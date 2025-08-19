@@ -1,12 +1,12 @@
 <?php
 session_start();
-require_once 'config.php';
-require_once 'vendor/autoload.php'; // נדרש להתקין את Google API Client Library
+require_once '../config.php';  // תיקון: חזרה לתיקייה הראשית
+require_once '../vendor/autoload.php'; // תיקון: חזרה לתיקייה הראשית
 
 // הגדרות Google OAuth
 define('GOOGLE_CLIENT_ID', 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com');
 define('GOOGLE_CLIENT_SECRET', 'YOUR_GOOGLE_CLIENT_SECRET');
-define('GOOGLE_REDIRECT_URI', 'https://your-domain.com/google-auth.php');
+define('GOOGLE_REDIRECT_URI', 'https://your-domain.com/auth/google-auth.php'); // תיקון: נתיב מלא
 
 // יצירת Google Client
 $client = new Google_Client();
@@ -83,7 +83,7 @@ try {
     $_SESSION['auth_type'] = 'google';
     
     // הפניה לדף הראשי
-    header('Location: index.php');
+    header('Location: ../index2.php');  // תיקון: חזרה לתיקייה הראשית
     exit;
     
 } catch (Exception $e) {

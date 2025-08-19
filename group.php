@@ -71,6 +71,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 }
             }
             
+            // בדיקה אם כבר קיימת הזמנה ממתינה לאימייל זה
+            $stmt = $pdo->prepare("
+                SELECT id FROM group_invitations 
+                WHERE group_id = ? AND email = ? AND status = 'pending'
+            ");
+            $stmt->execute([$group_id, $_POST['email']]);
+            if ($stmt->fetch()) {
+                echo json_encode(['success' => false, 'message' => 'כבר קיימת הזמנה ממתינה למשתמש זה']);
+                exit;
+            }
+            
             // בדיקה אם המשתמש קיים במערכת
             $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
             $stmt->execute([$_POST['email']]);
@@ -78,12 +89,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             
             if ($user) {
                 // בדיקה אם כבר חבר בקבוצה
-                $stmt = $pdo->prepare("SELECT id FROM group_members WHERE group_id = ? AND user_id = ?");
+                $stmt = $pdo->prepare("
+                    SELECT id, is_active FROM group_members 
+                    WHERE group_id = ? AND user_id = ?
+                ");
                 $stmt->execute([$group_id, $user['id']]);
+                $existingMember = $stmt->fetch();
                 
-                if ($stmt->fetch()) {
-                    echo json_encode(['success' => false, 'message' => 'המשתמש כבר חבר בקבוצה']);
+                if ($existingMember) {
+                    if ($existingMember['is_active']) {
+                        echo json_encode(['success' => false, 'message' => 'המשתמש כבר חבר פעיל בקבוצה']);
+                    } else {
+                        // אם המשתמש לא פעיל, הפעל אותו מחדש עם הנתונים החדשים
+                        $stmt = $pdo->prepare("
+                            UPDATE group_members 
+                            SET is_active = 1, 
+                                nickname = ?, 
+                                participation_type = ?, 
+                                participation_value = ?,
+                                joined_at = NOW()
+                            WHERE id = ?
+                        ");
+                        $result = $stmt->execute([
+                            $_POST['nickname'],
+                            $_POST['participation_type'],
+                            $_POST['participation_value'],
+                            $existingMember['id']
+                        ]);
+                        echo json_encode(['success' => $result, 'reactivated' => true]);
+                    }
                 } else {
+                    // הוסף משתמש חדש
                     $stmt = $pdo->prepare("
                         INSERT INTO group_members (group_id, user_id, nickname, email, participation_type, participation_value) 
                         VALUES (?, ?, ?, ?, ?, ?)
@@ -936,12 +972,21 @@ $purchases = $stmt->fetchAll(PDO::FETCH_ASSOC);
         document.getElementById('addMemberForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
+            const participationType = document.querySelector('input[name="participationType"]:checked').value;
+            const participationValue = parseFloat(document.getElementById('memberValue').value);
+            
+            // בדיקת תקינות בצד הלקוח
+            if (participationType === 'percentage' && participationValue > availablePercentage) {
+                alert(`לא ניתן להוסיף יותר מ-${availablePercentage}% זמינים`);
+                return;
+            }
+            
             const formData = new FormData();
             formData.append('action', 'addMember');
             formData.append('email', document.getElementById('memberEmail').value);
             formData.append('nickname', document.getElementById('memberNickname').value);
-            formData.append('participation_type', document.querySelector('input[name="participationType"]:checked').value);
-            formData.append('participation_value', document.getElementById('memberValue').value);
+            formData.append('participation_type', participationType);
+            formData.append('participation_value', participationValue);
             
             fetch('group.php?id=' + groupId, {
                 method: 'POST',
@@ -950,6 +995,9 @@ $purchases = $stmt->fetchAll(PDO::FETCH_ASSOC);
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
+                    if (data.reactivated) {
+                        alert('המשתמש הופעל מחדש בהצלחה');
+                    }
                     location.reload();
                 } else {
                     alert(data.message || 'שגיאה בהוספת המשתתף');

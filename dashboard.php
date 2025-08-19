@@ -17,27 +17,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     
     switch ($_POST['action']) {
         case 'createGroup':
-            $stmt = $pdo->prepare("INSERT INTO purchase_groups (name, description, owner_id) VALUES (?, ?, ?)");
-            $result = $stmt->execute([$_POST['name'], $_POST['description'], $user_id]);
-            
-            if ($result) {
-                $group_id = $pdo->lastInsertId();
-                // הוסף את היוצר כחבר עם ההגדרות שבחר
-                $stmt = $pdo->prepare("
-                    INSERT INTO group_members (group_id, user_id, nickname, email, participation_type, participation_value) 
-                    VALUES (?, ?, ?, ?, ?, ?)
-                ");
-                $stmt->execute([
-                    $group_id, 
-                    $user_id, 
-                    $_SESSION['name'], 
-                    $_SESSION['email'],
-                    $_POST['participation_type'],
-                    $_POST['participation_value']
-                ]);
+            try {
+                $pdo->beginTransaction();
+                
+                $stmt = $pdo->prepare("INSERT INTO purchase_groups (name, description, owner_id) VALUES (?, ?, ?)");
+                $result = $stmt->execute([$_POST['name'], $_POST['description'], $user_id]);
+                
+                if ($result) {
+                    $group_id = $pdo->lastInsertId();
+                    
+                    // בדיקת תקינות אחוזים
+                    if ($_POST['participation_type'] == 'percentage' && $_POST['participation_value'] > 100) {
+                        throw new Exception('לא ניתן להגדיר יותר מ-100% השתתפות');
+                    }
+                    
+                    // הוסף את היוצר כחבר עם ההגדרות שבחר
+                    $stmt = $pdo->prepare("
+                        INSERT INTO group_members (group_id, user_id, nickname, email, participation_type, participation_value) 
+                        VALUES (?, ?, ?, ?, ?, ?)
+                    ");
+                    $stmt->execute([
+                        $group_id, 
+                        $user_id, 
+                        $_SESSION['name'], 
+                        $_SESSION['email'],
+                        $_POST['participation_type'],
+                        $_POST['participation_value']
+                    ]);
+                    
+                    $pdo->commit();
+                    echo json_encode(['success' => true, 'group_id' => $group_id]);
+                } else {
+                    throw new Exception('שגיאה ביצירת הקבוצה');
+                }
+            } catch (Exception $e) {
+                $pdo->rollBack();
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
             }
-            
-            echo json_encode(['success' => $result, 'group_id' => $group_id ?? null]);
             exit;
             
         case 'leaveGroup':
@@ -345,12 +361,26 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
         document.getElementById('createGroupForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
+            const participationType = document.querySelector('input[name="ownerParticipationType"]:checked').value;
+            const participationValue = parseFloat(document.getElementById('ownerParticipationValue').value);
+            
+            // בדיקת תקינות
+            if (participationType === 'percentage' && participationValue > 100) {
+                alert('לא ניתן להגדיר יותר מ-100% השתתפות');
+                return;
+            }
+            
+            if (participationValue <= 0) {
+                alert('ערך ההשתתפות חייב להיות חיובי');
+                return;
+            }
+            
             const formData = new FormData();
             formData.append('action', 'createGroup');
             formData.append('name', document.getElementById('groupName').value);
             formData.append('description', document.getElementById('groupDescription').value);
-            formData.append('participation_type', document.querySelector('input[name="ownerParticipationType"]:checked').value);
-            formData.append('participation_value', document.getElementById('ownerParticipationValue').value);
+            formData.append('participation_type', participationType);
+            formData.append('participation_value', participationValue);
             
             fetch('dashboard.php', {
                 method: 'POST',
@@ -361,7 +391,7 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 if (data.success) {
                     window.location.href = 'group.php?id=' + data.group_id;
                 } else {
-                    alert('שגיאה ביצירת הקבוצה');
+                    alert(data.message || 'שגיאה ביצירת הקבוצה');
                 }
             });
         });

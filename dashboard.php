@@ -22,12 +22,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             
             if ($result) {
                 $group_id = $pdo->lastInsertId();
-                // הוסף את היוצר כחבר ראשון
+                // הוסף את היוצר כחבר עם ההגדרות שבחר
                 $stmt = $pdo->prepare("
                     INSERT INTO group_members (group_id, user_id, nickname, email, participation_type, participation_value) 
-                    VALUES (?, ?, ?, ?, 'percentage', 100)
+                    VALUES (?, ?, ?, ?, ?, ?)
                 ");
-                $stmt->execute([$group_id, $user_id, $_SESSION['name'], $_SESSION['email']]);
+                $stmt->execute([
+                    $group_id, 
+                    $user_id, 
+                    $_SESSION['name'], 
+                    $_SESSION['email'],
+                    $_POST['participation_type'],
+                    $_POST['participation_value']
+                ]);
             }
             
             echo json_encode(['success' => $result, 'group_id' => $group_id ?? null]);
@@ -48,6 +55,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $stmt = $pdo->prepare("UPDATE group_members SET is_active = 0 WHERE group_id = ? AND user_id = ?");
                 $result = $stmt->execute([$_POST['group_id'], $user_id]);
                 echo json_encode(['success' => $result]);
+            }
+            exit;
+            
+        case 'respondInvitation':
+            $invitation_id = $_POST['invitation_id'];
+            $response = $_POST['response'];
+            
+            // קבל את פרטי ההזמנה
+            $stmt = $pdo->prepare("SELECT * FROM group_invitations WHERE id = ? AND email = ?");
+            $stmt->execute([$invitation_id, $_SESSION['email']]);
+            $invitation = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($invitation) {
+                if ($response === 'accept') {
+                    // הוסף את המשתמש לקבוצה
+                    $stmt = $pdo->prepare("
+                        INSERT INTO group_members (group_id, user_id, nickname, email, participation_type, participation_value) 
+                        VALUES (?, ?, ?, ?, ?, ?)
+                    ");
+                    $stmt->execute([
+                        $invitation['group_id'],
+                        $user_id,
+                        $invitation['nickname'],
+                        $_SESSION['email'],
+                        $invitation['participation_type'],
+                        $invitation['participation_value']
+                    ]);
+                }
+                
+                // עדכן סטטוס הזמנה
+                $stmt = $pdo->prepare("UPDATE group_invitations SET status = ?, responded_at = NOW() WHERE id = ?");
+                $stmt->execute([$response === 'accept' ? 'accepted' : 'rejected', $invitation_id]);
+                
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'הזמנה לא נמצאה']);
             }
             exit;
     }
@@ -247,6 +290,26 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <label for="groupDescription">תיאור (אופציונלי):</label>
                     <textarea id="groupDescription" rows="3"></textarea>
                 </div>
+                <div class="form-group">
+                    <label>סוג השתתפות שלך:</label>
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" name="ownerParticipationType" value="percentage" checked onchange="toggleOwnerParticipationType()">
+                            אחוז
+                        </label>
+                        <label>
+                            <input type="radio" name="ownerParticipationType" value="fixed" onchange="toggleOwnerParticipationType()">
+                            סכום קבוע
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="ownerParticipationValue">ערך השתתפות שלך:</label>
+                    <div class="input-with-suffix">
+                        <input type="number" id="ownerParticipationValue" step="0.01" required>
+                        <span id="ownerValueSuffix">%</span>
+                    </div>
+                </div>
                 <div class="modal-actions">
                     <button type="submit" class="btn-primary">
                         <i class="fas fa-plus"></i> צור קבוצה
@@ -271,6 +334,13 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
             document.getElementById('createGroupForm').reset();
         }
         
+        // החלפת סוג השתתפות של המנהל
+        function toggleOwnerParticipationType() {
+            const type = document.querySelector('input[name="ownerParticipationType"]:checked').value;
+            const suffix = document.getElementById('ownerValueSuffix');
+            suffix.textContent = type === 'percentage' ? '%' : '₪';
+        }
+        
         // יצירת קבוצה חדשה
         document.getElementById('createGroupForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -279,6 +349,8 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
             formData.append('action', 'createGroup');
             formData.append('name', document.getElementById('groupName').value);
             formData.append('description', document.getElementById('groupDescription').value);
+            formData.append('participation_type', document.querySelector('input[name="ownerParticipationType"]:checked').value);
+            formData.append('participation_value', document.getElementById('ownerParticipationValue').value);
             
             fetch('dashboard.php', {
                 method: 'POST',

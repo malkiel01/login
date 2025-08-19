@@ -119,6 +119,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             }
             exit;
             
+        case 'cancelInvitation':
+            if (!$is_owner) {
+                echo json_encode(['success' => false, 'message' => 'אין הרשאה']);
+                exit;
+            }
+            
+            $stmt = $pdo->prepare("UPDATE group_invitations SET status = 'expired' WHERE id = ? AND group_id = ?");
+            $result = $stmt->execute([$_POST['invitation_id'], $group_id]);
+            echo json_encode(['success' => $result]);
+            exit;
+            
         case 'addPurchase':
             // טיפול בהעלאת תמונה
             $imagePath = null;
@@ -165,9 +176,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 }
 
-// שליפת חברי הקבוצה
+// שליפת חברי הקבוצה המאושרים
 $stmt = $pdo->prepare("
-    SELECT gm.*, u.name as user_name, u.profile_picture
+    SELECT gm.*, u.name as user_name, u.profile_picture, 'active' as status
     FROM group_members gm
     JOIN users u ON gm.user_id = u.id
     WHERE gm.group_id = ? AND gm.is_active = 1
@@ -175,6 +186,19 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute([$group_id]);
 $members = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// שליפת הזמנות ממתינות (רק למנהל)
+$pending_invitations = [];
+if ($is_owner) {
+    $stmt = $pdo->prepare("
+        SELECT gi.*, 'pending' as status
+        FROM group_invitations gi
+        WHERE gi.group_id = ? AND gi.status = 'pending'
+        ORDER BY gi.created_at DESC
+    ");
+    $stmt->execute([$group_id]);
+    $pending_invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 
 // שליפת קניות הקבוצה
 $stmt = $pdo->prepare("
@@ -279,6 +303,34 @@ $purchases = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                     <?php if ($is_owner && $member['user_id'] != $group['owner_id']): ?>
                     <button class="btn-remove" onclick="removeMember(<?php echo $member['id']; ?>)">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <?php endif; ?>
+                </div>
+                <?php endforeach; ?>
+                
+                <?php // הצגת הזמנות ממתינות (רק למנהל) ?>
+                <?php foreach ($pending_invitations as $invitation): ?>
+                <div class="member-card pending">
+                    <div class="member-avatar">
+                        <i class="fas fa-user-clock"></i>
+                    </div>
+                    <div class="member-info">
+                        <h3><?php echo htmlspecialchars($invitation['nickname']); ?></h3>
+                        <p class="member-email"><?php echo htmlspecialchars($invitation['email']); ?></p>
+                        <p class="member-status pending">
+                            <i class="fas fa-clock"></i> ממתין לאישור
+                        </p>
+                        <p class="member-participation">
+                            <?php if ($invitation['participation_type'] == 'percentage'): ?>
+                                <i class="fas fa-percentage"></i> <?php echo $invitation['participation_value']; ?>%
+                            <?php else: ?>
+                                <i class="fas fa-shekel-sign"></i> ₪<?php echo number_format($invitation['participation_value'], 2); ?>
+                            <?php endif; ?>
+                        </p>
+                    </div>
+                    <?php if ($is_owner): ?>
+                    <button class="btn-remove" onclick="cancelInvitation(<?php echo $invitation['id']; ?>)">
                         <i class="fas fa-times"></i>
                     </button>
                     <?php endif; ?>
@@ -681,6 +733,28 @@ $purchases = $stmt->fetchAll(PDO::FETCH_ASSOC);
             });
         }
         <?php endif; ?>
+        
+        // ביטול הזמנה
+        function cancelInvitation(invitationId) {
+            if (!confirm('האם אתה בטוח שברצונך לבטל הזמנה זו?')) return;
+            
+            const formData = new FormData();
+            formData.append('action', 'cancelInvitation');
+            formData.append('invitation_id', invitationId);
+            
+            fetch('group.php?id=' + groupId, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'שגיאה בביטול ההזמנה');
+                }
+            });
+        }
         
         // ניהול קניות
         function showAddPurchaseModal() {

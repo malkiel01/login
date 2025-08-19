@@ -4,7 +4,7 @@ require_once '../config.php';  // תיקון: חזרה לתיקייה הראשי
 
 // אם המשתמש כבר מחובר, העבר לדף הראשי
 if (isset($_SESSION['user_id'])) {
-    header('Location: ../index2.php');  // תיקון: חזרה לתיקייה הראשית
+    header('Location: ../dashboard.php');  // תיקון: חזרה לתיקייה הראשית
     exit;
 }
 
@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
             $_SESSION['email'] = $user['email'];
             $_SESSION['profile_picture'] = $user['profile_picture'];
             
-            header('Location: ../index2.php');  // תיקון: חזרה לתיקייה הראשית
+            header('Location: ../dashboard.php');  // תיקון: חזרה לתיקייה הראשית
             exit;
         } else {
             $error = 'שם משתמש או סיסמה שגויים';

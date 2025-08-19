@@ -4,9 +4,9 @@ require_once '../config.php';  // תיקון: חזרה לתיקייה הראשי
 require_once '../vendor/autoload.php'; // תיקון: חזרה לתיקייה הראשית
 
 // הגדרות Google OAuth
-define('GOOGLE_CLIENT_ID', 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com');
+define('GOOGLE_CLIENT_ID', '420537994881-gqiev5lqkp6gjj51l1arkjd5q09m5vv0.apps.googleusercontent.com');
 define('GOOGLE_CLIENT_SECRET', 'YOUR_GOOGLE_CLIENT_SECRET');
-define('GOOGLE_REDIRECT_URI', 'https://your-domain.com/auth/google-auth.php'); // תיקון: נתיב מלא
+define('GOOGLE_REDIRECT_URI', 'https://form.mbe-plus.com/family/auth/google-auth.php'); // תיקון: נתיב מלא
 
 // יצירת Google Client
 $client = new Google_Client();

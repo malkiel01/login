@@ -221,6 +221,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     </div>
     
     <script>
+     
         function switchTab(tab) {
             // הסתרת כל הטאבים
             document.querySelectorAll('.tab-content').forEach(content => {

@@ -101,7 +101,7 @@ function renderEditMemberModal() {
     <?php
 }
 
-function renderAddPurchaseModal($members) {
+function renderAddPurchaseModal($members, $is_owner, $member_id) {
     ?>
     <div id="addPurchaseModal" class="modal">
         <div class="modal-content">
@@ -110,6 +110,7 @@ function renderAddPurchaseModal($members) {
                 <span class="close" onclick="closeAddPurchaseModal()">&times;</span>
             </div>
             <form id="addPurchaseForm" enctype="multipart/form-data">
+                <?php if ($is_owner): ?>
                 <div class="form-group">
                     <label for="purchaseMember">בחר משתתף:</label>
                     <select id="purchaseMember" required>
@@ -121,6 +122,18 @@ function renderAddPurchaseModal($members) {
                         <?php endforeach; ?>
                     </select>
                 </div>
+                <?php else: ?>
+                <!-- משתמש רגיל - הקנייה תירשם על שמו בלבד -->
+                <input type="hidden" id="purchaseMember" value="<?php echo $member_id; ?>">
+                <div class="form-group">
+                    <label>הקנייה תירשם על שמך</label>
+                    <div class="info-message">
+                        <i class="fas fa-info-circle"></i>
+                        רק מנהל הקבוצה יכול להוסיף קניות בשם משתתפים אחרים
+                    </div>
+                </div>
+                <?php endif; ?>
+                
                 <div class="form-group">
                     <label for="purchaseAmount">סכום הקנייה (₪):</label>
                     <input type="number" id="purchaseAmount" step="0.01" required>

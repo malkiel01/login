@@ -252,9 +252,15 @@ document.addEventListener('DOMContentLoaded', function() {
         addPurchaseForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
+            const memberId = document.getElementById('purchaseMember').value;
+            if (!memberId) {
+                alert('יש לבחור משתתף');
+                return;
+            }
+            
             const formData = new FormData();
             formData.append('action', 'addPurchase');
-            formData.append('member_id', document.getElementById('purchaseMember').value);
+            formData.append('member_id', memberId);
             formData.append('amount', document.getElementById('purchaseAmount').value);
             formData.append('description', document.getElementById('purchaseDescription').value);
             
@@ -272,7 +278,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.success) {
                     location.reload();
                 } else {
-                    alert('שגיאה בהוספת הקנייה');
+                    alert(data.message || 'שגיאה בהוספת הקנייה');
                 }
             });
         });

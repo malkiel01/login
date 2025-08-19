@@ -211,6 +211,30 @@ function cancelInvitation($pdo, $group_id, $is_owner) {
 }
 
 function addPurchase($pdo, $group_id, $user_id) {
+    // בדיקה אם המשתמש הוא מנהל הקבוצה
+    $stmt = $pdo->prepare("SELECT owner_id FROM purchase_groups WHERE id = ?");
+    $stmt->execute([$group_id]);
+    $group = $stmt->fetch();
+    $is_owner = ($group['owner_id'] == $user_id);
+    
+    // אם המשתמש לא מנהל, וודא שהוא מוסיף קנייה רק בשם עצמו
+    if (!$is_owner) {
+        $stmt = $pdo->prepare("
+            SELECT id FROM group_members 
+            WHERE group_id = ? AND user_id = ? AND is_active = 1
+        ");
+        $stmt->execute([$group_id, $user_id]);
+        $member = $stmt->fetch();
+        
+        if (!$member) {
+            echo json_encode(['success' => false, 'message' => 'אינך חבר פעיל בקבוצה']);
+            return true;
+        }
+        
+        // החלף את ה-member_id למזהה של המשתמש עצמו
+        $_POST['member_id'] = $member['id'];
+    }
+    
     // טיפול בהעלאת תמונה
     $imagePath = null;
     if (isset($_FILES['image']) && $_FILES['image']['error'] === 0) {

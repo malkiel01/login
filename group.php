@@ -318,7 +318,7 @@ $totalAmount = array_sum(array_column($purchases, 'amount'));
         renderAddMemberModal($available_percentage);
         renderEditMemberModal();
     }
-    renderAddPurchaseModal($members);
+    renderAddPurchaseModal($members, $is_owner, $member_id);
     renderImageModal();
     ?>
 

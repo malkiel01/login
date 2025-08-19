@@ -1,4 +1,9 @@
 <?php
+// הצגת שגיאות לצורך דיבאג
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 session_start();
 
 // בדיקת התחברות
@@ -402,7 +407,7 @@ $purchases = $purchases->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                     <span class="user-name">שלום, <?php echo htmlspecialchars($_SESSION['name']); ?></span>
                 </div>
-                <a href="logout.php" class="btn-logout">
+                <a href="auth/logout.php" class="btn-logout">
                     <i class="fas fa-sign-out-alt"></i>
                     התנתק
                 </a>
@@ -640,7 +645,7 @@ $purchases = $purchases->fetchAll(PDO::FETCH_ASSOC);
             formData.append('name', document.getElementById('familyName').value);
             formData.append('percent', document.getElementById('familyPercent').value);
             
-            fetch('index.php', {
+            fetch('index2.php', {
                 method: 'POST',
                 body: formData
             })

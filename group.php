@@ -51,6 +51,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 exit;
             }
             
+            // בדיקת אחוזים קיימים
+            if ($_POST['participation_type'] == 'percentage') {
+                $stmt = $pdo->prepare("
+                    SELECT SUM(participation_value) as total_percentage 
+                    FROM group_members 
+                    WHERE group_id = ? AND participation_type = 'percentage' AND is_active = 1
+                ");
+                $stmt->execute([$group_id]);
+                $currentPercentage = $stmt->fetch()['total_percentage'] ?? 0;
+                
+                if ($currentPercentage + $_POST['participation_value'] > 100) {
+                    $available = 100 - $currentPercentage;
+                    echo json_encode([
+                        'success' => false, 
+                        'message' => "סכום האחוזים חורג מ-100%. נותרו $available% זמינים"
+                    ]);
+                    exit;
+                }
+            }
+            
             // בדיקה אם המשתמש קיים במערכת
             $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
             $stmt->execute([$_POST['email']]);
@@ -157,6 +177,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             echo json_encode(['success' => $result]);
             exit;
             
+        case 'editMember':
+            if (!$is_owner) {
+                echo json_encode(['success' => false, 'message' => 'אין הרשאה']);
+                exit;
+            }
+            
+            // בדיקת אחוזים אם שינוי לאחוזים
+            if ($_POST['participation_type'] == 'percentage') {
+                $stmt = $pdo->prepare("
+                    SELECT SUM(participation_value) as total_percentage 
+                    FROM group_members 
+                    WHERE group_id = ? AND participation_type = 'percentage' AND is_active = 1 AND id != ?
+                ");
+                $stmt->execute([$group_id, $_POST['member_id']]);
+                $currentPercentage = $stmt->fetch()['total_percentage'] ?? 0;
+                
+                if ($currentPercentage + $_POST['participation_value'] > 100) {
+                    $available = 100 - $currentPercentage;
+                    echo json_encode([
+                        'success' => false, 
+                        'message' => "סכום האחוזים חורג מ-100%. נותרו $available% זמינים"
+                    ]);
+                    exit;
+                }
+            }
+            
+            $stmt = $pdo->prepare("
+                UPDATE group_members 
+                SET participation_type = ?, participation_value = ?
+                WHERE id = ? AND group_id = ?
+            ");
+            $result = $stmt->execute([
+                $_POST['participation_type'],
+                $_POST['participation_value'],
+                $_POST['member_id'],
+                $group_id
+            ]);
+            echo json_encode(['success' => $result]);
+            exit;
+            
         case 'deletePurchase':
             // בדיקת הרשאות - מנהל או בעל הקנייה
             $stmt = $pdo->prepare("SELECT user_id FROM group_purchases WHERE id = ? AND group_id = ?");
@@ -186,6 +246,20 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute([$group_id]);
 $members = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// חישוב סך האחוזים הנוכחי
+$stmt = $pdo->prepare("
+    SELECT 
+        SUM(CASE WHEN participation_type = 'percentage' THEN participation_value ELSE 0 END) as total_percentage,
+        SUM(CASE WHEN participation_type = 'fixed' THEN participation_value ELSE 0 END) as total_fixed
+    FROM group_members 
+    WHERE group_id = ? AND is_active = 1
+");
+$stmt->execute([$group_id]);
+$participation_totals = $stmt->fetch(PDO::FETCH_ASSOC);
+$current_percentage = $participation_totals['total_percentage'] ?? 0;
+$total_fixed = $participation_totals['total_fixed'] ?? 0;
+$available_percentage = 100 - $current_percentage;
 
 // שליפת הזמנות ממתינות (רק למנהל)
 $pending_invitations = [];
@@ -301,13 +375,38 @@ $purchases = $stmt->fetchAll(PDO::FETCH_ASSOC);
                             <?php endif; ?>
                         </p>
                     </div>
-                    <?php if ($is_owner && $member['user_id'] != $group['owner_id']): ?>
-                    <button class="btn-remove" onclick="removeMember(<?php echo $member['id']; ?>)">
-                        <i class="fas fa-times"></i>
-                    </button>
+                    <?php if ($is_owner): ?>
+                    <div class="member-actions">
+                        <button class="btn-edit" onclick="editMember(<?php echo $member['id']; ?>, '<?php echo $member['participation_type']; ?>', <?php echo $member['participation_value']; ?>)" title="ערוך">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <?php if ($member['user_id'] != $group['owner_id']): ?>
+                        <button class="btn-remove" onclick="removeMember(<?php echo $member['id']; ?>)" title="הסר">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        <?php endif; ?>
+                    </div>
                     <?php endif; ?>
                 </div>
                 <?php endforeach; ?>
+                
+                <?php // הצגת התראה אם חסרים אחוזים ?>
+                <?php if ($current_percentage < 100 && $current_percentage > 0): ?>
+                <div class="member-card warning">
+                    <div class="member-avatar">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="member-info">
+                        <h3>חסרים אחוזים להשלמה</h3>
+                        <p class="member-status warning">
+                            <i class="fas fa-info-circle"></i> סה"כ מוגדר: <?php echo $current_percentage; ?>%
+                        </p>
+                        <p class="member-participation">
+                            <i class="fas fa-percentage"></i> חסרים: <?php echo $available_percentage; ?>%
+                        </p>
+                    </div>
+                </div>
+                <?php endif; ?>
                 
                 <?php // הצגת הזמנות ממתינות (רק למנהל) ?>
                 <?php foreach ($pending_invitations as $invitation): ?>
@@ -415,11 +514,20 @@ $purchases = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 $fixedTotal = array_sum(array_column($fixedMembers, 'participation_value'));
                 $percentageAmount = max(0, $totalAmount - $fixedTotal);
                 
+                // אם סך האחוזים קטן מ-100%, הצג התראה
+                $missingPercentage = 0;
+                $missingAmount = 0;
+                if ($totalPercentage < 100 && $totalPercentage > 0) {
+                    $missingPercentage = 100 - $totalPercentage;
+                    $missingAmount = $percentageAmount * ($missingPercentage / 100);
+                }
+                
                 foreach ($members as $member) {
                     $shouldPay = 0;
                     
                     if ($member['participation_type'] == 'percentage') {
-                        $shouldPay = $percentageAmount * ($member['participation_value'] / $totalPercentage);
+                        // חשב לפי האחוז האמיתי, לא לפי 100%
+                        $shouldPay = $percentageAmount * ($member['participation_value'] / 100);
                     } else {
                         $shouldPay = $member['participation_value'];
                     }
@@ -449,6 +557,24 @@ $purchases = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <h3>סכום כולל</h3>
                     <div class="total-amount">₪<?php echo number_format($totalAmount, 2); ?></div>
                 </div>
+                
+                <?php if ($fixedTotal > 0): ?>
+                <div class="info-box">
+                    <i class="fas fa-info-circle"></i>
+                    <p>סכומים קבועים: ₪<?php echo number_format($fixedTotal, 2); ?></p>
+                    <p>סכום לחלוקה באחוזים: ₪<?php echo number_format($percentageAmount, 2); ?></p>
+                </div>
+                <?php endif; ?>
+                
+                <?php if ($missingPercentage > 0): ?>
+                <div class="warning-box">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>חסרים אחוזים להשלמה</h3>
+                    <p>מוגדר כרגע: <?php echo $totalPercentage; ?>%</p>
+                    <p>חסרים: <?php echo $missingPercentage; ?>%</p>
+                    <p>סכום לא מוקצה: ₪<?php echo number_format($missingAmount, 2); ?></p>
+                </div>
+                <?php endif; ?>
             </div>
             
             <div class="members-calculations">
@@ -587,12 +713,59 @@ $purchases = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <input type="number" id="memberValue" step="0.01" required>
                         <span id="valueSuffix">%</span>
                     </div>
+                    <small id="percentageInfo" class="form-hint">
+                        נותרו <?php echo $available_percentage; ?>% זמינים להקצאה
+                    </small>
                 </div>
                 <div class="modal-actions">
                     <button type="submit" class="btn-primary">
                         <i class="fas fa-plus"></i> הוסף
                     </button>
                     <button type="button" class="btn-secondary" onclick="closeAddMemberModal()">
+                        ביטול
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <!-- Modal לעריכת משתתף -->
+    <?php if ($is_owner): ?>
+    <div id="editMemberModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>עריכת פרטי משתתף</h2>
+                <span class="close" onclick="closeEditMemberModal()">&times;</span>
+            </div>
+            <form id="editMemberForm">
+                <input type="hidden" id="editMemberId">
+                <div class="form-group">
+                    <label>סוג השתתפות:</label>
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" name="editParticipationType" value="percentage" onchange="toggleEditParticipationType()">
+                            אחוז
+                        </label>
+                        <label>
+                            <input type="radio" name="editParticipationType" value="fixed" onchange="toggleEditParticipationType()">
+                            סכום קבוע
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="editMemberValue">ערך השתתפות:</label>
+                    <div class="input-with-suffix">
+                        <input type="number" id="editMemberValue" step="0.01" required>
+                        <span id="editValueSuffix">%</span>
+                    </div>
+                    <small id="editPercentageInfo" class="form-hint"></small>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save"></i> שמור
+                    </button>
+                    <button type="button" class="btn-secondary" onclick="closeEditMemberModal()">
                         ביטול
                     </button>
                 </div>
@@ -673,8 +846,11 @@ $purchases = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         // ניהול משתתפים
         <?php if ($is_owner): ?>
+        const availablePercentage = <?php echo $available_percentage; ?>;
+        
         function showAddMemberModal() {
             document.getElementById('addMemberModal').style.display = 'block';
+            updatePercentageInfo();
         }
         
         function closeAddMemberModal() {
@@ -685,8 +861,77 @@ $purchases = $stmt->fetchAll(PDO::FETCH_ASSOC);
         function toggleParticipationType() {
             const type = document.querySelector('input[name="participationType"]:checked').value;
             const suffix = document.getElementById('valueSuffix');
+            const info = document.getElementById('percentageInfo');
+            
             suffix.textContent = type === 'percentage' ? '%' : '₪';
+            
+            if (type === 'percentage') {
+                info.style.display = 'block';
+                document.getElementById('memberValue').max = availablePercentage;
+            } else {
+                info.style.display = 'none';
+                document.getElementById('memberValue').removeAttribute('max');
+            }
         }
+        
+        function updatePercentageInfo() {
+            const type = document.querySelector('input[name="participationType"]:checked')?.value;
+            if (type === 'percentage') {
+                document.getElementById('percentageInfo').style.display = 'block';
+            }
+        }
+        
+        // עריכת משתתף
+        function editMember(memberId, type, value) {
+            document.getElementById('editMemberId').value = memberId;
+            document.querySelector(`input[name="editParticipationType"][value="${type}"]`).checked = true;
+            document.getElementById('editMemberValue').value = value;
+            toggleEditParticipationType();
+            document.getElementById('editMemberModal').style.display = 'block';
+        }
+        
+        function closeEditMemberModal() {
+            document.getElementById('editMemberModal').style.display = 'none';
+            document.getElementById('editMemberForm').reset();
+        }
+        
+        function toggleEditParticipationType() {
+            const type = document.querySelector('input[name="editParticipationType"]:checked').value;
+            const suffix = document.getElementById('editValueSuffix');
+            const info = document.getElementById('editPercentageInfo');
+            
+            suffix.textContent = type === 'percentage' ? '%' : '₪';
+            
+            if (type === 'percentage') {
+                info.textContent = `נותרו ${availablePercentage}% זמינים (בנוסף לערך הנוכחי)`;
+                info.style.display = 'block';
+            } else {
+                info.style.display = 'none';
+            }
+        }
+        
+        document.getElementById('editMemberForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('action', 'editMember');
+            formData.append('member_id', document.getElementById('editMemberId').value);
+            formData.append('participation_type', document.querySelector('input[name="editParticipationType"]:checked').value);
+            formData.append('participation_value', document.getElementById('editMemberValue').value);
+            
+            fetch('group.php?id=' + groupId, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'שגיאה בעדכון המשתתף');
+                }
+            });
+        });
         
         document.getElementById('addMemberForm').addEventListener('submit', function(e) {
             e.preventDefault();

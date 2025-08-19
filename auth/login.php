@@ -91,6 +91,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     <title>התחברות - <?php echo SITE_NAME; ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="../css/styles.css" rel="stylesheet">
+    
+    <!-- Google Sign-In API -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
     <div class="login-container">
@@ -150,10 +153,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                     <span>או</span>
                 </div>
                 
-                <button class="btn-google" onclick="loginWithGoogle()">
-                    <img src="https://www.google.com/favicon.ico" alt="Google">
-                    התחבר עם Google
-                </button>
+                <!-- כפתור Google Sign-In -->
+                <div id="g_id_onload"
+                     data-client_id="420537994881-gqiev5lqkp6gjj51l1arkjd5q09m5vv0.apps.googleusercontent.com"
+                     data-callback="handleGoogleResponse"
+                     data-auto_prompt="false">
+                </div>
+                <div class="g_id_signin"
+                     data-type="standard"
+                     data-size="large"
+                     data-theme="outline"
+                     data-text="signin_with"
+                     data-shape="rectangular"
+                     data-logo_alignment="left">
+                </div>
                 
                 <div class="forgot-password">
                     <a href="#">שכחת סיסמה?</a>
@@ -212,16 +225,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                     <span>או</span>
                 </div>
                 
-                <button class="btn-google" onclick="loginWithGoogle()">
-                    <img src="https://www.google.com/favicon.ico" alt="Google">
-                    הרשם עם Google
-                </button>
+                <!-- כפתור Google Sign-In להרשמה -->
+                <div class="g_id_signin"
+                     data-type="standard"
+                     data-size="large"
+                     data-theme="outline"
+                     data-text="signup_with"
+                     data-shape="rectangular"
+                     data-logo_alignment="left">
+                </div>
             </div>
         </div>
     </div>
     
     <script>
-     
         function switchTab(tab) {
             // הסתרת כל הטאבים
             document.querySelectorAll('.tab-content').forEach(content => {
@@ -241,9 +258,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
             }
         }
         
-        function loginWithGoogle() {
-            // כאן תצטרך להוסיף את הקוד של Google OAuth
-            window.location.href = 'google-auth.php';
+        // טיפול בתגובה מ-Google
+        function handleGoogleResponse(response) {
+            // שלח את הטוקן לשרת
+            fetch('google-auth.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    credential: response.credential
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // הצלחה - הפנה לדף הראשי
+                    window.location.href = data.redirect;
+                } else {
+                    // שגיאה - הצג הודעה
+                    alert(data.message || 'שגיאה בהתחברות');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('שגיאה בתקשורת עם השרת');
+            });
         }
     </script>
 </body>

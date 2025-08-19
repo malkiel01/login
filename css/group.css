@@ -10,7 +10,7 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
-    padding-top: 80px; /* הגדלתי את הרווח העליון */
+    padding-top: 70px;
 }
 
 /* Navigation Bar */
@@ -23,7 +23,6 @@ body {
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     z-index: 1000;
     padding: 15px 0;
-    min-height: 70px; /* גובה מינימלי לנאבבר */
 }
 
 .navbar-container {
@@ -33,7 +32,7 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 0 20px;
-    flex-wrap: wrap; /* מאפשר גלישה של אלמנטים */
+    flex-wrap: nowrap; /* מונע גלישה של אלמנטים */
     gap: 10px;
 }
 
@@ -125,6 +124,7 @@ body {
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
+    min-height: calc(100vh - 70px); /* מחסיר רק את גובה הנאבבר */
 }
 
 .tabs {
@@ -640,16 +640,19 @@ body {
     width: 100%;
     height: 100%;
     background-color: rgba(0,0,0,0.5);
+    overflow-y: auto; /* מאפשר גלילה של המודל */
+    padding: 20px 0;
 }
 
 .modal-content {
     background-color: white;
-    margin: 5% auto;
+    margin: 30px auto; /* מרחק קבוע וקטן מלמעלה */
     border-radius: 15px;
     width: 90%;
     max-width: 500px;
     box-shadow: 0 20px 60px rgba(0,0,0,0.3);
     animation: slideIn 0.3s;
+    position: relative;
 }
 
 .modal-content.image-modal {
@@ -823,75 +826,73 @@ body {
 /* Responsive Design */
 @media (max-width: 768px) {
     body {
-        padding-top: 120px; /* רווח גדול יותר במובייל */
+        padding-top: 70px; /* אותו padding כמו בדסקטופ */
     }
     
     .navbar {
-        min-height: auto;
         padding: 10px 0;
     }
     
     .navbar-container {
-        flex-direction: column;
-        align-items: stretch;
-        padding: 10px 15px;
+        padding: 0 15px;
+        gap: 5px;
     }
     
     .navbar-left {
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        width: 100%;
-        margin-bottom: 10px;
-        flex-wrap: wrap;
         gap: 10px;
+        flex: 1;
     }
     
     .navbar-title {
-        font-size: 16px;
-        flex: 1;
-        text-align: center;
+        font-size: 14px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 150px;
     }
     
     .navbar-user {
-        width: 100%;
-        justify-content: space-between;
-        padding-top: 10px;
-        border-top: 1px solid #e9ecef;
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
     
     .user-name {
-        font-size: 14px;
+        display: none; /* מסתיר רק את השם */
     }
     
     .btn-back {
         font-size: 12px;
-        padding: 6px 12px;
+        padding: 6px 10px;
     }
     
     .btn-logout {
-        padding: 6px 12px;
+        padding: 6px 10px;
         font-size: 12px;
     }
     
     /* Container adjustments */
     .container {
         padding: 15px;
+        min-height: calc(100vh - 70px);
     }
     
     .tabs {
-        flex-direction: row;
         overflow-x: auto;
         border-radius: 10px;
         margin-bottom: 20px;
+        display: flex;
+        flex-direction: row;
     }
     
     .tab {
-        min-width: 120px;
+        min-width: 100px;
         padding: 12px 15px;
         font-size: 14px;
-        border-bottom: none;
         white-space: nowrap;
+        flex: 1;
     }
     
     .tab i {
@@ -907,36 +908,9 @@ body {
         gap: 15px;
     }
     
-    .member-card {
-        padding: 15px;
-    }
-    
-    .member-actions {
-        position: static;
-        margin-top: 10px;
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-    }
-    
-    .calc-member {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
-    
-    .transfer-card {
-        flex-direction: column;
-        gap: 15px;
-        text-align: center;
-        padding: 15px;
-    }
-    
     .modal-content {
         width: 95%;
-        margin: 10% auto;
-        max-height: 90vh;
-        overflow-y: auto;
+        margin: 20px auto;
     }
     
     .section-header {
@@ -945,70 +919,35 @@ body {
         align-items: stretch;
     }
     
-    .section-header h2 {
-        font-size: 20px;
-    }
-    
     .btn-add {
         width: 100%;
         justify-content: center;
-        padding: 12px;
-    }
-    
-    .purchase-card {
-        padding: 15px;
-    }
-    
-    .purchase-header {
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    .purchase-amount {
-        font-size: 20px;
-        align-self: flex-end;
-    }
-    
-    .purchase-image img {
-        max-width: 100%;
-        height: auto;
     }
 }
 
 @media (max-width: 480px) {
-    body {
-        padding-top: 140px; /* עוד יותר רווח במסכים קטנים */
-    }
-    
     .navbar-title {
-        font-size: 14px;
-        width: 100%;
-        margin-top: 5px;
-    }
-    
-    .navbar-left {
-        flex-direction: column;
-        align-items: stretch;
+        font-size: 13px;
+        max-width: 120px;
     }
     
     .btn-back {
-        width: 100%;
-        text-align: center;
-        margin-bottom: 5px;
+        font-size: 11px;
+        padding: 5px 8px;
     }
     
-    .tabs {
-        flex-direction: column;
+    .btn-back i {
+        font-size: 12px;
     }
     
-    .tab {
-        width: 100%;
-        text-align: center;
-        border-bottom: 1px solid #e9ecef;
+    .user-avatar {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
     }
     
-    .tab:last-child {
-        border-bottom: none;
+    .modal-content {
+        margin: 15px auto;
     }
     
     .modal-actions {
@@ -1023,32 +962,5 @@ body {
     .radio-group {
         flex-direction: column;
         gap: 10px;
-    }
-    
-    .calculation-summary {
-        gap: 15px;
-    }
-    
-    .total-box {
-        padding: 20px;
-    }
-    
-    .total-amount {
-        font-size: 28px;
-    }
-    
-    .warning-box,
-    .info-box {
-        padding: 15px;
-        font-size: 14px;
-    }
-    
-    .calc-card {
-        padding: 15px;
-    }
-    
-    .transfer-arrow {
-        transform: rotate(90deg);
-        margin: 10px 0;
     }
 }

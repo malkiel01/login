@@ -1,133 +1,137 @@
 <?php
 /**
- * דף בדיקת חיבור למסד נתונים
- * test_db.php
+ * בדיקת חיבור אמיתית - מראה את כל השגיאות
+ * test_real.php
  */
 
-// הפעל הצגת שגיאות
+// הפעל הצגת כל השגיאות
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-echo "<html dir='rtl'><head><meta charset='UTF-8'><title>בדיקת חיבור</title></head><body>";
-echo "<h1>בדיקת חיבור למסד נתונים</h1>";
+echo "<html dir='rtl'><head><meta charset='UTF-8'><title>בדיקה אמיתית</title></head><body>";
+echo "<h1>בדיקת חיבור אמיתית למסד נתונים</h1>";
 echo "<div style='font-family: Arial; direction: rtl;'>";
 
-// כלול את קובץ ההגדרות
-require_once 'config.php';
+// טען את קובץ ENV באופן ידני
+$envPath = __DIR__ . '/.env';
+if (file_exists($envPath)) {
+    echo "<h2>קובץ ENV נמצא ✅</h2>";
+    $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    $env = [];
+    foreach ($lines as $line) {
+        if (strpos(trim($line), '#') === 0) continue;
+        $parts = explode('=', $line, 2);
+        if (count($parts) == 2) {
+            $key = trim($parts[0]);
+            $value = trim($parts[1], '"\'');
+            $env[$key] = $value;
+        }
+    }
+    
+    echo "<div style='background: #f0f0f0; padding: 10px;'>";
+    echo "DB_HOST: " . $env['DB_HOST'] . "<br>";
+    echo "PORT: " . $env['PORT'] . "<br>";
+    echo "DB_NAME: " . $env['DB_NAME'] . "<br>";
+    echo "DB_USER: " . $env['DB_USER'] . "<br>";
+    echo "</div>";
+} else {
+    echo "<h2 style='color: red;'>קובץ ENV לא נמצא! ❌</h2>";
+    die();
+}
 
-echo "<h2>1. בדיקת טעינת ENV:</h2>";
+echo "<h2>ניסיונות חיבור:</h2>";
+
+// ניסיון 1: חיבור עם הפורט בנפרד
+echo "<h3>ניסיון 1 - פורט בנפרד:</h3>";
 echo "<div style='background: #f0f0f0; padding: 10px; margin: 10px 0;'>";
-echo "DB_HOST: " . DB_HOST . "<br>";
-echo "DB_PORT: " . DB_PORT . "<br>";
-echo "DB_NAME: " . DB_NAME . "<br>";
-echo "DB_USER: " . DB_USER . "<br>";
-echo "DB_PASSWORD: " . (empty(DB_PASSWORD) ? "(ריק)" : "***מוגדר***") . "<br>";
-echo "GOOGLE_CLIENT_ID: " . (empty(GOOGLE_CLIENT_ID) ? "(לא מוגדר)" : "***מוגדר***") . "<br>";
-echo "</div>";
-
-echo "<h2>2. ניסיון חיבור למסד נתונים:</h2>";
-echo "<div style='background: #f0f0f0; padding: 10px; margin: 10px 0;'>";
-
 try {
-    // נסה להתחבר
-    $pdo = getDBConnection();
-    echo "<span style='color: green; font-weight: bold;'>✅ החיבור הצליח!</span><br><br>";
+    $dsn = "mysql:host=" . $env['DB_HOST'] . ";port=" . $env['PORT'] . ";dbname=" . $env['DB_NAME'] . ";charset=utf8mb4";
+    echo "DSN: " . $dsn . "<br>";
     
-    // בדוק גרסת MySQL
+    $pdo = new PDO($dsn, $env['DB_USER'], $env['DB_PASSWORD']);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
+    echo "<span style='color: green; font-weight: bold;'>✅ הצלחה!</span><br>";
     $version = $pdo->query('SELECT VERSION()')->fetchColumn();
-    echo "גרסת MySQL: " . $version . "<br>";
-    
-    // בדוק איזה טבלאות קיימות
-    echo "<br><strong>טבלאות במסד הנתונים:</strong><br>";
-    $tables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
-    
-    if (count($tables) > 0) {
-        foreach ($tables as $table) {
-            echo "- " . $table . "<br>";
-        }
-    } else {
-        echo "<span style='color: orange;'>אין טבלאות במסד הנתונים</span><br>";
-    }
-    
-    // בדוק טבלת users אם קיימת
-    if (in_array('users', $tables)) {
-        echo "<br><strong>בדיקת טבלת users:</strong><br>";
-        $count = $pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
-        echo "מספר משתמשים: " . $count . "<br>";
-        
-        // הצג מבנה הטבלה
-        echo "<br><strong>מבנה טבלת users:</strong><br>";
-        $columns = $pdo->query("SHOW COLUMNS FROM users")->fetchAll();
-        echo "<table border='1' style='border-collapse: collapse;'>";
-        echo "<tr><th>שם עמודה</th><th>סוג</th><th>Null</th><th>Key</th></tr>";
-        foreach ($columns as $col) {
-            echo "<tr>";
-            echo "<td>" . $col['Field'] . "</td>";
-            echo "<td>" . $col['Type'] . "</td>";
-            echo "<td>" . $col['Null'] . "</td>";
-            echo "<td>" . $col['Key'] . "</td>";
-            echo "</tr>";
-        }
-        echo "</table>";
-    }
-    
-    // בדוק טבלאות של הקבוצות
-    echo "<br><strong>בדיקת טבלאות קבוצות:</strong><br>";
-    $groupTables = ['purchase_groups', 'group_members', 'group_purchases', 'group_invitations'];
-    foreach ($groupTables as $table) {
-        if (in_array($table, $tables)) {
-            $count = $pdo->query("SELECT COUNT(*) FROM $table")->fetchColumn();
-            echo "✅ $table - $count רשומות<br>";
-        } else {
-            echo "❌ $table - לא קיימת<br>";
-        }
-    }
+    echo "MySQL Version: " . $version . "<br>";
     
 } catch (PDOException $e) {
-    echo "<span style='color: red; font-weight: bold;'>❌ החיבור נכשל!</span><br><br>";
-    echo "<strong>שגיאה:</strong><br>";
-    echo "<div style='background: #ffeeee; padding: 10px; border: 1px solid red;'>";
-    echo $e->getMessage();
-    echo "</div>";
-    
-    echo "<br><strong>פרטי החיבור שניסיתי:</strong><br>";
-    echo "Host: " . DB_HOST . "<br>";
-    echo "Port: " . DB_PORT . "<br>";
-    echo "Database: " . DB_NAME . "<br>";
-    echo "User: " . DB_USER . "<br>";
+    echo "<span style='color: red; font-weight: bold;'>❌ נכשל!</span><br>";
+    echo "שגיאה: " . $e->getMessage() . "<br>";
 }
-
 echo "</div>";
 
-echo "<h2>3. בדיקת PHP:</h2>";
+// ניסיון 2: חיבור עם הפורט בתוך ה-host
+echo "<h3>ניסיון 2 - פורט ב-HOST:</h3>";
+echo "<div style='background: #f0f0f0; padding: 10px; margin: 10px 0;'>";
+try {
+    $host_with_port = $env['DB_HOST'] . ":" . $env['PORT'];
+    $dsn = "mysql:host=" . $host_with_port . ";dbname=" . $env['DB_NAME'] . ";charset=utf8mb4";
+    echo "DSN: " . $dsn . "<br>";
+    
+    $pdo = new PDO($dsn, $env['DB_USER'], $env['DB_PASSWORD']);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
+    echo "<span style='color: green; font-weight: bold;'>✅ הצלחה!</span><br>";
+    $version = $pdo->query('SELECT VERSION()')->fetchColumn();
+    echo "MySQL Version: " . $version . "<br>";
+    
+} catch (PDOException $e) {
+    echo "<span style='color: red; font-weight: bold;'>❌ נכשל!</span><br>";
+    echo "שגיאה: " . $e->getMessage() . "<br>";
+}
+echo "</div>";
+
+// ניסיון 3: חיבור עם mysqli
+echo "<h3>ניסיון 3 - MySQLi:</h3>";
+echo "<div style='background: #f0f0f0; padding: 10px; margin: 10px 0;'>";
+$mysqli = @new mysqli($env['DB_HOST'], $env['DB_USER'], $env['DB_PASSWORD'], $env['DB_NAME'], $env['PORT']);
+
+if ($mysqli->connect_error) {
+    echo "<span style='color: red; font-weight: bold;'>❌ נכשל!</span><br>";
+    echo "שגיאה: " . $mysqli->connect_error . "<br>";
+} else {
+    echo "<span style='color: green; font-weight: bold;'>✅ הצלחה!</span><br>";
+    echo "MySQL Version: " . $mysqli->server_info . "<br>";
+    $mysqli->close();
+}
+echo "</div>";
+
+// ניסיון 4: בדיקת DNS
+echo "<h3>בדיקת DNS:</h3>";
+echo "<div style='background: #f0f0f0; padding: 10px; margin: 10px 0;'>";
+$ip = gethostbyname($env['DB_HOST']);
+echo "IP של " . $env['DB_HOST'] . ": " . $ip . "<br>";
+
+if ($ip === $env['DB_HOST']) {
+    echo "<span style='color: orange;'>⚠️ לא הצלחתי לפתור את כתובת ה-DNS</span><br>";
+} else {
+    echo "<span style='color: green;'>✅ DNS נפתר בהצלחה</span><br>";
+}
+echo "</div>";
+
+// ניסיון 5: בדיקת חיבור TCP
+echo "<h3>בדיקת חיבור TCP:</h3>";
+echo "<div style='background: #f0f0f0; padding: 10px; margin: 10px 0;'>";
+$connection = @fsockopen($env['DB_HOST'], $env['PORT'], $errno, $errstr, 5);
+if ($connection) {
+    echo "<span style='color: green;'>✅ פורט " . $env['PORT'] . " פתוח</span><br>";
+    fclose($connection);
+} else {
+    echo "<span style='color: red;'>❌ לא ניתן להתחבר לפורט " . $env['PORT'] . "</span><br>";
+    echo "שגיאה #$errno: $errstr<br>";
+}
+echo "</div>";
+
+// הצגת הגדרות PHP
+echo "<h3>הגדרות PHP:</h3>";
 echo "<div style='background: #f0f0f0; padding: 10px; margin: 10px 0;'>";
 echo "PHP Version: " . phpversion() . "<br>";
-echo "PDO MySQL: " . (extension_loaded('pdo_mysql') ? '✅ מותקן' : '❌ לא מותקן') . "<br>";
+echo "PDO: " . (extension_loaded('pdo') ? '✅' : '❌') . "<br>";
+echo "PDO MySQL: " . (extension_loaded('pdo_mysql') ? '✅' : '❌') . "<br>";
+echo "MySQLi: " . (extension_loaded('mysqli') ? '✅' : '❌') . "<br>";
 echo "</div>";
-
-echo "<h2>4. בדיקת קבצים:</h2>";
-echo "<div style='background: #f0f0f0; padding: 10px; margin: 10px 0;'>";
-$files = [
-    '.env' => __DIR__ . '/.env',
-    'config.php' => __DIR__ . '/config.php',
-    'dashboard.php' => __DIR__ . '/dashboard.php',
-    'auth/login.php' => __DIR__ . '/auth/login.php'
-];
-
-foreach ($files as $name => $path) {
-    if (file_exists($path)) {
-        echo "✅ $name - קיים<br>";
-    } else {
-        echo "❌ $name - לא נמצא<br>";
-    }
-}
-echo "</div>";
-
-echo "<br><hr><br>";
-echo "<a href='dashboard.php'>לדף הראשי</a> | ";
-echo "<a href='auth/login.php'>לדף התחברות</a> | ";
-echo "<a href='debug.php'>לדף דיבאג מלא</a>";
 
 echo "</div></body></html>";
 ?>

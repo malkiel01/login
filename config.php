@@ -43,7 +43,8 @@ define('DB_NAME', $_ENV['DB_NAME'] ?? 'database');
 define('DB_USER', $_ENV['DB_USER'] ?? 'root');
 define('DB_PASSWORD', $_ENV['DB_PASSWORD'] ?? '');
 define('DB_CHARSET', $_ENV['DB_CHARSET'] ?? 'utf8mb4');
-define('DB_PORT', $_ENV['PORT'] ?? '3306');
+// אל תשתמש בפורט 8080! זה לא פורט של MySQL
+// define('DB_PORT', $_ENV['PORT'] ?? '3306'); // <- מחק את זה!
 
 // הגדרות Google Auth
 define('GOOGLE_CLIENT_ID', $_ENV['CLIENT_ID'] ?? '');
@@ -69,13 +70,14 @@ if (ENVIRONMENT === 'development') {
     ini_set('display_errors', 0);
 }
 
-// פונקציית חיבור משופרת
+// פונקציית חיבור משופרת - בלי פורט!
 function getDBConnection() {
     static $pdo = null;
     
     if ($pdo === null) {
         try {
-            $dsn = "mysql:host=" . DB_HOST . ";port=" . DB_PORT . ";dbname=" . DB_NAME . ";charset=" . DB_CHARSET;
+            // חיבור בלי פורט - בדיוק כמו שעבד קודם!
+            $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=" . DB_CHARSET;
             
             $options = [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -122,3 +124,4 @@ function checkEnvFile() {
 if (ENVIRONMENT === 'development') {
     checkEnvFile();
 }
+?>

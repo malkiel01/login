@@ -1,23 +1,9 @@
 <?php
-// הצגת שגיאות לצורך דיבאג
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
-session_start();
-
-// בדיקת התחברות
-if (!isset($_SESSION['user_id'])) {
-    header('Location: ./auth/login.php');
-    exit;
-}
-
 // כולל את קובץ ההגדרות
 require_once 'config.php';
 
 // יצירת חיבור למסד נתונים
 $pdo = getDBConnection();
-$user_id = $_SESSION['user_id'];
 
 // טיפול בפעולות AJAX
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
@@ -25,15 +11,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     
     switch ($_POST['action']) {
         case 'addFamily':
-            $stmt = $pdo->prepare("INSERT INTO families (user_id, name, percent) VALUES (?, ?, ?)");
-            $result = $stmt->execute([$user_id, $_POST['name'], $_POST['percent']]);
+            $stmt = $pdo->prepare("INSERT INTO families (name, percent) VALUES (?, ?)");
+            $result = $stmt->execute([$_POST['name'], $_POST['percent']]);
             echo json_encode(['success' => $result]);
             exit;
             
         case 'deleteFamily':
-            // וידוא שהמשפחה שייכת למשתמש
-            $stmt = $pdo->prepare("DELETE FROM families WHERE id = ? AND user_id = ?");
-            $result = $stmt->execute([$_POST['id'], $user_id]);
+            $stmt = $pdo->prepare("DELETE FROM families WHERE id = ?");
+            $result = $stmt->execute([$_POST['id']]);
             echo json_encode(['success' => $result]);
             exit;
             
@@ -49,34 +34,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 move_uploaded_file($_FILES['image']['tmp_name'], $imagePath);
             }
             
-            $stmt = $pdo->prepare("INSERT INTO purchases (user_id, family_id, amount, description, image_path) VALUES (?, ?, ?, ?, ?)");
-            $result = $stmt->execute([$user_id, $_POST['family_id'], $_POST['amount'], $_POST['description'], $imagePath]);
+            $stmt = $pdo->prepare("INSERT INTO purchases (family_id, amount, description, image_path) VALUES (?, ?, ?, ?)");
+            $result = $stmt->execute([$_POST['family_id'], $_POST['amount'], $_POST['description'], $imagePath]);
             echo json_encode(['success' => $result]);
             exit;
             
         case 'deletePurchase':
-            // וידוא שהקנייה שייכת למשתמש
-            $stmt = $pdo->prepare("DELETE FROM purchases WHERE id = ? AND user_id = ?");
-            $result = $stmt->execute([$_POST['id'], $user_id]);
+            $stmt = $pdo->prepare("DELETE FROM purchases WHERE id = ?");
+            $result = $stmt->execute([$_POST['id']]);
             echo json_encode(['success' => $result]);
             exit;
     }
 }
 
-// שליפת נתונים מהמסד - רק של המשתמש המחובר
-$families = $pdo->prepare("SELECT * FROM families WHERE user_id = ? ORDER BY created_at DESC");
-$families->execute([$user_id]);
-$families = $families->fetchAll(PDO::FETCH_ASSOC);
-
-$purchases = $pdo->prepare("
+// שליפת נתונים מהמסד
+$families = $pdo->query("SELECT * FROM families ORDER BY created_at DESC")->fetchAll(PDO::FETCH_ASSOC);
+$purchases = $pdo->query("
     SELECT p.*, f.name as family_name 
     FROM purchases p 
     JOIN families f ON p.family_id = f.id 
-    WHERE p.user_id = ?
     ORDER BY p.created_at DESC
-");
-$purchases->execute([$user_id]);
-$purchases = $purchases->fetchAll(PDO::FETCH_ASSOC);
+")->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html dir="rtl" lang="he">
@@ -84,7 +62,6 @@ $purchases = $purchases->fetchAll(PDO::FETCH_ASSOC);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo SITE_NAME; ?></title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -96,99 +73,12 @@ $purchases = $purchases->fetchAll(PDO::FETCH_ASSOC);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding-top: 70px;
-        }
-        
-        /* Header Navigation */
-        .navbar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            z-index: 1000;
-            padding: 15px 0;
-        }
-        
-        .navbar-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 20px;
-        }
-        
-        .navbar-brand {
-            font-size: 20px;
-            font-weight: bold;
-            color: #667eea;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .navbar-user {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-        
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .user-avatar {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-        }
-        
-        .user-avatar img {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-        
-        .user-name {
-            font-weight: 600;
-            color: #333;
-        }
-        
-        .btn-logout {
-            background: #dc3545;
-            color: white;
-            padding: 8px 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: background 0.3s;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .btn-logout:hover {
-            background: #c82333;
+            padding: 20px;
         }
         
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
         }
         
         h1 {
@@ -389,34 +279,8 @@ $purchases = $purchases->fetchAll(PDO::FETCH_ASSOC);
     </style>
 </head>
 <body>
-    <!-- Navigation Bar -->
-    <nav class="navbar">
-        <div class="navbar-container">
-            <a href="index.php" class="navbar-brand">
-                <i class="fas fa-shopping-cart"></i>
-                <?php echo SITE_NAME; ?>
-            </a>
-            <div class="navbar-user">
-                <div class="user-info">
-                    <div class="user-avatar">
-                        <?php if (!empty($_SESSION['profile_picture'])): ?>
-                            <img src="<?php echo $_SESSION['profile_picture']; ?>" alt="Avatar">
-                        <?php else: ?>
-                            <?php echo mb_substr($_SESSION['name'], 0, 1); ?>
-                        <?php endif; ?>
-                    </div>
-                    <span class="user-name">שלום, <?php echo htmlspecialchars($_SESSION['name']); ?></span>
-                </div>
-                <a href="auth/logout.php" class="btn-logout">
-                    <i class="fas fa-sign-out-alt"></i>
-                    התנתק
-                </a>
-            </div>
-        </div>
-    </nav>
-
     <div class="container">
-        <h1>ניהול קניות משפחתיות</h1>
+        <h1><?php echo SITE_NAME; ?></h1>
         
         <div class="tabs">
             <button class="tab active" onclick="showTab('families', this)">הוספת משפחה</button>
@@ -645,7 +509,7 @@ $purchases = $purchases->fetchAll(PDO::FETCH_ASSOC);
             formData.append('name', document.getElementById('familyName').value);
             formData.append('percent', document.getElementById('familyPercent').value);
             
-            fetch('index2.php', {
+            fetch('index.php', {
                 method: 'POST',
                 body: formData
             })

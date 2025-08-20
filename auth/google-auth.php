@@ -22,9 +22,9 @@ if (!isset($data['credential'])) {
     exit;
 }
 
-try {
-    // Google Client ID - החלף לשלך!
-    $CLIENT_ID = '420537994881-gqiev5lqkp6gjj51l1arkjd5q09m5vv0.apps.googleusercontent.com';
+try {    
+    // משתמש ב-CLIENT_ID מה-ENV (דרך config.php)
+    $CLIENT_ID = GOOGLE_CLIENT_ID;
     
     // אימות הטוקן מול Google
     $id_token = $data['credential'];

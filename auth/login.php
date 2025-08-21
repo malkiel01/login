@@ -287,7 +287,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
         }
     </script>
     <script>
-        // הוסף את זה אחרי טעינת הדף
         window.onload = function() {
             // מצא את ה-container
             const container = document.querySelector('.login-body');
@@ -304,12 +303,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                     button.setAttribute('data-width', buttonWidth);
                 });
                 
-                // רענן את הכפתורים
+                // רענן את כל הכפתורים - כאן התיקון!
                 if (window.google && window.google.accounts) {
-                    window.google.accounts.id.renderButton(
-                        document.querySelector('.g_id_signin'),
-                        {width: buttonWidth}
-                    );
+                    googleButtons.forEach(button => {
+                        window.google.accounts.id.renderButton(
+                            button,  // עובר על כל כפתור בנפרד
+                            {width: buttonWidth}
+                        );
+                    });
                 }
             }
         };

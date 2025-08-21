@@ -86,9 +86,6 @@ function removeMember(memberId) {
     
     fetch('group.php?id=' + groupId, {
         method: 'POST',
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'  // חשוב! מזהה את הבקשה כ-AJAX
-        },
         body: formData
     })
     .then(response => response.json())
@@ -98,10 +95,6 @@ function removeMember(memberId) {
         } else {
             alert(data.message || 'שגיאה בהסרת המשתתף');
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('שגיאה בתקשורת עם השרת');
     });
 }
 
@@ -115,9 +108,6 @@ function cancelInvitation(invitationId) {
     
     fetch('group.php?id=' + groupId, {
         method: 'POST',
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        },
         body: formData
     })
     .then(response => response.json())
@@ -127,10 +117,6 @@ function cancelInvitation(invitationId) {
         } else {
             alert(data.message || 'שגיאה בביטול ההזמנה');
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('שגיאה בתקשורת עם השרת');
     });
 }
 
@@ -169,9 +155,6 @@ function deletePurchase(purchaseId) {
     
     fetch('group.php?id=' + groupId, {
         method: 'POST',
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        },
         body: formData
     })
     .then(response => response.json())
@@ -181,10 +164,6 @@ function deletePurchase(purchaseId) {
         } else {
             alert(data.message || 'שגיאה במחיקת הקנייה');
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('שגיאה בתקשורת עם השרת');
     });
 }
 
@@ -222,40 +201,20 @@ document.addEventListener('DOMContentLoaded', function() {
             formData.append('participation_type', participationType);
             formData.append('participation_value', participationValue);
             
-            // חשוב! הוספת header שמזהה את הבקשה כ-AJAX
             fetch('group.php?id=' + groupId, {
                 method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
                 body: formData
             })
-            .then(response => {
-                // בדיקה אם התגובה היא JSON
-                const contentType = response.headers.get("content-type");
-                if (contentType && contentType.indexOf("application/json") !== -1) {
-                    return response.json();
-                } else {
-                    throw new Error("לא התקבל JSON מהשרת");
-                }
-            })
+            .then(response => response.json())
             .then(data => {
                 if (data.success) {
                     if (data.reactivated) {
                         alert('המשתמש הופעל מחדש בהצלחה');
-                    } else if (data.invitation_sent) {
-                        alert('הזמנה נשלחה בהצלחה');
-                    } else {
-                        alert('המשתתף נוסף בהצלחה');
                     }
                     location.reload();
                 } else {
                     alert(data.message || 'שגיאה בהוספת המשתתף');
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('שגיאה בתקשורת עם השרת: ' + error.message);
             });
         });
     }
@@ -274,9 +233,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             fetch('group.php?id=' + groupId, {
                 method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
                 body: formData
             })
             .then(response => response.json())
@@ -286,10 +242,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     alert(data.message || 'שגיאה בעדכון המשתתף');
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('שגיאה בתקשורת עם השרת');
             });
         });
     }
@@ -319,9 +271,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             fetch('group.php?id=' + groupId, {
                 method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
                 body: formData
             })
             .then(response => response.json())
@@ -331,10 +280,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     alert(data.message || 'שגיאה בהוספת הקנייה');
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('שגיאה בתקשורת עם השרת');
             });
         });
     }

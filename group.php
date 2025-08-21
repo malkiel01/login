@@ -1,5 +1,63 @@
 <?php
+// התחלת session
 session_start();
+
+// בדיקה אם זו בקשת AJAX לפני כל בדיקה אחרת
+$is_ajax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+           strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+
+// אם זו בקשת AJAX עם action, טפל בה מיד
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    // לבקשות AJAX, אין צורך לבדוק דברים מסוימים
+    
+    // בדיקת התחברות בסיסית
+    if (!isset($_SESSION['user_id'])) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'לא מחובר למערכת']);
+        exit;
+    }
+    
+    // בדיקת ID קבוצה רק אם יש
+    $group_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+    if ($group_id <= 0) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'מזהה קבוצה לא תקין']);
+        exit;
+    }
+    
+    // טען את הקבצים הנדרשים
+    require_once 'config.php';
+    require_once 'includes/group_actions.php';
+    
+    $pdo = getDBConnection();
+    $user_id = $_SESSION['user_id'];
+    
+    // בדיקת הרשאות מהירה
+    $stmt = $pdo->prepare("
+        SELECT pg.owner_id, 
+               (pg.owner_id = ?) as is_owner
+        FROM purchase_groups pg
+        JOIN group_members gm ON pg.id = gm.group_id
+        WHERE pg.id = ? AND gm.user_id = ? AND gm.is_active = 1 AND pg.is_active = 1
+        LIMIT 1
+    ");
+    $stmt->execute([$user_id, $group_id, $user_id]);
+    $group_check = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if (!$group_check) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'אין הרשאה לקבוצה זו']);
+        exit;
+    }
+    
+    $is_owner = $group_check['is_owner'];
+    
+    // טיפול בפעולה
+    handleGroupActions($pdo, $group_id, $user_id, $is_owner);
+    exit; // יציאה מיידית אחרי טיפול ב-AJAX
+}
+
+// === מכאן זה רק עבור טעינת הדף הרגיל (לא AJAX) ===
 
 // בדיקת התחברות
 if (!isset($_SESSION['user_id'])) {
@@ -44,18 +102,16 @@ if (!$group) {
 $is_owner = $group['is_owner'];
 $member_id = $group['member_id'];
 
-// טיפול בפעולות AJAX - חשוב! צריך לצאת אחרי טיפול ב-AJAX
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    // handleGroupActions מחזיר true אם טיפל בבקשה
-    handleGroupActions($pdo, $group_id, $user_id, $is_owner);
-    exit; // חשוב! יציאה מיד אחרי טיפול ב-AJAX
-}
-
-// שליפת חברי הקבוצה המאושרים
+// שליפת חברי הקבוצה המאושרים - תיקון השאילתה
 $stmt = $pdo->prepare("
-    SELECT gm.*, u.name as user_name, u.profile_picture, u.email, 'active' as status
+    SELECT 
+        gm.*, 
+        COALESCE(u.name, gm.nickname) as user_name, 
+        u.profile_picture, 
+        COALESCE(u.email, gm.email) as email, 
+        'active' as status
     FROM group_members gm
-    JOIN users u ON gm.user_id = u.id
+    LEFT JOIN users u ON gm.user_id = u.id
     WHERE gm.group_id = ? AND gm.is_active = 1
     ORDER BY gm.joined_at
 ");
@@ -176,7 +232,7 @@ $totalAmount = array_sum(array_column($purchases, 'amount'));
                 <?php foreach ($members as $member): ?>
                 <div class="member-card">
                     <div class="member-avatar">
-                        <?php if ($member['profile_picture']): ?>
+                        <?php if (!empty($member['profile_picture'])): ?>
                             <img src="<?php echo $member['profile_picture']; ?>" alt="">
                         <?php else: ?>
                             <i class="fas fa-user"></i>
@@ -193,22 +249,19 @@ $totalAmount = array_sum(array_column($purchases, 'amount'));
                             <?php endif; ?>
                         </p>
                     </div>
-                    <?php if ($is_owner): ?>
+                    <?php if ($is_owner && $member['user_id'] != $group['owner_id']): ?>
                     <div class="member-actions">
                         <button class="btn-edit" onclick="editMember(<?php echo $member['id']; ?>, '<?php echo $member['participation_type']; ?>', <?php echo $member['participation_value']; ?>)" title="ערוך">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <?php if ($member['user_id'] != $group['owner_id']): ?>
                         <button class="btn-remove" onclick="removeMember(<?php echo $member['id']; ?>)" title="הסר">
                             <i class="fas fa-times"></i>
                         </button>
-                        <?php endif; ?>
                     </div>
                     <?php endif; ?>
                 </div>
                 <?php endforeach; ?>
                 
-                <?php // הצגת התראה אם חסרים אחוזים ?>
                 <?php if ($current_percentage < 100 && $current_percentage > 0): ?>
                 <div class="member-card warning">
                     <div class="member-avatar">
@@ -226,7 +279,6 @@ $totalAmount = array_sum(array_column($purchases, 'amount'));
                 </div>
                 <?php endif; ?>
                 
-                <?php // הצגת הזמנות ממתינות (רק למנהל) ?>
                 <?php foreach ($pending_invitations as $invitation): ?>
                 <div class="member-card pending">
                     <div class="member-avatar">

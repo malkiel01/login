@@ -2,58 +2,67 @@
 // התחלת session
 session_start();
 
-// בדיקה אם זו בקשת AJAX לפני כל בדיקה אחרת
-$is_ajax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
-           strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+// בדיקה אם זו בקשת AJAX - בדיקה ראשונה!
+$is_ajax = (
+    (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') ||
+    (isset($_POST['action']) && $_SERVER['REQUEST_METHOD'] === 'POST')
+);
 
 // אם זו בקשת AJAX עם action, טפל בה מיד
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    // לבקשות AJAX, אין צורך לבדוק דברים מסוימים
+if ($is_ajax && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    // הגדר headers ל-JSON
+    header('Content-Type: application/json; charset=utf-8');
     
     // בדיקת התחברות בסיסית
     if (!isset($_SESSION['user_id'])) {
-        header('Content-Type: application/json');
         echo json_encode(['success' => false, 'message' => 'לא מחובר למערכת']);
         exit;
     }
     
-    // בדיקת ID קבוצה רק אם יש
+    // בדיקת ID קבוצה
     $group_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
     if ($group_id <= 0) {
-        header('Content-Type: application/json');
         echo json_encode(['success' => false, 'message' => 'מזהה קבוצה לא תקין']);
         exit;
     }
     
     // טען את הקבצים הנדרשים
     require_once 'config.php';
-    require_once 'includes/group_actions.php';
     
-    $pdo = getDBConnection();
-    $user_id = $_SESSION['user_id'];
-    
-    // בדיקת הרשאות מהירה
-    $stmt = $pdo->prepare("
-        SELECT pg.owner_id, 
-               (pg.owner_id = ?) as is_owner
-        FROM purchase_groups pg
-        JOIN group_members gm ON pg.id = gm.group_id
-        WHERE pg.id = ? AND gm.user_id = ? AND gm.is_active = 1 AND pg.is_active = 1
-        LIMIT 1
-    ");
-    $stmt->execute([$user_id, $group_id, $user_id]);
-    $group_check = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    if (!$group_check) {
-        header('Content-Type: application/json');
-        echo json_encode(['success' => false, 'message' => 'אין הרשאה לקבוצה זו']);
-        exit;
+    try {
+        $pdo = getDBConnection();
+        $user_id = $_SESSION['user_id'];
+        
+        // בדיקת הרשאות מהירה
+        $stmt = $pdo->prepare("
+            SELECT pg.owner_id, 
+                   (pg.owner_id = ?) as is_owner
+            FROM purchase_groups pg
+            JOIN group_members gm ON pg.id = gm.group_id
+            WHERE pg.id = ? AND gm.user_id = ? AND gm.is_active = 1 AND pg.is_active = 1
+            LIMIT 1
+        ");
+        $stmt->execute([$user_id, $group_id, $user_id]);
+        $group_check = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$group_check) {
+            echo json_encode(['success' => false, 'message' => 'אין הרשאה לקבוצה זו']);
+            exit;
+        }
+        
+        $is_owner = $group_check['is_owner'];
+        
+        // טען את קובץ הפעולות
+        require_once 'includes/group_actions.php';
+        
+        // טיפול בפעולה
+        handleGroupActions($pdo, $group_id, $user_id, $is_owner);
+        
+    } catch (Exception $e) {
+        error_log("Group AJAX Error: " . $e->getMessage());
+        echo json_encode(['success' => false, 'message' => 'שגיאת שרת']);
     }
     
-    $is_owner = $group_check['is_owner'];
-    
-    // טיפול בפעולה
-    handleGroupActions($pdo, $group_id, $user_id, $is_owner);
     exit; // יציאה מיידית אחרי טיפול ב-AJAX
 }
 
@@ -95,6 +104,7 @@ $stmt->execute([$user_id, $group_id, $user_id]);
 $group = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$group) {
+    // אם אין הרשאה, חזור ל-dashboard
     header('Location: dashboard.php');
     exit;
 }
@@ -102,7 +112,7 @@ if (!$group) {
 $is_owner = $group['is_owner'];
 $member_id = $group['member_id'];
 
-// שליפת חברי הקבוצה המאושרים - תיקון השאילתה
+// שליפת חברי הקבוצה המאושרים
 $stmt = $pdo->prepare("
     SELECT 
         gm.*, 
@@ -381,7 +391,7 @@ $totalAmount = array_sum(array_column($purchases, 'amount'));
         const availablePercentage = <?php echo $available_percentage; ?>;
     </script>
     
-    <!-- JavaScript File -->
+    <!-- JavaScript File - השתמש בגרסה המתוקנת! -->
     <script src="js/group.js"></script>
 </body>
 </html>

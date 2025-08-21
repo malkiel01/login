@@ -392,6 +392,7 @@ $totalAmount = array_sum(array_column($purchases, 'amount'));
     </script>
     
     <!-- JavaScript File - השתמש בגרסה המתוקנת! -->
-    <script src="js/group.js"></script>
+    <!-- <script src="js/group.js"></script> -->
+    <script src="js/group_debug_detailed.js"></script>
 </body>
 </html>

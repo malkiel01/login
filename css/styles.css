@@ -37,14 +37,14 @@ body {
 
 .login-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    padding: 10px;
+    padding: 30px;
     text-align: center;
     color: white;
 }
 
 .login-header h1 {
-    font-size: 18px;
-    margin-bottom: 3px;
+    font-size: 28px;
+    margin-bottom: 10px;
 }
 
 .login-header p {

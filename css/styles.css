@@ -225,6 +225,14 @@ body {
     height: 20px;
 }
 
+.google-button-wrapper {
+    width: 100%;
+}
+
+.google-button-wrapper iframe {
+    width: 100% !important;
+}
+
 .alert {
     padding: 12px 15px;
     border-radius: 8px;

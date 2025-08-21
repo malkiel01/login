@@ -176,7 +176,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                             data-text="signup_with"
                             data-shape="rectangular"
                             data-logo_alignment="left"
-                            data-width="300">
+                            data-width="200">
                     </div>
                 </div>
                 

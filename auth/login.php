@@ -234,6 +234,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                      data-shape="rectangular"
                      data-logo_alignment="left">
                 </div>
+
+                <div class="google-button-wrapper">
+                    <div class="g_id_signin"
+                            data-type="standard"
+                            data-size="large"
+                            data-theme="outline"
+                            data-text="signup_with"
+                            data-shape="rectangular"
+                            data-logo_alignment="left">
+                    </div>
+                </div>
             </div>
         </div>
     </div>

@@ -66,9 +66,9 @@ body {
 }
 
 @media (max-width: 768px) {
-    .login-body {
+    /* .login-body {
         padding: 10px 30px;
-    }
+    } */
      .tab-container {
         /* display: flex; */
         /* margin-bottom: 10px; */

@@ -110,60 +110,62 @@ function addMember($pdo, $group_id, $user_id, $is_owner) {
         if ($existingMember) {
             if ($existingMember['is_active']) {
                 echo json_encode(['success' => false, 'message' => 'המשתמש כבר חבר פעיל בקבוצה']);
+                return;
             } else {
-                // הפעלה מחדש
+                // אם המשתמש היה חבר בעבר ועזב, נשלח לו הזמנה חדשה
+                // במקום להפעיל אותו אוטומטית
+                $token = bin2hex(random_bytes(32));
                 $stmt = $pdo->prepare("
-                    UPDATE group_members 
-                    SET is_active = 1, 
-                        nickname = ?, 
-                        participation_type = ?, 
-                        participation_value = ?,
-                        joined_at = NOW()
-                    WHERE id = ?
+                    INSERT INTO group_invitations (group_id, email, nickname, participation_type, participation_value, token, invited_by) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    ON DUPLICATE KEY UPDATE 
+                        nickname = VALUES(nickname),
+                        participation_type = VALUES(participation_type),
+                        participation_value = VALUES(participation_value),
+                        token = VALUES(token),
+                        status = 'pending',
+                        created_at = NOW()
                 ");
                 $result = $stmt->execute([
+                    $group_id,
+                    $email,
                     $nickname,
                     $participation_type,
                     $participation_value,
-                    $existingMember['id']
+                    $token,
+                    $user_id
                 ]);
-                echo json_encode(['success' => $result, 'reactivated' => true]);
+                echo json_encode([
+                    'success' => $result, 
+                    'invitation_sent' => true,
+                    'message' => 'הזמנה נשלחה למשתמש'
+                ]);
+                return;
             }
-        } else {
-            // הוסף משתמש חדש
-            $stmt = $pdo->prepare("
-                INSERT INTO group_members (group_id, user_id, nickname, email, participation_type, participation_value) 
-                VALUES (?, ?, ?, ?, ?, ?)
-            ");
-            $result = $stmt->execute([
-                $group_id, 
-                $user['id'], 
-                $nickname, 
-                $email,
-                $participation_type,
-                $participation_value
-            ]);
-            echo json_encode(['success' => $result]);
         }
-    } else {
-        // שלח הזמנה
-        $token = bin2hex(random_bytes(32));
-        $stmt = $pdo->prepare("
-            INSERT INTO group_invitations (group_id, email, nickname, participation_type, participation_value, token, invited_by) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ");
-        $result = $stmt->execute([
-            $group_id,
-            $email,
-            $nickname,
-            $participation_type,
-            $participation_value,
-            $token,
-            $user_id
-        ]);
-        
-        echo json_encode(['success' => $result, 'invitation_sent' => true]);
     }
+    
+    // תמיד שלח הזמנה - בין אם המשתמש קיים או לא
+    $token = bin2hex(random_bytes(32));
+    $stmt = $pdo->prepare("
+        INSERT INTO group_invitations (group_id, email, nickname, participation_type, participation_value, token, invited_by) 
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    ");
+    $result = $stmt->execute([
+        $group_id,
+        $email,
+        $nickname,
+        $participation_type,
+        $participation_value,
+        $token,
+        $user_id
+    ]);
+    
+    echo json_encode([
+        'success' => $result, 
+        'invitation_sent' => true,
+        'message' => 'הזמנה נשלחה למשתמש'
+    ]);
 }
 
 function removeMember($pdo, $group_id, $is_owner) {

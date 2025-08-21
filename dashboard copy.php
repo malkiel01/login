@@ -1,19 +1,21 @@
 <?php
-session_start();
+/**
+ * דף דשבורד מוגן
+ * dashboard.php
+ */
 
-// בדיקת התחברות
-if (!isset($_SESSION['user_id'])) {
-    header('Location: auth/login.php');
-    exit;
-}
-
+// בדיקת הרשאות
+require_once 'includes/auth_check.php';
 require_once 'config.php';
+
 $pdo = getDBConnection();
 $user_id = $_SESSION['user_id'];
 
 // טיפול ביצירת קבוצה חדשה
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     header('Content-Type: application/json');
+    
+    // בדיקת CSRF כבר נעשתה ב-auth_check.php
     
     switch ($_POST['action']) {
         case 'createGroup':
@@ -26,12 +28,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 if ($result) {
                     $group_id = $pdo->lastInsertId();
                     
-                    // בדיקת תקינות אחוזים
                     if ($_POST['participation_type'] == 'percentage' && $_POST['participation_value'] > 100) {
                         throw new Exception('לא ניתן להגדיר יותר מ-100% השתתפות');
                     }
                     
-                    // הוסף את היוצר כחבר עם ההגדרות שבחר
                     $stmt = $pdo->prepare("
                         INSERT INTO group_members (group_id, user_id, nickname, email, participation_type, participation_value) 
                         VALUES (?, ?, ?, ?, ?, ?)
@@ -57,7 +57,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             exit;
             
         case 'leaveGroup':
-            // בדיקה אם אין קניות פעילות
             $stmt = $pdo->prepare("
                 SELECT COUNT(*) FROM group_purchases gp
                 JOIN group_members gm ON gp.member_id = gm.id
@@ -78,14 +77,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $invitation_id = $_POST['invitation_id'];
             $response = $_POST['response'];
             
-            // קבל את פרטי ההזמנה
             $stmt = $pdo->prepare("SELECT * FROM group_invitations WHERE id = ? AND email = ?");
             $stmt->execute([$invitation_id, $_SESSION['email']]);
             $invitation = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if ($invitation) {
                 if ($response === 'accept') {
-                    // הוסף את המשתמש לקבוצה
                     $stmt = $pdo->prepare("
                         INSERT INTO group_members (group_id, user_id, nickname, email, participation_type, participation_value) 
                         VALUES (?, ?, ?, ?, ?, ?)
@@ -100,7 +97,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     ]);
                 }
                 
-                // עדכן סטטוס הזמנה
                 $stmt = $pdo->prepare("UPDATE group_invitations SET status = ?, responded_at = NOW() WHERE id = ?");
                 $stmt->execute([$response === 'accept' ? 'accepted' : 'rejected', $invitation_id]);
                 
@@ -298,6 +294,7 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <span class="close" onclick="closeCreateGroupModal()">&times;</span>
             </div>
             <form id="createGroupForm">
+                <?php echo csrf_field(); ?>
                 <div class="form-group">
                     <label for="groupName">שם הקבוצה:</label>
                     <input type="text" id="groupName" required>
@@ -339,32 +336,30 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </div>
 
     <script>
-        // פתיחת modal ליצירת קבוצה
+        // הוסף CSRF token לכל בקשות AJAX
+        const csrfToken = '<?php echo $_SESSION['csrf_token']; ?>';
+        
         function showCreateGroupModal() {
             document.getElementById('createGroupModal').style.display = 'block';
         }
         
-        // סגירת modal
         function closeCreateGroupModal() {
             document.getElementById('createGroupModal').style.display = 'none';
             document.getElementById('createGroupForm').reset();
         }
         
-        // החלפת סוג השתתפות של המנהל
         function toggleOwnerParticipationType() {
             const type = document.querySelector('input[name="ownerParticipationType"]:checked').value;
             const suffix = document.getElementById('ownerValueSuffix');
             suffix.textContent = type === 'percentage' ? '%' : '₪';
         }
         
-        // יצירת קבוצה חדשה
         document.getElementById('createGroupForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
             const participationType = document.querySelector('input[name="ownerParticipationType"]:checked').value;
             const participationValue = parseFloat(document.getElementById('ownerParticipationValue').value);
             
-            // בדיקת תקינות
             if (participationType === 'percentage' && participationValue > 100) {
                 alert('לא ניתן להגדיר יותר מ-100% השתתפות');
                 return;
@@ -381,9 +376,13 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
             formData.append('description', document.getElementById('groupDescription').value);
             formData.append('participation_type', participationType);
             formData.append('participation_value', participationValue);
+            formData.append('csrf_token', csrfToken);
             
             fetch('dashboard.php', {
                 method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
                 body: formData
             })
             .then(response => response.json())
@@ -396,16 +395,19 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
             });
         });
         
-        // עזיבת קבוצה
         function leaveGroup(groupId) {
             if (!confirm('האם אתה בטוח שברצונך לעזוב את הקבוצה?')) return;
             
             const formData = new FormData();
             formData.append('action', 'leaveGroup');
             formData.append('group_id', groupId);
+            formData.append('csrf_token', csrfToken);
             
             fetch('dashboard.php', {
                 method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
                 body: formData
             })
             .then(response => response.json())
@@ -418,15 +420,18 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
             });
         }
         
-        // מענה להזמנה
         function respondInvitation(invitationId, response) {
             const formData = new FormData();
             formData.append('action', 'respondInvitation');
             formData.append('invitation_id', invitationId);
             formData.append('response', response);
+            formData.append('csrf_token', csrfToken);
             
             fetch('dashboard.php', {
                 method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
                 body: formData
             })
             .then(response => response.json())
@@ -439,7 +444,6 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
             });
         }
         
-        // סגירת modal בלחיצה מחוץ לו
         window.onclick = function(event) {
             const modal = document.getElementById('createGroupModal');
             if (event.target == modal) {

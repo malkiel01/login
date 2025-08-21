@@ -3,37 +3,67 @@
 // טיפול בכל פעולות ה-AJAX של הקבוצה
 
 function handleGroupActions($pdo, $group_id, $user_id, $is_owner) {
-    header('Content-Type: application/json');
+    // וודא שה-header נשלח
+    if (!headers_sent()) {
+        header('Content-Type: application/json; charset=utf-8');
+    }
     
-    switch ($_POST['action']) {
-        case 'addMember':
-            return addMember($pdo, $group_id, $user_id, $is_owner);
-            
-        case 'removeMember':
-            return removeMember($pdo, $group_id, $is_owner);
-            
-        case 'editMember':
-            return editMember($pdo, $group_id, $is_owner);
-            
-        case 'cancelInvitation':
-            return cancelInvitation($pdo, $group_id, $is_owner);
-            
-        case 'addPurchase':
-            return addPurchase($pdo, $group_id, $user_id);
-            
-        case 'deletePurchase':
-            return deletePurchase($pdo, $group_id, $user_id, $is_owner);
+    $action = $_POST['action'] ?? '';
+    
+    try {
+        switch ($action) {
+            case 'addMember':
+                addMember($pdo, $group_id, $user_id, $is_owner);
+                break;
+                
+            case 'removeMember':
+                removeMember($pdo, $group_id, $is_owner);
+                break;
+                
+            case 'editMember':
+                editMember($pdo, $group_id, $is_owner);
+                break;
+                
+            case 'cancelInvitation':
+                cancelInvitation($pdo, $group_id, $is_owner);
+                break;
+                
+            case 'addPurchase':
+                addPurchase($pdo, $group_id, $user_id);
+                break;
+                
+            case 'deletePurchase':
+                deletePurchase($pdo, $group_id, $user_id, $is_owner);
+                break;
+                
+            default:
+                echo json_encode(['success' => false, 'message' => 'פעולה לא מוכרת']);
+        }
+    } catch (Exception $e) {
+        error_log("Group action error: " . $e->getMessage());
+        echo json_encode(['success' => false, 'message' => 'שגיאה: ' . $e->getMessage()]);
     }
 }
 
 function addMember($pdo, $group_id, $user_id, $is_owner) {
     if (!$is_owner) {
         echo json_encode(['success' => false, 'message' => 'אין הרשאה']);
-        return true;
+        return;
+    }
+    
+    $email = trim($_POST['email'] ?? '');
+    $nickname = trim($_POST['nickname'] ?? '');
+    $participation_type = $_POST['participation_type'] ?? 'percentage';
+    $participation_value = floatval($_POST['participation_value'] ?? 0);
+    
+    // בדיקת תקינות
+    if (empty($email) || empty($nickname)) {
+        echo json_encode(['success' => false, 'message' => 'יש למלא את כל השדות']);
+        return;
     }
     
     // בדיקת אחוזים קיימים
-    if ($_POST['participation_type'] == 'percentage') {
+    if ($participation_type == 'percentage') {
         $stmt = $pdo->prepare("
             SELECT SUM(participation_value) as total_percentage 
             FROM group_members 
@@ -42,30 +72,30 @@ function addMember($pdo, $group_id, $user_id, $is_owner) {
         $stmt->execute([$group_id]);
         $currentPercentage = $stmt->fetch()['total_percentage'] ?? 0;
         
-        if ($currentPercentage + $_POST['participation_value'] > 100) {
+        if ($currentPercentage + $participation_value > 100) {
             $available = 100 - $currentPercentage;
             echo json_encode([
                 'success' => false, 
                 'message' => "סכום האחוזים חורג מ-100%. נותרו $available% זמינים"
             ]);
-            return true;
+            return;
         }
     }
     
-    // בדיקה אם כבר קיימת הזמנה ממתינה לאימייל זה
+    // בדיקה אם כבר קיימת הזמנה ממתינה
     $stmt = $pdo->prepare("
         SELECT id FROM group_invitations 
         WHERE group_id = ? AND email = ? AND status = 'pending'
     ");
-    $stmt->execute([$group_id, $_POST['email']]);
+    $stmt->execute([$group_id, $email]);
     if ($stmt->fetch()) {
         echo json_encode(['success' => false, 'message' => 'כבר קיימת הזמנה ממתינה למשתמש זה']);
-        return true;
+        return;
     }
     
     // בדיקה אם המשתמש קיים במערכת
     $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
-    $stmt->execute([$_POST['email']]);
+    $stmt->execute([$email]);
     $user = $stmt->fetch();
     
     if ($user) {
@@ -81,7 +111,7 @@ function addMember($pdo, $group_id, $user_id, $is_owner) {
             if ($existingMember['is_active']) {
                 echo json_encode(['success' => false, 'message' => 'המשתמש כבר חבר פעיל בקבוצה']);
             } else {
-                // אם המשתמש לא פעיל, הפעל אותו מחדש עם הנתונים החדשים
+                // הפעלה מחדש
                 $stmt = $pdo->prepare("
                     UPDATE group_members 
                     SET is_active = 1, 
@@ -92,9 +122,9 @@ function addMember($pdo, $group_id, $user_id, $is_owner) {
                     WHERE id = ?
                 ");
                 $result = $stmt->execute([
-                    $_POST['nickname'],
-                    $_POST['participation_type'],
-                    $_POST['participation_value'],
+                    $nickname,
+                    $participation_type,
+                    $participation_value,
                     $existingMember['id']
                 ]);
                 echo json_encode(['success' => $result, 'reactivated' => true]);
@@ -108,10 +138,10 @@ function addMember($pdo, $group_id, $user_id, $is_owner) {
             $result = $stmt->execute([
                 $group_id, 
                 $user['id'], 
-                $_POST['nickname'], 
-                $_POST['email'],
-                $_POST['participation_type'],
-                $_POST['participation_value']
+                $nickname, 
+                $email,
+                $participation_type,
+                $participation_value
             ]);
             echo json_encode(['success' => $result]);
         }
@@ -124,62 +154,66 @@ function addMember($pdo, $group_id, $user_id, $is_owner) {
         ");
         $result = $stmt->execute([
             $group_id,
-            $_POST['email'],
-            $_POST['nickname'],
-            $_POST['participation_type'],
-            $_POST['participation_value'],
+            $email,
+            $nickname,
+            $participation_type,
+            $participation_value,
             $token,
             $user_id
         ]);
         
         echo json_encode(['success' => $result, 'invitation_sent' => true]);
     }
-    return true;
 }
 
 function removeMember($pdo, $group_id, $is_owner) {
     if (!$is_owner) {
         echo json_encode(['success' => false, 'message' => 'אין הרשאה']);
-        return true;
+        return;
     }
+    
+    $member_id = intval($_POST['member_id'] ?? 0);
     
     // בדיקה אם יש קניות פעילות
     $stmt = $pdo->prepare("SELECT COUNT(*) FROM group_purchases WHERE member_id = ?");
-    $stmt->execute([$_POST['member_id']]);
+    $stmt->execute([$member_id]);
     
     if ($stmt->fetchColumn() > 0) {
         echo json_encode(['success' => false, 'message' => 'לא ניתן למחוק חבר עם קניות פעילות']);
     } else {
         $stmt = $pdo->prepare("UPDATE group_members SET is_active = 0 WHERE id = ? AND group_id = ?");
-        $result = $stmt->execute([$_POST['member_id'], $group_id]);
+        $result = $stmt->execute([$member_id, $group_id]);
         echo json_encode(['success' => $result]);
     }
-    return true;
 }
 
 function editMember($pdo, $group_id, $is_owner) {
     if (!$is_owner) {
         echo json_encode(['success' => false, 'message' => 'אין הרשאה']);
-        return true;
+        return;
     }
     
-    // בדיקת אחוזים אם שינוי לאחוזים
-    if ($_POST['participation_type'] == 'percentage') {
+    $member_id = intval($_POST['member_id'] ?? 0);
+    $participation_type = $_POST['participation_type'] ?? 'percentage';
+    $participation_value = floatval($_POST['participation_value'] ?? 0);
+    
+    // בדיקת אחוזים
+    if ($participation_type == 'percentage') {
         $stmt = $pdo->prepare("
             SELECT SUM(participation_value) as total_percentage 
             FROM group_members 
             WHERE group_id = ? AND participation_type = 'percentage' AND is_active = 1 AND id != ?
         ");
-        $stmt->execute([$group_id, $_POST['member_id']]);
+        $stmt->execute([$group_id, $member_id]);
         $currentPercentage = $stmt->fetch()['total_percentage'] ?? 0;
         
-        if ($currentPercentage + $_POST['participation_value'] > 100) {
+        if ($currentPercentage + $participation_value > 100) {
             $available = 100 - $currentPercentage;
             echo json_encode([
                 'success' => false, 
                 'message' => "סכום האחוזים חורג מ-100%. נותרו $available% זמינים"
             ]);
-            return true;
+            return;
         }
     }
     
@@ -189,25 +223,25 @@ function editMember($pdo, $group_id, $is_owner) {
         WHERE id = ? AND group_id = ?
     ");
     $result = $stmt->execute([
-        $_POST['participation_type'],
-        $_POST['participation_value'],
-        $_POST['member_id'],
+        $participation_type,
+        $participation_value,
+        $member_id,
         $group_id
     ]);
     echo json_encode(['success' => $result]);
-    return true;
 }
 
 function cancelInvitation($pdo, $group_id, $is_owner) {
     if (!$is_owner) {
         echo json_encode(['success' => false, 'message' => 'אין הרשאה']);
-        return true;
+        return;
     }
     
+    $invitation_id = intval($_POST['invitation_id'] ?? 0);
+    
     $stmt = $pdo->prepare("UPDATE group_invitations SET status = 'expired' WHERE id = ? AND group_id = ?");
-    $result = $stmt->execute([$_POST['invitation_id'], $group_id]);
+    $result = $stmt->execute([$invitation_id, $group_id]);
     echo json_encode(['success' => $result]);
-    return true;
 }
 
 function addPurchase($pdo, $group_id, $user_id) {
@@ -217,7 +251,11 @@ function addPurchase($pdo, $group_id, $user_id) {
     $group = $stmt->fetch();
     $is_owner = ($group['owner_id'] == $user_id);
     
-    // אם המשתמש לא מנהל, וודא שהוא מוסיף קנייה רק בשם עצמו
+    $member_id = intval($_POST['member_id'] ?? 0);
+    $amount = floatval($_POST['amount'] ?? 0);
+    $description = $_POST['description'] ?? '';
+    
+    // אם לא מנהל, וודא שהוא מוסיף קנייה רק בשם עצמו
     if (!$is_owner) {
         $stmt = $pdo->prepare("
             SELECT id FROM group_members 
@@ -228,11 +266,10 @@ function addPurchase($pdo, $group_id, $user_id) {
         
         if (!$member) {
             echo json_encode(['success' => false, 'message' => 'אינך חבר פעיל בקבוצה']);
-            return true;
+            return;
         }
         
-        // החלף את ה-member_id למזהה של המשתמש עצמו
-        $_POST['member_id'] = $member['id'];
+        $member_id = $member['id'];
     }
     
     // טיפול בהעלאת תמונה
@@ -242,7 +279,7 @@ function addPurchase($pdo, $group_id, $user_id) {
         if (!file_exists($uploadDir)) {
             mkdir($uploadDir, 0777, true);
         }
-        $imagePath = $uploadDir . time() . '_' . $_FILES['image']['name'];
+        $imagePath = $uploadDir . time() . '_' . basename($_FILES['image']['name']);
         move_uploaded_file($_FILES['image']['tmp_name'], $imagePath);
     }
     
@@ -252,31 +289,31 @@ function addPurchase($pdo, $group_id, $user_id) {
     ");
     $result = $stmt->execute([
         $group_id,
-        $_POST['member_id'],
+        $member_id,
         $user_id,
-        $_POST['amount'],
-        $_POST['description'],
+        $amount,
+        $description,
         $imagePath
     ]);
     echo json_encode(['success' => $result]);
-    return true;
 }
 
 function deletePurchase($pdo, $group_id, $user_id, $is_owner) {
+    $purchase_id = intval($_POST['purchase_id'] ?? 0);
+    
     // בדיקת הרשאות - מנהל או בעל הקנייה
     $stmt = $pdo->prepare("SELECT user_id FROM group_purchases WHERE id = ? AND group_id = ?");
-    $stmt->execute([$_POST['purchase_id'], $group_id]);
+    $stmt->execute([$purchase_id, $group_id]);
     $purchase = $stmt->fetch();
     
     if (!$purchase) {
         echo json_encode(['success' => false, 'message' => 'קנייה לא נמצאה']);
     } elseif ($is_owner || $purchase['user_id'] == $user_id) {
         $stmt = $pdo->prepare("DELETE FROM group_purchases WHERE id = ?");
-        $result = $stmt->execute([$_POST['purchase_id']]);
+        $result = $stmt->execute([$purchase_id]);
         echo json_encode(['success' => $result]);
     } else {
         echo json_encode(['success' => false, 'message' => 'אין הרשאה למחוק קנייה זו']);
     }
-    return true;
 }
 ?>

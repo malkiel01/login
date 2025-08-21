@@ -44,16 +44,16 @@ if (!$group) {
 $is_owner = $group['is_owner'];
 $member_id = $group['member_id'];
 
-// טיפול בפעולות AJAX - חשוב! צריך לצאת אחרי טיפול ב-AJAX
+// טיפול בפעולות AJAX
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    // handleGroupActions מחזיר true אם טיפל בבקשה
-    handleGroupActions($pdo, $group_id, $user_id, $is_owner);
-    exit; // חשוב! יציאה מיד אחרי טיפול ב-AJAX
+    if (handleGroupActions($pdo, $group_id, $user_id, $is_owner)) {
+        exit;
+    }
 }
 
 // שליפת חברי הקבוצה המאושרים
 $stmt = $pdo->prepare("
-    SELECT gm.*, u.name as user_name, u.profile_picture, u.email, 'active' as status
+    SELECT gm.*, u.name as user_name, u.profile_picture, 'active' as status
     FROM group_members gm
     JOIN users u ON gm.user_id = u.id
     WHERE gm.group_id = ? AND gm.is_active = 1

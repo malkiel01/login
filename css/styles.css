@@ -232,7 +232,7 @@ body {
 
 .google-button-wrapper {
     border: 1px solid #3c3;
-    width: 100%;
+    min-width: 100%;
 }
 
 .google-button-wrapper iframe {

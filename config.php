@@ -50,7 +50,7 @@ define('DB_CHARSET', $_ENV['DB_CHARSET'] ?? 'utf8mb4');
 define('GOOGLE_CLIENT_ID', $_ENV['CLIENT_ID'] ?? '');
 
 // הגדרות כלליות
-define('SITE_NAME', 'מערכת ניהול קניות פנאן בפקאן 2025');
+define('SITE_NAME', 'מערכת ניהול קניות לאירועים משפחתיים');
 define('TIMEZONE', 'Asia/Jerusalem');
 define('CURRENCY_SYMBOL', '₪');
 

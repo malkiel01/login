@@ -316,7 +316,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
             const container = document.querySelector('.login-body');
             if (container) {
                 // חשב את הרוחב הפנימי (פחות padding)
-                const width = container.offsetWidth - 60; // 60 = padding משני הצדדים
+                const width = container.offsetWidth - 62; // 60 = padding משני הצדדים
                 
                 // הגבל למקסימום 400 (המגבלה של Google)
                 const buttonWidth = Math.min(width, 400);

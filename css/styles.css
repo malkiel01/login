@@ -59,21 +59,16 @@ body {
     padding: 40px 30px;
 }
 
+@media (max-width: 768px) {
+    .login-body {
+        padding: 10px 30px;
+    }
+}
+
 .tab-container {
     display: flex;
     margin-bottom: 30px;
     border-bottom: 2px solid #e0e0e0;
-}
-
-@media (max-width: 768px) {
-    /* .login-body {
-        padding: 10px 30px;
-    } */
-     .tab-container {
-        /* display: flex; */
-        /* margin-bottom: 10px; */
-        /* border-bottom: 2px solid #e0e0e0; */
-    }
 }
 
 .tab-btn {

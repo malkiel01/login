@@ -90,14 +90,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>התחברות - <?php echo SITE_NAME; ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- <link href="../css/styles.css" rel="stylesheet"> -->
+    <link href="../css/styles.css" rel="stylesheet">
     
     <!-- Google Sign-In API -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
     <div class="login-container">
-        <div class="login-header" style="1px solid green">
+        <div class="login-header" style="border: 1px solid red;">
             <h1><i class="fas fa-shopping-cart"></i> <?php echo SITE_NAME; ?>3</h1>
             <!-- <p>ברוכים הבאים למערכת ניהול הקניות המשפחתית</p> -->
         </div>

@@ -48,11 +48,7 @@ body {
     margin-bottom: 10px;
 }
 
-@media (max-width: 768px) {
-    .login-header h1 {
-    font-size: 18px;
-}
-}
+
 
 .login-header p {
     opacity: 0.9;
@@ -67,6 +63,14 @@ body {
     display: flex;
     margin-bottom: 30px;
     border-bottom: 2px solid #e0e0e0;
+}
+
+@media (max-width: 768px) {
+     .tab-container {
+        /* display: flex; */
+        margin-bottom: 10px;
+        /* border-bottom: 2px solid #e0e0e0; */
+    }
 }
 
 .tab-btn {

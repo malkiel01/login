@@ -66,14 +66,8 @@ body {
 }
 
 @media (max-width: 768px) {
-    .login-container {
-        /* background: white; */
-        /* border-radius: 20px; */
-        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        /* overflow: hidden; */
-        /* width: 100%; */
-        /* max-width: 450px; */
-        /* animation: slideIn 0.5s ease; */
+    .login-body {
+        padding: 10px 30px;
     }
      .tab-container {
         /* display: flex; */

@@ -1,7 +1,6 @@
-// js/group.js
-// כל ה-JavaScript של דף הקבוצה
+// js/group.js - גרסה סופית
 
-// פונקציית מעבר בין טאבים
+// פונקציות בסיסיות
 function showTab(tabName, element) {
     document.querySelectorAll('.content').forEach(content => {
         content.style.display = 'none';
@@ -14,7 +13,7 @@ function showTab(tabName, element) {
     element.classList.add('active');
 }
 
-// ניהול משתתפים - פונקציות למנהל בלבד
+// ניהול משתתפים
 function showAddMemberModal() {
     document.getElementById('addMemberModal').style.display = 'block';
     updatePercentageInfo();
@@ -87,7 +86,7 @@ function removeMember(memberId) {
     fetch('group.php?id=' + groupId, {
         method: 'POST',
         headers: {
-            'X-Requested-With': 'XMLHttpRequest'  // חשוב! מזהה את הבקשה כ-AJAX
+            'X-Requested-With': 'XMLHttpRequest'
         },
         body: formData
     })
@@ -142,22 +141,23 @@ function showAddPurchaseModal() {
 function closeAddPurchaseModal() {
     document.getElementById('addPurchaseModal').style.display = 'none';
     document.getElementById('addPurchaseForm').reset();
-    document.getElementById('imagePreview').style.display = 'none';
+    const preview = document.getElementById('imagePreview');
+    if (preview) {
+        preview.style.display = 'none';
+    }
 }
 
 function previewImage(event) {
     const file = event.target.files[0];
-    const reader = new FileReader();
+    if (!file) return;
     
+    const reader = new FileReader();
     reader.onload = function(e) {
         const preview = document.getElementById('imagePreview');
         preview.src = e.target.result;
         preview.style.display = 'block';
     };
-    
-    if (file) {
-        reader.readAsDataURL(file);
-    }
+    reader.readAsDataURL(file);
 }
 
 function deletePurchase(purchaseId) {
@@ -190,17 +190,24 @@ function deletePurchase(purchaseId) {
 
 // הצגת תמונה במודל
 function showImageModal(src) {
-    document.getElementById('modalImage').src = src;
-    document.getElementById('imageModal').style.display = 'block';
+    const modal = document.getElementById('imageModal');
+    const img = document.getElementById('modalImage');
+    if (modal && img) {
+        img.src = src;
+        modal.style.display = 'block';
+    }
 }
 
 function closeImageModal() {
-    document.getElementById('imageModal').style.display = 'none';
+    const modal = document.getElementById('imageModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
 }
 
 // אתחול Event Listeners
 document.addEventListener('DOMContentLoaded', function() {
-    // הוספת משתתף - רק למנהלים
+    // הוספת משתתף
     const addMemberForm = document.getElementById('addMemberForm');
     if (addMemberForm && isOwner) {
         addMemberForm.addEventListener('submit', function(e) {
@@ -222,7 +229,6 @@ document.addEventListener('DOMContentLoaded', function() {
             formData.append('participation_type', participationType);
             formData.append('participation_value', participationValue);
             
-            // חשוב! הוספת header שמזהה את הבקשה כ-AJAX
             fetch('group.php?id=' + groupId, {
                 method: 'POST',
                 headers: {
@@ -230,37 +236,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: formData
             })
-            .then(response => {
-                // בדיקה אם התגובה היא JSON
-                const contentType = response.headers.get("content-type");
-                if (contentType && contentType.indexOf("application/json") !== -1) {
-                    return response.json();
-                } else {
-                    throw new Error("לא התקבל JSON מהשרת");
-                }
-            })
+            .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    if (data.reactivated) {
-                        alert('המשתמש הופעל מחדש בהצלחה');
-                    } else if (data.invitation_sent) {
-                        alert('הזמנה נשלחה בהצלחה');
-                    } else {
-                        alert('המשתתף נוסף בהצלחה');
-                    }
+                    // רענון הדף בשקט אחרי הצלחה
                     location.reload();
                 } else {
+                    // הצגת הודעת שגיאה רק במקרה של כישלון
                     alert(data.message || 'שגיאה בהוספת המשתתף');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('שגיאה בתקשורת עם השרת: ' + error.message);
+                alert('שגיאה בתקשורת עם השרת');
             });
         });
     }
     
-    // עריכת משתתף - רק למנהלים
+    // עריכת משתתף
     const editMemberForm = document.getElementById('editMemberForm');
     if (editMemberForm && isOwner) {
         editMemberForm.addEventListener('submit', function(e) {
@@ -301,7 +294,7 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             
             const memberId = document.getElementById('purchaseMember').value;
-            if (!memberId) {
+            if (!memberId && isOwner) {
                 alert('יש לבחור משתתף');
                 return;
             }

@@ -22,6 +22,7 @@ body {
     width: 100%;
     max-width: 450px;
     animation: slideIn 0.5s ease;
+    border: 1px solid red;
 }
 
 @keyframes slideIn {

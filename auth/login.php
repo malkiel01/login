@@ -168,18 +168,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                      data-logo_alignment="left">
                 </div>
 
-                <div class="google-button-wrapper">
-                    <div class="g_id_signin"
-                            data-type="standard"
-                            data-size="large"
-                            data-theme="outline"
-                            data-text="signup_with"
-                            data-shape="rectangular"
-                            data-logo_alignment="left"
-                            data-width="250">
-                    </div>
-                </div>
-                
                 <div class="forgot-password">
                     <a href="#">שכחת סיסמה?</a>
                 </div>
@@ -246,17 +234,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                      data-shape="rectangular"
                      data-logo_alignment="left">
                 </div>
-
-                <div class="google-button-wrapper">
-                    <div class="g_id_signin"
-                            data-type="standard"
-                            data-size="large"
-                            data-theme="outline"
-                            data-text="signup_with"
-                            data-shape="rectangular"
-                            data-logo_alignment="left">
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -316,7 +293,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
             const container = document.querySelector('.login-body');
             if (container) {
                 // חשב את הרוחב הפנימי (פחות padding)
-                const width = container.offsetWidth - 65; // 60 = padding משני הצדדים
+                const width = container.offsetWidth - 60; // 60 = padding משני הצדדים
                 
                 // הגבל למקסימום 400 (המגבלה של Google)
                 const buttonWidth = Math.min(width, 400);

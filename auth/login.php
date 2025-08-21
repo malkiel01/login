@@ -309,5 +309,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
             });
         }
     </script>
+    <script>
+        // הוסף את זה אחרי טעינת הדף
+        window.onload = function() {
+            // מצא את ה-container
+            const container = document.querySelector('.login-body');
+            if (container) {
+                // חשב את הרוחב הפנימי (פחות padding)
+                const width = container.offsetWidth - 60; // 60 = padding משני הצדדים
+                
+                // הגבל למקסימום 400 (המגבלה של Google)
+                const buttonWidth = Math.min(width, 400);
+                
+                // עדכן את כל כפתורי Google
+                const googleButtons = document.querySelectorAll('.g_id_signin');
+                googleButtons.forEach(button => {
+                    button.setAttribute('data-width', buttonWidth);
+                });
+                
+                // רענן את הכפתורים
+                if (window.google && window.google.accounts) {
+                    window.google.accounts.id.renderButton(
+                        document.querySelector('.g_id_signin'),
+                        {width: buttonWidth}
+                    );
+                }
+            }
+        };
+    </script>
 </body>
 </html>

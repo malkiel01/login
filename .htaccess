@@ -11,8 +11,10 @@ RewriteRule ^service-worker\.js$ - [L]
 # אפשר גישה לתיקיית images
 RewriteRule ^images/.*\.(png|jpg|jpeg|gif|svg|ico)$ - [L]
 
-# אפשר גישה לדף הבדיקה
+# אפשר גישה לדפי בדיקה ספציפיים
 RewriteRule ^check-pwa\.php$ - [L]
+RewriteRule ^test-notifications\.php$ - [L]
+RewriteRule ^test-notifications-standalone\.php$ - [L]
 
 # אפשר גישה ל-offline.html
 RewriteRule ^offline\.html$ - [L]
@@ -34,9 +36,11 @@ RewriteRule ^offline\.html$ - [L]
 # חסימת גישה ישירה לקבצי PHP בתיקיות includes
 RewriteRule ^includes/.*\.php$ - [F,L]
 
-# חסימת גישה ישירה לקבצי דיבאג וטסט (חוץ מ-check-pwa)
+# חסימת גישה ישירה לקבצי דיבאג וטסט מסוכנים בלבד
+# אבל מאפשר את קבצי הבדיקה החשובים
 RewriteCond %{REQUEST_URI} !check-pwa\.php$
-RewriteRule ^(debug|test.*|find.*)\.php$ - [F,L]
+RewriteCond %{REQUEST_URI} !test-notifications.*\.php$
+RewriteRule ^(debug|find.*)\.php$ - [F,L]
 
 # הגדרת AJAX token check - מאפשר רק בקשות AJAX לקבצים מסוימים
 # אבל לא לבקשות GET רגילות

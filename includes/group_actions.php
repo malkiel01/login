@@ -275,6 +275,14 @@ function addMember($pdo, $group_id, $user_id, $is_owner) {
     $stmt->execute([$email]);
     $user = $stmt->fetch();
     
+    // טען את קובץ ההתראות פעם אחת בלבד!
+    $notificationFile = dirname(__DIR__) . '/api/send-push-notification.php';
+    $canSendNotification = false;
+    if (file_exists($notificationFile)) {
+        include_once $notificationFile;  // include_once במקום require_once
+        $canSendNotification = function_exists('notifyGroupInvitation');
+    }
+    
     if ($user) {
         // בדיקה אם כבר חבר בקבוצה
         $stmt = $pdo->prepare("
@@ -312,23 +320,15 @@ function addMember($pdo, $group_id, $user_id, $is_owner) {
                     $user_id
                 ]);
                 
-                // בדוק התראות ואז החזר תשובה
+                // בדוק התראות
                 $notificationSent = false;
-                if ($result) {
+                if ($result && $canSendNotification) {
                     $invitation_id = $pdo->lastInsertId();
-                    
-                    // נסה לשלוח התראה
-                    $notificationFile = dirname(__DIR__) . '/api/send-push-notification.php';
-                    if (file_exists($notificationFile)) {
-                        require_once $notificationFile;
-                        if (function_exists('notifyGroupInvitation')) {
-                            try {
-                                $notificationResult = notifyGroupInvitation($invitation_id);
-                                $notificationSent = $notificationResult && $notificationResult['success'];
-                            } catch (Exception $e) {
-                                // התעלם משגיאות
-                            }
-                        }
+                    try {
+                        $notificationResult = @notifyGroupInvitation($invitation_id);
+                        $notificationSent = $notificationResult && isset($notificationResult['success']) && $notificationResult['success'];
+                    } catch (Exception $e) {
+                        // התעלם
                     }
                 }
                 
@@ -337,7 +337,7 @@ function addMember($pdo, $group_id, $user_id, $is_owner) {
                     'invitation_sent' => true,
                     'notification_sent' => $notificationSent,
                     'message' => 'הזמנה נשלחה למשתמש' . ($notificationSent ? ' 🔔 והתראה נשלחה!' : ''),
-                    'show_popup' => true  // סימן להצגת פופאפ
+                    'show_popup' => true
                 ]);
                 return;
             }
@@ -360,48 +360,31 @@ function addMember($pdo, $group_id, $user_id, $is_owner) {
         $user_id
     ]);
     
-    // בדוק התראות לפני שליחת התגובה
+    // בדוק התראות
     $notificationSent = false;
-    $notificationDetails = [];
-    
-    if ($result && $user) {
+    if ($result && $user && $canSendNotification) {
         $invitation_id = $pdo->lastInsertId();
-        
-        // נסה לשלוח התראת Push
-        $notificationFile = dirname(__DIR__) . '/api/send-push-notification.php';
-        if (file_exists($notificationFile)) {
-            require_once $notificationFile;
+        try {
+            $notificationResult = @notifyGroupInvitation($invitation_id);
+            $notificationSent = $notificationResult && isset($notificationResult['success']) && $notificationResult['success'];
             
-            if (function_exists('notifyGroupInvitation')) {
-                try {
-                    $notificationResult = notifyGroupInvitation($invitation_id);
-                    
-                    if ($notificationResult && $notificationResult['success']) {
-                        $notificationSent = true;
-                        if (isset($notificationResult['queue_id'])) {
-                            $notificationDetails['queue_id'] = $notificationResult['queue_id'];
-                        }
-                        error_log("✅ Push notification sent for invitation ID: $invitation_id");
-                    } else {
-                        error_log("⚠️ Failed to send push notification for invitation ID: $invitation_id");
-                    }
-                } catch (Exception $e) {
-                    error_log("❌ Error sending notification: " . $e->getMessage());
-                }
+            if ($notificationSent) {
+                error_log("✅ Push notification sent for invitation ID: $invitation_id");
             }
+        } catch (Exception $e) {
+            error_log("❌ Error sending notification: " . $e->getMessage());
         }
     }
     
-    // שלח תגובה אחת עם כל הפרטים
+    // תגובה אחת ויחידה!
     echo json_encode([
         'success' => $result, 
         'invitation_sent' => true,
         'notification_sent' => $notificationSent,
         'message' => 'הזמנה נשלחה למשתמש' . ($notificationSent ? ' 🔔 והתראה נשלחה!' : ''),
-        'show_popup' => true,  // סימן להצגת פופאפ
+        'show_popup' => true,
         'details' => [
-            'user_exists' => ($user !== false),
-            'notification_details' => $notificationDetails
+            'user_exists' => ($user !== false)
         ]
     ]);
 }

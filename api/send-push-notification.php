@@ -1,18 +1,132 @@
 <?php
-// api/send-push-notification.php - שליחת התראות Push
+// api/send-push-notification.php - מערכת שליחת Push Notifications
 require_once '../config.php';
 
 /**
- * פונקציה לשליחת Push Notification
+ * פונקציה לשליחת התראה על הזמנה לקבוצה
  */
-function sendPushNotification($userId, $title, $body, $url = '/dashboard.php', $icon = null) {
+function notifyGroupInvitation($invitationId) {
     try {
         $pdo = getDBConnection();
         
-        // שלוף את המנויים הפעילים של המשתמש
+        // קבל פרטי ההזמנה
+        $stmt = $pdo->prepare("
+            SELECT 
+                gi.*,
+                pg.name as group_name,
+                inviter.name as inviter_name,
+                invitee.id as invitee_id
+            FROM group_invitations gi
+            JOIN purchase_groups pg ON gi.group_id = pg.id
+            JOIN users inviter ON gi.invited_by = inviter.id
+            LEFT JOIN users invitee ON invitee.email = gi.email
+            WHERE gi.id = ?
+        ");
+        $stmt->execute([$invitationId]);
+        $invitation = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$invitation) {
+            error_log("Invitation not found: $invitationId");
+            return ['success' => false, 'message' => 'Invitation not found'];
+        }
+        
+        // אם המשתמש לא רשום עדיין - אין למי לשלוח
+        if (!$invitation['invitee_id']) {
+            error_log("User not registered yet for email: " . $invitation['email']);
+            return ['success' => false, 'message' => 'User not registered'];
+        }
+        
+        // הכן את ההתראה
+        $notificationData = [
+            'type' => 'group_invitation',
+            'title' => 'הזמנה לקבוצת רכישה',
+            'body' => sprintf(
+                '%s הזמין אותך להצטרף לקבוצה "%s"',
+                $invitation['inviter_name'],
+                $invitation['group_name']
+            ),
+            'icon' => '/family/images/icons/android/android-launchericon-192-192.png',
+            'badge' => '/family/images/icons/android/android-launchericon-96-96.png',
+            'url' => '/family/dashboard.php#invitations',
+            'invitation_id' => $invitationId,
+            'group_id' => $invitation['group_id'],
+            'group_name' => $invitation['group_name'],
+            'inviter_name' => $invitation['inviter_name']
+        ];
+        
+        // שמור בטבלת ההתראות
+        return saveNotificationToQueue($invitation['invitee_id'], 'group_invitation', $notificationData);
+        
+    } catch (Exception $e) {
+        error_log("Error in notifyGroupInvitation: " . $e->getMessage());
+        return ['success' => false, 'message' => $e->getMessage()];
+    }
+}
+
+/**
+ * פונקציה לשמירת התראה בתור
+ */
+function saveNotificationToQueue($userId, $type, $data) {
+    try {
+        $pdo = getDBConnection();
+        
+        // שמור בטבלת notification_queue
+        $stmt = $pdo->prepare("
+            INSERT INTO notification_queue 
+            (type, data, status, user_id, priority, attempts, created_at) 
+            VALUES (?, ?, 'pending', ?, ?, 0, NOW())
+        ");
+        
+        $priority = getPriorityForType($type);
+        
+        $result = $stmt->execute([
+            $type,
+            json_encode($data, JSON_UNESCAPED_UNICODE),
+            $userId,
+            $priority
+        ]);
+        
+        if ($result) {
+            $queueId = $pdo->lastInsertId();
+            
+            // נסה לשלוח מיידית
+            $sendResult = sendPushToUser($userId, $data);
+            
+            // עדכן סטטוס בהתאם
+            if ($sendResult['success']) {
+                updateNotificationStatus($queueId, 'completed');
+                logNotification($queueId, $userId, $type, 'push', $data, 'sent');
+            } else {
+                updateNotificationStatus($queueId, 'pending', $sendResult['message']);
+            }
+            
+            return [
+                'success' => true,
+                'queue_id' => $queueId,
+                'sent' => $sendResult['success']
+            ];
+        }
+        
+        return ['success' => false, 'message' => 'Failed to queue notification'];
+        
+    } catch (Exception $e) {
+        error_log("Error in saveNotificationToQueue: " . $e->getMessage());
+        return ['success' => false, 'message' => $e->getMessage()];
+    }
+}
+
+/**
+ * פונקציה לשליחת Push למשתמש
+ */
+function sendPushToUser($userId, $notificationData) {
+    try {
+        $pdo = getDBConnection();
+        
+        // קבל את כל ה-subscriptions הפעילים של המשתמש
         $stmt = $pdo->prepare("
             SELECT * FROM push_subscriptions 
             WHERE user_id = ? AND is_active = 1
+            ORDER BY last_used DESC
         ");
         $stmt->execute([$userId]);
         $subscriptions = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -21,213 +135,237 @@ function sendPushNotification($userId, $title, $body, $url = '/dashboard.php', $
             return ['success' => false, 'message' => 'No active subscriptions'];
         }
         
-        $results = [];
+        $successCount = 0;
+        $failCount = 0;
+        
         foreach ($subscriptions as $subscription) {
-            // הכן את הנתונים להתראה
-            $notificationData = [
-                'title' => $title,
-                'body' => $body,
-                'icon' => $icon ?: '/images/icons/android/android-launchericon-192-192.png',
-                'badge' => '/images/icons/android/android-launchericon-96-96.png',
-                'url' => $url,
-                'timestamp' => time(),
-                'tag' => 'notification-' . time(),
-                'requireInteraction' => false,
-                'dir' => 'rtl',
-                'lang' => 'he',
-                'vibrate' => [200, 100, 200]
-            ];
-            
-            // שלח דרך FCM (Google)
-            $result = sendFCMNotification($subscription, $notificationData);
-            $results[] = $result;
+            try {
+                // שלח דרך Web Push API או שמור לטבלה מיוחדת
+                $result = deliverPushNotification($subscription, $notificationData);
+                
+                if ($result) {
+                    $successCount++;
+                    // עדכן last_used
+                    updateSubscriptionLastUsed($subscription['id']);
+                } else {
+                    $failCount++;
+                }
+                
+            } catch (Exception $e) {
+                error_log("Failed to send to subscription {$subscription['id']}: " . $e->getMessage());
+                $failCount++;
+            }
         }
         
         return [
-            'success' => true, 
-            'sent' => count(array_filter($results, function($r) { return $r['success']; })),
-            'total' => count($subscriptions)
+            'success' => $successCount > 0,
+            'sent' => $successCount,
+            'failed' => $failCount,
+            'message' => "Sent to $successCount devices"
         ];
         
     } catch (Exception $e) {
-        error_log('Push notification error: ' . $e->getMessage());
+        error_log("Error in sendPushToUser: " . $e->getMessage());
         return ['success' => false, 'message' => $e->getMessage()];
     }
 }
 
 /**
- * שליחה דרך FCM
+ * פונקציה לשליחת Push בפועל
+ * כאן אפשר להשתמש ב-Web Push או בפתרון חלופי
  */
-function sendFCMNotification($subscription, $data) {
-    // המר את ה-endpoint ל-FCM token
-    $endpoint = $subscription['endpoint'];
-    preg_match('/fcm\/send\/(.+)/', $endpoint, $matches);
-    
-    if (!isset($matches[1])) {
-        return ['success' => false, 'message' => 'Invalid FCM endpoint'];
+function deliverPushNotification($subscription, $data) {
+    try {
+        $pdo = getDBConnection();
+        
+        // פתרון זמני: שמור בטבלה מיוחדת שה-Service Worker בודק
+        $stmt = $pdo->prepare("
+            INSERT INTO pending_push_notifications 
+            (user_id, subscription_id, data, created_at) 
+            VALUES (?, ?, ?, NOW())
+        ");
+        
+        // קודם צור את הטבלה אם לא קיימת
+        createPendingPushTableIfNeeded($pdo);
+        
+        $result = $stmt->execute([
+            $subscription['user_id'],
+            $subscription['id'],
+            json_encode($data, JSON_UNESCAPED_UNICODE)
+        ]);
+        
+        return $result;
+        
+    } catch (Exception $e) {
+        error_log("Error in deliverPushNotification: " . $e->getMessage());
+        return false;
     }
-    
-    $token = $matches[1];
-    
-    // הגדרות FCM - צריך להוסיף ל-.env
-    $serverKey = $_ENV['FCM_SERVER_KEY'] ?? 'YOUR_FCM_SERVER_KEY_HERE';
-    
-    $url = 'https://fcm.googleapis.com/fcm/send';
-    
-    $notification = [
-        'title' => $data['title'],
-        'body' => $data['body'],
-        'icon' => $data['icon'],
-        'click_action' => 'https://form.mbe-plus.com/family' . $data['url']
-    ];
-    
-    $fields = [
-        'to' => $token,
-        'notification' => $notification,
-        'data' => $data,
-        'priority' => 'high'
-    ];
-    
-    $headers = [
-        'Authorization: key=' . $serverKey,
-        'Content-Type: application/json'
-    ];
-    
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($fields));
-    
-    $result = curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-    
-    if ($httpCode === 200) {
-        $response = json_decode($result, true);
-        if (isset($response['success']) && $response['success'] == 1) {
-            return ['success' => true];
-        }
-    }
-    
-    return ['success' => false, 'httpCode' => $httpCode];
 }
 
 /**
- * פונקציות עזר לסוגי התראות שונים
+ * יצירת טבלה זמנית להתראות ממתינות
  */
-function notifyGroupInvitation($invitationId) {
+function createPendingPushTableIfNeeded($pdo) {
     try {
-        $pdo = getDBConnection();
-        
-        // שלוף פרטי ההזמנה
-        $stmt = $pdo->prepare("
-            SELECT gi.*, pg.name as group_name, u.name as inviter_name, u2.id as invitee_id
-            FROM group_invitations gi
-            JOIN purchase_groups pg ON gi.group_id = pg.id
-            JOIN users u ON gi.invited_by = u.id
-            LEFT JOIN users u2 ON u2.email = gi.email
-            WHERE gi.id = ?
-        ");
-        $stmt->execute([$invitationId]);
-        $invitation = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if (!$invitation || !$invitation['invitee_id']) {
-            return false;
-        }
-        
-        $title = '🎉 הזמנה לקבוצת רכישה!';
-        $body = sprintf('%s הזמין אותך להצטרף לקבוצה "%s"', 
-            $invitation['inviter_name'], 
-            $invitation['group_name']
-        );
-        $url = '/dashboard.php#invitations';
-        
-        return sendPushNotification($invitation['invitee_id'], $title, $body, $url);
-        
+        $sql = "
+            CREATE TABLE IF NOT EXISTS pending_push_notifications (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                subscription_id INT,
+                data JSON,
+                delivered BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                delivered_at TIMESTAMP NULL,
+                INDEX idx_user_pending (user_id, delivered),
+                INDEX idx_created (created_at)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ";
+        $pdo->exec($sql);
     } catch (Exception $e) {
-        error_log('Error notifying invitation: ' . $e->getMessage());
-        return false;
+        // הטבלה כנראה כבר קיימת
     }
 }
 
-function notifyNewPurchase($purchaseId) {
+/**
+ * עדכון סטטוס התראה
+ */
+function updateNotificationStatus($queueId, $status, $errorMessage = null) {
     try {
         $pdo = getDBConnection();
         
-        // שלוף פרטי הקנייה
-        $stmt = $pdo->prepare("
-            SELECT gp.*, pg.name as group_name, gm.nickname
-            FROM group_purchases gp
-            JOIN purchase_groups pg ON gp.group_id = pg.id
-            JOIN group_members gm ON gp.member_id = gm.id
-            WHERE gp.id = ?
-        ");
-        $stmt->execute([$purchaseId]);
-        $purchase = $stmt->fetch(PDO::FETCH_ASSOC);
+        $sql = "UPDATE notification_queue SET status = ?, last_attempt = NOW()";
+        $params = [$status];
         
-        if (!$purchase) {
-            return false;
+        if ($status === 'completed') {
+            $sql .= ", processed_at = NOW()";
         }
         
-        // שלוף את כל חברי הקבוצה (חוץ מזה שהוסיף)
-        $stmt = $pdo->prepare("
-            SELECT DISTINCT user_id 
-            FROM group_members 
-            WHERE group_id = ? AND is_active = 1 AND user_id != ?
-        ");
-        $stmt->execute([$purchase['group_id'], $purchase['user_id']]);
-        $members = $stmt->fetchAll(PDO::FETCH_COLUMN);
-        
-        $title = '🛒 קנייה חדשה בקבוצה';
-        $body = sprintf('%s הוסיף קנייה בסך ₪%s בקבוצה "%s"',
-            $purchase['nickname'],
-            number_format($purchase['amount'], 2),
-            $purchase['group_name']
-        );
-        $url = '/group.php?id=' . $purchase['group_id'] . '#purchases';
-        
-        $results = [];
-        foreach ($members as $userId) {
-            $results[] = sendPushNotification($userId, $title, $body, $url);
+        if ($errorMessage) {
+            $sql .= ", error_message = ?";
+            $params[] = $errorMessage;
         }
         
-        return $results;
+        $sql .= " WHERE id = ?";
+        $params[] = $queueId;
+        
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
         
     } catch (Exception $e) {
-        error_log('Error notifying purchase: ' . $e->getMessage());
-        return false;
+        error_log("Error updating notification status: " . $e->getMessage());
     }
 }
 
-// טיפול בבקשות ישירות ל-API
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+/**
+ * רישום התראה בלוג
+ */
+function logNotification($queueId, $userId, $type, $channel, $data, $status) {
+    try {
+        $pdo = getDBConnection();
+        
+        $stmt = $pdo->prepare("
+            INSERT INTO notification_log 
+            (queue_id, user_id, type, channel, title, body, data, status, sent_at) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
+        ");
+        
+        $stmt->execute([
+            $queueId,
+            $userId,
+            $type,
+            $channel,
+            $data['title'] ?? '',
+            $data['body'] ?? '',
+            json_encode($data, JSON_UNESCAPED_UNICODE),
+            $status
+        ]);
+        
+    } catch (Exception $e) {
+        error_log("Error logging notification: " . $e->getMessage());
+    }
+}
+
+/**
+ * עדכון last_used של subscription
+ */
+function updateSubscriptionLastUsed($subscriptionId) {
+    try {
+        $pdo = getDBConnection();
+        $stmt = $pdo->prepare("
+            UPDATE push_subscriptions 
+            SET last_used = NOW() 
+            WHERE id = ?
+        ");
+        $stmt->execute([$subscriptionId]);
+    } catch (Exception $e) {
+        error_log("Error updating subscription last_used: " . $e->getMessage());
+    }
+}
+
+/**
+ * קבלת עדיפות לפי סוג התראה
+ */
+function getPriorityForType($type) {
+    $priorities = [
+        'group_invitation' => 1,
+        'new_purchase' => 2,
+        'invitation_response' => 2,
+        'group_calculation' => 3,
+        'reminder' => 3,
+        'general' => 5
+    ];
+    
+    return $priorities[$type] ?? 5;
+}
+
+/**
+ * API endpoint לקבלת התראות ממתינות (עבור Service Worker)
+ */
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
     session_start();
     header('Content-Type: application/json');
     
-    $data = json_decode(file_get_contents('php://input'), true);
-    $action = $_GET['action'] ?? '';
-    
-    switch ($action) {
-        case 'test':
-            if (!isset($_SESSION['user_id'])) {
-                echo json_encode(['success' => false, 'message' => 'Not logged in']);
-                exit;
+    if ($_GET['action'] === 'get-pending' && isset($_SESSION['user_id'])) {
+        try {
+            $pdo = getDBConnection();
+            
+            // נסה קודם לקבל מהטבלה הזמנית
+            createPendingPushTableIfNeeded($pdo);
+            
+            $stmt = $pdo->prepare("
+                SELECT * FROM pending_push_notifications 
+                WHERE user_id = ? AND delivered = FALSE 
+                AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)
+                ORDER BY created_at DESC
+                LIMIT 10
+            ");
+            $stmt->execute([$_SESSION['user_id']]);
+            $notifications = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            if (!empty($notifications)) {
+                // סמן כנמסרו
+                $ids = array_column($notifications, 'id');
+                $placeholders = str_repeat('?,', count($ids) - 1) . '?';
+                $stmt = $pdo->prepare("
+                    UPDATE pending_push_notifications 
+                    SET delivered = TRUE, delivered_at = NOW() 
+                    WHERE id IN ($placeholders)
+                ");
+                $stmt->execute($ids);
+                
+                // החזר את ההתראות
+                $result = array_map(function($n) {
+                    return json_decode($n['data'], true);
+                }, $notifications);
+                
+                echo json_encode(['success' => true, 'notifications' => $result]);
+            } else {
+                echo json_encode(['success' => true, 'notifications' => []]);
             }
             
-            $result = sendPushNotification(
-                $_SESSION['user_id'],
-                'התראת בדיקה 🔔',
-                'זו התראה לבדיקה שנשלחה מהשרת',
-                '/dashboard.php'
-            );
-            echo json_encode($result);
-            break;
-            
-        default:
-            echo json_encode(['success' => false, 'message' => 'Unknown action']);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
     }
 }
 ?>

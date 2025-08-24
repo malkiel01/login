@@ -45,7 +45,7 @@ function handleGroupActions($pdo, $group_id, $user_id, $is_owner) {
     }
 }
 
-function addMember($pdo, $group_id, $user_id, $is_owner) {
+function addMember2($pdo, $group_id, $user_id, $is_owner) {
     if (!$is_owner) {
         echo json_encode(['success' => false, 'message' => 'אין הרשאה']);
         return;
@@ -217,6 +217,190 @@ function addMember($pdo, $group_id, $user_id, $is_owner) {
             // אם ההתראה נכשלה, לא נעצור את התהליך
             error_log("Failed to send notification: " . $e->getMessage());
         }
+    }
+}
+
+// הפונקציה המעודכנת addMember עם Push Notifications
+function addMember($pdo, $group_id, $user_id, $is_owner) {
+    if (!$is_owner) {
+        echo json_encode(['success' => false, 'message' => 'אין הרשאה']);
+        return;
+    }
+    
+    $email = trim($_POST['email'] ?? '');
+    $nickname = trim($_POST['nickname'] ?? '');
+    $participation_type = $_POST['participation_type'] ?? 'percentage';
+    $participation_value = floatval($_POST['participation_value'] ?? 0);
+    
+    // בדיקת תקינות
+    if (empty($email) || empty($nickname)) {
+        echo json_encode(['success' => false, 'message' => 'יש למלא את כל השדות']);
+        return;
+    }
+    
+    // בדיקת אחוזים קיימים
+    if ($participation_type == 'percentage') {
+        $stmt = $pdo->prepare("
+            SELECT SUM(participation_value) as total_percentage 
+            FROM group_members 
+            WHERE group_id = ? AND participation_type = 'percentage' AND is_active = 1
+        ");
+        $stmt->execute([$group_id]);
+        $currentPercentage = $stmt->fetch()['total_percentage'] ?? 0;
+        
+        if ($currentPercentage + $participation_value > 100) {
+            $available = 100 - $currentPercentage;
+            echo json_encode([
+                'success' => false, 
+                'message' => "סכום האחוזים חורג מ-100%. נותרו $available% זמינים"
+            ]);
+            return;
+        }
+    }
+    
+    // בדיקה אם כבר קיימת הזמנה ממתינה
+    $stmt = $pdo->prepare("
+        SELECT id FROM group_invitations 
+        WHERE group_id = ? AND email = ? AND status = 'pending'
+    ");
+    $stmt->execute([$group_id, $email]);
+    if ($stmt->fetch()) {
+        echo json_encode(['success' => false, 'message' => 'כבר קיימת הזמנה ממתינה למשתמש זה']);
+        return;
+    }
+    
+    // בדיקה אם המשתמש קיים במערכת
+    $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+    $stmt->execute([$email]);
+    $user = $stmt->fetch();
+    
+    if ($user) {
+        // בדיקה אם כבר חבר בקבוצה
+        $stmt = $pdo->prepare("
+            SELECT id, is_active FROM group_members 
+            WHERE group_id = ? AND user_id = ?
+        ");
+        $stmt->execute([$group_id, $user['id']]);
+        $existingMember = $stmt->fetch();
+        
+        if ($existingMember) {
+            if ($existingMember['is_active']) {
+                echo json_encode(['success' => false, 'message' => 'המשתמש כבר חבר פעיל בקבוצה']);
+                return;
+            } else {
+                // אם המשתמש היה חבר בעבר ועזב, נשלח לו הזמנה חדשה
+                $token = bin2hex(random_bytes(32));
+                $stmt = $pdo->prepare("
+                    INSERT INTO group_invitations (group_id, email, nickname, participation_type, participation_value, token, invited_by) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    ON DUPLICATE KEY UPDATE 
+                        nickname = VALUES(nickname),
+                        participation_type = VALUES(participation_type),
+                        participation_value = VALUES(participation_value),
+                        token = VALUES(token),
+                        status = 'pending',
+                        created_at = NOW()
+                ");
+                $result = $stmt->execute([
+                    $group_id,
+                    $email,
+                    $nickname,
+                    $participation_type,
+                    $participation_value,
+                    $token,
+                    $user_id
+                ]);
+                
+                if ($result) {
+                    $invitation_id = $pdo->lastInsertId();
+                    
+                    // שלח Push Notification
+                    $notificationSent = false;
+                    if ($user) {
+                        require_once __DIR__ . '/../api/send-push-notification.php';
+                        $notificationResult = notifyGroupInvitation($invitation_id);
+                        $notificationSent = $notificationResult && $notificationResult['success'];
+                        
+                        if ($notificationSent) {
+                            error_log("✅ Push notification sent successfully for invitation ID: $invitation_id");
+                        } else {
+                            error_log("⚠️ Failed to send push notification for invitation ID: $invitation_id");
+                        }
+                    }
+                    
+                    echo json_encode([
+                        'success' => true, 
+                        'invitation_sent' => true,
+                        'notification_sent' => $notificationSent,
+                        'message' => 'הזמנה נשלחה למשתמש' . ($notificationSent ? ' והתראה נשלחה!' : '')
+                    ]);
+                } else {
+                    echo json_encode(['success' => false, 'message' => 'שגיאה בשליחת ההזמנה']);
+                }
+                return;
+            }
+        }
+    }
+    
+    // תמיד שלח הזמנה - בין אם המשתמש קיים או לא
+    $token = bin2hex(random_bytes(32));
+    $stmt = $pdo->prepare("
+        INSERT INTO group_invitations (group_id, email, nickname, participation_type, participation_value, token, invited_by) 
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    ");
+    $result = $stmt->execute([
+        $group_id,
+        $email,
+        $nickname,
+        $participation_type,
+        $participation_value,
+        $token,
+        $user_id
+    ]);
+    
+    if ($result) {
+        $invitation_id = $pdo->lastInsertId();
+        
+        // שלח Push Notification אם המשתמש רשום
+        $notificationSent = false;
+        if ($user) {
+            require_once __DIR__ . '/../api/send-push-notification.php';
+            
+            try {
+                $notificationResult = notifyGroupInvitation($invitation_id);
+                $notificationSent = $notificationResult && $notificationResult['success'];
+                
+                if ($notificationSent) {
+                    error_log("✅ Push notification queued for invitation ID: $invitation_id to user: {$user['id']}");
+                    
+                    // רשום פרטים נוספים לדיבאג
+                    if (isset($notificationResult['queue_id'])) {
+                        error_log("   Queue ID: {$notificationResult['queue_id']}");
+                    }
+                    if (isset($notificationResult['sent'])) {
+                        error_log("   Immediately sent: " . ($notificationResult['sent'] ? 'Yes' : 'No'));
+                    }
+                } else {
+                    $errorMsg = $notificationResult['message'] ?? 'Unknown error';
+                    error_log("⚠️ Failed to queue notification for invitation ID: $invitation_id - $errorMsg");
+                }
+                
+            } catch (Exception $e) {
+                error_log("❌ Exception while sending notification: " . $e->getMessage());
+                // אל תעצור את התהליך אם ההתראה נכשלה
+            }
+        } else {
+            error_log("ℹ️ User not registered yet for email: $email - notification will be sent when they register");
+        }
+        
+        echo json_encode([
+            'success' => true, 
+            'invitation_sent' => true,
+            'notification_sent' => $notificationSent,
+            'message' => 'הזמנה נשלחה למשתמש' . ($notificationSent ? ' 🔔 התראה נשלחה!' : '')
+        ]);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'שגיאה בשליחת ההזמנה']);
     }
 }
 

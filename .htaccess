@@ -19,6 +19,7 @@ RewriteRule ^process_notifications\.php$ - [L]
 RewriteRule ^setup_notifications\.php$ - [L]
 RewriteRule ^test-email-debug\.php$ - [L]
 RewriteRule ^setup-phpmailer.*\.php$ - [L]
+
 RewriteRule ^test-notification.*\.php$ - [L]
 
 # אפשר גישה ל-offline.html

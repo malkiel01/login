@@ -290,7 +290,6 @@ function addMember($pdo, $group_id, $user_id, $is_owner) {
                 return;
             } else {
                 // אם המשתמש היה חבר בעבר ועזב, נשלח לו הזמנה חדשה
-                // במקום להפעיל אותו אוטומטית
                 $token = bin2hex(random_bytes(32));
                 $stmt = $pdo->prepare("
                     INSERT INTO group_invitations (group_id, email, nickname, participation_type, participation_value, token, invited_by) 
@@ -312,10 +311,33 @@ function addMember($pdo, $group_id, $user_id, $is_owner) {
                     $token,
                     $user_id
                 ]);
+                
+                // בדוק התראות ואז החזר תשובה
+                $notificationSent = false;
+                if ($result) {
+                    $invitation_id = $pdo->lastInsertId();
+                    
+                    // נסה לשלוח התראה
+                    $notificationFile = dirname(__DIR__) . '/api/send-push-notification.php';
+                    if (file_exists($notificationFile)) {
+                        require_once $notificationFile;
+                        if (function_exists('notifyGroupInvitation')) {
+                            try {
+                                $notificationResult = notifyGroupInvitation($invitation_id);
+                                $notificationSent = $notificationResult && $notificationResult['success'];
+                            } catch (Exception $e) {
+                                // התעלם משגיאות
+                            }
+                        }
+                    }
+                }
+                
                 echo json_encode([
                     'success' => $result, 
                     'invitation_sent' => true,
-                    'message' => 'הזמנה נשלחה למשתמש'
+                    'notification_sent' => $notificationSent,
+                    'message' => 'הזמנה נשלחה למשתמש' . ($notificationSent ? ' 🔔 והתראה נשלחה!' : ''),
+                    'show_popup' => true  // סימן להצגת פופאפ
                 ]);
                 return;
             }
@@ -338,18 +360,14 @@ function addMember($pdo, $group_id, $user_id, $is_owner) {
         $user_id
     ]);
     
-    // ==== כאן רק נשלח JSON ונצא! ====
-    echo json_encode([
-        'success' => $result, 
-        'invitation_sent' => true,
-        'message' => 'הזמנה נשלחה למשתמש'
-    ]);
+    // בדוק התראות לפני שליחת התגובה
+    $notificationSent = false;
+    $notificationDetails = [];
     
-    // ==== אחרי שהחזרנו תגובה, נשלח התראה ברקע ====
     if ($result && $user) {
         $invitation_id = $pdo->lastInsertId();
         
-        // נסה לשלוח התראת Push ברקע
+        // נסה לשלוח התראת Push
         $notificationFile = dirname(__DIR__) . '/api/send-push-notification.php';
         if (file_exists($notificationFile)) {
             require_once $notificationFile;
@@ -359,6 +377,10 @@ function addMember($pdo, $group_id, $user_id, $is_owner) {
                     $notificationResult = notifyGroupInvitation($invitation_id);
                     
                     if ($notificationResult && $notificationResult['success']) {
+                        $notificationSent = true;
+                        if (isset($notificationResult['queue_id'])) {
+                            $notificationDetails['queue_id'] = $notificationResult['queue_id'];
+                        }
                         error_log("✅ Push notification sent for invitation ID: $invitation_id");
                     } else {
                         error_log("⚠️ Failed to send push notification for invitation ID: $invitation_id");
@@ -369,8 +391,20 @@ function addMember($pdo, $group_id, $user_id, $is_owner) {
             }
         }
     }
+    
+    // שלח תגובה אחת עם כל הפרטים
+    echo json_encode([
+        'success' => $result, 
+        'invitation_sent' => true,
+        'notification_sent' => $notificationSent,
+        'message' => 'הזמנה נשלחה למשתמש' . ($notificationSent ? ' 🔔 והתראה נשלחה!' : ''),
+        'show_popup' => true,  // סימן להצגת פופאפ
+        'details' => [
+            'user_exists' => ($user !== false),
+            'notification_details' => $notificationDetails
+        ]
+    ]);
 }
-
 
 function removeMember($pdo, $group_id, $is_owner) {
     if (!$is_owner) {

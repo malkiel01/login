@@ -546,7 +546,7 @@ VAPID_PRIVATE_KEY=<?php echo $vapidKeys['privateKey']; ?></pre>
             }
         }
         
-        async function testNotification() {
+        async function testNotification2() {
             if (Notification.permission !== 'granted') {
                 showMessage('❌ יש לאשר הרשאות תחילה', 'error');
                 return;
@@ -572,6 +572,54 @@ VAPID_PRIVATE_KEY=<?php echo $vapidKeys['privateKey']; ?></pre>
             };
             
             showMessage('📢 התראה נשלחה! בדוק את שורת ההתראות', 'success');
+        }
+        // החלף את הפונקציה testNotification בקוד הבא:
+        async function testNotification() {
+            console.log('Testing notification...');
+            
+            if (Notification.permission !== 'granted') {
+                showMessage('❌ יש לאשר הרשאות תחילה', 'error');
+                return;
+            }
+            
+            try {
+                // השתמש ב-Service Worker להצגת התראה
+                const registration = await navigator.serviceWorker.ready;
+                
+                await registration.showNotification('התראת בדיקה 🎉', {
+                    body: 'אם אתה רואה את זה, Push Notifications עובד מצוין!',
+                    icon: '/family/images/icons/android/android-launchericon-192-192.png',
+                    badge: '/family/images/icons/android/android-launchericon-96-96.png',
+                    vibrate: [200, 100, 200],
+                    tag: 'test-notification',
+                    requireInteraction: false,
+                    dir: 'rtl',
+                    lang: 'he',
+                    data: {
+                        url: '/family/dashboard.php',
+                        time: new Date().toISOString()
+                    },
+                    actions: [
+                        {
+                            action: 'open',
+                            title: 'פתח אפליקציה',
+                            icon: '/family/images/icons/android/android-launchericon-96-96.png'
+                        },
+                        {
+                            action: 'close',
+                            title: 'סגור',
+                            icon: '/family/images/icons/android/android-launchericon-96-96.png'
+                        }
+                    ]
+                });
+                
+                showMessage('📢 התראה נשלחה! בדוק את שורת ההתראות', 'success');
+                console.log('✅ Notification sent successfully');
+                
+            } catch (error) {
+                console.error('Error sending notification:', error);
+                showMessage('❌ שגיאה: ' + error.message, 'error');
+            }
         }
         
         async function checkSubscription() {

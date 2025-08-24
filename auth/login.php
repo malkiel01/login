@@ -424,7 +424,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
         }
     </script>
     <!-- PWA Installer Module -->
-    <script src="pwa-installer.js"></script>
+    <!-- <script src="pwa-installer.js"></script> -->
 </head>
 <body>
     <div class="login-container">

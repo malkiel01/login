@@ -167,6 +167,8 @@ function addMember($pdo, $group_id, $user_id, $is_owner) {
         'message' => 'הזמנה נשלחה למשתמש'
     ]);
 
+    alert('test')
+
     if ($result) {
         $invitation_id = $pdo->lastInsertId();
         

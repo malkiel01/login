@@ -207,16 +207,16 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <link rel="stylesheet" href="css/dashboard.css">
 
     <!-- PWA Meta Tags -->
-    <link rel="manifest" href="/manifest.json">
+    <link rel="manifest" href="/family/manifest.json">
     <meta name="theme-color" content="#667eea">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <link rel="apple-touch-icon" href="/images/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/family/images/icons/icon-192x192.png">
 
     <!-- Service Worker -->
     <script>
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/service-worker.js')
+        navigator.serviceWorker.register('/family/service-worker.js')
             .then(reg => console.log('SW registered'))
             .catch(err => console.error('SW failed'));
     }
@@ -529,7 +529,7 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
     </script>
 
-    <script src="/js/notifications.js"></script>
+    <script src="/family/js/notifications.js"></script>
     <script>
         function enableNotifications() {
             if (notificationManager) {

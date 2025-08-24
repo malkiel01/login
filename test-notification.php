@@ -1,7 +1,7 @@
 <?php
 session_start();
 require_once 'config.php';
-require_once 'api/send-push-notification.php';
+require_once '/api/send-push-notification.php';
 
 echo "<h1>בדיקת מערכת התראות</h1>";
 

@@ -6,6 +6,7 @@
     <title>בדיקת PWA</title>
     <link rel="manifest" href="/family/manifest.json">
     <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -35,35 +36,84 @@
             margin: 5px;
         }
         button:hover { background: #5569d0; }
-        pre {
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 5px;
-            overflow-x: auto;
-            font-size: 12px;
+        button:disabled { 
+            background: #ccc; 
+            cursor: not-allowed;
+        }
+        .install-banner {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+            display: none;
+        }
+        .install-banner.show { display: block; }
+        .browser-info {
+            background: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #ffeeba;
         }
     </style>
 </head>
 <body>
     <h1>🔍 בדיקת תקינות PWA</h1>
     
+    <!-- מידע על הדפדפן -->
+    <div class="browser-info">
+        <strong>📱 מידע על הדפדפן:</strong>
+        <div id="browser-info"></div>
+    </div>
+    
+    <!-- באנר התקנה -->
+    <div id="install-banner" class="install-banner">
+        <h2>🎉 האפליקציה מוכנה להתקנה!</h2>
+        <p>לחץ על הכפתור להתקנת האפליקציה במכשיר שלך</p>
+        <button onclick="promptInstall()" style="font-size: 20px; padding: 15px 30px;">
+            📱 התקן עכשיו
+        </button>
+    </div>
+    
     <div id="checks"></div>
     
     <div style="margin-top: 30px;">
-        <button onclick="installPWA()">📱 התקן אפליקציה</button>
+        <button id="install-btn" onclick="installPWA()">📱 התקן אפליקציה</button>
         <button onclick="testNotification()">🔔 בדוק התראות</button>
         <button onclick="clearCache()">🗑️ נקה Cache</button>
+        <button onclick="checkManualInstall()">📋 הוראות התקנה ידנית</button>
         <button onclick="location.reload()">🔄 רענן</button>
-    </div>
-    
-    <div id="install-prompt" style="display:none; margin-top:20px;" class="check-item info">
-        <h3>האפליקציה מוכנה להתקנה!</h3>
-        <button onclick="promptInstall()">התקן עכשיו</button>
     </div>
 
     <script>
         const checks = document.getElementById('checks');
         let deferredPrompt = null;
+        let installReady = false;
+        
+        // מידע על הדפדפן
+        function detectBrowser() {
+            const ua = navigator.userAgent;
+            const browserInfo = document.getElementById('browser-info');
+            let info = '';
+            
+            if (/chrome|chromium|crios/i.test(ua) && !/edge/i.test(ua)) {
+                info = 'Chrome - תומך בהתקנת PWA ✅';
+            } else if (/safari/i.test(ua) && !/chrome/i.test(ua)) {
+                info = 'Safari - התקנה דרך "Add to Home Screen" במסך השיתוף';
+            } else if (/firefox|fxios/i.test(ua)) {
+                info = 'Firefox - תמיכה חלקית ב-PWA';
+            } else if (/edge/i.test(ua)) {
+                info = 'Edge - תומך בהתקנת PWA ✅';
+            } else {
+                info = 'דפדפן לא מזוהה';
+            }
+            
+            info += '<br>User Agent: ' + ua.substring(0, 100) + '...';
+            browserInfo.innerHTML = info;
+        }
         
         // בדיקות אוטומטיות
         async function runChecks() {
@@ -79,13 +129,20 @@
             // 2. בדיקת Service Worker
             if ('serviceWorker' in navigator) {
                 try {
+                    // תחילה נרשום SW חדש
+                    await navigator.serviceWorker.register('/family/service-worker.js', {scope: '/family/'});
+                    
+                    // אז נבדוק אם רשום
                     const reg = await navigator.serviceWorker.getRegistration('/family/');
                     addCheck(!!reg, 'Service Worker', reg ? 'Registered' : 'Not registered');
                     
-                    if (!reg) {
-                        // נסה לרשום
-                        const newReg = await navigator.serviceWorker.register('/family/service-worker.js');
-                        addCheck(true, 'Service Worker Registration', 'Successfully registered');
+                    // בדוק אם ה-SW פעיל
+                    if (reg && reg.active) {
+                        addCheck(true, 'Service Worker Status', 'Active', 'success');
+                    } else if (reg && reg.installing) {
+                        addCheck(true, 'Service Worker Status', 'Installing...', 'warning');
+                    } else if (reg && reg.waiting) {
+                        addCheck(true, 'Service Worker Status', 'Waiting...', 'warning');
                     }
                 } catch (e) {
                     addCheck(false, 'Service Worker', e.message);
@@ -139,23 +196,17 @@
             // 5. בדיקת Display Mode
             const displayMode = window.matchMedia('(display-mode: standalone)').matches;
             addCheck(
-                true, // תמיד הצג כ-info
+                true,
                 'Display Mode',
                 displayMode ? 'Standalone (Installed)' : 'Browser',
-                'info'
+                displayMode ? 'success' : 'info'
             );
             
-            // 6. בדיקת התראות
-            if ('Notification' in window) {
-                const permission = Notification.permission;
-                addCheck(
-                    permission === 'granted',
-                    'Notifications',
-                    `Permission: ${permission}`,
-                    permission === 'denied' ? 'error' : permission === 'default' ? 'warning' : 'success'
-                );
+            // 6. בדיקת התקנה
+            if (installReady) {
+                addCheck(true, 'Install Ready', 'אפשר להתקין! 🎉', 'success');
             } else {
-                addCheck(false, 'Notifications', 'Not supported');
+                addCheck(false, 'Install Ready', 'ממתין לאפשרות התקנה...', 'warning');
             }
             
             // 7. בדיקת Cache
@@ -184,34 +235,121 @@
             checks.appendChild(div);
         }
         
-        // התקנת PWA
+        // התקנת PWA - האזנה לאירוע
         window.addEventListener('beforeinstallprompt', (e) => {
+            console.log('beforeinstallprompt fired!');
             e.preventDefault();
             deferredPrompt = e;
-            document.getElementById('install-prompt').style.display = 'block';
-            addCheck(true, 'Install Prompt', 'Ready to install!', 'success');
+            installReady = true;
+            
+            // הצג באנר התקנה
+            document.getElementById('install-banner').classList.add('show');
+            document.getElementById('install-btn').disabled = false;
+            
+            // עדכן את הבדיקות
+            runChecks();
+        });
+        
+        // בדוק אם האפליקציה כבר מותקנת
+        window.addEventListener('appinstalled', (evt) => {
+            console.log('App installed!');
+            deferredPrompt = null;
+            document.getElementById('install-banner').classList.remove('show');
+            alert('האפליקציה הותקנה בהצלחה! 🎉');
+            runChecks();
         });
         
         async function installPWA() {
-            if (!deferredPrompt) {
-                alert('האפליקציה כבר מותקנת או שהדפדפן לא תומך בהתקנה');
-                return;
+            if (deferredPrompt) {
+                promptInstall();
+            } else {
+                checkManualInstall();
             }
-            promptInstall();
         }
         
         async function promptInstall() {
-            if (!deferredPrompt) return;
+            if (!deferredPrompt) {
+                alert('האפליקציה כבר מותקנת או שאין אפשרות התקנה כרגע');
+                return;
+            }
             
             deferredPrompt.prompt();
             const result = await deferredPrompt.userChoice;
             
+            console.log('User choice:', result.outcome);
+            
             if (result.outcome === 'accepted') {
-                alert('האפליקציה הותקנה בהצלחה!');
+                console.log('User accepted the install prompt');
+            } else {
+                console.log('User dismissed the install prompt');
             }
             
             deferredPrompt = null;
-            document.getElementById('install-prompt').style.display = 'none';
+            document.getElementById('install-banner').classList.remove('show');
+        }
+        
+        // הוראות התקנה ידנית
+        function checkManualInstall() {
+            const ua = navigator.userAgent;
+            let instructions = '';
+            
+            if (/iphone|ipad|ipod/i.test(ua)) {
+                instructions = `
+                    <h3>התקנה ב-iOS (Safari):</h3>
+                    <ol>
+                        <li>פתח את האתר ב-Safari</li>
+                        <li>לחץ על כפתור השיתוף (ריבוע עם חץ)</li>
+                        <li>גלול למטה ובחר "Add to Home Screen"</li>
+                        <li>תן שם לאפליקציה ולחץ "Add"</li>
+                    </ol>
+                `;
+            } else if (/android/i.test(ua)) {
+                instructions = `
+                    <h3>התקנה ב-Android (Chrome):</h3>
+                    <ol>
+                        <li>לחץ על שלוש הנקודות בפינה העליונה</li>
+                        <li>בחר "התקן אפליקציה" או "Add to Home Screen"</li>
+                        <li>אשר את ההתקנה</li>
+                    </ol>
+                    <p>אם האפשרות לא מופיעה, נסה:</p>
+                    <ul>
+                        <li>רענן את הדף (Ctrl+F5)</li>
+                        <li>המתן 30 שניות ורענן שוב</li>
+                        <li>ודא שאתה משתמש ב-Chrome</li>
+                    </ul>
+                `;
+            } else {
+                instructions = `
+                    <h3>התקנה במחשב (Chrome/Edge):</h3>
+                    <ol>
+                        <li>חפש אייקון התקנה בשורת הכתובת (מימין)</li>
+                        <li>או לחץ על שלוש הנקודות > "התקן..."</li>
+                        <li>אשר את ההתקנה</li>
+                    </ol>
+                `;
+            }
+            
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: white;
+                padding: 30px;
+                border-radius: 10px;
+                box-shadow: 0 10px 50px rgba(0,0,0,0.3);
+                z-index: 1000;
+                max-width: 500px;
+                direction: rtl;
+            `;
+            modal.innerHTML = instructions + `
+                <button onclick="this.parentElement.remove()" 
+                        style="margin-top: 20px; width: 100%;">
+                    סגור
+                </button>
+            `;
+            document.body.appendChild(modal);
         }
         
         // בדיקת התראות
@@ -237,6 +375,7 @@
                     dir: 'rtl',
                     lang: 'he'
                 });
+                runChecks();
             }
         }
         
@@ -245,16 +384,40 @@
             if ('caches' in window) {
                 const cacheNames = await caches.keys();
                 await Promise.all(cacheNames.map(name => caches.delete(name)));
-                alert('Cache נוקה בהצלחה');
-                location.reload();
+                
+                // רשום מחדש את ה-Service Worker
+                if ('serviceWorker' in navigator) {
+                    const reg = await navigator.serviceWorker.getRegistration('/family/');
+                    if (reg) {
+                        await reg.unregister();
+                    }
+                    await navigator.serviceWorker.register('/family/service-worker.js', {scope: '/family/'});
+                }
+                
+                alert('Cache נוקה והService Worker נרשם מחדש');
+                setTimeout(() => location.reload(), 1000);
             }
         }
         
-        // הרץ בדיקות בטעינה
-        runChecks();
+        // אתחול
+        window.addEventListener('load', () => {
+            detectBrowser();
+            runChecks();
+            
+            // בדוק אם האפליקציה כבר מותקנת
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                addCheck(true, 'App Status', 'האפליקציה כבר מותקנת! 🎉', 'success');
+            }
+            
+            // עדכון אוטומטי
+            setInterval(runChecks, 5000);
+        });
         
-        // רענן כל 5 שניות
-        setInterval(runChecks, 5000);
+        // Log for debugging
+        console.log('PWA Check Script Loaded');
+        console.log('Current URL:', location.href);
+        console.log('Manifest URL:', '/family/manifest.json');
+        console.log('SW URL:', '/family/service-worker.js');
     </script>
 </body>
 </html>

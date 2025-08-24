@@ -96,16 +96,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 
     <!-- PWA Meta Tags -->
-    <link rel="manifest" href="/family/manifest.json">
+    <link rel="manifest" href="../manifest.json">
     <meta name="theme-color" content="#667eea">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <link rel="apple-touch-icon" href="/family/images/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="../images/icons/icon-192x192.png">
 
     <!-- Service Worker -->
     <script>
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/family/service-worker.js')
+        navigator.serviceWorker.register('../service-worker.js')
             .then(reg => console.log('SW registered'))
             .catch(err => console.error('SW failed'));
     }

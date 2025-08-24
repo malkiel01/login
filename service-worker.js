@@ -5,7 +5,7 @@ const urlsToCache = [
   '/',
   '/dashboard.php',
   '/auth/login.php',
-  '/css/dashboard.css',
+  'css/dashboard.css',
   '/css/group.css',
   '/css/styles.css',
   '/js/group.js',

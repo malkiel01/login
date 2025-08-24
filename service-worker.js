@@ -2,8 +2,8 @@
 
 const CACHE_NAME = 'panan-bakan-v1.0.0';
 const urlsToCache = [
-  '/',
-  '/dashboard.php',
+  'family/',
+  'family/dashboard.php',
   '/auth/login.php',
   '/css/dashboard.css',
   '/css/group.css',

@@ -321,51 +321,51 @@ function getPriorityForType($type) {
 /**
  * API endpoint לקבלת התראות ממתינות (עבור Service Worker)
  */
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
-    session_start();
-    header('Content-Type: application/json');
+// if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
+//     session_start();
+//     header('Content-Type: application/json');
     
-    if ($_GET['action'] === 'get-pending' && isset($_SESSION['user_id'])) {
-        try {
-            $pdo = getDBConnection();
+//     if ($_GET['action'] === 'get-pending' && isset($_SESSION['user_id'])) {
+//         try {
+//             $pdo = getDBConnection();
             
-            // נסה קודם לקבל מהטבלה הזמנית
-            createPendingPushTableIfNeeded($pdo);
+//             // נסה קודם לקבל מהטבלה הזמנית
+//             createPendingPushTableIfNeeded($pdo);
             
-            $stmt = $pdo->prepare("
-                SELECT * FROM pending_push_notifications 
-                WHERE user_id = ? AND delivered = FALSE 
-                AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)
-                ORDER BY created_at DESC
-                LIMIT 10
-            ");
-            $stmt->execute([$_SESSION['user_id']]);
-            $notifications = $stmt->fetchAll(PDO::FETCH_ASSOC);
+//             $stmt = $pdo->prepare("
+//                 SELECT * FROM pending_push_notifications 
+//                 WHERE user_id = ? AND delivered = FALSE 
+//                 AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)
+//                 ORDER BY created_at DESC
+//                 LIMIT 10
+//             ");
+//             $stmt->execute([$_SESSION['user_id']]);
+//             $notifications = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            if (!empty($notifications)) {
-                // סמן כנמסרו
-                $ids = array_column($notifications, 'id');
-                $placeholders = str_repeat('?,', count($ids) - 1) . '?';
-                $stmt = $pdo->prepare("
-                    UPDATE pending_push_notifications 
-                    SET delivered = TRUE, delivered_at = NOW() 
-                    WHERE id IN ($placeholders)
-                ");
-                $stmt->execute($ids);
+//             if (!empty($notifications)) {
+//                 // סמן כנמסרו
+//                 $ids = array_column($notifications, 'id');
+//                 $placeholders = str_repeat('?,', count($ids) - 1) . '?';
+//                 $stmt = $pdo->prepare("
+//                     UPDATE pending_push_notifications 
+//                     SET delivered = TRUE, delivered_at = NOW() 
+//                     WHERE id IN ($placeholders)
+//                 ");
+//                 $stmt->execute($ids);
                 
-                // החזר את ההתראות
-                $result = array_map(function($n) {
-                    return json_decode($n['data'], true);
-                }, $notifications);
+//                 // החזר את ההתראות
+//                 $result = array_map(function($n) {
+//                     return json_decode($n['data'], true);
+//                 }, $notifications);
                 
-                echo json_encode(['success' => true, 'notifications' => $result]);
-            } else {
-                echo json_encode(['success' => true, 'notifications' => []]);
-            }
+//                 echo json_encode(['success' => true, 'notifications' => $result]);
+//             } else {
+//                 echo json_encode(['success' => true, 'notifications' => []]);
+//             }
             
-        } catch (Exception $e) {
-            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
-        }
-    }
-}
+//         } catch (Exception $e) {
+//             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+//         }
+//     }
+// }
 ?>

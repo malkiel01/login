@@ -167,59 +167,59 @@ function addMember($pdo, $group_id, $user_id, $is_owner) {
         'message' => 'הזמנה נשלחה למשתמש'
     ]);
 
-    alert('test');
 
-    if ($result) {
-        $invitation_id = $pdo->lastInsertId();
+
+    // if ($result) {
+    //     $invitation_id = $pdo->lastInsertId();
         
-        // נסה לשלוח התראת Push
-        if ($user) {
-            // המשתמש רשום במערכת - שלח לו התראה
-            require_once __DIR__ . '/../api/send-push-notification.php';
+    //     // נסה לשלוח התראת Push
+    //     if ($user) {
+    //         // המשתמש רשום במערכת - שלח לו התראה
+    //         require_once __DIR__ . '/../api/send-push-notification.php';
             
-            try {
-                $notificationResult = notifyGroupInvitation($invitation_id);
+    //         try {
+    //             $notificationResult = notifyGroupInvitation($invitation_id);
                 
-                if ($notificationResult && $notificationResult['success']) {
-                    error_log("Push notification sent for invitation ID: $invitation_id");
-                } else {
-                    error_log("Failed to send push notification for invitation ID: $invitation_id");
-                }
-            } catch (Exception $e) {
-                error_log("Error sending notification: " . $e->getMessage());
-                // אל תעצור את התהליך אם ההתראה נכשלה
-            }
-        }
+    //             if ($notificationResult && $notificationResult['success']) {
+    //                 error_log("Push notification sent for invitation ID: $invitation_id");
+    //             } else {
+    //                 error_log("Failed to send push notification for invitation ID: $invitation_id");
+    //             }
+    //         } catch (Exception $e) {
+    //             error_log("Error sending notification: " . $e->getMessage());
+    //             // אל תעצור את התהליך אם ההתראה נכשלה
+    //         }
+    //     }
         
-        echo json_encode([
-            'success' => true, 
-            'invitation_sent' => true,
-            'notification_sent' => isset($notificationResult) && $notificationResult['success'],
-            'message' => 'הזמנה נשלחה למשתמש' . 
-                        (isset($notificationResult) && $notificationResult['success'] ? ' והתראה נשלחה!' : '')
-        ]);
-    } else {
-        echo json_encode(['success' => false, 'message' => 'שגיאה בשליחת ההזמנה']);
-    }
+    //     echo json_encode([
+    //         'success' => true, 
+    //         'invitation_sent' => true,
+    //         'notification_sent' => isset($notificationResult) && $notificationResult['success'],
+    //         'message' => 'הזמנה נשלחה למשתמש' . 
+    //                     (isset($notificationResult) && $notificationResult['success'] ? ' והתראה נשלחה!' : '')
+    //     ]);
+    // } else {
+    //     echo json_encode(['success' => false, 'message' => 'שגיאה בשליחת ההזמנה']);
+    // }
 
-    // שלח התראה על הזמנה
-    // שלח התראה על הזמנה (אם המשתמש רשום במערכת)
-    if ($result && $user) {
-        // נסה לשלוח התראה
-        try {
-            // הכנס את ה-ID של ההזמנה האחרונה
-            $invitation_id = $pdo->lastInsertId();
+    // // שלח התראה על הזמנה
+    // // שלח התראה על הזמנה (אם המשתמש רשום במערכת)
+    // if ($result && $user) {
+    //     // נסה לשלוח התראה
+    //     try {
+    //         // הכנס את ה-ID של ההזמנה האחרונה
+    //         $invitation_id = $pdo->lastInsertId();
             
-            // רשום ביומן לבדיקה
-            error_log("New invitation created: ID=$invitation_id for email=$email");
+    //         // רשום ביומן לבדיקה
+    //         error_log("New invitation created: ID=$invitation_id for email=$email");
             
-            // בעתיד כאן תהיה קריאה לשירות ההתראות
-            // $notificationService->notifyGroupInvitation($invitation_id);
-        } catch (Exception $e) {
-            // אם ההתראה נכשלה, לא נעצור את התהליך
-            error_log("Failed to send notification: " . $e->getMessage());
-        }
-    }
+    //         // בעתיד כאן תהיה קריאה לשירות ההתראות
+    //         // $notificationService->notifyGroupInvitation($invitation_id);
+    //     } catch (Exception $e) {
+    //         // אם ההתראה נכשלה, לא נעצור את התהליך
+    //         error_log("Failed to send notification: " . $e->getMessage());
+    //     }
+    // }
 }
 
 // הפונקציה המעודכנת addMember עם Push Notifications

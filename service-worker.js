@@ -1,13 +1,6 @@
-// service-worker.js - Simple working version
-const CACHE_NAME = 'panan-bakan-v1.0.3';
-// const urlsToCache = [
-//   '/family/',
-//   '/family/dashboard.php',
-//   '/family/manifest.json',
-//   '/family/offline.html'
-// ];
+// service-worker.js - עם בקשת הרשאת התראות בהתקנה
+const CACHE_NAME = 'panan-bakan-v1.0.4';
 
-// הוסף את האייקונים החדשים לרשימת הקבצים לקאש
 const urlsToCache = [
   '/family/',
   '/family/dashboard.php',
@@ -25,31 +18,94 @@ const urlsToCache = [
 
 self.addEventListener('install', event => {
   console.log('Service Worker: Installing...');
+  
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Service Worker: Caching files');
-        return cache.addAll(urlsToCache);
-      })
-      .then(() => self.skipWaiting())
+    Promise.all([
+      // Cache הקבצים
+      caches.open(CACHE_NAME)
+        .then(cache => {
+          console.log('Service Worker: Caching files');
+          return cache.addAll(urlsToCache);
+        }),
+      
+      // בקש הרשאת התראות מיד עם ההתקנה
+      requestNotificationPermissionOnInstall()
+    ]).then(() => {
+      console.log('Service Worker: Installation complete');
+      self.skipWaiting();
+    })
   );
 });
+
+// פונקציה לבקשת הרשאת התראות בזמן ההתקנה
+async function requestNotificationPermissionOnInstall() {
+  try {
+    // בדוק אם התראות נתמכות
+    if (!('Notification' in globalThis)) {
+      console.log('Notifications not supported');
+      return;
+    }
+    
+    // אם עדיין לא נתנה הרשאה, בקש אותה
+    if (Notification.permission === 'default') {
+      console.log('Service Worker: Requesting notification permission');
+      
+      // שלח הודעה לכל הלקוחות (דפים) שפתוחים
+      const clients = await self.clients.matchAll();
+      clients.forEach(client => {
+        client.postMessage({
+          type: 'REQUEST_NOTIFICATION_PERMISSION',
+          message: 'Requesting notification permission after install'
+        });
+      });
+    }
+  } catch (error) {
+    console.error('Error requesting notification permission:', error);
+  }
+}
 
 self.addEventListener('activate', event => {
   console.log('Service Worker: Activated');
   event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('Service Worker: Clearing old cache');
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    }).then(() => self.clients.claim())
+    Promise.all([
+      // נקה cache ישן
+      caches.keys().then(cacheNames => {
+        return Promise.all(
+          cacheNames.map(cacheName => {
+            if (cacheName !== CACHE_NAME) {
+              console.log('Service Worker: Clearing old cache');
+              return caches.delete(cacheName);
+            }
+          })
+        );
+      }),
+      
+      // בקש הרשאת התראות גם אחרי activation
+      requestNotificationPermissionOnActivate()
+    ]).then(() => {
+      self.clients.claim();
+    })
   );
 });
+
+// פונקציה נוספת לבקשת הרשאה אחרי activation
+async function requestNotificationPermissionOnActivate() {
+  try {
+    if ('Notification' in globalThis && Notification.permission === 'default') {
+      const clients = await self.clients.matchAll();
+      if (clients.length > 0) {
+        clients.forEach(client => {
+          client.postMessage({
+            type: 'REQUEST_NOTIFICATION_PERMISSION',
+            message: 'Service Worker activated - requesting notification permission'
+          });
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Error in activate notification request:', error);
+  }
+}
 
 self.addEventListener('fetch', event => {
   // רק cache דפי HTML וקבצים סטטיים, לא API calls
@@ -86,4 +142,72 @@ self.addEventListener('fetch', event => {
         })
     );
   }
+});
+
+// טיפול בהתראות Push
+self.addEventListener('push', event => {
+  console.log('Push message received:', event);
+  
+  let notificationData = {
+    title: 'התראה חדשה',
+    body: 'יש לך עדכון חדש',
+    icon: '/family/images/icons/android/android-launchericon-192-192.png',
+    badge: '/family/images/icons/android/android-launchericon-96-96.png',
+    tag: 'general',
+    dir: 'rtl',
+    lang: 'he'
+  };
+  
+  // אם יש נתונים בהתראה
+  if (event.data) {
+    try {
+      const data = event.data.json();
+      notificationData = {
+        ...notificationData,
+        ...data
+      };
+    } catch (error) {
+      console.error('Error parsing push data:', error);
+    }
+  }
+  
+  event.waitUntil(
+    self.registration.showNotification(notificationData.title, {
+      body: notificationData.body,
+      icon: notificationData.icon,
+      badge: notificationData.badge,
+      tag: notificationData.tag || 'general',
+      dir: 'rtl',
+      lang: 'he',
+      vibrate: [200, 100, 200],
+      requireInteraction: false,
+      data: notificationData.data || {}
+    })
+  );
+});
+
+// טיפול בלחיצה על התראה
+self.addEventListener('notificationclick', event => {
+  console.log('Notification clicked:', event.notification);
+  
+  event.notification.close();
+  
+  // פתח את האפליקציה או דף ספציפי
+  const urlToOpen = event.notification.data?.url || '/family/dashboard.php';
+  
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window' })
+      .then(clients => {
+        // אם יש דף פתוח, התמקד בו
+        for (const client of clients) {
+          if (client.url.includes('/family/') && 'focus' in client) {
+            return client.focus();
+          }
+        }
+        // אם אין דף פתוח, פתח חדש
+        if (self.clients.openWindow) {
+          return self.clients.openWindow(urlToOpen);
+        }
+      })
+  );
 });

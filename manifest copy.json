@@ -1,7 +1,7 @@
 {
   "name": "מערכת ניהול קניות מרוכזות",
   "short_name": "קניות מרוכזות",
-  "description": "מערכת חכמה לניהול וחלוקת קניות משותפות לקבוצות עם התראות בזמן אמת",
+  "description": "מערכת חכמה לניהול וחלוקת קניות משותפות לקבוצות",
   "start_url": "/family/dashboard.php",
   "scope": "/family/",
   "display": "standalone",
@@ -12,13 +12,6 @@
   "lang": "he",
   "dir": "rtl",
   "prefer_related_applications": false,
-  
-  "permissions": [
-    "notifications"
-  ],
-  
-  "gcm_sender_id": "103953800507",
-  
   "icons": [
     {
       "src": "/family/images/icons/android/android-launchericon-48-48.png",
@@ -36,7 +29,7 @@
       "src": "/family/images/icons/android/android-launchericon-96-96.png",
       "sizes": "96x96",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/family/images/icons/android/android-launchericon-144-144.png",
@@ -87,7 +80,6 @@
       "purpose": "any"
     }
   ],
-  
   "shortcuts": [
     {
       "name": "צור קבוצה חדשה",
@@ -112,7 +104,6 @@
       }]
     }
   ],
-  
   "screenshots": [
     {
       "src": "/family/images/screenshots/screenshot1.png",
@@ -127,7 +118,6 @@
       "label": "ניהול קניות"
     }
   ],
-  
   "share_target": {
     "action": "/family/share-target.php",
     "method": "POST",

@@ -205,6 +205,22 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <title>קבוצות הרכישה שלי - <?php echo SITE_NAME; ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/dashboard.css">
+
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/form/family/manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="apple-touch-icon" href="/form/family/images/icons/icon-192x192.png">
+
+    <!-- Service Worker -->
+    <script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/form/family/service-worker.js')
+            .then(reg => console.log('SW registered'))
+            .catch(err => console.error('SW failed'));
+    }
+    </script>
 </head>
 <body>
     <!-- Navigation Bar -->
@@ -230,6 +246,11 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     התנתק
                 </a>
             </div>
+            <!-- כפתור התראות -->
+            <button id="enable-notifications" class="btn btn-sm btn-outline-light me-2" 
+                    onclick="enableNotifications()" style="border-radius: 20px; padding: 5px 15px;">
+                <i class="fas fa-bell"></i> התראות
+            </button>
         </div>
     </nav>
 
@@ -504,6 +525,15 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
             const modal = document.getElementById('createGroupModal');
             if (event.target == modal) {
                 closeCreateGroupModal();
+            }
+        }
+    </script>
+
+    <script src="/form/family/js/notifications.js"></script>
+    <script>
+        function enableNotifications() {
+            if (notificationManager) {
+                notificationManager.requestPermission();
             }
         }
     </script>

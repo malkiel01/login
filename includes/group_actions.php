@@ -166,6 +166,25 @@ function addMember($pdo, $group_id, $user_id, $is_owner) {
         'invitation_sent' => true,
         'message' => 'הזמנה נשלחה למשתמש'
     ]);
+
+    // שלח התראה על הזמנה
+    // שלח התראה על הזמנה (אם המשתמש רשום במערכת)
+    if ($result && $user) {
+        // נסה לשלוח התראה
+        try {
+            // הכנס את ה-ID של ההזמנה האחרונה
+            $invitation_id = $pdo->lastInsertId();
+            
+            // רשום ביומן לבדיקה
+            error_log("New invitation created: ID=$invitation_id for email=$email");
+            
+            // בעתיד כאן תהיה קריאה לשירות ההתראות
+            // $notificationService->notifyGroupInvitation($invitation_id);
+        } catch (Exception $e) {
+            // אם ההתראה נכשלה, לא נעצור את התהליך
+            error_log("Failed to send notification: " . $e->getMessage());
+        }
+    }
 }
 
 function removeMember($pdo, $group_id, $is_owner) {

@@ -424,7 +424,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
         }
     </script>
     <!-- PWA Installer Module -->
-    <!-- <script src="pwa-installer.js"></script> -->
 </head>
 <body>
     <div class="login-container">
@@ -645,6 +644,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                 }
             }
         };
+    </script>
+    <!-- הוסף לפני סוף ה-body -->
+    <script src="../js/notification-prompt.js"></script>
+    <script>
+        // בדוק והצג בקשת התראות אחרי התחברות מוצלחת
+        window.addEventListener('load', () => {
+            // רק אם המשתמש מחובר (יש redirect)
+            <?php if (isset($_SESSION['user_id'])): ?>
+                setTimeout(() => {
+                    checkAndShowNotificationPrompt();
+                }, 1000);
+            <?php endif; ?>
+        });
     </script>
 </body>
 </html>

@@ -560,10 +560,10 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </a>
             </div>
             <!-- כפתור התראות -->
-            <button id="enable-notifications" class="btn btn-sm btn-outline-light me-2" 
+            <!-- <button id="enable-notifications" class="btn btn-sm btn-outline-light me-2" 
                     onclick="enableNotifications()" style="border-radius: 20px; padding: 5px 15px;">
                 <i class="fas fa-bell"></i> התראות
-            </button>
+            </button> -->
         </div>
     </nav>
 
@@ -843,12 +843,18 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </script>
 
     <script src="js/notifications.js"></script>
+    <!-- הוסף לפני סוף ה-body -->
+    <script src="../js/notification-prompt.js"></script>
     <script>
-        function enableNotifications() {
-            if (notificationManager) {
-                notificationManager.requestPermission();
-            }
-        }
+        // בדוק והצג בקשת התראות אחרי התחברות מוצלחת
+        window.addEventListener('load', () => {
+            // רק אם המשתמש מחובר (יש redirect)
+            <?php if (isset($_SESSION['user_id'])): ?>
+                setTimeout(() => {
+                    checkAndShowNotificationPrompt();
+                }, 1000);
+            <?php endif; ?>
+        });
     </script>
 </body>
 </html>

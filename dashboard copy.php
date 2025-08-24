@@ -838,7 +838,6 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </script>
 
     <!-- הוסף לפני סוף ה-body -->
-    <script src="../js/notification-prompt.js"></script>
     <script>
         // בדוק והצג בקשת התראות אחרי התחברות מוצלחת
         window.addEventListener('load', () => {

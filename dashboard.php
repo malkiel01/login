@@ -413,7 +413,9 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </script>
     
     <!-- טען קבצי JavaScript בסדר הנכון -->
-    <script src="js/pwa-notifications.js"></script>
+     <!-- pwa-notifications-compact -->
+    <script src="js/pwa-notifications-compact.js"></script>
+    <!-- <script src="js/pwa-notifications.js"></script> -->
     <script src="js/pwa-installer.js"></script>
     <script src="js/dashboard.js"></script>
 </body>

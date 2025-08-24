@@ -11,11 +11,14 @@ RewriteRule ^service-worker\.js$ - [L]
 # אפשר גישה לתיקיית images
 RewriteRule ^images/.*\.(png|jpg|jpeg|gif|svg|ico)$ - [L]
 
-# אפשר גישה לדפי בדיקה ספציפיים
+# אפשר גישה לדפי בדיקה והתקנה
 RewriteRule ^check-pwa\.php$ - [L]
 RewriteRule ^test-notifications\.php$ - [L]
 RewriteRule ^test-notifications-standalone\.php$ - [L]
 RewriteRule ^process_notifications\.php$ - [L]
+RewriteRule ^setup_notifications\.php$ - [L]
+RewriteRule ^test-email-debug\.php$ - [L]
+RewriteRule ^setup-phpmailer.*\.php$ - [L]
 
 # אפשר גישה ל-offline.html
 RewriteRule ^offline\.html$ - [L]
@@ -28,26 +31,39 @@ RewriteRule ^offline\.html$ - [L]
     Deny from all
 </Files>
 
-# הגנה על קובץ config
+# הגנה על קובץ config - אבל לא בקבצי PHP שצריכים אותו
 <Files config.php>
-    Order allow,deny
-    Deny from all
+    <RequireAll>
+        Require all denied
+        # אפשר גישה רק מקבצי PHP פנימיים
+        Require local
+    </RequireAll>
 </Files>
 
 # חסימת גישה ישירה לקבצי PHP בתיקיות includes
-RewriteRule ^includes/.*\.php$ - [F,L]
+# אבל אפשר לקבצי PHP אחרים לכלול אותם
+RewriteCond %{THE_REQUEST} \s/+includes/.*\.php[\s?] [NC]
+RewriteRule ^ - [F]
 
-# חסימת גישה ישירה לקבצי דיבאג וטסט מסוכנים בלבד
+# חסימת גישה ישירה לקבצי דיבאג מסוכנים בלבד
 # אבל מאפשר את קבצי הבדיקה החשובים
 RewriteCond %{REQUEST_URI} !check-pwa\.php$
 RewriteCond %{REQUEST_URI} !test-notifications.*\.php$
 RewriteCond %{REQUEST_URI} !process_notifications\.php$
+RewriteCond %{REQUEST_URI} !setup_notifications\.php$
+RewriteCond %{REQUEST_URI} !test-email-debug\.php$
+RewriteCond %{REQUEST_URI} !setup-phpmailer.*\.php$
 RewriteRule ^(debug|find.*)\.php$ - [F,L]
 
 # הגדרת AJAX token check - מאפשר רק בקשות AJAX לקבצים מסוימים
 # אבל לא לבקשות GET רגילות
 RewriteCond %{REQUEST_METHOD} POST
 RewriteCond %{HTTP:X-Requested-With} !XMLHttpRequest
+RewriteCond %{REQUEST_URI} !test-notifications\.php$
+RewriteCond %{REQUEST_URI} !process_notifications\.php$
+RewriteCond %{REQUEST_URI} !setup_notifications\.php$
+RewriteCond %{REQUEST_URI} !test-email-debug\.php$
+RewriteCond %{REQUEST_URI} !setup-phpmailer.*\.php$
 RewriteRule ^(dashboard|group)\.php$ - [F,L]
 
 # הגנה על תיקיות רגישות
@@ -112,4 +128,5 @@ RedirectMatch 404 /\.git
 # Custom error pages - אבל לא לקבצי PWA
 ErrorDocument 403 /index.php
 ErrorDocument 404 /index.php
-ErrorDocument 500 /index.php
+# הסר את השורה הבאה כי היא גורמת לבעיה עם error 500
+# ErrorDocument 500 /index.php

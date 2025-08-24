@@ -45,6 +45,9 @@ RewriteRule ^offline\.html$ - [L]
 RewriteCond %{THE_REQUEST} \s/+includes/.*\.php[\s?] [NC]
 RewriteRule ^ - [F]
 
+RewriteRule ^setup-push-notifications\.php$ - [L]
+RewriteRule ^api/.*\.php$ - [L]
+
 # חסימת גישה ישירה לקבצי דיבאג מסוכנים בלבד
 # אבל מאפשר את קבצי הבדיקה החשובים
 RewriteCond %{REQUEST_URI} !check-pwa\.php$

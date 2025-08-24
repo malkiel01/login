@@ -419,8 +419,6 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <script src="js/pwa-installer.js"></script>
     <script src="js/dashboard.js"></script>
 
-    // הוסף את הקוד הזה ב-dashboard.php לפני </body>
-
     <script>
         // בדיקת התראות חדשות כל 30 שניות
         async function checkForNotifications() {
@@ -473,6 +471,92 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 checkForNotifications();
             }
         });
+    </script>
+
+    <script>
+        // בדיקת התראות חדשות כל 30 שניות
+        function checkForNotifications() {
+            fetch('/family/api/get-notifications.php')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.notifications && data.notifications.length > 0) {
+                        data.notifications.forEach(notification => {
+                            showNotification(notification);
+                        });
+                    }
+                })
+                .catch(error => console.error('Error checking notifications:', error));
+        }
+
+        // הצגת התראה
+        function showNotification(notification) {
+            // אם יש תמיכה בהתראות דפדפן
+            if ("Notification" in window && Notification.permission === "granted") {
+                new Notification(notification.title, {
+                    body: notification.body,
+                    icon: notification.icon || '/family/images/icons/android/android-launchericon-192-192.png',
+                    badge: notification.badge,
+                    tag: 'notification-' + notification.invitation_id
+                });
+            }
+            
+            // הצג גם באנר בדף
+            const banner = document.createElement('div');
+            banner.style.cssText = `
+                position: fixed;
+                top: 80px;
+                left: 20px;
+                background: white;
+                border-radius: 10px;
+                padding: 15px;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                border-right: 4px solid #667eea;
+                max-width: 350px;
+                z-index: 9999;
+                animation: slideIn 0.5s;
+                direction: rtl;
+            `;
+            
+            banner.innerHTML = `
+                <div style="display: flex; align-items: start; gap: 10px;">
+                    <div style="font-size: 24px;">✉️</div>
+                    <div style="flex: 1;">
+                        <h4 style="margin: 0 0 5px 0; color: #333;">${notification.title}</h4>
+                        <p style="margin: 0; color: #666; font-size: 14px;">${notification.body}</p>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" 
+                            style="background: none; border: none; font-size: 20px; color: #999; cursor: pointer;">×</button>
+                </div>
+            `;
+            
+            document.body.appendChild(banner);
+            
+            // הסר אחרי 10 שניות
+            setTimeout(() => banner.remove(), 10000);
+        }
+
+        // בקש הרשאה להתראות
+        if ("Notification" in window && Notification.permission === "default") {
+            Notification.requestPermission();
+        }
+
+        // בדוק התראות כל 30 שניות
+        setInterval(checkForNotifications, 30000);
+
+        // בדוק מיד בטעינה
+        window.addEventListener('load', () => {
+            setTimeout(checkForNotifications, 2000);
+        });
+
+        // CSS לאנימציה
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(-100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
     </script>
 </body>
 </html>

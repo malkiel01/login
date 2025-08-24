@@ -92,6 +92,9 @@ function addMember($pdo, $group_id, $user_id, $is_owner) {
         echo json_encode(['success' => false, 'message' => 'כבר קיימת הזמנה ממתינה למשתמש זה']);
         return;
     }
+
+
+    echo json_encode(['success' => false, 'message' => 'test 1']);
     
     // בדיקה אם המשתמש קיים במערכת
     $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");

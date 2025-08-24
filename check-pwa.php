@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>בדיקת PWA</title>
-    <link rel="manifest" href="/form/family/manifest.json">
+    <link rel="manifest" href="/family/manifest.json">
     <meta name="theme-color" content="#667eea">
     <style>
         body {
@@ -79,12 +79,12 @@
             // 2. בדיקת Service Worker
             if ('serviceWorker' in navigator) {
                 try {
-                    const reg = await navigator.serviceWorker.getRegistration('/form/family/');
+                    const reg = await navigator.serviceWorker.getRegistration('/family/');
                     addCheck(!!reg, 'Service Worker', reg ? 'Registered' : 'Not registered');
                     
                     if (!reg) {
                         // נסה לרשום
-                        const newReg = await navigator.serviceWorker.register('/form/family/service-worker.js');
+                        const newReg = await navigator.serviceWorker.register('/family/service-worker.js');
                         addCheck(true, 'Service Worker Registration', 'Successfully registered');
                     }
                 } catch (e) {
@@ -96,7 +96,7 @@
             
             // 3. בדיקת Manifest
             try {
-                const response = await fetch('/form/family/manifest.json');
+                const response = await fetch('/family/manifest.json');
                 const manifest = await response.json();
                 addCheck(
                     response.ok,
@@ -115,7 +115,7 @@
                 
                 // בדוק start_url
                 addCheck(
-                    manifest.start_url === '/form/family/dashboard.php',
+                    manifest.start_url === '/family/dashboard.php',
                     'Start URL',
                     manifest.start_url || 'Not defined'
                 );
@@ -126,7 +126,7 @@
             
             // 4. בדיקת אייקון 192x192
             try {
-                const iconResponse = await fetch('/form/family/images/icons/icon-192x192.png');
+                const iconResponse = await fetch('/family/images/icons/icon-192x192.png');
                 addCheck(
                     iconResponse.ok,
                     'Icon 192x192',
@@ -232,8 +232,8 @@
             if (Notification.permission === 'granted') {
                 new Notification('בדיקת התראות', {
                     body: 'ההתראות עובדות מצוין! 🎉',
-                    icon: '/form/family/images/icons/icon-192x192.png',
-                    badge: '/form/family/images/icons/badge-72x72.png',
+                    icon: '/family/images/icons/icon-192x192.png',
+                    badge: '/family/images/icons/badge-72x72.png',
                     dir: 'rtl',
                     lang: 'he'
                 });

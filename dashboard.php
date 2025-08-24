@@ -221,78 +221,392 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     <!-- Service Worker Registration FIXED -->
     <script>
+        // if ('serviceWorker' in navigator) {
+        //     window.addEventListener('load', () => {
+        //         navigator.serviceWorker.register('/family/service-worker.js', {scope: '/family/'})
+        //             .then(reg => {
+        //                 console.log('Service Worker registered:', reg);
+                        
+        //                 // בדוק אם יש עדכון
+        //                 reg.addEventListener('updatefound', () => {
+        //                     console.log('Service Worker update found!');
+        //                 });
+        //             })
+        //             .catch(err => console.error('Service Worker registration failed:', err));
+        //     });
+            
+        //     // האזן ל-install prompt
+        //     let deferredPrompt;
+        //     let installButton = null;
+            
+        //     window.addEventListener('beforeinstallprompt', (e) => {
+        //         console.log('beforeinstallprompt event fired!');
+        //         e.preventDefault();
+        //         deferredPrompt = e;
+                
+        //         // הצג כפתור התקנה אם קיים
+        //         installButton = document.getElementById('install-pwa-btn');
+        //         if (!installButton) {
+        //             // צור כפתור התקנה דינמי
+        //             installButton = document.createElement('button');
+        //             installButton.id = 'install-pwa-btn';
+        //             installButton.innerHTML = '📱 התקן אפליקציה';
+        //             installButton.style.cssText = `
+        //                 position: fixed;
+        //                 bottom: 20px;
+        //                 right: 20px;
+        //                 background: linear-gradient(135deg, #667eea, #764ba2);
+        //                 color: white;
+        //                 border: none;
+        //                 padding: 15px 25px;
+        //                 border-radius: 50px;
+        //                 font-size: 16px;
+        //                 font-weight: bold;
+        //                 cursor: pointer;
+        //                 box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        //                 z-index: 9999;
+        //                 display: flex;
+        //                 align-items: center;
+        //                 gap: 8px;
+        //             `;
+        //             document.body.appendChild(installButton);
+        //         }
+                
+        //         installButton.style.display = 'flex';
+                
+        //         installButton.onclick = async () => {
+        //             if (deferredPrompt) {
+        //                 deferredPrompt.prompt();
+        //                 const result = await deferredPrompt.userChoice;
+        //                 console.log('User response to install prompt:', result.outcome);
+        //                 if (result.outcome === 'accepted') {
+        //                     console.log('User accepted the install prompt');
+        //                     installButton.style.display = 'none';
+        //                 }
+        //                 deferredPrompt = null;
+        //             }
+        //         };
+        //     });
+            
+        //     // בדוק אם האפליקציה כבר מותקנת
+        //     window.addEventListener('appinstalled', () => {
+        //         console.log('PWA was installed');
+        //         if (installButton) {
+        //             installButton.style.display = 'none';
+        //         }
+        //     });
+            
+        //     // בדוק אם רץ כ-PWA
+        //     if (window.matchMedia('(display-mode: standalone)').matches) {
+        //         console.log('Running as PWA');
+        //     } else {
+        //         console.log('Running in browser');
+        //     }
+        // }
+    </script>
+    <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/family/service-worker.js', {scope: '/family/'})
                     .then(reg => {
                         console.log('Service Worker registered:', reg);
-                        
-                        // בדוק אם יש עדכון
-                        reg.addEventListener('updatefound', () => {
-                            console.log('Service Worker update found!');
-                        });
                     })
                     .catch(err => console.error('Service Worker registration failed:', err));
             });
             
-            // האזן ל-install prompt
+            // מערכת התראת התקנה משופרת
             let deferredPrompt;
-            let installButton = null;
+            let installBanner = null;
+            
+            // סגנונות להתראה
+            const bannerStyles = `
+                <style>
+                    .pwa-install-banner {
+                        position: fixed;
+                        top: -100px;
+                        left: 0;
+                        right: 0;
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        color: white;
+                        padding: 15px 20px;
+                        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+                        z-index: 10000;
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        transition: top 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    }
+                    
+                    .pwa-install-banner.show {
+                        top: 0;
+                    }
+                    
+                    .pwa-install-content {
+                        display: flex;
+                        align-items: center;
+                        gap: 15px;
+                        flex: 1;
+                    }
+                    
+                    .pwa-install-icon {
+                        width: 50px;
+                        height: 50px;
+                        background: white;
+                        border-radius: 12px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 28px;
+                        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                    }
+                    
+                    .pwa-install-text {
+                        flex: 1;
+                    }
+                    
+                    .pwa-install-title {
+                        font-size: 18px;
+                        font-weight: bold;
+                        margin-bottom: 4px;
+                        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+                    }
+                    
+                    .pwa-install-subtitle {
+                        font-size: 14px;
+                        opacity: 0.95;
+                    }
+                    
+                    .pwa-install-actions {
+                        display: flex;
+                        gap: 10px;
+                        align-items: center;
+                    }
+                    
+                    .pwa-install-btn {
+                        background: white;
+                        color: #667eea;
+                        border: none;
+                        padding: 10px 20px;
+                        border-radius: 25px;
+                        font-size: 15px;
+                        font-weight: bold;
+                        cursor: pointer;
+                        transition: all 0.3s;
+                        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+                    }
+                    
+                    .pwa-install-btn:hover {
+                        transform: scale(1.05);
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                    }
+                    
+                    .pwa-close-btn {
+                        background: transparent;
+                        color: white;
+                        border: 2px solid rgba(255,255,255,0.3);
+                        padding: 8px 16px;
+                        border-radius: 20px;
+                        font-size: 14px;
+                        cursor: pointer;
+                        transition: all 0.3s;
+                    }
+                    
+                    .pwa-close-btn:hover {
+                        background: rgba(255,255,255,0.1);
+                        border-color: rgba(255,255,255,0.5);
+                    }
+                    
+                    @media (max-width: 768px) {
+                        .pwa-install-banner {
+                            padding: 12px 15px;
+                        }
+                        
+                        .pwa-install-icon {
+                            width: 40px;
+                            height: 40px;
+                            font-size: 24px;
+                        }
+                        
+                        .pwa-install-title {
+                            font-size: 16px;
+                        }
+                        
+                        .pwa-install-subtitle {
+                            font-size: 13px;
+                        }
+                        
+                        .pwa-install-btn {
+                            padding: 8px 16px;
+                            font-size: 14px;
+                        }
+                        
+                        .pwa-close-btn {
+                            padding: 6px 12px;
+                            font-size: 13px;
+                        }
+                    }
+                    
+                    @keyframes slideDown {
+                        from {
+                            top: -100px;
+                            opacity: 0;
+                        }
+                        to {
+                            top: 0;
+                            opacity: 1;
+                        }
+                    }
+                    
+                    @keyframes pulse {
+                        0% { transform: scale(1); }
+                        50% { transform: scale(1.05); }
+                        100% { transform: scale(1); }
+                    }
+                    
+                    .pwa-install-btn {
+                        animation: pulse 2s infinite;
+                    }
+                </style>
+            `;
+            
+            // הוסף את הסגנונות לדף
+            document.head.insertAdjacentHTML('beforeend', bannerStyles);
             
             window.addEventListener('beforeinstallprompt', (e) => {
                 console.log('beforeinstallprompt event fired!');
                 e.preventDefault();
                 deferredPrompt = e;
                 
-                // הצג כפתור התקנה אם קיים
-                installButton = document.getElementById('install-pwa-btn');
-                if (!installButton) {
-                    // צור כפתור התקנה דינמי
-                    installButton = document.createElement('button');
-                    installButton.id = 'install-pwa-btn';
-                    installButton.innerHTML = '📱 התקן אפליקציה';
-                    installButton.style.cssText = `
-                        position: fixed;
-                        bottom: 20px;
-                        right: 20px;
-                        background: linear-gradient(135deg, #667eea, #764ba2);
-                        color: white;
-                        border: none;
-                        padding: 15px 25px;
-                        border-radius: 50px;
-                        font-size: 16px;
-                        font-weight: bold;
-                        cursor: pointer;
-                        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-                        z-index: 9999;
-                        display: flex;
-                        align-items: center;
-                        gap: 8px;
-                    `;
-                    document.body.appendChild(installButton);
+                // בדוק אם המשתמש כבר דחה את ההתקנה בעבר
+                const dismissed = localStorage.getItem('pwa-install-dismissed');
+                const dismissedTime = localStorage.getItem('pwa-install-dismissed-time');
+                
+                // אם דחה, הצג שוב רק אחרי 7 ימים
+                if (dismissed && dismissedTime) {
+                    const daysPassed = (Date.now() - parseInt(dismissedTime)) / (1000 * 60 * 60 * 24);
+                    if (daysPassed < 7) {
+                        return;
+                    }
                 }
                 
-                installButton.style.display = 'flex';
+                // צור את ההתראה
+                installBanner = document.createElement('div');
+                installBanner.className = 'pwa-install-banner';
+                installBanner.innerHTML = `
+                    <div class="pwa-install-content">
+                        <div class="pwa-install-icon">📱</div>
+                        <div class="pwa-install-text">
+                            <div class="pwa-install-title">התקן את האפליקציה</div>
+                            <div class="pwa-install-subtitle">גישה מהירה ונוחה יותר לניהול הקניות שלך</div>
+                        </div>
+                    </div>
+                    <div class="pwa-install-actions">
+                        <button class="pwa-install-btn" id="install-app-btn">
+                            <span>התקן עכשיו</span>
+                            <span>⚡</span>
+                        </button>
+                        <button class="pwa-close-btn" id="dismiss-install-btn">
+                            אולי מאוחר יותר
+                        </button>
+                    </div>
+                `;
                 
-                installButton.onclick = async () => {
+                document.body.appendChild(installBanner);
+                
+                // הצג את ההתראה עם אנימציה
+                setTimeout(() => {
+                    installBanner.classList.add('show');
+                }, 1000); // המתן שנייה לפני הצגה
+                
+                // כפתור התקנה
+                document.getElementById('install-app-btn').onclick = async () => {
                     if (deferredPrompt) {
                         deferredPrompt.prompt();
                         const result = await deferredPrompt.userChoice;
                         console.log('User response to install prompt:', result.outcome);
+                        
                         if (result.outcome === 'accepted') {
                             console.log('User accepted the install prompt');
-                            installButton.style.display = 'none';
+                            // הסר את ההתראה
+                            installBanner.classList.remove('show');
+                            setTimeout(() => {
+                                installBanner.remove();
+                            }, 500);
+                            
+                            // הצג הודעת הצלחה
+                            showSuccessMessage();
+                        } else {
+                            // המשתמש דחה - שמור בלוקל סטורג'
+                            localStorage.setItem('pwa-install-dismissed', 'true');
+                            localStorage.setItem('pwa-install-dismissed-time', Date.now().toString());
                         }
+                        
                         deferredPrompt = null;
                     }
                 };
+                
+                // כפתור ביטול
+                document.getElementById('dismiss-install-btn').onclick = () => {
+                    installBanner.classList.remove('show');
+                    setTimeout(() => {
+                        installBanner.remove();
+                    }, 500);
+                    
+                    // שמור שהמשתמש דחה
+                    localStorage.setItem('pwa-install-dismissed', 'true');
+                    localStorage.setItem('pwa-install-dismissed-time', Date.now().toString());
+                };
+                
+                // הסתר אוטומטית אחרי 30 שניות
+                setTimeout(() => {
+                    if (installBanner && installBanner.classList.contains('show')) {
+                        installBanner.classList.remove('show');
+                        setTimeout(() => {
+                            if (installBanner && installBanner.parentNode) {
+                                installBanner.remove();
+                            }
+                        }, 500);
+                    }
+                }, 30000);
             });
+            
+            // הודעת הצלחה
+            function showSuccessMessage() {
+                const successBanner = document.createElement('div');
+                successBanner.className = 'pwa-install-banner show';
+                successBanner.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+                successBanner.innerHTML = `
+                    <div class="pwa-install-content">
+                        <div class="pwa-install-icon">✅</div>
+                        <div class="pwa-install-text">
+                            <div class="pwa-install-title">האפליקציה הותקנה בהצלחה!</div>
+                            <div class="pwa-install-subtitle">תוכל למצוא אותה במסך הבית שלך</div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(successBanner);
+                
+                setTimeout(() => {
+                    successBanner.classList.remove('show');
+                    setTimeout(() => {
+                        successBanner.remove();
+                    }, 500);
+                }, 5000);
+            }
             
             // בדוק אם האפליקציה כבר מותקנת
             window.addEventListener('appinstalled', () => {
                 console.log('PWA was installed');
-                if (installButton) {
-                    installButton.style.display = 'none';
+                if (installBanner) {
+                    installBanner.classList.remove('show');
+                    setTimeout(() => {
+                        installBanner.remove();
+                    }, 500);
                 }
             });
             

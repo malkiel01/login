@@ -541,11 +541,11 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
         // בדוק התראות כל 30 שניות
-        setInterval(checkForNotifications, 30000);
+        setInterval(checkForNotifications, 3000);
 
         // בדוק מיד בטעינה
         window.addEventListener('load', () => {
-            setTimeout(checkForNotifications, 2000);
+            setTimeout(checkForNotifications, 200);
         });
 
         // CSS לאנימציה

@@ -16,7 +16,7 @@ const urlsToCache = [
   '/family/css/group.css',
   '/family/css/styles.css',
   '/family/js/group.js',
-  '/family/js/notifications.js',
+  '/family/js/notification-prompt.js',
   '/family/offline.html',
   '/family/images/icons/android/android-launchericon-192-192.png',
   '/family/images/icons/android/android-launchericon-512-512.png',

@@ -559,11 +559,6 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     התנתק
                 </a>
             </div>
-            <!-- כפתור התראות -->
-            <!-- <button id="enable-notifications" class="btn btn-sm btn-outline-light me-2" 
-                    onclick="enableNotifications()" style="border-radius: 20px; padding: 5px 15px;">
-                <i class="fas fa-bell"></i> התראות
-            </button> -->
         </div>
     </nav>
 
@@ -842,7 +837,6 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
     </script>
 
-    <script src="js/notifications.js"></script>
     <!-- הוסף לפני סוף ה-body -->
     <script src="../js/notification-prompt.js"></script>
     <script>

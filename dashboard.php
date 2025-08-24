@@ -558,5 +558,150 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
         `;
         document.head.appendChild(style);
     </script>
+
+    <!-- הוסף בתחתית הדף, לפני </body> -->
+    <div id="debug-panel" style="position: fixed; bottom: 10px; right: 10px; background: white; 
+        border: 2px solid #667eea; border-radius: 10px; padding: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
+        z-index: 9999; direction: rtl; font-size: 12px; max-width: 300px;">
+        
+        <h4 style="margin: 0 0 10px 0; color: #667eea;">🔧 פאנל דיבאג</h4>
+        
+        <button onclick="testNotifications()" style="background: #667eea; color: white; border: none; 
+                padding: 8px 15px; border-radius: 5px; margin: 5px; width: 100%;">
+            בדוק הרשאות התראות
+        </button>
+        
+        <button onclick="createTestNotification()" style="background: #28a745; color: white; border: none; 
+                padding: 8px 15px; border-radius: 5px; margin: 5px; width: 100%;">
+            צור התראת בדיקה
+        </button>
+        
+        <button onclick="checkPendingNotifications()" style="background: #ffc107; color: white; border: none; 
+                padding: 8px 15px; border-radius: 5px; margin: 5px; width: 100%;">
+            בדוק התראות ממתינות
+        </button>
+        
+        <div id="debug-output" style="background: #f8f9fa; border-radius: 5px; padding: 10px; 
+            margin-top: 10px; font-family: monospace; font-size: 11px; max-height: 200px; overflow-y: auto;">
+            מוכן לבדיקה...
+        </div>
+        
+        <button onclick="this.parentElement.style.display='none'" 
+                style="background: #dc3545; color: white; border: none; 
+                padding: 5px 10px; border-radius: 5px; margin-top: 10px; font-size: 10px;">
+            סגור
+        </button>
+    </div>
+
+    <script>
+        function debugLog(message, data = null) {
+            const output = document.getElementById('debug-output');
+            const time = new Date().toLocaleTimeString('he-IL');
+            let html = `<div style="border-bottom: 1px solid #dee2e6; padding: 5px 0;">`;
+            html += `<strong>[${time}]</strong> ${message}`;
+            if (data) {
+                html += `<pre style="margin: 5px 0; font-size: 10px;">${JSON.stringify(data, null, 2)}</pre>`;
+            }
+            html += `</div>`;
+            output.innerHTML = html + output.innerHTML;
+        }
+
+        function testNotifications() {
+            debugLog('בודק הרשאות...');
+            
+            // בדוק תמיכה
+            if (!('Notification' in window)) {
+                debugLog('❌ הדפדפן לא תומך בהתראות');
+                return;
+            }
+            
+            debugLog('✅ יש תמיכה בהתראות');
+            debugLog('הרשאה נוכחית: ' + Notification.permission);
+            
+            if (Notification.permission === 'default') {
+                debugLog('מבקש הרשאה...');
+                Notification.requestPermission().then(permission => {
+                    debugLog('תשובה: ' + permission);
+                    if (permission === 'granted') {
+                        debugLog('✅ הרשאה ניתנה!');
+                        // נסה התראה
+                        new Notification('בדיקה', {
+                            body: 'ההתראות עובדות! 🎉',
+                            icon: '/family/images/icons/android/android-launchericon-192-192.png'
+                        });
+                    }
+                });
+            } else if (Notification.permission === 'granted') {
+                debugLog('✅ כבר יש הרשאה');
+                try {
+                    new Notification('בדיקה', {
+                        body: 'ההתראות עובדות! 🎉',
+                        icon: '/family/images/icons/android/android-launchericon-192-192.png'
+                    });
+                    debugLog('✅ התראה נשלחה');
+                } catch (e) {
+                    debugLog('❌ שגיאה: ' + e.message);
+                }
+            } else {
+                debugLog('❌ הרשאה נדחתה');
+            }
+        }
+
+        function createTestNotification() {
+            debugLog('יוצר התראת בדיקה...');
+            
+            const testNotif = {
+                title: 'התראת בדיקה 🔔',
+                body: 'זו התראה שנוצרה מהפלאפון - ' + new Date().toLocaleTimeString('he-IL'),
+                icon: '/family/images/icons/android/android-launchericon-192-192.png'
+            };
+            
+            // הצג באנר
+            showMobileNotification(testNotif);
+            debugLog('✅ באנר הוצג');
+            
+            // נסה גם התראת מערכת
+            if (Notification.permission === 'granted') {
+                try {
+                    new Notification(testNotif.title, testNotif);
+                    debugLog('✅ התראת מערכת נשלחה');
+                } catch (e) {
+                    debugLog('⚠️ התראת מערכת נכשלה: ' + e.message);
+                }
+            }
+        }
+
+        function checkPendingNotifications() {
+            debugLog('בודק התראות ממתינות...');
+            
+            fetch('/family/api/get-notifications.php')
+                .then(r => r.json())
+                .then(data => {
+                    debugLog('תגובה מהשרת:', data);
+                    
+                    if (data.success && data.count > 0) {
+                        debugLog(`✅ נמצאו ${data.count} התראות`);
+                        data.notifications.forEach((n, i) => {
+                            debugLog(`התראה ${i+1}: ${n.title}`);
+                            showMobileNotification(n);
+                        });
+                    } else {
+                        debugLog('📭 אין התראות ממתינות');
+                    }
+                })
+                .catch(error => {
+                    debugLog('❌ שגיאה: ' + error.message);
+                });
+        }
+
+        // בדיקה אוטומטית בטעינה
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                debugLog('מערכת דיבאג פעילה');
+                debugLog('דפדפן: ' + navigator.userAgent.substring(0, 50) + '...');
+                debugLog('PWA: ' + (window.matchMedia('(display-mode: standalone)').matches ? 'כן' : 'לא'));
+            }, 1000);
+        });
+    </script>
 </body>
 </html>

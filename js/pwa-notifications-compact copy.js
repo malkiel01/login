@@ -206,14 +206,13 @@ class PWANotificationManager {
                 position: relative;
                 background: white;
                 border-radius: 20px;
-                padding: 20px;
+                padding: 25px 20px;
                 max-width: 340px;
                 width: 90%;
-                max-height: 420px; /* הגדלתי קצת */
+                max-height: 400px; /* הגבלת גובה */
                 box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
                 transform: scale(0.9) translateY(30px);
                 transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-                overflow-y: auto; /* אפשר גלילה אם צריך */
             }
             
             .pwa-notification-modal.show .pwa-modal-card {
@@ -247,18 +246,18 @@ class PWANotificationManager {
             
             /* Features - רשימה פשוטה */
             .pwa-modal-features {
-                margin-bottom: 20px;
+                margin-bottom: 25px;
             }
             
             .pwa-feature-item {
                 display: flex;
                 align-items: center;
                 gap: 12px;
-                padding: 10px 12px;
+                padding: 12px;
                 background: #f8f9ff;
-                border-radius: 10px;
-                margin-bottom: 8px;
-                font-size: 14px;
+                border-radius: 12px;
+                margin-bottom: 10px;
+                font-size: 15px;
                 color: #333;
             }
             
@@ -269,13 +268,11 @@ class PWANotificationManager {
             /* Buttons */
             .pwa-modal-buttons {
                 display: flex;
-                flex-direction: column;
                 gap: 10px;
-                margin-top: 15px;
             }
             
             .pwa-btn-allow {
-                width: 100%;
+                flex: 1;
                 background: linear-gradient(135deg, #667eea, #764ba2);
                 color: white;
                 border: none;
@@ -292,21 +289,18 @@ class PWANotificationManager {
             }
             
             .pwa-btn-later {
-                width: 100%;
-                padding: 12px 20px;
-                background: transparent;
-                color: #999;
-                border: 1px solid #e0e0e0;
+                padding: 14px 20px;
+                background: #f0f0f0;
+                color: #666;
+                border: none;
                 border-radius: 12px;
-                font-size: 14px;
+                font-size: 15px;
                 cursor: pointer;
                 transition: all 0.3s;
             }
             
-            .pwa-btn-later:hover,
             .pwa-btn-later:active {
-                background: #f8f8f8;
-                border-color: #d0d0d0;
+                background: #e0e0e0;
             }
             
             /* Toast */
@@ -343,8 +337,8 @@ class PWANotificationManager {
             /* Mobile specific */
             @media (max-width: 480px) {
                 .pwa-modal-card {
-                    padding: 18px;
-                    max-height: 90vh; /* לא יותר מ-90% מגובה המסך */
+                    padding: 20px 15px;
+                    max-height: 380px;
                     width: 92%;
                 }
                 
@@ -357,22 +351,18 @@ class PWANotificationManager {
                 }
                 
                 .pwa-feature-item {
-                    padding: 9px 10px;
-                    font-size: 13px;
+                    padding: 10px;
+                    font-size: 14px;
                 }
                 
                 .pwa-modal-buttons {
+                    flex-direction: column;
                     gap: 8px;
                 }
                 
-                .pwa-btn-allow {
+                .pwa-btn-allow, .pwa-btn-later {
+                    width: 100%;
                     padding: 12px;
-                    font-size: 15px;
-                }
-                
-                .pwa-btn-later {
-                    padding: 10px;
-                    font-size: 13px;
                 }
             }
             

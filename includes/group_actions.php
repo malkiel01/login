@@ -275,14 +275,6 @@ function addMember($pdo, $group_id, $user_id, $is_owner) {
     $stmt->execute([$email]);
     $user = $stmt->fetch();
     
-    // טען את קובץ ההתראות פעם אחת בלבד!
-    $notificationFile = dirname(__DIR__) . '/api/send-push-notification.php';
-    $canSendNotification = false;
-    if (file_exists($notificationFile)) {
-        include_once $notificationFile;  // include_once במקום require_once
-        $canSendNotification = function_exists('notifyGroupInvitation');
-    }
-    
     if ($user) {
         // בדיקה אם כבר חבר בקבוצה
         $stmt = $pdo->prepare("
@@ -319,25 +311,10 @@ function addMember($pdo, $group_id, $user_id, $is_owner) {
                     $token,
                     $user_id
                 ]);
-                
-                // בדוק התראות
-                $notificationSent = false;
-                if ($result && $canSendNotification) {
-                    $invitation_id = $pdo->lastInsertId();
-                    try {
-                        $notificationResult = @notifyGroupInvitation($invitation_id);
-                        $notificationSent = $notificationResult && isset($notificationResult['success']) && $notificationResult['success'];
-                    } catch (Exception $e) {
-                        // התעלם
-                    }
-                }
-                
                 echo json_encode([
                     'success' => $result, 
                     'invitation_sent' => true,
-                    'notification_sent' => $notificationSent,
-                    'message' => 'הזמנה נשלחה למשתמש' . ($notificationSent ? ' 🔔 והתראה נשלחה!' : ''),
-                    'show_popup' => true
+                    'message' => 'הזמנה נשלחה למשתמש'
                 ]);
                 return;
             }
@@ -360,32 +337,44 @@ function addMember($pdo, $group_id, $user_id, $is_owner) {
         $user_id
     ]);
     
-    // בדוק התראות
+    // === כאן מוסיפים את ההתראות בצורה בטוחה ===
     $notificationSent = false;
-    if ($result && $user && $canSendNotification) {
-        $invitation_id = $pdo->lastInsertId();
+    
+    // רק אם ההזמנה נשמרה והמשתמש קיים
+    if ($result && $user) {
         try {
-            $notificationResult = @notifyGroupInvitation($invitation_id);
-            $notificationSent = $notificationResult && isset($notificationResult['success']) && $notificationResult['success'];
+            $invitation_id = $pdo->lastInsertId();
             
-            if ($notificationSent) {
-                error_log("✅ Push notification sent for invitation ID: $invitation_id");
+            // בדוק אם קובץ ההתראות קיים
+            $notificationFile = dirname(__DIR__) . '/api/send-push-notification.php';
+            if (file_exists($notificationFile)) {
+                // השתמש ב-@ כדי לדכא שגיאות
+                @include_once $notificationFile;
+                
+                // בדוק אם הפונקציה קיימת
+                if (function_exists('notifyGroupInvitation')) {
+                    // נסה לקרוא לפונקציה
+                    $notificationResult = @notifyGroupInvitation($invitation_id);
+                    
+                    // בדוק תוצאה
+                    if ($notificationResult && is_array($notificationResult) && isset($notificationResult['success'])) {
+                        $notificationSent = $notificationResult['success'] === true;
+                    }
+                }
             }
         } catch (Exception $e) {
-            error_log("❌ Error sending notification: " . $e->getMessage());
+            // התעלם משגיאות - אל תחזיר אותן למשתמש
+            error_log("Notification error: " . $e->getMessage());
         }
     }
     
-    // תגובה אחת ויחידה!
+    // === תגובה סופית אחת ויחידה ===
     echo json_encode([
         'success' => $result, 
         'invitation_sent' => true,
         'notification_sent' => $notificationSent,
         'message' => 'הזמנה נשלחה למשתמש' . ($notificationSent ? ' 🔔 והתראה נשלחה!' : ''),
-        'show_popup' => true,
-        'details' => [
-            'user_exists' => ($user !== false)
-        ]
+        'show_popup' => true
     ]);
 }
 

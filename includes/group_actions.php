@@ -167,6 +167,39 @@ function addMember($pdo, $group_id, $user_id, $is_owner) {
         'message' => 'הזמנה נשלחה למשתמש'
     ]);
 
+    if ($result) {
+        $invitation_id = $pdo->lastInsertId();
+        
+        // נסה לשלוח התראת Push
+        if ($user) {
+            // המשתמש רשום במערכת - שלח לו התראה
+            require_once __DIR__ . '/../api/send-push-notification.php';
+            
+            try {
+                $notificationResult = notifyGroupInvitation($invitation_id);
+                
+                if ($notificationResult && $notificationResult['success']) {
+                    error_log("Push notification sent for invitation ID: $invitation_id");
+                } else {
+                    error_log("Failed to send push notification for invitation ID: $invitation_id");
+                }
+            } catch (Exception $e) {
+                error_log("Error sending notification: " . $e->getMessage());
+                // אל תעצור את התהליך אם ההתראה נכשלה
+            }
+        }
+        
+        echo json_encode([
+            'success' => true, 
+            'invitation_sent' => true,
+            'notification_sent' => isset($notificationResult) && $notificationResult['success'],
+            'message' => 'הזמנה נשלחה למשתמש' . 
+                        (isset($notificationResult) && $notificationResult['success'] ? ' והתראה נשלחה!' : '')
+        ]);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'שגיאה בשליחת ההזמנה']);
+    }
+
     // שלח התראה על הזמנה
     // שלח התראה על הזמנה (אם המשתמש רשום במערכת)
     if ($result && $user) {
@@ -316,6 +349,29 @@ function addPurchase($pdo, $group_id, $user_id) {
         $description,
         $imagePath
     ]);
+
+    if ($result) {
+        $purchase_id = $pdo->lastInsertId();
+        
+        // שלח התראות לכל חברי הקבוצה
+        require_once __DIR__ . '/../api/send-push-notification.php';
+        
+        try {
+            $notificationResults = notifyNewPurchase($purchase_id);
+            error_log("Push notifications sent for purchase ID: $purchase_id");
+        } catch (Exception $e) {
+            error_log("Error sending purchase notifications: " . $e->getMessage());
+        }
+        
+        echo json_encode([
+            'success' => true,
+            'purchase_id' => $purchase_id,
+            'notifications_sent' => isset($notificationResults)
+        ]);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'שגיאה בהוספת הקנייה']);
+    }
+
     echo json_encode(['success' => $result]);
 }
 

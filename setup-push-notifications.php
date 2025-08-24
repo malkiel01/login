@@ -545,35 +545,7 @@ VAPID_PRIVATE_KEY=<?php echo $vapidKeys['privateKey']; ?></pre>
                 showMessage('❌ שגיאה בהרשמה: ' + error.message, 'error');
             }
         }
-        
-        async function testNotification2() {
-            if (Notification.permission !== 'granted') {
-                showMessage('❌ יש לאשר הרשאות תחילה', 'error');
-                return;
-            }
-            
-            // התראה מקומית
-            const notification = new Notification('התראת בדיקה 🎉', {
-                body: 'אם אתה רואה את זה, Push Notifications עובד!',
-                icon: '/family/images/icons/android/android-launchericon-192-192.png',
-                badge: '/family/images/icons/android/android-launchericon-96-96.png',
-                vibrate: [200, 100, 200],
-                tag: 'test-notification',
-                requireInteraction: true,
-                actions: [
-                    { action: 'like', title: '👍 אהבתי' },
-                    { action: 'close', title: '❌ סגור' }
-                ]
-            });
-            
-            notification.onclick = () => {
-                window.open('/family/dashboard.php');
-                notification.close();
-            };
-            
-            showMessage('📢 התראה נשלחה! בדוק את שורת ההתראות', 'success');
-        }
-        // החלף את הפונקציה testNotification בקוד הבא:
+
         async function testNotification() {
             console.log('Testing notification...');
             

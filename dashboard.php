@@ -418,5 +418,61 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <!-- <script src="js/pwa-notifications.js"></script> -->
     <script src="js/pwa-installer.js"></script>
     <script src="js/dashboard.js"></script>
+
+    // הוסף את הקוד הזה ב-dashboard.php לפני </body>
+
+    <script>
+        // בדיקת התראות חדשות כל 30 שניות
+        async function checkForNotifications() {
+            try {
+                const response = await fetch('/api/trigger-notification.php?action=check', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({})
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.notifications && data.notifications.length > 0) {
+                    // יש התראות חדשות!
+                    const registration = await navigator.serviceWorker.ready;
+                    
+                    for (const notif of data.notifications) {
+                        await registration.showNotification(notif.title, {
+                            body: notif.body,
+                            icon: notif.icon || '/images/icons/android/android-launchericon-192-192.png',
+                            badge: '/images/icons/android/android-launchericon-96-96.png',
+                            tag: 'notification-' + notif.id,
+                            data: {
+                                url: notif.url,
+                                id: notif.id
+                            },
+                            vibrate: [200, 100, 200],
+                            dir: 'rtl',
+                            lang: 'he'
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking notifications:', error);
+            }
+        }
+
+        // בדוק התראות בטעינת הדף
+        window.addEventListener('load', () => {
+            // בדוק מיד
+            checkForNotifications();
+            
+            // בדוק כל 30 שניות
+            setInterval(checkForNotifications, 30000);
+        });
+
+        // בדוק גם כשהטאב חוזר לפוקוס
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                checkForNotifications();
+            }
+        });
+    </script>
 </body>
 </html>

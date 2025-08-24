@@ -211,7 +211,13 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <meta name="theme-color" content="#667eea">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <link rel="apple-touch-icon" href="/family/images/icons/icon-192x192.png">
+
+    <!-- עדכן את הלינקים לאייקונים החדשים -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/family/images/icons/ios/32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/family/images/icons/ios/16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/family/images/icons/ios/180.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/family/images/icons/ios/152.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="/family/images/icons/ios/120.png">
 
     <!-- Service Worker Registration FIXED -->
     <script>
@@ -298,15 +304,6 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
             }
         }
     </script>
-
-    <!-- Service Worker -->
-    <!-- <script>
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('service-worker.js')
-            .then(reg => console.log('SW registered'))
-            .catch(err => console.error('SW failed'));
-    }
-    </script> -->
 </head>
 <body>
     <!-- Navigation Bar -->

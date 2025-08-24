@@ -1,10 +1,26 @@
 // service-worker.js - Simple working version
 const CACHE_NAME = 'panan-bakan-v1.0.3';
+// const urlsToCache = [
+//   '/family/',
+//   '/family/dashboard.php',
+//   '/family/manifest.json',
+//   '/family/offline.html'
+// ];
+
+// הוסף את האייקונים החדשים לרשימת הקבצים לקאש
 const urlsToCache = [
   '/family/',
   '/family/dashboard.php',
-  '/family/manifest.json',
-  '/family/offline.html'
+  '/family/auth/login.php',
+  '/family/css/dashboard.css',
+  '/family/css/group.css',
+  '/family/css/styles.css',
+  '/family/js/group.js',
+  '/family/js/notifications.js',
+  '/family/offline.html',
+  '/family/images/icons/android/android-launchericon-192-192.png',
+  '/family/images/icons/android/android-launchericon-512-512.png',
+  '/family/images/icons/ios/180.png'
 ];
 
 self.addEventListener('install', event => {

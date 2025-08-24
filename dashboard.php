@@ -204,23 +204,109 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>קבוצות הרכישה שלי - <?php echo SITE_NAME; ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="/family/css/dashboard.css">
 
     <!-- PWA Meta Tags -->
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="/family/manifest.json">
     <meta name="theme-color" content="#667eea">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <link rel="apple-touch-icon" href="images/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/family/images/icons/icon-192x192.png">
+
+    <!-- Service Worker Registration FIXED -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/family/service-worker.js', {scope: '/family/'})
+                    .then(reg => {
+                        console.log('Service Worker registered:', reg);
+                        
+                        // בדוק אם יש עדכון
+                        reg.addEventListener('updatefound', () => {
+                            console.log('Service Worker update found!');
+                        });
+                    })
+                    .catch(err => console.error('Service Worker registration failed:', err));
+            });
+            
+            // האזן ל-install prompt
+            let deferredPrompt;
+            let installButton = null;
+            
+            window.addEventListener('beforeinstallprompt', (e) => {
+                console.log('beforeinstallprompt event fired!');
+                e.preventDefault();
+                deferredPrompt = e;
+                
+                // הצג כפתור התקנה אם קיים
+                installButton = document.getElementById('install-pwa-btn');
+                if (!installButton) {
+                    // צור כפתור התקנה דינמי
+                    installButton = document.createElement('button');
+                    installButton.id = 'install-pwa-btn';
+                    installButton.innerHTML = '📱 התקן אפליקציה';
+                    installButton.style.cssText = `
+                        position: fixed;
+                        bottom: 20px;
+                        right: 20px;
+                        background: linear-gradient(135deg, #667eea, #764ba2);
+                        color: white;
+                        border: none;
+                        padding: 15px 25px;
+                        border-radius: 50px;
+                        font-size: 16px;
+                        font-weight: bold;
+                        cursor: pointer;
+                        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+                        z-index: 9999;
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                    `;
+                    document.body.appendChild(installButton);
+                }
+                
+                installButton.style.display = 'flex';
+                
+                installButton.onclick = async () => {
+                    if (deferredPrompt) {
+                        deferredPrompt.prompt();
+                        const result = await deferredPrompt.userChoice;
+                        console.log('User response to install prompt:', result.outcome);
+                        if (result.outcome === 'accepted') {
+                            console.log('User accepted the install prompt');
+                            installButton.style.display = 'none';
+                        }
+                        deferredPrompt = null;
+                    }
+                };
+            });
+            
+            // בדוק אם האפליקציה כבר מותקנת
+            window.addEventListener('appinstalled', () => {
+                console.log('PWA was installed');
+                if (installButton) {
+                    installButton.style.display = 'none';
+                }
+            });
+            
+            // בדוק אם רץ כ-PWA
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                console.log('Running as PWA');
+            } else {
+                console.log('Running in browser');
+            }
+        }
+    </script>
 
     <!-- Service Worker -->
-    <script>
+    <!-- <script>
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('service-worker.js')
             .then(reg => console.log('SW registered'))
             .catch(err => console.error('SW failed'));
     }
-    </script>
+    </script> -->
 </head>
 <body>
     <!-- Navigation Bar -->

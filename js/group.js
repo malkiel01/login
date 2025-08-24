@@ -229,7 +229,7 @@ document.addEventListener('DOMContentLoaded', function() {
             formData.append('participation_type', participationType);
             formData.append('participation_value', participationValue);
             
-                        // fetch('group.php?id=' + groupId, {
+            // fetch('group.php?id=' + groupId, {
             //     method: 'POST',
             //     headers: {
             //         'X-Requested-With': 'XMLHttpRequest'
@@ -337,93 +337,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     alert(data.message || 'שגיאה בהוספת המשתתף');
                 }
             })
-            // .then(data => {
-            //     if (data.success) {
-            //         // אם יש סימן להצגת פופאפ או אם יש התראה
-            //         if (data.show_popup || data.notification_sent !== undefined) {
-            //             // צור פופאפ
-            //             const popup = document.createElement('div');
-            //             popup.style.cssText = `
-            //                 position: fixed;
-            //                 top: 50%;
-            //                 left: 50%;
-            //                 transform: translate(-50%, -50%);
-            //                 background: white;
-            //                 border-radius: 15px;
-            //                 padding: 30px;
-            //                 box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            //                 z-index: 10000;
-            //                 max-width: 400px;
-            //                 text-align: center;
-            //                 animation: popIn 0.3s ease;
-            //             `;
-                        
-            //             // אייקון וצבע לפי סטטוס
-            //             const icon = data.notification_sent ? '✅' : '⚠️';
-            //             const color = data.notification_sent ? '#28a745' : '#ffc107';
-                        
-            //             popup.innerHTML = `
-            //                 <div style="font-size: 60px; margin-bottom: 20px;">${icon}</div>
-            //                 <h2 style="color: #333; margin-bottom: 15px;">הזמנה נשלחה!</h2>
-            //                 <p style="color: #666; font-size: 16px; margin-bottom: 10px;">
-            //                     ${data.message}
-            //                 </p>
-            //                 ${data.notification_sent ? `
-            //                     <div style="background: #d4edda; color: #155724; padding: 10px; border-radius: 8px; margin: 15px 0;">
-            //                         <strong>🔔 התראת Push נשלחה!</strong><br>
-            //                         <small>המשתמש יקבל התראה בזמן אמת</small>
-            //                     </div>
-            //                 ` : data.details && !data.details.user_exists ? `
-            //                     <div style="background: #fff3cd; color: #856404; padding: 10px; border-radius: 8px; margin: 15px 0;">
-            //                         <strong>המשתמש טרם נרשם למערכת</strong><br>
-            //                         <small>ההתראה תישלח כשיירשם</small>
-            //                     </div>
-            //                 ` : `
-            //                     <div style="background: #f8d7da; color: #721c24; padding: 10px; border-radius: 8px; margin: 15px 0;">
-            //                         <strong>ההתראה לא נשלחה</strong><br>
-            //                         <small>ההזמנה נשמרה אך ללא התראת Push</small>
-            //                     </div>
-            //                 `}
-            //                 <button onclick="this.parentElement.remove(); location.reload();" 
-            //                         style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            //                             color: white; border: none; padding: 12px 30px;
-            //                             border-radius: 8px; font-size: 16px; cursor: pointer;
-            //                             margin-top: 15px;">
-            //                     אישור
-            //                 </button>
-            //             `;
-                        
-            //             document.body.appendChild(popup);
-                        
-            //             // הוסף אנימציה
-            //             const style = document.createElement('style');
-            //             style.textContent = `
-            //                 @keyframes popIn {
-            //                     from {
-            //                         transform: translate(-50%, -50%) scale(0.8);
-            //                         opacity: 0;
-            //                     }
-            //                     to {
-            //                         transform: translate(-50%, -50%) scale(1);
-            //                         opacity: 1;
-            //                     }
-            //                 }
-            //             `;
-            //             document.head.appendChild(style);
-                        
-            //         } else {
-            //             // אם אין סימן לפופאפ, רק רענן
-            //             location.reload();
-            //         }
-                    
-            //         // סגור את המודל
-            //         closeAddMemberModal();
-                    
-            //     } else {
-            //         // הצגת הודעת שגיאה
-            //         alert(data.message || 'שגיאה בהוספת המשתתף');
-            //     }
-            // })
             .catch(error => {
                 console.error('Error:', error);
                 alert('שגיאה בתקשורת עם השרת: ' + error.message);

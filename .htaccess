@@ -1,6 +1,24 @@
 # הפעלת mod_rewrite
 RewriteEngine On
 
+# === אפשר גישה לקבצי PWA חשובים ===
+# אפשר גישה ל-manifest.json
+RewriteRule ^manifest\.json$ - [L]
+
+# אפשר גישה ל-service-worker.js
+RewriteRule ^service-worker\.js$ - [L]
+
+# אפשר גישה לתיקיית images
+RewriteRule ^images/.*\.(png|jpg|jpeg|gif|svg|ico)$ - [L]
+
+# אפשר גישה לדף הבדיקה
+RewriteRule ^check-pwa\.php$ - [L]
+
+# אפשר גישה ל-offline.html
+RewriteRule ^offline\.html$ - [L]
+
+# === הגנות בסיסיות ===
+
 # הגנה על קבצי ENV
 <Files .env>
     Order allow,deny
@@ -16,10 +34,12 @@ RewriteEngine On
 # חסימת גישה ישירה לקבצי PHP בתיקיות includes
 RewriteRule ^includes/.*\.php$ - [F,L]
 
-# חסימת גישה ישירה לקבצי דיבאג וטסט
+# חסימת גישה ישירה לקבצי דיבאג וטסט (חוץ מ-check-pwa)
+RewriteCond %{REQUEST_URI} !check-pwa\.php$
 RewriteRule ^(debug|test.*|find.*)\.php$ - [F,L]
 
 # הגדרת AJAX token check - מאפשר רק בקשות AJAX לקבצים מסוימים
+# אבל לא לבקשות GET רגילות
 RewriteCond %{REQUEST_METHOD} POST
 RewriteCond %{HTTP:X-Requested-With} !XMLHttpRequest
 RewriteRule ^(dashboard|group)\.php$ - [F,L]
@@ -28,8 +48,10 @@ RewriteRule ^(dashboard|group)\.php$ - [F,L]
 RewriteRule ^(vendor|logs|cache|sessions)/.*$ - [F,L]
 
 # הפניה של כל בקשה לא מורשית ל-index
+# אבל אל תפנה קבצי CSS, JS, ותמונות
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} !\.(css|js|png|jpg|jpeg|gif|svg|ico|json|html)$
 RewriteRule ^.*$ index.php [L]
 
 # הגדרות אבטחה נוספות
@@ -42,12 +64,34 @@ Options -MultiViews
     Deny from all
 </FilesMatch>
 
-# הגדרת headers לאבטחה
+# הגדרת headers לאבטחה עם תמיכה ב-PWA
 <IfModule mod_headers.c>
     Header set X-Content-Type-Options "nosniff"
-    Header set X-Frame-Options "SAMEORIGIN"
+    # X-Frame-Options מוגדר רק לדפים שאינם PWA
+    <FilesMatch "\.php$">
+        Header set X-Frame-Options "SAMEORIGIN"
+    </FilesMatch>
     Header set X-XSS-Protection "1; mode=block"
+    
+    # Headers נוספים ל-PWA
+    <FilesMatch "manifest\.json$">
+        Header set Cache-Control "public, max-age=604800"
+        Header set Content-Type "application/manifest+json"
+    </FilesMatch>
+    
+    <FilesMatch "service-worker\.js$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Service-Worker-Allowed "/"
+    </FilesMatch>
 </IfModule>
+
+# הגדרת MIME types נכונים
+AddType application/manifest+json .json
+AddType text/javascript .js
+AddType text/css .css
+AddType image/png .png
+AddType image/jpeg .jpg .jpeg
+AddType image/svg+xml .svg
 
 # הגבלת גודל העלאות
 php_value upload_max_filesize 5M
@@ -59,7 +103,7 @@ AddDefaultCharset UTF-8
 # מניעת גישה ל-git
 RedirectMatch 404 /\.git
 
-# Custom error pages
+# Custom error pages - אבל לא לקבצי PWA
 ErrorDocument 403 /index.php
 ErrorDocument 404 /index.php
 ErrorDocument 500 /index.php

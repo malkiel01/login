@@ -45,7 +45,7 @@ function handleGroupActions($pdo, $group_id, $user_id, $is_owner) {
     }
 }
 
-function addMember2($pdo, $group_id, $user_id, $is_owner) {
+function addMember($pdo, $group_id, $user_id, $is_owner) {
     if (!$is_owner) {
         echo json_encode(['success' => false, 'message' => 'אין הרשאה']);
         return;
@@ -416,7 +416,7 @@ function addMember3($pdo, $group_id, $user_id, $is_owner) {
 }
 
 // פונקציה מתוקנת - נקייה מ-warnings
-function addMember($pdo, $group_id, $user_id, $is_owner) {
+function addMember2($pdo, $group_id, $user_id, $is_owner) {
     // וודא שאין output קודם
     if (ob_get_level()) ob_clean();
     

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>התקנת האפליקציה</title>
+    <link rel="manifest" href="/family/manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+        }
+        .install-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .icon {
+            font-size: 80px;
+            margin: 20px 0;
+        }
+        .install-methods {
+            margin: 30px 0;
+        }
+        .method {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            border: 2px solid #e9ecef;
+        }
+        .method h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px;
+            display: inline-block;
+            text-decoration: none;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+        .browser-specific {
+            display: none;
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .ios-install {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .ios-install ol {
+            text-align: right;
+            margin: 15px 0;
+        }
+        .ios-install li {
+            margin: 10px 0;
+        }
+        code {
+            background: #f1f3f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="install-container">
+        <div class="icon">📱</div>
+        <h1>התקנת האפליקציה</h1>
+        
+        <!-- כפתור התקנה ראשי -->
+        <button id="install-btn" class="btn" style="display:none;">
+            התקן עכשיו
+        </button>
+        
+        <!-- הודעה ספציפית לדפדפן -->
+        <div id="browser-message" class="browser-specific"></div>
+        
+        <!-- שיטות התקנה -->
+        <div class="install-methods">
+            <!-- Chrome/Edge -->
+            <div id="chrome-method" class="method" style="display:none;">
+                <h3>🌐 Chrome / Edge</h3>
+                <p><strong>אפשרות 1:</strong> חפש אייקון התקנה בשורת הכתובת (מימין)</p>
+                <p><strong>אפשרות 2:</strong> תפריט (⋮) ← "התקן אפליקציה"</p>
+                <p><strong>אפשרות 3:</strong> <kbd>Ctrl+Shift+I</kbd> ← Application ← Install</p>
+            </div>
+            
+            <!-- iOS/Safari -->
+            <div id="ios-method" class="ios-install" style="display:none;">
+                <h3>🍎 iPhone / iPad</h3>
+                <ol>
+                    <li>פתח ב-Safari (חובה!)</li>
+                    <li>לחץ על כפתור השיתוף <span style="font-size:20px;">⬆️</span></li>
+                    <li>גלול למטה ובחר "Add to Home Screen"</li>
+                    <li>תן שם לאפליקציה</li>
+                    <li>לחץ "Add"</li>
+                </ol>
+            </div>
+            
+            <!-- Android -->
+            <div id="android-method" class="method" style="display:none;">
+                <h3>🤖 Android</h3>
+                <p>לחץ על שלוש הנקודות (⋮) ← "התקן אפליקציה"</p>
+                <p>או חפש באנר התקנה בתחתית המסך</p>
+            </div>
+        </div>
+        
+        <!-- קישור חזרה -->
+        <div style="margin-top: 30px;">
+            <a href="/family/auth/login.php" class="btn" style="background: #6c757d;">
+                חזור לאפליקציה
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // זיהוי דפדפן וOS
+        function detectBrowser() {
+            const ua = navigator.userAgent;
+            const isIOS = /iPhone|iPad|iPod/.test(ua);
+            const isAndroid = /Android/.test(ua);
+            const isChrome = /Chrome/.test(ua) && !/Edge/.test(ua);
+            const isEdge = /Edge/.test(ua);
+            const isSafari = /Safari/.test(ua) && !/Chrome/.test(ua);
+            
+            return { isIOS, isAndroid, isChrome, isEdge, isSafari };
+        }
+        
+        // רישום Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/family/service-worker.js')
+                .then(reg => console.log('Service Worker registered'))
+                .catch(err => console.error('Service Worker failed:', err));
+        }
+        
+        // הצגת הוראות בהתאם לדפדפן
+        const browser = detectBrowser();
+        const message = document.getElementById('browser-message');
+        
+        if (browser.isIOS) {
+            document.getElementById('ios-method').style.display = 'block';
+            if (!browser.isSafari) {
+                message.innerHTML = '⚠️ <strong>שים לב:</strong> ב-iPhone/iPad חובה להשתמש ב-Safari להתקנה!';
+                message.style.display = 'block';
+                message.style.background = '#fff3cd';
+                message.style.color = '#856404';
+            }
+        } else if (browser.isAndroid) {
+            document.getElementById('android-method').style.display = 'block';
+            document.getElementById('chrome-method').style.display = 'block';
+        } else {
+            document.getElementById('chrome-method').style.display = 'block';
+        }
+        
+        // טיפול בהתקנת PWA
+        let deferredPrompt = null;
+        const installBtn = document.getElementById('install-btn');
+        
+        // האזנה לאירוע התקנה
+        window.addEventListener('beforeinstallprompt', (e) => {
+            console.log('Install prompt available!');
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // הצג כפתור התקנה
+            installBtn.style.display = 'inline-block';
+            
+            // הצג הודעה
+            message.innerHTML = '✅ האפליקציה מוכנה להתקנה!';
+            message.style.display = 'block';
+        });
+        
+        // התקנה בלחיצה
+        installBtn.addEventListener('click', async () => {
+            if (!deferredPrompt) {
+                alert('ההתקנה לא זמינה כרגע. נסה לרענן את הדף.');
+                return;
+            }
+            
+            deferredPrompt.prompt();
+            const result = await deferredPrompt.userChoice;
+            
+            if (result.outcome === 'accepted') {
+                message.innerHTML = '🎉 האפליקציה הותקנה בהצלחה!';
+                installBtn.style.display = 'none';
+            }
+            
+            deferredPrompt = null;
+        });
+        
+        // בדיקה אם כבר מותקן
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+            message.innerHTML = '✅ האפליקציה כבר מותקנת!';
+            message.style.display = 'block';
+            document.querySelector('.install-methods').style.display = 'none';
+        }
+        
+        // הוספת דיבוג
+        console.log('Browser detection:', browser);
+        console.log('Waiting for install prompt...');
+        
+        // נסיון לגרום ל-Chrome להציג prompt
+        setTimeout(() => {
+            // הוסף אינטראקציה מלאכותית
+            document.body.click();
+            window.scrollTo(0, 1);
+            window.scrollTo(0, 0);
+        }, 1000);
+    </script>
+</body>
+</html>

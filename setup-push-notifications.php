@@ -474,8 +474,8 @@ VAPID_PRIVATE_KEY=<?php echo $vapidKeys['privateKey']; ?></pre>
         
         async function registerServiceWorker() {
             try {
-                const registration = await navigator.serviceWorker.register('/service-worker.js', {
-                    scope: '/'
+                const registration = await navigator.serviceWorker.register('service-worker.js', {
+                    scope: '/family/'
                 });
                 console.log('Service Worker registered:', registration);
                 showMessage('✅ Service Worker נרשם בהצלחה!', 'success');

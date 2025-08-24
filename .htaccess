@@ -48,8 +48,8 @@ RewriteRule ^ - [F]
 RewriteRule ^setup-push-notifications\.php$ - [L]
 RewriteRule ^api/.*\.php$ - [L]
 
-# Firebase Cloud Messaging
-FCM_SERVER_KEY=YOUR_SERVER_KEY_HERE
+# # Firebase Cloud Messaging
+# FCM_SERVER_KEY=YOUR_SERVER_KEY_HERE
 
 # חסימת גישה ישירה לקבצי דיבאג מסוכנים בלבד
 # אבל מאפשר את קבצי הבדיקה החשובים

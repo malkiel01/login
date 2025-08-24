@@ -3,14 +3,14 @@
 const CACHE_NAME = 'panan-bakan-v1.0.0';
 const urlsToCache = [
   '/',
-  '/dashboard.php',
-  '/auth/login.php',
+  'dashboard.php',
+  'auth/login.php',
   'css/dashboard.css',
-  '/css/group.css',
-  '/css/styles.css',
-  '/js/group.js',
-  '/js/notifications.js',
-  '/offline.html',
+  'css/group.css',
+  'css/styles.css',
+  'js/group.js',
+  'js/notifications.js',
+  'offline.html',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
 ];
 

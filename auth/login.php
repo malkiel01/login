@@ -110,6 +110,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
             .catch(err => console.error('SW failed'));
     }
     </script>
+    <!-- PWA Installer Module -->
+    <script src="pwa-installer.js"></script>
 </head>
 <body>
     <div class="login-container">

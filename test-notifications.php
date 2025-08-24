@@ -195,6 +195,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $message = "תור ההתראות נוקה";
             $messageType = 'success';
             break;
+            
+        case 'process_queue':
+            // עיבוד תור התראות
+            ob_start();
+            include 'process_notifications.php';
+            $output = ob_get_clean();
+            $message = "תור ההתראות עובד. בדוק את הפלט למטה.";
+            $messageType = 'success';
+            $_SESSION['process_output'] = $output;
+            break;
     }
 }
 
@@ -669,12 +679,30 @@ try {
             
             <div class="buttons-row">
                 <form method="POST" style="display: inline;">
+                    <input type="hidden" name="action" value="process_queue">
+                    <button type="submit" class="btn btn-success">
+                        ⚡ עבד תור התראות
+                    </button>
+                </form>
+                <form method="POST" style="display: inline;">
                     <input type="hidden" name="action" value="clear_queue">
                     <button type="submit" class="btn btn-danger">
                         🗑️ נקה תור התראות
                     </button>
                 </form>
             </div>
+            
+            <?php if (isset($_SESSION['process_output'])): ?>
+            <div class="test-section" style="margin-top: 20px;">
+                <h3>פלט עיבוד התראות:</h3>
+                <pre style="background: #f8f9fa; padding: 15px; border-radius: 8px; overflow-x: auto;">
+                    <?php 
+                    echo htmlspecialchars($_SESSION['process_output']); 
+                    unset($_SESSION['process_output']);
+                    ?>
+                </pre>
+            </div>
+            <?php endif; ?>
         </div>
         
         <!-- System Info -->

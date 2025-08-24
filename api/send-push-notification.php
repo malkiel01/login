@@ -1,6 +1,6 @@
 <?php
 // api/send-push-notification.php - מערכת שליחת Push Notifications
-// require_once '../config.php';
+require_once '../config.php';
 
 /**
  * פונקציה לשליחת התראה על הזמנה לקבוצה

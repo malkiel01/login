@@ -93,9 +93,6 @@ function addMember2($pdo, $group_id, $user_id, $is_owner) {
         return;
     }
 
-
-    // echo json_encode(['success' => true, 'message' => 'test 1']);
-    
     // בדיקה אם המשתמש קיים במערכת
     $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
     $stmt->execute([$email]);
@@ -172,61 +169,61 @@ function addMember2($pdo, $group_id, $user_id, $is_owner) {
 
 
 
-    // if ($result) {
-    //     $invitation_id = $pdo->lastInsertId();
+    if ($result) {
+        $invitation_id = $pdo->lastInsertId();
         
-    //     // נסה לשלוח התראת Push
-    //     if ($user) {
-    //         // המשתמש רשום במערכת - שלח לו התראה
-    //         require_once __DIR__ . '/../api/send-push-notification.php';
+        // נסה לשלוח התראת Push
+        if ($user) {
+            // המשתמש רשום במערכת - שלח לו התראה
+            require_once __DIR__ . '/../api/send-push-notification.php';
             
-    //         try {
-    //             $notificationResult = notifyGroupInvitation($invitation_id);
+            try {
+                $notificationResult = notifyGroupInvitation($invitation_id);
                 
-    //             if ($notificationResult && $notificationResult['success']) {
-    //                 error_log("Push notification sent for invitation ID: $invitation_id");
-    //             } else {
-    //                 error_log("Failed to send push notification for invitation ID: $invitation_id");
-    //             }
-    //         } catch (Exception $e) {
-    //             error_log("Error sending notification: " . $e->getMessage());
-    //             // אל תעצור את התהליך אם ההתראה נכשלה
-    //         }
-    //     }
+                if ($notificationResult && $notificationResult['success']) {
+                    error_log("Push notification sent for invitation ID: $invitation_id");
+                } else {
+                    error_log("Failed to send push notification for invitation ID: $invitation_id");
+                }
+            } catch (Exception $e) {
+                error_log("Error sending notification: " . $e->getMessage());
+                // אל תעצור את התהליך אם ההתראה נכשלה
+            }
+        }
         
-    //     echo json_encode([
-    //         'success' => true, 
-    //         'invitation_sent' => true,
-    //         'notification_sent' => isset($notificationResult) && $notificationResult['success'],
-    //         'message' => 'הזמנה נשלחה למשתמש' . 
-    //                     (isset($notificationResult) && $notificationResult['success'] ? ' והתראה נשלחה!' : '')
-    //     ]);
-    // } else {
-    //     echo json_encode(['success' => false, 'message' => 'שגיאה בשליחת ההזמנה']);
-    // }
+        echo json_encode([
+            'success' => true, 
+            'invitation_sent' => true,
+            'notification_sent' => isset($notificationResult) && $notificationResult['success'],
+            'message' => 'הזמנה נשלחה למשתמש' . 
+                        (isset($notificationResult) && $notificationResult['success'] ? ' והתראה נשלחה!' : '')
+        ]);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'שגיאה בשליחת ההזמנה']);
+    }
 
-    // // שלח התראה על הזמנה
-    // // שלח התראה על הזמנה (אם המשתמש רשום במערכת)
-    // if ($result && $user) {
-    //     // נסה לשלוח התראה
-    //     try {
-    //         // הכנס את ה-ID של ההזמנה האחרונה
-    //         $invitation_id = $pdo->lastInsertId();
+    // שלח התראה על הזמנה
+    // שלח התראה על הזמנה (אם המשתמש רשום במערכת)
+    if ($result && $user) {
+        // נסה לשלוח התראה
+        try {
+            // הכנס את ה-ID של ההזמנה האחרונה
+            $invitation_id = $pdo->lastInsertId();
             
-    //         // רשום ביומן לבדיקה
-    //         error_log("New invitation created: ID=$invitation_id for email=$email");
+            // רשום ביומן לבדיקה
+            error_log("New invitation created: ID=$invitation_id for email=$email");
             
-    //         // בעתיד כאן תהיה קריאה לשירות ההתראות
-    //         // $notificationService->notifyGroupInvitation($invitation_id);
-    //     } catch (Exception $e) {
-    //         // אם ההתראה נכשלה, לא נעצור את התהליך
-    //         error_log("Failed to send notification: " . $e->getMessage());
-    //     }
-    // }
+            // בעתיד כאן תהיה קריאה לשירות ההתראות
+            // $notificationService->notifyGroupInvitation($invitation_id);
+        } catch (Exception $e) {
+            // אם ההתראה נכשלה, לא נעצור את התהליך
+            error_log("Failed to send notification: " . $e->getMessage());
+        }
+    }
 }
 
 // פונקציה מתוקנת עם דיבאג מלא
-function addMember($pdo, $group_id, $user_id, $is_owner) {
+function addMember3($pdo, $group_id, $user_id, $is_owner) {
     if (!$is_owner) {
         echo json_encode(['success' => false, 'message' => 'אין הרשאה']);
         return;
@@ -415,6 +412,167 @@ function addMember($pdo, $group_id, $user_id, $is_owner) {
         
     } else {
         echo json_encode(['success' => false, 'message' => 'שגיאה בשליחת ההזמנה']);
+    }
+}
+
+// פונקציה מתוקנת - נקייה מ-warnings
+function addMember($pdo, $group_id, $user_id, $is_owner) {
+    // וודא שאין output קודם
+    if (ob_get_level()) ob_clean();
+    
+    // הגדר header נכון
+    header('Content-Type: application/json; charset=utf-8');
+    
+    if (!$is_owner) {
+        echo json_encode(['success' => false, 'message' => 'אין הרשאה']);
+        return;
+    }
+    
+    $email = trim($_POST['email'] ?? '');
+    $nickname = trim($_POST['nickname'] ?? '');
+    $participation_type = $_POST['participation_type'] ?? 'percentage';
+    $participation_value = floatval($_POST['participation_value'] ?? 0);
+    
+    // בדיקת תקינות
+    if (empty($email) || empty($nickname)) {
+        echo json_encode(['success' => false, 'message' => 'יש למלא את כל השדות']);
+        return;
+    }
+    
+    // בדיקת אחוזים קיימים
+    if ($participation_type == 'percentage') {
+        $stmt = $pdo->prepare("
+            SELECT SUM(participation_value) as total_percentage 
+            FROM group_members 
+            WHERE group_id = ? AND participation_type = 'percentage' AND is_active = 1
+        ");
+        $stmt->execute([$group_id]);
+        $currentPercentage = $stmt->fetch()['total_percentage'] ?? 0;
+        
+        if ($currentPercentage + $participation_value > 100) {
+            $available = 100 - $currentPercentage;
+            echo json_encode([
+                'success' => false, 
+                'message' => "סכום האחוזים חורג מ-100%. נותרו $available% זמינים"
+            ]);
+            return;
+        }
+    }
+    
+    // בדיקה אם כבר קיימת הזמנה ממתינה
+    $stmt = $pdo->prepare("
+        SELECT id FROM group_invitations 
+        WHERE group_id = ? AND email = ? AND status = 'pending'
+    ");
+    $stmt->execute([$group_id, $email]);
+    if ($stmt->fetch()) {
+        echo json_encode(['success' => false, 'message' => 'כבר קיימת הזמנה ממתינה למשתמש זה']);
+        return;
+    }
+    
+    // בדיקה אם המשתמש קיים במערכת
+    $stmt = $pdo->prepare("SELECT id, name FROM users WHERE email = ?");
+    $stmt->execute([$email]);
+    $user = $stmt->fetch();
+    
+    if ($user) {
+        // בדיקה אם כבר חבר בקבוצה
+        $stmt = $pdo->prepare("
+            SELECT id, is_active FROM group_members 
+            WHERE group_id = ? AND user_id = ?
+        ");
+        $stmt->execute([$group_id, $user['id']]);
+        $existingMember = $stmt->fetch();
+        
+        if ($existingMember && $existingMember['is_active']) {
+            echo json_encode(['success' => false, 'message' => 'המשתמש כבר חבר פעיל בקבוצה']);
+            return;
+        }
+    }
+    
+    // תמיד שלח הזמנה
+    $token = bin2hex(random_bytes(32));
+    $stmt = $pdo->prepare("
+        INSERT INTO group_invitations (group_id, email, nickname, participation_type, participation_value, token, invited_by) 
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    ");
+    
+    try {
+        $result = $stmt->execute([
+            $group_id,
+            $email,
+            $nickname,
+            $participation_type,
+            $participation_value,
+            $token,
+            $user_id
+        ]);
+        
+        if (!$result) {
+            echo json_encode(['success' => false, 'message' => 'שגיאה בשליחת ההזמנה']);
+            return;
+        }
+        
+        $invitation_id = $pdo->lastInsertId();
+        
+        // נסיון שליחת Push Notification - בצורה בטוחה
+        $notificationSent = false;
+        $notificationError = null;
+        
+        if ($user) {
+            // בדוק אם הקובץ קיים לפני הטעינה
+            $notificationFile = dirname(__DIR__) . '/api/send-push-notification.php';
+            
+            if (file_exists($notificationFile)) {
+                // דכא warnings בטעינה
+                @include_once $notificationFile;
+                
+                // בדוק אם הפונקציה קיימת
+                if (function_exists('notifyGroupInvitation')) {
+                    try {
+                        $notificationResult = @notifyGroupInvitation($invitation_id);
+                        
+                        if ($notificationResult && isset($notificationResult['success'])) {
+                            $notificationSent = $notificationResult['success'];
+                            if (!$notificationSent && isset($notificationResult['message'])) {
+                                $notificationError = $notificationResult['message'];
+                            }
+                        }
+                    } catch (Exception $e) {
+                        $notificationError = 'Exception: ' . $e->getMessage();
+                    }
+                } else {
+                    $notificationError = 'Function not found';
+                }
+            } else {
+                $notificationError = 'File not found';
+            }
+        }
+        
+        // הכן תגובה נקייה
+        $response = [
+            'success' => true,
+            'invitation_sent' => true,
+            'notification_sent' => $notificationSent,
+            'message' => 'הזמנה נשלחה למשתמש'
+        ];
+        
+        if ($notificationSent) {
+            $response['message'] .= ' 🔔 והתראה נשלחה!';
+        } else if ($user && $notificationError) {
+            // אל תוסיף את השגיאה להודעה הראשית
+            $response['notification_error'] = $notificationError;
+        }
+        
+        // החזר JSON נקי
+        echo json_encode($response);
+        
+    } catch (Exception $e) {
+        // תפוס כל שגיאה ברמת PHP
+        echo json_encode([
+            'success' => false, 
+            'message' => 'שגיאה: ' . $e->getMessage()
+        ]);
     }
 }
 

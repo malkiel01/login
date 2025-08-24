@@ -239,8 +239,15 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // רענון הדף בשקט אחרי הצלחה
-                    location.reload();
+            //         // רענון הדף בשקט אחרי הצלחה
+            //         location.reload();
+                    // הצג פופאפ מפורט
+                    showNotificationPopup(data);
+                    
+                    // רענן את הדף אחרי 3 שניות
+                    setTimeout(() => {
+                        location.reload();
+                    }, 3000);
                 } else {
                     // הצגת הודעת שגיאה רק במקרה של כישלון
                     alert(data.message || 'שגיאה בהוספת המשתתף');
@@ -248,10 +255,176 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('שגיאה בתקשורת עם השרת');
+                alert('שגיאה בתקשורת עם השרת: ' + error.message);
             });
         });
     }
+
+    // פונקציה להצגת פופאפ מפורט
+    function showNotificationPopup(data) {
+        // יצירת אלמנט המודל
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            animation: fadeIn 0.3s;
+        `;
+        
+        // תוכן המודל
+        const content = document.createElement('div');
+        content.style.cssText = `
+            background: white;
+            border-radius: 15px;
+            padding: 0;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideUp 0.5s;
+            overflow: hidden;
+        `;
+        
+        // כותרת
+        const header = document.createElement('div');
+        header.style.cssText = `
+            background: ${data.notification_sent ? 
+                'linear-gradient(135deg, #28a745 0%, #20c997 100%)' : 
+                'linear-gradient(135deg, #ffc107 0%, #ff9800 100%)'};
+            color: white;
+            padding: 20px;
+            text-align: center;
+        `;
+        
+        const icon = data.notification_sent ? '✅' : '⚠️';
+        const title = data.notification_sent ? 
+            'הזמנה והתראה נשלחו בהצלחה!' : 
+            'הזמנה נשלחה (ללא התראה)';
+        
+        header.innerHTML = `
+            <div style="font-size: 50px; margin-bottom: 10px;">${icon}</div>
+            <h2 style="margin: 0; font-size: 20px;">${title}</h2>
+        `;
+        
+        // גוף ההודעה
+        const body = document.createElement('div');
+        body.style.cssText = 'padding: 20px;';
+        
+        let bodyHTML = `
+            <div style="margin-bottom: 20px;">
+                <p style="color: #333; font-size: 16px; margin: 10px 0;">
+                    ${data.message}
+                </p>
+            </div>
+        `;
+        
+        // פרטים נוספים
+        if (data.details) {
+            bodyHTML += `
+                <div style="background: #f8f9fa; border-radius: 10px; padding: 15px; margin-bottom: 15px;">
+                    <h4 style="color: #667eea; margin: 0 0 10px 0;">📊 פרטי ההזמנה:</h4>
+                    <ul style="margin: 0; padding-right: 20px; color: #666;">
+                        <li>מזהה הזמנה: #${data.details.invitation_id}</li>
+                        ${data.details.user_exists ? 
+                            `<li>משתמש רשום: ${data.details.user_name || 'כן'}</li>` : 
+                            '<li>משתמש חדש (טרם נרשם)</li>'}
+                    </ul>
+                </div>
+            `;
+            
+            if (data.notification_sent && data.details.notification_details) {
+                bodyHTML += `
+                    <div style="background: #d4edda; border-radius: 10px; padding: 15px; margin-bottom: 15px;">
+                        <h4 style="color: #28a745; margin: 0 0 10px 0;">🔔 פרטי ההתראה:</h4>
+                        <ul style="margin: 0; padding-right: 20px; color: #155724;">
+                            ${data.details.notification_details.queue_id ? 
+                                `<li>מזהה תור: #${data.details.notification_details.queue_id}</li>` : ''}
+                            ${data.details.notification_details.immediately_sent ? 
+                                '<li>סטטוס: נשלחה מיידית!</li>' : 
+                                '<li>סטטוס: ממתינה בתור</li>'}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            if (data.details.saved_in_tables && data.details.saved_in_tables.length > 0) {
+                bodyHTML += `
+                    <div style="background: #d1ecf1; border-radius: 10px; padding: 15px;">
+                        <h4 style="color: #0c5460; margin: 0 0 10px 0;">💾 נשמר בטבלאות:</h4>
+                        <ul style="margin: 0; padding-right: 20px; color: #0c5460;">
+                            ${data.details.saved_in_tables.map(table => 
+                                `<li>${table}</li>`
+                            ).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+        }
+        
+        // מידע דיבאג (רק אם יש)
+        if (data.debug && window.location.search.includes('debug=1')) {
+            bodyHTML += `
+                <details style="margin-top: 15px;">
+                    <summary style="cursor: pointer; color: #666; font-size: 14px;">
+                        🔍 מידע דיבאג (למפתחים)
+                    </summary>
+                    <pre style="background: #263238; color: #aed581; padding: 10px; 
+                        border-radius: 5px; margin-top: 10px; font-size: 12px; 
+                        overflow-x: auto; direction: ltr;">
+    ${JSON.stringify(data.debug, null, 2)}
+                    </pre>
+                </details>
+            `;
+        }
+        
+        body.innerHTML = bodyHTML;
+        
+        // כפתור סגירה
+        const footer = document.createElement('div');
+        footer.style.cssText = 'padding: 20px; text-align: center;';
+        footer.innerHTML = `
+            <button onclick="this.closest('[style*=fixed]').remove()" 
+                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        color: white; border: none; padding: 12px 30px;
+                        border-radius: 8px; font-size: 16px; cursor: pointer;
+                        font-weight: 600;">
+                סגור
+            </button>
+        `;
+        
+        // הרכבת המודל
+        content.appendChild(header);
+        content.appendChild(body);
+        content.appendChild(footer);
+        modal.appendChild(content);
+        
+        // הוספה לדף
+        document.body.appendChild(modal);
+        
+        // אנימציות CSS
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes slideUp {
+                from { transform: translateY(50px); opacity: 0; }
+                to { transform: translateY(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // הוסף גם console.log לדיבאג
+    console.log('Group.js loaded with notification popup support');
+
     
     // עריכת משתתף
     const editMemberForm = document.getElementById('editMemberForm');

@@ -15,6 +15,7 @@ RewriteRule ^images/.*\.(png|jpg|jpeg|gif|svg|ico)$ - [L]
 RewriteRule ^check-pwa\.php$ - [L]
 RewriteRule ^test-notifications\.php$ - [L]
 RewriteRule ^test-notifications-standalone\.php$ - [L]
+RewriteRule ^process_notifications\.php$ - [L]
 
 # אפשר גישה ל-offline.html
 RewriteRule ^offline\.html$ - [L]
@@ -40,6 +41,7 @@ RewriteRule ^includes/.*\.php$ - [F,L]
 # אבל מאפשר את קבצי הבדיקה החשובים
 RewriteCond %{REQUEST_URI} !check-pwa\.php$
 RewriteCond %{REQUEST_URI} !test-notifications.*\.php$
+RewriteCond %{REQUEST_URI} !process_notifications\.php$
 RewriteRule ^(debug|find.*)\.php$ - [F,L]
 
 # הגדרת AJAX token check - מאפשר רק בקשות AJAX לקבצים מסוימים

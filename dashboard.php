@@ -544,7 +544,7 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </script>
 
     <!-- פאנל דיבאג (השאר אותו כמו שהוא) -->
-    <div id="debug-panel" style="position: fixed; bottom: 10px; right: 10px; background: white; 
+    <!-- <div id="debug-panel" style="position: fixed; bottom: 10px; right: 10px; background: white; 
         border: 2px solid #667eea; border-radius: 10px; padding: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
         z-index: 9999; direction: rtl; font-size: 12px; max-width: 300px;">
         
@@ -614,6 +614,20 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
             });
             debugLog(result ? '✅ נשלח!' : '⚠️ הוצג באנר');
         }
+    </script> -->
+
+    <!-- הוסף בסוף ה-body של dashboard.php או group.php -->
+    <div id="debug-panel" style="position: fixed; bottom: 10px; right: 10px; background: white; 
+        border: 2px solid #667eea; border-radius: 10px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
+        z-index: 9999; direction: rtl; font-size: 12px; width: 350px; max-height: 600px; display: flex; flex-direction: column;">
+        <!-- כל הקוד מהארטיפקט -->
+    </div>
+
+    <script>
+        // הגדר את המייל של המשתמש
+        const userEmail = '<?php echo $_SESSION['email']; ?>';
+        
+        // המשך עם הסקריפט המלא...
     </script>
 
    

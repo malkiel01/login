@@ -623,11 +623,45 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <!-- כל הקוד מהארטיפקט -->
     </div>
 
-    <script>
+   <script>
         // הגדר את המייל של המשתמש
         const userEmail = '<?php echo $_SESSION['email']; ?>';
-        
-        // המשך עם הסקריפט המלא...
+        // פונקציות דיבאג
+        function debugLog(msg) {
+            const output = document.getElementById('debug-output');
+            const time = new Date().toLocaleTimeString('he-IL');
+            output.innerHTML = `[${time}] ${msg}<br>` + output.innerHTML;
+        }
+
+        function testNotifications() {
+            if (!('Notification' in window)) {
+                debugLog('❌ אין תמיכה בהתראות');
+                return;
+            }
+            
+            debugLog('הרשאה: ' + Notification.permission);
+            
+            if (Notification.permission === 'default') {
+                Notification.requestPermission().then(p => {
+                    debugLog('הרשאה חדשה: ' + p);
+                    if (p === 'granted') testNotificationNow();
+                });
+            } else if (Notification.permission === 'granted') {
+                debugLog('✅ יש הרשאה');
+                testNotificationNow();
+            } else {
+                debugLog('❌ אין הרשאה');
+            }
+        }
+
+        async function testNotificationNow() {
+            debugLog('שולח התראת בדיקה...');
+            const result = await showNotificationUniversal('בדיקה 🔔', {
+                body: 'ההתראות עובדות! ' + new Date().toLocaleTimeString('he-IL'),
+                icon: '/family/images/icons/android/android-launchericon-192-192.png'
+            });
+            debugLog(result ? '✅ נשלח!' : '⚠️ הוצג באנר');
+        }
     </script>
 
    

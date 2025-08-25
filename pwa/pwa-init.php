@@ -63,6 +63,18 @@ function getPWAScripts($options = []) {
     $config = array_merge($defaults, $options);
     
     // הגדרות לפי סוג הדף
+    if ($config['page_type'] === 'login') {
+        $config['show_after_seconds'] = 5;
+        $config['minimum_visits'] = 1;
+        $config['title'] = 'התקן את האפליקציה! 📱';
+        $config['subtitle'] = 'גישה מהירה לרשימות הקניות שלך, גם בלי אינטרנט';
+    } elseif ($config['page_type'] === 'dashboard') {
+        $config['show_after_seconds'] = 10;
+        $config['minimum_visits'] = 2;
+        $config['title'] = 'הפוך את הדשבורד לאפליקציה! 🚀';
+        $config['subtitle'] = 'קבל התראות, עבוד אופליין וגישה מהירה מהמסך הראשי';
+    }
+
     // הגדרות מיוחדות לפי סוג הדף - רק אם לא נשלחו ערכים מותאמים
     if ($config['page_type'] === 'login') {
         if (!isset($options['show_after_seconds'])) 
@@ -152,6 +164,41 @@ function getNativeBannerScript($config) {
 /**
  * סקריפט לבאנר מותאם אישית
  */
+function getCustomBannerScript_not_work($config) {
+    return '
+    <!-- PWA Custom Banner -->
+    <script src="/pwa/js/pwa-install-manager.js"></script>
+    <script>
+        // מנע אתחול כפול - הקובץ כבר מאתחל את עצמו
+        document.addEventListener("DOMContentLoaded", function() {
+            // עדכן את ההגדרות של המנג׳ר הקיים
+            if (window.pwaInstallManager) {
+                // הסתר את הבאנר הקיים
+                window.pwaInstallManager.forceHide();
+                
+                // עדכן הגדרות
+                window.pwaInstallManager.config.title = "' . addslashes($config['title']) . '";
+                window.pwaInstallManager.config.subtitle = "' . addslashes($config['subtitle']) . '";
+                window.pwaInstallManager.config.icon = "' . addslashes($config['icon']) . '";
+                window.pwaInstallManager.config.showAfterSeconds = ' . $config['show_after_seconds'] . ';
+                window.pwaInstallManager.config.minimumVisits = ' . $config['minimum_visits'] . ';
+                
+                // בדוק שוב אם להציג
+                const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
+                const isInstalled = localStorage.getItem("pwa-installed") === "true";
+                
+                if (!isStandalone && !isInstalled && !window.pwaInstallManager.installDismissed) {
+                    setTimeout(() => {
+                        window.pwaInstallManager.forceShow();
+                    }, ' . $config['show_after_seconds'] . ' * 1000);
+                }
+                
+                console.log("PWA: Custom banner configured");
+            }
+        });
+    </script>
+    ';
+}
 function getCustomBannerScript($config) {
     return '
     <!-- PWA Custom Banner -->

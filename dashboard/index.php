@@ -1,7 +1,7 @@
 <?php
 // dashboard/index.php - קובץ ראשי של הדשבורד
 session_start();
-require_once '../../config.php';
+require_once '../config.php';
 require_once 'includes/functions.php';
 
 // בדיקת התחברות

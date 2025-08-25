@@ -13,6 +13,8 @@ if (isset($_SESSION['user_id'])) {
 }
 
 // אם לא מחובר - הפנה לדף התחברות
-header('Location: /auth/login.php');
-exit;
+// header('Location: /auth/login.php');
+
+echo '666'
+// exit;
 ?>

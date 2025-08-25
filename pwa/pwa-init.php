@@ -63,17 +63,28 @@ function getPWAScripts($options = []) {
     $config = array_merge($defaults, $options);
     
     // הגדרות לפי סוג הדף
+    // הגדרות מיוחדות לפי סוג הדף - רק אם לא נשלחו ערכים מותאמים
     if ($config['page_type'] === 'login') {
-        $config['show_after_seconds'] = 5;
-        $config['minimum_visits'] = 1;
-        $config['title'] = 'התקן את האפליקציה! 📱';
-        $config['subtitle'] = 'גישה מהירה לרשימות הקניות שלך, גם בלי אינטרנט';
+        if (!isset($options['show_after_seconds'])) 
+            $config['show_after_seconds'] = 5;
+        if (!isset($options['minimum_visits'])) 
+            $config['minimum_visits'] = 1;
+        if (!isset($options['title'])) 
+            $config['title'] = 'התקן את האפליקציה! 📱';
+        if (!isset($options['subtitle'])) 
+            $config['subtitle'] = 'גישה מהירה לרשימות הקניות שלך, גם בלי אינטרנט';
     } elseif ($config['page_type'] === 'dashboard') {
-        $config['show_after_seconds'] = 10;
-        $config['minimum_visits'] = 2;
-        $config['title'] = 'הפוך את הדשבורד לאפליקציה! 🚀';
-        $config['subtitle'] = 'קבל התראות, עבוד אופליין וגישה מהירה מהמסך הראשי';
+        if (!isset($options['show_after_seconds'])) 
+            $config['show_after_seconds'] = 10;
+        if (!isset($options['minimum_visits'])) 
+            $config['minimum_visits'] = 2;
+        if (!isset($options['title'])) 
+            $config['title'] = 'הפוך את הדשבורד לאפליקציה! 🚀';
+        if (!isset($options['subtitle'])) 
+            $config['subtitle'] = 'קבל התראות, עבוד אופליין וגישה מהירה מהמסך הראשי';
     }
+
+
     
     // Service Worker - תמיד נטען
     $html = '

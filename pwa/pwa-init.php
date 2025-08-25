@@ -17,7 +17,7 @@ function getPWAHeaders($options = []) {
     $defaults = [
         'title' => 'קניות משפחתיות',
         'theme_color' => '#667eea',
-        'icon_path' => '/images/'
+        'icon_path' => '/pwa/icons/ios/'
     ];
     
     $config = array_merge($defaults, $options);
@@ -32,10 +32,14 @@ function getPWAHeaders($options = []) {
     <link rel="manifest" href="/manifest.json">
     
     <!-- PWA Icons for iOS -->
-    <link rel="apple-touch-icon" href="' . $config['icon_path'] . 'icon-152x152.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="' . $config['icon_path'] . 'icon-152x152.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="' . $config['icon_path'] . 'icon-180x180.png">
-    <link rel="apple-touch-icon" sizes="167x167" href="' . $config['icon_path'] . 'icon-167x167.png">
+    <link rel="apple-touch-icon" href="' . $config['icon_path'] . '152.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="' . $config['icon_path'] . '152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="' . $config['icon_path'] . '180.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="' . $config['icon_path'] . '167.png">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="' . $config['icon_path'] . '32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="' . $config['icon_path'] . '16.png">
     
     <!-- PWA Custom Styles -->
     <link rel="stylesheet" href="/pwa/css/pwa-custom.css">
@@ -55,7 +59,7 @@ function getPWAScripts($options = []) {
         'minimum_visits' => 2,
         'title' => 'התקן את האפליקציה! 📱',
         'subtitle' => 'גישה מהירה, עבודה אופליין והתראות חכמות',
-        'icon' => '/images/icon-192x192.png',
+        'icon' => '/pwa/icons/android/android-launchericon-192-192.png',
         'auto_init' => true
     ];
     

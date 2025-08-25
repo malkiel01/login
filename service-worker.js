@@ -23,9 +23,11 @@ const urlsToCache = [
     // JS files
     '/dashboard/assets/js/dashboard.js',
     
-    // Images (add your icons)
-    '/images/icon-192x192.png',
-    '/images/icon-512x512.png'
+    // Images - עדכון לנתיבי האייקונים החדשים
+    '/pwa/icons/android/android-launchericon-192-192.png',
+    '/pwa/icons/android/android-launchericon-512-512.png',
+    '/pwa/icons/ios/152.png',
+    '/pwa/icons/ios/180.png'
 ];
 
 // התקנת Service Worker

@@ -216,6 +216,15 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <link rel="apple-touch-icon" sizes="180x180" href="/family/images/icons/ios/180.png">
     <link rel="apple-touch-icon" sizes="152x152" href="/family/images/icons/ios/152.png">
     <link rel="apple-touch-icon" sizes="120x120" href="/family/images/icons/ios/120.png">
+
+    <script>
+        // משתנה גלובלי לCSRF
+        window.APP_CONFIG = {
+            csrfToken: '<?php echo $_SESSION['csrf_token']; ?>',
+            userId: <?php echo $user_id; ?>,
+            basePath: '/family/'
+        };
+    </script>
 </head>
 <body>
     <!-- Navigation Bar -->
@@ -420,6 +429,195 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <script src="js/dashboard.js"></script>
 
     <script>
+        // פונקציה אוניברסלית להתראות - עובדת בכל מקום
+        async function showNotificationUniversal(title, options = {}) {
+            try {
+                // נסה Service Worker (לפלאפונים)
+                if ('serviceWorker' in navigator) {
+                    const registration = await navigator.serviceWorker.ready;
+                    await registration.showNotification(title, options);
+                    console.log('✅ Notification sent via Service Worker');
+                    return true;
+                }
+            } catch (e) {
+                console.log('Service Worker failed, trying fallback...');
+            }
+            
+            // נסה Notification API (למחשב)
+            try {
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    new Notification(title, options);
+                    console.log('✅ Notification sent via Notification API');
+                    return true;
+                }
+            } catch (e) {
+                console.log('Notification API failed, showing banner...');
+            }
+            
+            // Fallback - הצג באנר
+            showInPageBanner({ title, body: options.body });
+            return false;
+        }
+
+        // באנר בתוך הדף
+        function showInPageBanner(notification) {
+            const banner = document.createElement('div');
+            banner.style.cssText = `
+                position: fixed;
+                top: 80px;
+                left: 20px;
+                background: white;
+                border-radius: 10px;
+                padding: 15px;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                border-right: 4px solid #667eea;
+                max-width: 350px;
+                z-index: 9999;
+                animation: slideIn 0.5s;
+                direction: rtl;
+            `;
+            
+            banner.innerHTML = `
+                <div style="display: flex; align-items: start; gap: 10px;">
+                    <div style="font-size: 24px;">🔔</div>
+                    <div style="flex: 1;">
+                        <h4 style="margin: 0 0 5px 0; color: #333;">${notification.title || 'התראה'}</h4>
+                        <p style="margin: 0; color: #666; font-size: 14px;">${notification.body || ''}</p>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" 
+                            style="background: none; border: none; font-size: 20px; color: #999; cursor: pointer;">×</button>
+                </div>
+            `;
+            
+            document.body.appendChild(banner);
+            setTimeout(() => banner.remove(), 10000);
+        }
+
+        // בדיקת התראות מהשרת
+        async function checkServerNotifications() {
+            try {
+                const response = await fetch('/family/api/get-notifications.php');
+                const data = await response.json();
+                
+                if (data.success && data.notifications && data.notifications.length > 0) {
+                    for (const notif of data.notifications) {
+                        await showNotificationUniversal(notif.title || 'התראה', {
+                            body: notif.body || '',
+                            icon: notif.icon || '/family/images/icons/android/android-launchericon-192-192.png',
+                            badge: '/family/images/icons/android/android-launchericon-96-96.png',
+                            vibrate: [200, 100, 200],
+                            tag: 'notif-' + Date.now()
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking notifications:', error);
+            }
+        }
+
+        // בקש הרשאות אם צריך
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+
+        // הפעלה אוטומטית
+        window.addEventListener('load', () => {
+            // בדוק מיד
+            setTimeout(checkServerNotifications, 2000);
+            
+            // בדוק כל 30 שניות
+            setInterval(checkServerNotifications, 30000);
+        });
+
+        // CSS לאנימציות
+        if (!document.getElementById('notification-styles')) {
+            const style = document.createElement('style');
+            style.id = 'notification-styles';
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(-100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    </script>
+
+    <!-- פאנל דיבאג (השאר אותו כמו שהוא) -->
+    <div id="debug-panel" style="position: fixed; bottom: 10px; right: 10px; background: white; 
+        border: 2px solid #667eea; border-radius: 10px; padding: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
+        z-index: 9999; direction: rtl; font-size: 12px; max-width: 300px;">
+        
+        <h4 style="margin: 0 0 10px 0; color: #667eea;">🔧 פאנל דיבאג</h4>
+        
+        <button onclick="testNotifications()" style="background: #667eea; color: white; border: none; 
+                padding: 8px 15px; border-radius: 5px; margin: 5px; width: 100%;">
+            בדוק הרשאות
+        </button>
+        
+        <button onclick="testNotificationNow()" style="background: #28a745; color: white; border: none; 
+                padding: 8px 15px; border-radius: 5px; margin: 5px; width: 100%;">
+            התראת בדיקה
+        </button>
+        
+        <button onclick="checkServerNotifications()" style="background: #ffc107; color: white; border: none; 
+                padding: 8px 15px; border-radius: 5px; margin: 5px; width: 100%;">
+            בדוק שרת
+        </button>
+        
+        <div id="debug-output" style="background: #f8f9fa; border-radius: 5px; padding: 10px; 
+            margin-top: 10px; font-family: monospace; font-size: 11px; max-height: 200px; overflow-y: auto;">
+            מוכן...
+        </div>
+        
+        <button onclick="this.parentElement.style.display='none'" 
+                style="background: #dc3545; color: white; border: none; 
+                padding: 5px 10px; border-radius: 5px; margin-top: 10px; font-size: 10px;">
+            סגור
+        </button>
+    </div>
+
+    <script>
+        // פונקציות דיבאג
+        function debugLog(msg) {
+            const output = document.getElementById('debug-output');
+            const time = new Date().toLocaleTimeString('he-IL');
+            output.innerHTML = `[${time}] ${msg}<br>` + output.innerHTML;
+        }
+
+        function testNotifications() {
+            if (!('Notification' in window)) {
+                debugLog('❌ אין תמיכה בהתראות');
+                return;
+            }
+            
+            debugLog('הרשאה: ' + Notification.permission);
+            
+            if (Notification.permission === 'default') {
+                Notification.requestPermission().then(p => {
+                    debugLog('הרשאה חדשה: ' + p);
+                    if (p === 'granted') testNotificationNow();
+                });
+            } else if (Notification.permission === 'granted') {
+                debugLog('✅ יש הרשאה');
+                testNotificationNow();
+            } else {
+                debugLog('❌ אין הרשאה');
+            }
+        }
+
+        async function testNotificationNow() {
+            debugLog('שולח התראת בדיקה...');
+            const result = await showNotificationUniversal('בדיקה 🔔', {
+                body: 'ההתראות עובדות! ' + new Date().toLocaleTimeString('he-IL'),
+                icon: '/family/images/icons/android/android-launchericon-192-192.png'
+            });
+            debugLog(result ? '✅ נשלח!' : '⚠️ הוצג באנר');
+        }
+    </script>
+
+
+    <!-- <script>
         // בדיקת התראות חדשות כל 30 שניות
         async function checkForNotifications() {
             try {
@@ -559,8 +757,160 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
         document.head.appendChild(style);
     </script>
 
+    <script>
+        // פונקציה מתוקנת להתראות שעובדת גם בפלאפון
+        async function showNotificationSafe(title, options) {
+            try {
+                // נסה קודם עם Service Worker (לפלאפונים)
+                if ('serviceWorker' in navigator && 'PushManager' in window) {
+                    const registration = await navigator.serviceWorker.ready;
+                    await registration.showNotification(title, options);
+                    debugLog('✅ התראה נשלחה דרך Service Worker');
+                    return true;
+                }
+            } catch (e) {
+                debugLog('⚠️ Service Worker נכשל, מנסה דרך אחרת...');
+            }
+            
+            try {
+                // נסה התראה רגילה (למחשב)
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    new Notification(title, options);
+                    debugLog('✅ התראה נשלחה דרך Notification API');
+                    return true;
+                }
+            } catch (e) {
+                debugLog('⚠️ גם Notification API נכשל');
+            }
+            
+            // אם שניהם נכשלו - הצג באנר
+            showMobileNotification({ title, body: options.body });
+            return false;
+        }
+
+        // עדכון הפונקציה testNotifications
+        function testNotifications() {
+            debugLog('בודק הרשאות...');
+            
+            if (!('Notification' in window)) {
+                debugLog('❌ הדפדפן לא תומך בהתראות');
+                return;
+            }
+            
+            debugLog('✅ יש תמיכה בהתראות');
+            debugLog('הרשאה נוכחית: ' + Notification.permission);
+            
+            if (Notification.permission === 'default') {
+                debugLog('מבקש הרשאה...');
+                Notification.requestPermission().then(permission => {
+                    debugLog('תשובה: ' + permission);
+                    if (permission === 'granted') {
+                        debugLog('✅ הרשאה ניתנה!');
+                        showNotificationSafe('בדיקה', {
+                            body: 'ההתראות עובדות! 🎉',
+                            icon: '/family/images/icons/android/android-launchericon-192-192.png',
+                            badge: '/family/images/icons/android/android-launchericon-96-96.png',
+                            vibrate: [200, 100, 200]
+                        });
+                    }
+                });
+            } else if (Notification.permission === 'granted') {
+                debugLog('✅ כבר יש הרשאה');
+                showNotificationSafe('בדיקה', {
+                    body: 'ההתראות עובדות! 🎉',
+                    icon: '/family/images/icons/android/android-launchericon-192-192.png',
+                    badge: '/family/images/icons/android/android-launchericon-96-96.png',
+                    vibrate: [200, 100, 200]
+                });
+            } else {
+                debugLog('❌ הרשאה נדחתה');
+            }
+        }
+
+        // עדכון createTestNotification
+        async function createTestNotification() {
+            debugLog('יוצר התראת בדיקה...');
+            
+            const testNotif = {
+                title: 'התראת בדיקה 🔔',
+                body: 'זו התראה שנוצרה מהפלאפון - ' + new Date().toLocaleTimeString('he-IL'),
+                icon: '/family/images/icons/android/android-launchericon-192-192.png',
+                badge: '/family/images/icons/android/android-launchericon-96-96.png',
+                vibrate: [200, 100, 200],
+                tag: 'test-' + Date.now()
+            };
+            
+            // נסה התראת מערכת
+            const sent = await showNotificationSafe(testNotif.title, testNotif);
+            
+            if (!sent) {
+                debugLog('⚠️ נופל לבאנר');
+            }
+        }
+
+        // עדכון checkPendingNotifications
+        async function checkPendingNotifications() {
+            debugLog('בודק התראות ממתינות...');
+            
+            try {
+                const response = await fetch('/family/api/get-notifications.php');
+                const data = await response.json();
+                
+                debugLog('תגובה מהשרת:', data);
+                
+                if (data.success && data.count > 0) {
+                    debugLog(`✅ נמצאו ${data.count} התראות`);
+                    
+                    for (const notif of data.notifications) {
+                        debugLog(`מעבד התראה: ${notif.title}`);
+                        
+                        await showNotificationSafe(notif.title || 'התראה', {
+                            body: notif.body || '',
+                            icon: notif.icon || '/family/images/icons/android/android-launchericon-192-192.png',
+                            badge: '/family/images/icons/android/android-launchericon-96-96.png',
+                            vibrate: [200, 100, 200],
+                            tag: 'notif-' + (notif.id || Date.now()),
+                            data: {
+                                url: notif.url || '/family/dashboard.php'
+                            }
+                        });
+                    }
+                } else {
+                    debugLog('📭 אין התראות ממתינות');
+                }
+            } catch (error) {
+                debugLog('❌ שגיאה: ' + error.message);
+            }
+        }
+
+        // עדכון הבדיקה האוטומטית
+        async function checkNotificationsEnhanced() {
+            try {
+                const response = await fetch('/family/api/get-notifications.php');
+                const data = await response.json();
+                
+                if (data.success && data.notifications && data.notifications.length > 0) {
+                    for (const notification of data.notifications) {
+                        await showNotificationSafe(notification.title || 'התראה', {
+                            body: notification.body || '',
+                            icon: notification.icon || '/family/images/icons/android/android-launchericon-192-192.png',
+                            badge: '/family/images/icons/android/android-launchericon-96-96.png',
+                            vibrate: [200, 100, 200],
+                            tag: 'auto-' + Date.now()
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking notifications:', error);
+            }
+        }
+
+        // הפעל בדיקה אוטומטית
+        setInterval(checkNotificationsEnhanced, 30000);
+        setTimeout(checkNotificationsEnhanced, 2000); // בדוק אחרי 2 שניות
+    </script> -->
     <!-- הוסף בתחתית הדף, לפני </body> -->
-    <div id="debug-panel" style="position: fixed; bottom: 10px; right: 10px; background: white; 
+    <!-- <div id="debug-panel" style="position: fixed; bottom: 10px; right: 10px; background: white; 
         border: 2px solid #667eea; border-radius: 10px; padding: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
         z-index: 9999; direction: rtl; font-size: 12px; max-width: 300px;">
         
@@ -702,6 +1052,6 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 debugLog('PWA: ' + (window.matchMedia('(display-mode: standalone)').matches ? 'כן' : 'לא'));
             }, 1000);
         });
-    </script>
+    </script> -->
 </body>
 </html>

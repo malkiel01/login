@@ -115,18 +115,13 @@ class DashboardManager {
         const activityLog = document.getElementById('activityLog');
         if (!activityLog) return;
 
-        // יותר פעילויות לדוגמה כדי למלא את המקום
+        // סימולציה של פעילות - במימוש אמיתי יגיע מה-API
         this.activityLog = [
             { time: new Date(), action: 'התחברות למערכת', user: this.data.currentUser.username },
             { time: new Date(Date.now() - 300000), action: 'צפייה בדשבורד', user: this.data.currentUser.username },
             { time: new Date(Date.now() - 600000), action: 'עדכון פרופיל', user: 'user1' },
             { time: new Date(Date.now() - 900000), action: 'יצירת משימה חדשה', user: 'admin' },
-            { time: new Date(Date.now() - 1200000), action: 'מחיקת רשומה', user: 'editor' },
-            { time: new Date(Date.now() - 1500000), action: 'העלאת קובץ', user: 'user2' },
-            { time: new Date(Date.now() - 1800000), action: 'שינוי הגדרות', user: this.data.currentUser.username },
-            { time: new Date(Date.now() - 2100000), action: 'יצוא דוח', user: 'manager' },
-            { time: new Date(Date.now() - 2400000), action: 'עדכון סטטוס', user: 'user3' },
-            { time: new Date(Date.now() - 2700000), action: 'הוספת משתמש', user: 'admin' }
+            { time: new Date(Date.now() - 1200000), action: 'מחיקת רשומה', user: 'editor' }
         ];
 
         this.renderActivityLog();

@@ -229,13 +229,6 @@ body {
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--border-color);
     width: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
-/* Make activity log card fill space */
-.dashboard-card:has(.activity-log) {
-    min-height: 320px;
 }
 
 .card-title {
@@ -247,7 +240,6 @@ body {
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
-    flex-shrink: 0;
 }
 
 .card-title i {
@@ -345,11 +337,8 @@ body {
 
 /* Activity Log - Mobile */
 .activity-log {
-    min-height: 250px;
-    max-height: 350px;
+    max-height: 200px;
     overflow-y: auto;
-    overflow-x: hidden;
-    padding-right: 4px;
 }
 
 .log-entry {
@@ -359,16 +348,6 @@ body {
     margin-bottom: var(--spacing-sm);
     border-radius: 0 6px 6px 0;
     font-size: 11px;
-    transition: all 0.2s ease;
-}
-
-.log-entry:hover {
-    background: #e5e7eb;
-    transform: translateX(-2px);
-}
-
-.log-entry:last-child {
-    margin-bottom: 0;
 }
 
 .log-time {
@@ -380,7 +359,6 @@ body {
 .log-action {
     margin-top: 2px;
     font-size: 11px;
-    color: var(--dark-color);
 }
 
 .log-user {
@@ -595,31 +573,9 @@ body {
         padding: 2px 6px;
     }
     
-    /* Activity Log adjustments for tablet */
-    .activity-log {
-        min-height: 300px;
-        max-height: 400px;
-    }
-    
-    .log-entry {
-        padding: var(--spacing-md);
-        font-size: 12px;
-    }
-    
-    .log-time {
+    .api-url {
         font-size: 11px;
-    }
-    
-    .log-action {
-        font-size: 12px;
-    }
-    
-    .log-user {
-        font-size: 11px;
-    }
-    
-    .dashboard-card:has(.activity-log) {
-        min-height: 380px;
+        padding: 6px;
     }
 }
 

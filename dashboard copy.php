@@ -543,26 +543,128 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
     </script>
 
-    <!-- לפני סגירת ה-body -->
-    <script>
-        // הגדר משתנה גלובלי למייל
-        const userEmail = '<?php echo $_SESSION['email']; ?>';
-    </script>
-
-    <!-- אם רוצים פאנל דיבאג פשוט -->
-    <div style="position: fixed; bottom: 10px; left: 10px; z-index: 9999;">
-        <button onclick="window.open('/family/notification-debug.html', '_blank')" 
-                style="background: #667eea; color: white; border: none; padding: 10px 20px; 
-                    border-radius: 5px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
-            🔧 פתח פאנל דיבאג
+    <!-- פאנל דיבאג (השאר אותו כמו שהוא) -->
+    <!-- <div id="debug-panel" style="position: fixed; bottom: 10px; right: 10px; background: white; 
+        border: 2px solid #667eea; border-radius: 10px; padding: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
+        z-index: 9999; direction: rtl; font-size: 12px; max-width: 300px;">
+        
+        <h4 style="margin: 0 0 10px 0; color: #667eea;">🔧 פאנל דיבאג</h4>
+        
+        <button onclick="testNotifications()" style="background: #667eea; color: white; border: none; 
+                padding: 8px 15px; border-radius: 5px; margin: 5px; width: 100%;">
+            בדוק הרשאות
+        </button>
+        
+        <button onclick="testNotificationNow()" style="background: #28a745; color: white; border: none; 
+                padding: 8px 15px; border-radius: 5px; margin: 5px; width: 100%;">
+            התראת בדיקה
+        </button>
+        
+        <button onclick="checkServerNotifications()" style="background: #ffc107; color: white; border: none; 
+                padding: 8px 15px; border-radius: 5px; margin: 5px; width: 100%;">
+            בדוק שרת
+        </button>
+        
+        <div id="debug-output" style="background: #f8f9fa; border-radius: 5px; padding: 10px; 
+            margin-top: 10px; font-family: monospace; font-size: 11px; max-height: 200px; overflow-y: auto;">
+            מוכן...
+        </div>
+        
+        <button onclick="this.parentElement.style.display='none'" 
+                style="background: #dc3545; color: white; border: none; 
+                padding: 5px 10px; border-radius: 5px; margin-top: 10px; font-size: 10px;">
+            סגור
         </button>
     </div>
 
-    <!-- הסקריפטים הרגילים שלך -->
-    <script src="js/pwa-notifications-compact.js"></script>
-    <script src="js/pwa-installer.js"></script>
-    <script src="js/dashboard.js"></script>
+    <script>
+        // פונקציות דיבאג
+        function debugLog(msg) {
+            const output = document.getElementById('debug-output');
+            const time = new Date().toLocaleTimeString('he-IL');
+            output.innerHTML = `[${time}] ${msg}<br>` + output.innerHTML;
+        }
 
+        function testNotifications() {
+            if (!('Notification' in window)) {
+                debugLog('❌ אין תמיכה בהתראות');
+                return;
+            }
+            
+            debugLog('הרשאה: ' + Notification.permission);
+            
+            if (Notification.permission === 'default') {
+                Notification.requestPermission().then(p => {
+                    debugLog('הרשאה חדשה: ' + p);
+                    if (p === 'granted') testNotificationNow();
+                });
+            } else if (Notification.permission === 'granted') {
+                debugLog('✅ יש הרשאה');
+                testNotificationNow();
+            } else {
+                debugLog('❌ אין הרשאה');
+            }
+        }
+
+        async function testNotificationNow() {
+            debugLog('שולח התראת בדיקה...');
+            const result = await showNotificationUniversal('בדיקה 🔔', {
+                body: 'ההתראות עובדות! ' + new Date().toLocaleTimeString('he-IL'),
+                icon: '/family/images/icons/android/android-launchericon-192-192.png'
+            });
+            debugLog(result ? '✅ נשלח!' : '⚠️ הוצג באנר');
+        }
+    </script> -->
+
+    <!-- הוסף בסוף ה-body של dashboard.php או group.php -->
+    <div id="debug-panel" style="position: fixed; bottom: 10px; right: 10px; background: white; 
+        border: 2px solid #667eea; border-radius: 10px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
+        z-index: 9999; direction: rtl; font-size: 12px; width: 350px; max-height: 600px; display: flex; flex-direction: column;">
+        <!-- כל הקוד מהארטיפקט -->
+    </div>
+
+   <script>
+        // הגדר את המייל של המשתמש
+        const userEmail = '<?php echo $_SESSION['email']; ?>';
+        // פונקציות דיבאג
+        function debugLog(msg) {
+            const output = document.getElementById('debug-output');
+            const time = new Date().toLocaleTimeString('he-IL');
+            output.innerHTML = `[${time}] ${msg}<br>` + output.innerHTML;
+        }
+
+        function testNotifications() {
+            if (!('Notification' in window)) {
+                debugLog('❌ אין תמיכה בהתראות');
+                return;
+            }
+            
+            debugLog('הרשאה: ' + Notification.permission);
+            
+            if (Notification.permission === 'default') {
+                Notification.requestPermission().then(p => {
+                    debugLog('הרשאה חדשה: ' + p);
+                    if (p === 'granted') testNotificationNow();
+                });
+            } else if (Notification.permission === 'granted') {
+                debugLog('✅ יש הרשאה');
+                testNotificationNow();
+            } else {
+                debugLog('❌ אין הרשאה');
+            }
+        }
+
+        async function testNotificationNow() {
+            debugLog('שולח התראת בדיקה...');
+            const result = await showNotificationUniversal('בדיקה 🔔', {
+                body: 'ההתראות עובדות! ' + new Date().toLocaleTimeString('he-IL'),
+                icon: '/family/images/icons/android/android-launchericon-192-192.png'
+            });
+            debugLog(result ? '✅ נשלח!' : '⚠️ הוצג באנר');
+        }
+    </script>
+
+   
     <!-- בתחתית כל דף (dashboard.php, group.php וכו') -->
     <script src="/family/js/push-notifications-manager.js"></script>
 </body>

@@ -53,6 +53,9 @@ RewriteRule ^ - [F]
 
 RewriteRule ^setup-push-notifications\.php$ - [L]
 
+# אפשר גישה לדף הדיבאג
+RewriteRule ^notification-debug\.html$ - [L]
+
 # חסימת גישה ישירה לקבצי דיבאג מסוכנים בלבד
 # אבל מאפשר את קבצי הבדיקה החשובים
 RewriteCond %{REQUEST_URI} !check-pwa\.php$

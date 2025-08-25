@@ -1,17 +1,11 @@
 <?php
 /**
- * PWA Initialization File
- * קובץ אתחול מרכזי ל-PWA
- * 
- * שימוש: 
- * require_once 'pwa/pwa-init.php';
- * echo getPWAHeaders();  // ב-<head>
- * echo getPWAScripts();  // לפני </body>
+ * PWA Native Initialization
+ * אתחול PWA עם באנר נייטיב בלבד
  */
 
 /**
- * מחזיר את כל ה-meta tags וה-links ל-PWA
- * להוסיף בתוך ה-<head>
+ * מחזיר את ה-headers ל-PWA
  */
 function getPWAHeaders($options = []) {
     $defaults = [
@@ -40,43 +34,21 @@ function getPWAHeaders($options = []) {
     <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="32x32" href="' . $config['icon_path'] . '32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="' . $config['icon_path'] . '16.png">
-    
-    <!-- PWA Custom Styles -->
-    <link rel="stylesheet" href="/pwa/css/pwa-custom.css">
     ';
     
     return $html;
 }
 
 /**
- * מחזיר את הסקריפטים ל-PWA
- * להוסיף לפני </body>
+ * מחזיר את הסקריפטים הבסיסיים
  */
 function getPWAScripts($options = []) {
     $defaults = [
-        'page_type' => 'general', // 'login', 'dashboard', 'general'
-        'show_after_seconds' => 5,
-        'minimum_visits' => 2,
-        'title' => 'התקן את האפליקציה! 📱',
-        'subtitle' => 'גישה מהירה, עבודה אופליין והתראות חכמות',
-        'icon' => '/pwa/icons/android/android-launchericon-192-192.png',
-        'auto_init' => true
+        'use_native_prompt' => true,  // השתמש בבאנר נייטיב
+        'show_install_button' => false // הצג כפתור התקנה בממשק
     ];
     
     $config = array_merge($defaults, $options);
-    
-    // הגדרות מיוחדות לפי סוג הדף
-    if ($config['page_type'] === 'login') {
-        $config['show_after_seconds'] = 5;
-        $config['minimum_visits'] = 1;
-        $config['title'] = 'התקן את האפליקציה! 📱';
-        $config['subtitle'] = 'גישה מהירה לרשימות הקניות שלך, גם בלי אינטרנט';
-    } elseif ($config['page_type'] === 'dashboard') {
-        $config['show_after_seconds'] = 10;
-        $config['minimum_visits'] = 2;
-        $config['title'] = 'הפוך את הדשבורד לאפליקציה! 🚀';
-        $config['subtitle'] = 'קבל התראות, עבוד אופליין וגישה מהירה מהמסך הראשי';
-    }
     
     $html = '
     <!-- PWA Service Worker Registration -->
@@ -93,28 +65,40 @@ function getPWAScripts($options = []) {
             });
         }
     </script>
-    
-    <!-- PWA Install Manager -->
-    <script src="/pwa/js/pwa-install-manager.js"></script>
     ';
     
-    // הוספת אתחול אוטומטי אם נדרש
-    if ($config['auto_init']) {
+    // הוסף את מנהל הבאנר הנייטיב
+    if ($config['use_native_prompt']) {
+        $html .= '
+    <!-- PWA Native Prompt Manager -->
+    <script src="/pwa/js/pwa-native-prompt.js"></script>
+    ';
+    }
+    
+    // אם רוצים כפתור התקנה בממשק
+    if ($config['show_install_button']) {
         $html .= '
     <script>
+        // הוסף כפתור התקנה לממשק
         document.addEventListener("DOMContentLoaded", function() {
-            // בדיקה אם לא מותקן כבר
-            const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
-            const isInstalled = localStorage.getItem("pwa-installed") === "true";
-            
-            if (!isStandalone && !isInstalled) {
-                window.pwaInstallManager = new PWAInstallManager({
-                    title: "' . addslashes($config['title']) . '",
-                    subtitle: "' . addslashes($config['subtitle']) . '",
-                    icon: "' . addslashes($config['icon']) . '",
-                    showAfterSeconds: ' . $config['show_after_seconds'] . ',
-                    minimumVisits: ' . $config['minimum_visits'] . '
-                });
+            // מצא את המקום לכפתור (לדוגמה בהדר)
+            const header = document.querySelector(".header-content");
+            if (header && window.pwaPrompt && !window.pwaPrompt.isInstalled()) {
+                const installBtn = document.createElement("button");
+                installBtn.className = "pwa-install-trigger";
+                installBtn.innerHTML = "📱 התקן אפליקציה";
+                installBtn.style.cssText = `
+                    background: linear-gradient(135deg, #667eea, #764ba2);
+                    color: white;
+                    border: none;
+                    padding: 8px 16px;
+                    border-radius: 8px;
+                    font-size: 14px;
+                    cursor: pointer;
+                    margin-left: 10px;
+                    display: none;
+                `;
+                header.appendChild(installBtn);
             }
         });
     </script>
@@ -125,35 +109,9 @@ function getPWAScripts($options = []) {
 }
 
 /**
- * מחזיר סקריפט להצעת התקנה מיוחדת
- * לדוגמה: אחרי פעולה מוצלחת
+ * בדיקה אם במצב PWA
  */
-function getPWAPromptScript($message = 'פעולה בוצעה בהצלחה! רוצה להתקין את האפליקציה?') {
-    return '
-    <script>
-        // הצעת התקנה אחרי פעולה
-        setTimeout(function() {
-            if (window.pwaInstallManager && !localStorage.getItem("pwa-installed")) {
-                if (confirm("' . addslashes($message) . '")) {
-                    window.pwaInstallManager.forceShow();
-                }
-            }
-        }, 2000);
-    </script>
-    ';
-}
-
-/**
- * בדיקה אם האפליקציה מותקנת
- */
-function isPWAInstalled() {
-    return isset($_COOKIE['pwa_installed']) && $_COOKIE['pwa_installed'] === 'true';
-}
-
-/**
- * בדיקה אם המשתמש במצב standalone
- */
-function isStandaloneMode() {
-    return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
-           $_SERVER['HTTP_X_REQUESTED_WITH'] === 'com.your.app';
+function isPWAMode() {
+    return isset($_SERVER['HTTP_X_REQUESTED_WITH']) || 
+           (isset($_GET['mode']) && $_GET['mode'] === 'standalone');
 }

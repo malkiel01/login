@@ -133,7 +133,7 @@ try {
     // החזרת תגובה
     echo json_encode([
         'success' => true,
-        'redirect' => '../dashboard.php',
+        'redirect' => '../dashboard/index.php',
         'message' => 'התחברת בהצלחה'
     ]);
     

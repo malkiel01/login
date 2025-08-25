@@ -8,7 +8,7 @@ session_start();
 
 // אם המשתמש מחובר - הפנה לדשבורד
 if (isset($_SESSION['user_id'])) {
-    header('Location: dashboard.php');
+    header('Location: dashboard/index.php');
     exit;
 }
 

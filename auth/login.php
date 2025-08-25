@@ -328,5 +328,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
         'banner_type' => 'native',
         'page_type' => 'login'
     ]); ? -->
+    <?php echo getPWAScripts([
+        'banner_type' => 'custom',
+        'page_type' => 'dashboard',
+        'show_after_seconds' => 1,
+        'title' => 'הפוך אותנו לאפליקציה!',
+        'subtitle' => 'התקנה מהירה, גישה נוחה'
+    ]); ?>
 </body>
 </html>

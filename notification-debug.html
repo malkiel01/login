@@ -256,7 +256,7 @@
         }
 
         // התראה מקומית
-        async function testLocalNotification() {
+        async function testLocalNotification2() {
             debugLog('🔔 שולח התראה מקומית...', 'system');
             
             if (Notification.permission !== 'granted') {
@@ -295,6 +295,137 @@
                 updateCounters();
             }
         }
+
+
+        // התראה מקומית - גרסה מתוקנת ל-HTTPS
+        async function testLocalNotification() {
+            debugLog('🔔 שולח התראה מקומית...', 'system');
+            
+            // בדוק הרשאות
+            if (Notification.permission !== 'granted') {
+                debugLog('⚠️ אין הרשאה - מבקש...', 'warning');
+                await testPermissions();
+                if (Notification.permission !== 'granted') return;
+            }
+            
+            try {
+                // ב-HTTPS חייבים להשתמש ב-Service Worker
+                if ('serviceWorker' in navigator && window.location.protocol === 'https:') {
+                    debugLog('🔒 HTTPS detected - using Service Worker', 'info');
+                    
+                    const registration = await navigator.serviceWorker.ready;
+                    const timestamp = new Date().toLocaleTimeString('he-IL');
+                    
+                    await registration.showNotification('בדיקה 🔔', {
+                        body: `התראת בדיקה - ${timestamp}`,
+                        icon: '/family/images/icons/android/android-launchericon-192-192.png',
+                        badge: '/family/images/icons/android/android-launchericon-96-96.png',
+                        tag: 'test-' + Date.now(),
+                        requireInteraction: false,
+                        vibrate: [200, 100, 200],
+                        dir: 'rtl',
+                        lang: 'he',
+                        silent: false,
+                        data: {
+                            type: 'test',
+                            timestamp: timestamp
+                        }
+                    });
+                    
+                    debugLog('✅ התראה נשלחה בהצלחה דרך Service Worker!', 'success');
+                    notificationCounts.success++;
+                    updateCounters();
+                    
+                } else if (window.location.protocol === 'http:') {
+                    // רק ב-HTTP אפשר להשתמש ב-Notification API רגיל
+                    debugLog('🔓 HTTP detected - using standard Notification API', 'info');
+                    
+                    const timestamp = new Date().toLocaleTimeString('he-IL');
+                    const notification = new Notification('בדיקה 🔔', {
+                        body: `התראת בדיקה - ${timestamp}`,
+                        icon: '/family/images/icons/android/android-launchericon-192-192.png',
+                        tag: 'test-' + Date.now(),
+                        dir: 'rtl',
+                        lang: 'he'
+                    });
+                    
+                    notification.onclick = () => {
+                        debugLog('👆 התראה נלחצה!', 'success');
+                        notification.close();
+                    };
+                    
+                    debugLog('✅ התראה נשלחה בהצלחה!', 'success');
+                    notificationCounts.success++;
+                    updateCounters();
+                    
+                    setTimeout(() => notification.close(), 5000);
+                    
+                } else {
+                    debugLog('❌ לא ניתן לשלוח התראה בסביבה הנוכחית', 'error');
+                }
+                
+            } catch (err) {
+                debugLog(`❌ שגיאה: ${err.message}`, 'error');
+                notificationCounts.failed++;
+                updateCounters();
+                
+                // נסה fallback לבאנר בדף
+                debugLog('📋 מנסה באנר חלופי...', 'info');
+                showInPageNotification('בדיקה 🔔', 'התראת בדיקה - ' + new Date().toLocaleTimeString('he-IL'));
+            }
+        }
+
+        // פונקציית עזר לבאנר בדף
+        function showInPageNotification(title, body) {
+            const banner = document.createElement('div');
+            banner.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: white;
+                border: 2px solid #667eea;
+                border-radius: 10px;
+                padding: 15px;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                z-index: 10000;
+                animation: slideDown 0.5s ease;
+                direction: rtl;
+                min-width: 300px;
+            `;
+            
+            banner.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="font-size: 30px;">🔔</div>
+                    <div style="flex: 1;">
+                        <h4 style="margin: 0 0 5px 0; color: #667eea;">${title}</h4>
+                        <p style="margin: 0; color: #666; font-size: 14px;">${body}</p>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" 
+                            style="background: none; border: none; font-size: 20px; 
+                                color: #999; cursor: pointer;">×</button>
+                </div>
+            `;
+            
+            document.body.appendChild(banner);
+            
+            // הוסף אנימציה
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideDown {
+                    from { transform: translateX(-50%) translateY(-100px); opacity: 0; }
+                    to { transform: translateX(-50%) translateY(0); opacity: 1; }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            debugLog('✅ באנר הוצג בהצלחה', 'success');
+            
+            // הסר אחרי 5 שניות
+            setTimeout(() => banner.remove(), 5000);
+        }
+
+// ----
 
         // בדיקת חיבור לשרת
         async function testServerConnection() {

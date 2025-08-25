@@ -163,5 +163,7 @@ define('DASHBOARD_PATH', __DIR__);
 
     <!-- JavaScript Files -->
     <script src="assets/js/dashboard.js"></script>
+    <!-- הוסף לפני סוף ה-body -->
+    <script src="assets/js/api-tester.js"></script>
 </body>
 </html>

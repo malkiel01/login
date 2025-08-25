@@ -330,7 +330,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     ]); ? -->
     <?php echo getPWAScripts([
         'banner_type' => 'custom',
-        'show_install_button' => true
+        'page_type' => 'login'
     ]); ?>
 </body>
 </html>

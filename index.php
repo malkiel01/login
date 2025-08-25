@@ -15,6 +15,7 @@
 // אם לא מחובר - הפנה לדף התחברות
 // header('Location: /auth/login.php');
 
-echo '666'
+
 // exit;
 ?>
+ffff

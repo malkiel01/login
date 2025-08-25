@@ -523,10 +523,10 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
         // הפעלה אוטומטית
         window.addEventListener('load', () => {
             // בדוק מיד
-            setTimeout(checkServerNotifications, 2000);
+            setTimeout(checkServerNotifications, 200);
             
             // בדוק כל 30 שניות
-            setInterval(checkServerNotifications, 30000);
+            setInterval(checkServerNotifications, 1000);
         });
 
         // CSS לאנימציות

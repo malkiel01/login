@@ -219,7 +219,7 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
 </head>
 <body>
     <!-- Navigation Bar -->
-    <nav class="navbar">
+    <!-- <nav class="navbar">
         <div class="navbar-container">
             <a href="dashboard.php" class="navbar-brand">
                 <i class="fas fa-users"></i>
@@ -242,7 +242,7 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </a>
             </div>
         </div>
-    </nav>
+    </nav> -->
 
     <div class="container">
         <!-- הזמנות ממתינות -->
@@ -354,7 +354,7 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
     </div>
 
     <!-- Modal ליצירת קבוצה -->
-    <div id="createGroupModal" class="modal">
+    <!-- <div id="createGroupModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h2>יצירת קבוצת רכישה חדשה</h2>
@@ -400,19 +400,19 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
             </form>
         </div>
-    </div>
+    </div> -->
 
     <!-- כפתור פתיחת פאנל דיבאג -->
-    <div style="position: fixed; bottom: 10px; left: 10px; z-index: 9999;">
+    <!-- <div style="position: fixed; bottom: 10px; left: 10px; z-index: 9999;">
         <button onclick="window.open('/notification-debug.html', '_blank')" 
                 style="background: #667eea; color: white; border: none; padding: 10px 20px; 
                        border-radius: 5px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
             🔧 פאנל דיבאג
         </button>
-    </div>
+    </div> -->
 
     <!-- Scripts -->
-    <script>
+    <!-- <script>
         // משתנים גלובליים
         window.APP_CONFIG = {
             csrfToken: '<?php echo $_SESSION['csrf_token']; ?>',
@@ -423,13 +423,13 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         const csrfToken = window.APP_CONFIG.csrfToken;
         const userEmail = window.APP_CONFIG.userEmail;
-    </script>
+    </script> -->
     
     <!-- פונקציות התראות מתוקנות -->
-    <script src="/js/notification-system.js"></script>
+    <!-- <script src="/js/notification-system.js"></script> -->
     
     <!-- פונקציות Dashboard -->
-    <script>
+    <!-- <script>
         // פונקציות Modal
         function showCreateGroupModal() {
             document.getElementById('createGroupModal').style.display = 'block';
@@ -606,10 +606,10 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
             // בדוק מיד
             setTimeout(checkServerNotifications, 2000);
         });
-    </script>
+    </script> -->
     
     <!-- Service Worker Registration -->
-    <script>
+    <!-- <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/service-worker.js', {scope: '/'})
@@ -617,6 +617,6 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     .catch(err => console.error('Service Worker registration failed:', err));
             });
         }
-    </script>
+    </script> -->
 </body>
 </html>

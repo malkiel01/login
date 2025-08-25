@@ -94,40 +94,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     
     <!-- Google Sign-In API -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-
-    <!-- PWA Meta Tags -->
-    <link rel="manifest" href="../manifest.json">
-    <meta name="theme-color" content="#667eea">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    
-    <!-- עדכן את הלינקים לאייקונים החדשים -->
-    <link rel="icon" type="image/png" sizes="32x32" href="/images/icons/ios/32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/images/icons/ios/16.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/images/icons/ios/180.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="/images/icons/ios/152.png">
-    <link rel="apple-touch-icon" sizes="120x120" href="/images/icons/ios/120.png">
-
-    <!-- Service Worker -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js', {scope: '/'})
-                    .then(reg => {
-                        console.log('Service Worker registered:', reg);
-                    })
-                    .catch(err => console.error('Service Worker registration failed:', err));
-            });
-            
-            // בדוק אם רץ כ-PWA
-            if (window.matchMedia('(display-mode: standalone)').matches) {
-                console.log('Running as PWA');
-            } else {
-                console.log('Running in browser');
-            }
-        }
-    </script>
-    <!-- PWA Installer Module -->
 </head>
 <body>
     <div class="login-container">

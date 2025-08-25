@@ -175,7 +175,7 @@ define('DASHBOARD_PATH', __DIR__);
      <?php echo getPWAScripts([
         'banner_type' => 'custom',
         'page_type' => 'dashboard',
-        'show_after_seconds' => 15,
+        'show_after_seconds' => 1,
         'title' => 'הפוך אותנו לאפליקציה!',
         'subtitle' => 'התקנה מהירה, גישה נוחה'
     ]); ?>

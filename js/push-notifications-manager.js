@@ -13,9 +13,9 @@ class PushNotificationManager {
             swPath: '/family/service-worker.js',
             swScope: '/family/',
             apiEndpoint: '/family/api/simple-notifications.php',
-            pollInterval: 30000, // בדיקה כל 30 שניות
+            pollInterval: 3000, // בדיקה כל 30 שניות
             maxRetries: 3,
-            retryDelay: 2000,
+            retryDelay: 200,
             defaultIcon: '/family/images/icons/android/android-launchericon-192-192.png',
             defaultBadge: '/family/images/icons/android/android-launchericon-96-96.png',
             vibrate: [200, 100, 200],

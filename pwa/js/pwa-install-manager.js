@@ -601,12 +601,12 @@ Safari (iOS):
     // חשיפה גלובלית
     window.PWAInstallManager = PWAInstallManager;
     
-    // אתחול אוטומטי
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-            window.pwaInstallManager = new PWAInstallManager();
-        });
-    } else {
-        window.pwaInstallManager = new PWAInstallManager();
-    }
+    // // אתחול אוטומטי
+    // if (document.readyState === 'loading') {
+    //     document.addEventListener('DOMContentLoaded', () => {
+    //         window.pwaInstallManager = new PWAInstallManager();
+    //     });
+    // } else {
+    //     window.pwaInstallManager = new PWAInstallManager();
+    // }
 })();

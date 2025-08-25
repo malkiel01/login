@@ -1,4 +1,5 @@
 // service-worker.js - Enhanced with Push Notifications
+// לא עובד!!!
 const CACHE_NAME = 'panan-bakan-v1.0.4';
 const API_BASE = '/family';
 

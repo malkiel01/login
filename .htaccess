@@ -1,6 +1,10 @@
 # הפעלת mod_rewrite
 RewriteEngine On
 
+# === אפשר גישה לקבצי PWA וAPI חשובים - תמיד קודם! ===
+# אפשר גישה לכל ה-API
+RewriteRule ^api/.*\.php$ - [L]
+
 # === אפשר גישה לקבצי PWA חשובים ===
 # אפשר גישה ל-manifest.json
 RewriteRule ^manifest\.json$ - [L]
@@ -48,7 +52,6 @@ RewriteCond %{THE_REQUEST} \s/+includes/.*\.php[\s?] [NC]
 RewriteRule ^ - [F]
 
 RewriteRule ^setup-push-notifications\.php$ - [L]
-RewriteRule ^api/.*\.php$ - [L]
 
 # חסימת גישה ישירה לקבצי דיבאג מסוכנים בלבד
 # אבל מאפשר את קבצי הבדיקה החשובים

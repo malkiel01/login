@@ -1,5 +1,5 @@
-// service-worker.js - עם מערכת Polling להתראות Push
-const CACHE_NAME = 'panan-bakan-v1.0.4';
+// service-worker.js - גרסה משולבת שעובדת!
+const CACHE_NAME = 'panan-bakan-v1.0.5';
 const urlsToCache = [
   '/family/',
   '/family/dashboard.php',
@@ -13,10 +13,12 @@ const urlsToCache = [
   '/family/images/icons/android/android-launchericon-512-512.png'
 ];
 
-// Polling interval - בדוק כל 3 שניות
-const POLL_INTERVAL = 3000;
+// === POLLING SETTINGS ===
 let pollInterval = null;
+let isPollingActive = false;
+let lastCheckTime = 0;
 
+// התקנה
 self.addEventListener('install', event => {
   console.log('Service Worker: Installing...');
   event.waitUntil(
@@ -29,6 +31,7 @@ self.addEventListener('install', event => {
   );
 });
 
+// הפעלה
 self.addEventListener('activate', event => {
   console.log('Service Worker: Activated');
   event.waitUntil(
@@ -42,49 +45,79 @@ self.addEventListener('activate', event => {
         })
       );
     }).then(() => {
-      // התחל Polling כשה-Service Worker מופעל
-      startPolling();
+      // התחל Polling מיד כשה-Service Worker מופעל
+      startSmartPolling();
       return self.clients.claim();
     })
   );
 });
 
-// פונקציה להתחלת Polling
-function startPolling() {
-  console.log('Starting notification polling...');
+// === SMART POLLING - בודק בתדירות משתנה ===
+function startSmartPolling() {
+  if (isPollingActive) return;
   
-  // נקה interval קיים אם יש
-  if (pollInterval) {
-    clearInterval(pollInterval);
-  }
+  console.log('Starting smart polling...');
+  isPollingActive = true;
   
-  // בדוק מיידית
+  // בדוק מיד
   checkForNotifications();
   
-  // הגדר בדיקה כל 3 שניות
+  // בדוק כל 5 שניות למשך הדקה הראשונה
   pollInterval = setInterval(() => {
     checkForNotifications();
-  }, POLL_INTERVAL);
+  }, 5000);
+  
+  // אחרי דקה, האט ל-30 שניות
+  setTimeout(() => {
+    if (pollInterval) {
+      clearInterval(pollInterval);
+      pollInterval = setInterval(() => {
+        checkForNotifications();
+      }, 30000); // כל 30 שניות
+    }
+  }, 60000);
+  
+  // אחרי 5 דקות, האט לדקה
+  setTimeout(() => {
+    if (pollInterval) {
+      clearInterval(pollInterval);
+      pollInterval = setInterval(() => {
+        checkForNotifications();
+      }, 60000); // כל דקה
+    }
+  }, 300000);
 }
 
-// פונקציה לעצירת Polling
-function stopPolling() {
-  console.log('Stopping notification polling...');
-  if (pollInterval) {
-    clearInterval(pollInterval);
-    pollInterval = null;
-  }
-}
-
-// בדיקת התראות ממתינות
+// בדיקת התראות
 async function checkForNotifications() {
   try {
-    // שלח בקשה לשרת לקבלת התראות ממתינות
+    const now = Date.now();
+    
+    // מנע בדיקות מרובות (מינימום 3 שניות בין בדיקות)
+    if (now - lastCheckTime < 3000) {
+      return;
+    }
+    lastCheckTime = now;
+    
+    // בדוק אם יש לקוחות פעילים
+    const clients = await self.clients.matchAll({
+      type: 'window',
+      includeUncontrolled: true
+    });
+    
+    // אם אין אף חלון פתוח, בדוק רק כל 30 שניות
+    if (clients.length === 0) {
+      console.log('No active clients, reducing polling frequency');
+      return;
+    }
+    
+    // שלח בקשה לשרת
     const response = await fetch('/family/api/send-push-notification.php?action=get-pending', {
       method: 'GET',
-      credentials: 'include', // חשוב לשלוח cookies
+      credentials: 'include',
       headers: {
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'X-Service-Worker': 'true' // סמן שזו בקשה מ-Service Worker
       }
     });
     
@@ -101,7 +134,13 @@ async function checkForNotifications() {
       // הצג כל התראה
       for (const notification of data.notifications) {
         await showNotification(notification);
+        
+        // המתן קצת בין התראות
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
+      
+      // אם היו התראות, בדוק שוב בקרוב
+      setTimeout(() => checkForNotifications(), 3000);
     }
     
   } catch (error) {
@@ -117,25 +156,27 @@ async function showNotification(data) {
       body: data.body || '',
       icon: data.icon || '/family/images/icons/android/android-launchericon-192-192.png',
       badge: data.badge || '/family/images/icons/android/android-launchericon-96-96.png',
-      tag: data.type || 'notification',
+      tag: data.tag || `notification-${Date.now()}`,
       data: {
         url: data.url || '/family/dashboard.php',
         type: data.type,
-        ...data
+        id: data.id,
+        ...data.data
       },
       vibrate: [200, 100, 200],
-      requireInteraction: false,
+      requireInteraction: data.type === 'group_invitation', // השאר הזמנות פתוחות
       dir: 'rtl',
       lang: 'he',
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      silent: false
     };
     
-    // הוסף actions לפי סוג ההתראה
+    // הוסף כפתורי פעולה להזמנות
     if (data.type === 'group_invitation') {
       options.actions = [
         {
           action: 'accept',
-          title: 'קבל הזמנה',
+          title: 'קבל',
           icon: '/family/images/icons/android/android-launchericon-96-96.png'
         },
         {
@@ -144,18 +185,17 @@ async function showNotification(data) {
           icon: '/family/images/icons/android/android-launchericon-96-96.png'
         }
       ];
-      options.requireInteraction = true; // השאר את ההתראה עד שהמשתמש מגיב
     }
     
     await self.registration.showNotification(title, options);
-    console.log('Notification shown:', title);
+    console.log('✅ Notification shown:', title);
     
   } catch (error) {
-    console.error('Error showing notification:', error);
+    console.error('❌ Error showing notification:', error);
   }
 }
 
-// טיפול בלחיצה על התראה
+// לחיצה על התראה
 self.addEventListener('notificationclick', event => {
   console.log('Notification clicked:', event.notification.tag);
   
@@ -164,9 +204,9 @@ self.addEventListener('notificationclick', event => {
   const data = event.notification.data;
   let url = data.url || '/family/dashboard.php';
   
-  // טיפול ב-actions
-  if (event.action === 'accept' && data.invitation_id) {
-    url = `/family/dashboard.php?action=accept_invitation&id=${data.invitation_id}`;
+  // טיפול בפעולות
+  if (event.action === 'accept' && data.type === 'group_invitation') {
+    url = `/family/dashboard.php?action=accept_invitation&id=${data.id}`;
   } else if (event.action === 'view') {
     url = data.url || '/family/dashboard.php#invitations';
   }
@@ -177,46 +217,23 @@ self.addEventListener('notificationclick', event => {
       .then(windowClients => {
         // חפש חלון קיים
         for (let client of windowClients) {
-          if (client.url.includes('/family/') && 'focus' in client) {
+          if (client.url.includes('/family/')) {
             return client.focus().then(() => {
-              // שלח הודעה לחלון
-              client.postMessage({
-                type: 'notification-clicked',
-                data: data
-              });
+              client.navigate(url);
+              // הפעל מחדש את ה-polling
+              startSmartPolling();
             });
           }
         }
-        // אם אין חלון פתוח, פתח חדש
+        // פתח חלון חדש
         if (clients.openWindow) {
-          return clients.openWindow(url);
+          return clients.openWindow(url).then(() => {
+            // הפעל מחדש את ה-polling
+            startSmartPolling();
+          });
         }
       })
   );
-});
-
-// טיפול בסגירת התראה
-self.addEventListener('notificationclose', event => {
-  console.log('Notification closed:', event.notification.tag);
-});
-
-// טיפול ב-Push Events (אם יש)
-self.addEventListener('push', event => {
-  console.log('Push event received');
-  
-  let data = {};
-  if (event.data) {
-    try {
-      data = event.data.json();
-    } catch (e) {
-      data = {
-        title: 'התראה חדשה',
-        body: event.data.text()
-      };
-    }
-  }
-  
-  event.waitUntil(showNotification(data));
 });
 
 // הקשבה להודעות מהאפליקציה
@@ -224,68 +241,78 @@ self.addEventListener('message', event => {
   console.log('Service Worker received message:', event.data);
   
   if (event.data.type === 'START_POLLING') {
-    startPolling();
-  } else if (event.data.type === 'STOP_POLLING') {
-    stopPolling();
+    startSmartPolling();
   } else if (event.data.type === 'CHECK_NOW') {
     checkForNotifications();
+  } else if (event.data.type === 'USER_ACTIVE') {
+    // המשתמש פעיל - הגבר תדירות
+    if (pollInterval) {
+      clearInterval(pollInterval);
+      pollInterval = setInterval(() => checkForNotifications(), 5000);
+    }
+  } else if (event.data.type === 'USER_IDLE') {
+    // המשתמש לא פעיל - הפחת תדירות
+    if (pollInterval) {
+      clearInterval(pollInterval);
+      pollInterval = setInterval(() => checkForNotifications(), 30000);
+    }
   }
 });
 
-// Fetch event עם cache strategy
+// Cache strategy
 self.addEventListener('fetch', event => {
-  // רק cache דפי HTML וקבצים סטטיים, לא API calls
-  if (event.request.method === 'GET' && 
-      !event.request.url.includes('/api/') && 
-      !event.request.url.includes('action=')) {
-    
+  // אל תעשה cache לבקשות API
+  if (event.request.url.includes('/api/') || 
+      event.request.url.includes('action=') ||
+      event.request.url.includes('.php')) {
+    return; // תן לבקשה לעבור ישירות
+  }
+  
+  // Cache רק לקבצים סטטיים
+  if (event.request.method === 'GET') {
     event.respondWith(
-      fetch(event.request)
+      caches.match(event.request)
         .then(response => {
-          // אם הצלחנו להביא מהרשת, שמור בcache
-          if (!response || response.status !== 200) {
-            return response;
+          if (response) {
+            return response; // החזר מה-cache
           }
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME)
-            .then(cache => {
+          return fetch(event.request).then(response => {
+            // שמור ב-cache רק אם הצליח
+            if (!response || response.status !== 200 || response.type !== 'basic') {
+              return response;
+            }
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then(cache => {
               cache.put(event.request, responseToCache);
             });
-          return response;
+            return response;
+          });
         })
         .catch(() => {
-          // אם נכשל, נסה מהcache
-          return caches.match(event.request)
-            .then(response => {
-              if (response) {
-                return response;
-              }
-              // אם אין בcache, החזר דף offline
-              if (event.request.headers.get('accept').includes('text/html')) {
-                return caches.match('/family/offline.html');
-              }
-            });
+          // אם נכשל והקובץ הוא HTML, החזר offline page
+          if (event.request.headers.get('accept').includes('text/html')) {
+            return caches.match('/family/offline.html');
+          }
         })
     );
   }
 });
 
-// Background Sync (אם נתמך)
+// === Background Sync - אם הדפדפן תומך ===
 self.addEventListener('sync', event => {
-  console.log('Background sync event:', event.tag);
-  
+  console.log('Background sync triggered:', event.tag);
   if (event.tag === 'check-notifications') {
     event.waitUntil(checkForNotifications());
   }
 });
 
-// Periodic Background Sync (אם נתמך)
-self.addEventListener('periodicsync', event => {
-  console.log('Periodic sync event:', event.tag);
-  
-  if (event.tag === 'check-notifications') {
-    event.waitUntil(checkForNotifications());
+// === Visibility Change - כשהמשתמש חוזר לאפליקציה ===
+self.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    console.log('App became visible, checking notifications...');
+    checkForNotifications();
+    startSmartPolling();
   }
 });
 
-console.log('Service Worker script loaded with polling support');
+console.log('🚀 Service Worker loaded with Smart Polling!');

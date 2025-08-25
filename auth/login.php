@@ -331,7 +331,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     <?php echo getPWAScripts([
         'banner_type' => 'custom',
         'page_type' => 'login',
-        'show_after_seconds' => 1,
+        // 'show_after_seconds' => 1,
         'title' => 'הפוך אותנו לאפליקציה!',
         'subtitle' => 'התקנה מהירה, גישה נוחה'
     ]); ?>

@@ -29,7 +29,8 @@ define('DASHBOARD_PATH', __DIR__);
     <link rel="stylesheet" href="assets/css/dashboard.css">
 
     <!-- ב-head -->
-    <?php echo getPWAHeaders(['title' => 'דשבורד']); ?>
+    <!-- ?php echo getPWAHeaders(['title' => 'דשבורד']); ? -->
+     <?php echo getPWAHeaders(); ?>
 </head>
 <body>
     <div class="dashboard-container">
@@ -170,6 +171,13 @@ define('DASHBOARD_PATH', __DIR__);
     <!-- JavaScript Files -->
     <script src="assets/js/dashboard.js"></script>
     <!-- לפני </body> -->
-<?php echo getPWAScripts(['page_type' => 'dashboard']); ?>
+    <!-- ?php echo getPWAScripts(['page_type' => 'dashboard']); ? -->
+     <?php echo getPWAScripts([
+        'banner_type' => 'custom',
+        'page_type' => 'dashboard',
+        'show_after_seconds' => 15,
+        'title' => 'הפוך אותנו לאפליקציה!',
+        'subtitle' => 'התקנה מהירה, גישה נוחה'
+    ]); ?>
 </body>
 </html>

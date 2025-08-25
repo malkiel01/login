@@ -99,7 +99,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     <!-- Google Sign-In API -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <!-- בתוך ה-<head> -->
-    <?php echo getPWAHeaders(['title' => 'התחברות']); ?>
+    <!-- ?php echo getPWAHeaders(['title' => 'התחברות']); ? -->
+    <?php echo getPWAHeaders(); ?>
 </head>
 <body>
     <div class="login-container">
@@ -322,6 +323,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
         };
     </script>
     <!-- לפני </body> -->
-    <?php echo getPWAScripts(['page_type' => 'login']); ?>
+    <!-- ?php echo getPWAScripts(['page_type' => 'login']); ? -->
+     <?php echo getPWAScripts([
+        'banner_type' => 'native',
+        'page_type' => 'login'
+    ]); ?>
 </body>
 </html>

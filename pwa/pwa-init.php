@@ -1,11 +1,16 @@
 <?php
 /**
- * PWA Native Initialization
- * אתחול PWA עם באנר נייטיב בלבד
+ * PWA Initialization File - Flexible Version
+ * תומך גם בבאנר נייטיב וגם בבאנר מותאם אישית
+ * 
+ * שימוש: 
+ * require_once 'pwa/pwa-init.php';
+ * echo getPWAHeaders();
+ * echo getPWAScripts(['banner_type' => 'native']); // או 'custom'
  */
 
 /**
- * מחזיר את ה-headers ל-PWA
+ * מחזיר את כל ה-meta tags וה-links ל-PWA
  */
 function getPWAHeaders($options = []) {
     $defaults = [
@@ -40,16 +45,37 @@ function getPWAHeaders($options = []) {
 }
 
 /**
- * מחזיר את הסקריפטים הבסיסיים
+ * מחזיר את הסקריפטים ל-PWA
  */
 function getPWAScripts($options = []) {
     $defaults = [
-        'use_native_prompt' => true,  // השתמש בבאנר נייטיב
-        'show_install_button' => false // הצג כפתור התקנה בממשק
+        'banner_type' => 'custom',  // 'native' או 'custom'
+        'page_type' => 'general',
+        'show_after_seconds' => 5,
+        'minimum_visits' => 2,
+        'title' => 'התקן את האפליקציה! 📱',
+        'subtitle' => 'גישה מהירה, עבודה אופליין והתראות חכמות',
+        'icon' => '/pwa/icons/android/android-launchericon-192-192.png',
+        'auto_init' => true,
+        'show_install_button' => false
     ];
     
     $config = array_merge($defaults, $options);
     
+    // הגדרות לפי סוג הדף
+    if ($config['page_type'] === 'login') {
+        $config['show_after_seconds'] = 5;
+        $config['minimum_visits'] = 1;
+        $config['title'] = 'התקן את האפליקציה! 📱';
+        $config['subtitle'] = 'גישה מהירה לרשימות הקניות שלך, גם בלי אינטרנט';
+    } elseif ($config['page_type'] === 'dashboard') {
+        $config['show_after_seconds'] = 10;
+        $config['minimum_visits'] = 2;
+        $config['title'] = 'הפוך את הדשבורד לאפליקציה! 🚀';
+        $config['subtitle'] = 'קבל התראות, עבוד אופליין וגישה מהירה מהמסך הראשי';
+    }
+    
+    // Service Worker - תמיד נטען
     $html = '
     <!-- PWA Service Worker Registration -->
     <script>
@@ -67,51 +93,161 @@ function getPWAScripts($options = []) {
     </script>
     ';
     
-    // הוסף את מנהל הבאנר הנייטיב
-    if ($config['use_native_prompt']) {
-        $html .= '
-    <!-- PWA Native Prompt Manager -->
-    <script src="/pwa/js/pwa-native-prompt.js"></script>
-    ';
+    // בחירת סוג הבאנר
+    if ($config['banner_type'] === 'native') {
+        // באנר נייטיב - פשוט וקל
+        $html .= getNativeBannerScript($config);
+    } else {
+        // באנר מותאם אישית - שליטה מלאה
+        $html .= getCustomBannerScript($config);
     }
     
-    // אם רוצים כפתור התקנה בממשק
+    // כפתור התקנה אופציונלי
     if ($config['show_install_button']) {
-        $html .= '
-    <script>
-        // הוסף כפתור התקנה לממשק
-        document.addEventListener("DOMContentLoaded", function() {
-            // מצא את המקום לכפתור (לדוגמה בהדר)
-            const header = document.querySelector(".header-content");
-            if (header && window.pwaPrompt && !window.pwaPrompt.isInstalled()) {
-                const installBtn = document.createElement("button");
-                installBtn.className = "pwa-install-trigger";
-                installBtn.innerHTML = "📱 התקן אפליקציה";
-                installBtn.style.cssText = `
-                    background: linear-gradient(135deg, #667eea, #764ba2);
-                    color: white;
-                    border: none;
-                    padding: 8px 16px;
-                    border-radius: 8px;
-                    font-size: 14px;
-                    cursor: pointer;
-                    margin-left: 10px;
-                    display: none;
-                `;
-                header.appendChild(installBtn);
-            }
-        });
-    </script>
-        ';
+        $html .= getInstallButtonScript();
     }
     
     return $html;
 }
 
 /**
- * בדיקה אם במצב PWA
+ * סקריפט לבאנר נייטיב
  */
-function isPWAMode() {
+function getNativeBannerScript($config) {
+    return '
+    <!-- PWA Native Banner -->
+    <script src="/pwa/js/pwa-native-prompt.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // הבאנר הנייטיב יופיע אוטומטית
+            console.log("PWA: Using native banner");
+            
+            // רק ל-iOS נוסיף התראה
+            if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
+                if (!isStandalone && !localStorage.getItem("ios-prompt-shown")) {
+                    setTimeout(() => {
+                        if (confirm("להוסיף את האפליקציה למסך הבית?\\n\\nלחץ על כפתור השיתוף ⬆️ ואז \\"הוסף למסך הבית\\"")) {
+                            localStorage.setItem("ios-prompt-shown", "true");
+                        }
+                    }, ' . ($config['show_after_seconds'] * 1000) . ');
+                }
+            }
+        });
+    </script>
+    ';
+}
+
+/**
+ * סקריפט לבאנר מותאם אישית
+ */
+function getCustomBannerScript($config) {
+    return '
+    <!-- PWA Custom Banner -->
+    <script src="/pwa/js/pwa-install-manager.js"></script>
+    <style>
+        /* ודא שהבאנר המותאם מוסתר בהתחלה */
+        .pwa-install-banner { display: none; }
+    </style>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
+            const isInstalled = localStorage.getItem("pwa-installed") === "true";
+            
+            if (!isStandalone && !isInstalled) {
+                window.pwaInstallManager = new PWAInstallManager({
+                    title: "' . addslashes($config['title']) . '",
+                    subtitle: "' . addslashes($config['subtitle']) . '",
+                    icon: "' . addslashes($config['icon']) . '",
+                    showAfterSeconds: ' . $config['show_after_seconds'] . ',
+                    minimumVisits: ' . $config['minimum_visits'] . '
+                });
+                
+                console.log("PWA: Using custom banner");
+            }
+        });
+    </script>
+    ';
+}
+
+/**
+ * כפתור התקנה בממשק
+ */
+function getInstallButtonScript() {
+    return '
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // יצירת כפתור התקנה
+            const installBtn = document.createElement("button");
+            installBtn.id = "pwa-install-button";
+            installBtn.innerHTML = "📱 התקן";
+            installBtn.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                left: 20px;
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                color: white;
+                border: none;
+                padding: 12px 24px;
+                border-radius: 50px;
+                font-size: 16px;
+                font-weight: 600;
+                cursor: pointer;
+                box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+                z-index: 9999;
+                display: none;
+                transition: all 0.3s ease;
+            `;
+            
+            installBtn.onmouseover = () => {
+                installBtn.style.transform = "scale(1.1)";
+            };
+            
+            installBtn.onmouseout = () => {
+                installBtn.style.transform = "scale(1)";
+            };
+            
+            document.body.appendChild(installBtn);
+            
+            // הצג כפתור אם ניתן להתקין
+            let deferredPrompt;
+            
+            window.addEventListener("beforeinstallprompt", (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                installBtn.style.display = "block";
+            });
+            
+            installBtn.addEventListener("click", async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === "accepted") {
+                        installBtn.style.display = "none";
+                    }
+                    deferredPrompt = null;
+                } else if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                    alert("להתקנה:\\n1. לחץ על כפתור השיתוף ⬆️\\n2. בחר \\"הוסף למסך הבית\\"");
+                }
+            });
+            
+            // הסתר אם מותקן
+            window.addEventListener("appinstalled", () => {
+                installBtn.style.display = "none";
+            });
+        });
+    </script>
+    ';
+}
+
+/**
+ * בדיקות עזר
+ */
+function isPWAInstalled() {
+    return isset($_COOKIE['pwa_installed']) && $_COOKIE['pwa_installed'] === 'true';
+}
+
+function isStandaloneMode() {
     return isset($_SERVER['HTTP_X_REQUESTED_WITH']) || 
            (isset($_GET['mode']) && $_GET['mode'] === 'standalone');
 }

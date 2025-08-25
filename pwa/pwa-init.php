@@ -152,41 +152,6 @@ function getNativeBannerScript($config) {
 /**
  * סקריפט לבאנר מותאם אישית
  */
-function getCustomBannerScript_not_work($config) {
-    return '
-    <!-- PWA Custom Banner -->
-    <script src="/pwa/js/pwa-install-manager.js"></script>
-    <script>
-        // מנע אתחול כפול - הקובץ כבר מאתחל את עצמו
-        document.addEventListener("DOMContentLoaded", function() {
-            // עדכן את ההגדרות של המנג׳ר הקיים
-            if (window.pwaInstallManager) {
-                // הסתר את הבאנר הקיים
-                window.pwaInstallManager.forceHide();
-                
-                // עדכן הגדרות
-                window.pwaInstallManager.config.title = "' . addslashes($config['title']) . '";
-                window.pwaInstallManager.config.subtitle = "' . addslashes($config['subtitle']) . '";
-                window.pwaInstallManager.config.icon = "' . addslashes($config['icon']) . '";
-                window.pwaInstallManager.config.showAfterSeconds = ' . $config['show_after_seconds'] . ';
-                window.pwaInstallManager.config.minimumVisits = ' . $config['minimum_visits'] . ';
-                
-                // בדוק שוב אם להציג
-                const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
-                const isInstalled = localStorage.getItem("pwa-installed") === "true";
-                
-                if (!isStandalone && !isInstalled && !window.pwaInstallManager.installDismissed) {
-                    setTimeout(() => {
-                        window.pwaInstallManager.forceShow();
-                    }, ' . $config['show_after_seconds'] . ' * 1000);
-                }
-                
-                console.log("PWA: Custom banner configured");
-            }
-        });
-    </script>
-    ';
-}
 function getCustomBannerScript($config) {
     return '
     <!-- PWA Custom Banner -->

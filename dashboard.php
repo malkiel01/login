@@ -216,15 +216,6 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <link rel="apple-touch-icon" sizes="180x180" href="/family/images/icons/ios/180.png">
     <link rel="apple-touch-icon" sizes="152x152" href="/family/images/icons/ios/152.png">
     <link rel="apple-touch-icon" sizes="120x120" href="/family/images/icons/ios/120.png">
-
-    <script>
-        // משתנה גלובלי לCSRF
-        window.APP_CONFIG = {
-            csrfToken: '<?php echo $_SESSION['csrf_token']; ?>',
-            userId: <?php echo $user_id; ?>,
-            basePath: '/family/'
-        };
-    </script>
 </head>
 <body>
     <!-- Navigation Bar -->
@@ -411,92 +402,170 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
     </div>
 
-    <!-- JavaScript מחולק לקבצים -->
+    <!-- כפתור פתיחת פאנל דיבאג -->
+    <div style="position: fixed; bottom: 10px; left: 10px; z-index: 9999;">
+        <button onclick="window.open('/family/notification-debug.html', '_blank')" 
+                style="background: #667eea; color: white; border: none; padding: 10px 20px; 
+                       border-radius: 5px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+            🔧 פאנל דיבאג
+        </button>
+    </div>
+
+    <!-- Scripts -->
     <script>
-        // משתנה גלובלי לCSRF
+        // משתנים גלובליים
         window.APP_CONFIG = {
             csrfToken: '<?php echo $_SESSION['csrf_token']; ?>',
             userId: <?php echo $user_id; ?>,
+            userEmail: '<?php echo $_SESSION['email']; ?>',
             basePath: '/family/'
         };
+        
+        const csrfToken = window.APP_CONFIG.csrfToken;
+        const userEmail = window.APP_CONFIG.userEmail;
     </script>
     
-    <!-- טען קבצי JavaScript בסדר הנכון -->
-     <!-- pwa-notifications-compact -->
-    <script src="js/pwa-notifications-compact.js"></script>
-    <!-- <script src="js/pwa-notifications.js"></script> -->
-    <script src="js/pwa-installer.js"></script>
-    <script src="js/dashboard.js"></script>
-
+    <!-- פונקציות התראות מתוקנות -->
+    <script src="/family/js/notification-system.js"></script>
+    
+    <!-- פונקציות Dashboard -->
     <script>
-        // פונקציה אוניברסלית להתראות - עובדת בכל מקום
-        async function showNotificationUniversal(title, options = {}) {
-            try {
-                // נסה Service Worker (לפלאפונים)
-                if ('serviceWorker' in navigator) {
-                    const registration = await navigator.serviceWorker.ready;
-                    await registration.showNotification(title, options);
-                    console.log('✅ Notification sent via Service Worker');
-                    return true;
-                }
-            } catch (e) {
-                console.log('Service Worker failed, trying fallback...');
+        // פונקציות Modal
+        function showCreateGroupModal() {
+            document.getElementById('createGroupModal').style.display = 'block';
+        }
+        
+        function closeCreateGroupModal() {
+            document.getElementById('createGroupModal').style.display = 'none';
+            document.getElementById('createGroupForm').reset();
+        }
+        
+        function toggleOwnerParticipationType() {
+            const type = document.querySelector('input[name="ownerParticipationType"]:checked').value;
+            const suffix = document.getElementById('ownerValueSuffix');
+            suffix.textContent = type === 'percentage' ? '%' : '₪';
+        }
+        
+        // יצירת קבוצה
+        document.getElementById('createGroupForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const participationType = document.querySelector('input[name="ownerParticipationType"]:checked').value;
+            const participationValue = parseFloat(document.getElementById('ownerParticipationValue').value);
+            
+            if (participationType === 'percentage' && participationValue > 100) {
+                alert('לא ניתן להגדיר יותר מ-100% השתתפות');
+                return;
             }
             
-            // נסה Notification API (למחשב)
-            try {
-                if ('Notification' in window && Notification.permission === 'granted') {
-                    new Notification(title, options);
-                    console.log('✅ Notification sent via Notification API');
-                    return true;
-                }
-            } catch (e) {
-                console.log('Notification API failed, showing banner...');
+            if (participationValue <= 0) {
+                alert('ערך ההשתתפות חייב להיות חיובי');
+                return;
             }
             
-            // Fallback - הצג באנר
-            showInPageBanner({ title, body: options.body });
-            return false;
-        }
-
-        // באנר בתוך הדף
-        function showInPageBanner(notification) {
-            const banner = document.createElement('div');
-            banner.style.cssText = `
-                position: fixed;
-                top: 80px;
-                left: 20px;
-                background: white;
-                border-radius: 10px;
-                padding: 15px;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-                border-right: 4px solid #667eea;
-                max-width: 350px;
-                z-index: 9999;
-                animation: slideIn 0.5s;
-                direction: rtl;
-            `;
+            const formData = new FormData();
+            formData.append('action', 'createGroup');
+            formData.append('name', document.getElementById('groupName').value);
+            formData.append('description', document.getElementById('groupDescription').value);
+            formData.append('participation_type', participationType);
+            formData.append('participation_value', participationValue);
+            formData.append('csrf_token', csrfToken);
             
-            banner.innerHTML = `
-                <div style="display: flex; align-items: start; gap: 10px;">
-                    <div style="font-size: 24px;">🔔</div>
-                    <div style="flex: 1;">
-                        <h4 style="margin: 0 0 5px 0; color: #333;">${notification.title || 'התראה'}</h4>
-                        <p style="margin: 0; color: #666; font-size: 14px;">${notification.body || ''}</p>
-                    </div>
-                    <button onclick="this.parentElement.parentElement.remove()" 
-                            style="background: none; border: none; font-size: 20px; color: #999; cursor: pointer;">×</button>
-                </div>
-            `;
+            fetch('dashboard.php', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotificationUniversal('הצלחה! 🎉', {
+                        body: 'הקבוצה נוצרה בהצלחה',
+                        icon: '/family/images/icons/android/android-launchericon-192-192.png'
+                    });
+                    setTimeout(() => {
+                        window.location.href = 'group.php?id=' + data.group_id;
+                    }, 1500);
+                } else {
+                    alert(data.message || 'שגיאה ביצירת הקבוצה');
+                }
+            });
+        });
+        
+        // עזיבת קבוצה
+        function leaveGroup(groupId) {
+            if (!confirm('האם אתה בטוח שברצונך לעזוב את הקבוצה?')) return;
             
-            document.body.appendChild(banner);
-            setTimeout(() => banner.remove(), 10000);
+            const formData = new FormData();
+            formData.append('action', 'leaveGroup');
+            formData.append('group_id', groupId);
+            formData.append('csrf_token', csrfToken);
+            
+            fetch('dashboard.php', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotificationUniversal('עזבת את הקבוצה', {
+                        body: 'עזבת את הקבוצה בהצלחה',
+                        icon: '/family/images/icons/android/android-launchericon-192-192.png'
+                    });
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    alert(data.message || 'שגיאה בעזיבת הקבוצה');
+                }
+            });
         }
-
+        
+        // תגובה להזמנה
+        function respondInvitation(invitationId, response) {
+            const formData = new FormData();
+            formData.append('action', 'respondInvitation');
+            formData.append('invitation_id', invitationId);
+            formData.append('response', response);
+            formData.append('csrf_token', csrfToken);
+            
+            fetch('dashboard.php', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const message = response === 'accept' ? 'הצטרפת לקבוצה!' : 'ההזמנה נדחתה';
+                    showNotificationUniversal(message, {
+                        body: 'הפעולה בוצעה בהצלחה',
+                        icon: '/family/images/icons/android/android-launchericon-192-192.png'
+                    });
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    alert('שגיאה בטיפול בהזמנה');
+                }
+            });
+        }
+        
+        // סגירת Modal בלחיצה מחוץ לו
+        window.onclick = function(event) {
+            const modal = document.getElementById('createGroupModal');
+            if (event.target == modal) {
+                closeCreateGroupModal();
+            }
+        }
+        
         // בדיקת התראות מהשרת
         async function checkServerNotifications() {
             try {
-                const response = await fetch('/family/api/get-notifications.php');
+                const response = await fetch('/family/api/simple-notifications.php?action=get-pending');
                 const data = await response.json();
                 
                 if (data.success && data.notifications && data.notifications.length > 0) {
@@ -514,56 +583,40 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 console.error('Error checking notifications:', error);
             }
         }
-
-        // בקש הרשאות אם צריך
-        if ('Notification' in window && Notification.permission === 'default') {
-            Notification.requestPermission();
-        }
-
+        
         // הפעלה אוטומטית
         window.addEventListener('load', () => {
-            // בדוק מיד
-            setTimeout(checkServerNotifications, 200);
+            // בקש הרשאות אם צריך
+            if ('Notification' in window && Notification.permission === 'default') {
+                setTimeout(() => {
+                    Notification.requestPermission().then(permission => {
+                        if (permission === 'granted') {
+                            showNotificationUniversal('ברוך הבא! 👋', {
+                                body: 'התראות הופעלו בהצלחה',
+                                icon: '/family/images/icons/android/android-launchericon-192-192.png'
+                            });
+                        }
+                    });
+                }, 3000);
+            }
             
-            // בדוק כל 30 שניות
-            setInterval(checkServerNotifications, 1000);
+            // בדוק התראות כל 30 שניות
+            setInterval(checkServerNotifications, 30000);
+            
+            // בדוק מיד
+            setTimeout(checkServerNotifications, 2000);
         });
-
-        // CSS לאנימציות
-        if (!document.getElementById('notification-styles')) {
-            const style = document.createElement('style');
-            style.id = 'notification-styles';
-            style.textContent = `
-                @keyframes slideIn {
-                    from { transform: translateX(-100%); opacity: 0; }
-                    to { transform: translateX(0); opacity: 1; }
-                }
-            `;
-            document.head.appendChild(style);
+    </script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/family/service-worker.js', {scope: '/family/'})
+                    .then(reg => console.log('Service Worker registered:', reg))
+                    .catch(err => console.error('Service Worker registration failed:', err));
+            });
         }
     </script>
-
-    <!-- לפני סגירת ה-body -->
-    <script>
-        // הגדר משתנה גלובלי למייל
-        const userEmail = '<?php echo $_SESSION['email']; ?>';
-    </script>
-
-    <!-- אם רוצים פאנל דיבאג פשוט -->
-    <div style="position: fixed; bottom: 10px; left: 10px; z-index: 9999;">
-        <button onclick="window.open('/family/notification-debug.html', '_blank')" 
-                style="background: #667eea; color: white; border: none; padding: 10px 20px; 
-                    border-radius: 5px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
-            🔧 פתח פאנל דיבאג
-        </button>
-    </div>
-
-    <!-- הסקריפטים הרגילים שלך -->
-    <script src="js/pwa-notifications-compact.js"></script>
-    <script src="js/pwa-installer.js"></script>
-    <script src="js/dashboard.js"></script>
-
-    <!-- בתחתית כל דף (dashboard.php, group.php וכו') -->
-    <script src="/family/js/push-notifications-manager.js"></script>
 </body>
 </html>

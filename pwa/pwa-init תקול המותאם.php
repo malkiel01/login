@@ -145,32 +145,25 @@ function getCustomBannerScript($config) {
     return '
     <!-- PWA Custom Banner -->
     <script src="/pwa/js/pwa-install-manager.js"></script>
+    <style>
+        /* ודא שהבאנר המותאם מוסתר בהתחלה */
+        .pwa-install-banner { display: none; }
+    </style>
     <script>
-        // מנע אתחול כפול - הקובץ כבר מאתחל את עצמו
         document.addEventListener("DOMContentLoaded", function() {
-            // עדכן את ההגדרות של המנג׳ר הקיים
-            if (window.pwaInstallManager) {
-                // הסתר את הבאנר הקיים
-                window.pwaInstallManager.forceHide();
+            const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
+            const isInstalled = localStorage.getItem("pwa-installed") === "true";
+            
+            if (!isStandalone && !isInstalled) {
+                window.pwaInstallManager = new PWAInstallManager({
+                    title: "' . addslashes($config['title']) . '",
+                    subtitle: "' . addslashes($config['subtitle']) . '",
+                    icon: "' . addslashes($config['icon']) . '",
+                    showAfterSeconds: ' . $config['show_after_seconds'] . ',
+                    minimumVisits: ' . $config['minimum_visits'] . '
+                });
                 
-                // עדכן הגדרות
-                window.pwaInstallManager.config.title = "' . addslashes($config['title']) . '";
-                window.pwaInstallManager.config.subtitle = "' . addslashes($config['subtitle']) . '";
-                window.pwaInstallManager.config.icon = "' . addslashes($config['icon']) . '";
-                window.pwaInstallManager.config.showAfterSeconds = ' . $config['show_after_seconds'] . ';
-                window.pwaInstallManager.config.minimumVisits = ' . $config['minimum_visits'] . ';
-                
-                // בדוק שוב אם להציג
-                const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
-                const isInstalled = localStorage.getItem("pwa-installed") === "true";
-                
-                if (!isStandalone && !isInstalled && !window.pwaInstallManager.installDismissed) {
-                    setTimeout(() => {
-                        window.pwaInstallManager.forceShow();
-                    }, ' . $config['show_after_seconds'] . ' * 1000);
-                }
-                
-                console.log("PWA: Custom banner configured");
+                console.log("PWA: Using custom banner");
             }
         });
     </script>

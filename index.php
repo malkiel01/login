@@ -13,6 +13,6 @@ if (isset($_SESSION['user_id'])) {
 }
 
 // אם לא מחובר - הפנה לדף התחברות
-header('Location: auth/login.php');
+header('Location: /auth/login.php');
 exit;
 ?>

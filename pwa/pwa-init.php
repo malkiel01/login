@@ -141,7 +141,7 @@ function getNativeBannerScript($config) {
 /**
  * סקריפט לבאנר מותאם אישית
  */
-function getCustomBannerScript($config) {
+function getCustomBannerScript_not_work($config) {
     return '
     <!-- PWA Custom Banner -->
     <script src="/pwa/js/pwa-install-manager.js"></script>
@@ -171,6 +171,32 @@ function getCustomBannerScript($config) {
                 }
                 
                 console.log("PWA: Custom banner configured");
+            }
+        });
+    </script>
+    ';
+}
+function getCustomBannerScript($config) {
+    return '
+    <!-- PWA Custom Banner -->
+    <script src="/pwa/js/pwa-install-manager.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // יצירת המנהל - כי הוא לא נוצר אוטומטית
+            const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
+            const isInstalled = localStorage.getItem("pwa-installed") === "true";
+            
+            if (!isStandalone && !isInstalled) {
+                // צור את המנהל עם ההגדרות
+                window.pwaInstallManager = new PWAInstallManager({
+                    title: "' . addslashes($config['title']) . '",
+                    subtitle: "' . addslashes($config['subtitle']) . '",
+                    icon: "' . addslashes($config['icon']) . '",
+                    showAfterSeconds: ' . $config['show_after_seconds'] . ',
+                    minimumVisits: ' . $config['minimum_visits'] . '
+                });
+                
+                console.log("PWA: Custom banner created and configured");
             }
         });
     </script>

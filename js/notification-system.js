@@ -1,4 +1,4 @@
-// /family/js/notification-system.js
+// /login/js/notification-system.js
 // מערכת התראות מתוקנת שעובדת בכל הסביבות
 
 // פונקציה אוניברסלית מתוקנת להתראות
@@ -34,8 +34,8 @@ async function showNotificationUniversal(title, options = {}) {
             
             await registration.showNotification(title, {
                 body: options.body || '',
-                icon: options.icon || '/family/images/icons/android/android-launchericon-192-192.png',
-                badge: options.badge || '/family/images/icons/android/android-launchericon-96-96.png',
+                icon: options.icon || '/login/images/icons/android/android-launchericon-192-192.png',
+                badge: options.badge || '/login/images/icons/android/android-launchericon-96-96.png',
                 tag: options.tag || 'notification-' + Date.now(),
                 requireInteraction: options.requireInteraction || false,
                 vibrate: options.vibrate || [200, 100, 200],
@@ -59,7 +59,7 @@ async function showNotificationUniversal(title, options = {}) {
             console.log('📱 Using standard Notification API');
             const notification = new Notification(title, {
                 body: options.body || '',
-                icon: options.icon || '/family/images/icons/android/android-launchericon-192-192.png',
+                icon: options.icon || '/login/images/icons/android/android-launchericon-192-192.png',
                 tag: options.tag || 'notification-' + Date.now(),
                 dir: 'rtl',
                 lang: 'he'
@@ -183,8 +183,8 @@ async function testNotificationNow() {
     const timestamp = new Date().toLocaleTimeString('he-IL');
     const result = await showNotificationUniversal('בדיקה 🔔', {
         body: `התראת בדיקה - ${timestamp}`,
-        icon: '/family/images/icons/android/android-launchericon-192-192.png',
-        badge: '/family/images/icons/android/android-launchericon-96-96.png',
+        icon: '/login/images/icons/android/android-launchericon-192-192.png',
+        badge: '/login/images/icons/android/android-launchericon-96-96.png',
         tag: 'test-' + Date.now(),
         data: { test: true }
     });

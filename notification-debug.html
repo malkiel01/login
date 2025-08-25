@@ -130,7 +130,7 @@
         // אתחול פאנל
         function initDebugPanel() {
             // קבל מידע משתמש
-            fetch('/family/api/simple-notifications.php?action=get-user-info', { credentials: 'include' })
+            fetch('/login/api/simple-notifications.php?action=get-user-info', { credentials: 'include' })
                 .then(r => r.json())
                 .then(data => {
                     if (data.email) {
@@ -269,8 +269,8 @@
                 const timestamp = new Date().toLocaleTimeString('he-IL');
                 const notification = new Notification('בדיקה 🔔', {
                     body: `התראת בדיקה - ${timestamp}`,
-                    icon: '/family/images/icons/android/android-launchericon-192-192.png',
-                    badge: '/family/images/icons/android/android-launchericon-96-96.png',
+                    icon: '/login/images/icons/android/android-launchericon-192-192.png',
+                    badge: '/login/images/icons/android/android-launchericon-96-96.png',
                     tag: 'test-' + Date.now(),
                     requireInteraction: false,
                     dir: 'rtl',
@@ -318,8 +318,8 @@
                     
                     await registration.showNotification('בדיקה 🔔', {
                         body: `התראת בדיקה - ${timestamp}`,
-                        icon: '/family/images/icons/android/android-launchericon-192-192.png',
-                        badge: '/family/images/icons/android/android-launchericon-96-96.png',
+                        icon: '/login/images/icons/android/android-launchericon-192-192.png',
+                        badge: '/login/images/icons/android/android-launchericon-96-96.png',
                         tag: 'test-' + Date.now(),
                         requireInteraction: false,
                         vibrate: [200, 100, 200],
@@ -343,7 +343,7 @@
                     const timestamp = new Date().toLocaleTimeString('he-IL');
                     const notification = new Notification('בדיקה 🔔', {
                         body: `התראת בדיקה - ${timestamp}`,
-                        icon: '/family/images/icons/android/android-launchericon-192-192.png',
+                        icon: '/login/images/icons/android/android-launchericon-192-192.png',
                         tag: 'test-' + Date.now(),
                         dir: 'rtl',
                         lang: 'he'
@@ -432,7 +432,7 @@
             debugLog('🌐 בודק חיבור לשרת...', 'system');
             
             try {
-                const response = await fetch('/family/api/simple-notifications.php?action=test', {
+                const response = await fetch('/login/api/simple-notifications.php?action=test', {
                     credentials: 'include'
                 });
                 
@@ -455,7 +455,7 @@
             if (!silent) debugLog('📥 בודק התראות ממתינות...', 'system');
             
             try {
-                const response = await fetch('/family/api/simple-notifications.php?action=get-pending', {
+                const response = await fetch('/login/api/simple-notifications.php?action=get-pending', {
                     credentials: 'include'
                 });
                 

@@ -46,9 +46,9 @@ function notifyGroupInvitation($invitationId) {
                 $invitation['inviter_name'],
                 $invitation['group_name']
             ),
-            'icon' => '/family/images/icons/android/android-launchericon-192-192.png',
-            'badge' => '/family/images/icons/android/android-launchericon-96-96.png',
-            'url' => '/family/dashboard.php#invitations',
+            'icon' => '/login/images/icons/android/android-launchericon-192-192.png',
+            'badge' => '/login/images/icons/android/android-launchericon-96-96.png',
+            'url' => '/login/dashboard.php#invitations',
             'invitation_id' => $invitationId,
             'group_id' => $invitation['group_id'],
             'group_name' => $invitation['group_name'],

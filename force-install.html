@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>דיבוג התקנת PWA</title>
-    <link rel="manifest" href="/family/manifest.json">
+    <link rel="manifest" href="/login/manifest.json">
     <meta name="theme-color" content="#667eea">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="קניות מרוכזות">
-    <link rel="apple-touch-icon" href="/family/images/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/login/images/icons/icon-192x192.png">
     <style>
         body {
             font-family: monospace;
@@ -131,8 +131,8 @@
                 
                 // Register new
                 log('Registering new Service Worker...', 'info');
-                const reg = await navigator.serviceWorker.register('/family/service-worker.js', {
-                    scope: '/family/',
+                const reg = await navigator.serviceWorker.register('/login/service-worker.js', {
+                    scope: '/login/',
                     updateViaCache: 'none'
                 });
                 

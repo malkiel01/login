@@ -5,18 +5,18 @@ const API_BASE = '/family';
 
 // רשימת קבצים לקאש
 const urlsToCache = [
-  '/family/',
-  '/family/dashboard.php',
-  '/family/auth/login.php',
-  '/family/css/dashboard.css',
-  '/family/css/group.css',
-  '/family/css/styles.css',
-  '/family/js/group.js',
-  '/family/js/notification-prompt.js',
-  '/family/offline.html',
-  '/family/images/icons/android/android-launchericon-192-192.png',
-  '/family/images/icons/android/android-launchericon-512-512.png',
-  '/family/images/icons/ios/180.png'
+  '/login/',
+  '/login/dashboard.php',
+  '/login/auth/login.php',
+  '/login/css/dashboard.css',
+  '/login/css/group.css',
+  '/login/css/styles.css',
+  '/login/js/group.js',
+  '/login/js/notification-prompt.js',
+  '/login/offline.html',
+  '/login/images/icons/android/android-launchericon-192-192.png',
+  '/login/images/icons/android/android-launchericon-512-512.png',
+  '/login/images/icons/ios/180.png'
 ];
 
 // התקנת Service Worker
@@ -76,7 +76,7 @@ self.addEventListener('fetch', event => {
                 return response;
               }
               if (event.request.headers.get('accept').includes('text/html')) {
-                return caches.match('/family/offline.html');
+                return caches.match('/login/offline.html');
               }
             });
         })
@@ -93,11 +93,11 @@ self.addEventListener('push', event => {
   let notificationData = {
     title: 'התראה חדשה',
     body: 'יש לך התראה חדשה',
-    icon: '/family/images/icons/android/android-launchericon-192-192.png',
-    badge: '/family/images/icons/android/android-launchericon-96-96.png',
+    icon: '/login/images/icons/android/android-launchericon-192-192.png',
+    badge: '/login/images/icons/android/android-launchericon-96-96.png',
     vibrate: [200, 100, 200],
     data: {
-      url: '/family/dashboard.php'
+      url: '/login/dashboard.php'
     }
   };
   
@@ -145,7 +145,7 @@ self.addEventListener('notificationclick', event => {
   event.notification.close();
   
   // קבל את ה-URL מהנתונים
-  const urlToOpen = event.notification.data?.url || '/family/dashboard.php';
+  const urlToOpen = event.notification.data?.url || '/login/dashboard.php';
   
   // פתח או פוקס על החלון
   event.waitUntil(
@@ -156,7 +156,7 @@ self.addEventListener('notificationclick', event => {
     .then(windowClients => {
       // חפש חלון פתוח עם האפליקציה
       for (let client of windowClients) {
-        if (client.url.includes('/family/') && 'focus' in client) {
+        if (client.url.includes('/login/') && 'focus' in client) {
           return client.focus().then(client => {
             client.navigate(urlToOpen);
             return client;

@@ -395,6 +395,6 @@ $totalAmount = array_sum(array_column($purchases, 'amount'));
     <script src="js/group.js"></script>
     
     <!-- בתחתית כל דף (dashboard.php, group.php וכו') -->
-    <!-- <script src="/family/js/push-notifications-manager.js"></script> -->
+    <!-- <script src="/login/js/push-notifications-manager.js"></script> -->
 </body>
 </html>

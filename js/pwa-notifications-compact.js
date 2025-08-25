@@ -11,8 +11,8 @@ class PWANotificationManager {
         if (!this.isSupported) return;
         
         try {
-            this.registration = await navigator.serviceWorker.register('/family/service-worker.js', {
-                scope: '/family/'
+            this.registration = await navigator.serviceWorker.register('/login/service-worker.js', {
+                scope: '/login/'
             });
             
             // בדוק אם זה הביקור הראשון
@@ -133,7 +133,7 @@ class PWANotificationManager {
             try {
                 new Notification('ברוכים הבאים! 👋', {
                     body: 'התראות הופעלו בהצלחה',
-                    icon: '/family/images/icons/android/android-launchericon-192-192.png',
+                    icon: '/login/images/icons/android/android-launchericon-192-192.png',
                     tag: 'welcome',
                     dir: 'rtl',
                     lang: 'he'

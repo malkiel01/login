@@ -300,7 +300,7 @@ class NotificationListener {
     
     async checkForNotifications() {
         try {
-            const response = await fetch('/family/api/notification-system.php?action=check', {
+            const response = await fetch('/login/api/notification-system.php?action=check', {
                 method: 'GET',
                 credentials: 'same-origin',
                 headers: {
@@ -341,8 +341,8 @@ class NotificationListener {
             try {
                 const browserNotification = new Notification(notification.title, {
                     body: notification.body,
-                    icon: notification.icon || '/family/images/icons/android/android-launchericon-192-192.png',
-                    badge: '/family/images/icons/android/android-launchericon-96-96.png',
+                    icon: notification.icon || '/login/images/icons/android/android-launchericon-192-192.png',
+                    badge: '/login/images/icons/android/android-launchericon-96-96.png',
                     tag: `notification-${notification.id}`,
                     requireInteraction: false,
                     silent: false,
@@ -448,7 +448,7 @@ class NotificationListener {
             const formData = new FormData();
             formData.append('notification_id', notificationId);
             
-            await fetch('/family/api/notification-system.php?action=mark-read', {
+            await fetch('/login/api/notification-system.php?action=mark-read', {
                 method: 'POST',
                 credentials: 'same-origin',
                 body: formData
@@ -499,7 +499,7 @@ class NotificationListener {
     async registerServiceWorker() {
         if ('serviceWorker' in navigator) {
             try {
-                const registration = await navigator.serviceWorker.register('/family/service-worker.js');
+                const registration = await navigator.serviceWorker.register('/login/service-worker.js');
                 console.log('Service Worker registered:', registration);
                 
                 // הגדר handler להודעות מה-Service Worker
@@ -545,7 +545,7 @@ class NotificationListener {
     }
     
     async testNotification() {
-        await fetch('/family/api/notification-system.php?action=test', {
+        await fetch('/login/api/notification-system.php?action=test', {
             method: 'GET',
             credentials: 'same-origin'
         });

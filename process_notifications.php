@@ -208,7 +208,7 @@ function sendInvitationEmail($data, $emailService, $pdo) {
                 <h3 style='color: #667eea;'>$groupName</h3>
                 <p>בקבוצה זו תוכל לחלוק קניות ולנהל חישובים בצורה פשוטה ונוחה.</p>
                 <center>
-                    <a href='https://form.mbe-plus.com/family/dashboard.php' class='button'>
+                    <a href='https://form.mbe-plus.com/login/dashboard.php' class='button'>
                         כניסה למערכת
                     </a>
                 </center>
@@ -242,7 +242,7 @@ function sendPurchaseEmail($data, $emailService, $pdo) {
         <h2>קנייה חדשה בקבוצה</h2>
         <p><strong>$memberName</strong> הוסיף קנייה בסך ₪" . number_format($amount, 2) . "</p>
         <p>קבוצה: $groupName</p>
-        <a href='https://form.mbe-plus.com/family/dashboard.php'>כניסה למערכת</a>
+        <a href='https://form.mbe-plus.com/login/dashboard.php'>כניסה למערכת</a>
     </body>
     </html>";
     
@@ -263,7 +263,7 @@ function sendCalculationEmail($data, $emailService, $pdo) {
         <h2>עדכון חישובים</h2>
         <p>$status: ₪" . number_format($amount, 2) . "</p>
         <p>קבוצה: $groupName</p>
-        <a href='https://form.mbe-plus.com/family/dashboard.php'>כניסה למערכת</a>
+        <a href='https://form.mbe-plus.com/login/dashboard.php'>כניסה למערכת</a>
     </body>
     </html>";
     

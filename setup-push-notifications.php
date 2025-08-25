@@ -501,8 +501,8 @@ VAPID_PRIVATE_KEY=<?php echo $vapidKeys['privateKey']; ?></pre>
                 // שלח התראת ברוכים הבאים
                 new Notification('ברוך הבא! 👋', {
                     body: 'התראות Push הופעלו בהצלחה',
-                    icon: '/family/images/icons/android/android-launchericon-192-192.png',
-                    badge: '/family/images/icons/android/android-launchericon-96-96.png'
+                    icon: '/login/images/icons/android/android-launchericon-192-192.png',
+                    badge: '/login/images/icons/android/android-launchericon-96-96.png'
                 });
             } else if (permission === 'denied') {
                 showMessage('❌ ההרשאה נדחתה. יש לאפשר בהגדרות הדפדפן', 'error');
@@ -560,27 +560,27 @@ VAPID_PRIVATE_KEY=<?php echo $vapidKeys['privateKey']; ?></pre>
                 
                 await registration.showNotification('התראת בדיקה 🎉', {
                     body: 'אם אתה רואה את זה, Push Notifications עובד מצוין!',
-                    icon: '/family/images/icons/android/android-launchericon-192-192.png',
-                    badge: '/family/images/icons/android/android-launchericon-96-96.png',
+                    icon: '/login/images/icons/android/android-launchericon-192-192.png',
+                    badge: '/login/images/icons/android/android-launchericon-96-96.png',
                     vibrate: [200, 100, 200],
                     tag: 'test-notification',
                     requireInteraction: false,
                     dir: 'rtl',
                     lang: 'he',
                     data: {
-                        url: '/family/dashboard.php',
+                        url: '/login/dashboard.php',
                         time: new Date().toISOString()
                     },
                     actions: [
                         {
                             action: 'open',
                             title: 'פתח אפליקציה',
-                            icon: '/family/images/icons/android/android-launchericon-96-96.png'
+                            icon: '/login/images/icons/android/android-launchericon-96-96.png'
                         },
                         {
                             action: 'close',
                             title: 'סגור',
-                            icon: '/family/images/icons/android/android-launchericon-96-96.png'
+                            icon: '/login/images/icons/android/android-launchericon-96-96.png'
                         }
                     ]
                 });

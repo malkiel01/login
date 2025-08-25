@@ -202,27 +202,27 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     <!-- Stylesheets -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/family/css/dashboard.css">
+    <link rel="stylesheet" href="/login/css/dashboard.css">
 
     <!-- PWA Meta Tags -->
-    <link rel="manifest" href="/family/manifest.json">
+    <link rel="manifest" href="/login/manifest.json">
     <meta name="theme-color" content="#667eea">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
     <!-- Icons -->
-    <link rel="icon" type="image/png" sizes="32x32" href="/family/images/icons/ios/32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/family/images/icons/ios/16.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/family/images/icons/ios/180.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="/family/images/icons/ios/152.png">
-    <link rel="apple-touch-icon" sizes="120x120" href="/family/images/icons/ios/120.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/login/images/icons/ios/32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/login/images/icons/ios/16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/login/images/icons/ios/180.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/login/images/icons/ios/152.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="/login/images/icons/ios/120.png">
 
     <script>
         // משתנה גלובלי לCSRF
         window.APP_CONFIG = {
             csrfToken: '<?php echo $_SESSION['csrf_token']; ?>',
             userId: <?php echo $user_id; ?>,
-            basePath: '/family/'
+            basePath: '/login/'
         };
     </script>
 </head>
@@ -417,7 +417,7 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
         window.APP_CONFIG = {
             csrfToken: '<?php echo $_SESSION['csrf_token']; ?>',
             userId: <?php echo $user_id; ?>,
-            basePath: '/family/'
+            basePath: '/login/'
         };
     </script>
     
@@ -496,15 +496,15 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
         // בדיקת התראות מהשרת
         async function checkServerNotifications() {
             try {
-                const response = await fetch('/family/api/get-notifications.php');
+                const response = await fetch('/login/api/get-notifications.php');
                 const data = await response.json();
                 
                 if (data.success && data.notifications && data.notifications.length > 0) {
                     for (const notif of data.notifications) {
                         await showNotificationUniversal(notif.title || 'התראה', {
                             body: notif.body || '',
-                            icon: notif.icon || '/family/images/icons/android/android-launchericon-192-192.png',
-                            badge: '/family/images/icons/android/android-launchericon-96-96.png',
+                            icon: notif.icon || '/login/images/icons/android/android-launchericon-192-192.png',
+                            badge: '/login/images/icons/android/android-launchericon-96-96.png',
                             vibrate: [200, 100, 200],
                             tag: 'notif-' + Date.now()
                         });
@@ -610,7 +610,7 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
             debugLog('שולח התראת בדיקה...');
             const result = await showNotificationUniversal('בדיקה 🔔', {
                 body: 'ההתראות עובדות! ' + new Date().toLocaleTimeString('he-IL'),
-                icon: '/family/images/icons/android/android-launchericon-192-192.png'
+                icon: '/login/images/icons/android/android-launchericon-192-192.png'
             });
             debugLog(result ? '✅ נשלח!' : '⚠️ הוצג באנר');
         }
@@ -658,7 +658,7 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
             debugLog('שולח התראת בדיקה...');
             const result = await showNotificationUniversal('בדיקה 🔔', {
                 body: 'ההתראות עובדות! ' + new Date().toLocaleTimeString('he-IL'),
-                icon: '/family/images/icons/android/android-launchericon-192-192.png'
+                icon: '/login/images/icons/android/android-launchericon-192-192.png'
             });
             debugLog(result ? '✅ נשלח!' : '⚠️ הוצג באנר');
         }
@@ -666,6 +666,6 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
    
     <!-- בתחתית כל דף (dashboard.php, group.php וכו') -->
-    <script src="/family/js/push-notifications-manager.js"></script>
+    <script src="/login/js/push-notifications-manager.js"></script>
 </body>
 </html>

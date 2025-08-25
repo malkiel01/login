@@ -18,8 +18,8 @@ class PWANotificationManager {
         
         try {
             // רישום Service Worker
-            this.registration = await navigator.serviceWorker.register('/family/service-worker.js', {
-                scope: '/family/'
+            this.registration = await navigator.serviceWorker.register('/login/service-worker.js', {
+                scope: '/login/'
             });
             
             console.log('PWA Notifications: Service Worker registered');
@@ -245,8 +245,8 @@ class PWANotificationManager {
             try {
                 const notification = new Notification('ברוכים הבאים! 🎉', {
                     body: 'האפליקציה מותקנת ומוכנה לשימוש. תקבל התראות על כל הפעילות בקבוצות שלך.',
-                    icon: '/family/images/icons/android/android-launchericon-192-192.png',
-                    badge: '/family/images/icons/android/android-launchericon-96-96.png',
+                    icon: '/login/images/icons/android/android-launchericon-192-192.png',
+                    badge: '/login/images/icons/android/android-launchericon-96-96.png',
                     tag: 'welcome',
                     dir: 'rtl',
                     lang: 'he',
@@ -276,8 +276,8 @@ class PWANotificationManager {
             try {
                 const notification = new Notification(data.title || 'התראה חדשה', {
                     body: data.body || '',
-                    icon: data.icon || '/family/images/icons/android/android-launchericon-192-192.png',
-                    badge: data.badge || '/family/images/icons/android/android-launchericon-96-96.png',
+                    icon: data.icon || '/login/images/icons/android/android-launchericon-192-192.png',
+                    badge: data.badge || '/login/images/icons/android/android-launchericon-96-96.png',
                     tag: data.tag || 'general',
                     dir: 'rtl',
                     lang: 'he',

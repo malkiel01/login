@@ -10,14 +10,14 @@ class PushNotificationManager {
         this.notificationQueue = [];
         this.listeners = new Map();
         this.config = {
-            swPath: '/family/service-worker.js',
-            swScope: '/family/',
-            apiEndpoint: '/family/api/simple-notifications.php',
+            swPath: '/login/service-worker.js',
+            swScope: '/login/',
+            apiEndpoint: '/login/api/simple-notifications.php',
             pollInterval: 3000, // בדיקה כל 30 שניות
             maxRetries: 3,
             retryDelay: 200,
-            defaultIcon: '/family/images/icons/android/android-launchericon-192-192.png',
-            defaultBadge: '/family/images/icons/android/android-launchericon-96-96.png',
+            defaultIcon: '/login/images/icons/android/android-launchericon-192-192.png',
+            defaultBadge: '/login/images/icons/android/android-launchericon-96-96.png',
             vibrate: [200, 100, 200],
             requireInteraction: false,
             renotify: true,

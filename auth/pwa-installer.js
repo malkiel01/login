@@ -51,7 +51,7 @@ class PWAInstaller {
         
         try {
             const registration = await navigator.serviceWorker.register('../service-worker.js', {
-                scope: '/family/'
+                scope: '/login/'
             });
             this.log(`Service Worker registered: ${registration.scope}`);
             

@@ -102,17 +102,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     
     <!-- עדכן את הלינקים לאייקונים החדשים -->
-    <link rel="icon" type="image/png" sizes="32x32" href="/family/images/icons/ios/32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/family/images/icons/ios/16.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/family/images/icons/ios/180.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="/family/images/icons/ios/152.png">
-    <link rel="apple-touch-icon" sizes="120x120" href="/family/images/icons/ios/120.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/login/images/icons/ios/32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/login/images/icons/ios/16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/login/images/icons/ios/180.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/login/images/icons/ios/152.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="/login/images/icons/ios/120.png">
 
     <!-- Service Worker -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/family/service-worker.js', {scope: '/family/'})
+                navigator.serviceWorker.register('/login/service-worker.js', {scope: '/login/'})
                     .then(reg => {
                         console.log('Service Worker registered:', reg);
                     })

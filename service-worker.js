@@ -1,16 +1,16 @@
 // service-worker.js - גרסה משולבת שעובדת!
 const CACHE_NAME = 'panan-bakan-v1.0.5';
 const urlsToCache = [
-  '/family/',
-  '/family/dashboard.php',
-  '/family/auth/login.php',
-  '/family/css/dashboard.css',
-  '/family/css/group.css',
-  '/family/css/styles.css',
-  '/family/js/group.js',
-  '/family/offline.html',
-  '/family/images/icons/android/android-launchericon-192-192.png',
-  '/family/images/icons/android/android-launchericon-512-512.png'
+  '/login/',
+  '/login/dashboard.php',
+  '/login/auth/login.php',
+  '/login/css/dashboard.css',
+  '/login/css/group.css',
+  '/login/css/styles.css',
+  '/login/js/group.js',
+  '/login/offline.html',
+  '/login/images/icons/android/android-launchericon-192-192.png',
+  '/login/images/icons/android/android-launchericon-512-512.png'
 ];
 
 // === POLLING SETTINGS ===
@@ -112,7 +112,7 @@ async function checkForNotifications() {
     }
     
     // שלח בקשה לשרת
-    const response = await fetch('/family/api/send-push-notification.php?action=get-pending', {
+    const response = await fetch('/login/api/send-push-notification.php?action=get-pending', {
       method: 'GET',
       credentials: 'include',
       headers: {
@@ -154,11 +154,11 @@ async function showNotification(data) {
     const title = data.title || 'התראה חדשה';
     const options = {
       body: data.body || '',
-      icon: data.icon || '/family/images/icons/android/android-launchericon-192-192.png',
-      badge: data.badge || '/family/images/icons/android/android-launchericon-96-96.png',
+      icon: data.icon || '/login/images/icons/android/android-launchericon-192-192.png',
+      badge: data.badge || '/login/images/icons/android/android-launchericon-96-96.png',
       tag: data.tag || `notification-${Date.now()}`,
       data: {
-        url: data.url || '/family/dashboard.php',
+        url: data.url || '/login/dashboard.php',
         type: data.type,
         id: data.id,
         ...data.data
@@ -177,12 +177,12 @@ async function showNotification(data) {
         {
           action: 'accept',
           title: 'קבל',
-          icon: '/family/images/icons/android/android-launchericon-96-96.png'
+          icon: '/login/images/icons/android/android-launchericon-96-96.png'
         },
         {
           action: 'view',
           title: 'צפה',
-          icon: '/family/images/icons/android/android-launchericon-96-96.png'
+          icon: '/login/images/icons/android/android-launchericon-96-96.png'
         }
       ];
     }
@@ -202,13 +202,13 @@ self.addEventListener('notificationclick', event => {
   event.notification.close();
   
   const data = event.notification.data;
-  let url = data.url || '/family/dashboard.php';
+  let url = data.url || '/login/dashboard.php';
   
   // טיפול בפעולות
   if (event.action === 'accept' && data.type === 'group_invitation') {
-    url = `/family/dashboard.php?action=accept_invitation&id=${data.id}`;
+    url = `/login/dashboard.php?action=accept_invitation&id=${data.id}`;
   } else if (event.action === 'view') {
-    url = data.url || '/family/dashboard.php#invitations';
+    url = data.url || '/login/dashboard.php#invitations';
   }
   
   // פתח או פוקס על החלון
@@ -217,7 +217,7 @@ self.addEventListener('notificationclick', event => {
       .then(windowClients => {
         // חפש חלון קיים
         for (let client of windowClients) {
-          if (client.url.includes('/family/')) {
+          if (client.url.includes('/login/')) {
             return client.focus().then(() => {
               client.navigate(url);
               // הפעל מחדש את ה-polling
@@ -291,7 +291,7 @@ self.addEventListener('fetch', event => {
         .catch(() => {
           // אם נכשל והקובץ הוא HTML, החזר offline page
           if (event.request.headers.get('accept').includes('text/html')) {
-            return caches.match('/family/offline.html');
+            return caches.match('/login/offline.html');
           }
         })
     );

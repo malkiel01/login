@@ -202,20 +202,20 @@
     
     <!-- Stylesheets -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/family/css/dashboard.css">
+    <link rel="stylesheet" href="/login/css/dashboard.css">
 
     <!-- PWA Meta Tags -->
-    <link rel="manifest" href="/family/manifest.json">
+    <link rel="manifest" href="/login/manifest.json">
     <meta name="theme-color" content="#667eea">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
     <!-- Icons -->
-    <link rel="icon" type="image/png" sizes="32x32" href="/family/images/icons/ios/32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/family/images/icons/ios/16.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/family/images/icons/ios/180.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="/family/images/icons/ios/152.png">
-    <link rel="apple-touch-icon" sizes="120x120" href="/family/images/icons/ios/120.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/login/images/icons/ios/32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/login/images/icons/ios/16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/login/images/icons/ios/180.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/login/images/icons/ios/152.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="/login/images/icons/ios/120.png">
 </head>
 <body>
     <!-- Navigation Bar -->
@@ -404,7 +404,7 @@
 
     <!-- כפתור פתיחת פאנל דיבאג -->
     <div style="position: fixed; bottom: 10px; left: 10px; z-index: 9999;">
-        <button onclick="window.open('/family/notification-debug.html', '_blank')" 
+        <button onclick="window.open('/login/notification-debug.html', '_blank')" 
                 style="background: #667eea; color: white; border: none; padding: 10px 20px; 
                        border-radius: 5px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
             🔧 פאנל דיבאג
@@ -418,7 +418,7 @@
             csrfToken: '<?php echo $_SESSION['csrf_token']; ?>',
             userId: <?php echo $user_id; ?>,
             userEmail: '<?php echo $_SESSION['email']; ?>',
-            basePath: '/family/'
+            basePath: '/login/'
         };
         
         const csrfToken = window.APP_CONFIG.csrfToken;
@@ -426,7 +426,7 @@
     </script>
     
     <!-- פונקציות התראות מתוקנות -->
-    <script src="/family/js/notification-system.js"></script>
+    <script src="/login/js/notification-system.js"></script>
     
     <!-- פונקציות Dashboard -->
     <script>
@@ -483,7 +483,7 @@
                 if (data.success) {
                     showNotificationUniversal('הצלחה! 🎉', {
                         body: 'הקבוצה נוצרה בהצלחה',
-                        icon: '/family/images/icons/android/android-launchericon-192-192.png'
+                        icon: '/login/images/icons/android/android-launchericon-192-192.png'
                     });
                     setTimeout(() => {
                         window.location.href = 'group.php?id=' + data.group_id;
@@ -515,7 +515,7 @@
                 if (data.success) {
                     showNotificationUniversal('עזבת את הקבוצה', {
                         body: 'עזבת את הקבוצה בהצלחה',
-                        icon: '/family/images/icons/android/android-launchericon-192-192.png'
+                        icon: '/login/images/icons/android/android-launchericon-192-192.png'
                     });
                     setTimeout(() => location.reload(), 1500);
                 } else {
@@ -545,7 +545,7 @@
                     const message = response === 'accept' ? 'הצטרפת לקבוצה!' : 'ההזמנה נדחתה';
                     showNotificationUniversal(message, {
                         body: 'הפעולה בוצעה בהצלחה',
-                        icon: '/family/images/icons/android/android-launchericon-192-192.png'
+                        icon: '/login/images/icons/android/android-launchericon-192-192.png'
                     });
                     setTimeout(() => location.reload(), 1500);
                 } else {
@@ -565,15 +565,15 @@
         // בדיקת התראות מהשרת
         async function checkServerNotifications() {
             try {
-                const response = await fetch('/family/api/simple-notifications.php?action=get-pending');
+                const response = await fetch('/login/api/simple-notifications.php?action=get-pending');
                 const data = await response.json();
                 
                 if (data.success && data.notifications && data.notifications.length > 0) {
                     for (const notif of data.notifications) {
                         await showNotificationUniversal(notif.title || 'התראה', {
                             body: notif.body || '',
-                            icon: notif.icon || '/family/images/icons/android/android-launchericon-192-192.png',
-                            badge: '/family/images/icons/android/android-launchericon-96-96.png',
+                            icon: notif.icon || '/login/images/icons/android/android-launchericon-192-192.png',
+                            badge: '/login/images/icons/android/android-launchericon-96-96.png',
                             vibrate: [200, 100, 200],
                             tag: 'notif-' + Date.now()
                         });
@@ -593,7 +593,7 @@
                         if (permission === 'granted') {
                             showNotificationUniversal('ברוך הבא! 👋', {
                                 body: 'התראות הופעלו בהצלחה',
-                                icon: '/family/images/icons/android/android-launchericon-192-192.png'
+                                icon: '/login/images/icons/android/android-launchericon-192-192.png'
                             });
                         }
                     });
@@ -612,7 +612,7 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/family/service-worker.js', {scope: '/family/'})
+                navigator.serviceWorker.register('/login/service-worker.js', {scope: '/login/'})
                     .then(reg => console.log('Service Worker registered:', reg))
                     .catch(err => console.error('Service Worker registration failed:', err));
             });

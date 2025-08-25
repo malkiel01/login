@@ -783,8 +783,8 @@ try {
                 // שלח התראת בדיקה
                 new Notification('ברוך הבא! 👋', {
                     body: 'ההתראות הופעלו בהצלחה',
-                    icon: '/family/images/icons/android/android-launchericon-192-192.png',
-                    badge: '/family/images/icons/android/android-launchericon-96-96.png',
+                    icon: '/login/images/icons/android/android-launchericon-192-192.png',
+                    badge: '/login/images/icons/android/android-launchericon-96-96.png',
                     vibrate: [200, 100, 200],
                     tag: 'welcome'
                 });
@@ -822,8 +822,8 @@ try {
             
             const notification = new Notification('הזמנה לקבוצת רכישה 🎉', {
                 body: 'ישראל ישראלי הזמין אותך לקבוצה "משפחת כהן - פסח 2024"',
-                icon: '/family/images/icons/android/android-launchericon-192-192.png',
-                badge: '/family/images/icons/android/android-launchericon-96-96.png',
+                icon: '/login/images/icons/android/android-launchericon-192-192.png',
+                badge: '/login/images/icons/android/android-launchericon-96-96.png',
                 tag: 'invitation-test',
                 requireInteraction: true,
                 actions: [
@@ -838,7 +838,7 @@ try {
             });
             
             notification.onclick = () => {
-                window.open('/family/dashboard.php#invitations');
+                window.open('/login/dashboard.php#invitations');
                 notification.close();
             };
         }
@@ -851,8 +851,8 @@ try {
             
             const notification = new Notification('קנייה חדשה בקבוצה 🛒', {
                 body: 'משה כהן הוסיף קנייה בסך ₪245.50',
-                icon: '/family/images/icons/android/android-launchericon-192-192.png',
-                badge: '/family/images/icons/android/android-launchericon-96-96.png',
+                icon: '/login/images/icons/android/android-launchericon-192-192.png',
+                badge: '/login/images/icons/android/android-launchericon-96-96.png',
                 tag: 'purchase-test',
                 vibrate: [200, 100, 200],
                 data: {
@@ -863,7 +863,7 @@ try {
             });
             
             notification.onclick = () => {
-                window.open('/family/group.php?id=123#purchases');
+                window.open('/login/group.php?id=123#purchases');
                 notification.close();
             };
         }
@@ -876,8 +876,8 @@ try {
             
             const notification = new Notification('עדכון חישובים 💰', {
                 body: 'מגיע לך החזר של ₪127.30 בקבוצה "פסח 2024"',
-                icon: '/family/images/icons/android/android-launchericon-192-192.png',
-                badge: '/family/images/icons/android/android-launchericon-96-96.png',
+                icon: '/login/images/icons/android/android-launchericon-192-192.png',
+                badge: '/login/images/icons/android/android-launchericon-96-96.png',
                 tag: 'calculation-test',
                 requireInteraction: false,
                 data: {
@@ -888,7 +888,7 @@ try {
             });
             
             notification.onclick = () => {
-                window.open('/family/group.php?id=123#calculations');
+                window.open('/login/group.php?id=123#calculations');
                 notification.close();
             };
         }

@@ -49,36 +49,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             case 'invitation':
                 $notificationData['title'] = 'הזמנה לקבוצה חדשה 👥';
                 $notificationData['body'] = 'הוזמנת להצטרף לקבוצת רכישה "קבוצת בדיקה"';
-                $notificationData['url'] = '/family/dashboard.php#invitations';
+                $notificationData['url'] = '/login/dashboard.php#invitations';
                 break;
                 
             case 'purchase':
                 $notificationData['title'] = 'קנייה חדשה בקבוצה 🛒';
                 $notificationData['body'] = $_SESSION['name'] . ' הוסיף קנייה בסך ₪150.00';
-                $notificationData['url'] = '/family/dashboard.php#purchases';
+                $notificationData['url'] = '/login/dashboard.php#purchases';
                 break;
                 
             case 'payment':
                 $notificationData['title'] = 'תזכורת תשלום 💰';
                 $notificationData['body'] = 'יש לך חוב של ₪75.50 בקבוצה';
-                $notificationData['url'] = '/family/dashboard.php#payments';
+                $notificationData['url'] = '/login/dashboard.php#payments';
                 break;
                 
             case 'custom':
                 $notificationData['title'] = $customTitle ?: 'התראה מותאמת אישית';
                 $notificationData['body'] = $customBody ?: 'זו התראת בדיקה מותאמת אישית';
-                $notificationData['url'] = '/family/dashboard.php';
+                $notificationData['url'] = '/login/dashboard.php';
                 break;
                 
             default: // test
                 $notificationData['title'] = 'התראת בדיקה 🧪';
                 $notificationData['body'] = 'זו התראת בדיקה שנשלחה ב-' . date('H:i:s');
-                $notificationData['url'] = '/family/dashboard.php';
+                $notificationData['url'] = '/login/dashboard.php';
         }
         
         $notificationData['type'] = $notificationType;
-        $notificationData['icon'] = '/family/images/icons/android/android-launchericon-192-192.png';
-        $notificationData['badge'] = '/family/images/icons/android/android-launchericon-96-96.png';
+        $notificationData['icon'] = '/login/images/icons/android/android-launchericon-192-192.png';
+        $notificationData['badge'] = '/login/images/icons/android/android-launchericon-96-96.png';
         
         try {
             // הכנס לתור ההתראות
@@ -745,7 +745,7 @@ $users = $stmt->fetchAll();
                     // שלח התראת בדיקה
                     registration.showNotification('בדיקת Service Worker', {
                         body: 'אם אתה רואה את זה, ה-Service Worker עובד!',
-                        icon: '/family/images/icons/android/android-launchericon-192-192.png',
+                        icon: '/login/images/icons/android/android-launchericon-192-192.png',
                         vibrate: [200, 100, 200]
                     });
                 } else {

@@ -2,16 +2,16 @@
 // גירסה שעובדת לפוש מקומי
 const CACHE_NAME = 'panan-bakan-v1.0.4';
 const urlsToCache = [
-  '/family/',
-  '/family/dashboard.php',
-  '/family/auth/login.php',
-  '/family/css/dashboard.css',
-  '/family/css/group.css',
-  '/family/css/styles.css',
-  '/family/js/group.js',
-  '/family/offline.html',
-  '/family/images/icons/android/android-launchericon-192-192.png',
-  '/family/images/icons/android/android-launchericon-512-512.png'
+  '/login/',
+  '/login/dashboard.php',
+  '/login/auth/login.php',
+  '/login/css/dashboard.css',
+  '/login/css/group.css',
+  '/login/css/styles.css',
+  '/login/js/group.js',
+  '/login/offline.html',
+  '/login/images/icons/android/android-launchericon-192-192.png',
+  '/login/images/icons/android/android-launchericon-512-512.png'
 ];
 
 // Polling interval - בדוק כל 3 שניות
@@ -81,7 +81,7 @@ function stopPolling() {
 async function checkForNotifications() {
   try {
     // שלח בקשה לשרת לקבלת התראות ממתינות
-    const response = await fetch('/family/api/send-push-notification.php?action=get-pending', {
+    const response = await fetch('/login/api/send-push-notification.php?action=get-pending', {
       method: 'GET',
       credentials: 'include', // חשוב לשלוח cookies
       headers: {
@@ -116,11 +116,11 @@ async function showNotification(data) {
     const title = data.title || 'התראה חדשה';
     const options = {
       body: data.body || '',
-      icon: data.icon || '/family/images/icons/android/android-launchericon-192-192.png',
-      badge: data.badge || '/family/images/icons/android/android-launchericon-96-96.png',
+      icon: data.icon || '/login/images/icons/android/android-launchericon-192-192.png',
+      badge: data.badge || '/login/images/icons/android/android-launchericon-96-96.png',
       tag: data.type || 'notification',
       data: {
-        url: data.url || '/family/dashboard.php',
+        url: data.url || '/login/dashboard.php',
         type: data.type,
         ...data
       },
@@ -137,12 +137,12 @@ async function showNotification(data) {
         {
           action: 'accept',
           title: 'קבל הזמנה',
-          icon: '/family/images/icons/android/android-launchericon-96-96.png'
+          icon: '/login/images/icons/android/android-launchericon-96-96.png'
         },
         {
           action: 'view',
           title: 'צפה',
-          icon: '/family/images/icons/android/android-launchericon-96-96.png'
+          icon: '/login/images/icons/android/android-launchericon-96-96.png'
         }
       ];
       options.requireInteraction = true; // השאר את ההתראה עד שהמשתמש מגיב
@@ -163,13 +163,13 @@ self.addEventListener('notificationclick', event => {
   event.notification.close();
   
   const data = event.notification.data;
-  let url = data.url || '/family/dashboard.php';
+  let url = data.url || '/login/dashboard.php';
   
   // טיפול ב-actions
   if (event.action === 'accept' && data.invitation_id) {
-    url = `/family/dashboard.php?action=accept_invitation&id=${data.invitation_id}`;
+    url = `/login/dashboard.php?action=accept_invitation&id=${data.invitation_id}`;
   } else if (event.action === 'view') {
-    url = data.url || '/family/dashboard.php#invitations';
+    url = data.url || '/login/dashboard.php#invitations';
   }
   
   // פתח או פוקס על החלון
@@ -178,7 +178,7 @@ self.addEventListener('notificationclick', event => {
       .then(windowClients => {
         // חפש חלון קיים
         for (let client of windowClients) {
-          if (client.url.includes('/family/') && 'focus' in client) {
+          if (client.url.includes('/login/') && 'focus' in client) {
             return client.focus().then(() => {
               // שלח הודעה לחלון
               client.postMessage({
@@ -263,7 +263,7 @@ self.addEventListener('fetch', event => {
               }
               // אם אין בcache, החזר דף offline
               if (event.request.headers.get('accept').includes('text/html')) {
-                return caches.match('/family/offline.html');
+                return caches.match('/login/offline.html');
               }
             });
         })

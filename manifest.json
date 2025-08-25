@@ -2,8 +2,8 @@
   "name": "מערכת ניהול קניות מרוכזות",
   "short_name": "קניות מרוכזות",
   "description": "מערכת חכמה לניהול וחלוקת קניות משותפות לקבוצות עם התראות בזמן אמת",
-  "start_url": "/family/dashboard.php",
-  "scope": "/family/",
+  "start_url": "/login/dashboard.php",
+  "scope": "/login/",
   "display": "standalone",
   "orientation": "portrait",
   "theme_color": "#667eea",
@@ -21,67 +21,67 @@
   
   "icons": [
     {
-      "src": "/family/images/icons/android/android-launchericon-48-48.png",
+      "src": "/login/images/icons/android/android-launchericon-48-48.png",
       "sizes": "48x48",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/family/images/icons/android/android-launchericon-72-72.png",
+      "src": "/login/images/icons/android/android-launchericon-72-72.png",
       "sizes": "72x72",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/family/images/icons/android/android-launchericon-96-96.png",
+      "src": "/login/images/icons/android/android-launchericon-96-96.png",
       "sizes": "96x96",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/family/images/icons/android/android-launchericon-144-144.png",
+      "src": "/login/images/icons/android/android-launchericon-144-144.png",
       "sizes": "144x144",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/family/images/icons/android/android-launchericon-192-192.png",
+      "src": "/login/images/icons/android/android-launchericon-192-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/family/images/icons/android/android-launchericon-512-512.png",
+      "src": "/login/images/icons/android/android-launchericon-512-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/family/images/icons/ios/120.png",
+      "src": "/login/images/icons/ios/120.png",
       "sizes": "120x120",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/family/images/icons/ios/152.png",
+      "src": "/login/images/icons/ios/152.png",
       "sizes": "152x152",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/family/images/icons/ios/167.png",
+      "src": "/login/images/icons/ios/167.png",
       "sizes": "167x167",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/family/images/icons/ios/180.png",
+      "src": "/login/images/icons/ios/180.png",
       "sizes": "180x180",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/family/images/icons/ios/1024.png",
+      "src": "/login/images/icons/ios/1024.png",
       "sizes": "1024x1024",
       "type": "image/png",
       "purpose": "any"
@@ -93,9 +93,9 @@
       "name": "צור קבוצה חדשה",
       "short_name": "קבוצה חדשה",
       "description": "צור קבוצת רכישה חדשה",
-      "url": "/family/dashboard.php?action=new_group",
+      "url": "/login/dashboard.php?action=new_group",
       "icons": [{ 
-        "src": "/family/images/icons/android/android-launchericon-96-96.png",
+        "src": "/login/images/icons/android/android-launchericon-96-96.png",
         "sizes": "96x96",
         "type": "image/png"
       }]
@@ -104,9 +104,9 @@
       "name": "הוסף קנייה",
       "short_name": "קנייה",
       "description": "הוסף קנייה חדשה",
-      "url": "/family/dashboard.php?action=new_purchase",
+      "url": "/login/dashboard.php?action=new_purchase",
       "icons": [{ 
-        "src": "/family/images/icons/android/android-launchericon-96-96.png",
+        "src": "/login/images/icons/android/android-launchericon-96-96.png",
         "sizes": "96x96",
         "type": "image/png"
       }]
@@ -115,13 +115,13 @@
   
   "screenshots": [
     {
-      "src": "/family/images/screenshots/screenshot1.png",
+      "src": "/login/images/screenshots/screenshot1.png",
       "sizes": "1280x720",
       "type": "image/png",
       "label": "מסך הקבוצות"
     },
     {
-      "src": "/family/images/screenshots/screenshot2.png",
+      "src": "/login/images/screenshots/screenshot2.png",
       "sizes": "1280x720",
       "type": "image/png",
       "label": "ניהול קניות"
@@ -129,7 +129,7 @@
   ],
   
   "share_target": {
-    "action": "/family/share-target.php",
+    "action": "/login/share-target.php",
     "method": "POST",
     "enctype": "multipart/form-data",
     "params": {

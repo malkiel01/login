@@ -171,7 +171,7 @@ switch ($action) {
                 'title' => 'התראת בדיקה 🔔',
                 'body' => 'זו התראת בדיקה מהשרת - ' . date('H:i:s'),
                 'type' => 'test',
-                'icon' => '/family/images/icons/android/android-launchericon-192-192.png'
+                'icon' => '/login/images/icons/android/android-launchericon-192-192.png'
             ]);
             
             $stmt = $pdo->prepare("

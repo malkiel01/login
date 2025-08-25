@@ -24,7 +24,7 @@ class PushNotificationManager {
             console.log('Service Worker is ready');
 
             // קבל את ה-VAPID public key מהשרת
-            const response = await fetch('/family/api/push-notifications.php?action=vapid-key');
+            const response = await fetch('/login/api/push-notifications.php?action=vapid-key');
             const data = await response.json();
             this.vapidPublicKey = data.publicKey;
             console.log('VAPID key received');
@@ -133,7 +133,7 @@ class PushNotificationManager {
      */
     async sendSubscriptionToServer(subscription) {
         try {
-            const response = await fetch('/family/api/push-notifications.php?action=subscribe', {
+            const response = await fetch('/login/api/push-notifications.php?action=subscribe', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -187,7 +187,7 @@ class PushNotificationManager {
      */
     async sendTestNotification() {
         try {
-            const response = await fetch('/family/api/push-notifications.php?action=test', {
+            const response = await fetch('/login/api/push-notifications.php?action=test', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

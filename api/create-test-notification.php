@@ -24,9 +24,9 @@ try {
         'user_id' => $user_id,
         'title' => 'התראת בדיקה 🧪',
         'body' => 'זו התראת בדיקה שנוצרה ב-' . date('H:i:s'),
-        'icon' => '/family/images/icons/android/android-launchericon-192-192.png',
-        'badge' => '/family/images/icons/android/android-launchericon-96-96.png',
-        'url' => '/family/dashboard.php',
+        'icon' => '/login/images/icons/android/android-launchericon-192-192.png',
+        'badge' => '/login/images/icons/android/android-launchericon-96-96.png',
+        'url' => '/login/dashboard.php',
         'type' => 'test'
     ]);
     

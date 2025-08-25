@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>בדיקת PWA</title>
-    <link rel="manifest" href="/family/manifest.json">
+    <link rel="manifest" href="/login/manifest.json">
     <meta name="theme-color" content="#667eea">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <style>
@@ -130,10 +130,10 @@
             if ('serviceWorker' in navigator) {
                 try {
                     // תחילה נרשום SW חדש
-                    await navigator.serviceWorker.register('/family/service-worker.js', {scope: '/family/'});
+                    await navigator.serviceWorker.register('/login/service-worker.js', {scope: '/login/'});
                     
                     // אז נבדוק אם רשום
-                    const reg = await navigator.serviceWorker.getRegistration('/family/');
+                    const reg = await navigator.serviceWorker.getRegistration('/login/');
                     addCheck(!!reg, 'Service Worker', reg ? 'Registered' : 'Not registered');
                     
                     // בדוק אם ה-SW פעיל
@@ -153,7 +153,7 @@
             
             // 3. בדיקת Manifest
             try {
-                const response = await fetch('/family/manifest.json');
+                const response = await fetch('/login/manifest.json');
                 const manifest = await response.json();
                 addCheck(
                     response.ok,
@@ -172,7 +172,7 @@
                 
                 // בדוק start_url
                 addCheck(
-                    manifest.start_url === '/family/dashboard.php',
+                    manifest.start_url === '/login/dashboard.php',
                     'Start URL',
                     manifest.start_url || 'Not defined'
                 );
@@ -183,7 +183,7 @@
             
             // 4. בדיקת אייקון 192x192
             try {
-                const iconResponse = await fetch('/family/images/icons/icon-192x192.png');
+                const iconResponse = await fetch('/login/images/icons/icon-192x192.png');
                 addCheck(
                     iconResponse.ok,
                     'Icon 192x192',
@@ -370,8 +370,8 @@
             if (Notification.permission === 'granted') {
                 new Notification('בדיקת התראות', {
                     body: 'ההתראות עובדות מצוין! 🎉',
-                    icon: '/family/images/icons/icon-192x192.png',
-                    badge: '/family/images/icons/badge-72x72.png',
+                    icon: '/login/images/icons/icon-192x192.png',
+                    badge: '/login/images/icons/badge-72x72.png',
                     dir: 'rtl',
                     lang: 'he'
                 });
@@ -387,11 +387,11 @@
                 
                 // רשום מחדש את ה-Service Worker
                 if ('serviceWorker' in navigator) {
-                    const reg = await navigator.serviceWorker.getRegistration('/family/');
+                    const reg = await navigator.serviceWorker.getRegistration('/login/');
                     if (reg) {
                         await reg.unregister();
                     }
-                    await navigator.serviceWorker.register('/family/service-worker.js', {scope: '/family/'});
+                    await navigator.serviceWorker.register('/login/service-worker.js', {scope: '/login/'});
                 }
                 
                 alert('Cache נוקה והService Worker נרשם מחדש');
@@ -416,8 +416,8 @@
         // Log for debugging
         console.log('PWA Check Script Loaded');
         console.log('Current URL:', location.href);
-        console.log('Manifest URL:', '/family/manifest.json');
-        console.log('SW URL:', '/family/service-worker.js');
+        console.log('Manifest URL:', '/login/manifest.json');
+        console.log('SW URL:', '/login/service-worker.js');
     </script>
 </body>
 </html>

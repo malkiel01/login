@@ -121,12 +121,12 @@ class PushNotificationService {
         $payload = json_encode([
             'title' => $title,
             'body' => $body,
-            'icon' => '/family/images/icons/android/android-launchericon-192-192.png',
-            'badge' => '/family/images/icons/android/android-launchericon-96-96.png',
+            'icon' => '/login/images/icons/android/android-launchericon-192-192.png',
+            'badge' => '/login/images/icons/android/android-launchericon-96-96.png',
             'vibrate' => [200, 100, 200],
             'data' => array_merge($data, [
                 'timestamp' => time(),
-                'url' => $data['url'] ?? '/family/dashboard.php'
+                'url' => $data['url'] ?? '/login/dashboard.php'
             ])
         ]);
         
@@ -250,7 +250,7 @@ class PushNotificationService {
                     'type' => 'group_invitation',
                     'invitation_id' => $invitationId,
                     'group_id' => $invitation['group_id'],
-                    'url' => '/family/dashboard.php#invitations'
+                    'url' => '/login/dashboard.php#invitations'
                 ]
             );
             
@@ -301,7 +301,7 @@ class PushNotificationService {
                         'type' => 'new_purchase',
                         'purchase_id' => $purchaseId,
                         'group_id' => $purchase['group_id'],
-                        'url' => '/family/group.php?id=' . $purchase['group_id'] . '#purchases'
+                        'url' => '/login/group.php?id=' . $purchase['group_id'] . '#purchases'
                     ]
                 );
             }

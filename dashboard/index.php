@@ -173,7 +173,7 @@ define('DASHBOARD_PATH', __DIR__);
     <!-- לפני </body> -->
     <!-- ?php echo getPWAScripts(['page_type' => 'dashboard']); ? -->
      <?php echo getPWAScripts([
-        'banner_type' => 'custom',
+        'banner_type' => 'native',
         'page_type' => 'dashboard',
         'show_after_seconds' => 5,
         'title' => 'הפוך אותנו לאפליקציה!',

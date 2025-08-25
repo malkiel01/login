@@ -1,4 +1,8 @@
 <?php
+
+// בתחילת הקובץ
+require_once '../pwa/pwa-init.php';
+
 session_start();
 require_once '../config.php';  // תיקון: חזרה לתיקייה הראשית
 
@@ -94,6 +98,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     
     <!-- Google Sign-In API -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- בתוך ה-<head> -->
+    <?php echo getPWAHeaders(['title' => 'התחברות']); ?>
 </head>
 <body>
     <div class="login-container">
@@ -315,20 +321,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
             }
         };
     </script>
-    <!-- הוסף לפני סוף ה-body -->
-    <!-- PWA Notifications Manager - גרסה קומפקטית -->
-    <script src="../js/pwa-notifications-compact.js"></script>
-    <script>
-        // הפעל בדיקת התראות אחרי טעינת הדף
-        window.addEventListener('load', () => {
-            // המתן 3 שניות לפני הצגת בקשת התראות
-            // כדי לתת למשתמש זמן להתמקד בדף
-            setTimeout(() => {
-                if (window.pwaNotifications) {
-                    window.pwaNotifications.handlePermissionRequest();
-                }
-            }, 3000);
-        });
-    </script>
+    <!-- לפני </body> -->
+    <?php echo getPWAScripts(['page_type' => 'login']); ?>
 </body>
 </html>

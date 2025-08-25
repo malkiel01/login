@@ -1,5 +1,6 @@
 <?php
 // dashboard/index.php - קובץ ראשי של הדשבורד
+require_once '../pwa/pwa-init.php';
 session_start();
 require_once '../config.php';
 require_once 'includes/functions.php';
@@ -26,10 +27,9 @@ define('DASHBOARD_PATH', __DIR__);
     <!-- CSS Files -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="assets/css/dashboard.css">
-    
-    <!-- PWA Support -->
-    <link rel="manifest" href="../manifest.json">
-    <meta name="theme-color" content="#667eea">
+
+    <!-- ב-head -->
+    <?php echo getPWAHeaders(['title' => 'דשבורד']); ?>
 </head>
 <body>
     <div class="dashboard-container">
@@ -169,5 +169,7 @@ define('DASHBOARD_PATH', __DIR__);
 
     <!-- JavaScript Files -->
     <script src="assets/js/dashboard.js"></script>
+    <!-- לפני </body> -->
+<?php echo getPWAScripts(['page_type' => 'dashboard']); ?>
 </body>
 </html>

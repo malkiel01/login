@@ -618,6 +618,6 @@ $invitations = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
    
     <!-- בתחתית כל דף (dashboard.php, group.php וכו') -->
-    <script src="/family/js/push-notifications-manager.js"></script>
+    <!-- <script src="/family/js/push-notifications-manager.js"></script> -->
 </body>
 </html>

@@ -42,10 +42,10 @@ use Permissions\Core\PermissionTypes;
 /**
  * אתחול מנהל ההרשאות הגלובלי
  */
-// if (!isset($GLOBALS['permissionsManager'])) {
-//     $userId = $_SESSION['user_id'] ?? null;
-//     $GLOBALS['permissionsManager'] = new PermissionsManager($userId);
-// }
+if (!isset($GLOBALS['permissionsManager'])) {
+    $userId = $_SESSION['user_id'] ?? null;
+    $GLOBALS['permissionsManager'] = new PermissionsManager($userId);
+}
 
 // /**
 //  * פונקציה להחזרת headers ל-HTML

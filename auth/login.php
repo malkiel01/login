@@ -102,22 +102,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     <!-- ?php echo getPWAHeaders(['title' => 'התחברות']); ? -->
     <?php echo getPWAHeaders(); ?>
     <?php 
-        require_once 'permissions/init.php';
+        require_once '../permissions/init.php';
         // echo getPermissionsScript();  // לפני </body>
     ?>
 
-    <!-- <script>
-
-        // בקשת הרשאת התראות
-await Permissions.requestNotificationPermission();
-
-// בקשת הרשאת Push
-await Permissions.requestPushPermission(); 
-
-// שליחת התראה
-Permissions.showNotification('הודעה', {body: 'תוכן'});
-    </script> -->
-    
 </head>
 <body>
     <div class="login-container">

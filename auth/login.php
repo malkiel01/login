@@ -106,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
         echo getPermissionsScript();  // לפני </body>
     ?>
 
-    <script>
+    <!-- <script>
 
         // בקשת הרשאת התראות
 await Permissions.requestNotificationPermission();
@@ -116,7 +116,7 @@ await Permissions.requestPushPermission();
 
 // שליחת התראה
 Permissions.showNotification('הודעה', {body: 'תוכן'});
-    </script>
+    </script> -->
     
 </head>
 <body>

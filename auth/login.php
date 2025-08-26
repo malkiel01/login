@@ -103,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     <?php echo getPWAHeaders(); ?>
     <?php 
         require_once 'permissions/init.php';
-        echo getPermissionsScript();  // לפני </body>
+        // echo getPermissionsScript();  // לפני </body>
     ?>
 
     <!-- <script>

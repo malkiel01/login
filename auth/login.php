@@ -668,32 +668,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
         //     'page_type' => 'login'
         // ]);
 
-
-        // // כפתור צף שכשלוחצים עליו מופיע הבאנר הנייטיב האמיתי
+        // // עם התאמת מיקום וטקסט
         // echo getPWAScripts([
         //     'banner_type' => 'manual-native',
-        //     'page_type' => 'login'
+        //     'install_text' => '📱 התקן עכשיו',
+        //     'button_position' => 'bottom-right'  // bottom-left, top-right, top-left
         // ]);
 
-        // עם התאמת מיקום וטקסט
+
+        // באנר מעוצב מותאם אישית
         echo getPWAScripts([
-            'banner_type' => 'manual-native',
-            'install_text' => '📱 התקן עכשיו',
-            'button_position' => 'bottom-right'  // bottom-left, top-right, top-left
+            'banner_type' => 'custom',
+            'page_type' => 'login',
+            'show_after_seconds' => 5,
+            'title' => 'הפוך אותנו לאפליקציה! 🚀',
+            'subtitle' => 'גישה מהירה, עבודה אופליין והתראות חכמות',
+            'icon' => '/path/to/custom-icon.png',
+            'install_text' => 'התקן עכשיו',
+            'dismiss_text' => 'אולי מאוחר יותר',
+            'minimum_visits' => 2  // להציג רק אחרי 2 ביקורים
         ]);
-
-        // // באנר מעוצב מותאם אישית
-        // echo getPWAScripts([
-        //     'banner_type' => 'custom',
-        //     'page_type' => 'login',
-        //     'show_after_seconds' => 5,
-        //     'title' => 'הפוך אותנו לאפליקציה! 🚀',
-        //     'subtitle' => 'גישה מהירה, עבודה אופליין והתראות חכמות',
-        //     'icon' => '/path/to/custom-icon.png',
-        //     'install_text' => 'התקן עכשיו',
-        //     'dismiss_text' => 'אולי מאוחר יותר',
-        //     'minimum_visits' => 2  // להציג רק אחרי 2 ביקורים
-        // ]);
     ?>
 
 </body>

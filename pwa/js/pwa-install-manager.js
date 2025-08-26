@@ -601,12 +601,29 @@ Safari (iOS):
     // חשיפה גלובלית
     window.PWAInstallManager = PWAInstallManager;
     
-    // אתחול אוטומטי
+    // // אתחול אוטומטי
+    // if (document.readyState === 'loading') {
+    //     document.addEventListener('DOMContentLoaded', () => {
+    //         window.pwaInstallManager = new PWAInstallManager();
+    //     });
+    // } else {
+    //     window.pwaInstallManager = new PWAInstallManager();
+    // }
+
+
+        // חשיפה גלובלית
+    window.PWAInstallManager = PWAInstallManager;
+    
+    // אתחול אוטומטי רק אם לא קיים
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
-            window.pwaInstallManager = new PWAInstallManager();
+            if (!window.pwaInstallManager) {
+                window.pwaInstallManager = new PWAInstallManager();
+            }
         });
     } else {
-        window.pwaInstallManager = new PWAInstallManager();
+        if (!window.pwaInstallManager) {
+            window.pwaInstallManager = new PWAInstallManager();
+        }
     }
 })();

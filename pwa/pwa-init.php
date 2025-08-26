@@ -160,38 +160,23 @@ function getCustomBannerScript($config) {
     <!-- PWA Custom Banner -->
     <script src="/pwa/js/pwa-install-manager.js"></script>
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            // בדיקה שאין כבר מנהל קיים
+        // חכה שהקובץ ייטען ויצור את המנהל האוטומטי
+        setTimeout(function() {
             if (window.pwaInstallManager) {
-                console.log("PWA: Manager already exists, updating config");
-                // עדכן הגדרות במנהל קיים
+                // המנהל כבר נוצר אוטומטית מהקובץ, רק עדכן הגדרות
                 window.pwaInstallManager.config.title = "' . addslashes($config['title']) . '";
                 window.pwaInstallManager.config.subtitle = "' . addslashes($config['subtitle']) . '";
                 window.pwaInstallManager.config.icon = "' . addslashes($config['icon']) . '";
                 window.pwaInstallManager.config.showAfterSeconds = ' . $config['show_after_seconds'] . ';
                 window.pwaInstallManager.config.minimumVisits = ' . $config['minimum_visits'] . ';
-                return;
-            }
-            
-            // בדיקה אם כבר מותקן
-            const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
-            const isInstalled = localStorage.getItem("pwa-installed") === "true";
-            
-            if (!isStandalone && !isInstalled) {
-                // צור את המנהל פעם אחת בלבד
-                window.pwaInstallManager = new PWAInstallManager({
-                    title: "' . addslashes($config['title']) . '",
-                    subtitle: "' . addslashes($config['subtitle']) . '",
-                    icon: "' . addslashes($config['icon']) . '",
-                    showAfterSeconds: ' . $config['show_after_seconds'] . ',
-                    minimumVisits: ' . $config['minimum_visits'] . '
-                });
                 
-                console.log("PWA: Custom banner created");
-            } else {
-                console.log("PWA: Already installed or in standalone mode");
+                // הסתר את הבאנר הקיים וטען מחדש עם ההגדרות החדשות
+                window.pwaInstallManager.hide();
+                window.pwaInstallManager.checkShowBanner();
+                
+                console.log("PWA: Custom banner configured with new settings");
             }
-        });
+        }, 100); // המתן מעט שהקובץ ייטען
     </script>
     ';
 }

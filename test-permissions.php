@@ -1,324 +1,341 @@
 <?php
 /**
- * בדיקת מערכת הרשאות - גרסה פשוטה
- * permissions-check.php
+ * בדיקת מערכת הרשאות - גרסה מפורטת עם תפיסת שגיאות
+ * permissions-check-detailed.php
  */
 
-// מניעת הפניות - חשוב!
+// מניעת הפניות
 if (!defined('SKIP_AUTH_CHECK')) {
     define('SKIP_AUTH_CHECK', true);
 }
 
-// מניעת session אוטומטי שעלול לגרום להפניה
-session_write_close();
-
-// הצג שגיאות
+// הצג כל השגיאות
 ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
+
+// Custom error handler
+function customErrorHandler($errno, $errstr, $errfile, $errline) {
+    echo "<div style='background:#fee; padding:10px; margin:5px; border-left:3px solid red;'>";
+    echo "<strong>שגיאת PHP:</strong><br>";
+    echo "קובץ: " . basename($errfile) . " שורה: $errline<br>";
+    echo "הודעה: $errstr";
+    echo "</div>";
+    return false; // המשך לטפל בשגיאה כרגיל
+}
+set_error_handler("customErrorHandler");
+
+// Exception handler
+function customExceptionHandler($exception) {
+    echo "<div style='background:#fee; padding:10px; margin:5px; border-left:3px solid red;'>";
+    echo "<strong>Exception:</strong><br>";
+    echo "קובץ: " . basename($exception->getFile()) . " שורה: " . $exception->getLine() . "<br>";
+    echo "הודעה: " . $exception->getMessage();
+    echo "</div>";
+}
+set_exception_handler("customExceptionHandler");
 
 // Headers
 header('Content-Type: text/html; charset=UTF-8');
-header('X-Robots-Tag: noindex');
-
-// פונקציה לבדיקת קובץ
-function checkFile($path, $required = false) {
-    if (file_exists($path)) {
-        $size = filesize($path);
-        return "✅ קיים (" . number_format($size) . " bytes)";
-    } else {
-        return $required ? "❌ חסר!" : "⚠️ לא נמצא (אופציונלי)";
-    }
-}
-
-// התחלת HTML
 ?>
 <!DOCTYPE html>
 <html dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>בדיקת מערכת הרשאות</title>
+    <title>בדיקת הרשאות - מפורט</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 1000px;
-            margin: 20px auto;
-            padding: 20px;
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px;
             background: #f5f5f5;
         }
-        .box {
+        .section {
             background: white;
-            padding: 20px;
+            padding: 15px;
             margin: 10px 0;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        h1 { color: #333; }
-        h2 { 
-            color: #555; 
-            border-bottom: 2px solid #667eea;
-            padding-bottom: 5px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         .success { color: #10b981; }
         .warning { color: #f59e0b; }
         .error { color: #ef4444; }
+        h2 { 
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 5px;
+        }
         pre {
             background: #f0f0f0;
             padding: 10px;
-            border-radius: 5px;
             overflow-x: auto;
+            font-size: 12px;
         }
-        .file-list {
-            font-family: monospace;
-            font-size: 14px;
-        }
-        .file-item {
-            padding: 3px 0;
-        }
-        .summary {
-            padding: 15px;
-            border-radius: 8px;
-            margin: 20px 0;
-            font-size: 18px;
-            text-align: center;
-        }
-        .summary.ok {
-            background: #d4f4dd;
-            color: #0e7c3a;
-        }
-        .summary.error {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-        .btn {
-            display: inline-block;
-            padding: 10px 20px;
-            background: #667eea;
-            color: white;
-            text-decoration: none;
+        .code {
+            background: #1f2937;
+            color: #10b981;
+            padding: 10px;
             border-radius: 5px;
-            margin: 5px;
-        }
-        .btn:hover {
-            background: #5a6ed8;
+            font-family: monospace;
+            overflow-x: auto;
         }
     </style>
 </head>
 <body>
-    <h1>🔍 בדיקת מערכת הרשאות</h1>
-    
-    <div class="box">
-        <h2>📁 מבנה תיקיות</h2>
-        <div class="file-list">
-            <?php
-            $base = dirname(__FILE__);
-            $permDir = $base . '/permissions';
-            
-            echo "<div class='file-item'>תיקייה ראשית: $base</div>";
-            
-            if (is_dir($permDir)) {
-                echo "<div class='file-item success'>✅ /permissions/ - נמצאה</div>";
-                
-                // בדוק תתי תיקיות
-                $subdirs = [
-                    'core' => true,
-                    'handlers' => false,
-                    'ui' => false,
-                    'ui/styles' => false,
-                    'js' => false,
-                    'api' => false,
-                    'debug' => false
-                ];
-                
-                foreach ($subdirs as $dir => $required) {
-                    $path = $permDir . '/' . $dir;
-                    if (is_dir($path)) {
-                        echo "<div class='file-item success'>  ✅ /$dir/</div>";
-                    } else {
-                        $class = $required ? 'error' : 'warning';
-                        $icon = $required ? '❌' : '⚠️';
-                        echo "<div class='file-item $class'>  $icon /$dir/ - לא נמצאה</div>";
-                    }
-                }
-            } else {
-                echo "<div class='file-item error'>❌ /permissions/ - לא נמצאה!</div>";
-                echo "<div class='file-item'>נתיב מצופה: $permDir</div>";
-            }
-            ?>
-        </div>
-    </div>
-    
-    <div class="box">
-        <h2>📄 קבצי Core</h2>
-        <div class="file-list">
-            <?php
-            $files = [
-                'permissions-init.php' => $permDir . '/permissions-init.php',
-                'PermissionsManager.php' => $permDir . '/core/PermissionsManager.php',
-                'PermissionStorage.php' => $permDir . '/core/PermissionStorage.php',
-                'PermissionTypes.php' => $permDir . '/core/PermissionTypes.php'
-            ];
-            
-            $allCoreExists = true;
-            foreach ($files as $name => $path) {
-                $status = checkFile($path, true);
-                echo "<div class='file-item'>$name: $status</div>";
-                if (!file_exists($path)) {
-                    $allCoreExists = false;
-                }
-            }
-            ?>
-        </div>
-    </div>
-    
-    <div class="box">
-        <h2>🔧 Handlers (אופציונלי)</h2>
-        <div class="file-list">
-            <?php
-            $handlers = [
-                'NotificationHandler.php',
-                'PushHandler.php',
-                'MediaHandler.php',
-                'StorageHandler.php',
-                'LocationHandler.php',
-                'BackgroundHandler.php'
-            ];
-            
-            foreach ($handlers as $handler) {
-                $path = $permDir . '/handlers/' . $handler;
-                $status = checkFile($path, false);
-                echo "<div class='file-item'>$handler: $status</div>";
-            }
-            ?>
-        </div>
-    </div>
-    
-    <div class="box">
-        <h2>🎨 קבצי UI</h2>
-        <div class="file-list">
-            <?php
-            $uiFiles = [
-                'permissions.css' => $permDir . '/ui/styles/permissions.css',
-                'permissions-manager.js' => $permDir . '/js/permissions-manager.js',
-                'permissions-debug.php' => $permDir . '/debug/permissions-debug.php'
-            ];
-            
-            foreach ($uiFiles as $name => $path) {
-                $status = checkFile($path, false);
-                echo "<div class='file-item'>$name: $status</div>";
-            }
-            ?>
-        </div>
-    </div>
-    
-    <div class="box">
-        <h2>⚙️ בדיקת טעינה</h2>
-        <?php
-        $canLoad = false;
-        if ($allCoreExists) {
-            echo "<div>מנסה לטעון את המערכת...</div>";
-            
-            // כבה דיווח שגיאות זמנית
-            $oldError = error_reporting(0);
-            $result = @include_once $permDir . '/permissions-init.php';
-            error_reporting($oldError);
-            
-            if ($result !== false) {
-                echo "<div class='success'>✅ המערכת נטענה בהצלחה!</div>";
-                $canLoad = true;
-                
-                // בדוק פונקציות
-                $funcs = ['getPermissionsHeaders', 'getPermissionsScripts', 'checkPermission'];
-                echo "<div>פונקציות זמינות:</div>";
-                foreach ($funcs as $func) {
-                    if (function_exists($func)) {
-                        echo "<div class='success'>  ✅ $func()</div>";
-                    } else {
-                        echo "<div class='error'>  ❌ $func()</div>";
-                    }
-                }
-            } else {
-                echo "<div class='error'>❌ שגיאה בטעינת המערכת</div>";
-                $error = error_get_last();
-                if ($error) {
-                    echo "<pre>" . print_r($error, true) . "</pre>";
-                }
-            }
-        } else {
-            echo "<div class='error'>❌ חסרים קבצי Core - לא ניתן לטעון</div>";
-        }
-        ?>
-    </div>
-    
-    <div class="box">
-        <h2>🗄️ בדיקת Database</h2>
-        <?php
-        $configFile = $base . '/config.php';
-        if (file_exists($configFile)) {
-            echo "<div class='success'>✅ config.php נמצא</div>";
-            
-            @include_once $configFile;
-            
-            if (defined('DB_HOST')) {
-                echo "<div>Host: " . DB_HOST . "</div>";
-                echo "<div>Database: " . DB_NAME . "</div>";
-                
-                // נסה חיבור
-                try {
-                    if (function_exists('getDBConnection')) {
-                        $pdo = @getDBConnection();
-                        if ($pdo) {
-                            echo "<div class='success'>✅ חיבור למסד נתונים הצליח</div>";
-                        }
-                    }
-                } catch (Exception $e) {
-                    echo "<div class='warning'>⚠️ בעיית חיבור: " . $e->getMessage() . "</div>";
-                }
-            } else {
-                echo "<div class='warning'>⚠️ הגדרות DB לא נטענו</div>";
-            }
-        } else {
-            echo "<div class='error'>❌ config.php לא נמצא</div>";
-        }
-        ?>
-    </div>
-    
-    <div class="box">
-        <h2>🔒 בדיקת HTTPS</h2>
-        <?php
-        $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443;
-        if ($isHttps) {
-            echo "<div class='success'>✅ האתר רץ ב-HTTPS</div>";
-        } else {
-            echo "<div class='warning'>⚠️ האתר לא רץ ב-HTTPS - חלק מההרשאות לא יעבדו</div>";
-        }
-        echo "<div>Protocol: " . (isset($_SERVER['HTTPS']) ? 'HTTPS' : 'HTTP') . "</div>";
-        echo "<div>Port: " . $_SERVER['SERVER_PORT'] . "</div>";
-        ?>
-    </div>
+    <h1>🔍 בדיקת מערכת הרשאות - מפורט</h1>
     
     <?php
-    // סיכום
-    if ($allCoreExists && $canLoad) {
-        echo '<div class="summary ok">';
-        echo '✅ המערכת מוכנה לשימוש!';
-        echo '</div>';
-        echo '<div style="text-align: center;">';
-        echo '<a href="/permissions/debug/permissions-debug.php" class="btn">פתח דף דיבוג מלא</a>';
-        echo '<a href="/auth/login.php" class="btn">חזור להתחברות</a>';
-        echo '</div>';
-    } else {
-        echo '<div class="summary error">';
-        echo '❌ המערכת לא מוכנה - יש לתקן את הבעיות';
-        echo '</div>';
-    }
+    $baseDir = dirname(__FILE__);
+    $permDir = $baseDir . '/permissions';
     ?>
     
-    <div class="box" style="background: #f0f0f0; font-size: 12px;">
-        <strong>מידע נוסף:</strong><br>
-        PHP: <?php echo phpversion(); ?><br>
-        Server: <?php echo $_SERVER['SERVER_SOFTWARE']; ?><br>
-        Path: <?php echo __FILE__; ?>
+    <div class="section">
+        <h2>📁 בדיקת מבנה</h2>
+        <?php
+        echo "תיקיית בסיס: <code>$baseDir</code><br>";
+        echo "תיקיית הרשאות: <code>$permDir</code><br><br>";
+        
+        if (is_dir($permDir)) {
+            echo "<span class='success'>✅ תיקיית permissions קיימת</span><br>";
+            
+            // רשימת קבצים
+            echo "<h3>קבצים בתיקייה:</h3>";
+            echo "<div class='code'>";
+            $files = scandir($permDir);
+            foreach ($files as $file) {
+                if ($file != '.' && $file != '..') {
+                    $path = $permDir . '/' . $file;
+                    if (is_dir($path)) {
+                        echo "📁 $file/<br>";
+                        $subfiles = scandir($path);
+                        foreach ($subfiles as $subfile) {
+                            if ($subfile != '.' && $subfile != '..') {
+                                echo "&nbsp;&nbsp;&nbsp;📄 $subfile<br>";
+                            }
+                        }
+                    } else {
+                        echo "📄 $file<br>";
+                    }
+                }
+            }
+            echo "</div>";
+        } else {
+            echo "<span class='error'>❌ תיקיית permissions לא קיימת!</span>";
+        }
+        ?>
+    </div>
+    
+    <div class="section">
+        <h2>🔧 בדיקת קובץ config.php</h2>
+        <?php
+        $configFile = $baseDir . '/config.php';
+        if (file_exists($configFile)) {
+            echo "<span class='success'>✅ config.php נמצא</span><br>";
+            
+            // נסה לכלול
+            echo "מנסה לטעון config.php...<br>";
+            ob_start();
+            $configLoaded = false;
+            
+            try {
+                @include_once $configFile;
+                $configLoaded = true;
+                echo "<span class='success'>✅ config.php נטען</span><br>";
+            } catch (Exception $e) {
+                echo "<span class='error'>❌ שגיאה בטעינת config.php: " . $e->getMessage() . "</span><br>";
+            }
+            
+            $output = ob_get_clean();
+            if ($output) {
+                echo "<div class='warning'>פלט מ-config.php:</div>";
+                echo "<pre>$output</pre>";
+            }
+            
+            // בדוק constants
+            if ($configLoaded) {
+                $constants = ['DB_HOST', 'DB_NAME', 'DB_USER', 'DB_CHARSET'];
+                foreach ($constants as $const) {
+                    if (defined($const)) {
+                        echo "<span class='success'>✅ $const מוגדר</span><br>";
+                    } else {
+                        echo "<span class='warning'>⚠️ $const לא מוגדר</span><br>";
+                    }
+                }
+                
+                // בדוק פונקציה
+                if (function_exists('getDBConnection')) {
+                    echo "<span class='success'>✅ פונקציית getDBConnection קיימת</span><br>";
+                } else {
+                    echo "<span class='warning'>⚠️ פונקציית getDBConnection לא קיימת</span><br>";
+                }
+            }
+        } else {
+            echo "<span class='error'>❌ config.php לא נמצא!</span><br>";
+            echo "נתיב מצופה: <code>$configFile</code>";
+        }
+        ?>
+    </div>
+    
+    <div class="section">
+        <h2>⚙️ טעינת permissions-init.php</h2>
+        <?php
+        $initFile = $permDir . '/permissions-init.php';
+        
+        if (file_exists($initFile)) {
+            echo "<span class='success'>✅ permissions-init.php נמצא</span><br>";
+            echo "גודל: " . filesize($initFile) . " bytes<br><br>";
+            
+            echo "מנסה לטעון...<br>";
+            
+            // Capture any output
+            ob_start();
+            $loadSuccess = false;
+            
+            try {
+                // כבה דיווח שגיאות זמנית כדי לתפוס אותן
+                $oldErrorReporting = error_reporting(E_ALL);
+                
+                // נסה לטעון
+                $result = include_once $initFile;
+                
+                if ($result === false) {
+                    echo "<span class='error'>❌ include_once החזיר false</span><br>";
+                } else {
+                    echo "<span class='success'>✅ הקובץ נטען</span><br>";
+                    $loadSuccess = true;
+                }
+                
+                error_reporting($oldErrorReporting);
+                
+            } catch (ParseError $e) {
+                echo "<span class='error'>❌ Parse Error: " . $e->getMessage() . "</span><br>";
+                echo "שורה: " . $e->getLine() . "<br>";
+            } catch (Error $e) {
+                echo "<span class='error'>❌ Fatal Error: " . $e->getMessage() . "</span><br>";
+                echo "קובץ: " . basename($e->getFile()) . "<br>";
+                echo "שורה: " . $e->getLine() . "<br>";
+            } catch (Exception $e) {
+                echo "<span class='error'>❌ Exception: " . $e->getMessage() . "</span><br>";
+                echo "קובץ: " . basename($e->getFile()) . "<br>";
+                echo "שורה: " . $e->getLine() . "<br>";
+            }
+            
+            $output = ob_get_clean();
+            if ($output) {
+                echo "<div class='warning'>פלט מהטעינה:</div>";
+                echo "<pre>$output</pre>";
+            }
+            
+            // בדוק מה נטען
+            if ($loadSuccess) {
+                echo "<h3>בדיקת פונקציות:</h3>";
+                $functions = [
+                    'getPermissionsHeaders',
+                    'getPermissionsScripts',
+                    'checkPermission',
+                    'checkAllPermissions',
+                    'getMissingCriticalPermissions',
+                    'renderPermissionsBanner'
+                ];
+                
+                foreach ($functions as $func) {
+                    if (function_exists($func)) {
+                        echo "<span class='success'>✅ $func()</span><br>";
+                    } else {
+                        echo "<span class='error'>❌ $func() לא נמצאה</span><br>";
+                    }
+                }
+                
+                // בדוק classes
+                echo "<h3>בדיקת Classes:</h3>";
+                $classes = [
+                    'Permissions\Core\PermissionsManager',
+                    'Permissions\Core\PermissionStorage',
+                    'Permissions\Core\PermissionTypes'
+                ];
+                
+                foreach ($classes as $class) {
+                    if (class_exists($class)) {
+                        echo "<span class='success'>✅ $class</span><br>";
+                    } else {
+                        echo "<span class='error'>❌ $class לא נמצא</span><br>";
+                    }
+                }
+                
+                // בדוק משתנה גלובלי
+                echo "<h3>בדיקת מנהל הרשאות:</h3>";
+                if (isset($GLOBALS['permissionsManager'])) {
+                    echo "<span class='success'>✅ \$GLOBALS['permissionsManager'] קיים</span><br>";
+                    echo "Type: " . get_class($GLOBALS['permissionsManager']) . "<br>";
+                } else {
+                    echo "<span class='error'>❌ \$GLOBALS['permissionsManager'] לא נוצר</span><br>";
+                }
+            }
+            
+        } else {
+            echo "<span class='error'>❌ permissions-init.php לא נמצא!</span><br>";
+        }
+        ?>
+    </div>
+    
+    <div class="section">
+        <h2>📝 שגיאות PHP אחרונות</h2>
+        <?php
+        $error = error_get_last();
+        if ($error && ($error['type'] === E_ERROR || $error['type'] === E_PARSE)) {
+            echo "<div class='error'>";
+            echo "<strong>סוג:</strong> " . $error['type'] . "<br>";
+            echo "<strong>הודעה:</strong> " . $error['message'] . "<br>";
+            echo "<strong>קובץ:</strong> " . basename($error['file']) . "<br>";
+            echo "<strong>שורה:</strong> " . $error['line'] . "<br>";
+            echo "</div>";
+        } else {
+            echo "<span class='success'>אין שגיאות קריטיות</span>";
+        }
+        ?>
+    </div>
+    
+    <div class="section">
+        <h2>🔍 סביבת PHP</h2>
+        <?php
+        echo "PHP Version: " . phpversion() . "<br>";
+        echo "Memory Limit: " . ini_get('memory_limit') . "<br>";
+        echo "Max Execution Time: " . ini_get('max_execution_time') . "<br>";
+        echo "Display Errors: " . (ini_get('display_errors') ? 'On' : 'Off') . "<br>";
+        echo "Error Reporting: " . error_reporting() . "<br>";
+        
+        // Extensions
+        echo "<h3>Extensions רלוונטיות:</h3>";
+        $extensions = ['pdo', 'pdo_mysql', 'json', 'session', 'mbstring'];
+        foreach ($extensions as $ext) {
+            if (extension_loaded($ext)) {
+                echo "<span class='success'>✅ $ext</span><br>";
+            } else {
+                echo "<span class='error'>❌ $ext חסר</span><br>";
+            }
+        }
+        ?>
+    </div>
+    
+    <div class="section">
+        <h2>💡 פעולות מומלצות</h2>
+        <?php
+        if (!$loadSuccess) {
+            echo "<p>נראה שיש בעיה בטעינת המערכת. נסה:</p>";
+            echo "<ol>";
+            echo "<li>בדוק את השגיאות למעלה</li>";
+            echo "<li>וודא שכל הקבצים במקומם</li>";
+            echo "<li>בדוק הרשאות קבצים (chmod 644)</li>";
+            echo "<li>בדוק שה-namespace נכון בקבצי PHP</li>";
+            echo "</ol>";
+        } else {
+            echo "<p class='success'>✅ המערכת נטענה בהצלחה!</p>";
+            echo "<p>עכשיו אפשר:</p>";
+            echo "<ul>";
+            echo "<li><a href='/permissions/debug/permissions-debug.php'>לפתוח את דף הדיבוג המלא</a></li>";
+            echo "<li><a href='/auth/login.php'>לחזור לדף ההתחברות</a></li>";
+            echo "</ul>";
+        }
+        ?>
     </div>
 </body>
 </html>

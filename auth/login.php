@@ -572,6 +572,328 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     // </script>
 ?>
 
+        <!-- Console Debug Window - הוסף לכל דף שתרצה לדבג -->
+
+        <div id="console-debug-window" style="
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            width: 400px;
+            max-height: 500px;
+            background: #1a1a1a;
+            border: 2px solid #333;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 12px;
+            direction: ltr;
+        ">
+            <!-- Header -->
+            <div style="
+                background: #2d2d2d;
+                padding: 10px;
+                border-bottom: 1px solid #444;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                cursor: move;
+            " id="console-header">
+                <span style="color: #0f0; font-weight: bold;">📟 Console Debug</span>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="clearConsoleDebug()" style="
+                        background: #444;
+                        color: white;
+                        border: none;
+                        padding: 4px 8px;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        font-size: 11px;
+                    ">Clear</button>
+                    <button onclick="toggleConsoleDebug()" style="
+                        background: #f44;
+                        color: white;
+                        border: none;
+                        padding: 4px 8px;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        font-size: 11px;
+                    " id="console-toggle">Hide</button>
+                </div>
+            </div>
+            
+            <!-- Console Output -->
+            <div id="console-output" style="
+                flex: 1;
+                overflow-y: auto;
+                overflow-x: auto;
+                padding: 10px;
+                background: #0d0d0d;
+                color: #fff;
+                white-space: pre-wrap;
+                word-wrap: break-word;
+            "></div>
+            
+            <!-- Input -->
+            <div style="
+                border-top: 1px solid #444;
+                padding: 5px;
+                background: #1a1a1a;
+            ">
+                <input type="text" id="console-input" placeholder="Type command and press Enter..." style="
+                    width: 100%;
+                    background: #2d2d2d;
+                    color: #0f0;
+                    border: 1px solid #444;
+                    padding: 5px;
+                    font-family: monospace;
+                    font-size: 12px;
+                    border-radius: 3px;
+                " onkeypress="handleConsoleInput(event)">
+            </div>
+        </div>
+
+        <!-- Minimized Button -->
+        <button id="console-show-btn" style="
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: #1a1a1a;
+            color: #0f0;
+            border: 2px solid #333;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            z-index: 9999;
+            display: none;
+            font-family: monospace;
+            font-size: 12px;
+        " onclick="showConsoleDebug()">
+            📟 Console
+        </button>
+
+        <script>
+            (function() {
+                // שמירת הפונקציות המקוריות
+                const originalLog = console.log;
+                const originalError = console.error;
+                const originalWarn = console.warn;
+                const originalInfo = console.info;
+                
+                const debugOutput = document.getElementById('console-output');
+                let logCounter = 0;
+                
+                // פונקציה להוספת הודעה לחלון
+                function addToDebugWindow(type, args) {
+                    if (!debugOutput) return;
+                    
+                    logCounter++;
+                    const timestamp = new Date().toLocaleTimeString();
+                    const entry = document.createElement('div');
+                    
+                    // צבעים לפי סוג
+                    const colors = {
+                        log: '#fff',
+                        error: '#f44',
+                        warn: '#fa0',
+                        info: '#08f',
+                        success: '#0f0'
+                    };
+                    
+                    entry.style.cssText = `
+                        color: ${colors[type] || '#fff'};
+                        padding: 3px 0;
+                        border-bottom: 1px solid #222;
+                        margin-bottom: 3px;
+                    `;
+                    
+                    // סימון סוג ההודעה
+                    const typeLabel = {
+                        log: '📝',
+                        error: '❌',
+                        warn: '⚠️',
+                        info: 'ℹ️'
+                    }[type] || '>';
+                    
+                    // המרת ארגומנטים לטקסט
+                    const message = Array.from(args).map(arg => {
+                        if (typeof arg === 'object') {
+                            try {
+                                return JSON.stringify(arg, null, 2);
+                            } catch (e) {
+                                return String(arg);
+                            }
+                        }
+                        return String(arg);
+                    }).join(' ');
+                    
+                    entry.innerHTML = `<span style="color: #666;">[${timestamp}]</span> ${typeLabel} ${escapeHtml(message)}`;
+                    
+                    debugOutput.appendChild(entry);
+                    
+                    // גלילה למטה
+                    debugOutput.scrollTop = debugOutput.scrollHeight;
+                    
+                    // הגבלת מספר הודעות
+                    if (debugOutput.children.length > 100) {
+                        debugOutput.removeChild(debugOutput.firstChild);
+                    }
+                }
+                
+                // פונקציה לניקוי HTML
+                function escapeHtml(text) {
+                    const div = document.createElement('div');
+                    div.textContent = text;
+                    return div.innerHTML;
+                }
+                
+                // Override console functions
+                console.log = function(...args) {
+                    originalLog.apply(console, args);
+                    addToDebugWindow('log', args);
+                };
+                
+                console.error = function(...args) {
+                    originalError.apply(console, args);
+                    addToDebugWindow('error', args);
+                };
+                
+                console.warn = function(...args) {
+                    originalWarn.apply(console, args);
+                    addToDebugWindow('warn', args);
+                };
+                
+                console.info = function(...args) {
+                    originalInfo.apply(console, args);
+                    addToDebugWindow('info', args);
+                };
+                
+                // תפיסת שגיאות גלובליות
+                window.addEventListener('error', function(event) {
+                    addToDebugWindow('error', [`Error: ${event.message} at ${event.filename}:${event.lineno}:${event.colno}`]);
+                });
+                
+                // תפיסת Promise rejections
+                window.addEventListener('unhandledrejection', function(event) {
+                    addToDebugWindow('error', [`Unhandled Promise Rejection: ${event.reason}`]);
+                });
+                
+                // הודעה ראשונית
+                console.log('🚀 Console Debug Window Initialized');
+                console.info('Type commands in the input field below');
+                
+                // גרירה של החלון
+                let isDragging = false;
+                let currentX;
+                let currentY;
+                let initialX;
+                let initialY;
+                let xOffset = 0;
+                let yOffset = 0;
+                
+                const debugWindow = document.getElementById('console-debug-window');
+                const header = document.getElementById('console-header');
+                
+                header.addEventListener('mousedown', dragStart);
+                document.addEventListener('mousemove', drag);
+                document.addEventListener('mouseup', dragEnd);
+                
+                function dragStart(e) {
+                    initialX = e.clientX - xOffset;
+                    initialY = e.clientY - yOffset;
+                    
+                    if (e.target === header || e.target.parentNode === header) {
+                        isDragging = true;
+                    }
+                }
+                
+                function drag(e) {
+                    if (isDragging) {
+                        e.preventDefault();
+                        currentX = e.clientX - initialX;
+                        currentY = e.clientY - initialY;
+                        xOffset = currentX;
+                        yOffset = currentY;
+                        
+                        debugWindow.style.transform = `translate(${currentX}px, ${currentY}px)`;
+                    }
+                }
+                
+                function dragEnd(e) {
+                    initialX = currentX;
+                    initialY = currentY;
+                    isDragging = false;
+                }
+            })();
+
+            // פונקציות גלובליות
+            function clearConsoleDebug() {
+                document.getElementById('console-output').innerHTML = '';
+                console.log('🧹 Console cleared');
+            }
+
+            function toggleConsoleDebug() {
+                const debugWindow = document.getElementById('console-debug-window');
+                const showBtn = document.getElementById('console-show-btn');
+                debugWindow.style.display = 'none';
+                showBtn.style.display = 'block';
+            }
+
+            function showConsoleDebug() {
+                const debugWindow = document.getElementById('console-debug-window');
+                const showBtn = document.getElementById('console-show-btn');
+                debugWindow.style.display = 'flex';
+                showBtn.style.display = 'none';
+            }
+
+            function handleConsoleInput(event) {
+                if (event.key === 'Enter') {
+                    const input = event.target;
+                    const command = input.value.trim();
+                    if (command) {
+                        console.log('> ' + command);
+                        try {
+                            const result = eval(command);
+                            if (result !== undefined) {
+                                console.log('< ', result);
+                            }
+                        } catch (e) {
+                            console.error('Error: ' + e.message);
+                        }
+                        input.value = '';
+                    }
+                }
+            }
+
+            // הוספת קיצורי מקלדת
+            document.addEventListener('keydown', function(e) {
+                // Ctrl+Shift+D - toggle debug window
+                if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+                    const debugWindow = document.getElementById('console-debug-window');
+                    const showBtn = document.getElementById('console-show-btn');
+                    
+                    if (debugWindow.style.display === 'none') {
+                        showConsoleDebug();
+                    } else {
+                        toggleConsoleDebug();
+                    }
+                }
+                
+                // Ctrl+Shift+C - clear console
+                if (e.ctrlKey && e.shiftKey && e.key === 'C') {
+                    clearConsoleDebug();
+                }
+            });
+
+            // בדיקת PWA logs
+            if (window.location.pathname.includes('login')) {
+                console.log('📍 Login page detected');
+                console.log('🔍 Monitoring PWA events...');
+            }
+        </script>
+
         <!-- סוף קוד בדיקת PWA לדשבורד -->
     
     <script>

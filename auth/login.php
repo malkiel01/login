@@ -662,10 +662,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
 
     <!-- <script src="../pwa/js/pwa-hybrid-prompt.js"></script> -->
      <?php 
+        // // דיפולטיבי
+        // echo getPWAScripts([
+        //     'banner_type' => 'auto-native',  // <- השינוי הקריטי!
+        //     'page_type' => 'login'
+        // ]);
+
+
+        // כפתור צף שכשלוחצים עליו מופיע הבאנר הנייטיב האמיתי
         echo getPWAScripts([
-            'banner_type' => 'auto-native',  // <- השינוי הקריטי!
+            'banner_type' => 'manual-native',
             'page_type' => 'login'
         ]);
+
+        // // עם התאמת מיקום וטקסט
+        // echo getPWAScripts([
+        //     'banner_type' => 'manual-native',
+        //     'install_text' => '📱 התקן עכשיו',
+        //     'button_position' => 'bottom-right'  // bottom-left, top-right, top-left
+        // ]);
 
         // echo getPWAScripts([
         //     'banner_type' => 'native',

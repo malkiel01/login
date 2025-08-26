@@ -242,19 +242,14 @@ if (SHOW_DEBUG_CONSOLE):
     
     const debugOutput = document.getElementById('console-output');
     let logCounter = 0;
-    let errorCount = 0;  // Define errorCount here in the closure
-    
-    // Make errorCount accessible globally for the functions
-    window.consoleDebugErrorCount = 0;
+    let errorCount = 0;
     
     // Add message to debug window
     function addToDebugWindow(type, args) {
         if (!debugOutput) return;
         
         logCounter++;
-        if (type === 'error') {
-            window.consoleDebugErrorCount++;
-        }
+        if (type === 'error') errorCount++;
         
         const timestamp = new Date().toLocaleTimeString();
         const entry = document.createElement('div');
@@ -535,7 +530,7 @@ function showNotification(message, color) {
 
 function clearConsoleDebug() {
     document.getElementById('console-output').innerHTML = '';
-    window.consoleDebugErrorCount = 0;
+    errorCount = 0;
     updateMiniBarCount();
     console.log('Console cleared');
 }
@@ -553,7 +548,7 @@ function minimizeConsole() {
 function expandConsole() {
     document.getElementById('console-debug-window').style.display = 'flex';
     document.getElementById('console-mini-bar').style.display = 'none';
-    window.consoleDebugErrorCount = 0;
+    errorCount = 0;
     updateMiniBarCount();
 }
 
@@ -584,8 +579,8 @@ function handleConsoleInput(event) {
 
 function updateMiniBarCount() {
     const countEl = document.getElementById('mini-bar-count');
-    if (countEl && window.consoleDebugErrorCount > 0) {
-        countEl.textContent = window.consoleDebugErrorCount;
+    if (countEl && errorCount > 0) {
+        countEl.textContent = errorCount;
         countEl.style.display = 'inline-block';
     } else if (countEl) {
         countEl.style.display = 'none';

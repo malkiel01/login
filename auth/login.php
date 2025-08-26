@@ -2,6 +2,7 @@
 
 // בתחילת הקובץ
 require_once '../pwa/pwa-init.php';
+require_once 'permissions/permissions-init.php';
 
 session_start();
 require_once '../config.php';  // תיקון: חזרה לתיקייה הראשית

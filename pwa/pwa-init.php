@@ -49,7 +49,7 @@ function getPWAHeaders($options = []) {
  */
 function getPWAScripts($options = []) {
     $defaults = [
-        // 'banner_type' => 'custom',  // 'native' או 'custom'
+        'banner_type' => 'custom',  // 'native' או 'custom'
         'page_type' => 'general',
         'show_after_seconds' => 5,
         'minimum_visits' => 2,

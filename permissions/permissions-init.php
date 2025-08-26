@@ -17,13 +17,13 @@ require_once __DIR__ . '/core/PermissionsManager.php';
 require_once __DIR__ . '/core/PermissionStorage.php';
 require_once __DIR__ . '/core/PermissionTypes.php';
 
-// טעינת handlers
-require_once __DIR__ . '/handlers/NotificationHandler.php';
-require_once __DIR__ . '/handlers/PushHandler.php';
-require_once __DIR__ . '/handlers/MediaHandler.php';
-require_once __DIR__ . '/handlers/StorageHandler.php';
-require_once __DIR__ . '/handlers/LocationHandler.php';
-require_once __DIR__ . '/handlers/BackgroundHandler.php';
+// // טעינת handlers
+// require_once __DIR__ . '/handlers/NotificationHandler.php';
+// require_once __DIR__ . '/handlers/PushHandler.php';
+// require_once __DIR__ . '/handlers/MediaHandler.php';
+// require_once __DIR__ . '/handlers/StorageHandler.php';
+// require_once __DIR__ . '/handlers/LocationHandler.php';
+// require_once __DIR__ . '/handlers/BackgroundHandler.php';
 
 // Use statements
 use Permissions\Core\PermissionsManager;

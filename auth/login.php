@@ -325,7 +325,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     <!-- לפני </body> -->
     <!-- ?php echo getPWAScripts(['page_type' => 'login']); ? -->
      <?php echo getPWAScripts([
-        'banner_type' => 'native',
+        // 'banner_type' => 'native',
+        'banner_type' => 'custom',
         'page_type' => 'login'
     ]); ?>
     <!-- < ?php echo getPWAScripts([

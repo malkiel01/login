@@ -24,17 +24,45 @@
         init() {
             console.log('PWA Auto Native: Initialized - Browser banner will show automatically');
             
+            // דיבוג מפורט
+            this.debugInfo();
+            
             // האזנה לאירוע - אבל לא מבטלים אותו!
             window.addEventListener('beforeinstallprompt', (e) => {
-                console.log('PWA Auto Native: Browser install banner is available');
+                console.log('🚀 PWA Auto Native: beforeinstallprompt event fired!');
+                console.log('Event object:', e);
+                console.log('Platforms:', e.platforms);
+                
+                // בדיקת דיבוג - האם preventDefault נקרא?
+                const originalPreventDefault = e.preventDefault;
+                e.preventDefault = function() {
+                    console.error('⚠️ WARNING: preventDefault() was called! Banner will NOT show!');
+                    console.trace('Called from:');
+                    return originalPreventDefault.apply(this, arguments);
+                };
                 
                 // ⚠️ לא עושים preventDefault() - זה מה שמאפשר לבאנר להופיע!
-                // הבאנר הנייטיב יופיע אוטומטית עכשיו
+                console.log('✅ NOT calling preventDefault - banner should show automatically');
                 
                 this.promptShown = true;
                 
+                // נסיון להפעיל ידנית אחרי 2 שניות אם לא הופיע
+                setTimeout(() => {
+                    console.log('🔍 Checking if prompt was shown...');
+                    if (!e.userChoice.resolved) {
+                        console.log('⏰ Prompt not shown yet, trying manual trigger...');
+                        try {
+                            e.prompt();
+                            console.log('✅ Manual prompt() called successfully');
+                        } catch (err) {
+                            console.error('❌ Manual prompt failed:', err.message);
+                        }
+                    }
+                }, 2000);
+                
                 // אפשר לעקוב אחרי התוצאה
                 e.userChoice.then((choiceResult) => {
+                    console.log('📊 User choice received:', choiceResult);
                     if (choiceResult.outcome === 'accepted') {
                         console.log('PWA Auto Native: User accepted the install');
                         localStorage.setItem('pwa-installed', 'true');
@@ -43,12 +71,14 @@
                         console.log('PWA Auto Native: User dismissed the install');
                         localStorage.setItem('pwa-prompt-dismissed', Date.now());
                     }
+                }).catch(err => {
+                    console.error('Error waiting for user choice:', err);
                 });
             });
 
             // האזנה להתקנה מוצלחת
             window.addEventListener('appinstalled', () => {
-                console.log('PWA Auto Native: App was installed!');
+                console.log('🎉 PWA Auto Native: App was installed!');
                 localStorage.setItem('pwa-installed', 'true');
                 this.onInstallSuccess();
             });
@@ -57,6 +87,45 @@
             if (this.isIOS) {
                 this.handleIOS();
             }
+            
+            // בדיקה גלובלית למניעת preventDefault
+            this.monitorPreventDefault();
+        }
+        
+        // פונקציית דיבוג
+        debugInfo() {
+            console.group('🔍 PWA Debug Info:');
+            console.log('URL:', window.location.href);
+            console.log('Protocol:', window.location.protocol);
+            console.log('Standalone:', this.isStandalone);
+            console.log('iOS:', this.isIOS);
+            console.log('User Agent:', navigator.userAgent);
+            console.log('Previous dismissal:', localStorage.getItem('pwa-prompt-dismissed'));
+            console.log('Already installed:', localStorage.getItem('pwa-installed'));
+            console.log('Service Worker:', 'serviceWorker' in navigator);
+            console.log('Manifest link exists:', !!document.querySelector('link[rel="manifest"]'));
+            console.groupEnd();
+        }
+        
+        // מוניטור גלובלי ל-preventDefault
+        monitorPreventDefault() {
+            const originalAddEventListener = window.addEventListener;
+            window.addEventListener = function(type, listener, options) {
+                if (type === 'beforeinstallprompt') {
+                    console.warn('⚠️ Another beforeinstallprompt listener detected!');
+                    const wrappedListener = function(e) {
+                        const originalPreventDefault = e.preventDefault;
+                        e.preventDefault = function() {
+                            console.error('🚫 preventDefault called by another script!');
+                            console.trace();
+                            return originalPreventDefault.apply(this, arguments);
+                        };
+                        return listener.apply(this, arguments);
+                    };
+                    return originalAddEventListener.call(this, type, wrappedListener, options);
+                }
+                return originalAddEventListener.apply(this, arguments);
+            };
         }
 
         // טיפול מיוחד ל-iOS

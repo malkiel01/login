@@ -11,6 +11,7 @@
     class PWAAutoNativePrompt {
         constructor() {
             this.promptShown = false;
+            this.deferredPrompt = null;
             this.isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
             this.isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
                               window.navigator.standalone === true;
@@ -46,17 +47,15 @@
                 
                 this.promptShown = true;
                 
-                // נסיון להפעיל ידנית אחרי 2 שניות אם לא הופיע
+                // שמור את הפרומפט גלובלית
+                this.deferredPrompt = e;
+                
+                // Chrome דורש פעולת משתמש! צור אזור לחיצה
                 setTimeout(() => {
                     console.log('🔍 Checking if prompt was shown...');
                     if (!e.userChoice.resolved) {
-                        console.log('⏰ Prompt not shown yet, trying manual trigger...');
-                        try {
-                            e.prompt();
-                            console.log('✅ Manual prompt() called successfully');
-                        } catch (err) {
-                            console.error('❌ Manual prompt failed:', err.message);
-                        }
+                        console.log('📱 Creating click trigger for Chrome requirement...');
+                        this.createClickTrigger();
                     }
                 }, 2000);
                 
@@ -149,6 +148,112 @@
             }
         }
 
+        // יצירת טריגר לחיצה (Chrome דורש user gesture)
+        createClickTrigger() {
+            // אם כבר יש טריגר, צא
+            if (document.getElementById('pwa-click-trigger')) return;
+            
+            const trigger = document.createElement('div');
+            trigger.id = 'pwa-click-trigger';
+            trigger.innerHTML = `
+                <style>
+                    #pwa-click-trigger {
+                        position: fixed;
+                        top: 10px;
+                        left: 50%;
+                        transform: translateX(-50%);
+                        background: linear-gradient(135deg, #667eea, #764ba2);
+                        color: white;
+                        padding: 12px 24px;
+                        border-radius: 30px;
+                        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+                        z-index: 10000;
+                        cursor: pointer;
+                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                        font-size: 14px;
+                        font-weight: 600;
+                        animation: pulse 2s infinite, slideDown 0.5s ease;
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                    }
+                    
+                    @keyframes pulse {
+                        0%, 100% { transform: translateX(-50%) scale(1); }
+                        50% { transform: translateX(-50%) scale(1.05); }
+                    }
+                    
+                    @keyframes slideDown {
+                        from { 
+                            top: -100px;
+                            opacity: 0;
+                        }
+                        to { 
+                            top: 10px;
+                            opacity: 1;
+                        }
+                    }
+                    
+                    #pwa-click-trigger:hover {
+                        transform: translateX(-50%) scale(1.08);
+                        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+                    }
+                    
+                    #pwa-click-trigger .icon {
+                        font-size: 18px;
+                    }
+                    
+                    @media (max-width: 480px) {
+                        #pwa-click-trigger {
+                            padding: 10px 20px;
+                            font-size: 13px;
+                        }
+                    }
+                </style>
+                <span class="icon">📱</span>
+                <span>לחץ להתקנת האפליקציה</span>
+            `;
+            
+            document.body.appendChild(trigger);
+            
+            // הוסף אירוע לחיצה
+            trigger.addEventListener('click', async () => {
+                console.log('👆 User clicked install trigger');
+                
+                if (this.deferredPrompt) {
+                    try {
+                        // עכשיו יש user gesture - אפשר להפעיל!
+                        this.deferredPrompt.prompt();
+                        console.log('✅ Prompt shown successfully!');
+                        
+                        // חכה לתשובה
+                        const { outcome } = await this.deferredPrompt.userChoice;
+                        console.log('User choice:', outcome);
+                        
+                        // הסר את הכפתור
+                        trigger.remove();
+                        
+                        // נקה את הפרומפט
+                        this.deferredPrompt = null;
+                        
+                    } catch (err) {
+                        console.error('Error showing prompt:', err);
+                    }
+                } else {
+                    console.log('No deferred prompt available');
+                    trigger.remove();
+                }
+            });
+            
+            // הסתר אוטומטית אחרי 30 שניות
+            setTimeout(() => {
+                if (trigger.parentNode) {
+                    trigger.style.animation = 'slideDown 0.5s ease reverse';
+                    setTimeout(() => trigger.remove(), 500);
+                }
+            }, 30000);
+        }
+        
         // קריאה בהתקנה מוצלחת
         onInstallSuccess() {
             // אפשר להציג הודעת תודה

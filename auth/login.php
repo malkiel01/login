@@ -576,8 +576,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     <!-- סוף קוד בדיקת PWA לדשבורד -->
     <?php
         // בתחילת הדף או במקום שתרצה
-        require_once '../console-debug.php';
+        require_once '../debuds/console-debug.php';
     ?>
+    <script src="../debuds/pwa-debug-popup.js"></script>
     
     <script>
         function switchTab(tab) {

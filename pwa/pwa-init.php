@@ -1,12 +1,10 @@
 <?php
 /**
- * PWA Initialization File - Updated Version
- * תומך בשני סוגי באנרים: native ו-custom
- * 
- * שימוש: 
- * require_once 'pwa/pwa-init.php';
- * echo getPWAHeaders();
- * echo getPWAScripts(['banner_type' => 'native']); // או 'custom'
+ * PWA Initialization File - Enhanced Version
+ * תומך בשלושה סוגי באנרים:
+ * 1. auto-native - באנר נייטיב אוטומטי (מומלץ!)
+ * 2. manual-native - באנר נייטיב עם כפתור
+ * 3. custom - באנר מותאם אישית
  */
 
 /**
@@ -49,7 +47,7 @@ function getPWAHeaders($options = []) {
  */
 function getPWAScripts($options = []) {
     $defaults = [
-        'banner_type' => 'custom',  // 'native' או 'custom'
+        'banner_type' => 'auto-native',  // 'auto-native', 'manual-native', 'custom'
         'page_type' => 'general',
         'show_after_seconds' => 5,
         'minimum_visits' => 2,
@@ -58,24 +56,10 @@ function getPWAScripts($options = []) {
         'icon' => '/pwa/icons/android/android-launchericon-192-192.png',
         'install_text' => 'התקן עכשיו',
         'dismiss_text' => 'מאוחר יותר',
-        'button_position' => 'bottom-right',
         'show_install_button' => false
     ];
     
     $config = array_merge($defaults, $options);
-    
-    // הגדרות לפי סוג הדף - רק אם לא נשלחו ערכים מותאמים
-    if ($config['page_type'] === 'login' && !isset($options['show_after_seconds'])) {
-        $config['show_after_seconds'] = 5;
-        $config['minimum_visits'] = 1;
-        $config['title'] = 'התקן את האפליקציה! 📱';
-        $config['subtitle'] = 'גישה מהירה לרשימות הקניות שלך, גם בלי אינטרנט';
-    } elseif ($config['page_type'] === 'dashboard' && !isset($options['show_after_seconds'])) {
-        $config['show_after_seconds'] = 10;
-        $config['minimum_visits'] = 2;
-        $config['title'] = 'הפוך את הדשבורד לאפליקציה! 🚀';
-        $config['subtitle'] = 'קבל התראות, עבוד אופליין וגישה מהירה מהמסך הראשי';
-    }
     
     // Service Worker - תמיד נטען
     $html = '
@@ -96,12 +80,25 @@ function getPWAScripts($options = []) {
     ';
     
     // בחירת סוג הבאנר
-    if ($config['banner_type'] === 'native') {
-        // באנר נייטיב - דורש לחיצת משתמש
-        $html .= getNativeBannerScript($config);
-    } else {
-        // באנר מותאם אישית - יכול להופיע אוטומטית
-        $html .= getCustomBannerScript($config);
+    switch ($config['banner_type']) {
+        case 'auto-native':
+            // באנר נייטיב אוטומטי - מומלץ!
+            $html .= getAutoNativeBannerScript($config);
+            break;
+            
+        case 'manual-native':
+            // באנר נייטיב עם כפתור
+            $html .= getManualNativeBannerScript($config);
+            break;
+            
+        case 'custom':
+            // באנר מותאם אישית
+            $html .= getCustomBannerScript($config);
+            break;
+            
+        default:
+            // ברירת מחדל - אוטומטי
+            $html .= getAutoNativeBannerScript($config);
     }
     
     // כפתור התקנה אופציונלי
@@ -113,37 +110,47 @@ function getPWAScripts($options = []) {
 }
 
 /**
- * סקריפט לבאנר נייטיב
+ * סקריפט לבאנר נייטיב אוטומטי - מומלץ!
  */
-function getNativeBannerScript($config) {
+function getAutoNativeBannerScript($config) {
     return '
-    <!-- PWA Native Banner (Requires User Interaction) -->
+    <!-- PWA Auto Native Banner (Recommended) -->
+    <script src="/pwa/js/pwa-auto-native-prompt.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            console.log("PWA: Using AUTO native banner - will show automatically!");
+            
+            // אפשר לעקוב אחרי הסטטוס
+            setTimeout(function() {
+                if (window.pwaAutoPrompt) {
+                    if (window.pwaAutoPrompt.isInstalled()) {
+                        console.log("PWA: App is already installed");
+                    } else if (window.pwaAutoPrompt.wasRecentlyDismissed()) {
+                        console.log("PWA: Banner was recently dismissed by user");
+                    } else {
+                        console.log("PWA: Waiting for browser to show native banner...");
+                    }
+                }
+            }, 2000);
+        });
+    </script>
+    ';
+}
+
+/**
+ * סקריפט לבאנר נייטיב ידני (עם כפתור)
+ */
+function getManualNativeBannerScript($config) {
+    return '
+    <!-- PWA Manual Native Banner (With Button) -->
     <script src="/pwa/js/pwa-native-banner.js"></script>
     <script>
-        // המתן שהקובץ ייטען
-        window.addEventListener("DOMContentLoaded", function() {
-            setTimeout(function() {
-                if (window.pwaNativeBanner) {
-                    console.log("PWA: Native banner initialized");
-                    
-                    // עדכן הגדרות אם נדרש
-                    window.pwaNativeBanner.config.buttonText = "' . addslashes($config['install_text']) . '";
-                    window.pwaNativeBanner.config.buttonPosition = "' . $config['button_position'] . '";
-                    
-                    // רענן את הכפתור אם קיים
-                    const button = document.getElementById("pwa-native-btn");
-                    if (button) {
-                        button.textContent = "' . addslashes($config['install_text']) . '";
-                    }
-                } else {
-                    // אם לא נוצר אוטומטית, צור עכשיו
-                    window.pwaNativeBanner = new PWANativeBanner({
-                        buttonText: "' . addslashes($config['install_text']) . '",
-                        buttonPosition: "' . $config['button_position'] . '",
-                        showFloatingButton: true
-                    });
-                }
-            }, 100);
+        document.addEventListener("DOMContentLoaded", function() {
+            console.log("PWA: Using MANUAL native banner - requires user click");
+            
+            if (window.pwaNativeBanner) {
+                window.pwaNativeBanner.config.buttonText = "' . addslashes($config['install_text']) . '";
+            }
         });
     </script>
     ';
@@ -154,45 +161,24 @@ function getNativeBannerScript($config) {
  */
 function getCustomBannerScript($config) {
     return '
-    <!-- PWA Custom Banner (Can Show Automatically) -->
-    <script src="/pwa/js/pwa-custom-banner.js"></script>
+    <!-- PWA Custom Banner -->
+    <script src="/pwa/js/pwa-install-manager.js"></script>
     <script>
-        // המתן שהקובץ ייטען
-        window.addEventListener("DOMContentLoaded", function() {
-            setTimeout(function() {
-                if (window.pwaCustomBanner) {
-                    console.log("PWA: Custom banner initialized, updating config");
-                    
-                    // עדכן הגדרות
-                    window.pwaCustomBanner.updateConfig({
-                        title: "' . addslashes($config['title']) . '",
-                        subtitle: "' . addslashes($config['subtitle']) . '",
-                        icon: "' . addslashes($config['icon']) . '",
-                        installText: "' . addslashes($config['install_text']) . '",
-                        dismissText: "' . addslashes($config['dismiss_text']) . '",
-                        showDelay: ' . ($config['show_after_seconds'] * 1000) . ',
-                        minimumVisits: ' . $config['minimum_visits'] . '
-                    });
-                    
-                    // בדוק אם להציג
-                    if (!window.pwaCustomBanner.dismissed && window.pwaCustomBanner.shouldShow()) {
-                        setTimeout(function() {
-                            window.pwaCustomBanner.show();
-                        }, ' . ($config['show_after_seconds'] * 1000) . ');
-                    }
-                } else {
-                    // אם לא נוצר אוטומטית, צור עכשיו
-                    window.pwaCustomBanner = new PWACustomBanner({
-                        title: "' . addslashes($config['title']) . '",
-                        subtitle: "' . addslashes($config['subtitle']) . '",
-                        icon: "' . addslashes($config['icon']) . '",
-                        installText: "' . addslashes($config['install_text']) . '",
-                        dismissText: "' . addslashes($config['dismiss_text']) . '",
-                        showDelay: ' . ($config['show_after_seconds'] * 1000) . ',
-                        minimumVisits: ' . $config['minimum_visits'] . '
-                    });
-                }
-            }, 100);
+        document.addEventListener("DOMContentLoaded", function() {
+            console.log("PWA: Using CUSTOM banner");
+            
+            const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
+            const isInstalled = localStorage.getItem("pwa-installed") === "true";
+            
+            if (!isStandalone && !isInstalled) {
+                window.pwaInstallManager = new PWAInstallManager({
+                    title: "' . addslashes($config['title']) . '",
+                    subtitle: "' . addslashes($config['subtitle']) . '",
+                    icon: "' . addslashes($config['icon']) . '",
+                    showAfterSeconds: ' . $config['show_after_seconds'] . ',
+                    minimumVisits: ' . $config['minimum_visits'] . '
+                });
+            }
         });
     </script>
     ';
@@ -205,11 +191,6 @@ function getInstallButtonScript() {
     return '
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            // בדוק אם כבר יש כפתור
-            if (document.getElementById("pwa-manual-install-button")) {
-                return;
-            }
-            
             // יצירת כפתור התקנה
             const installBtn = document.createElement("button");
             installBtn.id = "pwa-manual-install-button";
@@ -232,20 +213,13 @@ function getInstallButtonScript() {
                 transition: all 0.3s ease;
             `;
             
-            installBtn.onmouseover = () => {
-                installBtn.style.transform = "scale(1.1)";
-            };
-            
-            installBtn.onmouseout = () => {
-                installBtn.style.transform = "scale(1)";
-            };
-            
             document.body.appendChild(installBtn);
             
-            // הצג כפתור אם ניתן להתקין
+            // טיפול בבאנר נייטיב
             let deferredPrompt;
             
             window.addEventListener("beforeinstallprompt", (e) => {
+                // אם רוצים כפתור ידני, מבטלים את האוטומטי
                 e.preventDefault();
                 deferredPrompt = e;
                 installBtn.style.display = "block";

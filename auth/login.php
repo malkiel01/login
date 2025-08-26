@@ -661,10 +661,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     <!-- ?php echo getPWAScripts(['page_type' => 'login']); ? -->
      <?php 
         echo getPWAScripts([
-            'banner_type' => 'native',
-            'page_type' => 'login',
-            // 'showFloatingButton' => false  // ללא כפתור צף
+            'banner_type' => 'auto-native',  // <- השינוי הקריטי!
+            'page_type' => 'login'
         ]);
+
+        // echo getPWAScripts([
+        //     'banner_type' => 'native',
+        //     'page_type' => 'login',
+        //     // 'showFloatingButton' => false  // ללא כפתור צף
+        // ]);
      
         // echo getPWAScripts([
         //     'banner_type' => 'native',

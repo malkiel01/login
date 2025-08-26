@@ -656,7 +656,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
      <?php 
         echo getPWAScripts([
             'banner_type' => 'native',
-            'showFloatingButton' => false  // ללא כפתור צף
+            // 'showFloatingButton' => false  // ללא כפתור צף
         ]);
      
         // echo getPWAScripts([

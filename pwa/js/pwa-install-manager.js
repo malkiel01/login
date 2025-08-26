@@ -35,19 +35,19 @@
                 // תמיד שמור את האירוע
                 this.deferredPrompt = e;
                 
-                // החלט אם להציג מיד או להשהות
-                if (this.config.autoShow) {
-                    // אפשרות 1: הצג את הבאנר אחרי השהייה
-                    e.preventDefault(); // מנע הצגה אוטומטית
-                    
-                    setTimeout(() => {
-                        this.showPrompt();
-                    }, this.config.showDelay);
-                } else {
-                    // אפשרות 2: אל תמנע - תן לדפדפן להציג מיד
-                    // לא עושים preventDefault - הבאנר יופיע מיד
-                    console.log('PWA: Allowing browser to show native banner immediately');
+                // אפשרות 1: תן לדפדפן להציג מיד (אם הוא רוצה)
+                if (!this.config.preventAutoShow) {
+                    // לא עושים preventDefault - הדפדפן יציג אם ירצה
+                    console.log('PWA: Browser may show native banner');
+                    return;
                 }
+                
+                // אפשרות 2: מנע הצגה אוטומטית והוסף כפתור/טריגר
+                e.preventDefault();
+                console.log('PWA: Native banner prevented, waiting for user action');
+                
+                // יצירת כפתור התקנה צף
+                this.createFloatingButton();
             });
 
             // האזנה להתקנה מוצלחת
@@ -176,6 +176,64 @@
                     }
                 });
             });
+        }
+
+        // יצירת כפתור צף להתקנה
+        createFloatingButton() {
+            // בדוק אם כבר יש כפתור
+            if (document.getElementById('pwa-native-install-btn')) {
+                return;
+            }
+            
+            const button = document.createElement('button');
+            button.id = 'pwa-native-install-btn';
+            button.innerHTML = '📱 התקן אפליקציה';
+            button.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                color: white;
+                border: none;
+                padding: 12px 24px;
+                border-radius: 50px;
+                font-size: 16px;
+                font-weight: 600;
+                cursor: pointer;
+                box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+                z-index: 9999;
+                animation: pwa-bounce 2s infinite;
+                transition: all 0.3s ease;
+            `;
+            
+            // הוסף אנימציה
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes pwa-bounce {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-10px); }
+                }
+                #pwa-native-install-btn:hover {
+                    transform: scale(1.1);
+                    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // הוסף אירוע לחיצה
+            button.addEventListener('click', () => {
+                this.showPrompt();
+                button.style.display = 'none';
+            });
+            
+            document.body.appendChild(button);
+            
+            // הסתר אחרי זמן אם לא לחצו
+            setTimeout(() => {
+                if (button.parentNode) {
+                    button.style.opacity = '0.7';
+                }
+            }, 10000);
         }
 
         // הוראות התקנה ידניות

@@ -131,17 +131,15 @@ function getNativeBannerScript($config) {
             if (window.pwaPrompt) {
                 console.log("PWA: Configuring native prompt");
                 
-                // עדכן הגדרות לפי הצורך
+                // עדכן הגדרות
                 window.pwaPrompt.updateConfig({
                     showDelay: ' . ($config['show_after_seconds'] * 1000) . ',
-                    autoShow: true  // הצג אוטומטית אחרי ההשהייה
+                    preventAutoShow: true  // מנע הצגה אוטומטית, הצג כפתור במקום
                 });
                 
-                console.log("PWA: Native banner configured with " + ' . $config['show_after_seconds'] . ' seconds delay");
-            } else {
-                console.log("PWA: Native prompt not initialized yet");
+                console.log("PWA: Native banner will show button instead of auto-prompt");
             }
-        }, 100); // המתן קצת שהקובץ ייטען
+        }, 100);
     </script>
     ';
 }

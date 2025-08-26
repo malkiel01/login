@@ -655,16 +655,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     <!-- ?php echo getPWAScripts(['page_type' => 'login']); ? -->
      <?php 
      
-        // echo getPWAScripts([
-        //     'banner_type' => 'native',
-        //     'install_text' => '📱 התקן עכשיו',
-        //     'button_position' => 'bottom-right'
-        // ]); 
         echo getPWAScripts([
-            'banner_type' => 'custom',  // לא native!
-            'page_type' => 'login',
-            'show_after_seconds' => 3
-        ]);
+            'banner_type' => 'native',
+            'install_text' => '📱 התקן עכשיו',
+            'button_position' => 'bottom-right'
+        ]); 
+        // echo getPWAScripts([
+        //     'banner_type' => 'custom',  // לא native!
+        //     'page_type' => 'login',
+        //     'show_after_seconds' => 3
+        // ]);
         // echo getPWAScripts([
         //     'banner_type' => 'custom',
         //     'page_type' => 'login',

@@ -35,11 +35,11 @@
                 console.log('PWA Native: Install prompt available');
                 
                 // מנע הצגה אוטומטית
-                e.preventDefault();
+                // e.preventDefault();
                 
                 // שמור את האירוע
                 this.deferredPrompt = e;
-                
+
                 // צור כפתור צף אם מוגדר
                 if (this.config.showFloatingButton) {
                     this.createFloatingButton();

@@ -659,11 +659,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     </script>
     <!-- לפני </body> -->
     <!-- ?php echo getPWAScripts(['page_type' => 'login']); ? -->
+
+    <script src="../pwa/js/pwa-hybrid-prompt.js"></script>
      <?php 
-        echo getPWAScripts([
-            'banner_type' => 'auto-native',  // <- השינוי הקריטי!
-            'page_type' => 'login'
-        ]);
+        // echo getPWAScripts([
+        //     'banner_type' => 'auto-native',  // <- השינוי הקריטי!
+        //     'page_type' => 'login'
+        // ]);
 
         // echo getPWAScripts([
         //     'banner_type' => 'native',

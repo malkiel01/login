@@ -25,6 +25,7 @@ RewriteRule ^test-email-debug\.php$ - [L]
 RewriteRule ^setup-phpmailer.*\.php$ - [L]
 
 RewriteRule ^test-notification.*\.php$ - [L]
+RewriteRule ^test-permissions.*\.php$ - [L]
 
 # אפשר גישה ל-offline.html
 RewriteRule ^offline\.html$ - [L]

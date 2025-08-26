@@ -326,7 +326,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     <!-- ?php echo getPWAScripts(['page_type' => 'login']); ? -->
      <?php echo getPWAScripts([
         'banner_type' => 'native',
-        'page_type' => 'login'
+        'install_text' => '📱 התקן עכשיו',
+        'button_position' => 'bottom-right'
     ]); ?>
     <!-- < ?php echo getPWAScripts([
     'banner_type' => 'custom',

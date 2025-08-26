@@ -652,17 +652,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     </script>
     <!-- לפני </body> -->
     <!-- ?php echo getPWAScripts(['page_type' => 'login']); ? -->
-     <?php echo getPWAScripts([
-        'banner_type' => 'native',
-        'install_text' => '📱 התקן עכשיו',
-        'button_position' => 'bottom-right'
-    ]); ?>
-    <!-- < ?php echo getPWAScripts([
-    'banner_type' => 'custom',
-    'page_type' => 'login',
-    'show_after_seconds' => 5,
-    'title' => 'הפוך אותנו לאפליקציה!',
-    'subtitle' => 'התקנה מהירה, גישה נוחה'
-    ]); ?> -->
+     <?php 
+     
+        // echo getPWAScripts([
+        //     'banner_type' => 'native',
+        //     'install_text' => '📱 התקן עכשיו',
+        //     'button_position' => 'bottom-right'
+        // ]); 
+        echo getPWAScripts([
+            'banner_type' => 'custom',  // לא native!
+            'page_type' => 'login',
+            'show_after_seconds' => 3
+        ]);
+        // echo getPWAScripts([
+        //     'banner_type' => 'custom',
+        //     'page_type' => 'login',
+        //     'show_after_seconds' => 5,
+        //     'title' => 'הפוך אותנו לאפליקציה!',
+        //     'subtitle' => 'התקנה מהירה, גישה נוחה'
+        // ]); 
+    ?>
+
 </body>
 </html>

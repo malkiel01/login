@@ -669,18 +669,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
         // ]);
 
 
-        // כפתור צף שכשלוחצים עליו מופיע הבאנר הנייטיב האמיתי
-        echo getPWAScripts([
-            'banner_type' => 'manual-native',
-            'page_type' => 'login'
-        ]);
-
-        // // עם התאמת מיקום וטקסט
+        // // כפתור צף שכשלוחצים עליו מופיע הבאנר הנייטיב האמיתי
         // echo getPWAScripts([
         //     'banner_type' => 'manual-native',
-        //     'install_text' => '📱 התקן עכשיו',
-        //     'button_position' => 'bottom-right'  // bottom-left, top-right, top-left
+        //     'page_type' => 'login'
         // ]);
+
+        // עם התאמת מיקום וטקסט
+        echo getPWAScripts([
+            'banner_type' => 'manual-native',
+            'install_text' => '📱 התקן עכשיו',
+            'button_position' => 'bottom-right'  // bottom-left, top-right, top-left
+        ]);
 
         // // באנר מעוצב מותאם אישית
         // echo getPWAScripts([

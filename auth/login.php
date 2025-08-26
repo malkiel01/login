@@ -669,11 +669,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
         // ]);
 
 
-        // כפתור צף שכשלוחצים עליו מופיע הבאנר הנייטיב האמיתי
-        echo getPWAScripts([
-            'banner_type' => 'manual-native',
-            'page_type' => 'login'
-        ]);
+        // // כפתור צף שכשלוחצים עליו מופיע הבאנר הנייטיב האמיתי
+        // echo getPWAScripts([
+        //     'banner_type' => 'manual-native',
+        //     'page_type' => 'login'
+        // ]);
 
         // // עם התאמת מיקום וטקסט
         // echo getPWAScripts([
@@ -681,6 +681,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
         //     'install_text' => '📱 התקן עכשיו',
         //     'button_position' => 'bottom-right'  // bottom-left, top-right, top-left
         // ]);
+
+        // באנר מעוצב מותאם אישית
+        echo getPWAScripts([
+            'banner_type' => 'custom',
+            'page_type' => 'login',
+            'show_after_seconds' => 5,
+            'title' => 'הפוך אותנו לאפליקציה! 🚀',
+            'subtitle' => 'גישה מהירה, עבודה אופליין והתראות חכמות',
+            'icon' => '/path/to/custom-icon.png',
+            'install_text' => 'התקן עכשיו',
+            'dismiss_text' => 'אולי מאוחר יותר',
+            'minimum_visits' => 2  // להציג רק אחרי 2 ביקורים
+        ]);
 
         // echo getPWAScripts([
         //     'banner_type' => 'native',

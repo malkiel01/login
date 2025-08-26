@@ -6,6 +6,8 @@
 
 session_start();
 
+require_once 'permissions/permissions-init.php';
+
 // אם המשתמש מחובר - הפנה לדשבורד
 if (isset($_SESSION['user_id'])) {
     header('Location: dashboard/index.php');

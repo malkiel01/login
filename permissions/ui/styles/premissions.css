@@ -1,0 +1,529 @@
+/**
+ * Permissions System Styles
+ * permissions/ui/styles/permissions.css
+ */
+
+:root {
+    --pm-primary: #667eea;
+    --pm-primary-dark: #764ba2;
+    --pm-success: #10b981;
+    --pm-warning: #f59e0b;
+    --pm-danger: #ef4444;
+    --pm-info: #3b82f6;
+    --pm-dark: #1f2937;
+    --pm-gray: #6b7280;
+    --pm-light: #f3f4f6;
+    --pm-white: #ffffff;
+    --pm-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    --pm-radius: 12px;
+    --pm-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Permission Banner - באנר בקשת הרשאה */
+.permission-banner {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-120%);
+    background: var(--pm-white);
+    border-radius: var(--pm-radius);
+    box-shadow: var(--pm-shadow);
+    padding: 20px;
+    max-width: 480px;
+    width: 90%;
+    z-index: 10000;
+    transition: var(--pm-transition);
+    direction: rtl;
+}
+
+.permission-banner.show {
+    transform: translateX(-50%) translateY(0);
+    animation: pm-slideDown 0.4s ease-out;
+}
+
+@keyframes pm-slideDown {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-120%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+.permission-banner-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+}
+
+.permission-icon {
+    font-size: 48px;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, var(--pm-primary), var(--pm-primary-dark));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+.permission-text {
+    flex: 1;
+}
+
+.permission-text h3 {
+    margin: 0 0 8px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--pm-dark);
+}
+
+.permission-text p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--pm-gray);
+    line-height: 1.5;
+}
+
+.permission-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.permission-actions button {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--pm-transition);
+    border: none;
+    outline: none;
+}
+
+.btn-allow {
+    background: linear-gradient(135deg, var(--pm-primary), var(--pm-primary-dark));
+    color: var(--pm-white);
+    flex: 2;
+}
+
+.btn-allow:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-deny {
+    background: var(--pm-light);
+    color: var(--pm-gray);
+    flex: 1;
+}
+
+.btn-deny:hover {
+    background: #e5e7eb;
+}
+
+/* Permission Modal - חלון מודל */
+.permission-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10001;
+    padding: 20px;
+    animation: pm-fadeIn 0.3s ease-out;
+    direction: rtl;
+}
+
+@keyframes pm-fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.permission-modal-content {
+    background: var(--pm-white);
+    border-radius: var(--pm-radius);
+    padding: 30px;
+    max-width: 500px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    animation: pm-scaleIn 0.3s ease-out;
+}
+
+@keyframes pm-scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.permission-modal h2 {
+    margin: 0 0 20px 0;
+    font-size: 24px;
+    color: var(--pm-dark);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.permission-modal .reason {
+    background: var(--pm-light);
+    padding: 15px;
+    border-radius: 8px;
+    color: var(--pm-gray);
+    margin-bottom: 20px;
+    border-right: 4px solid var(--pm-warning);
+}
+
+.permission-modal .instructions {
+    margin-bottom: 20px;
+}
+
+.permission-modal .instructions h3 {
+    font-size: 16px;
+    color: var(--pm-dark);
+    margin-bottom: 10px;
+}
+
+.permission-modal .instructions ol {
+    margin: 0;
+    padding-right: 20px;
+    color: var(--pm-gray);
+    line-height: 1.8;
+}
+
+.permission-modal .instructions li {
+    margin-bottom: 8px;
+}
+
+.btn-close {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, var(--pm-primary), var(--pm-primary-dark));
+    color: var(--pm-white);
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--pm-transition);
+}
+
+.btn-close:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* Permission Status Cards - כרטיסי סטטוס הרשאות */
+.permissions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    padding: 20px;
+    direction: rtl;
+}
+
+.permission-card {
+    background: var(--pm-white);
+    border-radius: var(--pm-radius);
+    padding: 20px;
+    box-shadow: var(--pm-shadow);
+    transition: var(--pm-transition);
+    border: 2px solid transparent;
+}
+
+.permission-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.permission-card.granted {
+    border-color: var(--pm-success);
+    background: linear-gradient(135deg, #ffffff 0%, #d4f4dd 100%);
+}
+
+.permission-card.denied {
+    border-color: var(--pm-danger);
+    background: linear-gradient(135deg, #ffffff 0%, #fee2e2 100%);
+}
+
+.permission-card.prompt {
+    border-color: var(--pm-warning);
+    background: linear-gradient(135deg, #ffffff 0%, #fef3c7 100%);
+}
+
+.permission-card.blocked {
+    border-color: var(--pm-dark);
+    background: linear-gradient(135deg, #ffffff 0%, #f3f4f6 100%);
+    opacity: 0.8;
+}
+
+.permission-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.permission-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.permission-title-icon {
+    font-size: 24px;
+}
+
+.permission-title-text {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--pm-dark);
+}
+
+.permission-status {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.permission-status.granted {
+    background: var(--pm-success);
+    color: var(--pm-white);
+}
+
+.permission-status.denied {
+    background: var(--pm-danger);
+    color: var(--pm-white);
+}
+
+.permission-status.prompt {
+    background: var(--pm-warning);
+    color: var(--pm-white);
+}
+
+.permission-status.blocked {
+    background: var(--pm-dark);
+    color: var(--pm-white);
+}
+
+.permission-description {
+    color: var(--pm-gray);
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 15px;
+}
+
+.permission-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 15px;
+    border-top: 1px solid var(--pm-light);
+}
+
+.permission-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: var(--pm-gray);
+}
+
+.permission-meta-icon {
+    font-size: 14px;
+    opacity: 0.7;
+}
+
+.permission-action {
+    padding: 8px 16px;
+    background: linear-gradient(135deg, var(--pm-primary), var(--pm-primary-dark));
+    color: var(--pm-white);
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--pm-transition);
+}
+
+.permission-action:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.permission-action:not(:disabled):hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+/* Debug Panel - פאנל דיבוג */
+.permissions-debug-panel {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: var(--pm-white);
+    border-radius: var(--pm-radius);
+    box-shadow: var(--pm-shadow);
+    padding: 20px;
+    max-width: 400px;
+    max-height: 500px;
+    overflow-y: auto;
+    z-index: 9999;
+    direction: rtl;
+    transition: var(--pm-transition);
+}
+
+.permissions-debug-panel.collapsed {
+    max-height: 50px;
+    overflow: hidden;
+}
+
+.debug-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    cursor: pointer;
+}
+
+.debug-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--pm-dark);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.debug-toggle {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+
+.permissions-debug-panel.collapsed .debug-toggle {
+    transform: rotate(180deg);
+}
+
+.debug-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.debug-stat {
+    background: var(--pm-light);
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.debug-stat-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--pm-dark);
+}
+
+.debug-stat-label {
+    font-size: 11px;
+    color: var(--pm-gray);
+    margin-top: 4px;
+}
+
+.debug-permissions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.debug-permission-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: var(--pm-light);
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+.debug-permission-name {
+    font-weight: 600;
+    color: var(--pm-dark);
+}
+
+.debug-permission-status {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.debug-permission-status.granted {
+    background: #d4f4dd;
+    color: #0e7c3a;
+}
+
+.debug-permission-status.denied {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.debug-permission-status.prompt {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .permission-banner {
+        width: 95%;
+        top: 10px;
+    }
+    
+    .permission-banner-content {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    
+    .permission-actions {
+        width: 100%;
+    }
+    
+    .permission-actions button {
+        flex: 1;
+    }
+    
+    .permissions-grid {
+        grid-template-columns: 1fr;
+        padding: 10px;
+    }
+    
+    .permissions-debug-panel {
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        max-width: 100%;
+    }
+    
+    .permission-modal-content {
+        padding: 20px;
+    }
+}

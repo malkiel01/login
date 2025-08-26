@@ -660,18 +660,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
         //     'install_text' => '📱 התקן עכשיו',
         //     'button_position' => 'bottom-right'
         // ]); 
-        // echo getPWAScripts([
-        //     'banner_type' => 'custom',  // לא native!
-        //     'page_type' => 'login',
-        //     // 'show_after_seconds' => 3
-        // ]);
         echo getPWAScripts([
-            'banner_type' => 'custom',
+            'banner_type' => 'custom',  // לא native!
             'page_type' => 'login',
-            'show_after_seconds' => 5,
-            'title' => 'הפוך אותנו לאפליקציה!',
-            'subtitle' => 'התקנה מהירה, גישה נוחה'
-        ]); 
+            'show_after_seconds' => 3
+        ]);
+        // echo getPWAScripts([
+        //     'banner_type' => 'custom',
+        //     'page_type' => 'login',
+        //     'show_after_seconds' => 5,
+        //     'title' => 'הפוך אותנו לאפליקציה!',
+        //     'subtitle' => 'התקנה מהירה, גישה נוחה'
+        // ]); 
     ?>
 
 </body>

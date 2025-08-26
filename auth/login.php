@@ -574,35 +574,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
 
         <!-- Console Debug Window - הוסף לכל דף שתרצה לדבג -->
 
+        <!-- Console Debug Window - Mobile Responsive -->
+
         <div id="console-debug-window" style="
             position: fixed;
-            top: 10px;
-            left: 10px;
-            width: 400px;
-            max-height: 500px;
-            background: #1a1a1a;
+            bottom: 20px;
+            right: 20px;
+            width: calc(100vw - 40px);
+            max-width: 400px;
+            height: 300px;
+            background: rgba(26, 26, 26, 0.95);
+            backdrop-filter: blur(10px);
             border: 2px solid #333;
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.8);
             z-index: 10000;
             display: flex;
             flex-direction: column;
             font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 12px;
+            font-size: 11px;
             direction: ltr;
+            resize: both;
+            overflow: auto;
         ">
             <!-- Header -->
             <div style="
-                background: #2d2d2d;
-                padding: 10px;
+                background: rgba(45, 45, 45, 0.9);
+                padding: 8px;
                 border-bottom: 1px solid #444;
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
                 cursor: move;
+                border-radius: 10px 10px 0 0;
+                min-height: 35px;
             " id="console-header">
-                <span style="color: #0f0; font-weight: bold;">📟 Console Debug</span>
-                <div style="display: flex; gap: 10px;">
+                <span style="color: #0f0; font-weight: bold; font-size: 12px;">📟 Console</span>
+                <div style="display: flex; gap: 5px;">
                     <button onclick="clearConsoleDebug()" style="
                         background: #444;
                         color: white;
@@ -610,17 +618,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                         padding: 4px 8px;
                         border-radius: 4px;
                         cursor: pointer;
-                        font-size: 11px;
+                        font-size: 10px;
                     ">Clear</button>
-                    <button onclick="toggleConsoleDebug()" style="
+                    <button onclick="minimizeConsole()" style="
+                        background: #fa0;
+                        color: white;
+                        border: none;
+                        padding: 4px 8px;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        font-size: 10px;
+                    ">_</button>
+                    <button onclick="closeConsoleDebug()" style="
                         background: #f44;
                         color: white;
                         border: none;
                         padding: 4px 8px;
                         border-radius: 4px;
                         cursor: pointer;
-                        font-size: 11px;
-                    " id="console-toggle">Hide</button>
+                        font-size: 10px;
+                    ">✕</button>
                 </div>
             </div>
             
@@ -629,54 +646,168 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                 flex: 1;
                 overflow-y: auto;
                 overflow-x: auto;
-                padding: 10px;
-                background: #0d0d0d;
+                padding: 8px;
+                background: rgba(13, 13, 13, 0.9);
                 color: #fff;
                 white-space: pre-wrap;
                 word-wrap: break-word;
+                min-height: 0;
             "></div>
             
             <!-- Input -->
             <div style="
                 border-top: 1px solid #444;
                 padding: 5px;
-                background: #1a1a1a;
+                background: rgba(26, 26, 26, 0.9);
+                border-radius: 0 0 10px 10px;
             ">
-                <input type="text" id="console-input" placeholder="Type command and press Enter..." style="
+                <input type="text" id="console-input" placeholder="Type command..." style="
                     width: 100%;
-                    background: #2d2d2d;
+                    background: rgba(45, 45, 45, 0.9);
                     color: #0f0;
                     border: 1px solid #444;
                     padding: 5px;
                     font-family: monospace;
-                    font-size: 12px;
+                    font-size: 11px;
                     border-radius: 3px;
                 " onkeypress="handleConsoleInput(event)">
             </div>
         </div>
 
-        <!-- Minimized Button -->
-        <button id="console-show-btn" style="
+        <!-- Floating Button (Minimized State) -->
+        <button id="console-float-btn" style="
             position: fixed;
-            top: 10px;
-            left: 10px;
-            background: #1a1a1a;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: rgba(26, 26, 26, 0.95);
+            backdrop-filter: blur(10px);
             color: #0f0;
             border: 2px solid #333;
-            padding: 8px 12px;
-            border-radius: 4px;
+            border-radius: 50%;
             cursor: pointer;
             z-index: 9999;
             display: none;
-            font-family: monospace;
-            font-size: 12px;
+            font-size: 20px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.8);
+            transition: all 0.3s ease;
         " onclick="showConsoleDebug()">
-            📟 Console
+            📟
         </button>
+
+        <!-- Mini Bar (Collapsed State) -->
+        <div id="console-mini-bar" style="
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(26, 26, 26, 0.95);
+            backdrop-filter: blur(10px);
+            border: 2px solid #333;
+            border-radius: 25px;
+            padding: 8px 15px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            z-index: 9999;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.8);
+            cursor: pointer;
+        " onclick="expandConsole()">
+            <span style="color: #0f0; font-size: 12px;">📟 Console</span>
+            <span id="mini-bar-count" style="
+                background: #f44;
+                color: white;
+                padding: 2px 6px;
+                border-radius: 10px;
+                font-size: 10px;
+                font-weight: bold;
+                display: none;
+            ">0</span>
+        </div>
+
+        <style>
+            /* Mobile Responsive */
+            @media (max-width: 768px) {
+                #console-debug-window {
+                    width: calc(100vw - 20px) !important;
+                    max-width: none !important;
+                    right: 10px !important;
+                    bottom: 10px !important;
+                    height: 250px !important;
+                    font-size: 10px !important;
+                }
+                
+                #console-float-btn {
+                    bottom: 10px !important;
+                    right: 10px !important;
+                    width: 45px !important;
+                    height: 45px !important;
+                }
+                
+                #console-mini-bar {
+                    bottom: 10px !important;
+                    right: 10px !important;
+                }
+                
+                #console-input {
+                    font-size: 10px !important;
+                }
+            }
+
+            /* Animations */
+            @keyframes slideIn {
+                from {
+                    transform: translateY(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+            }
+
+            @keyframes pulse {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.1); }
+            }
+
+            #console-debug-window.show {
+                animation: slideIn 0.3s ease;
+            }
+
+            #console-float-btn:hover {
+                transform: scale(1.1);
+                background: rgba(45, 45, 45, 0.95);
+            }
+
+            #console-mini-bar:hover {
+                transform: scale(1.02);
+                background: rgba(45, 45, 45, 0.95);
+            }
+
+            /* Scrollbar Styling */
+            #console-output::-webkit-scrollbar {
+                width: 6px;
+                height: 6px;
+            }
+
+            #console-output::-webkit-scrollbar-track {
+                background: #1a1a1a;
+            }
+
+            #console-output::-webkit-scrollbar-thumb {
+                background: #444;
+                border-radius: 3px;
+            }
+
+            #console-output::-webkit-scrollbar-thumb:hover {
+                background: #555;
+            }
+        </style>
 
         <script>
             (function() {
-                // שמירת הפונקציות המקוריות
+                // Save original console functions
                 const originalLog = console.log;
                 const originalError = console.error;
                 const originalWarn = console.warn;
@@ -684,16 +815,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                 
                 const debugOutput = document.getElementById('console-output');
                 let logCounter = 0;
+                let errorCount = 0;
                 
-                // פונקציה להוספת הודעה לחלון
+                // Add message to debug window
                 function addToDebugWindow(type, args) {
                     if (!debugOutput) return;
                     
                     logCounter++;
+                    if (type === 'error') errorCount++;
+                    
                     const timestamp = new Date().toLocaleTimeString();
                     const entry = document.createElement('div');
                     
-                    // צבעים לפי סוג
+                    // Colors by type
                     const colors = {
                         log: '#fff',
                         error: '#f44',
@@ -704,20 +838,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                     
                     entry.style.cssText = `
                         color: ${colors[type] || '#fff'};
-                        padding: 3px 0;
+                        padding: 2px 0;
                         border-bottom: 1px solid #222;
-                        margin-bottom: 3px;
+                        margin-bottom: 2px;
+                        font-size: 11px;
                     `;
                     
-                    // סימון סוג ההודעה
+                    // Type indicators
                     const typeLabel = {
-                        log: '📝',
-                        error: '❌',
-                        warn: '⚠️',
-                        info: 'ℹ️'
-                    }[type] || '>';
+                        log: '›',
+                        error: '✕',
+                        warn: '⚠',
+                        info: 'ℹ'
+                    }[type] || '›';
                     
-                    // המרת ארגומנטים לטקסט
+                    // Convert arguments to text
                     const message = Array.from(args).map(arg => {
                         if (typeof arg === 'object') {
                             try {
@@ -729,20 +864,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                         return String(arg);
                     }).join(' ');
                     
-                    entry.innerHTML = `<span style="color: #666;">[${timestamp}]</span> ${typeLabel} ${escapeHtml(message)}`;
+                    entry.innerHTML = `<span style="color: #666;">${timestamp}</span> ${typeLabel} ${escapeHtml(message)}`;
                     
                     debugOutput.appendChild(entry);
-                    
-                    // גלילה למטה
                     debugOutput.scrollTop = debugOutput.scrollHeight;
                     
-                    // הגבלת מספר הודעות
+                    // Update mini bar count
+                    updateMiniBarCount();
+                    
+                    // Limit messages
                     if (debugOutput.children.length > 100) {
                         debugOutput.removeChild(debugOutput.firstChild);
                     }
                 }
                 
-                // פונקציה לניקוי HTML
+                // Escape HTML
                 function escapeHtml(text) {
                     const div = document.createElement('div');
                     div.textContent = text;
@@ -770,21 +906,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                     addToDebugWindow('info', args);
                 };
                 
-                // תפיסת שגיאות גלובליות
+                // Catch global errors
                 window.addEventListener('error', function(event) {
-                    addToDebugWindow('error', [`Error: ${event.message} at ${event.filename}:${event.lineno}:${event.colno}`]);
+                    addToDebugWindow('error', [`${event.message} at ${event.filename}:${event.lineno}`]);
                 });
                 
-                // תפיסת Promise rejections
+                // Catch promise rejections
                 window.addEventListener('unhandledrejection', function(event) {
-                    addToDebugWindow('error', [`Unhandled Promise Rejection: ${event.reason}`]);
+                    addToDebugWindow('error', [`Unhandled Promise: ${event.reason}`]);
                 });
                 
-                // הודעה ראשונית
-                console.log('🚀 Console Debug Window Initialized');
-                console.info('Type commands in the input field below');
+                // Initial message
+                console.log('Console Debug Ready');
                 
-                // גרירה של החלון
+                // Make draggable
                 let isDragging = false;
                 let currentX;
                 let currentY;
@@ -796,13 +931,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                 const debugWindow = document.getElementById('console-debug-window');
                 const header = document.getElementById('console-header');
                 
-                header.addEventListener('mousedown', dragStart);
-                document.addEventListener('mousemove', drag);
-                document.addEventListener('mouseup', dragEnd);
+                if (header) {
+                    header.addEventListener('touchstart', dragStart, {passive: false});
+                    header.addEventListener('touchmove', drag, {passive: false});
+                    header.addEventListener('touchend', dragEnd, {passive: false});
+                    
+                    header.addEventListener('mousedown', dragStart);
+                    document.addEventListener('mousemove', drag);
+                    document.addEventListener('mouseup', dragEnd);
+                }
                 
                 function dragStart(e) {
-                    initialX = e.clientX - xOffset;
-                    initialY = e.clientY - yOffset;
+                    if (e.type === "touchstart") {
+                        initialX = e.touches[0].clientX - xOffset;
+                        initialY = e.touches[0].clientY - yOffset;
+                    } else {
+                        initialX = e.clientX - xOffset;
+                        initialY = e.clientY - yOffset;
+                    }
                     
                     if (e.target === header || e.target.parentNode === header) {
                         isDragging = true;
@@ -812,8 +958,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                 function drag(e) {
                     if (isDragging) {
                         e.preventDefault();
-                        currentX = e.clientX - initialX;
-                        currentY = e.clientY - initialY;
+                        
+                        if (e.type === "touchmove") {
+                            currentX = e.touches[0].clientX - initialX;
+                            currentY = e.touches[0].clientY - initialY;
+                        } else {
+                            currentX = e.clientX - initialX;
+                            currentY = e.clientY - initialY;
+                        }
+                        
                         xOffset = currentX;
                         yOffset = currentY;
                         
@@ -828,24 +981,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                 }
             })();
 
-            // פונקציות גלובליות
+            // Global functions
             function clearConsoleDebug() {
                 document.getElementById('console-output').innerHTML = '';
-                console.log('🧹 Console cleared');
+                errorCount = 0;
+                updateMiniBarCount();
+                console.log('Console cleared');
             }
 
-            function toggleConsoleDebug() {
-                const debugWindow = document.getElementById('console-debug-window');
-                const showBtn = document.getElementById('console-show-btn');
-                debugWindow.style.display = 'none';
-                showBtn.style.display = 'block';
+            function closeConsoleDebug() {
+                document.getElementById('console-debug-window').style.display = 'none';
+                document.getElementById('console-float-btn').style.display = 'block';
+            }
+
+            function minimizeConsole() {
+                document.getElementById('console-debug-window').style.display = 'none';
+                document.getElementById('console-mini-bar').style.display = 'flex';
+            }
+
+            function expandConsole() {
+                document.getElementById('console-debug-window').style.display = 'flex';
+                document.getElementById('console-mini-bar').style.display = 'none';
+                errorCount = 0;
+                updateMiniBarCount();
             }
 
             function showConsoleDebug() {
-                const debugWindow = document.getElementById('console-debug-window');
-                const showBtn = document.getElementById('console-show-btn');
-                debugWindow.style.display = 'flex';
-                showBtn.style.display = 'none';
+                document.getElementById('console-debug-window').style.display = 'flex';
+                document.getElementById('console-float-btn').style.display = 'none';
+                document.getElementById('console-mini-bar').style.display = 'none';
             }
 
             function handleConsoleInput(event) {
@@ -867,31 +1031,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                 }
             }
 
-            // הוספת קיצורי מקלדת
+            function updateMiniBarCount() {
+                const countEl = document.getElementById('mini-bar-count');
+                if (countEl && errorCount > 0) {
+                    countEl.textContent = errorCount;
+                    countEl.style.display = 'inline-block';
+                } else if (countEl) {
+                    countEl.style.display = 'none';
+                }
+            }
+
+            // Keyboard shortcuts
             document.addEventListener('keydown', function(e) {
-                // Ctrl+Shift+D - toggle debug window
-                if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+                // Ctrl+` - toggle console
+                if (e.ctrlKey && e.key === '`') {
                     const debugWindow = document.getElementById('console-debug-window');
-                    const showBtn = document.getElementById('console-show-btn');
-                    
                     if (debugWindow.style.display === 'none') {
                         showConsoleDebug();
                     } else {
-                        toggleConsoleDebug();
+                        closeConsoleDebug();
                     }
                 }
-                
-                // Ctrl+Shift+C - clear console
-                if (e.ctrlKey && e.shiftKey && e.key === 'C') {
-                    clearConsoleDebug();
-                }
             });
-
-            // בדיקת PWA logs
-            if (window.location.pathname.includes('login')) {
-                console.log('📍 Login page detected');
-                console.log('🔍 Monitoring PWA events...');
-            }
         </script>
 
         <!-- סוף קוד בדיקת PWA לדשבורד -->

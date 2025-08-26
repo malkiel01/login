@@ -126,28 +126,22 @@ function getNativeBannerScript($config) {
     <!-- PWA Native Banner -->
     <script src="/pwa/js/pwa-native-prompt.js"></script>
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            // בדיקה שאין כבר מנהל קיים
+        // המתן שהקובץ ייטען
+        setTimeout(function() {
             if (window.pwaPrompt) {
-                console.log("PWA: Native prompt already initialized");
-                return;
+                console.log("PWA: Configuring native prompt");
+                
+                // עדכן הגדרות לפי הצורך
+                window.pwaPrompt.updateConfig({
+                    showDelay: ' . ($config['show_after_seconds'] * 1000) . ',
+                    autoShow: true  // הצג אוטומטית אחרי ההשהייה
+                });
+                
+                console.log("PWA: Native banner configured with " + ' . $config['show_after_seconds'] . ' seconds delay");
+            } else {
+                console.log("PWA: Native prompt not initialized yet");
             }
-            
-            // הבאנר הנייטיב יופיע אוטומטית
-            console.log("PWA: Using native banner");
-            
-            // רק ל-iOS נוסיף התראה
-            if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
-                const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
-                if (!isStandalone && !localStorage.getItem("ios-prompt-shown")) {
-                    setTimeout(() => {
-                        if (confirm("להוסיף את האפליקציה למסך הבית?\\n\\nלחץ על כפתור השיתוף ⬆️ ואז \\"הוסף למסך הבית\\"")) {
-                            localStorage.setItem("ios-prompt-shown", "true");
-                        }
-                    }, ' . ($config['show_after_seconds'] * 1000) . ');
-                }
-            }
-        });
+        }, 100); // המתן קצת שהקובץ ייטען
     </script>
     ';
 }

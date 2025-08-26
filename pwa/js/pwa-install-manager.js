@@ -1,629 +1,267 @@
 /**
- * PWA Install Manager
- * מנהל התקנת PWA עם באנר אוטומטי
+ * PWA Native Prompt Manager - Fixed Version
+ * מנהל התקנת PWA עם באנר נייטיב של הדפדפן
  * 
- * שימוש:
- * 1. הוסף את הקובץ לכל דף: <script src="/js/pwa-install-manager.js"></script>
- * 2. הבאנר יופיע אוטומטית בתנאים המתאימים
+ * גרסה מתוקנת שבאמת מציגה את הבאנר הנייטיב
  */
 
 (function() {
     'use strict';
 
-    // יצירת סגנונות CSS
-    const styles = `
-        .pwa-install-banner {
-            position: fixed;
-            top: -200px;
-            left: 0;
-            right: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 16px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            z-index: 10000;
-            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-            direction: rtl;
-        }
-
-        .pwa-install-banner.show {
-            top: 0;
-            animation: pwa-slideDown 0.5s ease-out;
-        }
-
-        .pwa-install-banner.hide {
-            animation: pwa-slideUp 0.4s ease-in;
-            top: -200px;
-        }
-
-        @keyframes pwa-slideDown {
-            0% { top: -200px; opacity: 0; }
-            100% { top: 0; opacity: 1; }
-        }
-
-        @keyframes pwa-slideUp {
-            0% { top: 0; opacity: 1; }
-            100% { top: -200px; opacity: 0; }
-        }
-
-        .pwa-banner-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            color: white;
-        }
-
-        .pwa-banner-content {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            flex: 1;
-        }
-
-        .pwa-app-icon {
-            width: 56px;
-            height: 56px;
-            background: white;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            flex-shrink: 0;
-        }
-
-        .pwa-app-icon img {
-            width: 40px;
-            height: 40px;
-            object-fit: contain;
-        }
-
-        .pwa-app-icon .icon-placeholder {
-            font-size: 28px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .pwa-banner-text {
-            flex: 1;
-        }
-
-        .pwa-banner-title {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 4px;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-        }
-
-        .pwa-banner-subtitle {
-            font-size: 13px;
-            opacity: 0.95;
-            line-height: 1.4;
-        }
-
-        .pwa-banner-actions {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .pwa-install-btn {
-            background: white;
-            color: #667eea;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            white-space: nowrap;
-        }
-
-        .pwa-install-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .pwa-dismiss-btn {
-            background: transparent;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            white-space: nowrap;
-        }
-
-        .pwa-dismiss-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.5);
-        }
-
-        .pwa-close-btn {
-            background: transparent;
-            border: none;
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
-            padding: 4px;
-            opacity: 0.8;
-            transition: opacity 0.3s;
-            line-height: 1;
-        }
-
-        .pwa-close-btn:hover {
-            opacity: 1;
-        }
-
-        /* iOS Modal */
-        .pwa-ios-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 10001;
-            justify-content: center;
-            align-items: center;
-            direction: rtl;
-        }
-
-        .pwa-ios-modal.show {
-            display: flex;
-            animation: pwa-fadeIn 0.3s ease;
-        }
-
-        @keyframes pwa-fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .pwa-ios-content {
-            background: white;
-            border-radius: 16px;
-            padding: 24px;
-            max-width: 400px;
-            margin: 20px;
-            text-align: center;
-            position: relative;
-        }
-
-        .pwa-ios-title {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            color: #333;
-        }
-
-        .pwa-ios-steps {
-            text-align: right;
-            margin: 20px 0;
-        }
-
-        .pwa-ios-step {
-            display: flex;
-            align-items: center;
-            margin-bottom: 16px;
-            gap: 12px;
-        }
-
-        .pwa-ios-step-number {
-            background: #667eea;
-            color: white;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            flex-shrink: 0;
-        }
-
-        .pwa-ios-step-text {
-            color: #666;
-            font-size: 14px;
-            line-height: 1.4;
-        }
-
-        .pwa-ios-close {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 12px 32px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 16px;
-        }
-
-        /* Mobile styles */
-        @media (max-width: 768px) {
-            .pwa-install-banner { padding: 12px; }
-            .pwa-banner-container { flex-wrap: wrap; }
-            .pwa-app-icon { width: 48px; height: 48px; }
-            .pwa-app-icon img { width: 32px; height: 32px; }
-            .pwa-banner-title { font-size: 14px; }
-            .pwa-banner-subtitle { font-size: 12px; }
-            .pwa-banner-actions { width: 100%; justify-content: stretch; gap: 8px; }
-            .pwa-install-btn, .pwa-dismiss-btn { flex: 1; padding: 8px 12px; font-size: 13px; }
-            .pwa-close-btn { position: absolute; top: 8px; left: 8px; font-size: 20px; }
-            .pwa-dismiss-btn { display: none; }
-        }
-    `;
-
-    // יצירת HTML של הבאנר
-    const createBannerHTML = (config) => {
-        return `
-            <div class="pwa-banner-container">
-                <button class="pwa-close-btn" aria-label="סגור">×</button>
-                
-                <div class="pwa-banner-content">
-                    <div class="pwa-app-icon">
-                        ${config.icon ? 
-                            `<img src="${config.icon}" alt="App Icon">` : 
-                            `<span class="icon-placeholder">📱</span>`
-                        }
-                    </div>
-                    
-                    <div class="pwa-banner-text">
-                        <div class="pwa-banner-title">${config.title}</div>
-                        <div class="pwa-banner-subtitle">${config.subtitle}</div>
-                    </div>
-                </div>
-                
-                <div class="pwa-banner-actions">
-                    <button class="pwa-install-btn">${config.installText}</button>
-                    <button class="pwa-dismiss-btn">${config.dismissText}</button>
-                </div>
-            </div>
-        `;
-    };
-
-    // יצירת מודל iOS
-    const createIOSModal = () => {
-        return `
-            <div class="pwa-ios-content">
-                <div class="pwa-ios-title">📱 התקנת האפליקציה</div>
-                
-                <div class="pwa-ios-steps">
-                    <div class="pwa-ios-step">
-                        <div class="pwa-ios-step-number">1</div>
-                        <div class="pwa-ios-step-text">
-                            לחץ על כפתור השיתוף <span style="color: #007AFF;">⬆️</span> בתחתית המסך
-                        </div>
-                    </div>
-                    
-                    <div class="pwa-ios-step">
-                        <div class="pwa-ios-step-number">2</div>
-                        <div class="pwa-ios-step-text">
-                            גלול למטה ובחר "הוסף למסך הבית" <span style="color: #007AFF;">➕</span>
-                        </div>
-                    </div>
-                    
-                    <div class="pwa-ios-step">
-                        <div class="pwa-ios-step-number">3</div>
-                        <div class="pwa-ios-step-text">
-                            לחץ על "הוסף" בפינה הימנית העליונה
-                        </div>
-                    </div>
-                </div>
-                
-                <div style="font-size: 16px; color: #10b981; margin: 16px 0;">
-                    🎉 זהו! האפליקציה תופיע במסך הבית
-                </div>
-                
-                <button class="pwa-ios-close">הבנתי</button>
-            </div>
-        `;
-    };
-
-    // מחלקת PWAInstallManager
-    class PWAInstallManager {
-        constructor(config = {}) {
-            // הגדרות ברירת מחדל
-            this.config = {
-                title: 'התקן את האפליקציה שלנו! 🚀',
-                subtitle: 'גישה מהירה, עבודה אופליין והתראות חכמות',
-                installText: 'התקן עכשיו',
-                dismissText: 'אולי מאוחר יותר',
-                icon: null,
-                showAfterSeconds: 3,
-                minimumVisits: 2,
-                ...config
-            };
-
-            // משתני מצב
+    class PWANativePrompt {
+        constructor() {
             this.deferredPrompt = null;
-            this.banner = null;
-            this.iosModal = null;
             this.isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-            this.isAndroid = /Android/.test(navigator.userAgent);
             this.isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
                               window.navigator.standalone === true;
             
-            // בדיקת localStorage
-            this.installDismissed = this.checkDismissed();
-            this.visitCount = this.updateVisitCount();
+            // הגדרות ניתנות להתאמה
+            this.config = {
+                showDelay: 3000,  // השהייה לפני הצגת הבאנר (ms)
+                autoShow: true     // הצג אוטומטית או חכה לטריגר ידני
+            };
             
-            // אתחול
+            // אתחול רק אם לא מותקן
             if (!this.isStandalone) {
                 this.init();
             }
         }
 
         init() {
-            // הזרקת סגנונות
-            this.injectStyles();
-            
-            // יצירת באנר
-            this.createBanner();
-            
-            // יצירת מודל iOS
-            if (this.isIOS) {
-                this.createIOSModal();
-            }
-            
-            // הוספת מאזינים
-            this.setupEventListeners();
-            
-            // בדיקה אם להציג באנר
-            this.checkShowBanner();
-        }
-
-        injectStyles() {
-            if (!document.getElementById('pwa-install-styles')) {
-                const styleSheet = document.createElement('style');
-                styleSheet.id = 'pwa-install-styles';
-                styleSheet.textContent = styles;
-                document.head.appendChild(styleSheet);
-            }
-        }
-
-        createBanner() {
-            this.banner = document.createElement('div');
-            this.banner.className = 'pwa-install-banner';
-            this.banner.innerHTML = createBannerHTML(this.config);
-            document.body.appendChild(this.banner);
-            
-            // הוספת אירועי לחיצה
-            this.banner.querySelector('.pwa-install-btn').addEventListener('click', () => this.install());
-            this.banner.querySelector('.pwa-dismiss-btn').addEventListener('click', () => this.dismiss(false));
-            this.banner.querySelector('.pwa-close-btn').addEventListener('click', () => this.dismiss(true));
-        }
-
-        createIOSModal() {
-            this.iosModal = document.createElement('div');
-            this.iosModal.className = 'pwa-ios-modal';
-            this.iosModal.innerHTML = createIOSModal();
-            document.body.appendChild(this.iosModal);
-            
-            // סגירת המודל
-            this.iosModal.querySelector('.pwa-ios-close').addEventListener('click', () => {
-                this.iosModal.classList.remove('show');
-            });
-            
-            // סגירה בלחיצה על הרקע
-            this.iosModal.addEventListener('click', (e) => {
-                if (e.target === this.iosModal) {
-                    this.iosModal.classList.remove('show');
-                }
-            });
-        }
-
-        setupEventListeners() {
-            // האזנה ל-beforeinstallprompt
+            // האזנה לאירוע beforeinstallprompt
             window.addEventListener('beforeinstallprompt', (e) => {
-                e.preventDefault();
+                console.log('PWA: Native install prompt available');
+                
+                // תמיד שמור את האירוע
                 this.deferredPrompt = e;
                 
-                // הצג באנר אם עדיין לא הוצג
-                if (!this.installDismissed) {
-                    this.show();
+                // החלט אם להציג מיד או להשהות
+                if (this.config.autoShow) {
+                    // אפשרות 1: הצג את הבאנר אחרי השהייה
+                    e.preventDefault(); // מנע הצגה אוטומטית
+                    
+                    setTimeout(() => {
+                        this.showPrompt();
+                    }, this.config.showDelay);
+                } else {
+                    // אפשרות 2: אל תמנע - תן לדפדפן להציג מיד
+                    // לא עושים preventDefault - הבאנר יופיע מיד
+                    console.log('PWA: Allowing browser to show native banner immediately');
                 }
             });
-            
-            // האזנה להתקנה
+
+            // האזנה להתקנה מוצלחת
             window.addEventListener('appinstalled', () => {
-                console.log('PWA was installed');
-                this.hide();
+                console.log('PWA: App was installed successfully');
+                this.deferredPrompt = null;
+                
+                // שמור סטטוס
                 localStorage.setItem('pwa-installed', 'true');
-                this.trackEvent('app_installed');
+                
+                // הצג הודעת תודה
+                this.showThankYouMessage();
             });
+
+            // בדיקה ל-iOS
+            if (this.isIOS && !this.isStandalone) {
+                this.checkIOSPrompt();
+            }
+
+            // הוסף כפתורי התקנה בדף (אם יש)
+            this.setupInstallButtons();
         }
 
-        checkShowBanner() {
-            // אל תציג אם כבר נדחה או מותקן
-            if (this.installDismissed || localStorage.getItem('pwa-installed') === 'true') {
-                return;
-            }
-            
-            // בדיקת מספר ביקורים
-            const shouldShow = this.visitCount >= this.config.minimumVisits || this.isIOS;
-            
-            if (shouldShow) {
-                // הצג אחרי המתנה
-                setTimeout(() => {
-                    this.show();
-                }, this.config.showAfterSeconds * 1000);
-            }
-        }
-
-        show() {
-            if (this.banner) {
-                this.banner.classList.remove('hide');
-                this.banner.classList.add('show');
+        // הצגת הבאנר הנייטיב
+        async showPrompt() {
+            if (!this.deferredPrompt) {
+                console.log('PWA: No installation prompt available');
                 
-                // עדכון טקסט לפי פלטפורמה
-                const installBtn = this.banner.querySelector('.pwa-install-btn');
+                // אם אין באנר נייטיב זמין, בדוק אם iOS
                 if (this.isIOS) {
-                    installBtn.textContent = 'הוראות התקנה';
+                    this.showIOSInstructions();
                 }
-                
-                this.trackEvent('banner_shown');
+                return false;
             }
-        }
 
-        hide() {
-            if (this.banner) {
-                this.banner.classList.remove('show');
-                this.banner.classList.add('hide');
-            }
-        }
-
-        async install() {
-            if (this.isIOS) {
-                // הצג מודל הוראות iOS
-                if (this.iosModal) {
-                    this.iosModal.classList.add('show');
-                    this.trackEvent('ios_instructions_shown');
-                }
-            } else if (this.deferredPrompt) {
-                // התקנה רגילה
+            try {
+                // הצג את הבאנר הנייטיב של הדפדפן
+                console.log('PWA: Showing native install prompt');
                 this.deferredPrompt.prompt();
+                
+                // חכה לתגובת המשתמש
                 const { outcome } = await this.deferredPrompt.userChoice;
                 
+                console.log(`PWA: User response - ${outcome}`);
+                
                 if (outcome === 'accepted') {
-                    this.trackEvent('install_accepted');
+                    console.log('PWA: User accepted installation');
+                    localStorage.setItem('pwa-install-accepted', 'true');
                 } else {
-                    this.trackEvent('install_dismissed');
+                    console.log('PWA: User dismissed installation');
+                    localStorage.setItem('pwa-install-dismissed', Date.now().toString());
                 }
                 
+                // נקה את הרפרנס
                 this.deferredPrompt = null;
-                this.hide();
-            } else {
-                // נסה התקנה ידנית או הצג הודעה
-                this.showFallbackInstructions();
+                
+                return outcome === 'accepted';
+            } catch (error) {
+                console.error('PWA: Error showing prompt', error);
+                return false;
             }
         }
 
-        dismiss(permanent) {
-            this.hide();
+        // בדיקה והצגת הנחיות ל-iOS
+        checkIOSPrompt() {
+            // בדוק אם כבר הוצג או המשתמש דחה
+            const dismissed = localStorage.getItem('ios-prompt-dismissed');
+            const installed = localStorage.getItem('pwa-installed');
             
-            if (permanent) {
-                // דחייה לצמיתות
-                localStorage.setItem('pwa-install-dismissed', 'permanent');
-                this.trackEvent('banner_dismissed_permanent');
-            } else {
-                // דחייה ל-7 ימים
-                const dismissTime = Date.now() + (7 * 24 * 60 * 60 * 1000);
-                localStorage.setItem('pwa-install-dismissed', dismissTime.toString());
-                this.trackEvent('banner_dismissed_temporary');
+            if (!dismissed && !installed) {
+                // הצג הודעה אחרי השהייה
+                setTimeout(() => {
+                    this.showIOSInstructions();
+                }, this.config.showDelay);
             }
         }
 
-        checkDismissed() {
-            const dismissed = localStorage.getItem('pwa-install-dismissed');
-            
-            if (dismissed === 'permanent') {
-                return true;
-            }
-            
-            if (dismissed && !isNaN(dismissed)) {
-                // בדוק אם הזמן עבר
-                return Date.now() < parseInt(dismissed);
-            }
-            
-            return false;
-        }
-
-        updateVisitCount() {
-            let count = parseInt(localStorage.getItem('pwa-visit-count') || '0');
-            count++;
-            localStorage.setItem('pwa-visit-count', count.toString());
-            return count;
-        }
-
-        showFallbackInstructions() {
+        // הצגת הוראות התקנה ל-iOS
+        showIOSInstructions() {
             const message = `
-📱 התקנת האפליקציה:
+📱 להוספת האפליקציה למסך הבית:
 
-Chrome/Edge:
-• לחץ על תפריט (⋮) ← "התקן אפליקציה"
+1. לחץ על כפתור השיתוף ⬆️ בתחתית המסך
+2. גלול למטה ובחר "הוסף למסך הבית" ➕
+3. לחץ על "הוסף" בפינה הימנית העליונה
 
-Firefox:
-• לחץ על תפריט (☰) ← "התקן"
-
-Safari (iOS):
-• לחץ על שיתוף (⬆️) ← "הוסף למסך הבית"
+האפליקציה תהיה זמינה גם בלי חיבור לאינטרנט!
             `;
-            alert(message);
+            
+            if (confirm(message + '\n\nלחץ אישור אם הבנת, או ביטול להסתיר לצמיתות')) {
+                localStorage.setItem('ios-prompt-shown', Date.now().toString());
+            } else {
+                localStorage.setItem('ios-prompt-dismissed', 'true');
+            }
         }
 
-        trackEvent(eventName) {
-            // Google Analytics
-            if (typeof gtag !== 'undefined') {
-                gtag('event', eventName, {
-                    'event_category': 'PWA',
-                    'event_label': 'Install Banner'
+        // הגדרת כפתורי התקנה בדף
+        setupInstallButtons() {
+            // מצא כל הכפתורים עם המחלקה המתאימה
+            const installButtons = document.querySelectorAll('.pwa-install-trigger, .install-pwa-btn, [data-pwa-install]');
+            
+            installButtons.forEach(button => {
+                // הסתר אם כבר מותקן
+                if (this.isStandalone || localStorage.getItem('pwa-installed') === 'true') {
+                    button.style.display = 'none';
+                    return;
+                }
+
+                // הצג את הכפתור
+                button.style.display = 'inline-block';
+                
+                // הוסף אירוע לחיצה
+                button.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    
+                    if (this.isIOS) {
+                        this.showIOSInstructions();
+                    } else if (this.deferredPrompt) {
+                        const installed = await this.showPrompt();
+                        if (installed) {
+                            button.style.display = 'none';
+                        }
+                    } else {
+                        // אין באנר זמין - הצג הוראות ידניות
+                        this.showManualInstructions();
+                    }
                 });
+            });
+        }
+
+        // הוראות התקנה ידניות
+        showManualInstructions() {
+            const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+            const isEdge = /Edg/.test(navigator.userAgent);
+            const isFirefox = /Firefox/.test(navigator.userAgent);
+            
+            let instructions = '📱 להתקנת האפליקציה:\n\n';
+            
+            if (isChrome || isEdge) {
+                instructions += '1. לחץ על תפריט (⋮) בפינה העליונה\n';
+                instructions += '2. בחר "התקן אפליקציה" או "Add to Home screen"\n';
+            } else if (isFirefox) {
+                instructions += '1. לחץ על תפריט (☰)\n';
+                instructions += '2. בחר "התקן" או "Install"\n';
+            } else if (this.isIOS) {
+                instructions += '1. לחץ על כפתור השיתוף ⬆️\n';
+                instructions += '2. בחר "הוסף למסך הבית"\n';
+            } else {
+                instructions += 'חפש באפשרויות הדפדפן את "התקן אפליקציה" או "Add to Home screen"';
             }
             
-            // Facebook Pixel
-            if (typeof fbq !== 'undefined') {
-                fbq('trackCustom', 'PWA_' + eventName);
-            }
+            alert(instructions);
+        }
+
+        // הודעת תודה אחרי התקנה
+        showThankYouMessage() {
+            console.log('🎉 תודה שהתקנת את האפליקציה!');
             
-            // Console log for debugging
-            console.log('[PWA Install]', eventName);
+            // אפשר להוסיף הודעה ויזואלית אם רוצים
+            if (typeof window.showNotification === 'function') {
+                window.showNotification('האפליקציה הותקנה בהצלחה! 🎉', 'success');
+            }
         }
 
         // API ציבורי
         
+        // בדיקה אם ניתן להתקין
+        canInstall() {
+            return !!this.deferredPrompt || this.isIOS;
+        }
+
+        // בדיקה אם מותקן
+        isInstalled() {
+            return this.isStandalone || localStorage.getItem('pwa-installed') === 'true';
+        }
+
+        // התקנה ידנית (מופעלת מבחוץ)
+        async install() {
+            if (this.isIOS) {
+                this.showIOSInstructions();
+                return false;
+            }
+            return await this.showPrompt();
+        }
+
+        // עדכון הגדרות
+        updateConfig(newConfig) {
+            this.config = { ...this.config, ...newConfig };
+        }
+
+        // איפוס הגדרות שמורות
         reset() {
-            localStorage.removeItem('pwa-install-dismissed');
-            localStorage.removeItem('pwa-visit-count');
             localStorage.removeItem('pwa-installed');
-            this.installDismissed = false;
-            this.visitCount = 1;
-        }
-
-        forceShow() {
-            this.show();
-        }
-
-        forceHide() {
-            this.hide();
+            localStorage.removeItem('pwa-install-accepted');
+            localStorage.removeItem('pwa-install-dismissed');
+            localStorage.removeItem('ios-prompt-shown');
+            localStorage.removeItem('ios-prompt-dismissed');
+            console.log('PWA: Settings reset');
         }
     }
 
-    // חשיפה גלובלית
-    window.PWAInstallManager = PWAInstallManager;
-    
-    // // אתחול אוטומטי
-    // if (document.readyState === 'loading') {
-    //     document.addEventListener('DOMContentLoaded', () => {
-    //         window.pwaInstallManager = new PWAInstallManager();
-    //     });
-    // } else {
-    //     window.pwaInstallManager = new PWAInstallManager();
-    // }
-
-
-        // חשיפה גלובלית
-    window.PWAInstallManager = PWAInstallManager;
-    
-    // אתחול אוטומטי רק אם לא קיים
+    // יצירת instance יחיד
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
-            if (!window.pwaInstallManager) {
-                window.pwaInstallManager = new PWAInstallManager();
+            if (!window.pwaPrompt) {
+                window.pwaPrompt = new PWANativePrompt();
             }
         });
     } else {
-        if (!window.pwaInstallManager) {
-            window.pwaInstallManager = new PWAInstallManager();
+        if (!window.pwaPrompt) {
+            window.pwaPrompt = new PWANativePrompt();
         }
     }
+
+    // חשוף גם את המחלקה
+    window.PWANativePrompt = PWANativePrompt;
 })();

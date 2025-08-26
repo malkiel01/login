@@ -2,7 +2,6 @@
 
 // בתחילת הקובץ
 require_once '../pwa/pwa-init.php';
-// require_once '../permissions/permissions-init.php';
 
 session_start();
 require_once '../config.php';  // תיקון: חזרה לתיקייה הראשית
@@ -254,9 +253,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     <script src="../debugs/pwa-debug-popup.js"></script>
     
     <script>
-
-        await permissionsManager.requestMultiple(['notification', 'push', 'camera']); 
-
         function switchTab(tab) {
             // הסתרת כל הטאבים
             document.querySelectorAll('.tab-content').forEach(content => {

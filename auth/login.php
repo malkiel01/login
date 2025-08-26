@@ -244,6 +244,334 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
             </div>
         </div>
     </div>
+
+
+
+    <!-- קוד בדיקת PWA לדשבורד -->
+    <!-- הוסף את זה בכל מקום בדשבורד שלך -->
+
+    <div id="pwa-test-panel" style="
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: white;
+        border: 2px solid #667eea;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        z-index: 9990;
+        max-width: 350px;
+        direction: rtl;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    ">
+        <h3 style="margin: 0 0 15px 0; color: #667eea; font-size: 18px;">
+            🧪 בדיקת באנרי PWA
+        </h3>
+        
+        <div style="margin-bottom: 15px; padding: 10px; background: #f3f4f6; border-radius: 8px;">
+            <strong>מצב נוכחי:</strong>
+            <div id="pwa-status" style="margin-top: 5px; font-size: 14px;"></div>
+        </div>
+        
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <!-- כפתורי בדיקה לבאנר נייטיב -->
+            <button onclick="testNativeBanner()" style="
+                padding: 10px;
+                background: linear-gradient(135deg, #10b981, #059669);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: 600;
+                transition: all 0.3s;
+            ">
+                🎯 בדוק באנר נייטיב
+            </button>
+            
+            <!-- כפתורי בדיקה לבאנר מותאם -->
+            <button onclick="testCustomBanner()" style="
+                padding: 10px;
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: 600;
+                transition: all 0.3s;
+            ">
+                🎨 בדוק באנר מותאם
+            </button>
+            
+            <button onclick="testCustomBannerDelayed()" style="
+                padding: 10px;
+                background: linear-gradient(135deg, #f59e0b, #d97706);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: 600;
+                transition: all 0.3s;
+            ">
+                ⏰ באנר מותאם (5 שניות)
+            </button>
+            
+            <!-- כפתורי ניקוי -->
+            <button onclick="clearPWAData()" style="
+                padding: 10px;
+                background: linear-gradient(135deg, #ef4444, #dc2626);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: 600;
+                transition: all 0.3s;
+            ">
+                🗑️ נקה נתוני PWA
+            </button>
+            
+            <!-- כפתור הסתרה -->
+            <button onclick="document.getElementById('pwa-test-panel').style.display='none'" style="
+                padding: 10px;
+                background: #6b7280;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: 600;
+                transition: all 0.3s;
+            ">
+                ❌ סגור פאנל בדיקות
+            </button>
+        </div>
+        
+        <div style="margin-top: 15px; padding: 10px; background: #fef3c7; border-radius: 8px; font-size: 12px;">
+            <strong>💡 טיפ:</strong> הבאנר הנייטיב דורש פעולת משתמש (לחיצה) ולא יכול להופיע אוטומטית
+        </div>
+    </div>
+
+    <script>
+        // עדכון סטטוס
+        function updatePWAStatus() {
+            const statusEl = document.getElementById('pwa-status');
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+            const isInstalled = localStorage.getItem('pwa-installed') === 'true';
+            const dismissed = localStorage.getItem('pwa-custom-dismissed');
+            const visits = localStorage.getItem('pwa-visit-count') || '0';
+            
+            let statusHTML = '';
+            
+            if (isStandalone) {
+                statusHTML += '<span style="color: #10b981;">✅ האפליקציה מותקנת (Standalone)</span><br>';
+            } else if (isInstalled) {
+                statusHTML += '<span style="color: #10b981;">✅ האפליקציה מותקנת</span><br>';
+            } else {
+                statusHTML += '<span style="color: #ef4444;">❌ האפליקציה לא מותקנת</span><br>';
+            }
+            
+            statusHTML += `<span>ביקורים: ${visits}</span><br>`;
+            
+            if (dismissed === 'permanent') {
+                statusHTML += '<span style="color: #f59e0b;">⚠️ באנר נדחה לצמיתות</span>';
+            } else if (dismissed && !isNaN(dismissed)) {
+                const date = new Date(parseInt(dismissed));
+                statusHTML += `<span style="color: #f59e0b;">⏳ באנר נדחה עד: ${date.toLocaleDateString('he-IL')}</span>`;
+            }
+            
+            statusEl.innerHTML = statusHTML;
+        }
+
+        // בדיקת באנר נייטיב
+        function testNativeBanner() {
+            console.log('Testing Native Banner...');
+            
+            // הסתר באנרים אחרים
+            if (window.pwaCustomBanner) {
+                window.pwaCustomBanner.hide();
+            }
+            
+            // טען את הבאנר הנייטיב אם לא קיים
+            if (!window.pwaNativeBanner) {
+                const script = document.createElement('script');
+                script.src = '/pwa/js/pwa-native-banner.js';
+                script.onload = () => {
+                    console.log('Native banner loaded');
+                    setTimeout(() => {
+                        if (window.pwaNativeBanner && window.pwaNativeBanner.deferredPrompt) {
+                            window.pwaNativeBanner.showInstallPrompt();
+                        } else {
+                            alert('הבאנר הנייטיב דורש לחיצה על הכפתור הצף שנוצר');
+                        }
+                    }, 100);
+                };
+                document.head.appendChild(script);
+            } else {
+                // נסה להציג
+                if (window.pwaNativeBanner.deferredPrompt) {
+                    window.pwaNativeBanner.showInstallPrompt();
+                } else {
+                    alert('אין אפשרות להתקנה זמינה. נסה לרענן את הדף.');
+                }
+            }
+            
+            updatePWAStatus();
+        }
+
+        // בדיקת באנר מותאם
+        function testCustomBanner() {
+            console.log('Testing Custom Banner...');
+            
+            // הסתר באנרים אחרים
+            if (window.pwaNativeBanner) {
+                const nativeBtn = document.getElementById('pwa-native-btn');
+                if (nativeBtn) nativeBtn.style.display = 'none';
+            }
+            
+            // טען את הבאנר המותאם אם לא קיים
+            if (!window.pwaCustomBanner) {
+                const script = document.createElement('script');
+                script.src = '/pwa/js/pwa-custom-banner.js';
+                script.onload = () => {
+                    console.log('Custom banner loaded');
+                    setTimeout(() => {
+                        if (window.pwaCustomBanner) {
+                            window.pwaCustomBanner.forceShow();
+                        }
+                    }, 100);
+                };
+                document.head.appendChild(script);
+            } else {
+                // הצג מיד
+                window.pwaCustomBanner.dismissed = false; // אפס דחייה
+                window.pwaCustomBanner.forceShow();
+            }
+            
+            updatePWAStatus();
+        }
+
+        // בדיקת באנר מותאם עם השהייה
+        function testCustomBannerDelayed() {
+            console.log('Testing Custom Banner with 5 seconds delay...');
+            
+            // הסתר באנרים אחרים
+            if (window.pwaNativeBanner) {
+                const nativeBtn = document.getElementById('pwa-native-btn');
+                if (nativeBtn) nativeBtn.style.display = 'none';
+            }
+            
+            // טען את הבאנר המותאם
+            if (!window.pwaCustomBanner) {
+                const script = document.createElement('script');
+                script.src = '/pwa/js/pwa-custom-banner.js';
+                script.onload = () => {
+                    console.log('Custom banner loaded, showing in 5 seconds...');
+                    setTimeout(() => {
+                        if (window.pwaCustomBanner) {
+                            window.pwaCustomBanner.updateConfig({
+                                title: 'באנר בדיקה! ⏰',
+                                subtitle: 'הבאנר הזה הופיע אחרי 5 שניות',
+                                showDelay: 5000
+                            });
+                            window.pwaCustomBanner.forceShow();
+                        }
+                    }, 5000);
+                };
+                document.head.appendChild(script);
+            } else {
+                // עדכן והצג אחרי 5 שניות
+                console.log('Showing custom banner in 5 seconds...');
+                window.pwaCustomBanner.dismissed = false;
+                window.pwaCustomBanner.updateConfig({
+                    title: 'באנר בדיקה! ⏰',
+                    subtitle: 'הבאנר הזה הופיע אחרי 5 שניות'
+                });
+                setTimeout(() => {
+                    window.pwaCustomBanner.forceShow();
+                }, 5000);
+            }
+            
+            updatePWAStatus();
+        }
+
+        // ניקוי נתוני PWA
+        function clearPWAData() {
+            if (confirm('האם לנקות את כל נתוני ה-PWA?\nזה יאפס את כל ההגדרות והדחיות.')) {
+                // נקה localStorage
+                localStorage.removeItem('pwa-installed');
+                localStorage.removeItem('pwa-install-accepted');
+                localStorage.removeItem('pwa-install-dismissed');
+                localStorage.removeItem('pwa-custom-dismissed');
+                localStorage.removeItem('pwa-visit-count');
+                localStorage.removeItem('ios-instructions-shown');
+                localStorage.removeItem('ios-prompt-dismissed');
+                localStorage.removeItem('ios-prompt-shown');
+                
+                // אפס באנרים אם קיימים
+                if (window.pwaNativeBanner) {
+                    window.pwaNativeBanner.reset();
+                }
+                if (window.pwaCustomBanner) {
+                    window.pwaCustomBanner.reset();
+                }
+                
+                console.log('PWA data cleared');
+                alert('נתוני PWA נוקו בהצלחה! רענן את הדף לבדיקה מחדש.');
+                updatePWAStatus();
+            }
+        }
+
+        // עדכון סטטוס בטעינה
+        updatePWAStatus();
+
+        // עדכון סטטוס כל 2 שניות
+        setInterval(updatePWAStatus, 2000);
+
+        // הוסף כפתור להצגת הפאנל אם הוסתר
+        if (!document.getElementById('pwa-test-toggle')) {
+            const toggleBtn = document.createElement('button');
+            toggleBtn.id = 'pwa-test-toggle';
+            toggleBtn.innerHTML = '🧪';
+            toggleBtn.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                background: #667eea;
+                color: white;
+                border: none;
+                font-size: 24px;
+                cursor: pointer;
+                z-index: 9989;
+                display: none;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            `;
+            toggleBtn.onclick = () => {
+                const panel = document.getElementById('pwa-test-panel');
+                panel.style.display = 'block';
+                toggleBtn.style.display = 'none';
+            };
+            document.body.appendChild(toggleBtn);
+            
+            // הצג את הכפתור כשהפאנל נסגר
+            const originalClose = document.getElementById('pwa-test-panel').querySelector('button[onclick*="display=\'none\'"]');
+            if (originalClose) {
+                originalClose.onclick = () => {
+                    document.getElementById('pwa-test-panel').style.display = 'none';
+                    document.getElementById('pwa-test-toggle').style.display = 'block';
+                };
+            }
+        }
+
+        console.log('PWA Test Panel Ready! 🧪');
+    </script>
+
+        <!-- סוף קוד בדיקת PWA לדשבורד -->
     
     <script>
         function switchTab(tab) {

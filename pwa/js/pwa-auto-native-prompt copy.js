@@ -11,6 +11,7 @@
     class PWAAutoNativePrompt {
         constructor() {
             this.promptShown = false;
+            this.deferredPrompt = null;
             this.isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
             this.isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
                               window.navigator.standalone === true;
@@ -46,17 +47,15 @@
                 
                 this.promptShown = true;
                 
-                // נסיון להפעיל ידנית אחרי 2 שניות אם לא הופיע
+                // שמור את הפרומפט גלובלית
+                this.deferredPrompt = e;
+                
+                // Chrome דורש פעולת משתמש! צור אזור לחיצה
                 setTimeout(() => {
                     console.log('🔍 Checking if prompt was shown...');
                     if (!e.userChoice.resolved) {
-                        console.log('⏰ Prompt not shown yet, trying manual trigger...');
-                        try {
-                            e.prompt();
-                            console.log('✅ Manual prompt() called successfully');
-                        } catch (err) {
-                            console.error('❌ Manual prompt failed:', err.message);
-                        }
+                        console.log('📱 Creating click trigger for Chrome requirement...');
+                        this.createClickTrigger();
                     }
                 }, 2000);
                 
@@ -149,6 +148,275 @@
             }
         }
 
+        // יצירת באנר בסגנון נייטיב
+        createNativeLikeBanner() {
+            // אם כבר יש באנר, צא
+            if (document.getElementById('pwa-native-banner')) return;
+            
+            // קבל פרטים מה-manifest
+            const manifestLink = document.querySelector('link[rel="manifest"]');
+            if (!manifestLink) return;
+            
+            fetch(manifestLink.href)
+                .then(res => res.json())
+                .then(manifest => {
+                    this.showNativeLikeBanner(manifest);
+                })
+                .catch(err => {
+                    console.error('Error loading manifest:', err);
+                    // הצג עם ערכי ברירת מחדל
+                    this.showNativeLikeBanner({
+                        name: 'קניות משפחתיות',
+                        icons: [{src: '/pwa/icons/android/android-launchericon-192-192.png'}]
+                    });
+                });
+        }
+        
+        showNativeLikeBanner(manifest) {
+            const banner = document.createElement('div');
+            banner.id = 'pwa-native-banner';
+            
+            // מצא את האייקון הכי מתאים
+            const icon = manifest.icons?.find(i => i.sizes === '192x192') || 
+                        manifest.icons?.find(i => i.sizes === '144x144') ||
+                        manifest.icons?.[0] || 
+                        {src: '/pwa/icons/android/android-launchericon-192-192.png'};
+            
+            banner.innerHTML = `
+                <style>
+                    #pwa-native-banner {
+                        position: fixed;
+                        top: -100px;
+                        left: 0;
+                        right: 0;
+                        background: white;
+                        box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+                        z-index: 10000;
+                        transition: top 0.4s ease;
+                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+                        direction: rtl;
+                    }
+                    
+                    #pwa-native-banner.show {
+                        top: 0;
+                    }
+                    
+                    #pwa-native-banner .banner-content {
+                        display: flex;
+                        align-items: center;
+                        padding: 12px 16px;
+                        gap: 12px;
+                        max-width: 600px;
+                        margin: 0 auto;
+                    }
+                    
+                    #pwa-native-banner .app-icon {
+                        width: 36px;
+                        height: 36px;
+                        border-radius: 8px;
+                        box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+                        overflow: hidden;
+                        flex-shrink: 0;
+                    }
+                    
+                    #pwa-native-banner .app-icon img {
+                        width: 100%;
+                        height: 100%;
+                        object-fit: cover;
+                    }
+                    
+                    #pwa-native-banner .app-info {
+                        flex: 1;
+                        min-width: 0;
+                    }
+                    
+                    #pwa-native-banner .app-name {
+                        font-size: 14px;
+                        font-weight: 600;
+                        color: #202124;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        line-height: 1.3;
+                    }
+                    
+                    #pwa-native-banner .app-url {
+                        font-size: 12px;
+                        color: #5f6368;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        margin-top: 2px;
+                    }
+                    
+                    #pwa-native-banner .banner-actions {
+                        display: flex;
+                        gap: 8px;
+                        flex-shrink: 0;
+                    }
+                    
+                    #pwa-native-banner .install-btn {
+                        background: #1a73e8;
+                        color: white;
+                        border: none;
+                        padding: 8px 20px;
+                        border-radius: 4px;
+                        font-size: 14px;
+                        font-weight: 500;
+                        cursor: pointer;
+                        transition: background 0.2s;
+                        white-space: nowrap;
+                    }
+                    
+                    #pwa-native-banner .install-btn:hover {
+                        background: #1557b0;
+                    }
+                    
+                    #pwa-native-banner .install-btn:active {
+                        transform: scale(0.98);
+                    }
+                    
+                    #pwa-native-banner .close-btn {
+                        background: transparent;
+                        border: none;
+                        color: #5f6368;
+                        font-size: 20px;
+                        cursor: pointer;
+                        padding: 4px;
+                        line-height: 1;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    }
+                    
+                    #pwa-native-banner .close-btn:hover {
+                        color: #202124;
+                    }
+                    
+                    /* אנימציה עדינה */
+                    @keyframes subtleSlide {
+                        from { 
+                            top: -100px;
+                            opacity: 0.8;
+                        }
+                        to { 
+                            top: 0;
+                            opacity: 1;
+                        }
+                    }
+                    
+                    #pwa-native-banner.show {
+                        animation: subtleSlide 0.4s ease-out;
+                    }
+                    
+                    /* רספונסיב */
+                    @media (max-width: 480px) {
+                        #pwa-native-banner .banner-content {
+                            padding: 10px 12px;
+                        }
+                        
+                        #pwa-native-banner .app-icon {
+                            width: 32px;
+                            height: 32px;
+                        }
+                        
+                        #pwa-native-banner .app-name {
+                            font-size: 13px;
+                        }
+                        
+                        #pwa-native-banner .install-btn {
+                            padding: 7px 16px;
+                            font-size: 13px;
+                        }
+                    }
+                </style>
+                
+                <div class="banner-content">
+                    <div class="app-icon">
+                        <img src="${icon.src}" alt="${manifest.name || 'App'}" />
+                    </div>
+                    
+                    <div class="app-info">
+                        <div class="app-name">${manifest.name || 'קניות משפחתיות'}</div>
+                        <div class="app-url">${window.location.hostname}</div>
+                    </div>
+                    
+                    <div class="banner-actions">
+                        <button class="install-btn">התקן</button>
+                        <button class="close-btn" aria-label="סגור">×</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(banner);
+            
+            // הצג את הבאנר אחרי רגע
+            setTimeout(() => {
+                banner.classList.add('show');
+            }, 100);
+            
+            // אירועי לחיצה
+            const installBtn = banner.querySelector('.install-btn');
+            const closeBtn = banner.querySelector('.close-btn');
+            
+            installBtn.addEventListener('click', async () => {
+                console.log('👆 User clicked install button');
+                
+                if (this.deferredPrompt) {
+                    try {
+                        // הסתר את הבאנר המותאם
+                        banner.classList.remove('show');
+                        
+                        // הצג את הפרומפט הנייטיב
+                        this.deferredPrompt.prompt();
+                        console.log('✅ Native prompt shown!');
+                        
+                        const { outcome } = await this.deferredPrompt.userChoice;
+                        
+                        if (outcome === 'accepted') {
+                            console.log('User accepted installation');
+                            localStorage.setItem('pwa-installed', 'true');
+                        } else {
+                            console.log('User dismissed installation');
+                            localStorage.setItem('pwa-prompt-dismissed', Date.now());
+                        }
+                        
+                        // הסר את הבאנר
+                        setTimeout(() => banner.remove(), 400);
+                        this.deferredPrompt = null;
+                        
+                    } catch (err) {
+                        console.error('Error showing prompt:', err);
+                    }
+                } else if (this.isIOS) {
+                    this.showIOSInstructions();
+                    banner.remove();
+                } else {
+                    console.log('No deferred prompt available');
+                    banner.remove();
+                }
+            });
+            
+            closeBtn.addEventListener('click', () => {
+                banner.classList.remove('show');
+                setTimeout(() => banner.remove(), 400);
+                localStorage.setItem('pwa-banner-dismissed', Date.now());
+            });
+            
+            // הסתר אוטומטית אחרי 15 שניות
+            setTimeout(() => {
+                if (banner.parentNode) {
+                    banner.classList.remove('show');
+                    setTimeout(() => banner.remove(), 400);
+                }
+            }, 15000);
+        }
+        
+        // יצירת טריגר לחיצה (Chrome דורש user gesture) - מוחלף בבאנר הנייטיבי
+        createClickTrigger() {
+            this.createNativeLikeBanner();
+        }
+        
         // קריאה בהתקנה מוצלחת
         onInstallSuccess() {
             // אפשר להציג הודעת תודה

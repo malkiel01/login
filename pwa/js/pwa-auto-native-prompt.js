@@ -204,17 +204,17 @@
                     #pwa-native-banner .banner-content {
                         display: flex;
                         align-items: center;
-                        padding: 12px 16px;
-                        gap: 12px;
-                        max-width: 600px;
+                        padding: 16px 20px;
+                        gap: 16px;
+                        max-width: 720px;
                         margin: 0 auto;
                     }
                     
                     #pwa-native-banner .app-icon {
-                        width: 36px;
-                        height: 36px;
-                        border-radius: 8px;
-                        box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+                        width: 48px;
+                        height: 48px;
+                        border-radius: 10px;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
                         overflow: hidden;
                         flex-shrink: 0;
                     }
@@ -231,22 +231,22 @@
                     }
                     
                     #pwa-native-banner .app-name {
-                        font-size: 14px;
+                        font-size: 16px;
                         font-weight: 600;
                         color: #202124;
                         white-space: nowrap;
                         overflow: hidden;
                         text-overflow: ellipsis;
-                        line-height: 1.3;
+                        line-height: 1.4;
                     }
                     
                     #pwa-native-banner .app-url {
-                        font-size: 12px;
+                        font-size: 13px;
                         color: #5f6368;
                         white-space: nowrap;
                         overflow: hidden;
                         text-overflow: ellipsis;
-                        margin-top: 2px;
+                        margin-top: 3px;
                     }
                     
                     #pwa-native-banner .banner-actions {
@@ -259,17 +259,19 @@
                         background: #1a73e8;
                         color: white;
                         border: none;
-                        padding: 8px 20px;
-                        border-radius: 4px;
-                        font-size: 14px;
+                        padding: 10px 24px;
+                        border-radius: 6px;
+                        font-size: 15px;
                         font-weight: 500;
                         cursor: pointer;
-                        transition: background 0.2s;
+                        transition: all 0.2s;
                         white-space: nowrap;
+                        box-shadow: 0 1px 3px rgba(26, 115, 232, 0.2);
                     }
                     
                     #pwa-native-banner .install-btn:hover {
                         background: #1557b0;
+                        box-shadow: 0 2px 6px rgba(26, 115, 232, 0.3);
                     }
                     
                     #pwa-native-banner .install-btn:active {
@@ -280,16 +282,21 @@
                         background: transparent;
                         border: none;
                         color: #5f6368;
-                        font-size: 20px;
+                        font-size: 24px;
                         cursor: pointer;
-                        padding: 4px;
+                        padding: 6px;
                         line-height: 1;
                         display: flex;
                         align-items: center;
                         justify-content: center;
+                        border-radius: 50%;
+                        transition: all 0.2s;
+                        width: 36px;
+                        height: 36px;
                     }
                     
                     #pwa-native-banner .close-btn:hover {
+                        background: rgba(0,0,0,0.06);
                         color: #202124;
                     }
                     
@@ -312,21 +319,21 @@
                     /* רספונסיב */
                     @media (max-width: 480px) {
                         #pwa-native-banner .banner-content {
-                            padding: 10px 12px;
+                            padding: 14px 16px;
                         }
                         
                         #pwa-native-banner .app-icon {
-                            width: 32px;
-                            height: 32px;
+                            width: 42px;
+                            height: 42px;
                         }
                         
                         #pwa-native-banner .app-name {
-                            font-size: 13px;
+                            font-size: 15px;
                         }
                         
                         #pwa-native-banner .install-btn {
-                            padding: 7px 16px;
-                            font-size: 13px;
+                            padding: 9px 20px;
+                            font-size: 14px;
                         }
                     }
                 </style>

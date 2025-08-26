@@ -1,6 +1,6 @@
 <?php
 /**
- * PWA Initialization File - Fixed Version
+ * PWA Initialization File - Flexible Version
  * תומך גם בבאנר נייטיב וגם בבאנר מותאם אישית
  * 
  * שימוש: 
@@ -62,7 +62,20 @@ function getPWAScripts($options = []) {
     
     $config = array_merge($defaults, $options);
     
-    // הגדרות לפי סוג הדף - רק אם לא נשלחו ערכים מותאמים
+    // הגדרות לפי סוג הדף
+    if ($config['page_type'] === 'login') {
+        $config['show_after_seconds'] = 5;
+        $config['minimum_visits'] = 1;
+        $config['title'] = 'התקן את האפליקציה! 📱';
+        $config['subtitle'] = 'גישה מהירה לרשימות הקניות שלך, גם בלי אינטרנט';
+    } elseif ($config['page_type'] === 'dashboard') {
+        $config['show_after_seconds'] = 10;
+        $config['minimum_visits'] = 2;
+        $config['title'] = 'הפוך את הדשבורד לאפליקציה! 🚀';
+        $config['subtitle'] = 'קבל התראות, עבוד אופליין וגישה מהירה מהמסך הראשי';
+    }
+
+    // הגדרות מיוחדות לפי סוג הדף - רק אם לא נשלחו ערכים מותאמים
     if ($config['page_type'] === 'login') {
         if (!isset($options['show_after_seconds'])) 
             $config['show_after_seconds'] = 5;
@@ -82,6 +95,8 @@ function getPWAScripts($options = []) {
         if (!isset($options['subtitle'])) 
             $config['subtitle'] = 'קבל התראות, עבוד אופליין וגישה מהירה מהמסך הראשי';
     }
+
+
     
     // Service Worker - תמיד נטען
     $html = '
@@ -127,12 +142,6 @@ function getNativeBannerScript($config) {
     <script src="/pwa/js/pwa-native-prompt.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            // בדיקה שאין כבר מנהל קיים
-            if (window.pwaPrompt) {
-                console.log("PWA: Native prompt already initialized");
-                return;
-            }
-            
             // הבאנר הנייטיב יופיע אוטומטית
             console.log("PWA: Using native banner");
             
@@ -155,30 +164,53 @@ function getNativeBannerScript($config) {
 /**
  * סקריפט לבאנר מותאם אישית
  */
+function getCustomBannerScript_not_work($config) {
+    return '
+    <!-- PWA Custom Banner -->
+    <script src="/pwa/js/pwa-install-manager.js"></script>
+    <script>
+        // מנע אתחול כפול - הקובץ כבר מאתחל את עצמו
+        document.addEventListener("DOMContentLoaded", function() {
+            // עדכן את ההגדרות של המנג׳ר הקיים
+            if (window.pwaInstallManager) {
+                // הסתר את הבאנר הקיים
+                window.pwaInstallManager.forceHide();
+                
+                // עדכן הגדרות
+                window.pwaInstallManager.config.title = "' . addslashes($config['title']) . '";
+                window.pwaInstallManager.config.subtitle = "' . addslashes($config['subtitle']) . '";
+                window.pwaInstallManager.config.icon = "' . addslashes($config['icon']) . '";
+                window.pwaInstallManager.config.showAfterSeconds = ' . $config['show_after_seconds'] . ';
+                window.pwaInstallManager.config.minimumVisits = ' . $config['minimum_visits'] . ';
+                
+                // בדוק שוב אם להציג
+                const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
+                const isInstalled = localStorage.getItem("pwa-installed") === "true";
+                
+                if (!isStandalone && !isInstalled && !window.pwaInstallManager.installDismissed) {
+                    setTimeout(() => {
+                        window.pwaInstallManager.forceShow();
+                    }, ' . $config['show_after_seconds'] . ' * 1000);
+                }
+                
+                console.log("PWA: Custom banner configured");
+            }
+        });
+    </script>
+    ';
+}
 function getCustomBannerScript($config) {
     return '
     <!-- PWA Custom Banner -->
     <script src="/pwa/js/pwa-install-manager.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            // בדיקה שאין כבר מנהל קיים
-            if (window.pwaInstallManager) {
-                console.log("PWA: Manager already exists, updating config");
-                // עדכן הגדרות במנהל קיים
-                window.pwaInstallManager.config.title = "' . addslashes($config['title']) . '";
-                window.pwaInstallManager.config.subtitle = "' . addslashes($config['subtitle']) . '";
-                window.pwaInstallManager.config.icon = "' . addslashes($config['icon']) . '";
-                window.pwaInstallManager.config.showAfterSeconds = ' . $config['show_after_seconds'] . ';
-                window.pwaInstallManager.config.minimumVisits = ' . $config['minimum_visits'] . ';
-                return;
-            }
-            
-            // בדיקה אם כבר מותקן
+            // יצירת המנהל - כי הוא לא נוצר אוטומטית
             const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
             const isInstalled = localStorage.getItem("pwa-installed") === "true";
             
             if (!isStandalone && !isInstalled) {
-                // צור את המנהל פעם אחת בלבד
+                // צור את המנהל עם ההגדרות
                 window.pwaInstallManager = new PWAInstallManager({
                     title: "' . addslashes($config['title']) . '",
                     subtitle: "' . addslashes($config['subtitle']) . '",
@@ -187,9 +219,7 @@ function getCustomBannerScript($config) {
                     minimumVisits: ' . $config['minimum_visits'] . '
                 });
                 
-                console.log("PWA: Custom banner created");
-            } else {
-                console.log("PWA: Already installed or in standalone mode");
+                console.log("PWA: Custom banner created and configured");
             }
         });
     </script>
@@ -203,12 +233,6 @@ function getInstallButtonScript() {
     return '
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            // בדוק אם כבר יש כפתור
-            if (document.getElementById("pwa-install-button")) {
-                console.log("PWA: Install button already exists");
-                return;
-            }
-            
             // יצירת כפתור התקנה
             const installBtn = document.createElement("button");
             installBtn.id = "pwa-install-button";

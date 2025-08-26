@@ -324,16 +324,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     </script>
     <!-- לפני </body> -->
     <!-- ?php echo getPWAScripts(['page_type' => 'login']); ? -->
-     <?php echo getPWAScripts([
+     <!-- < ?php echo getPWAScripts([
         'banner_type' => 'native',
         'page_type' => 'login'
-    ]); ?>
-    <!-- < ?php echo getPWAScripts([
+    ]); ?> -->
+    <?php echo getPWAScripts([
     'banner_type' => 'custom',
     'page_type' => 'login',
     'show_after_seconds' => 5,
     'title' => 'הפוך אותנו לאפליקציה!',
     'subtitle' => 'התקנה מהירה, גישה נוחה'
-    ]); ?> -->
+    ]); ?>
 </body>
 </html>

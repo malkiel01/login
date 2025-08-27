@@ -392,7 +392,7 @@
             } else {
                 // אם אין, טען את הסקריפט
                 const script = document.createElement('script');
-                script.src = '../debugs/console-debug.php';
+                script.src = './console-debug.php';
                 document.head.appendChild(script);
             }
         }
@@ -404,7 +404,7 @@
             const top = (screen.height - height) / 2;
             
             window.open(
-                '../debugs/notifications-debug.php',
+                './notifications-debug.php',
                 'NotificationDebugPanel',
                 `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
             );
@@ -416,7 +416,7 @@
                 window.PWADebugPopup.show();
             } else {
                 // טען את הסקריפט
-                fetch('../debugs/pwa-debug-popup.js')
+                fetch('./pwa-debug-popup.js')
                     .then(r => r.text())
                     .then(eval)
                     .then(() => {

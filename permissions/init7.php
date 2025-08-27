@@ -113,58 +113,51 @@ window.Permissions = {
                 return false;
             }
             
-            // יצירת אובייקט התראה
-            const notificationData = {
-                id: Date.now().toString(),
-                title: title,
-                body: (options && options.body) || "זו התראת בדיקה",
-                timestamp: Date.now(),
-                read: false,
-                url: (options && options.url) || null
-            };
-            
-            // שמירה ב-localStorage - החלק שהיה חסר!
-            let notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
-            notifications.unshift(notificationData);
-            
-            // הגבל ל-50 התראות אחרונות
-            if (notifications.length > 50) {
-                notifications = notifications.slice(0, 50);
-            }
-            
-            localStorage.setItem('notifications', JSON.stringify(notifications));
-            console.log('התראה נשמרה ב-localStorage:', notificationData);
-            
             // נסה דרך Service Worker אם זמין
             if ('serviceWorker' in navigator && 'PushManager' in window) {
                 const registration = await navigator.serviceWorker.getRegistration();
                 if (registration) {
                     // סגור התראות קודמות (אופציונלי)
-                    const existingNotifications = await registration.getNotifications();
-                    existingNotifications.forEach(n => n.close());
+                    const notifications = await registration.getNotifications();
+                    notifications.forEach(n => n.close());
                     
-                    // השתמש ב-Service Worker להצגת התראה
+                    // השתמש ב-Service Worker להצגת התראה עם קיבוץ
+                    const notificationId = Date.now();
                     await registration.showNotification(title, {
-                        body: notificationData.body,
+                        body: (options && options.body) || "זו התראת בדיקה",
                         icon: "/pwa/icons/android/android-launchericon-192-192.png",
                         badge: "/pwa/icons/android/android-launchericon-72-72.png",
                         vibrate: [200, 100, 200],
-                        tag: "msg-" + notificationData.id,
+                        tag: "msg-" + notificationId, // tag ייחודי לכל התראה
                         data: {
-                            id: notificationData.id,
-                            url: notificationData.url,
+                            id: notificationId,
                             time: new Date().toISOString()
                         },
                         requireInteraction: false,
                         renotify: true,
                         timestamp: Date.now(),
-                        silent: false,
-                        actions: [
-                            {action: 'view', title: 'צפה'},
-                            {action: 'close', title: 'סגור'}
-                        ]
+                        silent: false
                     });
                     
+                    // בדוק אם יש יותר מ-3 התראות ואז צור התראת סיכום
+                    const allNotifications = await registration.getNotifications();
+                    if (allNotifications.length > 3) {
+                        // סגור את כל ההתראות הישנות
+                        allNotifications.forEach(n => n.close());
+                        
+                        // צור התראת סיכום
+                        await registration.showNotification('יש לך ' + allNotifications.length + ' התראות חדשות', {
+                            body: 'לחץ לצפייה בכל ההתראות',
+                            icon: "/pwa/icons/android/android-launchericon-192-192.png",
+                            badge: "/pwa/icons/android/android-launchericon-72-72.png",
+                            tag: 'summary',
+                            renotify: true,
+                            data: {
+                                type: 'summary',
+                                count: allNotifications.length
+                            }
+                        });
+                    }
                     console.log("Notification shown via Service Worker");
                     return true;
                 }

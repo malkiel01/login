@@ -320,7 +320,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     <!-- סוף קוד בדיקת PWA לדשבורד -->
      <!-- ניהול ניתוב התחברות -->
      <?php echo getRedirectScript(); ?> 
-    <!-- < ?php echo getPermissionsScript(); ?> -->
+    <?php echo getPermissionsScript(); ?>
     <script>
         // קוד חכם שזוכר מתי ביקש בפעם האחרונה
         setTimeout(function() {

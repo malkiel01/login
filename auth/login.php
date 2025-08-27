@@ -266,7 +266,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
             }
         }, 3000);
     </script>
-    <script src="../permissions/debug-launcher.js"></script>
+
+
+        <!-- debugs -->
+    <script src="../debugs/debug-launcher.js"></script>
      <script>
         // בדיקה להרשאות שהכל נטען
         console.log('Checking Permissions object:', window.Permissions);
@@ -275,7 +278,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
         // בתחילת הדף או במקום שתרצה
         require_once '../debugs/console-debug.php';
     ?>
-    <!-- <script src="../debugs/pwa-debug-popup.js"></script> -->
+    <script src="../debugs/pwa-debug-popup.js"></script>
     
     <script>
         function switchTab(tab) {

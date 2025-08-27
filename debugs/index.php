@@ -392,7 +392,7 @@
             } else {
                 // אם אין, טען את הסקריפט
                 const script = document.createElement('script');
-                script.src = './console-debug.php';
+                script.src = 'console-debug.php';
                 document.head.appendChild(script);
             }
         }

@@ -207,6 +207,9 @@
     </style>
 </head>
 <body>
-111
+    <?php
+    require_once '../premissions/init.php';
+    ?>
+222
 </body>
 </html>

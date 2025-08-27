@@ -1,3 +1,7 @@
+<?php
+// debug-menu.php
+// שמור קובץ זה בתיקיית debugs
+?>
 <!DOCTYPE html>
 <html dir="rtl" lang="he">
 <head>
@@ -190,25 +194,6 @@
             border: 2px solid #f87171;
         }
 
-        /* Tooltip on hover */
-        .debug-button::after {
-            content: attr(data-name);
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.9);
-            color: #0f0;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 10px;
-            white-space: nowrap;
-            opacity: 0;
-            pointer-events: none;
-            transition: all 0.3s;
-            border: 1px solid #0f0;
-        }
-
         /* Badge למספר שגיאות */
         .debug-badge {
             position: absolute;
@@ -350,6 +335,22 @@
         </div>
     </div>
 
+    <!-- טעינת Console Debug ישירות -->
+    <?php
+    // בדוק אם הקובץ קיים ואז טען אותו
+    $console_debug_path = __DIR__ . '/console-debug.php';
+    if (file_exists($console_debug_path)) {
+        // הגדר שאנחנו רוצים להציג את הקונסול
+        if (!defined('SHOW_DEBUG_CONSOLE')) {
+            define('SHOW_DEBUG_CONSOLE', true);
+        }
+        include $console_debug_path;
+    }
+    ?>
+
+    <!-- טעינת PWA Debug Popup כ-script -->
+    <script src="pwa-debug-popup.js"></script>
+
     <script>
         // Toggle menu
         const debugMenu = document.getElementById('debugMenu');
@@ -381,19 +382,24 @@
 
         // Debug Functions
         function toggleConsoleDebug() {
-            // אם יש console debug קיים, הצג/הסתר אותו
+            // הקונסול כבר נטען, פשוט הצג/הסתר
             const consoleWindow = document.getElementById('console-debug-window');
+            const floatBtn = document.getElementById('console-float-btn');
+            const miniBar = document.getElementById('console-mini-bar');
+            
             if (consoleWindow) {
-                if (consoleWindow.style.display === 'none') {
+                if (consoleWindow.style.display === 'none' || consoleWindow.style.display === '') {
+                    // הצג את החלון
                     consoleWindow.style.display = 'flex';
+                    if (floatBtn) floatBtn.style.display = 'none';
+                    if (miniBar) miniBar.style.display = 'none';
                 } else {
+                    // הסתר את החלון
                     consoleWindow.style.display = 'none';
+                    if (floatBtn) floatBtn.style.display = 'block';
                 }
             } else {
-                // אם אין, טען את הסקריפט
-                const script = document.createElement('script');
-                script.src = '../debugs/console-debug.php';
-                document.head.appendChild(script);
+                console.error('Console Debug Window not found!');
             }
         }
 
@@ -403,33 +409,32 @@
             const left = (screen.width - width) / 2;
             const top = (screen.height - height) / 2;
             
+            // פתח בחלון חדש - הדפדפן יטפל בנתיב היחסי
             window.open(
-                '../debugs/notifications-debug.php',
+                'notifications-debug.php',
                 'NotificationDebugPanel',
                 `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
             );
         }
 
         function openPWADebug() {
-            // בדוק אם PWA Debug כבר נטען
+            // PWA Debug כבר נטען, פשוט הצג
             if (window.PWADebugPopup) {
                 window.PWADebugPopup.show();
             } else {
-                // טען את הסקריפט
-                fetch('../debugs/pwa-debug-popup.js')
-                    .then(r => r.text())
-                    .then(eval)
-                    .then(() => {
-                        if (window.PWADebugPopup) {
-                            window.PWADebugPopup.show();
-                        }
-                    });
+                console.error('PWA Debug not loaded!');
             }
         }
 
         function openStorageDebug() {
             // Storage Debug Modal
+            const existingModal = document.getElementById('storage-debug-modal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
             const modal = document.createElement('div');
+            modal.id = 'storage-debug-modal';
             modal.style.cssText = `
                 position: fixed;
                 top: 50%;
@@ -446,64 +451,111 @@
                 font-family: monospace;
             `;
             
-            const localStorageData = Object.keys(localStorage).map(key => 
-                `<div><strong>${key}:</strong> ${localStorage.getItem(key)}</div>`
-            ).join('');
+            // אסוף נתונים מ-localStorage
+            const localStorageData = Object.keys(localStorage).map(key => {
+                const value = localStorage.getItem(key);
+                const truncatedValue = value.length > 100 ? value.substring(0, 100) + '...' : value;
+                return `<div style="margin-bottom: 10px; padding: 5px; border-bottom: 1px solid #333;">
+                    <strong style="color: #fbbf24;">${key}:</strong><br>
+                    <span style="color: #fff; word-break: break-all;">${truncatedValue}</span>
+                </div>`;
+            }).join('');
             
             modal.innerHTML = `
-                <h2 style="margin-bottom: 20px;">💾 Storage Debug</h2>
-                <div style="max-height: 400px; overflow-y: auto; background: #111; padding: 10px; border-radius: 5px;">
-                    ${localStorageData || '<p>No data in localStorage</p>'}
+                <h2 style="margin-bottom: 20px; text-align: center;">💾 Storage Debug</h2>
+                <div style="display: flex; gap: 10px; margin-bottom: 15px; font-size: 14px;">
+                    <span>Items: ${Object.keys(localStorage).length}</span>
+                    <span>|</span>
+                    <span>Size: ~${new Blob(Object.values(localStorage)).size} bytes</span>
                 </div>
-                <button onclick="this.parentElement.remove()" style="
-                    margin-top: 20px;
-                    padding: 10px 20px;
-                    background: #f59e0b;
-                    color: #000;
-                    border: none;
-                    border-radius: 5px;
-                    cursor: pointer;
-                    font-weight: bold;
-                ">Close</button>
-                <button onclick="localStorage.clear(); location.reload();" style="
-                    margin-top: 20px;
-                    margin-left: 10px;
-                    padding: 10px 20px;
-                    background: #f00;
-                    color: #fff;
-                    border: none;
-                    border-radius: 5px;
-                    cursor: pointer;
-                    font-weight: bold;
-                ">Clear All</button>
+                <div style="max-height: 400px; overflow-y: auto; background: #111; padding: 10px; border-radius: 5px;">
+                    ${localStorageData || '<p style="text-align: center;">No data in localStorage</p>'}
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+                    <button onclick="this.parentElement.parentElement.remove()" style="
+                        padding: 10px 20px;
+                        background: #f59e0b;
+                        color: #000;
+                        border: none;
+                        border-radius: 5px;
+                        cursor: pointer;
+                        font-weight: bold;
+                    ">Close</button>
+                    <button onclick="if(confirm('Clear all localStorage?')) { localStorage.clear(); location.reload(); }" style="
+                        padding: 10px 20px;
+                        background: #f00;
+                        color: #fff;
+                        border: none;
+                        border-radius: 5px;
+                        cursor: pointer;
+                        font-weight: bold;
+                    ">Clear All</button>
+                </div>
             `;
             
             document.body.appendChild(modal);
         }
 
         function openNetworkDebug() {
+            // בדוק אם כבר פעיל
+            if (window.networkDebugActive) {
+                alert('Network Debug is already active!');
+                return;
+            }
+            
+            window.networkDebugActive = true;
+            
             // Network Monitor
             console.log('%c🌐 Network Debug Active', 'color: #ef4444; font-size: 16px; font-weight: bold;');
             
             // Monitor fetch requests
             const originalFetch = window.fetch;
             window.fetch = function(...args) {
-                console.log('%c📡 Fetch:', 'color: #ef4444; font-weight: bold;', args[0]);
+                const startTime = performance.now();
+                console.log('%c📡 Fetch Request:', 'color: #f59e0b; font-weight: bold;', {
+                    url: args[0],
+                    options: args[1] || {},
+                    timestamp: new Date().toLocaleTimeString()
+                });
+                
                 return originalFetch.apply(this, args)
                     .then(response => {
-                        console.log('%c✅ Response:', 'color: #10b981;', response.status);
+                        const duration = (performance.now() - startTime).toFixed(2);
+                        console.log('%c✅ Response:', 'color: #10b981; font-weight: bold;', {
+                            url: args[0],
+                            status: response.status,
+                            statusText: response.statusText,
+                            duration: `${duration}ms`,
+                            headers: response.headers
+                        });
                         return response;
                     })
                     .catch(error => {
-                        console.error('%c❌ Error:', 'color: #f00;', error);
+                        const duration = (performance.now() - startTime).toFixed(2);
+                        console.error('%c❌ Network Error:', 'color: #ef4444; font-weight: bold;', {
+                            url: args[0],
+                            error: error.message,
+                            duration: `${duration}ms`
+                        });
                         throw error;
                     });
             };
             
-            alert('Network monitoring activated! Check console for requests.');
+            // Monitor XMLHttpRequest
+            const originalXHR = window.XMLHttpRequest.prototype.open;
+            window.XMLHttpRequest.prototype.open = function(method, url, ...rest) {
+                console.log('%c📡 XHR Request:', 'color: #3b82f6; font-weight: bold;', {
+                    method,
+                    url,
+                    timestamp: new Date().toLocaleTimeString()
+                });
+                return originalXHR.apply(this, [method, url, ...rest]);
+            };
+            
+            alert('Network monitoring activated!\n\nCheck console for:\n• Fetch requests (orange)\n• XHR requests (blue)\n• Responses (green)\n• Errors (red)');
         }
 
-        // Monitor console errors
+        // Monitor console errors for badge
         window.addEventListener('error', () => {
             errorCount++;
             consoleBadge.textContent = errorCount;
@@ -513,6 +565,7 @@
         // Startup message
         console.log('%c🔧 Debug Menu Ready!', 'background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 10px 20px; border-radius: 5px; font-size: 16px; font-weight: bold;');
         console.log('%cPress Ctrl+Shift+D to toggle menu', 'color: #666; font-style: italic;');
+        console.log('%cAll debug tools loaded successfully!', 'color: #10b981; font-weight: bold;');
     </script>
 </body>
 </html>

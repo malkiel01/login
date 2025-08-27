@@ -451,15 +451,7 @@ define('DASHBOARD_PATH', __DIR__);
                 // שמור מתי ביקשנו
                 localStorage.setItem('last_notification_prompt', now);
             }
-        }, 3000); // 3 שניות
-        // // בקשה אוטומטית אחרי 3 שניות
-        // setTimeout(function() {
-        //     if (Notification.permission === "default") {
-        //         if (confirm('לאפשר התראות מהאתר?')) {
-        //             Permissions.requestNotificationPermission();
-        //         }
-        //     }
-        // }, 2000);
+        }, 2000); // 2 שניות
     </script>
     
 

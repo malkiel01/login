@@ -182,12 +182,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                      data-logo_alignment="left">
                 </div>
 
-                <!-- כפתורי הרשאות -->
-                <div style="margin-top: 20px;">
-                    <?php echo getPermissionsButtons(); ?>
-                </div>
-
-
                 <div class="forgot-password">
                     <a href="#">שכחת סיסמה?</a>
                 </div>

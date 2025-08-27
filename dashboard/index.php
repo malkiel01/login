@@ -398,5 +398,13 @@ define('DASHBOARD_PATH', __DIR__);
         // 'title' => 'הפוך אותנו לאפליקציה!',
         // 'subtitle' => 'התקנה מהירה, גישה נוחה'
     ]); ?>
+
+    <script src="/push/listener.js"></script>
+    <script>
+        // התחל מאזין אם לא רץ
+        if (window.PushListener && !PushListener.isRunning()) {
+            PushListener.start();
+        }
+    </script>
 </body>
 </html>

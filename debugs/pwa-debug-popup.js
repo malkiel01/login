@@ -551,15 +551,15 @@
             this.popup = popup;
         }
 
-        createFloatingButton() {
-            const button = document.createElement('button');
-            button.className = 'pwa-debug-float-btn';
-            button.innerHTML = '🧪';
-            button.onclick = () => this.toggle();
-            button.title = 'PWA Debug Tool (Ctrl+Shift+D)';
-            document.body.appendChild(button);
-            this.floatButton = button;
-        }
+        // createFloatingButton() {
+        //     const button = document.createElement('button');
+        //     button.className = 'pwa-debug-float-btn';
+        //     button.innerHTML = '🧪';
+        //     button.onclick = () => this.toggle();
+        //     button.title = 'PWA Debug Tool (Ctrl+Shift+D)';
+        //     document.body.appendChild(button);
+        //     this.floatButton = button;
+        // }
 
         attachEventListeners() {
             // Tab switching

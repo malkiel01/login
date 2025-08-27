@@ -233,382 +233,500 @@ if (SHOW_DEBUG_CONSOLE):
 </style>
 
 <script>
-(function() {
-    // Save original console functions
-    const originalLog = console.log;
-    const originalError = console.error;
-    const originalWarn = console.warn;
-    const originalInfo = console.info;
-    
-    const debugOutput = document.getElementById('console-output');
-    let logCounter = 0;
-    let errorCount = 0;  // Define errorCount here in the closure
-    
-    // Make errorCount accessible globally for the functions
-    window.consoleDebugErrorCount = 0;
-    
-    // Add message to debug window
-    function addToDebugWindow(type, args) {
-        if (!debugOutput) return;
+    (function() {
+        // Save original console functions
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        const originalInfo = console.info;
         
-        logCounter++;
-        if (type === 'error') {
-            window.consoleDebugErrorCount++;
+        const debugOutput = document.getElementById('console-output');
+        let logCounter = 0;
+        let errorCount = 0;  // Define errorCount here in the closure
+        
+        // Make errorCount accessible globally for the functions
+        window.consoleDebugErrorCount = 0;
+        
+        // Add message to debug window
+        function addToDebugWindow(type, args) {
+            if (!debugOutput) return;
+            
+            logCounter++;
+            if (type === 'error') {
+                window.consoleDebugErrorCount++;
+            }
+            
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            
+            // Colors by type
+            const colors = {
+                log: '#fff',
+                error: '#f44',
+                warn: '#fa0',
+                info: '#08f',
+                success: '#0f0'
+            };
+            
+            entry.style.cssText = `
+                color: ${colors[type] || '#fff'};
+                padding: 4px;
+                border-bottom: 1px solid #222;
+                margin-bottom: 2px;
+                font-size: 11px;
+                cursor: text;
+                user-select: text;
+                -webkit-user-select: text;
+            `;
+            
+            // Add long press event for mobile
+            let pressTimer;
+            entry.addEventListener('touchstart', function(e) {
+                pressTimer = setTimeout(() => {
+                    selectText(entry);
+                    showCopyTooltip(e.touches[0].clientX, e.touches[0].clientY);
+                }, 500);
+            });
+            
+            entry.addEventListener('touchend', function() {
+                clearTimeout(pressTimer);
+            });
+            
+            entry.addEventListener('touchmove', function() {
+                clearTimeout(pressTimer);
+            });
+            
+            // Double click to select on desktop
+            entry.addEventListener('dblclick', function() {
+                selectText(entry);
+            });
+            
+            // Type indicators
+            const typeLabel = {
+                log: '›',
+                error: '✕',
+                warn: '⚠',
+                info: 'ℹ'
+            }[type] || '›';
+            
+            // Convert arguments to text
+            const message = Array.from(args).map(arg => {
+                if (typeof arg === 'object') {
+                    try {
+                        return JSON.stringify(arg, null, 2);
+                    } catch (e) {
+                        return String(arg);
+                    }
+                }
+                return String(arg);
+            }).join(' ');
+            
+            entry.innerHTML = `<span style="color: #666;">${timestamp}</span> ${typeLabel} ${escapeHtml(message)}`;
+            
+            debugOutput.appendChild(entry);
+            debugOutput.scrollTop = debugOutput.scrollHeight;
+            
+            // Update mini bar count
+            updateMiniBarCount();
+            
+            // Limit messages
+            if (debugOutput.children.length > 100) {
+                debugOutput.removeChild(debugOutput.firstChild);
+            }
         }
         
-        const timestamp = new Date().toLocaleTimeString();
-        const entry = document.createElement('div');
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
         
-        // Colors by type
-        const colors = {
-            log: '#fff',
-            error: '#f44',
-            warn: '#fa0',
-            info: '#08f',
-            success: '#0f0'
+        // Override console functions
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToDebugWindow('log', args);
         };
         
-        entry.style.cssText = `
-            color: ${colors[type] || '#fff'};
-            padding: 4px;
-            border-bottom: 1px solid #222;
-            margin-bottom: 2px;
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToDebugWindow('error', args);
+        };
+        
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            addToDebugWindow('warn', args);
+        };
+        
+        console.info = function(...args) {
+            originalInfo.apply(console, args);
+            addToDebugWindow('info', args);
+        };
+        
+        // Catch global errors
+        window.addEventListener('error', function(event) {
+            addToDebugWindow('error', [`${event.message} at ${event.filename}:${event.lineno}`]);
+        });
+        
+        // Catch promise rejections
+        window.addEventListener('unhandledrejection', function(event) {
+            addToDebugWindow('error', [`Unhandled Promise: ${event.reason}`]);
+        });
+        
+        // Initial message
+        console.log('Console Debug Ready');
+        
+        // Make draggable
+        let isDragging = false;
+        let currentX;
+        let currentY;
+        let initialX;
+        let initialY;
+        let xOffset = 0;
+        let yOffset = 0;
+        
+        const debugWindow = document.getElementById('console-debug-window');
+        const header = document.getElementById('console-header');
+        
+        if (header) {
+            header.addEventListener('touchstart', dragStart, {passive: false});
+            header.addEventListener('touchmove', drag, {passive: false});
+            header.addEventListener('touchend', dragEnd, {passive: false});
+            
+            header.addEventListener('mousedown', dragStart);
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', dragEnd);
+        }
+        
+        function dragStart(e) {
+            if (e.type === "touchstart") {
+                initialX = e.touches[0].clientX - xOffset;
+                initialY = e.touches[0].clientY - yOffset;
+            } else {
+                initialX = e.clientX - xOffset;
+                initialY = e.clientY - yOffset;
+            }
+            
+            if (e.target === header || e.target.parentNode === header) {
+                isDragging = true;
+            }
+        }
+        
+        function drag(e) {
+            if (isDragging) {
+                e.preventDefault();
+                
+                if (e.type === "touchmove") {
+                    currentX = e.touches[0].clientX - initialX;
+                    currentY = e.touches[0].clientY - initialY;
+                } else {
+                    currentX = e.clientX - initialX;
+                    currentY = e.clientY - initialY;
+                }
+                
+                xOffset = currentX;
+                yOffset = currentY;
+                
+                debugWindow.style.transform = `translate(${currentX}px, ${currentY}px)`;
+            }
+        }
+        
+        function dragEnd(e) {
+            initialX = currentX;
+            initialY = currentY;
+            isDragging = false;
+        }
+    })();
+
+    // === Mini Bar Drag & Persist ===
+    (function () {
+    const miniBar = document.getElementById('console-mini-bar');
+    if (!miniBar) return;
+
+    // שחזור מיקום אם נשמר
+    try {
+        const saved = localStorage.getItem('consoleMiniBarPos');
+        if (saved) {
+        const pos = JSON.parse(saved);
+        miniBar.style.left = (pos.left ?? 0) + 'px';
+        miniBar.style.top  = (pos.top  ?? 0) + 'px';
+        miniBar.style.right = 'auto';
+        miniBar.style.bottom = 'auto';
+        }
+    } catch (e) {}
+
+    let dragging = false;
+    let startX = 0, startY = 0;     // נקודת איסוף העכבר/מגע
+    let offsetX = 0, offsetY = 0;   // היסט יחסית לקצה ה-mini bar
+    let moved = false;
+
+    function pointerPos(e) {
+        if (e.touches && e.touches[0]) {
+        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        }
+        return { x: e.clientX, y: e.clientY };
+    }
+
+    function clamp(val, min, max) { return Math.max(min, Math.min(max, val)); }
+
+    function dragStart(e) {
+        // כדי למנוע פתיחה בקליק בזמן גרירה
+        moved = false;
+
+        const { x, y } = pointerPos(e);
+        const rect = miniBar.getBoundingClientRect();
+
+        // עבור גרירה חופשית – נשתמש left/top וננטרל right/bottom
+        miniBar.style.left = rect.left + 'px';
+        miniBar.style.top  = rect.top  + 'px';
+        miniBar.style.right = 'auto';
+        miniBar.style.bottom = 'auto';
+
+        // באיזה נקודה בתוך האלמנט נתפסנו
+        offsetX = x - rect.left;
+        offsetY = y - rect.top;
+
+        startX = x; startY = y;
+        dragging = true;
+
+        // למנוע בחירה/גלילה תוך כדי
+        e.preventDefault && e.preventDefault();
+    }
+
+    function dragMove(e) {
+        if (!dragging) return;
+
+        const { x, y } = pointerPos(e);
+
+        // אם זזנו יותר מכמה פיקסלים – נחשב כגרירה
+        if (!moved && (Math.abs(x - startX) > 3 || Math.abs(y - startY) > 3)) {
+        moved = true;
+        // סמן זמני כדי שהלחיצה לא תפתח את הקונסול
+        miniBar.dataset.dragging = '1';
+        }
+
+        // חישוב מיקום ממורכז למסך
+        const newLeft = clamp(x - offsetX, 0, window.innerWidth  - miniBar.offsetWidth);
+        const newTop  = clamp(y - offsetY, 0, window.innerHeight - miniBar.offsetHeight);
+
+        miniBar.style.left = newLeft + 'px';
+        miniBar.style.top  = newTop  + 'px';
+
+        // נשמור כל כמה תזוזות (פה שומרים בכל move – פשוט ויעיל)
+        try {
+        localStorage.setItem('consoleMiniBarPos', JSON.stringify({ left: newLeft, top: newTop }));
+        } catch (e2) {}
+
+        e.preventDefault && e.preventDefault();
+    }
+
+    function dragEnd() {
+        if (dragging) {
+        // הסרת הדגל אחרי טיק קצר – כדי שלחיצת השחרור לא תחשב "קליק לפתיחה"
+        setTimeout(() => { miniBar.dataset.dragging = '0'; }, 0);
+        }
+        dragging = false;
+    }
+
+    // עכבר
+    miniBar.addEventListener('mousedown', dragStart);
+    document.addEventListener('mousemove', dragMove);
+    document.addEventListener('mouseup', dragEnd);
+
+    // מגע
+    miniBar.addEventListener('touchstart', dragStart, { passive: false });
+    document.addEventListener('touchmove', dragMove, { passive: false });
+    document.addEventListener('touchend', dragEnd, { passive: false });
+
+    // מניעת פתיחה כאשר הייתה גרירה
+    const originalOnClick = miniBar.onclick;
+    miniBar.onclick = function (e) {
+        if (miniBar.dataset.dragging === '1') {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+        }
+        if (typeof originalOnClick === 'function') {
+        return originalOnClick.call(this, e);
+        }
+        // אם אין handler אחר – נקרא לפונקציית הפתיחה הקיימת
+        if (typeof expandConsole === 'function') {
+        expandConsole();
+        }
+    };
+    })();
+
+    // Global functions
+    function copyConsoleContent() {
+        const output = document.getElementById('console-output');
+        const text = output.innerText || output.textContent;
+        
+        if (!text) {
+            console.log('Nothing to copy');
+            return;
+        }
+        
+        // Try modern clipboard API first
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(() => {
+                showNotification('Copied to clipboard! ✓', '#0f0');
+            }).catch(err => {
+                fallbackCopy(text);
+            });
+        } else {
+            fallbackCopy(text);
+        }
+    }
+
+    function fallbackCopy(text) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        
+        try {
+            document.execCommand('copy');
+            showNotification('Copied to clipboard! ✓', '#0f0');
+        } catch (err) {
+            showNotification('Copy failed! Select text manually', '#f44');
+        }
+        
+        document.body.removeChild(textarea);
+    }
+
+    function selectText(element) {
+        const selection = window.getSelection();
+        const range = document.createRange();
+        range.selectNodeContents(element);
+        selection.removeAllRanges();
+        selection.addRange(range);
+    }
+
+    function showCopyTooltip(x, y) {
+        const tooltip = document.createElement('div');
+        tooltip.textContent = 'Text selected - Copy with Ctrl+C';
+        tooltip.style.cssText = `
+            position: fixed;
+            left: ${x}px;
+            top: ${y - 40}px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
             font-size: 11px;
-            cursor: text;
-            user-select: text;
-            -webkit-user-select: text;
+            z-index: 10001;
+            pointer-events: none;
+        `;
+        document.body.appendChild(tooltip);
+        
+        setTimeout(() => {
+            tooltip.remove();
+        }, 2000);
+    }
+
+    function showNotification(message, color) {
+        const notification = document.createElement('div');
+        notification.textContent = message;
+        notification.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(26, 26, 26, 0.95);
+            color: ${color || '#fff'};
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 2px solid ${color || '#333'};
+            font-size: 14px;
+            z-index: 10002;
+            animation: fadeInOut 2s ease;
         `;
         
-        // Add long press event for mobile
-        let pressTimer;
-        entry.addEventListener('touchstart', function(e) {
-            pressTimer = setTimeout(() => {
-                selectText(entry);
-                showCopyTooltip(e.touches[0].clientX, e.touches[0].clientY);
-            }, 500);
-        });
+        document.body.appendChild(notification);
         
-        entry.addEventListener('touchend', function() {
-            clearTimeout(pressTimer);
-        });
-        
-        entry.addEventListener('touchmove', function() {
-            clearTimeout(pressTimer);
-        });
-        
-        // Double click to select on desktop
-        entry.addEventListener('dblclick', function() {
-            selectText(entry);
-        });
-        
-        // Type indicators
-        const typeLabel = {
-            log: '›',
-            error: '✕',
-            warn: '⚠',
-            info: 'ℹ'
-        }[type] || '›';
-        
-        // Convert arguments to text
-        const message = Array.from(args).map(arg => {
-            if (typeof arg === 'object') {
-                try {
-                    return JSON.stringify(arg, null, 2);
-                } catch (e) {
-                    return String(arg);
-                }
-            }
-            return String(arg);
-        }).join(' ');
-        
-        entry.innerHTML = `<span style="color: #666;">${timestamp}</span> ${typeLabel} ${escapeHtml(message)}`;
-        
-        debugOutput.appendChild(entry);
-        debugOutput.scrollTop = debugOutput.scrollHeight;
-        
-        // Update mini bar count
+        setTimeout(() => {
+            notification.remove();
+        }, 2000);
+    }
+
+    function clearConsoleDebug() {
+        document.getElementById('console-output').innerHTML = '';
+        window.consoleDebugErrorCount = 0;
         updateMiniBarCount();
-        
-        // Limit messages
-        if (debugOutput.children.length > 100) {
-            debugOutput.removeChild(debugOutput.firstChild);
-        }
+        console.log('Console cleared');
     }
-    
-    // Escape HTML
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
+
+    function closeConsoleDebug() {
+        document.getElementById('console-debug-window').style.display = 'none';
+        document.getElementById('console-float-btn').style.display = 'block';
     }
-    
-    // Override console functions
-    console.log = function(...args) {
-        originalLog.apply(console, args);
-        addToDebugWindow('log', args);
-    };
-    
-    console.error = function(...args) {
-        originalError.apply(console, args);
-        addToDebugWindow('error', args);
-    };
-    
-    console.warn = function(...args) {
-        originalWarn.apply(console, args);
-        addToDebugWindow('warn', args);
-    };
-    
-    console.info = function(...args) {
-        originalInfo.apply(console, args);
-        addToDebugWindow('info', args);
-    };
-    
-    // Catch global errors
-    window.addEventListener('error', function(event) {
-        addToDebugWindow('error', [`${event.message} at ${event.filename}:${event.lineno}`]);
-    });
-    
-    // Catch promise rejections
-    window.addEventListener('unhandledrejection', function(event) {
-        addToDebugWindow('error', [`Unhandled Promise: ${event.reason}`]);
-    });
-    
-    // Initial message
-    console.log('Console Debug Ready');
-    
-    // Make draggable
-    let isDragging = false;
-    let currentX;
-    let currentY;
-    let initialX;
-    let initialY;
-    let xOffset = 0;
-    let yOffset = 0;
-    
-    const debugWindow = document.getElementById('console-debug-window');
-    const header = document.getElementById('console-header');
-    
-    if (header) {
-        header.addEventListener('touchstart', dragStart, {passive: false});
-        header.addEventListener('touchmove', drag, {passive: false});
-        header.addEventListener('touchend', dragEnd, {passive: false});
-        
-        header.addEventListener('mousedown', dragStart);
-        document.addEventListener('mousemove', drag);
-        document.addEventListener('mouseup', dragEnd);
+
+    function minimizeConsole() {
+        document.getElementById('console-debug-window').style.display = 'none';
+        document.getElementById('console-mini-bar').style.display = 'flex';
     }
-    
-    function dragStart(e) {
-        if (e.type === "touchstart") {
-            initialX = e.touches[0].clientX - xOffset;
-            initialY = e.touches[0].clientY - yOffset;
-        } else {
-            initialX = e.clientX - xOffset;
-            initialY = e.clientY - yOffset;
-        }
-        
-        if (e.target === header || e.target.parentNode === header) {
-            isDragging = true;
-        }
+
+    function expandConsole() {
+        document.getElementById('console-debug-window').style.display = 'flex';
+        document.getElementById('console-mini-bar').style.display = 'none';
+        window.consoleDebugErrorCount = 0;
+        updateMiniBarCount();
     }
-    
-    function drag(e) {
-        if (isDragging) {
-            e.preventDefault();
-            
-            if (e.type === "touchmove") {
-                currentX = e.touches[0].clientX - initialX;
-                currentY = e.touches[0].clientY - initialY;
-            } else {
-                currentX = e.clientX - initialX;
-                currentY = e.clientY - initialY;
-            }
-            
-            xOffset = currentX;
-            yOffset = currentY;
-            
-            debugWindow.style.transform = `translate(${currentX}px, ${currentY}px)`;
-        }
+
+    function showConsoleDebug() {
+        document.getElementById('console-debug-window').style.display = 'flex';
+        document.getElementById('console-float-btn').style.display = 'none';
+        document.getElementById('console-mini-bar').style.display = 'none';
     }
-    
-    function dragEnd(e) {
-        initialX = currentX;
-        initialY = currentY;
-        isDragging = false;
-    }
-})();
 
-// Global functions
-function copyConsoleContent() {
-    const output = document.getElementById('console-output');
-    const text = output.innerText || output.textContent;
-    
-    if (!text) {
-        console.log('Nothing to copy');
-        return;
-    }
-    
-    // Try modern clipboard API first
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(() => {
-            showNotification('Copied to clipboard! ✓', '#0f0');
-        }).catch(err => {
-            fallbackCopy(text);
-        });
-    } else {
-        fallbackCopy(text);
-    }
-}
-
-function fallbackCopy(text) {
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    textarea.style.position = 'fixed';
-    textarea.style.opacity = '0';
-    document.body.appendChild(textarea);
-    textarea.select();
-    
-    try {
-        document.execCommand('copy');
-        showNotification('Copied to clipboard! ✓', '#0f0');
-    } catch (err) {
-        showNotification('Copy failed! Select text manually', '#f44');
-    }
-    
-    document.body.removeChild(textarea);
-}
-
-function selectText(element) {
-    const selection = window.getSelection();
-    const range = document.createRange();
-    range.selectNodeContents(element);
-    selection.removeAllRanges();
-    selection.addRange(range);
-}
-
-function showCopyTooltip(x, y) {
-    const tooltip = document.createElement('div');
-    tooltip.textContent = 'Text selected - Copy with Ctrl+C';
-    tooltip.style.cssText = `
-        position: fixed;
-        left: ${x}px;
-        top: ${y - 40}px;
-        background: rgba(0,0,0,0.8);
-        color: white;
-        padding: 5px 10px;
-        border-radius: 4px;
-        font-size: 11px;
-        z-index: 10001;
-        pointer-events: none;
-    `;
-    document.body.appendChild(tooltip);
-    
-    setTimeout(() => {
-        tooltip.remove();
-    }, 2000);
-}
-
-function showNotification(message, color) {
-    const notification = document.createElement('div');
-    notification.textContent = message;
-    notification.style.cssText = `
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: rgba(26, 26, 26, 0.95);
-        color: ${color || '#fff'};
-        padding: 10px 20px;
-        border-radius: 8px;
-        border: 2px solid ${color || '#333'};
-        font-size: 14px;
-        z-index: 10002;
-        animation: fadeInOut 2s ease;
-    `;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.remove();
-    }, 2000);
-}
-
-function clearConsoleDebug() {
-    document.getElementById('console-output').innerHTML = '';
-    window.consoleDebugErrorCount = 0;
-    updateMiniBarCount();
-    console.log('Console cleared');
-}
-
-function closeConsoleDebug() {
-    document.getElementById('console-debug-window').style.display = 'none';
-    document.getElementById('console-float-btn').style.display = 'block';
-}
-
-function minimizeConsole() {
-    document.getElementById('console-debug-window').style.display = 'none';
-    document.getElementById('console-mini-bar').style.display = 'flex';
-}
-
-function expandConsole() {
-    document.getElementById('console-debug-window').style.display = 'flex';
-    document.getElementById('console-mini-bar').style.display = 'none';
-    window.consoleDebugErrorCount = 0;
-    updateMiniBarCount();
-}
-
-function showConsoleDebug() {
-    document.getElementById('console-debug-window').style.display = 'flex';
-    document.getElementById('console-float-btn').style.display = 'none';
-    document.getElementById('console-mini-bar').style.display = 'none';
-}
-
-function handleConsoleInput(event) {
-    if (event.key === 'Enter') {
-        const input = event.target;
-        const command = input.value.trim();
-        if (command) {
-            console.log('> ' + command);
-            try {
-                const result = eval(command);
-                if (result !== undefined) {
-                    console.log('< ', result);
+    function handleConsoleInput(event) {
+        if (event.key === 'Enter') {
+            const input = event.target;
+            const command = input.value.trim();
+            if (command) {
+                console.log('> ' + command);
+                try {
+                    const result = eval(command);
+                    if (result !== undefined) {
+                        console.log('< ', result);
+                    }
+                } catch (e) {
+                    console.error('Error: ' + e.message);
                 }
-            } catch (e) {
-                console.error('Error: ' + e.message);
+                input.value = '';
             }
-            input.value = '';
         }
     }
-}
 
-function updateMiniBarCount() {
-    const countEl = document.getElementById('mini-bar-count');
-    if (countEl && window.consoleDebugErrorCount > 0) {
-        countEl.textContent = window.consoleDebugErrorCount;
-        countEl.style.display = 'inline-block';
-    } else if (countEl) {
-        countEl.style.display = 'none';
-    }
-}
-
-// Keyboard shortcuts
-document.addEventListener('keydown', function(e) {
-    // Ctrl+` - toggle console
-    if (e.ctrlKey && e.key === '`') {
-        const debugWindow = document.getElementById('console-debug-window');
-        if (debugWindow.style.display === 'none') {
-            showConsoleDebug();
-        } else {
-            closeConsoleDebug();
+    function updateMiniBarCount() {
+        const countEl = document.getElementById('mini-bar-count');
+        if (countEl && window.consoleDebugErrorCount > 0) {
+            countEl.textContent = window.consoleDebugErrorCount;
+            countEl.style.display = 'inline-block';
+        } else if (countEl) {
+            countEl.style.display = 'none';
         }
     }
-    
-    // Ctrl+Shift+C - copy console content
-    if (e.ctrlKey && e.shiftKey && e.key === 'C') {
-        copyConsoleContent();
-    }
-});
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // Ctrl+` - toggle console
+        if (e.ctrlKey && e.key === '`') {
+            const debugWindow = document.getElementById('console-debug-window');
+            if (debugWindow.style.display === 'none') {
+                showConsoleDebug();
+            } else {
+                closeConsoleDebug();
+            }
+        }
+        
+        // Ctrl+Shift+C - copy console content
+        if (e.ctrlKey && e.shiftKey && e.key === 'C') {
+            copyConsoleContent();
+        }
+    });
 </script>
 
 <?php endif; // End of SHOW_DEBUG_CONSOLE check ?>

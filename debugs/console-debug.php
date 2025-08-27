@@ -438,7 +438,8 @@ if (SHOW_DEBUG_CONSOLE):
         }
     })();
 
-    // === Mini Bar Drag & Persist ===
+
+    // === Mini Bar Drag & Persist (fixed) ===
     (function () {
     const miniBar = document.getElementById('console-mini-bar');
     if (!miniBar) return;
@@ -448,16 +449,17 @@ if (SHOW_DEBUG_CONSOLE):
         const saved = localStorage.getItem('consoleMiniBarPos');
         if (saved) {
         const pos = JSON.parse(saved);
-        miniBar.style.left = (pos.left ?? 0) + 'px';
-        miniBar.style.top  = (pos.top  ?? 0) + 'px';
+        miniBar.style.left = (pos.left ?? 20) + 'px';
+        miniBar.style.top  = (pos.top  ?? (window.innerHeight - miniBar.offsetHeight - 20)) + 'px';
         miniBar.style.right = 'auto';
         miniBar.style.bottom = 'auto';
+        miniBar.style.position = 'fixed';
         }
     } catch (e) {}
 
     let dragging = false;
-    let startX = 0, startY = 0;     // נקודת איסוף העכבר/מגע
-    let offsetX = 0, offsetY = 0;   // היסט יחסית לקצה ה-mini bar
+    let startX = 0, startY = 0;
+    let offsetX = 0, offsetY = 0;
     let moved = false;
 
     function pointerPos(e) {
@@ -470,49 +472,47 @@ if (SHOW_DEBUG_CONSOLE):
     function clamp(val, min, max) { return Math.max(min, Math.min(max, val)); }
 
     function dragStart(e) {
-        // כדי למנוע פתיחה בקליק בזמן גרירה
         moved = false;
-
         const { x, y } = pointerPos(e);
         const rect = miniBar.getBoundingClientRect();
 
-        // עבור גרירה חופשית – נשתמש left/top וננטרל right/bottom
+        // נעילה על גודל קיים כדי שלא "ישנה גודל" בזמן גרירה
+        miniBar.style.width  = rect.width  + 'px';
+        miniBar.style.height = rect.height + 'px';
+
+        // מעבר ל־left/top חופשיים
+        miniBar.style.position = 'fixed';
         miniBar.style.left = rect.left + 'px';
         miniBar.style.top  = rect.top  + 'px';
         miniBar.style.right = 'auto';
         miniBar.style.bottom = 'auto';
+        miniBar.style.userSelect = 'none';
 
-        // באיזה נקודה בתוך האלמנט נתפסנו
         offsetX = x - rect.left;
         offsetY = y - rect.top;
 
         startX = x; startY = y;
         dragging = true;
 
-        // למנוע בחירה/גלילה תוך כדי
         e.preventDefault && e.preventDefault();
     }
 
     function dragMove(e) {
         if (!dragging) return;
-
         const { x, y } = pointerPos(e);
 
-        // אם זזנו יותר מכמה פיקסלים – נחשב כגרירה
         if (!moved && (Math.abs(x - startX) > 3 || Math.abs(y - startY) > 3)) {
         moved = true;
-        // סמן זמני כדי שהלחיצה לא תפתח את הקונסול
         miniBar.dataset.dragging = '1';
         }
 
-        // חישוב מיקום ממורכז למסך
         const newLeft = clamp(x - offsetX, 0, window.innerWidth  - miniBar.offsetWidth);
         const newTop  = clamp(y - offsetY, 0, window.innerHeight - miniBar.offsetHeight);
 
         miniBar.style.left = newLeft + 'px';
         miniBar.style.top  = newTop  + 'px';
 
-        // נשמור כל כמה תזוזות (פה שומרים בכל move – פשוט ויעיל)
+        // שמירת מיקום
         try {
         localStorage.setItem('consoleMiniBarPos', JSON.stringify({ left: newLeft, top: newTop }));
         } catch (e2) {}
@@ -522,10 +522,13 @@ if (SHOW_DEBUG_CONSOLE):
 
     function dragEnd() {
         if (dragging) {
-        // הסרת הדגל אחרי טיק קצר – כדי שלחיצת השחרור לא תחשב "קליק לפתיחה"
+        // שחרור דגל הגרירה אחרי טיק כדי שקליק השחרור לא יפתח
         setTimeout(() => { miniBar.dataset.dragging = '0'; }, 0);
         }
         dragging = false;
+        miniBar.style.userSelect = '';
+        // השארת width/height מקובע זה בסדר – שומר יציבות. אם תרצה להחזיר לדינמי:
+        // miniBar.style.width = ''; miniBar.style.height = '';
     }
 
     // עכבר
@@ -538,23 +541,24 @@ if (SHOW_DEBUG_CONSOLE):
     document.addEventListener('touchmove', dragMove, { passive: false });
     document.addEventListener('touchend', dragEnd, { passive: false });
 
-    // מניעת פתיחה כאשר הייתה גרירה
-    const originalOnClick = miniBar.onclick;
-    miniBar.onclick = function (e) {
+    // פתיחה רק בדאבל-קליק (לא בקליק רגיל)
+    miniBar.addEventListener('click', function (e) {
+        // אם הייתה גרירה – אין פתיחה בקליק
         if (miniBar.dataset.dragging === '1') {
-        e.preventDefault();
-        e.stopPropagation();
-        return;
+        e.preventDefault(); e.stopPropagation(); return;
         }
-        if (typeof originalOnClick === 'function') {
-        return originalOnClick.call(this, e);
-        }
-        // אם אין handler אחר – נקרא לפונקציית הפתיחה הקיימת
+        // קליק רגיל לא עושה כלום
+    });
+
+    miniBar.addEventListener('dblclick', function (e) {
+        if (miniBar.dataset.dragging === '1') return;
         if (typeof expandConsole === 'function') {
         expandConsole();
         }
-    };
+    });
     })();
+
+
 
     // Global functions
     function copyConsoleContent() {

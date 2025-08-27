@@ -399,7 +399,7 @@ define('DASHBOARD_PATH', __DIR__);
         // 'subtitle' => 'התקנה מהירה, גישה נוחה'
     ]); ?>
 
-    <script src="/push/listener.js"></script>
+    <script src="../push/listener.js"></script>
     <script>
         // התחל מאזין אם לא רץ
         if (window.PushListener && !PushListener.isRunning()) {

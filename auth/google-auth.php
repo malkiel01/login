@@ -121,7 +121,7 @@ try {
         $user_name = $name;
     }
     
-    // הגדרת סשן
+    // אחרי הגדרת הסשן בהצלחה
     $_SESSION['user_id'] = $user_id;
     $_SESSION['username'] = $username;
     $_SESSION['name'] = $user_name;
@@ -129,6 +129,37 @@ try {
     $_SESSION['profile_picture'] = $picture;
     $_SESSION['auth_type'] = 'google';
     $_SESSION['login_time'] = time();
+    $_SESSION['is_pwa'] = true;  // הוסף זאת
+    $_SESSION['session_lifetime'] = 2592000;  // 30 ימים
+
+    // יצירת טוקן זכירה גם ל-Google Auth
+    $rememberToken = bin2hex(random_bytes(32));
+    $updateStmt = $pdo->prepare("
+        UPDATE users 
+        SET remember_token = ?,
+            remember_expiry = DATE_ADD(NOW(), INTERVAL 30 DAY)
+        WHERE id = ?
+    ");
+    $updateStmt->execute([$rememberToken, $user_id]);
+
+    setcookie(
+        'remember_token', 
+        $rememberToken,
+        time() + 2592000,
+        '/',
+        $_SERVER['HTTP_HOST'],
+        true,
+        true
+    );
+
+    // // הגדרת סשן
+    // $_SESSION['user_id'] = $user_id;
+    // $_SESSION['username'] = $username;
+    // $_SESSION['name'] = $user_name;
+    // $_SESSION['email'] = $email;
+    // $_SESSION['profile_picture'] = $picture;
+    // $_SESSION['auth_type'] = 'google';
+    // $_SESSION['login_time'] = time();
     
     // החזרת תגובה
     echo json_encode([

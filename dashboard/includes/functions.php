@@ -218,7 +218,176 @@ function updateLastActivity() {
 /**
  * בדיקת timeout של סשן
  */
-function checkSessionTimeout($maxIdleTime = 7200) { // 2 שעות
+function checkSessionTimeout3($maxIdleTime = null) {
+    // קבלת זמן timeout לפי סוג הסשן
+    if ($maxIdleTime === null) {
+        $maxIdleTime = $_SESSION['session_lifetime'] ?? 7200; // ברירת מחדל 2 שעות
+    }
+    
+    // בדיקה מיוחדת ל-PWA
+    if (isset($_SESSION['is_pwa']) && $_SESSION['is_pwa']) {
+        $maxIdleTime = 2592000; // 30 ימים ל-PWA
+    }
+    
+    if (isset($_SESSION['last_activity'])) {
+        $idleTime = time() - $_SESSION['last_activity'];
+        
+        if ($idleTime > $maxIdleTime) {
+            // לפני השמדת הסשן, בדוק אם יש טוקן זכירה
+            if (isset($_COOKIE['remember_token'])) {
+                return checkRememberToken();
+            }
+            
+            session_destroy();
+            return false;
+        }
+    }
+    
+    updateLastActivity();
+    return true;
+}
+function checkSessionTimeout($maxIdleTime = null) {
+    // קבלת זמן timeout לפי סוג הסשן
+    if ($maxIdleTime === null) {
+        $maxIdleTime = $_SESSION['session_lifetime'] ?? 7200;
+    }
+    
+    // 👈 בדיקת אבטחה לסשנים ארוכים
+    if (isset($_SESSION['is_pwa']) && $_SESSION['is_pwa']) {
+        if (!validateLongSession()) {
+            return false; // נכשל בבדיקת אבטחה
+        }
+        $maxIdleTime = 2592000; // 30 ימים ל-PWA
+    }
+    
+    if (isset($_SESSION['last_activity'])) {
+        $idleTime = time() - $_SESSION['last_activity'];
+        
+        if ($idleTime > $maxIdleTime) {
+            if (isset($_COOKIE['remember_token'])) {
+                return checkRememberToken();
+            }
+            
+            session_destroy();
+            return false;
+        }
+    }
+    
+    updateLastActivity();
+    return true;
+}
+function checkRememberToken() {
+    if (!isset($_COOKIE['remember_token'])) {
+        return false;
+    }
+    
+    $token = $_COOKIE['remember_token'];
+    $pdo = getDBConnection();
+    
+    $stmt = $pdo->prepare("
+        SELECT * FROM users 
+        WHERE remember_token = ? 
+        AND remember_expiry > NOW()
+        AND is_active = 1
+    ");
+    $stmt->execute([$token]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if ($user) {
+        // חידוש הסשן
+        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['username'] = $user['username'];
+        $_SESSION['name'] = $user['name'];
+        $_SESSION['email'] = $user['email'];
+        $_SESSION['profile_picture'] = $user['profile_picture'];
+        $_SESSION['is_pwa'] = true;
+        $_SESSION['session_lifetime'] = 2592000;
+        $_SESSION['last_activity'] = time();
+        
+        // חידוש הטוקן
+        $newToken = bin2hex(random_bytes(32));
+        $updateStmt = $pdo->prepare("
+            UPDATE users 
+            SET remember_token = ?,
+                remember_expiry = DATE_ADD(NOW(), INTERVAL 30 DAY),
+                last_login = NOW()
+            WHERE id = ?
+        ");
+        $updateStmt->execute([$newToken, $user['id']]);
+        
+        // עדכון העוגייה
+        setcookie(
+            'remember_token', 
+            $newToken,
+            time() + 2592000,
+            '/',
+            $_SERVER['HTTP_HOST'],
+            true,
+            true
+        );
+        
+        return true;
+    }
+    
+    return false;
+}
+/**
+ * בדיקת אבטחה נוספת לסשנים ארוכים
+ * בודקת כל 24 שעות אם ה-IP או User Agent השתנו
+ */
+function validateLongSession() {
+    // בדיקה ראשונית - שמור IP ו-User Agent
+    if (!isset($_SESSION['ip_address'])) {
+        $_SESSION['ip_address'] = $_SERVER['REMOTE_ADDR'] ?? '';
+        $_SESSION['user_agent'] = $_SERVER['HTTP_USER_AGENT'] ?? '';
+    }
+    
+    if (!isset($_SESSION['last_security_check'])) {
+        $_SESSION['last_security_check'] = time();
+        return true;
+    }
+    
+    $timeSinceCheck = time() - $_SESSION['last_security_check'];
+    
+    // בדיקה כל 24 שעות
+    if ($timeSinceCheck > 86400) { // 24 שעות
+        // בדוק אם ה-IP השתנה
+        if (isset($_SESSION['ip_address']) && 
+            $_SESSION['ip_address'] !== ($_SERVER['REMOTE_ADDR'] ?? '')) {
+            
+            // רישום האירוע לפני ההשמדה
+            error_log("Security alert: IP changed for user " . $_SESSION['user_id']);
+            
+            // IP השתנה - דרוש אימות מחדש
+            session_destroy();
+            return false;
+        }
+        
+        // בדוק אם ה-User Agent השתנה משמעותית
+        if (isset($_SESSION['user_agent'])) {
+            $currentUA = $_SERVER['HTTP_USER_AGENT'] ?? '';
+            $storedUA = $_SESSION['user_agent'];
+            
+            // בדיקה בסיסית - אם הדפדפן השתנה לגמרי
+            if (strpos($storedUA, 'Chrome') !== false && strpos($currentUA, 'Chrome') === false ||
+                strpos($storedUA, 'Firefox') !== false && strpos($currentUA, 'Firefox') === false ||
+                strpos($storedUA, 'Safari') !== false && strpos($currentUA, 'Safari') === false) {
+                
+                error_log("Security alert: Browser changed for user " . $_SESSION['user_id']);
+                session_destroy();
+                return false;
+            }
+        }
+        
+        // עדכון זמן הבדיקה האחרונה
+        $_SESSION['last_security_check'] = time();
+        $_SESSION['ip_address'] = $_SERVER['REMOTE_ADDR'] ?? '';
+        $_SESSION['user_agent'] = $_SERVER['HTTP_USER_AGENT'] ?? '';
+    }
+    
+    return true;
+}
+function checkSessionTimeout2($maxIdleTime = 7200) { // 2 שעות
     if (isset($_SESSION['last_activity'])) {
         $idleTime = time() - $_SESSION['last_activity'];
         

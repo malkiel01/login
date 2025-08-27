@@ -1,4 +1,18 @@
 <?php
+// הגדרות סשן ל-PWA - לפני session_start()
+ini_set('session.gc_maxlifetime', 2592000);    // 30 ימים בשניות
+ini_set('session.cookie_lifetime', 2592000);    // Cookie חי 30 ימים
+
+// הגדרת פרמטרים נוספים של העוגייה
+session_set_cookie_params([
+    'lifetime' => 2592000,    // 30 ימים
+    'path' => '/',
+    'domain' => $_SERVER['HTTP_HOST'],
+    'secure' => true,         // רק HTTPS
+    'httponly' => true,       // מניעת גישה מ-JavaScript
+    'samesite' => 'Lax'       // הגנת CSRF
+]);
+
 
 // בתחילת הקובץ
 require_once '../pwa/pwa-init.php';
@@ -31,22 +45,75 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
         $stmt->execute([$username, $username]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
         
+        // אחרי אימות מוצלח של המשתמש
         if ($user && password_verify($password, $user['password'])) {
-            // עדכון זמן התחברות אחרון
-            $updateStmt = $pdo->prepare("UPDATE users SET last_login = NOW() WHERE id = ?");
-            $updateStmt->execute([$user['id']]);
+            // בדיקה אם המשתמש סימן "זכור אותי" או שזו אפליקציית PWA
+            $isPWA = isset($_SERVER['HTTP_X_REQUESTED_WITH']) || 
+                    strpos($_SERVER['HTTP_USER_AGENT'], 'PWA') !== false ||
+                    isset($_POST['remember']);
             
-            // שמירת פרטי המשתמש בסשן
+            if ($isPWA) {
+                // הגדרת סשן ל-30 ימים
+                $lifetime = 2592000; // 30 ימים
+                
+                // יצירת טוקן זכירה
+                $rememberToken = bin2hex(random_bytes(32));
+                
+                // שמירת הטוקן במסד הנתונים
+                $updateStmt = $pdo->prepare("
+                    UPDATE users 
+                    SET last_login = NOW(), 
+                        remember_token = ?,
+                        remember_expiry = DATE_ADD(NOW(), INTERVAL 30 DAY)
+                    WHERE id = ?
+                ");
+                $updateStmt->execute([$rememberToken, $user['id']]);
+                
+                // יצירת עוגיית זכירה
+                setcookie(
+                    'remember_token', 
+                    $rememberToken,
+                    time() + $lifetime,
+                    '/',
+                    $_SERVER['HTTP_HOST'],
+                    true,  // HTTPS only
+                    true   // HTTP only
+                );
+            } else {
+                // התחברות רגילה
+                $updateStmt = $pdo->prepare("UPDATE users SET last_login = NOW() WHERE id = ?");
+                $updateStmt->execute([$user['id']]);
+            }
+            
+            // שמירת פרטים בסשן
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
             $_SESSION['name'] = $user['name'];
             $_SESSION['email'] = $user['email'];
             $_SESSION['profile_picture'] = $user['profile_picture'];
+            $_SESSION['is_pwa'] = $isPWA;
+            $_SESSION['session_lifetime'] = $isPWA ? 2592000 : 7200;
             
-            // header('Location: ../dashboard/index.php');  // תיקון: חזרה לתיקייה הראשית
             handleLoginRedirect();
             exit;
-        } else {
+        }
+        // if ($user && password_verify($password, $user['password'])) {
+        //     // עדכון זמן התחברות אחרון
+        //     $updateStmt = $pdo->prepare("UPDATE users SET last_login = NOW() WHERE id = ?");
+        //     $updateStmt->execute([$user['id']]);
+            
+        //     // שמירת פרטי המשתמש בסשן
+        //     $_SESSION['user_id'] = $user['id'];
+        //     $_SESSION['username'] = $user['username'];
+        //     $_SESSION['name'] = $user['name'];
+        //     $_SESSION['email'] = $user['email'];
+        //     $_SESSION['profile_picture'] = $user['profile_picture'];
+            
+        //     // header('Location: ../dashboard/index.php');  // תיקון: חזרה לתיקייה הראשית
+        //     handleLoginRedirect();
+        //     exit;
+        // } 
+        else {
             $error = 'שם משתמש או סיסמה שגויים';
         }
     }

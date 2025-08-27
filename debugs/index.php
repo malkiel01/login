@@ -334,12 +334,12 @@
             </div>
 
             <!-- Complete Notifications Test -->
-            <!-- <div class="debug-item">
+            <div class="debug-item">
                 <span class="debug-label">Full Test</span>
                 <button class="debug-button" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: 2px solid #34d399;" onclick="openCompleteNotificationsTest()">
                     🧪
                 </button>
-            </div> -->
+            </div>
         </div>
     </div>
 
@@ -563,18 +563,18 @@
             alert('Network monitoring activated!\n\nCheck console for:\n• Fetch requests (orange)\n• XHR requests (blue)\n• Responses (green)\n• Errors (red)');
         }
 
-        // function openCompleteNotificationsTest() {
-        //     const width = 1200;
-        //     const height = 800;
-        //     const left = (screen.width - width) / 2;
-        //     const top = (screen.height - height) / 2;
+        function openCompleteNotificationsTest() {
+            const width = 1200;
+            const height = 800;
+            const left = (screen.width - width) / 2;
+            const top = (screen.height - height) / 2;
             
-        //     window.open(
-        //         '/debugs/notifications-complete-test.html',
-        //         'NotificationsCompleteTest',
-        //         `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
-        //     );
-        // }
+            window.open(
+                '/debugs/notifications-complete-test.html',
+                'NotificationsCompleteTest',
+                `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
+            );
+        }
 
         // Monitor console errors for badge
         window.addEventListener('error', () => {

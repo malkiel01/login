@@ -689,7 +689,7 @@
                 
                 // נסה לטעון
                 const script = document.createElement('script');
-                script.src = '/push-listener.js';
+                script.src = '/push/listener.js';
                 script.onload = () => {
                     window.PushListener.start();
                     log('✅ Push Listener נטען והופעל', 'success');

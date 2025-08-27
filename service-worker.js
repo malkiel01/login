@@ -205,7 +205,8 @@ self.addEventListener('notificationclick', event => {
     
     // אם יש URL ספציפי בהתראה
     const notificationData = event.notification.data || {};
-    const targetUrl = notificationData.url || '/notifications/manager.php';
+    const targetUrl = notificationData.url || '/permissions/manager.php';
+    // const targetUrl = notificationData.url || '/notifications/manager.php';
     
     // פתח או מקד את החלון
     event.waitUntil(

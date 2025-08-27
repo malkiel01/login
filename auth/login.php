@@ -277,7 +277,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
         // בתחילת הדף או במקום שתרצה
         require_once '../debugs/console-debug.php';
     ?>
-    <script src="../debugs/pwa-debug-popup.js"></script>
+    <!-- <script src="../debugs/pwa-debug-popup.js"></script> -->
     
     <script>
         function switchTab(tab) {

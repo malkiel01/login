@@ -129,9 +129,7 @@ window.Permissions = {
                         vibrate: [200, 100, 200],
                         tag: "notification-" + Date.now(), // tag ייחודי לכל התראה
                         requireInteraction: false,
-                        renotify: true, // מאפשר התראה חוזרת
-                        timestamp: Date.now(), // זמן ההתראה
-                        silent: false // השמע צליל
+                        renotify: true // מאפשר התראה חוזרת
                     });
                     console.log("Notification shown via Service Worker");
                     return true;

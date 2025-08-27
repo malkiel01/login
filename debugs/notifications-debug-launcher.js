@@ -56,7 +56,7 @@ function openDebugPanel() {
     const top = (screen.height - height) / 2;
     
     window.open(
-        '/debugs/debug.php',
+        '/debugs/notifications-debug.php',
         'NotificationDebugPanel',
         `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
     );

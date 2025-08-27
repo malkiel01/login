@@ -269,7 +269,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
 
 
         <!-- debugs -->
-    <script src="../debugs/debug-launcher.js"></script>
+    <script src="../debugs/notifications-debug-launcher.js"></script>
      <script>
         // בדיקה להרשאות שהכל נטען
         console.log('Checking Permissions object:', window.Permissions);

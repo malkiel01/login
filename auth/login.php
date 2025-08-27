@@ -1,17 +1,17 @@
 <?php
-// הגדרות סשן ל-PWA - לפני session_start()
-ini_set('session.gc_maxlifetime', 2592000);    // 30 ימים בשניות
-ini_set('session.cookie_lifetime', 2592000);    // Cookie חי 30 ימים
+// // הגדרות סשן ל-PWA - לפני session_start()
+// ini_set('session.gc_maxlifetime', 2592000);    // 30 ימים בשניות
+// ini_set('session.cookie_lifetime', 2592000);    // Cookie חי 30 ימים
 
-// הגדרת פרמטרים נוספים של העוגייה
-session_set_cookie_params([
-    'lifetime' => 2592000,    // 30 ימים
-    'path' => '/',
-    'domain' => $_SERVER['HTTP_HOST'],
-    'secure' => true,         // רק HTTPS
-    'httponly' => true,       // מניעת גישה מ-JavaScript
-    'samesite' => 'Lax'       // הגנת CSRF
-]);
+// // הגדרת פרמטרים נוספים של העוגייה
+// session_set_cookie_params([
+//     'lifetime' => 2592000,    // 30 ימים
+//     'path' => '/',
+//     'domain' => $_SERVER['HTTP_HOST'],
+//     'secure' => true,         // רק HTTPS
+//     'httponly' => true,       // מניעת גישה מ-JavaScript
+//     'samesite' => 'Lax'       // הגנת CSRF
+// ]);
 
 
 // בתחילת הקובץ

@@ -21,7 +21,7 @@ session_start();
 require_once '../config.php';  // תיקון: חזרה לתיקייה הראשית
 require_once 'redirect-handler.php';
 require_once '../permissions/init.php';
-require_once '../debugs/index.php';
+// require_once '../debugs/index.php';
 
 // אם המשתמש כבר מחובר, העבר לדף הראשי
 if (isset($_SESSION['user_id'])) {

@@ -349,7 +349,7 @@
     ?>
 
     <!-- טעינת PWA Debug Popup כ-script -->
-    <script src="pwa-debug-popup.js"></script>
+    <script src="/debugs/pwa-debug-popup.js"></script>
 
     <script>
         // Toggle menu

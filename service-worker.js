@@ -171,30 +171,15 @@ self.addEventListener('push', event => {
     );
 });
 
-// טיפול בלחיצה על התראה - גרסה משולבת ומתוקנת
+// טיפול בלחיצה על התראה - עם ניתוב חכם
 self.addEventListener('notificationclick', event => {
     console.log('[Service Worker] Notification click received.');
     
     // סגור את ההתראה
     event.notification.close();
     
-    // קבל את הנתונים מההתראה
-    const notificationData = event.notification.data || {};
-    
-    // הגדר את ה-URL לפתיחה
-    let targetUrl = '/notifications/manager.php';
-    
-    // אם יש URL ספציפי בהתראה
-    if (notificationData.url) {
-        targetUrl = notificationData.url;
-    }
-    
-    // אם זה לחיצה על action button
-    if (event.action === 'view') {
-        targetUrl = '/notifications/manager.php';
-    } else if (event.action === 'close') {
-        return; // רק סגור את ההתראה
-    }
+    // שמור את היעד הסופי
+    const finalTarget = '/notifications/manager.php';
     
     // פתח או מקד את החלון
     event.waitUntil(
@@ -202,29 +187,34 @@ self.addEventListener('notificationclick', event => {
             type: 'window',
             includeUncontrolled: true
         }).then(windowClients => {
-            console.log('[Service Worker] Found windows:', windowClients.length);
-            
-            // נסה למצוא חלון פתוח
+            // בדוק אם יש חלון פתוח
             for (let client of windowClients) {
-                console.log('[Service Worker] Checking client:', client.url);
-                
                 // אם יש חלון פתוח של האפליקציה
                 if (client.url.includes(self.location.origin)) {
-                    console.log('[Service Worker] Navigating existing window to:', targetUrl);
-                    // נווט אותו ומקד
-                    return client.navigate(targetUrl).then(client => {
-                        return client.focus();
-                    });
+                    // בדוק אם המשתמש בדף login
+                    if (client.url.includes('/auth/login.php')) {
+                        // שמור ב-localStorage שצריך לנווט אחרי התחברות
+                        return client.focus().then(() => {
+                            // שלח הודעה לדף הlogin
+                            client.postMessage({
+                                type: 'REDIRECT_AFTER_LOGIN',
+                                url: finalTarget
+                            });
+                        });
+                    } else {
+                        // המשתמש מחובר - נווט ישר לדף ההתראות
+                        return client.navigate(finalTarget).then(client => client.focus());
+                    }
                 }
             }
             
             // אם אין חלון פתוח, פתח חדש
-            console.log('[Service Worker] Opening new window:', targetUrl);
+            // האפליקציה תנווט אוטומטית ללוגין או לדשבורד
+            // ואז לדף ההתראות אם צריך
             if (clients.openWindow) {
-                return clients.openWindow(targetUrl);
+                // שמור ב-sessionStorage את היעד
+                return clients.openWindow('/?redirect_to=' + encodeURIComponent(finalTarget));
             }
-        }).catch(error => {
-            console.error('[Service Worker] Error handling notification click:', error);
         })
     );
 });

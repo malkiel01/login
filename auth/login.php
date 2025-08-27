@@ -5,6 +5,7 @@ require_once '../pwa/pwa-init.php';
 
 session_start();
 require_once '../config.php';  // תיקון: חזרה לתיקייה הראשית
+require_once 'redirect-handler.php';
 
 // אם המשתמש כבר מחובר, העבר לדף הראשי
 if (isset($_SESSION['user_id'])) {
@@ -40,7 +41,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
             $_SESSION['email'] = $user['email'];
             $_SESSION['profile_picture'] = $user['profile_picture'];
             
-            header('Location: ../dashboard/index.php');  // תיקון: חזרה לתיקייה הראשית
+            // header('Location: ../dashboard/index.php');  // תיקון: חזרה לתיקייה הראשית
+            handleLoginRedirect();
             exit;
         } else {
             $error = 'שם משתמש או סיסמה שגויים';
@@ -273,10 +275,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
         // בדיקה להרשאות שהכל נטען
         console.log('Checking Permissions object:', window.Permissions);
     </script>
-    <?php
+    <!-- <?php
         // בתחילת הדף או במקום שתרצה
         // require_once '../debugs/console-debug.php';
-    ?>
+    ?> -->
     <!-- <script src="../debugs/pwa-debug-popup.js"></script> -->
     
     <script>

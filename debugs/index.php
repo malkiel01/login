@@ -339,6 +339,7 @@
                 <button class="debug-button" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: 2px solid #34d399;" onclick="openCompleteNotificationsTest()">
                     🧪
                 </button>
+    
             </div>
         </div>
     </div>

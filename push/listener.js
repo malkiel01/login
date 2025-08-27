@@ -152,7 +152,7 @@
         checkForNotifications();
         
         // בדיקה כל 30 שניות
-        checkInterval = setInterval(checkForNotifications, 30000);
+        checkInterval = setInterval(checkForNotifications, 3000);
         
         console.log('🎧 Push Listener started - checking every 30 seconds');
     }

@@ -411,7 +411,7 @@
             
             // פתח בחלון חדש - הדפדפן יטפל בנתיב היחסי
             window.open(
-                'notifications-debug.php',
+                '/debugs/notifications-debug.php',
                 'NotificationDebugPanel',
                 `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
             );
@@ -420,12 +420,7 @@
         function openPWADebug() {
             // PWA Debug כבר נטען, פשוט הצג
             if (window.PWADebugPopup) {
-                // הסתר את הכפתור הצף ופתח ישירות את החלון
-                if (window.PWADebugPopup.floatButton) {
-                    window.PWADebugPopup.floatButton.style.display = 'none';
-                }
-                window.PWADebugPopup.popup.classList.add('show');
-                window.PWADebugPopup.isVisible = true;
+                window.PWADebugPopup.show();
             } else {
                 console.error('PWA Debug not loaded!');
             }

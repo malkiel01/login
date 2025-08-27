@@ -101,8 +101,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     <!-- בתוך ה-<head> -->
     <!-- ?php echo getPWAHeaders(['title' => 'התחברות']); ? -->
     <?php echo getPWAHeaders(); ?>
+
     <?php 
         require_once '../permissions/init.php';
+        echo getPermissionsScript();  // לפני </body>
     ?>
 
 <script>
@@ -190,6 +192,7 @@ await Permissions.requestNotificationPermission();
                     <?php echo getPermissionsButtons(); ?>
                 </div>
 
+
                 <div class="forgot-password">
                     <a href="#">שכחת סיסמה?</a>
                 </div>
@@ -261,6 +264,11 @@ await Permissions.requestNotificationPermission();
     </div>
 
     <!-- סוף קוד בדיקת PWA לדשבורד -->
+     <?php echo getPermissionsScript(); ?>
+     <script>
+        // בדיקה להרשאות שהכל נטען
+        console.log('Checking Permissions object:', window.Permissions);
+    </script>
     <?php
         // בתחילת הדף או במקום שתרצה
         require_once '../debugs/console-debug.php';

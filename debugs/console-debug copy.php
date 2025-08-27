@@ -1,20 +1,24 @@
 <?php
 /**
- * Console Debug Window - Updated Version
- * ללא כפתור צף ועם גרירה למיני בר
+ * Console Debug Window - Standalone Version
  * 
  * שימוש:
  * require_once 'path/to/console-debug.php';
+ * 
+ * או:
+ * include 'path/to/console-debug.php';
  */
 
+// בדיקה אם להציג את הקונסול (אופציונלי - אפשר להגדיר במקום אחר)
 if (!defined('SHOW_DEBUG_CONSOLE')) {
     define('SHOW_DEBUG_CONSOLE', true);
 }
 
+// הצג רק אם מוגדר
 if (SHOW_DEBUG_CONSOLE):
 ?>
 
-<!-- Console Debug Window -->
+<!-- Console Debug Window - Mobile Responsive -->
 <div id="console-debug-window" style="
     position: fixed;
     bottom: 20px;
@@ -28,7 +32,7 @@ if (SHOW_DEBUG_CONSOLE):
     border-radius: 12px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.8);
     z-index: 10000;
-    display: none;
+    display: flex;
     flex-direction: column;
     font-family: 'Consolas', 'Monaco', monospace;
     font-size: 11px;
@@ -124,7 +128,29 @@ if (SHOW_DEBUG_CONSOLE):
     </div>
 </div>
 
-<!-- Mini Bar (Draggable) -->
+<!-- Floating Button (Minimized State) -->
+<button id="console-float-btn" style="
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    background: rgba(26, 26, 26, 0.95);
+    backdrop-filter: blur(10px);
+    color: #0f0;
+    border: 2px solid #333;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 9999;
+    display: none;
+    font-size: 20px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.8);
+    transition: all 0.3s ease;
+" onclick="showConsoleDebug()">
+    📟
+</button>
+
+<!-- Mini Bar (Collapsed State) -->
 <div id="console-mini-bar" style="
     position: fixed;
     bottom: 20px;
@@ -139,9 +165,7 @@ if (SHOW_DEBUG_CONSOLE):
     gap: 10px;
     z-index: 9999;
     box-shadow: 0 4px 16px rgba(0,0,0,0.8);
-    cursor: move;
-    user-select: none;
-    -webkit-user-select: none;
+    cursor: pointer;
 " onclick="expandConsole()">
     <span style="color: #0f0; font-size: 12px;">📟 Console</span>
     <span id="mini-bar-count" style="
@@ -165,6 +189,13 @@ if (SHOW_DEBUG_CONSOLE):
         bottom: 10px !important;
         height: 250px !important;
         font-size: 10px !important;
+    }
+    
+    #console-float-btn {
+        bottom: 10px !important;
+        right: 10px !important;
+        width: 45px !important;
+        height: 45px !important;
     }
     
     #console-mini-bar {
@@ -191,11 +222,8 @@ if (SHOW_DEBUG_CONSOLE):
 }
 
 #console-debug-window.show { animation: slideIn 0.3s ease; }
-#console-mini-bar:hover { 
-    transform: scale(1.02); 
-    background: rgba(45, 45, 45, 0.95); 
-    box-shadow: 0 6px 20px rgba(0,0,0,0.9);
-}
+#console-float-btn:hover { transform: scale(1.1); background: rgba(45, 45, 45, 0.95); }
+#console-mini-bar:hover { transform: scale(1.02); background: rgba(45, 45, 45, 0.95); }
 
 /* Scrollbar Styling */
 #console-output::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -214,7 +242,9 @@ if (SHOW_DEBUG_CONSOLE):
         
         const debugOutput = document.getElementById('console-output');
         let logCounter = 0;
+        let errorCount = 0;  // Define errorCount here in the closure
         
+        // Make errorCount accessible globally for the functions
         window.consoleDebugErrorCount = 0;
         
         // Add message to debug window
@@ -229,6 +259,7 @@ if (SHOW_DEBUG_CONSOLE):
             const timestamp = new Date().toLocaleTimeString();
             const entry = document.createElement('div');
             
+            // Colors by type
             const colors = {
                 log: '#fff',
                 error: '#f44',
@@ -248,7 +279,7 @@ if (SHOW_DEBUG_CONSOLE):
                 -webkit-user-select: text;
             `;
             
-            // Touch events for mobile
+            // Add long press event for mobile
             let pressTimer;
             entry.addEventListener('touchstart', function(e) {
                 pressTimer = setTimeout(() => {
@@ -265,10 +296,12 @@ if (SHOW_DEBUG_CONSOLE):
                 clearTimeout(pressTimer);
             });
             
+            // Double click to select on desktop
             entry.addEventListener('dblclick', function() {
                 selectText(entry);
             });
             
+            // Type indicators
             const typeLabel = {
                 log: '›',
                 error: '✕',
@@ -276,6 +309,7 @@ if (SHOW_DEBUG_CONSOLE):
                 info: 'ℹ'
             }[type] || '›';
             
+            // Convert arguments to text
             const message = Array.from(args).map(arg => {
                 if (typeof arg === 'object') {
                     try {
@@ -292,13 +326,16 @@ if (SHOW_DEBUG_CONSOLE):
             debugOutput.appendChild(entry);
             debugOutput.scrollTop = debugOutput.scrollHeight;
             
+            // Update mini bar count
             updateMiniBarCount();
             
+            // Limit messages
             if (debugOutput.children.length > 100) {
                 debugOutput.removeChild(debugOutput.firstChild);
             }
         }
         
+        // Escape HTML
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
@@ -326,17 +363,20 @@ if (SHOW_DEBUG_CONSOLE):
             addToDebugWindow('info', args);
         };
         
+        // Catch global errors
         window.addEventListener('error', function(event) {
             addToDebugWindow('error', [`${event.message} at ${event.filename}:${event.lineno}`]);
         });
         
+        // Catch promise rejections
         window.addEventListener('unhandledrejection', function(event) {
             addToDebugWindow('error', [`Unhandled Promise: ${event.reason}`]);
         });
         
+        // Initial message
         console.log('Console Debug Ready');
         
-        // Draggable for main window
+        // Make draggable
         let isDragging = false;
         let currentX;
         let currentY;
@@ -396,65 +436,6 @@ if (SHOW_DEBUG_CONSOLE):
             initialY = currentY;
             isDragging = false;
         }
-        
-        // Draggable for mini bar
-        const miniBar = document.getElementById('console-mini-bar');
-        let miniBarDragging = false;
-        let miniBarCurrentX;
-        let miniBarCurrentY;
-        let miniBarInitialX;
-        let miniBarInitialY;
-        let miniBarXOffset = 0;
-        let miniBarYOffset = 0;
-        
-        function miniBarDragStart(e) {
-            e.stopPropagation();
-            
-            if (e.type === "touchstart") {
-                miniBarInitialX = e.touches[0].clientX - miniBarXOffset;
-                miniBarInitialY = e.touches[0].clientY - miniBarYOffset;
-            } else {
-                miniBarInitialX = e.clientX - miniBarXOffset;
-                miniBarInitialY = e.clientY - miniBarYOffset;
-            }
-            
-            miniBarDragging = true;
-            miniBar.style.transition = 'none';
-        }
-        
-        function miniBarDrag(e) {
-            if (miniBarDragging) {
-                e.preventDefault();
-                
-                if (e.type === "touchmove") {
-                    miniBarCurrentX = e.touches[0].clientX - miniBarInitialX;
-                    miniBarCurrentY = e.touches[0].clientY - miniBarInitialY;
-                } else {
-                    miniBarCurrentX = e.clientX - miniBarInitialX;
-                    miniBarCurrentY = e.clientY - miniBarInitialY;
-                }
-                
-                miniBarXOffset = miniBarCurrentX;
-                miniBarYOffset = miniBarCurrentY;
-                
-                miniBar.style.transform = `translate(${miniBarCurrentX}px, ${miniBarCurrentY}px)`;
-            }
-        }
-        
-        function miniBarDragEnd(e) {
-            miniBarInitialX = miniBarCurrentX;
-            miniBarInitialY = miniBarCurrentY;
-            miniBarDragging = false;
-            miniBar.style.transition = '';
-        }
-        
-        // Attach drag events to mini bar
-        miniBar.addEventListener('mousedown', miniBarDragStart);
-        miniBar.addEventListener('touchstart', miniBarDragStart, {passive: false});
-        document.addEventListener('mousemove', miniBarDrag);
-        document.addEventListener('touchmove', miniBarDrag, {passive: false});
-        document.addEventListener('mouseup', miniBarDragEnd);
-        document.addEventListener('touchend', miniBarDragEnd, {passive: false});
     })();
 
     // Global functions
@@ -467,6 +448,7 @@ if (SHOW_DEBUG_CONSOLE):
             return;
         }
         
+        // Try modern clipboard API first
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(text).then(() => {
                 showNotification('Copied to clipboard! ✓', '#0f0');
@@ -560,7 +542,7 @@ if (SHOW_DEBUG_CONSOLE):
 
     function closeConsoleDebug() {
         document.getElementById('console-debug-window').style.display = 'none';
-        // כבר לא מציגים את הכפתור הצף
+        document.getElementById('console-float-btn').style.display = 'block';
     }
 
     function minimizeConsole() {
@@ -577,6 +559,7 @@ if (SHOW_DEBUG_CONSOLE):
 
     function showConsoleDebug() {
         document.getElementById('console-debug-window').style.display = 'flex';
+        document.getElementById('console-float-btn').style.display = 'none';
         document.getElementById('console-mini-bar').style.display = 'none';
     }
 
@@ -614,7 +597,7 @@ if (SHOW_DEBUG_CONSOLE):
         // Ctrl+` - toggle console
         if (e.ctrlKey && e.key === '`') {
             const debugWindow = document.getElementById('console-debug-window');
-            if (debugWindow.style.display === 'none' || debugWindow.style.display === '') {
+            if (debugWindow.style.display === 'none') {
                 showConsoleDebug();
             } else {
                 closeConsoleDebug();
@@ -628,4 +611,4 @@ if (SHOW_DEBUG_CONSOLE):
     });
 </script>
 
-<?php endif; ?>
+<?php endif; // End of SHOW_DEBUG_CONSOLE check ?>

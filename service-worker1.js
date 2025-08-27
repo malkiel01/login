@@ -150,15 +150,15 @@ self.addEventListener('fetch', event => {
     );
 });
 
-// טיפול בהודעות Push (אופציונלי)
+// טיפול בהודעות Push
 self.addEventListener('push', event => {
     console.log('[ServiceWorker] Push Received');
     
     const title = 'קניות משפחתיות';
     const options = {
         body: event.data ? event.data.text() : 'יש לך עדכון חדש!',
-        icon: '/images/icon-192x192.png',
-        badge: '/images/badge-72x72.png',
+        icon: '/pwa/icons/android/android-launchericon-192-192.png',
+        badge: '/pwa/icons/android/android-launchericon-72-72.png',
         vibrate: [200, 100, 200],
         data: {
             dateOfArrival: Date.now(),
@@ -171,26 +171,86 @@ self.addEventListener('push', event => {
     );
 });
 
-// טיפול בלחיצה על התראה
+// טיפול בלחיצה על התראה - עם ניתוב חכם
 self.addEventListener('notificationclick', event => {
-    console.log('[ServiceWorker] Notification click');
+    console.log('[Service Worker] Notification click received.');
     
+    // סגור את ההתראה
     event.notification.close();
     
+    // שמור את היעד הסופי
+    const finalTarget = '/notifications/manager.php';
+    
+    // פתח או מקד את החלון
     event.waitUntil(
-        clients.openWindow('/dashboard/index.php')
+        clients.matchAll({
+            type: 'window',
+            includeUncontrolled: true
+        }).then(windowClients => {
+            // בדוק אם יש חלון פתוח
+            for (let client of windowClients) {
+                // אם יש חלון פתוח של האפליקציה
+                if (client.url.includes(self.location.origin)) {
+                    // בדוק אם המשתמש בדף login
+                    if (client.url.includes('/auth/login.php')) {
+                        // שמור ב-localStorage שצריך לנווט אחרי התחברות
+                        return client.focus().then(() => {
+                            // שלח הודעה לדף הlogin
+                            client.postMessage({
+                                type: 'REDIRECT_AFTER_LOGIN',
+                                url: finalTarget
+                            });
+                        });
+                    } else {
+                        // המשתמש מחובר - נווט ישר לדף ההתראות
+                        return client.navigate(finalTarget).then(client => client.focus());
+                    }
+                }
+            }
+            
+            // אם אין חלון פתוח, פתח חדש
+            // האפליקציה תנווט אוטומטית ללוגין או לדשבורד
+            // ואז לדף ההתראות אם צריך
+            if (clients.openWindow) {
+                // שמור ב-sessionStorage את היעד
+                return clients.openWindow('/?redirect_to=' + encodeURIComponent(finalTarget));
+            }
+        })
     );
 });
 
-// עדכון אוטומטי כל 24 שעות
+// טיפול בהודעות מהדף
 self.addEventListener('message', event => {
+    // דילוג על עדכון
     if (event.data && event.data.type === 'SKIP_WAITING') {
         self.skipWaiting();
     }
     
+    // עדכון קאש
     if (event.data && event.data.type === 'UPDATE_CACHE') {
         caches.open(CACHE_NAME).then(cache => {
             cache.addAll(urlsToCache);
         });
+    }
+    
+    // שמירת התראה
+    if (event.data && event.data.type === 'SAVE_NOTIFICATION') {
+        // שלח הודעה לכל החלונות לעדכן את רשימת ההתראות
+        clients.matchAll().then(clients => {
+            clients.forEach(client => {
+                client.postMessage({
+                    type: 'NEW_NOTIFICATION',
+                    notification: event.data.notification
+                });
+            });
+        });
+    }
+    
+    // עדכון badge
+    if (event.data && event.data.type === 'NOTIFICATION_UPDATE') {
+        // עדכון badge אם יש (נתמך רק בחלק מהדפדפנים)
+        if (self.registration.setAppBadge) {
+            self.registration.setAppBadge(event.data.count);
+        }
     }
 });

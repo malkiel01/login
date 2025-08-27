@@ -1,9 +1,12 @@
 /**
- * Service Worker for PWA
+ * Service Worker for PWA - Enhanced Version
+ * כולל את כל הפונקציונליות הקיימת + Background Sync
  * חייב להיות בשורש האתר!
  */
 
 const CACHE_NAME = 'pwa-cache-v1';
+const API_URL = '/api/notifications.php';
+
 const urlsToCache = [
     '/',
     '/auth/login.php',
@@ -23,14 +26,14 @@ const urlsToCache = [
     // JS files
     '/dashboard/assets/js/dashboard.js',
     
-    // Images - עדכון לנתיבי האייקונים החדשים
+    // Images
     '/pwa/icons/android/android-launchericon-192-192.png',
     '/pwa/icons/android/android-launchericon-512-512.png',
     '/pwa/icons/ios/152.png',
     '/pwa/icons/ios/180.png'
 ];
 
-// התקנת Service Worker
+// ============= התקנת Service Worker (הקוד המקורי שלך) =============
 self.addEventListener('install', event => {
     console.log('[ServiceWorker] Install');
     
@@ -38,7 +41,6 @@ self.addEventListener('install', event => {
         caches.open(CACHE_NAME)
             .then(cache => {
                 console.log('[ServiceWorker] Caching app shell');
-                // נסה לשמור בקאש, אבל אל תיכשל אם חלק מהקבצים לא קיימים
                 return Promise.allSettled(
                     urlsToCache.map(url => 
                         cache.add(url).catch(err => 
@@ -49,12 +51,11 @@ self.addEventListener('install', event => {
             })
     );
     
-    // הפעל מיד את ה-Service Worker החדש
     self.skipWaiting();
 });
 
-// הפעלת Service Worker
-self.addEventListener('activate', event => {
+// ============= הפעלת Service Worker (משופר) =============
+self.addEventListener('activate', async event => {
     console.log('[ServiceWorker] Activate');
     
     event.waitUntil(
@@ -70,27 +71,36 @@ self.addEventListener('activate', event => {
         })
     );
     
-    // השתלט על כל הלקוחות מיד
+    // ===== תוספת חדשה: רישום לסנכרון תקופתי =====
+    if ('periodicSync' in self.registration) {
+        try {
+            await self.registration.periodicSync.register('check-notifications', {
+                minInterval: 30 * 60 * 1000 // 30 דקות
+            });
+            console.log('[ServiceWorker] ✅ Periodic sync registered');
+        } catch (error) {
+            console.log('[ServiceWorker] ⚠️ Periodic sync failed:', error);
+        }
+    }
+    
     return self.clients.claim();
 });
 
-// טיפול בבקשות
+// ============= טיפול בבקשות (הקוד המקורי שלך) =============
 self.addEventListener('fetch', event => {
     const { request } = event;
     const url = new URL(request.url);
     
-    // דלג על בקשות שאינן HTTP/HTTPS
     if (!url.protocol.startsWith('http')) {
         return;
     }
     
-    // דלג על בקשות API וקבצי PHP (תמיד טריים)
+    // דלג על בקשות API וקבצי PHP
     if (url.pathname.includes('/api/') || 
         url.pathname.includes('.php') ||
         url.pathname.includes('/auth/google-auth.php')) {
         event.respondWith(
             fetch(request).catch(() => {
-                // אם זה דף PHP ואין רשת, הצג דף אופליין
                 if (request.mode === 'navigate') {
                     return caches.match('/offline.html');
                 }
@@ -99,21 +109,18 @@ self.addEventListener('fetch', event => {
         return;
     }
     
-    // אסטרטגיית Network First with Cache Fallback
+    // Network First with Cache Fallback
     event.respondWith(
         fetch(request)
             .then(response => {
-                // בדוק שהתגובה תקינה
                 if (!response || response.status !== 200 || response.type !== 'basic') {
                     return response;
                 }
                 
-                // שמור בקאש
                 const responseToCache = response.clone();
                 
                 caches.open(CACHE_NAME)
                     .then(cache => {
-                        // שמור רק קבצים סטטיים
                         if (request.method === 'GET' && 
                             (url.pathname.includes('.js') || 
                              url.pathname.includes('.css') || 
@@ -129,19 +136,16 @@ self.addEventListener('fetch', event => {
                 return response;
             })
             .catch(() => {
-                // אם הרשת נכשלה, נסה מהקאש
                 return caches.match(request)
                     .then(response => {
                         if (response) {
                             return response;
                         }
                         
-                        // אם זה ניווט ואין בקאש, הצג דף אופליין
                         if (request.mode === 'navigate') {
                             return caches.match('/offline.html');
                         }
                         
-                        // החזר תמונת placeholder לתמונות חסרות
                         if (request.destination === 'image') {
                             return caches.match('/images/placeholder.png');
                         }
@@ -150,13 +154,89 @@ self.addEventListener('fetch', event => {
     );
 });
 
-// טיפול בהודעות Push
+// ============= תוספות חדשות: BACKGROUND SYNC =============
+
+// פונקציה לבדיקת והצגת התראות ברקע
+async function checkAndShowNotifications() {
+    console.log('[SW] 📡 Checking for notifications in background...');
+    
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: new URLSearchParams({
+                action: 'check_undelivered'
+            }),
+            credentials: 'include' // חשוב! שולח cookies
+        });
+        
+        if (!response.ok) throw new Error('Network error');
+        
+        const data = await response.json();
+        
+        if (data.success && data.notifications && data.notifications.length > 0) {
+            console.log(`[SW] 📨 Found ${data.notifications.length} notifications`);
+            
+            // הצג כל התראה
+            for (const notif of data.notifications) {
+                await self.registration.showNotification(notif.title, {
+                    body: notif.body,
+                    icon: '/pwa/icons/android/android-launchericon-192-192.png',
+                    badge: '/pwa/icons/android/android-launchericon-72-72.png',
+                    tag: 'notification-' + notif.id,
+                    data: { 
+                        url: notif.url || '/notifications/manager.php',
+                        id: notif.id,
+                        timestamp: Date.now()
+                    },
+                    requireInteraction: false,
+                    vibrate: [200, 100, 200],
+                    renotify: true
+                });
+            }
+            
+            // עדכן badge אם אפשר
+            if (self.registration.setAppBadge) {
+                self.registration.setAppBadge(data.notifications.length);
+            }
+            
+            return true;
+        }
+        
+        console.log('[SW] ✅ No new notifications');
+        return true;
+        
+    } catch (error) {
+        console.error('[SW] ❌ Error checking notifications:', error);
+        throw error;
+    }
+}
+
+// Background Sync - מופעל כשחוזרים לאונליין
+self.addEventListener('sync', event => {
+    console.log('[SW] 🔄 Background sync triggered:', event.tag);
+    
+    if (event.tag === 'check-notifications') {
+        event.waitUntil(checkAndShowNotifications());
+    }
+});
+
+// Periodic Background Sync - בדיקה תקופתית
+self.addEventListener('periodicsync', event => {
+    console.log('[SW] ⏰ Periodic sync triggered:', event.tag);
+    
+    if (event.tag === 'check-notifications') {
+        event.waitUntil(checkAndShowNotifications());
+    }
+});
+
+// ============= Push Notifications (משופר) =============
 self.addEventListener('push', event => {
     console.log('[ServiceWorker] Push Received');
     
-    const title = 'קניות משפחתיות';
-    const options = {
-        body: event.data ? event.data.text() : 'יש לך עדכון חדש!',
+    let notificationData = {
+        title: 'קניות משפחתיות',
+        body: 'יש לך עדכון חדש!',
         icon: '/pwa/icons/android/android-launchericon-192-192.png',
         badge: '/pwa/icons/android/android-launchericon-72-72.png',
         vibrate: [200, 100, 200],
@@ -166,22 +246,38 @@ self.addEventListener('push', event => {
         }
     };
     
+    // נסה לפרש את הנתונים אם יש
+    if (event.data) {
+        try {
+            const data = event.data.json();
+            notificationData = {
+                ...notificationData,
+                title: data.title || notificationData.title,
+                body: data.body || notificationData.body,
+                data: { 
+                    ...notificationData.data,
+                    url: data.url || '/notifications/manager.php'
+                }
+            };
+        } catch (e) {
+            notificationData.body = event.data.text();
+        }
+    }
+    
     event.waitUntil(
-        self.registration.showNotification(title, options)
+        self.registration.showNotification(notificationData.title, notificationData)
     );
 });
 
-// טיפול בלחיצה על התראה - עם ניתוב חכם
+// ============= טיפול בלחיצה על התראה (הקוד המקורי שלך) =============
 self.addEventListener('notificationclick', event => {
     console.log('[Service Worker] Notification click received.');
     
-    // סגור את ההתראה
     event.notification.close();
     
-    // שמור את היעד הסופי
-    const finalTarget = '/notifications/manager.php';
+    // קבל URL מה-data או השתמש בברירת מחדל
+    const finalTarget = event.notification.data?.url || '/notifications/manager.php';
     
-    // פתח או מקד את החלון
     event.waitUntil(
         clients.matchAll({
             type: 'window',
@@ -189,37 +285,31 @@ self.addEventListener('notificationclick', event => {
         }).then(windowClients => {
             // בדוק אם יש חלון פתוח
             for (let client of windowClients) {
-                // אם יש חלון פתוח של האפליקציה
                 if (client.url.includes(self.location.origin)) {
-                    // בדוק אם המשתמש בדף login
+                    // אם המשתמש בדף login
                     if (client.url.includes('/auth/login.php')) {
-                        // שמור ב-localStorage שצריך לנווט אחרי התחברות
                         return client.focus().then(() => {
-                            // שלח הודעה לדף הlogin
                             client.postMessage({
                                 type: 'REDIRECT_AFTER_LOGIN',
                                 url: finalTarget
                             });
                         });
                     } else {
-                        // המשתמש מחובר - נווט ישר לדף ההתראות
+                        // המשתמש מחובר - נווט לדף ההתראות
                         return client.navigate(finalTarget).then(client => client.focus());
                     }
                 }
             }
             
-            // אם אין חלון פתוח, פתח חדש
-            // האפליקציה תנווט אוטומטית ללוגין או לדשבורד
-            // ואז לדף ההתראות אם צריך
+            // אם אין חלון פתוח
             if (clients.openWindow) {
-                // שמור ב-sessionStorage את היעד
                 return clients.openWindow('/?redirect_to=' + encodeURIComponent(finalTarget));
             }
         })
     );
 });
 
-// טיפול בהודעות מהדף
+// ============= טיפול בהודעות (משופר) =============
 self.addEventListener('message', event => {
     // דילוג על עדכון
     if (event.data && event.data.type === 'SKIP_WAITING') {
@@ -233,9 +323,20 @@ self.addEventListener('message', event => {
         });
     }
     
+    // ===== תוספת חדשה: בדיקה ידנית של התראות =====
+    if (event.data && event.data.type === 'CHECK_NOTIFICATIONS') {
+        event.waitUntil(checkAndShowNotifications());
+    }
+    
+    // ===== תוספת חדשה: רישום לסנכרון =====
+    if (event.data && event.data.type === 'REGISTER_SYNC') {
+        event.waitUntil(
+            self.registration.sync.register('check-notifications')
+        );
+    }
+    
     // שמירת התראה
     if (event.data && event.data.type === 'SAVE_NOTIFICATION') {
-        // שלח הודעה לכל החלונות לעדכן את רשימת ההתראות
         clients.matchAll().then(clients => {
             clients.forEach(client => {
                 client.postMessage({
@@ -248,9 +349,10 @@ self.addEventListener('message', event => {
     
     // עדכון badge
     if (event.data && event.data.type === 'NOTIFICATION_UPDATE') {
-        // עדכון badge אם יש (נתמך רק בחלק מהדפדפנים)
         if (self.registration.setAppBadge) {
             self.registration.setAppBadge(event.data.count);
         }
     }
 });
+
+console.log('[SW] ✨ Service Worker loaded with Background Sync support');

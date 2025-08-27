@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Debug - בדיקה מלאה של מערכת התראות</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        
+        .card h2 {
+            color: #2a5298;
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        /* סטטוסים */
+        .status-grid {
+            display: grid;
+            gap: 12px;
+        }
+        
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            border-right: 4px solid #ddd;
+            transition: all 0.3s;
+        }
+        
+        .status-item.active {
+            border-right-color: #4CAF50;
+            background: #e8f5e9;
+        }
+        
+        .status-item.inactive {
+            border-right-color: #f44336;
+            background: #ffebee;
+        }
+        
+        .status-item.partial {
+            border-right-color: #FF9800;
+            background: #fff3e0;
+        }
+        
+        .status-item.checking {
+            border-right-color: #2196F3;
+            background: #e3f2fd;
+        }
+        
+        .status-label {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .status-value {
+            font-size: 12px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .status-value.active { background: #4CAF50; }
+        .status-value.inactive { background: #f44336; }
+        .status-value.partial { background: #FF9800; }
+        .status-value.checking { background: #2196F3; }
+        .status-value.neutral { background: #9E9E9E; }
+        
+        /* כפתורים */
+        .button-grid {
+            display: grid;
+            gap: 10px;
+        }
+        
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .btn-info {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #fc4a1a 0%, #f7b733 100%);
+            color: white;
+        }
+        
+        /* קונסול */
+        .console {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .console-entry {
+            margin: 4px 0;
+            padding: 4px 8px;
+            border-radius: 4px;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .console-info { color: #58a6ff; }
+        .console-success { color: #3fb950; background: rgba(63, 185, 80, 0.1); }
+        .console-error { color: #f85149; background: rgba(248, 81, 73, 0.1); }
+        .console-warning { color: #d29922; background: rgba(210, 153, 34, 0.1); }
+        
+        /* התראות לוקאליות */
+        .notification-list {
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        
+        .notification-item {
+            background: #f9f9f9;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-right: 3px solid #4CAF50;
+        }
+        
+        .notification-item h4 {
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        
+        .notification-item p {
+            color: #666;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+        
+        .notification-item .time {
+            color: #999;
+            font-size: 11px;
+        }
+        
+        /* אנימציה לבדיקות */
+        .checking-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #2196F3;
+            border-radius: 50%;
+            animation: pulse 1s infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+        
+        /* הודעות */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        /* מונים */
+        .counter {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2a5298;
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border-radius: 8px;
+        }
+        
+        .counter small {
+            display: block;
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+            font-weight: normal;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔍 מערכת בדיקת התראות מלאה</h1>
+        <p>Debug Mode - בדיקת כל רכיבי מערכת ההתראות</p>
+    </div>
+    
+    <div class="dashboard">
+        <!-- כרטיס סטטוסים -->
+        <div class="card">
+            <h2>📊 סטטוס מערכת</h2>
+            <div class="status-grid">
+                <div class="status-item" id="browser-support-item">
+                    <span class="status-label">תמיכת דפדפן</span>
+                    <span class="status-value neutral" id="browser-support">בודק...</span>
+                </div>
+                <div class="status-item" id="sw-item">
+                    <span class="status-label">Service Worker</span>
+                    <span class="status-value neutral" id="sw-status">בודק...</span>
+                </div>
+                <div class="status-item" id="notif-item">
+                    <span class="status-label">הרשאות התראות</span>
+                    <span class="status-value neutral" id="notif-status">בודק...</span>
+                </div>
+                <div class="status-item" id="push-item">
+                    <span class="status-label">Push API</span>
+                    <span class="status-value neutral" id="push-status">בודק...</span>
+                </div>
+                <div class="status-item" id="sync-item">
+                    <span class="status-label">Background Sync</span>
+                    <span class="status-value neutral" id="sync-status">בודק...</span>
+                </div>
+                <div class="status-item" id="periodic-item">
+                    <span class="status-label">Periodic Sync</span>
+                    <span class="status-value neutral" id="periodic-status">בודק...</span>
+                </div>
+                <div class="status-item" id="listener-item">
+                    <span class="status-label">Push Listener</span>
+                    <span class="status-value neutral" id="listener-status">בודק...</span>
+                </div>
+                <div class="status-item" id="session-item">
+                    <span class="status-label">User Session</span>
+                    <span class="status-value neutral" id="session-status">בודק...</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- כרטיס הפעלה -->
+        <div class="card">
+            <h2>🚀 הפעלת רכיבים</h2>
+            <div class="button-grid">
+                <button class="btn-primary" onclick="setupEverything()">
+                    ⚡ הגדרה אוטומטית מלאה
+                </button>
+                <button class="btn-success" onclick="registerSW()">
+                    📦 רשום Service Worker
+                </button>
+                <button class="btn-success" onclick="requestNotif()">
+                    🔔 בקש הרשאות התראות
+                </button>
+                <button class="btn-success" onclick="setupBackgroundSync()">
+                    🔄 הפעל Background Sync
+                </button>
+                <button class="btn-info" onclick="startPushListener()">
+                    👂 הפעל Push Listener
+                </button>
+            </div>
+        </div>
+        
+        <!-- כרטיס בדיקות -->
+        <div class="card">
+            <h2>🧪 בדיקות</h2>
+            <div class="button-grid">
+                <button class="btn-warning" onclick="testNotification()">
+                    📨 שלח התראת בדיקה
+                </button>
+                <button class="btn-warning" onclick="checkUndelivered()">
+                    🔍 בדוק התראות שלא נמסרו
+                </button>
+                <button class="btn-warning" onclick="triggerBackgroundSync()">
+                    ⚡ הפעל Background Sync ידנית
+                </button>
+                <button class="btn-warning" onclick="simulateOfflineNotification()">
+                    📴 סמלץ התראה אופליין
+                </button>
+                <button class="btn-danger" onclick="clearAll()">
+                    🗑️ נקה הכל והתחל מחדש
+                </button>
+            </div>
+        </div>
+        
+        <!-- כרטיס מונים -->
+        <div class="card">
+            <h2>📈 סטטיסטיקות</h2>
+            <div class="counter">
+                <span id="notif-counter">0</span>
+                <small>התראות שנמסרו היום</small>
+            </div>
+            <div class="counter" style="margin-top: 10px;">
+                <span id="unread-counter">0</span>
+                <small>התראות שלא נקראו</small>
+            </div>
+            <div class="counter" style="margin-top: 10px;">
+                <span id="check-counter">0</span>
+                <small>בדיקות שבוצעו</small>
+            </div>
+        </div>
+        
+        <!-- כרטיס התראות אחרונות -->
+        <div class="card">
+            <h2>📬 התראות אחרונות</h2>
+            <div class="notification-list" id="notification-list">
+                <p style="color: #999; text-align: center;">אין התראות עדיין</p>
+            </div>
+        </div>
+        
+        <!-- כרטיס קונסול -->
+        <div class="card" style="grid-column: 1 / -1;">
+            <h2>💻 קונסול</h2>
+            <div class="console" id="console">
+                <div class="console-entry console-info">🚀 מערכת Debug נטענה...</div>
+            </div>
+        </div>
+        
+        <!-- הודעות חשובות -->
+        <div class="card" style="grid-column: 1 / -1;">
+            <h2>ℹ️ מידע חשוב</h2>
+            <div class="alert alert-warning">
+                <strong>⚠️ דפדפנים נתמכים:</strong> Chrome, Edge, Firefox (חלקית). Safari/iOS לא תומך בהתראות רקע מלאות.
+            </div>
+            <div class="alert alert-info">
+                <strong>💡 טיפ:</strong> לחץ על "הגדרה אוטומטית מלאה" כדי להגדיר את הכל בלחיצה אחת!
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // משתנים גלובליים
+        let checkCount = 0;
+        let notificationCount = 0;
+        
+        // לוג לקונסול
+        function log(message, type = 'info') {
+            const console = document.getElementById('console');
+            const entry = document.createElement('div');
+            entry.className = `console-entry console-${type}`;
+            const time = new Date().toLocaleTimeString('he-IL');
+            entry.innerHTML = `<span style="opacity: 0.6">[${time}]</span> ${message}`;
+            console.insertBefore(entry, console.firstChild);
+            
+            // הגבל ל-100 שורות
+            while (console.children.length > 100) {
+                console.removeChild(console.lastChild);
+            }
+        }
+        
+        // עדכון סטטוס
+        function updateStatus(id, status, text = null) {
+            const element = document.getElementById(id);
+            const item = document.getElementById(id.replace('-status', '-item'));
+            
+            if (element) {
+                element.className = 'status-value ' + status;
+                element.textContent = text || (
+                    status === 'active' ? 'פעיל' :
+                    status === 'inactive' ? 'לא פעיל' :
+                    status === 'partial' ? 'חלקי' :
+                    status === 'checking' ? 'בודק...' :
+                    'לא נתמך'
+                );
+            }
+            
+            if (item) {
+                item.className = 'status-item ' + status;
+            }
+        }
+        
+        // בדיקת סטטוסים
+        async function checkAllStatuses() {
+            log('🔍 מתחיל בדיקת סטטוסים מקיפה...');
+            
+            // תמיכת דפדפן
+            const browser = detectBrowser();
+            updateStatus('browser-support', browser.supported ? 'active' : 'inactive', browser.name);
+            log(`דפדפן: ${browser.name} - ${browser.supported ? 'נתמך' : 'לא נתמך'}`, browser.supported ? 'success' : 'warning');
+            
+            // Service Worker
+            if ('serviceWorker' in navigator) {
+                const registration = await navigator.serviceWorker.getRegistration();
+                updateStatus('sw-status', registration ? 'active' : 'inactive');
+                if (registration) {
+                    log('✅ Service Worker רשום ופעיל', 'success');
+                } else {
+                    log('❌ Service Worker לא רשום', 'error');
+                }
+            } else {
+                updateStatus('sw-status', 'inactive', 'לא נתמך');
+                log('❌ הדפדפן לא תומך ב-Service Worker', 'error');
+            }
+            
+            // הרשאות התראות
+            if ('Notification' in window) {
+                const perm = Notification.permission;
+                updateStatus('notif-status', 
+                    perm === 'granted' ? 'active' : 
+                    perm === 'denied' ? 'inactive' : 'partial',
+                    perm === 'granted' ? 'מאושר' : 
+                    perm === 'denied' ? 'נדחה' : 'ממתין'
+                );
+                log(`הרשאות התראות: ${perm}`, perm === 'granted' ? 'success' : 'warning');
+            }
+            
+            // Push API
+            if ('PushManager' in window) {
+                try {
+                    const registration = await navigator.serviceWorker.ready;
+                    const subscription = await registration.pushManager.getSubscription();
+                    updateStatus('push-status', subscription ? 'active' : 'partial');
+                    log(subscription ? '✅ Push מוגדר' : '⚠️ Push זמין אבל לא מוגדר', subscription ? 'success' : 'warning');
+                } catch (e) {
+                    updateStatus('push-status', 'inactive');
+                }
+            }
+            
+            // Background Sync
+            if ('SyncManager' in window) {
+                updateStatus('sync-status', 'partial', 'זמין');
+                log('✅ Background Sync נתמך', 'success');
+            } else {
+                updateStatus('sync-status', 'inactive');
+                log('❌ Background Sync לא נתמך', 'warning');
+            }
+            
+            // Periodic Sync
+            if ('periodicSync' in ServiceWorkerRegistration.prototype) {
+                updateStatus('periodic-status', 'partial', 'זמין');
+                log('✅ Periodic Sync נתמך', 'success');
+            } else {
+                updateStatus('periodic-status', 'inactive');
+                log('❌ Periodic Sync לא נתמך', 'warning');
+            }
+            
+            // Push Listener
+            if (window.PushListener && window.PushListener.isRunning()) {
+                updateStatus('listener-status', 'active');
+                log('✅ Push Listener פעיל', 'success');
+            } else {
+                updateStatus('listener-status', 'inactive');
+                log('❌ Push Listener לא פעיל', 'warning');
+            }
+            
+            // User Session
+            const hasSession = document.cookie.includes('PHPSESSID') || localStorage.getItem('user_id');
+            updateStatus('session-status', hasSession ? 'active' : 'inactive');
+            log(hasSession ? '✅ משתמש מחובר' : '❌ משתמש לא מחובר', hasSession ? 'success' : 'warning');
+            
+            // עדכון מונים
+            updateCounters();
+        }
+        
+        // זיהוי דפדפן
+        function detectBrowser() {
+            const ua = navigator.userAgent;
+            let name = 'Unknown';
+            let supported = false;
+            
+            if (ua.includes('Chrome')) {
+                name = 'Chrome';
+                supported = true;
+            } else if (ua.includes('Edge')) {
+                name = 'Edge';
+                supported = true;
+            } else if (ua.includes('Firefox')) {
+                name = 'Firefox';
+                supported = true;
+            } else if (ua.includes('Safari')) {
+                name = 'Safari';
+                supported = false;
+            }
+            
+            return { name, supported };
+        }
+        
+        // הגדרה אוטומטית מלאה
+        async function setupEverything() {
+            log('⚡ מתחיל הגדרה אוטומטית מלאה...', 'info');
+            
+            try {
+                await registerSW();
+                await new Promise(r => setTimeout(r, 1000));
+                
+                await requestNotif();
+                await new Promise(r => setTimeout(r, 1000));
+                
+                await setupBackgroundSync();
+                await new Promise(r => setTimeout(r, 1000));
+                
+                await startPushListener();
+                
+                log('🎉 ההגדרה הושלמה בהצלחה!', 'success');
+                
+                // רענן סטטוסים
+                checkAllStatuses();
+                
+            } catch (error) {
+                log(`❌ שגיאה בהגדרה: ${error.message}`, 'error');
+            }
+        }
+        
+        // רישום Service Worker
+        async function registerSW() {
+            log('📦 רושם Service Worker...', 'info');
+            
+            try {
+                const registration = await navigator.serviceWorker.register('/service-worker.js');
+                
+                await navigator.serviceWorker.ready;
+                
+                log('✅ Service Worker נרשם בהצלחה', 'success');
+                updateStatus('sw-status', 'active');
+                
+                return registration;
+            } catch (error) {
+                log(`❌ שגיאה ברישום: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+        
+        // בקשת הרשאות
+        async function requestNotif() {
+            log('🔔 מבקש הרשאות התראות...', 'info');
+            
+            try {
+                const permission = await Notification.requestPermission();
+                
+                if (permission === 'granted') {
+                    log('✅ הרשאות ניתנו', 'success');
+                    updateStatus('notif-status', 'active', 'מאושר');
+                    
+                    // הצג התראת בדיקה
+                    if ('serviceWorker' in navigator) {
+                        const registration = await navigator.serviceWorker.ready;
+                        await registration.showNotification('התראות מופעלות! 🎉', {
+                            body: 'המערכת מוכנה לקבלת התראות',
+                            icon: '/pwa/icons/android/android-launchericon-192-192.png'
+                        });
+                    }
+                } else {
+                    log('❌ הרשאות נדחו', 'error');
+                    updateStatus('notif-status', 'inactive', 'נדחה');
+                }
+            } catch (error) {
+                log(`❌ שגיאה: ${error.message}`, 'error');
+            }
+        }
+        
+        // הגדרת Background Sync
+        async function setupBackgroundSync() {
+            log('🔄 מגדיר Background Sync...', 'info');
+            
+            try {
+                const registration = await navigator.serviceWorker.ready;
+                
+                if ('sync' in registration) {
+                    await registration.sync.register('check-notifications');
+                    log('✅ Background Sync נרשם', 'success');
+                    updateStatus('sync-status', 'active');
+                }
+                
+                if ('periodicSync' in registration) {
+                    try {
+                        await registration.periodicSync.register('check-notifications', {
+                            minInterval: 30 * 60 * 1000
+                        });
+                        log('✅ Periodic Sync נרשם', 'success');
+                        updateStatus('periodic-status', 'active');
+                    } catch (e) {
+                        log('⚠️ Periodic Sync דורש הרשאה מיוחדת', 'warning');
+                    }
+                }
+            } catch (error) {
+                log(`❌ שגיאה: ${error.message}`, 'error');
+            }
+        }
+        
+        // הפעלת Push Listener
+        function startPushListener() {
+            log('👂 מפעיל Push Listener...', 'info');
+            
+            if (window.PushListener) {
+                window.PushListener.start();
+                log('✅ Push Listener הופעל', 'success');
+                updateStatus('listener-status', 'active');
+            } else {
+                log('❌ Push Listener לא נמצא - טען את הסקריפט', 'error');
+                
+                // נסה לטעון
+                const script = document.createElement('script');
+                script.src = '/push-listener.js';
+                script.onload = () => {
+                    window.PushListener.start();
+                    log('✅ Push Listener נטען והופעל', 'success');
+                    updateStatus('listener-status', 'active');
+                };
+                document.head.appendChild(script);
+            }
+        }
+        
+        // בדיקות
+        async function testNotification() {
+            log('📨 שולח התראת בדיקה...', 'info');
+            notificationCount++;
+            
+            try {
+                if ('serviceWorker' in navigator) {
+                    const registration = await navigator.serviceWorker.ready;
+                    await registration.showNotification(`התראת בדיקה #${notificationCount}`, {
+                        body: `זו התראה לבדיקה - ${new Date().toLocaleTimeString('he-IL')}`,
+                        icon: '/pwa/icons/android/android-launchericon-192-192.png',
+                        tag: 'test-' + Date.now()
+                    });
+                    log('✅ התראה נשלחה', 'success');
+                    
+                    // הוסף להתראות מקומיות
+                    addLocalNotification(`התראת בדיקה #${notificationCount}`, `זו התראה לבדיקה`);
+                }
+            } catch (error) {
+                log(`❌ שגיאה: ${error.message}`, 'error');
+            }
+            
+            updateCounters();
+        }
+        
+        async function checkUndelivered() {
+            log('🔍 בודק התראות שלא נמסרו...', 'info');
+            checkCount++;
+            
+            try {
+                const response = await fetch('/api/notifications.php', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: new URLSearchParams({
+                        action: 'check_undelivered'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.notifications) {
+                    log(`📬 נמצאו ${data.notifications.length} התראות`, 'success');
+                    
+                    data.notifications.forEach(notif => {
+                        addLocalNotification(notif.title, notif.body);
+                    });
+                } else {
+                    log('✅ אין התראות חדשות', 'info');
+                }
+            } catch (error) {
+                log(`❌ שגיאה: ${error.message}`, 'error');
+            }
+            
+            updateCounters();
+        }
+        
+        async function triggerBackgroundSync() {
+            log('⚡ מפעיל Background Sync ידנית...', 'info');
+            
+            try {
+                const registration = await navigator.serviceWorker.ready;
+                
+                if (registration.active) {
+                    registration.active.postMessage({
+                        type: 'CHECK_NOTIFICATIONS'
+                    });
+                    log('✅ בקשה נשלחה ל-Service Worker', 'success');
+                }
+                
+                if ('sync' in registration) {
+                    await registration.sync.register('check-notifications');
+                    log('✅ Background Sync הופעל', 'success');
+                }
+            } catch (error) {
+                log(`❌ שגיאה: ${error.message}`, 'error');
+            }
+        }
+        
+        function simulateOfflineNotification() {
+            log('📴 מדמה התראה אופליין...', 'info');
+            
+            // שמור התראה ב-localStorage
+            const notification = {
+                id: Date.now().toString(),
+                title: 'התראה אופליין',
+                body: 'התראה זו נשמרה בזמן אופליין',
+                timestamp: Date.now(),
+                read: false
+            };
+            
+            let notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+            notifications.unshift(notification);
+            localStorage.setItem('notifications', JSON.stringify(notifications));
+            
+            log('✅ התראה נשמרה ב-localStorage', 'success');
+            
+            // הצג בממשק
+            addLocalNotification(notification.title, notification.body);
+            updateCounters();
+        }
+        
+        async function clearAll() {
+            if (!confirm('האם אתה בטוח? פעולה זו תמחק את כל ההגדרות')) return;
+            
+            log('🗑️ מנקה הכל...', 'warning');
+            
+            try {
+                // עצור Push Listener
+                if (window.PushListener) {
+                    window.PushListener.stop();
+                }
+                
+                // מחק Service Worker
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                for (let registration of registrations) {
+                    await registration.unregister();
+                }
+                
+                // נקה localStorage
+                localStorage.removeItem('notifications');
+                
+                // נקה התראות
+                document.getElementById('notification-list').innerHTML = '<p style="color: #999; text-align: center;">אין התראות עדיין</p>';
+                
+                log('✅ הכל נוקה', 'success');
+                
+                // רענן סטטוסים
+                setTimeout(checkAllStatuses, 500);
+                
+            } catch (error) {
+                log(`❌ שגיאה: ${error.message}`, 'error');
+            }
+        }
+        
+        // הוספת התראה מקומית
+        function addLocalNotification(title, body) {
+            const list = document.getElementById('notification-list');
+            
+            // אם זו ההתראה הראשונה, נקה את ההודעה
+            if (list.querySelector('p')) {
+                list.innerHTML = '';
+            }
+            
+            const item = document.createElement('div');
+            item.className = 'notification-item';
+            item.innerHTML = `
+                <h4>${title}</h4>
+                <p>${body}</p>
+                <div class="time">${new Date().toLocaleString('he-IL')}</div>
+            `;
+            
+            list.insertBefore(item, list.firstChild);
+            
+            // הגבל ל-10 התראות
+            while (list.children.length > 10) {
+                list.removeChild(list.lastChild);
+            }
+        }
+        
+        // עדכון מונים
+        function updateCounters() {
+            document.getElementById('notif-counter').textContent = notificationCount;
+            document.getElementById('check-counter').textContent = checkCount;
+            
+            const notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+            const unreadCount = notifications.filter(n => !n.read).length;
+            document.getElementById('unread-counter').textContent = unreadCount;
+        }
+        
+        // טעינה ראשונית
+        window.addEventListener('load', () => {
+            log('🚀 מערכת Debug מוכנה', 'success');
+            checkAllStatuses();
+            
+            // רענון אוטומטי כל 30 שניות
+            setInterval(checkAllStatuses, 30000);
+        });
+    </script>
+</body>
+</html>

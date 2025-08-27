@@ -36,7 +36,7 @@
         init() {
             this.injectStyles();
             this.createPopup();
-            this.createFloatingButton();
+            // this.createFloatingButton();
             this.attachEventListeners();
             this.interceptConsole();
             this.startMonitoring();

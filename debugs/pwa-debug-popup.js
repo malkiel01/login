@@ -755,13 +755,13 @@
         show() {
             this.popup.classList.add('show');
             this.isVisible = true;
-            this.floatButton.style.display = 'none';
+            // this.floatButton.style.display = 'none';
         }
 
         hide() {
             this.popup.classList.remove('show');
             this.isVisible = false;
-            this.floatButton.style.display = 'flex';
+            // this.floatButton.style.display = 'flex';
         }
 
         toggle() {
@@ -774,10 +774,10 @@
 
         minimize() {
             this.hide();
-            this.floatButton.classList.add('pulse');
-            setTimeout(() => {
-                this.floatButton.classList.remove('pulse');
-            }, 3000);
+            // this.floatButton.classList.add('pulse');
+            // setTimeout(() => {
+                // this.floatButton.classList.remove('pulse');
+            // }, 3000);
         }
 
         // Test Methods

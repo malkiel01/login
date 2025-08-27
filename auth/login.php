@@ -259,6 +259,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     </div>
 
     <!-- סוף קוד בדיקת PWA לדשבורד -->
+     <!-- ניהול ניתוב התחברות -->
+     <?php echo getRedirectScript(); ?> 
     <?php echo getPermissionsScript(); ?>
     <script>
         // בקשה אוטומטית אחרי 3 שניות

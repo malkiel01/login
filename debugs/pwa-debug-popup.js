@@ -402,7 +402,6 @@
                         <span>PWA Debug Tool</span>
                     </div>
                     <div>
-                        <button class="pwa-debug-minimize" onclick="PWADebugPopup.minimize()">_</button>
                         <button class="pwa-debug-close" onclick="PWADebugPopup.hide()">✕</button>
                     </div>
                 </div>

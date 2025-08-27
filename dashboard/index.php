@@ -168,6 +168,225 @@ define('DASHBOARD_PATH', __DIR__);
         };
     </script>
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <!-- הוסף את זה בדשבורד שלך (dashboard/index.php) -->
+
+        <!-- Widget התראות בפינה -->
+        <div id="notificationWidget" style="
+            position: fixed;
+            top: 70px;
+            left: 20px;
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            min-width: 250px;
+            z-index: 1000;
+            display: none;
+        ">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3 style="margin: 0; font-size: 16px;">🔔 התראות</h3>
+                <span id="notifCount" style="background: #ef4444; color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px;">0</span>
+            </div>
+            <div id="notifList" style="max-height: 300px; overflow-y: auto;">
+                <!-- התראות יטענו כאן -->
+            </div>
+            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #e5e7eb;">
+                <a href="/notifications/manager.php" style="color: #667eea; text-decoration: none; font-size: 14px;">
+                    צפה בכל ההתראות ←
+                </a>
+            </div>
+        </div>
+
+        <!-- כפתור התראות צף -->
+        <button id="notificationBtn" onclick="toggleNotifications()" style="
+            position: fixed;
+            top: 15px;
+            left: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        ">
+            🔔
+            <span id="notifBadge" style="
+                position: absolute;
+                top: -5px;
+                right: -5px;
+                background: #ef4444;
+                color: white;
+                width: 20px;
+                height: 20px;
+                border-radius: 50%;
+                font-size: 11px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                display: none;
+            ">0</span>
+        </button>
+
+        <script>
+            // מערכת התראות בדשבורד
+            (function() {
+                let widgetOpen = false;
+                let notifications = [];
+                
+                // טעינת התראות בטעינה
+                window.addEventListener('DOMContentLoaded', function() {
+                    loadNotifications();
+                    
+                    // רענון כל 30 שניות
+                    setInterval(loadNotifications, 30000);
+                    
+                    // הקשבה להודעות מ-Service Worker
+                    if ('serviceWorker' in navigator) {
+                        navigator.serviceWorker.addEventListener('message', event => {
+                            if (event.data && event.data.type === 'NEW_NOTIFICATION') {
+                                loadNotifications();
+                            }
+                        });
+                    }
+                });
+                
+                // טעינת התראות
+                window.loadNotifications = function() {
+                    notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+                    updateNotificationWidget();
+                }
+                
+                // עדכון Widget
+                function updateNotificationWidget() {
+                    const unreadCount = notifications.filter(n => !n.read).length;
+                    const badge = document.getElementById('notifBadge');
+                    const count = document.getElementById('notifCount');
+                    const list = document.getElementById('notifList');
+                    
+                    // עדכון מונים
+                    if (unreadCount > 0) {
+                        badge.style.display = 'flex';
+                        badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+                        count.textContent = unreadCount;
+                    } else {
+                        badge.style.display = 'none';
+                        count.textContent = '0';
+                    }
+                    
+                    // עדכון רשימה
+                    const recentNotifs = notifications.slice(0, 5);
+                    if (recentNotifs.length === 0) {
+                        list.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">אין התראות חדשות</div>';
+                    } else {
+                        list.innerHTML = recentNotifs.map(n => `
+                            <div onclick="openNotification('${n.id}')" style="
+                                padding: 10px;
+                                border-radius: 5px;
+                                margin-bottom: 5px;
+                                cursor: pointer;
+                                background: ${n.read ? '#f9fafb' : '#e0f2fe'};
+                                transition: all 0.2s;
+                            " onmouseover="this.style.background='#e5e7eb'" onmouseout="this.style.background='${n.read ? '#f9fafb' : '#e0f2fe'}'">
+                                <div style="font-weight: 600; font-size: 14px; color: #333;">${n.title}</div>
+                                <div style="font-size: 12px; color: #666; margin-top: 2px;">${n.body}</div>
+                                <div style="font-size: 11px; color: #999; margin-top: 5px;">${formatTime(n.timestamp)}</div>
+                            </div>
+                        `).join('');
+                    }
+                }
+                
+                // פתח/סגור Widget
+                window.toggleNotifications = function() {
+                    const widget = document.getElementById('notificationWidget');
+                    widgetOpen = !widgetOpen;
+                    widget.style.display = widgetOpen ? 'block' : 'none';
+                    
+                    if (widgetOpen) {
+                        loadNotifications();
+                    }
+                }
+                
+                // פתיחת התראה
+                window.openNotification = function(id) {
+                    const notification = notifications.find(n => n.id === id);
+                    if (notification) {
+                        notification.read = true;
+                        localStorage.setItem('notifications', JSON.stringify(notifications));
+                        
+                        if (notification.url) {
+                            window.location.href = notification.url;
+                        } else {
+                            window.location.href = '/notifications/manager.php';
+                        }
+                    }
+                }
+                
+                // פורמט זמן
+                function formatTime(timestamp) {
+                    const date = new Date(timestamp);
+                    const now = new Date();
+                    const diff = now - date;
+                    
+                    if (diff < 60000) return 'עכשיו';
+                    if (diff < 3600000) return `לפני ${Math.floor(diff/60000)} דק׳`;
+                    if (diff < 86400000) return `לפני ${Math.floor(diff/3600000)} שעות`;
+                    
+                    return date.toLocaleDateString('he-IL');
+                }
+                
+                // סגור Widget בלחיצה מחוץ
+                document.addEventListener('click', function(e) {
+                    const widget = document.getElementById('notificationWidget');
+                    const btn = document.getElementById('notificationBtn');
+                    
+                    if (!widget.contains(e.target) && !btn.contains(e.target) && widgetOpen) {
+                        toggleNotifications();
+                    }
+                });
+            })();
+        </script>
+
+
+    <!-- סוף הוסף את זה בדשבורד שלך (dashboard/index.php) -->
+
     <!-- JavaScript Files -->
     <script src="assets/js/dashboard.js"></script>
     <!-- לפני </body> -->

@@ -150,15 +150,15 @@ self.addEventListener('fetch', event => {
     );
 });
 
-// טיפול בהודעות Push (אופציונלי)
+// טיפול בהודעות Push
 self.addEventListener('push', event => {
     console.log('[ServiceWorker] Push Received');
     
     const title = 'קניות משפחתיות';
     const options = {
         body: event.data ? event.data.text() : 'יש לך עדכון חדש!',
-        icon: '/images/icon-192x192.png',
-        badge: '/images/badge-72x72.png',
+        icon: '/pwa/icons/android/android-launchericon-192-192.png',
+        badge: '/pwa/icons/android/android-launchericon-72-72.png',
         vibrate: [200, 100, 200],
         data: {
             dateOfArrival: Date.now(),
@@ -171,65 +171,79 @@ self.addEventListener('push', event => {
     );
 });
 
-// טיפול בלחיצה על התראה
-self.addEventListener('notificationclick', event => {
-    console.log('[ServiceWorker] Notification click');
-    
-    event.notification.close();
-    
-    event.waitUntil(
-        clients.openWindow('/dashboard/index.php')
-    );
-});
-
-// עדכון אוטומטי כל 24 שעות
-self.addEventListener('message', event => {
-    if (event.data && event.data.type === 'SKIP_WAITING') {
-        self.skipWaiting();
-    }
-    
-    if (event.data && event.data.type === 'UPDATE_CACHE') {
-        caches.open(CACHE_NAME).then(cache => {
-            cache.addAll(urlsToCache);
-        });
-    }
-});
-
-// הוסף את הקוד הזה ל-service-worker.js שלך
-
-// טיפול בלחיצה על התראה
+// טיפול בלחיצה על התראה - גרסה משולבת ומתוקנת
 self.addEventListener('notificationclick', event => {
     console.log('[Service Worker] Notification click received.');
     
-    event.notification.close(); // סגור את ההתראה
+    // סגור את ההתראה
+    event.notification.close();
+    
+    // קבל את הנתונים מההתראה
+    const notificationData = event.notification.data || {};
+    
+    // הגדר את ה-URL לפתיחה
+    let targetUrl = '/notifications/manager.php';
     
     // אם יש URL ספציפי בהתראה
-    const notificationData = event.notification.data || {};
-    // const targetUrl = notificationData.url || '/permissions/manager.php';
-    const targetUrl = notificationData.url || '/notifications/manager.php';
+    if (notificationData.url) {
+        targetUrl = notificationData.url;
+    }
+    
+    // אם זה לחיצה על action button
+    if (event.action === 'view') {
+        targetUrl = '/notifications/manager.php';
+    } else if (event.action === 'close') {
+        return; // רק סגור את ההתראה
+    }
     
     // פתח או מקד את החלון
     event.waitUntil(
         clients.matchAll({
             type: 'window',
             includeUncontrolled: true
-        }).then(clientList => {
-            // בדוק אם יש חלון פתוח
-            for (let client of clientList) {
-                if (client.url === targetUrl && 'focus' in client) {
-                    return client.focus();
+        }).then(windowClients => {
+            console.log('[Service Worker] Found windows:', windowClients.length);
+            
+            // נסה למצוא חלון פתוח
+            for (let client of windowClients) {
+                console.log('[Service Worker] Checking client:', client.url);
+                
+                // אם יש חלון פתוח של האפליקציה
+                if (client.url.includes(self.location.origin)) {
+                    console.log('[Service Worker] Navigating existing window to:', targetUrl);
+                    // נווט אותו ומקד
+                    return client.navigate(targetUrl).then(client => {
+                        return client.focus();
+                    });
                 }
             }
-            // אם לא, פתח חלון חדש
+            
+            // אם אין חלון פתוח, פתח חדש
+            console.log('[Service Worker] Opening new window:', targetUrl);
             if (clients.openWindow) {
                 return clients.openWindow(targetUrl);
             }
+        }).catch(error => {
+            console.error('[Service Worker] Error handling notification click:', error);
         })
     );
 });
 
-// שמירת התראה ב-localStorage (דרך הדף)
+// טיפול בהודעות מהדף
 self.addEventListener('message', event => {
+    // דילוג על עדכון
+    if (event.data && event.data.type === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
+    
+    // עדכון קאש
+    if (event.data && event.data.type === 'UPDATE_CACHE') {
+        caches.open(CACHE_NAME).then(cache => {
+            cache.addAll(urlsToCache);
+        });
+    }
+    
+    // שמירת התראה
     if (event.data && event.data.type === 'SAVE_NOTIFICATION') {
         // שלח הודעה לכל החלונות לעדכן את רשימת ההתראות
         clients.matchAll().then(clients => {
@@ -240,5 +254,13 @@ self.addEventListener('message', event => {
                 });
             });
         });
+    }
+    
+    // עדכון badge
+    if (event.data && event.data.type === 'NOTIFICATION_UPDATE') {
+        // עדכון badge אם יש (נתמך רק בחלק מהדפדפנים)
+        if (self.registration.setAppBadge) {
+            self.registration.setAppBadge(event.data.count);
+        }
     }
 });

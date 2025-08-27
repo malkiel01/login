@@ -103,20 +103,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     <?php echo getPWAHeaders(); ?>
     <?php 
         require_once '../permissions/init.php';
-        echo getPermissionsScript();  // לפני </body>
     ?>
 
-    <script>
-
-        // בקשת הרשאת התראות
+<script>
+// בקשת הרשאת התראות
 await Permissions.requestNotificationPermission();
-
-// בקשת הרשאת Push
-await Permissions.requestPushPermission(); 
-
-// שליחת התראה
-Permissions.showNotification('הודעה', {body: 'תוכן'});
-    </script>
+// ...
+</script>
     
 </head>
 <body>
@@ -190,6 +183,11 @@ Permissions.showNotification('הודעה', {body: 'תוכן'});
                      data-text="signin_with"
                      data-shape="rectangular"
                      data-logo_alignment="left">
+                </div>
+
+                <!-- כפתורי הרשאות -->
+                <div style="margin-top: 20px;">
+                    <?php echo getPermissionsButtons(); ?>
                 </div>
 
                 <div class="forgot-password">

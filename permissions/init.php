@@ -1,82 +1,70 @@
 <?php
 /**
- * Permissions Initialization
- * מערכת הרשאות פשוטה ל-Push Notifications
- * 
- * שימוש:
- * require_once 'permissions/init.php';
- * echo getPermissionsScript();
+ * Permissions System - Simple & Working
  */
 
-// מניעת שגיאות
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
-/**
- * מחזיר את הסקריפט לניהול הרשאות
- */
-if (!function_exists('getPermissionsScript')) {
-    function getPermissionsScript() {
-        $script = <<<'JAVASCRIPT'
-<script>
-// מערכת הרשאות פשוטה
-window.PermissionsManager = {
-    
-    // בקשת הרשאה ל-Notifications
-    async requestNotificationPermission() {
+function getPermissionsScript() {
+    return '<script>
+window.Permissions = {
+    requestNotificationPermission: async function() {
         try {
-            // בדוק אם הדפדפן תומך
             if (!("Notification" in window)) {
-                console.log("הדפדפן לא תומך בהתראות");
+                alert("הדפדפן שלך לא תומך בהתראות");
                 return false;
             }
             
-            // בדוק סטטוס נוכחי
             if (Notification.permission === "granted") {
                 console.log("הרשאות התראות כבר ניתנו");
+                alert("התראות כבר מאופשרות!");
                 return true;
             }
             
-            // בקש הרשאה
-            if (Notification.permission !== "denied") {
-                const permission = await Notification.requestPermission();
-                if (permission === "granted") {
-                    console.log("הרשאות התראות ניתנו!");
-                    // הצג התראת בדיקה
-                    new Notification("התראות פעילות! 🎉", {
-                        body: "מעכשיו תקבל עדכונים חשובים",
-                        icon: "/pwa/icons/android/android-launchericon-192-192.png"
-                    });
-                    return true;
-                }
+            const permission = await Notification.requestPermission();
+            
+            if (permission === "granted") {
+                // הצג התראת בדיקה
+                new Notification("התראות מופעלות! 🎉", {
+                    body: "מעולה! עכשיו תקבל התראות מהאפליקציה",
+                    icon: "/pwa/icons/android/android-launchericon-192-192.png"
+                });
+                return true;
+            } else {
+                alert("לא ניתנו הרשאות להתראות");
+                return false;
             }
-            
-            console.log("הרשאות התראות נדחו");
-            return false;
-            
         } catch (error) {
-            console.error("שגיאה בבקשת הרשאות:", error);
+            console.error("שגיאה:", error);
+            alert("שגיאה בבקשת הרשאות: " + error.message);
             return false;
         }
     },
     
-    // בקשת הרשאה ל-Push (דורש Service Worker)
-    async requestPushPermission() {
+    requestPushPermission: async function() {
         try {
-            // בדוק תמיכה
-            if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-                console.log("הדפדפן לא תומך ב-Push");
+            if (!("serviceWorker" in navigator)) {
+                alert("הדפדפן לא תומך ב-Service Worker");
                 return false;
             }
             
-            // המתן ל-Service Worker
-            const registration = await navigator.serviceWorker.ready;
+            if (!("PushManager" in window)) {
+                alert("הדפדפן לא תומך ב-Push Notifications");
+                return false;
+            }
+            
+            // רשום Service Worker אם לא רשום
+            let registration = await navigator.serviceWorker.getRegistration();
+            if (!registration) {
+                console.log("רושם Service Worker...");
+                registration = await navigator.serviceWorker.register("/service-worker.js");
+                await new Promise(r => setTimeout(r, 1000)); // המתן שנייה
+            }
             
             // בדוק מנוי קיים
             let subscription = await registration.pushManager.getSubscription();
             
             if (subscription) {
-                console.log("כבר רשום ל-Push:", subscription);
+                alert("כבר רשום ל-Push Notifications!");
+                console.log("Push subscription exists:", subscription);
                 return subscription;
             }
             
@@ -85,123 +73,93 @@ window.PermissionsManager = {
                 userVisibleOnly: true
             });
             
-            console.log("נרשם ל-Push בהצלחה:", subscription);
+            alert("נרשמת בהצלחה ל-Push Notifications!");
+            console.log("New push subscription:", subscription);
             return subscription;
             
         } catch (error) {
-            console.error("שגיאה ברישום Push:", error);
+            console.error("Push error:", error);
+            alert("שגיאה ב-Push: " + error.message);
             return false;
         }
     },
     
-    // בדיקת סטטוס הרשאות
-    checkPermissions() {
-        const status = {
-            notifications: false,
-            push: false
-        };
-        
-        // בדוק התראות
-        if ("Notification" in window) {
-            status.notifications = Notification.permission === "granted";
+    showNotification: function(title, options = {}) {
+        if (!("Notification" in window)) {
+            alert("הדפדפן לא תומך בהתראות");
+            return false;
         }
         
-        // בדוק Push (אסינכרוני)
-        if ("serviceWorker" in navigator && "PushManager" in window) {
-            navigator.serviceWorker.ready.then(registration => {
-                registration.pushManager.getSubscription().then(subscription => {
-                    status.push = !!subscription;
-                    console.log("סטטוס הרשאות:", status);
-                });
-            });
-        }
-        
-        return status;
-    },
-    
-    // הצגת התראה פשוטה
-    showNotification(title, options = {}) {
         if (Notification.permission !== "granted") {
-            console.log("אין הרשאות להתראות");
+            alert("אין הרשאות להתראות - לחץ על כפתור הפעלת התראות");
             return false;
         }
         
-        const defaultOptions = {
-            icon: "/pwa/icons/android/android-launchericon-192-192.png",
+        const notification = new Notification(title, {
+            body: options.body || "זו התראת בדיקה",
+            icon: options.icon || "/pwa/icons/android/android-launchericon-192-192.png",
             badge: "/pwa/icons/android/android-launchericon-72-72.png",
-            vibrate: [200, 100, 200],
             dir: "rtl",
             lang: "he"
-        };
+        });
         
-        const notification = new Notification(title, {...defaultOptions, ...options});
-        
-        // סגור אוטומטית אחרי 5 שניות
         setTimeout(() => notification.close(), 5000);
-        
         return notification;
     }
 };
 
-// חשוף גלובלית
-window.Permissions = window.PermissionsManager;
-
-console.log("מערכת הרשאות מוכנה. השתמש ב-Permissions.requestNotificationPermission() או Permissions.requestPushPermission()");
-</script>
-JAVASCRIPT;
-        
-        return $script;
-    }
-}
-
-/**
- * מחזיר כפתורי בקשת הרשאות
- */
-if (!function_exists('getPermissionsButtons')) {
-    function getPermissionsButtons() {
-        $html = <<<'HTML'
-<div class="permissions-buttons" style="padding: 20px; text-align: center;">
-    <button onclick="Permissions.requestNotificationPermission()" 
-            style="background: #10b981; color: white; border: none; padding: 12px 24px; 
-                   border-radius: 8px; margin: 10px; cursor: pointer; font-size: 16px;">
-        🔔 אפשר התראות
-    </button>
+// הוסף כפתורים אוטומטית לדף אם יש אלמנט עם ID מתאים
+document.addEventListener("DOMContentLoaded", function() {
+    console.log("Permissions system ready!");
     
-    <button onclick="Permissions.requestPushPermission()" 
-            style="background: #667eea; color: white; border: none; padding: 12px 24px; 
-                   border-radius: 8px; margin: 10px; cursor: pointer; font-size: 16px;">
-        📬 אפשר Push Notifications
-    </button>
-    
-    <button onclick="Permissions.showNotification('בדיקה!', {body: 'זו התראת בדיקה'})" 
-            style="background: #f59e0b; color: white; border: none; padding: 12px 24px; 
-                   border-radius: 8px; margin: 10px; cursor: pointer; font-size: 16px;">
-        🧪 בדיקת התראה
-    </button>
-</div>
-HTML;
-        
-        return $html;
+    // אם יש div עם ID="permission-buttons", הוסף לו כפתורים
+    const container = document.getElementById("permission-buttons");
+    if (container) {
+        container.innerHTML = `
+            <button onclick="Permissions.requestNotificationPermission()" 
+                    style="background: #10b981; color: white; border: none; 
+                           padding: 12px 24px; border-radius: 8px; margin: 5px; 
+                           cursor: pointer; font-size: 16px;">
+                🔔 הפעל התראות
+            </button>
+            <button onclick="Permissions.requestPushPermission()" 
+                    style="background: #667eea; color: white; border: none; 
+                           padding: 12px 24px; border-radius: 8px; margin: 5px; 
+                           cursor: pointer; font-size: 16px;">
+                📬 הפעל Push
+            </button>
+            <button onclick="Permissions.showNotification(\'בדיקה!\', {body: \'ההתראות עובדות מצוין!\'})" 
+                    style="background: #f59e0b; color: white; border: none; 
+                           padding: 12px 24px; border-radius: 8px; margin: 5px; 
+                           cursor: pointer; font-size: 16px;">
+                🧪 בדיקת התראה
+            </button>
+        `;
     }
+});
+</script>';
 }
 
-/**
- * בדיקה בצד השרת אם יש הרשאות (לפי cookies)
- */
-if (!function_exists('hasNotificationPermission')) {
-    function hasNotificationPermission() {
-        return isset($_COOKIE['notification_permission']) && 
-               $_COOKIE['notification_permission'] === 'granted';
-    }
+function getPermissionsButtons() {
+    return '<div id="permission-buttons" style="padding: 20px; text-align: center;">
+        <button onclick="Permissions.requestNotificationPermission()" 
+                style="background: #10b981; color: white; border: none; 
+                       padding: 12px 24px; border-radius: 8px; margin: 5px; 
+                       cursor: pointer; font-size: 16px;">
+            🔔 הפעל התראות
+        </button>
+        <button onclick="Permissions.requestPushPermission()" 
+                style="background: #667eea; color: white; border: none; 
+                       padding: 12px 24px; border-radius: 8px; margin: 5px; 
+                       cursor: pointer; font-size: 16px;">
+            📬 הפעל Push
+        </button>
+        <button onclick="Permissions.showNotification(\'בדיקה!\', {body: \'ההתראות עובדות מצוין!\'})" 
+                style="background: #f59e0b; color: white; border: none; 
+                       padding: 12px 24px; border-radius: 8px; margin: 5px; 
+                       cursor: pointer; font-size: 16px;">
+            🧪 בדיקת התראה
+        </button>
+    </div>';
 }
-
-if (!function_exists('hasPushPermission')) {
-    function hasPushPermission() {
-        return isset($_COOKIE['push_permission']) && 
-               $_COOKIE['push_permission'] === 'granted';
-    }
-}
-
-// אם הקובץ נטען בהצלחה
-return true;
 ?>

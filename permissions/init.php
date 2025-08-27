@@ -254,4 +254,5 @@ function getPermissionStatus() {
     });
     </script>';
 }
+
 ?>

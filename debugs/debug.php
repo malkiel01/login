@@ -208,7 +208,7 @@
 </head>
 <body>
     <?php
-    require_once '/permissions/init.php';
+    require_once '../permissions/init.php';
     ?>
     
     <div class="debug-container">

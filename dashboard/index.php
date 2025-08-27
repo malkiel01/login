@@ -406,5 +406,9 @@ define('DASHBOARD_PATH', __DIR__);
             PushListener.start();
         }
     </script>
+    <?php
+        // בתחילת הדף או במקום שתרצה
+        require_once '../debugs/console-debug.php';
+    ?>
 </body>
 </html>

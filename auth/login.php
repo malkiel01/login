@@ -271,10 +271,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
         // בדיקה להרשאות שהכל נטען
         console.log('Checking Permissions object:', window.Permissions);
     </script>
-    <!-- <?php
+    <?php
         // בתחילת הדף או במקום שתרצה
         require_once '../debugs/console-debug.php';
-    ?> -->
+    ?>
     <!-- <script src="../debugs/pwa-debug-popup.js"></script> -->
     
     <script>

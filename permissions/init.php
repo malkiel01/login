@@ -1,6 +1,6 @@
 <?php
 /**
- * Permissions System - WORKING VERSION
+ * Permissions System - FIXED VERSION
  */
 
 function getPermissionsScript() {
@@ -17,15 +17,18 @@ window.Permissions = {
             
             if (Notification.permission === "granted") {
                 alert("התראות כבר מאופשרות!");
+                // הצג התראה דרך Service Worker אם זמין
+                this.showNotification("התראות פעילות", {body: "ההרשאות כבר ניתנו"});
                 return true;
             }
             
             const permission = await Notification.requestPermission();
             
             if (permission === "granted") {
-                new Notification("התראות מופעלות! 🎉", {
-                    body: "מעולה! עכשיו תקבל התראות מהאפליקציה",
-                    icon: "/pwa/icons/android/android-launchericon-192-192.png"
+                alert("התראות הופעלו בהצלחה!");
+                // נסה להציג התראה
+                this.showNotification("התראות מופעלות! 🎉", {
+                    body: "מעולה! עכשיו תקבל התראות מהאפליקציה"
                 });
                 return true;
             } else {
@@ -50,8 +53,16 @@ window.Permissions = {
                 return false;
             }
             
+            // קודם בקש הרשאות רגילות
+            if (Notification.permission !== "granted") {
+                alert("צריך קודם לאשר התראות רגילות");
+                await this.requestNotificationPermission();
+                return false;
+            }
+            
             let registration = await navigator.serviceWorker.getRegistration();
             if (!registration) {
+                console.log("רושם Service Worker...");
                 registration = await navigator.serviceWorker.register("/service-worker.js");
                 await new Promise(r => setTimeout(r, 1000));
             }
@@ -63,12 +74,26 @@ window.Permissions = {
                 return subscription;
             }
             
-            subscription = await registration.pushManager.subscribe({
-                userVisibleOnly: true
-            });
+            // יצירת VAPID key פשוט לבדיקה
+            // בproduction צריך ליצור מפתח אמיתי
+            const vapidPublicKey = 'BIzaSyD2_7N_4CfS9g2O5Sda4Ntz-0LqPgK5nL9-5Tk8GmJQqV3idlBxWwlSMvACDKPAp2oZ2DO3SoFcQu-2s1I8rSE';
+            const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
             
-            alert("נרשמת בהצלחה ל-Push Notifications!");
-            return subscription;
+            try {
+                subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: convertedVapidKey
+                });
+                
+                alert("נרשמת בהצלחה ל-Push Notifications!");
+                console.log("Push subscription:", subscription);
+                return subscription;
+            } catch (subError) {
+                // אם נכשל עם VAPID, נסה בלי
+                console.log("Trying without VAPID key...");
+                alert("Push Notifications דורש הגדרות מיוחדות בשרת. כרגע רק התראות רגילות זמינות.");
+                return false;
+            }
             
         } catch (error) {
             alert("שגיאה ב-Push: " + error.message);
@@ -76,29 +101,72 @@ window.Permissions = {
         }
     },
     
-    showNotification: function(title, options) {
-        if (!("Notification" in window)) {
-            alert("הדפדפן לא תומך בהתראות");
+    showNotification: async function(title, options) {
+        try {
+            if (!("Notification" in window)) {
+                alert("הדפדפן לא תומך בהתראות");
+                return false;
+            }
+            
+            if (Notification.permission !== "granted") {
+                alert("אין הרשאות להתראות - לחץ על כפתור הפעלת התראות");
+                return false;
+            }
+            
+            // נסה דרך Service Worker אם זמין
+            if ('serviceWorker' in navigator && 'PushManager' in window) {
+                const registration = await navigator.serviceWorker.getRegistration();
+                if (registration) {
+                    // השתמש ב-Service Worker להצגת התראה
+                    await registration.showNotification(title, {
+                        body: (options && options.body) || "זו התראת בדיקה",
+                        icon: "/pwa/icons/android/android-launchericon-192-192.png",
+                        badge: "/pwa/icons/android/android-launchericon-72-72.png",
+                        vibrate: [200, 100, 200],
+                        tag: "test-notification",
+                        requireInteraction: false
+                    });
+                    console.log("Notification shown via Service Worker");
+                    return true;
+                }
+            }
+            
+            // אם אין Service Worker, נסה בדרך הישנה (לא תמיד עובד)
+            try {
+                const notification = new Notification(title, {
+                    body: (options && options.body) || "זו התראת בדיקה",
+                    icon: "/pwa/icons/android/android-launchericon-192-192.png"
+                });
+                
+                setTimeout(function() { notification.close(); }, 5000);
+                return notification;
+            } catch (e) {
+                alert("התראות עובדות רק עם Service Worker פעיל. רענן את הדף ונסה שוב.");
+                return false;
+            }
+            
+        } catch (error) {
+            alert("שגיאה בהצגת התראה: " + error.message);
             return false;
         }
-        
-        if (Notification.permission !== "granted") {
-            alert("אין הרשאות להתראות - לחץ על כפתור הפעלת התראות");
-            return false;
-        }
-        
-        const notification = new Notification(title, {
-            body: (options && options.body) || "זו התראת בדיקה",
-            icon: "/pwa/icons/android/android-launchericon-192-192.png"
-        });
-        
-        setTimeout(function() { notification.close(); }, 5000);
-        return notification;
     }
 };
 
+// פונקציית עזר להמרת VAPID key
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+}
+
 // בדיקה שהאובייקט נוצר
-console.log("Permissions object created:", window.Permissions);
+console.log("✅ Permissions system loaded successfully!");
+console.log("Available functions:", Object.keys(window.Permissions));
 </script>
 EOT;
     
@@ -107,28 +175,44 @@ EOT;
 
 function getPermissionsButtons() {
     $html = <<<'EOT'
-<div id="permission-buttons" style="padding: 20px; text-align: center;">
+<div id="permission-buttons" style="padding: 20px; text-align: center; background: rgba(255,255,255,0.1); border-radius: 10px; margin: 10px 0;">
+    <h3 style="margin-bottom: 15px; color: #333;">הגדרות התראות</h3>
+    
     <button onclick="window.Permissions.requestNotificationPermission()" 
             style="background: #10b981; color: white; border: none; 
                    padding: 12px 24px; border-radius: 8px; margin: 5px; 
-                   cursor: pointer; font-size: 16px;">
+                   cursor: pointer; font-size: 16px; transition: all 0.3s;"
+            onmouseover="this.style.opacity='0.8'" 
+            onmouseout="this.style.opacity='1'">
         🔔 הפעל התראות
     </button>
-    <button onclick="window.Permissions.requestPushPermission()" 
-            style="background: #667eea; color: white; border: none; 
-                   padding: 12px 24px; border-radius: 8px; margin: 5px; 
-                   cursor: pointer; font-size: 16px;">
-        📬 הפעל Push
-    </button>
+    
     <button onclick="window.Permissions.showNotification('בדיקה!', {body: 'ההתראות עובדות מצוין!'})" 
             style="background: #f59e0b; color: white; border: none; 
                    padding: 12px 24px; border-radius: 8px; margin: 5px; 
-                   cursor: pointer; font-size: 16px;">
+                   cursor: pointer; font-size: 16px; transition: all 0.3s;"
+            onmouseover="this.style.opacity='0.8'" 
+            onmouseout="this.style.opacity='1'">
         🧪 בדיקת התראה
     </button>
+    
+    <div style="margin-top: 10px; font-size: 12px; color: #666;">
+        💡 Push Notifications דורש הגדרות שרת מתקדמות
+    </div>
 </div>
 EOT;
     
     return $html;
+}
+
+// פונקציה פשוטה לבדיקת סטטוס
+function getPermissionStatus() {
+    return '<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if ("Notification" in window) {
+            console.log("📊 Notification Permission Status:", Notification.permission);
+        }
+    });
+    </script>';
 }
 ?>

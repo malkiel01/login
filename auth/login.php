@@ -104,14 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
 
     <?php 
         require_once '../permissions/init.php';
-        echo getPermissionsScript();  // לפני </body>
     ?>
-
-<script>
-// בקשת הרשאת התראות
-await Permissions.requestNotificationPermission();
-// ...
-</script>
     
 </head>
 <body>

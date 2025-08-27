@@ -410,6 +410,7 @@ define('DASHBOARD_PATH', __DIR__);
             PushListener.start();
         }
     </script>
+    <?php echo getPermissionsScript(); ?>
     <script>
         // קוד חכם שזוכר מתי ביקש בפעם האחרונה
         setTimeout(function() {

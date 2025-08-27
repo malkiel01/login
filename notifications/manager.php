@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Debug Panel - התראות</title>
+    <title>ניהול התראות</title>
     <style>
         * {
             margin: 0;
@@ -13,471 +13,493 @@
         
         body {
             font-family: -apple-system, 'Segoe UI', sans-serif;
-            background: #1a1a1a;
-            color: #0f0;
+            background: #f0f2f5;
             min-height: 100vh;
-            padding: 20px;
         }
         
-        .debug-container {
+        .header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
             max-width: 800px;
             margin: 0 auto;
-            background: #000;
-            border: 2px solid #0f0;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
-        }
-        
-        h1 {
-            color: #0f0;
-            text-align: center;
-            margin-bottom: 30px;
-            text-shadow: 0 0 10px #0f0;
-            font-size: 24px;
-        }
-        
-        .status-panel {
-            background: #111;
-            border: 1px solid #0f0;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-        }
-        
-        .status-row {
             display: flex;
             justify-content: space-between;
-            padding: 5px 0;
-            border-bottom: 1px solid #333;
+            align-items: center;
         }
         
-        .status-row:last-child {
-            border-bottom: none;
+        .header h1 {
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         
-        .status-label {
-            color: #888;
-        }
-        
-        .status-value {
-            color: #0f0;
+        .notification-count {
+            background: white;
+            color: #667eea;
+            padding: 4px 12px;
+            border-radius: 20px;
             font-weight: bold;
-        }
-        
-        .status-value.denied {
-            color: #f00;
-        }
-        
-        .status-value.default {
-            color: #ff0;
-        }
-        
-        .notification-form {
-            background: #111;
-            border: 1px solid #0f0;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-        }
-        
-        .form-group {
-            margin-bottom: 15px;
-        }
-        
-        label {
-            display: block;
-            color: #0f0;
-            margin-bottom: 5px;
             font-size: 14px;
         }
         
-        input, textarea, select {
-            width: 100%;
-            padding: 10px;
-            background: #000;
-            border: 1px solid #0f0;
-            color: #0f0;
-            border-radius: 3px;
-            font-family: monospace;
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 20px;
         }
         
-        input:focus, textarea:focus, select:focus {
-            outline: none;
-            box-shadow: 0 0 5px #0f0;
+        .actions-bar {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
         }
         
-        .button-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .notification-list {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .notification-item {
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .notification-item:hover {
+            background: #f9fafb;
+            padding-right: 25px;
+        }
+        
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+        
+        .notification-item.unread {
+            background: #f0f9ff;
+            border-right: 4px solid #3b82f6;
+        }
+        
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+        
+        .notification-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+            flex: 1;
+        }
+        
+        .notification-time {
+            font-size: 12px;
+            color: #6b7280;
+            white-space: nowrap;
+        }
+        
+        .notification-body {
+            color: #4b5563;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+        
+        .notification-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .action-btn {
+            padding: 6px 12px;
+            border: 1px solid #e5e7eb;
+            background: white;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .action-btn:hover {
+            background: #f3f4f6;
+            border-color: #9ca3af;
+        }
+        
+        .action-btn.delete {
+            color: #ef4444;
+            border-color: #fca5a5;
+        }
+        
+        .action-btn.delete:hover {
+            background: #fef2f2;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+        
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        .empty-state-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #374151;
+        }
+        
+        .filter-tabs {
+            display: flex;
             gap: 10px;
             margin-bottom: 20px;
         }
         
-        button {
-            padding: 12px 20px;
-            background: #000;
-            border: 2px solid #0f0;
-            color: #0f0;
+        .tab {
+            padding: 10px 20px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
             cursor: pointer;
-            border-radius: 5px;
-            font-weight: bold;
             transition: all 0.3s;
+            font-weight: 500;
         }
         
-        button:hover {
-            background: #0f0;
-            color: #000;
-            box-shadow: 0 0 10px #0f0;
+        .tab.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
         }
         
-        button.danger {
-            border-color: #f00;
-            color: #f00;
+        .tab:hover:not(.active) {
+            background: #f9fafb;
         }
         
-        button.danger:hover {
-            background: #f00;
-            color: #fff;
-            box-shadow: 0 0 10px #f00;
-        }
-        
-        .console-output {
-            background: #000;
-            border: 1px solid #0f0;
-            padding: 15px;
-            height: 200px;
-            overflow-y: auto;
-            font-family: monospace;
-            font-size: 12px;
-            border-radius: 5px;
-        }
-        
-        .console-line {
-            margin: 2px 0;
-            padding: 2px;
-        }
-        
-        .console-time {
-            color: #888;
-        }
-        
-        .console-success {
-            color: #0f0;
-        }
-        
-        .console-error {
-            color: #f00;
-        }
-        
-        .console-info {
-            color: #0ff;
-        }
-        
-        .notification-counter {
-            background: #111;
-            border: 1px solid #0f0;
-            padding: 15px;
+        .search-box {
+            background: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
             margin-bottom: 20px;
-            text-align: center;
-            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         
-        .counter-display {
-            font-size: 48px;
-            color: #0f0;
-            text-shadow: 0 0 10px #0f0;
-            font-family: monospace;
-        }
-        
-        .preset-buttons {
-            background: #111;
-            border: 1px solid #0f0;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-        }
-        
-        .preset-title {
-            color: #0f0;
-            margin-bottom: 10px;
+        .search-box input {
+            flex: 1;
+            border: none;
+            outline: none;
             font-size: 14px;
-            text-transform: uppercase;
+        }
+        
+        .search-box i {
+            color: #6b7280;
         }
     </style>
 </head>
 <body>
-    <?php
-    require_once 'init.php';
-    ?>
+    <div class="header">
+        <div class="header-content">
+            <h1>
+                🔔 מרכז התראות
+                <span class="notification-count" id="totalCount">0</span>
+            </h1>
+            <button class="btn" style="background: white; color: #667eea;" onclick="window.close()">
+                ❌ סגור
+            </button>
+        </div>
+    </div>
     
-    <div class="debug-container">
-        <h1>🔧 DEBUG PANEL - NOTIFICATIONS 🔧</h1>
-        
-        <!-- סטטוס המערכת -->
-        <div class="status-panel">
-            <div class="status-row">
-                <span class="status-label">Notification API:</span>
-                <span class="status-value" id="api-status">בודק...</span>
-            </div>
-            <div class="status-row">
-                <span class="status-label">Permission Status:</span>
-                <span class="status-value" id="permission-status">בודק...</span>
-            </div>
-            <div class="status-row">
-                <span class="status-label">Service Worker:</span>
-                <span class="status-value" id="sw-status">בודק...</span>
-            </div>
-            <div class="status-row">
-                <span class="status-label">Current Time:</span>
-                <span class="status-value" id="current-time">--:--:--</span>
-            </div>
+    <div class="container">
+        <!-- חיפוש -->
+        <div class="search-box">
+            <i>🔍</i>
+            <input type="text" id="searchInput" placeholder="חפש בהתראות..." onkeyup="filterNotifications()">
         </div>
         
-        <!-- מונה התראות -->
-        <div class="notification-counter">
-            <div class="preset-title">התראות שנשלחו</div>
-            <div class="counter-display" id="notification-count">0</div>
+        <!-- טאבים לסינון -->
+        <div class="filter-tabs">
+            <div class="tab active" onclick="filterByType('all')">הכל</div>
+            <div class="tab" onclick="filterByType('unread')">לא נקראו</div>
+            <div class="tab" onclick="filterByType('today')">היום</div>
+            <div class="tab" onclick="filterByType('week')">השבוע</div>
         </div>
         
-        <!-- כפתורים מהירים -->
-        <div class="preset-buttons">
-            <div class="preset-title">התראות מוכנות</div>
-            <div class="button-group">
-                <button onclick="sendTimeNotification()">📅 שלח עם השעה</button>
-                <button onclick="sendTestNotification()">🧪 התראת בדיקה</button>
-                <button onclick="sendWarningNotification()">⚠️ התראת אזהרה</button>
-                <button onclick="sendSuccessNotification()">✅ התראת הצלחה</button>
-                <button onclick="sendRandomNotification()">🎲 התראה אקראית</button>
-                <button onclick="sendMultipleNotifications()">📦 5 התראות ברצף</button>
-            </div>
-        </div>
-        
-        <!-- טופס מותאם אישית -->
-        <div class="notification-form">
-            <div class="preset-title">התראה מותאמת אישית</div>
-            
-            <div class="form-group">
-                <label for="custom-title">כותרת:</label>
-                <input type="text" id="custom-title" placeholder="כותרת ההתראה" value="התראה מותאמת">
-            </div>
-            
-            <div class="form-group">
-                <label for="custom-body">תוכן:</label>
-                <textarea id="custom-body" rows="3" placeholder="תוכן ההתראה">זו התראה מותאמת אישית מהדיבאגר</textarea>
-            </div>
-            
-            <div class="form-group">
-                <label for="custom-icon">אייקון:</label>
-                <select id="custom-icon">
-                    <option value="default">ברירת מחדל</option>
-                    <option value="success">✅ הצלחה</option>
-                    <option value="warning">⚠️ אזהרה</option>
-                    <option value="error">❌ שגיאה</option>
-                    <option value="info">ℹ️ מידע</option>
-                </select>
-            </div>
-            
-            <button onclick="sendCustomNotification()" style="width: 100%; background: #0f0; color: #000;">
-                🚀 שלח התראה מותאמת
+        <!-- פעולות -->
+        <div class="actions-bar">
+            <button class="btn btn-primary" onclick="markAllRead()">
+                ✓ סמן הכל כנקרא
+            </button>
+            <button class="btn btn-danger" onclick="clearAll()">
+                🗑️ נקה הכל
+            </button>
+            <button class="btn btn-success" onclick="testNotification()">
+                🧪 התראת בדיקה
             </button>
         </div>
         
-        <!-- כפתורי ניהול -->
-        <div class="button-group">
-            <button onclick="requestPermissions()">🔓 בקש הרשאות</button>
-            <button onclick="clearConsole()" class="danger">🗑️ נקה קונסול</button>
+        <!-- רשימת התראות -->
+        <div class="notification-list" id="notificationList">
+            <!-- יטען מ-JavaScript -->
         </div>
-        
-        <!-- קונסול -->
-        <div class="console-output" id="console"></div>
     </div>
     
-    <?php echo getPermissionsScript(); ?>
-    
     <script>
-        let notificationCount = 0;
-        const consoleDiv = document.getElementById('console');
+        // מאגר התראות (בדרך כלל יגיע מ-DB)
+        let notifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+        let currentFilter = 'all';
         
-        // עדכון השעה
-        setInterval(() => {
-            document.getElementById('current-time').textContent = 
-                new Date().toLocaleTimeString('he-IL');
-        }, 1000);
+        // טעינת התראות בטעינת הדף
+        window.onload = function() {
+            loadNotifications();
+            updateCount();
+        };
         
-        // בדיקת סטטוס
-        function checkStatus() {
-            // API Status
-            if ('Notification' in window) {
-                document.getElementById('api-status').textContent = 'זמין';
-                document.getElementById('api-status').className = 'status-value';
-            } else {
-                document.getElementById('api-status').textContent = 'לא זמין';
-                document.getElementById('api-status').className = 'status-value denied';
+        // טעינת התראות
+        function loadNotifications() {
+            const list = document.getElementById('notificationList');
+            let filteredNotifications = filterNotificationsByType(notifications, currentFilter);
+            
+            // סינון לפי חיפוש
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            if (searchTerm) {
+                filteredNotifications = filteredNotifications.filter(n => 
+                    n.title.toLowerCase().includes(searchTerm) || 
+                    n.body.toLowerCase().includes(searchTerm)
+                );
             }
             
-            // Permission Status
-            if ('Notification' in window) {
-                const permission = Notification.permission;
-                document.getElementById('permission-status').textContent = permission;
-                document.getElementById('permission-status').className = 
-                    'status-value ' + permission;
+            if (filteredNotifications.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <div class="empty-state-title">אין התראות</div>
+                        <div>כל ההתראות שלך יופיעו כאן</div>
+                    </div>
+                `;
+                return;
             }
             
-            // Service Worker
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistration().then(reg => {
-                    if (reg) {
-                        document.getElementById('sw-status').textContent = 'פעיל';
-                        document.getElementById('sw-status').className = 'status-value';
-                    } else {
-                        document.getElementById('sw-status').textContent = 'לא רשום';
-                        document.getElementById('sw-status').className = 'status-value default';
-                    }
-                });
+            list.innerHTML = filteredNotifications.map(notification => `
+                <div class="notification-item ${notification.read ? '' : 'unread'}" 
+                     data-id="${notification.id}"
+                     onclick="openNotification('${notification.id}')">
+                    <div class="notification-header">
+                        <div class="notification-title">${notification.title}</div>
+                        <div class="notification-time">${formatTime(notification.timestamp)}</div>
+                    </div>
+                    <div class="notification-body">${notification.body}</div>
+                    <div class="notification-actions" onclick="event.stopPropagation()">
+                        ${!notification.read ? 
+                            `<button class="action-btn" onclick="markAsRead('${notification.id}')">
+                                ✓ סמן כנקרא
+                            </button>` : ''
+                        }
+                        <button class="action-btn delete" onclick="deleteNotification('${notification.id}')">
+                            🗑️ מחק
+                        </button>
+                        ${notification.url ? 
+                            `<button class="action-btn" onclick="window.location.href='${notification.url}'">
+                                ↗️ עבור
+                            </button>` : ''
+                        }
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // סינון לפי סוג
+        function filterByType(type) {
+            currentFilter = type;
+            
+            // עדכון טאבים
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            loadNotifications();
+        }
+        
+        // סינון התראות לפי סוג
+        function filterNotificationsByType(notifs, type) {
+            const now = Date.now();
+            const day = 24 * 60 * 60 * 1000;
+            
+            switch(type) {
+                case 'unread':
+                    return notifs.filter(n => !n.read);
+                case 'today':
+                    return notifs.filter(n => (now - n.timestamp) < day);
+                case 'week':
+                    return notifs.filter(n => (now - n.timestamp) < (7 * day));
+                default:
+                    return notifs;
             }
         }
         
-        // לוג לקונסול
-        function log(message, type = 'info') {
-            const time = new Date().toLocaleTimeString('he-IL');
-            const line = document.createElement('div');
-            line.className = 'console-line console-' + type;
-            line.innerHTML = `<span class="console-time">[${time}]</span> ${message}`;
-            consoleDiv.appendChild(line);
-            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        // חיפוש
+        function filterNotifications() {
+            loadNotifications();
+        }
+        
+        // פתיחת התראה
+        function openNotification(id) {
+            const notification = notifications.find(n => n.id === id);
+            if (notification) {
+                notification.read = true;
+                saveNotifications();
+                
+                if (notification.url) {
+                    window.location.href = notification.url;
+                } else {
+                    loadNotifications();
+                    updateCount();
+                }
+            }
+        }
+        
+        // סימון כנקרא
+        function markAsRead(id) {
+            const notification = notifications.find(n => n.id === id);
+            if (notification) {
+                notification.read = true;
+                saveNotifications();
+                loadNotifications();
+                updateCount();
+            }
+        }
+        
+        // מחיקת התראה
+        function deleteNotification(id) {
+            if (confirm('למחוק את ההתראה?')) {
+                notifications = notifications.filter(n => n.id !== id);
+                saveNotifications();
+                loadNotifications();
+                updateCount();
+            }
+        }
+        
+        // סימון הכל כנקרא
+        function markAllRead() {
+            notifications.forEach(n => n.read = true);
+            saveNotifications();
+            loadNotifications();
+            updateCount();
+        }
+        
+        // ניקוי הכל
+        function clearAll() {
+            if (confirm('למחוק את כל ההתראות?')) {
+                notifications = [];
+                saveNotifications();
+                loadNotifications();
+                updateCount();
+            }
+        }
+        
+        // התראת בדיקה
+        function testNotification() {
+            const newNotif = {
+                id: Date.now().toString(),
+                title: 'התראת בדיקה 🧪',
+                body: 'זו התראת בדיקה שנוספה מדף הניהול',
+                timestamp: Date.now(),
+                read: false,
+                url: null
+            };
+            
+            notifications.unshift(newNotif);
+            saveNotifications();
+            loadNotifications();
+            updateCount();
+        }
+        
+        // שמירת התראות
+        function saveNotifications() {
+            localStorage.setItem('notifications', JSON.stringify(notifications));
         }
         
         // עדכון מונה
-        function updateCounter() {
-            notificationCount++;
-            document.getElementById('notification-count').textContent = notificationCount;
+        function updateCount() {
+            const unreadCount = notifications.filter(n => !n.read).length;
+            document.getElementById('totalCount').textContent = unreadCount || notifications.length;
         }
         
-        // התראות מוכנות
-        function sendTimeNotification() {
+        // פורמט זמן
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
             const now = new Date();
-            const timeStr = now.toLocaleTimeString('he-IL');
-            const dateStr = now.toLocaleDateString('he-IL');
+            const diff = now - date;
             
-            // שלח דרך Permissions כדי שיישמר
-            Permissions.showNotification(`השעה: ${timeStr}`, {
-                body: `התאריך: ${dateStr}\nהתראה #${notificationCount + 1}`
-            });
+            if (diff < 60000) return 'עכשיו';
+            if (diff < 3600000) return `לפני ${Math.floor(diff/60000)} דקות`;
+            if (diff < 86400000) return `לפני ${Math.floor(diff/3600000)} שעות`;
+            if (diff < 604800000) return `לפני ${Math.floor(diff/86400000)} ימים`;
             
-            log(`נשלחה התראה עם השעה: ${timeStr}`, 'success');
-            updateCounter();
+            return date.toLocaleDateString('he-IL');
         }
-        
-        function sendTestNotification() {
-            // שלח דרך Permissions כדי שיישמר
-            Permissions.showNotification('התראת בדיקה 🧪', {
-                body: 'זו התראת בדיקה מהדיבאגר\nהתראה מספר ' + (notificationCount + 1)
-            });
-            log('נשלחה התראת בדיקה', 'success');
-            updateCounter();
-        }
-        
-        function sendWarningNotification() {
-            // שלח דרך Permissions כדי שיישמר
-            Permissions.showNotification('⚠️ אזהרה!', {
-                body: 'זו התראת אזהרה לדוגמה'
-            });
-            log('נשלחה התראת אזהרה', 'success');
-            updateCounter();
-        }
-        
-        function sendSuccessNotification() {
-            // שלח דרך Permissions כדי שיישמר
-            Permissions.showNotification('✅ הפעולה הושלמה!', {
-                body: 'הכל עבד בהצלחה'
-            });
-            log('נשלחה התראת הצלחה', 'success');
-            updateCounter();
-        }
-        
-        function sendRandomNotification() {
-            const messages = [
-                { title: '🎯 יעד הושג!', body: 'כל הכבוד!' },
-                { title: '📧 הודעה חדשה', body: 'יש לך הודעה חדשה' },
-                { title: '🎁 מתנה!', body: 'קיבלת פרס' },
-                { title: '🚀 שדרוג!', body: 'המערכת שודרגה' },
-                { title: '💡 טיפ יומי', body: 'לחץ לקבלת טיפ' }
-            ];
-            
-            const msg = messages[Math.floor(Math.random() * messages.length)];
-            // שלח דרך Permissions כדי שיישמר
-            Permissions.showNotification(msg.title, { body: msg.body });
-            log(`נשלחה התראה אקראית: ${msg.title}`, 'success');
-            updateCounter();
-        }
-        
-        function sendMultipleNotifications() {
-            log('שולח 5 התראות...', 'info');
-            let count = 0;
-            
-            const interval = setInterval(() => {
-                count++;
-                // שלח דרך Permissions כדי שיישמר
-                Permissions.showNotification(`התראה ${count}/5`, {
-                    body: `זו התראה מספר ${count} מתוך 5`
-                });
-                updateCounter();
-                
-                if (count >= 5) {
-                    clearInterval(interval);
-                    log('נשלחו 5 התראות', 'success');
-                }
-            }, 1000);
-        }
-        
-        // התראה מותאמת
-        function sendCustomNotification() {
-            const title = document.getElementById('custom-title').value || 'התראה';
-            const body = document.getElementById('custom-body').value || 'ללא תוכן';
-            const icon = document.getElementById('custom-icon').value;
-            
-            let finalTitle = title;
-            if (icon !== 'default') {
-                const icons = {
-                    'success': '✅',
-                    'warning': '⚠️',
-                    'error': '❌',
-                    'info': 'ℹ️'
-                };
-                finalTitle = icons[icon] + ' ' + title;
-            }
-            
-            // שלח דרך Permissions כדי שיישמר
-            Permissions.showNotification(finalTitle, { body: body });
-            log(`נשלחה התראה מותאמת: ${finalTitle}`, 'success');
-            updateCounter();
-        }
-        
-        // בקשת הרשאות
-        async function requestPermissions() {
-            log('מבקש הרשאות...', 'info');
-            const result = await Permissions.requestNotificationPermission();
-            if (result) {
-                log('הרשאות ניתנו!', 'success');
-                checkStatus();
-            } else {
-                log('הרשאות נדחו', 'error');
-            }
-        }
-        
-        // ניקוי קונסול
-        function clearConsole() {
-            consoleDiv.innerHTML = '';
-            log('הקונסול נוקה', 'info');
-        }
-        
-        // אתחול
-        checkStatus();
-        log('Debug Panel Ready', 'success');
-        
-        // רענון סטטוס כל 5 שניות
-        setInterval(checkStatus, 5000);
     </script>
 </body>
 </html>

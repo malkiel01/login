@@ -360,6 +360,7 @@
             const timeStr = now.toLocaleTimeString('he-IL');
             const dateStr = now.toLocaleDateString('he-IL');
             
+            // שלח דרך Permissions כדי שיישמר
             Permissions.showNotification(`השעה: ${timeStr}`, {
                 body: `התאריך: ${dateStr}\nהתראה #${notificationCount + 1}`
             });
@@ -369,6 +370,7 @@
         }
         
         function sendTestNotification() {
+            // שלח דרך Permissions כדי שיישמר
             Permissions.showNotification('התראת בדיקה 🧪', {
                 body: 'זו התראת בדיקה מהדיבאגר\nהתראה מספר ' + (notificationCount + 1)
             });
@@ -377,6 +379,7 @@
         }
         
         function sendWarningNotification() {
+            // שלח דרך Permissions כדי שיישמר
             Permissions.showNotification('⚠️ אזהרה!', {
                 body: 'זו התראת אזהרה לדוגמה'
             });
@@ -385,6 +388,7 @@
         }
         
         function sendSuccessNotification() {
+            // שלח דרך Permissions כדי שיישמר
             Permissions.showNotification('✅ הפעולה הושלמה!', {
                 body: 'הכל עבד בהצלחה'
             });
@@ -402,6 +406,7 @@
             ];
             
             const msg = messages[Math.floor(Math.random() * messages.length)];
+            // שלח דרך Permissions כדי שיישמר
             Permissions.showNotification(msg.title, { body: msg.body });
             log(`נשלחה התראה אקראית: ${msg.title}`, 'success');
             updateCounter();
@@ -413,6 +418,7 @@
             
             const interval = setInterval(() => {
                 count++;
+                // שלח דרך Permissions כדי שיישמר
                 Permissions.showNotification(`התראה ${count}/5`, {
                     body: `זו התראה מספר ${count} מתוך 5`
                 });
@@ -442,6 +448,7 @@
                 finalTitle = icons[icon] + ' ' + title;
             }
             
+            // שלח דרך Permissions כדי שיישמר
             Permissions.showNotification(finalTitle, { body: body });
             log(`נשלחה התראה מותאמת: ${finalTitle}`, 'success');
             updateCounter();

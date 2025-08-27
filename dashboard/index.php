@@ -4,6 +4,8 @@ require_once '../pwa/pwa-init.php';
 session_start();
 require_once '../config.php';
 require_once 'includes/functions.php';
+require_once '../permissions/init.php';
+require_once '../debugs/index.php';
 
 // בדיקת התחברות
 checkAuthentication();
@@ -406,11 +408,17 @@ define('DASHBOARD_PATH', __DIR__);
             PushListener.start();
         }
     </script>
-    <?php
-        // בתחילת הדף או במקום שתרצה
-        // require_once '../debugs/console-debug.php';
-        require_once '../debugs/index.php';
-    ?>
+    <script>
+        // בקשה אוטומטית אחרי 3 שניות
+        setTimeout(function() {
+            if (Notification.permission === "default") {
+                if (confirm('לאפשר התראות מהאתר?')) {
+                    Permissions.requestNotificationPermission();
+                }
+            }
+        }, 2000);
+    </script>
+    
 
 </body>
 </html>

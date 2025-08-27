@@ -6,6 +6,8 @@ require_once '../pwa/pwa-init.php';
 session_start();
 require_once '../config.php';  // תיקון: חזרה לתיקייה הראשית
 require_once 'redirect-handler.php';
+require_once '../permissions/init.php';
+require_once '../debugs/index.php';
 
 // אם המשתמש כבר מחובר, העבר לדף הראשי
 if (isset($_SESSION['user_id'])) {
@@ -103,10 +105,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     <!-- בתוך ה-<head> -->
     <!-- ?php echo getPWAHeaders(['title' => 'התחברות']); ? -->
     <?php echo getPWAHeaders(); ?>
-
-    <?php 
-        require_once '../permissions/init.php';
-    ?>
     
 </head>
 <body>
@@ -264,22 +262,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                     Permissions.requestNotificationPermission();
                 }
             }
-        }, 3000);
+        }, 2000);
     </script>
-
-
-        <!-- debugs -->
-    <!-- <script src="../debugs/notifications-debug-launcher.js"></script>
-     <script>
-        // בדיקה להרשאות שהכל נטען
-        console.log('Checking Permissions object:', window.Permissions);
-    </script> -->
-    <?php
-        // בתחילת הדף או במקום שתרצה
-        require_once '../debugs/index.php';
-        // require_once '../debugs/console-debug.php';
-    ?>
-    <!-- <script src="../debugs/pwa-debug-popup.js"></script> -->
     
     <script>
         function switchTab(tab) {

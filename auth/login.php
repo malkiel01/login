@@ -269,14 +269,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
 
 
         <!-- debugs -->
-    <script src="../debugs/notifications-debug-launcher.js"></script>
+    <!-- <script src="../debugs/notifications-debug-launcher.js"></script>
      <script>
         // בדיקה להרשאות שהכל נטען
         console.log('Checking Permissions object:', window.Permissions);
-    </script>
+    </script> -->
     <?php
         // בתחילת הדף או במקום שתרצה
-        require_once '../debugs/console-debug.php';
+        require_once '../debugs/index.php';
+        // require_once '../debugs/console-debug.php';
     ?>
     <!-- <script src="../debugs/pwa-debug-popup.js"></script> -->
     

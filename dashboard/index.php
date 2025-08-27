@@ -5,7 +5,7 @@ session_start();
 require_once '../config.php';
 require_once 'includes/functions.php';
 require_once '../permissions/init.php';
-require_once '../debugs/index.php';
+// require_once '../debugs/index.php';
 
 // בדיקת התחברות
 checkAuthentication();

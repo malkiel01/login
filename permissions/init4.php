@@ -117,19 +117,14 @@ window.Permissions = {
             if ('serviceWorker' in navigator && 'PushManager' in window) {
                 const registration = await navigator.serviceWorker.getRegistration();
                 if (registration) {
-                    // סגור התראות קודמות (אופציונלי)
-                    const notifications = await registration.getNotifications();
-                    notifications.forEach(n => n.close());
-                    
                     // השתמש ב-Service Worker להצגת התראה
                     await registration.showNotification(title, {
                         body: (options && options.body) || "זו התראת בדיקה",
                         icon: "/pwa/icons/android/android-launchericon-192-192.png",
                         badge: "/pwa/icons/android/android-launchericon-72-72.png",
                         vibrate: [200, 100, 200],
-                        tag: "notification-" + Date.now(), // tag ייחודי לכל התראה
-                        requireInteraction: false,
-                        renotify: true // מאפשר התראה חוזרת
+                        tag: "test-notification",
+                        requireInteraction: false
                     });
                     console.log("Notification shown via Service Worker");
                     return true;

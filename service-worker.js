@@ -355,21 +355,21 @@ self.addEventListener('message', event => {
     }
 });
 
-// // זיהוי אוטומטי של PWA - הוסף ל-Service Worker:
-// self.addEventListener('fetch', event => {
-//     const request = event.request.clone();
+// זיהוי אוטומטי של PWA - הוסף ל-Service Worker:
+self.addEventListener('fetch', event => {
+    const request = event.request.clone();
     
-//     // הוסף header מזהה ל-PWA
-//     if (request.url.includes('/auth/') || request.url.includes('/dashboard/')) {
-//         const modifiedHeaders = new Headers(request.headers);
-//         modifiedHeaders.set('X-Requested-With', 'PWA');
+    // הוסף header מזהה ל-PWA
+    if (request.url.includes('/auth/') || request.url.includes('/dashboard/')) {
+        const modifiedHeaders = new Headers(request.headers);
+        modifiedHeaders.set('X-Requested-With', 'PWA');
         
-//         const modifiedRequest = new Request(request, {
-//             headers: modifiedHeaders
-//         });
+        const modifiedRequest = new Request(request, {
+            headers: modifiedHeaders
+        });
         
-//         event.respondWith(fetch(modifiedRequest));
-//     }
-// });
+        event.respondWith(fetch(modifiedRequest));
+    }
+});
 
 console.log('[SW] ✨ Service Worker loaded with Background Sync support');

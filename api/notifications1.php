@@ -25,30 +25,16 @@ switch ($action) {
         $lastCheck = $_POST['last_check'] ?? 0;
         
         $pdo = getDBConnection();
+        $stmt = $pdo->prepare("
+            SELECT * FROM push_notifications 
+            WHERE user_id = ? 
+            AND is_delivered = 0
+            AND created_at > FROM_UNIXTIME(?)
+            ORDER BY created_at DESC
+            LIMIT 10
+        ");
         
-        // אם lastCheck = 0, קבל את כל ההתראות שלא נמסרו
-        if ($lastCheck == 0) {
-            $stmt = $pdo->prepare("
-                SELECT * FROM push_notifications 
-                WHERE user_id = ? 
-                AND is_delivered = 0
-                ORDER BY created_at DESC
-                LIMIT 10
-            ");
-            $stmt->execute([$userId]);
-        } else {
-            // אחרת קבל רק התראות חדשות
-            $stmt = $pdo->prepare("
-                SELECT * FROM push_notifications 
-                WHERE user_id = ? 
-                AND is_delivered = 0
-                AND created_at > FROM_UNIXTIME(?)
-                ORDER BY created_at DESC
-                LIMIT 10
-            ");
-            $stmt->execute([$userId, $lastCheck / 1000]);
-        }
-        
+        $stmt->execute([$userId, $lastCheck / 1000]);
         $notifications = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         // סמן כנמסרו

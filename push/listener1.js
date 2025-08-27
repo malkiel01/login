@@ -9,10 +9,9 @@
     'use strict';
     
     // משתנים גלובליים
-    let lastCheckTime = 0; // התחל מ-0 כדי לקבל את כל ההתראות שלא נמסרו
+    let lastCheckTime = Math.floor(Date.now() / 1000) * 1000;
     let checkInterval = null;
     let isChecking = false;
-    let hasInitialized = false;
     
     // בדיקת התראות חדשות
     async function checkForNotifications() {
@@ -153,7 +152,7 @@
         checkForNotifications();
         
         // בדיקה כל 30 שניות
-        checkInterval = setInterval(checkForNotifications, 30000);
+        checkInterval = setInterval(checkForNotifications, 3000);
         
         console.log('🎧 Push Listener started - checking every 30 seconds');
     }

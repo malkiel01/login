@@ -320,16 +320,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     <!-- סוף קוד בדיקת PWA לדשבורד -->
      <!-- ניהול ניתוב התחברות -->
      <?php echo getRedirectScript(); ?> 
-    <?php echo getPermissionsScript(); ?>
+    <!-- < ?php echo getPermissionsScript(); ?> -->
     <script>
-        // בקשה אוטומטית אחרי 3 שניות
+        // קוד חכם שזוכר מתי ביקש בפעם האחרונה
         setTimeout(function() {
+            // בדוק אם כבר ביקשנו לאחרונה
+            const lastPrompt = localStorage.getItem('last_notification_prompt');
+            const now = Date.now();
+            
+            // אם ביקשנו בשעה האחרונה, אל תבקש שוב
+            if (lastPrompt && (now - parseInt(lastPrompt)) < 3600000) {
+                console.log('כבר ביקשנו הרשאה לאחרונה, מדלג...');
+                return;
+            }
+            
+            // בדוק אם כבר נדחה 3 פעמים
+            const deniedCount = parseInt(localStorage.getItem('notification_denied_count') || '0');
+            if (deniedCount >= 3) {
+                console.log('המשתמש דחה 3 פעמים, מפסיק לבקש');
+                return;
+            }
+            
+            // רק אם ההרשאה במצב default (לא granted ולא denied)
             if (Notification.permission === "default") {
                 if (confirm('לאפשר התראות מהאתר?')) {
-                    Permissions.requestNotificationPermission();
+                    Permissions.requestNotificationPermission().then(result => {
+                        if (result) {
+                            // הצלחה - נקה counters
+                            localStorage.removeItem('notification_denied_count');
+                        } else {
+                            // נדחה - עדכן counter
+                            localStorage.setItem('notification_denied_count', deniedCount + 1);
+                        }
+                    });
+                } else {
+                    // המשתמש ביטל - עדכן counter
+                    localStorage.setItem('notification_denied_count', deniedCount + 1);
                 }
+                
+                // שמור מתי ביקשנו
+                localStorage.setItem('last_notification_prompt', now);
             }
-        }, 2000);
+        }, 3000); // 3 שניות
+        // // בקשה אוטומטית אחרי 3 שניות
+        // setTimeout(function() {
+        //     if (Notification.permission === "default") {
+        //         if (confirm('לאפשר התראות מהאתר?')) {
+        //             Permissions.requestNotificationPermission();
+        //         }
+        //     }
+        // }, 2000);
     </script>
     
     <script>

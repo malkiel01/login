@@ -121,43 +121,18 @@ window.Permissions = {
                     const notifications = await registration.getNotifications();
                     notifications.forEach(n => n.close());
                     
-                    // השתמש ב-Service Worker להצגת התראה עם קיבוץ
-                    const notificationId = Date.now();
+                    // השתמש ב-Service Worker להצגת התראה
                     await registration.showNotification(title, {
                         body: (options && options.body) || "זו התראת בדיקה",
                         icon: "/pwa/icons/android/android-launchericon-192-192.png",
                         badge: "/pwa/icons/android/android-launchericon-72-72.png",
                         vibrate: [200, 100, 200],
-                        tag: "msg-" + notificationId, // tag ייחודי לכל התראה
-                        data: {
-                            id: notificationId,
-                            time: new Date().toISOString()
-                        },
+                        tag: "notification-" + Date.now(), // tag ייחודי לכל התראה
                         requireInteraction: false,
-                        renotify: true,
-                        timestamp: Date.now(),
-                        silent: false
+                        renotify: true, // מאפשר התראה חוזרת
+                        timestamp: Date.now(), // זמן ההתראה
+                        silent: false // השמע צליל
                     });
-                    
-                    // בדוק אם יש יותר מ-3 התראות ואז צור התראת סיכום
-                    const allNotifications = await registration.getNotifications();
-                    if (allNotifications.length > 3) {
-                        // סגור את כל ההתראות הישנות
-                        allNotifications.forEach(n => n.close());
-                        
-                        // צור התראת סיכום
-                        await registration.showNotification('יש לך ' + allNotifications.length + ' התראות חדשות', {
-                            body: 'לחץ לצפייה בכל ההתראות',
-                            icon: "/pwa/icons/android/android-launchericon-192-192.png",
-                            badge: "/pwa/icons/android/android-launchericon-72-72.png",
-                            tag: 'summary',
-                            renotify: true,
-                            data: {
-                                type: 'summary',
-                                count: allNotifications.length
-                            }
-                        });
-                    }
                     console.log("Notification shown via Service Worker");
                     return true;
                 }

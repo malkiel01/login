@@ -152,15 +152,6 @@ try {
         true
     );
 
-    // // הגדרת סשן
-    // $_SESSION['user_id'] = $user_id;
-    // $_SESSION['username'] = $username;
-    // $_SESSION['name'] = $user_name;
-    // $_SESSION['email'] = $email;
-    // $_SESSION['profile_picture'] = $picture;
-    // $_SESSION['auth_type'] = 'google';
-    // $_SESSION['login_time'] = time();
-    
     // החזרת תגובה
     echo json_encode([
         'success' => true,

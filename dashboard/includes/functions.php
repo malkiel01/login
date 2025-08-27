@@ -218,34 +218,6 @@ function updateLastActivity() {
 /**
  * בדיקת timeout של סשן
  */
-// function checkSessionTimeout3($maxIdleTime = null) {
-//     // קבלת זמן timeout לפי סוג הסשן
-//     if ($maxIdleTime === null) {
-//         $maxIdleTime = $_SESSION['session_lifetime'] ?? 7200; // ברירת מחדל 2 שעות
-//     }
-    
-//     // בדיקה מיוחדת ל-PWA
-//     if (isset($_SESSION['is_pwa']) && $_SESSION['is_pwa']) {
-//         $maxIdleTime = 2592000; // 30 ימים ל-PWA
-//     }
-    
-//     if (isset($_SESSION['last_activity'])) {
-//         $idleTime = time() - $_SESSION['last_activity'];
-        
-//         if ($idleTime > $maxIdleTime) {
-//             // לפני השמדת הסשן, בדוק אם יש טוקן זכירה
-//             if (isset($_COOKIE['remember_token'])) {
-//                 return checkRememberToken();
-//             }
-            
-//             session_destroy();
-//             return false;
-//         }
-//     }
-    
-//     updateLastActivity();
-//     return true;
-// }
 function checkSessionTimeout($maxIdleTime = null) {
     // קבלת זמן timeout לפי סוג הסשן
     if ($maxIdleTime === null) {
@@ -387,21 +359,6 @@ function validateLongSession() {
     
     return true;
 }
-function checkSessionTimeout2($maxIdleTime = 7200) { // 2 שעות
-    if (isset($_SESSION['last_activity'])) {
-        $idleTime = time() - $_SESSION['last_activity'];
-        
-        if ($idleTime > $maxIdleTime) {
-            // סשן פג תוקף
-            session_destroy();
-            return false;
-        }
-    }
-    
-    updateLastActivity();
-    return true;
-}
-
 /**
  * קבלת מידע על המערכת
  */

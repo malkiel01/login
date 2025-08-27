@@ -180,7 +180,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                      data-text="signin_with"
                      data-shape="rectangular"
                      data-logo_alignment="left">
-                </div>
+                </div> 
 
                 <div class="forgot-password">
                     <a href="#">שכחת סיסמה?</a>

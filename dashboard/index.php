@@ -408,7 +408,9 @@ define('DASHBOARD_PATH', __DIR__);
     </script>
     <?php
         // בתחילת הדף או במקום שתרצה
-        require_once '../debugs/console-debug.php';
+        // require_once '../debugs/console-debug.php';
+        require_once '../debugs/index.php';
     ?>
+
 </body>
 </html>

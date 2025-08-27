@@ -279,7 +279,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     </script>
     <!-- <?php
         // בתחילת הדף או במקום שתרצה
-        // require_once '../debugs/console-debug.php';
+        require_once '../debugs/console-debug.php';
     ?> -->
     <!-- <script src="../debugs/pwa-debug-popup.js"></script> -->
     

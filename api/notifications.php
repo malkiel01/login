@@ -20,7 +20,39 @@ $userId = $_SESSION['user_id'];
 
 switch ($action) {
     
-    // בדיקת התראות חדשות
+    // בדיקת התראות שלא נמסרו - פשוט יותר
+    case 'check_undelivered':
+        $pdo = getDBConnection();
+        $stmt = $pdo->prepare("
+            SELECT * FROM push_notifications 
+            WHERE user_id = ? 
+            AND is_delivered = 0
+            ORDER BY created_at DESC
+            LIMIT 20
+        ");
+        $stmt->execute([$userId]);
+        $notifications = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // סמן כנמסרו
+        if (!empty($notifications)) {
+            $ids = array_column($notifications, 'id');
+            $placeholders = str_repeat('?,', count($ids) - 1) . '?';
+            $updateStmt = $pdo->prepare("
+                UPDATE push_notifications 
+                SET is_delivered = 1, delivered_at = NOW() 
+                WHERE id IN ($placeholders)
+            ");
+            $updateStmt->execute($ids);
+        }
+        
+        echo json_encode([
+            'success' => true,
+            'notifications' => $notifications,
+            'count' => count($notifications)
+        ]);
+        break;
+    
+    // בדיקת התראות חדשות (השאר למקרה שצריך)
     case 'check':
         $lastCheck = $_POST['last_check'] ?? 0;
         

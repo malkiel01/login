@@ -1,18 +1,15 @@
 /**
- * Push Notification Listener
+ * Push Notification Listener - Fixed Version
  * מאזין להתראות חדשות כל 30 שניות
- * 
- * הוסף את זה בכל דף שרוצה לקבל התראות
  */
 
 (function() {
     'use strict';
     
     // משתנים גלובליים
-    let lastCheckTime = 0; // התחל מ-0 כדי לקבל את כל ההתראות שלא נמסרו
     let checkInterval = null;
     let isChecking = false;
-    let hasInitialized = false;
+    let deliveredNotifications = new Set(); // שמור IDs של התראות שכבר נמסרו
     
     // בדיקת התראות חדשות
     async function checkForNotifications() {
@@ -28,8 +25,7 @@
                 method: 'POST',
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 body: new URLSearchParams({
-                    action: 'check',
-                    last_check: lastCheckTime
+                    action: 'check_undelivered' // שינוי ה-action
                 })
             });
             
@@ -42,6 +38,15 @@
                 
                 // עבור על כל התראה
                 for (const notif of data.notifications) {
+                    // בדוק אם כבר טיפלנו בהתראה הזו
+                    if (deliveredNotifications.has(notif.id)) {
+                        console.log(`התראה ${notif.id} כבר נמסרה - מדלג`);
+                        continue;
+                    }
+                    
+                    // סמן שטיפלנו בהתראה
+                    deliveredNotifications.add(notif.id);
+                    
                     // שמור ב-localStorage
                     saveNotificationLocally(notif);
                     
@@ -52,9 +57,6 @@
                     updateNotificationWidget();
                 }
             }
-            
-            // עדכן זמן בדיקה אחרון
-            lastCheckTime = Date.now();
             
         } catch (error) {
             console.error('Error checking notifications:', error);
@@ -100,10 +102,34 @@
         
         // אם יש Permissions.showNotification - השתמש בה
         if (window.Permissions && typeof window.Permissions.showNotification === 'function') {
+            // אל תשמור שוב ב-localStorage כי הפונקציה כבר עושה את זה
+            const originalShowNotification = window.Permissions.showNotification;
+            
+            // עוטף זמני שמונע שמירה כפולה
+            window.Permissions.showNotification = async function(title, options) {
+                // הצג רק את ההתראה בלי לשמור
+                if ('serviceWorker' in navigator) {
+                    const registration = await navigator.serviceWorker.getRegistration();
+                    if (registration) {
+                        await registration.showNotification(title, {
+                            body: options.body || '',
+                            icon: '/pwa/icons/android/android-launchericon-192-192.png',
+                            badge: '/pwa/icons/android/android-launchericon-72-72.png',
+                            tag: 'push-' + Date.now(),
+                            data: { url: options.url }
+                        });
+                    }
+                }
+                return true;
+            };
+            
             await window.Permissions.showNotification(notif.title, {
                 body: notif.body,
                 url: notif.url
             });
+            
+            // החזר את הפונקציה המקורית
+            window.Permissions.showNotification = originalShowNotification;
         } 
         // אחרת הצג ישירות
         else if ('serviceWorker' in navigator) {
@@ -170,10 +196,8 @@
     // האזנה לשינויי מצב הדף
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
-            // עצור כשהדף לא נראה (חיסכון בסוללה)
             console.log('📱 App in background - pausing checks');
         } else {
-            // חדש בדיקות כשחוזרים
             console.log('📱 App in foreground - resuming checks');
             checkForNotifications();
         }

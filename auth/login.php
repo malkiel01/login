@@ -410,18 +410,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
         };
     </script>
      <?php 
-        // // דיפולטיבי
-        // echo getPWAScripts([
-        //     'banner_type' => 'auto-native',  // <- השינוי הקריטי!
-        //     'page_type' => 'login'
-        // ]);
-
-        // עם התאמת מיקום וטקסט
+        // דיפולטיבי
         echo getPWAScripts([
-            'banner_type' => 'manual-native',
-            'install_text' => '📱 התקן עכשיו',
-            'button_position' => 'bottom-left'  // bottom-left, top-right, top-left
+            'banner_type' => 'auto-native',  // <- השינוי הקריטי!
+            'page_type' => 'login'
         ]);
+
+        // // עם התאמת מיקום וטקסט
+        // echo getPWAScripts([
+        //     'banner_type' => 'manual-native',
+        //     'install_text' => '📱 התקן עכשיו',
+        //     'button_position' => 'bottom-left'  // bottom-left, top-right, top-left
+        // ]);
 
 
         // // באנר מעוצב מותאם אישית

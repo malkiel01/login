@@ -438,123 +438,123 @@ if (SHOW_DEBUG_CONSOLE):
         }
     })();
 
-    // // === Mini Bar Drag & Persist ===
-    // (function () {
-    // const miniBar = document.getElementById('console-mini-bar');
-    // if (!miniBar) return;
+    // === Mini Bar Drag & Persist ===
+    (function () {
+    const miniBar = document.getElementById('console-mini-bar');
+    if (!miniBar) return;
 
-    // // שחזור מיקום אם נשמר
-    // try {
-    //     const saved = localStorage.getItem('consoleMiniBarPos');
-    //     if (saved) {
-    //     const pos = JSON.parse(saved);
-    //     miniBar.style.left = (pos.left ?? 0) + 'px';
-    //     miniBar.style.top  = (pos.top  ?? 0) + 'px';
-    //     miniBar.style.right = 'auto';
-    //     miniBar.style.bottom = 'auto';
-    //     }
-    // } catch (e) {}
+    // שחזור מיקום אם נשמר
+    try {
+        const saved = localStorage.getItem('consoleMiniBarPos');
+        if (saved) {
+        const pos = JSON.parse(saved);
+        miniBar.style.left = (pos.left ?? 0) + 'px';
+        miniBar.style.top  = (pos.top  ?? 0) + 'px';
+        miniBar.style.right = 'auto';
+        miniBar.style.bottom = 'auto';
+        }
+    } catch (e) {}
 
-    // let dragging = false;
-    // let startX = 0, startY = 0;     // נקודת איסוף העכבר/מגע
-    // let offsetX = 0, offsetY = 0;   // היסט יחסית לקצה ה-mini bar
-    // let moved = false;
+    let dragging = false;
+    let startX = 0, startY = 0;     // נקודת איסוף העכבר/מגע
+    let offsetX = 0, offsetY = 0;   // היסט יחסית לקצה ה-mini bar
+    let moved = false;
 
-    // function pointerPos(e) {
-    //     if (e.touches && e.touches[0]) {
-    //     return { x: e.touches[0].clientX, y: e.touches[0].clientY };
-    //     }
-    //     return { x: e.clientX, y: e.clientY };
-    // }
+    function pointerPos(e) {
+        if (e.touches && e.touches[0]) {
+        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+        }
+        return { x: e.clientX, y: e.clientY };
+    }
 
-    // function clamp(val, min, max) { return Math.max(min, Math.min(max, val)); }
+    function clamp(val, min, max) { return Math.max(min, Math.min(max, val)); }
 
-    // function dragStart(e) {
-    //     // כדי למנוע פתיחה בקליק בזמן גרירה
-    //     moved = false;
+    function dragStart(e) {
+        // כדי למנוע פתיחה בקליק בזמן גרירה
+        moved = false;
 
-    //     const { x, y } = pointerPos(e);
-    //     const rect = miniBar.getBoundingClientRect();
+        const { x, y } = pointerPos(e);
+        const rect = miniBar.getBoundingClientRect();
 
-    //     // עבור גרירה חופשית – נשתמש left/top וננטרל right/bottom
-    //     miniBar.style.left = rect.left + 'px';
-    //     miniBar.style.top  = rect.top  + 'px';
-    //     miniBar.style.right = 'auto';
-    //     miniBar.style.bottom = 'auto';
+        // עבור גרירה חופשית – נשתמש left/top וננטרל right/bottom
+        miniBar.style.left = rect.left + 'px';
+        miniBar.style.top  = rect.top  + 'px';
+        miniBar.style.right = 'auto';
+        miniBar.style.bottom = 'auto';
 
-    //     // באיזה נקודה בתוך האלמנט נתפסנו
-    //     offsetX = x - rect.left;
-    //     offsetY = y - rect.top;
+        // באיזה נקודה בתוך האלמנט נתפסנו
+        offsetX = x - rect.left;
+        offsetY = y - rect.top;
 
-    //     startX = x; startY = y;
-    //     dragging = true;
+        startX = x; startY = y;
+        dragging = true;
 
-    //     // למנוע בחירה/גלילה תוך כדי
-    //     e.preventDefault && e.preventDefault();
-    // }
+        // למנוע בחירה/גלילה תוך כדי
+        e.preventDefault && e.preventDefault();
+    }
 
-    // function dragMove(e) {
-    //     if (!dragging) return;
+    function dragMove(e) {
+        if (!dragging) return;
 
-    //     const { x, y } = pointerPos(e);
+        const { x, y } = pointerPos(e);
 
-    //     // אם זזנו יותר מכמה פיקסלים – נחשב כגרירה
-    //     if (!moved && (Math.abs(x - startX) > 3 || Math.abs(y - startY) > 3)) {
-    //     moved = true;
-    //     // סמן זמני כדי שהלחיצה לא תפתח את הקונסול
-    //     miniBar.dataset.dragging = '1';
-    //     }
+        // אם זזנו יותר מכמה פיקסלים – נחשב כגרירה
+        if (!moved && (Math.abs(x - startX) > 3 || Math.abs(y - startY) > 3)) {
+        moved = true;
+        // סמן זמני כדי שהלחיצה לא תפתח את הקונסול
+        miniBar.dataset.dragging = '1';
+        }
 
-    //     // חישוב מיקום ממורכז למסך
-    //     const newLeft = clamp(x - offsetX, 0, window.innerWidth  - miniBar.offsetWidth);
-    //     const newTop  = clamp(y - offsetY, 0, window.innerHeight - miniBar.offsetHeight);
+        // חישוב מיקום ממורכז למסך
+        const newLeft = clamp(x - offsetX, 0, window.innerWidth  - miniBar.offsetWidth);
+        const newTop  = clamp(y - offsetY, 0, window.innerHeight - miniBar.offsetHeight);
 
-    //     miniBar.style.left = newLeft + 'px';
-    //     miniBar.style.top  = newTop  + 'px';
+        miniBar.style.left = newLeft + 'px';
+        miniBar.style.top  = newTop  + 'px';
 
-    //     // נשמור כל כמה תזוזות (פה שומרים בכל move – פשוט ויעיל)
-    //     try {
-    //     localStorage.setItem('consoleMiniBarPos', JSON.stringify({ left: newLeft, top: newTop }));
-    //     } catch (e2) {}
+        // נשמור כל כמה תזוזות (פה שומרים בכל move – פשוט ויעיל)
+        try {
+        localStorage.setItem('consoleMiniBarPos', JSON.stringify({ left: newLeft, top: newTop }));
+        } catch (e2) {}
 
-    //     e.preventDefault && e.preventDefault();
-    // }
+        e.preventDefault && e.preventDefault();
+    }
 
-    // function dragEnd() {
-    //     if (dragging) {
-    //     // הסרת הדגל אחרי טיק קצר – כדי שלחיצת השחרור לא תחשב "קליק לפתיחה"
-    //     setTimeout(() => { miniBar.dataset.dragging = '0'; }, 0);
-    //     }
-    //     dragging = false;
-    // }
+    function dragEnd() {
+        if (dragging) {
+        // הסרת הדגל אחרי טיק קצר – כדי שלחיצת השחרור לא תחשב "קליק לפתיחה"
+        setTimeout(() => { miniBar.dataset.dragging = '0'; }, 0);
+        }
+        dragging = false;
+    }
 
-    // // עכבר
-    // miniBar.addEventListener('mousedown', dragStart);
-    // document.addEventListener('mousemove', dragMove);
-    // document.addEventListener('mouseup', dragEnd);
+    // עכבר
+    miniBar.addEventListener('mousedown', dragStart);
+    document.addEventListener('mousemove', dragMove);
+    document.addEventListener('mouseup', dragEnd);
 
-    // // מגע
-    // miniBar.addEventListener('touchstart', dragStart, { passive: false });
-    // document.addEventListener('touchmove', dragMove, { passive: false });
-    // document.addEventListener('touchend', dragEnd, { passive: false });
+    // מגע
+    miniBar.addEventListener('touchstart', dragStart, { passive: false });
+    document.addEventListener('touchmove', dragMove, { passive: false });
+    document.addEventListener('touchend', dragEnd, { passive: false });
 
-    // // מניעת פתיחה כאשר הייתה גרירה
-    // const originalOnClick = miniBar.onclick;
-    // miniBar.onclick = function (e) {
-    //     if (miniBar.dataset.dragging === '1') {
-    //     e.preventDefault();
-    //     e.stopPropagation();
-    //     return;
-    //     }
-    //     if (typeof originalOnClick === 'function') {
-    //     return originalOnClick.call(this, e);
-    //     }
-    //     // אם אין handler אחר – נקרא לפונקציית הפתיחה הקיימת
-    //     if (typeof expandConsole === 'function') {
-    //     expandConsole();
-    //     }
-    // };
-    // })();
+    // מניעת פתיחה כאשר הייתה גרירה
+    const originalOnClick = miniBar.onclick;
+    miniBar.onclick = function (e) {
+        if (miniBar.dataset.dragging === '1') {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+        }
+        if (typeof originalOnClick === 'function') {
+        return originalOnClick.call(this, e);
+        }
+        // אם אין handler אחר – נקרא לפונקציית הפתיחה הקיימת
+        if (typeof expandConsole === 'function') {
+        expandConsole();
+        }
+    };
+    })();
 
     // Global functions
     function copyConsoleContent() {

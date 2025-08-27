@@ -411,7 +411,7 @@
             
             // פתח בחלון חדש - הדפדפן יטפל בנתיב היחסי
             window.open(
-                'notifications-debug.php',
+                './notifications-debug.php',
                 'NotificationDebugPanel',
                 `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
             );

@@ -257,7 +257,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     </div>
 
     <!-- סוף קוד בדיקת PWA לדשבורד -->
-     <?php echo getPermissionsScript(); ?>
+    <?php echo getPermissionsScript(); ?>
+    <script>
+        // בקשה אוטומטית אחרי 3 שניות
+        setTimeout(function() {
+            if (Notification.permission === "default") {
+                if (confirm('לאפשר התראות מהאתר?')) {
+                    Permissions.requestNotificationPermission();
+                }
+            }
+        }, 3000);
+    </script>
      <script>
         // בדיקה להרשאות שהכל נטען
         console.log('Checking Permissions object:', window.Permissions);

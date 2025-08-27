@@ -208,7 +208,7 @@
 </head>
 <body>
     <?php
-    require_once '/premissions/init.php';
+    require_once '../premissions/init.php';
     ?>
     
     <div class="debug-container">

@@ -438,125 +438,330 @@ if (SHOW_DEBUG_CONSOLE):
         }
     })();
 
+    (function() {
+        // Save original console functions
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        const originalInfo = console.info;
+        
+        const debugOutput = document.getElementById('console-mini-bar');
+        let logCounter = 0;
+        let errorCount = 0;  // Define errorCount here in the closure
+        
+        // Make errorCount accessible globally for the functions
+        window.consoleDebugErrorCount = 0;
+        
+        // Add message to debug window
+        function addToDebugWindow(type, args) {
+            if (!debugOutput) return;
+            
+            logCounter++;
+            if (type === 'error') {
+                window.consoleDebugErrorCount++;
+            }
+            
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            
+            // Colors by type
+            const colors = {
+                log: '#fff',
+                error: '#f44',
+                warn: '#fa0',
+                info: '#08f',
+                success: '#0f0'
+            };
+            
+            entry.style.cssText = `
+                color: ${colors[type] || '#fff'};
+                padding: 4px;
+                border-bottom: 1px solid #222;
+                margin-bottom: 2px;
+                font-size: 11px;
+                cursor: text;
+                user-select: text;
+                -webkit-user-select: text;
+            `;
+            
+            // Add long press event for mobile
+            let pressTimer;
+            entry.addEventListener('touchstart', function(e) {
+                pressTimer = setTimeout(() => {
+                    selectText(entry);
+                    showCopyTooltip(e.touches[0].clientX, e.touches[0].clientY);
+                }, 500);
+            });
+            
+            entry.addEventListener('touchend', function() {
+                clearTimeout(pressTimer);
+            });
+            
+            entry.addEventListener('touchmove', function() {
+                clearTimeout(pressTimer);
+            });
+            
+            // Double click to select on desktop
+            entry.addEventListener('dblclick', function() {
+                selectText(entry);
+            });
+            
+            // Type indicators
+            const typeLabel = {
+                log: '›',
+                error: '✕',
+                warn: '⚠',
+                info: 'ℹ'
+            }[type] || '›';
+            
+            // Convert arguments to text
+            const message = Array.from(args).map(arg => {
+                if (typeof arg === 'object') {
+                    try {
+                        return JSON.stringify(arg, null, 2);
+                    } catch (e) {
+                        return String(arg);
+                    }
+                }
+                return String(arg);
+            }).join(' ');
+            
+            entry.innerHTML = `<span style="color: #666;">${timestamp}</span> ${typeLabel} ${escapeHtml(message)}`;
+            
+            debugOutput.appendChild(entry);
+            debugOutput.scrollTop = debugOutput.scrollHeight;
+            
+            // Update mini bar count
+            updateMiniBarCount();
+            
+            // Limit messages
+            if (debugOutput.children.length > 100) {
+                debugOutput.removeChild(debugOutput.firstChild);
+            }
+        }
+        
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Override console functions
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToDebugWindow('log', args);
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToDebugWindow('error', args);
+        };
+        
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            addToDebugWindow('warn', args);
+        };
+        
+        console.info = function(...args) {
+            originalInfo.apply(console, args);
+            addToDebugWindow('info', args);
+        };
+        
+        // Catch global errors
+        window.addEventListener('error', function(event) {
+            addToDebugWindow('error', [`${event.message} at ${event.filename}:${event.lineno}`]);
+        });
+        
+        // Catch promise rejections
+        window.addEventListener('unhandledrejection', function(event) {
+            addToDebugWindow('error', [`Unhandled Promise: ${event.reason}`]);
+        });
+        
+        // Initial message
+        console.log('Console Debug Ready');
+        
+        // Make draggable
+        let isDragging = false;
+        let currentX;
+        let currentY;
+        let initialX;
+        let initialY;
+        let xOffset = 0;
+        let yOffset = 0;
+        
+        const debugWindow = document.getElementById('console-debug-window');
+        const header = document.getElementById('console-header');
+        
+        if (header) {
+            header.addEventListener('touchstart', dragStart, {passive: false});
+            header.addEventListener('touchmove', drag, {passive: false});
+            header.addEventListener('touchend', dragEnd, {passive: false});
+            
+            header.addEventListener('mousedown', dragStart);
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', dragEnd);
+        }
+        
+        function dragStart(e) {
+            if (e.type === "touchstart") {
+                initialX = e.touches[0].clientX - xOffset;
+                initialY = e.touches[0].clientY - yOffset;
+            } else {
+                initialX = e.clientX - xOffset;
+                initialY = e.clientY - yOffset;
+            }
+            
+            if (e.target === header || e.target.parentNode === header) {
+                isDragging = true;
+            }
+        }
+        
+        function drag(e) {
+            if (isDragging) {
+                e.preventDefault();
+                
+                if (e.type === "touchmove") {
+                    currentX = e.touches[0].clientX - initialX;
+                    currentY = e.touches[0].clientY - initialY;
+                } else {
+                    currentX = e.clientX - initialX;
+                    currentY = e.clientY - initialY;
+                }
+                
+                xOffset = currentX;
+                yOffset = currentY;
+                
+                debugWindow.style.transform = `translate(${currentX}px, ${currentY}px)`;
+            }
+        }
+        
+        function dragEnd(e) {
+            initialX = currentX;
+            initialY = currentY;
+            isDragging = false;
+        }
+    })();
+
 
     // === Mini Bar Drag & Persist (fixed) ===
-    (function () {
-    const miniBar = document.getElementById('console-mini-bar');
-    if (!miniBar) return;
+    // (function () {
+    // const miniBar = document.getElementById('console-mini-bar');
+    // if (!miniBar) return;
 
-    // שחזור מיקום אם נשמר
-    try {
-        const saved = localStorage.getItem('consoleMiniBarPos');
-        if (saved) {
-        const pos = JSON.parse(saved);
-        miniBar.style.left = (pos.left ?? 20) + 'px';
-        miniBar.style.top  = (pos.top  ?? (window.innerHeight - miniBar.offsetHeight - 20)) + 'px';
-        miniBar.style.right = 'auto';
-        miniBar.style.bottom = 'auto';
-        miniBar.style.position = 'fixed';
-        }
-    } catch (e) {}
+    // // שחזור מיקום אם נשמר
+    // try {
+    //     const saved = localStorage.getItem('consoleMiniBarPos');
+    //     if (saved) {
+    //     const pos = JSON.parse(saved);
+    //     miniBar.style.left = (pos.left ?? 20) + 'px';
+    //     miniBar.style.top  = (pos.top  ?? (window.innerHeight - miniBar.offsetHeight - 20)) + 'px';
+    //     miniBar.style.right = 'auto';
+    //     miniBar.style.bottom = 'auto';
+    //     miniBar.style.position = 'fixed';
+    //     }
+    // } catch (e) {}
 
-    let dragging = false;
-    let startX = 0, startY = 0;
-    let offsetX = 0, offsetY = 0;
-    let moved = false;
+    // let dragging = false;
+    // let startX = 0, startY = 0;
+    // let offsetX = 0, offsetY = 0;
+    // let moved = false;
 
-    function pointerPos(e) {
-        if (e.touches && e.touches[0]) {
-        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        }
-        return { x: e.clientX, y: e.clientY };
-    }
+    // function pointerPos(e) {
+    //     if (e.touches && e.touches[0]) {
+    //     return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    //     }
+    //     return { x: e.clientX, y: e.clientY };
+    // }
 
-    function clamp(val, min, max) { return Math.max(min, Math.min(max, val)); }
+    // function clamp(val, min, max) { return Math.max(min, Math.min(max, val)); }
 
-    function dragStart(e) {
-        moved = false;
-        const { x, y } = pointerPos(e);
-        const rect = miniBar.getBoundingClientRect();
+    // function dragStart(e) {
+    //     moved = false;
+    //     const { x, y } = pointerPos(e);
+    //     const rect = miniBar.getBoundingClientRect();
 
-        // נעילה על גודל קיים כדי שלא "ישנה גודל" בזמן גרירה
-        miniBar.style.width  = rect.width  + 'px';
-        miniBar.style.height = rect.height + 'px';
+    //     // נעילה על גודל קיים כדי שלא "ישנה גודל" בזמן גרירה
+    //     miniBar.style.width  = rect.width  + 'px';
+    //     miniBar.style.height = rect.height + 'px';
 
-        // מעבר ל־left/top חופשיים
-        miniBar.style.position = 'fixed';
-        miniBar.style.left = rect.left + 'px';
-        miniBar.style.top  = rect.top  + 'px';
-        miniBar.style.right = 'auto';
-        miniBar.style.bottom = 'auto';
-        miniBar.style.userSelect = 'none';
+    //     // מעבר ל־left/top חופשיים
+    //     miniBar.style.position = 'fixed';
+    //     miniBar.style.left = rect.left + 'px';
+    //     miniBar.style.top  = rect.top  + 'px';
+    //     miniBar.style.right = 'auto';
+    //     miniBar.style.bottom = 'auto';
+    //     miniBar.style.userSelect = 'none';
 
-        offsetX = x - rect.left;
-        offsetY = y - rect.top;
+    //     offsetX = x - rect.left;
+    //     offsetY = y - rect.top;
 
-        startX = x; startY = y;
-        dragging = true;
+    //     startX = x; startY = y;
+    //     dragging = true;
 
-        e.preventDefault && e.preventDefault();
-    }
+    //     e.preventDefault && e.preventDefault();
+    // }
 
-    function dragMove(e) {
-        if (!dragging) return;
-        const { x, y } = pointerPos(e);
+    // function dragMove(e) {
+    //     if (!dragging) return;
+    //     const { x, y } = pointerPos(e);
 
-        if (!moved && (Math.abs(x - startX) > 3 || Math.abs(y - startY) > 3)) {
-        moved = true;
-        miniBar.dataset.dragging = '1';
-        }
+    //     if (!moved && (Math.abs(x - startX) > 3 || Math.abs(y - startY) > 3)) {
+    //     moved = true;
+    //     miniBar.dataset.dragging = '1';
+    //     }
 
-        const newLeft = clamp(x - offsetX, 0, window.innerWidth  - miniBar.offsetWidth);
-        const newTop  = clamp(y - offsetY, 0, window.innerHeight - miniBar.offsetHeight);
+    //     const newLeft = clamp(x - offsetX, 0, window.innerWidth  - miniBar.offsetWidth);
+    //     const newTop  = clamp(y - offsetY, 0, window.innerHeight - miniBar.offsetHeight);
 
-        miniBar.style.left = newLeft + 'px';
-        miniBar.style.top  = newTop  + 'px';
+    //     miniBar.style.left = newLeft + 'px';
+    //     miniBar.style.top  = newTop  + 'px';
 
-        // שמירת מיקום
-        try {
-        localStorage.setItem('consoleMiniBarPos', JSON.stringify({ left: newLeft, top: newTop }));
-        } catch (e2) {}
+    //     // שמירת מיקום
+    //     try {
+    //     localStorage.setItem('consoleMiniBarPos', JSON.stringify({ left: newLeft, top: newTop }));
+    //     } catch (e2) {}
 
-        e.preventDefault && e.preventDefault();
-    }
+    //     e.preventDefault && e.preventDefault();
+    // }
 
-    function dragEnd() {
-        if (dragging) {
-        // שחרור דגל הגרירה אחרי טיק כדי שקליק השחרור לא יפתח
-        setTimeout(() => { miniBar.dataset.dragging = '0'; }, 0);
-        }
-        dragging = false;
-        miniBar.style.userSelect = '';
-        // השארת width/height מקובע זה בסדר – שומר יציבות. אם תרצה להחזיר לדינמי:
-        // miniBar.style.width = ''; miniBar.style.height = '';
-    }
+    // function dragEnd() {
+    //     if (dragging) {
+    //     // שחרור דגל הגרירה אחרי טיק כדי שקליק השחרור לא יפתח
+    //     setTimeout(() => { miniBar.dataset.dragging = '0'; }, 0);
+    //     }
+    //     dragging = false;
+    //     miniBar.style.userSelect = '';
+    //     // השארת width/height מקובע זה בסדר – שומר יציבות. אם תרצה להחזיר לדינמי:
+    //     // miniBar.style.width = ''; miniBar.style.height = '';
+    // }
 
-    // עכבר
-    miniBar.addEventListener('mousedown', dragStart);
-    document.addEventListener('mousemove', dragMove);
-    document.addEventListener('mouseup', dragEnd);
+    // // עכבר
+    // miniBar.addEventListener('mousedown', dragStart);
+    // document.addEventListener('mousemove', dragMove);
+    // document.addEventListener('mouseup', dragEnd);
 
-    // מגע
-    miniBar.addEventListener('touchstart', dragStart, { passive: false });
-    document.addEventListener('touchmove', dragMove, { passive: false });
-    document.addEventListener('touchend', dragEnd, { passive: false });
+    // // מגע
+    // miniBar.addEventListener('touchstart', dragStart, { passive: false });
+    // document.addEventListener('touchmove', dragMove, { passive: false });
+    // document.addEventListener('touchend', dragEnd, { passive: false });
 
-    // פתיחה רק בדאבל-קליק (לא בקליק רגיל)
-    miniBar.addEventListener('click', function (e) {
-        // אם הייתה גרירה – אין פתיחה בקליק
-        if (miniBar.dataset.dragging === '1') {
-        e.preventDefault(); e.stopPropagation(); return;
-        }
-        // קליק רגיל לא עושה כלום
-    });
+    // // פתיחה רק בדאבל-קליק (לא בקליק רגיל)
+    // miniBar.addEventListener('click', function (e) {
+    //     // אם הייתה גרירה – אין פתיחה בקליק
+    //     if (miniBar.dataset.dragging === '1') {
+    //     e.preventDefault(); e.stopPropagation(); return;
+    //     }
+    //     // קליק רגיל לא עושה כלום
+    // });
 
-    miniBar.addEventListener('dblclick', function (e) {
-        if (miniBar.dataset.dragging === '1') return;
-        if (typeof expandConsole === 'function') {
-        expandConsole();
-        }
-    });
-    })();
+    // miniBar.addEventListener('dblclick', function (e) {
+    //     if (miniBar.dataset.dragging === '1') return;
+    //     if (typeof expandConsole === 'function') {
+    //     expandConsole();
+    //     }
+    // });
+    // })();
 
 
 

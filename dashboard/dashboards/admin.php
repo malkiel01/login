@@ -473,7 +473,7 @@ require_once '../../config.php';
 </head>
 <body>
     <!-- Header -->
-    <div class="admin-header">
+    <!-- <div class="admin-header">
         <div class="header-content">
             <div class="header-title">
                 <span style="font-size: 40px;">👨‍💼</span>
@@ -491,7 +491,7 @@ require_once '../../config.php';
                 <a href="/auth/logout.php" class="logout-btn">יציאה</a>
             </div>
         </div>
-    </div>
+    </div> -->
     
     <div class="container">
         <!-- Alert Messages -->
@@ -503,7 +503,7 @@ require_once '../../config.php';
         < ?php endif; ?> -->
         
         <!-- Statistics -->
-        <div class="stats-grid">
+        <!-- <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-icon blue">👥</div>
                 <div class="stat-content">
@@ -535,10 +535,10 @@ require_once '../../config.php';
                     <p>מנהלי מערכת</p>
                 </div>
             </div>
-        </div>
+        </div> -->
         
         <!-- Users Table -->
-        <div class="users-section">
+        <!-- <div class="users-section">
             <div class="section-header">
                 <div class="section-title">
                     <span>👥</span>
@@ -658,7 +658,7 @@ require_once '../../config.php';
                     </tbody>
                 </table>
             </div>
-        </div>
+        </div> -->
     </div>
     
     <!-- <script>

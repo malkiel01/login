@@ -8,7 +8,7 @@ session_start();
 //     exit;
 // }
 
-require_once '../../config.php';
+// require_once '../../config.php';
 
 // // בדיקה שהמשתמש הוא אכן מנהל
 // $pdo = getDBConnection();

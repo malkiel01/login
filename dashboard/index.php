@@ -5,11 +5,11 @@ require_once 'config.php';
 require_once 'includes/auth.php';
 // require_once 'includes/db.php';
 
-// // בדיקת התחברות
-// if (!isLoggedIn()) {
-    //     header('Location: /auth/login.php');
-    //     exit;
-    // }
+// בדיקת התחברות
+if (!isLoggedIn()) {
+        header('Location: /auth/login.php');
+        exit;
+    }
     
     // // קבלת סוג הדשבורד של המשתמש
     // $userId = $_SESSION['user_id'];

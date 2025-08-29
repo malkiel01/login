@@ -1,0 +1,91 @@
+
+javascript// קבלת משתמש #10
+await api.get('user/10')
+
+// או בקיצור:
+await api.user.get(10)
+
+// עדכון משתמש
+await api.user.update(10, {
+    name: 'שם חדש',
+    email: 'new@email.com'
+})
+
+// חיפוש משתמשים
+await api.users.search('admin')
+
+// קבלת סטטיסטיקות
+await api.stats.get()
+🎯 קיצורי דרך מובנים:
+משתמשים:
+javascriptapi.user.get(10)                    // קבלת משתמש
+api.user.update(10, {name: 'New'})  // עדכון
+api.user.create({...})              // יצירה
+api.user.delete(15)                 // מחיקה
+api.user.activity(10)               // היסטוריית פעילות
+רשימות:
+javascriptapi.users.list()                    // כל המשתמשים
+api.users.list({limit: 5})         // עם הגבלה
+api.users.search('john')           // חיפוש
+סטטיסטיקות:
+javascriptapi.stats.get()                     // קבלת סטטיסטיקות
+api.stats.refresh()                 // רענון
+לוג פעילות:
+javascriptapi.activity.get(20)                // 20 פעילויות אחרונות
+api.activity.log('action', 'details') // רישום פעילות
+🧪 בדיקות:
+javascript// בדיקת כל ה-endpoints
+await api.testAll()
+
+// הצגת עזרה
+api.help()
+
+// ניקוי קונסול
+api.clear()
+
+// דוגמאות
+api.examples()
+🔍 כלי Debug מתקדמים:
+javascript// הצג את כל המשתמשים בטבלה
+await apiDebug.showUsers()
+
+// הצג סטטיסטיקות בגרף
+await apiDebug.showStats()
+
+// התחל מעקב אחר בקשות
+apiDebug.monitor.start()
+apiDebug.monitor.stop()
+✨ תכונות מיוחדות:
+
+צבעים בקונסול - הודעות צבעוניות לפי סוג
+טבלאות אוטומטיות - תצוגה נוחה של נתונים
+אייקונים - לזיהוי מהיר של פעולות
+Promise-based - תמיכה מלאה ב-async/await
+Error handling - טיפול אוטומטי בשגיאות
+
+📝 דוגמה מלאה:
+javascript// סקריפט לבדיקה מהירה
+async function testDashboard() {
+    // 1. בדוק מי אני
+    const me = await api.session.info();
+    console.log('I am:', me.data.username);
+    
+    // 2. קבל סטטיסטיקות
+    const stats = await api.stats.get();
+    console.log('Total users:', stats.data.total_users);
+    
+    // 3. חפש משתמש
+    const results = await api.users.search('admin');
+    console.log('Found:', results.data.users.length, 'users');
+    
+    // 4. רשום פעילות
+    await api.activity.log('console_test', 'Testing from browser console');
+    
+    // 5. הצג פעילויות אחרונות
+    const activities = await api.activity.get(5);
+    console.table(activities.data);
+}
+
+// הרץ את הבדיקה
+testDashboard();
+הכלי הזה יחסוך לך המון זמן בפיתוח ובדיקות! 🎉

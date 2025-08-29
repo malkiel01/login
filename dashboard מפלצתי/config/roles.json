@@ -1,0 +1,68 @@
+{
+  "admin": {
+    "name": "מנהל מערכת",
+    "description": "גישה מלאה לכל המערכת",
+    "permissions": [
+      "view_dashboard",
+      "view_statistics",
+      "export_data",
+      "view_users",
+      "create_user",
+      "edit_user",
+      "delete_user",
+      "change_role",
+      "view_content",
+      "create_content",
+      "edit_content",
+      "delete_content",
+      "publish_content",
+      "view_logs",
+      "clear_cache",
+      "system_settings",
+      "backup_restore"
+    ],
+    "theme": "admin",
+    "modules": ["dashboard", "users", "content", "analytics", "settings", "system"]
+  },
+  "moderator": {
+    "name": "מנהל תוכן",
+    "description": "ניהול תוכן ומשתמשים",
+    "permissions": [
+      "view_dashboard",
+      "view_statistics",
+      "view_users",
+      "edit_user",
+      "view_content",
+      "create_content",
+      "edit_content",
+      "delete_content",
+      "publish_content",
+      "view_logs"
+    ],
+    "theme": "moderator",
+    "modules": ["dashboard", "users", "content", "analytics"]
+  },
+  "user": {
+    "name": "משתמש רגיל",
+    "description": "גישה בסיסית",
+    "permissions": [
+      "view_dashboard",
+      "view_statistics",
+      "view_content",
+      "create_content",
+      "edit_own_content"
+    ],
+    "theme": "user",
+    "modules": ["dashboard", "profile", "content"]
+  },
+  "guest": {
+    "name": "אורח",
+    "description": "גישה מוגבלת",
+    "permissions": [
+      "view_dashboard",
+      "view_content"
+    ],
+    "theme": "guest",
+    "modules": ["limited"]
+  }
+}

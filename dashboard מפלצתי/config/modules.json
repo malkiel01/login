@@ -1,0 +1,20 @@
+{
+  "admin": [
+    "dashboard",
+    "functions",
+    "widgets"
+  ],
+  "moderator": [
+    "dashboard",
+    "functions",
+    "widgets"
+  ],
+  "user": [
+    "dashboard",
+    "functions",
+    "widgets"
+  ],
+  "guest": [
+    "limited"
+  ]
+}

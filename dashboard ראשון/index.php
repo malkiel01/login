@@ -12,19 +12,6 @@ require_once '../debugs/console-debug-single.php';
 // בדיקת התחברות
 checkAuthentication();
 
-// הוספה
-
-// בתחילת הקובץ, אחרי בדיקת ההתחברות
-$currentUser = getCurrentUser();
-$dashboardType = getUserDashboardType($currentUser['id']);
-
-// הפניה לדשבורד המתאים
-if ($dashboardType !== 'default') {
-    redirectToDashboard($currentUser['id']);
-}
-
-// סוף הוספה
-
 // קבלת נתוני משתמש
 $currentUser = getCurrentUser();
 $allUsers = getAllUsers();

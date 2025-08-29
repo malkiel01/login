@@ -1,0 +1,1760 @@
+# מערכת דשבורד מודולרית - חלק 2
+
+## המשך הקבצים:
+
+### **18. dashboard/api/index.php**
+```php
+<?php
+ /**
+  * API Entry Point
+  * נקודת כניסה ל-API
+  */
+
+ session_start();
+ require_once '../bootstrap/loader.php';
+
+ // הגדרת Headers
+ header('Content-Type: application/json; charset=utf-8');
+ header('Access-Control-Allow-Origin: ' . ($_ENV['CORS_ORIGIN'] ?? '*'));
+ header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+ header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+
+ // טיפול ב-OPTIONS request
+ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+     http_response_code(200);
+     exit;
+ }
+
+ // אתחול
+ $loader = new DashboardLoader();
+ $loader->init();
+
+ // טעינת router
+ require_once 'routes.php';
+ require_once 'middleware.php';
+
+ // יצירת router
+ $router = new APIRouter();
+
+ // הגדרת middleware
+ $router->middleware(new AuthMiddleware());
+ $router->middleware(new RateLimitMiddleware());
+ $router->middleware(new LoggingMiddleware());
+
+ // ניתוב הבקשה
+ try {
+     $response = $router->dispatch();
+     echo json_encode($response);
+ } catch (Exception $e) {
+     http_response_code($e->getCode() ?: 500);
+     echo json_encode([
+         'success' => false,
+         'error' => $e->getMessage()
+     ]);
+ }
+?>
+```
+
+### **19. dashboard/api/routes.php**
+```php
+<?php
+ /**
+  * API Routes
+  * הגדרת נתיבי API
+  */
+
+ class APIRouter {
+     private $routes = [];
+     private $middlewares = [];
+     
+     public function __construct() {
+         $this->defineRoutes();
+     }
+     
+     /**
+      * הגדרת הנתיבים
+      */
+     private function defineRoutes() {
+         // User routes
+         $this->get('/user', 'UserController@getCurrentUser');
+         $this->get('/user/{id}', 'UserController@getUser');
+         $this->put('/user/{id}', 'UserController@updateUser');
+         $this->delete('/user/{id}', 'UserController@deleteUser');
+         
+         // Users collection
+         $this->get('/users', 'UserController@getUsers');
+         $this->post('/users', 'UserController@createUser');
+         $this->get('/users/search', 'UserController@searchUsers');
+         
+         // Stats
+         $this->get('/stats', 'StatsController@getStats');
+         $this->get('/stats/chart/{type}', 'StatsController@getChartData');
+         
+         // Activity
+         $this->get('/activity', 'ActivityController@getActivity');
+         $this->post('/activity', 'ActivityController@logActivity');
+         
+         // Session
+         $this->get('/session', 'SessionController@getInfo');
+         $this->post('/session/refresh', 'SessionController@refresh');
+         $this->delete('/session', 'SessionController@logout');
+         
+         // System (admin only)
+         $this->get('/system', 'SystemController@getInfo', ['admin']);
+         $this->post('/system/cache/clear', 'SystemController@clearCache', ['admin']);
+         $this->post('/system/backup', 'SystemController@backup', ['admin']);
+         
+         // Export
+         $this->get('/export/{type}', 'ExportController@export');
+     }
+     
+     /**
+      * הוספת middleware
+      */
+     public function middleware($middleware) {
+         $this->middlewares[] = $middleware;
+     }
+     
+     /**
+      * הגדרת GET route
+      */
+     public function get($path, $handler, $permissions = []) {
+         $this->addRoute('GET', $path, $handler, $permissions);
+     }
+     
+     /**
+      * הגדרת POST route
+      */
+     public function post($path, $handler, $permissions = []) {
+         $this->addRoute('POST', $path, $handler, $permissions);
+     }
+     
+     /**
+      * הגדרת PUT route
+      */
+     public function put($path, $handler, $permissions = []) {
+         $this->addRoute('PUT', $path, $handler, $permissions);
+     }
+     
+     /**
+      * הגדרת DELETE route
+      */
+     public function delete($path, $handler, $permissions = []) {
+         $this->addRoute('DELETE', $path, $handler, $permissions);
+     }
+     
+     /**
+      * הוספת route
+      */
+     private function addRoute($method, $path, $handler, $permissions) {
+         $this->routes[] = [
+             'method' => $method,
+             'path' => $path,
+             'handler' => $handler,
+             'permissions' => $permissions
+         ];
+     }
+     
+     /**
+      * ניתוב בקשה
+      */
+     public function dispatch() {
+         $method = $_SERVER['REQUEST_METHOD'];
+         $path = $this->getPath();
+         
+         // הרצת middlewares
+         foreach ($this->middlewares as $middleware) {
+             $middleware->handle();
+         }
+         
+         // חיפוש route מתאים
+         foreach ($this->routes as $route) {
+             if ($route['method'] !== $method) {
+                 continue;
+             }
+             
+             $params = $this->matchRoute($route['path'], $path);
+             if ($params !== false) {
+                 // בדיקת הרשאות
+                 if (!empty($route['permissions'])) {
+                     $this->checkPermissions($route['permissions']);
+                 }
+                 
+                 // הפעלת handler
+                 return $this->executeHandler($route['handler'], $params);
+             }
+         }
+         
+         throw new Exception('Route not found', 404);
+     }
+     
+     /**
+      * קבלת path
+      */
+     private function getPath() {
+         $path = $_SERVER['REQUEST_URI'];
+         $path = parse_url($path, PHP_URL_PATH);
+         $path = str_replace('/dashboard/api', '', $path);
+         return $path ?: '/';
+     }
+     
+     /**
+      * התאמת route
+      */
+     private function matchRoute($routePath, $requestPath) {
+         // המרה לביטוי רגולרי
+         $pattern = preg_replace('/\{(\w+)\}/', '(?P<$1>[^/]+)', $routePath);
+         $pattern = '#^' . $pattern . '$#';
+         
+         if (preg_match($pattern, $requestPath, $matches)) {
+             $params = [];
+             foreach ($matches as $key => $value) {
+                 if (!is_numeric($key)) {
+                     $params[$key] = $value;
+                 }
+             }
+             return $params;
+         }
+         
+         return false;
+     }
+     
+     /**
+      * בדיקת הרשאות
+      */
+     private function checkPermissions($requiredPermissions) {
+         $userPermissions = $_SESSION['permissions'] ?? [];
+         
+         foreach ($requiredPermissions as $permission) {
+             if (!in_array($permission, $userPermissions)) {
+                 throw new Exception('Insufficient permissions', 403);
+             }
+         }
+     }
+     
+     /**
+      * הפעלת handler
+      */
+     private function executeHandler($handler, $params) {
+         list($controller, $method) = explode('@', $handler);
+         
+         $controllerClass = $controller;
+         if (!class_exists($controllerClass)) {
+             require_once __DIR__ . '/controllers/' . $controller . '.php';
+         }
+         
+         $instance = new $controllerClass();
+         
+         // קבלת input
+         $input = json_decode(file_get_contents('php://input'), true);
+         
+         // הפעלת method
+         return $instance->$method($params, $input);
+     }
+ }
+?>
+```
+
+### **20. dashboard/api/middleware.php**
+```php
+<?php
+ /**
+  * API Middleware
+  * שכבות ביניים ל-API
+  */
+
+ /**
+  * Middleware לאימות
+  */
+ class AuthMiddleware {
+     public function handle() {
+         if (!isset($_SESSION['user_id'])) {
+             throw new Exception('Unauthorized', 401);
+         }
+         
+         // בדיקת תוקף session
+         if (isset($_SESSION['last_activity'])) {
+             $inactive = time() - $_SESSION['last_activity'];
+             if ($inactive > SESSION_TIMEOUT) {
+                 session_destroy();
+                 throw new Exception('Session expired', 401);
+             }
+         }
+         
+         $_SESSION['last_activity'] = time();
+     }
+ }
+
+ /**
+  * Middleware ל-Rate Limiting
+  */
+ class RateLimitMiddleware {
+     private $maxRequests = 60;
+     private $timeWindow = 60; // seconds
+     
+     public function handle() {
+         $identifier = $_SESSION['user_id'] ?? $_SERVER['REMOTE_ADDR'];
+         $key = 'rate_limit_' . md5($identifier);
+         
+         // שימוש ב-session לשמירת נתונים
+         if (!isset($_SESSION[$key])) {
+             $_SESSION[$key] = [];
+         }
+         
+         // ניקוי בקשות ישנות
+         $now = time();
+         $_SESSION[$key] = array_filter($_SESSION[$key], function($timestamp) use ($now) {
+             return ($now - $timestamp) < $this->timeWindow;
+         });
+         
+         // בדיקת מגבלה
+         if (count($_SESSION[$key]) >= $this->maxRequests) {
+             throw new Exception('Rate limit exceeded', 429);
+         }
+         
+         // הוספת בקשה חדשה
+         $_SESSION[$key][] = $now;
+     }
+ }
+
+ /**
+  * Middleware לרישום
+  */
+ class LoggingMiddleware {
+     public function handle() {
+         $logData = [
+             'time' => date('Y-m-d H:i:s'),
+             'method' => $_SERVER['REQUEST_METHOD'],
+             'path' => $_SERVER['REQUEST_URI'],
+             'ip' => $_SERVER['REMOTE_ADDR'],
+             'user_id' => $_SESSION['user_id'] ?? null
+         ];
+         
+         // רישום ב-log file
+         $logFile = LOGS_PATH . '/api_' . date('Y-m-d') . '.log';
+         file_put_contents($logFile, json_encode($logData) . "\n", FILE_APPEND);
+     }
+ }
+
+ /**
+  * Middleware ל-CORS
+  */
+ class CORSMiddleware {
+     public function handle() {
+         $origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
+         
+         // בדיקת origin מורשה
+         $allowedOrigins = [
+             'http://localhost',
+             'https://yourdomain.com'
+         ];
+         
+         if (in_array($origin, $allowedOrigins)) {
+             header('Access-Control-Allow-Origin: ' . $origin);
+         } else {
+             header('Access-Control-Allow-Origin: *');
+         }
+         
+         header('Access-Control-Allow-Credentials: true');
+         header('Access-Control-Max-Age: 86400');
+     }
+ }
+?>
+```
+
+### **21. dashboard/templates/layouts/header.php**
+```php
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    
+    <title><?php echo htmlspecialchars($pageTitle ?? 'דשבורד'); ?></title>
+    
+    <!-- Meta Tags -->
+    <meta name="description" content="מערכת ניהול דשבורד מתקדמת">
+    <meta name="theme-color" content="#667eea">
+    
+    <!-- Preloads -->
+    <?php echo $preloads ?? DependencyLoader::renderPreloads(); ?>
+    
+    <!-- Critical CSS -->
+    <?php echo $inlineCSS ?? DependencyLoader::renderInlineCSS($userType ?? 'user'); ?>
+    
+    <!-- Dependencies -->
+    <?php echo $dependencies ?? DependencyLoader::renderHTML($userType ?? 'user'); ?>
+    
+    <!-- PWA -->
+    <?php if (PWA_ENABLED && function_exists('getPWAHeaders')): ?>
+        <?php echo getPWAHeaders(); ?>
+    <?php endif; ?>
+    
+    <!-- CSRF Token -->
+    <meta name="csrf-token" content="<?php echo generateCSRFToken(); ?>">
+    
+    <!-- API Config -->
+    <script>
+        window.dashboardConfig = {
+            apiUrl: '<?php echo DASHBOARD_URL; ?>/api',
+            csrfToken: '<?php echo generateCSRFToken(); ?>',
+            userId: <?php echo $_SESSION['user_id'] ?? 'null'; ?>,
+            userType: '<?php echo $userType ?? 'guest'; ?>',
+            permissions: <?php echo json_encode($_SESSION['permissions'] ?? []); ?>
+        };
+    </script>
+</head>
+<body class="dashboard-body <?php echo $userType ?? 'user'; ?>-theme">
+    
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="spinner"></div>
+        <div>טוען...</div>
+    </div>
+    
+    <!-- Main Container -->
+    <div class="dashboard-container">
+        
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-content">
+                <div class="header-right">
+                    <!-- Logo -->
+                    <div class="logo">
+                        <i class="fas fa-th-large"></i>
+                        <span><?php echo SITE_NAME; ?></span>
+                    </div>
+                    
+                    <!-- Navigation -->
+                    <nav class="main-nav">
+                        <?php include __DIR__ . '/../components/navigation.php'; ?>
+                    </nav>
+                </div>
+                
+                <div class="header-left">
+                    <!-- Search -->
+                    <div class="search-box">
+                        <input type="search" placeholder="חיפוש..." id="globalSearch">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    
+                    <!-- Notifications -->
+                    <div class="notifications-dropdown">
+                        <button class="notification-btn">
+                            <i class="fas fa-bell"></i>
+                            <span class="badge" id="notificationCount">0</span>
+                        </button>
+                        <div class="dropdown-content" id="notificationDropdown">
+                            <!-- נטען דינמית -->
+                        </div>
+                    </div>
+                    
+                    <!-- User Menu -->
+                    <div class="user-menu">
+                        <button class="user-btn">
+                            <?php if (!empty($user['avatar'])): ?>
+                                <img src="<?php echo htmlspecialchars($user['avatar']); ?>" alt="Avatar">
+                            <?php else: ?>
+                                <div class="avatar-placeholder">
+                                    <?php echo strtoupper(substr($user['username'] ?? 'U', 0, 1)); ?>
+                                </div>
+                            <?php endif; ?>
+                            <span><?php echo htmlspecialchars($user['name'] ?? $user['username'] ?? 'משתמש'); ?></span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="dropdown-content">
+                            <a href="/dashboard/profile">
+                                <i class="fas fa-user"></i> הפרופיל שלי
+                            </a>
+                            <a href="/dashboard/settings">
+                                <i class="fas fa-cog"></i> הגדרות
+                            </a>
+                            <hr>
+                            <a href="/auth/logout.php" class="logout">
+                                <i class="fas fa-sign-out-alt"></i> יציאה
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Sidebar -->
+        <aside class="dashboard-sidebar" id="sidebar">
+            <?php include __DIR__ . '/../components/sidebar.php'; ?>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="dashboard-main">
+            <!-- Breadcrumbs -->
+            <div class="breadcrumbs">
+                <?php include __DIR__ . '/../components/breadcrumbs.php'; ?>
+            </div>
+            
+            <!-- Content Area -->
+            <div class="content-area">
+```
+
+### **22. dashboard/templates/layouts/footer.php**
+```php
+            </div>
+            <!-- End Content Area -->
+        </main>
+        <!-- End Main Content -->
+        
+    </div>
+    <!-- End Dashboard Container -->
+    
+    <!-- Footer -->
+    <footer class="dashboard-footer">
+        <div class="footer-content">
+            <div class="footer-right">
+                <span>&copy; <?php echo date('Y'); ?> <?php echo SITE_NAME; ?>. כל הזכויות שמורות.</span>
+            </div>
+            <div class="footer-left">
+                <span>גרסה <?php echo DASHBOARD_VERSION; ?></span>
+                <span class="separator">|</span>
+                <span id="serverTime"><?php echo date('H:i:s'); ?></span>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Modals Container -->
+    <div id="modalsContainer"></div>
+    
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+    
+    <!-- Back to Top -->
+    <button id="backToTop" class="back-to-top" aria-label="חזרה למעלה">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+    
+    <!-- JavaScript Data -->
+    <script>
+        window.dashboardData = <?php echo json_encode([
+            'user' => $user ?? null,
+            'stats' => $stats ?? null,
+            'config' => [
+                'sessionTimeout' => SESSION_TIMEOUT,
+                'apiRateLimit' => API_RATE_LIMIT,
+                'locale' => 'he-IL',
+                'timezone' => date_default_timezone_get()
+            ]
+        ]); ?>;
+    </script>
+    
+    <!-- Core JavaScript -->
+    <script src="<?php echo DASHBOARD_URL; ?>/assets/js/core.js" defer></script>
+    
+    <!-- Page Specific JavaScript -->
+    <?php if (isset($pageScripts)): ?>
+        <?php foreach ($pageScripts as $script): ?>
+            <script src="<?php echo $script; ?>" defer></script>
+        <?php endforeach; ?>
+    <?php endif; ?>
+    
+    <!-- PWA Scripts -->
+    <?php if (PWA_ENABLED && function_exists('getPWAScripts')): ?>
+        <?php echo getPWAScripts(); ?>
+    <?php endif; ?>
+    
+    <!-- Analytics -->
+    <?php if (defined('ANALYTICS_ID') && !empty(ANALYTICS_ID)): ?>
+        <!-- Google Analytics or other analytics code -->
+    <?php endif; ?>
+    
+</body>
+</html>
+```
+
+### **23. dashboard/assets/js/core.js**
+```javascript
+ /**
+  * Core JavaScript
+  * פונקציות ליבה של הדשבורד
+  */
+
+ // Namespace
+ window.Dashboard = window.Dashboard || {};
+
+ // Configuration
+ Dashboard.config = window.dashboardConfig || {};
+
+ // API Client
+ Dashboard.API = class {
+     constructor(baseUrl) {
+         this.baseUrl = baseUrl || Dashboard.config.apiUrl;
+         this.headers = {
+             'Content-Type': 'application/json',
+             'X-CSRF-Token': Dashboard.config.csrfToken,
+             'X-Requested-With': 'XMLHttpRequest'
+         };
+     }
+
+     async request(method, endpoint, data = null) {
+         const options = {
+             method: method,
+             headers: this.headers,
+             credentials: 'same-origin'
+         };
+
+         if (data && method !== 'GET') {
+             options.body = JSON.stringify(data);
+         }
+
+         try {
+             const response = await fetch(this.baseUrl + endpoint, options);
+             
+             if (!response.ok) {
+                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+             }
+
+             const result = await response.json();
+             
+             if (!result.success && result.error) {
+                 throw new Error(result.error);
+             }
+
+             return result;
+         } catch (error) {
+             console.error('API Error:', error);
+             Dashboard.Toast.error('שגיאת API: ' + error.message);
+             throw error;
+         }
+     }
+
+     get(endpoint) {
+         return this.request('GET', endpoint);
+     }
+
+     post(endpoint, data) {
+         return this.request('POST', endpoint, data);
+     }
+
+     put(endpoint, data) {
+         return this.request('PUT', endpoint, data);
+     }
+
+     delete(endpoint) {
+         return this.request('DELETE', endpoint);
+     }
+ };
+
+ // Toast Notifications
+ Dashboard.Toast = {
+     container: null,
+
+     init() {
+         this.container = document.getElementById('toastContainer');
+     },
+
+     show(message, type = 'info', duration = 3000) {
+         const toast = document.createElement('div');
+         toast.className = `toast toast-${type}`;
+         toast.innerHTML = `
+             <i class="fas fa-${this.getIcon(type)}"></i>
+             <span>${message}</span>
+             <button class="toast-close">&times;</button>
+         `;
+
+         this.container.appendChild(toast);
+
+         // Animation
+         setTimeout(() => toast.classList.add('show'), 10);
+
+         // Auto remove
+         const timer = setTimeout(() => this.remove(toast), duration);
+
+         // Manual remove
+         toast.querySelector('.toast-close').addEventListener('click', () => {
+             clearTimeout(timer);
+             this.remove(toast);
+         });
+     },
+
+     remove(toast) {
+         toast.classList.remove('show');
+         setTimeout(() => toast.remove(), 300);
+     },
+
+     getIcon(type) {
+         const icons = {
+             success: 'check-circle',
+             error: 'exclamation-circle',
+             warning: 'exclamation-triangle',
+             info: 'info-circle'
+         };
+         return icons[type] || icons.info;
+     },
+
+     success(message, duration) {
+         this.show(message, 'success', duration);
+     },
+
+     error(message, duration) {
+         this.show(message, 'error', duration);
+     },
+
+     warning(message, duration) {
+         this.show(message, 'warning', duration);
+     },
+
+     info(message, duration) {
+         this.show(message, 'info', duration);
+     }
+ };
+
+ // Modal Manager
+ Dashboard.Modal = {
+     container: null,
+
+     init() {
+         this.container = document.getElementById('modalsContainer');
+     },
+
+     open(content, options = {}) {
+         const modal = document.createElement('div');
+         modal.className = 'modal';
+         modal.innerHTML = `
+             <div class="modal-backdrop"></div>
+             <div class="modal-content ${options.size || ''}">
+                 <div class="modal-header">
+                     <h3>${options.title || ''}</h3>
+                     <button class="modal-close">&times;</button>
+                 </div>
+                 <div class="modal-body">
+                     ${content}
+                 </div>
+                 ${options.footer ? `<div class="modal-footer">${options.footer}</div>` : ''}
+             </div>
+         `;
+
+         this.container.appendChild(modal);
+
+         // Events
+         modal.querySelector('.modal-close').addEventListener('click', () => this.close(modal));
+         modal.querySelector('.modal-backdrop').addEventListener('click', () => this.close(modal));
+
+         // Animation
+         setTimeout(() => modal.classList.add('show'), 10);
+
+         return modal;
+     },
+
+     close(modal) {
+         modal.classList.remove('show');
+         setTimeout(() => modal.remove(), 300);
+     },
+
+     confirm(message, onConfirm, onCancel) {
+         const content = `<p>${message}</p>`;
+         const footer = `
+             <button class="btn btn-secondary" id="modalCancel">ביטול</button>
+             <button class="btn btn-primary" id="modalConfirm">אישור</button>
+         `;
+
+         const modal = this.open(content, {
+             title: 'אישור',
+             footer: footer,
+             size: 'small'
+         });
+
+         modal.querySelector('#modalConfirm').addEventListener('click', () => {
+             this.close(modal);
+             if (onConfirm) onConfirm();
+         });
+
+         modal.querySelector('#modalCancel').addEventListener('click', () => {
+             this.close(modal);
+             if (onCancel) onCancel();
+         });
+     }
+ };
+
+ // Utils
+ Dashboard.Utils = {
+     debounce(func, wait) {
+         let timeout;
+         return function executedFunction(...args) {
+             const later = () => {
+                 clearTimeout(timeout);
+                 func(...args);
+             };
+             clearTimeout(timeout);
+             timeout = setTimeout(later, wait);
+         };
+     },
+
+     throttle(func, limit) {
+         let inThrottle;
+         return function(...args) {
+             if (!inThrottle) {
+                 func.apply(this, args);
+                 inThrottle = true;
+                 setTimeout(() => inThrottle = false, limit);
+             }
+         };
+     },
+
+     formatDate(date, format = 'short') {
+         const d = new Date(date);
+         const options = {
+             short: { day: '2-digit', month: '2-digit', year: 'numeric' },
+             long: { day: 'numeric', month: 'long', year: 'numeric' },
+             full: { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }
+         };
+         return d.toLocaleDateString('he-IL', options[format] || options.short);
+     },
+
+     formatNumber(num) {
+         return new Intl.NumberFormat('he-IL').format(num);
+     },
+
+     timeAgo(date) {
+         const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+         
+         const intervals = {
+             year: 31536000,
+             month: 2592000,
+             week: 604800,
+             day: 86400,
+             hour: 3600,
+             minute: 60
+         };
+
+         for (const [unit, secondsInUnit] of Object.entries(intervals)) {
+             const interval = Math.floor(seconds / secondsInUnit);
+             if (interval >= 1) {
+                 const rtf = new Intl.RelativeTimeFormat('he', { numeric: 'auto' });
+                 return rtf.format(-interval, unit);
+             }
+         }
+
+         return 'עכשיו';
+     }
+ };
+
+ // Session Manager
+ Dashboard.Session = {
+     timeout: Dashboard.config.sessionTimeout || 3600,
+     warningTime: 300, // 5 minutes before timeout
+     timer: null,
+     warningShown: false,
+
+     init() {
+         this.resetTimer();
+         this.attachEventListeners();
+     },
+
+     attachEventListeners() {
+         ['mousedown', 'keypress', 'scroll', 'touchstart'].forEach(event => {
+             document.addEventListener(event, () => this.resetTimer(), true);
+         });
+     },
+
+     resetTimer() {
+         clearTimeout(this.timer);
+         this.warningShown = false;
+         
+         // Warning timer
+         this.timer = setTimeout(() => {
+             this.showWarning();
+         }, (this.timeout - this.warningTime) * 1000);
+     },
+
+     showWarning() {
+         if (this.warningShown) return;
+         this.warningShown = true;
+
+         Dashboard.Modal.confirm(
+             'הסשן שלך עומד להסתיים בעוד 5 דקות. האם ברצונך להמשיך?',
+             () => {
+                 this.refresh();
+             },
+             () => {
+                 this.logout();
+             }
+         );
+
+         // Final timeout
+         setTimeout(() => {
+             if (this.warningShown) {
+                 this.logout();
+             }
+         }, this.warningTime * 1000);
+     },
+
+     async refresh() {
+         try {
+             const api = new Dashboard.API();
+             await api.post('/session/refresh');
+             this.resetTimer();
+             Dashboard.Toast.success('הסשן חודש בהצלחה');
+         } catch (error) {
+             console.error('Session refresh failed:', error);
+         }
+     },
+
+     logout() {
+         window.location.href = '/auth/logout.php';
+     }
+ };
+
+ // Notifications Manager
+ Dashboard.Notifications = {
+     count: 0,
+     interval: null,
+
+     init() {
+         this.updateCount();
+         this.startPolling();
+         this.attachEventListeners();
+     },
+
+     startPolling(interval = 60000) {
+         this.interval = setInterval(() => {
+             this.fetchNotifications();
+         }, interval);
+     },
+
+     stopPolling() {
+         clearInterval(this.interval);
+     },
+
+     async fetchNotifications() {
+         try {
+             const api = new Dashboard.API();
+             const response = await api.get('/notifications');
+             this.updateUI(response.data);
+         } catch (error) {
+             console.error('Failed to fetch notifications:', error);
+         }
+     },
+
+     updateCount(count) {
+         this.count = count || 0;
+         const badge = document.getElementById('notificationCount');
+         if (badge) {
+             badge.textContent = this.count;
+             badge.style.display = this.count > 0 ? 'block' : 'none';
+         }
+     },
+
+     updateUI(notifications) {
+         const dropdown = document.getElementById('notificationDropdown');
+         if (!dropdown) return;
+
+         if (notifications.length === 0) {
+             dropdown.innerHTML = '<div class="no-notifications">אין התראות חדשות</div>';
+             return;
+         }
+
+         dropdown.innerHTML = notifications.map(notif => `
+             <div class="notification-item ${notif.read ? 'read' : 'unread'}" data-id="${notif.id}">
+                 <div class="notification-icon">
+                     <i class="fas fa-${this.getIcon(notif.type)}"></i>
+                 </div>
+                 <div class="notification-content">
+                     <div class="notification-message">${notif.message}</div>
+                     <div class="notification-time">${Dashboard.Utils.timeAgo(notif.created_at)}</div>
+                 </div>
+             </div>
+         `).join('');
+
+         this.updateCount(notifications.filter(n => !n.read).length);
+     },
+
+     getIcon(type) {
+         const icons = {
+             info: 'info-circle',
+             success: 'check-circle',
+             warning: 'exclamation-triangle',
+             error: 'exclamation-circle',
+             message: 'envelope',
+             user: 'user'
+         };
+         return icons[type] || 'bell';
+     },
+
+     attachEventListeners() {
+         document.addEventListener('click', (e) => {
+             if (e.target.closest('.notification-item')) {
+                 const item = e.target.closest('.notification-item');
+                 this.markAsRead(item.dataset.id);
+             }
+         });
+     },
+
+     async markAsRead(id) {
+         try {
+             const api = new Dashboard.API();
+             await api.put(`/notifications/${id}/read`);
+             this.fetchNotifications();
+         } catch (error) {
+             console.error('Failed to mark notification as read:', error);
+         }
+     }
+ };
+
+ // Initialize on DOM ready
+ document.addEventListener('DOMContentLoaded', () => {
+     // Hide loading screen
+     const loadingScreen = document.getElementById('loadingScreen');
+     if (loadingScreen) {
+         setTimeout(() => {
+             loadingScreen.style.opacity = '0';
+             setTimeout(() => loadingScreen.remove(), 300);
+         }, 500);
+     }
+
+     // Initialize components
+     Dashboard.Toast.init();
+     Dashboard.Modal.init();
+     Dashboard.Session.init();
+     Dashboard.Notifications.init();
+
+     // Back to top button
+     const backToTop = document.getElementById('backToTop');
+     if (backToTop) {
+         window.addEventListener('scroll', Dashboard.Utils.throttle(() => {
+             backToTop.style.display = window.scrollY > 300 ? 'block' : 'none';
+         }, 100));
+
+         backToTop.addEventListener('click', () => {
+             window.scrollTo({ top: 0, behavior: 'smooth' });
+         });
+     }
+
+     // Global search
+     const searchInput = document.getElementById('globalSearch');
+     if (searchInput) {
+         searchInput.addEventListener('input', Dashboard.Utils.debounce((e) => {
+             if (e.target.value.length > 2) {
+                 Dashboard.Search.perform(e.target.value);
+             }
+         }, 300));
+     }
+
+     // Server time update
+     const serverTime = document.getElementById('serverTime');
+     if (serverTime) {
+         setInterval(() => {
+             const now = new Date();
+             serverTime.textContent = now.toLocaleTimeString('he-IL');
+         }, 1000);
+     }
+ });
+
+ // Expose API
+ window.DashboardAPI = new Dashboard.API();
+```
+
+### **24. dashboard/assets/css/base.css**
+```css
+ /* Base CSS - עיצוב בסיסי */
+
+ /* CSS Variables */
+ :root {
+     /* Colors */
+     --primary-color: #667eea;
+     --primary-dark: #5a67d8;
+     --primary-light: #7f8ff3;
+     --secondary-color: #48bb78;
+     --success-color: #48bb78;
+     --warning-color: #ed8936;
+     --danger-color: #f56565;
+     --info-color: #4299e1;
+     
+     /* Grays */
+     --gray-50: #f9fafb;
+     --gray-100: #f3f4f6;
+     --gray-200: #e5e7eb;
+     --gray-300: #d1d5db;
+     --gray-400: #9ca3af;
+     --gray-500: #6b7280;
+     --gray-600: #4b5563;
+     --gray-700: #374151;
+     --gray-800: #1f2937;
+     --gray-900: #111827;
+     
+     /* Spacing */
+     --spacing-xs: 0.25rem;
+     --spacing-sm: 0.5rem;
+     --spacing-md: 1rem;
+     --spacing-lg: 1.5rem;
+     --spacing-xl: 2rem;
+     --spacing-2xl: 3rem;
+     
+     /* Border Radius */
+     --radius-sm: 0.25rem;
+     --radius-md: 0.375rem;
+     --radius-lg: 0.5rem;
+     --radius-xl: 0.75rem;
+     --radius-full: 9999px;
+     
+     /* Shadows */
+     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+     --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+     
+     /* Transitions */
+     --transition-fast: 150ms ease-in-out;
+     --transition-base: 250ms ease-in-out;
+     --transition-slow: 350ms ease-in-out;
+     
+     /* Z-Index */
+     --z-dropdown: 1000;
+     --z-sticky: 1020;
+     --z-fixed: 1030;
+     --z-modal-backdrop: 1040;
+     --z-modal: 1050;
+     --z-popover: 1060;
+     --z-tooltip: 1070;
+     --z-toast: 1080;
+ }
+
+ /* Reset */
+ *, *::before, *::after {
+     box-sizing: border-box;
+     margin: 0;
+     padding: 0;
+ }
+
+ /* Base */
+ html {
+     font-size: 16px;
+     scroll-behavior: smooth;
+     -webkit-text-size-adjust: 100%;
+ }
+
+ body {
+     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+     font-size: 1rem;
+     line-height: 1.5;
+     color: var(--gray-900);
+     background-color: var(--gray-50);
+     direction: rtl;
+     min-height: 100vh;
+     overflow-x: hidden;
+ }
+
+ /* Typography */
+ h1, h2, h3, h4, h5, h6 {
+     font-weight: 600;
+     line-height: 1.2;
+     margin-bottom: var(--spacing-md);
+ }
+
+ h1 { font-size: 2.5rem; }
+ h2 { font-size: 2rem; }
+ h3 { font-size: 1.75rem; }
+ h4 { font-size: 1.5rem; }
+ h5 { font-size: 1.25rem; }
+ h6 { font-size: 1rem; }
+
+ p {
+     margin-bottom: var(--spacing-md);
+ }
+
+ a {
+     color: var(--primary-color);
+     text-decoration: none;
+     transition: color var(--transition-fast);
+ }
+
+ a:hover {
+     color: var(--primary-dark);
+ }
+
+ /* Forms */
+ input, select, textarea {
+     font-family: inherit;
+     font-size: inherit;
+     line-height: inherit;
+ }
+
+ .form-control {
+     display: block;
+     width: 100%;
+     padding: var(--spacing-sm) var(--spacing-md);
+     font-size: 1rem;
+     line-height: 1.5;
+     color: var(--gray-900);
+     background-color: white;
+     border: 1px solid var(--gray-300);
+     border-radius: var(--radius-md);
+     transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+ }
+
+ .form-control:focus {
+     outline: none;
+     border-color: var(--primary-color);
+     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+ }
+
+ /* Buttons */
+ .btn {
+     display: inline-flex;
+     align-items: center;
+     justify-content: center;
+     padding: var(--spacing-sm) var(--spacing-lg);
+     font-size: 1rem;
+     font-weight: 500;
+     line-height: 1.5;
+     text-align: center;
+     white-space: nowrap;
+     vertical-align: middle;
+     cursor: pointer;
+     user-select: none;
+     border: 1px solid transparent;
+     border-radius: var(--radius-md);
+     transition: all var(--transition-fast);
+ }
+
+ .btn:hover {
+     transform: translateY(-1px);
+     box-shadow: var(--shadow-md);
+ }
+
+ .btn:active {
+     transform: translateY(0);
+ }
+
+ .btn:disabled {
+     opacity: 0.65;
+     cursor: not-allowed;
+ }
+
+ .btn-primary {
+     color: white;
+     background-color: var(--primary-color);
+     border-color: var(--primary-color);
+ }
+
+ .btn-primary:hover {
+     background-color: var(--primary-dark);
+     border-color: var(--primary-dark);
+ }
+
+ .btn-secondary {
+     color: var(--gray-700);
+     background-color: white;
+     border-color: var(--gray-300);
+ }
+
+ .btn-secondary:hover {
+     background-color: var(--gray-50);
+     border-color: var(--gray-400);
+ }
+
+ .btn-success {
+     color: white;
+     background-color: var(--success-color);
+     border-color: var(--success-color);
+ }
+
+ .btn-danger {
+     color: white;
+     background-color: var(--danger-color);
+     border-color: var(--danger-color);
+ }
+
+ /* Loading Screen */
+ .loading-screen {
+     position: fixed;
+     top: 0;
+     left: 0;
+     right: 0;
+     bottom: 0;
+     background: white;
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     justify-content: center;
+     z-index: 9999;
+     transition: opacity var(--transition-slow);
+ }
+
+ .spinner {
+     width: 50px;
+     height: 50px;
+     border: 3px solid var(--gray-200);
+     border-top-color: var(--primary-color);
+     border-radius: 50%;
+     animation: spin 1s linear infinite;
+ }
+
+ @keyframes spin {
+     to { transform: rotate(360deg); }
+ }
+
+ /* Toast Notifications */
+ .toast-container {
+     position: fixed;
+     top: 20px;
+     left: 20px;
+     z-index: var(--z-toast);
+     pointer-events: none;
+ }
+
+ .toast {
+     background: white;
+     border-radius: var(--radius-md);
+     box-shadow: var(--shadow-lg);
+     padding: var(--spacing-md) var(--spacing-lg);
+     margin-bottom: var(--spacing-md);
+     display: flex;
+     align-items: center;
+     gap: var(--spacing-md);
+     min-width: 300px;
+     max-width: 500px;
+     transform: translateX(-120%);
+     transition: transform var(--transition-base);
+     pointer-events: all;
+ }
+
+ .toast.show {
+     transform: translateX(0);
+ }
+
+ .toast-success {
+     border-right: 4px solid var(--success-color);
+ }
+
+ .toast-error {
+     border-right: 4px solid var(--danger-color);
+ }
+
+ .toast-warning {
+     border-right: 4px solid var(--warning-color);
+ }
+
+ .toast-info {
+     border-right: 4px solid var(--info-color);
+ }
+
+ .toast-close {
+     margin-right: auto;
+     background: none;
+     border: none;
+     font-size: 1.5rem;
+     cursor: pointer;
+     opacity: 0.5;
+     transition: opacity var(--transition-fast);
+ }
+
+ .toast-close:hover {
+     opacity: 1;
+ }
+
+ /* Modal */
+ .modal {
+     position: fixed;
+     top: 0;
+     left: 0;
+     right: 0;
+     bottom: 0;
+     z-index: var(--z-modal);
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     opacity: 0;
+     transition: opacity var(--transition-base);
+ }
+
+ .modal.show {
+     opacity: 1;
+ }
+
+ .modal-backdrop {
+     position: absolute;
+     top: 0;
+     left: 0;
+     right: 0;
+     bottom: 0;
+     background: rgba(0, 0, 0, 0.5);
+     z-index: -1;
+ }
+
+ .modal-content {
+     background: white;
+     border-radius: var(--radius-lg);
+     box-shadow: var(--shadow-xl);
+     max-width: 500px;
+     width: 90%;
+     max-height: 90vh;
+     overflow: auto;
+     transform: scale(0.9);
+     transition: transform var(--transition-base);
+ }
+
+ .modal.show .modal-content {
+     transform: scale(1);
+ }
+
+ .modal-content.small {
+     max-width: 400px;
+ }
+
+ .modal-content.large {
+     max-width: 800px;
+ }
+
+ .modal-header {
+     padding: var(--spacing-lg);
+     border-bottom: 1px solid var(--gray-200);
+     display: flex;
+     align-items: center;
+     justify-content: space-between;
+ }
+
+ .modal-header h3 {
+     margin: 0;
+ }
+
+ .modal-close {
+     background: none;
+     border: none;
+     font-size: 1.5rem;
+     cursor: pointer;
+     opacity: 0.5;
+     transition: opacity var(--transition-fast);
+ }
+
+ .modal-close:hover {
+     opacity: 1;
+ }
+
+ .modal-body {
+     padding: var(--spacing-lg);
+ }
+
+ .modal-footer {
+     padding: var(--spacing-lg);
+     border-top: 1px solid var(--gray-200);
+     display: flex;
+     justify-content: flex-end;
+     gap: var(--spacing-md);
+ }
+
+ /* Utilities */
+ .text-center { text-align: center; }
+ .text-right { text-align: right; }
+ .text-left { text-align: left; }
+
+ .text-primary { color: var(--primary-color); }
+ .text-success { color: var(--success-color); }
+ .text-warning { color: var(--warning-color); }
+ .text-danger { color: var(--danger-color); }
+ .text-info { color: var(--info-color); }
+ .text-muted { color: var(--gray-500); }
+
+ .bg-primary { background-color: var(--primary-color); }
+ .bg-success { background-color: var(--success-color); }
+ .bg-warning { background-color: var(--warning-color); }
+ .bg-danger { background-color: var(--danger-color); }
+ .bg-info { background-color: var(--info-color); }
+
+ .d-none { display: none !important; }
+ .d-block { display: block !important; }
+ .d-flex { display: flex !important; }
+ .d-inline { display: inline !important; }
+ .d-inline-block { display: inline-block !important; }
+
+ .justify-content-start { justify-content: flex-start !important; }
+ .justify-content-center { justify-content: center !important; }
+ .justify-content-end { justify-content: flex-end !important; }
+ .justify-content-between { justify-content: space-between !important; }
+
+ .align-items-start { align-items: flex-start !important; }
+ .align-items-center { align-items: center !important; }
+ .align-items-end { align-items: flex-end !important; }
+
+ .gap-sm { gap: var(--spacing-sm) !important; }
+ .gap-md { gap: var(--spacing-md) !important; }
+ .gap-lg { gap: var(--spacing-lg) !important; }
+
+ .m-0 { margin: 0 !important; }
+ .m-auto { margin: auto !important; }
+ .mt-auto { margin-top: auto !important; }
+ .mb-auto { margin-bottom: auto !important; }
+ .ms-auto { margin-inline-start: auto !important; }
+ .me-auto { margin-inline-end: auto !important; }
+
+ .p-0 { padding: 0 !important; }
+ .p-sm { padding: var(--spacing-sm) !important; }
+ .p-md { padding: var(--spacing-md) !important; }
+ .p-lg { padding: var(--spacing-lg) !important; }
+
+ /* Responsive */
+ @media (max-width: 768px) {
+     .hide-mobile { display: none !important; }
+ }
+
+ @media (min-width: 769px) {
+     .show-mobile { display: none !important; }
+ }
+```
+
+### **25. dashboard/.htaccess**
+```apache
+ # Dashboard .htaccess Configuration
+
+ # Enable Rewrite Engine
+ RewriteEngine On
+
+ # Security Headers
+ Header set X-Content-Type-Options "nosniff"
+ Header set X-Frame-Options "SAMEORIGIN"
+ Header set X-XSS-Protection "1; mode=block"
+ Header set Referrer-Policy "strict-origin-when-cross-origin"
+ Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com data:; img-src 'self' data: https:;"
+
+ # Protect sensitive directories
+ RewriteRule ^(bootstrap|config|logs|cache|uploads/temp)/ - [F,L]
+
+ # Protect sensitive files
+ <FilesMatch "\.(json|log|md|yml|yaml|env|ini|conf|config)$">
+     Order Allow,Deny
+     Deny from all
+ </FilesMatch>
+
+ # API Routing
+ RewriteCond %{REQUEST_FILENAME} !-f
+ RewriteCond %{REQUEST_FILENAME} !-d
+ RewriteRule ^api/(.*)$ api/index.php?path=$1 [QSA,L]
+
+ # Pretty URLs
+ RewriteCond %{REQUEST_FILENAME} !-f
+ RewriteCond %{REQUEST_FILENAME} !-d
+ RewriteRule ^([^/]+)/?$ index.php?page=$1 [QSA,L]
+
+ # Force HTTPS (uncomment in production)
+ # RewriteCond %{HTTPS} off
+ # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+ # Compression
+ <IfModule mod_deflate.c>
+     AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css
+     AddOutputFilterByType DEFLATE application/javascript application/json
+     AddOutputFilterByType DEFLATE application/x-font-ttf application/x-font-opentype
+     AddOutputFilterByType DEFLATE image/svg+xml
+ </IfModule>
+
+ # Caching
+ <IfModule mod_expires.c>
+     ExpiresActive On
+     
+     # Images
+     ExpiresByType image/jpeg "access plus 1 month"
+     ExpiresByType image/gif "access plus 1 month"
+     ExpiresByType image/png "access plus 1 month"
+     ExpiresByType image/webp "access plus 1 month"
+     ExpiresByType image/svg+xml "access plus 1 month"
+     ExpiresByType image/x-icon "access plus 1 year"
+     
+     # CSS and JavaScript
+     ExpiresByType text/css "access plus 1 month"
+     ExpiresByType application/javascript "access plus 1 month"
+     
+     # Fonts
+     ExpiresByType application/x-font-ttf "access plus 1 year"
+     ExpiresByType application/x-font-woff "access plus 1 year"
+     ExpiresByType application/x-font-woff2 "access plus 1 year"
+ </IfModule>
+
+ # UTF-8 Encoding
+ AddDefaultCharset UTF-8
+
+ # Directory Indexes
+ DirectoryIndex index.php index.html
+
+ # Disable directory browsing
+ Options -Indexes
+
+ # Error Documents
+ ErrorDocument 403 /dashboard/error/403.php
+ ErrorDocument 404 /dashboard/error/404.php
+ ErrorDocument 500 /dashboard/error/500.php
+
+ # PHP Configuration (if allowed)
+ <IfModule mod_php7.c>
+     php_flag display_errors off
+     php_flag log_errors on
+     php_value error_log logs/php_errors.log
+     php_value upload_max_filesize 10M
+     php_value post_max_size 10M
+     php_value max_execution_time 60
+     php_value session.cookie_httponly on
+     php_value session.cookie_secure on
+     php_value session.cookie_samesite Strict
+ </IfModule>
+```
+
+### **26. dashboard/templates/admin/admin-dashboard.php**
+```php
+ <?php
+ /**
+  * Admin Dashboard Template
+  */
+ ?>
+
+ <div class="admin-dashboard">
+     <!-- Page Header -->
+     <div class="page-header">
+         <h1>דשבורד מנהל</h1>
+         <div class="page-actions">
+             <button class="btn btn-primary" onclick="AdminActions.createUser()">
+                 <i class="fas fa-user-plus"></i>
+                 משתמש חדש
+             </button>
+             <button class="btn btn-secondary" onclick="AdminActions.exportData()">
+                 <i class="fas fa-download"></i>
+                 ייצוא נתונים
+             </button>
+         </div>
+     </div>
+
+     <!-- Stats Overview -->
+     <div class="stats-grid">
+         <?php AdminWidgets::renderAdvancedStats($stats); ?>
+     </div>
+
+     <!-- Main Grid -->
+     <div class="dashboard-grid">
+         <!-- System Status -->
+         <div class="dashboard-card">
+             <div class="card-header">
+                 <h3><i class="fas fa-server"></i> מצב המערכת</h3>
+             </div>
+             <div class="card-body">
+                 <div class="system-status">
+                     <div class="status-item">
+                         <span class="status-label">PHP Version:</span>
+                         <span class="status-value"><?php echo $systemStatus['php_version']; ?></span>
+                     </div>
+                     <div class="status-item">
+                         <span class="status-label">MySQL Version:</span>
+                         <span class="status-value"><?php echo $systemStatus['mysql_version']; ?></span>
+                     </div>
+                     <div class="status-item">
+                         <span class="status-label">Server:</span>
+                         <span class="status-value"><?php echo $systemStatus['server_software']; ?></span>
+                     </div>
+                     <div class="status-item">
+                         <span class="status-label">SSL:</span>
+                         <span class="status-value">
+                             <?php if ($systemStatus['ssl_enabled']): ?>
+                                 <span class="badge badge-success">מאובטח</span>
+                             <?php else: ?>
+                                 <span class="badge badge-warning">לא מאובטח</span>
+                             <?php endif; ?>
+                         </span>
+                     </div>
+                     <div class="status-item">
+                         <span class="status-label">Memory Limit:</span>
+                         <span class="status-value"><?php echo $systemStatus['memory_limit']; ?></span>
+                     </div>
+                 </div>
+             </div>
+         </div>
+
+         <!-- Recent Users -->
+         <div class="dashboard-card">
+             <div class="card-header">
+                 <h3><i class="fas fa-users"></i> משתמשים אחרונים</h3>
+                 <a href="/dashboard/users" class="view-all">צפה בכולם</a>
+             </div>
+             <div class="card-body">
+                 <div class="users-list">
+                     <?php foreach ($recentUsers as $user): ?>
+                     <div class="user-item">
+                         <div class="user-avatar">
+                             <?php if ($user['avatar']): ?>
+                                 <img src="<?php echo htmlspecialchars($user['avatar']); ?>" alt="">
+                             <?php else: ?>
+                                 <div class="avatar-placeholder">
+                                     <?php echo strtoupper(substr($user['username'], 0, 1)); ?>
+                                 </div>
+                             <?php endif; ?>
+                         </div>
+                         <div class="user-info">
+                             <div class="user-name"><?php echo htmlspecialchars($user['name'] ?? $user['username']); ?></div>
+                             <div class="user-email"><?php echo htmlspecialchars($user['email']); ?></div>
+                         </div>
+                         <div class="user-meta">
+                             <span class="badge badge-<?php echo $user['role']; ?>">
+                                 <?php echo $user['role']; ?>
+                             </span>
+                             <div class="user-date">
+                                 <?php echo Dashboard\Utils::timeAgo($user['created_at']); ?>
+                             </div>
+                         </div>
+                         <div class="user-actions">
+                             <button class="btn-icon" onclick="AdminActions.editUser(<?php echo $user['id']; ?>)">
+                                 <i class="fas fa-edit"></i>
+                             </button>
+                             <button class="btn-icon danger" onclick="AdminActions.deleteUser(<?php echo $user['id']; ?>)">
+                                 <i class="fas fa-trash"></i>
+                             </button>
+                         </div>
+                     </div>
+                     <?php endforeach; ?>
+                 </div>
+             </div>
+         </div>
+
+         <!-- Activity Log -->
+         <?php AdminWidgets::renderRealtimeActivity($activityLog); ?>
+
+         <!-- Quick Actions -->
+         <?php AdminWidgets::renderQuickActions(); ?>
+
+         <!-- Performance Chart -->
+         <?php AdminWidgets::renderPerformanceChart(); ?>
+     </div>
+ </div>
+
+ <!-- Admin JavaScript -->
+ <script src="/dashboard/modules/admin/assets/admin.js"></script>
+```
+
+---
+
+## סיכום המבנה המודולרי
+
+המערכת שבניתי לך כוללת:
+
+### ✅ **יתרונות המערכת:**
+
+1. **מודולריות מלאה** - כל רכיב עומד בפני עצמו
+2. **הרשאות דינמיות** - ניהול מלא של תפקידים והרשאות
+3. **אבטחה מקיפה** - הגנות מובנות בכל רמה
+4. **ביצועים מעולים** - cache, lazy loading, minification
+5. **תחזוקה קלה** - קוד נקי ומאורגן
+6. **הרחבה פשוטה** - קל להוסיף מודולים חדשים
+7. **API מלא** - תמיכה בכל הפעולות
+8. **PWA Ready** - תמיכה מלאה ב-Progressive Web App
+9. **Responsive** - עובד מצוין בכל המכשירים
+10. **RTL Support** - תמיכה מלאה בעברית
+
+### 📦 **התקנה:**
+
+1. העתק את כל התיקייה לשרת
+2. הגדר את החיבור למסד נתונים ב-config.php
+3. ודא הרשאות כתיבה לתיקיות logs, cache, uploads
+4. גש ל-/dashboard והמערכת תיטען אוטומטית
+
+### 🔧 **התאמות נדרשות:**
+
+1. עדכן את הנתיבים בקבצי ה-config
+2. התאם את ההרשאות לצרכים שלך
+3. הוסף/הסר מודולים לפי הצורך
+4. התאם את העיצוב לפי העדפתך
+
+המערכת מוכנה לשימוש מיידי ומספקת בסיס מצוין להרחבה!
+
+האם תרצה שאוסיף עוד קבצים או מודולים ספציפיים?

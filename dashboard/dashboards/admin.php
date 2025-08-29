@@ -8,7 +8,7 @@
     // exit;
 // }
 
-require_once '../../config.php';
+// require_once '../../config.php';
 
 // // בדיקה שהמשתמש הוא אכן מנהל
 // $pdo = getDBConnection();
@@ -472,6 +472,7 @@ require_once '../../config.php';
     </style>
 </head>
 <body>
+    ee
     <!-- Header -->
     <!-- <div class="admin-header">
         <div class="header-content">

@@ -1,6 +1,5 @@
 <?php
 // dashboard/dashboards/admin.php - דשבורד מנהל מערכת
-session_start();
 
 // בדיקת הרשאות
 if (!isset($_SESSION['user_id'])) {
@@ -12,6 +11,12 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/config.php';
 
 // בדיקה שהמשתמש הוא אכן מנהל
 $pdo = getDBConnection();
+
+// עדכן את הזמן האחרון של המשתמש הנוכחי
+$stmt = $pdo->prepare("UPDATE users SET last_login = NOW() WHERE id = ?");
+$stmt->execute([$_SESSION['user_id']]);
+
+// בדיקה שהמשתמש הוא אכן מנהל
 $stmt = $pdo->prepare("SELECT dashboard_type FROM user_permissions WHERE user_id = ?");
 $stmt->execute([$_SESSION['user_id']]);
 $result = $stmt->fetch(PDO::FETCH_ASSOC);

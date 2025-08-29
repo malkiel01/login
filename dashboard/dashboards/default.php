@@ -1,5 +1,5 @@
 <?php
-header("Location: search/index.html");
+header("Location: search/index.php");
 exit();
 ?>
 

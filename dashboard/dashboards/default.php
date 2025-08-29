@@ -1,7 +1,19 @@
-<?php
+< ?php
 header("Location: ./search/index.html");
 exit();
 ?>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="refresh" content="0; url=search/index.html">
+</head>
+<body>
+    <script>
+        window.location.href = "search/index.html";
+    </script>
+</body>
+</html>
 
 <!-- <!DOCTYPE html>
 <html dir="rtl" lang="he">

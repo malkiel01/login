@@ -42,7 +42,7 @@ function getUserDashboardType($userId) {
 
 // קבלת סוג הדשבורד של המשתמש המחובר
 $userId = $_SESSION['user_id'];
-$dashboardType = getUserDashboardType($userId);
+// $dashboardType = getUserDashboardType($userId);
 
 // // הצגת הדשבורד המתאים
 // $dashboardFile = __DIR__ . '/dashboards/' . $dashboardType . '.php';

@@ -54,4 +54,4 @@ if (!isset($_SESSION['user_id'])) {
 //     require_once __DIR__ . '/dashboards/default.php';
 // }
 
-echo 'test1'
+echo 'test1';

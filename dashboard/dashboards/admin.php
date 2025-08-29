@@ -1,6 +1,6 @@
 <?php
 // dashboard/dashboards/admin.php - דשבורד מנהל מערכת
-session_start();
+// session_start();
 
 // בדיקת הרשאות
 if (!isset($_SESSION['user_id'])) {

@@ -474,9 +474,8 @@ $adminUsers = count(array_filter($users, function($u) { return $u['dashboard_typ
     </style>
 </head>
 <body>
-    ee
     <!-- Header -->
-    <!-- <div class="admin-header">
+    <div class="admin-header">
         <div class="header-content">
             <div class="header-title">
                 <span style="font-size: 40px;">👨‍💼</span>
@@ -494,19 +493,19 @@ $adminUsers = count(array_filter($users, function($u) { return $u['dashboard_typ
                 <a href="/auth/logout.php" class="logout-btn">יציאה</a>
             </div>
         </div>
-    </div> -->
+    </div>
     
     <div class="container">
         <!-- Alert Messages -->
-        <!-- < ?php if (isset($message)): ?>
+        <?php if (isset($message)): ?>
             <div class="alert <?php echo $messageType; ?>">
                 <?php echo $messageType === 'success' ? '✅' : '⚠️'; ?>
                 <?php echo htmlspecialchars($message); ?>
             </div>
-        < ?php endif; ?> -->
+        <?php endif; ?>
         
         <!-- Statistics -->
-        <!-- <div class="stats-grid">
+        <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-icon blue">👥</div>
                 <div class="stat-content">
@@ -538,10 +537,10 @@ $adminUsers = count(array_filter($users, function($u) { return $u['dashboard_typ
                     <p>מנהלי מערכת</p>
                 </div>
             </div>
-        </div> -->
+        </div>
         
         <!-- Users Table -->
-        <!-- <div class="users-section">
+        <div class="users-section">
             <div class="section-header">
                 <div class="section-title">
                     <span>👥</span>
@@ -661,10 +660,10 @@ $adminUsers = count(array_filter($users, function($u) { return $u['dashboard_typ
                     </tbody>
                 </table>
             </div>
-        </div> -->
+        </div>
     </div>
     
-    <!-- <script>
+    <script>
         // פונקציית חיפוש משתמשים
         function filterUsers() {
             const searchBox = document.getElementById('searchBox');
@@ -683,6 +682,6 @@ $adminUsers = count(array_filter($users, function($u) { return $u['dashboard_typ
         setTimeout(() => {
             location.reload();
         }, 30000);
-    </script> -->
+    </script>
 </body>
 </html>

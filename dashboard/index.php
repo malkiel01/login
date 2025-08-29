@@ -40,9 +40,9 @@ function getUserDashboardType($userId) {
     return 'default'; // ברירת מחדל אם אין רשומה
 }
 
-// // קבלת סוג הדשבורד של המשתמש המחובר
-// $userId = $_SESSION['user_id'];
-// $dashboardType = getUserDashboardType($userId);
+// קבלת סוג הדשבורד של המשתמש המחובר
+$userId = $_SESSION['user_id'];
+$dashboardType = getUserDashboardType($userId);
 
 // // הצגת הדשבורד המתאים
 // $dashboardFile = __DIR__ . '/dashboards/' . $dashboardType . '.php';

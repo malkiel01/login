@@ -3,12 +3,12 @@
 session_start();
 
 // בדיקת הרשאות
-// if (!isset($_SESSION['user_id'])) {
-//     header('Location: /auth/login.php');
-//     exit;
-// }
+if (!isset($_SESSION['user_id'])) {
+    header('Location: /auth/login.php');
+    exit;
+}
 
-// require_once '../../config.php';
+require_once '../../config.php';
 
 // // בדיקה שהמשתמש הוא אכן מנהל
 // $pdo = getDBConnection();

@@ -9,9 +9,9 @@ exit();
     <meta http-equiv="refresh" content="0; url=search/index.html">
 </head>
 <body>
-    <script>
+    <!-- <script>
         window.location.href = "search/index.html";
-    </script>
+    </script> -->
 </body>
 </html>
 

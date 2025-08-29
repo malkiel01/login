@@ -1,4 +1,4 @@
-<?php
+< ?php
 // הפניה ישירה לדף החיפוש
 header("Location: search/index.html");
 exit();

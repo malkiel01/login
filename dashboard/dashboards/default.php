@@ -1,4 +1,10 @@
-<!DOCTYPE html>
+<?php
+// הפניה ישירה לדף החיפוש
+header("Location: search/index.html");
+exit();
+?>
+
+<!-- <!DOCTYPE html>
 <html dir="rtl" lang="he">
 <head>
     <meta charset="UTF-8">
@@ -78,11 +84,11 @@
         
         <div class="user-info">
             <strong>משתמש מחובר:</strong><br>
-            <?php echo htmlspecialchars($_SESSION['username'] ?? 'משתמש'); ?><br>
-            <small>ID: <?php echo $_SESSION['user_id']; ?></small>
+            < ?php echo htmlspecialchars($_SESSION['username'] ?? 'משתמש'); ?><br>
+            <small>ID: < ?php echo $_SESSION['user_id']; ?></small>
         </div>
         
         <a href="/auth/logout.php" class="logout-btn">יציאה</a>
     </div>
 </body>
-</html>
+</html> -->

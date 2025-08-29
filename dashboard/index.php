@@ -8,8 +8,8 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-// // חיבור למסד נתונים - משתמש בחיבור הקיים של הפרויקט
-// require_once '../config.php';  // או איפה שהחיבור שלך נמצא
+// חיבור למסד נתונים - משתמש בחיבור הקיים של הפרויקט
+require_once '../config.php';  // או איפה שהחיבור שלך נמצא
 
 // // פונקציה פשוטה לקבלת סוג הדשבורד
 // function getUserDashboardType($userId) {

@@ -6,7 +6,7 @@
     <title>חיפוש נפטרים - מערכת ניהול בית עלמין</title>
     
     <!-- CSS Files -->
-    <link rel="stylesheet" href="/dashboard/dashboards/search/assets/css/search.css">
+    <link rel="stylesheet" href="dashboards/search/assets/css/search.css">
     <link rel="stylesheet" href="/dashboard/dashboards/search/assets/css/animations.css">
 </head>
 <body>

@@ -11,9 +11,9 @@ if (!isLoggedIn()) {
         exit;
     }
     
-    // // קבלת סוג הדשבורד של המשתמש
-    // $userId = $_SESSION['user_id'];
-    // $dashboardType = getUserDashboardType($userId);
+    // קבלת סוג הדשבורד של המשתמש
+    $userId = $_SESSION['user_id'];
+    $dashboardType = getUserDashboardType($userId);
     
     // // ניתוב לדשבורד המתאים
     // require_once 'router.php';

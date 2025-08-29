@@ -6,7 +6,7 @@ exit();
 <!DOCTYPE html>
 <html>
 <head>
-    <meta http-equiv="refresh" content="0; url=search/index.html">
+    <!-- <meta http-equiv="refresh" content="0; url=search/index.html"> -->
 </head>
 <body>
     <!-- <script>

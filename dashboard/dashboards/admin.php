@@ -2,7 +2,7 @@
 // dashboard/dashboards/admin.php - דשבורד מנהל מערכת
 // session_start();
 
-בדיקת הרשאות
+// בדיקת הרשאות
 if (!isset($_SESSION['user_id'])) {
     header('Location: /auth/login.php');
     exit;

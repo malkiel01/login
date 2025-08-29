@@ -1,6 +1,6 @@
 <?php
-header("Location: search/index.php");
-exit();
+// פשוט כלול את הקובץ במקום להפנות
+include 'search/index.php';
 ?>
 
 <!-- <!DOCTYPE html>

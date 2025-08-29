@@ -1,6 +1,6 @@
 <?php
 // dashboard/dashboards/admin.php - דשבורד מנהל מערכת
-session_start();
+// session_start();
 
 // בדיקת הרשאות
 if (!isset($_SESSION['user_id'])) {
@@ -9,6 +9,8 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config.php';
+
+// require_once '../../config.php';
 
 // בדיקה שהמשתמש הוא אכן מנהל
 $pdo = getDBConnection();

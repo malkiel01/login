@@ -495,12 +495,12 @@ require_once '../../config.php';
     
     <div class="container">
         <!-- Alert Messages -->
-        <?php if (isset($message)): ?>
+        <!-- < ?php if (isset($message)): ?>
             <div class="alert <?php echo $messageType; ?>">
                 <?php echo $messageType === 'success' ? '✅' : '⚠️'; ?>
                 <?php echo htmlspecialchars($message); ?>
             </div>
-        <?php endif; ?>
+        < ?php endif; ?> -->
         
         <!-- Statistics -->
         <div class="stats-grid">
@@ -661,7 +661,7 @@ require_once '../../config.php';
         </div>
     </div>
     
-    <script>
+    <!-- <script>
         // פונקציית חיפוש משתמשים
         function filterUsers() {
             const searchBox = document.getElementById('searchBox');
@@ -680,6 +680,6 @@ require_once '../../config.php';
         setTimeout(() => {
             location.reload();
         }, 30000);
-    </script>
+    </script> -->
 </body>
 </html>

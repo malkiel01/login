@@ -8,6 +8,8 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config.php';
+
 // require_once '../../config.php';
 
 // // בדיקה שהמשתמש הוא אכן מנהל

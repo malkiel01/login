@@ -4,8 +4,8 @@
 
 // בדיקת הרשאות
 if (!isset($_SESSION['user_id'])) {
-    header('Location: /auth/login.php');
-    exit;
+    // header('Location: /auth/login.php');
+    // exit;
 }
 
 require_once '../../config.php';

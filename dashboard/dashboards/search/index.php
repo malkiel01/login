@@ -7,7 +7,7 @@
     
     <!-- CSS Files -->
     <link rel="stylesheet" href="/dashboard/dashboards/search/assets/css/search.css">
-    <link rel="stylesheet" href="/dashboard/search/assets/css/animations.css">
+    <link rel="stylesheet" href="/dashboard/dashboards/search/assets/css/animations.css">
 </head>
 <body>
     <div class="dashboard-container">
@@ -217,10 +217,10 @@
     </div>
 
     <!-- JavaScript Files -->
-    <script src="/dashboard/search/assets/js/config.js"></script>
-    <script src="/dashboard/search/assets/js/search-algorithms.js"></script>
-    <script src="/dashboard/search/assets/js/data-service.js"></script>
-    <script src="/dashboard/search/assets/js/ui-controller.js"></script>
-    <script src="/dashboard/search/assets/js/main.js"></script>
+    <script src="/dashboard/dashboards/search/assets/js/config.js"></script>
+    <script src="/dashboard/dashboards/search/assets/js/search-algorithms.js"></script>
+    <script src="/dashboard/dashboards/search/assets/js/data-service.js"></script>
+    <script src="/dashboard/dashboards/search/assets/js/ui-controller.js"></script>
+    <script src="/dashboard/dashboards/search/assets/js/main.js"></script>
 </body>
 </html>

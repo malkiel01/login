@@ -12,90 +12,90 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/config.php';
 
 // require_once '../../config.php';
 
-// // בדיקה שהמשתמש הוא אכן מנהל
-// $pdo = getDBConnection();
-// $stmt = $pdo->prepare("SELECT dashboard_type FROM user_permissions WHERE user_id = ?");
-// $stmt->execute([$_SESSION['user_id']]);
-// $result = $stmt->fetch(PDO::FETCH_ASSOC);
+// בדיקה שהמשתמש הוא אכן מנהל
+$pdo = getDBConnection();
+$stmt = $pdo->prepare("SELECT dashboard_type FROM user_permissions WHERE user_id = ?");
+$stmt->execute([$_SESSION['user_id']]);
+$result = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// if (!$result || $result['dashboard_type'] !== 'admin') {
-//     die('אין לך הרשאת מנהל');
-// }
+if (!$result || $result['dashboard_type'] !== 'admin') {
+    die('אין לך הרשאת מנהל');
+}
 
-// // טיפול בפעולות POST
-// if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+// טיפול בפעולות POST
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
-//     // עדכון הרשאות משתמש
-//     if (isset($_POST['update_permission'])) {
-//         $userId = intval($_POST['user_id']);
-//         $dashboardType = $_POST['dashboard_type'];
+    // עדכון הרשאות משתמש
+    if (isset($_POST['update_permission'])) {
+        $userId = intval($_POST['user_id']);
+        $dashboardType = $_POST['dashboard_type'];
         
-//         $stmt = $pdo->prepare("
-//             INSERT INTO user_permissions (user_id, dashboard_type) 
-//             VALUES (?, ?)
-//             ON DUPLICATE KEY UPDATE dashboard_type = VALUES(dashboard_type)
-//         ");
-//         $stmt->execute([$userId, $dashboardType]);
-//         $message = "ההרשאות עודכנו בהצלחה!";
-//         $messageType = "success";
-//     }
+        $stmt = $pdo->prepare("
+            INSERT INTO user_permissions (user_id, dashboard_type) 
+            VALUES (?, ?)
+            ON DUPLICATE KEY UPDATE dashboard_type = VALUES(dashboard_type)
+        ");
+        $stmt->execute([$userId, $dashboardType]);
+        $message = "ההרשאות עודכנו בהצלחה!";
+        $messageType = "success";
+    }
     
-//     // שינוי סטטוס משתמש (פעיל/לא פעיל)
-//     if (isset($_POST['toggle_status'])) {
-//         $userId = intval($_POST['user_id']);
-//         $newStatus = intval($_POST['new_status']);
+    // שינוי סטטוס משתמש (פעיל/לא פעיל)
+    if (isset($_POST['toggle_status'])) {
+        $userId = intval($_POST['user_id']);
+        $newStatus = intval($_POST['new_status']);
         
-//         $stmt = $pdo->prepare("UPDATE users SET is_active = ? WHERE id = ?");
-//         $stmt->execute([$newStatus, $userId]);
+        $stmt = $pdo->prepare("UPDATE users SET is_active = ? WHERE id = ?");
+        $stmt->execute([$newStatus, $userId]);
         
-//         $statusText = $newStatus ? "הופעל" : "הושבת";
-//         $message = "המשתמש $statusText בהצלחה!";
-//         $messageType = "success";
-//     }
+        $statusText = $newStatus ? "הופעל" : "הושבת";
+        $message = "המשתמש $statusText בהצלחה!";
+        $messageType = "success";
+    }
     
-//     // מחיקת משתמש
-//     if (isset($_POST['delete_user'])) {
-//         $userId = intval($_POST['user_id']);
+    // מחיקת משתמש
+    if (isset($_POST['delete_user'])) {
+        $userId = intval($_POST['user_id']);
         
-//         if ($userId != $_SESSION['user_id']) { // מניעת מחיקה עצמית
-//             $stmt = $pdo->prepare("DELETE FROM users WHERE id = ?");
-//             $stmt->execute([$userId]);
-//             $message = "המשתמש נמחק בהצלחה!";
-//             $messageType = "success";
-//         } else {
-//             $message = "לא ניתן למחוק את עצמך!";
-//             $messageType = "error";
-//         }
-//     }
-// }
+        if ($userId != $_SESSION['user_id']) { // מניעת מחיקה עצמית
+            $stmt = $pdo->prepare("DELETE FROM users WHERE id = ?");
+            $stmt->execute([$userId]);
+            $message = "המשתמש נמחק בהצלחה!";
+            $messageType = "success";
+        } else {
+            $message = "לא ניתן למחוק את עצמך!";
+            $messageType = "error";
+        }
+    }
+}
 
-// // קבלת רשימת כל המשתמשים עם המידע המלא
-// $stmt = $pdo->query("
-//     SELECT 
-//         u.id,
-//         u.username,
-//         u.name,
-//         u.email,
-//         u.is_active,
-//         u.last_login,
-//         u.created_at,
-//         u.auth_type,
-//         COALESCE(up.dashboard_type, 'default') as dashboard_type,
-//         CASE 
-//             WHEN u.last_login > DATE_SUB(NOW(), INTERVAL 5 MINUTE) THEN 1
-//             ELSE 0
-//         END as is_online
-//     FROM users u
-//     LEFT JOIN user_permissions up ON u.id = up.user_id
-//     ORDER BY u.last_login DESC
-// ");
-// $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// קבלת רשימת כל המשתמשים עם המידע המלא
+$stmt = $pdo->query("
+    SELECT 
+        u.id,
+        u.username,
+        u.name,
+        u.email,
+        u.is_active,
+        u.last_login,
+        u.created_at,
+        u.auth_type,
+        COALESCE(up.dashboard_type, 'default') as dashboard_type,
+        CASE 
+            WHEN u.last_login > DATE_SUB(NOW(), INTERVAL 5 MINUTE) THEN 1
+            ELSE 0
+        END as is_online
+    FROM users u
+    LEFT JOIN user_permissions up ON u.id = up.user_id
+    ORDER BY u.last_login DESC
+");
+$users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// // סטטיסטיקות
-// $totalUsers = count($users);
-// $activeUsers = count(array_filter($users, function($u) { return $u['is_active']; }));
-// $onlineUsers = count(array_filter($users, function($u) { return $u['is_online']; }));
-// $adminUsers = count(array_filter($users, function($u) { return $u['dashboard_type'] === 'admin'; }));
+// סטטיסטיקות
+$totalUsers = count($users);
+$activeUsers = count(array_filter($users, function($u) { return $u['is_active']; }));
+$onlineUsers = count(array_filter($users, function($u) { return $u['is_online']; }));
+$adminUsers = count(array_filter($users, function($u) { return $u['dashboard_type'] === 'admin'; }));
 ?>
 <!DOCTYPE html>
 <html dir="rtl" lang="he">

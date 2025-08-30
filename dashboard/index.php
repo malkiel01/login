@@ -10,12 +10,16 @@ if (!isset($_SESSION['user_id'])) {
 
 // טעינת קובץ הקונפיג של הפרויקט - כמו שאתה עושה בשאר הקבצים
 require_once '../config.php';
+$pdo = getDBConnection();
+
+// עדכן last_login פעם אחת כאן
+$stmt = $pdo->prepare("UPDATE users SET last_login = NOW() WHERE id = ?");
+$stmt->execute([$_SESSION['user_id']]);
 
 // פונקציה לקבלת סוג הדשבורד - משתמשת ב-getDBConnection שכבר קיים אצלך!
 function getUserDashboardType($userId) {
     try {
-        // משתמש בפונקציה getDBConnection() מ-config.php
-        $pdo = getDBConnection();
+        global $pdo;
         
         // בודק אם טבלת ההרשאות קיימת
         $stmt = $pdo->prepare("SHOW TABLES LIKE 'user_permissions'");

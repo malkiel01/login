@@ -1,0 +1,50 @@
+[27-Aug-2025 07:50:57 America/Boise] PHP Warning:  require_once(init.php): Failed to open stream: No such file or directory in /home2/mbeplusc/public_html/form/login/debugs/notifications-debug.php on line 211
+[27-Aug-2025 07:50:57 America/Boise] PHP Fatal error:  Uncaught Error: Failed opening required 'init.php' (include_path='.:/opt/cpanel/ea-php83/root/usr/share/pear') in /home2/mbeplusc/public_html/form/login/debugs/notifications-debug.php:211
+Stack trace:
+#0 {main}
+  thrown in /home2/mbeplusc/public_html/form/login/debugs/notifications-debug.php on line 211
+[27-Aug-2025 07:51:32 America/Boise] PHP Warning:  require_once(init.php): Failed to open stream: No such file or directory in /home2/mbeplusc/public_html/form/login/debugs/notifications-debug.php on line 211
+[27-Aug-2025 07:51:32 America/Boise] PHP Fatal error:  Uncaught Error: Failed opening required 'init.php' (include_path='.:/opt/cpanel/ea-php83/root/usr/share/pear') in /home2/mbeplusc/public_html/form/login/debugs/notifications-debug.php:211
+Stack trace:
+#0 {main}
+  thrown in /home2/mbeplusc/public_html/form/login/debugs/notifications-debug.php on line 211
+[27-Aug-2025 07:54:26 America/Boise] PHP Warning:  require_once(init.php): Failed to open stream: No such file or directory in /home2/mbeplusc/public_html/form/login/debugs/debug.php on line 211
+[27-Aug-2025 07:54:26 America/Boise] PHP Fatal error:  Uncaught Error: Failed opening required 'init.php' (include_path='.:/opt/cpanel/ea-php83/root/usr/share/pear') in /home2/mbeplusc/public_html/form/login/debugs/debug.php:211
+Stack trace:
+#0 {main}
+  thrown in /home2/mbeplusc/public_html/form/login/debugs/debug.php on line 211
+[27-Aug-2025 07:55:18 America/Boise] PHP Warning:  require_once(/premissions/init.php): Failed to open stream: No such file or directory in /home2/mbeplusc/public_html/form/login/debugs/debug.php on line 211
+[27-Aug-2025 07:55:18 America/Boise] PHP Fatal error:  Uncaught Error: Failed opening required '/premissions/init.php' (include_path='.:/opt/cpanel/ea-php83/root/usr/share/pear') in /home2/mbeplusc/public_html/form/login/debugs/debug.php:211
+Stack trace:
+#0 {main}
+  thrown in /home2/mbeplusc/public_html/form/login/debugs/debug.php on line 211
+[27-Aug-2025 07:55:25 America/Boise] PHP Warning:  require_once(/premissions/init.php): Failed to open stream: No such file or directory in /home2/mbeplusc/public_html/form/login/debugs/debug.php on line 211
+[27-Aug-2025 07:55:25 America/Boise] PHP Fatal error:  Uncaught Error: Failed opening required '/premissions/init.php' (include_path='.:/opt/cpanel/ea-php83/root/usr/share/pear') in /home2/mbeplusc/public_html/form/login/debugs/debug.php:211
+Stack trace:
+#0 {main}
+  thrown in /home2/mbeplusc/public_html/form/login/debugs/debug.php on line 211
+[27-Aug-2025 07:55:44 America/Boise] PHP Warning:  require_once(../premissions/init.php): Failed to open stream: No such file or directory in /home2/mbeplusc/public_html/form/login/debugs/debug.php on line 211
+[27-Aug-2025 07:55:44 America/Boise] PHP Fatal error:  Uncaught Error: Failed opening required '../premissions/init.php' (include_path='.:/opt/cpanel/ea-php83/root/usr/share/pear') in /home2/mbeplusc/public_html/form/login/debugs/debug.php:211
+Stack trace:
+#0 {main}
+  thrown in /home2/mbeplusc/public_html/form/login/debugs/debug.php on line 211
+[27-Aug-2025 07:55:50 America/Boise] PHP Warning:  require_once(../premissions/init.php): Failed to open stream: No such file or directory in /home2/mbeplusc/public_html/form/login/debugs/debug.php on line 211
+[27-Aug-2025 07:55:50 America/Boise] PHP Fatal error:  Uncaught Error: Failed opening required '../premissions/init.php' (include_path='.:/opt/cpanel/ea-php83/root/usr/share/pear') in /home2/mbeplusc/public_html/form/login/debugs/debug.php:211
+Stack trace:
+#0 {main}
+  thrown in /home2/mbeplusc/public_html/form/login/debugs/debug.php on line 211
+[27-Aug-2025 07:57:03 America/Boise] PHP Warning:  require_once(../premissions/init.php): Failed to open stream: No such file or directory in /home2/mbeplusc/public_html/form/login/debugs/debug.php on line 211
+[27-Aug-2025 07:57:03 America/Boise] PHP Fatal error:  Uncaught Error: Failed opening required '../premissions/init.php' (include_path='.:/opt/cpanel/ea-php83/root/usr/share/pear') in /home2/mbeplusc/public_html/form/login/debugs/debug.php:211
+Stack trace:
+#0 {main}
+  thrown in /home2/mbeplusc/public_html/form/login/debugs/debug.php on line 211
+[27-Aug-2025 07:57:33 America/Boise] PHP Warning:  require_once(/permissions/init.php): Failed to open stream: No such file or directory in /home2/mbeplusc/public_html/form/login/debugs/debug.php on line 211
+[27-Aug-2025 07:57:33 America/Boise] PHP Fatal error:  Uncaught Error: Failed opening required '/permissions/init.php' (include_path='.:/opt/cpanel/ea-php83/root/usr/share/pear') in /home2/mbeplusc/public_html/form/login/debugs/debug.php:211
+Stack trace:
+#0 {main}
+  thrown in /home2/mbeplusc/public_html/form/login/debugs/debug.php on line 211
+[27-Aug-2025 07:57:39 America/Boise] PHP Warning:  require_once(/permissions/init.php): Failed to open stream: No such file or directory in /home2/mbeplusc/public_html/form/login/debugs/debug.php on line 211
+[27-Aug-2025 07:57:39 America/Boise] PHP Fatal error:  Uncaught Error: Failed opening required '/permissions/init.php' (include_path='.:/opt/cpanel/ea-php83/root/usr/share/pear') in /home2/mbeplusc/public_html/form/login/debugs/debug.php:211
+Stack trace:
+#0 {main}
+  thrown in /home2/mbeplusc/public_html/form/login/debugs/debug.php on line 211

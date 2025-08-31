@@ -1,0 +1,61 @@
+[26-Aug-2025 10:57:23 America/Boise] PHP Warning:  require_once(permissions/permissions-init.php): Failed to open stream: No such file or directory in /home2/mbeplusc/public_html/form/login/index.php on line 9
+[26-Aug-2025 10:57:23 America/Boise] PHP Fatal error:  Uncaught Error: Failed opening required 'permissions/permissions-init.php' (include_path='.:/opt/cpanel/ea-php83/root/usr/share/pear') in /home2/mbeplusc/public_html/form/login/index.php:9
+Stack trace:
+#0 {main}
+  thrown in /home2/mbeplusc/public_html/form/login/index.php on line 9
+[26-Aug-2025 10:57:26 America/Boise] PHP Warning:  require_once(permissions/permissions-init.php): Failed to open stream: No such file or directory in /home2/mbeplusc/public_html/form/login/index.php on line 9
+[26-Aug-2025 10:57:26 America/Boise] PHP Fatal error:  Uncaught Error: Failed opening required 'permissions/permissions-init.php' (include_path='.:/opt/cpanel/ea-php83/root/usr/share/pear') in /home2/mbeplusc/public_html/form/login/index.php:9
+Stack trace:
+#0 {main}
+  thrown in /home2/mbeplusc/public_html/form/login/index.php on line 9
+[26-Aug-2025 10:57:29 America/Boise] PHP Warning:  require_once(permissions/permissions-init.php): Failed to open stream: No such file or directory in /home2/mbeplusc/public_html/form/login/index.php on line 9
+[26-Aug-2025 10:57:29 America/Boise] PHP Fatal error:  Uncaught Error: Failed opening required 'permissions/permissions-init.php' (include_path='.:/opt/cpanel/ea-php83/root/usr/share/pear') in /home2/mbeplusc/public_html/form/login/index.php:9
+Stack trace:
+#0 {main}
+  thrown in /home2/mbeplusc/public_html/form/login/index.php on line 9
+[26-Aug-2025 11:03:37 America/Boise] PHP Warning:  require_once(/home2/mbeplusc/public_html/form/login/permissions/handlers/NotificationHandler.php): Failed to open stream: No such file or directory in /home2/mbeplusc/public_html/form/login/permissions/permissions-init.php on line 21
+[26-Aug-2025 11:03:37 America/Boise] PHP Fatal error:  Uncaught Error: Failed opening required '/home2/mbeplusc/public_html/form/login/permissions/handlers/NotificationHandler.php' (include_path='.:/opt/cpanel/ea-php83/root/usr/share/pear') in /home2/mbeplusc/public_html/form/login/permissions/permissions-init.php:21
+Stack trace:
+#0 /home2/mbeplusc/public_html/form/login/index.php(9): require_once()
+#1 {main}
+  thrown in /home2/mbeplusc/public_html/form/login/permissions/permissions-init.php on line 21
+[26-Aug-2025 11:03:40 America/Boise] PHP Warning:  require_once(/home2/mbeplusc/public_html/form/login/permissions/handlers/NotificationHandler.php): Failed to open stream: No such file or directory in /home2/mbeplusc/public_html/form/login/permissions/permissions-init.php on line 21
+[26-Aug-2025 11:03:40 America/Boise] PHP Fatal error:  Uncaught Error: Failed opening required '/home2/mbeplusc/public_html/form/login/permissions/handlers/NotificationHandler.php' (include_path='.:/opt/cpanel/ea-php83/root/usr/share/pear') in /home2/mbeplusc/public_html/form/login/permissions/permissions-init.php:21
+Stack trace:
+#0 /home2/mbeplusc/public_html/form/login/index.php(9): require_once()
+#1 {main}
+  thrown in /home2/mbeplusc/public_html/form/login/permissions/permissions-init.php on line 21
+[26-Aug-2025 11:03:41 America/Boise] PHP Warning:  require_once(/home2/mbeplusc/public_html/form/login/permissions/handlers/NotificationHandler.php): Failed to open stream: No such file or directory in /home2/mbeplusc/public_html/form/login/permissions/permissions-init.php on line 21
+[26-Aug-2025 11:03:41 America/Boise] PHP Fatal error:  Uncaught Error: Failed opening required '/home2/mbeplusc/public_html/form/login/permissions/handlers/NotificationHandler.php' (include_path='.:/opt/cpanel/ea-php83/root/usr/share/pear') in /home2/mbeplusc/public_html/form/login/permissions/permissions-init.php:21
+Stack trace:
+#0 /home2/mbeplusc/public_html/form/login/index.php(9): require_once()
+#1 {main}
+  thrown in /home2/mbeplusc/public_html/form/login/permissions/permissions-init.php on line 21
+[26-Aug-2025 11:03:42 America/Boise] PHP Warning:  require_once(/home2/mbeplusc/public_html/form/login/permissions/handlers/NotificationHandler.php): Failed to open stream: No such file or directory in /home2/mbeplusc/public_html/form/login/permissions/permissions-init.php on line 21
+[26-Aug-2025 11:03:42 America/Boise] PHP Fatal error:  Uncaught Error: Failed opening required '/home2/mbeplusc/public_html/form/login/permissions/handlers/NotificationHandler.php' (include_path='.:/opt/cpanel/ea-php83/root/usr/share/pear') in /home2/mbeplusc/public_html/form/login/permissions/permissions-init.php:21
+Stack trace:
+#0 /home2/mbeplusc/public_html/form/login/index.php(9): require_once()
+#1 {main}
+  thrown in /home2/mbeplusc/public_html/form/login/permissions/permissions-init.php on line 21
+[26-Aug-2025 11:03:43 America/Boise] PHP Warning:  require_once(/home2/mbeplusc/public_html/form/login/permissions/handlers/NotificationHandler.php): Failed to open stream: No such file or directory in /home2/mbeplusc/public_html/form/login/permissions/permissions-init.php on line 21
+[26-Aug-2025 11:03:43 America/Boise] PHP Fatal error:  Uncaught Error: Failed opening required '/home2/mbeplusc/public_html/form/login/permissions/handlers/NotificationHandler.php' (include_path='.:/opt/cpanel/ea-php83/root/usr/share/pear') in /home2/mbeplusc/public_html/form/login/permissions/permissions-init.php:21
+Stack trace:
+#0 /home2/mbeplusc/public_html/form/login/index.php(9): require_once()
+#1 {main}
+  thrown in /home2/mbeplusc/public_html/form/login/permissions/permissions-init.php on line 21
+[26-Aug-2025 11:03:45 America/Boise] PHP Warning:  require_once(/home2/mbeplusc/public_html/form/login/permissions/handlers/NotificationHandler.php): Failed to open stream: No such file or directory in /home2/mbeplusc/public_html/form/login/permissions/permissions-init.php on line 21
+[26-Aug-2025 11:03:45 America/Boise] PHP Fatal error:  Uncaught Error: Failed opening required '/home2/mbeplusc/public_html/form/login/permissions/handlers/NotificationHandler.php' (include_path='.:/opt/cpanel/ea-php83/root/usr/share/pear') in /home2/mbeplusc/public_html/form/login/permissions/permissions-init.php:21
+Stack trace:
+#0 /home2/mbeplusc/public_html/form/login/index.php(9): require_once()
+#1 {main}
+  thrown in /home2/mbeplusc/public_html/form/login/permissions/permissions-init.php on line 21
+[26-Aug-2025 11:31:48 America/Boise] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in /home2/mbeplusc/public_html/form/login/permissions/permissions-init.php on line 11
+[26-Aug-2025 11:35:43 America/Boise] PHP Warning:  require_once(/home2/mbeplusc/public_html/form/config.php): Failed to open stream: No such file or directory in /home2/mbeplusc/public_html/form/login/permissions/core/PermissionStorage.php on line 35
+[26-Aug-2025 11:35:43 America/Boise] PHP Fatal error:  Uncaught Error: Failed opening required '/home2/mbeplusc/public_html/form/config.php' (include_path='.:/opt/cpanel/ea-php83/root/usr/share/pear') in /home2/mbeplusc/public_html/form/login/permissions/core/PermissionStorage.php:35
+Stack trace:
+#0 /home2/mbeplusc/public_html/form/login/permissions/core/PermissionStorage.php(21): Permissions\Core\PermissionStorage->getDBConnection()
+#1 /home2/mbeplusc/public_html/form/login/permissions/core/PermissionsManager.php(45): Permissions\Core\PermissionStorage->__construct()
+#2 /home2/mbeplusc/public_html/form/login/permissions/permissions-init.php(62): Permissions\Core\PermissionsManager->__construct(NULL)
+#3 /home2/mbeplusc/public_html/form/login/test-permissions.php(14): require_once('/home2/mbeplusc...')
+#4 {main}
+  thrown in /home2/mbeplusc/public_html/form/login/permissions/core/PermissionStorage.php on line 35

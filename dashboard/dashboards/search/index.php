@@ -241,7 +241,7 @@
     <script src="/dashboard/dashboards/search/assets/js/main.js"
             onerror="console.error('❌ Failed to load main.js');"
             onload="console.log('✅ main.js loaded');"></script>
-    <script src="/dashboard/dashboards/search/assets/js/auto-search.js"></script>
+    <!-- <script src="/dashboard/dashboards/search/assets/js/auto-search.js"></script> -->
     <script>
         // Check if everything loaded after 2 seconds
         setTimeout(function() {

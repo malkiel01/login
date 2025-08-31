@@ -429,10 +429,7 @@
             try {
                 const response = await fetch(window.location.href, {
                     method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
+                    body: formData
                 });
                 
                 if (!response.ok) {
@@ -442,19 +439,26 @@
                 const contentType = response.headers.get('Content-Type') || '';
                 
                 if (contentType.includes('application/json')) {
-                    // This is the JSON stream
-                    await processStream(response);
-                } else {
-                    // This might be an error message
+                    // Check if it's an error response
                     const text = await response.text();
-                    if (text.trim().startsWith('{') || text.trim().startsWith('[')) {
-                        // It's JSON
+                    
+                    try {
+                        const jsonResponse = JSON.parse(text);
+                        if (jsonResponse.error) {
+                            throw new Error(jsonResponse.message);
+                        }
+                        // It's valid JSON data
                         streamedData = text;
                         recordCount = countRecordsInJSON(text);
                         showResults();
-                    } else {
-                        throw new Error('תגובה לא תקינה מהשרת');
+                    } catch (parseError) {
+                        // It's streaming JSON, not a single object
+                        streamedData = text;
+                        recordCount = countRecordsInJSON(text);
+                        showResults();
                     }
+                } else {
+                    throw new Error('תגובה לא צפויה מהשרת');
                 }
                 
             } catch (error) {
@@ -663,8 +667,8 @@
     </script>
 
     <?php
-    // Only process if it's an AJAX request
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WITH'])) {
+    // Process POST requests (both AJAX and regular)
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         $dbType = $_POST['dbType'] ?? '';
         $host = $_POST['host'] ?? '';
@@ -674,15 +678,32 @@
         $password = $_POST['password'] ?? '';
         $query = trim($_POST['query'] ?? '');
         
+        // Validate required fields
+        if (empty($dbType) || empty($host) || empty($port) || empty($database) || empty($username) || empty($query)) {
+            header('Content-Type: application/json');
+            echo json_encode(['error' => true, 'message' => 'חסרים שדות נדרשים']);
+            exit;
+        }
+        
         try {
             // Create connection
             $pdo = createConnection($dbType, $host, $port, $database, $username, $password);
             
+            // Test connection first
+            $testQuery = "SELECT 1 as test";
+            $testStmt = $pdo->prepare($testQuery);
+            $testStmt->execute();
+            
             // Stream JSON data
             streamJSONData($pdo, $query);
             
+        } catch (PDOException $e) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'error' => true, 
+                'message' => 'שגיאת חיבור למסד הנתונים: ' . $e->getMessage()
+            ]);
         } catch (Exception $e) {
-            // Return error as JSON
             header('Content-Type: application/json');
             echo json_encode([
                 'error' => true, 
@@ -721,7 +742,7 @@
     }
     
     function streamJSONData($pdo, $query) {
-        // Prepare query
+        // Prepare query - validate and sanitize
         $finalQuery = prepareQuery($query);
         
         // Set headers for JSON streaming
@@ -738,33 +759,46 @@
             ob_end_clean();
         }
         
-        $stmt = $pdo->prepare($finalQuery);
-        $stmt->execute();
-        
-        // Start JSON array
-        echo '[';
-        $first = true;
-        $batchCount = 0;
-        
-        while ($row = $stmt->fetch()) {
+        try {
+            $stmt = $pdo->prepare($finalQuery);
+            $stmt->execute();
+            
+            // Start JSON array
+            echo '[';
+            $first = true;
+            $batchCount = 0;
+            
+            while ($row = $stmt->fetch()) {
+                if (!$first) {
+                    echo ',';
+                }
+                
+                echo json_encode($row, JSON_UNESCAPED_UNICODE);
+                $first = false;
+                $batchCount++;
+                
+                // Flush every 100 records for smooth streaming
+                if ($batchCount % 100 === 0) {
+                    flush();
+                    // Small delay to prevent overwhelming the browser
+                    usleep(10000); // 10ms
+                }
+            }
+            
+            // Close JSON array properly
+            echo ']';
+            flush();
+            
+        } catch (Exception $e) {
+            // If we already started outputting, we can't change headers
+            // Just output error in JSON format
             if (!$first) {
-                echo ',';
+                echo ',{"error": "' . addslashes($e->getMessage()) . '"}';
+            } else {
+                echo '{"error": "' . addslashes($e->getMessage()) . '"}';
             }
-            
-            echo "\n" . json_encode($row, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-            $first = false;
-            $batchCount++;
-            
-            // Flush every 50 records for smooth streaming
-            if ($batchCount % 50 === 0) {
-                flush();
-                usleep(5000); // 5ms pause
-            }
+            echo ']';
         }
-        
-        // Close JSON array properly
-        echo "\n]";
-        flush();
     }
     
     function prepareQuery($query) {

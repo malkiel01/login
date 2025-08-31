@@ -33,25 +33,16 @@ if (empty($dbType) || empty($host) || empty($port) || empty($database) || empty(
 }
 
 try {
-    // Create connection
+    // Create connection with buffered queries for large datasets
     $pdo = createConnection($dbType, $host, $port, $database, $username, $password);
     
-    // Test connection
-    $testStmt = $pdo->prepare("SELECT 1 as test");
-    $testStmt->execute();
-    $testResult = $testStmt->fetch();
-    
-    if (!$testResult) {
-        throw new Exception('מבחן החיבור נכשל');
-    }
-    
-    // Get data
+    // Get data directly (no separate test query to avoid unbuffered issues)
     $finalQuery = prepareQuery($query);
     $stmt = $pdo->prepare($finalQuery);
     $stmt->execute();
     $results = $stmt->fetchAll();
     
-    // Return JSON
+    // Return JSON - clean output
     echo json_encode($results, JSON_UNESCAPED_UNICODE);
     
 } catch (PDOException $e) {
@@ -76,7 +67,9 @@ function createConnection($dbType, $host, $port, $database, $username, $password
     switch ($dbType) {
         case 'mysql':
             $dsn = "mysql:host={$host};port={$port};dbname={$database};charset=utf8mb4";
-            $options[PDO::MYSQL_ATTR_USE_BUFFERED_QUERY] = false;
+            // Use buffered queries for large datasets - this solves the unbuffered error
+            $options[PDO::MYSQL_ATTR_USE_BUFFERED_QUERY] = true;
+            $options[PDO::MYSQL_ATTR_INIT_COMMAND] = "SET NAMES utf8mb4";
             break;
             
         case 'postgresql':

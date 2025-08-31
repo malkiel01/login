@@ -16,9 +16,10 @@ class DataService {
     constructor() {
     // בדיקה אם Config קיים
     if (window.Config && window.Config.api) {
-        this.apiEndpoint = window.Config.api.searchEndpoint || '/dashboard/search/api/deceased-search.php';
+        this.apiEndpoint = window.Config.api.searchEndpoint || '/dashboard/dashboards/search/api/deceased-search.php';
     } else {
-        this.apiEndpoint = '/dashboard/search/api/deceased-search.php';
+        // this.apiEndpoint = '/dashboard/search/api/deceased-search.php';
+        this.apiEndpoint = '/dashboard/dashboards/search/api/deceased-search.php';
     }
     this.dataSource = localStorage.getItem('dataSource') || 'json';
     this.cache = new Map();

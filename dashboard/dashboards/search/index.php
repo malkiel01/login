@@ -23,7 +23,7 @@
             <div class="subtitle">מערכת חיפוש מתקדמת לאיתור נפטרים בבתי העלמין</div>
             
             <!-- Data Source Toggle -->
-            <div class="data-source-toggle">
+            <!-- <div class="data-source-toggle">
                 <label class="toggle-label">מקור נתונים:</label>
                 <div class="toggle-switch">
                     <input type="checkbox" id="dataSourceToggle" onchange="toggleDataSource()">
@@ -33,7 +33,7 @@
                     </label>
                 </div>
                 <span id="currentSource" class="current-source">JSON (בדיקות)</span>
-            </div>
+            </div> -->
         </div>
 
         <!-- Search Section -->
@@ -241,7 +241,7 @@
     <script src="/dashboard/dashboards/search/assets/js/main.js"
             onerror="console.error('❌ Failed to load main.js');"
             onload="console.log('✅ main.js loaded');"></script>
-    <!-- <script src="/dashboard/dashboards/search/assets/js/auto-search.js"></script> -->
+    <script src="/dashboard/dashboards/search/assets/js/auto-search.js"></script>
     <script>
         // Check if everything loaded after 2 seconds
         setTimeout(function() {

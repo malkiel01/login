@@ -408,8 +408,11 @@
             const formData = new FormData(form);
             const connectBtn = document.getElementById('connectBtn');
             
+            console.log('🚀 התחלת תהליך הזרמה');
+            
             // Validate form
             if (!form.checkValidity()) {
+                console.log('❌ טופס לא תקין');
                 form.reportValidity();
                 return;
             }
@@ -419,6 +422,7 @@
             for (let [key, value] of formData.entries()) {
                 data[key] = value;
             }
+            console.log('📤 שליחת נתונים:', data);
             
             // Reset state
             streamedData = '';
@@ -432,7 +436,11 @@
             hideResults();
             hideError();
             
+            console.log('⏳ מתחיל תהליך...');
+            
             try {
+                console.log('🌐 שולח בקשה לשרת...');
+                
                 // Use separate API file
                 const response = await fetch('api.php', {
                     method: 'POST',
@@ -442,78 +450,123 @@
                     body: JSON.stringify(data)
                 });
                 
+                console.log('📡 תגובה מהשרת התקבלה');
+                console.log('📊 Status:', response.status);
+                console.log('📋 Headers:', Object.fromEntries(response.headers.entries()));
+                
                 if (!response.ok) {
                     const errorText = await response.text();
-                    console.error('HTTP Error Response:', errorText);
+                    console.error('❌ HTTP Error Response:', errorText);
                     throw new Error(`שגיאת HTTP ${response.status}: ${errorText}`);
                 }
                 
                 const contentType = response.headers.get('Content-Type') || '';
-                console.log('Content-Type received:', contentType);
+                console.log('📝 Content-Type received:', contentType);
+                
+                console.log('📥 מתחיל לקרוא נתונים...');
                 
                 // Get response text for debugging
                 const responseText = await response.text();
-                console.log('Response received, length:', responseText.length);
+                console.log('📦 Response received, length:', responseText.length, 'characters');
+                console.log('🔍 First 200 chars:', responseText.substring(0, 200));
+                console.log('🔍 Last 200 chars:', responseText.substring(responseText.length - 200));
                 
                 if (contentType.includes('application/json')) {
+                    console.log('✅ זוהה כ-JSON, מנסה לפענח...');
+                    
                     try {
                         const jsonResponse = JSON.parse(responseText);
+                        console.log('🎯 JSON פוענח בהצלחה');
+                        
                         if (jsonResponse.error) {
+                            console.error('❌ שגיאה מהשרת:', jsonResponse.message);
                             throw new Error(jsonResponse.message);
                         }
+                        
                         // It's valid JSON data array
                         streamedData = responseText;
                         recordCount = Array.isArray(jsonResponse) ? jsonResponse.length : 1;
                         
-                        // Simulate streaming progress
-                        simulateProgress();
+                        console.log('📊 סטטיסטיקות:');
+                        console.log('   📈 כמות רשומות:', recordCount);
+                        console.log('   💾 גודל נתונים:', Math.round(responseText.length / 1024), 'KB');
+                        console.log('   📝 סוג נתונים:', Array.isArray(jsonResponse) ? 'Array' : 'Object');
+                        
+                        if (Array.isArray(jsonResponse) && jsonResponse.length > 0) {
+                            console.log('   🔑 מפתחות של הרשומה הראשונה:', Object.keys(jsonResponse[0]));
+                        }
+                        
+                        // Simulate realistic progress
+                        console.log('🎬 מתחיל סימולציית התקדמות...');
+                        simulateRealisticProgress();
                         
                     } catch (parseError) {
-                        console.error('JSON Parse Error:', parseError);
+                        console.error('❌ JSON Parse Error:', parseError);
+                        console.error('📄 Raw response that failed to parse:', responseText.substring(0, 1000));
                         throw new Error('שגיאה בפענוח התגובה מהשרת');
                     }
                 } else {
                     // Show what we actually received
-                    console.error('Unexpected response type. Content-Type:', contentType);
-                    console.error('Response preview:', responseText.substring(0, 1000));
+                    console.error('❌ Unexpected response type. Content-Type:', contentType);
+                    console.error('📄 Response preview:', responseText.substring(0, 1000));
                     throw new Error('תגובה לא צפויה מהשרת. בדוק שקובץ api.php קיים.');
                 }
                 
             } catch (error) {
-                console.error('Stream error:', error);
+                console.error('💥 Stream error:', error);
                 showError(error.message);
             } finally {
                 connectBtn.disabled = false;
                 connectBtn.textContent = '🔥 התחל הזרמה';
-                if (progressInterval) {
-                    clearInterval(progressInterval);
-                }
+                console.log('🏁 תהליך הסתיים');
             }
         }
         
-        function simulateProgress() {
+        function simulateRealisticProgress() {
+            console.log('📊 מתחיל סימולציית התקדמות למ-' + recordCount + ' רשומות');
+            
             let progress = 0;
             let recordsLoaded = 0;
+            let step = 0;
+            
+            // Calculate realistic timing based on record count
+            const totalSteps = Math.min(50, Math.max(10, Math.floor(recordCount / 500))); // 10-50 steps
+            const stepDuration = Math.max(50, Math.min(300, 3000 / totalSteps)); // 50-300ms per step
+            
+            console.log('⚙️ תצורת התקדמות:');
+            console.log('   📏 כמות צעדים:', totalSteps);
+            console.log('   ⏱️ זמן כל צעד:', stepDuration + 'ms');
+            console.log('   🕒 זמן כולל משוער:', (totalSteps * stepDuration / 1000).toFixed(1) + 's');
             
             progressInterval = setInterval(() => {
-                progress += Math.random() * 15;
+                step++;
+                progress = Math.min(100, (step / totalSteps) * 100);
                 recordsLoaded = Math.floor((progress / 100) * recordCount);
+                
+                console.log(`📈 התקדמות: ${progress.toFixed(1)}% (${recordsLoaded}/${recordCount} רשומות)`);
                 
                 if (progress >= 100) {
                     progress = 100;
                     recordsLoaded = recordCount;
                     clearInterval(progressInterval);
+                    console.log('🎉 התקדמות הושלמה! מציג תוצאות...');
                     showResults();
                 }
                 
-                // Update progress
+                // Update progress UI
                 document.getElementById('progressFill').style.width = progress + '%';
                 document.getElementById('recordsCount').textContent = recordsLoaded.toLocaleString();
                 document.getElementById('progressText').textContent = 
-                    `טוען נתונים... ${Math.round(progress)}%`;
+                    `טוען נתונים... ${Math.round(progress)}% (${recordsLoaded.toLocaleString()} רשומות)`;
                 
                 updateRealtimeStats(recordsLoaded);
-            }, 200);
+                
+                // Log every 10% or every 10 steps
+                if (step % Math.max(1, Math.floor(totalSteps / 10)) === 0) {
+                    console.log(`🔄 מעדכן UI: ${progress.toFixed(1)}% - ${recordsLoaded} רשומות`);
+                }
+                
+            }, stepDuration);
         }
         
         async function processStream(response) {
@@ -563,15 +616,18 @@
         }
         
         function updateRealtimeStats(recordsLoaded) {
-            const sizeKB = Math.round((streamedData.length * (recordsLoaded / recordCount)) / 1024);
-            document.getElementById('dataSize').textContent = sizeKB.toLocaleString() + ' KB';
-            
             const elapsed = (Date.now() - startTime) / 1000;
+            const estimatedTotalSize = Math.round((streamedData.length * (recordsLoaded / recordCount)) / 1024);
+            
+            console.log(`📊 עדכון סטטיסטיקות: ${recordsLoaded} רשומות, ${estimatedTotalSize}KB, ${elapsed.toFixed(1)}s`);
+            
+            document.getElementById('dataSize').textContent = estimatedTotalSize.toLocaleString() + ' KB';
             document.getElementById('timeElapsed').textContent = elapsed.toFixed(1) + 's';
             
             if (recordsLoaded > 0 && elapsed > 0) {
                 const speed = Math.round(recordsLoaded / elapsed);
                 document.getElementById('speed').textContent = speed + '/s';
+                console.log(`⚡ מהירות נוכחית: ${speed} רשומות/שנייה`);
             }
         }
         
@@ -653,8 +709,11 @@
         }
         
         function copyToClipboard() {
+            console.log('📋 מנסה להעתיק לזיכרון');
             if (streamedData) {
+                console.log('💾 נתונים זמינים, אורך:', streamedData.length, 'תווים');
                 navigator.clipboard.writeText(streamedData).then(() => {
+                    console.log('✅ הועתק בהצלחה לזיכרון');
                     const copyBtn = document.querySelector('.action-btn');
                     const originalText = copyBtn.textContent;
                     copyBtn.textContent = '✅ הועתק!';
@@ -663,24 +722,34 @@
                     setTimeout(() => {
                         copyBtn.textContent = originalText;
                         copyBtn.style.background = '#28a745';
+                        console.log('🔄 כפתור החזר למצב רגיל');
                     }, 2000);
                 }).catch(err => {
+                    console.error('❌ שגיאה בהעתקה:', err);
                     alert('שגיאה בהעתקה: ' + err.message);
                 });
+            } else {
+                console.warn('⚠️ אין נתונים להעתקה');
             }
         }
         
         function downloadJSON() {
+            console.log('💾 מנסה להוריד קובץ');
             if (streamedData) {
+                console.log('📦 יוצר קובץ JSON, אורך:', streamedData.length, 'תווים');
                 const blob = new Blob([streamedData], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
+                const filename = 'database_export_' + new Date().toISOString().slice(0, 19).replace(/:/g, '-') + '.json';
+                
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'database_export_' + new Date().toISOString().slice(0, 19).replace(/:/g, '-') + '.json';
+                a.download = filename;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
+                
+                console.log('📁 קובץ הורד:', filename);
                 
                 // Visual feedback
                 const downloadBtn = document.querySelector('.download-btn');
@@ -688,16 +757,21 @@
                 downloadBtn.textContent = '✅ הורד!';
                 setTimeout(() => {
                     downloadBtn.textContent = originalText;
+                    console.log('🔄 כפתור הורדה החזר למצב רגיל');
                 }, 2000);
+            } else {
+                console.warn('⚠️ אין נתונים להורדה');
             }
         }
         
         function togglePreview() {
+            console.log('👁️ מחליף תצוגה מקדימה');
             const previewDiv = document.getElementById('jsonPreview');
             const previewBtn = document.querySelector('.preview-btn');
             
             if (previewDiv.style.display === 'none' || !previewDiv.style.display) {
                 if (streamedData) {
+                    console.log('📄 מציג תצוגה מקדימה');
                     // Show first 2000 characters
                     let preview = streamedData.substring(0, 2000);
                     if (streamedData.length > 2000) {
@@ -707,8 +781,12 @@
                     previewDiv.textContent = preview;
                     previewDiv.style.display = 'block';
                     previewBtn.textContent = '🙈 הסתר תצוגה';
+                    console.log('✅ תצוגה מקדימה מוצגת');
+                } else {
+                    console.warn('⚠️ אין נתונים לתצוגה מקדימה');
                 }
             } else {
+                console.log('👻 מסתיר תצוגה מקדימה');
                 previewDiv.style.display = 'none';
                 previewBtn.textContent = '👁️ תצוגה מקדימה';
             }

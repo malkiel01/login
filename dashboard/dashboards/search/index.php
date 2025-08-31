@@ -222,5 +222,16 @@
     <script src="/dashboard/dashboards/search/assets/js/data-service.js"></script>
     <script src="/dashboard/dashboards/search/assets/js/ui-controller.js"></script>
     <script src="/dashboard/dashboards/search/assets/js/main.js"></script>
+
+
+    <!-- במקום: -->
+    <!-- <script src="/dashboard/dashboards/search/assets/js/..."></script> -->
+
+    <!-- שנה ל: -->
+    <!-- <script src="assets/js/config.js"></script>
+    <script src="assets/js/search-algorithms.js"></script>
+    <script src="assets/js/data-service.js"></script>
+    <script src="assets/js/ui-controller.js"></script>
+    <script src="assets/js/main.js"></script> -->
 </body>
 </html>

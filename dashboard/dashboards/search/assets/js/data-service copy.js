@@ -6,7 +6,7 @@
 class DataService {
     constructor() {
         this.useAPI = false; // ברירת מחדל - JSON
-        this.apiEndpoint = '/search/api/deceased-search.php';
+        this.apiEndpoint = '/dashboards/search/api/deceased-search.php';
         // this.apiEndpoint = 'api/deceased-search.php';  // נתיב יחסי
         this.jsonPath = '/search/data/data.json';
         this.cache = null;

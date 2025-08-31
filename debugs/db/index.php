@@ -433,32 +433,46 @@
                 });
                 
                 if (!response.ok) {
-                    throw new Error(`שגיאת HTTP: ${response.status}`);
+                    const errorText = await response.text();
+                    console.error('HTTP Error Response:', errorText);
+                    throw new Error(`שגיאת HTTP ${response.status}: ${errorText}`);
                 }
                 
                 const contentType = response.headers.get('Content-Type') || '';
+                console.log('Content-Type received:', contentType);
+                
+                // Get response text for debugging
+                const responseText = await response.text();
+                console.log('Full response:', responseText.substring(0, 500) + '...');
                 
                 if (contentType.includes('application/json')) {
-                    // Check if it's an error response
-                    const text = await response.text();
-                    
                     try {
-                        const jsonResponse = JSON.parse(text);
+                        const jsonResponse = JSON.parse(responseText);
                         if (jsonResponse.error) {
                             throw new Error(jsonResponse.message);
                         }
                         // It's valid JSON data
-                        streamedData = text;
-                        recordCount = countRecordsInJSON(text);
+                        streamedData = responseText;
+                        recordCount = countRecordsInJSON(responseText);
                         showResults();
                     } catch (parseError) {
-                        // It's streaming JSON, not a single object
-                        streamedData = text;
-                        recordCount = countRecordsInJSON(text);
+                        console.error('JSON Parse Error:', parseError);
+                        // Maybe it's streaming JSON, try to use as-is
+                        streamedData = responseText;
+                        recordCount = countRecordsInJSON(responseText);
                         showResults();
                     }
+                } else if (responseText.trim().startsWith('[') || responseText.trim().startsWith('{')) {
+                    // Looks like JSON even if Content-Type is wrong
+                    console.log('Detected JSON despite wrong Content-Type');
+                    streamedData = responseText;
+                    recordCount = countRecordsInJSON(responseText);
+                    showResults();
                 } else {
-                    throw new Error('תגובה לא צפויה מהשרת');
+                    // Show what we actually received
+                    console.error('Unexpected response type. Content-Type:', contentType);
+                    console.error('Response preview:', responseText.substring(0, 1000));
+                    throw new Error('תגובה לא צפויה מהשרת. בדוק את ה-Console לפרטים נוספים.');
                 }
                 
             } catch (error) {
@@ -667,8 +681,17 @@
     </script>
 
     <?php
+    // Enable error reporting for debugging
+    error_reporting(E_ALL);
+    ini_set('display_errors', 1);
+    
     // Process POST requests (both AJAX and regular)
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        
+        // Clear any previous output
+        if (ob_get_level()) {
+            ob_end_clean();
+        }
         
         $dbType = $_POST['dbType'] ?? '';
         $host = $_POST['host'] ?? '';
@@ -677,6 +700,9 @@
         $username = $_POST['username'] ?? '';
         $password = $_POST['password'] ?? '';
         $query = trim($_POST['query'] ?? '');
+        
+        // Debug: Log received data
+        error_log("Received POST data: " . print_r($_POST, true));
         
         // Validate required fields
         if (empty($dbType) || empty($host) || empty($port) || empty($database) || empty($username) || empty($query)) {
@@ -693,6 +719,11 @@
             $testQuery = "SELECT 1 as test";
             $testStmt = $pdo->prepare($testQuery);
             $testStmt->execute();
+            $testResult = $testStmt->fetch();
+            
+            if (!$testResult) {
+                throw new Exception('מבחן החיבור נכשל');
+            }
             
             // Stream JSON data
             streamJSONData($pdo, $query);

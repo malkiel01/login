@@ -5,7 +5,8 @@
 
 class DataService {
     constructor() {
-        this.apiEndpoint = '/search/api/deceased-search.php';
+        // this.apiEndpoint = '/search/api/deceased-search.php';
+        this.apiEndpoint = '/dashboards/search/api/deceased-search.php';
         this.dataSource = localStorage.getItem('dataSource') || 'json';
         this.cache = new Map();
         this.cacheTimeout = 5 * 60 * 1000; // 5 דקות

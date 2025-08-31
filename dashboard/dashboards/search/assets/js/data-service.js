@@ -4,14 +4,26 @@
  */
 
 class DataService {
+    // constructor() {
+    //     // this.apiEndpoint = '/search/api/deceased-search.php';
+    //     // this.apiEndpoint = '/dashboards/search/api/deceased-search.php';
+    //     this.apiEndpoint = window.searchConfig.api.searchEndpoint;
+    //     this.dataSource = localStorage.getItem('dataSource') || 'json';
+    //     this.cache = new Map();
+    //     this.cacheTimeout = 5 * 60 * 1000; // 5 דקות
+    // }
+
     constructor() {
-        // this.apiEndpoint = '/search/api/deceased-search.php';
-        // this.apiEndpoint = '/dashboards/search/api/deceased-search.php';
-        this.apiEndpoint = window.searchConfig.api.searchEndpoint;
-        this.dataSource = localStorage.getItem('dataSource') || 'json';
-        this.cache = new Map();
-        this.cacheTimeout = 5 * 60 * 1000; // 5 דקות
+    // בדיקה אם Config קיים
+    if (window.Config && window.Config.api) {
+        this.apiEndpoint = window.Config.api.searchEndpoint || '/dashboard/search/api/deceased-search.php';
+    } else {
+        this.apiEndpoint = '/dashboard/search/api/deceased-search.php';
     }
+    this.dataSource = localStorage.getItem('dataSource') || 'json';
+    this.cache = new Map();
+    this.cacheTimeout = 5 * 60 * 1000; // 5 דקות
+}
 
     /**
      * שינוי מקור הנתונים

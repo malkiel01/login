@@ -12,7 +12,7 @@
  */
 function getPWAHeaders($options = []) {
     $defaults = [
-        'title' => 'קניות משפחתיות',
+        'title' => 'חברה קדישא',
         'theme_color' => '#667eea',
         'icon_path' => '/pwa/icons/ios/'
     ];

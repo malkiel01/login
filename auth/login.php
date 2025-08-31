@@ -178,7 +178,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     <div class="login-container">
         <div class="login-header">
             <h1><i class="fas fa-shopping-cart"></i> <?php echo SITE_NAME; ?></h1>
-            <!-- <p>ברוכים הבאים למערכת ניהול הקניות המשפחתית</p> -->
         </div>
         
         <div class="login-body">

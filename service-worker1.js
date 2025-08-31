@@ -154,7 +154,7 @@ self.addEventListener('fetch', event => {
 self.addEventListener('push', event => {
     console.log('[ServiceWorker] Push Received');
     
-    const title = 'קניות משפחתיות';
+    const title = 'חברה קדישא';
     const options = {
         body: event.data ? event.data.text() : 'יש לך עדכון חדש!',
         icon: '/pwa/icons/android/android-launchericon-192-192.png',

@@ -166,7 +166,7 @@
                     console.error('Error loading manifest:', err);
                     // הצג עם ערכי ברירת מחדל
                     this.showNativeLikeBanner({
-                        name: 'קניות משפחתיות',
+                        name: 'חברה קדישא',
                         icons: [{src: '/pwa/icons/android/android-launchericon-192-192.png'}]
                     });
                 });
@@ -344,7 +344,7 @@
                     </div>
                     
                     <div class="app-info">
-                        <div class="app-name">${manifest.name || 'קניות משפחתיות'}</div>
+                        <div class="app-name">${manifest.name || 'חברה קדישא'}</div>
                         <div class="app-url">${window.location.hostname}</div>
                     </div>
                     

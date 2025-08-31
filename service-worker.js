@@ -235,7 +235,7 @@ self.addEventListener('push', event => {
     console.log('[ServiceWorker] Push Received');
     
     let notificationData = {
-        title: 'קניות משפחתיות',
+        title: 'חברה קדישא',
         body: 'יש לך עדכון חדש!',
         icon: '/pwa/icons/android/android-launchericon-192-192.png',
         badge: '/pwa/icons/android/android-launchericon-72-72.png',

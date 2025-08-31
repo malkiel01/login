@@ -6,44 +6,8 @@
     <title>חיפוש נפטרים - מערכת ניהול בית עלמין</title>
     
     <!-- CSS Files -->
-    <link rel="stylesheet" href="assets/css/search.css">
-    <link rel="stylesheet" href="assets/css/animations.css">
-    
-    <style>
-        /* Debug Panel Styles */
-        .debug-panel {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            background: #1a1a1a;
-            color: #00ff00;
-            padding: 15px;
-            border-radius: 8px;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            max-width: 400px;
-            max-height: 300px;
-            overflow-y: auto;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            z-index: 9999;
-        }
-        .debug-panel h4 {
-            margin: 0 0 10px 0;
-            color: #ffff00;
-        }
-        .debug-error {
-            color: #ff6b6b;
-            margin: 5px 0;
-        }
-        .debug-success {
-            color: #51cf66;
-            margin: 5px 0;
-        }
-        .debug-info {
-            color: #74c0fc;
-            margin: 5px 0;
-        }
-    </style>
+    <link rel="stylesheet" href="dashboards/search/assets/css/search.css">
+    <link rel="stylesheet" href="dashboards/search/assets/css/animations.css">
 </head>
 <body>
     <div class="dashboard-container">
@@ -228,7 +192,7 @@
         </div>
 
         <!-- Results Section -->
-        <div id="results-section" class="results-section" style="display: none;">
+        <div id="results-section" class="results-section">
             <div class="results-header">
                 <h2>תוצאות חיפוש</h2>
                 <div class="results-info">
@@ -237,7 +201,7 @@
                 </div>
             </div>
             
-            <div id="loading" class="loading" style="display: none;">
+            <div id="loading" class="loading">
                 <div class="spinner"></div>
                 <p>מחפש במאגר הנתונים...</p>
             </div>
@@ -252,131 +216,46 @@
         </div>
     </div>
 
-    <!-- Debug Panel -->
-    <div id="debug-panel" class="debug-panel">
-        <h4>🔧 Debug Console</h4>
-        <div id="debug-content"></div>
-    </div>
-
-    <!-- JavaScript Files with debug -->
+    <!-- JavaScript Files -->
     <script>
-        // Debug helper function
-        const debug = {
-            log: function(message, type = 'info') {
-                console.log(message);
-                const debugContent = document.getElementById('debug-content');
-                if (debugContent) {
-                    const timestamp = new Date().toLocaleTimeString('he-IL');
-                    const className = `debug-${type}`;
-                    debugContent.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
-                    debugContent.scrollTop = debugContent.scrollHeight;
-                }
-            },
-            error: function(message) {
-                this.log('❌ ' + message, 'error');
-            },
-            success: function(message) {
-                this.log('✅ ' + message, 'success');
-            },
-            info: function(message) {
-                this.log('ℹ️ ' + message, 'info');
-            }
-        };
-
-        // Track script loading
-        debug.info('Starting application...');
-        
-        // Check current path
-        debug.info('Current path: ' + window.location.pathname);
-        debug.info('Base URL: ' + window.location.origin);
+        console.log('=== Starting to load scripts ===');
+        console.log('Current path:', window.location.pathname);
     </script>
 
-    <!-- Load config.js -->
+    <script src="/dashboard/dashboards/search/assets/js/config.js" 
+            onerror="console.error('❌ Failed to load config.js');" 
+            onload="console.log('✅ config.js loaded');"></script>
+
+    <script src="/dashboard/dashboards/search/assets/js/search-algorithms.js"
+            onerror="console.error('❌ Failed to load search-algorithms.js');"
+            onload="console.log('✅ search-algorithms.js loaded');"></script>
+
+    <script src="/dashboard/dashboards/search/assets/js/data-service.js"
+            onerror="console.error('❌ Failed to load data-service.js');"
+            onload="console.log('✅ data-service.js loaded');"></script>
+
+    <script src="/dashboard/dashboards/search/assets/js/ui-controller.js"
+            onerror="console.error('❌ Failed to load ui-controller.js');"
+            onload="console.log('✅ ui-controller.js loaded');"></script>
+
+    <script src="/dashboard/dashboards/search/assets/js/main.js"
+            onerror="console.error('❌ Failed to load main.js');"
+            onload="console.log('✅ main.js loaded');"></script>
+
     <script>
-        debug.info('Loading config.js...');
-    </script>
-    <script src="assets/js/config.js" 
-            onerror="debug.error('Failed to load config.js'); 
-                    // Create minimal config
-                    window.config = {
-                        apiEndpoint: 'api/deceased-search.php',
-                        dataSource: 'json'
-                    };
-                    debug.info('Created minimal config');"
-            onload="debug.success('config.js loaded');">
-    </script>
-
-    <!-- Load search-algorithms.js -->
-    <script>
-        debug.info('Loading search-algorithms.js...');
-    </script>
-    <script src="assets/js/search-algorithms.js" 
-            onerror="debug.error('Failed to load search-algorithms.js - skipping (optional)');"
-            onload="debug.success('search-algorithms.js loaded');">
-    </script>
-
-    <!-- Load data-service.js -->
-    <script>
-        debug.info('Loading data-service.js...');
-    </script>
-    <script src="assets/js/data-service.js" 
-            onerror="debug.error('Failed to load data-service.js');"
-            onload="debug.success('data-service.js loaded');">
-    </script>
-
-    <!-- Load ui-controller.js -->
-    <script>
-        debug.info('Loading ui-controller.js...');
-    </script>
-    <script src="assets/js/ui-controller.js" 
-            onerror="debug.error('Failed to load ui-controller.js');"
-            onload="debug.success('ui-controller.js loaded');">
-    </script>
-
-    <!-- Load main.js -->
-    <script>
-        debug.info('Loading main.js...');
-    </script>
-    <script src="assets/js/main.js" 
-            onerror="debug.error('Failed to load main.js'); 
-                    debug.info('Creating minimal main.js');
-                    // Minimal initialization
-                    if (typeof window.uiController === 'undefined' && typeof UIController !== 'undefined') {
-                        window.uiController = new UIController();
-                        debug.success('UIController initialized');
-                    }
-                    if (typeof window.dataService === 'undefined' && typeof DataService !== 'undefined') {
-                        window.dataService = new DataService();
-                        debug.success('DataService initialized');
-                    }"
-            onload="debug.success('main.js loaded');">
-    </script>
-
-    <!-- Final check -->
-    <script>
+        // Check if everything loaded after 2 seconds
         setTimeout(function() {
-            debug.info('=== Final Status Check ===');
-            debug.info('window.dataService: ' + (typeof window.dataService !== 'undefined' ? 'Ready' : 'Missing'));
-            debug.info('window.uiController: ' + (typeof window.uiController !== 'undefined' ? 'Ready' : 'Missing'));
-            debug.info('config: ' + (typeof window.config !== 'undefined' ? 'Ready' : 'Missing'));
+            console.log('=== Final check after 2 seconds ===');
+            console.log('window.dataService exists:', typeof window.dataService !== 'undefined');
+            console.log('window.uiController exists:', typeof window.uiController !== 'undefined');
             
-            // Test API connection
-            if (window.dataService) {
-                debug.info('Testing API connection...');
-                fetch('api/deceased-search.php?action=test')
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            debug.success('API is working! ' + data.message);
-                        } else {
-                            debug.error('API returned error: ' + data.message);
-                        }
-                    })
-                    .catch(error => {
-                        debug.error('API test failed: ' + error.message);
-                    });
+            if (typeof window.dataService === 'undefined') {
+                console.error('dataService is missing - check if data-service.js loaded correctly');
             }
-        }, 1000);
+            if (typeof window.uiController === 'undefined') {
+                console.error('uiController is missing - check if ui-controller.js loaded correctly');
+            }
+        }, 2000);
     </script>
 </body>
 </html>

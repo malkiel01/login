@@ -217,45 +217,10 @@
     </div>
 
     <!-- JavaScript Files -->
-    <script>
-        console.log('=== Starting to load scripts ===');
-        console.log('Current path:', window.location.pathname);
-    </script>
-
-    <script src="/dashboard/dashboards/search/assets/js/config.js" 
-            onerror="console.error('❌ Failed to load config.js');" 
-            onload="console.log('✅ config.js loaded');"></script>
-
-    <script src="/dashboard/dashboards/search/assets/js/search-algorithms.js"
-            onerror="console.error('❌ Failed to load search-algorithms.js');"
-            onload="console.log('✅ search-algorithms.js loaded');"></script>
-
-    <script src="/dashboard/dashboards/search/assets/js/data-service.js"
-            onerror="console.error('❌ Failed to load data-service.js');"
-            onload="console.log('✅ data-service.js loaded');"></script>
-
-    <script src="/dashboard/dashboards/search/assets/js/ui-controller.js"
-            onerror="console.error('❌ Failed to load ui-controller.js');"
-            onload="console.log('✅ ui-controller.js loaded');"></script>
-
-    <script src="/dashboard/dashboards/search/assets/js/main.js"
-            onerror="console.error('❌ Failed to load main.js');"
-            onload="console.log('✅ main.js loaded');"></script>
-
-    <script>
-        // Check if everything loaded after 2 seconds
-        setTimeout(function() {
-            console.log('=== Final check after 2 seconds ===');
-            console.log('window.dataService exists:', typeof window.dataService !== 'undefined');
-            console.log('window.uiController exists:', typeof window.uiController !== 'undefined');
-            
-            if (typeof window.dataService === 'undefined') {
-                console.error('dataService is missing - check if data-service.js loaded correctly');
-            }
-            if (typeof window.uiController === 'undefined') {
-                console.error('uiController is missing - check if ui-controller.js loaded correctly');
-            }
-        }, 2000);
-    </script>
+    <script src="/dashboard/dashboards/search/assets/js/config.js"></script>
+    <script src="/dashboard/dashboards/search/assets/js/search-algorithms.js"></script>
+    <script src="/dashboard/dashboards/search/assets/js/data-service.js"></script>
+    <script src="/dashboard/dashboards/search/assets/js/ui-controller.js"></script>
+    <script src="/dashboard/dashboards/search/assets/js/main.js"></script>
 </body>
 </html>

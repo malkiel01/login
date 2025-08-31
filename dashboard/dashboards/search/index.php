@@ -63,9 +63,9 @@
                             </svg>
                         </button>
                     </div>
-                    <div class="search-hints">
+                    <!-- <div class="search-hints">
                         💡 ניתן לחפש בכל סדר: "משה כהן" או "כהן משה"
-                    </div>
+                    </div> -->
                 </div>
             </div>
 

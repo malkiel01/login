@@ -414,6 +414,12 @@
                 return;
             }
             
+            // Convert FormData to JSON
+            const data = {};
+            for (let [key, value] of formData.entries()) {
+                data[key] = value;
+            }
+            
             // Reset state
             streamedData = '';
             recordCount = 0;
@@ -427,9 +433,13 @@
             hideError();
             
             try {
-                const response = await fetch(window.location.href, {
+                // Use separate API file
+                const response = await fetch('api.php', {
                     method: 'POST',
-                    body: formData
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
                 });
                 
                 if (!response.ok) {
@@ -443,7 +453,7 @@
                 
                 // Get response text for debugging
                 const responseText = await response.text();
-                console.log('Full response:', responseText.substring(0, 500) + '...');
+                console.log('Response received, length:', responseText.length);
                 
                 if (contentType.includes('application/json')) {
                     try {
@@ -451,28 +461,22 @@
                         if (jsonResponse.error) {
                             throw new Error(jsonResponse.message);
                         }
-                        // It's valid JSON data
+                        // It's valid JSON data array
                         streamedData = responseText;
-                        recordCount = countRecordsInJSON(responseText);
-                        showResults();
+                        recordCount = Array.isArray(jsonResponse) ? jsonResponse.length : 1;
+                        
+                        // Simulate streaming progress
+                        simulateProgress();
+                        
                     } catch (parseError) {
                         console.error('JSON Parse Error:', parseError);
-                        // Maybe it's streaming JSON, try to use as-is
-                        streamedData = responseText;
-                        recordCount = countRecordsInJSON(responseText);
-                        showResults();
+                        throw new Error('שגיאה בפענוח התגובה מהשרת');
                     }
-                } else if (responseText.trim().startsWith('[') || responseText.trim().startsWith('{')) {
-                    // Looks like JSON even if Content-Type is wrong
-                    console.log('Detected JSON despite wrong Content-Type');
-                    streamedData = responseText;
-                    recordCount = countRecordsInJSON(responseText);
-                    showResults();
                 } else {
                     // Show what we actually received
                     console.error('Unexpected response type. Content-Type:', contentType);
                     console.error('Response preview:', responseText.substring(0, 1000));
-                    throw new Error('תגובה לא צפויה מהשרת. בדוק את ה-Console לפרטים נוספים.');
+                    throw new Error('תגובה לא צפויה מהשרת. בדוק שקובץ api.php קיים.');
                 }
                 
             } catch (error) {
@@ -485,6 +489,31 @@
                     clearInterval(progressInterval);
                 }
             }
+        }
+        
+        function simulateProgress() {
+            let progress = 0;
+            let recordsLoaded = 0;
+            
+            progressInterval = setInterval(() => {
+                progress += Math.random() * 15;
+                recordsLoaded = Math.floor((progress / 100) * recordCount);
+                
+                if (progress >= 100) {
+                    progress = 100;
+                    recordsLoaded = recordCount;
+                    clearInterval(progressInterval);
+                    showResults();
+                }
+                
+                // Update progress
+                document.getElementById('progressFill').style.width = progress + '%';
+                document.getElementById('recordsCount').textContent = recordsLoaded.toLocaleString();
+                document.getElementById('progressText').textContent = 
+                    `טוען נתונים... ${Math.round(progress)}%`;
+                
+                updateRealtimeStats(recordsLoaded);
+            }, 200);
         }
         
         async function processStream(response) {
@@ -533,11 +562,17 @@
             }
         }
         
-        function updateRealtimeStats() {
-            document.getElementById('recordsCount').textContent = recordCount.toLocaleString();
-            
-            const sizeKB = Math.round(streamedData.length / 1024);
+        function updateRealtimeStats(recordsLoaded) {
+            const sizeKB = Math.round((streamedData.length * (recordsLoaded / recordCount)) / 1024);
             document.getElementById('dataSize').textContent = sizeKB.toLocaleString() + ' KB';
+            
+            const elapsed = (Date.now() - startTime) / 1000;
+            document.getElementById('timeElapsed').textContent = elapsed.toFixed(1) + 's';
+            
+            if (recordsLoaded > 0 && elapsed > 0) {
+                const speed = Math.round(recordsLoaded / elapsed);
+                document.getElementById('speed').textContent = speed + '/s';
+            }
         }
         
         function updateProgress() {

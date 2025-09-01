@@ -98,7 +98,85 @@ const SearchConfig = {
             }
         },
         
-        // דוגמה לחיפוש נוסף
+        // חיפוש נפטרים
+        deceased_search: {
+            name: 'חיפוש נפטרים',
+            filters: {
+                required: {
+                    'b_clientId': { operator: '!=', value: null },
+                    'graveStatus': { operator: '=', value: '3' }
+                }
+            },
+            searchFields: {
+                simple: [
+                    'c_firstName', 
+                    'c_lastName', 
+                    'c_fullNameHe',
+                    'c_nameFather',
+                    'c_nameMother',
+                    'graveNameHe',
+                    'areaGraveNameHe',
+                    'plotNameHe',
+                    'blockNameHe',
+                    'cemeteryNameHe'
+                ],
+                advanced: {
+                    // פרטי הנפטר
+                    firstName: 'c_firstName',
+                    lastName: 'c_lastName',
+                    fatherName: 'c_nameFather',
+                    motherName: 'c_nameMother',
+                    // מיקום הקבר
+                    graveName: 'graveNameHe',
+                    areaName: 'areaGraveNameHe',
+                    lineName: 'lineNameHe',
+                    plotName: 'plotNameHe',
+                    blockName: 'blockNameHe',
+                    cemeteryName: 'cemeteryNameHe',
+                    // תאריכים
+                    deathDate: 'b_dateDeath',
+                    burialDate: 'b_dateBurial'
+                }
+            },
+            returnFields: [
+                'c_firstName',
+                'c_lastName',
+                'c_nameFather',
+                'c_nameMother',
+                'graveNameHe',
+                'areaGraveNameHe',
+                'lineNameHe',
+                'plotNameHe',
+                'blockNameHe',
+                'cemeteryNameHe',
+                'b_dateDeath',
+                'b_timeDeath',
+                'b_dateBurial',
+                'b_timeBurial',
+                'c_dateBirth',
+                'c_comment'
+            ],
+            displayFields: {
+                'c_firstName': 'שם פרטי',
+                'c_lastName': 'שם משפחה',
+                'c_nameFather': 'שם האב',
+                'c_nameMother': 'שם האם',
+                'graveNameHe': 'מספר קבר',
+                'areaGraveNameHe': 'אזור',
+                'lineNameHe': 'שורה',
+                'plotNameHe': 'חלקה',
+                'blockNameHe': 'גוש',
+                'cemeteryNameHe': 'בית עלמין',
+                'b_dateDeath': 'תאריך פטירה',
+                'b_timeDeath': 'שעת פטירה',
+                'b_dateBurial': 'תאריך קבורה',
+                'b_timeBurial': 'שעת קבורה',
+                'c_dateBirth': 'תאריך לידה',
+                'c_comment': 'הערות'
+            }
+        },
+        
+        // קברים פנויים
         available_graves: {
             name: 'קברים פנויים',
             filters: {
@@ -124,7 +202,16 @@ const SearchConfig = {
                 'blockNameHe',
                 'cemeteryNameHe',
                 'graveStatus'
-            ]
+            ],
+            displayFields: {
+                'graveId': 'מזהה קבר',
+                'graveNameHe': 'מספר קבר',
+                'areaGraveNameHe': 'אזור',
+                'plotNameHe': 'חלקה',
+                'blockNameHe': 'גוש',
+                'cemeteryNameHe': 'בית עלמין',
+                'graveStatus': 'סטטוס'
+            }
         }
     },
     

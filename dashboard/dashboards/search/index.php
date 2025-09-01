@@ -35,14 +35,6 @@
             border-color: #4a90e2;
         }
         
-        .filter-info {
-            background: #f0f8ff;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-            border-left: 4px solid #4a90e2;
-        }
-        
         .field-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -71,86 +63,6 @@
         .result-table tr:hover {
             background: #f9f9f9;
         }
-        
-        /* סגנון ל-toggle של מקור הנתונים */
-        .data-source-toggle {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        .toggle-switch {
-            position: relative;
-            width: 60px;
-            height: 30px;
-            background: #ccc;
-            border-radius: 15px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        
-        .toggle-switch input {
-            display: none;
-        }
-        
-        .toggle-switch input:checked + .toggle-slider {
-            transform: translateX(30px);
-        }
-        
-        .toggle-switch input:checked ~ .toggle-bg {
-            background: #4a90e2;
-        }
-        
-        .toggle-slider {
-            position: absolute;
-            top: 3px;
-            left: 3px;
-            width: 24px;
-            height: 24px;
-            background: white;
-            border-radius: 50%;
-            transition: transform 0.3s;
-        }
-        
-        .toggle-bg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: #ccc;
-            border-radius: 15px;
-            transition: background 0.3s;
-        }
-        
-        .source-label {
-            font-weight: bold;
-            color: #333;
-        }
-        
-        .source-status {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            margin-left: 5px;
-        }
-        
-        .source-active {
-            background: #4caf50;
-            color: white;
-        }
-        
-        .source-inactive {
-            background: #f44336;
-            color: white;
-        }
     </style>
 </head>
 <body>
@@ -170,11 +82,6 @@
             <button class="search-type-btn" onclick="switchSearchType('available_graves')">
                 ✅ קברים פנויים
             </button>
-        </div>
-        
-        <div id="filter-info" class="filter-info" style="display: none;">
-            <strong>תנאי סינון פעילים:</strong>
-            <div id="filter-list"></div>
         </div>
     </div>
 
@@ -262,7 +169,6 @@
             
             try {
                 currentSearch = new ConfigurableSearch(searchType);
-                updateFilterDisplay();
                 updateAdvancedFields();
             } catch (error) {
                 console.error('Error initializing search:', error);
@@ -287,9 +193,6 @@
                     event.target.classList.add('active');
                 }
                 
-                // עדכון תנאי סינון
-                updateFilterDisplay();
-                
                 // עדכון שדות מתקדמים
                 updateAdvancedFields();
                 
@@ -298,27 +201,6 @@
             } catch (error) {
                 console.error('Error switching search type:', error);
                 alert('שגיאה בהחלפת סוג החיפוש: ' + error.message);
-            }
-        }
-        
-        /**
-         * עדכון תצוגת תנאי סינון
-         */
-        function updateFilterDisplay() {
-            const filterInfo = document.getElementById('filter-info');
-            const filterList = document.getElementById('filter-list');
-            
-            if (currentSearch.config.filters && currentSearch.config.filters.required) {
-                filterInfo.style.display = 'block';
-                filterList.innerHTML = '';
-                
-                for (const [field, condition] of Object.entries(currentSearch.config.filters.required)) {
-                    const item = document.createElement('div');
-                    item.innerHTML = `• ${field} ${condition.operator} ${condition.value || 'null'}`;
-                    filterList.appendChild(item);
-                }
-            } else {
-                filterInfo.style.display = 'none';
             }
         }
         

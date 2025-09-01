@@ -35,49 +35,6 @@
             border-color: #4a90e2;
         }
         
-        /* טאבים לחיפוש */
-        .search-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #e0e0e0;
-        }
-        
-        .search-tab {
-            padding: 12px 24px;
-            background: transparent;
-            border: none;
-            border-bottom: 3px solid transparent;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 500;
-            transition: all 0.3s;
-            color: #666;
-        }
-        
-        .search-tab:hover {
-            color: #4a90e2;
-        }
-        
-        .search-tab.active {
-            color: #4a90e2;
-            border-bottom-color: #4a90e2;
-        }
-        
-        .tab-content {
-            display: none;
-            animation: fadeIn 0.3s;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
         .field-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -128,56 +85,37 @@
         </div>
     </div>
 
-    <!-- טאבים לבחירת סוג חיפוש -->
-    <div class="search-tabs">
-        <button class="search-tab active" onclick="switchTab('simple')">
-            🔍 חיפוש מהיר
-        </button>
-        <button class="search-tab" onclick="switchTab('advanced')">
-            ⚙️ חיפוש מתקדם
-        </button>
+    <!-- חיפוש פשוט -->
+    <div class="search-section">
+        <h2>חיפוש פשוט</h2>
+        <div class="search-wrapper">
+            <input type="text" 
+                   id="simple-query" 
+                   class="search-input" 
+                   placeholder="הקלד טקסט לחיפוש..."
+                   onkeypress="if(event.key === 'Enter') performConfigurableSearch()">
+            <button class="search-button" onclick="performConfigurableSearch()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+            </button>
+        </div>
     </div>
 
-    <!-- תוכן הטאבים -->
-    <div class="search-container">
-        <!-- טאב חיפוש מהיר -->
-        <div id="simple-tab" class="tab-content active">
-            <div class="search-section">
-                <h2>חיפוש מהיר</h2>
-                <p style="color: #666; margin-bottom: 20px;">הקלד טקסט חופשי לחיפוש בכל השדות הרלוונטיים</p>
-                <div class="search-wrapper">
-                    <input type="text" 
-                           id="simple-query" 
-                           class="search-input" 
-                           placeholder="הקלד שם, מספר קבר, בית עלמין..."
-                           onkeypress="if(event.key === 'Enter') performConfigurableSearch()">
-                    <button class="search-button" onclick="performConfigurableSearch()">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="11" cy="11" r="8"></circle>
-                            <path d="m21 21-4.35-4.35"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
+    <!-- חיפוש מתקדם -->
+    <div class="search-section">
+        <h2>חיפוש מתקדם</h2>
+        <div id="advanced-fields" class="field-grid">
+            <!-- השדות יתווספו דינמית לפי סוג החיפוש -->
         </div>
-
-        <!-- טאב חיפוש מתקדם -->
-        <div id="advanced-tab" class="tab-content">
-            <div class="search-section">
-                <h2>חיפוש מתקדם</h2>
-                <p style="color: #666; margin-bottom: 20px;">חפש לפי שדות ספציפיים לתוצאות מדויקות יותר</p>
-                <div id="advanced-fields" class="field-grid">
-                    <!-- השדות יתווספו דינמית לפי סוג החיפוש -->
-                </div>
-                <div style="margin-top: 20px;">
-                    <button class="submit-button" onclick="performAdvancedConfigurableSearch()">
-                        חפש
-                    </button>
-                    <button class="clear-button" onclick="clearAdvancedForm()">
-                        נקה
-                    </button>
-                </div>
-            </div>
+        <div style="margin-top: 20px;">
+            <button class="submit-button" onclick="performAdvancedConfigurableSearch()">
+                חפש
+            </button>
+            <button class="clear-button" onclick="clearAdvancedForm()">
+                נקה
+            </button>
         </div>
     </div>
 
@@ -209,39 +147,6 @@
     <script>
         let currentSearch = null;
         let currentSearchType = 'standard';
-        let currentTab = 'simple';
-        
-        // אתחול
-        document.addEventListener('DOMContentLoaded', function() {
-            // בדיקה שהקונפיגורציה נטענה
-            if (typeof ConfigurableSearch === 'undefined' || typeof SearchConfig === 'undefined') {
-                console.error('Configuration file not loaded!');
-                alert('שגיאה בטעינת קובץ הקונפיגורציה. נא לרענן את הדף.');
-                return;
-            }
-            
-            // אתחול עם סוג החיפוש הראשוני
-            initializeSearch('purchased_graves');
-        });
-        
-        /**
-         * החלפת טאב
-         */
-        function switchTab(tabName) {
-            currentTab = tabName;
-            
-            // עדכון כפתורי הטאבים
-            document.querySelectorAll('.search-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            
-            // עדכון תוכן הטאבים
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            document.getElementById(`${tabName}-tab`).classList.add('active');
-        }
         
         // אתחול
         document.addEventListener('DOMContentLoaded', function() {

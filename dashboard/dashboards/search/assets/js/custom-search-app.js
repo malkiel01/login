@@ -6,20 +6,15 @@
 class SearchApp {
     constructor() {
         this.currentSearch = null;
-        this.currentSearchType = 'standard';
-        this.currentDataSource = 'JSON';
+        this.currentSearchType = 'deceased_search'; // ברירת מחדל
+        this.currentDataSource = 'JSON'; // תמיד JSON
+        this.currentTab = 'simple';
         this.resultsTable = window.resultsTable || new ResultsTable();
         this.jsonData = null;
         this.lastSearchTime = null;
         
         // הגדרת מקורות המידע
         this.dataSources = {
-            API: {
-                name: 'API Server',
-                endpoint: '/dashboard/dashboards/search/api/deceased-search.php',
-                active: false,
-                method: 'POST'
-            },
             JSON: {
                 name: 'JSON File',
                 endpoint: '/dashboard/dashboards/search/data/data.json',
@@ -39,11 +34,8 @@ class SearchApp {
             return;
         }
         
-        // יצירת כפתורי סוגי חיפוש
-        this.createSearchTypeButtons();
-        
-        // אתחול ברירת מחדל
-        this.switchSearchType('standard');
+        // אתחול ברירת מחדל - חיפוש נפטרים
+        this.switchSearchType('deceased_search');
         
         // טעינת נתוני JSON
         this.preloadJSONData();
@@ -70,37 +62,14 @@ class SearchApp {
     }
 
     /**
-     * יצירת כפתורי סוגי חיפוש
-     */
-    createSearchTypeButtons() {
-        const container = document.getElementById('search-type-buttons');
-        if (!container) return;
-        
-        container.innerHTML = '';
-        
-        Object.entries(SearchConfig.searches).forEach(([key, config]) => {
-            const button = document.createElement('button');
-            button.className = 'search-type-btn';
-            button.dataset.searchType = key;
-            button.onclick = () => this.switchSearchType(key);
-            
-            // הוספת אייקון לפי סוג
-            const icons = {
-                standard: '🔍',
-                deceased_search: '🪦',
-                purchased_graves: '💰',
-                available_graves: '✅'
-            };
-            
-            button.innerHTML = `${icons[key] || ''} ${config.name}`;
-            container.appendChild(button);
-        });
-    }
-
-    /**
      * החלפת סוג חיפוש
      */
     switchSearchType(searchType) {
+        // בדיקה שזה לא standard
+        if (searchType === 'standard') {
+            return; // לא מאפשרים חיפוש סטנדרטי
+        }
+        
         this.currentSearchType = searchType;
         
         try {
@@ -110,13 +79,22 @@ class SearchApp {
             return;
         }
         
-        // עדכון כפתורים
-        document.querySelectorAll('.search-type-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.searchType === searchType);
+        // עדכון כרטיסים
+        document.querySelectorAll('.search-type-card').forEach(card => {
+            card.classList.remove('active');
         });
         
-        // עדכון תנאי סינון
-        this.updateFilterDisplay();
+        // מצא את הכרטיס הנכון ומרקר אותו
+        const searchTypeMapping = {
+            'deceased_search': 0,
+            'purchased_graves': 1,
+            'available_graves': 2
+        };
+        
+        const cards = document.querySelectorAll('.search-type-card');
+        if (cards[searchTypeMapping[searchType]]) {
+            cards[searchTypeMapping[searchType]].classList.add('active');
+        }
         
         // עדכון שדות מתקדמים
         this.updateAdvancedFields();
@@ -126,25 +104,28 @@ class SearchApp {
     }
 
     /**
-     * עדכון תצוגת תנאי סינון
+     * החלפת טאב
      */
-    updateFilterDisplay() {
-        const filterInfo = document.getElementById('filter-info');
-        const filterList = document.getElementById('filter-list');
+    switchTab(tab) {
+        this.currentTab = tab;
         
-        if (!this.currentSearch.config.filters?.required) {
-            filterInfo.style.display = 'none';
-            return;
+        // עדכון הטאבים
+        document.querySelectorAll('.search-tab').forEach(t => {
+            t.classList.remove('active');
+        });
+        document.querySelectorAll('.search-content').forEach(c => {
+            c.classList.remove('active');
+        });
+        
+        // הפעל את הטאב הנבחר
+        const tabButton = Array.from(document.querySelectorAll('.search-tab')).find(
+            t => t.textContent.includes(tab === 'simple' ? 'מהיר' : 'מתקדם')
+        );
+        if (tabButton) {
+            tabButton.classList.add('active');
         }
         
-        filterInfo.style.display = 'block';
-        filterList.innerHTML = '';
-        
-        Object.entries(this.currentSearch.config.filters.required).forEach(([field, condition]) => {
-            const div = document.createElement('div');
-            div.innerHTML = `• <strong>${field}</strong> ${condition.operator} ${condition.value ?? 'null'}`;
-            filterList.appendChild(div);
-        });
+        document.getElementById(`${tab}-search`).classList.add('active');
     }
 
     /**
@@ -461,64 +442,6 @@ class SearchApp {
         
         // גלילה לתוצאות
         document.getElementById('results-section').scrollIntoView({ behavior: 'smooth' });
-    }
-
-    /**
-     * החלפת מקור נתונים
-     */
-    toggleDataSource() {
-        const toggle = document.getElementById('dataSourceToggle');
-        const newSource = toggle.checked ? 'API' : 'JSON';
-        
-        // בדיקה אם המקור פעיל
-        if (!this.dataSources[newSource].active) {
-            this.showToast(`${this.dataSources[newSource].name} אינו פעיל כרגע`, 'warning');
-            toggle.checked = !toggle.checked;
-            return;
-        }
-        
-        this.currentDataSource = newSource;
-        
-        // עדכון תצוגה
-        document.getElementById('currentSource').textContent = this.dataSources[newSource].name;
-        document.getElementById('sourceStatus').className = 'source-status source-active';
-        
-        console.log('Data source switched to:', newSource);
-    }
-
-    /**
-     * ניקוי טופס מתקדם
-     */
-    clearAdvancedForm() {
-        document.querySelectorAll('#advanced-fields input').forEach(input => {
-            input.value = '';
-        });
-        this.showToast('הטופס נוקה', 'success');
-    }
-
-    /**
-     * ייצוא לאקסל
-     */
-    exportToExcel() {
-        this.resultsTable.exportToExcel();
-        this.showToast('הקובץ הורד בהצלחה', 'success');
-    }
-
-    /**
-     * הדפסה
-     */
-    printResults() {
-        this.resultsTable.printResults();
-    }
-
-    /**
-     * הצגת/הסתרת טעינה
-     */
-    showLoading(show) {
-        const loading = document.getElementById('loading');
-        if (loading) {
-            loading.style.display = show ? 'flex' : 'none';
-        }
     }
 
     /**

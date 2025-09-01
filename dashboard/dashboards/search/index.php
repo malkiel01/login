@@ -10,69 +10,76 @@
     <link rel="stylesheet" href="dashboards/search/assets/css/custom-search.css">
 </head>
 <body>
-    <!-- בורר מקור נתונים -->
-    <div class="data-source-toggle">
-        <span class="source-label">מקור נתונים:</span>
-        <label class="toggle-switch">
-            <input type="checkbox" id="dataSourceToggle" onchange="searchApp.toggleDataSource()">
-            <span class="toggle-bg"></span>
-            <span class="toggle-slider"></span>
-        </label>
-        <span id="currentSource">JSON File</span>
-        <span id="sourceStatus" class="source-status source-active">פעיל</span>
-    </div>
-
     <!-- בורר סוג חיפוש -->
     <div class="search-type-selector">
-        <h3>בחר סוג חיפוש:</h3>
-        <div id="search-type-buttons" class="search-type-buttons">
-            <!-- הכפתורים יתווספו דינמית מהקונפיגורציה -->
+        <h2>בחר סוג חיפוש</h2>
+        <div class="search-type-cards">
+            <div class="search-type-card" onclick="searchApp.switchSearchType('deceased_search')">
+                <div class="card-icon">🪦</div>
+                <div class="card-title">חיפוש נפטרים</div>
+                <div class="card-description">חיפוש פרטי נפטרים ומיקום קבורה</div>
+            </div>
+            <div class="search-type-card" onclick="searchApp.switchSearchType('purchased_graves')">
+                <div class="card-icon">💰</div>
+                <div class="card-title">חיפוש רכישות</div>
+                <div class="card-description">קברים שנרכשו ופרטי רכישה</div>
+            </div>
+            <div class="search-type-card" onclick="searchApp.switchSearchType('available_graves')">
+                <div class="card-icon">✅</div>
+                <div class="card-title">קברים פנויים</div>
+                <div class="card-description">קברים זמינים לרכישה</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- כרטיסיות חיפוש -->
+    <div class="search-container">
+        <div class="search-tabs">
+            <button class="search-tab active" onclick="searchApp.switchTab('simple')">
+                חיפוש מהיר
+            </button>
+            <button class="search-tab" onclick="searchApp.switchTab('advanced')">
+                חיפוש מתקדם
+            </button>
         </div>
         
-        <div id="filter-info" class="filter-info" style="display: none;">
-            <strong>תנאי סינון פעילים:</strong>
-            <div id="filter-list"></div>
+        <!-- חיפוש פשוט -->
+        <div id="simple-search" class="search-content active">
+            <div class="search-input-wrapper">
+                <input type="text" 
+                       id="simple-query" 
+                       class="search-input" 
+                       placeholder="הקלד טקסט לחיפוש..."
+                       onkeypress="if(event.key === 'Enter') searchApp.performSimpleSearch()">
+                <button class="search-button" onclick="searchApp.performSimpleSearch()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                </button>
+            </div>
         </div>
-    </div>
 
-    <!-- חיפוש פשוט -->
-    <div class="search-section">
-        <h2>חיפוש פשוט</h2>
-        <div class="search-wrapper">
-            <input type="text" 
-                   id="simple-query" 
-                   class="search-input" 
-                   placeholder="הקלד טקסט לחיפוש..."
-                   onkeypress="if(event.key === 'Enter') searchApp.performSimpleSearch()">
-            <button class="search-button" onclick="searchApp.performSimpleSearch()">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <path d="m21 21-4.35-4.35"></path>
-                </svg>
-            </button>
-        </div>
-    </div>
-
-    <!-- חיפוש מתקדם -->
-    <div class="search-section">
-        <h2>חיפוש מתקדם</h2>
-        <div id="advanced-fields" class="field-grid">
-            <!-- השדות יתווספו דינמית לפי סוג החיפוש -->
-        </div>
-        <div class="form-actions">
-            <button class="submit-button" onclick="searchApp.performAdvancedSearch()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <path d="m21 21-4.35-4.35"></path>
-                </svg>
-                חפש
-            </button>
-            <button class="clear-button" onclick="searchApp.clearAdvancedForm()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14zM10 11v6M14 11v6"/>
-                </svg>
-                נקה
-            </button>
+        <!-- חיפוש מתקדם -->
+        <div id="advanced-search" class="search-content">
+            <div id="advanced-fields" class="field-grid">
+                <!-- השדות יתווספו דינמית לפי סוג החיפוש -->
+            </div>
+            <div class="form-actions">
+                <button class="submit-button" onclick="searchApp.performAdvancedSearch()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                    חפש
+                </button>
+                <button class="clear-button" onclick="searchApp.clearAdvancedForm()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14zM10 11v6M14 11v6"/>
+                    </svg>
+                    נקה
+                </button>
+            </div>
         </div>
     </div>
 

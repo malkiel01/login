@@ -151,28 +151,182 @@
     </div>
 
     <!-- Scripts -->
-    <script src="assets/js/search-config.js"></script>
+    <script>
+        // טעינת הקונפיגורציה ישירות בדף (למקרה שהקובץ החיצוני לא נטען)
+        function loadConfigInline() {
+            window.SearchConfig = {
+                searches: {
+                    standard: {
+                        name: 'חיפוש סטנדרטי',
+                        filters: {},
+                        searchFields: {
+                            simple: ['c_firstName', 'c_lastName', 'c_fullNameHe'],
+                            advanced: {
+                                firstName: 'c_firstName',
+                                lastName: 'c_lastName',
+                                fatherName: 'c_nameFather',
+                                motherName: 'c_nameMother',
+                                cemetery: 'cemeteryNameHe'
+                            }
+                        },
+                        returnFields: [
+                            'c_firstName', 'c_lastName', 'graveNameHe', 'cemeteryNameHe'
+                        ]
+                    },
+                    purchased_graves: {
+                        name: 'קברים שנרכשו',
+                        filters: {
+                            required: {
+                                'p_clientId': { operator: '!=', value: null },
+                                'graveStatus': { operator: '=', value: '2' }
+                            }
+                        },
+                        searchFields: {
+                            simple: ['c_firstName', 'c_lastName', 'graveNameHe', 'cemeteryNameHe'],
+                            advanced: {
+                                firstName: 'c_firstName',
+                                lastName: 'c_lastName',
+                                graveName: 'graveNameHe',
+                                cemeteryName: 'cemeteryNameHe'
+                            }
+                        },
+                        returnFields: [
+                            'c_firstName', 'c_lastName', 'graveNameHe', 'cemeteryNameHe', 'p_price'
+                        ],
+                        displayFields: {
+                            'c_firstName': 'שם פרטי',
+                            'c_lastName': 'שם משפחה',
+                            'graveNameHe': 'מספר קבר',
+                            'cemeteryNameHe': 'בית עלמין',
+                            'p_price': 'מחיר'
+                        }
+                    }
+                },
+                settings: {
+                    defaultLimit: 50,
+                    maxLimit: 100,
+                    minSearchLength: 2
+                }
+            };
+
+            // הגדרת המחלקה
+            window.ConfigurableSearch = class {
+                constructor(searchType = 'standard') {
+                    this.searchType = searchType;
+                    this.config = SearchConfig.searches[searchType];
+                    if (!this.config) {
+                        throw new Error(`Search type "${searchType}" not found`);
+                    }
+                }
+                
+                matchesFilters(record) {
+                    if (!this.config.filters || !this.config.filters.required) {
+                        return true;
+                    }
+                    
+                    for (const [field, condition] of Object.entries(this.config.filters.required)) {
+                        const recordValue = record[field];
+                        const { operator, value } = condition;
+                        
+                        switch (operator) {
+                            case '=':
+                                if (recordValue != value) return false;
+                                break;
+                            case '!=':
+                                if (recordValue == value) return false;
+                                break;
+                        }
+                    }
+                    return true;
+                }
+                
+                getDisplayLabels() {
+                    return this.config.displayFields || {};
+                }
+                
+                prepareApiParams(params) {
+                    const apiParams = {
+                        searchType: this.searchType,
+                        filters: this.config.filters,
+                        limit: params.limit || SearchConfig.settings.defaultLimit,
+                        offset: params.offset || 0
+                    };
+                    
+                    const fieldMapping = this.config.searchFields.advanced;
+                    
+                    Object.entries(params).forEach(([key, value]) => {
+                        if (fieldMapping && fieldMapping[key]) {
+                            apiParams[fieldMapping[key]] = value;
+                        } else if (key !== 'limit' && key !== 'offset') {
+                            apiParams[key] = value;
+                        }
+                    });
+                    
+                    return apiParams;
+                }
+            };
+        }
+        
+        // טען את הקונפיגורציה מיד
+        loadConfigInline();
+    </script>
+    
+    <!-- ניסיון לטעון את הקובץ החיצוני (אופציונלי) -->
+    <script src="assets/js/search-config.js" onerror="console.log('External config not found, using inline')"></script>
+    
     <script>
         let currentSearch = null;
         let currentSearchType = 'standard';
         
-        // אתחול
+        // אתחול - מחכים שהקובץ יטען
         document.addEventListener('DOMContentLoaded', function() {
-            switchSearchType('purchased_graves'); // ברירת מחדל
+            // בדיקה שהקונפיגורציה נטענה
+            if (typeof ConfigurableSearch === 'undefined') {
+                console.error('ConfigurableSearch not loaded. Creating inline...');
+                // טעינת הקונפיגורציה ישירות אם הקובץ לא נטען
+                loadConfigInline();
+            }
+            
+            // אתחול ללא event (כי אין כפתור שנלחץ)
+            initializeSearch('purchased_graves');
         });
+        
+        /**
+         * אתחול החיפוש
+         */
+        function initializeSearch(searchType) {
+            currentSearchType = searchType;
+            
+            // בדיקה שהמחלקה קיימת
+            if (typeof ConfigurableSearch !== 'undefined') {
+                currentSearch = new ConfigurableSearch(searchType);
+                updateFilterDisplay();
+                updateAdvancedFields();
+            } else {
+                console.error('ConfigurableSearch class not available');
+            }
+        }
         
         /**
          * החלפת סוג חיפוש
          */
         function switchSearchType(searchType) {
+            // בדיקה שהמחלקה קיימת
+            if (typeof ConfigurableSearch === 'undefined') {
+                alert('מערכת החיפוש לא נטענה כראוי. נא לרענן את הדף.');
+                return;
+            }
+            
             currentSearchType = searchType;
             currentSearch = new ConfigurableSearch(searchType);
             
-            // עדכון כפתורים
-            document.querySelectorAll('.search-type-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
+            // עדכון כפתורים - רק אם יש event
+            if (event && event.target) {
+                document.querySelectorAll('.search-type-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                event.target.classList.add('active');
+            }
             
             // עדכון תנאי סינון
             updateFilterDisplay();
@@ -295,6 +449,11 @@
          * ביצוע חיפוש עם קונפיגורציה
          */
         async function searchWithConfig(queryOrParams, searchMode) {
+            // בדיקה שיש חיפוש פעיל
+            if (!currentSearch) {
+                throw new Error('No search configuration loaded');
+            }
+            
             // הכנת הפרמטרים ל-API
             const apiParams = currentSearch.prepareApiParams(
                 searchMode === 'simple' 
@@ -302,8 +461,26 @@
                     : queryOrParams
             );
             
-            // כאן תקרא ל-API שלך
-            // לדוגמה:
+            // סימולציה של תוצאות - החלף בקריאה אמיתית ל-API
+            console.log('API Params:', apiParams);
+            
+            // לצורך בדיקה - החזרת נתונים מדומים
+            return {
+                success: true,
+                results: [
+                    {
+                        c_firstName: 'יוסף',
+                        c_lastName: 'כהן',
+                        graveNameHe: '123',
+                        cemeteryNameHe: 'הר המנוחות',
+                        p_price: '15000',
+                        p_purchaseStatus: 3,
+                        p_purchaseStatus_display: 'הושלם'
+                    }
+                ]
+            };
+            
+            /* קוד אמיתי לקריאה ל-API:
             const response = await fetch('/dashboard/dashboards/search/api/configurable-search.php', {
                 method: 'POST',
                 headers: {
@@ -314,6 +491,7 @@
             
             const data = await response.json();
             return data;
+            */
         }
         
         /**

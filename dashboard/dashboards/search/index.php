@@ -466,19 +466,6 @@
             document.getElementById(`${tabName}-tab`).classList.add('active');
         }
         
-        // אתחול
-        document.addEventListener('DOMContentLoaded', function() {
-            // בדיקה שהקונפיגורציה נטענה
-            if (typeof ConfigurableSearch === 'undefined' || typeof SearchConfig === 'undefined') {
-                console.error('Configuration file not loaded!');
-                alert('שגיאה בטעינת קובץ הקונפיגורציה. נא לרענן את הדף.');
-                return;
-            }
-            
-            // אתחול עם סוג החיפוש הראשוני
-            initializeSearch('purchased_graves');
-        });
-        
         /**
          * אתחול החיפוש
          */
@@ -503,12 +490,12 @@
             try {
                 currentSearch = new ConfigurableSearch(searchType);
                 
-                // עדכון כפתורים
+                // עדכון טאבים
                 if (event && event.target) {
-                    document.querySelectorAll('.search-type-btn').forEach(btn => {
-                        btn.classList.remove('active');
+                    document.querySelectorAll('.search-type-tab').forEach(tab => {
+                        tab.classList.remove('active');
                     });
-                    event.target.classList.add('active');
+                    event.target.closest('.search-type-tab').classList.add('active');
                 }
                 
                 // עדכון שדות מתקדמים

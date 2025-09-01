@@ -135,7 +135,7 @@ const SearchConfig = {
                     cemeteryName: 'cemeteryNameHe',
                     // תאריכים
                     deathDate: 'b_dateDeath',
-                    burialDate: 'b_dateBurial'
+                    // burialDate: 'b_dateBurial'
                 }
             },
             returnFields: [
@@ -343,6 +343,34 @@ class ConfigurableSearch {
                     if (!recordValue.includes(searchValue)) {
                         return false;
                     }
+
+                }
+            }
+            
+            // טיפול מיוחד בטווח תאריכים
+            if (params.deathDateRange) {
+                const deathDate = record.b_dateDeath;
+                if (!deathDate) return false;
+                
+                const from = new Date(params.deathDateRange.from + '-01');
+                const to = new Date(params.deathDateRange.to + '-01');
+                const recordDate = new Date(deathDate);
+                
+                if (recordDate < from || recordDate > to) {
+                    return false;
+                }
+            }
+
+            if (params.deathDateExact) {
+                const deathDate = record.b_dateDeath;
+                if (!deathDate) return false;
+                
+                const [searchYear, searchMonth] = params.deathDateExact.split('-');
+                const recordDate = new Date(deathDate);
+                
+                if (recordDate.getFullYear() != searchYear || 
+                    (recordDate.getMonth() + 1) != parseInt(searchMonth)) {
+                    return false;
                 }
             }
             

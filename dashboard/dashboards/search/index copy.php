@@ -243,47 +243,20 @@
                 container.appendChild(locationSection);
                 
                 // תאריכים
-                // const datesSection = document.createElement('div');
-                // datesSection.innerHTML = '<h4 style="margin-top: 20px; margin-bottom: 10px;">📅 תאריכים:</h4>';
-                // datesSection.className = 'field-section';
-                
-                // const datesGrid = document.createElement('div');
-                // datesGrid.className = 'field-grid';
-                
-                // ['deathDate', 'burialDate'].forEach(key => {
-                //     if (fields[key]) {
-                //         const fieldDiv = createFieldElement(key, fields[key], displayLabels, 'date');
-                //         datesGrid.appendChild(fieldDiv);
-                //     }
-                // });
-                // datesSection.appendChild(datesGrid);
-                // container.appendChild(datesSection);
-
-                // תאריכים
                 const datesSection = document.createElement('div');
-                datesSection.innerHTML = '<h4 style="margin-top: 20px; margin-bottom: 10px;">📅 תאריך פטירה:</h4>';
+                datesSection.innerHTML = '<h4 style="margin-top: 20px; margin-bottom: 10px;">📅 תאריכים:</h4>';
                 datesSection.className = 'field-section';
-
-                // בורר חודש ושנה
-                const dateHTML = `
-                    <div style="margin-bottom: 15px;">
-                        <label class="form-label">בחר חודש ושנה:</label>
-                        <input type="month" id="adv-deathMonth" class="form-input" style="margin-bottom: 10px;">
-                        
-                        <div style="display: flex; align-items: center; gap: 15px; margin-top: 10px;">
-                            <label style="display: flex; align-items: center; gap: 5px;">
-                                <input type="radio" name="dateAccuracy" value="exact" checked>
-                                <span>תאריך מדויק</span>
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 5px;">
-                                <input type="radio" name="dateAccuracy" value="approximate">
-                                <span>תאריך משוער (±2.5 שנים)</span>
-                            </label>
-                        </div>
-                    </div>
-                `;
-
-                datesSection.innerHTML += dateHTML;
+                
+                const datesGrid = document.createElement('div');
+                datesGrid.className = 'field-grid';
+                
+                ['deathDate', 'burialDate'].forEach(key => {
+                    if (fields[key]) {
+                        const fieldDiv = createFieldElement(key, fields[key], displayLabels, 'date');
+                        datesGrid.appendChild(fieldDiv);
+                    }
+                });
+                datesSection.appendChild(datesGrid);
                 container.appendChild(datesSection);
                 
             } else {
@@ -348,27 +321,6 @@
             const params = {};
             const fields = currentSearch.config.searchFields.advanced;
 
-            // טיפול מיוחד בתאריך פטירה אם זה חיפוש נפטרים
-            if (currentSearchType === 'deceased_search') {
-                const monthInput = document.getElementById('adv-deathMonth');
-                const accuracy = document.querySelector('input[name="dateAccuracy"]:checked');
-                
-                if (monthInput && monthInput.value) {
-                    const [year, month] = monthInput.value.split('-');
-                    
-                    if (accuracy && accuracy.value === 'approximate') {
-                        // חיפוש משוער - 2.5 שנים לפני ואחרי
-                        params.deathDateRange = {
-                            from: `${parseInt(year) - 3}-${month}`,
-                            to: `${parseInt(year) + 2}-${month}`
-                        };
-                    } else {
-                        // חיפוש מדויק - רק החודש הספציפי
-                        params.deathDateExact = monthInput.value;
-                    }
-                }
-            }
-            
             // איסוף ערכים מהשדות
             for (const key of Object.keys(fields)) {
                 const input = document.getElementById(`adv-${key}`);

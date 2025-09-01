@@ -228,128 +228,11 @@
             background: #e0e0e0;
         }
         
-        /* בורר תצוגה */
-        .view-selector {
-            display: flex;
-            gap: 8px;
-            margin-top: 10px;
-        }
-        
-        .view-btn {
-            padding: 8px 16px;
-            border: 1px solid #dee2e6;
-            background: white;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            transition: all 0.3s;
-        }
-        
-        .view-btn:hover {
-            background: #f8f9fa;
-        }
-        
-        .view-btn.active {
-            background: #4a90e2;
-            color: white;
-            border-color: #4a90e2;
-        }
-        
-        /* כרטיסי תוצאות */
-        .results-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-        
-        .result-card {
-            background: white;
-            border: 1px solid #e0e0e0;
-            border-radius: 12px;
-            padding: 15px;
-            display: flex;
-            gap: 15px;
-            transition: all 0.3s;
-            cursor: pointer;
-        }
-        
-        .result-card:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            transform: translateY(-2px);
-        }
-        
-        .result-card .image-placeholder {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        
-        .result-card .image-placeholder .initials {
-            color: white;
-            font-size: 24px;
-            font-weight: bold;
-        }
-        
-        .result-card .card-content {
-            flex: 1;
-            min-width: 0;
-        }
-        
-        .result-card .name {
-            font-size: 18px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 5px;
-        }
-        
-        .result-card .parents {
-            font-size: 13px;
-            color: #6c757d;
-            margin-bottom: 8px;
-        }
-        
-        .result-card .dates {
-            font-size: 14px;
-            color: #495057;
-            margin-bottom: 10px;
-        }
-        
-        .result-card .location {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 13px;
-            color: #6c757d;
-            padding-top: 10px;
-            border-top: 1px solid #e9ecef;
-        }
-        
-        .result-card .location-icon {
-            font-size: 16px;
-            color: #4a90e2;
-        }
-        
-        /* טבלת תוצאות רספונסיבית */
-        .results-table-container {
-            overflow-x: auto;
-            margin-top: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-        
+        /* טבלת תוצאות - מותאמת למובייל */
         .result-table {
             width: 100%;
             border-collapse: collapse;
-            background: white;
+            margin-top: 20px;
         }
         
         .result-table th,
@@ -360,21 +243,15 @@
         }
         
         .result-table th {
-            background: #f8f9fa;
+            background: #f5f5f5;
             font-weight: bold;
             position: sticky;
             top: 0;
             z-index: 10;
-            font-size: 14px;
-            color: #495057;
         }
         
         .result-table tr:hover {
-            background: #f8f9fa;
-        }
-        
-        .result-table td {
-            font-size: 14px;
+            background: #f9f9f9;
         }
         
         /* התאמות למובייל */
@@ -535,15 +412,6 @@
                 <span>נמצאו <strong id="result-count">0</strong> תוצאות</span>
                 <span>זמן חיפוש: <strong id="search-time">0</strong> שניות</span>
             </div>
-            <!-- בורר תצוגה -->
-            <div class="view-selector">
-                <button class="view-btn active" onclick="switchView('cards')">
-                    <span>📇</span> כרטיסים
-                </button>
-                <button class="view-btn" onclick="switchView('table')">
-                    <span>📊</span> טבלה
-                </button>
-            </div>
         </div>
         
         <div id="results-container">
@@ -565,7 +433,6 @@
         let currentSearch = null;
         let currentSearchType = 'deceased_search';
         let currentTab = 'simple';
-        let currentView = 'cards'; // ברירת מחדל - תצוגת כרטיסים
         
         // אתחול
         document.addEventListener('DOMContentLoaded', function() {
@@ -881,47 +748,6 @@
         }
         
         /**
-         * החלפת תצוגת תוצאות
-         */
-        function switchView(viewType) {
-            currentView = viewType;
-            
-            // עדכון כפתורים
-            document.querySelectorAll('.view-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.closest('.view-btn').classList.add('active');
-            
-            // רענון התוצאות בתצוגה החדשה
-            const lastResults = window.lastSearchResults;
-            if (lastResults) {
-                displayConfigurableResults(lastResults);
-            }
-        }
-        
-        /**
-         * יצירת ראשי תיבות משם
-         */
-        function getInitials(firstName, lastName) {
-            const first = firstName ? firstName.charAt(0) : '';
-            const last = lastName ? lastName.charAt(0) : '';
-            return (first + last) || '?';
-        }
-        
-        /**
-         * פורמט תאריך
-         */
-        function formatDate(dateStr) {
-            if (!dateStr) return '';
-            try {
-                const date = new Date(dateStr);
-                return date.toLocaleDateString('he-IL');
-            } catch {
-                return dateStr;
-            }
-        }
-        
-        /**
          * הצגת תוצאות
          */
         function displayConfigurableResults(data) {
@@ -929,122 +755,15 @@
             const resultsContainer = document.getElementById('results-container');
             const resultCount = document.getElementById('result-count');
             
-            // שמירת התוצאות האחרונות
-            window.lastSearchResults = data;
-            
             resultsSection.style.display = 'block';
             resultCount.textContent = data.results ? data.results.length : 0;
             
             if (!data.results || data.results.length === 0) {
-                resultsContainer.innerHTML = '<p style="text-align: center; padding: 20px;">לא נמצאו תוצאות</p>';
+                resultsContainer.innerHTML = '<p>לא נמצאו תוצאות</p>';
                 return;
             }
             
-            // בחירת תצוגה לפי currentView
-            if (currentView === 'cards') {
-                displayCardsView(data.results, resultsContainer);
-            } else {
-                displayTableView(data.results, resultsContainer);
-            }
-        }
-        
-        /**
-         * תצוגת כרטיסים
-         */
-        function displayCardsView(results, container) {
-            const cardsContainer = document.createElement('div');
-            cardsContainer.className = 'results-cards';
-            
-            const displayLabels = currentSearch.getDisplayLabels();
-            
-            results.forEach(record => {
-                const card = document.createElement('div');
-                card.className = 'result-card';
-                
-                // ראשי תיבות או תמונה
-                const initials = getInitials(record.c_firstName, record.c_lastName);
-                
-                // בניית תוכן לפי סוג החיפוש
-                let cardHTML = `
-                    <div class="image-placeholder">
-                        <span class="initials">${initials}</span>
-                    </div>
-                    <div class="card-content">
-                `;
-                
-                if (currentSearchType === 'deceased_search') {
-                    // כרטיס נפטר
-                    cardHTML += `
-                        <div class="name">${record.c_firstName || ''} ${record.c_lastName || ''}</div>
-                        <div class="parents">
-                            ${record.c_nameFather ? `בן ${record.c_nameFather}` : ''}
-                            ${record.c_nameMother ? ` ו${record.c_nameMother}` : ''}
-                        </div>
-                        <div class="dates">
-                            ${record.c_dateBirth ? `נולד: ${formatDate(record.c_dateBirth)}` : ''}
-                            ${record.b_dateDeath ? ` | נפטר: ${formatDate(record.b_dateDeath)}` : ''}
-                        </div>
-                        <div class="location">
-                            <span class="location-icon">📍</span>
-                            <span>
-                                ${record.cemeteryNameHe || ''}
-                                ${record.blockNameHe ? `, גוש ${record.blockNameHe}` : ''}
-                                ${record.plotNameHe ? `, חלקה ${record.plotNameHe}` : ''}
-                                ${record.lineNameHe ? `, שורה ${record.lineNameHe}` : ''}
-                                ${record.graveNameHe ? `, קבר ${record.graveNameHe}` : ''}
-                            </span>
-                        </div>
-                    `;
-                } else if (currentSearchType === 'purchased_graves') {
-                    // כרטיס רכישה
-                    cardHTML += `
-                        <div class="name">${record.c_firstName || ''} ${record.c_lastName || ''}</div>
-                        <div class="parents">רוכש הקבר</div>
-                        <div class="dates">
-                            ${record.p_price ? `מחיר: ₪${record.p_price}` : ''}
-                            ${record.p_purchaseStatus_display ? ` | ${record.p_purchaseStatus_display}` : ''}
-                        </div>
-                        <div class="location">
-                            <span class="location-icon">📍</span>
-                            <span>
-                                ${record.cemeteryNameHe || ''}
-                                ${record.graveNameHe ? `, קבר ${record.graveNameHe}` : ''}
-                            </span>
-                        </div>
-                    `;
-                } else if (currentSearchType === 'available_graves') {
-                    // כרטיס קבר פנוי
-                    cardHTML += `
-                        <div class="name">קבר פנוי #${record.graveNameHe || record.graveId}</div>
-                        <div class="parents">סטטוס: ${record.graveStatus_display || 'פנוי'}</div>
-                        <div class="location">
-                            <span class="location-icon">📍</span>
-                            <span>
-                                ${record.cemeteryNameHe || ''}
-                                ${record.blockNameHe ? `, גוש ${record.blockNameHe}` : ''}
-                                ${record.plotNameHe ? `, חלקה ${record.plotNameHe}` : ''}
-                                ${record.areaGraveNameHe ? `, אזור ${record.areaGraveNameHe}` : ''}
-                            </span>
-                        </div>
-                    `;
-                }
-                
-                cardHTML += `</div>`;
-                card.innerHTML = cardHTML;
-                cardsContainer.appendChild(card);
-            });
-            
-            container.innerHTML = '';
-            container.appendChild(cardsContainer);
-        }
-        
-        /**
-         * תצוגת טבלה
-         */
-        function displayTableView(results, container) {
-            const tableContainer = document.createElement('div');
-            tableContainer.className = 'results-table-container';
-            
+            // יצירת טבלת תוצאות
             const table = document.createElement('table');
             table.className = 'result-table';
             
@@ -1063,17 +782,15 @@
             
             // נתונים
             const tbody = document.createElement('tbody');
-            for (const record of results) {
+            for (const record of data.results) {
                 const row = document.createElement('tr');
                 
                 for (const field of currentSearch.config.returnFields) {
                     const td = document.createElement('td');
                     
-                    // בדיקה אם יש תצוגה מתורגמת
+                    // בדיקה אם יש תצוגה מתורגמת (לסטטוסים)
                     if (record[field + '_display']) {
                         td.textContent = record[field + '_display'];
-                    } else if (field.includes('Date') && record[field]) {
-                        td.textContent = formatDate(record[field]);
                     } else {
                         td.textContent = record[field] || '-';
                     }
@@ -1085,9 +802,8 @@
             }
             table.appendChild(tbody);
             
-            tableContainer.appendChild(table);
-            container.innerHTML = '';
-            container.appendChild(tableContainer);
+            resultsContainer.innerHTML = '';
+            resultsContainer.appendChild(table);
         }
         
         /**

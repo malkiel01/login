@@ -154,8 +154,20 @@
     </style>
 </head>
 <body>
+    <!-- בורר מקור נתונים -->
+    <div class="data-source-toggle">
+        <span class="source-label">מקור נתונים:</span>
+        <label class="toggle-switch">
+            <input type="checkbox" id="dataSourceToggle" onchange="toggleDataSource()">
+            <span class="toggle-bg"></span>
+            <span class="toggle-slider"></span>
+        </label>
+        <span id="currentSource">JSON File</span>
+        <span class="source-status source-active">פעיל</span>
+    </div>
+
     <!-- בורר סוג חיפוש -->
-    <div class="search-type-selector">
+    <div class="search-type-selector" style="margin-top: 70px;">
         <h3>בחר סוג חיפוש:</h3>
         <div class="search-type-buttons">
             <button class="search-type-btn active" onclick="switchSearchType('standard')">
@@ -235,7 +247,7 @@
 
     <!-- Scripts -->
     <!-- טוען את קובץ הקונפיגורציה החיצוני -->
-    <script src="assets/js/search-config.js"></script>
+    <script src="dashboards/search/assets/js/search-config.js"></script>
     
     <script>
         let currentSearch = null;
@@ -473,12 +485,56 @@
             }
         }
         
+        // הגדרת מקורות המידע
+        const DATA_SOURCES = {
+            API: {
+                name: 'API Server',
+                endpoint: '/dashboard/dashboards/search/api/deceased-search.php',
+                active: false,
+                method: 'POST'
+            },
+            JSON: {
+                name: 'JSON File',
+                endpoint: '/dashboard/dashboards/search/data/data.json',
+                active: true,
+                method: 'GET'
+            }
+        };
+        
+        // מקור נתונים נוכחי
+        let currentDataSource = 'JSON';
+        
+        /**
+         * החלפת מקור נתונים
+         */
+        function toggleDataSource() {
+            const toggle = document.getElementById('dataSourceToggle');
+            if (toggle) {
+                currentDataSource = toggle.checked ? 'API' : 'JSON';
+                console.log('Data source switched to:', currentDataSource);
+                
+                // עדכון תצוגה
+                const sourceDisplay = document.getElementById('currentSource');
+                if (sourceDisplay) {
+                    sourceDisplay.textContent = DATA_SOURCES[currentDataSource].name;
+                }
+                
+                // בדיקה אם המקור פעיל
+                if (!DATA_SOURCES[currentDataSource].active) {
+                    alert(`מקור הנתונים ${DATA_SOURCES[currentDataSource].name} אינו פעיל כרגע`);
+                    // חזרה למקור הקודם
+                    currentDataSource = currentDataSource === 'API' ? 'JSON' : 'API';
+                    toggle.checked = currentDataSource === 'API';
+                }
+            }
+        }
+        
         /**
          * טעינת נתוני JSON
          */
         async function loadJSONData() {
             try {
-                const response = await fetch('/dashboard/dashboards/search/data/data.json');
+                const response = await fetch(DATA_SOURCES.JSON.endpoint);
                 if (!response.ok) {
                     throw new Error('Failed to load JSON data');
                 }
@@ -524,14 +580,37 @@
             const startTime = performance.now();
             
             try {
-                // טעינת נתוני JSON
-                const jsonData = await loadJSONData();
+                let results = [];
                 
-                const searchParams = searchMode === 'simple' 
-                    ? { query: queryOrParams }
-                    : queryOrParams;
-                
-                const results = searchInJSON(jsonData, searchParams, searchMode);
+                if (currentDataSource === 'JSON') {
+                    // חיפוש ב-JSON
+                    const jsonData = await loadJSONData();
+                    
+                    const searchParams = searchMode === 'simple' 
+                        ? { query: queryOrParams }
+                        : queryOrParams;
+                    
+                    results = searchInJSON(jsonData, searchParams, searchMode);
+                    
+                } else if (currentDataSource === 'API') {
+                    // חיפוש דרך API
+                    const apiParams = currentSearch.prepareApiParams(
+                        searchMode === 'simple' 
+                            ? { query: queryOrParams }
+                            : queryOrParams
+                    );
+                    
+                    const response = await fetch(DATA_SOURCES.API.endpoint, {
+                        method: DATA_SOURCES.API.method,
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(apiParams)
+                    });
+                    
+                    const data = await response.json();
+                    results = data.results || [];
+                }
                 
                 const endTime = performance.now();
                 const searchTime = ((endTime - startTime) / 1000).toFixed(2);
@@ -547,7 +626,8 @@
                 return {
                     success: true,
                     results: results,
-                    searchTime: searchTime
+                    searchTime: searchTime,
+                    source: currentDataSource
                 };
                 
             } catch (error) {

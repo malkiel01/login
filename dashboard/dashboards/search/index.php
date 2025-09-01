@@ -536,7 +536,8 @@
                         </div>
                         <div class="dates">
                             ${record.c_dateBirth ? `נולד: ${formatDate(record.c_dateBirth)}` : ''}
-                            ${record.b_dateDeath ? ` | נפטר: ${formatDate(record.b_dateDeath)}` : ''}
+                            </br>
+                            ${record.b_dateDeath ? `נפטר: ${formatDate(record.b_dateDeath)}` : ''}
                         </div>
                         <div class="location">
                             <span class="location-icon">📍</span>

@@ -1,261 +1,668 @@
 <!DOCTYPE html>
-<html dir="rtl" lang="he">
+<html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>חיפוש נפטרים - מערכת ניהול בית עלמין</title>
-    
-    <!-- CSS Files -->
+    <title>חיפוש מותאם - קברים שנרכשו</title>
     <link rel="stylesheet" href="dashboards/search/assets/css/search.css">
-    <link rel="stylesheet" href="dashboards/search/assets/css/animations.css">
+    <link rel="stylesheet" href="dashboards/search/assets/css/custom-search.css">
 </head>
 <body>
-    <div class="dashboard-container">
-        <!-- Header -->
-        <div class="header">
-            <h1>
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <path d="m21 21-4.35-4.35"></path>
-                </svg>
-                חיפוש נפטרים
-            </h1>
-            <div class="subtitle">מערכת חיפוש מתקדמת לאיתור נפטרים בבתי העלמין</div>
-            
-            <!-- Data Source Toggle -->
-            <!-- <div class="data-source-toggle">
-                <label class="toggle-label">מקור נתונים:</label>
-                <div class="toggle-switch">
-                    <input type="checkbox" id="dataSourceToggle" onchange="toggleDataSource()">
-                    <label for="dataSourceToggle" class="toggle-slider">
-                        <span class="toggle-text json">JSON</span>
-                        <span class="toggle-text api">API</span>
-                    </label>
-                </div>
-                <span id="currentSource" class="current-source">JSON (בדיקות)</span>
-            </div> -->
+    <!-- בורר סוג חיפוש - טאבים -->
+    <div class="search-type-selector">
+        <div class="search-type-tabs">
+            <button class="search-type-tab active" onclick="switchSearchType('deceased_search')">
+                <div class="icon">🪦</div>
+                <div class="label">חיפוש נפטרים</div>
+            </button>
+            <button class="search-type-tab" onclick="switchSearchType('purchased_graves')">
+                <div class="icon">💰</div>
+                <div class="label">קברים שנרכשו</div>
+            </button>
+            <button class="search-type-tab" onclick="switchSearchType('available_graves')">
+                <div class="icon">✅</div>
+                <div class="label">קברים פנויים</div>
+            </button>
         </div>
+    </div>
 
-        <!-- Search Section -->
-        <div class="search-section">
-            <div class="search-tabs">
-                <button class="tab-button active" onclick="switchTab('simple')">
-                    🔍 חיפוש מהיר
-                </button>
-                <button class="tab-button" onclick="switchTab('advanced')">
-                    ⚙️ חיפוש מתקדם
-                </button>
-            </div>
+    <!-- טאבים לבחירת סוג חיפוש -->
+    <div class="search-tabs">
+        <button class="search-tab active" onclick="switchTab('simple')">
+            <span class="tab-icon">⚡</span>
+            <span class="tab-text">חיפוש מהיר</span>
+        </button>
+        <button class="search-tab" onclick="switchTab('advanced')">
+            <span class="tab-icon">🎯</span>
+            <span class="tab-text">חיפוש מתקדם</span>
+        </button>
+    </div>
 
-            <!-- Simple Search -->
-            <div id="simple-search" class="search-content active">
-                <div class="simple-search">
-                    <div class="search-input-wrapper">
-                        <input type="text" 
-                               id="simple-query" 
-                               class="search-input" 
-                               placeholder="הקלד שם פרטי ו/או שם משפחה..."
-                               onkeypress="if(event.key === 'Enter') performSimpleSearch()">
-                        <button class="search-button" onclick="performSimpleSearch()">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="11" cy="11" r="8"></circle>
-                                <path d="m21 21-4.35-4.35"></path>
-                            </svg>
-                        </button>
-                    </div>
-                    <!-- <div class="search-hints">
-                        💡 ניתן לחפש בכל סדר: "משה כהן" או "כהן משה"
-                    </div> -->
-                </div>
-            </div>
-
-            <!-- Advanced Search -->
-            <div id="advanced-search" class="search-content">
-                <div class="advanced-search">
-                    <!-- פרטים אישיים -->
-                    <div class="form-section">
-                        <div class="section-title">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                <circle cx="12" cy="7" r="4"></circle>
-                            </svg>
-                            פרטים אישיים
-                        </div>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label class="form-label">שם פרטי</label>
-                                <input type="text" id="adv-first-name" class="form-input" placeholder="לדוגמה: משה חיים">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">שם משפחה</label>
-                                <input type="text" id="adv-last-name" class="form-input" placeholder="לדוגמה: כהן">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">שם האב</label>
-                                <input type="text" id="adv-father-name" class="form-input" placeholder="לדוגמה: אברהם">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">שם האם</label>
-                                <input type="text" id="adv-mother-name" class="form-input" placeholder="לדוגמה: שרה">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- תאריך פטירה -->
-                    <div class="form-section">
-                        <div class="section-title">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                                <line x1="16" y1="2" x2="16" y2="6"></line>
-                                <line x1="8" y1="2" x2="8" y2="6"></line>
-                                <line x1="3" y1="10" x2="21" y2="10"></line>
-                            </svg>
-                            תאריך פטירה
-                        </div>
-                        
-                        <div class="radio-group">
-                            <div class="radio-option">
-                                <input type="radio" id="date-none" name="date-type" value="none" checked>
-                                <label for="date-none">ללא תאריך</label>
-                            </div>
-                            <div class="radio-option">
-                                <input type="radio" id="date-range" name="date-type" value="range">
-                                <label for="date-range">טווח תאריכים</label>
-                            </div>
-                            <div class="radio-option">
-                                <input type="radio" id="date-estimated" name="date-type" value="estimated">
-                                <label for="date-estimated">שנה משוערת</label>
-                            </div>
-                        </div>
-
-                        <div id="date-range-fields" class="form-grid" style="display: none;">
-                            <div class="date-range-group">
-                                <div class="form-group">
-                                    <label class="form-label">משנה</label>
-                                    <input type="number" id="adv-from-year" class="form-input" placeholder="שנה" min="1900" max="2025">
-                                </div>
-                                <div class="date-separator">עד</div>
-                                <div class="form-group">
-                                    <label class="form-label">עד שנה</label>
-                                    <input type="number" id="adv-to-year" class="form-input" placeholder="שנה" min="1900" max="2025">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="date-estimated-fields" class="form-grid" style="display: none;">
-                            <div class="form-group">
-                                <label class="form-label">שנה משוערת</label>
-                                <input type="number" id="adv-estimated-year" class="form-input" placeholder="לדוגמה: 2020" min="1900" max="2025">
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="year-range-5" checked disabled>
-                                    <label for="year-range-5">חיפוש בטווח של ±5 שנים</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- מיקום -->
-                    <div class="form-section">
-                        <div class="section-title">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                                <circle cx="12" cy="10" r="3"></circle>
-                            </svg>
-                            מיקום קבורה
-                        </div>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label class="form-label">עיר</label>
-                                <select id="adv-city" class="form-select">
-                                    <option value="">בחר עיר</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">בית עלמין</label>
-                                <select id="adv-cemetery" class="form-select">
-                                    <option value="">בחר בית עלמין</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-actions">
-                        <button class="clear-button" onclick="clearAdvancedForm()">
-                            נקה טופס
-                        </button>
-                        <button class="submit-button" onclick="performAdvancedSearch()">
-                            🔍 חפש נפטרים
-                        </button>
-                    </div>
+    <!-- תוכן הטאבים -->
+    <div class="search-container">
+        <!-- טאב חיפוש מהיר -->
+        <div id="simple-tab" class="tab-content active">
+            <div class="search-section">
+                <h2>חיפוש מהיר</h2>
+                <p style="color: #666; margin-bottom: 20px;">הקלד טקסט חופשי לחיפוש בכל השדות הרלוונטיים</p>
+                <div class="search-wrapper">
+                    <input type="text" 
+                           id="simple-query" 
+                           class="search-input" 
+                           placeholder="הקלד שם, מספר קבר, בית עלמין..."
+                           onkeypress="if(event.key === 'Enter') performConfigurableSearch()">
+                    <button class="search-button" onclick="performConfigurableSearch()">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- Results Section -->
-        <div id="results-section" class="results-section">
-            <div class="results-header">
-                <h2>תוצאות חיפוש</h2>
-                <div class="results-info">
-                    <span class="results-count">נמצאו <span id="results-count">0</span> תוצאות</span>
-                    <span id="search-time" class="search-time"></span>
+        <!-- טאב חיפוש מתקדם -->
+        <div id="advanced-tab" class="tab-content">
+            <div class="search-section">
+                <h2>חיפוש מתקדם</h2>
+                <p style="color: #666; margin-bottom: 20px;">חפש לפי שדות ספציפיים לתוצאות מדויקות יותר</p>
+                <div id="advanced-fields" class="field-grid">
+                    <!-- השדות יתווספו דינמית לפי סוג החיפוש -->
                 </div>
-            </div>
-            
-            <div id="loading" class="loading">
-                <div class="spinner"></div>
-                <p>מחפש במאגר הנתונים...</p>
-            </div>
-
-            <div id="results-grid" class="results-grid"></div>
-            
-            <div id="no-results" class="no-results" style="display: none;">
-                <div class="no-results-icon">🔍</div>
-                <h3>לא נמצאו תוצאות</h3>
-                <p>נסה לשנות את פרטי החיפוש או להשתמש בפחות מסננים</p>
+                <div style="margin-top: 20px;">
+                    <button class="submit-button" onclick="performAdvancedConfigurableSearch()">
+                        חפש
+                    </button>
+                    <button class="clear-button" onclick="clearAdvancedForm()">
+                        נקה
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- JavaScript Files -->
+    <!-- תוצאות -->
+    <div id="results-section" class="results-section" style="display: none;">
+        <div class="results-header">
+            <h2>תוצאות החיפוש</h2>
+            <div class="results-info">
+                <span>נמצאו <strong id="result-count">0</strong> תוצאות</span>
+                <span>זמן חיפוש: <strong id="search-time">0</strong> שניות</span>
+            </div>
+            <!-- בורר תצוגה -->
+            <div class="view-selector">
+                <button class="view-btn active" onclick="switchView('cards')">
+                    <span>📇</span> כרטיסים
+                </button>
+                <button class="view-btn" onclick="switchView('table')">
+                    <span>📊</span> טבלה
+                </button>
+            </div>
+        </div>
+        
+        <div id="results-container">
+            <!-- התוצאות יוצגו כאן -->
+        </div>
+    </div>
+
+    <!-- טעינה -->
+    <div id="loading" class="loading" style="display: none;">
+        <div class="spinner"></div>
+        <p>מחפש...</p>
+    </div>
+
+    <!-- Scripts -->
+    <!-- טוען את קובץ הקונפיגורציה החיצוני -->
+    <script src="dashboards/search/assets/js/search-config.js"></script>
+    
     <script>
-        console.log('=== Starting to load scripts ===');
-        console.log('Current path:', window.location.pathname);
-    </script>
-
-    <script src="/dashboard/dashboards/search/assets/js/config.js" 
-            onerror="console.error('❌ Failed to load config.js');" 
-            onload="console.log('✅ config.js loaded');"></script>
-
-    <script src="/dashboard/dashboards/search/assets/js/search-algorithms.js"
-            onerror="console.error('❌ Failed to load search-algorithms.js');"
-            onload="console.log('✅ search-algorithms.js loaded');"></script>
-
-    <script src="/dashboard/dashboards/search/assets/js/data-service.js"
-            onerror="console.error('❌ Failed to load data-service.js');"
-            onload="console.log('✅ data-service.js loaded');"></script>
-
-    <script src="/dashboard/dashboards/search/assets/js/ui-controller.js"
-            onerror="console.error('❌ Failed to load ui-controller.js');"
-            onload="console.log('✅ ui-controller.js loaded');"></script>
-
-    <script src="/dashboard/dashboards/search/assets/js/main.js"
-            onerror="console.error('❌ Failed to load main.js');"
-            onload="console.log('✅ main.js loaded');"></script>
-    <script src="/dashboard/dashboards/search/assets/js/auto-search.js"></script>
-    <script>
-        // Check if everything loaded after 2 seconds
-        setTimeout(function() {
-            console.log('=== Final check after 2 seconds ===');
-            console.log('window.dataService exists:', typeof window.dataService !== 'undefined');
-            console.log('window.uiController exists:', typeof window.uiController !== 'undefined');
+        let currentSearch = null;
+        let currentSearchType = 'deceased_search';
+        let currentTab = 'simple';
+        let currentView = 'cards'; // ברירת מחדל - תצוגת כרטיסים
+        
+        // אתחול
+        document.addEventListener('DOMContentLoaded', function() {
+            // בדיקה שהקונפיגורציה נטענה
+            if (typeof ConfigurableSearch === 'undefined' || typeof SearchConfig === 'undefined') {
+                console.error('Configuration file not loaded!');
+                alert('שגיאה בטעינת קובץ הקונפיגורציה. נא לרענן את הדף.');
+                return;
+            }
             
-            if (typeof window.dataService === 'undefined') {
-                console.error('dataService is missing - check if data-service.js loaded correctly');
+            // אתחול עם סוג החיפוש הראשוני
+            initializeSearch('deceased_search');
+        });
+        
+        /**
+         * החלפת טאב
+         */
+        function switchTab(tabName) {
+            currentTab = tabName;
+            
+            // עדכון כפתורי הטאבים
+            document.querySelectorAll('.search-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // עדכון תוכן הטאבים
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+        }
+        
+        /**
+         * אתחול החיפוש
+         */
+        function initializeSearch(searchType) {
+            currentSearchType = searchType;
+            
+            try {
+                currentSearch = new ConfigurableSearch(searchType);
+                updateAdvancedFields();
+            } catch (error) {
+                console.error('Error initializing search:', error);
+                alert('שגיאה באתחול החיפוש: ' + error.message);
             }
-            if (typeof window.uiController === 'undefined') {
-                console.error('uiController is missing - check if ui-controller.js loaded correctly');
+        }
+        
+        /**
+         * החלפת סוג חיפוש
+         */
+        function switchSearchType(searchType) {
+            currentSearchType = searchType;
+            
+            try {
+                currentSearch = new ConfigurableSearch(searchType);
+                
+                // עדכון טאבים
+                if (event && event.target) {
+                    document.querySelectorAll('.search-type-tab').forEach(tab => {
+                        tab.classList.remove('active');
+                    });
+                    event.target.closest('.search-type-tab').classList.add('active');
+                }
+                
+                // עדכון שדות מתקדמים
+                updateAdvancedFields();
+                
+                // ניקוי תוצאות
+                document.getElementById('results-section').style.display = 'none';
+            } catch (error) {
+                console.error('Error switching search type:', error);
+                alert('שגיאה בהחלפת סוג החיפוש: ' + error.message);
             }
-        }, 2000);
+        }
+        
+        /**
+         * עדכון שדות החיפוש המתקדם
+         */
+        function updateAdvancedFields() {
+            const container = document.getElementById('advanced-fields');
+            container.innerHTML = '';
+            
+            const fields = currentSearch.config.searchFields.advanced;
+            const displayLabels = currentSearch.getDisplayLabels();
+            
+            // קיבוץ שדות לפי קטגוריות (אם זה חיפוש נפטרים)
+            if (currentSearchType === 'deceased_search') {
+                // פרטי הנפטר
+                const personalSection = document.createElement('div');
+                personalSection.innerHTML = '<h4 style="margin-bottom: 10px;">👤 פרטי הנפטר:</h4>';
+                personalSection.className = 'field-section';
+                
+                const personalGrid = document.createElement('div');
+                personalGrid.className = 'field-grid';
+                
+                ['firstName', 'lastName', 'fatherName', 'motherName'].forEach(key => {
+                    if (fields[key]) {
+                        const fieldDiv = createFieldElement(key, fields[key], displayLabels);
+                        personalGrid.appendChild(fieldDiv);
+                    }
+                });
+                personalSection.appendChild(personalGrid);
+                container.appendChild(personalSection);
+                
+                // מיקום הקבר
+                const locationSection = document.createElement('div');
+                locationSection.innerHTML = '<h4 style="margin-top: 20px; margin-bottom: 10px;">📍 מיקום הקבר:</h4>';
+                locationSection.className = 'field-section';
+                
+                const locationGrid = document.createElement('div');
+                locationGrid.className = 'field-grid';
+                
+                ['cemeteryName', 'blockName', 'plotName', 'areaName', 'lineName', 'graveName'].forEach(key => {
+                    if (fields[key]) {
+                        const fieldDiv = createFieldElement(key, fields[key], displayLabels);
+                        locationGrid.appendChild(fieldDiv);
+                    }
+                });
+                locationSection.appendChild(locationGrid);
+                container.appendChild(locationSection);
+                
+                // תאריכים
+                const datesSection = document.createElement('div');
+                datesSection.innerHTML = '<h4 style="margin-top: 20px; margin-bottom: 10px;">📅 תאריכים:</h4>';
+                datesSection.className = 'field-section';
+                
+                const datesGrid = document.createElement('div');
+                datesGrid.className = 'field-grid';
+                
+                ['deathDate', 'burialDate'].forEach(key => {
+                    if (fields[key]) {
+                        const fieldDiv = createFieldElement(key, fields[key], displayLabels, 'date');
+                        datesGrid.appendChild(fieldDiv);
+                    }
+                });
+                datesSection.appendChild(datesGrid);
+                container.appendChild(datesSection);
+                
+            } else {
+                // לשאר סוגי החיפוש - הצגה רגילה
+                for (const [key, dbField] of Object.entries(fields)) {
+                    const fieldDiv = createFieldElement(key, dbField, displayLabels);
+                    container.appendChild(fieldDiv);
+                }
+            }
+        }
+        
+        /**
+         * יצירת אלמנט שדה
+         */
+        function createFieldElement(key, dbField, displayLabels, type = 'text') {
+            const fieldDiv = document.createElement('div');
+            fieldDiv.className = 'form-group';
+            
+            const label = displayLabels[dbField] || key;
+            const inputType = type === 'date' ? 'date' : 'text';
+            const placeholder = type === 'date' ? '' : `הקלד ${label}...`;
+            
+            fieldDiv.innerHTML = `
+                <label class="form-label">${label}</label>
+                <input type="${inputType}" 
+                       id="adv-${key}" 
+                       class="form-input" 
+                       placeholder="${placeholder}">
+            `;
+            
+            return fieldDiv;
+        }
+        
+        /**
+         * חיפוש פשוט
+         */
+        async function performConfigurableSearch() {
+            const query = document.getElementById('simple-query').value.trim();
+            
+            if (!query || query.length < SearchConfig.settings.minSearchLength) {
+                alert(`יש להזין לפחות ${SearchConfig.settings.minSearchLength} תווים לחיפוש`);
+                return;
+            }
+            
+            showLoading(true);
+            
+            try {
+                const results = await searchWithConfig(query, 'simple');
+                displayConfigurableResults(results);
+            } catch (error) {
+                console.error('Search error:', error);
+                alert('אירעה שגיאה בחיפוש');
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        /**
+         * חיפוש מתקדם
+         */
+        async function performAdvancedConfigurableSearch() {
+            const params = {};
+            const fields = currentSearch.config.searchFields.advanced;
+            
+            // איסוף ערכים מהשדות
+            for (const key of Object.keys(fields)) {
+                const input = document.getElementById(`adv-${key}`);
+                if (input && input.value.trim()) {
+                    params[key] = input.value.trim();
+                }
+            }
+            
+            if (Object.keys(params).length === 0) {
+                alert('יש למלא לפחות שדה אחד');
+                return;
+            }
+            
+            showLoading(true);
+            
+            try {
+                const results = await searchWithConfig(params, 'advanced');
+                displayConfigurableResults(results);
+            } catch (error) {
+                console.error('Advanced search error:', error);
+                alert('אירעה שגיאה בחיפוש');
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        /**
+         * טעינת נתוני JSON
+         */
+        async function loadJSONData() {
+            try {
+                const response = await fetch('/dashboard/dashboards/search/data/data.json');
+                if (!response.ok) {
+                    throw new Error('Failed to load JSON data');
+                }
+                const data = await response.json();
+                console.log('JSON data loaded:', data.length, 'records');
+                return data;
+            } catch (error) {
+                console.error('Error loading JSON:', error);
+                return [];
+            }
+        }
+        
+        /**
+         * חיפוש ב-JSON באמצעות המחלקה מהקונפיג
+         */
+        function searchInJSON(data, searchParams, searchMode) {
+            let results = [];
+            
+            if (searchMode === 'simple') {
+                // שימוש במתודה simpleSearch מהמחלקה
+                results = currentSearch.simpleSearch(searchParams.query, data);
+            } else {
+                // שימוש במתודה advancedSearch מהמחלקה
+                results = currentSearch.advancedSearch(searchParams, data);
+            }
+            
+            // עיצוב התוצאות באמצעות המתודה formatResults
+            const formattedResults = currentSearch.formatResults(results);
+            
+            console.log(`Found ${formattedResults.length} results for ${currentSearchType}`);
+            return formattedResults;
+        }
+        
+        /**
+         * ביצוע חיפוש עם קונפיגורציה
+         */
+        async function searchWithConfig(queryOrParams, searchMode) {
+            // בדיקה שיש חיפוש פעיל
+            if (!currentSearch) {
+                throw new Error('No search configuration loaded');
+            }
+            
+            const startTime = performance.now();
+            
+            try {
+                // טעינת נתוני JSON
+                const jsonData = await loadJSONData();
+                
+                const searchParams = searchMode === 'simple' 
+                    ? { query: queryOrParams }
+                    : queryOrParams;
+                
+                const results = searchInJSON(jsonData, searchParams, searchMode);
+                
+                const endTime = performance.now();
+                const searchTime = ((endTime - startTime) / 1000).toFixed(2);
+                
+                console.log(`Search completed: ${results.length} results in ${searchTime}s`);
+                
+                // עדכון זמן החיפוש בממשק
+                const searchTimeEl = document.getElementById('search-time');
+                if (searchTimeEl) {
+                    searchTimeEl.textContent = searchTime;
+                }
+                
+                return {
+                    success: true,
+                    results: results,
+                    searchTime: searchTime
+                };
+                
+            } catch (error) {
+                console.error('Search error:', error);
+                return {
+                    success: false,
+                    results: [],
+                    error: error.message
+                };
+            }
+        }
+        
+        /**
+         * החלפת תצוגת תוצאות
+         */
+        function switchView(viewType) {
+            currentView = viewType;
+            
+            // עדכון כפתורים
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.closest('.view-btn').classList.add('active');
+            
+            // רענון התוצאות בתצוגה החדשה
+            const lastResults = window.lastSearchResults;
+            if (lastResults) {
+                displayConfigurableResults(lastResults);
+            }
+        }
+        
+        /**
+         * יצירת ראשי תיבות משם
+         */
+        function getInitials(firstName, lastName) {
+            const first = firstName ? firstName.charAt(0) : '';
+            const last = lastName ? lastName.charAt(0) : '';
+            return (first + last) || '?';
+        }
+        
+        /**
+         * פורמט תאריך
+         */
+        function formatDate(dateStr) {
+            if (!dateStr) return '-----';
+            try {
+                const date = new Date(dateStr);
+                if (isNaN(date.getTime())) {
+                    return '-----';
+                }
+                return date.toLocaleDateString('he-IL');
+            } catch {
+                return '-----';
+            }
+        }
+        
+        /**
+         * הצגת תוצאות
+         */
+        function displayConfigurableResults(data) {
+            const resultsSection = document.getElementById('results-section');
+            const resultsContainer = document.getElementById('results-container');
+            const resultCount = document.getElementById('result-count');
+            
+            // שמירת התוצאות האחרונות
+            window.lastSearchResults = data;
+            
+            resultsSection.style.display = 'block';
+            resultCount.textContent = data.results ? data.results.length : 0;
+            
+            if (!data.results || data.results.length === 0) {
+                resultsContainer.innerHTML = '<p style="text-align: center; padding: 20px;">לא נמצאו תוצאות</p>';
+                return;
+            }
+            
+            // בחירת תצוגה לפי currentView
+            if (currentView === 'cards') {
+                displayCardsView(data.results, resultsContainer);
+            } else {
+                displayTableView(data.results, resultsContainer);
+            }
+        }
+        
+        /**
+         * תצוגת כרטיסים
+         */
+        function displayCardsView(results, container) {
+            const cardsContainer = document.createElement('div');
+            cardsContainer.className = 'results-cards';
+            
+            const displayLabels = currentSearch.getDisplayLabels();
+            
+            results.forEach(record => {
+                const card = document.createElement('div');
+                card.className = 'result-card';
+                
+                // ראשי תיבות או תמונה
+                const initials = getInitials(record.c_firstName, record.c_lastName);
+                
+                // בניית תוכן לפי סוג החיפוש
+                let cardHTML = `
+                    <div class="image-placeholder">
+                        <span class="initials">${initials}</span>
+                    </div>
+                    <div class="card-content">
+                `;
+                
+                if (currentSearchType === 'deceased_search') {
+                    // כרטיס נפטר
+                    cardHTML += `
+                        <div class="name">${record.c_firstName || ''} ${record.c_lastName || ''}</div>
+                        <div class="parents">
+                            ${record.c_nameFather ? `בן ${record.c_nameFather}` : ''}
+                            ${record.c_nameMother ? ` ו${record.c_nameMother}` : ''}
+                        </div>
+                        <div class="dates">
+                            ${record.c_dateBirth ? `נולד: ${formatDate(record.c_dateBirth)}` : ''}
+                            </br>
+                            ${record.b_dateDeath ? `נפטר: ${formatDate(record.b_dateDeath)}` : ''}
+                        </div>
+                        <div class="location">
+                            <span class="location-icon">📍</span>
+                            <span>
+                                ${record.cemeteryNameHe || ''}
+                                ${record.blockNameHe ? `, גוש ${record.blockNameHe}` : ''}
+                                ${record.plotNameHe ? `, חלקה ${record.plotNameHe}` : ''}
+                                ${record.lineNameHe ? `, שורה ${record.lineNameHe}` : ''}
+                                ${record.graveNameHe ? `, קבר ${record.graveNameHe}` : ''}
+                            </span>
+                        </div>
+                    `;
+                } else if (currentSearchType === 'purchased_graves') {
+                    // כרטיס רכישה
+                    cardHTML += `
+                        <div class="name">${record.c_firstName || ''} ${record.c_lastName || ''}</div>
+                        <div class="parents">רוכש הקבר</div>
+                        <div class="dates">
+                            ${record.p_price ? `מחיר: ₪${record.p_price}` : ''}
+                            ${record.p_purchaseStatus_display ? ` | ${record.p_purchaseStatus_display}` : ''}
+                        </div>
+                        <div class="location">
+                            <span class="location-icon">📍</span>
+                            <span>
+                                ${record.cemeteryNameHe || ''}
+                                ${record.graveNameHe ? `, קבר ${record.graveNameHe}` : ''}
+                            </span>
+                        </div>
+                    `;
+                } else if (currentSearchType === 'available_graves') {
+                    // כרטיס קבר פנוי
+                    cardHTML += `
+                        <div class="name">קבר פנוי #${record.graveNameHe || record.graveId}</div>
+                        <div class="parents">סטטוס: ${record.graveStatus_display || 'פנוי'}</div>
+                        <div class="location">
+                            <span class="location-icon">📍</span>
+                            <span>
+                                ${record.cemeteryNameHe || ''}
+                                ${record.blockNameHe ? `, גוש ${record.blockNameHe}` : ''}
+                                ${record.plotNameHe ? `, חלקה ${record.plotNameHe}` : ''}
+                                ${record.areaGraveNameHe ? `, אזור ${record.areaGraveNameHe}` : ''}
+                            </span>
+                        </div>
+                    `;
+                }
+                
+                cardHTML += `</div>`;
+                card.innerHTML = cardHTML;
+                cardsContainer.appendChild(card);
+            });
+            
+            container.innerHTML = '';
+            container.appendChild(cardsContainer);
+        }
+        
+        /**
+         * תצוגת טבלה
+         */
+        function displayTableView(results, container) {
+            const tableContainer = document.createElement('div');
+            tableContainer.className = 'results-table-container';
+            
+            const table = document.createElement('table');
+            table.className = 'result-table';
+            
+            // כותרות
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            const displayLabels = currentSearch.getDisplayLabels();
+            
+            for (const field of currentSearch.config.returnFields) {
+                const th = document.createElement('th');
+                th.textContent = displayLabels[field] || field;
+                headerRow.appendChild(th);
+            }
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+            
+            // נתונים
+            const tbody = document.createElement('tbody');
+            for (const record of results) {
+                const row = document.createElement('tr');
+                
+                for (const field of currentSearch.config.returnFields) {
+                    const td = document.createElement('td');
+                    
+                    // בדיקה אם יש תצוגה מתורגמת
+                    if (record[field + '_display']) {
+                        td.textContent = record[field + '_display'];
+                    } else if (field.includes('Date') && record[field]) {
+                        td.textContent = formatDate(record[field]);
+                    } else {
+                        td.textContent = record[field] || '-';
+                    }
+                    
+                    row.appendChild(td);
+                }
+                
+                tbody.appendChild(row);
+            }
+            table.appendChild(tbody);
+            
+            tableContainer.appendChild(table);
+            container.innerHTML = '';
+            container.appendChild(tableContainer);
+        }
+        
+        /**
+         * ניקוי טופס
+         */
+        function clearAdvancedForm() {
+            document.querySelectorAll('#advanced-fields input').forEach(input => {
+                input.value = '';
+            });
+        }
+        
+        /**
+         * הצגת/הסתרת טעינה
+         */
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'flex' : 'none';
+        }
     </script>
 </body>
 </html>

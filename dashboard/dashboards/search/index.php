@@ -427,7 +427,7 @@
 
     <!-- Scripts -->
     <!-- טוען את קובץ הקונפיגורציה החיצוני -->
-    <script src="dashboards/search/assets/js/search-config.js"></script>
+    <script src="assets/js/search-config.js"></script>
     
     <script>
         let currentSearch = null;

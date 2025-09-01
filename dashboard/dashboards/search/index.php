@@ -6,64 +6,151 @@
     <title>חיפוש מותאם - קברים שנרכשו</title>
     <link rel="stylesheet" href="dashboards/search/assets/css/search.css">
     <style>
+        /* כרטיסיות סוג חיפוש - עיצוב מותאם למובייל */
         .search-type-selector {
             background: white;
-            padding: 20px;
+            padding: 15px;
             border-radius: 12px;
             margin-bottom: 20px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
-        .search-type-buttons {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
+        .search-type-selector h3 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #333;
         }
         
-        .search-type-btn {
-            padding: 10px 20px;
+        .search-type-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+        }
+        
+        .search-type-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px 10px;
             border: 2px solid #e0e0e0;
             background: white;
-            border-radius: 8px;
+            border-radius: 12px;
             cursor: pointer;
             transition: all 0.3s;
+            text-align: center;
+            min-height: 80px;
+            justify-content: center;
         }
         
-        .search-type-btn.active {
-            background: #4a90e2;
+        .search-type-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .search-type-card.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            border-color: #4a90e2;
+            border-color: transparent;
         }
         
-        /* טאבים לחיפוש */
+        .search-type-card .icon {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .search-type-card .label {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        /* טאבים - עיצוב מותאם למובייל */
         .search-tabs {
             display: flex;
-            gap: 10px;
+            gap: 5px;
             margin-bottom: 20px;
-            border-bottom: 2px solid #e0e0e0;
+            background: #f5f5f5;
+            padding: 4px;
+            border-radius: 10px;
         }
         
         .search-tab {
-            padding: 12px 24px;
+            flex: 1;
+            padding: 10px 15px;
             background: transparent;
             border: none;
-            border-bottom: 3px solid transparent;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 500;
             transition: all 0.3s;
             color: #666;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
         }
         
         .search-tab:hover {
-            color: #4a90e2;
+            background: rgba(255,255,255,0.5);
         }
         
         .search-tab.active {
+            background: white;
             color: #4a90e2;
-            border-bottom-color: #4a90e2;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
+        /* שדה חיפוש מהיר - תיקון כפתור */
+        .search-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 12px 50px 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #4a90e2;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        }
+        
+        .search-button {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: #4a90e2;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .search-button:hover {
+            background: #357abd;
+        }
+        
+        .search-button:active {
+            transform: translateY(-50%) scale(0.95);
+        }
+        
+        /* תוכן הטאבים */
         .tab-content {
             display: none;
             animation: fadeIn 0.3s;
@@ -78,6 +165,7 @@
             to { opacity: 1; transform: translateY(0); }
         }
         
+        /* שדות בחיפוש מתקדם */
         .field-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -85,6 +173,37 @@
             margin-top: 20px;
         }
         
+        /* כפתורי פעולה */
+        .submit-button, .clear-button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-right: 10px;
+        }
+        
+        .submit-button {
+            background: #4a90e2;
+            color: white;
+        }
+        
+        .submit-button:hover {
+            background: #357abd;
+        }
+        
+        .clear-button {
+            background: #f5f5f5;
+            color: #666;
+        }
+        
+        .clear-button:hover {
+            background: #e0e0e0;
+        }
+        
+        /* טבלת תוצאות - מותאמת למובייל */
         .result-table {
             width: 100%;
             border-collapse: collapse;
@@ -101,40 +220,108 @@
         .result-table th {
             background: #f5f5f5;
             font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
         
         .result-table tr:hover {
             background: #f9f9f9;
         }
+        
+        /* התאמות למובייל */
+        @media (max-width: 768px) {
+            .search-type-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .search-tab {
+                font-size: 13px;
+                padding: 10px 8px;
+            }
+            
+            .search-tab .icon {
+                display: none;
+            }
+            
+            .field-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .result-table {
+                font-size: 14px;
+            }
+            
+            .result-table th,
+            .result-table td {
+                padding: 8px;
+            }
+            
+            /* גלילה אופקית לטבלה במובייל */
+            .results-container {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .search-type-selector h3 {
+                font-size: 16px;
+            }
+            
+            .search-type-card {
+                min-height: 70px;
+                padding: 12px 8px;
+            }
+            
+            .search-type-card .icon {
+                font-size: 20px;
+            }
+            
+            .search-type-card .label {
+                font-size: 12px;
+            }
+            
+            .submit-button, .clear-button {
+                width: 100%;
+                margin: 5px 0;
+            }
+        }
     </style>
 </head>
 <body>
-    <!-- בורר סוג חיפוש -->
+    <!-- בורר סוג חיפוש - כרטיסיות -->
     <div class="search-type-selector">
         <h3>בחר סוג חיפוש:</h3>
-        <div class="search-type-buttons">
-            <button class="search-type-btn active" onclick="switchSearchType('standard')">
-                חיפוש סטנדרטי
-            </button>
-            <button class="search-type-btn" onclick="switchSearchType('deceased_search')">
-                🪦 חיפוש נפטרים
-            </button>
-            <button class="search-type-btn" onclick="switchSearchType('purchased_graves')">
-                💰 קברים שנרכשו
-            </button>
-            <button class="search-type-btn" onclick="switchSearchType('available_graves')">
-                ✅ קברים פנויים
-            </button>
+        <div class="search-type-cards">
+            <div class="search-type-card active" onclick="switchSearchType('standard')">
+                <div class="icon">📋</div>
+                <div class="label">חיפוש סטנדרטי</div>
+            </div>
+            <div class="search-type-card" onclick="switchSearchType('deceased_search')">
+                <div class="icon">🪦</div>
+                <div class="label">חיפוש נפטרים</div>
+            </div>
+            <div class="search-type-card" onclick="switchSearchType('purchased_graves')">
+                <div class="icon">💰</div>
+                <div class="label">קברים שנרכשו</div>
+            </div>
+            <div class="search-type-card" onclick="switchSearchType('available_graves')">
+                <div class="icon">✅</div>
+                <div class="label">קברים פנויים</div>
+            </div>
         </div>
     </div>
 
     <!-- טאבים לבחירת סוג חיפוש -->
     <div class="search-tabs">
         <button class="search-tab active" onclick="switchTab('simple')">
-            🔍 חיפוש מהיר
+            <span class="icon">🔍</span>
+            <span>חיפוש מהיר</span>
         </button>
         <button class="search-tab" onclick="switchTab('advanced')">
-            ⚙️ חיפוש מתקדם
+            <span class="icon">⚙️</span>
+            <span>חיפוש מתקדם</span>
         </button>
     </div>
 

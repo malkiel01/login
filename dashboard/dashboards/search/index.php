@@ -71,11 +71,103 @@
         .result-table tr:hover {
             background: #f9f9f9;
         }
+        
+        /* סגנון ל-toggle של מקור הנתונים */
+        .data-source-toggle {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background: #ccc;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .toggle-switch input {
+            display: none;
+        }
+        
+        .toggle-switch input:checked + .toggle-slider {
+            transform: translateX(30px);
+        }
+        
+        .toggle-switch input:checked ~ .toggle-bg {
+            background: #4a90e2;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+        
+        .toggle-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #ccc;
+            border-radius: 15px;
+            transition: background 0.3s;
+        }
+        
+        .source-label {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .source-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+        
+        .source-active {
+            background: #4caf50;
+            color: white;
+        }
+        
+        .source-inactive {
+            background: #f44336;
+            color: white;
+        }
     </style>
 </head>
 <body>
+    <!-- בורר מקור נתונים -->
+    <div class="data-source-toggle">
+        <span class="source-label">מקור נתונים:</span>
+        <label class="toggle-switch">
+            <input type="checkbox" id="dataSourceToggle" onchange="toggleDataSource()">
+            <span class="toggle-bg"></span>
+            <span class="toggle-slider"></span>
+        </label>
+        <span id="currentSource">JSON File</span>
+        <span class="source-status source-active">פעיל</span>
+    </div>
+
     <!-- בורר סוג חיפוש -->
-    <div class="search-type-selector">
+    <div class="search-type-selector" style="margin-top: 70px;">
         <h3>בחר סוג חיפוש:</h3>
         <div class="search-type-buttons">
             <button class="search-type-btn active" onclick="switchSearchType('standard')">
@@ -445,6 +537,133 @@
             }
         }
         
+        // הגדרת מקורות המידע
+        const DATA_SOURCES = {
+            API: {
+                name: 'API Server',
+                endpoint: '/dashboard/dashboards/search/api/deceased-search.php',
+                active: false, // כרגע לא פעיל
+                method: 'POST'
+            },
+            JSON: {
+                name: 'JSON File',
+                endpoint: '/dashboard/dashboards/search/data/data.json',
+                active: true, // פעיל
+                method: 'GET'
+            }
+        };
+        
+        // מקור נתונים נוכחי (ברירת מחדל JSON)
+        let currentDataSource = 'JSON';
+        
+        /**
+         * החלפת מקור נתונים
+         */
+        function toggleDataSource() {
+            const toggle = document.getElementById('dataSourceToggle');
+            if (toggle) {
+                currentDataSource = toggle.checked ? 'API' : 'JSON';
+                console.log('Data source switched to:', currentDataSource);
+                
+                // עדכון תצוגה
+                const sourceDisplay = document.getElementById('currentSource');
+                if (sourceDisplay) {
+                    sourceDisplay.textContent = DATA_SOURCES[currentDataSource].name;
+                }
+                
+                // בדיקה אם המקור פעיל
+                if (!DATA_SOURCES[currentDataSource].active) {
+                    alert(`מקור הנתונים ${DATA_SOURCES[currentDataSource].name} אינו פעיל כרגע`);
+                    // חזרה למקור הקודם
+                    currentDataSource = currentDataSource === 'API' ? 'JSON' : 'API';
+                    toggle.checked = currentDataSource === 'API';
+                }
+            }
+        }
+        
+        /**
+         * טעינת נתוני JSON
+         */
+        async function loadJSONData() {
+            try {
+                const response = await fetch(DATA_SOURCES.JSON.endpoint);
+                if (!response.ok) {
+                    throw new Error('Failed to load JSON data');
+                }
+                const data = await response.json();
+                console.log('JSON data loaded:', data.length, 'records');
+                return data;
+            } catch (error) {
+                console.error('Error loading JSON:', error);
+                return [];
+            }
+        }
+        
+        /**
+         * חיפוש ב-JSON
+         */
+        function searchInJSON(data, searchParams, searchMode) {
+            let results = [];
+            
+            if (searchMode === 'simple') {
+                const query = searchParams.query.toLowerCase();
+                const searchTerms = query.split(' ').filter(t => t);
+                const searchFields = currentSearch.config.searchFields.simple;
+                
+                results = data.filter(record => {
+                    // בדיקת תנאי סינון
+                    if (!currentSearch.matchesFilters(record)) {
+                        return false;
+                    }
+                    
+                    // בניית טקסט לחיפוש
+                    const searchableText = searchFields
+                        .map(field => (record[field] || '').toString())
+                        .join(' ')
+                        .toLowerCase();
+                    
+                    // בדיקה שכל המילים נמצאות
+                    return searchTerms.every(term => searchableText.includes(term));
+                });
+            } else {
+                // חיפוש מתקדם
+                const fieldMapping = currentSearch.config.searchFields.advanced;
+                
+                results = data.filter(record => {
+                    // בדיקת תנאי סינון
+                    if (!currentSearch.matchesFilters(record)) {
+                        return false;
+                    }
+                    
+                    // בדיקת כל פרמטר חיפוש
+                    for (const [uiField, dbField] of Object.entries(fieldMapping)) {
+                        if (searchParams[uiField]) {
+                            const searchValue = searchParams[uiField].toLowerCase();
+                            const recordValue = (record[dbField] || '').toString().toLowerCase();
+                            
+                            if (!recordValue.includes(searchValue)) {
+                                return false;
+                            }
+                        }
+                    }
+                    
+                    return true;
+                });
+            }
+            
+            // עיצוב התוצאות - החזרת רק השדות הרצויים
+            const returnFields = currentSearch.config.returnFields;
+            const formattedResults = results.map(record => {
+                const formattedRecord = {};
+                returnFields.forEach(field => {
+                    formattedRecord[field] = record[field] || null;
+                });
+                return formattedRecord;
+            });
+            
+            return formattedResults;
+        }
+        
         /**
          * ביצוע חיפוש עם קונפיגורציה
          */
@@ -454,44 +673,67 @@
                 throw new Error('No search configuration loaded');
             }
             
-            // הכנת הפרמטרים ל-API
-            const apiParams = currentSearch.prepareApiParams(
-                searchMode === 'simple' 
-                    ? { query: queryOrParams }
-                    : queryOrParams
-            );
+            const startTime = performance.now();
             
-            // סימולציה של תוצאות - החלף בקריאה אמיתית ל-API
-            console.log('API Params:', apiParams);
-            
-            // לצורך בדיקה - החזרת נתונים מדומים
-            return {
-                success: true,
-                results: [
-                    {
-                        c_firstName: 'יוסף',
-                        c_lastName: 'כהן',
-                        graveNameHe: '123',
-                        cemeteryNameHe: 'הר המנוחות',
-                        p_price: '15000',
-                        p_purchaseStatus: 3,
-                        p_purchaseStatus_display: 'הושלם'
-                    }
-                ]
-            };
-            
-            /* קוד אמיתי לקריאה ל-API:
-            const response = await fetch('/dashboard/dashboards/search/api/configurable-search.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(apiParams)
-            });
-            
-            const data = await response.json();
-            return data;
-            */
+            try {
+                let results = [];
+                
+                if (currentDataSource === 'JSON') {
+                    // חיפוש ב-JSON
+                    const jsonData = await loadJSONData();
+                    
+                    const searchParams = searchMode === 'simple' 
+                        ? { query: queryOrParams }
+                        : queryOrParams;
+                    
+                    results = searchInJSON(jsonData, searchParams, searchMode);
+                    
+                } else if (currentDataSource === 'API') {
+                    // חיפוש דרך API (כרגע לא פעיל)
+                    const apiParams = currentSearch.prepareApiParams(
+                        searchMode === 'simple' 
+                            ? { query: queryOrParams }
+                            : queryOrParams
+                    );
+                    
+                    const response = await fetch(DATA_SOURCES.API.endpoint, {
+                        method: DATA_SOURCES.API.method,
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(apiParams)
+                    });
+                    
+                    const data = await response.json();
+                    results = data.results || [];
+                }
+                
+                const endTime = performance.now();
+                const searchTime = ((endTime - startTime) / 1000).toFixed(2);
+                
+                console.log(`Search completed: ${results.length} results in ${searchTime}s`);
+                
+                // עדכון זמן החיפוש בממשק
+                const searchTimeEl = document.getElementById('search-time');
+                if (searchTimeEl) {
+                    searchTimeEl.textContent = searchTime;
+                }
+                
+                return {
+                    success: true,
+                    results: results,
+                    searchTime: searchTime,
+                    source: currentDataSource
+                };
+                
+            } catch (error) {
+                console.error('Search error:', error);
+                return {
+                    success: false,
+                    results: [],
+                    error: error.message
+                };
+            }
         }
         
         /**

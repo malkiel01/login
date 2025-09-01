@@ -6,8 +6,8 @@
     <title>מערכת חיפוש מתקדמת</title>
     
     <!-- CSS Files -->
-    <link rel="stylesheet" href="assets/css/search.css">
-    <link rel="stylesheet" href="assets/css/custom-search.css">
+    <link rel="stylesheet" href="dashboards/search/assets/css/search.css">
+    <link rel="stylesheet" href="dashboards/search/assets/css/custom-search.css">
 </head>
 <body>
     <!-- בורר מקור נתונים -->
@@ -110,9 +110,9 @@
     <div id="toast-container" class="toast-container"></div>
 
     <!-- JavaScript Files -->
-    <script src="assets/js/search-config.js"></script>
-    <script src="assets/js/search-results-table.js"></script>
-    <script src="assets/js/custom-search-app.js"></script>
+    <script src="dashboards/search/assets/js/search-config.js"></script>
+    <script src="dashboards/search/assets/js/search-results-table.js"></script>
+    <script src="dashboards/search/assets/js/custom-search-app.js"></script>
     
     <!-- Initialize -->
     <script>
@@ -125,9 +125,9 @@
                         <p>אחד או יותר מקבצי המערכת לא נטענו כראוי</p>
                         <p>וודא שהקבצים הבאים קיימים:</p>
                         <ul style="list-style: none;">
-                            <li>assets/js/search-config.js</li>
-                            <li>assets/js/search-results-table.js</li>
-                            <li>assets/js/custom-search-app.js</li>
+                            <li>dashboards/search/assets/js/search-config.js</li>
+                            <li>dashboards/search/assets/js/search-results-table.js</li>
+                            <li>dashboards/search/assets/js/custom-search-app.js</li>
                         </ul>
                     </div>
                 `;

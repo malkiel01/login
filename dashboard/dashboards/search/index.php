@@ -6,7 +6,7 @@
     <title>מערכת חיפוש מתקדמת</title>
     
     <!-- CSS Files -->
-    <link rel="stylesheet" href="dashboards/search/assets/css/search.css">
+    <!-- <link rel="stylesheet" href="dashboards/search/assets/css/search.css"> -->
     <link rel="stylesheet" href="dashboards/search/assets/css/custom-search.css">
 </head>
 <body>

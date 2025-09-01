@@ -65,8 +65,9 @@
         
         /* טאבים - עיצוב מותאם למובייל */
         .search-tabs {
-            display: flex;
-            gap: 5px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
             margin-bottom: 20px;
             background: #f5f5f5;
             padding: 4px;
@@ -74,21 +75,28 @@
         }
         
         .search-tab {
-            flex: 1;
-            padding: 10px 15px;
+            padding: 12px 10px;
             background: transparent;
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 500;
             transition: all 0.3s;
             color: #666;
-            white-space: nowrap;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 5px;
+            gap: 6px;
+            min-height: 44px;
+        }
+        
+        .search-tab .tab-icon {
+            font-size: 18px;
+        }
+        
+        .search-tab .tab-text {
+            white-space: nowrap;
         }
         
         .search-tab:hover {
@@ -237,11 +245,15 @@
             
             .search-tab {
                 font-size: 13px;
-                padding: 10px 8px;
+                padding: 10px 5px;
             }
             
-            .search-tab .icon {
-                display: none;
+            .search-tab .tab-icon {
+                font-size: 16px;
+            }
+            
+            .search-tab .tab-text {
+                font-size: 13px;
             }
             
             .field-grid {
@@ -316,12 +328,12 @@
     <!-- טאבים לבחירת סוג חיפוש -->
     <div class="search-tabs">
         <button class="search-tab active" onclick="switchTab('simple')">
-            <span class="icon">🔍</span>
-            <span>חיפוש מהיר</span>
+            <span class="tab-icon">⚡</span>
+            <span class="tab-text">חיפוש מהיר</span>
         </button>
         <button class="search-tab" onclick="switchTab('advanced')">
-            <span class="icon">⚙️</span>
-            <span>חיפוש מתקדם</span>
+            <span class="tab-icon">🎯</span>
+            <span class="tab-text">חיפוש מתקדם</span>
         </button>
     </div>
 

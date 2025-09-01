@@ -242,49 +242,63 @@
                 locationSection.appendChild(locationGrid);
                 container.appendChild(locationSection);
                 
-                // תאריכים
-                // const datesSection = document.createElement('div');
-                // datesSection.innerHTML = '<h4 style="margin-top: 20px; margin-bottom: 10px;">📅 תאריכים:</h4>';
-                // datesSection.className = 'field-section';
-                
-                // const datesGrid = document.createElement('div');
-                // datesGrid.className = 'field-grid';
-                
-                // ['deathDate', 'burialDate'].forEach(key => {
-                //     if (fields[key]) {
-                //         const fieldDiv = createFieldElement(key, fields[key], displayLabels, 'date');
-                //         datesGrid.appendChild(fieldDiv);
-                //     }
-                // });
-                // datesSection.appendChild(datesGrid);
-                // container.appendChild(datesSection);
+                // תאריכים - בדיקה אם יש הגדרות מיוחדות
+                if (currentSearch.config.searchFields.special && 
+                    currentSearch.config.searchFields.special.dateSearch) {
+                    
+                    const dateConfig = currentSearch.config.searchFields.special.dateSearch;
+                    const datesSection = document.createElement('div');
+                    datesSection.innerHTML = `<h4 style="margin-top: 20px; margin-bottom: 10px;">📅 ${dateConfig.label}:</h4>`;
+                    datesSection.className = 'field-section';
 
-                // תאריכים
-                const datesSection = document.createElement('div');
-                datesSection.innerHTML = '<h4 style="margin-top: 20px; margin-bottom: 10px;">📅 תאריך פטירה:</h4>';
-                datesSection.className = 'field-section';
-
-                // בורר חודש ושנה
-                const dateHTML = `
-                    <div style="margin-bottom: 15px;">
-                        <label class="form-label">בחר חודש ושנה:</label>
-                        <input type="month" id="adv-deathMonth" class="form-input" style="margin-bottom: 10px;">
-                        
-                        <div style="display: flex; align-items: center; gap: 15px; margin-top: 10px;">
-                            <label style="display: flex; align-items: center; gap: 5px;">
-                                <input type="radio" name="dateAccuracy" value="exact" checked>
-                                <span>תאריך מדויק</span>
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 5px;">
-                                <input type="radio" name="dateAccuracy" value="approximate">
-                                <span>תאריך משוער (±2.5 שנים)</span>
-                            </label>
+                    const dateHTML = `
+                        <div style="margin-bottom: 15px;">
+                            <label class="form-label">בחר חודש ושנה:</label>
+                            <input type="month" id="adv-deathMonth" class="form-input" style="margin-bottom: 10px;">
+                            
+                            <div style="display: flex; align-items: center; gap: 15px; margin-top: 10px;">
+                                <label style="display: flex; align-items: center; gap: 5px;">
+                                    <input type="radio" name="dateAccuracy" value="exact" checked>
+                                    <span>תאריך מדויק</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 5px;">
+                                    <input type="radio" name="dateAccuracy" value="approximate">
+                                    <span>תאריך משוער (±2.5 שנים)</span>
+                                </label>
+                            </div>
                         </div>
-                    </div>
-                `;
+                    `;
 
-                datesSection.innerHTML += dateHTML;
-                container.appendChild(datesSection);
+                    datesSection.innerHTML += dateHTML;
+                    container.appendChild(datesSection);
+                }
+
+                // // תאריכים
+                // const datesSection = document.createElement('div');
+                // datesSection.innerHTML = '<h4 style="margin-top: 20px; margin-bottom: 10px;">📅 תאריך פטירה:</h4>';
+                // datesSection.className = 'field-section';
+
+                // // בורר חודש ושנה
+                // const dateHTML = `
+                //     <div style="margin-bottom: 15px;">
+                //         <label class="form-label">בחר חודש ושנה:</label>
+                //         <input type="month" id="adv-deathMonth" class="form-input" style="margin-bottom: 10px;">
+                        
+                //         <div style="display: flex; align-items: center; gap: 15px; margin-top: 10px;">
+                //             <label style="display: flex; align-items: center; gap: 5px;">
+                //                 <input type="radio" name="dateAccuracy" value="exact" checked>
+                //                 <span>תאריך מדויק</span>
+                //             </label>
+                //             <label style="display: flex; align-items: center; gap: 5px;">
+                //                 <input type="radio" name="dateAccuracy" value="approximate">
+                //                 <span>תאריך משוער (±2.5 שנים)</span>
+                //             </label>
+                //         </div>
+                //     </div>
+                // `;
+
+                // datesSection.innerHTML += dateHTML;
+                // container.appendChild(datesSection);
                 
             } else {
                 // לשאר סוגי החיפוש - הצגה רגילה

@@ -136,6 +136,14 @@ const SearchConfig = {
                     // תאריכים
                     deathDate: 'b_dateDeath',
                     // burialDate: 'b_dateBurial'
+                },
+                // הגדרה חדשה לשדות מיוחדים
+                special: {
+                    dateSearch: {
+                        type: 'date-or',
+                        fields: ['b_dateDeath', 'b_dateBurial'],
+                        label: 'תאריך פטירה/קבורה'
+                    }
                 }
             },
             returnFields: [
@@ -325,6 +333,58 @@ class ConfigurableSearch {
     /**
      * חיפוש מתקדם
      */
+    // advancedSearch2(params, database) {
+    //     const fieldMapping = this.config.searchFields.advanced;
+        
+    //     return database.filter(record => {
+    //         // בדיקת תנאי סינון
+    //         if (!this.matchesFilters(record)) {
+    //             return false;
+    //         }
+            
+    //         // בדיקת כל פרמטר חיפוש
+    //         for (const [paramKey, dbField] of Object.entries(fieldMapping)) {
+    //             if (params[paramKey]) {
+    //                 const searchValue = params[paramKey].toLowerCase();
+    //                 const recordValue = (record[dbField] || '').toLowerCase();
+                    
+    //                 if (!recordValue.includes(searchValue)) {
+    //                     return false;
+    //                 }
+
+    //             }
+    //         }
+
+    //         // טיפול מיוחד בטווח תאריכים
+    //         if (params.deathDateRange) {
+    //             const deathDate = record.b_dateDeath;
+    //             if (!deathDate) return false;
+                
+    //             const from = new Date(params.deathDateRange.from + '-01');
+    //             const to = new Date(params.deathDateRange.to + '-01');
+    //             const recordDate = new Date(deathDate);
+                
+    //             if (recordDate < from || recordDate > to) {
+    //                 return false;
+    //             }
+    //         }
+
+    //         if (params.deathDateExact) {
+    //             const deathDate = record.b_dateDeath;
+    //             if (!deathDate) return false;
+                
+    //             const [searchYear, searchMonth] = params.deathDateExact.split('-');
+    //             const recordDate = new Date(deathDate);
+                
+    //             if (recordDate.getFullYear() != searchYear || 
+    //                 (recordDate.getMonth() + 1) != parseInt(searchMonth)) {
+    //                 return false;
+    //             }
+    //         }
+            
+    //         return true;
+    //     });
+    // }
     advancedSearch(params, database) {
         const fieldMapping = this.config.searchFields.advanced;
         
@@ -334,7 +394,7 @@ class ConfigurableSearch {
                 return false;
             }
             
-            // בדיקת כל פרמטר חיפוש
+            // בדיקת שדות רגילים
             for (const [paramKey, dbField] of Object.entries(fieldMapping)) {
                 if (params[paramKey]) {
                     const searchValue = params[paramKey].toLowerCase();
@@ -343,33 +403,12 @@ class ConfigurableSearch {
                     if (!recordValue.includes(searchValue)) {
                         return false;
                     }
-
                 }
             }
             
-            // טיפול מיוחד בטווח תאריכים
-            if (params.deathDateRange) {
-                const deathDate = record.b_dateDeath;
-                if (!deathDate) return false;
-                
-                const from = new Date(params.deathDateRange.from + '-01');
-                const to = new Date(params.deathDateRange.to + '-01');
-                const recordDate = new Date(deathDate);
-                
-                if (recordDate < from || recordDate > to) {
-                    return false;
-                }
-            }
-
-            if (params.deathDateExact) {
-                const deathDate = record.b_dateDeath;
-                if (!deathDate) return false;
-                
-                const [searchYear, searchMonth] = params.deathDateExact.split('-');
-                const recordDate = new Date(deathDate);
-                
-                if (recordDate.getFullYear() != searchYear || 
-                    (recordDate.getMonth() + 1) != parseInt(searchMonth)) {
+            // בדיקת תאריכים מיוחדים
+            if (params.deathDateRange || params.deathDateExact) {
+                if (!this.checkSpecialDateFields(record, params)) {
                     return false;
                 }
             }
@@ -432,6 +471,50 @@ class ConfigurableSearch {
         });
         
         return apiParams;
+    }
+
+    /**
+     * בדיקת תאריכים מיוחדת
+     */
+    checkSpecialDateFields(record, params) {
+        // בדיקה אם יש הגדרת תאריכים מיוחדת
+        if (!this.config.searchFields.special || 
+            !this.config.searchFields.special.dateSearch) {
+            return true;
+        }
+        
+        const dateFields = this.config.searchFields.special.dateSearch.fields;
+        
+        // אם יש חיפוש טווח
+        if (params.deathDateRange) {
+            const from = new Date(params.deathDateRange.from + '-01');
+            const to = new Date(params.deathDateRange.to + '-01');
+            
+            // בדיקה אם לפחות אחד מהתאריכים מתאים
+            return dateFields.some(field => {
+                const dateValue = record[field];
+                if (!dateValue) return false;
+                
+                const recordDate = new Date(dateValue);
+                return recordDate >= from && recordDate <= to;
+            });
+        }
+        
+        // אם יש חיפוש מדויק
+        if (params.deathDateExact) {
+            const [searchYear, searchMonth] = params.deathDateExact.split('-');
+            
+            return dateFields.some(field => {
+                const dateValue = record[field];
+                if (!dateValue) return false;
+                
+                const recordDate = new Date(dateValue);
+                return recordDate.getFullYear() == searchYear && 
+                    (recordDate.getMonth() + 1) == parseInt(searchMonth);
+            });
+        }
+        
+        return true;
     }
 }
 

@@ -110,9 +110,9 @@
     <div id="toast-container" class="toast-container"></div>
 
     <!-- JavaScript Files -->
-    <script src="dashboards/search/assets/js/search-config.js"></script>
-    <script src="dashboards/search/assets/js/search-results-table.js"></script>
-    <script src="dashboards/search/assets/js/custom-search-app.js"></script>
+    <script src="/dashboards/search/assets/js/search-config.js"></script>
+    <script src="/dashboards/search/assets/js/search-results-table.js"></script>
+    <script src="/dashboards/search/assets/js/custom-search-app.js"></script>
     
     <!-- Initialize -->
     <script>

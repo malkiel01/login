@@ -465,13 +465,25 @@
         /**
          * פורמט תאריך
          */
-        function formatDate(dateStr) {
+        function formatDate2(dateStr) {
             if (!dateStr) return '';
             try {
                 const date = new Date(dateStr);
                 return date.toLocaleDateString('he-IL');
             } catch {
                 return dateStr;
+            }
+        }
+        function formatDate(dateStr) {
+            if (!dateStr) return '-----';
+            try {
+                const date = new Date(dateStr);
+                if (isNaN(date.getTime())) {
+                    return '-----';
+                }
+                return date.toLocaleDateString('he-IL');
+            } catch {
+                return '-----';
             }
         }
         

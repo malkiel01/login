@@ -173,11 +173,14 @@
             <button class="search-type-btn active" onclick="switchSearchType('standard')">
                 חיפוש סטנדרטי
             </button>
+            <button class="search-type-btn" onclick="switchSearchType('deceased_search')">
+                🪦 חיפוש נפטרים
+            </button>
             <button class="search-type-btn" onclick="switchSearchType('purchased_graves')">
-                קברים שנרכשו
+                💰 קברים שנרכשו
             </button>
             <button class="search-type-btn" onclick="switchSearchType('available_graves')">
-                קברים פנויים
+                ✅ קברים פנויים
             </button>
         </div>
         
@@ -292,12 +295,147 @@
                             'cemeteryNameHe': 'בית עלמין',
                             'p_price': 'מחיר'
                         }
+                    },
+                    
+                    // חיפוש נפטרים חדש
+                    deceased_search: {
+                        name: 'חיפוש נפטרים',
+                        filters: {
+                            required: {
+                                'b_clientId': { operator: '!=', value: null },
+                                'graveStatus': { operator: '=', value: '3' }
+                            }
+                        },
+                        searchFields: {
+                            simple: [
+                                'c_firstName', 
+                                'c_lastName', 
+                                'c_fullNameHe',
+                                'c_nameFather',
+                                'c_nameMother',
+                                'graveNameHe',
+                                'areaGraveNameHe',
+                                'plotNameHe',
+                                'blockNameHe',
+                                'cemeteryNameHe'
+                            ],
+                            advanced: {
+                                // פרטי הנפטר
+                                firstName: 'c_firstName',
+                                lastName: 'c_lastName',
+                                fatherName: 'c_nameFather',
+                                motherName: 'c_nameMother',
+                                // מיקום הקבר
+                                graveName: 'graveNameHe',
+                                areaName: 'areaGraveNameHe',
+                                lineName: 'lineNameHe',
+                                plotName: 'plotNameHe',
+                                blockName: 'blockNameHe',
+                                cemeteryName: 'cemeteryNameHe',
+                                // תאריכים
+                                deathDate: 'b_dateDeath',
+                                burialDate: 'b_dateBurial'
+                            }
+                        },
+                        returnFields: [
+                            'c_firstName',
+                            'c_lastName',
+                            'c_nameFather',
+                            'c_nameMother',
+                            'graveNameHe',
+                            'areaGraveNameHe',
+                            'lineNameHe',
+                            'plotNameHe',
+                            'blockNameHe',
+                            'cemeteryNameHe',
+                            'b_dateDeath',
+                            'b_timeDeath',
+                            'b_dateBurial',
+                            'b_timeBurial',
+                            'c_dateBirth',
+                            'c_comment'
+                        ],
+                        displayFields: {
+                            'c_firstName': 'שם פרטי',
+                            'c_lastName': 'שם משפחה',
+                            'c_nameFather': 'שם האב',
+                            'c_nameMother': 'שם האם',
+                            'graveNameHe': 'מספר קבר',
+                            'areaGraveNameHe': 'אזור',
+                            'lineNameHe': 'שורה',
+                            'plotNameHe': 'חלקה',
+                            'blockNameHe': 'גוש',
+                            'cemeteryNameHe': 'בית עלמין',
+                            'b_dateDeath': 'תאריך פטירה',
+                            'b_timeDeath': 'שעת פטירה',
+                            'b_dateBurial': 'תאריך קבורה',
+                            'b_timeBurial': 'שעת קבורה',
+                            'c_dateBirth': 'תאריך לידה',
+                            'c_comment': 'הערות'
+                        }
+                    },
+                    
+                    available_graves: {
+                        name: 'קברים פנויים',
+                        filters: {
+                            required: {
+                                'graveStatus': { operator: '=', value: '1' },
+                                'p_clientId': { operator: '=', value: null }
+                            }
+                        },
+                        searchFields: {
+                            simple: ['cemeteryNameHe', 'blockNameHe', 'plotNameHe'],
+                            advanced: {
+                                cemetery: 'cemeteryNameHe',
+                                block: 'blockNameHe',
+                                plot: 'plotNameHe',
+                                area: 'areaGraveNameHe'
+                            }
+                        },
+                        returnFields: [
+                            'graveId',
+                            'graveNameHe',
+                            'areaGraveNameHe',
+                            'plotNameHe',
+                            'blockNameHe',
+                            'cemeteryNameHe',
+                            'graveStatus'
+                        ]
                     }
                 },
                 settings: {
                     defaultLimit: 50,
                     maxLimit: 100,
-                    minSearchLength: 2
+                    minSearchLength: 2,
+                    // שדות שלא לכלול בחיפוש כללי
+                    excludeFromGeneralSearch: [
+                        'graveId',
+                        'audit_log_id',
+                        'createDate',
+                        'updateDate',
+                        'inactiveDate',
+                        'saveDate',
+                        'clientId',
+                        'p_unicId',
+                        'b_burialId',
+                        'c_customerId',
+                        'c_unicId',
+                        'graveUnicId',
+                        'areaGraveId',
+                        'plotType',
+                        'graveStatus',
+                        'graveLocation',
+                        'isSmallGrave',
+                        'isActive',
+                        'documentsList',
+                        'p_paymentsList',
+                        'p_additionalpaymentsList',
+                        'p_historyList',
+                        'p_savedGravesList',
+                        'b_savedGravesList',
+                        'b_historyList',
+                        'b_documentsList'
+                    ]
                 }
             };
 
@@ -461,22 +599,88 @@
             const fields = currentSearch.config.searchFields.advanced;
             const displayLabels = currentSearch.getDisplayLabels();
             
-            for (const [key, dbField] of Object.entries(fields)) {
-                const fieldDiv = document.createElement('div');
-                fieldDiv.className = 'form-group';
+            // קיבוץ שדות לפי קטגוריות (אם זה חיפוש נפטרים)
+            if (currentSearchType === 'deceased_search') {
+                // פרטי הנפטר
+                const personalSection = document.createElement('div');
+                personalSection.innerHTML = '<h4 style="margin-bottom: 10px;">👤 פרטי הנפטר:</h4>';
+                personalSection.className = 'field-section';
                 
-                const label = displayLabels[dbField] || key;
+                const personalGrid = document.createElement('div');
+                personalGrid.className = 'field-grid';
                 
-                fieldDiv.innerHTML = `
-                    <label class="form-label">${label}</label>
-                    <input type="text" 
-                           id="adv-${key}" 
-                           class="form-input" 
-                           placeholder="הקלד ${label}...">
-                `;
+                ['firstName', 'lastName', 'fatherName', 'motherName'].forEach(key => {
+                    if (fields[key]) {
+                        const fieldDiv = createFieldElement(key, fields[key], displayLabels);
+                        personalGrid.appendChild(fieldDiv);
+                    }
+                });
+                personalSection.appendChild(personalGrid);
+                container.appendChild(personalSection);
                 
-                container.appendChild(fieldDiv);
+                // מיקום הקבר
+                const locationSection = document.createElement('div');
+                locationSection.innerHTML = '<h4 style="margin-top: 20px; margin-bottom: 10px;">📍 מיקום הקבר:</h4>';
+                locationSection.className = 'field-section';
+                
+                const locationGrid = document.createElement('div');
+                locationGrid.className = 'field-grid';
+                
+                ['cemeteryName', 'blockName', 'plotName', 'areaName', 'lineName', 'graveName'].forEach(key => {
+                    if (fields[key]) {
+                        const fieldDiv = createFieldElement(key, fields[key], displayLabels);
+                        locationGrid.appendChild(fieldDiv);
+                    }
+                });
+                locationSection.appendChild(locationGrid);
+                container.appendChild(locationSection);
+                
+                // תאריכים
+                const datesSection = document.createElement('div');
+                datesSection.innerHTML = '<h4 style="margin-top: 20px; margin-bottom: 10px;">📅 תאריכים:</h4>';
+                datesSection.className = 'field-section';
+                
+                const datesGrid = document.createElement('div');
+                datesGrid.className = 'field-grid';
+                
+                ['deathDate', 'burialDate'].forEach(key => {
+                    if (fields[key]) {
+                        const fieldDiv = createFieldElement(key, fields[key], displayLabels, 'date');
+                        datesGrid.appendChild(fieldDiv);
+                    }
+                });
+                datesSection.appendChild(datesGrid);
+                container.appendChild(datesSection);
+                
+            } else {
+                // לשאר סוגי החיפוש - הצגה רגילה
+                for (const [key, dbField] of Object.entries(fields)) {
+                    const fieldDiv = createFieldElement(key, dbField, displayLabels);
+                    container.appendChild(fieldDiv);
+                }
             }
+        }
+        
+        /**
+         * יצירת אלמנט שדה
+         */
+        function createFieldElement(key, dbField, displayLabels, type = 'text') {
+            const fieldDiv = document.createElement('div');
+            fieldDiv.className = 'form-group';
+            
+            const label = displayLabels[dbField] || key;
+            const inputType = type === 'date' ? 'date' : 'text';
+            const placeholder = type === 'date' ? '' : `הקלד ${label}...`;
+            
+            fieldDiv.innerHTML = `
+                <label class="form-label">${label}</label>
+                <input type="${inputType}" 
+                       id="adv-${key}" 
+                       class="form-input" 
+                       placeholder="${placeholder}">
+            `;
+            
+            return fieldDiv;
         }
         
         /**
@@ -608,7 +812,24 @@
             if (searchMode === 'simple') {
                 const query = searchParams.query.toLowerCase();
                 const searchTerms = query.split(' ').filter(t => t);
-                const searchFields = currentSearch.config.searchFields.simple;
+                
+                // קבלת שדות לחיפוש
+                let searchFields = currentSearch.config.searchFields.simple;
+                
+                // אם אין הגדרה ספציפית, חפש בכל השדות (פחות אלו שמוחרגים)
+                if (!searchFields || searchFields.length === 0) {
+                    searchFields = [];
+                    const excludeFields = SearchConfig.settings.excludeFromGeneralSearch || [];
+                    
+                    // לקחת רשומה לדוגמה כדי לדעת אילו שדות יש
+                    if (data.length > 0) {
+                        Object.keys(data[0]).forEach(field => {
+                            if (!excludeFields.includes(field)) {
+                                searchFields.push(field);
+                            }
+                        });
+                    }
+                }
                 
                 results = data.filter(record => {
                     // בדיקת תנאי סינון
@@ -618,7 +839,13 @@
                     
                     // בניית טקסט לחיפוש
                     const searchableText = searchFields
-                        .map(field => (record[field] || '').toString())
+                        .map(field => {
+                            const value = record[field];
+                            // המרת ערכים null או undefined למחרוזת ריקה
+                            if (value === null || value === undefined) return '';
+                            // המרת מספרים ובוליאנים למחרוזת
+                            return value.toString();
+                        })
                         .join(' ')
                         .toLowerCase();
                     
@@ -641,8 +868,24 @@
                             const searchValue = searchParams[uiField].toLowerCase();
                             const recordValue = (record[dbField] || '').toString().toLowerCase();
                             
-                            if (!recordValue.includes(searchValue)) {
-                                return false;
+                            // לתאריכים - השוואה מדויקת או חלקית
+                            if (uiField.includes('Date') && recordValue) {
+                                // אם החיפוש הוא רק שנה, חפש את השנה בתאריך
+                                if (searchValue.length === 4) {
+                                    if (!recordValue.includes(searchValue)) {
+                                        return false;
+                                    }
+                                } else {
+                                    // אחרת בדוק התאמה רגילה
+                                    if (!recordValue.includes(searchValue)) {
+                                        return false;
+                                    }
+                                }
+                            } else {
+                                // לשאר השדות - חיפוש טקסט רגיל
+                                if (!recordValue.includes(searchValue)) {
+                                    return false;
+                                }
                             }
                         }
                     }
@@ -661,6 +904,7 @@
                 return formattedRecord;
             });
             
+            console.log(`Found ${formattedResults.length} results for ${currentSearchType}`);
             return formattedResults;
         }
         

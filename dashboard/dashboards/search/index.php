@@ -6,61 +6,78 @@
     <title>חיפוש מותאם - קברים שנרכשו</title>
     <link rel="stylesheet" href="dashboards/search/assets/css/search.css">
     <style>
-        /* כרטיסיות סוג חיפוש - עיצוב מותאם למובייל */
+        /* כרטיסיות סוג חיפוש - עיצוב כטאבים */
         .search-type-selector {
             background: white;
-            padding: 15px;
+            padding: 0;
             border-radius: 12px;
             margin-bottom: 20px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
         }
         
-        .search-type-selector h3 {
-            font-size: 18px;
-            margin-bottom: 15px;
-            color: #333;
-        }
-        
-        .search-type-cards {
+        .search-type-tabs {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 10px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0;
+            background: #f8f9fa;
         }
         
-        .search-type-card {
+        .search-type-tab {
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 15px 10px;
-            border: 2px solid #e0e0e0;
-            background: white;
-            border-radius: 12px;
+            padding: 18px 10px;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
             cursor: pointer;
             transition: all 0.3s;
             text-align: center;
-            min-height: 80px;
-            justify-content: center;
+            position: relative;
         }
         
-        .search-type-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        .search-type-tab:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 25%;
+            height: 50%;
+            width: 1px;
+            background: #dee2e6;
         }
         
-        .search-type-card.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-color: transparent;
+        .search-type-tab:hover {
+            background: rgba(74, 144, 226, 0.05);
         }
         
-        .search-type-card .icon {
-            font-size: 24px;
-            margin-bottom: 5px;
+        .search-type-tab.active {
+            background: white;
+            border-bottom-color: #4a90e2;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
         }
         
-        .search-type-card .label {
+        .search-type-tab .icon {
+            font-size: 26px;
+            margin-bottom: 6px;
+            transition: transform 0.3s;
+        }
+        
+        .search-type-tab.active .icon {
+            transform: scale(1.1);
+            color: #4a90e2;
+        }
+        
+        .search-type-tab .label {
             font-size: 14px;
             font-weight: 500;
+            color: #6c757d;
+            transition: color 0.3s;
+        }
+        
+        .search-type-tab.active .label {
+            color: #4a90e2;
+            font-weight: 600;
         }
         
         /* טאבים - עיצוב מותאם למובייל */
@@ -239,8 +256,20 @@
         
         /* התאמות למובייל */
         @media (max-width: 768px) {
-            .search-type-cards {
-                grid-template-columns: repeat(2, 1fr);
+            .search-type-tab {
+                padding: 15px 5px;
+            }
+            
+            .search-type-tab .icon {
+                font-size: 22px;
+            }
+            
+            .search-type-tab .label {
+                font-size: 12px;
+            }
+            
+            .search-type-tab:not(:last-child)::after {
+                display: none;
             }
             
             .search-tab {
@@ -302,26 +331,21 @@
     </style>
 </head>
 <body>
-    <!-- בורר סוג חיפוש - כרטיסיות -->
+    <!-- בורר סוג חיפוש - טאבים -->
     <div class="search-type-selector">
-        <h3>בחר סוג חיפוש:</h3>
-        <div class="search-type-cards">
-            <div class="search-type-card active" onclick="switchSearchType('standard')">
-                <div class="icon">📋</div>
-                <div class="label">חיפוש סטנדרטי</div>
-            </div>
-            <div class="search-type-card" onclick="switchSearchType('deceased_search')">
+        <div class="search-type-tabs">
+            <button class="search-type-tab active" onclick="switchSearchType('deceased_search')">
                 <div class="icon">🪦</div>
                 <div class="label">חיפוש נפטרים</div>
-            </div>
-            <div class="search-type-card" onclick="switchSearchType('purchased_graves')">
+            </button>
+            <button class="search-type-tab" onclick="switchSearchType('purchased_graves')">
                 <div class="icon">💰</div>
                 <div class="label">קברים שנרכשו</div>
-            </div>
-            <div class="search-type-card" onclick="switchSearchType('available_graves')">
+            </button>
+            <button class="search-type-tab" onclick="switchSearchType('available_graves')">
                 <div class="icon">✅</div>
                 <div class="label">קברים פנויים</div>
-            </div>
+            </button>
         </div>
     </div>
 
@@ -407,7 +431,7 @@
     
     <script>
         let currentSearch = null;
-        let currentSearchType = 'standard';
+        let currentSearchType = 'deceased_search';
         let currentTab = 'simple';
         
         // אתחול
@@ -420,7 +444,7 @@
             }
             
             // אתחול עם סוג החיפוש הראשוני
-            initializeSearch('purchased_graves');
+            initializeSearch('deceased_search');
         });
         
         /**

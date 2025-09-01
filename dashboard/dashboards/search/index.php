@@ -272,33 +272,6 @@
                     datesSection.innerHTML += dateHTML;
                     container.appendChild(datesSection);
                 }
-
-                // // תאריכים
-                // const datesSection = document.createElement('div');
-                // datesSection.innerHTML = '<h4 style="margin-top: 20px; margin-bottom: 10px;">📅 תאריך פטירה:</h4>';
-                // datesSection.className = 'field-section';
-
-                // // בורר חודש ושנה
-                // const dateHTML = `
-                //     <div style="margin-bottom: 15px;">
-                //         <label class="form-label">בחר חודש ושנה:</label>
-                //         <input type="month" id="adv-deathMonth" class="form-input" style="margin-bottom: 10px;">
-                        
-                //         <div style="display: flex; align-items: center; gap: 15px; margin-top: 10px;">
-                //             <label style="display: flex; align-items: center; gap: 5px;">
-                //                 <input type="radio" name="dateAccuracy" value="exact" checked>
-                //                 <span>תאריך מדויק</span>
-                //             </label>
-                //             <label style="display: flex; align-items: center; gap: 5px;">
-                //                 <input type="radio" name="dateAccuracy" value="approximate">
-                //                 <span>תאריך משוער (±2.5 שנים)</span>
-                //             </label>
-                //         </div>
-                //     </div>
-                // `;
-
-                // datesSection.innerHTML += dateHTML;
-                // container.appendChild(datesSection);
                 
             } else {
                 // לשאר סוגי החיפוש - הצגה רגילה
@@ -603,6 +576,7 @@
                             ${record.c_dateBirth ? `נולד: ${formatDate(record.c_dateBirth)}` : ''}
                             </br>
                             ${record.b_dateDeath ? `נפטר: ${formatDate(record.b_dateDeath)}` : ''}
+                            ${record.b_dateBurial ? `נקבר: ${formatDate(record.b_dateBurial)}` : ''}
                         </div>
                         <div class="location">
                             <span class="location-icon">📍</span>

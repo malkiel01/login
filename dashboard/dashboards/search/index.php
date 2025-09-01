@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>חיפוש מותאם - קברים שנרכשו</title>
-    <link rel="stylesheet" href="assets/css/search.css">
+    <link rel="stylesheet" href="dashboards/search/assets/css/search.css">
     <style>
         .search-type-selector {
             background: white;
@@ -246,278 +246,23 @@
     </div>
 
     <!-- Scripts -->
-    <script>
-        // טעינת הקונפיגורציה ישירות בדף (למקרה שהקובץ החיצוני לא נטען)
-        function loadConfigInline() {
-            window.SearchConfig = {
-                searches: {
-                    standard: {
-                        name: 'חיפוש סטנדרטי',
-                        filters: {},
-                        searchFields: {
-                            simple: ['c_firstName', 'c_lastName', 'c_fullNameHe'],
-                            advanced: {
-                                firstName: 'c_firstName',
-                                lastName: 'c_lastName',
-                                fatherName: 'c_nameFather',
-                                motherName: 'c_nameMother',
-                                cemetery: 'cemeteryNameHe'
-                            }
-                        },
-                        returnFields: [
-                            'c_firstName', 'c_lastName', 'graveNameHe', 'cemeteryNameHe'
-                        ]
-                    },
-                    purchased_graves: {
-                        name: 'קברים שנרכשו',
-                        filters: {
-                            required: {
-                                'p_clientId': { operator: '!=', value: null },
-                                'graveStatus': { operator: '=', value: '2' }
-                            }
-                        },
-                        searchFields: {
-                            simple: ['c_firstName', 'c_lastName', 'graveNameHe', 'cemeteryNameHe'],
-                            advanced: {
-                                firstName: 'c_firstName',
-                                lastName: 'c_lastName',
-                                graveName: 'graveNameHe',
-                                cemeteryName: 'cemeteryNameHe'
-                            }
-                        },
-                        returnFields: [
-                            'c_firstName', 'c_lastName', 'graveNameHe', 'cemeteryNameHe', 'p_price'
-                        ],
-                        displayFields: {
-                            'c_firstName': 'שם פרטי',
-                            'c_lastName': 'שם משפחה',
-                            'graveNameHe': 'מספר קבר',
-                            'cemeteryNameHe': 'בית עלמין',
-                            'p_price': 'מחיר'
-                        }
-                    },
-                    
-                    // חיפוש נפטרים חדש
-                    deceased_search: {
-                        name: 'חיפוש נפטרים',
-                        filters: {
-                            required: {
-                                'b_clientId': { operator: '!=', value: null },
-                                'graveStatus': { operator: '=', value: '3' }
-                            }
-                        },
-                        searchFields: {
-                            simple: [
-                                'c_firstName', 
-                                'c_lastName', 
-                                'c_fullNameHe',
-                                'c_nameFather',
-                                'c_nameMother',
-                                'graveNameHe',
-                                'areaGraveNameHe',
-                                'plotNameHe',
-                                'blockNameHe',
-                                'cemeteryNameHe'
-                            ],
-                            advanced: {
-                                // פרטי הנפטר
-                                firstName: 'c_firstName',
-                                lastName: 'c_lastName',
-                                fatherName: 'c_nameFather',
-                                motherName: 'c_nameMother',
-                                // מיקום הקבר
-                                graveName: 'graveNameHe',
-                                areaName: 'areaGraveNameHe',
-                                lineName: 'lineNameHe',
-                                plotName: 'plotNameHe',
-                                blockName: 'blockNameHe',
-                                cemeteryName: 'cemeteryNameHe',
-                                // תאריכים
-                                deathDate: 'b_dateDeath',
-                                burialDate: 'b_dateBurial'
-                            }
-                        },
-                        returnFields: [
-                            'c_firstName',
-                            'c_lastName',
-                            'c_nameFather',
-                            'c_nameMother',
-                            'graveNameHe',
-                            'areaGraveNameHe',
-                            'lineNameHe',
-                            'plotNameHe',
-                            'blockNameHe',
-                            'cemeteryNameHe',
-                            'b_dateDeath',
-                            'b_timeDeath',
-                            'b_dateBurial',
-                            'b_timeBurial',
-                            'c_dateBirth',
-                            'c_comment'
-                        ],
-                        displayFields: {
-                            'c_firstName': 'שם פרטי',
-                            'c_lastName': 'שם משפחה',
-                            'c_nameFather': 'שם האב',
-                            'c_nameMother': 'שם האם',
-                            'graveNameHe': 'מספר קבר',
-                            'areaGraveNameHe': 'אזור',
-                            'lineNameHe': 'שורה',
-                            'plotNameHe': 'חלקה',
-                            'blockNameHe': 'גוש',
-                            'cemeteryNameHe': 'בית עלמין',
-                            'b_dateDeath': 'תאריך פטירה',
-                            'b_timeDeath': 'שעת פטירה',
-                            'b_dateBurial': 'תאריך קבורה',
-                            'b_timeBurial': 'שעת קבורה',
-                            'c_dateBirth': 'תאריך לידה',
-                            'c_comment': 'הערות'
-                        }
-                    },
-                    
-                    available_graves: {
-                        name: 'קברים פנויים',
-                        filters: {
-                            required: {
-                                'graveStatus': { operator: '=', value: '1' },
-                                'p_clientId': { operator: '=', value: null }
-                            }
-                        },
-                        searchFields: {
-                            simple: ['cemeteryNameHe', 'blockNameHe', 'plotNameHe'],
-                            advanced: {
-                                cemetery: 'cemeteryNameHe',
-                                block: 'blockNameHe',
-                                plot: 'plotNameHe',
-                                area: 'areaGraveNameHe'
-                            }
-                        },
-                        returnFields: [
-                            'graveId',
-                            'graveNameHe',
-                            'areaGraveNameHe',
-                            'plotNameHe',
-                            'blockNameHe',
-                            'cemeteryNameHe',
-                            'graveStatus'
-                        ]
-                    }
-                },
-                settings: {
-                    defaultLimit: 50,
-                    maxLimit: 100,
-                    minSearchLength: 2,
-                    // שדות שלא לכלול בחיפוש כללי
-                    excludeFromGeneralSearch: [
-                        'graveId',
-                        'audit_log_id',
-                        'createDate',
-                        'updateDate',
-                        'inactiveDate',
-                        'saveDate',
-                        'clientId',
-                        'p_unicId',
-                        'b_burialId',
-                        'c_customerId',
-                        'c_unicId',
-                        'graveUnicId',
-                        'areaGraveId',
-                        'plotType',
-                        'graveStatus',
-                        'graveLocation',
-                        'isSmallGrave',
-                        'isActive',
-                        'documentsList',
-                        'p_paymentsList',
-                        'p_additionalpaymentsList',
-                        'p_historyList',
-                        'p_savedGravesList',
-                        'b_savedGravesList',
-                        'b_historyList',
-                        'b_documentsList'
-                    ]
-                }
-            };
-
-            // הגדרת המחלקה
-            window.ConfigurableSearch = class {
-                constructor(searchType = 'standard') {
-                    this.searchType = searchType;
-                    this.config = SearchConfig.searches[searchType];
-                    if (!this.config) {
-                        throw new Error(`Search type "${searchType}" not found`);
-                    }
-                }
-                
-                matchesFilters(record) {
-                    if (!this.config.filters || !this.config.filters.required) {
-                        return true;
-                    }
-                    
-                    for (const [field, condition] of Object.entries(this.config.filters.required)) {
-                        const recordValue = record[field];
-                        const { operator, value } = condition;
-                        
-                        switch (operator) {
-                            case '=':
-                                if (recordValue != value) return false;
-                                break;
-                            case '!=':
-                                if (recordValue == value) return false;
-                                break;
-                        }
-                    }
-                    return true;
-                }
-                
-                getDisplayLabels() {
-                    return this.config.displayFields || {};
-                }
-                
-                prepareApiParams(params) {
-                    const apiParams = {
-                        searchType: this.searchType,
-                        filters: this.config.filters,
-                        limit: params.limit || SearchConfig.settings.defaultLimit,
-                        offset: params.offset || 0
-                    };
-                    
-                    const fieldMapping = this.config.searchFields.advanced;
-                    
-                    Object.entries(params).forEach(([key, value]) => {
-                        if (fieldMapping && fieldMapping[key]) {
-                            apiParams[fieldMapping[key]] = value;
-                        } else if (key !== 'limit' && key !== 'offset') {
-                            apiParams[key] = value;
-                        }
-                    });
-                    
-                    return apiParams;
-                }
-            };
-        }
-        
-        // טען את הקונפיגורציה מיד
-        loadConfigInline();
-    </script>
-    
-    <!-- ניסיון לטעון את הקובץ החיצוני (אופציונלי) -->
-    <script src="assets/js/search-config.js" onerror="console.log('External config not found, using inline')"></script>
+    <!-- טוען את קובץ הקונפיגורציה החיצוני -->
+    <script src="assets/js/search-config.js"></script>
     
     <script>
         let currentSearch = null;
         let currentSearchType = 'standard';
         
-        // אתחול - מחכים שהקובץ יטען
+        // אתחול
         document.addEventListener('DOMContentLoaded', function() {
             // בדיקה שהקונפיגורציה נטענה
-            if (typeof ConfigurableSearch === 'undefined') {
-                console.error('ConfigurableSearch not loaded. Creating inline...');
-                // טעינת הקונפיגורציה ישירות אם הקובץ לא נטען
-                loadConfigInline();
+            if (typeof ConfigurableSearch === 'undefined' || typeof SearchConfig === 'undefined') {
+                console.error('Configuration file not loaded!');
+                alert('שגיאה בטעינת קובץ הקונפיגורציה. נא לרענן את הדף.');
+                return;
             }
             
-            // אתחול ללא event (כי אין כפתור שנלחץ)
+            // אתחול עם סוג החיפוש הראשוני
             initializeSearch('purchased_graves');
         });
         
@@ -527,13 +272,13 @@
         function initializeSearch(searchType) {
             currentSearchType = searchType;
             
-            // בדיקה שהמחלקה קיימת
-            if (typeof ConfigurableSearch !== 'undefined') {
+            try {
                 currentSearch = new ConfigurableSearch(searchType);
                 updateFilterDisplay();
                 updateAdvancedFields();
-            } else {
-                console.error('ConfigurableSearch class not available');
+            } catch (error) {
+                console.error('Error initializing search:', error);
+                alert('שגיאה באתחול החיפוש: ' + error.message);
             }
         }
         
@@ -541,31 +286,31 @@
          * החלפת סוג חיפוש
          */
         function switchSearchType(searchType) {
-            // בדיקה שהמחלקה קיימת
-            if (typeof ConfigurableSearch === 'undefined') {
-                alert('מערכת החיפוש לא נטענה כראוי. נא לרענן את הדף.');
-                return;
-            }
-            
             currentSearchType = searchType;
-            currentSearch = new ConfigurableSearch(searchType);
             
-            // עדכון כפתורים - רק אם יש event
-            if (event && event.target) {
-                document.querySelectorAll('.search-type-btn').forEach(btn => {
-                    btn.classList.remove('active');
-                });
-                event.target.classList.add('active');
+            try {
+                currentSearch = new ConfigurableSearch(searchType);
+                
+                // עדכון כפתורים
+                if (event && event.target) {
+                    document.querySelectorAll('.search-type-btn').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    event.target.classList.add('active');
+                }
+                
+                // עדכון תנאי סינון
+                updateFilterDisplay();
+                
+                // עדכון שדות מתקדמים
+                updateAdvancedFields();
+                
+                // ניקוי תוצאות
+                document.getElementById('results-section').style.display = 'none';
+            } catch (error) {
+                console.error('Error switching search type:', error);
+                alert('שגיאה בהחלפת סוג החיפוש: ' + error.message);
             }
-            
-            // עדכון תנאי סינון
-            updateFilterDisplay();
-            
-            // עדכון שדות מתקדמים
-            updateAdvancedFields();
-            
-            // ניקוי תוצאות
-            document.getElementById('results-section').style.display = 'none';
         }
         
         /**
@@ -689,15 +434,14 @@
         async function performConfigurableSearch() {
             const query = document.getElementById('simple-query').value.trim();
             
-            if (!query || query.length < 2) {
-                alert('יש להזין לפחות 2 תווים לחיפוש');
+            if (!query || query.length < SearchConfig.settings.minSearchLength) {
+                alert(`יש להזין לפחות ${SearchConfig.settings.minSearchLength} תווים לחיפוש`);
                 return;
             }
             
             showLoading(true);
             
             try {
-                // כאן תקרא לפונקציה הקיימת שלך עם הפרמטרים החדשים
                 const results = await searchWithConfig(query, 'simple');
                 displayConfigurableResults(results);
             } catch (error) {
@@ -746,18 +490,18 @@
             API: {
                 name: 'API Server',
                 endpoint: '/dashboard/dashboards/search/api/deceased-search.php',
-                active: false, // כרגע לא פעיל
+                active: false,
                 method: 'POST'
             },
             JSON: {
                 name: 'JSON File',
                 endpoint: '/dashboard/dashboards/search/data/data.json',
-                active: true, // פעיל
+                active: true,
                 method: 'GET'
             }
         };
         
-        // מקור נתונים נוכחי (ברירת מחדל JSON)
+        // מקור נתונים נוכחי
         let currentDataSource = 'JSON';
         
         /**
@@ -804,105 +548,21 @@
         }
         
         /**
-         * חיפוש ב-JSON
+         * חיפוש ב-JSON באמצעות המחלקה מהקונפיג
          */
         function searchInJSON(data, searchParams, searchMode) {
             let results = [];
             
             if (searchMode === 'simple') {
-                const query = searchParams.query.toLowerCase();
-                const searchTerms = query.split(' ').filter(t => t);
-                
-                // קבלת שדות לחיפוש
-                let searchFields = currentSearch.config.searchFields.simple;
-                
-                // אם אין הגדרה ספציפית, חפש בכל השדות (פחות אלו שמוחרגים)
-                if (!searchFields || searchFields.length === 0) {
-                    searchFields = [];
-                    const excludeFields = SearchConfig.settings.excludeFromGeneralSearch || [];
-                    
-                    // לקחת רשומה לדוגמה כדי לדעת אילו שדות יש
-                    if (data.length > 0) {
-                        Object.keys(data[0]).forEach(field => {
-                            if (!excludeFields.includes(field)) {
-                                searchFields.push(field);
-                            }
-                        });
-                    }
-                }
-                
-                results = data.filter(record => {
-                    // בדיקת תנאי סינון
-                    if (!currentSearch.matchesFilters(record)) {
-                        return false;
-                    }
-                    
-                    // בניית טקסט לחיפוש
-                    const searchableText = searchFields
-                        .map(field => {
-                            const value = record[field];
-                            // המרת ערכים null או undefined למחרוזת ריקה
-                            if (value === null || value === undefined) return '';
-                            // המרת מספרים ובוליאנים למחרוזת
-                            return value.toString();
-                        })
-                        .join(' ')
-                        .toLowerCase();
-                    
-                    // בדיקה שכל המילים נמצאות
-                    return searchTerms.every(term => searchableText.includes(term));
-                });
+                // שימוש במתודה simpleSearch מהמחלקה
+                results = currentSearch.simpleSearch(searchParams.query, data);
             } else {
-                // חיפוש מתקדם
-                const fieldMapping = currentSearch.config.searchFields.advanced;
-                
-                results = data.filter(record => {
-                    // בדיקת תנאי סינון
-                    if (!currentSearch.matchesFilters(record)) {
-                        return false;
-                    }
-                    
-                    // בדיקת כל פרמטר חיפוש
-                    for (const [uiField, dbField] of Object.entries(fieldMapping)) {
-                        if (searchParams[uiField]) {
-                            const searchValue = searchParams[uiField].toLowerCase();
-                            const recordValue = (record[dbField] || '').toString().toLowerCase();
-                            
-                            // לתאריכים - השוואה מדויקת או חלקית
-                            if (uiField.includes('Date') && recordValue) {
-                                // אם החיפוש הוא רק שנה, חפש את השנה בתאריך
-                                if (searchValue.length === 4) {
-                                    if (!recordValue.includes(searchValue)) {
-                                        return false;
-                                    }
-                                } else {
-                                    // אחרת בדוק התאמה רגילה
-                                    if (!recordValue.includes(searchValue)) {
-                                        return false;
-                                    }
-                                }
-                            } else {
-                                // לשאר השדות - חיפוש טקסט רגיל
-                                if (!recordValue.includes(searchValue)) {
-                                    return false;
-                                }
-                            }
-                        }
-                    }
-                    
-                    return true;
-                });
+                // שימוש במתודה advancedSearch מהמחלקה
+                results = currentSearch.advancedSearch(searchParams, data);
             }
             
-            // עיצוב התוצאות - החזרת רק השדות הרצויים
-            const returnFields = currentSearch.config.returnFields;
-            const formattedResults = results.map(record => {
-                const formattedRecord = {};
-                returnFields.forEach(field => {
-                    formattedRecord[field] = record[field] || null;
-                });
-                return formattedRecord;
-            });
+            // עיצוב התוצאות באמצעות המתודה formatResults
+            const formattedResults = currentSearch.formatResults(results);
             
             console.log(`Found ${formattedResults.length} results for ${currentSearchType}`);
             return formattedResults;
@@ -933,7 +593,7 @@
                     results = searchInJSON(jsonData, searchParams, searchMode);
                     
                 } else if (currentDataSource === 'API') {
-                    // חיפוש דרך API (כרגע לא פעיל)
+                    // חיפוש דרך API
                     const apiParams = currentSearch.prepareApiParams(
                         searchMode === 'simple' 
                             ? { query: queryOrParams }

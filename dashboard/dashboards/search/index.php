@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>מערכת חיפוש</title>
+    <title>מערכת חיפוש מתקדמת</title>
     
     <!-- CSS Files -->
-    <link rel="stylesheet" href="dashboards/search/assets/css/search.css">
+    <!-- <link rel="stylesheet" href="dashboards/search/assets/css/search.css"> -->
     <link rel="stylesheet" href="dashboards/search/assets/css/custom-search.css">
 </head>
 <body>
@@ -16,27 +16,29 @@
             <h1>מערכת חיפוש מתקדמת</h1>
         </header>
 
-        <!-- לשוניות סוג חיפוש -->
-        <div class="search-type-tabs">
-            <button class="type-tab active" onclick="searchApp.switchSearchType('deceased_search')">
-                נפטרים
-            </button>
-            <button class="type-tab" onclick="searchApp.switchSearchType('purchased_graves')">
-                רכישות
-            </button>
-            <button class="type-tab" onclick="searchApp.switchSearchType('available_graves')">
-                פנויים
-            </button>
+        <!-- לשוניות סוג חיפוש - גרופ כפתורים -->
+        <div class="search-type-wrapper">
+            <div class="search-type-group">
+                <button class="type-btn active" data-type="deceased_search" onclick="searchApp.switchSearchType('deceased_search')">
+                    נפטרים
+                </button>
+                <button class="type-btn" data-type="purchased_graves" onclick="searchApp.switchSearchType('purchased_graves')">
+                    רכישות
+                </button>
+                <button class="type-btn" data-type="available_graves" onclick="searchApp.switchSearchType('available_graves')">
+                    פנויים
+                </button>
+            </div>
         </div>
 
         <!-- אזור החיפוש -->
         <div class="search-area">
             <!-- טאבים של סוג החיפוש -->
             <div class="search-mode-tabs">
-                <button class="mode-tab active" onclick="searchApp.switchMode('simple')">
+                <button class="mode-tab active" data-mode="simple" onclick="searchApp.switchMode('simple')">
                     חיפוש מהיר
                 </button>
-                <button class="mode-tab" onclick="searchApp.switchMode('advanced')">
+                <button class="mode-tab" data-mode="advanced" onclick="searchApp.switchMode('advanced')">
                     חיפוש מתקדם
                 </button>
             </div>
@@ -60,7 +62,7 @@
                 <!-- חיפוש מתקדם -->
                 <div id="advanced-search" class="search-panel">
                     <div id="advanced-fields" class="advanced-fields">
-                        <!-- השדות יתווספו דינמית -->
+                        <!-- השדות יתווספו דינמית מהקונפיגורציה -->
                     </div>
                     <div class="search-actions">
                         <button class="btn-primary" onclick="searchApp.performAdvancedSearch()">
@@ -85,7 +87,7 @@
             </div>
             
             <div id="results-container">
-                <!-- התוצאות יוצגו כאן -->
+                <!-- התוצאות יוצגו כאן דרך search-results-table.js -->
             </div>
         </div>
 
@@ -99,7 +101,7 @@
         <div id="toast-container" class="toast-container"></div>
     </div>
 
-    <!-- JavaScript Files -->
+    <!-- JavaScript Files - חיבור לכל הקבצים -->
     <script src="dashboards/search/assets/js/search-config.js"></script>
     <script src="dashboards/search/assets/js/search-results-table.js"></script>
     <script src="dashboards/search/assets/js/custom-search-app.js"></script>
@@ -107,11 +109,16 @@
     <!-- Initialize -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            if (typeof SearchApp === 'undefined') {
-                alert('שגיאה בטעינת המערכת');
+            // בדיקה שכל הקבצים נטענו
+            if (typeof SearchApp === 'undefined' || 
+                typeof SearchConfig === 'undefined' || 
+                typeof ResultsTable === 'undefined') {
+                console.error('Missing required files');
+                alert('שגיאה בטעינת קבצי המערכת');
                 return;
             }
             
+            // יצירת האפליקציה
             window.searchApp = new SearchApp();
             window.searchApp.init();
         });

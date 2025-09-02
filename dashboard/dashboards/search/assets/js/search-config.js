@@ -148,6 +148,7 @@ const SearchConfig = {
             returnFields: [
                 'c_firstName',
                 'c_lastName',
+                'c_numId',
                 'c_nameFather',
                 'c_nameMother',
                 'graveNameHe',

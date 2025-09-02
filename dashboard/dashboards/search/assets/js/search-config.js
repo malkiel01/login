@@ -134,8 +134,7 @@ const SearchConfig = {
                     blockName: 'blockNameHe',
                     cemeteryName: 'cemeteryNameHe',
                     // תאריכים
-                    deathDate: 'b_dateDeath',
-                    // burialDate: 'b_dateBurial'
+                    // deathDate: 'b_dateDeath',
                 },
                 // הגדרה חדשה לשדות מיוחדים
                 special: {

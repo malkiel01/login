@@ -369,6 +369,12 @@
     font-size: 14px;
 }
 
+.id-number {
+    font-size: 0.9em;
+    color: #666;
+    margin: 5px 0;
+}
+
 /* התאמות למובייל */
 @media (max-width: 768px) {
     .search-type-tab {

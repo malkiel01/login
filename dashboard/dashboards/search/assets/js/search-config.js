@@ -118,7 +118,8 @@ const SearchConfig = {
                     'areaGraveNameHe',
                     'plotNameHe',
                     'blockNameHe',
-                    'cemeteryNameHe'
+                    'cemeteryNameHe',
+                     'c_numId',
                 ],
                 advanced: {
                     // פרטי הנפטר
@@ -126,6 +127,7 @@ const SearchConfig = {
                     lastName: 'c_lastName',
                     fatherName: 'c_nameFather',
                     motherName: 'c_nameMother',
+                    numId: 'c_numId',
                     // מיקום הקבר
                     graveName: 'graveNameHe',
                     areaName: 'areaGraveNameHe',
@@ -133,8 +135,6 @@ const SearchConfig = {
                     plotName: 'plotNameHe',
                     blockName: 'blockNameHe',
                     cemeteryName: 'cemeteryNameHe',
-                    // תאריכים
-                    // deathDate: 'b_dateDeath',
                 },
                 // הגדרה חדשה לשדות מיוחדים
                 special: {
@@ -166,6 +166,7 @@ const SearchConfig = {
             displayFields: {
                 'c_firstName': 'שם פרטי',
                 'c_lastName': 'שם משפחה',
+                'c_numId': 'תעודת זהות',
                 'c_nameFather': 'שם האב',
                 'c_nameMother': 'שם האם',
                 'graveNameHe': 'מספר קבר',

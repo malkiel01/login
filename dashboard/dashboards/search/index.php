@@ -216,7 +216,7 @@
                 const personalGrid = document.createElement('div');
                 personalGrid.className = 'field-grid';
                 
-                ['firstName', 'lastName', 'fatherName', 'motherName'].forEach(key => {
+                ['firstName', 'lastName', 'fatherName', 'motherName', 'numId'].forEach(key => {
                     if (fields[key]) {
                         const fieldDiv = createFieldElement(key, fields[key], displayLabels);
                         personalGrid.appendChild(fieldDiv);
@@ -565,9 +565,11 @@
                 `;
                 
                 if (currentSearchType === 'deceased_search') {
-                    // כרטיס נפטר
-                    cardHTML += `
+
+                        // כרטיס נפטר
+                        cardHTML += `
                         <div class="name">${record.c_firstName || ''} ${record.c_lastName || ''}</div>
+                        ${record.c_numId ? `<div class="id-number">ת.ז: ${record.c_numId}</div>` : ''}
                         <div class="parents">
                             ${record.c_nameFather ? `בן ${record.c_nameFather}` : ''}
                             ${record.c_nameMother ? ` ו${record.c_nameMother}` : ''}

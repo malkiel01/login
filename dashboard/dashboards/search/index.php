@@ -569,7 +569,6 @@
                         // כרטיס נפטר
                         cardHTML += `
                         <div class="name">${record.c_firstName || ''} ${record.c_lastName || ''}</div>
-                        <div class="name">תז: ${record.c_numId || ''}</div>
                         ${record.c_numId ? `<div class="id-number">ת.ז: ${record.c_numId}</div>` : ''}
 
                         <div class="parents">

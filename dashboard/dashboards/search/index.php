@@ -216,7 +216,7 @@
                 const personalGrid = document.createElement('div');
                 personalGrid.className = 'field-grid';
                 
-                ['firstName', 'lastName', 'fatherName', 'motherName', 'numId'].forEach(key => {
+                ['firstName', 'lastName', 'numId', 'fatherName', 'motherName'].forEach(key => {
                     if (fields[key]) {
                         const fieldDiv = createFieldElement(key, fields[key], displayLabels);
                         personalGrid.appendChild(fieldDiv);

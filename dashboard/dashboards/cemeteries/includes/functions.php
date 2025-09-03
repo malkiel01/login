@@ -103,23 +103,23 @@ function validateEmail($email) {
     return filter_var($email, FILTER_VALIDATE_EMAIL);
 }
 
-// /**
-//  * בדיקת תקינות טלפון ישראלי
-//  */
-// function validateIsraeliPhone($phone) {
-//     // הסרת תווים שאינם ספרות
-//     $phone = preg_replace('/[^0-9]/', '', $phone);
+/**
+ * בדיקת תקינות טלפון ישראלי
+ */
+function validateIsraeliPhone($phone) {
+    // הסרת תווים שאינם ספרות
+    $phone = preg_replace('/[^0-9]/', '', $phone);
     
-//     // בדיקת אורך ותבנית
-//     if (strlen($phone) == 10 && substr($phone, 0, 1) == '0') {
-//         return true;
-//     }
-//     if (strlen($phone) == 9 && in_array(substr($phone, 0, 1), ['5', '7', '8'])) {
-//         return true;
-//     }
+    // בדיקת אורך ותבנית
+    if (strlen($phone) == 10 && substr($phone, 0, 1) == '0') {
+        return true;
+    }
+    if (strlen($phone) == 9 && in_array(substr($phone, 0, 1), ['5', '7', '8'])) {
+        return true;
+    }
     
-//     return false;
-// }
+    return false;
+}
 
 // /**
 //  * בדיקת תקינות ת.ז. ישראלית

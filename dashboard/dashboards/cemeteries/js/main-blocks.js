@@ -1,7 +1,7 @@
 // dashboards/cemeteries/js/main-blocks.js
 // ניהול גושים
 
-// עדכן את loadAllBlocks - אל תנקה כלום!
+// טעינת כל הגושים
 async function loadAllBlocks() {
     console.log('Loading all blocks...');
     
@@ -43,34 +43,6 @@ function openBlock(blockId, blockName) {
         ? `בתי עלמין › ${window.selectedItems.cemetery.name} › גושים › ${blockName}`
         : `גושים › ${blockName}`;
     updateBreadcrumb(path);
-}
-
-// טעינת כל הגושים
-async function loadAllBlocks2() {
-    console.log('Loading all blocks...');
-    
-    // נקה את כל הבחירות בסידבר
-    if (typeof clearAllSidebarSelections === 'function') {
-        clearAllSidebarSelections();
-    }
-    
-    // אפס את הבחירות
-    window.selectedItems = {};
-    window.currentType = 'block';
-    window.currentParentId = null;
-    
-    try {
-        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=block`);
-        const data = await response.json();
-        
-        if (data.success) {
-            displayBlocksInMainContent(data.data);
-            updateSidebarCount('blocksCount', data.data.length);
-        }
-    } catch (error) {
-        console.error('Error loading blocks:', error);
-        showError('שגיאה בטעינת גושים');
-    }
 }
 
 // טעינת גושים לבית עלמין ספציפי
@@ -154,28 +126,6 @@ function displayBlocksInMainContent(blocks, cemeteryName = null) {
     } else {
         updateBreadcrumb('גושים');
     }
-}
-
-// פתיחת גוש ספציפי - מעבר לתצוגת חלקות
-function openBlock2(blockId, blockName) {
-    console.log('Opening block:', blockId, blockName);
-    
-    // שמור את הבחירה
-    selectedItems.block = { id: blockId, name: blockName };
-    currentType = 'plot';
-    currentParentId = blockId;
-    
-    // עדכן את הסידבר להציג את הגוש הנבחר
-    updateSidebarSelection('block', blockId, blockName);
-    
-    // טען את החלקות של הגוש
-    loadPlotsForBlock(blockId);
-    
-    // עדכן breadcrumb
-    const path = selectedItems.cemetery 
-        ? `בתי עלמין › ${selectedItems.cemetery.name} › גושים › ${blockName}`
-        : `גושים › ${blockName}`;
-    updateBreadcrumb(path);
 }
 
 // הוספת גוש חדש

@@ -96,12 +96,12 @@ function cleanInput($data) {
     return $data;
 }
 
-// /**
-//  * בדיקת תקינות אימייל
-//  */
-// function validateEmail($email) {
-//     return filter_var($email, FILTER_VALIDATE_EMAIL);
-// }
+/**
+ * בדיקת תקינות אימייל
+ */
+function validateEmail($email) {
+    return filter_var($email, FILTER_VALIDATE_EMAIL);
+}
 
 // /**
 //  * בדיקת תקינות טלפון ישראלי

@@ -1,4 +1,4 @@
-< ?php
+<!-- < ?php
 // בדיקת הרשאות בצד השרת
 // התחל את ה-session עם אותו שם לפני טעינת config
 session_name('deceased_forms_session');
@@ -48,7 +48,7 @@ if (!$hasAccess) {
 if (!defined('SITE_NAME')) {
     define('SITE_NAME', 'מערכת ניהול');
 }
-?>
+?> -->
 <!DOCTYPE html>
 <html dir="rtl" lang="he">
 <head>
@@ -57,7 +57,7 @@ if (!defined('SITE_NAME')) {
     <title>ניהול בתי עלמין - <?php echo SITE_NAME; ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="css/style.css" rel="stylesheet">
+    <link href="dashboards/cemeteries/css/style.css" rel="stylesheet">
 </head>
 <body>
     <!-- הצג מידע על המשתמש המחובר -->
@@ -159,18 +159,18 @@ if (!defined('SITE_NAME')) {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <!-- App Scripts -->
-    <script src="js/config.js"></script>
-    <script src="js/utils.js"></script>
-    <script src="js/validation.js"></script>
-    <script src="js/api.js"></script>
-    <script src="js/views/overview.js"></script>
-    <script src="js/views/cemeteries.js"></script>
-    <script src="js/views/blocks.js"></script>
-    <script src="js/views/plots.js"></script>
-    <script src="js/views/rows.js"></script>
-    <script src="js/views/areaGraves.js"></script>
-    <script src="js/views/graves.js"></script>
-    <script src="js/forms.js"></script>
-    <script src="js/main.js"></script>
+    <script src="dashboards/cemeteries/js/config.js"></script>
+    <script src="dashboards/cemeteries/js/utils.js"></script>
+    <script src="dashboards/cemeteries/js/validation.js"></script>
+    <script src="dashboards/cemeteries/js/api.js"></script>
+    <script src="dashboards/cemeteries/js/views/overview.js"></script>
+    <script src="dashboards/cemeteries/js/views/cemeteries.js"></script>
+    <script src="dashboards/cemeteries/js/views/blocks.js"></script>
+    <script src="dashboards/cemeteries/js/views/plots.js"></script>
+    <script src="dashboards/cemeteries/js/views/rows.js"></script>
+    <script src="dashboards/cemeteries/js/views/areaGraves.js"></script>
+    <script src="dashboards/cemeteries/js/views/graves.js"></script>
+    <script src="dashboards/cemeteries/js/forms.js"></script>
+    <script src="dashboards/cemeteries/js/main.js"></script>
 </body>
 </html>

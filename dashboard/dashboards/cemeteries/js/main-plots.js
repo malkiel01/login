@@ -589,6 +589,6 @@ function openAddRow() {
 window.manageRows = manageRows;
 window.openAddRow = openAddRow;
 window.openAddAreaGrave = openAddAreaGrave;
-window.openAreaGrave = openAreaGrave;
-window.editAreaGrave = editAreaGrave;
-window.deleteAreaGrave = deleteAreaGrave;
+// window.openAreaGrave = openAreaGrave;
+// window.editAreaGrave = editAreaGrave;
+// window.deleteAreaGrave = deleteAreaGrave;

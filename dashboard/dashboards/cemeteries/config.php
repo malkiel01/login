@@ -9,7 +9,7 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/config.php';
 define('DASHBOARD_NAME', 'ניהול בתי עלמין');
 define('DASHBOARD_VERSION', '1.0.0');
 define('DASHBOARD_PATH', dirname(__FILE__));
-define('DASHBOARD_URL', '/cemeteries/');
+define('CEMETERY_DASHBOARD_URL', '/dashboards/cemeteries/');
 
 // הגדרות סטטוסים לבתי עלמין
 if (!defined('GRAVE_STATUS')) {

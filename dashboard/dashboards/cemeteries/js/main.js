@@ -523,7 +523,7 @@ function updateSidebarSelection(type, id, name) {
         'cemetery': 0,
         'block': 1,
         'plot': 2,
-        'area_grave': 3,
+        'areaGrave': 3,
         'grave': 4
     };
     

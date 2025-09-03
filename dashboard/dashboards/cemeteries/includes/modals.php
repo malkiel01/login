@@ -374,7 +374,7 @@ function adjustFieldsForType(type) {
         nameContainer.style.display = 'block';
     }
     
-    if (type === 'area_grave') {
+    if (type === 'area_grave') { 
         document.querySelectorAll('.area-grave-only').forEach(el => {
             el.style.display = 'block';
         });

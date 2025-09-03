@@ -34,8 +34,7 @@ function getParentColumn($type) {
         'plot' => 'block_id',
         'row' => 'plot_id',
         'area_grave' => 'row_id',
-        // 'grave' => 'area_grave_id'
-        'grave' => 'grave_number' // בקברים השם הוא מספר הקבר
+        'grave' => 'area_grave_id'
     ];
     return $parents[$type] ?? null;
 }
@@ -44,7 +43,7 @@ try {
     $pdo = getDBConnection();
     
     switch($action) {
-        case 'list':
+        case 'listOld':
             $table = getTableName($type);
             if (!$table) {
                 throw new Exception('סוג לא תקין');
@@ -103,6 +102,73 @@ try {
             ]);
             break;
             
+        case 'list':
+            $table = getTableName($type);
+            if (!$table) {
+                throw new Exception('סוג לא תקין');
+            }
+            
+            $sql = "SELECT * FROM $table WHERE is_active = 1";
+            $params = [];
+            
+            // סינון לפי הורה
+            if (isset($_GET['parent_id'])) {
+                $parentColumn = getParentColumn($type);
+                if ($parentColumn) {
+                    $sql .= " AND $parentColumn = :parent_id";
+                    $params['parent_id'] = $_GET['parent_id'];
+                }
+            }
+            
+            // חיפוש
+            if (isset($_GET['search']) && !empty($_GET['search'])) {
+                if ($type === 'grave') {
+                    $sql .= " AND grave_number LIKE :search";
+                } else {
+                    $sql .= " AND (name LIKE :search OR code LIKE :search)";
+                }
+                $params['search'] = '%' . $_GET['search'] . '%';
+            }
+            
+            // מיון - תיקון כאן!
+            if ($type === 'grave') {
+                $orderBy = $_GET['sort'] ?? 'grave_number';
+            } else {
+                $orderBy = $_GET['sort'] ?? 'name';
+            }
+            $orderDir = $_GET['order'] ?? 'ASC';
+            
+            $sql .= " ORDER BY $orderBy $orderDir";
+            
+            // עימוד
+            $page = intval($_GET['page'] ?? 1);
+            $limit = intval($_GET['limit'] ?? 50);
+            $offset = ($page - 1) * $limit;
+            
+            // ספירת סך הכל
+            $countSql = str_replace('SELECT *', 'SELECT COUNT(*)', $sql);
+            $stmt = $pdo->prepare($countSql);
+            $stmt->execute($params);
+            $total = $stmt->fetchColumn();
+            
+            // הוספת LIMIT
+            $sql .= " LIMIT $limit OFFSET $offset";
+            
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            echo json_encode([
+                'success' => true,
+                'data' => $data,
+                'pagination' => [
+                    'page' => $page,
+                    'limit' => $limit,
+                    'total' => $total,
+                    'pages' => ceil($total / $limit)
+                ]
+            ]);
+            break;
         case 'get':
             $table = getTableName($type);
             if (!$table || !$id) {

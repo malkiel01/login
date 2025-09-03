@@ -106,10 +106,10 @@
     <script src="js/burials.js"></script>
     
     <script>
-        // Initialize dashboard on load
-        document.addEventListener('DOMContentLoaded', function() {
-            initDashboard();
-        });
+        // // Initialize dashboard on load
+        // document.addEventListener('DOMContentLoaded', function() {
+        //     initDashboard();
+        // });
     </script>
 </body>
 </html>

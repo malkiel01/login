@@ -364,7 +364,138 @@ function adjustFieldsForType(type) {
 }
 
 // שמירת פריט
+// תיקון לפונקציית saveItem במודאל
+// להחליף את הפונקציה הקיימת ב-modals.php
+
 async function saveItem(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    const type = document.getElementById('itemType').value;
+    const parentId = document.getElementById('parentId').value;
+    
+    // בניית אובייקט נתונים לפי סוג הפריט
+    const data = {};
+    
+    // שדות בסיסיים לכל הסוגים
+    if (formData.get('name') && type !== 'grave') {
+        data.name = formData.get('name');
+    }
+    
+    if (formData.get('code')) {
+        data.code = formData.get('code');
+    }
+    
+    if (formData.get('location')) {
+        data.location = formData.get('location');
+    }
+    
+    if (formData.get('coordinates')) {
+        data.coordinates = formData.get('coordinates');
+    }
+    
+    if (formData.get('comments')) {
+        data.comments = formData.get('comments');
+    }
+    
+    // שדות ספציפיים לפי סוג
+    switch(type) {
+        case 'cemetery':
+            // שדות ספציפיים לבית עלמין
+            if (formData.get('address')) {
+                data.address = formData.get('address');
+            }
+            if (formData.get('contact_name')) {
+                data.contact_name = formData.get('contact_name');
+            }
+            if (formData.get('contact_phone')) {
+                data.contact_phone = formData.get('contact_phone');
+            }
+            break;
+            
+        case 'row':
+            // שדות ספציפיים לשורה
+            if (formData.get('serial_number')) {
+                data.serial_number = formData.get('serial_number');
+            }
+            break;
+            
+        case 'area_grave':
+            // שדות ספציפיים לאחוזת קבר
+            if (formData.get('grave_type')) {
+                data.grave_type = formData.get('grave_type');
+            }
+            break;
+            
+        case 'grave':
+            // שדות ספציפיים לקבר
+            if (formData.get('grave_number')) {
+                data.grave_number = formData.get('grave_number');
+                data.name = data.grave_number; // בקברים השם הוא מספר הקבר
+            }
+            if (formData.get('plot_type')) {
+                data.plot_type = formData.get('plot_type');
+            }
+            if (formData.get('grave_status')) {
+                data.grave_status = formData.get('grave_status');
+            }
+            if (formData.get('grave_location')) {
+                data.grave_location = formData.get('grave_location');
+            }
+            if (formData.get('construction_cost')) {
+                data.construction_cost = formData.get('construction_cost');
+            }
+            if (formData.get('is_small_grave')) {
+                data.is_small_grave = formData.get('is_small_grave') ? 1 : 0;
+            }
+            break;
+    }
+    
+    // הוספת parent_id אם נדרש
+    const parentColumn = getParentColumn(type);
+    if (parentColumn && parentId) {
+        data[parentColumn] = parentId;
+    }
+    
+    // הוספת is_active
+    data.is_active = 1;
+    
+    try {
+        const url = editingItemId 
+            ? `/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=update&type=${type}&id=${editingItemId}`
+            : `/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=create&type=${type}`;
+            
+        const method = editingItemId ? 'PUT' : 'POST';
+        
+        console.log('Sending data:', data); // לוג לבדיקה
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('success', editingItemId ? 'הפריט עודכן בהצלחה' : 'הפריט נוצר בהצלחה');
+            closeModal();
+            if (typeof refreshAllData === 'function') {
+                refreshAllData();
+            }
+        } else {
+            showToast('error', result.error || 'שגיאה בשמירה');
+            console.error('Save error:', result.error);
+        }
+    } catch (error) {
+        showToast('error', 'שגיאה בתקשורת עם השרת');
+        console.error('Network error:', error);
+    }
+}
+async function saveItemOld(event) {
     event.preventDefault();
     
     const form = event.target;

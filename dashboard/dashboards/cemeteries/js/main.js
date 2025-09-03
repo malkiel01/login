@@ -686,12 +686,6 @@ function getParentName(type) {
     return parents[type] || '';
 }
 
-// // פתיחת מודל הוספה
-// function openAddModal() {
-//     console.log('Opening add modal for type:', currentType);
-//     // TODO: implement modal
-// }
-
 // פתיחת הוספה מהירה
 function openQuickAdd() {
     console.log('Opening quick add');
@@ -792,6 +786,5 @@ window.deleteItem = deleteItem;
 window.selectCemetery = selectCemetery;
 window.selectBlock = selectBlock;
 window.selectPlot = selectPlot;
-// חשיפת פונקציות נוספות
 window.getHierarchyLevel = getHierarchyLevel;
 window.getParentColumn = getParentColumn;

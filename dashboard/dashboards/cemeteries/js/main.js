@@ -538,11 +538,159 @@ async function performQuickSearch(query) {
     // TODO: implement search
 }
 
-// פתיחת מודל הוספה
+// תקן את openAddModal (במקום השורה 540)
 function openAddModal() {
     console.log('Opening add modal for type:', currentType);
-    // TODO: implement modal
+    
+    // בדיקה שיש הורה אם צריך
+    if (currentType !== 'cemetery' && !currentParentId) {
+        showWarning('יש לבחור ' + getParentName(currentType) + ' תחילה');
+        return;
+    }
+    
+    // בדיקה אם פונקציית המודל קיימת
+    if (typeof window.openModal === 'function') {
+        window.openModal(currentType, currentParentId, null);
+    } else {
+        // אם המודל לא נטען, הצג טופס פשוט
+        createSimpleAddForm();
+    }
 }
+
+// הוסף פונקציה חדשה לטופס פשוט
+function createSimpleAddForm() {
+    const existingForm = document.getElementById('simpleAddForm');
+    if (existingForm) existingForm.remove();
+    
+    const formHtml = `
+        <div id="simpleAddForm" style="
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.3);
+            z-index: 10000;
+            min-width: 400px;
+        ">
+            <h3>הוסף ${getHierarchyLevel(currentType)}</h3>
+            <form onsubmit="submitSimpleForm(event)">
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px;">שם:</label>
+                    <input type="text" name="name" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px;">קוד:</label>
+                    <input type="text" name="code" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                ${currentType === 'cemetery' ? `
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px;">כתובת:</label>
+                    <input type="text" name="address" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                ` : ''}
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" onclick="document.getElementById('simpleAddForm').remove()" 
+                            style="padding: 8px 20px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        ביטול
+                    </button>
+                    <button type="submit" 
+                            style="padding: 8px 20px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        שמור
+                    </button>
+                </div>
+            </form>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', formHtml);
+}
+
+// הוסף פונקציה לשליחת הטופס
+window.submitSimpleForm = async function(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    
+    const data = {
+        name: formData.get('name'),
+        code: formData.get('code'),
+        is_active: 1
+    };
+    
+    if (formData.get('address')) {
+        data.address = formData.get('address');
+    }
+    
+    // הוסף parent_id אם צריך
+    const parentColumn = getParentColumn(currentType);
+    if (parentColumn && currentParentId) {
+        data[parentColumn] = currentParentId;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=create&type=${currentType}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            document.getElementById('simpleAddForm').remove();
+            showSuccess('נוסף בהצלחה!');
+            refreshAllData();
+        } else {
+            alert('שגיאה: ' + (result.error || 'Unknown error'));
+        }
+    } catch (error) {
+        alert('שגיאה בשמירה');
+        console.error(error);
+    }
+}
+
+// הוסף את הפונקציות העזר
+function getHierarchyLevel(type) {
+    const levels = {
+        'cemetery': 'בית עלמין',
+        'block': 'גוש',
+        'plot': 'חלקה',
+        'row': 'שורה',
+        'area_grave': 'אחוזת קבר',
+        'grave': 'קבר'
+    };
+    return levels[type] || type;
+}
+
+function getParentColumn(type) {
+    const parents = {
+        'block': 'cemetery_id',
+        'plot': 'block_id',
+        'row': 'plot_id',
+        'area_grave': 'row_id',
+        'grave': 'area_grave_id'
+    };
+    return parents[type] || null;
+}
+
+function getParentName(type) {
+    const parents = {
+        'block': 'בית עלמין',
+        'plot': 'גוש',
+        'row': 'חלקה',
+        'area_grave': 'שורה',
+        'grave': 'אחוזת קבר'
+    };
+    return parents[type] || '';
+}
+
+// // פתיחת מודל הוספה
+// function openAddModal() {
+//     console.log('Opening add modal for type:', currentType);
+//     // TODO: implement modal
+// }
 
 // פתיחת הוספה מהירה
 function openQuickAdd() {
@@ -644,3 +792,6 @@ window.deleteItem = deleteItem;
 window.selectCemetery = selectCemetery;
 window.selectBlock = selectBlock;
 window.selectPlot = selectPlot;
+// חשיפת פונקציות נוספות
+window.getHierarchyLevel = getHierarchyLevel;
+window.getParentColumn = getParentColumn;

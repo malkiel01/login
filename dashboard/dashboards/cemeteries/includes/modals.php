@@ -442,7 +442,7 @@ async function saveItem(event) {
             }
             break;
             
-        case 'area_grave':
+        case 'areaGrave':
             // שדות ספציפיים לאחוזת קבר
             if (formData.get('grave_type')) {
                 data.grave_type = formData.get('grave_type');

@@ -138,6 +138,23 @@ async function loadAllCemeteries() {
 }
 
 // כשפותחים בית עלמין ספציפי
+function openCemetery2(cemeteryId, cemeteryName) {
+    console.log('Opening cemetery:', cemeteryId, cemeteryName);
+    
+    // שמור את הבחירה
+    window.selectedItems.cemetery = { id: cemeteryId, name: cemeteryName };
+    window.currentType = 'block';
+    window.currentParentId = cemeteryId;
+    
+    // עדכן את הסידבר - הצג את בית העלמין הנבחר
+    updateSidebarSelection('cemetery', cemeteryId, cemeteryName);
+    
+    // טען את הגושים
+    loadBlocksForCemetery(cemeteryId);
+    
+    // עדכן breadcrumb
+    updateBreadcrumb(`בתי עלמין › ${cemeteryName}`);
+}
 function openCemetery(cemeteryId, cemeteryName) {
     console.log('Opening cemetery:', cemeteryId, cemeteryName);
     

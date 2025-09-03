@@ -2,52 +2,52 @@
 // dashboard/dashboards/cemeteries/includes/functions.php
 // פונקציות עזר לדשבורד בתי עלמין
 
-/**
- * בדיקת הרשאה לפעולה
- */
-function checkPermission($action, $module = 'cemetery') {
-    // בדיקה בסיסית - להחליף בבדיקת הרשאות אמיתית
-    if (!isset($_SESSION['user_id'])) {
-        return false;
-    }
-    
-    // בינתיים מאשרים הכל
-    return true;
-}
-
 // /**
-//  * רישום פעילות בלוג
+//  * בדיקת הרשאה לפעולה
 //  */
-// function logActivity($action, $module, $itemId, $details = []) {
-//     global $pdo;
-    
-//     try {
-//         // בדיקה אם טבלת לוגים קיימת
-//         $stmt = $pdo->query("SHOW TABLES LIKE 'activity_logs'");
-//         if ($stmt->rowCount() == 0) {
-//             // אם הטבלה לא קיימת, רק רשום ב-error log
-//             error_log("[$module] $action on item #$itemId - " . json_encode($details));
-//             return;
-//         }
-        
-//         // הכנסה לטבלת לוגים
-//         $stmt = $pdo->prepare("
-//             INSERT INTO activity_logs (user_id, module, action, item_id, details, ip_address, created_at)
-//             VALUES (:user_id, :module, :action, :item_id, :details, :ip, NOW())
-//         ");
-        
-//         $stmt->execute([
-//             'user_id' => $_SESSION['user_id'] ?? 0,
-//             'module' => $module,
-//             'action' => $action,
-//             'item_id' => $itemId,
-//             'details' => json_encode($details),
-//             'ip' => $_SERVER['REMOTE_ADDR'] ?? ''
-//         ]);
-//     } catch (Exception $e) {
-//         error_log("Failed to log activity: " . $e->getMessage());
+// function checkPermission($action, $module = 'cemetery') {
+//     // בדיקה בסיסית - להחליף בבדיקת הרשאות אמיתית
+//     if (!isset($_SESSION['user_id'])) {
+//         return false;
 //     }
+    
+//     // בינתיים מאשרים הכל
+//     return true;
 // }
+
+/**
+ * רישום פעילות בלוג
+ */
+function logActivity($action, $module, $itemId, $details = []) {
+    global $pdo;
+    
+    try {
+        // בדיקה אם טבלת לוגים קיימת
+        $stmt = $pdo->query("SHOW TABLES LIKE 'activity_logs'");
+        if ($stmt->rowCount() == 0) {
+            // אם הטבלה לא קיימת, רק רשום ב-error log
+            error_log("[$module] $action on item #$itemId - " . json_encode($details));
+            return;
+        }
+        
+        // הכנסה לטבלת לוגים
+        $stmt = $pdo->prepare("
+            INSERT INTO activity_logs (user_id, module, action, item_id, details, ip_address, created_at)
+            VALUES (:user_id, :module, :action, :item_id, :details, :ip, NOW())
+        ");
+        
+        $stmt->execute([
+            'user_id' => $_SESSION['user_id'] ?? 0,
+            'module' => $module,
+            'action' => $action,
+            'item_id' => $itemId,
+            'details' => json_encode($details),
+            'ip' => $_SERVER['REMOTE_ADDR'] ?? ''
+        ]);
+    } catch (Exception $e) {
+        error_log("Failed to log activity: " . $e->getMessage());
+    }
+}
 
 // /**
 //  * קבלת חיבור לבסיס נתונים

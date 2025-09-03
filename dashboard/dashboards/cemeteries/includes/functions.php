@@ -191,12 +191,12 @@ function formatHebrewDateTime($datetime, $format = 'd/m/Y H:i') {
 //     }
 // }
 
-// /**
-//  * יצירת מזהה ייחודי
-//  */
-// function generateUniqueId($prefix = '') {
-//     return uniqid($prefix, true);
-// }
+/**
+ * יצירת מזהה ייחודי
+ */
+function generateUniqueId($prefix = '') {
+    return uniqid($prefix, true);
+}
 
 // /**
 //  * המרת מספר לפורמט כסף

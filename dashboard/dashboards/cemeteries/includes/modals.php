@@ -339,7 +339,7 @@ function closeModal() {
 }
 
 // התאמת שדות לסוג הפריט
-function adjustFieldsForType(type) {
+function adjustFieldsForType2(type) {
     // הסתרת כל השדות הספציפיים
     document.querySelectorAll('.grave-only, .area-grave-only').forEach(el => {
         el.style.display = 'none';
@@ -362,12 +362,85 @@ function adjustFieldsForType(type) {
         });
     }
 }
+// בפונקציה adjustFieldsForType - שורה ~197 בערך
+function adjustFieldsForType(type) {
+    // הסתרת כל השדות הספציפיים
+    document.querySelectorAll('.grave-only, .area-grave-only').forEach(el => {
+        el.style.display = 'none';
+    });
+    
+    // הצגת שדות לפי סוג
+    if (type === 'grave') {
+        document.querySelectorAll('.grave-only').forEach(el => {
+            el.style.display = 'block';
+        });
+        // בקברים השם הוא מספר הקבר
+        const nameField = document.getElementById('itemName');
+        const nameContainer = nameField.parentElement;
+        
+        // הסר את required מהשדה name כשהוא מוסתר
+        nameField.removeAttribute('required');
+        nameContainer.style.display = 'none';
+        
+        // הוסף required לשדה grave_number
+        const graveNumberField = document.getElementById('graveNumber');
+        if (graveNumberField) {
+            graveNumberField.setAttribute('required', 'required');
+        }
+    } else {
+        // בכל המקרים האחרים - החזר את השדה name
+        const nameField = document.getElementById('itemName');
+        const nameContainer = nameField.parentElement;
+        
+        nameField.setAttribute('required', 'required');
+        nameContainer.style.display = 'block';
+    }
+    
+    if (type === 'area_grave') {
+        document.querySelectorAll('.area-grave-only').forEach(el => {
+            el.style.display = 'block';
+        });
+    }
+}
 
 // שמירת פריט
 // תיקון לפונקציית saveItem במודאל
 // להחליף את הפונקציה הקיימת ב-modals.php
 
+// בפונקציה saveItem - שורה ~245 בערך
 async function saveItem(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    const type = document.getElementById('itemType').value;
+    const parentId = document.getElementById('parentId').value;
+    
+    // בניית אובייקט נתונים לפי סוג הפריט
+    const data = {};
+    
+    // שדות בסיסיים לכל הסוגים
+    if (type === 'grave') {
+        // בקברים - לא צריך את השדה name, רק grave_number
+        if (formData.get('grave_number')) {
+            data.grave_number = formData.get('grave_number');
+            data.name = formData.get('grave_number'); // הוסף גם כ-name לתאימות
+        }
+    } else {
+        // בכל שאר הסוגים - צריך את השדה name
+        if (formData.get('name')) {
+            data.name = formData.get('name');
+        }
+    }
+    
+    // המשך עם שאר השדות...
+    if (formData.get('code')) {
+        data.code = formData.get('code');
+    }
+    
+    // וכו'...
+}
+async function saveItem2(event) {
     event.preventDefault();
     
     const form = event.target;
@@ -493,63 +566,6 @@ async function saveItem(event) {
     } catch (error) {
         showToast('error', 'שגיאה בתקשורת עם השרת');
         console.error('Network error:', error);
-    }
-}
-async function saveItemOld(event) {
-    event.preventDefault();
-    
-    const form = event.target;
-    const formData = new FormData(form);
-    const data = {};
-    
-    // המרת FormData לאובייקט
-    formData.forEach((value, key) => {
-        if (value && key !== 'id' && key !== 'type' && key !== 'parent_id') {
-            data[key] = value;
-        }
-    });
-    
-    const type = document.getElementById('itemType').value;
-    const parentId = document.getElementById('parentId').value;
-    
-    // בקברים, השם הוא מספר הקבר
-    if (type === 'grave') {
-        data.name = data.grave_number;
-    }
-    
-    // הוספת parent_id לנתונים
-    const parentColumn = getParentColumn(type);
-    if (parentColumn && parentId) {
-        data[parentColumn] = parentId;
-    }
-    
-    try {
-        const url = editingItemId 
-            ? `/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=update&type=${type}&id=${editingItemId}`
-            : `/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=create&type=${type}`;
-            
-        const method = editingItemId ? 'PUT' : 'POST';
-        
-        const response = await fetch(url, {
-            method: method,
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showToast('success', editingItemId ? 'הפריט עודכן בהצלחה' : 'הפריט נוצר בהצלחה');
-            closeModal();
-            refreshAllData();
-        } else {
-            showToast('error', result.error || 'שגיאה בשמירה');
-        }
-    } catch (error) {
-        showToast('error', 'שגיאה בתקשורת עם השרת');
-        console.error(error);
     }
 }
 

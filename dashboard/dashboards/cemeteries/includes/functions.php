@@ -198,22 +198,22 @@ function generateUniqueId($prefix = '') {
     return uniqid($prefix, true);
 }
 
-// /**
-//  * המרת מספר לפורמט כסף
-//  */
-// function formatMoney($amount, $currency = '₪') {
-//     return $currency . ' ' . number_format($amount, 2, '.', ',');
-// }
+/**
+ * המרת מספר לפורמט כסף
+ */
+function formatMoney($amount, $currency = '₪') {
+    return $currency . ' ' . number_format($amount, 2, '.', ',');
+}
 
-// /**
-//  * קבלת שם סטטוס קבר
-//  */
-// function getGraveStatusName($status) {
-//     if (defined('GRAVE_STATUS') && isset(GRAVE_STATUS[$status])) {
-//         return GRAVE_STATUS[$status]['name'];
-//     }
-//     return 'לא ידוע';
-// }
+/**
+ * קבלת שם סטטוס קבר
+ */
+function getGraveStatusName($status) {
+    if (defined('GRAVE_STATUS') && isset(GRAVE_STATUS[$status])) {
+        return GRAVE_STATUS[$status]['name'];
+    }
+    return 'לא ידוע';
+}
 
 // /**
 //  * קבלת צבע סטטוס קבר

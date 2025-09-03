@@ -1,0 +1,223 @@
+/* מודאל */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.6);
+    animation: fadeIn 0.3s;
+}
+
+.modal.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: auto;
+    padding: 0;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow: auto;
+    box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
+    animation: slideIn 0.3s;
+}
+
+.modal-close {
+    color: #aaa;
+    position: absolute;
+    top: 15px;
+    left: 20px;
+    font-size: 32px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 1001;
+    background: white;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.modal-close:hover,
+.modal-close:focus {
+    color: #000;
+    transform: rotate(90deg);
+    transition: 0.3s;
+}
+
+/* כרטיס נפטר במודאל */
+.deceased-modal-card {
+    padding: 0;
+    direction: rtl;
+}
+
+.deceased-modal-header {
+    position: relative;
+    height: 200px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px 12px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.deceased-modal-image {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    color: #667eea;
+    font-weight: bold;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.deceased-modal-body {
+    padding: 30px;
+}
+
+.deceased-name-section {
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.deceased-main-name {
+    font-size: 28px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.deceased-id {
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.deceased-parents {
+    font-size: 18px;
+    color: #555;
+}
+
+.info-section {
+    margin-bottom: 25px;
+}
+
+.info-section-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.info-label {
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 5px;
+}
+
+.info-value {
+    font-size: 16px;
+    color: #333;
+    font-weight: 500;
+}
+
+.location-section {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.location-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.location-item {
+    background: white;
+    padding: 8px 15px;
+    border-radius: 20px;
+    border: 1px solid #e0e0e0;
+    font-size: 14px;
+}
+
+.comment-section {
+    background: #fff9e6;
+    padding: 15px;
+    border-radius: 8px;
+    border-right: 4px solid #ffcc00;
+}
+
+.comment-text {
+    font-size: 15px;
+    line-height: 1.6;
+    color: #555;
+}
+
+/* אנימציות */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* רספונסיביות */
+@media (max-width: 600px) {
+    .modal-content {
+        width: 95%;
+        margin: 10px;
+    }
+    
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .deceased-modal-body {
+        padding: 20px;
+    }
+}

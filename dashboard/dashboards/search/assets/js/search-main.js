@@ -14,6 +14,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     SearchUI.init();
     initializeSearch('deceased_search');
+
+    // אתחול המודאל
+    DeceasedModal.init();
 });
 
 // אתחול החיפוש

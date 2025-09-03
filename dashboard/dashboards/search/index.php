@@ -6,6 +6,7 @@
     <title>חיפוש מותאם</title>
     <link rel="stylesheet" href="dashboards/search/assets/css/search.css">
     <link rel="stylesheet" href="dashboards/search/assets/css/custom-search.css">
+    <link rel="stylesheet" href="dashboards/search/assets/css/modal.css">
 </head>
 <body>
     <!-- בורר סוג חיפוש -->
@@ -67,7 +68,18 @@
     <!-- טעינה -->
     <div id="loading" class="loading" style="display: none;">
         <div class="spinner"></div>
-        <p>מחפש...</p>
+        <!-- <p>מחפש...</p> -->
+    </div>
+
+    <!-- הוסף אחרי ה-loading div -->
+    <!-- מודאל לפרטי נפטר -->
+    <div id="deceased-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <div id="modal-body">
+                <!-- התוכן יוזרק כאן דינמית -->
+            </div>
+        </div>
     </div>
 
     <!-- Scripts -->
@@ -81,5 +93,6 @@
     <script src="dashboards/search/assets/js/search-api.js"></script>
     <script src="dashboards/search/assets/js/search-ui.js"></script>
     <script src="dashboards/search/assets/js/search-main.js"></script>
+    <script src="dashboards/search/assets/js/modal.js"></script>
 </body>
 </html>

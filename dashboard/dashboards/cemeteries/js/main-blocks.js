@@ -1,8 +1,52 @@
 // dashboards/cemeteries/js/main-blocks.js
 // ניהול גושים
 
-// טעינת כל הגושים
+// עדכן את loadAllBlocks - אל תנקה כלום!
 async function loadAllBlocks() {
+    console.log('Loading all blocks...');
+    
+    // אל תנקה את הסידבר! רק אפס את הבחירה
+    window.currentType = 'block';
+    window.currentParentId = null;
+    
+    try {
+        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=block`);
+        const data = await response.json();
+        
+        if (data.success) {
+            displayBlocksInMainContent(data.data);
+            updateSidebarCount('blocksCount', data.data.length);
+        }
+    } catch (error) {
+        console.error('Error loading blocks:', error);
+        showError('שגיאה בטעינת גושים');
+    }
+}
+
+// כשפותחים גוש ספציפי
+function openBlock(blockId, blockName) {
+    console.log('Opening block:', blockId, blockName);
+    
+    // שמור את הבחירה
+    window.selectedItems.block = { id: blockId, name: blockName };
+    window.currentType = 'plot';
+    window.currentParentId = blockId;
+    
+    // עדכן את הסידבר - הצג את הגוש הנבחר
+    updateSidebarSelection('block', blockId, blockName);
+    
+    // טען את החלקות
+    loadPlotsForBlock(blockId);
+    
+    // עדכן breadcrumb
+    const path = window.selectedItems.cemetery 
+        ? `בתי עלמין › ${window.selectedItems.cemetery.name} › גושים › ${blockName}`
+        : `גושים › ${blockName}`;
+    updateBreadcrumb(path);
+}
+
+// טעינת כל הגושים
+async function loadAllBlocks2() {
     console.log('Loading all blocks...');
     
     // נקה את כל הבחירות בסידבר
@@ -113,7 +157,7 @@ function displayBlocksInMainContent(blocks, cemeteryName = null) {
 }
 
 // פתיחת גוש ספציפי - מעבר לתצוגת חלקות
-function openBlock(blockId, blockName) {
+function openBlock2(blockId, blockName) {
     console.log('Opening block:', blockId, blockName);
     
     // שמור את הבחירה

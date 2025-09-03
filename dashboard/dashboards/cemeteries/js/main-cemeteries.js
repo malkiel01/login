@@ -18,22 +18,6 @@ function updateSidebarSelection(type, id, name) {
         container.style.display = 'block';
     }
 }
-function updateSidebarSelection2(type, id, name) {
-    // נקה את כל הבחירות
-    clearAllSidebarSelections();
-    
-    // הוסף רק את הפריט הנבחר הנוכחי
-    const container = document.getElementById(`${type}SelectedItem`);
-    if (container) {
-        container.innerHTML = `
-            <div class="selected-item">
-                <span class="selected-icon">📍</span>
-                <span class="selected-name">${name}</span>
-            </div>
-        `;
-        container.style.display = 'block';
-    }
-}
 
 // ניקוי הסידבר מתחת לרמה מסוימת
 function clearSidebarBelow(type) {
@@ -49,47 +33,12 @@ function clearSidebarBelow(type) {
         }
     }
 }
-function clearSidebarBelow2(type) {
-    const levels = ['cemetery', 'block', 'plot', 'area_grave'];
-    const startClearing = levels.indexOf(type) + 1;
-    
-    for (let i = startClearing; i < levels.length; i++) {
-        const container = document.getElementById(`${levels[i]}SelectedItem`);
-        if (container) {
-            container.innerHTML = '';
-        }
-    }
-}
 
 // טעינת כל בתי העלמין
 async function loadAllCemeteries() {
     console.log('Loading all cemeteries...');
     
     // אל תנקה את הסידבר! רק אפס את הבחירה
-    window.currentType = 'cemetery';
-    window.currentParentId = null;
-    
-    try {
-        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=cemetery`);
-        const data = await response.json();
-        
-        if (data.success) {
-            displayCemeteriesInMainContent(data.data);
-            updateSidebarCount('cemeteriesCount', data.data.length);
-        }
-    } catch (error) {
-        console.error('Error loading cemeteries:', error);
-        showError('שגיאה בטעינת בתי העלמין');
-    }
-}
-async function loadAllCemeteries2() {
-    console.log('Loading all cemeteries...');
-    
-    // נקה את כל הבחירות בסידבר
-    clearAllSidebarSelections();
-    
-    // אפס את הבחירות
-    window.selectedItems = {};
     window.currentType = 'cemetery';
     window.currentParentId = null;
     
@@ -125,24 +74,6 @@ function openCemetery(cemeteryId, cemeteryName) {
     // עדכן breadcrumb
     updateBreadcrumb(`בתי עלמין › ${cemeteryName}`);
 }
-function openCemetery2(cemeteryId, cemeteryName) {
-    console.log('Opening cemetery:', cemeteryId, cemeteryName);
-    
-    // שמור את הבחירה
-    selectedItems.cemetery = { id: cemeteryId, name: cemeteryName };
-    currentType = 'block';
-    currentParentId = cemeteryId;
-    
-    // עדכן את הסידבר להציג את בית העלמין הנבחר
-    updateSidebarSelection('cemetery', cemeteryId, cemeteryName);
-    
-    // טען את הגושים של בית העלמין
-    loadBlocksForCemetery(cemeteryId);
-    
-    // עדכן breadcrumb
-    updateBreadcrumb(`בתי עלמין › ${cemeteryName}`);
-}
-
 
 // פונקציה לניקוי כל הפריטים הנבחרים בסידבר
 function clearAllSidebarSelections() {

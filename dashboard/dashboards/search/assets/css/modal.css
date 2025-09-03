@@ -189,6 +189,29 @@
     color: #555;
 }
 
+.result-card.clickable {
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.result-card.clickable:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+}
+
+.click-hint {
+    font-size: 12px;
+    color: #999;
+    text-align: center;
+    margin-top: 10px;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.result-card.clickable:hover .click-hint {
+    opacity: 1;
+}
+
 /* אנימציות */
 @keyframes fadeIn {
     from { opacity: 0; }

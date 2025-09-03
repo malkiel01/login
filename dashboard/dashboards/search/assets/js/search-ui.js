@@ -21,11 +21,13 @@ window.SearchUI = {
             });
         });
         
-        // כפתורי תצוגה
+        // כפתורי תצוגה - תיקון
         document.querySelectorAll('.view-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
+                e.preventDefault();
                 const viewType = e.currentTarget.dataset.view;
-                window.switchView(viewType);
+                window.currentView = viewType; // עדכון ישיר של המשתנה
+                this.switchView(viewType);
             });
         });
     },
@@ -278,7 +280,8 @@ window.SearchUI = {
         });
         document.getElementById(`${tabName}-tab`).classList.add('active');
     },
-    
+
+    // עדכן את הפונקציה switchView
     switchView(viewType) {
         // עדכון כפתורים
         document.querySelectorAll('.view-btn').forEach(btn => {
@@ -288,10 +291,18 @@ window.SearchUI = {
             }
         });
         
+        // עדכון המשתנה הגלובלי
+        window.currentView = viewType;
+        
         // רענון התוצאות בתצוגה החדשה
         const lastResults = window.lastSearchResults;
         if (lastResults && window.currentSearch) {
-            this.displayResults(lastResults, window.currentSearch, window.currentSearchType, viewType);
+            this.displayResults(
+                lastResults, 
+                window.currentSearch, 
+                window.currentSearchType, 
+                viewType  // שימוש בפרמטר שהועבר
+            );
         }
     },
     

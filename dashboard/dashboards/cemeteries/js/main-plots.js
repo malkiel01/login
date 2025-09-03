@@ -179,7 +179,7 @@ function displayEmptyPlot(plotName) {
                     <div style="font-size: 48px; margin-bottom: 20px;">📏</div>
                     <div>אין שורות בחלקה ${plotName || ''}</div>
                     <p style="margin-top: 10px;">יש להוסיף שורות לחלקה לפני הוספת אחוזות קבר</p>
-                    <button class="btn btn-primary mt-3" onclick="openAddRow()">
+                    <button class="btn btn-primary mt-3" onclick="window.openAddRowForm(${window.selectedItems.plot.id})">
                         הוסף שורה ראשונה
                     </button>
                 </div>

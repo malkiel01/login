@@ -123,7 +123,7 @@ function openPlot(plotId, plotName) {
     
     // שמור את הבחירה
     window.selectedItems.plot = { id: plotId, name: plotName };
-    window.currentType = 'area_grave';
+    window.currentType = 'areaGrave';
     window.currentParentId = plotId;
     
     // עדכן את הסידבר - הצג את החלקה הנבחרת

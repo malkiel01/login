@@ -4,6 +4,12 @@ let currentSearchType = 'deceased_search';
 let currentTab = 'simple';
 let currentView = 'cards';
 
+// סנכרון עם window
+window.currentSearch = currentSearch;
+window.currentSearchType = currentSearchType;
+window.currentTab = currentTab;
+window.currentView = currentView;
+
 // אתחול
 document.addEventListener('DOMContentLoaded', function() {
     if (typeof ConfigurableSearch === 'undefined' || typeof SearchConfig === 'undefined') {
@@ -22,9 +28,11 @@ document.addEventListener('DOMContentLoaded', function() {
 // אתחול החיפוש
 function initializeSearch(searchType) {
     currentSearchType = searchType;
+    window.currentSearchType = searchType; // סנכרון
     
     try {
         currentSearch = new ConfigurableSearch(searchType);
+        window.currentSearch = currentSearch; // סנכרון - זה החשוב ביותר!
         SearchUI.updateAdvancedFields(currentSearch);
     } catch (error) {
         console.error('Error initializing search:', error);
@@ -45,6 +53,7 @@ window.switchTab = function(tabName) {
 
 window.switchView = function(viewType) {
     currentView = viewType;
+    window.currentView = viewType; // סנכרון
     SearchUI.switchView(viewType);
 };
 
@@ -60,6 +69,7 @@ window.performConfigurableSearch = async function() {
     
     try {
         const results = await SearchAPI.search(currentSearch, query, 'simple');
+        window.currentSearch = currentSearch; // וודא סנכרון
         SearchUI.displayResults(results, currentSearch, currentSearchType, currentView);
     } catch (error) {
         console.error('Search error:', error);

@@ -410,9 +410,15 @@ async function saveItem(event) {
     
     // בניית אובייקט נתונים לפי סוג הפריט
     const data = {};
+
+        // המרה ל-API אם צריך
+    let apiType = type;
+    if (type === 'areaGrave') {
+        apiType = 'area_grave';
+    }
     
     // שדות בסיסיים לכל הסוגים - חוץ מקברים
-    if (type !== 'grave') {
+    if (apiType !== 'grave') {
         if (formData.get('name')) {
             data.name = formData.get('name');
         }
@@ -435,7 +441,7 @@ async function saveItem(event) {
     }
     
     // שדות ספציפיים לפי סוג
-    switch(type) {
+    switch(apiType) {
         case 'cemetery':
             // שדות ספציפיים לבית עלמין
             if (formData.get('address')) {
@@ -456,7 +462,7 @@ async function saveItem(event) {
             }
             break;
             
-        case 'areaGrave':
+        case 'area_grave':
             // שדות ספציפיים לאחוזת קבר
             if (formData.get('grave_type')) {
                 data.grave_type = formData.get('grave_type');
@@ -489,7 +495,7 @@ async function saveItem(event) {
     }
     
     // הוספת parent_id אם נדרש
-    const parentColumn = getParentColumn(type);
+    const parentColumn = getParentColumn(apiType);
     if (parentColumn && parentId) {
         data[parentColumn] = parentId;
     }
@@ -499,8 +505,8 @@ async function saveItem(event) {
     
     try {
         const url = editingItemId 
-            ? `/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=update&type=${type}&id=${editingItemId}`
-            : `/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=create&type=${type}`;
+            ? `/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=update&type=${apiType}&id=${editingItemId}`
+            : `/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=create&type=${apiType}`;
             
         const method = editingItemId ? 'PUT' : 'POST';
         

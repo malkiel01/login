@@ -15,72 +15,72 @@
 //     return true;
 // }
 
-/**
- * רישום פעילות בלוג
- */
-function logActivity($action, $module, $itemId, $details = []) {
-    global $pdo;
-    
-    try {
-        // בדיקה אם טבלת לוגים קיימת
-        $stmt = $pdo->query("SHOW TABLES LIKE 'activity_logs'");
-        if ($stmt->rowCount() == 0) {
-            // אם הטבלה לא קיימת, רק רשום ב-error log
-            error_log("[$module] $action on item #$itemId - " . json_encode($details));
-            return;
-        }
-        
-        // הכנסה לטבלת לוגים
-        $stmt = $pdo->prepare("
-            INSERT INTO activity_logs (user_id, module, action, item_id, details, ip_address, created_at)
-            VALUES (:user_id, :module, :action, :item_id, :details, :ip, NOW())
-        ");
-        
-        $stmt->execute([
-            'user_id' => $_SESSION['user_id'] ?? 0,
-            'module' => $module,
-            'action' => $action,
-            'item_id' => $itemId,
-            'details' => json_encode($details),
-            'ip' => $_SERVER['REMOTE_ADDR'] ?? ''
-        ]);
-    } catch (Exception $e) {
-        error_log("Failed to log activity: " . $e->getMessage());
-    }
-}
-
 // /**
-//  * קבלת חיבור לבסיס נתונים
+//  * רישום פעילות בלוג
 //  */
-// function getDBConnection() {
+// function logActivity($action, $module, $itemId, $details = []) {
 //     global $pdo;
     
-//     if ($pdo instanceof PDO) {
-//         return $pdo;
-//     }
-    
-//     // אם אין חיבור גלובלי, צור חדש
 //     try {
-//         // השתמש בהגדרות מהקונפיג הראשי
-//         $host = defined('DB_HOST') ? DB_HOST : 'localhost';
-//         $dbname = defined('DB_NAME') ? DB_NAME : '';
-//         $username = defined('DB_USER') ? DB_USER : '';
-//         $password = defined('DB_PASS') ? DB_PASS : '';
+//         // בדיקה אם טבלת לוגים קיימת
+//         $stmt = $pdo->query("SHOW TABLES LIKE 'activity_logs'");
+//         if ($stmt->rowCount() == 0) {
+//             // אם הטבלה לא קיימת, רק רשום ב-error log
+//             error_log("[$module] $action on item #$itemId - " . json_encode($details));
+//             return;
+//         }
         
-//         $dsn = "mysql:host=$host;dbname=$dbname;charset=utf8mb4";
-//         $options = [
-//             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-//             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-//             PDO::ATTR_EMULATE_PREPARES => false
-//         ];
+//         // הכנסה לטבלת לוגים
+//         $stmt = $pdo->prepare("
+//             INSERT INTO activity_logs (user_id, module, action, item_id, details, ip_address, created_at)
+//             VALUES (:user_id, :module, :action, :item_id, :details, :ip, NOW())
+//         ");
         
-//         $pdo = new PDO($dsn, $username, $password, $options);
-//         return $pdo;
-        
-//     } catch (PDOException $e) {
-//         die("Connection failed: " . $e->getMessage());
+//         $stmt->execute([
+//             'user_id' => $_SESSION['user_id'] ?? 0,
+//             'module' => $module,
+//             'action' => $action,
+//             'item_id' => $itemId,
+//             'details' => json_encode($details),
+//             'ip' => $_SERVER['REMOTE_ADDR'] ?? ''
+//         ]);
+//     } catch (Exception $e) {
+//         error_log("Failed to log activity: " . $e->getMessage());
 //     }
 // }
+
+/**
+ * קבלת חיבור לבסיס נתונים
+ */
+function getDBConnection() {
+    global $pdo;
+    
+    if ($pdo instanceof PDO) {
+        return $pdo;
+    }
+    
+    // אם אין חיבור גלובלי, צור חדש
+    try {
+        // השתמש בהגדרות מהקונפיג הראשי
+        $host = defined('DB_HOST') ? DB_HOST : 'localhost';
+        $dbname = defined('DB_NAME') ? DB_NAME : '';
+        $username = defined('DB_USER') ? DB_USER : '';
+        $password = defined('DB_PASS') ? DB_PASS : '';
+        
+        $dsn = "mysql:host=$host;dbname=$dbname;charset=utf8mb4";
+        $options = [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES => false
+        ];
+        
+        $pdo = new PDO($dsn, $username, $password, $options);
+        return $pdo;
+        
+    } catch (PDOException $e) {
+        die("Connection failed: " . $e->getMessage());
+    }
+}
 
 // /**
 //  * ניקוי קלט מהמשתמש

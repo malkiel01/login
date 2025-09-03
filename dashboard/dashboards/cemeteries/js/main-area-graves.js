@@ -158,11 +158,11 @@ async function openAddAreaGrave(preselectedRowId = null) {
         }
     } else {
         const rowId = preselectedRowId || window.selectedItems.row.id;
-        window.currentType = 'area_grave';
+        window.currentType = 'areaGrave';
         window.currentParentId = rowId;
         
         if (typeof window.openModal === 'function') {
-            window.openModal('area_grave', rowId, null);
+            window.openModal('areaGrave', rowId, null);
         } else {
             createAreaGraveForm(rowId);
         }
@@ -237,11 +237,11 @@ window.proceedWithRowSelection = function() {
     select.closest('div[style*=fixed]').remove();
     
     // פתח טופס הוספת אחוזת קבר
-    window.currentType = 'area_grave';
+    window.currentType = 'areaGrave';
     window.currentParentId = rowId;
     
     if (typeof window.openModal === 'function') {
-        window.openModal('area_grave', rowId, null);
+        window.openModal('areaGrave', rowId, null);
     } else {
         createAreaGraveForm(rowId);
     }
@@ -343,9 +343,9 @@ window.submitAreaGraveForm = async function(event, rowId) {
 
 // עריכת אחוזת קבר
 function editAreaGrave(id) {
-    window.currentType = 'area_grave';
+    window.currentType = 'areaGrave';
     if (typeof window.openModal === 'function') {
-        window.openModal('area_grave', window.selectedItems.row?.id, id);
+        window.openModal('areaGrave', window.selectedItems.row?.id, id);
     }
 }
 

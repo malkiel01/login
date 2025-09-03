@@ -1,176 +1,114 @@
-<!-- < ?php
-// בדיקת הרשאות בצד השרת
-// התחל את ה-session עם אותו שם לפני טעינת config
-session_name('deceased_forms_session');
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+<?php
+// cemetery_dashboard/index.php
+require_once 'config.php';
+require_once 'includes/functions.php';
 
-// כעת טען את הקונפיג
-require_once '../config.php';
-
-// בדיקה פשוטה - האם המשתמש מחובר
-if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
-    header('Location: ../auth/login.php');
-    exit;
+// בדיקת הרשאות
+if (!checkPermission('view', 'cemetery')) {
+    die('אין לך הרשאה לצפות בעמוד זה');
 }
-
-// בדיקת רמת הרשאה - רק מנהלים (רמה 4) או הרשאה ספציפית
-$hasAccess = false;
-if (isset($_SESSION['permission_level']) && $_SESSION['permission_level'] >= 4) {
-    $hasAccess = true;
-} else {
-    // בדוק הרשאה ספציפית למודול
-    try {
-        $db = getDbConnection();
-        $stmt = $db->prepare("
-            SELECT COUNT(*) 
-            FROM user_permissions 
-            WHERE user_id = ? 
-            AND module_name = 'cemeteries' 
-            AND can_access = 1
-        ");
-        $stmt->execute([$_SESSION['user_id']]);
-        $hasAccess = $stmt->fetchColumn() > 0;
-    } catch (Exception $e) {
-        // אם אין טבלת הרשאות, תן גישה רק למנהלים
-        $hasAccess = false;
-    }
-}
-
-if (!$hasAccess) {
-    // אין הרשאה - חזור לדשבורד הראשי
-    header('Location: ../');
-    exit;
-}
-
-// קבע את שם האתר אם לא מוגדר
-if (!defined('SITE_NAME')) {
-    define('SITE_NAME', 'מערכת ניהול');
-}
-?> -->
+?>
 <!DOCTYPE html>
-<html dir="rtl" lang="he">
+<html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ניהול בתי עלמין - <?php echo SITE_NAME; ?></title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="dashboards/cemeteries/css/style.css" rel="stylesheet">
+    <title><?php echo DASHBOARD_NAME; ?></title>
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/tables.css">
+    <link rel="stylesheet" href="css/forms.css">
 </head>
 <body>
-    <!-- הצג מידע על המשתמש המחובר -->
-    <!-- <div class="position-fixed top-0 start-0 m-3 text-muted small">
-        <i class="fas fa-user"></i> <?php echo $_SESSION['username'] ?? 'משתמש'; ?> 
-        | רמה: <?php echo $_SESSION['permission_level'] ?? '?'; ?>
-    </div> -->
-    
-    <div class="container-fluid">
-        <div class="row">
+    <div class="dashboard-wrapper">
+        <!-- Header -->
+        <?php include 'includes/header.php'; ?>
+        
+        <div class="dashboard-container">
             <!-- Sidebar -->
-            <div class="col-md-2 sidebar">
-                <h4 class="text-center mb-4">
-                    <i class="fas fa-landmark"></i> ניהול בתי עלמין
-                </h4>
-                <nav class="nav flex-column">
-                    <a class="nav-link active" href="#" data-page="overview">
-                        <i class="fas fa-dashboard"></i> סקירה כללית
-                    </a>
-                    <a class="nav-link" href="#" data-page="cemeteries">
-                        <i class="fas fa-building"></i> בתי עלמין
-                    </a>
-                    <a class="nav-link" href="#" data-page="blocks">
-                        <i class="fas fa-th-large"></i> גושים
-                    </a>
-                    <a class="nav-link" href="#" data-page="plots">
-                        <i class="fas fa-map"></i> חלקות
-                    </a>
-                    <a class="nav-link" href="#" data-page="rows">
-                        <i class="fas fa-grip-lines"></i> שורות
-                    </a>
-                    <a class="nav-link" href="#" data-page="areaGraves">
-                        <i class="fas fa-layer-group"></i> אחוזות קבר
-                    </a>
-                    <a class="nav-link" href="#" data-page="graves">
-                        <i class="fas fa-cross"></i> קברים
-                    </a>
-                    <hr class="my-3">
-                    <a class="nav-link" href="../">
-                        <i class="fas fa-arrow-right"></i> חזרה לדשבורד
-                    </a>
-                    <a class="nav-link" href="../auth/logout.php">
-                        <i class="fas fa-sign-out-alt"></i> יציאה
-                    </a>
-                </nav>
-            </div>
-
+            <?php include 'includes/sidebar.php'; ?>
+            
             <!-- Main Content -->
-            <div class="col-md-10 main-content">
-                <!-- Breadcrumb -->
-                <nav class="breadcrumb-custom">
-                    <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item"><a href="../">דף הבית</a></li>
-                        <li class="breadcrumb-item">בתי עלמין</li>
-                        <li class="breadcrumb-item active" id="current-page">סקירה כללית</li>
-                    </ol>
-                </nav>
-
-                <!-- Dynamic Content Area -->
-                <div id="content-area">
-                    <div class="text-center p-5">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">טוען...</span>
-                        </div>
+            <main class="main-content">
+                <!-- Action Bar -->
+                <div class="action-bar">
+                    <div class="breadcrumb" id="breadcrumb">
+                        <span class="breadcrumb-item">ראשי</span>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn btn-secondary" onclick="refreshData()">
+                            <svg class="icon"><use xlink:href="#icon-refresh"></use></svg>
+                            רענון
+                        </button>
+                        <button class="btn btn-primary" onclick="openAddModal()">
+                            <svg class="icon"><use xlink:href="#icon-plus"></use></svg>
+                            הוסף חדש
+                        </button>
                     </div>
                 </div>
-            </div>
+                
+                <!-- Statistics Cards -->
+                <div class="stats-grid" id="statsGrid">
+                    <!-- Will be populated by JS -->
+                </div>
+                
+                <!-- Data Table -->
+                <div class="table-container">
+                    <table class="data-table" id="dataTable">
+                        <thead>
+                            <tr id="tableHeaders">
+                                <!-- Headers will be populated by JS -->
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <!-- Data will be populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                <div class="pagination" id="pagination">
+                    <!-- Will be populated by JS -->
+                </div>
+            </main>
         </div>
     </div>
-
-    <!-- Modal Template -->
-    <div class="modal fade" id="editModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalTitle">טוען...</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="editForm">
-                        <input type="hidden" id="itemId" name="id">
-                        <input type="hidden" id="itemType" name="type">
-                        <div id="formFields">
-                            <!-- Dynamic fields will load here -->
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ביטול</button>
-                    <button type="button" class="btn btn-primary" id="saveBtn">שמירה</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
-    <!-- App Scripts -->
-    <script src="dashboards/cemeteries/js/config.js"></script>
-    <script src="dashboards/cemeteries/js/utils.js"></script>
-    <script src="dashboards/cemeteries/js/validation.js"></script>
-    <script src="dashboards/cemeteries/js/api.js"></script>
-    <script src="dashboards/cemeteries/js/views/overview.js"></script>
-    <script src="dashboards/cemeteries/js/views/cemeteries.js"></script>
-    <script src="dashboards/cemeteries/js/views/blocks.js"></script>
-    <script src="dashboards/cemeteries/js/views/plots.js"></script>
-    <script src="dashboards/cemeteries/js/views/rows.js"></script>
-    <script src="dashboards/cemeteries/js/views/areaGraves.js"></script>
-    <script src="dashboards/cemeteries/js/views/graves.js"></script>
-    <script src="dashboards/cemeteries/js/forms.js"></script>
-    <script src="dashboards/cemeteries/js/main.js"></script>
+    <!-- Modals -->
+    <?php include 'includes/modals.php'; ?>
+    
+    <!-- SVG Icons -->
+    <svg style="display: none;">
+        <symbol id="icon-refresh" viewBox="0 0 24 24">
+            <path d="M4 12a8 8 0 0 1 8-8v2a6 6 0 0 0 0 12v2a8 8 0 0 1-8-8z"/>
+            <path d="M12 4V2l3 3-3 3v-2a6 6 0 0 0 0 12v2l3-3-3-3v2a8 8 0 0 1 0-16z"/>
+        </symbol>
+        <symbol id="icon-plus" viewBox="0 0 24 24">
+            <path d="M12 5v14m-7-7h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </symbol>
+        <symbol id="icon-edit" viewBox="0 0 24 24">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2"/>
+        </symbol>
+        <symbol id="icon-delete" viewBox="0 0 24 24">
+            <path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </symbol>
+    </svg>
+    
+    <!-- JavaScript Files -->
+    <script src="js/main.js"></script>
+    <script src="js/hierarchy.js"></script>
+    <script src="js/customers.js"></script>
+    <script src="js/purchases.js"></script>
+    <script src="js/burials.js"></script>
+    
+    <script>
+        // Initialize dashboard on load
+        document.addEventListener('DOMContentLoaded', function() {
+            initDashboard();
+        });
+    </script>
 </body>
 </html>

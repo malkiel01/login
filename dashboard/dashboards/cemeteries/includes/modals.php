@@ -312,8 +312,17 @@ function openModal(type = null, parentId = null, itemId = null) {
     form.reset();
     editingItemId = itemId;
     
+    // התאמה של הטיפוס
+    let apiType = type;
+    if (type === 'areaGrave') {
+        apiType = 'area_grave'; // המרה ל-API
+    }
+    
+    // המשך הפונקציה...
+    document.getElementById('itemType').value = apiType;
+    
     // הגדרת סוג ואב
-    document.getElementById('itemType').value = type || currentType;
+    // document.getElementById('itemType').value = type || currentType;
     document.getElementById('parentId').value = parentId || currentParentId;
     
     // התאמת השדות לסוג
@@ -341,6 +350,11 @@ function closeModal() {
 // התאמת שדות לסוג הפריט
 // בפונקציה adjustFieldsForType - שורה ~197 בערך
 function adjustFieldsForType(type) {
+    // המרה אם צריך
+    if (type === 'areaGrave') {
+        type = 'area_grave';
+    }
+
     // הסתרת כל השדות הספציפיים
     document.querySelectorAll('.grave-only, .area-grave-only').forEach(el => {
         el.style.display = 'none';
@@ -373,7 +387,7 @@ function adjustFieldsForType(type) {
         nameContainer.style.display = 'block';
     }
     
-    if (type === 'areaGrave') {
+    if (type === 'area_grave') {
         document.querySelectorAll('.area-grave-only').forEach(el => {
             el.style.display = 'block';
         });

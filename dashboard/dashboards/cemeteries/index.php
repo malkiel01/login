@@ -22,7 +22,6 @@ if (!checkPermission('view', 'cemetery')) {
     <link rel="stylesheet" href="dashboards/cemeteries/css/forms.css">
 </head>
 <body>
- 44
     <div class="dashboard-wrapper">
         <!-- Header -->
         <?php include 'dashboards/cemeteries/includes/header.php'; ?>

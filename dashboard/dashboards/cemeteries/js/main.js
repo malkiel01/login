@@ -8,7 +8,7 @@ let currentPage = 1;
 let isLoading = false;
 
 // הגדרות API - נתיב מלא מהשורש
-const API_BASE = '/dashboard/dashboards/cemeteries/api/';
+const API_BASE = 'dashboards/cemeteries/api/';
 
 // אתחול הדשבורד
 function initDashboard() {

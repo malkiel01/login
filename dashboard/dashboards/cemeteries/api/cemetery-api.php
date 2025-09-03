@@ -31,10 +31,10 @@ session_start();
 header('Content-Type: application/json; charset=utf-8');
 
 // בדיקה פשוטה - רק אם יש user_id
-if (!isset($_SESSION['user_id'])) {
-    http_response_code(403);
-    die(json_encode(['error' => 'אין הרשאה']));
-}
+// if (!isset($_SESSION['user_id'])) {
+//     http_response_code(403);
+//     die(json_encode(['error' => 'אין הרשאה']));
+// }
 
 // טען את הקונפיג
 // require_once '../../config.php';

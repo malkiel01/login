@@ -61,10 +61,10 @@ if (!defined('SITE_NAME')) {
 </head>
 <body>
     <!-- הצג מידע על המשתמש המחובר -->
-    <div class="position-fixed top-0 start-0 m-3 text-muted small">
+    <!-- <div class="position-fixed top-0 start-0 m-3 text-muted small">
         <i class="fas fa-user"></i> <?php echo $_SESSION['username'] ?? 'משתמש'; ?> 
         | רמה: <?php echo $_SESSION['permission_level'] ?? '?'; ?>
-    </div>
+    </div> -->
     
     <div class="container-fluid">
         <div class="row">

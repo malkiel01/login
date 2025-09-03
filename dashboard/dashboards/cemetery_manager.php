@@ -1,3 +1,8 @@
+<?php
+// פשוט כלול את הקובץ במקום להפנות
+include 'cemeteries/index.php';
+?>
+
 
 <script type="text/plain" id="disabled-block">
     <?php

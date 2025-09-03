@@ -8,6 +8,32 @@ const SearchConfig = {
      * הגדרות חיפושים שונים
      */
     searches: {
+        // החיפוש הקיים שלך
+        standard: {
+            name: 'חיפוש סטנדרטי',
+            filters: {}, // אין תנאי סינון מיוחדים
+            searchFields: {
+                simple: ['c_firstName', 'c_lastName', 'c_fullNameHe'],
+                advanced: {
+                    firstName: 'c_firstName',
+                    lastName: 'c_lastName',
+                    fatherName: 'c_nameFather',
+                    motherName: 'c_nameMother',
+                    cemetery: 'cemeteryNameHe'
+                }
+            },
+            returnFields: [
+                'c_firstName',
+                'c_lastName',
+                'c_nameFather',
+                'c_nameMother',
+                'graveNameHe',
+                'cemeteryNameHe',
+                'b_dateDeath',
+                'b_dateBurial'
+            ]
+        },
+        
         // חיפש רכישות
         purchased_graves: {
             name: 'קברים שנרכשו',
@@ -46,7 +72,6 @@ const SearchConfig = {
             returnFields: [
                 'c_firstName',
                 'c_lastName',
-                'c_numId',
                 'graveNameHe',
                 'areaGraveNameHe',
                 'lineNameHe',
@@ -61,7 +86,6 @@ const SearchConfig = {
             displayFields: {
                 'c_firstName': 'שם פרטי',
                 'c_lastName': 'שם משפחה',
-                'c_numId': 'תעודת זהות', 
                 'graveNameHe': 'מספר קבר',
                 'areaGraveNameHe': 'אזור',
                 'lineNameHe': 'שורה',

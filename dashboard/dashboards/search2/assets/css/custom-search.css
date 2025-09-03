@@ -1,0 +1,451 @@
+/* כרטיסיות סוג חיפוש - עיצוב כטאבים */
+.search-type-selector {
+    background: white;
+    padding: 0;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.search-type-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    background: #f8f9fa;
+}
+
+.search-type-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 18px 10px;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: center;
+    position: relative;
+}
+
+.search-type-tab:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 25%;
+    height: 50%;
+    width: 1px;
+    background: #dee2e6;
+}
+
+.search-type-tab:hover {
+    background: rgba(74, 144, 226, 0.05);
+}
+
+.search-type-tab.active {
+    background: white;
+    border-bottom-color: #4a90e2;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
+}
+
+.search-type-tab .icon {
+    font-size: 26px;
+    margin-bottom: 6px;
+    transition: transform 0.3s;
+}
+
+.search-type-tab.active .icon {
+    transform: scale(1.1);
+    color: #4a90e2;
+}
+
+.search-type-tab .label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #6c757d;
+    transition: color 0.3s;
+}
+
+.search-type-tab.active .label {
+    color: #4a90e2;
+    font-weight: 600;
+}
+
+/* טאבים - עיצוב מותאם למובייל */
+.search-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 20px;
+    background: #f5f5f5;
+    padding: 4px;
+    border-radius: 10px;
+}
+
+.search-tab {
+    padding: 12px 10px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    transition: all 0.3s;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 44px;
+}
+
+.search-tab .tab-icon {
+    font-size: 18px;
+}
+
+.search-tab .tab-text {
+    white-space: nowrap;
+}
+
+.search-tab:hover {
+    background: rgba(255,255,255,0.5);
+}
+
+.search-tab.active {
+    background: white;
+    color: #4a90e2;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* שדה חיפוש מהיר - תיקון כפתור */
+.search-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.search-input {
+    width: 100%;
+    padding: 12px 15px 12px 50px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 16px;
+    transition: all 0.3s;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+.search-button {
+    position: absolute;
+    left: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: #4a90e2;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+}
+
+.search-button:hover {
+    background: #357abd;
+}
+
+.search-button:active {
+    transform: translateY(-50%) scale(0.95);
+}
+
+/* תוכן הטאבים */
+.tab-content {
+    display: none;
+    animation: fadeIn 0.3s;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* שדות בחיפוש מתקדם */
+.field-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+/* כפתורי פעולה */
+.submit-button, .clear-button {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-right: 10px;
+}
+
+.submit-button {
+    background: #4a90e2;
+    color: white;
+}
+
+.submit-button:hover {
+    background: #357abd;
+}
+
+.clear-button {
+    background: #f5f5f5;
+    color: #666;
+}
+
+.clear-button:hover {
+    background: #e0e0e0;
+}
+
+/* בורר תצוגה */
+.view-selector {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.view-btn {
+    padding: 8px 16px;
+    border: 1px solid #dee2e6;
+    background: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.3s;
+}
+
+.view-btn:hover {
+    background: #f8f9fa;
+}
+
+.view-btn.active {
+    background: #4a90e2;
+    color: white;
+    border-color: #4a90e2;
+}
+
+/* כרטיסי תוצאות */
+.results-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.result-card {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    gap: 15px;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.result-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.result-card .image-placeholder {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.result-card .image-placeholder .initials {
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.result-card .card-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.result-card .name {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.result-card .parents {
+    font-size: 13px;
+    color: #6c757d;
+    margin-bottom: 8px;
+}
+
+.result-card .dates {
+    font-size: 14px;
+    color: #495057;
+    margin-bottom: 10px;
+}
+
+.result-card .location {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 13px;
+    color: #6c757d;
+    padding-top: 10px;
+    border-top: 1px solid #e9ecef;
+}
+
+.result-card .location-icon {
+    font-size: 16px;
+    color: #4a90e2;
+}
+
+/* טבלת תוצאות רספונסיבית */
+.results-table-container {
+    overflow-x: auto;
+    margin-top: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.result-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+.result-table th,
+.result-table td {
+    padding: 12px;
+    text-align: right;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.result-table th {
+    background: #f8f9fa;
+    font-weight: bold;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    font-size: 14px;
+    color: #495057;
+}
+
+.result-table tr:hover {
+    background: #f8f9fa;
+}
+
+.result-table td {
+    font-size: 14px;
+}
+
+.id-number {
+    font-size: 0.9em;
+    color: #666;
+    margin: 5px 0;
+}
+
+/* התאמות למובייל */
+@media (max-width: 768px) {
+    .search-type-tab {
+        padding: 15px 5px;
+    }
+    
+    .search-type-tab .icon {
+        font-size: 22px;
+    }
+    
+    .search-type-tab .label {
+        font-size: 12px;
+    }
+    
+    .search-type-tab:not(:last-child)::after {
+        display: none;
+    }
+    
+    .search-tab {
+        font-size: 13px;
+        padding: 10px 5px;
+    }
+    
+    .search-tab .tab-icon {
+        font-size: 16px;
+    }
+    
+    .search-tab .tab-text {
+        font-size: 13px;
+    }
+    
+    .field-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .result-table {
+        font-size: 14px;
+    }
+    
+    .result-table th,
+    .result-table td {
+        padding: 8px;
+    }
+    
+    /* גלילה אופקית לטבלה במובייל */
+    .results-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+@media (max-width: 480px) {
+    .search-type-selector h3 {
+        font-size: 16px;
+    }
+    
+    .search-type-card {
+        min-height: 70px;
+        padding: 12px 8px;
+    }
+    
+    .search-type-card .icon {
+        font-size: 20px;
+    }
+    
+    .search-type-card .label {
+        font-size: 12px;
+    }
+    
+    .submit-button, .clear-button {
+        width: 100%;
+        margin: 5px 0;
+    }
+}

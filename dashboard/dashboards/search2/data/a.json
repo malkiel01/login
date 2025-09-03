@@ -1,0 +1,197 @@
+{
+ "graveId":"21",
+ "audit_log_id":null,
+ "graveNameHe":"22",
+ "areaGraveNameHe":"22",
+ "lineNameHe":"1",
+ "plotNameHe":"1",
+ "blockNameHe":"1 - 1",
+ "cemeteryNameHe":"הר המנוחות גבעת שאול",
+ "plotType":"1",
+ "areaGraveId":"2136cd88-8214-4e33-be9b-e64bc7541a4c",
+ "graveStatus":"3",
+ "graveLocation":"0",
+ "constructionCost":"",
+ "isSmallGrave":"0",
+ "isActive":"1",
+ "comments":"",
+ "documentsList":"",
+ "createDate":"2025-01-01",
+ "saveDate":"2025-01-01",
+ "updateDate":"2025-01-01",
+ "inactiveDate":"2025-01-01",
+ "graveUnicId":"2136cd88-8214-4e33-be9b-e64bc7541a4c-0",
+ "clientId":"cust-auto-000022",
+ "p_clientId":null,
+ "p_serialPurchaseId":null,
+ "p_purchaseStatus":null,
+ "p_buyerStatus":null,
+ "p_isFuneralPayments":null,
+ "p_BookkeepingApproval":null,
+ "p_price":null,
+ "p_numOfPayments":null,
+ "p_PaymentEndDate":null,
+ "p_paymentsList":null,
+ "p_additionalpaymentsList":null,
+ "p_refundInvoiceNumber":null,
+ "p_documentsList":null,
+ "p_historyList":null,
+ "p_savedGravesList":null,
+ "p_refundAmount":null,
+ "p_contactId":null,
+ "p_dateOpening":null,
+ "p_comment":null,
+ "p_ifCertificate":null,
+ "p_deedNum":null,
+ "p_kinship":null,
+ "p_diesSpouse":null,
+ "p_hashPurchase":null,
+ "p_unicId":null,
+ "p_createDate":null,
+ "p_updateDate":null,
+ "p_cancelDate":null,
+ "p_inactiveDate":null,
+ "p_isActive":null,
+ "b_burialId":12,
+ "b_clientId":"cust-auto-000022",
+ "b_purchaseId":null,
+ "b_serialBurialId":"",
+ "b_dateDeath":"1985-11-07",
+ "b_timeDeath":"00:00:00",
+ "b_dateBurial":"1996-04-22",
+ "b_timeBurial":"00:00:00",
+ "b_placeDeath":"",
+ "b_nationalInsuranceBurial":"כן",
+ "b_deathAbroad":"כן",
+ "b_savedGravesList":"null",
+ "b_dateOpening":"1985-11-07",
+ "b_reportingBL":"0000-00-00",
+ "b_contactId":null,
+ "b_kinship":"",
+ "b_documentsList":"null",
+ "b_historyList":"null",
+ "b_createDate":"2015-02-01 00:00:00",
+ "b_updateDate":"2015-11-01 00:00:00",
+ "b_cancelDate":"2025-01-01 00:00:00",
+ "b_inactiveDate":"2025-01-01 00:00:00",
+ "b_isActive":1,
+ "b_buriaLicense":"",
+ "b_comment":"",
+ "source":"graves",
+ "c_customerId":21,
+ "c_typeId":0,
+ "c_numId":"",
+ "c_firstName":"אסתר",
+ "c_lastName":"אייש",
+ "c_oldName":"",
+ "c_nom":"",
+ "c_gender":3,
+ "c_nameFather":"אברהם",
+ "c_nameMother":"פנינה",
+ "c_maritalStatus":5,
+ "c_dateBirth":"1952-10-05",
+ "c_countryBirthId":"",
+ "c_age":"",
+ "c_countryBirth":"",
+ "c_resident":0,
+ "c_countryId":null,
+ "c_cityId":null,
+ "c_phone":"",
+ "c_phoneMobile":"",
+ "c_address":"",
+ "c_statusCustomer":3,
+ "c_graveId":"2136cd88-8214-4e33-be9b-e64bc7541a4c-0",
+ "c_createDate":"31.12.2024",
+ "c_updateDate":"31.12.2024",
+ "c_inactiveDate":"31.12.2024",
+ "c_isActive":1,
+ "c_spouse":"",
+ "c_comment":"פרטי זיהוי חסרים",
+ "c_association":0,
+ "c_dateBirthHe":"\"יז,תשרי ,תשיג\"",
+ "c_tourist":0,
+ "c_unicId":"cust-auto-000022",
+ "c_countryBirthNameHe":"",
+ "c_countryNameHe":"",
+ "c_cityNameHe":"",
+ "c_graveNameHe":"",
+ "c_areaGraveNameHe":"",
+ "c_lineNameHe":"",
+ "c_plotNameHe":"",
+ "c_blockNameHe":"",
+ "c_cemeteryNameHe":"",
+ "c_spouseNameHe":"",
+ "c_fullNameHe":"אסתר אייש"
+},
+
+
+אני רוצה הפעם לחפש את הפרמטרים הבאים:
+
+תנאים לחיפוש:
+
+"b_clientId" אינו null
+"graveStatus" שווה "3" בלבד
+
+רק אם תנאים אלו קיימים תתייחס לערך,
+אחרת אל תבדוק או תציג אותו
+
+הערכים לחיפוש:
+
+בחיפוש מתקדם:
+
+שם הלקוח
+ "c_firstName":"אסתר",
+ "c_lastName":"אייש",
+ "c_nameFather":"אברהם",
+ "c_nameMother":"פנינה",
+
+
+מיקום הקבר
+ "graveNameHe":"1",
+ "areaGraveNameHe":"1",
+ "lineNameHe":"0",
+ "plotNameHe":"1",
+ "blockNameHe":"1 - 1",
+ "cemeteryNameHe":"הר המנוחות גבעת שאול",
+
+תאריך פטירה וקבורה
+ "b_dateDeath":"1985-11-07",
+ "b_timeDeath":"00:00:00",
+ "b_dateBurial":"1996-04-22",
+ "b_timeBurial":"00:00:00",
+
+
+בחיפוש כללי
+הערך המתקבל יבדק אל מול כל השדות
+(נשאיר אופציה לסינון שדה כל שהוא - כלומר שהשוואת הערך לא תבדק אל מול שדות מסויימים)
+
+הערכים שיוחזרו ללקוח:
+אנו נבנה פרמטר,
+ששם אני יצור מערך של ערכים
+ולפיו זה המידע שהוא יחזיר
+כלומר נניח והמערך יהיה
+
+[
+ "c_firstName",
+ "c_lastName",
+ "graveNameHe",
+ "areaGraveNameHe",
+ "lineNameHe",
+ "plotNameHe",
+ "blockNameHe",
+ "cemeteryNameHe",
+ "b_dateDeath",
+ "b_timeDeath",
+ "b_dateBurial",
+ "b_timeBurial",
+]
+
+אז אלו הערכים שיחזרו
+
+כלומר מה שאני רוצה
+זה דף מיוחד שינהל לי את מבנה השאילתות
+בצורה כזו, שאוכל בקלות להוסיף פרמטר לחיפוש
+או להוסיף פרמטר מתקבל כתוצאה
+איזור שיגדיר בבירור את שמות הפרמטרים שלי אל מול שמות הפרמטרים של השרת
+
+

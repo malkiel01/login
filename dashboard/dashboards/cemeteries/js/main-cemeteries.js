@@ -1,67 +1,67 @@
 // dashboards/cemeteries/js/main-cemeteries.js
 // ניהול בתי עלמין
-// פונקציה מעודכנת לניהול הסידבר
-function updateSidebarSelection(type, id, name) {
-    console.log('updateSidebarSelection called:', type, id, name);
-    // 1. הסר את כל ה-active מהכותרות
-    document.querySelectorAll('.hierarchy-header').forEach(header => {
-        header.classList.remove('active');
-    });
+// // פונקציה מעודכנת לניהול הסידבר
+// function updateSidebarSelection(type, id, name) {
+//     console.log('updateSidebarSelection called:', type, id, name);
+//     // 1. הסר את כל ה-active מהכותרות
+//     document.querySelectorAll('.hierarchy-header').forEach(header => {
+//         header.classList.remove('active');
+//     });
     
-    // 2. הוסף active לכותרת הנוכחית
-    const headers = {
-        'cemetery': 0,
-        'block': 1,
-        'plot': 2,
-        'area_grave': 3,
-        'grave': 4
-    };
+//     // 2. הוסף active לכותרת הנוכחית
+//     const headers = {
+//         'cemetery': 0,
+//         'block': 1,
+//         'plot': 2,
+//         'area_grave': 3,
+//         'grave': 4
+//     };
     
-    const headerElements = document.querySelectorAll('.hierarchy-header');
-    if (headerElements[headers[type]]) {
-        headerElements[headers[type]].classList.add('active');
-    }
+//     const headerElements = document.querySelectorAll('.hierarchy-header');
+//     if (headerElements[headers[type]]) {
+//         headerElements[headers[type]].classList.add('active');
+//     }
     
-    // 3. נקה את כל הבחירות מתחת לרמה הנוכחית
-    clearSidebarBelow(type);
+//     // 3. נקה את כל הבחירות מתחת לרמה הנוכחית
+//     clearSidebarBelow(type);
     
-    // 4. הצג את הפריט הנבחר
-    const container = document.getElementById(`${type}SelectedItem`);
-    if (container) {
-        container.innerHTML = `
-            <div class="selected-item" onclick="goToItem('${type}', ${id})">
-                <span class="selected-icon">📍</span>
-                <span class="selected-name">${name}</span>
-            </div>
-        `;
-        container.style.display = 'block';
-    }
-}
+//     // 4. הצג את הפריט הנבחר
+//     const container = document.getElementById(`${type}SelectedItem`);
+//     if (container) {
+//         container.innerHTML = `
+//             <div class="selected-item" onclick="goToItem('${type}', ${id})">
+//                 <span class="selected-icon">📍</span>
+//                 <span class="selected-name">${name}</span>
+//             </div>
+//         `;
+//         container.style.display = 'block';
+//     }
+// }
 
-// פונקציה לניקוי כל הבחירות
-function clearAllSidebarSelections() {
-    // הסר active מכל הכותרות
-    document.querySelectorAll('.hierarchy-header').forEach(header => {
-        header.classList.remove('active');
-    });
+// // פונקציה לניקוי כל הבחירות
+// function clearAllSidebarSelections() {
+//     // הסר active מכל הכותרות
+//     document.querySelectorAll('.hierarchy-header').forEach(header => {
+//         header.classList.remove('active');
+//     });
     
-    // נקה את כל הפריטים הנבחרים
-    const containers = [
-        'cemeterySelectedItem',
-        'blockSelectedItem', 
-        'plotSelectedItem',
-        'areaGraveSelectedItem',
-        'graveSelectedItem'
-    ];
+//     // נקה את כל הפריטים הנבחרים
+//     const containers = [
+//         'cemeterySelectedItem',
+//         'blockSelectedItem', 
+//         'plotSelectedItem',
+//         'areaGraveSelectedItem',
+//         'graveSelectedItem'
+//     ];
     
-    containers.forEach(id => {
-        const element = document.getElementById(id);
-        if (element) {
-            element.innerHTML = '';
-            element.style.display = 'none';
-        }
-    });
-}
+//     containers.forEach(id => {
+//         const element = document.getElementById(id);
+//         if (element) {
+//             element.innerHTML = '';
+//             element.style.display = 'none';
+//         }
+//     });
+// }
 
 // פונקציה למעבר לפריט שנבחר
 window.goToItem = function(type, id) {
@@ -131,25 +131,6 @@ function openCemetery(cemeteryId, cemeteryName) {
     
     // עדכן breadcrumb
     updateBreadcrumb(`בתי עלמין › ${cemeteryName}`);
-}
-
-// פונקציה לניקוי כל הפריטים הנבחרים בסידבר
-function clearAllSidebarSelections2() {
-    const containers = [
-        'cemeterySelectedItem',
-        'blockSelectedItem', 
-        'plotSelectedItem',
-        'areaGraveSelectedItem',
-        'graveSelectedItem'
-    ];
-    
-    containers.forEach(id => {
-        const element = document.getElementById(id);
-        if (element) {
-            element.innerHTML = '';
-            element.style.display = 'none';
-        }
-    });
 }
 
 // הצגת בתי עלמין בתוכן הראשי (לא בסידבר!)
@@ -256,23 +237,19 @@ async function deleteCemetery(id) {
     }
 }
 
-// עדכון הבחירה בסידבר
-function updateSidebarSelection(type, id, name) {
-    // הסר את כל האיתים מהרמות הנמוכות יותר
-    clearSidebarBelow(type);
+// // עדכון הבחירה בסידבר
+// function updateSidebarSelection(type, id, name) {
+//     // הסר את כל האיתים מהרמות הנמוכות יותר
+//     clearSidebarBelow(type);
     
-    // הוסף את הפריט הנבחר לסידבר
-    const container = document.getElementById(`${type}SelectedItem`);
-    if (container) {
-        container.innerHTML = `
-            <div class="selected-item">
-                <span class="selected-icon">📍</span>
-                <span class="selected-name">${name}</span>
-            </div>
-        `;
-    }
-}
-
-// הפוך את הפונקציות לגלובליות
-window.updateSidebarSelection = updateSidebarSelection;
-window.clearAllSidebarSelections = clearAllSidebarSelections;
+//     // הוסף את הפריט הנבחר לסידבר
+//     const container = document.getElementById(`${type}SelectedItem`);
+//     if (container) {
+//         container.innerHTML = `
+//             <div class="selected-item">
+//                 <span class="selected-icon">📍</span>
+//                 <span class="selected-name">${name}</span>
+//             </div>
+//         `;
+//     }
+// }

@@ -129,195 +129,6 @@ function updateSidebarCount(elementId, count) {
     }
 }
 
-// Start Plots -------------------------------------
-
-    // הצגת חלקות
-    // function displayPlots(plots) {
-    //     const list = document.getElementById('plotsList');
-    //     if (!list) return;
-        
-    //     list.innerHTML = '';
-    //     list.classList.remove('collapsed');
-        
-    //     plots.forEach(plot => {
-    //         const item = document.createElement('div');
-    //         item.className = 'hierarchy-item';
-    //         item.dataset.id = plot.id;
-    //         item.onclick = () => selectPlot(plot.id, plot.name);
-            
-    //         item.innerHTML = `
-    //             <span class="hierarchy-item-name">${plot.name}</span>
-    //             <span class="hierarchy-item-badge">${plot.code || ''}</span>
-    //         `;
-            
-    //         list.appendChild(item);
-    //     });
-    // }
-
-    // בחירת חלקה
-    // async function selectPlot(id, name) {
-    //     selectedItems.plot = {id, name};
-    //     currentType = 'row';
-    //     currentParentId = id;
-        
-    //     updateSelectedItem('plot', id);
-    //     updateBreadcrumb();
-        
-    //     await loadRows(id);
-    // }
-
-    // טעינת שורות
-    // async function loadRows(plotId) {
-    //     try {
-    //         const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=row&parent_id=${plotId}`);
-    //         const data = await response.json();
-            
-    //         if (data.success) {
-    //             displayRows(data.data);
-    //             updateTableData('row', data.data);
-    //         }
-    //     } catch (error) {
-    //         console.error('Error loading rows:', error);
-    //     }
-    // }
-
-// End Plots ---------------------------------------
-
-// Start Rows --------------------------------------
-
-    // הצגת שורות
-    // function displayRows(rows) {
-    //     const list = document.getElementById('rowsList');
-    //     if (!list) return;
-        
-    //     list.innerHTML = '';
-    //     list.classList.remove('collapsed');
-        
-    //     rows.forEach(row => {
-    //         const item = document.createElement('div');
-    //         item.className = 'hierarchy-item';
-    //         item.dataset.id = row.id;
-    //         item.onclick = () => selectRow(row.id, row.name);
-            
-    //         item.innerHTML = `
-    //             <span class="hierarchy-item-name">${row.name}</span>
-    //             <span class="hierarchy-item-badge">${row.code || ''}</span>
-    //         `;
-            
-    //         list.appendChild(item);
-    //     });
-    // }
-
-    // // בחירת שורה
-    // async function selectRow(id, name) {
-    //     selectedItems.row = {id, name};
-    //     currentType = 'area_grave';
-    //     currentParentId = id;
-        
-    //     updateSelectedItem('row', id);
-    //     updateBreadcrumb();
-        
-    //     await loadAreaGraves(id);
-    // }
-
-    // // טעינת אחוזות קבר
-    // async function loadAreaGraves(rowId) {
-    //     try {
-    //         const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=area_grave&parent_id=${rowId}`);
-    //         const data = await response.json();
-            
-    //         if (data.success) {
-    //             displayAreaGraves(data.data);
-    //             updateTableData('area_grave', data.data);
-    //         }
-    //     } catch (error) {
-    //         console.error('Error loading area graves:', error);
-    //     }
-    // }
-
-// End Rows ----------------------------------------
-
-// Start AreaGraves --------------------------------
-
-    // הצגת אחוזות קבר
-    // function displayAreaGraves(areaGraves) {
-    //     const list = document.getElementById('areaGravesList');
-    //     if (!list) return;
-        
-    //     list.innerHTML = '';
-    //     list.classList.remove('collapsed');
-        
-    //     areaGraves.forEach(area => {
-    //         const item = document.createElement('div');
-    //         item.className = 'hierarchy-item';
-    //         item.dataset.id = area.id;
-    //         item.onclick = () => selectAreaGrave(area.id, area.name);
-            
-    //         item.innerHTML = `
-    //             <span class="hierarchy-item-name">${area.name}</span>
-    //             <span class="hierarchy-item-badge">${area.grave_type || ''}</span>
-    //         `;
-            
-    //         list.appendChild(item);
-    //     });
-    // }
-
-    // // בחירת אחוזת קבר
-    // async function selectAreaGrave(id, name) {
-    //     selectedItems.areaGrave = {id, name};
-    //     currentType = 'grave';
-    //     currentParentId = id;
-        
-    //     updateSelectedItem('area_grave', id);
-    //     updateBreadcrumb();
-        
-    //     await loadGraves(id);
-    // }
-
-    // // טעינת קברים
-    // async function loadGraves(areaGraveId) {
-    //     try {
-    //         const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=grave&parent_id=${areaGraveId}`);
-    //         const data = await response.json();
-            
-    //         if (data.success) {
-    //             displayGraves(data.data);
-    //             updateTableData('grave', data.data);
-    //         }
-    //     } catch (error) {
-    //         console.error('Error loading graves:', error);
-    //     }
-    // }
-
-// End AreaGraves ----------------------------------
-
-// Start Graves ------------------------------------
-
-    // הצגת קברים
-    // function displayGraves(graves) {
-    //     const list = document.getElementById('gravesList');
-    //     if (!list) return;
-        
-    //     list.innerHTML = '';
-    //     list.classList.remove('collapsed');
-        
-    //     graves.forEach(grave => {
-    //         const item = document.createElement('div');
-    //         item.className = 'hierarchy-item';
-    //         item.dataset.id = grave.id;
-            
-    //         item.innerHTML = `
-    //             <span class="hierarchy-item-name">קבר ${grave.grave_number}</span>
-    //             <span class="hierarchy-item-badge">${grave.grave_status}</span>
-    //         `;
-            
-    //         list.appendChild(item);
-    //     });
-    // }
-
-// End Graves --------------------------------------
-
-
 // עדכון פריט נבחר בסרגל צד
 function updateSelectedItem(type, id) {
     // הסרת בחירה קודמת
@@ -699,6 +510,73 @@ function formatDate(dateString) {
     });
 }
 
+// פונקציה מעודכנת לניהול הסידבר
+function updateSidebarSelection(type, id, name) {
+    console.log('updateSidebarSelection called:', type, id, name);
+    // 1. הסר את כל ה-active מהכותרות
+    document.querySelectorAll('.hierarchy-header').forEach(header => {
+        header.classList.remove('active');
+    });
+    
+    // 2. הוסף active לכותרת הנוכחית
+    const headers = {
+        'cemetery': 0,
+        'block': 1,
+        'plot': 2,
+        'area_grave': 3,
+        'grave': 4
+    };
+    
+    const headerElements = document.querySelectorAll('.hierarchy-header');
+    if (headerElements[headers[type]]) {
+        headerElements[headers[type]].classList.add('active');
+    }
+    
+    // 3. נקה את כל הבחירות מתחת לרמה הנוכחית
+    clearSidebarBelow(type);
+    
+    // 4. הצג את הפריט הנבחר
+    const container = document.getElementById(`${type}SelectedItem`);
+    if (container) {
+        container.innerHTML = `
+            <div class="selected-item" onclick="goToItem('${type}', ${id})">
+                <span class="selected-icon">📍</span>
+                <span class="selected-name">${name}</span>
+            </div>
+        `;
+        container.style.display = 'block';
+    }
+}
+
+// פונקציה לניקוי כל הבחירות
+function clearAllSidebarSelections() {
+    // הסר active מכל הכותרות
+    document.querySelectorAll('.hierarchy-header').forEach(header => {
+        header.classList.remove('active');
+    });
+    
+    // נקה את כל הפריטים הנבחרים
+    const containers = [
+        'cemeterySelectedItem',
+        'blockSelectedItem', 
+        'plotSelectedItem',
+        'areaGraveSelectedItem',
+        'graveSelectedItem'
+    ];
+    
+    containers.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.innerHTML = '';
+            element.style.display = 'none';
+        }
+    });
+}
+
+// ייצוא הפונקציות כגלובליות
+window.updateSidebarSelection = updateSidebarSelection;
+window.clearAllSidebarSelections = clearAllSidebarSelections;
+
 // ייצוא פונקציות גלובליות
 window.initDashboard = initDashboard;
 window.refreshAllData = refreshAllData;
@@ -711,9 +589,6 @@ window.openQuickAdd = openQuickAdd;
 window.exportData = exportData;
 window.editItem = editItem;
 window.deleteItem = deleteItem;
-// window.selectCemetery = selectCemetery; // מחק - כי הסרנו את הפונקציה
-// window.selectBlock = selectBlock;       // מחק - כי הסרנו את הפונקציה
-// window.selectPlot = selectPlot;
 window.getHierarchyLevel = getHierarchyLevel;
 window.getParentColumn = getParentColumn;
 

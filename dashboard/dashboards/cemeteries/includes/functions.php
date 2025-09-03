@@ -161,19 +161,19 @@ function formatHebrewDate($date, $format = 'd/m/Y') {
     }
 }
 
-/**
- * פורמט תאריך ושעה לעברית
- */
-function formatHebrewDateTime($datetime, $format = 'd/m/Y H:i') {
-    if (!$datetime) return '-';
+// /**
+//  * פורמט תאריך ושעה לעברית
+//  */
+// function formatHebrewDateTime($datetime, $format = 'd/m/Y H:i') {
+//     if (!$datetime) return '-';
     
-    try {
-        $dt = new DateTime($datetime);
-        return $dt->format($format);
-    } catch (Exception $e) {
-        return '-';
-    }
-}
+//     try {
+//         $dt = new DateTime($datetime);
+//         return $dt->format($format);
+//     } catch (Exception $e) {
+//         return '-';
+//     }
+// }
 
 /**
  * חישוב גיל

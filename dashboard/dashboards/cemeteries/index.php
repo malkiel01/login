@@ -1,4 +1,4 @@
-<?php
+< ?php
 // בדיקת הרשאות בצד השרת
 // התחל את ה-session עם אותו שם לפני טעינת config
 session_name('deceased_forms_session');

@@ -129,28 +129,30 @@ function openAreaGrave(areaGraveId, areaGraveName) {
     updateSidebarSelection('areaGrave', areaGraveId, areaGraveName);
     console.log('After updateSidebarSelection');
     
-    // דיבוג של האלמנט בסידבר
-    console.log('=== SIDEBAR ELEMENT DEBUG ===');
-    const areaGraveHeader = document.querySelectorAll('.hierarchy-header')[3];
-    if (areaGraveHeader) {
-        console.log('Area Grave Header found');
-        console.log('Header classes:', areaGraveHeader.className);
-        console.log('Header has active class:', areaGraveHeader.classList.contains('active'));
-        console.log('Header HTML:', areaGraveHeader.outerHTML);
-    } else {
-        console.log('ERROR: Area Grave Header NOT found!');
-    }
+    // דיבוג של כל הכותרות בסידבר
+    console.log('=== ALL HEADERS DEBUG ===');
+    const allHeaders = document.querySelectorAll('.hierarchy-header');
+    allHeaders.forEach((header, index) => {
+        console.log(`Header ${index}:`, {
+            text: header.textContent.trim(),
+            classes: header.className,
+            hasActive: header.classList.contains('active'),
+            element: header
+        });
+    });
     
-    const selectedItemContainer = document.getElementById('areaGraveSelectedItem');
-    if (selectedItemContainer) {
-        console.log('Selected item container found');
-        console.log('Container ID:', selectedItemContainer.id);
-        console.log('Container display style:', selectedItemContainer.style.display);
-        console.log('Container innerHTML:', selectedItemContainer.innerHTML);
+    console.log('=== SPECIFIC AREA GRAVE HEADER ===');
+    const areaGraveHeader = allHeaders[3];
+    if (areaGraveHeader) {
+        console.log('Area Grave Header (index 3):');
+        console.log('- Text:', areaGraveHeader.textContent.trim());
+        console.log('- Classes:', areaGraveHeader.className);
+        console.log('- Has active?:', areaGraveHeader.classList.contains('active'));
+        console.log('- Full HTML:', areaGraveHeader.outerHTML);
     } else {
-        console.log('ERROR: Selected item container NOT found!');
+        console.log('ERROR: No header at index 3!');
     }
-    console.log('=== END SIDEBAR DEBUG ===');
+    console.log('=== END DEBUG ===');
 
     // טען את הקברים
     if (typeof loadGravesForAreaGrave === 'function') {

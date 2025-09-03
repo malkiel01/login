@@ -170,6 +170,60 @@
     color: white;
 }
 
+/* הוסף את הסגנונות האלה ב-sidebar.php אחרי שורה 170 בערך */
+
+.hierarchy-level {
+    margin-bottom: 0.5rem;
+}
+
+.hierarchy-header.active {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: white;
+    font-weight: 600;
+}
+
+.selected-item-container {
+    margin-top: 0.5rem;
+    margin-right: 2rem;
+    padding: 0.5rem;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    display: none;
+    animation: slideIn 0.3s ease;
+}
+
+.selected-item-container:not(:empty) {
+    display: block;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.selected-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    background: white;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.selected-item:hover {
+    background: var(--primary-light);
+    transform: translateX(2px);
+}
+
 .hierarchy-icon {
     font-size: 1.25rem;
 }

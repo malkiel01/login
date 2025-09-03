@@ -575,3 +575,11 @@ function openAddAreaGrave(rowId) {
         alert('פונקציית הוספת אחוזת קבר אינה זמינה');
     }
 }
+
+// ייצוא פונקציות גלובליות
+window.manageRows = manageRows;
+window.openAddRow = openAddRow;
+window.openAddAreaGrave = openAddAreaGrave;
+window.openAreaGrave = openAreaGrave;
+window.editAreaGrave = editAreaGrave;
+window.deleteAreaGrave = deleteAreaGrave;

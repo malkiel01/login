@@ -73,14 +73,14 @@
 
     <!-- הוסף אחרי ה-loading div -->
     <!-- מודאל לפרטי נפטר -->
-    <div id="deceased-modal" class="modal">
+    <!-- <div id="deceased-modal" class="modal">
         <div class="modal-content">
             <span class="modal-close">&times;</span>
-            <div id="modal-body">
+            <div id="modal-body"> -->
                 <!-- התוכן יוזרק כאן דינמית -->
-            </div>
+            <!-- </div>
         </div>
-    </div>
+    </div> -->
 
     <!-- Scripts -->
     <script src="dashboards/search/assets/js/search-config.js"></script>

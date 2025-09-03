@@ -34,7 +34,8 @@ function getParentColumn($type) {
         'plot' => 'block_id',
         'row' => 'plot_id',
         'area_grave' => 'row_id',
-        'grave' => 'area_grave_id'
+        // 'grave' => 'area_grave_id'
+        'grave' => 'grave_number' // בקברים השם הוא מספר הקבר
     ];
     return $parents[$type] ?? null;
 }

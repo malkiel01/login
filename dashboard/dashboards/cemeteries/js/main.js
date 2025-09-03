@@ -1,42 +1,29 @@
 // dashboard/dashboards/cemeteries/js/main.js
 
 // משתנים גלובליים
-let currentType = 'cemetery';
-let currentParentId = null;
-let selectedItems = {};
+
+window.currentType = 'cemetery';
+window.currentParentId = null;
+window.selectedItems = {};
 let currentPage = 1;
 let isLoading = false;
+
 
 // הגדרות API - נתיב מלא מהשורש
 const API_BASE = '/dashboard/dashboards/cemeteries/api/';
 
 
 // אתחול הדשבורד
-// function initDashboard() {
-//     console.log('Initializing Cemetery Dashboard...');
-    
-//     // טעינת נתונים ראשוניים
-//     loadCemeteries();
-//     loadStats();
-    
-//     // הגדרת אירועים
-//     setupEventListeners();
-    
-//     // רענון אוטומטי כל 5 דקות
-//     setInterval(() => {
-//         if (!isLoading) {
-//             refreshAllData();
-//         }
-//     }, 5 * 60 * 1000);
-// }
 function initDashboard() {
     console.log('Initializing Cemetery Dashboard...');
     
-    // טעינת נתונים ראשוניים
-    if (typeof loadAllCemeteries === 'function') {
-        loadAllCemeteries(); // הפונקציה החדשה מ-main-cemeteries.js
-    }
+    // טעינת סטטיסטיקות
     loadStats();
+    
+    // טעינת נתונים ראשוניים - רק אם הפונקציה קיימת
+    if (typeof loadAllCemeteries === 'function') {
+        loadAllCemeteries();
+    }
     
     // הגדרת אירועים
     setupEventListeners();
@@ -132,6 +119,12 @@ function updateSidebarCounts(stats) {
         document.getElementById('rowsCount').textContent = stats.counts.rows?.count || 0;
         document.getElementById('areaGravesCount').textContent = stats.counts.area_graves?.count || 0;
         document.getElementById('gravesCount').textContent = stats.counts.graves?.count || 0;
+    }
+}
+function updateSidebarCount(elementId, count) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.textContent = count;
     }
 }
 
@@ -722,3 +715,16 @@ window.deleteItem = deleteItem;
 window.selectPlot = selectPlot;
 window.getHierarchyLevel = getHierarchyLevel;
 window.getParentColumn = getParentColumn;
+
+// הוסף בסוף main.js
+window.updateSidebarCount = updateSidebarCount;
+window.updateBreadcrumb = updateBreadcrumb;
+window.formatDate = formatDate;
+window.showSuccess = showSuccess;
+window.showError = showError;
+window.showWarning = showWarning;
+window.API_BASE = API_BASE;
+// ייצוא משתנים גלובליים
+window.currentType = currentType;
+window.currentParentId = currentParentId;
+window.selectedItems = selectedItems;

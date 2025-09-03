@@ -117,6 +117,7 @@ function displayAreaGravesInMainContent(areaGraves, rowName = null) {
 // פתיחת אחוזת קבר ספציפית - מעבר לתצוגת קברים
 function openAreaGrave(areaGraveId, areaGraveName) {
     console.log('Opening area grave:', areaGraveId, areaGraveName);
+    console.log('Before updateSidebarSelection - currentType:', window.currentType);
     
     // שמור את הבחירה
     window.selectedItems.areaGrave = { id: areaGraveId, name: areaGraveName };
@@ -124,13 +125,15 @@ function openAreaGrave(areaGraveId, areaGraveName) {
     window.currentParentId = areaGraveId;
     
     // עדכן את הסידבר
+    console.log('Calling updateSidebarSelection with:', 'areaGrave', areaGraveId, areaGraveName);
     updateSidebarSelection('areaGrave', areaGraveId, areaGraveName);
+    console.log('After updateSidebarSelection');
     
     // טען את הקברים
     if (typeof loadGravesForAreaGrave === 'function') {
         loadGravesForAreaGrave(areaGraveId);
     }
-    
+
     // עדכן breadcrumb
     let breadcrumbPath = `אחוזות קבר › ${areaGraveName}`;
     if (window.selectedItems.cemetery && window.selectedItems.block && window.selectedItems.plot) {

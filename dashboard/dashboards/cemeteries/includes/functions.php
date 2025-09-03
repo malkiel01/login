@@ -121,45 +121,45 @@ function validateIsraeliPhone($phone) {
     return false;
 }
 
-// /**
-//  * בדיקת תקינות ת.ז. ישראלית
-//  */
-// function validateIsraeliID($id) {
-//     $id = trim($id);
+/**
+ * בדיקת תקינות ת.ז. ישראלית
+ */
+function validateIsraeliID($id) {
+    $id = trim($id);
     
-//     // הסרת תווים שאינם ספרות
-//     $id = preg_replace('/[^0-9]/', '', $id);
+    // הסרת תווים שאינם ספרות
+    $id = preg_replace('/[^0-9]/', '', $id);
     
-//     // השלמה ל-9 ספרות עם אפסים מובילים
-//     $id = str_pad($id, 9, '0', STR_PAD_LEFT);
+    // השלמה ל-9 ספרות עם אפסים מובילים
+    $id = str_pad($id, 9, '0', STR_PAD_LEFT);
     
-//     // אלגוריתם בדיקת ת.ז.
-//     $sum = 0;
-//     for ($i = 0; $i < 9; $i++) {
-//         $num = intval($id[$i]);
-//         $num *= (($i % 2) + 1);
-//         if ($num > 9) {
-//             $num = intval($num / 10) + ($num % 10);
-//         }
-//         $sum += $num;
-//     }
+    // אלגוריתם בדיקת ת.ז.
+    $sum = 0;
+    for ($i = 0; $i < 9; $i++) {
+        $num = intval($id[$i]);
+        $num *= (($i % 2) + 1);
+        if ($num > 9) {
+            $num = intval($num / 10) + ($num % 10);
+        }
+        $sum += $num;
+    }
     
-//     return ($sum % 10 == 0);
-// }
+    return ($sum % 10 == 0);
+}
 
-// /**
-//  * פורמט תאריך לעברית
-//  */
-// function formatHebrewDate($date, $format = 'd/m/Y') {
-//     if (!$date) return '-';
+/**
+ * פורמט תאריך לעברית
+ */
+function formatHebrewDate($date, $format = 'd/m/Y') {
+    if (!$date) return '-';
     
-//     try {
-//         $datetime = new DateTime($date);
-//         return $datetime->format($format);
-//     } catch (Exception $e) {
-//         return '-';
-//     }
-// }
+    try {
+        $datetime = new DateTime($date);
+        return $datetime->format($format);
+    } catch (Exception $e) {
+        return '-';
+    }
+}
 
 // /**
 //  * פורמט תאריך ושעה לעברית

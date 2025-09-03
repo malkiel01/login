@@ -57,7 +57,7 @@
                 <span class="hierarchy-title">אחוזות קבר</span>
                 <span class="hierarchy-count" id="areaGravesCount">0</span>
             </div>
-            <div id="areaGraveSelectedItem" class="selected-item-container"></div>
+            <div id="areaGravesSelectedItem" class="selected-item-container"></div>
         </div>
         
         <!-- קברים -->

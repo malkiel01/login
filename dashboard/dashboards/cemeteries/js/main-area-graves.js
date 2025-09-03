@@ -126,7 +126,7 @@ function openAreaGrave(areaGraveId, areaGraveName) {
     
     // עדכן את הסידבר
     console.log('Calling updateSidebarSelection with:', 'areaGrave', areaGraveId, areaGraveName);
-    updateSidebarSelection('areaGrave', areaGraveId, areaGraveName);
+    updateSidebarSelection('areaGraves', areaGraveId, areaGraveName);
     console.log('After updateSidebarSelection');
     
     // דיבוג של כל הכותרות בסידבר

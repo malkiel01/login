@@ -2,18 +2,18 @@
 // dashboard/dashboards/cemeteries/includes/functions.php
 // פונקציות עזר לדשבורד בתי עלמין
 
-// /**
-//  * בדיקת הרשאה לפעולה
-//  */
-// function checkPermission($action, $module = 'cemetery') {
-//     // בדיקה בסיסית - להחליף בבדיקת הרשאות אמיתית
-//     if (!isset($_SESSION['user_id'])) {
-//         return false;
-//     }
+/**
+ * בדיקת הרשאה לפעולה
+ */
+function checkPermission($action, $module = 'cemetery') {
+    // בדיקה בסיסית - להחליף בבדיקת הרשאות אמיתית
+    if (!isset($_SESSION['user_id'])) {
+        return false;
+    }
     
-//     // בינתיים מאשרים הכל
-//     return true;
-// }
+    // בינתיים מאשרים הכל
+    return true;
+}
 
 // /**
 //  * רישום פעילות בלוג

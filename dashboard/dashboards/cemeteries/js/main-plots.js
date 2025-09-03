@@ -123,16 +123,16 @@ function openPlot(plotId, plotName) {
     
     // שמור את הבחירה
     window.selectedItems.plot = { id: plotId, name: plotName };
-    window.currentType = 'area_grave'; // דילוג ישר לאחוזות קבר
+    window.currentType = 'area_grave';
     window.currentParentId = plotId;
     
     // עדכן את הסידבר - הצג את החלקה הנבחרת
     updateSidebarSelection('plot', plotId, plotName);
     
-    // טען את אחוזות הקבר של החלקה (עם השורות שלהן)
+    // טען את אחוזות הקבר של החלקה
     loadAreaGravesForPlot(plotId);
     
-    // עדכן breadcrumb
+    // עדכון breadcrumb
     let breadcrumbPath = `חלקות › ${plotName}`;
     if (window.selectedItems.cemetery && window.selectedItems.block) {
         breadcrumbPath = `בתי עלמין › ${window.selectedItems.cemetery.name} › גושים › ${window.selectedItems.block.name} › חלקות › ${plotName}`;

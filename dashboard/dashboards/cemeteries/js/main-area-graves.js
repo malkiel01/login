@@ -379,3 +379,7 @@ function getGraveTypeName(type) {
     };
     return types[type] || 'לא מוגדר';
 }
+
+window.openAreaGrave = openAreaGrave;
+window.editAreaGrave = editAreaGrave;
+window.deleteAreaGrave = deleteAreaGrave;

@@ -362,41 +362,41 @@ function getDashboardStats() {
     return $stats;
 }
 
-// /**
-//  * יצירת אפשרויות לרשימה נפתחת
-//  */
-// function generateSelectOptions($items, $selectedId = null, $valueField = 'id', $textField = 'name') {
-//     $options = '';
+/**
+ * יצירת אפשרויות לרשימה נפתחת
+ */
+function generateSelectOptions($items, $selectedId = null, $valueField = 'id', $textField = 'name') {
+    $options = '';
     
-//     foreach ($items as $item) {
-//         $value = is_array($item) ? $item[$valueField] : $item->$valueField;
-//         $text = is_array($item) ? $item[$textField] : $item->$textField;
-//         $selected = ($value == $selectedId) ? 'selected' : '';
+    foreach ($items as $item) {
+        $value = is_array($item) ? $item[$valueField] : $item->$valueField;
+        $text = is_array($item) ? $item[$textField] : $item->$textField;
+        $selected = ($value == $selectedId) ? 'selected' : '';
         
-//         $options .= sprintf(
-//             '<option value="%s" %s>%s</option>',
-//             htmlspecialchars($value),
-//             $selected,
-//             htmlspecialchars($text)
-//         );
-//     }
+        $options .= sprintf(
+            '<option value="%s" %s>%s</option>',
+            htmlspecialchars($value),
+            $selected,
+            htmlspecialchars($text)
+        );
+    }
     
-//     return $options;
-// }
+    return $options;
+}
 
-// /**
-//  * שליחת התראה למשתמש
-//  */
-// function sendNotification($userId, $title, $message, $type = 'info') {
-//     // TODO: implement notification system
-//     error_log("Notification to user $userId: $title - $message");
-// }
+/**
+ * שליחת התראה למשתמש
+ */
+function sendNotification($userId, $title, $message, $type = 'info') {
+    // TODO: implement notification system
+    error_log("Notification to user $userId: $title - $message");
+}
 
-// /**
-//  * בדיקת תקינות תאריך
-//  */
-// function isValidDate($date, $format = 'Y-m-d') {
-//     $d = DateTime::createFromFormat($format, $date);
-//     return $d && $d->format($format) === $date;
-// }
+/**
+ * בדיקת תקינות תאריך
+ */
+function isValidDate($date, $format = 'Y-m-d') {
+    $d = DateTime::createFromFormat($format, $date);
+    return $d && $d->format($format) === $date;
+}
 ?>

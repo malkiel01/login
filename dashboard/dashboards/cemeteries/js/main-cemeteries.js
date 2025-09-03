@@ -68,20 +68,7 @@ window.goToItem = function(type, id) {
     // כאן אפשר להוסיף לוגיקה למעבר לפריט
     console.log(`Going to ${type} with id ${id}`);
 }
-// ניקוי הסידבר מתחת לרמה מסוימת
-function clearSidebarBelow(type) {
-    const hierarchy = ['cemetery', 'block', 'plot', 'area_grave', 'grave'];
-    const currentIndex = hierarchy.indexOf(type);
-    
-    // נקה רק את הרמות מתחת לרמה הנוכחית
-    for (let i = currentIndex + 1; i < hierarchy.length; i++) {
-        const container = document.getElementById(`${hierarchy[i]}SelectedItem`);
-        if (container) {
-            container.innerHTML = '';
-            container.style.display = 'none';
-        }
-    }
-}
+
 
 // טעינת כל בתי העלמין
 async function loadAllCemeteries() {

@@ -573,9 +573,26 @@ function clearAllSidebarSelections() {
     });
 }
 
+// ניקוי הסידבר מתחת לרמה מסוימת
+function clearSidebarBelow(type) {
+    const hierarchy = ['cemetery', 'block', 'plot', 'areaGrave', 'grave'];
+    const currentIndex = hierarchy.indexOf(type);
+    
+    // נקה רק את הרמות מתחת לרמה הנוכחית
+    for (let i = currentIndex + 1; i < hierarchy.length; i++) {
+        const container = document.getElementById(`${hierarchy[i]}SelectedItem`);
+        if (container) {
+            container.innerHTML = '';
+            container.style.display = 'none';
+        }
+    }
+}
+
+
 // ייצוא הפונקציות כגלובליות
 window.updateSidebarSelection = updateSidebarSelection;
 window.clearAllSidebarSelections = clearAllSidebarSelections;
+window.clearSidebarBelow = clearSidebarBelow;
 
 // ייצוא פונקציות גלובליות
 window.initDashboard = initDashboard;

@@ -4,10 +4,19 @@
 // טעינת כל החלקות
 async function loadAllPlots() {
     console.log('Loading all plots...');
+
+    // נקה את כל הסידבר
+    clearAllSidebarSelections();
+
+    // סמן שאנחנו ברמת גושים
+    const plotsHeader = document.querySelectorAll('.hierarchy-header')[1];
+    if (plotsHeader) {
+        plotsHeader.classList.add('active');
+    }
     
-    // אל תנקה את הסידבר! רק אפס את הבחירה
     window.currentType = 'plot';
     window.currentParentId = null;
+    window.selectedItems = {};
     
     try {
         const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=plot`);
@@ -589,6 +598,3 @@ function openAddRow() {
 window.manageRows = manageRows;
 window.openAddRow = openAddRow;
 window.openAddAreaGrave = openAddAreaGrave;
-// window.openAreaGrave = openAreaGrave;
-// window.editAreaGrave = editAreaGrave;
-// window.deleteAreaGrave = deleteAreaGrave;

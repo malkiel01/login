@@ -5,8 +5,18 @@
 async function loadAllAreaGraves() {
     console.log('Loading all area graves...');
     
-    window.currentType = 'area_grave';
+    // נקה את כל הסידבר
+    clearAllSidebarSelections();
+
+    // סמן שאנחנו ברמת גושים
+    const areaGravesHeader = document.querySelectorAll('.hierarchy-header')[1];
+    if (areaGravesHeader) {
+        areaGravesHeader.classList.add('active');
+    }
+    
+    window.currentType = 'areaGrave';
     window.currentParentId = null;
+    window.selectedItems = {};
     
     try {
         const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=area_grave`);

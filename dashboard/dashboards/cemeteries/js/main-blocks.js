@@ -4,10 +4,20 @@
 // טעינת כל הגושים
 async function loadAllBlocks() {
     console.log('Loading all blocks...');
+
+    // נקה את כל הסידבר
+    clearAllSidebarSelections();
+
+    // סמן שאנחנו ברמת גושים
+    const blocksHeader = document.querySelectorAll('.hierarchy-header')[1];
+    if (blocksHeader) {
+        blocksHeader.classList.add('active');
+    }
     
-    // אל תנקה את הסידבר! רק אפס את הבחירה
     window.currentType = 'block';
     window.currentParentId = null;
+    window.selectedItems = {};
+
     
     try {
         const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=block`);

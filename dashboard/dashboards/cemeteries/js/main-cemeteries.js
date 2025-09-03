@@ -2,7 +2,7 @@
 // ניהול בתי עלמין
 
 // החלף את updateSidebarSelection בגרסה חדשה
-function updateSidebarSelection(type, id, name) {
+function updateSidebarSelection2(type, id, name) {
     // נקה רק את הרמות מתחת
     clearSidebarBelow(type);
     
@@ -18,6 +18,78 @@ function updateSidebarSelection(type, id, name) {
         container.style.display = 'block';
     }
 }
+
+// -=-=-=-=-=-=-=-=-=-
+
+// פונקציה מעודכנת לניהול הסידבר
+function updateSidebarSelection(type, id, name) {
+    // 1. הסר את כל ה-active מהכותרות
+    document.querySelectorAll('.hierarchy-header').forEach(header => {
+        header.classList.remove('active');
+    });
+    
+    // 2. הוסף active לכותרת הנוכחית
+    const headers = {
+        'cemetery': 0,
+        'block': 1,
+        'plot': 2,
+        'area_grave': 3,
+        'grave': 4
+    };
+    
+    const headerElements = document.querySelectorAll('.hierarchy-header');
+    if (headerElements[headers[type]]) {
+        headerElements[headers[type]].classList.add('active');
+    }
+    
+    // 3. נקה את כל הבחירות מתחת לרמה הנוכחית
+    clearSidebarBelow(type);
+    
+    // 4. הצג את הפריט הנבחר
+    const container = document.getElementById(`${type}SelectedItem`);
+    if (container) {
+        container.innerHTML = `
+            <div class="selected-item" onclick="goToItem('${type}', ${id})">
+                <span class="selected-icon">📍</span>
+                <span class="selected-name">${name}</span>
+            </div>
+        `;
+        container.style.display = 'block';
+    }
+}
+
+// פונקציה לניקוי כל הבחירות
+function clearAllSidebarSelections() {
+    // הסר active מכל הכותרות
+    document.querySelectorAll('.hierarchy-header').forEach(header => {
+        header.classList.remove('active');
+    });
+    
+    // נקה את כל הפריטים הנבחרים
+    const containers = [
+        'cemeterySelectedItem',
+        'blockSelectedItem', 
+        'plotSelectedItem',
+        'areaGraveSelectedItem',
+        'graveSelectedItem'
+    ];
+    
+    containers.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.innerHTML = '';
+            element.style.display = 'none';
+        }
+    });
+}
+
+// פונקציה למעבר לפריט שנבחר
+window.goToItem = function(type, id) {
+    // כאן אפשר להוסיף לוגיקה למעבר לפריט
+    console.log(`Going to ${type} with id ${id}`);
+}
+
+// -=-=-=-=-=-=-=-=-=-
 
 // ניקוי הסידבר מתחת לרמה מסוימת
 function clearSidebarBelow(type) {
@@ -38,9 +110,18 @@ function clearSidebarBelow(type) {
 async function loadAllCemeteries() {
     console.log('Loading all cemeteries...');
     
-    // אל תנקה את הסידבר! רק אפס את הבחירה
+    // נקה את כל הסידבר
+    clearAllSidebarSelections();
+    
+    // סמן שאנחנו ברמת בתי עלמין
+    const cemeteriesHeader = document.querySelector('.hierarchy-header');
+    if (cemeteriesHeader) {
+        cemeteriesHeader.classList.add('active');
+    }
+    
     window.currentType = 'cemetery';
     window.currentParentId = null;
+    window.selectedItems = {}; // נקה את כל הבחירות
     
     try {
         const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=cemetery`);
@@ -76,7 +157,7 @@ function openCemetery(cemeteryId, cemeteryName) {
 }
 
 // פונקציה לניקוי כל הפריטים הנבחרים בסידבר
-function clearAllSidebarSelections() {
+function clearAllSidebarSelections2() {
     const containers = [
         'cemeterySelectedItem',
         'blockSelectedItem', 

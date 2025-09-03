@@ -5,8 +5,18 @@
 async function loadAllGraves() {
     console.log('Loading all graves...');
     
+    // נקה את כל הסידבר
+    clearAllSidebarSelections();
+
+    // סמן שאנחנו ברמת גושים
+    const gravesHeader = document.querySelectorAll('.hierarchy-header')[1];
+    if (gravesHeader) {
+        gravesHeader.classList.add('active');
+    }
+    
     window.currentType = 'grave';
     window.currentParentId = null;
+    window.selectedItems = {};
     
     try {
         const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=grave`);

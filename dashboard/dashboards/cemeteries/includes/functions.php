@@ -161,35 +161,35 @@ function formatHebrewDate($date, $format = 'd/m/Y') {
     }
 }
 
-// /**
-//  * פורמט תאריך ושעה לעברית
-//  */
-// function formatHebrewDateTime($datetime, $format = 'd/m/Y H:i') {
-//     if (!$datetime) return '-';
+/**
+ * פורמט תאריך ושעה לעברית
+ */
+function formatHebrewDateTime($datetime, $format = 'd/m/Y H:i') {
+    if (!$datetime) return '-';
     
-//     try {
-//         $dt = new DateTime($datetime);
-//         return $dt->format($format);
-//     } catch (Exception $e) {
-//         return '-';
-//     }
-// }
+    try {
+        $dt = new DateTime($datetime);
+        return $dt->format($format);
+    } catch (Exception $e) {
+        return '-';
+    }
+}
 
-// /**
-//  * חישוב גיל
-//  */
-// function calculateAge($birthDate, $deathDate = null) {
-//     if (!$birthDate) return null;
+/**
+ * חישוב גיל
+ */
+function calculateAge($birthDate, $deathDate = null) {
+    if (!$birthDate) return null;
     
-//     try {
-//         $from = new DateTime($birthDate);
-//         $to = $deathDate ? new DateTime($deathDate) : new DateTime();
+    try {
+        $from = new DateTime($birthDate);
+        $to = $deathDate ? new DateTime($deathDate) : new DateTime();
         
-//         return $from->diff($to)->y;
-//     } catch (Exception $e) {
-//         return null;
-//     }
-// }
+        return $from->diff($to)->y;
+    } catch (Exception $e) {
+        return null;
+    }
+}
 
 // /**
 //  * יצירת מזהה ייחודי

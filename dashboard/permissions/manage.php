@@ -71,6 +71,7 @@ $users = $stmt->fetchAll();
                                 <option value="manager" <?php echo $user['dashboard_type'] === 'manager' ? 'selected' : ''; ?>>מנהל צוות</option>
                                 <option value="employee" <?php echo $user['dashboard_type'] === 'employee' ? 'selected' : ''; ?>>עובד</option>
                                 <option value="client" <?php echo $user['dashboard_type'] === 'client' ? 'selected' : ''; ?>>לקוח</option>
+                                <option value="cemetery_manager" <?php echo $user['dashboard_type'] === 'cemetery_manager' ? 'selected' : ''; ?>>מנהל בית עלמין</option>
                             </select>
                         </td>
                         <td>

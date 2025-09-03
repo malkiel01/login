@@ -331,247 +331,39 @@ async function deletePlot(id) {
     }
 }
 
-// פונקציות לניהול שורות
+// פונקציות לניהול שורות (יופיעו בחלון נפרד)
 function manageRows() {
-    if (!window.selectedItems.plot) {
-        showError('לא נבחרה חלקה');
-        return;
-    }
-    
-    // פתח חלון לניהול שורות
-    openRowsManagementModal(window.selectedItems.plot.id, window.selectedItems.plot.name);
+    // TODO: פתח חלון לניהול שורות
+    console.log('Opening rows management for plot:', window.selectedItems.plot);
+    alert('ניהול שורות - בפיתוח');
 }
 
-// חלון ניהול שורות
-async function openRowsManagementModal(plotId, plotName) {
-    try {
-        // טען את השורות הקיימות
-        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=row&parent_id=${plotId}`);
-        const data = await response.json();
-        
-        if (!data.success) {
-            showError('שגיאה בטעינת שורות');
-            return;
-        }
-        
-        const rows = data.data;
-        
-        const modal = document.createElement('div');
-        modal.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 0 30px rgba(0,0,0,0.3);
-            z-index: 10000;
-            min-width: 600px;
-            max-height: 70vh;
-            overflow-y: auto;
-        `;
-        
-        modal.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h3>ניהול שורות - חלקה ${plotName}</h3>
-                <button onclick="this.closest('div[style*=fixed]').remove()" 
-                        style="background: none; border: none; font-size: 24px; cursor: pointer;">×</button>
-            </div>
-            
-            <div style="margin-bottom: 20px;">
-                <button onclick="openAddRowForm(${plotId})" 
-                        style="padding: 8px 20px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                    + הוסף שורה חדשה
-                </button>
-            </div>
-            
-            <table style="width: 100%; border-collapse: collapse;">
-                <thead>
-                    <tr style="background: #f8f9fa;">
-                        <th style="padding: 10px; border: 1px solid #ddd;">מספר סידורי</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">שם</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">מיקום</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">אחוזות קבר</th>
-                        <th style="padding: 10px; border: 1px solid #ddd;">פעולות</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${rows.length > 0 ? rows.map(row => `
-                        <tr>
-                            <td style="padding: 10px; border: 1px solid #ddd;">${row.serial_number || '-'}</td>
-                            <td style="padding: 10px; border: 1px solid #ddd;">${row.name}</td>
-                            <td style="padding: 10px; border: 1px solid #ddd;">${row.location || '-'}</td>
-                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">
-                                <span id="rowAreaCount_${row.id}">טוען...</span>
-                            </td>
-                            <td style="padding: 10px; border: 1px solid #ddd;">
-                                <button onclick="editRow(${row.id})" class="btn btn-sm btn-secondary">ערוך</button>
-                                <button onclick="deleteRow(${row.id})" class="btn btn-sm btn-danger">מחק</button>
-                            </td>
-                        </tr>
-                    `).join('') : `
-                        <tr>
-                            <td colspan="5" style="padding: 20px; text-align: center; color: #999;">
-                                אין שורות בחלקה זו
-                            </td>
-                        </tr>
-                    `}
-                </tbody>
-            </table>
-            
-            <div style="margin-top: 20px; text-align: left;">
-                <button onclick="this.closest('div[style*=fixed]').remove()" 
-                        style="padding: 8px 20px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                    סגור
-                </button>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-        
-        // טען ספירת אחוזות קבר לכל שורה
-        rows.forEach(async row => {
-            try {
-                const res = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=area_grave&parent_id=${row.id}`);
-                const data = await res.json();
-                const countElement = document.getElementById(`rowAreaCount_${row.id}`);
-                if (countElement) {
-                    countElement.textContent = data.data ? data.data.length : '0';
-                }
-            } catch (error) {
-                console.error('Error loading area graves count:', error);
-            }
-        });
-        
-    } catch (error) {
-        console.error('Error in rows management:', error);
-        showError('שגיאה בפתיחת ניהול שורות');
-    }
+function openAddRow() {
+    // TODO: הוסף שורה חדשה
+    console.log('Adding row to plot:', window.selectedItems.plot);
+    alert('הוספת שורה - בפיתוח');
 }
 
-// טופס הוספת שורה
-window.openAddRowForm = function(plotId) {
-    const form = document.createElement('div');
-    form.style.cssText = `
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: white;
-        padding: 30px;
-        border-radius: 10px;
-        box-shadow: 0 0 30px rgba(0,0,0,0.3);
-        z-index: 10001;
-        min-width: 400px;
-    `;
-    
-    form.innerHTML = `
-        <h3>הוסף שורה חדשה</h3>
-        <form onsubmit="submitRowForm(event, ${plotId})">
-            <div style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 5px;">שם:</label>
-                <input type="text" name="name" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-            </div>
-            <div style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 5px;">מספר סידורי:</label>
-                <input type="number" name="serial_number" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-            </div>
-            <div style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 5px;">מיקום:</label>
-                <input type="text" name="location" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-            </div>
-            <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                <button type="button" onclick="this.closest('div[style*=fixed]').remove()" 
-                        style="padding: 8px 20px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                    ביטול
-                </button>
-                <button type="submit" 
-                        style="padding: 8px 20px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                    שמור
-                </button>
-            </div>
-        </form>
-    `;
-    
-    document.body.appendChild(form);
-}
-
-// שליחת טופס שורה
-window.submitRowForm = async function(event, plotId) {
-    event.preventDefault();
-    const formData = new FormData(event.target);
-    
-    const data = {
-        name: formData.get('name'),
-        serial_number: formData.get('serial_number'),
-        location: formData.get('location'),
-        plot_id: plotId,
-        is_active: 1
-    };
-    
-    try {
-        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=create&type=row`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(data)
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            event.target.closest('div[style*=fixed]').remove();
-            showSuccess('השורה נוספה בהצלחה');
-            
-            // סגור את החלון הקודם וטען מחדש
-            document.querySelectorAll('div[style*=fixed]').forEach(el => el.remove());
-            openRowsManagementModal(plotId, window.selectedItems.plot?.name);
-        } else {
-            alert('שגיאה: ' + (result.error || 'Unknown error'));
-        }
-    } catch (error) {
-        alert('שגיאה בשמירה');
-        console.error(error);
-    }
-}
-
-// עריכת שורה
-window.editRow = function(rowId) {
-    // TODO: טען את פרטי השורה ופתח טופס עריכה
-    alert('עריכת שורה - בפיתוח');
-}
-
-// מחיקת שורה
-window.deleteRow = async function(rowId) {
-    if (!confirm('האם אתה בטוח? מחיקת שורה תמחק גם את כל אחוזות הקבר והקברים שבה!')) return;
-    
-    try {
-        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=delete&type=row&id=${rowId}`, {
-            method: 'DELETE'
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showSuccess('השורה נמחקה בהצלחה');
-            // סגור וטען מחדש
-            document.querySelectorAll('div[style*=fixed]').forEach(el => el.remove());
-            openRowsManagementModal(window.selectedItems.plot.id, window.selectedItems.plot.name);
-        } else {
-            showError(data.error || 'שגיאה במחיקת השורה');
-        }
-    } catch (error) {
-        console.error('Error deleting row:', error);
-        showError('שגיאה במחיקת השורה');
-    }
-}
-
-// הוספת אחוזת קבר - הפונקציה כבר מוגדרת ב-main-area-graves.js
-// רק מחבר אותה מהקונטקסט של החלקה
 function openAddAreaGrave(rowId) {
-    if (typeof window.openAddAreaGrave === 'function') {
-        window.openAddAreaGrave(rowId);
-    } else {
-        alert('פונקציית הוספת אחוזת קבר אינה זמינה');
-    }
+    // TODO: הוסף אחוזת קבר לשורה
+    console.log('Adding area grave to row:', rowId);
+    alert('הוספת אחוזת קבר - בפיתוח');
+}
+
+function openAreaGrave(id, name) {
+    // TODO: פתח אחוזת קבר
+    console.log('Opening area grave:', id, name);
+    alert('פתיחת אחוזת קבר - בפיתוח');
+}
+
+function editAreaGrave(id) {
+    // TODO: ערוך אחוזת קבר
+    console.log('Editing area grave:', id);
+    alert('עריכת אחוזת קבר - בפיתוח');
+}
+
+function deleteAreaGrave(id) {
+    // TODO: מחק אחוזת קבר
+    console.log('Deleting area grave:', id);
+    alert('מחיקת אחוזת קבר - בפיתוח');
 }

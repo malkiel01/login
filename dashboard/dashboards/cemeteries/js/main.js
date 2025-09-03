@@ -186,134 +186,134 @@ function updateSidebarCount(elementId, count) {
 // Start Rows --------------------------------------
 
     // הצגת שורות
-    function displayRows(rows) {
-        const list = document.getElementById('rowsList');
-        if (!list) return;
+    // function displayRows(rows) {
+    //     const list = document.getElementById('rowsList');
+    //     if (!list) return;
         
-        list.innerHTML = '';
-        list.classList.remove('collapsed');
+    //     list.innerHTML = '';
+    //     list.classList.remove('collapsed');
         
-        rows.forEach(row => {
-            const item = document.createElement('div');
-            item.className = 'hierarchy-item';
-            item.dataset.id = row.id;
-            item.onclick = () => selectRow(row.id, row.name);
+    //     rows.forEach(row => {
+    //         const item = document.createElement('div');
+    //         item.className = 'hierarchy-item';
+    //         item.dataset.id = row.id;
+    //         item.onclick = () => selectRow(row.id, row.name);
             
-            item.innerHTML = `
-                <span class="hierarchy-item-name">${row.name}</span>
-                <span class="hierarchy-item-badge">${row.code || ''}</span>
-            `;
+    //         item.innerHTML = `
+    //             <span class="hierarchy-item-name">${row.name}</span>
+    //             <span class="hierarchy-item-badge">${row.code || ''}</span>
+    //         `;
             
-            list.appendChild(item);
-        });
-    }
+    //         list.appendChild(item);
+    //     });
+    // }
 
-    // בחירת שורה
-    async function selectRow(id, name) {
-        selectedItems.row = {id, name};
-        currentType = 'area_grave';
-        currentParentId = id;
+    // // בחירת שורה
+    // async function selectRow(id, name) {
+    //     selectedItems.row = {id, name};
+    //     currentType = 'area_grave';
+    //     currentParentId = id;
         
-        updateSelectedItem('row', id);
-        updateBreadcrumb();
+    //     updateSelectedItem('row', id);
+    //     updateBreadcrumb();
         
-        await loadAreaGraves(id);
-    }
+    //     await loadAreaGraves(id);
+    // }
 
-    // טעינת אחוזות קבר
-    async function loadAreaGraves(rowId) {
-        try {
-            const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=area_grave&parent_id=${rowId}`);
-            const data = await response.json();
+    // // טעינת אחוזות קבר
+    // async function loadAreaGraves(rowId) {
+    //     try {
+    //         const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=area_grave&parent_id=${rowId}`);
+    //         const data = await response.json();
             
-            if (data.success) {
-                displayAreaGraves(data.data);
-                updateTableData('area_grave', data.data);
-            }
-        } catch (error) {
-            console.error('Error loading area graves:', error);
-        }
-    }
+    //         if (data.success) {
+    //             displayAreaGraves(data.data);
+    //             updateTableData('area_grave', data.data);
+    //         }
+    //     } catch (error) {
+    //         console.error('Error loading area graves:', error);
+    //     }
+    // }
 
 // End Rows ----------------------------------------
 
 // Start AreaGraves --------------------------------
 
     // הצגת אחוזות קבר
-    function displayAreaGraves(areaGraves) {
-        const list = document.getElementById('areaGravesList');
-        if (!list) return;
+    // function displayAreaGraves(areaGraves) {
+    //     const list = document.getElementById('areaGravesList');
+    //     if (!list) return;
         
-        list.innerHTML = '';
-        list.classList.remove('collapsed');
+    //     list.innerHTML = '';
+    //     list.classList.remove('collapsed');
         
-        areaGraves.forEach(area => {
-            const item = document.createElement('div');
-            item.className = 'hierarchy-item';
-            item.dataset.id = area.id;
-            item.onclick = () => selectAreaGrave(area.id, area.name);
+    //     areaGraves.forEach(area => {
+    //         const item = document.createElement('div');
+    //         item.className = 'hierarchy-item';
+    //         item.dataset.id = area.id;
+    //         item.onclick = () => selectAreaGrave(area.id, area.name);
             
-            item.innerHTML = `
-                <span class="hierarchy-item-name">${area.name}</span>
-                <span class="hierarchy-item-badge">${area.grave_type || ''}</span>
-            `;
+    //         item.innerHTML = `
+    //             <span class="hierarchy-item-name">${area.name}</span>
+    //             <span class="hierarchy-item-badge">${area.grave_type || ''}</span>
+    //         `;
             
-            list.appendChild(item);
-        });
-    }
+    //         list.appendChild(item);
+    //     });
+    // }
 
-    // בחירת אחוזת קבר
-    async function selectAreaGrave(id, name) {
-        selectedItems.areaGrave = {id, name};
-        currentType = 'grave';
-        currentParentId = id;
+    // // בחירת אחוזת קבר
+    // async function selectAreaGrave(id, name) {
+    //     selectedItems.areaGrave = {id, name};
+    //     currentType = 'grave';
+    //     currentParentId = id;
         
-        updateSelectedItem('area_grave', id);
-        updateBreadcrumb();
+    //     updateSelectedItem('area_grave', id);
+    //     updateBreadcrumb();
         
-        await loadGraves(id);
-    }
+    //     await loadGraves(id);
+    // }
 
-    // טעינת קברים
-    async function loadGraves(areaGraveId) {
-        try {
-            const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=grave&parent_id=${areaGraveId}`);
-            const data = await response.json();
+    // // טעינת קברים
+    // async function loadGraves(areaGraveId) {
+    //     try {
+    //         const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=grave&parent_id=${areaGraveId}`);
+    //         const data = await response.json();
             
-            if (data.success) {
-                displayGraves(data.data);
-                updateTableData('grave', data.data);
-            }
-        } catch (error) {
-            console.error('Error loading graves:', error);
-        }
-    }
+    //         if (data.success) {
+    //             displayGraves(data.data);
+    //             updateTableData('grave', data.data);
+    //         }
+    //     } catch (error) {
+    //         console.error('Error loading graves:', error);
+    //     }
+    // }
 
 // End AreaGraves ----------------------------------
 
 // Start Graves ------------------------------------
 
     // הצגת קברים
-    function displayGraves(graves) {
-        const list = document.getElementById('gravesList');
-        if (!list) return;
+    // function displayGraves(graves) {
+    //     const list = document.getElementById('gravesList');
+    //     if (!list) return;
         
-        list.innerHTML = '';
-        list.classList.remove('collapsed');
+    //     list.innerHTML = '';
+    //     list.classList.remove('collapsed');
         
-        graves.forEach(grave => {
-            const item = document.createElement('div');
-            item.className = 'hierarchy-item';
-            item.dataset.id = grave.id;
+    //     graves.forEach(grave => {
+    //         const item = document.createElement('div');
+    //         item.className = 'hierarchy-item';
+    //         item.dataset.id = grave.id;
             
-            item.innerHTML = `
-                <span class="hierarchy-item-name">קבר ${grave.grave_number}</span>
-                <span class="hierarchy-item-badge">${grave.grave_status}</span>
-            `;
+    //         item.innerHTML = `
+    //             <span class="hierarchy-item-name">קבר ${grave.grave_number}</span>
+    //             <span class="hierarchy-item-badge">${grave.grave_status}</span>
+    //         `;
             
-            list.appendChild(item);
-        });
-    }
+    //         list.appendChild(item);
+    //     });
+    // }
 
 // End Graves --------------------------------------
 

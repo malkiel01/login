@@ -273,3 +273,6 @@ function updateSidebarSelection(type, id, name) {
     }
 }
 
+// הפוך את הפונקציות לגלובליות
+window.updateSidebarSelection = updateSidebarSelection;
+window.clearAllSidebarSelections = clearAllSidebarSelections;

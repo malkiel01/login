@@ -179,7 +179,7 @@ function displayEmptyPlot(plotName) {
                     <div style="font-size: 48px; margin-bottom: 20px;">📏</div>
                     <div>אין שורות בחלקה ${plotName || ''}</div>
                     <p style="margin-top: 10px;">יש להוסיף שורות לחלקה לפני הוספת אחוזות קבר</p>
-                    <button class="btn btn-primary mt-3" onclick="window.openAddRowForm(${window.selectedItems.plot.id})">
+                    <button class="btn btn-primary mt-3" onclick="openAddRow()">
                         הוסף שורה ראשונה
                     </button>
                 </div>
@@ -573,6 +573,15 @@ function openAddAreaGrave(rowId) {
         window.openAddAreaGrave(rowId);
     } else {
         alert('פונקציית הוספת אחוזת קבר אינה זמינה');
+    }
+}
+
+// הוסף את הפונקציה הזו לפני הייצוא בסוף הקובץ (לפני שורה 580)
+function openAddRow() {
+    if (window.selectedItems.plot) {
+        window.openAddRowForm(window.selectedItems.plot.id);
+    } else {
+        showError('לא נבחרה חלקה');
     }
 }
 

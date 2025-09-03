@@ -77,7 +77,7 @@ if (!checkPermission('view', 'cemetery')) {
     </div>
     
     <!-- Modals -->
-    <?php include 'dashboards/cemeteries/includes/modals.php'; ?>
+    <!-- < ?php include 'dashboards/cemeteries/includes/modals.php'; ?> -->
     
     <!-- SVG Icons -->
     <svg style="display: none;">

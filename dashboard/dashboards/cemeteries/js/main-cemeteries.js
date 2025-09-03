@@ -1,28 +1,8 @@
 // dashboards/cemeteries/js/main-cemeteries.js
 // ניהול בתי עלמין
-
-// החלף את updateSidebarSelection בגרסה חדשה
-function updateSidebarSelection2(type, id, name) {
-    // נקה רק את הרמות מתחת
-    clearSidebarBelow(type);
-    
-    // הוסף את הפריט הנבחר
-    const container = document.getElementById(`${type}SelectedItem`);
-    if (container) {
-        container.innerHTML = `
-            <div class="selected-item">
-                <span class="selected-icon">📍</span>
-                <span class="selected-name">${name}</span>
-            </div>
-        `;
-        container.style.display = 'block';
-    }
-}
-
-// -=-=-=-=-=-=-=-=-=-
-
 // פונקציה מעודכנת לניהול הסידבר
 function updateSidebarSelection(type, id, name) {
+    console.log('updateSidebarSelection called:', type, id, name);
     // 1. הסר את כל ה-active מהכותרות
     document.querySelectorAll('.hierarchy-header').forEach(header => {
         header.classList.remove('active');
@@ -88,9 +68,6 @@ window.goToItem = function(type, id) {
     // כאן אפשר להוסיף לוגיקה למעבר לפריט
     console.log(`Going to ${type} with id ${id}`);
 }
-
-// -=-=-=-=-=-=-=-=-=-
-
 // ניקוי הסידבר מתחת לרמה מסוימת
 function clearSidebarBelow(type) {
     const hierarchy = ['cemetery', 'block', 'plot', 'area_grave', 'grave'];
@@ -138,23 +115,6 @@ async function loadAllCemeteries() {
 }
 
 // כשפותחים בית עלמין ספציפי
-function openCemetery2(cemeteryId, cemeteryName) {
-    console.log('Opening cemetery:', cemeteryId, cemeteryName);
-    
-    // שמור את הבחירה
-    window.selectedItems.cemetery = { id: cemeteryId, name: cemeteryName };
-    window.currentType = 'block';
-    window.currentParentId = cemeteryId;
-    
-    // עדכן את הסידבר - הצג את בית העלמין הנבחר
-    updateSidebarSelection('cemetery', cemeteryId, cemeteryName);
-    
-    // טען את הגושים
-    loadBlocksForCemetery(cemeteryId);
-    
-    // עדכן breadcrumb
-    updateBreadcrumb(`בתי עלמין › ${cemeteryName}`);
-}
 function openCemetery(cemeteryId, cemeteryName) {
     console.log('Opening cemetery:', cemeteryId, cemeteryName);
     

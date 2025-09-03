@@ -14,7 +14,7 @@ async function loadAllAreaGraves() {
         areaGravesHeader.classList.add('active');
     }
     
-    window.currentType = 'area_grave';
+    window.currentType = 'areaGrave';
     window.currentParentId = null;
     window.selectedItems = {};
     

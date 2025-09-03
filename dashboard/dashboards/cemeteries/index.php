@@ -25,11 +25,11 @@ if (!checkPermission('view', 'cemetery')) {
  44
     <div class="dashboard-wrapper">
         <!-- Header -->
-        <!-- < ?php include 'includes/header.php'; ?> -->
+        <?php include 'dashboards/cemeteries/includes/header.php'; ?>
         
         <div class="dashboard-container">
             <!-- Sidebar -->
-            <!-- < ?php include 'includes/sidebar.php'; ?> -->
+            <?php include 'dashboards/cemeteries/includes/sidebar.php'; ?>
             
             <!-- Main Content -->
             <main class="main-content">
@@ -78,7 +78,7 @@ if (!checkPermission('view', 'cemetery')) {
     </div>
     
     <!-- Modals -->
-    <!-- < ?php include 'includes/modals.php'; ?> -->
+    <?php include 'dashboards/cemeteries/includes/modals.php'; ?>
     
     <!-- SVG Icons -->
     <svg style="display: none;">
@@ -99,17 +99,17 @@ if (!checkPermission('view', 'cemetery')) {
     </svg>
     
     <!-- JavaScript Files -->
-    <!-- <script src="js/main.js"></script>
-    <script src="js/hierarchy.js"></script>
-    <script src="js/customers.js"></script>
-    <script src="js/purchases.js"></script>
-    <script src="js/burials.js"></script> -->
+    <script src="dashboards/cemeteries/js/main.js"></script>
+    <script src="dashboards/cemeteries/js/hierarchy.js"></script>
+    <script src="dashboards/cemeteries/js/customers.js"></script>
+    <script src="dashboards/cemeteries/js/purchases.js"></script>
+    <script src="dashboards/cemeteries/js/burials.js"></script>
     
     <script>
-        // // Initialize dashboard on load
-        // document.addEventListener('DOMContentLoaded', function() {
-        //     initDashboard();
-        // });
+        // Initialize dashboard on load
+        document.addEventListener('DOMContentLoaded', function() {
+            initDashboard();
+        });
     </script>
 </body>
 </html>

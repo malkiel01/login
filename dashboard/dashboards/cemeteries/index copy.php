@@ -1,7 +1,7 @@
 <?php
 // cemetery_dashboard/index.php
-require_once 'config.php';
-require_once 'includes/functions.php';
+require_once 'dashboards/cemeteries/config.php';
+require_once 'dashboards/cemeteries/includes/functions.php';
 
 // בדיקת הרשאות
 if (!checkPermission('view', 'cemetery')) {
@@ -16,19 +16,19 @@ if (!checkPermission('view', 'cemetery')) {
     <title><?php echo DASHBOARD_NAME; ?></title>
     
     <!-- CSS Files -->
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="css/dashboard.css">
-    <link rel="stylesheet" href="css/tables.css">
-    <link rel="stylesheet" href="css/forms.css">
+    <link rel="stylesheet" href="dashboards/cemeteries/css/main.css">
+    <link rel="stylesheet" href="dashboards/cemeteries/css/dashboard.css">
+    <link rel="stylesheet" href="dashboards/cemeteries/css/tables.css">
+    <link rel="stylesheet" href="dashboards/cemeteries/css/forms.css">
 </head>
 <body>
     <div class="dashboard-wrapper">
         <!-- Header -->
-        <?php include 'includes/header.php'; ?>
+        <?php include 'dashboards/cemeteries/includes/header.php'; ?>
         
         <div class="dashboard-container">
             <!-- Sidebar -->
-            <?php include 'includes/sidebar.php'; ?>
+            <?php include 'dashboards/cemeteries/includes/sidebar.php'; ?>
             
             <!-- Main Content -->
             <main class="main-content">
@@ -59,21 +59,11 @@ if (!checkPermission('view', 'cemetery')) {
                     <table class="data-table" id="dataTable">
                         <thead>
                             <tr id="tableHeaders">
-                                <th>מזהה</th>
-                                <th>שם</th>
-                                <th>קוד</th>
-                                <th>סטטוס</th>
-                                <th>נוצר בתאריך</th>
-                                <th>פעולות</th>
+                                <!-- Headers will be populated by JS -->
                             </tr>
                         </thead>
                         <tbody id="tableBody">
-                            <tr>
-                                <td colspan="6" style="text-align: center; padding: 20px;">
-                                    <div class="spinner"></div>
-                                    טוען נתונים...
-                                </td>
-                            </tr>
+                            <!-- Data will be populated by JS -->
                         </tbody>
                     </table>
                 </div>
@@ -87,7 +77,7 @@ if (!checkPermission('view', 'cemetery')) {
     </div>
     
     <!-- Modals -->
-    <?php include 'includes/modals.php'; ?>
+    <?php include 'dashboards/cemeteries/includes/modals.php'; ?>
     
     <!-- SVG Icons -->
     <svg style="display: none;">

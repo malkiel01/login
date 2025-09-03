@@ -78,7 +78,7 @@
     </div>
     
     <!-- Modals -->
-    <?php include 'includes/modals.php'; ?>
+    <!-- < ?php include 'includes/modals.php'; ?> -->
     
     <!-- SVG Icons -->
     <svg style="display: none;">
@@ -99,11 +99,11 @@
     </svg>
     
     <!-- JavaScript Files -->
-    <script src="js/main.js"></script>
+    <!-- <script src="js/main.js"></script>
     <script src="js/hierarchy.js"></script>
     <script src="js/customers.js"></script>
     <script src="js/purchases.js"></script>
-    <script src="js/burials.js"></script>
+    <script src="js/burials.js"></script> -->
     
     <script>
         // // Initialize dashboard on load

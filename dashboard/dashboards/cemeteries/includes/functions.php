@@ -14,6 +14,17 @@
 //     // בינתיים מאשרים הכל
 //     return true;
 // }
+function checkPermission($action, $module = 'cemetery') {
+    // בדיקה בסיסית - להחליף בבדיקת הרשאות אמיתית
+    if (!isset($_SESSION['user_id'])) {
+        return false;
+    }
+    
+    // בינתיים מאשרים הכל
+    return true;
+}
+
+
 
 // /**
 //  * רישום פעילות בלוג

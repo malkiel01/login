@@ -4,7 +4,7 @@
 ob_start();
 
 // נסה לטעון את הקונפיג
-$configPath = __DIR__ . '/../../config.php';
+$configPath = __DIR__ . '/../../../../config.php';
 if (!file_exists($configPath)) {
     ob_end_clean();
     http_response_code(500);

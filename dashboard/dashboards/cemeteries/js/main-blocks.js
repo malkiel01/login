@@ -4,6 +4,17 @@
 // טעינת כל הגושים
 async function loadAllBlocks() {
     console.log('Loading all blocks...');
+    
+    // נקה את כל הבחירות בסידבר
+    if (typeof clearAllSidebarSelections === 'function') {
+        clearAllSidebarSelections();
+    }
+    
+    // אפס את הבחירות
+    window.selectedItems = {};
+    window.currentType = 'block';
+    window.currentParentId = null;
+    
     try {
         const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=block`);
         const data = await response.json();

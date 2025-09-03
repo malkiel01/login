@@ -4,6 +4,15 @@
 // טעינת כל בתי העלמין
 async function loadAllCemeteries() {
     console.log('Loading all cemeteries...');
+    
+    // נקה את כל הבחירות בסידבר
+    clearAllSidebarSelections();
+    
+    // אפס את הבחירות
+    window.selectedItems = {};
+    window.currentType = 'cemetery';
+    window.currentParentId = null;
+    
     try {
         const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=cemetery`);
         const data = await response.json();
@@ -15,6 +24,43 @@ async function loadAllCemeteries() {
     } catch (error) {
         console.error('Error loading cemeteries:', error);
         showError('שגיאה בטעינת בתי העלמין');
+    }
+}
+
+// פונקציה לניקוי כל הפריטים הנבחרים בסידבר
+function clearAllSidebarSelections() {
+    const containers = [
+        'cemeterySelectedItem',
+        'blockSelectedItem', 
+        'plotSelectedItem',
+        'areaGraveSelectedItem',
+        'graveSelectedItem'
+    ];
+    
+    containers.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.innerHTML = '';
+            element.style.display = 'none';
+        }
+    });
+}
+
+// עדכן את הפונקציה updateSidebarSelection
+function updateSidebarSelection(type, id, name) {
+    // נקה את כל הבחירות
+    clearAllSidebarSelections();
+    
+    // הוסף רק את הפריט הנבחר הנוכחי
+    const container = document.getElementById(`${type}SelectedItem`);
+    if (container) {
+        container.innerHTML = `
+            <div class="selected-item">
+                <span class="selected-icon">📍</span>
+                <span class="selected-name">${name}</span>
+            </div>
+        `;
+        container.style.display = 'block';
     }
 }
 

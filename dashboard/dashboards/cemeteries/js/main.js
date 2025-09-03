@@ -113,12 +113,13 @@ function updateHeaderStats(stats) {
 // עדכון ספירות בסרגל צד
 function updateSidebarCounts(stats) {
     if (stats.counts) {
-        document.getElementById('cemeteriesCount').textContent = stats.counts.cemeteries?.count || 0;
-        document.getElementById('blocksCount').textContent = stats.counts.blocks?.count || 0;
-        document.getElementById('plotsCount').textContent = stats.counts.plots?.count || 0;
-        document.getElementById('rowsCount').textContent = stats.counts.rows?.count || 0;
-        document.getElementById('areaGravesCount').textContent = stats.counts.area_graves?.count || 0;
-        document.getElementById('gravesCount').textContent = stats.counts.graves?.count || 0;
+        // השתמש בפונקציה הבודדת שיצרנו
+        updateSidebarCount('cemeteriesCount', stats.counts.cemeteries?.count || 0);
+        updateSidebarCount('blocksCount', stats.counts.blocks?.count || 0);
+        updateSidebarCount('plotsCount', stats.counts.plots?.count || 0);
+        updateSidebarCount('areaGravesCount', stats.counts.area_graves?.count || 0);
+        updateSidebarCount('gravesCount', stats.counts.graves?.count || 0);
+        // הסרנו את rowsCount כי הסרנו את השורות מהתצוגה
     }
 }
 function updateSidebarCount(elementId, count) {

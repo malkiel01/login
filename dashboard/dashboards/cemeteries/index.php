@@ -25,11 +25,11 @@
  44
     <div class="dashboard-wrapper">
         <!-- Header -->
-        <?php include 'includes/header.php'; ?>
+        <!-- < ?php include 'includes/header.php'; ?> -->
         
         <div class="dashboard-container">
             <!-- Sidebar -->
-            <?php include 'includes/sidebar.php'; ?>
+            <!-- < ?php include 'includes/sidebar.php'; ?> -->
             
             <!-- Main Content -->
             <main class="main-content">

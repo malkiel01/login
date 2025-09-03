@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>חיפוש מותאם</title>
-    <link rel="stylesheet" href="assets/css/search.css">
-    <link rel="stylesheet" href="assets/css/custom-search.css">
+    <link rel="stylesheet" href="dashboards/search/assets/css/search.css">
+    <link rel="stylesheet" href="dashboards/search/assets/css/custom-search.css">
 </head>
 <body>
     <!-- בורר סוג חיפוש -->
@@ -71,15 +71,15 @@
     </div>
 
     <!-- Scripts -->
-    <script src="assets/js/search-config.js"></script>
-    <script src="assets/templates/deceased-card.js"></script>
-    <script src="assets/templates/deceased-table.js"></script>
-    <script src="assets/templates/purchased-card.js"></script>
-    <script src="assets/templates/purchased-table.js"></script>
-    <script src="assets/templates/available-card.js"></script>
-    <script src="assets/templates/available-table.js"></script>
-    <script src="assets/js/search-api.js"></script>
-    <script src="assets/js/search-ui.js"></script>
-    <script src="assets/js/search-main.js"></script>
+    <script src="dashboards/search/assets/js/search-config.js"></script>
+    <script src="dashboards/search/assets/templates/deceased-card.js"></script>
+    <script src="dashboards/search/assets/templates/deceased-table.js"></script>
+    <script src="dashboards/search/assets/templates/purchased-card.js"></script>
+    <script src="dashboards/search/assets/templates/purchased-table.js"></script>
+    <script src="dashboards/search/assets/templates/available-card.js"></script>
+    <script src="dashboards/search/assets/templates/available-table.js"></script>
+    <script src="dashboards/search/assets/js/search-api.js"></script>
+    <script src="dashboards/search/assets/js/search-ui.js"></script>
+    <script src="dashboards/search/assets/js/search-main.js"></script>
 </body>
 </html>

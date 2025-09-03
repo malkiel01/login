@@ -215,70 +215,70 @@ function getGraveStatusName($status) {
     return 'לא ידוע';
 }
 
-// /**
-//  * קבלת צבע סטטוס קבר
-//  */
-// function getGraveStatusColor($status) {
-//     if (defined('GRAVE_STATUS') && isset(GRAVE_STATUS[$status])) {
-//         return GRAVE_STATUS[$status]['color'];
-//     }
-//     return '#6b7280';
-// }
+/**
+ * קבלת צבע סטטוס קבר
+ */
+function getGraveStatusColor($status) {
+    if (defined('GRAVE_STATUS') && isset(GRAVE_STATUS[$status])) {
+        return GRAVE_STATUS[$status]['color'];
+    }
+    return '#6b7280';
+}
 
-// /**
-//  * קבלת שם סוג חלקה
-//  */
-// function getPlotTypeName($type) {
-//     if (defined('PLOT_TYPES') && isset(PLOT_TYPES[$type])) {
-//         return PLOT_TYPES[$type]['name'];
-//     }
-//     return 'לא ידוע';
-// }
+/**
+ * קבלת שם סוג חלקה
+ */
+function getPlotTypeName($type) {
+    if (defined('PLOT_TYPES') && isset(PLOT_TYPES[$type])) {
+        return PLOT_TYPES[$type]['name'];
+    }
+    return 'לא ידוע';
+}
 
-// /**
-//  * בניית מיקום קבר מלא
-//  */
-// function buildGraveFullLocation($graveId) {
-//     $pdo = getDBConnection();
+/**
+ * בניית מיקום קבר מלא
+ */
+function buildGraveFullLocation($graveId) {
+    $pdo = getDBConnection();
     
-//     try {
-//         $stmt = $pdo->prepare("
-//             SELECT 
-//                 c.name as cemetery,
-//                 b.name as block,
-//                 p.name as plot,
-//                 r.name as row,
-//                 ag.name as area_grave,
-//                 g.grave_number
-//             FROM graves g
-//             LEFT JOIN area_graves ag ON g.area_grave_id = ag.id
-//             LEFT JOIN rows r ON ag.row_id = r.id
-//             LEFT JOIN plots p ON r.plot_id = p.id
-//             LEFT JOIN blocks b ON p.block_id = b.id
-//             LEFT JOIN cemeteries c ON b.cemetery_id = c.id
-//             WHERE g.id = :id
-//         ");
+    try {
+        $stmt = $pdo->prepare("
+            SELECT 
+                c.name as cemetery,
+                b.name as block,
+                p.name as plot,
+                r.name as row,
+                ag.name as area_grave,
+                g.grave_number
+            FROM graves g
+            LEFT JOIN area_graves ag ON g.area_grave_id = ag.id
+            LEFT JOIN rows r ON ag.row_id = r.id
+            LEFT JOIN plots p ON r.plot_id = p.id
+            LEFT JOIN blocks b ON p.block_id = b.id
+            LEFT JOIN cemeteries c ON b.cemetery_id = c.id
+            WHERE g.id = :id
+        ");
         
-//         $stmt->execute(['id' => $graveId]);
-//         $data = $stmt->fetch();
+        $stmt->execute(['id' => $graveId]);
+        $data = $stmt->fetch();
         
-//         if ($data) {
-//             $parts = array_filter([
-//                 $data['cemetery'],
-//                 $data['block'],
-//                 $data['plot'],
-//                 $data['row'],
-//                 $data['area_grave'],
-//                 $data['grave_number']
-//             ]);
-//             return implode(' ← ', $parts);
-//         }
-//     } catch (Exception $e) {
-//         error_log("Error building grave location: " . $e->getMessage());
-//     }
+        if ($data) {
+            $parts = array_filter([
+                $data['cemetery'],
+                $data['block'],
+                $data['plot'],
+                $data['row'],
+                $data['area_grave'],
+                $data['grave_number']
+            ]);
+            return implode(' ← ', $parts);
+        }
+    } catch (Exception $e) {
+        error_log("Error building grave location: " . $e->getMessage());
+    }
     
-//     return 'מיקום לא ידוע';
-// }
+    return 'מיקום לא ידוע';
+}
 
 // /**
 //  * בדיקה אם קבר פנוי

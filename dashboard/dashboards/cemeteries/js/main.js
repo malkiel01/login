@@ -7,8 +7,8 @@ let selectedItems = {};
 let currentPage = 1;
 let isLoading = false;
 
-// הגדרות API
-const API_BASE = 'dashboards/cemeteries/api/';
+// הגדרות API - נתיב מלא מהשורש
+const API_BASE = '/dashboard/dashboards/cemeteries/api/';
 
 // אתחול הדשבורד
 function initDashboard() {
@@ -445,18 +445,27 @@ function closeAllModals() {
 
 // פונקציות עזר להודעות
 function showSuccess(message) {
-    // TODO: implement toast notifications
-    console.log('Success:', message);
+    if (typeof showToast === 'function') {
+        showToast('success', message);
+    } else {
+        console.log('Success:', message);
+    }
 }
 
 function showError(message) {
-    // TODO: implement toast notifications
-    console.error('Error:', message);
+    if (typeof showToast === 'function') {
+        showToast('error', message);
+    } else {
+        console.error('Error:', message);
+    }
 }
 
 function showWarning(message) {
-    // TODO: implement toast notifications
-    console.warn('Warning:', message);
+    if (typeof showToast === 'function') {
+        showToast('warning', message);
+    } else {
+        console.warn('Warning:', message);
+    }
 }
 
 // עיצוב תאריך

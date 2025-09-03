@@ -3,7 +3,7 @@
 ?>
 <aside class="dashboard-sidebar" id="dashboardSidebar">
     <div class="sidebar-header">
-        <h3 class="sidebar-title">היררכיה</h3>
+        <h3 class="sidebar-title">ניווט</h3>
         <button class="btn-toggle-sidebar" onclick="toggleSidebar()">
             <svg class="icon-sm"><use xlink:href="#icon-menu"></use></svg>
         </button>
@@ -18,86 +18,64 @@
                onkeyup="performQuickSearch(this.value)">
     </div>
     
-    <!-- רמות ההיררכיה -->
+    <!-- רמות ההיררכיה - גרסה חדשה -->
     <div class="hierarchy-levels">
         <!-- בתי עלמין -->
         <div class="hierarchy-level">
-            <div class="hierarchy-header" onclick="toggleHierarchyLevel('cemeteries')">
+            <div class="hierarchy-header" onclick="loadAllCemeteries()">
                 <span class="hierarchy-icon">🏛️</span>
                 <span class="hierarchy-title">בתי עלמין</span>
                 <span class="hierarchy-count" id="cemeteriesCount">0</span>
             </div>
-            <div class="hierarchy-list" id="cemeteriesList">
-                <!-- Will be populated by JS -->
-            </div>
+            <div id="cemeterySelectedItem" class="selected-item-container"></div>
         </div>
         
         <!-- גושים -->
         <div class="hierarchy-level">
-            <div class="hierarchy-header" onclick="toggleHierarchyLevel('blocks')">
+            <div class="hierarchy-header" onclick="loadAllBlocks()">
                 <span class="hierarchy-icon">📦</span>
                 <span class="hierarchy-title">גושים</span>
                 <span class="hierarchy-count" id="blocksCount">0</span>
             </div>
-            <div class="hierarchy-list collapsed" id="blocksList">
-                <!-- Will be populated by JS -->
-            </div>
+            <div id="blockSelectedItem" class="selected-item-container"></div>
         </div>
         
         <!-- חלקות -->
         <div class="hierarchy-level">
-            <div class="hierarchy-header" onclick="toggleHierarchyLevel('plots')">
+            <div class="hierarchy-header" onclick="if(typeof loadAllPlots === 'function') loadAllPlots()">
                 <span class="hierarchy-icon">📋</span>
                 <span class="hierarchy-title">חלקות</span>
                 <span class="hierarchy-count" id="plotsCount">0</span>
             </div>
-            <div class="hierarchy-list collapsed" id="plotsList">
-                <!-- Will be populated by JS -->
-            </div>
-        </div>
-        
-        <!-- שורות -->
-        <div class="hierarchy-level">
-            <div class="hierarchy-header" onclick="toggleHierarchyLevel('rows')">
-                <span class="hierarchy-icon">📏</span>
-                <span class="hierarchy-title">שורות</span>
-                <span class="hierarchy-count" id="rowsCount">0</span>
-            </div>
-            <div class="hierarchy-list collapsed" id="rowsList">
-                <!-- Will be populated by JS -->
-            </div>
+            <div id="plotSelectedItem" class="selected-item-container"></div>
         </div>
         
         <!-- אחוזות קבר -->
         <div class="hierarchy-level">
-            <div class="hierarchy-header" onclick="toggleHierarchyLevel('areaGraves')">
+            <div class="hierarchy-header" onclick="if(typeof loadAllAreaGraves === 'function') loadAllAreaGraves()">
                 <span class="hierarchy-icon">🏘️</span>
                 <span class="hierarchy-title">אחוזות קבר</span>
                 <span class="hierarchy-count" id="areaGravesCount">0</span>
             </div>
-            <div class="hierarchy-list collapsed" id="areaGravesList">
-                <!-- Will be populated by JS -->
-            </div>
+            <div id="areaGraveSelectedItem" class="selected-item-container"></div>
         </div>
         
         <!-- קברים -->
         <div class="hierarchy-level">
-            <div class="hierarchy-header" onclick="toggleHierarchyLevel('graves')">
+            <div class="hierarchy-header" onclick="if(typeof loadAllGraves === 'function') loadAllGraves()">
                 <span class="hierarchy-icon">🪦</span>
                 <span class="hierarchy-title">קברים</span>
                 <span class="hierarchy-count" id="gravesCount">0</span>
             </div>
-            <div class="hierarchy-list collapsed" id="gravesList">
-                <!-- Will be populated by JS -->
-            </div>
+            <div id="graveSelectedItem" class="selected-item-container"></div>
         </div>
     </div>
     
     <!-- פעולות מהירות -->
     <div class="sidebar-footer">
-        <button class="btn btn-primary btn-block" onclick="openQuickAdd()">
+        <button class="btn btn-primary btn-block" onclick="openAddModal()">
             <svg class="icon-sm"><use xlink:href="#icon-plus"></use></svg>
-            הוספה מהירה
+            הוספה חדשה
         </button>
         <button class="btn btn-secondary btn-block mt-2" onclick="exportData()">
             <svg class="icon-sm"><use xlink:href="#icon-download"></use></svg>
@@ -116,6 +94,9 @@
     </symbol>
     <symbol id="icon-fullscreen" viewBox="0 0 24 24">
         <path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+    </symbol>
+    <symbol id="icon-enter" viewBox="0 0 24 24">
+        <path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M9 10l5-5m0 0h-4m4 0v4m1 7H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"/>
     </symbol>
 </svg>
 
@@ -184,6 +165,11 @@
     transform: translateX(-2px);
 }
 
+.hierarchy-header.active {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: white;
+}
+
 .hierarchy-icon {
     font-size: 1.25rem;
 }
@@ -203,51 +189,39 @@
     font-weight: 600;
 }
 
-.hierarchy-list {
+.hierarchy-header.active .hierarchy-count {
+    background: white;
+    color: var(--primary-color);
+}
+
+/* תצוגת פריט נבחר */
+.selected-item-container {
     margin-top: 0.5rem;
-    max-height: 200px;
-    overflow-y: auto;
-    transition: var(--transition);
+    margin-right: 2rem;
+    padding: 0.5rem;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    display: none;
 }
 
-.hierarchy-list.collapsed {
-    max-height: 0;
-    margin: 0;
-    overflow: hidden;
+.selected-item-container:not(:empty) {
+    display: block;
 }
 
-.hierarchy-item {
+.selected-item {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 0.5rem 0.75rem;
-    margin-bottom: 0.25rem;
-    background: var(--bg-primary);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    transition: var(--transition);
-    font-size: 0.875rem;
+    gap: 0.5rem;
 }
 
-.hierarchy-item:hover {
-    background: var(--bg-tertiary);
-    transform: translateX(-2px);
+.selected-icon {
+    color: var(--primary-color);
 }
 
-.hierarchy-item.selected {
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-    color: white;
-}
-
-.hierarchy-item-name {
-    flex: 1;
-}
-
-.hierarchy-item-badge {
-    font-size: 0.75rem;
-    padding: 0.125rem 0.375rem;
-    border-radius: var(--radius-sm);
-    background: rgba(0, 0, 0, 0.1);
+.selected-name {
+    font-weight: 500;
+    color: var(--text-secondary);
 }
 
 .sidebar-footer {

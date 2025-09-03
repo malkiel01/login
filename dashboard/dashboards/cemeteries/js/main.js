@@ -132,54 +132,54 @@ function updateSidebarCount(elementId, count) {
 // Start Plots -------------------------------------
 
     // הצגת חלקות
-    function displayPlots(plots) {
-        const list = document.getElementById('plotsList');
-        if (!list) return;
+    // function displayPlots(plots) {
+    //     const list = document.getElementById('plotsList');
+    //     if (!list) return;
         
-        list.innerHTML = '';
-        list.classList.remove('collapsed');
+    //     list.innerHTML = '';
+    //     list.classList.remove('collapsed');
         
-        plots.forEach(plot => {
-            const item = document.createElement('div');
-            item.className = 'hierarchy-item';
-            item.dataset.id = plot.id;
-            item.onclick = () => selectPlot(plot.id, plot.name);
+    //     plots.forEach(plot => {
+    //         const item = document.createElement('div');
+    //         item.className = 'hierarchy-item';
+    //         item.dataset.id = plot.id;
+    //         item.onclick = () => selectPlot(plot.id, plot.name);
             
-            item.innerHTML = `
-                <span class="hierarchy-item-name">${plot.name}</span>
-                <span class="hierarchy-item-badge">${plot.code || ''}</span>
-            `;
+    //         item.innerHTML = `
+    //             <span class="hierarchy-item-name">${plot.name}</span>
+    //             <span class="hierarchy-item-badge">${plot.code || ''}</span>
+    //         `;
             
-            list.appendChild(item);
-        });
-    }
+    //         list.appendChild(item);
+    //     });
+    // }
 
     // בחירת חלקה
-    async function selectPlot(id, name) {
-        selectedItems.plot = {id, name};
-        currentType = 'row';
-        currentParentId = id;
+    // async function selectPlot(id, name) {
+    //     selectedItems.plot = {id, name};
+    //     currentType = 'row';
+    //     currentParentId = id;
         
-        updateSelectedItem('plot', id);
-        updateBreadcrumb();
+    //     updateSelectedItem('plot', id);
+    //     updateBreadcrumb();
         
-        await loadRows(id);
-    }
+    //     await loadRows(id);
+    // }
 
     // טעינת שורות
-    async function loadRows(plotId) {
-        try {
-            const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=row&parent_id=${plotId}`);
-            const data = await response.json();
+    // async function loadRows(plotId) {
+    //     try {
+    //         const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=row&parent_id=${plotId}`);
+    //         const data = await response.json();
             
-            if (data.success) {
-                displayRows(data.data);
-                updateTableData('row', data.data);
-            }
-        } catch (error) {
-            console.error('Error loading rows:', error);
-        }
-    }
+    //         if (data.success) {
+    //             displayRows(data.data);
+    //             updateTableData('row', data.data);
+    //         }
+    //     } catch (error) {
+    //         console.error('Error loading rows:', error);
+    //     }
+    // }
 
 // End Plots ---------------------------------------
 
@@ -713,7 +713,7 @@ window.editItem = editItem;
 window.deleteItem = deleteItem;
 // window.selectCemetery = selectCemetery; // מחק - כי הסרנו את הפונקציה
 // window.selectBlock = selectBlock;       // מחק - כי הסרנו את הפונקציה
-window.selectPlot = selectPlot;
+// window.selectPlot = selectPlot;
 window.getHierarchyLevel = getHierarchyLevel;
 window.getParentColumn = getParentColumn;
 

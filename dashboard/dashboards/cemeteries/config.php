@@ -64,14 +64,14 @@ function formatGraveLocation($cemetery, $block, $plot, $row, $area, $grave) {
     return implode(' ← ', $parts);
 }
 
-function calculateAge($birthDate, $deathDate = null) {
-    if (!$birthDate) return null;
+// function calculateAge($birthDate, $deathDate = null) {
+//     if (!$birthDate) return null;
     
-    $from = new DateTime($birthDate);
-    $to = $deathDate ? new DateTime($deathDate) : new DateTime();
+//     $from = new DateTime($birthDate);
+//     $to = $deathDate ? new DateTime($deathDate) : new DateTime();
     
-    return $from->diff($to)->y;
-}
+//     return $from->diff($to)->y;
+// }
 
 // בדיקת הרשאות למשתמש (אם יש מערכת משתמשים)
 function checkPermission($action, $module = 'cemetery') {

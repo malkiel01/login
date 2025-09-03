@@ -280,87 +280,87 @@ function buildGraveFullLocation($graveId) {
     return 'מיקום לא ידוע';
 }
 
-// /**
-//  * בדיקה אם קבר פנוי
-//  */
-// function isGraveAvailable($graveId) {
-//     $pdo = getDBConnection();
+/**
+ * בדיקה אם קבר פנוי
+ */
+function isGraveAvailable($graveId) {
+    $pdo = getDBConnection();
     
-//     try {
-//         $stmt = $pdo->prepare("
-//             SELECT grave_status 
-//             FROM graves 
-//             WHERE id = :id AND is_active = 1
-//         ");
-//         $stmt->execute(['id' => $graveId]);
-//         $grave = $stmt->fetch();
+    try {
+        $stmt = $pdo->prepare("
+            SELECT grave_status 
+            FROM graves 
+            WHERE id = :id AND is_active = 1
+        ");
+        $stmt->execute(['id' => $graveId]);
+        $grave = $stmt->fetch();
         
-//         return $grave && $grave['grave_status'] == 1;
-//     } catch (Exception $e) {
-//         return false;
-//     }
-// }
+        return $grave && $grave['grave_status'] == 1;
+    } catch (Exception $e) {
+        return false;
+    }
+}
 
-// /**
-//  * בדיקה אם קבר תפוס
-//  */
-// function isGraveOccupied($graveId) {
-//     $pdo = getDBConnection();
+/**
+ * בדיקה אם קבר תפוס
+ */
+function isGraveOccupied($graveId) {
+    $pdo = getDBConnection();
     
-//     try {
-//         // בדוק אם יש קבורה פעילה
-//         $stmt = $pdo->prepare("
-//             SELECT COUNT(*) 
-//             FROM burials 
-//             WHERE grave_id = :id AND is_active = 1
-//         ");
-//         $stmt->execute(['id' => $graveId]);
+    try {
+        // בדוק אם יש קבורה פעילה
+        $stmt = $pdo->prepare("
+            SELECT COUNT(*) 
+            FROM burials 
+            WHERE grave_id = :id AND is_active = 1
+        ");
+        $stmt->execute(['id' => $graveId]);
         
-//         return $stmt->fetchColumn() > 0;
-//     } catch (Exception $e) {
-//         return false;
-//     }
-// }
+        return $stmt->fetchColumn() > 0;
+    } catch (Exception $e) {
+        return false;
+    }
+}
 
-// /**
-//  * קבלת סטטיסטיקות כלליות
-//  */
-// function getDashboardStats() {
-//     $pdo = getDBConnection();
-//     $stats = [];
+/**
+ * קבלת סטטיסטיקות כלליות
+ */
+function getDashboardStats() {
+    $pdo = getDBConnection();
+    $stats = [];
     
-//     try {
-//         // ספירת קברים לפי סטטוס
-//         $stmt = $pdo->query("
-//             SELECT 
-//                 COUNT(*) as total,
-//                 SUM(CASE WHEN grave_status = 1 THEN 1 ELSE 0 END) as available,
-//                 SUM(CASE WHEN grave_status = 2 THEN 1 ELSE 0 END) as reserved,
-//                 SUM(CASE WHEN grave_status = 3 THEN 1 ELSE 0 END) as occupied,
-//                 SUM(CASE WHEN grave_status = 4 THEN 1 ELSE 0 END) as saved
-//             FROM graves 
-//             WHERE is_active = 1
-//         ");
-//         $stats['graves'] = $stmt->fetch();
+    try {
+        // ספירת קברים לפי סטטוס
+        $stmt = $pdo->query("
+            SELECT 
+                COUNT(*) as total,
+                SUM(CASE WHEN grave_status = 1 THEN 1 ELSE 0 END) as available,
+                SUM(CASE WHEN grave_status = 2 THEN 1 ELSE 0 END) as reserved,
+                SUM(CASE WHEN grave_status = 3 THEN 1 ELSE 0 END) as occupied,
+                SUM(CASE WHEN grave_status = 4 THEN 1 ELSE 0 END) as saved
+            FROM graves 
+            WHERE is_active = 1
+        ");
+        $stats['graves'] = $stmt->fetch();
         
-//         // ספירת לקוחות
-//         $stmt = $pdo->query("SELECT COUNT(*) as total FROM customers WHERE is_active = 1");
-//         $stats['customers'] = $stmt->fetchColumn();
+        // ספירת לקוחות
+        $stmt = $pdo->query("SELECT COUNT(*) as total FROM customers WHERE is_active = 1");
+        $stats['customers'] = $stmt->fetchColumn();
         
-//         // ספירת רכישות
-//         $stmt = $pdo->query("SELECT COUNT(*) as total FROM purchases WHERE is_active = 1");
-//         $stats['purchases'] = $stmt->fetchColumn();
+        // ספירת רכישות
+        $stmt = $pdo->query("SELECT COUNT(*) as total FROM purchases WHERE is_active = 1");
+        $stats['purchases'] = $stmt->fetchColumn();
         
-//         // ספירת קבורות
-//         $stmt = $pdo->query("SELECT COUNT(*) as total FROM burials WHERE is_active = 1");
-//         $stats['burials'] = $stmt->fetchColumn();
+        // ספירת קבורות
+        $stmt = $pdo->query("SELECT COUNT(*) as total FROM burials WHERE is_active = 1");
+        $stats['burials'] = $stmt->fetchColumn();
         
-//     } catch (Exception $e) {
-//         error_log("Error getting dashboard stats: " . $e->getMessage());
-//     }
+    } catch (Exception $e) {
+        error_log("Error getting dashboard stats: " . $e->getMessage());
+    }
     
-//     return $stats;
-// }
+    return $stats;
+}
 
 // /**
 //  * יצירת אפשרויות לרשימה נפתחת

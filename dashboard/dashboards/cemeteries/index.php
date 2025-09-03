@@ -16,10 +16,10 @@ if (!checkPermission('view', 'cemetery')) {
     <title><?php echo DASHBOARD_NAME; ?></title>
     
     <!-- CSS Files -->
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="css/dashboard.css">
-    <link rel="stylesheet" href="css/tables.css">
-    <link rel="stylesheet" href="css/forms.css">
+    <link rel="stylesheet" href="dashboards/cemeteries/css/main.css">
+    <link rel="stylesheet" href="dashboards/cemeteries/css/dashboard.css">
+    <link rel="stylesheet" href="dashboards/cemeteries/css/tables.css">
+    <link rel="stylesheet" href="dashboards/cemeteries/css/forms.css">
 </head>
 <body>
     <div class="dashboard-wrapper">

@@ -1,12 +1,12 @@
 <?php
 // cemetery_dashboard/index.php
-require_once 'config.php';
-require_once 'includes/functions.php';
+// require_once 'config.php';
+// require_once 'includes/functions.php';
 
 // בדיקת הרשאות
-if (!checkPermission('view', 'cemetery')) {
-    die('אין לך הרשאה לצפות בעמוד זה');
-}
+// if (!checkPermission('view', 'cemetery')) {
+//     die('אין לך הרשאה לצפות בעמוד זה');
+// }
 ?>
 <!DOCTYPE html>
 <html lang="he" dir="rtl">

@@ -9,7 +9,7 @@ async function loadAllAreaGraves() {
     clearAllSidebarSelections();
 
     // סמן שאנחנו ברמת גושים
-    const areaGravesHeader = document.querySelectorAll('.hierarchy-header')[1];
+    const areaGravesHeader = document.querySelectorAll('.hierarchy-header')[3];
     if (areaGravesHeader) {
         areaGravesHeader.classList.add('active');
     }

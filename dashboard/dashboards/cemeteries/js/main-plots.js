@@ -9,7 +9,7 @@ async function loadAllPlots() {
     clearAllSidebarSelections();
 
     // סמן שאנחנו ברמת גושים
-    const plotsHeader = document.querySelectorAll('.hierarchy-header')[1];
+    const plotsHeader = document.querySelectorAll('.hierarchy-header')[2];
     if (plotsHeader) {
         plotsHeader.classList.add('active');
     }

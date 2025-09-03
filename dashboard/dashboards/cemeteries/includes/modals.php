@@ -408,7 +408,42 @@ function adjustFieldsForType(type) {
 // להחליף את הפונקציה הקיימת ב-modals.php
 
 // בפונקציה saveItem - שורה ~245 בערך
-async function saveItem(event) {
+// בתחילת הפונקציה saveItem
+async function saveItem11(event) {
+    console.log('saveItem called');
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    const type = document.getElementById('itemType').value;
+    const parentId = document.getElementById('parentId').value;
+    
+    console.log('Form type:', type);
+    console.log('Parent ID:', parentId);
+    
+    // בניית אובייקט נתונים לפי סוג הפריט
+    const data = {};
+    
+    // שדות בסיסיים לכל הסוגים
+    if (type === 'grave') {
+        console.log('Processing grave data');
+        // בקברים - לא צריך את השדה name, רק grave_number
+        if (formData.get('grave_number')) {
+            data.grave_number = formData.get('grave_number');
+            console.log('Grave number:', data.grave_number);
+        }
+    } else {
+        // בכל שאר הסוגים
+        if (formData.get('name')) {
+            data.name = formData.get('name');
+        }
+    }
+    
+    console.log('Data to send:', data);
+    
+    // וכו'...
+}
+async function saveItem2(event) {
     event.preventDefault();
     
     const form = event.target;
@@ -440,7 +475,7 @@ async function saveItem(event) {
     
     // וכו'...
 }
-async function saveItem2(event) {
+async function saveItem(event) {
     event.preventDefault();
     
     const form = event.target;

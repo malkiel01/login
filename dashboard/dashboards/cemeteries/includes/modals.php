@@ -544,7 +544,7 @@ async function loadItemData(itemId) {
                 document.getElementById('graveStatus').value = data.grave_status || 1;
             }
             
-            if (type === 'area_grave') {
+            if (type === 'areaGrave') {
                 document.getElementById('graveType').value = data.grave_type || '';
             }
         }

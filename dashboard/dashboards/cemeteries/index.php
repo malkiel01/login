@@ -24,11 +24,11 @@ if (!checkPermission('view', 'cemetery')) {
 <body>
     <div class="dashboard-wrapper">
         <!-- Header -->
-        <?php include 'includes/header.php'; ?>
+        <?php include 'dashboards/cemeteries/includes/header.php'; ?>
         
         <div class="dashboard-container">
             <!-- Sidebar -->
-            <?php include 'includes/sidebar.php'; ?>
+            <?php include 'dashboards/cemeteries/includes/sidebar.php'; ?>
             
             <!-- Main Content -->
             <main class="main-content">

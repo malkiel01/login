@@ -622,6 +622,7 @@ $adminUsers = count(array_filter($users, function($u) { return $u['dashboard_typ
                                         <option value="manager" <?php echo $user['dashboard_type'] === 'manager' ? 'selected' : ''; ?>>מנהל צוות</option>
                                         <option value="employee" <?php echo $user['dashboard_type'] === 'employee' ? 'selected' : ''; ?>>עובד</option>
                                         <option value="client" <?php echo $user['dashboard_type'] === 'client' ? 'selected' : ''; ?>>לקוח</option>
+                                        <option value="cemetery_manager" <?php echo $user['dashboard_type'] === 'cemetery_manager' ? 'selected' : ''; ?>>מנהל בית עלמין</option>
                                     </select>
                                     <input type="hidden" name="update_permission" value="1">
                                 </form>

@@ -409,7 +409,7 @@ function adjustFieldsForType(type) {
 
 // בפונקציה saveItem - שורה ~245 בערך
 // בתחילת הפונקציה saveItem
-async function saveItem-אא(event) {
+async function saveItem11(event) {
     event.preventDefault();
     
     const form = event.target;

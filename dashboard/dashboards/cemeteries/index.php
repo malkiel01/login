@@ -111,7 +111,7 @@ if (!checkPermission('view', 'cemetery')) {
     <script src="dashboards/cemeteries/js/main.js"></script>
     <script src="dashboards/cemeteries/js/main-cemeteries.js"></script>
     <script src="dashboards/cemeteries/js/main-blocks.js"></script>
-    <!-- <script src="dashboards/cemeteries/js/main-plots.js"></script> -->
+    <script src="dashboards/cemeteries/js/main-plots.js"></script>
     <script src="dashboards/cemeteries/js/hierarchy.js"></script>
     <script src="dashboards/cemeteries/js/customers.js"></script>
     <script src="dashboards/cemeteries/js/purchases.js"></script>

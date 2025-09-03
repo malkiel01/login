@@ -124,7 +124,7 @@ function openAreaGrave(areaGraveId, areaGraveName) {
     window.currentParentId = areaGraveId;
     
     // עדכן את הסידבר
-    updateSidebarSelection('area_grave', areaGraveId, areaGraveName);
+    updateSidebarSelection('areaGrave', areaGraveId, areaGraveName);
     
     // טען את הקברים
     if (typeof loadGravesForAreaGrave === 'function') {

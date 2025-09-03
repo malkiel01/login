@@ -1,28 +1,44 @@
 <?php
+// // api/cemetery-api.php
+// // אל תשלח שום פלט לפני טעינת הקונפיג
+// ob_start();
+
+// // נסה לטעון את הקונפיג
+// $configPath = __DIR__ . '/../../../../config.php';
+// if (!file_exists($configPath)) {
+//     ob_end_clean();
+//     http_response_code(500);
+//     header('Content-Type: application/json; charset=utf-8');
+//     die(json_encode(['error' => 'קובץ הגדרות לא נמצא']));
+// }
+
+// require_once $configPath;
+// ob_end_clean();
+
+// // כעת אפשר לשלוח headers
+// header('Content-Type: application/json; charset=utf-8');
+
+// // בדיקת הרשאות בסיסית
+// if (!isset($_SESSION['user_id'])) {
+//     http_response_code(401);
+//     die(json_encode(['error' => 'לא מחובר למערכת']));
+// }
+
 // api/cemetery-api.php
-// אל תשלח שום פלט לפני טעינת הקונפיג
-ob_start();
+session_name('deceased_forms_session');
+session_start();
 
-// נסה לטעון את הקונפיג
-$configPath = __DIR__ . '/../../../../config.php';
-if (!file_exists($configPath)) {
-    ob_end_clean();
-    http_response_code(500);
-    header('Content-Type: application/json; charset=utf-8');
-    die(json_encode(['error' => 'קובץ הגדרות לא נמצא']));
-}
-
-require_once $configPath;
-ob_end_clean();
-
-// כעת אפשר לשלוח headers
 header('Content-Type: application/json; charset=utf-8');
 
-// בדיקת הרשאות בסיסית
+// בדיקה פשוטה - רק אם יש user_id
 if (!isset($_SESSION['user_id'])) {
-    http_response_code(401);
-    die(json_encode(['error' => 'לא מחובר למערכת']));
+    http_response_code(403);
+    die(json_encode(['error' => 'אין הרשאה']));
 }
+
+// טען את הקונפיג
+// require_once '../../config.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config.php';
 
 // קבל חיבור למסד נתונים
 try {

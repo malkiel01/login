@@ -35,6 +35,20 @@ define('DASHBOARD_TYPES', [
         'color' => '#FDBB2D',
         'permissions' => ['view_projects', 'view_reports']
     ],
+    'cemetery_manager' => [
+        'name' => 'דשבורד בתי עלמין',
+        'icon' => '🪦',
+        'color' => '#8B4513',
+        'permissions' => [
+            'view_graves',
+            'edit_graves', 
+            'manage_burials',
+            'view_cemetery_map',
+            'manage_memorials',
+            'generate_reports',
+            'manage_families'
+        ]
+    ],
     'default' => [
         'name' => 'דשבורד בסיסי',
         'icon' => '🏠',

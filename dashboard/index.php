@@ -183,7 +183,8 @@ if (!file_exists($dashboardFile)) {
                 'manager' => '📈',
                 'employee' => '💼',
                 'client' => '🏢',
-                'default' => '🏠'
+                'default' => '🏠',
+                'cemetery_manager' => '🪦'
             ];
             
             $icon = $dashboardIcons[$dashboardType] ?? '📊';

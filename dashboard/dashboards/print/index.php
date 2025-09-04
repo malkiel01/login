@@ -325,7 +325,9 @@
                 
                 <div class="form-group">
                     <label for="pdfUrl">כתובת קובץ PDF (אופציונלי):</label>
-                    <input type="text" id="pdfUrl" placeholder="https://example.com/file.pdf או השאר ריק ליצירת PDF חדש" dir="ltr">
+                    <input type="text" id="pdfUrl" placeholder="https://example.com/file.pdf או השאר ריק ליצירת PDF חדש" dir="ltr"
+                    value="https://login.form.mbe-plus.com/dashboard/dashboards/print/templates/DeepEmpty.pdf"
+                    >
                     <small style="color: #666; margin-top: 5px; display: block;">
                         * השאר ריק ליצירת PDF חדש, או הכנס URL לעיבוד PDF קיים
                     </small>

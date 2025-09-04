@@ -62,7 +62,7 @@ try {
     $orientation = isset($input['orientation']) ? strtoupper($input['orientation']) : 'P';
     $format = ($orientation === 'L') ? 'A4-L' : 'A4';
     
-    // Create mPDF instance
+    // Create mPDF instance - exactly like in your working debug file
     $pdf = new \Mpdf\Mpdf([
         'mode' => 'utf-8',
         'format' => $format,
@@ -89,46 +89,48 @@ try {
     // Debug array
     $debugInfo = [];
     
-    // Process each value using direct positioning
+    // Build HTML exactly like your debug file
+    $html = '';
+    if ($isRTL) {
+        $html .= '<div dir="rtl">';
+    } else {
+        $html .= '<div>';
+    }
+    
     foreach ($values as $index => $value) {
         // Extract value properties
         $text = isset($value['text']) ? $value['text'] : '';
-        $x = isset($value['x']) ? floatval($value['x']) : 100;
-        $y = isset($value['y']) ? floatval($value['y']) : 100;
+        $x = isset($value['x']) ? intval($value['x']) : 100;
+        $y = isset($value['y']) ? intval($value['y']) : 100;
         $fontSize = isset($value['fontSize']) ? intval($value['fontSize']) : 12;
-        $color = isset($value['color']) ? $value['color'] : '#000000';
+        $color = isset($value['color']) ? $value['color'] : 'black';
         
         // Store debug info
         $debugInfo[] = [
             'text' => $text,
-            'x_received' => $x,
-            'y_received' => $y,
-            'fontSize' => $fontSize
+            'x' => $x,
+            'y' => $y,
+            'fontSize' => $fontSize,
+            'color' => $color
         ];
         
-        // Convert pixels to mm (1px = 0.264583mm at 96 DPI)
-        $x_mm = $x * 0.264583;
-        $y_mm = $y * 0.264583;
-        
-        // Parse color
-        $r = 0; $g = 0; $b = 0;
-        if (strpos($color, '#') === 0) {
-            $hex = str_replace('#', '', $color);
-            $r = hexdec(substr($hex, 0, 2));
-            $g = hexdec(substr($hex, 2, 2));
-            $b = hexdec(substr($hex, 4, 2));
-        }
-        
-        // Set text color
-        $pdf->SetTextColor($r, $g, $b);
-        
-        // Set font
-        $pdf->SetFont('dejavusans', '', $fontSize);
-        
-        // Move to position and write text
-        $pdf->SetXY($x_mm, $y_mm);
-        $pdf->Cell(0, 0, $text, 0, 0, 'L');
+        // Build the HTML for this text - exactly like your debug file
+        $html .= sprintf(
+            '<div style="position: absolute; left: %dpx; top: %dpx;">
+                <p style="color: %s; font-size: %dpt;">%s</p>
+            </div>',
+            $x,
+            $y,
+            $color,
+            $fontSize,
+            $text
+        );
     }
+    
+    $html .= '</div>';
+    
+    // Write HTML to PDF
+    $pdf->WriteHTML($html);
     
     // Generate filename
     $outputFilename = 'output/mpdf_' . date('Ymd_His') . '_' . uniqid() . '.pdf';
@@ -148,7 +150,7 @@ try {
     echo json_encode([
         'success' => true,
         'message' => 'PDF created successfully with mPDF overlay',
-        'method' => 'mpdf-overlay-xy',
+        'method' => 'mpdf-overlay',
         'filename' => $outputFilename,
         'view_url' => $viewUrl,
         'download_url' => $downloadUrl,
@@ -156,8 +158,8 @@ try {
         'rtl' => $isRTL,
         'orientation' => $orientation,
         'values_count' => count($values),
-        'debug' => $debugInfo,
-        'note' => 'Using SetXY and Cell method for precise positioning'
+        'debug_values' => $debugInfo,
+        'html_length' => strlen($html)
     ]);
     
 } catch (Exception $e) {

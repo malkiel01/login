@@ -1,1 +1,5 @@
 https://login.form.mbe-plus.com/dashboard/dashboards/print/templates/DeepEmpty.pdf
+
+composer require mpdf/mpdf
+composer require setasign/fpdi
+composer require setasign/fpdi-mpdf

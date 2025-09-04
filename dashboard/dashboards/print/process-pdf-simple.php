@@ -187,7 +187,9 @@ class SimplePDF {
             'success' => true,
             'method' => 'HTML',
             'filename' => basename($filename),
+            'view_url' => $this->getViewUrl($filename),
             'download_url' => $this->getDownloadUrl($filename),
+            'direct_url' => $this->getDirectUrl($filename),
             'html_content' => $html,
             'message' => 'HTML created. Use browser print-to-PDF or online converter.'
         ];

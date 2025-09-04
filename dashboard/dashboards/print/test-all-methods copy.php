@@ -310,22 +310,18 @@ async function testMethod(method) {
         const result = await response.json();
         
         if (result.success) {
-            // בדוק אילו URLs זמינים
-            const viewUrl = result.view_url || result.direct_url || result.download_url;
-            const downloadUrl = result.download_url || result.direct_url;
-            
             resultDiv.innerHTML = `
                 <strong>✅ הצלחה!</strong><br>
                 שיטה: ${result.method}<br>
                 קובץ: ${result.filename}<br>
                 <div style="margin-top: 10px;">
-                    <a href="${viewUrl}" target="_blank" 
+                    <a href="${result.download_url}" target="_blank" 
                        style="background: #007bff; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; display: inline-block; margin-right: 10px;">
-                       👁️ הצג
+                       👁️ הצג PDF
                     </a>
-                    <a href="${downloadUrl}" 
+                    <a href="${result.download_url}" download="${result.filename}"
                        style="background: #28a745; color: white; padding: 8px 15px; text-decoration: none; border-radius: 5px; display: inline-block;">
-                       📥 הורד
+                       📥 הורד PDF
                     </a>
                 </div>
             `;

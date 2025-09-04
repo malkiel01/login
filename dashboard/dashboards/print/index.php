@@ -349,6 +349,9 @@
                         <span class="method-badge" data-method="mpdf" onclick="selectMethod('mpdf')">
                             mPDF (עברית!)  <!-- הוסף את זה! -->
                         </span>
+                        <span class="method-badge" data-method="tcpdf" onclick="selectMethod('tcpdf')">
+                            tcpdf (עברית וקובץ!)  <!-- הוסף את זה! -->
+                        </span>
                     </div>
                     <small id="methodDescription" style="color: #666; margin-top: 5px; display: block;">
                         Minimal PDF - יוצר PDF בסיסי ללא תלויות
@@ -479,7 +482,8 @@
             'fpdf': 'pdf-fpdf.php',
             'html': 'pdf-html.php',
             'postscript': 'pdf-postscript.php',
-            'mpdf': 'pdf-mpdf-overlay.php'  // הוסף את זה!
+            'mpdf': 'pdf-mpdf-overlay.php',  // הוסף את זה!
+            'tcpdf': 'pdf-tcpdf-overlay.php',  // הוסף את זה!
         };
 
         const METHOD_DESCRIPTIONS = {
@@ -487,7 +491,8 @@
             'fpdf': 'FPDF - ספרייה מתקדמת ליצירת PDF איכותי',
             'html': 'HTML - יוצר HTML להמרה ל-PDF דרך הדפדפן',
             'postscript': 'PostScript - יוצר קובץ PS להמרה ל-PDF',
-            'mpdf': 'mPDF - תמיכה מושלמת בעברית!'  // הוסף את זה!
+            'mpdf': 'mPDF - תמיכה מושלמת בעברית!',  // הוסף את זה!
+            'tcpdf': 'tcpdf - תמיכה מושלמת בקובץ ובעברית!'  // הוסף את זה!
         };
 
         function selectMethod(method) {

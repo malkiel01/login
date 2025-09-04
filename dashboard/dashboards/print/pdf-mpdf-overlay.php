@@ -59,7 +59,7 @@ try {
     file_put_contents($tempFile, $pdfContent);
     
     // Detect orientation (default to portrait)
-    $orientation = isset($input['orientation']) ? strtoupper($input['orientation']) : 'L';
+    $orientation = isset($input['orientation']) ? strtoupper($input['orientation']) : 'P';
     $format = ($orientation === 'L') ? 'A4-L' : 'A4';
     
     // Create mPDF instance

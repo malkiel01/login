@@ -105,6 +105,63 @@
             font-family: 'Courier New', monospace;
         }
 
+        .orientation-selector {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .orientation-btn {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .orientation-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .orientation-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .orientation-btn i {
+            font-size: 2rem;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .color-input-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        input[type="color"] {
+            width: 60px;
+            height: 40px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            cursor: pointer;
+            padding: 2px;
+        }
+
+        .color-preview {
+            padding: 8px 15px;
+            border-radius: 8px;
+            background: #f0f4f8;
+            font-family: 'Courier New', monospace;
+            flex: 1;
+        }
+
         .values-list {
             max-height: 300px;
             overflow-y: auto;
@@ -138,6 +195,15 @@
             color: #667eea;
             font-weight: 500;
             font-family: 'Courier New', monospace;
+        }
+
+        .color-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            margin-left: 10px;
         }
 
         .btn {
@@ -326,17 +392,30 @@
                 <div class="form-group">
                     <label for="pdfUrl">כתובת קובץ PDF (אופציונלי):</label>
                     <input type="text" id="pdfUrl" placeholder="https://example.com/file.pdf או השאר ריק ליצירת PDF חדש" dir="ltr"
-                    value="https://login.form.mbe-plus.com/dashboard/dashboards/print/templates/DeepEmpty.pdf"
-                    >
+                    value="https://login.form.mbe-plus.com/dashboard/dashboards/print/templates/DeepEmpty.pdf">
                     <small style="color: #666; margin-top: 5px; display: block;">
                         * השאר ריק ליצירת PDF חדש, או הכנס URL לעיבוד PDF קיים
                     </small>
+                </div>
+
+                <div class="form-group">
+                    <label>כיוון הדף:</label>
+                    <div class="orientation-selector">
+                        <div class="orientation-btn active" data-orientation="P" onclick="selectOrientation('P')">
+                            <i>📄</i>
+                            <span>אנכי (Portrait)</span>
+                        </div>
+                        <div class="orientation-btn" data-orientation="L" onclick="selectOrientation('L')">
+                            <i>📃</i>
+                            <span>רוחבי (Landscape)</span>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="form-group">
                     <label for="method">שיטת יצירת PDF:</label>
                     <div class="method-selector">
-                        <span class="method-badge active" data-method="minimal" onclick="selectMethod('minimal')">
+                        <span class="method-badge" data-method="minimal" onclick="selectMethod('minimal')">
                             Minimal PDF
                         </span>
                         <span class="method-badge" data-method="fpdf" onclick="selectMethod('fpdf')">
@@ -348,15 +427,15 @@
                         <span class="method-badge" data-method="postscript" onclick="selectMethod('postscript')">
                             PostScript
                         </span>
-                        <span class="method-badge" data-method="mpdf" onclick="selectMethod('mpdf')">
-                            mPDF (עברית!)  <!-- הוסף את זה! -->
+                        <span class="method-badge active" data-method="mpdf" onclick="selectMethod('mpdf')">
+                            mPDF (עברית!)
                         </span>
                         <span class="method-badge" data-method="tcpdf" onclick="selectMethod('tcpdf')">
-                            tcpdf (עברית וקובץ!)  <!-- הוסף את זה! -->
+                            tcpdf (עברית וקובץ!)
                         </span>
                     </div>
                     <small id="methodDescription" style="color: #666; margin-top: 5px; display: block;">
-                        Minimal PDF - יוצר PDF בסיסי ללא תלויות
+                        mPDF - תמיכה מושלמת בעברית!
                     </small>
                 </div>
 
@@ -386,8 +465,16 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="fontSize">גודל גופן (אופציונלי):</label>
+                    <label for="fontSize">גודל גופן:</label>
                     <input type="number" id="fontSize" placeholder="12" min="8" max="72" value="12">
+                </div>
+
+                <div class="form-group">
+                    <label for="fontColor">צבע טקסט:</label>
+                    <div class="color-input-wrapper">
+                        <input type="color" id="fontColor" value="#000000" onchange="updateColorPreview()">
+                        <div class="color-preview" id="colorPreview">#000000</div>
+                    </div>
                 </div>
 
                 <button class="btn btn-secondary" onclick="addValue()">
@@ -429,14 +516,16 @@
                     <label for="jsonInput">הדבק JSON:</label>
                     <textarea id="jsonInput" placeholder='{
     "filename": "https://example.com/file.pdf",
-    "method": "minimal",
+    "orientation": "P",
+    "method": "mpdf",
     "language": "he",
     "values": [
         {
             "text": "שלום עולם",
             "x": 100,
             "y": 200,
-            "fontSize": 16
+            "fontSize": 16,
+            "color": "#FF0000"
         }
     ]
 }'></textarea>
@@ -476,7 +565,8 @@
 
     <script>
         let values = [];
-        let selectedMethod = 'minimal';
+        let selectedMethod = 'mpdf'; // Default to mPDF
+        let selectedOrientation = 'P'; // Default to Portrait
         
         // מיפוי של שיטות לקבצים
         const METHOD_FILES = {
@@ -484,8 +574,8 @@
             'fpdf': 'pdf-fpdf.php',
             'html': 'pdf-html.php',
             'postscript': 'pdf-postscript.php',
-            'mpdf': 'pdf-mpdf-overlay.php',  // הוסף את זה!
-            'tcpdf': 'pdf-tcpdf-overlay.php',  // הוסף את זה!
+            'mpdf': 'pdf-mpdf-overlay.php',
+            'tcpdf': 'pdf-tcpdf-overlay.php',
         };
 
         const METHOD_DESCRIPTIONS = {
@@ -493,9 +583,21 @@
             'fpdf': 'FPDF - ספרייה מתקדמת ליצירת PDF איכותי',
             'html': 'HTML - יוצר HTML להמרה ל-PDF דרך הדפדפן',
             'postscript': 'PostScript - יוצר קובץ PS להמרה ל-PDF',
-            'mpdf': 'mPDF - תמיכה מושלמת בעברית!',  // הוסף את זה!
-            'tcpdf': 'tcpdf - תמיכה מושלמת בקובץ ובעברית!'  // הוסף את זה!
+            'mpdf': 'mPDF - תמיכה מושלמת בעברית!',
+            'tcpdf': 'tcpdf - תמיכה מושלמת בקובץ ובעברית!'
         };
+
+        function selectOrientation(orientation) {
+            selectedOrientation = orientation;
+            
+            // עדכן את הכפתורים
+            document.querySelectorAll('.orientation-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-orientation="${orientation}"]`).classList.add('active');
+            
+            debugLog(`Selected orientation: ${orientation === 'P' ? 'Portrait' : 'Landscape'}`, 'info');
+        }
 
         function selectMethod(method) {
             selectedMethod = method;
@@ -510,6 +612,12 @@
             document.getElementById('methodDescription').textContent = METHOD_DESCRIPTIONS[method];
             
             debugLog(`Selected method: ${method}`, 'info');
+        }
+
+        function updateColorPreview() {
+            const color = document.getElementById('fontColor').value;
+            document.getElementById('colorPreview').textContent = color.toUpperCase();
+            document.getElementById('colorPreview').style.color = color;
         }
 
         function debugLog(message, type = 'info') {
@@ -536,6 +644,7 @@
             const x = parseInt(document.getElementById('xCoord').value) || 100;
             const y = parseInt(document.getElementById('yCoord').value) || 100;
             const fontSize = parseInt(document.getElementById('fontSize').value) || 12;
+            const color = document.getElementById('fontColor').value;
 
             if (!text) {
                 showStatus('נא להכניס טקסט', 'error');
@@ -543,7 +652,7 @@
                 return;
             }
 
-            const value = { text, x, y, fontSize };
+            const value = { text, x, y, fontSize, color };
             values.push(value);
             
             debugLog(`Added value: ${JSON.stringify(value)}`, 'success');
@@ -566,6 +675,7 @@
                 <div class="value-item">
                     <span class="value-item-text">${val.text}</span>
                     <span class="value-item-coords">(${val.x}, ${val.y}) - ${val.fontSize}px</span>
+                    <span class="color-dot" style="background: ${val.color};"></span>
                     <button class="btn btn-danger btn-small" onclick="removeValue(${index})">
                         הסר
                     </button>
@@ -587,6 +697,8 @@
             document.getElementById('xCoord').value = '100';
             document.getElementById('yCoord').value = '100';
             document.getElementById('fontSize').value = '12';
+            document.getElementById('fontColor').value = '#000000';
+            updateColorPreview();
         }
 
         function clearAll() {
@@ -619,6 +731,7 @@
             
             const data = {
                 language: document.getElementById('language').value,
+                orientation: selectedOrientation,
                 values: values
             };
             
@@ -678,6 +791,12 @@
                     showStatus('הקובץ נוצר בהצלחה!', 'success');
                     debugLog(`Success: ${result.message || 'File created successfully'}`, 'success');
                     debugLog(`Method used: ${result.method}`, 'info');
+                    debugLog(`Orientation: ${result.orientation || 'not specified'}`, 'info');
+                    
+                    // Debug positions if available
+                    if (result.debug_positions) {
+                        debugLog(`Positions: ${JSON.stringify(result.debug_positions)}`, 'info');
+                    }
                     
                     // פתח את הקובץ בחלון חדש
                     if (result.view_url || result.direct_url) {
@@ -701,15 +820,16 @@
 
         async function testMethod() {
             const testData = {
+                orientation: selectedOrientation,
                 values: [
-                    { text: `Test ${selectedMethod.toUpperCase()}`, x: 100, y: 100, fontSize: 20 },
-                    { text: 'בדיקת עברית', x: 100, y: 130, fontSize: 14 },
-                    { text: new Date().toLocaleString(), x: 100, y: 160, fontSize: 12 }
+                    { text: `Test ${selectedMethod.toUpperCase()}`, x: 100, y: 100, fontSize: 20, color: '#FF0000' },
+                    { text: 'בדיקת עברית', x: 100, y: 130, fontSize: 14, color: '#00FF00' },
+                    { text: new Date().toLocaleString(), x: 100, y: 160, fontSize: 12, color: '#0000FF' }
                 ],
                 language: document.getElementById('language').value
             };
             
-            debugLog(`Testing method: ${selectedMethod}`, 'info');
+            debugLog(`Testing method: ${selectedMethod} with orientation: ${selectedOrientation}`, 'info');
             await sendToServer(testData, selectedMethod);
         }
 
@@ -742,7 +862,6 @@
                         const data = await response.json();
                         available.push(method);
                         
-                        // בדיקה מיוחדת ל-FPDF
                         if (method === 'fpdf' && data.installed === false) {
                             debugLog(`⚠️ ${method}: File exists but FPDF not installed`, 'error');
                         } else {
@@ -770,6 +889,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             debugLog('Application initialized', 'success');
             updateValuesList();
+            updateColorPreview();
             checkAvailableMethods();
         });
     </script>

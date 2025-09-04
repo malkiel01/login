@@ -2,7 +2,6 @@
 /**
  * Minimal PDF Generator
  * יוצר PDF בסיסי ללא תלויות
- * גרסה מתוקנת עם תמיכה בעברית
  */
 
 header('Access-Control-Allow-Origin: *');
@@ -68,38 +67,6 @@ class MinimalPDF {
         ];
     }
     
-    /**
-     * פונקציה להמרת טקסט עברי ל-PDF
-     * מטפלת בסדר הנכון של האותיות
-     */
-    private function reverseHebrew($text) {
-        // בדוק אם יש עברית בטקסט
-        if (preg_match('/[\x{0590}-\x{05FF}]/u', $text)) {
-            // הפוך את סדר האותיות העבריות
-            $text = strrev($text);
-        }
-        return $text;
-    }
-    
-    /**
-     * המרת טקסט למחרוזת PDF
-     * תומך בעברית ואנגלית
-     */
-    private function encodeText($text) {
-        // בדוק אם הטקסט מכיל עברית
-        if (preg_match('/[\x{0590}-\x{05FF}]/u', $text)) {
-            // לעברית - השתמש בקידוד Windows-1255
-            $encoded = iconv('UTF-8', 'Windows-1255//IGNORE', $text);
-            if ($encoded !== false) {
-                // החזר כמחרוזת רגילה עם escape characters
-                return '(' . str_replace(['(', ')', '\\'], ['\\(', '\\)', '\\\\'], $encoded) . ')';
-            }
-        }
-        
-        // לאנגלית ותווים רגילים
-        return '(' . str_replace(['(', ')', '\\'], ['\\(', '\\)', '\\\\'], $text) . ')';
-    }
-    
     public function save($filename) {
         $pdf = "%PDF-1.4\n";
         $objects = [];
@@ -114,18 +81,15 @@ class MinimalPDF {
         
         $objNum = 3;
         foreach ($this->pages as $page) {
-            // הגדר פונט עם תמיכה בעברית
-            $objects[] = "$objNum 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents " . ($objNum + 1) . " 0 R /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >> >> >> >>\nendobj";
+            $objects[] = "$objNum 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents " . ($objNum + 1) . " 0 R /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >> >>\nendobj";
             $objNum++;
             
             $stream = "BT\n";
-            foreach ($page['texts'] as $textData) {
-                $stream .= "/F1 " . $textData['fontSize'] . " Tf\n";
-                $stream .= $textData['x'] . " " . (792 - $textData['y']) . " Td\n";
-                
-                // קידוד הטקסט
-                $encodedText = $this->encodeText($textData['text']);
-                $stream .= $encodedText . " Tj\n";
+            foreach ($page['texts'] as $text) {
+                $stream .= "/F1 " . $text['fontSize'] . " Tf\n";
+                $stream .= $text['x'] . " " . (792 - $text['y']) . " Td\n";
+                // $stream .= "(" . str_replace(['(', ')', '\\'], ['\\(', '\\)', '\\\\'], $text['text']) . ") Tj\n";
+                $stream .= "<" . bin2hex(mb_convert_encoding($text['text'], 'UTF-16BE', 'UTF-8')) . "> Tj\n";
             }
             $stream .= "ET";
             
@@ -193,8 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'filename' => basename($filename),
                 'view_url' => $base_url . '/pdf-minimal.php?file=' . basename($filename),
                 'download_url' => $base_url . '/pdf-minimal.php?file=' . basename($filename) . '&action=download',
-                'direct_url' => $base_url . '/' . $filename,
-                'note' => 'Hebrew support is limited in basic PDF. Use HTML or FPDF with Hebrew fonts for better results.'
+                'direct_url' => $base_url . '/' . $filename
             ]);
         } else {
             echo json_encode(['success' => false, 'error' => 'Failed to save PDF']);

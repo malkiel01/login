@@ -153,7 +153,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 // הוסף עמוד חדש// 
                 // הוסף עמוד חדש
-                $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                $pdf->AddPage();   
+                // // הוסף עמוד חדש
+                // $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
 
                 // // הוסף עמוד חדש עם הגודל הנכון
                 // if ($size['orientation'] == 'L') {

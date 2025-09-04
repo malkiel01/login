@@ -324,6 +324,14 @@
                 <h2 class="section-title">⚙️ הגדרות בסיסיות</h2>
                 
                 <div class="form-group">
+                    <label for="pdfUrl">כתובת קובץ PDF (אופציונלי):</label>
+                    <input type="text" id="pdfUrl" placeholder="https://example.com/file.pdf או השאר ריק ליצירת PDF חדש" dir="ltr">
+                    <small style="color: #666; margin-top: 5px; display: block;">
+                        * השאר ריק ליצירת PDF חדש, או הכנס URL לעיבוד PDF קיים
+                    </small>
+                </div>
+                
+                <div class="form-group">
                     <label for="method">שיטת יצירת PDF:</label>
                     <div class="method-selector">
                         <span class="method-badge active" data-method="minimal" onclick="selectMethod('minimal')">
@@ -412,6 +420,7 @@
                 <div class="form-group">
                     <label for="jsonInput">הדבק JSON:</label>
                     <textarea id="jsonInput" placeholder='{
+    "filename": "https://example.com/file.pdf",
     "method": "minimal",
     "language": "he",
     "values": [
@@ -573,6 +582,7 @@
                 values = [];
                 updateValuesList();
                 clearInputs();
+                document.getElementById('pdfUrl').value = '';
                 debugLog('Cleared all values', 'info');
                 showStatus('כל הנתונים נוקו', 'success');
             }
@@ -593,10 +603,20 @@
                 return;
             }
 
+            const pdfUrl = document.getElementById('pdfUrl').value;
+            
             const data = {
                 language: document.getElementById('language').value,
                 values: values
             };
+            
+            // הוסף את ה-URL רק אם הוזן
+            if (pdfUrl && pdfUrl.trim() !== '') {
+                data.filename = pdfUrl;
+                debugLog(`Using existing PDF: ${pdfUrl}`, 'info');
+            } else {
+                debugLog('Creating new PDF', 'info');
+            }
 
             debugLog(`Sending to ${selectedMethod}: ${JSON.stringify(data, null, 2)}`, 'info');
             await sendToServer(data, selectedMethod);

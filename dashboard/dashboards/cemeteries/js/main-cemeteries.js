@@ -117,7 +117,6 @@ function displayCemeteriesInMainContent(cemeteries) {
     updateBreadcrumb('בתי עלמין');
 }
 
-
 // הוספת בית עלמין חדש
 function openAddCemetery() {
     currentType = 'cemetery';
@@ -160,20 +159,3 @@ async function deleteCemetery(id) {
         showError('שגיאה במחיקת בית העלמין');
     }
 }
-
-// // עדכון הבחירה בסידבר
-// function updateSidebarSelection(type, id, name) {
-//     // הסר את כל האיתים מהרמות הנמוכות יותר
-//     clearSidebarBelow(type);
-    
-//     // הוסף את הפריט הנבחר לסידבר
-//     const container = document.getElementById(`${type}SelectedItem`);
-//     if (container) {
-//         container.innerHTML = `
-//             <div class="selected-item">
-//                 <span class="selected-icon">📍</span>
-//                 <span class="selected-name">${name}</span>
-//             </div>
-//         `;
-//     }
-// }

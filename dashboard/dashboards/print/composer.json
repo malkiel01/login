@@ -1,0 +1,19 @@
+{
+    "name": "pdf-text-printer/application",
+    "description": "PDF Text Printer with Hebrew and English support",
+    "require": {
+        "php": ">=7.4",
+        "tecnickcom/tcpdf": "^6.6",
+        "setasign/fpdi": "^2.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "scripts": {
+        "post-install-cmd": [
+            "@php -r \"if(!file_exists('output')) { mkdir('output', 0777, true); }\""
+        ]
+    }
+}

@@ -117,7 +117,6 @@ function displayAreaGravesInMainContent(areaGraves, rowName = null) {
 // פתיחת אחוזת קבר ספציפית - מעבר לתצוגת קברים
 function openAreaGrave(areaGraveId, areaGraveName) {
     console.log('Opening area grave:', areaGraveId, areaGraveName);
-    console.log('Before updateSidebarSelection - currentType:', window.currentType);
     
     // שמור את הבחירה
     window.selectedItems.areaGrave = { id: areaGraveId, name: areaGraveName };
@@ -125,34 +124,7 @@ function openAreaGrave(areaGraveId, areaGraveName) {
     window.currentParentId = areaGraveId;
     
     // עדכן את הסידבר
-    console.log('Calling updateSidebarSelection with:', 'areaGrave', areaGraveId, areaGraveName);
     updateSidebarSelection('areaGrave', areaGraveId, areaGraveName);
-    console.log('After updateSidebarSelection');
-    
-    // דיבוג של כל הכותרות בסידבר
-    console.log('=== ALL HEADERS DEBUG ===');
-    const allHeaders = document.querySelectorAll('.hierarchy-header');
-    allHeaders.forEach((header, index) => {
-        console.log(`Header ${index}:`, {
-            text: header.textContent.trim(),
-            classes: header.className,
-            hasActive: header.classList.contains('active'),
-            element: header
-        });
-    });
-    
-    console.log('=== SPECIFIC AREA GRAVE HEADER ===');
-    const areaGraveHeader = allHeaders[3];
-    if (areaGraveHeader) {
-        console.log('Area Grave Header (index 3):');
-        console.log('- Text:', areaGraveHeader.textContent.trim());
-        console.log('- Classes:', areaGraveHeader.className);
-        console.log('- Has active?:', areaGraveHeader.classList.contains('active'));
-        console.log('- Full HTML:', areaGraveHeader.outerHTML);
-    } else {
-        console.log('ERROR: No header at index 3!');
-    }
-    console.log('=== END DEBUG ===');
 
     // טען את הקברים
     if (typeof loadGravesForAreaGrave === 'function') {

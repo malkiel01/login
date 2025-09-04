@@ -395,7 +395,7 @@
 
     <script>
         let values = [];
-        const API_URL = 'process-pdf.php'; // שנה לכתובת השרת שלך
+        const API_URL = 'process-pdf-simple.php'; // שנה לכתובת השרת שלך
 
         function debugLog(message, type = 'info') {
             const debugOutput = document.getElementById('debugOutput');

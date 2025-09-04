@@ -1,11 +1,4 @@
-case 'postscript':
-                    // יצירת PostScript
-                    $outputDir = 'output/';
-                    if (!file_exists($outputDir)) {
-                        mkdir($outputDir, 0777, true);
-                    }
-                    
-                    $filename = $outputDir . 'ps_' . date('Y-m-d_H-i-s') . '_' . rand(1000, 9999)<?php
+<?php
 /**
  * PDF Text Printer - Simplified Version Without Composer
  * גרסה פשוטה ללא צורך ב-Composer

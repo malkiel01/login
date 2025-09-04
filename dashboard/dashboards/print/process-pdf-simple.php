@@ -334,6 +334,121 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $pdfCreator = new SimplePDF();
         
+        // בדוק אם המשתמש ביקש שיטה ספציפית
+        if (isset($input['method'])) {
+            $result = null;
+            
+            switch($input['method']) {
+                case 'minimal':
+                    // שיטת Minimal PDF - יוצר PDF אמיתי!
+                    $outputDir = 'output/';
+                    if (!file_exists($outputDir)) {
+                        mkdir($outputDir, 0777, true);
+                    }
+                    
+                    $pdf = new MinimalPDF();
+                    $pdf->addPage();
+                    
+                    foreach ($input['values'] as $value) {
+                        $pdf->addText(
+                            $value['x'], 
+                            $value['y'], 
+                            $value['text'], 
+                            isset($value['fontSize']) ? $value['fontSize'] : 12
+                        );
+                    }
+                    
+                    $filename = $outputDir . 'pdf_minimal_' . date('Y-m-d_H-i-s') . '_' . rand(1000, 9999) . '.pdf';
+                    
+                    if ($pdf->save($filename)) {
+                        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+                        $host = $_SERVER['HTTP_HOST'];
+                        $script = dirname($_SERVER['SCRIPT_NAME']);
+                        
+                        $result = [
+                            'success' => true,
+                            'method' => 'Minimal PDF (Real PDF!)',
+                            'filename' => basename($filename),
+                            'download_url' => $protocol . '://' . $host . $script . '/' . $filename
+                        ];
+                    } else {
+                        $result = [
+                            'success' => false,
+                            'error' => 'Failed to save PDF file'
+                        ];
+                    }
+                    break;
+                    
+                case 'fpdf':
+                    if (class_exists('UTF8_FPDF')) {
+                        $result = $pdfCreator->createWithFPDF($input);
+                    } else {
+                        $result = [
+                            'success' => false,
+                            'error' => 'FPDF not installed. Please install FPDF first.'
+                        ];
+                    }
+                    break;
+                    
+                case 'html':
+                    $result = $pdfCreator->createHTMLForPDF($input);
+                    break;
+                    
+                case 'postscript':
+                    // יצירת PostScript
+                    $filename = 'output/ps_' . date('Y-m-d_H-i-s') . '_' . rand(1000, 9999) . '.ps';
+                    
+                    $ps = "%!PS-Adobe-3.0\n";
+                    $ps .= "%%Pages: 1\n";
+                    $ps .= "%%Page: 1 1\n";
+                    $ps .= "/Helvetica findfont 12 scalefont setfont\n";
+                    
+                    foreach ($input['values'] as $value) {
+                        $y = 792 - $value['y'];
+                        $ps .= $value['x'] . " " . $y . " moveto\n";
+                        $ps .= "(" . addslashes($value['text']) . ") show\n";
+                    }
+                    
+                    $ps .= "showpage\n%%EOF\n";
+                    
+                    if (file_put_contents($filename, $ps)) {
+                        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+                        $host = $_SERVER['HTTP_HOST'];
+                        $script = dirname($_SERVER['SCRIPT_NAME']);
+                        
+                        $result = [
+                            'success' => true,
+                            'method' => 'PostScript',
+                            'filename' => basename($filename),
+                            'download_url' => $protocol . '://' . $host . $script . '/' . $filename,
+                            'message' => 'PostScript file created. Convert to PDF using ps2pdf or online converter.'
+                        ];
+                    } else {
+                        $result = [
+                            'success' => false,
+                            'error' => 'Failed to create PostScript file'
+                        ];
+                    }
+                    break;
+                    
+                case 'system':
+                    $result = $pdfCreator->createWithSystemCommand($input);
+                    break;
+                    
+                default:
+                    $result = [
+                        'success' => false,
+                        'error' => 'Unknown method: ' . $input['method']
+                    ];
+            }
+            
+            // אם יש תוצאה, החזר אותה
+            if ($result !== null) {
+                echo json_encode($result);
+                exit();
+            }
+        }
+        
         // Try different methods in order of preference
         $result = null;
         
@@ -341,12 +456,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (class_exists('UTF8_FPDF')) {
             $result = $pdfCreator->createWithFPDF($input);
         }
-        // Method 2: Try system command (Linux/Mac)
-        elseif (PHP_OS_FAMILY !== 'Windows') {
-            $result = $pdfCreator->createWithSystemCommand($input);
-        }
-        // Method 3: Use Minimal PDF (always works)
-        else {
+        // Method 2: Use Minimal PDF (always works)
+        elseif (!isset($result) || $result === null) {
             $outputDir = 'output/';
             if (!file_exists($outputDir)) {
                 mkdir($outputDir, 0777, true);

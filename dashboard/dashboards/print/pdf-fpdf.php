@@ -105,8 +105,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     try {
-        // $pdf = new UTF8_FPDF();
-        $pdf = new Hebrew_FPDF();
+        $pdf = new UTF8_FPDF();
+        // $pdf = new Hebrew_FPDF();
         $pdf->AddPage();
         $pdf->SetFont('Arial', '', 12);
         

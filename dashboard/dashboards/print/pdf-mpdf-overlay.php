@@ -20,7 +20,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 // יצירת class שמשלב mPDF עם FPDI
 class PDF extends \Mpdf\Mpdf {
-    use \setasign\Fpdi\Tcpdf\FpdiTrait;
+    use \Mpdf\FpdiTrait;
 }
 
 // בדיקת התקנה

@@ -117,7 +117,8 @@ class MinimalPDF {
         $objNum = 3;
         foreach ($this->pages as $page) {
             // הגדר פונט עם תמיכה בעברית
-            $objects[] = "$objNum 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents " . ($objNum + 1) . " 0 R /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >> >> >> >>\nendobj";
+            $objects[] = "$objNum 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents " . ($objNum + 1) . " 0 R /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >> >> >> >>\nendobj";
+            // $objects[] = "$objNum 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents " . ($objNum + 1) . " 0 R /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >> >> >> >>\nendobj";
             $objNum++;
             
             $stream = "BT\n";

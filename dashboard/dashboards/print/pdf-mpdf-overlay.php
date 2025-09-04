@@ -130,7 +130,7 @@ try {
     $viewUrl = $baseUrl . '/' . $outputFilename;
     $downloadUrl = $baseUrl . '/download.php?file=' . urlencode($outputFilename);
     
-    // Return success response
+    // Return success response with debug info
     echo json_encode([
         'success' => true,
         'message' => 'PDF created successfully with mPDF overlay',
@@ -142,7 +142,17 @@ try {
         'rtl' => $isRTL,
         'orientation' => $orientation,
         'values_count' => count($values),
-        'html_length' => strlen($html)
+        'html_length' => strlen($html),
+        'debug' => [
+            'received_input' => $input,
+            'processed_values' => $debugInfo,
+            'generated_html' => $debugHtml,
+            'mpdf_settings' => [
+                'format' => $format,
+                'orientation' => $orientation,
+                'rtl' => $isRTL
+            ]
+        ]
     ]);
     
 } catch (Exception $e) {

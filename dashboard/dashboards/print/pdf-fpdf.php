@@ -58,18 +58,22 @@ if (file_exists('fpdf/fpdf.php')) {
     
     class Hebrew_FPDF extends FPDF {
         
+        function __construct() {
+            parent::__construct();
+            // הוסף את הפונט העברי החדש
+            $this->AddFont('NotoHebrew', '', 'NotoSansHebrew-VariableFont_wdth,wght.php');
+        }
+        
         function Text($x, $y, $txt) {
-            // בדוק אם יש עברית בטקסט
+            // אל תמיר את הקידוד! הפונט החדש תומך ב-UTF-8
+            // רק הפוך את הטקסט העברי
             if (preg_match('/[\x{0590}-\x{05FF}]/u', $txt)) {
-                // הפוך את הטקסט העברי
                 $txt = $this->reverseHebrew($txt);
-                // המר לקידוד Windows-1255
-                $txt = iconv('UTF-8', 'Windows-1255//TRANSLIT//IGNORE', $txt);
             }
             parent::Text($x, $y, $txt);
         }
         
-        // פונקציה להיפוך טקסט עברי
+        // הפונקציה reverseHebrew נשארת אותו דבר
         private function reverseHebrew($text) {
             // פרק למילים
             $words = preg_split('/\s+/u', $text);
@@ -121,11 +125,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // נסה להגדיר פונט שתומך בעברית
         // אם יש פונט עברי מותקן
-        if (file_exists('fpdf/font/arial.php')) {
-            $pdf->AddFont('arial', '', 'arial.php');
-            $pdf->SetFont('arial', '', 12);
+        // בדוק אם יש את הפונט העברי החדש
+        if (file_exists('fpdf/font/NotoSansHebrew-VariableFont_wdth,wght.php')) {
+            $pdf->AddFont('NotoHebrew', '', 'NotoSansHebrew-VariableFont_wdth,wght.php');
+            $pdf->SetFont('NotoHebrew', '', 12);
         } else {
-            // אחרת השתמש בפונט רגיל
+            // אחרת השתמש בפונט רגיל (לא יעבוד טוב עם עברית)
             $pdf->SetFont('Arial', '', 12);
         }
         

@@ -70,9 +70,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <title>PDF Document</title>
     <style>
-        @page { size: A4; margin: 0; }
+        @page { 
+            size: A4; 
+            margin: 20mm;
+        }
+        @media print {
+            body { 
+                margin: 0;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
         body { 
-            font-family: Arial, sans-serif; 
+            font-family: Arial, "Noto Sans Hebrew", sans-serif; 
             position: relative;
             width: 210mm;
             height: 297mm;
@@ -82,12 +93,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .text-element {
             position: absolute;
         }
-        @media print {
-            body { margin: 0; }
+        .print-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 1000;
+            font-size: 16px;
+        }
+        .print-button:hover {
+            background: #45a049;
         }
     </style>
+    <script>
+        function printToPDF() {
+            window.print();
+        }
+        
+        // הדפס אוטומטית אם יש פרמטר auto_print
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get("auto_print") === "true") {
+                setTimeout(function() {
+                    window.print();
+                }, 500);
+            }
+        }
+    </script>
 </head>
-<body>';
+<body>
+    <button class="print-button no-print" onclick="printToPDF()">🖨️ הדפס ל-PDF</button>';
         
         // הוסף את הטקסטים
         foreach ($input['values'] as $value) {
@@ -116,12 +156,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         echo json_encode([
             'success' => true,
-            'method' => 'HTML',
+            'method' => 'HTML to PDF',
             'filename' => basename($filename),
             'view_url' => $base_url . '/pdf-html.php?file=' . basename($filename),
+            'print_url' => $base_url . '/pdf-html.php?file=' . basename($filename) . '&auto_print=true',
             'download_url' => $base_url . '/pdf-html.php?file=' . basename($filename) . '&action=download',
             'direct_url' => $base_url . '/' . $filename,
-            'message' => 'HTML created. Use Ctrl+P to print to PDF'
+            'message' => 'HTML נוצר. לחץ על כפתור "הדפס ל-PDF" או Ctrl+P'
         ]);
         
     } catch (Exception $e) {

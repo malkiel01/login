@@ -503,6 +503,9 @@
                     <button class="btn btn-secondary" onclick="showJsonInput()">
                         📄 הזן JSON
                     </button>
+                    <button class="btn btn-secondary" onclick="exportToJson()" style="background: #805ad5;">
+                        📤 ייצא JSON
+                    </button>
                     <button class="btn btn-danger" onclick="clearAll()">
                         🗑️ נקה הכל
                     </button>
@@ -586,6 +589,155 @@
             'mpdf': 'mPDF - תמיכה מושלמת בעברית!',
             'tcpdf': 'tcpdf - תמיכה מושלמת בקובץ ובעברית!'
         };
+
+        function exportToJson() {
+            if (values.length === 0) {
+                showStatus('אין ערכים לייצוא', 'error');
+                return;
+            }
+            
+            const pdfUrl = document.getElementById('pdfUrl').value;
+            
+            // בניית אובייקט JSON
+            const exportData = {
+                method: selectedMethod,
+                orientation: selectedOrientation,
+                language: document.getElementById('language').value,
+                values: values
+            };
+            
+            // הוסף URL רק אם קיים
+            if (pdfUrl && pdfUrl.trim() !== '') {
+                exportData.filename = pdfUrl;
+            }
+            
+            // יצירת JSON מעוצב
+            const jsonString = JSON.stringify(exportData, null, 2);
+            
+            // יצירת modal או dialog להצגת ה-JSON
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: white;
+                padding: 30px;
+                border-radius: 15px;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                z-index: 10000;
+                max-width: 600px;
+                width: 90%;
+                max-height: 80vh;
+            `;
+            
+            modal.innerHTML = `
+                <h3 style="margin-bottom: 15px; color: #333;">📤 JSON מוכן לייצוא</h3>
+                <p style="margin-bottom: 10px; color: #666;">העתק את ה-JSON הבא לשימוש בפונקציה:</p>
+                <textarea id="exportedJson" style="
+                    width: 100%;
+                    height: 300px;
+                    font-family: 'Courier New', monospace;
+                    font-size: 12px;
+                    padding: 10px;
+                    border: 2px solid #e1e8ed;
+                    border-radius: 8px;
+                    background: #f7f9fc;
+                    resize: vertical;
+                " readonly>${jsonString}</textarea>
+                <div style="margin-top: 20px; display: flex; gap: 10px;">
+                    <button onclick="copyJsonToClipboard()" class="btn btn-primary" style="
+                        padding: 10px 20px;
+                        border: none;
+                        border-radius: 8px;
+                        background: #667eea;
+                        color: white;
+                        cursor: pointer;
+                        font-weight: 600;
+                    ">📋 העתק</button>
+                    <button onclick="downloadJson()" class="btn btn-secondary" style="
+                        padding: 10px 20px;
+                        border: none;
+                        border-radius: 8px;
+                        background: #48bb78;
+                        color: white;
+                        cursor: pointer;
+                        font-weight: 600;
+                    ">💾 הורד כקובץ</button>
+                    <button onclick="closeExportModal()" class="btn btn-danger" style="
+                        padding: 10px 20px;
+                        border: none;
+                        border-radius: 8px;
+                        background: #f56565;
+                        color: white;
+                        cursor: pointer;
+                        font-weight: 600;
+                    ">✖️ סגור</button>
+                </div>
+                <div style="margin-top: 15px; padding: 15px; background: #f0f4f8; border-radius: 8px;">
+                    <strong style="color: #667eea;">💡 דוגמת שימוש:</strong>
+                    <pre style="margin-top: 10px; font-size: 11px; overflow-x: auto;">
+// בדף HTML שלך:
+&lt;script src="pdfGenerator.js"&gt;&lt;/script&gt;
+
+// בקוד שלך:
+const jsonData = ${JSON.stringify(exportData, null, 2).substring(0, 200)}...
+
+// יצירת PDF:
+generatePDF(jsonData).then(result => {
+    console.log('PDF created!', result);
+});
+                    </pre>
+                </div>
+            `;
+            
+            // הוספת backdrop
+            const backdrop = document.createElement('div');
+            backdrop.id = 'modalBackdrop';
+            backdrop.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.5);
+                z-index: 9999;
+            `;
+            
+            document.body.appendChild(backdrop);
+            document.body.appendChild(modal);
+            
+            // בחירה אוטומטית של הטקסט
+            document.getElementById('exportedJson').select();
+            
+            debugLog(`Exported JSON with ${values.length} values`, 'success');
+        }
+
+        function copyJsonToClipboard() {
+            const textarea = document.getElementById('exportedJson');
+            textarea.select();
+            document.execCommand('copy');
+            showStatus('JSON הועתק ללוח!', 'success');
+        }
+
+        function downloadJson() {
+            const textarea = document.getElementById('exportedJson');
+            const blob = new Blob([textarea.value], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `pdf-config-${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showStatus('הקובץ הורד!', 'success');
+        }
+
+        function closeExportModal() {
+            const modal = document.querySelector('div[style*="position: fixed"]');
+            const backdrop = document.getElementById('modalBackdrop');
+            if (modal) modal.remove();
+            if (backdrop) backdrop.remove();
+        }
 
         function selectOrientation(orientation) {
             selectedOrientation = orientation;

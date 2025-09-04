@@ -2,6 +2,7 @@
 /**
  * FPDF Generator
  * דורש התקנת FPDF
+ * תמיכה בעברית דרך היפוך טקסט
  */
 
 header('Access-Control-Allow-Origin: *');
@@ -54,27 +55,37 @@ if (isset($_GET['file'])) {
 // טען FPDF אם קיים
 if (file_exists('fpdf/fpdf.php')) {
     require_once('fpdf/fpdf.php');
-
-    // // בתחילת הקובץ pdf-fpdf.php, אחרי require_once('fpdf/fpdf.php')
-    // class Hebrew_FPDF extends FPDF {
-    //     function Text($x, $y, $txt) {
-    //         // המרה לעברית
-    //         $txt = iconv('UTF-8', 'WINDOWS-1255', $txt);
-    //         parent::Text($x, $y, $txt);
-    //     }
-        
-    //     function AddFont($family, $style='', $file='') {
-    //         // טען פונט עברי אם קיים
-    //         if (file_exists('fpdf/font/arial.php')) {
-    //             parent::AddFont('arial', '', 'arial.php');
-    //         }
-    //     }
-    // }
     
-    class UTF8_FPDF extends FPDF {
+    class Hebrew_FPDF extends FPDF {
+        
         function Text($x, $y, $txt) {
-            $txt = @iconv('UTF-8', 'windows-1252//IGNORE', $txt);
+            // בדוק אם יש עברית בטקסט
+            if (preg_match('/[\x{0590}-\x{05FF}]/u', $txt)) {
+                // הפוך את הטקסט העברי
+                $txt = $this->reverseHebrew($txt);
+                // המר לקידוד Windows-1255
+                $txt = iconv('UTF-8', 'Windows-1255//TRANSLIT//IGNORE', $txt);
+            }
             parent::Text($x, $y, $txt);
+        }
+        
+        // פונקציה להיפוך טקסט עברי
+        private function reverseHebrew($text) {
+            // פרק למילים
+            $words = preg_split('/\s+/u', $text);
+            $reversed = [];
+            
+            foreach ($words as $word) {
+                // הפוך כל מילה עברית
+                if (preg_match('/[\x{0590}-\x{05FF}]/u', $word)) {
+                    $chars = mb_str_split($word, 1, 'UTF-8');
+                    $word = implode('', array_reverse($chars));
+                }
+                $reversed[] = $word;
+            }
+            
+            // הפוך את סדר המילים
+            return implode(' ', array_reverse($reversed));
         }
     }
 }
@@ -105,10 +116,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     try {
-        $pdf = new UTF8_FPDF();
-        // $pdf = new Hebrew_FPDF();
+        $pdf = new Hebrew_FPDF();
         $pdf->AddPage();
-        $pdf->SetFont('Arial', '', 12);
+        
+        // נסה להגדיר פונט שתומך בעברית
+        // אם יש פונט עברי מותקן
+        if (file_exists('fpdf/font/arial.php')) {
+            $pdf->AddFont('arial', '', 'arial.php');
+            $pdf->SetFont('arial', '', 12);
+        } else {
+            // אחרת השתמש בפונט רגיל
+            $pdf->SetFont('Arial', '', 12);
+        }
         
         // הוסף את הטקסטים
         foreach ($input['values'] as $value) {
@@ -125,6 +144,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $value['y'] ?? 100,
                 $value['text'] ?? ''
             );
+            
+            // אפס צבע
+            $pdf->SetTextColor(0, 0, 0);
         }
         
         // שמור

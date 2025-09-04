@@ -39,6 +39,8 @@ RewriteRule ^process-pdf-simple\.php$ - [L]
 RewriteRule ^setup\.php$ - [L]
 RewriteRule ^test-debug\.php$ - [L]
 RewriteRule ^simple-test\.php$ - [L]
+RewriteRule ^pdf-mpdf-overlay\.php$ - [L]
+
 
 # אפשר גישה לתיקיות הנדרשות ל-PDF
 RewriteRule ^output/.*\.(pdf|html|ps)$ - [L]

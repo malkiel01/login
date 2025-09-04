@@ -1,78 +1,86 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
 require_once __DIR__ . '/vendor/autoload.php';
 
-echo "<h1>תיקון בעיית Writer</h1><pre>";
+echo "<h1>בדיקת גרסאות וחלופות</h1><pre>";
+
+// בדוק גרסאות
+echo "=== גרסאות ===\n";
+$composerJson = json_decode(file_get_contents(__DIR__ . '/composer.json'), true);
+echo "mPDF: " . ($composerJson['require']['mpdf/mpdf'] ?? 'unknown') . "\n";
+echo "FPDI: " . ($composerJson['require']['setasign/fpdi'] ?? 'unknown') . "\n\n";
+
+// נסה גישה אחרת - השתמש ב-FPDI הרגיל ולא ב-trait
+echo "=== ניסיון עם FPDI ישיר ===\n";
 
 try {
+    // השתמש ב-FPDI class הרגיל
+    require_once __DIR__ . '/vendor/setasign/fpdi/src/autoload.php';
+    
     @mkdir('output', 0777, true);
     @mkdir('temp', 0777, true);
     
     // הורד טמפלייט
-    $templateUrl = "https://login.form.mbe-plus.com/dashboard/dashboards/print/templates/DeepEmpty.pdf";
-    $tempFile = 'temp/fix_' . uniqid() . '.pdf';
-    echo "Downloading template... ";
-    file_put_contents($tempFile, file_get_contents($templateUrl));
-    echo "✓\n";
+    $tempFile = 'temp/version_' . uniqid() . '.pdf';
+    file_put_contents($tempFile, file_get_contents("https://login.form.mbe-plus.com/dashboard/dashboards/print/templates/DeepEmpty.pdf"));
     
-    // גישה 1: צור מחלקה נפרדת (לא אנונימית)
-    if (!class_exists('MyPDF')) {
-        class MyPDF extends \Mpdf\Mpdf {
-            use \Mpdf\FpdiTrait;
-        }
-    }
+    // צור mPDF רגיל
+    $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8']);
     
-    echo "Creating PDF with separate class... ";
-    $pdf = new MyPDF([
-        'mode' => 'utf-8',
-        'format' => 'A4'
-    ]);
-    echo "✓\n";
+    // צור עמוד חדש
+    $mpdf->AddPage();
     
-    // טען טמפלייט
-    echo "Loading template... ";
-    $pageCount = $pdf->setSourceFile($tempFile);
-    $tplId = $pdf->importPage(1);
-    echo "✓\n";
+    // כתוב HTML עם טקסט בעברית
+    $html = '
+    <div style="text-align: center; margin-top: 200px;">
+        <h1 style="color: red; font-size: 40px;">שלום עולם</h1>
+        <p>טקסט בעברית על רקע הטמפלייט</p>
+    </div>
+    ';
     
-    // הוסף עמוד
-    echo "Adding page... ";
-    $pdf->AddPage();
-    echo "✓\n";
-    
-    // השתמש בטמפלייט
-    echo "Using template... ";
-    $pdf->useTemplate($tplId);
-    echo "✓\n";
-    
-    // כתוב טקסט במרכז
-    echo "Writing Hebrew text... ";
-    $pdf->SetFont('dejavusans', '', 30);
-    $pdf->SetTextColor(255, 0, 0); // אדום כדי שיבלוט
-    $pdf->SetXY(70, 140);
-    $pdf->Write(0, 'שלום עולם');
-    echo "✓\n";
+    $mpdf->WriteHTML($html);
     
     // שמור
-    $filename = 'output/fixed_' . date('Ymd_His') . '.pdf';
-    echo "Saving PDF... ";
-    $pdf->Output($filename, 'F');
-    echo "✓\n";
+    $filename = 'output/simple_' . date('Ymd_His') . '.pdf';
+    $mpdf->Output($filename, 'F');
     
-    // נקה
+    echo "✓ PDF נוצר בהצלחה (ללא טמפלייט לעת עתה)\n";
+    
+    $url = 'https://' . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']) . '/' . $filename;
+    echo "\n<a href='$url' target='_blank'>פתח PDF פשוט</a>\n\n";
+    
+    // עכשיו נסה להוסיף את הטמפלייט כרקע בגישה אחרת
+    echo "=== מנסה גישה חלופית עם SetSourceFile ===\n";
+    
+    // צור PDF חדש עם יכולות FPDI
+    $pdf2 = new \Mpdf\Mpdf(['mode' => 'utf-8']);
+    
+    // נסה להוסיף את SetSourceFile באופן ידני
+    if (method_exists($pdf2, 'setSourceFile')) {
+        echo "✓ setSourceFile method exists\n";
+    } else {
+        echo "✗ setSourceFile method NOT found - checking alternatives...\n";
+        
+        // בדוק אם אפשר להוסיף כתמונת רקע
+        $pdf3 = new \Mpdf\Mpdf(['mode' => 'utf-8']);
+        $pdf3->SetDocTemplate($tempFile, true);
+        $pdf3->AddPage();
+        
+        $pdf3->SetFont('dejavusans', '', 30);
+        $pdf3->SetXY(70, 140);
+        $pdf3->Write(0, 'שלום עולם');
+        
+        $filename2 = 'output/template_' . date('Ymd_His') . '.pdf';
+        $pdf3->Output($filename2, 'F');
+        
+        $url2 = 'https://' . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']) . '/' . $filename2;
+        echo "✓ PDF עם טמפלייט נוצר בשיטה חלופית!\n";
+        echo "\n<a href='$url2' target='_blank' style='background:green;color:white;padding:10px;'>🎉 פתח PDF עם טמפלייט!</a>\n";
+    }
+    
     unlink($tempFile);
-    
-    $downloadUrl = 'https://' . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']) . '/' . $filename;
-    
-    echo "\n=== הצלחה! ===\n";
-    echo "</pre>";
-    echo "<h2 style='color:green;'>✅ הקובץ נוצר בהצלחה!</h2>";
-    echo "<h2><a href='$downloadUrl' target='_blank' style='background:blue;color:white;padding:10px;text-decoration:none;'>⬇️ לחץ כאן להוריד את ה-PDF</a></h2>";
     
 } catch (Exception $e) {
     echo "✗ ERROR: " . $e->getMessage() . "\n";
-    echo "Trace:\n" . $e->getTraceAsString();
-    echo "</pre>";
 }
+
+echo "</pre>";

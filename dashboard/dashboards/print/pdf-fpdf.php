@@ -54,6 +54,22 @@ if (isset($_GET['file'])) {
 // טען FPDF אם קיים
 if (file_exists('fpdf/fpdf.php')) {
     require_once('fpdf/fpdf.php');
+
+    // בתחילת הקובץ pdf-fpdf.php, אחרי require_once('fpdf/fpdf.php')
+    class Hebrew_FPDF extends FPDF {
+        function Text($x, $y, $txt) {
+            // המרה לעברית
+            $txt = iconv('UTF-8', 'WINDOWS-1255', $txt);
+            parent::Text($x, $y, $txt);
+        }
+        
+        function AddFont($family, $style='', $file='') {
+            // טען פונט עברי אם קיים
+            if (file_exists('fpdf/font/arial.php')) {
+                parent::AddFont('arial', '', 'arial.php');
+            }
+        }
+    }
     
     class UTF8_FPDF extends FPDF {
         function Text($x, $y, $txt) {

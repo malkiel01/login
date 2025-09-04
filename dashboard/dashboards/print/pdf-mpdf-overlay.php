@@ -58,23 +58,11 @@ try {
     
     file_put_contents($tempFile, $pdfContent);
     
-    // First, detect the orientation of the existing PDF
-    $tempPdf = new \Mpdf\Mpdf(['tempDir' => __DIR__ . '/temp']);
-    $pageCount = $tempPdf->SetSourceFile($tempFile);
-    $pageInfo = $tempPdf->GetTemplateSize($tempPdf->ImportPage(1));
-    
-    // Determine orientation based on page dimensions
-    $isLandscape = $pageInfo['width'] > $pageInfo['height'];
-    $orientation = $isLandscape ? 'L' : 'P';
-    
-    // Allow override from input
-    if (isset($input['orientation'])) {
-        $orientation = strtoupper($input['orientation']) === 'L' ? 'L' : 'P';
-    }
-    
+    // Detect orientation (default to portrait)
+    $orientation = isset($input['orientation']) ? strtoupper($input['orientation']) : 'P';
     $format = ($orientation === 'L') ? 'A4-L' : 'A4';
     
-    // Create new mPDF instance with correct orientation
+    // Create mPDF instance
     $pdf = new \Mpdf\Mpdf([
         'mode' => 'utf-8',
         'format' => $format,
@@ -98,84 +86,35 @@ try {
     // Add page with same orientation
     $pdf->AddPage($orientation);
     
-    // Get page dimensions in mm
-    $pageWidth = $pdf->w;
-    $pageHeight = $pdf->h;
+    // Build HTML from values - using the method that works from your debug file
+    $html = '<div' . ($isRTL ? ' dir="rtl"' : '') . '>';
     
-    // Process each text value
     foreach ($values as $value) {
         // Extract value properties
         $text = isset($value['text']) ? $value['text'] : '';
-        $x = isset($value['x']) ? floatval($value['x']) : 100;
-        $y = isset($value['y']) ? floatval($value['y']) : 100;
+        $x = isset($value['x']) ? intval($value['x']) : 100;
+        $y = isset($value['y']) ? intval($value['y']) : 100;
         $fontSize = isset($value['fontSize']) ? intval($value['fontSize']) : 12;
         $color = isset($value['color']) ? $value['color'] : '#000000';
-        $bold = isset($value['bold']) && $value['bold'];
-        $italic = isset($value['italic']) && $value['italic'];
-        $align = isset($value['align']) ? $value['align'] : 'L';
         
-        // Convert pixels to mm (assuming 72 DPI)
-        // 1 inch = 25.4mm, 1 inch = 72 points
-        $x_mm = $x * 0.3527778; // pixels to mm conversion
-        $y_mm = $y * 0.3527778;
+        // Escape HTML
+        $text = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
         
-        // Parse color
-        $r = 0; $g = 0; $b = 0;
-        if (strpos($color, '#') === 0) {
-            $hex = str_replace('#', '', $color);
-            $r = hexdec(substr($hex, 0, 2));
-            $g = hexdec(substr($hex, 2, 2));
-            $b = hexdec(substr($hex, 4, 2));
-        }
-        
-        // Set text color
-        $pdf->SetTextColor($r, $g, $b);
-        
-        // Set font
-        $fontStyle = '';
-        if ($bold) $fontStyle .= 'B';
-        if ($italic) $fontStyle .= 'I';
-        $pdf->SetFont('dejavusans', $fontStyle, $fontSize);
-        
-        // For RTL, adjust alignment
-        if ($isRTL) {
-            if ($align === 'L') $align = 'R';
-            elseif ($align === 'R') $align = 'L';
-            
-            // Also adjust X position for RTL
-            // We might need to calculate from right edge
-            // $x_mm = $pageWidth - $x_mm;
-        }
-        
-        // Method 1: Using SetXY and Write
-        $pdf->SetXY($x_mm, $y_mm);
-        
-        if ($isRTL) {
-            // For RTL text, we use WriteCell or MultiCell
-            $pdf->MultiCell(
-                0,              // width (0 = to the right margin)
-                $fontSize * 0.3527778, // height in mm
-                $text,
-                0,              // border
-                $align,         // alignment
-                false,          // fill
-                1,              // ln (move to next line)
-                $x_mm,          // x position
-                $y_mm,          // y position
-                true,           // reset height
-                0,              // stretch
-                false,          // is html
-                true,           // autopadding
-                0,              // max height
-                'T',            // vertical align
-                false           // fit cell
-            );
-        } else {
-            // For LTR text, we can use Write
-            $pdf->SetXY($x_mm, $y_mm);
-            $pdf->Write($fontSize * 0.3527778, $text);
-        }
+        // Create positioned div for each text
+        $html .= sprintf(
+            '<div style="position: absolute; left: %dpx; top: %dpx; font-size: %dpt; color: %s;">%s</div>',
+            $x,
+            $y,
+            $fontSize,
+            $color,
+            $text
+        );
     }
+    
+    $html .= '</div>';
+    
+    // Write HTML to PDF - like in your working debug file
+    $pdf->WriteHTML($html);
     
     // Generate filename
     $outputFilename = 'output/mpdf_' . date('Ymd_His') . '_' . uniqid() . '.pdf';
@@ -202,16 +141,8 @@ try {
         'direct_url' => $viewUrl,
         'rtl' => $isRTL,
         'orientation' => $orientation,
-        'detected_landscape' => $isLandscape,
-        'page_dimensions' => [
-            'width' => round($pageWidth, 2) . 'mm',
-            'height' => round($pageHeight, 2) . 'mm'
-        ],
         'values_count' => count($values),
-        'template_info' => [
-            'original_width' => round($pageInfo['width'], 2),
-            'original_height' => round($pageInfo['height'], 2)
-        ]
+        'html_length' => strlen($html)
     ]);
     
 } catch (Exception $e) {

@@ -116,8 +116,8 @@ try {
         
         // Build the HTML for this text - exactly like your debug file
         $html .= sprintf(
-            '<div style="position: absolute; left: %dpx; top: %dpx;">
-                <p style="color: %s; font-size: %dpt;">%s</p>
+            '<div style="border: 1px solid red; position: absolute; left: %dpx; top: %dpx;">
+                <p style="border: 1px solid green; color: %s; font-size: %dpt;">%s</p>
             </div>',
             $x,
             $y,

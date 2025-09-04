@@ -152,12 +152,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $size = $pdf->getTemplateSize($templateId);
                 
                 // הוסף עמוד חדש// 
-                // הוסף עמוד חדש עם הגודל הנכון
-                if ($size['orientation'] == 'L') {
-                    $pdf->AddPage('L', [$size['height'], $size['width']]);
-                } else {
-                    $pdf->AddPage('P', [$size['width'], $size['height']]);
-                }
+                // הוסף עמוד חדש
+                $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+
+                // // הוסף עמוד חדש עם הגודל הנכון
+                // if ($size['orientation'] == 'L') {
+                //     $pdf->AddPage('L', [$size['height'], $size['width']]);
+                // } else {
+                //     $pdf->AddPage('P', [$size['width'], $size['height']]);
+                // }
                 
                 // השתמש בתבנית העמוד המיובא
                 $pdf->useTemplate($templateId);

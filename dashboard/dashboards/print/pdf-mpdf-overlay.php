@@ -16,23 +16,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // טען את הספריות
-if (file_exists('vendor/autoload.php')) {
-    require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/vendor/autoload.php';
+
+// יצירת class שמשלב mPDF עם FPDI
+class PDF extends \Mpdf\Mpdf {
+    use \setasign\Fpdi\Tcpdf\FpdiTrait;
 }
 
 // בדיקת התקנה
 if (isset($_GET['test'])) {
     header('Content-Type: application/json');
     $mpdf_exists = class_exists('\Mpdf\Mpdf');
-    $fpdi_exists = class_exists('\setasign\Fpdi\Mpdf\Fpdi');
+    $fpdi_exists = class_exists('\setasign\Fpdi\Fpdi');
+    
+    // נסה ליצור PDF עם FPDI
+    $can_create = false;
+    try {
+        $test = new PDF(['mode' => 'utf-8']);
+        $can_create = true;
+    } catch (Exception $e) {
+        $can_create = false;
+    }
     
     echo json_encode([
         'success' => true,
         'mpdf_installed' => $mpdf_exists,
         'fpdi_installed' => $fpdi_exists,
-        'message' => ($mpdf_exists && $fpdi_exists) 
-            ? 'Both mPDF and FPDI are installed' 
-            : 'Missing: ' . (!$mpdf_exists ? 'mPDF ' : '') . (!$fpdi_exists ? 'FPDI' : '')
+        'can_create_pdf' => $can_create,
+        'message' => ($mpdf_exists && $fpdi_exists && $can_create) 
+            ? 'Both mPDF and FPDI are installed and working!' 
+            : 'Missing: ' . (!$mpdf_exists ? 'mPDF ' : '') . (!$fpdi_exists ? 'FPDI ' : '') . (!$can_create ? 'Integration' : '')
     ]);
     exit();
 }
@@ -73,15 +86,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
     
-    // בדוק התקנות
-    if (!class_exists('\setasign\Fpdi\Mpdf\Fpdi')) {
-        echo json_encode([
-            'success' => false,
-            'error' => 'FPDI not installed. Run: composer require setasign/fpdi'
-        ]);
-        exit();
-    }
-    
     // צור תיקיות נדרשות
     if (!file_exists('output')) {
         mkdir('output', 0777, true);
@@ -91,8 +95,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     try {
-        // השתמש ב-FPDI class שמרחיב את mPDF
-        $pdf = new \setasign\Fpdi\Mpdf\Fpdi([
+        // יצירת PDF עם FPDI
+        $pdf = new PDF([
             'mode' => 'utf-8',
             'format' => 'A4',
             'tempDir' => __DIR__ . '/temp',
@@ -108,10 +112,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // אם זה URL מרוחק, הורד אותו קודם
             if (filter_var($pdfUrl, FILTER_VALIDATE_URL)) {
                 $tempFile = 'temp/source_' . uniqid() . '.pdf';
-                $pdfContent = file_get_contents($pdfUrl);
                 
-                if ($pdfContent === false) {
-                    throw new Exception('Failed to download PDF from URL');
+                // השתמש ב-curl להורדה
+                $ch = curl_init($pdfUrl);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+                $pdfContent = curl_exec($ch);
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
+                
+                if ($httpCode !== 200 || empty($pdfContent)) {
+                    throw new Exception("Failed to download PDF from URL. HTTP Code: $httpCode");
                 }
                 
                 file_put_contents($tempFile, $pdfContent);
@@ -132,8 +145,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // ייבא את העמוד
                 $templateId = $pdf->importPage($pageNo);
                 
+                // קבל את הגודל של העמוד
+                $size = $pdf->getTemplateSize($templateId);
+                
                 // הוסף עמוד חדש
-                $pdf->AddPage();
+                $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
                 
                 // השתמש בתבנית העמוד המיובא
                 $pdf->useTemplate($templateId);
@@ -141,7 +157,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // הוסף את הטקסטים החדשים רק לעמוד הראשון
                 if ($pageNo == 1) {
                     // הגדר פונט שתומך בעברית
-                    $pdf->SetFont('dejavusans');
+                    try {
+                        $pdf->SetFont('dejavusans');
+                    } catch (Exception $e) {
+                        // אם הפונט לא קיים, נסה פונטים אחרים
+                        try {
+                            $pdf->SetFont('freeserif');
+                        } catch (Exception $e2) {
+                            $pdf->SetFont('');
+                        }
+                    }
                     
                     // הגדר כיוון RTL אם נדרש
                     $isHebrew = isset($input['language']) && $input['language'] === 'he';
@@ -182,7 +207,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdf->AddPage();
             
             // הגדר פונט שתומך בעברית
-            $pdf->SetFont('dejavusans');
+            try {
+                $pdf->SetFont('dejavusans');
+            } catch (Exception $e) {
+                try {
+                    $pdf->SetFont('freeserif');
+                } catch (Exception $e2) {
+                    $pdf->SetFont('');
+                }
+            }
             
             // הגדר כיוון RTL אם נדרש
             $isHebrew = isset($input['language']) && $input['language'] === 'he';
@@ -284,6 +317,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['test']) && !isset($_GE
             border-radius: 5px;
             margin: 20px 0;
         }
+        .test-button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #2980b9;
+        }
     </style>
 </head>
 <body>
@@ -294,6 +339,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['test']) && !isset($_GE
             <strong>⚠️ חשוב:</strong> פתרון זה מאפשר כתיבה על PDF קיים!
         </div>
         
+        <h2>🧪 בדיקת מערכת</h2>
+        <button class="test-button" onclick="testSystem()">בדוק התקנה</button>
+        <button class="test-button" onclick="testPDF()">בדוק יצירת PDF</button>
+        <div id="testResult"></div>
+        
         <h2>✨ יתרונות</h2>
         <div class="feature">✅ כתיבה על PDF קיים - לא רק יצירת PDF חדש</div>
         <div class="feature">✅ שומר על התוכן המקורי של ה-PDF</div>
@@ -301,18 +351,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['test']) && !isset($_GE
         <div class="feature">✅ תמיכה ב-PDFs מרובי עמודים</div>
         <div class="feature">✅ יכול לקרוא PDFs מ-URL או מקובץ מקומי</div>
         
-        <h2>🔧 התקנה</h2>
-        <div class="code">
-# התקן את שתי הספריות
-composer require mpdf/mpdf
-composer require setasign/fpdi
-        </div>
-        
         <h2>📝 דוגמת שימוש</h2>
         <div class="code">
 // בקשת POST עם URL של PDF קיים
 {
-    "filename": "https://example.com/existing.pdf",
+    "filename": "https://login.form.mbe-plus.com/dashboard/dashboards/print/templates/DeepEmpty.pdf",
     "language": "he",
     "values": [
         {
@@ -324,15 +367,64 @@ composer require setasign/fpdi
     ]
 }
         </div>
-        
-        <h2>🎯 איך זה עובד?</h2>
-        <ol>
-            <li>FPDI קורא את ה-PDF הקיים</li>
-            <li>מייבא כל עמוד כתבנית</li>
-            <li>mPDF מוסיף את הטקסט החדש מעל התבנית</li>
-            <li>התוצאה: PDF עם התוכן המקורי + הטקסט החדש</li>
-        </ol>
     </div>
+    
+    <script>
+    async function testSystem() {
+        const resultDiv = document.getElementById('testResult');
+        resultDiv.innerHTML = '<p>בודק...</p>';
+        
+        try {
+            const response = await fetch('?test=1');
+            const data = await response.json();
+            
+            if (data.can_create_pdf) {
+                resultDiv.innerHTML = '<p class="success">✅ המערכת מוכנה לעבודה!</p>';
+            } else {
+                resultDiv.innerHTML = '<p class="error">❌ ' + data.message + '</p>';
+            }
+        } catch (error) {
+            resultDiv.innerHTML = '<p class="error">❌ שגיאה: ' + error.message + '</p>';
+        }
+    }
+    
+    async function testPDF() {
+        const resultDiv = document.getElementById('testResult');
+        resultDiv.innerHTML = '<p>יוצר PDF לדוגמה...</p>';
+        
+        const testData = {
+            filename: "https://login.form.mbe-plus.com/dashboard/dashboards/print/templates/DeepEmpty.pdf",
+            language: "he",
+            values: [
+                {
+                    text: "בדיקה - " + new Date().toLocaleString('he-IL'),
+                    x: 100,
+                    y: 100,
+                    fontSize: 20
+                }
+            ]
+        };
+        
+        try {
+            const response = await fetch('', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(testData)
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                resultDiv.innerHTML = '<p class="success">✅ PDF נוצר בהצלחה! <a href="' + data.view_url + '" target="_blank">פתח PDF</a></p>';
+                window.open(data.view_url, '_blank');
+            } else {
+                resultDiv.innerHTML = '<p class="error">❌ שגיאה: ' + data.error + '</p>';
+            }
+        } catch (error) {
+            resultDiv.innerHTML = '<p class="error">❌ שגיאה: ' + error.message + '</p>';
+        }
+    }
+    </script>
 </body>
 </html>
 <?php

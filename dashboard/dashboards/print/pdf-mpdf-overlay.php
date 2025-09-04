@@ -17,7 +17,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 // טען את הספריות
 if (file_exists('vendor/autoload.php')) {
-    require_once 'vendor/autoload.php';
+    // require_once 'vendor/autoload.php';
+    require_once '/home2/mbeplusc/public_html/form/login/dashboard/dashboards/print/vendor/autoload.php';
 }
 
 // בדיקת התקנה

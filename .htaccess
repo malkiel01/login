@@ -30,6 +30,23 @@ RewriteRule ^test-permissions.*\.php$ - [L]
 # אפשר גישה ל-offline.html
 RewriteRule ^offline\.html$ - [L]
 
+# === הוסף את זה אחרי השורה "RewriteEngine On" ===
+# === קבצי PDF Test - זמני לבדיקות ===
+# אפשר גישה לקבצי בדיקת PDF
+RewriteRule ^test-all-methods\.php$ - [L]
+RewriteRule ^create-sample\.php$ - [L]
+RewriteRule ^process-pdf-simple\.php$ - [L]
+RewriteRule ^setup\.php$ - [L]
+RewriteRule ^test-debug\.php$ - [L]
+RewriteRule ^simple-test\.php$ - [L]
+
+# אפשר גישה לתיקיות הנדרשות ל-PDF
+RewriteRule ^output/.*\.(pdf|html|ps)$ - [L]
+RewriteRule ^templates/.*\.(pdf|html)$ - [L]
+RewriteRule ^fpdf/.*\.php$ - [L]
+
+# === סוף קבצי PDF Test ===
+
 # === הגנות בסיסיות ===
 
 # הגנה על קבצי ENV

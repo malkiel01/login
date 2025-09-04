@@ -88,7 +88,8 @@ class MinimalPDF {
             foreach ($page['texts'] as $text) {
                 $stream .= "/F1 " . $text['fontSize'] . " Tf\n";
                 $stream .= $text['x'] . " " . (792 - $text['y']) . " Td\n";
-                $stream .= "(" . str_replace(['(', ')', '\\'], ['\\(', '\\)', '\\\\'], $text['text']) . ") Tj\n";
+                // $stream .= "(" . str_replace(['(', ')', '\\'], ['\\(', '\\)', '\\\\'], $text['text']) . ") Tj\n";
+                $stream .= "<" . bin2hex(mb_convert_encoding($text['text'], 'UTF-16BE', 'UTF-8')) . "> Tj\n";
             }
             $stream .= "ET";
             

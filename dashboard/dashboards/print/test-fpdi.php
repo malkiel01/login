@@ -1,4 +1,3 @@
-cat > test-fpdi.php << 'EOF'
 <?php
 require_once __DIR__ . '/vendor/autoload.php';
 
@@ -21,4 +20,3 @@ try {
     echo "ERROR: " . $e->getMessage() . "\n";
 }
 echo "</pre>";
-EOF

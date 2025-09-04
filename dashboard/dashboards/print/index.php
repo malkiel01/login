@@ -479,7 +479,7 @@
             'fpdf': 'pdf-fpdf.php',
             'html': 'pdf-html.php',
             'postscript': 'pdf-postscript.php',
-            'mpdf': 'pdf-mpdf.php'  // הוסף את זה!
+            'mpdf': 'pdf-mpdf-overlay.php'  // הוסף את זה!
         };
 
         const METHOD_DESCRIPTIONS = {

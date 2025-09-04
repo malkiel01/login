@@ -1,4 +1,4 @@
-<?php
+<!-- < ?php
 /**
  * PDF Text Printer - Simplified Version Without Composer
  * גרסה פשוטה ללא צורך ב-Composer
@@ -514,4 +514,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'error' => 'Only POST method is allowed'
     ]);
 }
-?>
+?> -->

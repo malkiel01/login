@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -204,4 +204,4 @@ function forceDownload(url, filename) {
 </script>
 
 </body>
-</html>
+</html> -->

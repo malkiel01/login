@@ -341,12 +341,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (class_exists('UTF8_FPDF')) {
             $result = $pdfCreator->createWithFPDF($input);
         }
-        // Method 2: Try system command (Linux/Mac)
-        elseif (PHP_OS_FAMILY !== 'Windows') {
-            $result = $pdfCreator->createWithSystemCommand($input);
-        }
-        // Method 3: Use Minimal PDF (always works)
-        else {
+        // Method 2: Use Minimal PDF (always works)
+        elseif (!isset($result) || $result === null) {
             $outputDir = 'output/';
             if (!file_exists($outputDir)) {
                 mkdir($outputDir, 0777, true);

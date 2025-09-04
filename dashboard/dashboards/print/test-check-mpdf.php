@@ -1,4 +1,3 @@
-cat > check-mpdf.php << 'EOF'
 <?php
 require_once __DIR__ . '/vendor/autoload.php';
 
@@ -14,4 +13,3 @@ try {
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'error' => $e->getMessage()]);
 }
-EOF

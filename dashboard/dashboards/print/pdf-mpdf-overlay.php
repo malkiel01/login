@@ -62,7 +62,7 @@ try {
     $orientation = isset($input['orientation']) ? strtoupper($input['orientation']) : 'P';
     $format = ($orientation === 'L') ? 'A4-L' : 'A4';
     
-    // Create mPDF instance - exactly like in your working debug file
+    // Create mPDF instance
     $pdf = new \Mpdf\Mpdf([
         'mode' => 'utf-8',
         'format' => $format,
@@ -89,48 +89,86 @@ try {
     // Debug array
     $debugInfo = [];
     
-    // Build HTML exactly like your debug file
-    $html = '';
-    if ($isRTL) {
-        $html .= '<div dir="rtl">';
-    } else {
-        $html .= '<div>';
-    }
-    
+    // Process each value individually with WriteText
     foreach ($values as $index => $value) {
         // Extract value properties
         $text = isset($value['text']) ? $value['text'] : '';
-        $x = isset($value['x']) ? intval($value['x']) : 100;
-        $y = isset($value['y']) ? intval($value['y']) : 100;
+        $x = isset($value['x']) ? floatval($value['x']) : 100;
+        $y = isset($value['y']) ? floatval($value['y']) : 100;
         $fontSize = isset($value['fontSize']) ? intval($value['fontSize']) : 12;
-        $color = isset($value['color']) ? $value['color'] : 'black';
+        $color = isset($value['color']) ? $value['color'] : '#000000';
+        
+        // Convert pixels to mm
+        // A4 is 210mm x 297mm (portrait)
+        // Standard screen resolution is 96 DPI
+        // 1 inch = 25.4mm, 1 inch = 96 pixels
+        // So: 1 pixel = 25.4/96 = 0.264583mm
+        $x_mm = $x * 0.264583;
+        $y_mm = $y * 0.264583;
         
         // Store debug info
         $debugInfo[] = [
             'text' => $text,
-            'x' => $x,
-            'y' => $y,
+            'x_px' => $x,
+            'y_px' => $y,
+            'x_mm' => round($x_mm, 2),
+            'y_mm' => round($y_mm, 2),
             'fontSize' => $fontSize,
             'color' => $color
         ];
         
-        // Build the HTML for this text - exactly like your debug file
-        $html .= sprintf(
-            '<div style="border: 1px solid red; position: absolute; left: %dpx; top: %dpx;">
-                <p style="border: 1px solid green; color: %s; font-size: %dpt;">%s</p>
-            </div>',
-            $x,
-            $y,
-            $color,
-            $fontSize,
-            $text
-        );
+        // Parse color
+        $r = 0; $g = 0; $b = 0;
+        if (strpos($color, '#') === 0) {
+            $hex = str_replace('#', '', $color);
+            $r = hexdec(substr($hex, 0, 2));
+            $g = hexdec(substr($hex, 2, 2));
+            $b = hexdec(substr($hex, 4, 2));
+        }
+        
+        // Set text color
+        $pdf->SetTextColor($r, $g, $b);
+        
+        // Set font
+        $pdf->SetFont('dejavusans', '', $fontSize);
+        
+        // Use WriteText for absolute positioning
+        // WriteText places text at exact X,Y coordinates
+        $pdf->WriteText($x_mm, $y_mm, $text);
     }
     
-    $html .= '</div>';
-    
-    // Write HTML to PDF
-    $pdf->WriteHTML($html);
+    // Alternative: Try with HTML but with fixed positioning
+    // This adds a second pass with HTML as backup
+    if (count($values) > 0 && $isRTL) {
+        // Create one large HTML block with fixed positioning
+        $html = '<div style="position: relative; width: 100%; height: 100%;">';
+        
+        foreach ($values as $value) {
+            $text = isset($value['text']) ? $value['text'] : '';
+            $x = isset($value['x']) ? intval($value['x']) : 100;
+            $y = isset($value['y']) ? intval($value['y']) : 100;
+            $fontSize = isset($value['fontSize']) ? intval($value['fontSize']) : 12;
+            $color = isset($value['color']) ? $value['color'] : 'black';
+            
+            // Use a table with fixed positioning as a workaround
+            $html .= sprintf(
+                '<div style="position: fixed; left: %dpx; top: %dpx; z-index: 1000;">
+                    <span style="color: %s; font-size: %dpt;">%s</span>
+                </div>',
+                $x,
+                $y,
+                $color,
+                $fontSize,
+                $text
+            );
+        }
+        
+        $html .= '</div>';
+        
+        // Try to write the HTML (this might override previous text)
+        // Comment this out if WriteText works well
+        // $pdf->WriteHTML($html);
+    }
     
     // Generate filename
     $outputFilename = 'output/mpdf_' . date('Ymd_His') . '_' . uniqid() . '.pdf';
@@ -150,7 +188,7 @@ try {
     echo json_encode([
         'success' => true,
         'message' => 'PDF created successfully with mPDF overlay',
-        'method' => 'mpdf-overlay',
+        'method' => 'mpdf-overlay-writetext',
         'filename' => $outputFilename,
         'view_url' => $viewUrl,
         'download_url' => $downloadUrl,
@@ -158,8 +196,8 @@ try {
         'rtl' => $isRTL,
         'orientation' => $orientation,
         'values_count' => count($values),
-        'debug_values' => $debugInfo,
-        'html_length' => strlen($html)
+        'debug_positions' => $debugInfo,
+        'note' => 'Using WriteText for precise positioning'
     ]);
     
 } catch (Exception $e) {

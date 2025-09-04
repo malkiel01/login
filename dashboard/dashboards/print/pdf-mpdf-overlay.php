@@ -139,76 +139,114 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     throw new Exception('Source PDF file not found');
                 }
             }
-            
-            // ייבא את ה-PDF הקיים
-            $pageCount = $pdf->setSourceFile($sourcePdf);
-            
-            // עבור על כל העמודים
-            for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
-                // ייבא את העמוד
-                $templateId = $pdf->importPage($pageNo);
-                
-                // קבל את הגודל של העמוד
-                $size = $pdf->getTemplateSize($templateId);
-                
-                // הוסף עמוד חדש// 
-                // הוסף עמוד חדש
-                // $pdf->AddPage();   
-                // // הוסף עמוד חדש
-                $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
 
-                // // // הוסף עמוד חדש עם הגודל הנכון
-                // if ($size['orientation'] == 'L') {
-                //     $pdf->AddPage('L', [$size['height'], $size['width']]);
-                // } else {
-                //     $pdf->AddPage('P', [$size['width'], $size['height']]);
-                // }
+            // ייבא את ה-PDF הקיים
+$pageCount = $pdf->setSourceFile($sourcePdf);
+
+// עבור על כל העמודים
+for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+    // ייבא את העמוד
+    $templateId = $pdf->importPage($pageNo);
+    
+    // קבל את הגודל של התבנית
+    $size = $pdf->getTemplateSize($templateId);
+    
+    // הוסף עמוד חדש בגודל המקורי
+    $pdf->AddPage($size['orientation']);
+    
+    // השתמש בתבנית - חשוב! צריך לציין את הגודל
+    $pdf->useTemplate($templateId, 0, 0, $size['width'], $size['height'], true);
+    
+    // הוסף טקסטים רק לעמוד הראשון
+    if ($pageNo == 1 && isset($input['values'])) {
+        // הגדר פונט עברי - חשוב מאוד!
+        $pdf->SetFont('dejavusans', '', 12);
+        
+        // עבור על הערכים
+        foreach ($input['values'] as $value) {
+            $x = ($value['x'] ?? 100) / 2.83; 
+            $y = ($value['y'] ?? 100) / 2.83;
+            $text = $value['text'] ?? '';
+            $fontSize = $value['fontSize'] ?? 12;
+            
+            $pdf->SetFontSize($fontSize);
+            
+            // כתוב עם WriteHTML לתמיכה טובה בעברית
+            $html = '<div style="position:absolute; left:'.$x.'mm; top:'.$y.'mm; font-size:'.$fontSize.'pt;">'.$text.'</div>';
+            $pdf->WriteHTML($html);
+        }
+    }
+}
+            
+            // // ייבא את ה-PDF הקיים
+            // $pageCount = $pdf->setSourceFile($sourcePdf);
+            
+            // // עבור על כל העמודים
+            // for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+            //     // ייבא את העמוד
+            //     $templateId = $pdf->importPage($pageNo);
                 
-                // השתמש בתבנית העמוד המיובא
-                $pdf->useTemplate($templateId);
+            //     // קבל את הגודל של העמוד
+            //     $size = $pdf->getTemplateSize($templateId);
                 
-                // הוסף את הטקסטים החדשים רק לעמוד הראשון
-                if ($pageNo == 1) {
-                    // הגדר פונט שתומך בעברית
-                    try {
-                        $pdf->SetFont('dejavusans');
-                    } catch (Exception $e) {
-                        // אם הפונט לא קיים, נסה פונטים אחרים
-                        try {
-                            $pdf->SetFont('freeserif');
-                        } catch (Exception $e2) {
-                            $pdf->SetFont('');
-                        }
-                    }
+            //     // הוסף עמוד חדש// 
+            //     // הוסף עמוד חדש
+            //     // $pdf->AddPage();   
+            //     // // הוסף עמוד חדש
+            //     $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+
+            //     // // // הוסף עמוד חדש עם הגודל הנכון
+            //     // if ($size['orientation'] == 'L') {
+            //     //     $pdf->AddPage('L', [$size['height'], $size['width']]);
+            //     // } else {
+            //     //     $pdf->AddPage('P', [$size['width'], $size['height']]);
+            //     // }
+                
+            //     // השתמש בתבנית העמוד המיובא
+            //     $pdf->useTemplate($templateId);
+                
+            //     // הוסף את הטקסטים החדשים רק לעמוד הראשון
+            //     if ($pageNo == 1) {
+            //         // הגדר פונט שתומך בעברית
+            //         try {
+            //             $pdf->SetFont('dejavusans');
+            //         } catch (Exception $e) {
+            //             // אם הפונט לא קיים, נסה פונטים אחרים
+            //             try {
+            //                 $pdf->SetFont('freeserif');
+            //             } catch (Exception $e2) {
+            //                 $pdf->SetFont('');
+            //             }
+            //         }
                     
-                    // הגדר כיוון RTL אם נדרש
-                    $isHebrew = isset($input['language']) && $input['language'] === 'he';
-                    if ($isHebrew) {
-                        $pdf->SetDirectionality('rtl');
-                    }
+            //         // הגדר כיוון RTL אם נדרש
+            //         $isHebrew = isset($input['language']) && $input['language'] === 'he';
+            //         if ($isHebrew) {
+            //             $pdf->SetDirectionality('rtl');
+            //         }
                     
-                    // הוסף את הטקסטים
-                    foreach ($input['values'] as $value) {
-                        $x = ($value['x'] ?? 100) / 2.83; // המרה מפיקסלים למ"מ
-                        $y = ($value['y'] ?? 100) / 2.83;
-                        $text = $value['text'] ?? '';
-                        $fontSize = $value['fontSize'] ?? 12;
+            //         // הוסף את הטקסטים
+            //         foreach ($input['values'] as $value) {
+            //             $x = ($value['x'] ?? 100) / 2.83; // המרה מפיקסלים למ"מ
+            //             $y = ($value['y'] ?? 100) / 2.83;
+            //             $text = $value['text'] ?? '';
+            //             $fontSize = $value['fontSize'] ?? 12;
                         
-                        $pdf->SetFontSize($fontSize);
+            //             $pdf->SetFontSize($fontSize);
                         
-                        if (isset($value['color']) && is_array($value['color'])) {
-                            $pdf->SetTextColor($value['color'][0], $value['color'][1], $value['color'][2]);
-                        }
+            //             if (isset($value['color']) && is_array($value['color'])) {
+            //                 $pdf->SetTextColor($value['color'][0], $value['color'][1], $value['color'][2]);
+            //             }
                         
-                        // כתוב טקסט
-                        $pdf->SetXY($x, $y);
-                        $pdf->Write(0, $text);
+            //             // כתוב טקסט
+            //             $pdf->SetXY($x, $y);
+            //             $pdf->Write(0, $text);
                         
-                        // אפס צבע
-                        $pdf->SetTextColor(0, 0, 0);
-                    }
-                }
-            }
+            //             // אפס צבע
+            //             $pdf->SetTextColor(0, 0, 0);
+            //         }
+            //     }
+            // }
             
             // נקה קובץ זמני אם נוצר
             if (isset($tempFile) && file_exists($tempFile)) {

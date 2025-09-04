@@ -88,10 +88,12 @@ class MinimalPDF {
     private function encodeText($text) {
         // בדוק אם הטקסט מכיל עברית
         if (preg_match('/[\x{0590}-\x{05FF}]/u', $text)) {
-            // לעברית - השתמש בקידוד Windows-1255
-            $encoded = iconv('UTF-8', 'Windows-1255//IGNORE', $text);
+            // הפוך את הטקסט העברי לסדר הנכון
+            $text = hebrev($text); // פונקציה מובנית של PHP
+            
+            // המר ל-ISO-8859-8 (קידוד עברי)
+            $encoded = iconv('UTF-8', 'ISO-8859-8//IGNORE', $text);
             if ($encoded !== false) {
-                // החזר כמחרוזת רגילה עם escape characters
                 return '(' . str_replace(['(', ')', '\\'], ['\\(', '\\)', '\\\\'], $encoded) . ')';
             }
         }

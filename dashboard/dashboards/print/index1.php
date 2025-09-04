@@ -180,15 +180,6 @@
             background: #e53e3e;
         }
 
-        .btn-info {
-            background: #4299e1;
-            color: white;
-        }
-
-        .btn-info:hover {
-            background: #3182ce;
-        }
-
         .btn-small {
             padding: 6px 12px;
             font-size: 0.875rem;
@@ -199,32 +190,6 @@
             gap: 10px;
             margin-top: 20px;
             flex-wrap: wrap;
-        }
-
-        .method-selector {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .method-badge {
-            padding: 8px 16px;
-            border-radius: 20px;
-            background: #e2e8f0;
-            color: #2d3748;
-            font-size: 0.875rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .method-badge.active {
-            background: #667eea;
-            color: white;
-        }
-
-        .method-badge:hover {
-            transform: translateY(-1px);
         }
 
         .debug-section {
@@ -254,7 +219,6 @@
             margin-bottom: 20px;
             display: none;
             animation: slideDown 0.3s ease;
-            grid-column: 1 / -1;
         }
 
         @keyframes slideDown {
@@ -324,24 +288,8 @@
                 <h2 class="section-title">⚙️ הגדרות בסיסיות</h2>
                 
                 <div class="form-group">
-                    <label for="method">שיטת יצירת PDF:</label>
-                    <div class="method-selector">
-                        <span class="method-badge active" data-method="minimal" onclick="selectMethod('minimal')">
-                            Minimal PDF
-                        </span>
-                        <span class="method-badge" data-method="fpdf" onclick="selectMethod('fpdf')">
-                            FPDF
-                        </span>
-                        <span class="method-badge" data-method="html" onclick="selectMethod('html')">
-                            HTML
-                        </span>
-                        <span class="method-badge" data-method="postscript" onclick="selectMethod('postscript')">
-                            PostScript
-                        </span>
-                    </div>
-                    <small id="methodDescription" style="color: #666; margin-top: 5px; display: block;">
-                        Minimal PDF - יוצר PDF בסיסי ללא תלויות
-                    </small>
+                    <label for="pdfUrl">כתובת קובץ PDF:</label>
+                    <input type="text" id="pdfUrl" placeholder="https://example.com/file.pdf" dir="ltr">
                 </div>
 
                 <div class="form-group">
@@ -364,14 +312,9 @@
                 <div class="form-group">
                     <label>קואורדינטות (X, Y):</label>
                     <div class="coordinates-inputs">
-                        <input type="number" id="xCoord" placeholder="X" min="0" value="100">
-                        <input type="number" id="yCoord" placeholder="Y" min="0" value="100">
+                        <input type="number" id="xCoord" placeholder="X" min="0">
+                        <input type="number" id="yCoord" placeholder="Y" min="0">
                     </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="fontSize">גודל גופן (אופציונלי):</label>
-                    <input type="number" id="fontSize" placeholder="12" min="8" max="72" value="12">
                 </div>
 
                 <button class="btn btn-secondary" onclick="addValue()">
@@ -391,11 +334,8 @@
                 </div>
 
                 <div class="button-group">
-                    <button class="btn btn-primary" onclick="processValues()">
-                        🚀 צור PDF
-                    </button>
-                    <button class="btn btn-info" onclick="testMethod()">
-                        🧪 בדוק שיטה
+                    <button class="btn btn-primary" onclick="processManual()">
+                        🚀 עבד PDF (ממשק)
                     </button>
                     <button class="btn btn-secondary" onclick="showJsonInput()">
                         📄 הזן JSON
@@ -412,14 +352,13 @@
                 <div class="form-group">
                     <label for="jsonInput">הדבק JSON:</label>
                     <textarea id="jsonInput" placeholder='{
-    "method": "minimal",
+    "filename": "https://example.com/file.pdf",
     "language": "he",
     "values": [
         {
             "text": "שלום עולם",
             "x": 100,
-            "y": 200,
-            "fontSize": 16
+            "y": 200
         }
     ]
 }'></textarea>
@@ -427,7 +366,7 @@
 
                 <div class="button-group">
                     <button class="btn btn-primary" onclick="processJson()">
-                        📄 עבד JSON
+                        🔄 עבד JSON
                     </button>
                     <button class="btn btn-secondary" onclick="hideJsonInput()">
                         ❌ סגור
@@ -436,7 +375,7 @@
             </div>
 
             <div class="debug-section">
-                <h2 class="section-title" style="color: white; border-color: #48bb78;">🛠 Debug Console</h2>
+                <h2 class="section-title" style="color: white; border-color: #48bb78;">🐛 Debug Console</h2>
                 
                 <div class="button-group">
                     <button class="btn btn-secondary btn-small" onclick="clearDebug()">
@@ -444,9 +383,6 @@
                     </button>
                     <button class="btn btn-secondary btn-small" onclick="testConnection()">
                         🔌 בדוק חיבור
-                    </button>
-                    <button class="btn btn-secondary btn-small" onclick="checkAvailableMethods()">
-                        📊 בדוק שיטות זמינות
                     </button>
                 </div>
 
@@ -459,37 +395,7 @@
 
     <script>
         let values = [];
-        let selectedMethod = 'minimal';
-        
-        // מיפוי של שיטות לקבצים
-        const METHOD_FILES = {
-            'minimal': 'pdf-minimal.php',
-            'fpdf': 'pdf-fpdf.php',
-            'html': 'pdf-html.php',
-            'postscript': 'pdf-postscript.php'
-        };
-
-        const METHOD_DESCRIPTIONS = {
-            'minimal': 'Minimal PDF - יוצר PDF בסיסי ללא תלויות',
-            'fpdf': 'FPDF - ספרייה מתקדמת ליצירת PDF איכותי',
-            'html': 'HTML - יוצר HTML להמרה ל-PDF דרך הדפדפן',
-            'postscript': 'PostScript - יוצר קובץ PS להמרה ל-PDF'
-        };
-
-        function selectMethod(method) {
-            selectedMethod = method;
-            
-            // עדכן את הבאדג'ים
-            document.querySelectorAll('.method-badge').forEach(badge => {
-                badge.classList.remove('active');
-            });
-            document.querySelector(`[data-method="${method}"]`).classList.add('active');
-            
-            // עדכן תיאור
-            document.getElementById('methodDescription').textContent = METHOD_DESCRIPTIONS[method];
-            
-            debugLog(`Selected method: ${method}`, 'info');
-        }
+        const API_URL = 'process-pdf.php'; // שנה לכתובת השרת שלך
 
         function debugLog(message, type = 'info') {
             const debugOutput = document.getElementById('debugOutput');
@@ -512,17 +418,16 @@
 
         function addValue() {
             const text = document.getElementById('textValue').value;
-            const x = parseInt(document.getElementById('xCoord').value) || 100;
-            const y = parseInt(document.getElementById('yCoord').value) || 100;
-            const fontSize = parseInt(document.getElementById('fontSize').value) || 12;
+            const x = parseInt(document.getElementById('xCoord').value);
+            const y = parseInt(document.getElementById('yCoord').value);
 
-            if (!text) {
-                showStatus('נא להכניס טקסט', 'error');
-                debugLog('Failed to add value: missing text', 'error');
+            if (!text || isNaN(x) || isNaN(y)) {
+                showStatus('נא למלא את כל השדות', 'error');
+                debugLog('Failed to add value: missing fields', 'error');
                 return;
             }
 
-            const value = { text, x, y, fontSize };
+            const value = { text, x, y };
             values.push(value);
             
             debugLog(`Added value: ${JSON.stringify(value)}`, 'success');
@@ -544,7 +449,7 @@
             listDiv.innerHTML = values.map((val, index) => `
                 <div class="value-item">
                     <span class="value-item-text">${val.text}</span>
-                    <span class="value-item-coords">(${val.x}, ${val.y}) - ${val.fontSize}px</span>
+                    <span class="value-item-coords">(${val.x}, ${val.y})</span>
                     <button class="btn btn-danger btn-small" onclick="removeValue(${index})">
                         הסר
                     </button>
@@ -563,9 +468,8 @@
 
         function clearInputs() {
             document.getElementById('textValue').value = '';
-            document.getElementById('xCoord').value = '100';
-            document.getElementById('yCoord').value = '100';
-            document.getElementById('fontSize').value = '12';
+            document.getElementById('xCoord').value = '';
+            document.getElementById('yCoord').value = '';
         }
 
         function clearAll() {
@@ -573,6 +477,7 @@
                 values = [];
                 updateValuesList();
                 clearInputs();
+                document.getElementById('pdfUrl').value = '';
                 debugLog('Cleared all values', 'info');
                 showStatus('כל הנתונים נוקו', 'success');
             }
@@ -587,19 +492,28 @@
             document.getElementById('jsonSection').style.display = 'none';
         }
 
-        async function processValues() {
+        async function processManual() {
+            const pdfUrl = document.getElementById('pdfUrl').value;
+            const language = document.getElementById('language').value;
+
+            if (!pdfUrl) {
+                showStatus('נא להזין כתובת PDF', 'error');
+                return;
+            }
+
             if (values.length === 0) {
                 showStatus('נא להוסיף לפחות ערך אחד', 'error');
                 return;
             }
 
             const data = {
-                language: document.getElementById('language').value,
+                filename: pdfUrl,
+                language: language,
                 values: values
             };
 
-            debugLog(`Sending to ${selectedMethod}: ${JSON.stringify(data, null, 2)}`, 'info');
-            await sendToServer(data, selectedMethod);
+            debugLog(`Sending data: ${JSON.stringify(data, null, 2)}`, 'info');
+            await sendToServer(data);
         }
 
         async function processJson() {
@@ -609,30 +523,22 @@
                 const data = JSON.parse(jsonInput);
                 debugLog(`Parsed JSON: ${JSON.stringify(data, null, 2)}`, 'success');
                 
-                if (!data.values || !Array.isArray(data.values)) {
-                    throw new Error('Invalid JSON structure - missing values array');
+                if (!data.filename || !data.values || !Array.isArray(data.values)) {
+                    throw new Error('Invalid JSON structure');
                 }
 
-                const method = data.method || selectedMethod;
-                await sendToServer(data, method);
+                await sendToServer(data);
             } catch (e) {
                 showStatus('שגיאה בפענוח JSON', 'error');
                 debugLog(`JSON parse error: ${e.message}`, 'error');
             }
         }
 
-        async function sendToServer(data, method) {
-            const apiUrl = METHOD_FILES[method];
-            
-            if (!apiUrl) {
-                showStatus('שיטה לא חוקית', 'error');
-                return;
-            }
-            
-            debugLog(`Sending request to ${apiUrl}...`, 'info');
+        async function sendToServer(data) {
+            debugLog('Sending request to server...', 'info');
             
             try {
-                const response = await fetch(apiUrl, {
+                const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -643,89 +549,36 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    showStatus('הקובץ נוצר בהצלחה!', 'success');
-                    debugLog(`Success: ${result.message || 'File created successfully'}`, 'success');
-                    debugLog(`Method used: ${result.method}`, 'info');
+                    showStatus('הקובץ עובד בהצלחה!', 'success');
+                    debugLog(`Success: ${result.message || 'PDF processed successfully'}`, 'success');
                     
-                    // פתח את הקובץ בחלון חדש
-                    if (result.view_url || result.direct_url) {
-                        const url = result.view_url || result.direct_url;
-                        debugLog(`Opening URL: ${url}`, 'success');
-                        window.open(url, '_blank');
-                    }
-                    
-                    // הצג אופציה להורדה
                     if (result.download_url) {
-                        debugLog(`Download available: ${result.download_url}`, 'success');
+                        debugLog(`Download URL: ${result.download_url}`, 'success');
+                        window.open(result.download_url, '_blank');
                     }
                 } else {
                     throw new Error(result.error || 'Unknown error');
                 }
             } catch (error) {
-                showStatus('שגיאה ביצירת הקובץ', 'error');
+                showStatus('שגיאה בעיבוד הקובץ', 'error');
                 debugLog(`Server error: ${error.message}`, 'error');
             }
         }
 
-        async function testMethod() {
-            const testData = {
-                values: [
-                    { text: `Test ${selectedMethod.toUpperCase()}`, x: 100, y: 100, fontSize: 20 },
-                    { text: 'בדיקת עברית', x: 100, y: 130, fontSize: 14 },
-                    { text: new Date().toLocaleString(), x: 100, y: 160, fontSize: 12 }
-                ],
-                language: document.getElementById('language').value
-            };
-            
-            debugLog(`Testing method: ${selectedMethod}`, 'info');
-            await sendToServer(testData, selectedMethod);
-        }
-
         async function testConnection() {
-            debugLog('Testing server connections...', 'info');
+            debugLog('Testing server connection...', 'info');
             
-            for (const [method, file] of Object.entries(METHOD_FILES)) {
-                try {
-                    const response = await fetch(file + '?test=1');
-                    if (response.ok) {
-                        const data = await response.json();
-                        debugLog(`✅ ${method}: ${data.message || 'OK'}`, 'success');
-                    } else {
-                        debugLog(`❌ ${method}: HTTP ${response.status}`, 'error');
-                    }
-                } catch (error) {
-                    debugLog(`❌ ${method}: ${error.message}`, 'error');
+            try {
+                const response = await fetch(API_URL + '?test=1');
+                if (response.ok) {
+                    debugLog('Server connection successful!', 'success');
+                    showStatus('החיבור לשרת תקין', 'success');
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
                 }
-            }
-        }
-
-        async function checkAvailableMethods() {
-            debugLog('Checking available methods...', 'info');
-            
-            const available = [];
-            for (const [method, file] of Object.entries(METHOD_FILES)) {
-                try {
-                    const response = await fetch(file + '?test=1');
-                    if (response.ok) {
-                        const data = await response.json();
-                        available.push(method);
-                        
-                        // בדיקה מיוחדת ל-FPDF
-                        if (method === 'fpdf' && data.installed === false) {
-                            debugLog(`⚠️ ${method}: File exists but FPDF not installed`, 'error');
-                        } else {
-                            debugLog(`✅ ${method}: Available`, 'success');
-                        }
-                    }
-                } catch (error) {
-                    debugLog(`❌ ${method}: Not available`, 'error');
-                }
-            }
-            
-            if (available.length > 0) {
-                showStatus(`${available.length} שיטות זמינות: ${available.join(', ')}`, 'success');
-            } else {
-                showStatus('אף שיטה לא זמינה!', 'error');
+            } catch (error) {
+                debugLog(`Connection failed: ${error.message}`, 'error');
+                showStatus('החיבור לשרת נכשל', 'error');
             }
         }
 
@@ -738,7 +591,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             debugLog('Application initialized', 'success');
             updateValuesList();
-            checkAvailableMethods();
         });
     </script>
 </body>

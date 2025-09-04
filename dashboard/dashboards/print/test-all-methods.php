@@ -280,6 +280,20 @@ sudo apt-get install chromium-browser
 </div>
 
 <script>
+// פונקציה להורדה כפויה
+function forceDownloadFile(url, filename) {
+    // יצירת קישור זמני
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.style.display = 'none';
+    
+    // הוסף לדף, לחץ, והסר
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
 async function testMethod(method) {
     const resultDiv = document.getElementById('result-' + method);
     resultDiv.style.display = 'block';

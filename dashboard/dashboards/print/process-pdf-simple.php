@@ -393,7 +393,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     break;
                     
                 case 'html':
-                    $result = $pdfCreator->createHTMLForPDF($input);
+                    // וודא שאנחנו לא בתוך עיבוד של קובץ
+                    if (!headers_sent()) {
+                        $result = $pdfCreator->createHTMLForPDF($input);
+                    } else {
+                        $result = [
+                            'success' => false,
+                            'error' => 'Headers already sent - cannot process HTML'
+                        ];
+                    }
                     break;
                     
                 case 'postscript':

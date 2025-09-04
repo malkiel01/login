@@ -1,26 +1,41 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
 require_once __DIR__ . '/vendor/autoload.php';
 
-echo "Testing FPDI integration:<br>";
+echo "<pre>";
+echo "Checking all FPDI classes:\n\n";
 
-try {
-    // בדיקה 1: האם המחלקות קיימות
-    echo "1. Mpdf exists: " . (class_exists('\Mpdf\Mpdf') ? 'YES' : 'NO') . "<br>";
-    echo "2. Fpdi exists: " . (class_exists('\setasign\Fpdi\Fpdi') ? 'YES' : 'NO') . "<br>";
-    
-    // בדיקה 2: האם יש את ה-Trait
-    echo "3. FpdiTrait exists: " . (trait_exists('\setasign\Fpdi\Tcpdf\FpdiTrait') ? 'YES' : 'NO') . "<br>";
-    
-    // אם ה-Trait לא קיים, חפש traits אחרים
-    $traits = get_declared_traits();
-    $fpdiTraits = array_filter($traits, function($t) {
-        return strpos($t, 'Fpdi') !== false;
-    });
-    echo "4. Available FPDI traits: <pre>" . print_r($fpdiTraits, true) . "</pre>";
-    
-} catch (Exception $e) {
-    echo "ERROR: " . $e->getMessage();
+// רשימת מחלקות אפשריות
+$classes = [
+    '\setasign\Fpdi\Mpdf\Fpdi',
+    '\setasign\Fpdi\Fpdi',
+    '\setasign\Fpdi\FpdiTrait',
+    '\setasign\Fpdi\PdfParser\PdfParser'
+];
+
+foreach ($classes as $class) {
+    echo "$class: " . (class_exists($class) ? 'EXISTS' : 'NOT FOUND') . "\n";
 }
+
+// נסה ליצור FPDI עם mPDF
+echo "\nTrying different approaches:\n";
+
+// גישה 1: יצירת mPDF רגיל עם FPDI trait
+try {
+    class MyPDF extends \Mpdf\Mpdf {
+        use \setasign\Fpdi\FpdiTrait;
+    }
+    $pdf = new MyPDF();
+    echo "SUCCESS - Created mPDF with FpdiTrait\n";
+} catch (Exception $e) {
+    echo "ERROR Method 1: " . $e->getMessage() . "\n";
+}
+
+// גישה 2: בדוק אם יש namespace אחר
+$namespaces = get_declared_classes();
+$fpdiClasses = array_filter($namespaces, function($class) {
+    return strpos($class, 'Fpdi') !== false;
+});
+echo "\nAll FPDI related classes loaded:\n";
+print_r($fpdiClasses);
+
+echo "</pre>";

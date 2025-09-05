@@ -25,6 +25,35 @@ if (isset($_GET['test'])) {
 
 require_once __DIR__ . '/vendor/autoload.php';
 
+/**
+ * Validate font family and return valid font name for mPDF
+ * For now, just returns default font until we set up custom fonts
+ */
+function validateFontFamily($fontFamily) {
+    // Always return dejavusans for now
+    // This ensures the system works while we set up custom fonts
+    return 'dejavusans';
+    
+    /* Future implementation when fonts are ready:
+    $validFonts = [
+        'dejavusans' => true,
+        'rubik' => true,
+        'heebo' => true,
+        'assistant' => true
+    ];
+    
+    if (isset($validFonts[$fontFamily])) {
+        // Check if font file exists
+        $fontFile = __DIR__ . '/assets/fonts/' . ucfirst($fontFamily) . '-Regular.ttf';
+        if (file_exists($fontFile)) {
+            return $fontFamily;
+        }
+    }
+    
+    return 'dejavusans';
+    */
+}
+
 // Create directories if needed
 @mkdir('output', 0777, true);
 @mkdir('temp', 0777, true);
@@ -98,29 +127,9 @@ try {
         $fontSize = isset($value['fontSize']) ? intval($value['fontSize']) : 12;
         $color = isset($value['color']) ? $value['color'] : '#000000';
         $fontFamily = isset($value['fontFamily']) ? $value['fontFamily'] : 'dejavusans';
-        $fontUrl = isset($value['fontUrl']) ? $value['fontUrl'] : null;
         
-        // Handle custom font URL
-        if ($fontFamily === 'custom' && $fontUrl) {
-            try {
-                // Download and add custom font
-                $fontFile = 'temp/font_' . md5($fontUrl) . '.ttf';
-                if (!file_exists($fontFile)) {
-                    $fontContent = @file_get_contents($fontUrl);
-                    if ($fontContent) {
-                        file_put_contents($fontFile, $fontContent);
-                        
-                        // Add font to mPDF
-                        $pdf->AddFontFromFile($fontFile, 'custom_' . $index);
-                        $fontFamily = 'custom_' . $index;
-                    }
-                }
-            } catch (Exception $e) {
-                // Fallback to default font
-                $fontFamily = 'dejavusans';
-                $debugInfo[] = ['error' => 'Failed to load custom font: ' . $e->getMessage()];
-            }
-        }
+        // Validate font family (currently returns 'dejavusans' always)
+        $fontFamily = validateFontFamily($fontFamily);
         
         // Convert pixels to mm
         // A4 is 210mm x 297mm (portrait)
@@ -139,7 +148,8 @@ try {
             'y_mm' => round($y_mm, 2),
             'fontSize' => $fontSize,
             'color' => $color,
-            'fontFamily' => $fontFamily
+            'fontFamily' => $fontFamily,
+            'requested_font' => isset($value['fontFamily']) ? $value['fontFamily'] : 'default'
         ];
         
         // Parse color
@@ -154,45 +164,12 @@ try {
         // Set text color
         $pdf->SetTextColor($r, $g, $b);
         
-        // Set font
+        // Set font (currently always uses dejavusans)
         $pdf->SetFont($fontFamily, '', $fontSize);
         
         // Use WriteText for absolute positioning
         // WriteText places text at exact X,Y coordinates
         $pdf->WriteText($x_mm, $y_mm, $text);
-    }
-    
-    // Alternative: Try with HTML but with fixed positioning
-    // This adds a second pass with HTML as backup
-    if (count($values) > 0 && $isRTL) {
-        // Create one large HTML block with fixed positioning
-        $html = '<div style="position: relative; width: 100%; height: 100%;">';
-        
-        foreach ($values as $value) {
-            $text = isset($value['text']) ? $value['text'] : '';
-            $x = isset($value['x']) ? intval($value['x']) : 100;
-            $y = isset($value['y']) ? intval($value['y']) : 100;
-            $fontSize = isset($value['fontSize']) ? intval($value['fontSize']) : 12;
-            $color = isset($value['color']) ? $value['color'] : 'black';
-            
-            // Use a table with fixed positioning as a workaround
-            $html .= sprintf(
-                '<div style="position: fixed; left: %dpx; top: %dpx; z-index: 1000;">
-                    <span style="color: %s; font-size: %dpt;">%s</span>
-                </div>',
-                $x,
-                $y,
-                $color,
-                $fontSize,
-                $text
-            );
-        }
-        
-        $html .= '</div>';
-        
-        // Try to write the HTML (this might override previous text)
-        // Comment this out if WriteText works well
-        // $pdf->WriteHTML($html);
     }
     
     // Generate filename

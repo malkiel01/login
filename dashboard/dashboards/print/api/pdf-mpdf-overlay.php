@@ -122,17 +122,23 @@ try {
     // ]);
 
     // Create mPDF instance
-    $fontData = \Mpdf\Config\FontVariables::getDefaults();
-    $fontData['fontdata']['rubik'] = [
+    // Create mPDF instance עם פונטים
+    $config = new \Mpdf\Config\ConfigVariables();
+    $fontDirs = $config->getDefaults()['fontDir'];
+
+    $fontConfig = new \Mpdf\Config\FontVariables();
+    $fontData = $fontConfig->getDefaults()['fontdata'];
+
+    // הוסף את התיקייה שלנו
+    $fontDirs[] = dirname(__DIR__) . '/assets/fonts/';
+
+    // הוסף את הפונטים שלנו
+    $fontData['rubik'] = [
         'R' => 'Rubik-Regular.ttf',
         'useOTL' => 0xFF,
     ];
-    $fontData['fontdata']['heebo'] = [
+    $fontData['heebo'] = [
         'R' => 'Heebo-Regular.ttf',
-        'useOTL' => 0xFF,
-    ];
-    $fontData['fontdata']['assistant'] = [
-        'R' => 'Assistant-Regular.ttf',
         'useOTL' => 0xFF,
     ];
 
@@ -146,11 +152,8 @@ try {
         'margin_top' => 0,
         'margin_bottom' => 0,
         'tempDir' => dirname(__DIR__) . '/temp',
-        'fontDir' => [
-            dirname(__DIR__) . '/vendor/mpdf/mpdf/ttfonts/',
-            dirname(__DIR__) . '/assets/fonts/'
-        ],
-        'fontdata' => $fontData['fontdata']
+        'fontDir' => $fontDirs,
+        'fontdata' => $fontData
     ]);
     
     // Set RTL if needed

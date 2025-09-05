@@ -1045,6 +1045,6 @@ generatePDF(jsonData).then(result => {
             checkAvailableMethods();
         });
     </script>
-    <!-- <script src="pdfGenerator.js"></script> -->
+    <script src="pdfGenerator.js"></script>
 </body>
 </html>

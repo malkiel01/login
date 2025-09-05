@@ -29,30 +29,6 @@ require_once dirname(__DIR__) . '/vendor/autoload.php';
  * Validate font family and return valid font name for mPDF
  * For now, just returns default font until we set up custom fonts
  */
-function validateFontFamily1($fontFamily) {
-    // Always return dejavusans for now
-    // This ensures the system works while we set up custom fonts
-    return 'dejavusans';
-    
-    /* Future implementation when fonts are ready:
-    $validFonts = [
-        'dejavusans' => true,
-        'rubik' => true,
-        'heebo' => true,
-        'assistant' => true
-    ];
-    
-    if (isset($validFonts[$fontFamily])) {
-        // Check if font file exists
-        $fontFile = dirname(__DIR__) . '/assets/fonts/' . ucfirst($fontFamily) . '-Regular.ttf';
-        if (file_exists($fontFile)) {
-            return $fontFamily;
-        }
-    }
-    
-    return 'dejavusans';
-    */
-}
 function validateFontFamily($fontFamily) {
     // רשימת פונטים נתמכים
     $validFonts = ['dejavusans', 'rubik', 'heebo', 'assistant'];
@@ -102,6 +78,19 @@ try {
     $format = ($orientation === 'L') ? 'A4-L' : 'A4';
     
     // Create mPDF instance
+    // $pdf = new \Mpdf\Mpdf([
+    //     'mode' => 'utf-8',
+    //     'format' => $format,
+    //     'orientation' => $orientation,
+    //     'default_font' => 'dejavusans',
+    //     'margin_left' => 0,
+    //     'margin_right' => 0,
+    //     'margin_top' => 0,
+    //     'margin_bottom' => 0,
+    //     'tempDir' => dirname(__DIR__) . '/temp'
+    // ]);
+
+    // Create mPDF instance
     $pdf = new \Mpdf\Mpdf([
         'mode' => 'utf-8',
         'format' => $format,
@@ -111,7 +100,25 @@ try {
         'margin_right' => 0,
         'margin_top' => 0,
         'margin_bottom' => 0,
-        'tempDir' => dirname(__DIR__) . '/temp'
+        'tempDir' => dirname(__DIR__) . '/temp',
+        'fontDir' => [
+            dirname(__DIR__) . '/vendor/mpdf/mpdf/ttfonts/',
+            dirname(__DIR__) . '/assets/fonts/'
+        ],
+        'fontdata' => [
+            'rubik' => [
+                'R' => 'Rubik-Regular.ttf',
+                'useOTL' => 0xFF,
+            ],
+            'heebo' => [
+                'R' => 'Heebo-Regular.ttf', 
+                'useOTL' => 0xFF,
+            ],
+            'assistant' => [
+                'R' => 'Assistant-Regular.ttf',
+                'useOTL' => 0xFF,
+            ]
+        ] + \Mpdf\Config\FontVariables::getDefaults()['fontdata']
     ]);
     
     // Set RTL if needed

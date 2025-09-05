@@ -39,7 +39,7 @@ $config = [
     'default_template' => 'https://login.form.mbe-plus.com/dashboard/dashboards/print/templates/DeepEmpty.pdf',
     
     // תכונות
-    'enable_preview' => false,  // תצוגה מקדימה (בפיתוח)
+    'enable_preview' => true,  // תצוגה מקדימה (בפיתוח)
     'enable_image_upload' => false,  // העלאת תמונות (בפיתוח)
     'enable_text_rotation' => false,  // סיבוב טקסט (בפיתוח)
     'enable_debug' => true,

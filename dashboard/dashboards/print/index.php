@@ -31,7 +31,7 @@ require_once 'config.php';
             
             <!-- Values List Section -->
             <?php include 'includes/list-section.php'; ?>
-            
+
             <!-- Preview Canvas (Future) -->
             <?php if ($config['enable_preview'] ?? false): ?>
                 <?php include 'includes/preview-canvas.php'; ?>

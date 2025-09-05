@@ -54,7 +54,7 @@ async function sendToServer(data, method) {
         'fpdf': 'api/pdf-fpdf.php',
         'html': 'api/pdf-html.php',
         'postscript': 'api/pdf-postscript.php',
-        'mpdf': 'pdf-mpdf-overlay.php',
+        'mpdf': 'api/pdf-mpdf-overlay.php',
         'tcpdf': 'api/pdf-tcpdf-overlay.php',
     };
     

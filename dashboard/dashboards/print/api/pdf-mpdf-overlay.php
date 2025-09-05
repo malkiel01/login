@@ -23,11 +23,15 @@ if (isset($_GET['test'])) {
     ]));
 }
 
-require_once __DIR__ . '/vendor/autoload.php';
+// require_once __DIR__ . '/vendor/autoload.php';
 
-// Create directories if needed
-@mkdir('output', 0777, true);
-@mkdir('temp', 0777, true);
+// // Create directories if needed
+// @mkdir('output', 0777, true);
+// @mkdir('temp', 0777, true);
+
+require_once dirname(__DIR__) . '/vendor/autoload.php';
+@mkdir('../output', 0777, true);
+@mkdir('../temp', 0777, true);
 
 try {
     // Get JSON input

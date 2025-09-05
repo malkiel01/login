@@ -44,7 +44,7 @@ function validateFontFamily($fontFamily) {
     
     if (isset($validFonts[$fontFamily])) {
         // Check if font file exists
-        $fontFile = __DIR__ . '/assets/fonts/' . ucfirst($fontFamily) . '-Regular.ttf';
+        $fontFile = dirname(__DIR__) . '/assets/fonts/' . ucfirst($fontFamily) . '-Regular.ttf';
         if (file_exists($fontFile)) {
             return $fontFamily;
         }
@@ -55,8 +55,8 @@ function validateFontFamily($fontFamily) {
 }
 
 // Create directories if needed
-@mkdir('../output', 0777, true);
-@mkdir('../temp', 0777, true);
+@mkdir(dirname(__DIR__) . '/output', 0777, true);
+@mkdir(dirname(__DIR__) . '/temp', 0777, true);
 
 try {
     // Get JSON input
@@ -78,7 +78,7 @@ try {
     }
     
     // Download template
-    $tempFile = 'temp/template_' . uniqid() . '.pdf';
+    $tempFile = dirname(__DIR__) . '/temp/template_' . uniqid() . '.pdf';
     $pdfContent = @file_get_contents($pdfUrl);
     
     if ($pdfContent === false) {
@@ -101,7 +101,7 @@ try {
         'margin_right' => 0,
         'margin_top' => 0,
         'margin_bottom' => 0,
-        'tempDir' => __DIR__ . '/temp'
+        'tempDir' => dirname(__DIR__) . '/temp'
     ]);
     
     // Set RTL if needed
@@ -172,27 +172,27 @@ try {
         $pdf->WriteText($x_mm, $y_mm, $text);
     }
     
-    // Generate filename
-    $outputFilename = '../output/mpdf_' . date('Ymd_His') . '_' . uniqid() . '.pdf';
+    // Generate filename - IMPORTANT: use the same filename for saving and URLs
+    $filename = 'mpdf_' . date('Ymd_His') . '_' . uniqid() . '.pdf';
+    $outputPath = dirname(__DIR__) . '/output/' . $filename;
     
     // Save PDF
-    $pdf->Output($outputFilename, 'F');
+    $pdf->Output($outputPath, 'F');
     
     // Clean up temp file
     @unlink($tempFile);
-
     
     // Generate URLs
     $baseUrl = 'https://' . $_SERVER['HTTP_HOST'] . dirname(dirname($_SERVER['SCRIPT_NAME']));
-    $viewUrl = $baseUrl . '/' . $outputFilename;
-    $downloadUrl = $baseUrl . '/download.php?file=' . urlencode($outputFilename);
+    $viewUrl = $baseUrl . '/output/' . $filename;
+    $downloadUrl = $baseUrl . '/download.php?file=' . urlencode('output/' . $filename);
     
     // Return success response
     echo json_encode([
         'success' => true,
         'message' => 'PDF created successfully with mPDF overlay',
         'method' => 'mpdf-overlay-writetext',
-        'filename' => $outputFilename,
+        'filename' => $filename,
         'view_url' => $viewUrl,
         'download_url' => $downloadUrl,
         'direct_url' => $viewUrl,

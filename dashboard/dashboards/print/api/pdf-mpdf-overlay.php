@@ -23,7 +23,7 @@ if (isset($_GET['test'])) {
     ]));
 }
 
-require_once __DIR__ . '/vendor/autoload.php';
+require_once dirname(__DIR__) . '/vendor/autoload.php';
 
 /**
  * Validate font family and return valid font name for mPDF
@@ -55,8 +55,8 @@ function validateFontFamily($fontFamily) {
 }
 
 // Create directories if needed
-@mkdir('output', 0777, true);
-@mkdir('temp', 0777, true);
+@mkdir('../output', 0777, true);
+@mkdir('../temp', 0777, true);
 
 try {
     // Get JSON input

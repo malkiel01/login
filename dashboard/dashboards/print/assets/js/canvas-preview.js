@@ -1,7 +1,12 @@
 /**
  * Canvas Preview System - Fixed Coordinate System
- * Ensures 1:1 mapping between canvas display and mPDF output
+ * Version 3 - Consolidated and conflict-free
  */
+
+// Remove any existing global variables to avoid conflicts
+if (window.pdfPreview) {
+    window.pdfPreview = null;
+}
 
 class PDFCanvasPreview {
     constructor() {
@@ -27,44 +32,59 @@ class PDFCanvasPreview {
     }
     
     init() {
-        // Create wrapper structure if doesn't exist
-        const container = document.getElementById('canvasContainer');
-        if (!container) return;
-        
-        // Update HTML structure
-        container.innerHTML = `
-            <div class="canvas-wrapper" style="
-                width: 100%;
-                max-width: 900px;
-                height: 600px;
-                margin: 0 auto;
-                border: 2px solid #e1e8ed;
-                border-radius: 8px;
-                overflow: auto;
-                background: #f5f5f5;
-                position: relative;
-            ">
-                <div class="canvas-holder" id="canvasHolder" style="
-                    position: relative;
-                    display: inline-block;
-                    background: white;
-                    margin: 20px;
-                ">
-                    <canvas id="pdfCanvas"></canvas>
-                    <div id="textOverlay" class="text-overlay" style="
-                        position: absolute;
-                        top: 0;
-                        left: 0;
-                        pointer-events: none;
-                    "></div>
-                </div>
-            </div>
-        `;
-        
+        // Use existing canvas structure first
         this.canvas = document.getElementById('pdfCanvas');
-        this.ctx = this.canvas.getContext('2d');
         this.textOverlay = document.getElementById('textOverlay');
-        this.canvasWrapper = container.querySelector('.canvas-wrapper');
+        
+        if (this.canvas && this.textOverlay) {
+            // Use existing structure
+            this.ctx = this.canvas.getContext('2d');
+            this.canvasWrapper = document.getElementById('canvasContainer');
+            console.log('Using existing canvas structure');
+        } else {
+            // Create new structure if needed
+            const container = document.getElementById('canvasContainer');
+            if (!container) {
+                console.error('Canvas container not found');
+                return;
+            }
+            
+            // Create wrapper structure
+            container.innerHTML = `
+                <div class="canvas-wrapper" style="
+                    width: 100%;
+                    max-width: 900px;
+                    height: 600px;
+                    margin: 0 auto;
+                    border: 2px solid #e1e8ed;
+                    border-radius: 8px;
+                    overflow: auto;
+                    background: #f5f5f5;
+                    position: relative;
+                ">
+                    <div class="canvas-holder" id="canvasHolder" style="
+                        position: relative;
+                        display: inline-block;
+                        background: white;
+                        margin: 20px;
+                    ">
+                        <canvas id="pdfCanvas"></canvas>
+                        <div id="textOverlay" class="text-overlay" style="
+                            position: absolute;
+                            top: 0;
+                            left: 0;
+                            pointer-events: none;
+                        "></div>
+                    </div>
+                </div>
+            `;
+            
+            this.canvas = document.getElementById('pdfCanvas');
+            this.ctx = this.canvas.getContext('2d');
+            this.textOverlay = document.getElementById('textOverlay');
+            this.canvasWrapper = container.querySelector('.canvas-wrapper');
+        }
+        
         this.canvasHolder = document.getElementById('canvasHolder');
         
         // Load PDF.js if not loaded
@@ -82,7 +102,9 @@ class PDFCanvasPreview {
     
     async loadPdf(url) {
         if (!url) {
-            showStatus('נא להזין כתובת PDF', 'error');
+            if (typeof showStatus !== 'undefined') {
+                showStatus('נא להזין כתובת PDF', 'error');
+            }
             return;
         }
         
@@ -100,13 +122,21 @@ class PDFCanvasPreview {
             await this.renderPage();
             this.syncWithValues();
             
-            showStatus('PDF נטען בהצלחה', 'success');
-            debugLog(`PDF loaded: ${url}`, 'success');
+            if (typeof showStatus !== 'undefined') {
+                showStatus('PDF נטען בהצלחה', 'success');
+            }
+            if (typeof debugLog !== 'undefined') {
+                debugLog(`PDF loaded: ${url}`, 'success');
+            }
             
         } catch (error) {
             console.error('Error loading PDF:', error);
-            showStatus('שגיאה בטעינת PDF', 'error');
-            debugLog(`PDF load error: ${error.message}`, 'error');
+            if (typeof showStatus !== 'undefined') {
+                showStatus('שגיאה בטעינת PDF', 'error');
+            }
+            if (typeof debugLog !== 'undefined') {
+                debugLog(`PDF load error: ${error.message}`, 'error');
+            }
         }
     }
     
@@ -123,11 +153,16 @@ class PDFCanvasPreview {
         this.pdfHeight = originalViewport.height;
         
         // Calculate scale to fit in wrapper
-        const wrapperWidth = this.canvasWrapper.clientWidth - 40; // Account for margins
-        const wrapperHeight = this.canvasWrapper.clientHeight - 40;
+        let maxWidth = 850; // Default max width
+        let maxHeight = 550; // Default max height
         
-        const scaleX = wrapperWidth / this.pdfWidth;
-        const scaleY = wrapperHeight / this.pdfHeight;
+        if (this.canvasWrapper) {
+            maxWidth = this.canvasWrapper.clientWidth - 40; // Account for margins
+            maxHeight = this.canvasWrapper.clientHeight - 40;
+        }
+        
+        const scaleX = maxWidth / this.pdfWidth;
+        const scaleY = maxHeight / this.pdfHeight;
         this.scale = Math.min(scaleX, scaleY, 2.0); // Cap at 2x zoom
         
         // Get scaled viewport
@@ -138,8 +173,10 @@ class PDFCanvasPreview {
         this.canvas.height = viewport.height;
         
         // Set holder and overlay dimensions
-        this.canvasHolder.style.width = viewport.width + 'px';
-        this.canvasHolder.style.height = viewport.height + 'px';
+        if (this.canvasHolder) {
+            this.canvasHolder.style.width = viewport.width + 'px';
+            this.canvasHolder.style.height = viewport.height + 'px';
+        }
         this.textOverlay.style.width = viewport.width + 'px';
         this.textOverlay.style.height = viewport.height + 'px';
         
@@ -212,7 +249,7 @@ class PDFCanvasPreview {
             e.preventDefault();
         });
         
-        document.addEventListener('mousemove', (e) => {
+        const handleMouseMove = (e) => {
             if (!isDragging) return;
             
             const x = e.pageX - startX;
@@ -224,9 +261,9 @@ class PDFCanvasPreview {
             
             element.style.left = Math.max(0, Math.min(x, maxX)) + 'px';
             element.style.top = Math.max(0, Math.min(y, maxY)) + 'px';
-        });
+        };
         
-        document.addEventListener('mouseup', (e) => {
+        const handleMouseUp = (e) => {
             if (!isDragging) return;
             
             isDragging = false;
@@ -241,27 +278,44 @@ class PDFCanvasPreview {
             const y_mm = (y_canvas / this.scale) * this.POINTS_TO_MM;
             
             // Store as pixels (for compatibility with existing system)
-            if (values[index]) {
+            if (typeof values !== 'undefined' && values[index]) {
                 values[index].x = Math.round(x_mm / this.PIXELS_TO_MM);
                 values[index].y = Math.round(y_mm / this.PIXELS_TO_MM);
                 
                 // Update list display
-                updateValuesList();
-                saveState();
+                if (typeof updateValuesList !== 'undefined') {
+                    updateValuesList();
+                }
+                if (typeof saveState !== 'undefined') {
+                    saveState();
+                }
                 
-                debugLog(`Text moved: "${values[index].text}" to (${values[index].x}px, ${values[index].y}px) = (${x_mm.toFixed(1)}mm, ${y_mm.toFixed(1)}mm)`, 'info');
+                if (typeof debugLog !== 'undefined') {
+                    debugLog(`Text moved: "${values[index].text}" to (${values[index].x}px, ${values[index].y}px) = (${x_mm.toFixed(1)}mm, ${y_mm.toFixed(1)}mm)`, 'info');
+                }
             }
-        });
+        };
+        
+        // Store handlers on element for cleanup
+        element._mouseMoveHandler = handleMouseMove;
+        element._mouseUpHandler = handleMouseUp;
+        
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
         
         // Double-click to edit
         element.addEventListener('dblclick', (e) => {
             e.stopPropagation();
             const newText = prompt('ערוך טקסט:', element.textContent);
-            if (newText && values[index]) {
+            if (newText && typeof values !== 'undefined' && values[index]) {
                 values[index].text = newText;
                 element.textContent = newText;
-                updateValuesList();
-                saveState();
+                if (typeof updateValuesList !== 'undefined') {
+                    updateValuesList();
+                }
+                if (typeof saveState !== 'undefined') {
+                    saveState();
+                }
             }
         });
     }
@@ -273,9 +327,11 @@ class PDFCanvasPreview {
         this.textOverlay.innerHTML = '';
         
         // Add all values
-        values.forEach((value, index) => {
-            this.addTextToCanvas(value, index);
-        });
+        if (typeof values !== 'undefined' && values) {
+            values.forEach((value, index) => {
+                this.addTextToCanvas(value, index);
+            });
+        }
     }
     
     syncWithValues() {
@@ -289,9 +345,11 @@ class PDFCanvasPreview {
             height: this.pdfHeight * this.POINTS_TO_MM
         };
         
-        debugLog(`PDF Dimensions: ${this.pdfWidth.toFixed(0)}×${this.pdfHeight.toFixed(0)} points = ${pdfSizeMm.width.toFixed(1)}×${pdfSizeMm.height.toFixed(1)} mm`, 'info');
-        debugLog(`Canvas Scale: ${this.scale.toFixed(2)}x`, 'info');
-        debugLog(`Canvas Size: ${this.canvas.width}×${this.canvas.height} pixels`, 'info');
+        if (typeof debugLog !== 'undefined') {
+            debugLog(`PDF Dimensions: ${this.pdfWidth.toFixed(0)}×${this.pdfHeight.toFixed(0)} points = ${pdfSizeMm.width.toFixed(1)}×${pdfSizeMm.height.toFixed(1)} mm`, 'info');
+            debugLog(`Canvas Scale: ${this.scale.toFixed(2)}x`, 'info');
+            debugLog(`Canvas Size: ${this.canvas.width}×${this.canvas.height} pixels`, 'info');
+        }
         
         // Update zoom level display
         const zoomSpan = document.querySelector('.zoom-level');
@@ -318,56 +376,78 @@ class PDFCanvasPreview {
 }
 
 // Create global instance
-let pdfPreview = null;
+window.pdfPreview = new PDFCanvasPreview();
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
-    pdfPreview = new PDFCanvasPreview();
-    pdfPreview.init();
+    if (window.pdfPreview) {
+        window.pdfPreview.init();
+    }
 });
 
 // Global functions for UI buttons
 window.loadPdfPreview = function() {
-    if (!pdfPreview) {
-        pdfPreview = new PDFCanvasPreview();
-        pdfPreview.init();
+    if (!window.pdfPreview) {
+        window.pdfPreview = new PDFCanvasPreview();
+        window.pdfPreview.init();
     }
     
-    const pdfUrl = document.getElementById('pdfUrl').value;
-    if (pdfUrl) {
-        pdfPreview.loadPdf(pdfUrl);
+    const pdfUrlElement = document.getElementById('pdfUrl');
+    if (pdfUrlElement) {
+        const pdfUrl = pdfUrlElement.value;
+        if (pdfUrl) {
+            window.pdfPreview.loadPdf(pdfUrl);
+        }
     }
 };
 
 window.zoomIn = function() {
-    if (pdfPreview) pdfPreview.zoomIn();
+    if (window.pdfPreview) window.pdfPreview.zoomIn();
 };
 
 window.zoomOut = function() {
-    if (pdfPreview) pdfPreview.zoomOut();
+    if (window.pdfPreview) window.pdfPreview.zoomOut();
 };
 
 window.resetZoom = function() {
-    if (pdfPreview) pdfPreview.resetZoom();
+    if (window.pdfPreview) window.pdfPreview.resetZoom();
 };
 
-// Override addValue to update canvas
-const originalAddValue = window.addValue;
+// Store original functions only once
+if (!window._originalAddValue) {
+    window._originalAddValue = window.addValue;
+}
+if (!window._originalRemoveValue) {
+    window._originalRemoveValue = window.removeValue;  
+}
+if (!window._originalClearAll) {
+    window._originalClearAll = window.clearAll;
+}
+
+// Override functions
 window.addValue = function() {
-    originalAddValue();
-    if (pdfPreview) pdfPreview.syncWithValues();
+    if (window._originalAddValue) {
+        window._originalAddValue();
+    }
+    if (window.pdfPreview) {
+        window.pdfPreview.syncWithValues();
+    }
 };
 
-// Override removeValue
-const originalRemoveValue = window.removeValue;
 window.removeValue = function(index) {
-    originalRemoveValue(index);
-    if (pdfPreview) pdfPreview.syncWithValues();
+    if (window._originalRemoveValue) {
+        window._originalRemoveValue(index);
+    }
+    if (window.pdfPreview) {
+        window.pdfPreview.syncWithValues();
+    }
 };
 
-// Override clearAll
-const originalClearAll = window.clearAll;
 window.clearAll = function() {
-    originalClearAll();
-    if (pdfPreview) pdfPreview.syncWithValues();
+    if (window._originalClearAll) {
+        window._originalClearAll();
+    }
+    if (window.pdfPreview) {
+        window.pdfPreview.syncWithValues();
+    }
 };

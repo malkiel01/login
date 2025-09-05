@@ -1,5 +1,5 @@
 /**
- * Canvas Preview System
+ * Canvas Preview System v1
  */
 
 let pdfDoc = null;

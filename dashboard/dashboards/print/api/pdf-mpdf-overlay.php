@@ -185,36 +185,74 @@ try {
     // ]);
 
     // Create mPDF instance עם פונטים דינמיים
-    $config = new \Mpdf\Config\ConfigVariables();
-    $fontDirs = $config->getDefaults()['fontDir'];
+    // $config = new \Mpdf\Config\ConfigVariables();
+    // $fontDirs = $config->getDefaults()['fontDir'];
 
-    $fontConfig = new \Mpdf\Config\FontVariables();
-    $defaultFontData = $fontConfig->getDefaults()['fontdata'];
+    // $fontConfig = new \Mpdf\Config\FontVariables();
+    // $defaultFontData = $fontConfig->getDefaults()['fontdata'];
 
-    // הוסף את התיקייה שלנו
-    $fontDirs[] = dirname(__DIR__) . '/assets/fonts/';
+    // // הוסף את התיקייה שלנו
+    // $fontDirs[] = dirname(__DIR__) . '/assets/fonts/';
 
-    // טען פונטים מה-JSON
-    $customFonts = loadFontConfig();
+    // // טען פונטים מה-JSON
+    // $customFonts = loadFontConfig();
 
-    // מזג את הפונטים המותאמים עם ברירת המחדל
-    $fontData = array_merge($defaultFontData, $customFonts);
+    // // מזג את הפונטים המותאמים עם ברירת המחדל
+    // $fontData = array_merge($defaultFontData, $customFonts);
 
-    $pdf = new \Mpdf\Mpdf([
-        'mode' => 'utf-8',
-        'format' => $format,
-        'orientation' => $orientation,
-        'default_font' => 'dejavusans',
-        'margin_left' => 0,
-        'margin_right' => 0,
-        'margin_top' => 0,
-        'margin_bottom' => 0,
-        'tempDir' => dirname(__DIR__) . '/temp',
-        'fontDir' => $fontDirs,
-        'fontdata' => $fontData,
-        'allow_output_buffering' => true
-    ]);
+    // $pdf = new \Mpdf\Mpdf([
+    //     'mode' => 'utf-8',
+    //     'format' => $format,
+    //     'orientation' => $orientation,
+    //     'default_font' => 'dejavusans',
+    //     'margin_left' => 0,
+    //     'margin_right' => 0,
+    //     'margin_top' => 0,
+    //     'margin_bottom' => 0,
+    //     'tempDir' => dirname(__DIR__) . '/temp',
+    //     'fontDir' => $fontDirs,
+    //     'fontdata' => $fontData,
+    //     'allow_output_buffering' => true
+    // ]);
 
+// -=-=-=-=-=-=-=-=-=-
+// Create mPDF instance עם פונטים
+$config = new \Mpdf\Config\ConfigVariables();
+$fontDirs = $config->getDefaults()['fontDir'];
+
+$fontConfig = new \Mpdf\Config\FontVariables();
+$fontData = $fontConfig->getDefaults()['fontdata'];
+
+// הוסף את התיקייה שלנו
+$fontDirs[] = dirname(__DIR__) . '/assets/fonts/';
+
+// הוסף את הפונטים שלנו - עם הגדרות שמתאימות ל-mPDF
+$fontData['rubik'] = [
+    'R' => 'Rubik-Regular.ttf',
+    'useOTL' => 0xFF,
+    'useKashida' => 75,
+];
+
+// Heebo צריך הגדרות מיוחדות כי יש לו MarkGlyphSets
+$fontData['heebo'] = [
+    'R' => 'Heebo-Regular.ttf',
+    'useOTL' => 0x00,  // ביטול OTL features שגורמות לבעיה
+];
+
+$pdf = new \Mpdf\Mpdf([
+    'mode' => 'utf-8',
+    'format' => $format,
+    'orientation' => $orientation,
+    'default_font' => 'dejavusans',
+    'margin_left' => 0,
+    'margin_right' => 0,
+    'margin_top' => 0,
+    'margin_bottom' => 0,
+    'tempDir' => dirname(__DIR__) . '/temp',
+    'fontDir' => $fontDirs,
+    'fontdata' => $fontData,
+    'allow_output_buffering' => true
+]);
 // -=-=-=-=-=-=-=-=-=-
     
     // Set RTL if needed

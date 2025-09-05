@@ -52,9 +52,14 @@ require_once 'config.php';
     <script src="assets/js/ui-handlers.js"></script>
     <script src="assets/js/font-manager.js"></script>
     <script src="assets/js/debug.js"></script>
-    
-    <?php if ($config['enable_preview'] ?? false): ?>
-        <script src="assets/js/preview.js"></script>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+
+<?php if ($config['enable_preview'] ?? false): ?>
+    <script src="assets/js/preview.js"></script>
+    <script src="assets/js/canvas-preview.js"></script>
     <?php endif; ?>
 </body>
 </html>

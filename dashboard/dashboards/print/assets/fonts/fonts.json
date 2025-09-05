@@ -15,6 +15,20 @@
       }
     },
     {
+      "id": "ba",
+      "name": "BA Pyutim Regular",
+      "displayName": "Pyutim (ברירת מחדל)",
+      "file": "BAPyutimRegular.ttf",
+      "type": "local",
+      "supports": ["hebrew", "english", "arabic"],
+      "category": "sans-serif",
+      "default": true,
+      "mpdfSettings": {
+        "useOTL": "0xFF",
+        "useKashida": 75
+      }
+    },
+    {
       "id": "rubik",
       "name": "Rubik",
       "displayName": "רוביק (Rubik)",

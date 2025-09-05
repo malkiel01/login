@@ -17,7 +17,7 @@
     {
       "id": "ba",
       "name": "BA Pyutim Regular",
-      "displayName": "Pyutim (ברירת מחדל)",
+      "displayName": "Pyutim",
       "file": "BAPyutimRegular.ttf",
       "type": "local",
       "supports": ["hebrew", "english", "arabic"],

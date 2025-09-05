@@ -23,15 +23,11 @@ if (isset($_GET['test'])) {
     ]));
 }
 
-// require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/vendor/autoload.php';
 
-// // Create directories if needed
-// @mkdir('output', 0777, true);
-// @mkdir('temp', 0777, true);
-
-require_once dirname(__DIR__) . '/vendor/autoload.php';
-@mkdir('../output', 0777, true);
-@mkdir('../temp', 0777, true);
+// Create directories if needed
+@mkdir('output', 0777, true);
+@mkdir('temp', 0777, true);
 
 try {
     // Get JSON input
@@ -101,6 +97,30 @@ try {
         $y = isset($value['y']) ? floatval($value['y']) : 100;
         $fontSize = isset($value['fontSize']) ? intval($value['fontSize']) : 12;
         $color = isset($value['color']) ? $value['color'] : '#000000';
+        $fontFamily = isset($value['fontFamily']) ? $value['fontFamily'] : 'dejavusans';
+        $fontUrl = isset($value['fontUrl']) ? $value['fontUrl'] : null;
+        
+        // Handle custom font URL
+        if ($fontFamily === 'custom' && $fontUrl) {
+            try {
+                // Download and add custom font
+                $fontFile = 'temp/font_' . md5($fontUrl) . '.ttf';
+                if (!file_exists($fontFile)) {
+                    $fontContent = @file_get_contents($fontUrl);
+                    if ($fontContent) {
+                        file_put_contents($fontFile, $fontContent);
+                        
+                        // Add font to mPDF
+                        $pdf->AddFontFromFile($fontFile, 'custom_' . $index);
+                        $fontFamily = 'custom_' . $index;
+                    }
+                }
+            } catch (Exception $e) {
+                // Fallback to default font
+                $fontFamily = 'dejavusans';
+                $debugInfo[] = ['error' => 'Failed to load custom font: ' . $e->getMessage()];
+            }
+        }
         
         // Convert pixels to mm
         // A4 is 210mm x 297mm (portrait)
@@ -118,7 +138,8 @@ try {
             'x_mm' => round($x_mm, 2),
             'y_mm' => round($y_mm, 2),
             'fontSize' => $fontSize,
-            'color' => $color
+            'color' => $color,
+            'fontFamily' => $fontFamily
         ];
         
         // Parse color
@@ -134,7 +155,7 @@ try {
         $pdf->SetTextColor($r, $g, $b);
         
         // Set font
-        $pdf->SetFont('dejavusans', '', $fontSize);
+        $pdf->SetFont($fontFamily, '', $fontSize);
         
         // Use WriteText for absolute positioning
         // WriteText places text at exact X,Y coordinates
@@ -175,8 +196,7 @@ try {
     }
     
     // Generate filename
-    // $outputFilename = 'output/mpdf_' . date('Ymd_His') . '_' . uniqid() . '.pdf';
-    $outputFilename = '../output/mpdf_' . date('Ymd_His') . '_' . uniqid() . '.pdf';
+    $outputFilename = 'output/mpdf_' . date('Ymd_His') . '_' . uniqid() . '.pdf';
     
     // Save PDF
     $pdf->Output($outputFilename, 'F');

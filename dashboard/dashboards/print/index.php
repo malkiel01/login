@@ -50,6 +50,7 @@ require_once 'config.php';
     <script src="assets/js/app.js"></script>
     <script src="assets/js/pdf-generator.js"></script>
     <script src="assets/js/ui-handlers.js"></script>
+    <script src="assets/js/font-manager.js"></script>
     <script src="assets/js/debug.js"></script>
     
     <?php if ($config['enable_preview'] ?? false): ?>

@@ -25,6 +25,22 @@
     </div>
 
     <div class="form-group">
+        <label for="fontFamily">סוג גופן:</label>
+        <select id="fontFamily" onchange="handleFontChange()">
+            <option value="dejavusans">DejaVu Sans (ברירת מחדל)</option>
+            <!-- Options will be loaded from fonts.json -->
+        </select>
+        <div id="customFontInput" style="display: none; margin-top: 10px;">
+            <input type="text" 
+                   id="customFontUrl" 
+                   placeholder="https://example.com/font.ttf" 
+                   dir="ltr"
+                   style="width: 100%;">
+            <small>הכנס URL לקובץ פונט (TTF/OTF)</small>
+        </div>
+    </div>
+
+    <div class="form-group">
         <label for="fontColor">צבע טקסט:</label>
         <div class="color-input-wrapper">
             <input type="color" id="fontColor" value="<?= $config['defaults']['color'] ?>" onchange="updateColorPreview()">

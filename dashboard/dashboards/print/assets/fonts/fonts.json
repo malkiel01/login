@@ -1,0 +1,93 @@
+{
+  "fonts": [
+    {
+      "id": "dejavusans",
+      "name": "DejaVu Sans",
+      "displayName": "DejaVu Sans (ברירת מחדל)",
+      "file": "DejaVuSans.ttf",
+      "type": "local",
+      "supports": ["hebrew", "english", "arabic"],
+      "category": "sans-serif",
+      "default": true
+    },
+    {
+      "id": "arial",
+      "name": "Arial",
+      "displayName": "Arial",
+      "file": "Arial.ttf",
+      "type": "local",
+      "supports": ["hebrew", "english"],
+      "category": "sans-serif"
+    },
+    {
+      "id": "david",
+      "name": "David",
+      "displayName": "דוד (David)",
+      "file": "David.ttf",
+      "type": "local",
+      "supports": ["hebrew"],
+      "category": "serif"
+    },
+    {
+      "id": "rubik",
+      "name": "Rubik",
+      "displayName": "רוביק (Rubik)",
+      "file": "Rubik-Regular.ttf",
+      "type": "local",
+      "supports": ["hebrew", "english"],
+      "category": "sans-serif"
+    },
+    {
+      "id": "heebo",
+      "name": "Heebo",
+      "displayName": "היבו (Heebo)",
+      "file": "Heebo-Regular.ttf",
+      "type": "local",
+      "supports": ["hebrew", "english"],
+      "category": "sans-serif"
+    },
+    {
+      "id": "assistant",
+      "name": "Assistant",
+      "displayName": "אסיסטנט (Assistant)",
+      "file": "Assistant-Regular.ttf",
+      "type": "local",
+      "supports": ["hebrew", "english"],
+      "category": "sans-serif"
+    },
+    {
+      "id": "opensans",
+      "name": "Open Sans",
+      "displayName": "Open Sans",
+      "file": "OpenSans-Regular.ttf",
+      "type": "local",
+      "supports": ["english", "hebrew"],
+      "category": "sans-serif"
+    },
+    {
+      "id": "amiri",
+      "name": "Amiri",
+      "displayName": "أميري (Amiri)",
+      "file": "Amiri-Regular.ttf",
+      "type": "local",
+      "supports": ["arabic", "english"],
+      "category": "serif"
+    },
+    {
+      "id": "custom",
+      "name": "Custom Font",
+      "displayName": "פונט מותאם (URL)",
+      "file": "",
+      "type": "custom",
+      "supports": ["hebrew", "english", "arabic"],
+      "category": "custom",
+      "requiresUrl": true
+    }
+  ],
+  "formats": {
+    "supported": [".ttf", ".otf", ".woff", ".woff2"],
+    "recommended": ".ttf",
+    "maxSize": "5MB",
+    "note": "mPDF תומך רק בפונטים TrueType או OpenType"
+  }
+}

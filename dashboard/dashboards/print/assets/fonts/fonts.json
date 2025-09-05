@@ -3,8 +3,8 @@
     {
       "id": "dejavusans",
       "name": "DejaVu Sans",
-      "displayName": "DejaVu Sans (ברירת מחדל)",
-      "file": "DejaVuSans.ttf",
+      "displayName": "Arial (ברירת מחדל)",
+      "file": "arial.ttf",
       "type": "local",
       "supports": ["hebrew", "english", "arabic"],
       "category": "sans-serif",

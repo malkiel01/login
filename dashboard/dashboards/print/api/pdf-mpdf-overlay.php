@@ -44,69 +44,6 @@ function validateFontFamily($fontFamily) {
 @mkdir(dirname(__DIR__) . '/output', 0777, true);
 @mkdir(dirname(__DIR__) . '/temp', 0777, true);
 
-// בתחילת הקובץ, אחרי require_once
-function loadFontConfig() {
-    $fontsJsonPath = dirname(__DIR__) . '/assets/fonts/fonts.json';
-    if (!file_exists($fontsJsonPath)) {
-        return [];
-    }
-    
-    $jsonContent = file_get_contents($fontsJsonPath);
-    $fontsConfig = json_decode($jsonContent, true);
-    
-    $fontData = [];
-    if (isset($fontsConfig['fonts'])) {
-        foreach ($fontsConfig['fonts'] as $font) {
-            if ($font['type'] === 'local' && !empty($font['file'])) {
-                // בדוק אם הקובץ קיים
-                $fontPath = dirname(__DIR__) . '/assets/fonts/' . $font['file'];
-                if (file_exists($fontPath)) {
-                    // הגדרות שונות לפונטים שונים
-                    if ($font['id'] === 'heebo') {
-                        // Heebo צריך הגדרות מיוחדות
-                        $fontData[$font['id']] = [
-                            'R' => $font['file'],
-                            'useOTL' => 0x00,  // ביטול OTL בגלל MarkGlyphSets
-                        ];
-                    } else {
-                        // ברירת מחדל לפונטים עבריים
-                        $fontData[$font['id']] = [
-                            'R' => $font['file'],
-                            'useOTL' => 0xFF,
-                            'useKashida' => 75,
-                        ];
-                    }
-                }
-            }
-        }
-    }
-    
-    return $fontData;
-}
-
-function validateFontFamily($fontFamily) {
-    // טען את רשימת הפונטים מה-JSON
-    $fontsJsonPath = dirname(__DIR__) . '/assets/fonts/fonts.json';
-    if (file_exists($fontsJsonPath)) {
-        $jsonContent = file_get_contents($fontsJsonPath);
-        $fontsConfig = json_decode($jsonContent, true);
-        
-        if (isset($fontsConfig['fonts'])) {
-            foreach ($fontsConfig['fonts'] as $font) {
-                if ($font['id'] === strtolower($fontFamily) && $font['type'] === 'local') {
-                    // בדוק אם הקובץ קיים
-                    $fontPath = dirname(__DIR__) . '/assets/fonts/' . $font['file'];
-                    if (file_exists($fontPath)) {
-                        return strtolower($fontFamily);
-                    }
-                }
-            }
-        }
-    }
-    
-    return 'dejavusans';
-}
-
 try {
     // Get JSON input
     $input = json_decode(file_get_contents('php://input'), true);
@@ -184,76 +121,37 @@ try {
     //     ] + \Mpdf\Config\FontVariables::getDefaults()['fontdata']
     // ]);
 
-    // Create mPDF instance עם פונטים דינמיים
-    // $config = new \Mpdf\Config\ConfigVariables();
-    // $fontDirs = $config->getDefaults()['fontDir'];
+    // Create mPDF instance
+    $fontData = \Mpdf\Config\FontVariables::getDefaults();
+    $fontData['fontdata']['rubik'] = [
+        'R' => 'Rubik-Regular.ttf',
+        'useOTL' => 0xFF,
+    ];
+    $fontData['fontdata']['heebo'] = [
+        'R' => 'Heebo-Regular.ttf',
+        'useOTL' => 0xFF,
+    ];
+    $fontData['fontdata']['assistant'] = [
+        'R' => 'Assistant-Regular.ttf',
+        'useOTL' => 0xFF,
+    ];
 
-    // $fontConfig = new \Mpdf\Config\FontVariables();
-    // $defaultFontData = $fontConfig->getDefaults()['fontdata'];
-
-    // // הוסף את התיקייה שלנו
-    // $fontDirs[] = dirname(__DIR__) . '/assets/fonts/';
-
-    // // טען פונטים מה-JSON
-    // $customFonts = loadFontConfig();
-
-    // // מזג את הפונטים המותאמים עם ברירת המחדל
-    // $fontData = array_merge($defaultFontData, $customFonts);
-
-    // $pdf = new \Mpdf\Mpdf([
-    //     'mode' => 'utf-8',
-    //     'format' => $format,
-    //     'orientation' => $orientation,
-    //     'default_font' => 'dejavusans',
-    //     'margin_left' => 0,
-    //     'margin_right' => 0,
-    //     'margin_top' => 0,
-    //     'margin_bottom' => 0,
-    //     'tempDir' => dirname(__DIR__) . '/temp',
-    //     'fontDir' => $fontDirs,
-    //     'fontdata' => $fontData,
-    //     'allow_output_buffering' => true
-    // ]);
-
-// -=-=-=-=-=-=-=-=-=-
-// Create mPDF instance עם פונטים
-$config = new \Mpdf\Config\ConfigVariables();
-$fontDirs = $config->getDefaults()['fontDir'];
-
-$fontConfig = new \Mpdf\Config\FontVariables();
-$fontData = $fontConfig->getDefaults()['fontdata'];
-
-// הוסף את התיקייה שלנו
-$fontDirs[] = dirname(__DIR__) . '/assets/fonts/';
-
-// הוסף את הפונטים שלנו - עם הגדרות שמתאימות ל-mPDF
-$fontData['rubik'] = [
-    'R' => 'Rubik-Regular.ttf',
-    'useOTL' => 0xFF,
-    'useKashida' => 75,
-];
-
-// Heebo צריך הגדרות מיוחדות כי יש לו MarkGlyphSets
-$fontData['heebo'] = [
-    'R' => 'Heebo-Regular.ttf',
-    'useOTL' => 0x00,  // ביטול OTL features שגורמות לבעיה
-];
-
-$pdf = new \Mpdf\Mpdf([
-    'mode' => 'utf-8',
-    'format' => $format,
-    'orientation' => $orientation,
-    'default_font' => 'dejavusans',
-    'margin_left' => 0,
-    'margin_right' => 0,
-    'margin_top' => 0,
-    'margin_bottom' => 0,
-    'tempDir' => dirname(__DIR__) . '/temp',
-    'fontDir' => $fontDirs,
-    'fontdata' => $fontData,
-    'allow_output_buffering' => true
-]);
-// -=-=-=-=-=-=-=-=-=-
+    $pdf = new \Mpdf\Mpdf([
+        'mode' => 'utf-8',
+        'format' => $format,
+        'orientation' => $orientation,
+        'default_font' => 'dejavusans',
+        'margin_left' => 0,
+        'margin_right' => 0,
+        'margin_top' => 0,
+        'margin_bottom' => 0,
+        'tempDir' => dirname(__DIR__) . '/temp',
+        'fontDir' => [
+            dirname(__DIR__) . '/vendor/mpdf/mpdf/ttfonts/',
+            dirname(__DIR__) . '/assets/fonts/'
+        ],
+        'fontdata' => $fontData['fontdata']
+    ]);
     
     // Set RTL if needed
     if ($isRTL) {

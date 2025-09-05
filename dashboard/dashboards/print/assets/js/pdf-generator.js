@@ -50,12 +50,12 @@ async function processJson() {
 
 async function sendToServer(data, method) {
     const METHOD_FILES = {
-        'minimal': 'pdf-minimal.php',
-        'fpdf': 'pdf-fpdf.php',
-        'html': 'pdf-html.php',
-        'postscript': 'pdf-postscript.php',
-        'mpdf': 'pdf-mpdf-overlay.php',
-        'tcpdf': 'pdf-tcpdf-overlay.php',
+        'minimal': 'api/pdf-minimal.php',
+        'fpdf': 'api/pdf-fpdf.php',
+        'html': 'api/pdf-html.php',
+        'postscript': 'api/pdf-postscript.php',
+        'mpdf': 'api/pdf-mpdf-overlay.php',
+        'tcpdf': 'api/pdf-tcpdf-overlay.php',
     };
     
     const apiUrl = METHOD_FILES[method];

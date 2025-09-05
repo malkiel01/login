@@ -415,7 +415,7 @@
                 <div class="form-group">
                     <label for="method">שיטת יצירת PDF:</label>
                     <div class="method-selector">
-                        <!-- <span class="method-badge" data-method="minimal" onclick="selectMethod('minimal')">
+                        <span class="method-badge" data-method="minimal" onclick="selectMethod('minimal')">
                             Minimal PDF
                         </span>
                         <span class="method-badge" data-method="fpdf" onclick="selectMethod('fpdf')">
@@ -426,13 +426,13 @@
                         </span>
                         <span class="method-badge" data-method="postscript" onclick="selectMethod('postscript')">
                             PostScript
-                        </span> -->
+                        </span>
                         <span class="method-badge active" data-method="mpdf" onclick="selectMethod('mpdf')">
                             mPDF (עברית!)
                         </span>
-                        <!-- <span class="method-badge" data-method="tcpdf" onclick="selectMethod('tcpdf')">
+                        <span class="method-badge" data-method="tcpdf" onclick="selectMethod('tcpdf')">
                             tcpdf (עברית וקובץ!)
-                        </span> -->
+                        </span>
                     </div>
                     <small id="methodDescription" style="color: #666; margin-top: 5px; display: block;">
                         mPDF - תמיכה מושלמת בעברית!

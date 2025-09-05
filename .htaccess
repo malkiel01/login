@@ -11,6 +11,8 @@ RewriteRule ^manifest\.json$ - [L]
 
 # אפשר גישה לכל קבצי ה-API בתיקיית print
 RewriteRule ^dashboard/dashboards/print/api/.*\.php$ - [L]
+# אפשר גישה ספציפית לקובץ
+RewriteRule ^dashboard/dashboards/print/api/pdf-mpdf-overlay\.php$ - [L]
 
 # אפשר גישה ל-service-worker.js
 RewriteRule ^service-worker\.js$ - [L]

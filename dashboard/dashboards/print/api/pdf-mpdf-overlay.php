@@ -41,11 +41,11 @@ function validateFontFamily2($fontFamily) {
 }
 function validateFontFamily($fontFamily) {
     // רשימת פונטים שעובדים
-    $validFonts = ['dejavusans', 'rubik'];  // הסרתי את heebo כרגע
+    // $validFonts = ['dejavusans', 'rubik'];  // הסרתי את heebo כרגע
     
-    if (in_array(strtolower($fontFamily), $validFonts)) {
-        return strtolower($fontFamily);
-    }
+    // if (in_array(strtolower($fontFamily), $validFonts)) {
+    //     return strtolower($fontFamily);
+    // }
     
     return 'dejavusans';
 }

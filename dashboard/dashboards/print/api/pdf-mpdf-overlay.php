@@ -29,7 +29,7 @@ require_once dirname(__DIR__) . '/vendor/autoload.php';
  * Validate font family and return valid font name for mPDF
  * For now, just returns default font until we set up custom fonts
  */
-function validateFontFamily($fontFamily) {
+function validateFontFamily1($fontFamily) {
     // Always return dejavusans for now
     // This ensures the system works while we set up custom fonts
     return 'dejavusans';
@@ -52,6 +52,16 @@ function validateFontFamily($fontFamily) {
     
     return 'dejavusans';
     */
+}
+function validateFontFamily($fontFamily) {
+    // רשימת פונטים נתמכים
+    $validFonts = ['dejavusans', 'rubik', 'heebo', 'assistant'];
+    
+    if (in_array(strtolower($fontFamily), $validFonts)) {
+        return strtolower($fontFamily);
+    }
+    
+    return 'dejavusans';
 }
 
 // Create directories if needed

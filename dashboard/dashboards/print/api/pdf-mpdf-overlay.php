@@ -175,7 +175,8 @@ try {
     }
     
     // Generate filename
-    $outputFilename = 'output/mpdf_' . date('Ymd_His') . '_' . uniqid() . '.pdf';
+    // $outputFilename = 'output/mpdf_' . date('Ymd_His') . '_' . uniqid() . '.pdf';
+    $outputFilename = '../output/mpdf_' . date('Ymd_His') . '_' . uniqid() . '.pdf';
     
     // Save PDF
     $pdf->Output($outputFilename, 'F');

@@ -173,16 +173,17 @@ try {
     }
     
     // Generate filename
-    $outputFilename = 'output/mpdf_' . date('Ymd_His') . '_' . uniqid() . '.pdf';
+    $outputFilename = '../output/mpdf_' . date('Ymd_His') . '_' . uniqid() . '.pdf';
     
     // Save PDF
     $pdf->Output($outputFilename, 'F');
     
     // Clean up temp file
     @unlink($tempFile);
+
     
     // Generate URLs
-    $baseUrl = 'https://' . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']);
+    $baseUrl = 'https://' . $_SERVER['HTTP_HOST'] . dirname(dirname($_SERVER['SCRIPT_NAME']));
     $viewUrl = $baseUrl . '/' . $outputFilename;
     $downloadUrl = $baseUrl . '/download.php?file=' . urlencode($outputFilename);
     

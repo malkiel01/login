@@ -1,0 +1,58 @@
+{
+  "fonts": [
+    {
+      "id": "dejavusans",
+      "name": "DejaVu Sans",
+      "displayName": "Arial (ברירת מחדל)",
+      "file": "arial.ttf",
+      "type": "local",
+      "supports": ["hebrew", "english", "arabic"],
+      "category": "sans-serif",
+      "default": true,
+      "mpdfSettings": {
+        "useOTL": "0xFF",
+        "useKashida": 75
+      }
+    },
+    {
+      "id": "ba",
+      "name": "BA Pyutim Regular",
+      "displayName": "Pyutim",
+      "file": "BAPyutimRegular.ttf",
+      "type": "local",
+      "supports": ["hebrew", "english", "arabic"],
+      "category": "sans-serif",
+      "default": true,
+      "mpdfSettings": {
+        "useOTL": "0xFF",
+        "useKashida": 75
+      }
+    },
+    {
+      "id": "rubik",
+      "name": "Rubik",
+      "displayName": "רוביק (Rubik)",
+      "file": "Rubik-Regular.ttf",
+      "type": "local",
+      "supports": ["hebrew", "english"],
+      "category": "sans-serif",
+      "mpdfSettings": {
+        "useOTL": "0xFF",
+        "useKashida": 75
+      }
+    },
+    {
+      "id": "heebo",
+      "name": "Heebo",
+      "displayName": "היבו (Heebo)",
+      "file": "Heebo-Regular.ttf",
+      "type": "local",
+      "supports": ["hebrew", "english"],
+      "category": "sans-serif",
+      "mpdfSettings": {
+        "useOTL": "0x00",
+        "note": "OTL disabled due to MarkGlyphSets"
+      }
+    }
+  ]
+}

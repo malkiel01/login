@@ -1,0 +1,34 @@
+dashboard/dashboards/print/
+│
+├── index.php                     # קובץ ראשי מינימלי
+├── config.php                    # הגדרות גלובליות
+│
+├── /assets/
+│   ├── /css/
+│   │   ├── main.css             # עיצוב ראשי
+│   │   ├── components.css       # עיצוב רכיבים
+│   │   └── debug.css            # עיצוב קונסול דיבאג
+│   │
+│   └── /js/
+│       ├── app.js               # לוגיקה ראשית
+│       ├── pdf-generator.js     # פונקציות PDF
+│       ├── ui-handlers.js       # טיפול באירועי UI
+│       ├── preview.js           # תצוגה מקדימה (עתידי)
+│       └── debug.js             # פונקציות דיבאג
+│
+├── /includes/
+│   ├── header.php               # כותרת העמוד
+│   ├── settings-section.php     # אזור הגדרות
+│   ├── values-section.php       # אזור הוספת ערכים
+│   ├── list-section.php         # רשימת ערכים
+│   ├── json-modal.php           # מודל JSON
+│   ├── export-modal.php         # מודל ייצוא
+│   ├── debug-console.php        # קונסול דיבאג
+│   └── preview-canvas.php       # תצוגה מקדימה (עתידי)
+│
+├── /api/
+│   ├── pdf-mpdf-overlay.php     # כבר קיים
+│   └── pdf-preview.php          # API לתצוגה מקדימה (עתידי)
+│
+└── /templates/
+    └── DeepEmpty.pdf            # תבניות PDF

@@ -1,240 +1,373 @@
 /**
- * Canvas Preview System
+ * Canvas Preview System - Fixed Coordinate System
+ * Ensures 1:1 mapping between canvas display and mPDF output
  */
 
-let pdfDoc = null;
-let pageNum = 1;
-let pageRendering = false;
-let pageNumPending = null;
-let scale = 1.0;
-let canvas = null;
-let ctx = null;
-let textOverlay = null;
-let currentPdfUrl = null;
-
-// Initialize canvas
-function initCanvas() {
-    canvas = document.getElementById('pdfCanvas');
-    ctx = canvas.getContext('2d');
-    textOverlay = document.getElementById('textOverlay');
-    
-    // Load PDF.js library
-    if (!window.pdfjsLib) {
-        const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-        script.onload = () => {
-            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-            console.log('PDF.js loaded');
-        };
-        document.head.appendChild(script);
-    }
-}
-
-// Load PDF preview
-async function loadPdfPreview() {
-    const pdfUrl = document.getElementById('pdfUrl').value;
-    
-    if (!pdfUrl) {
-        showStatus('נא להזין כתובת PDF', 'error');
-        return;
+class PDFCanvasPreview {
+    constructor() {
+        this.canvas = null;
+        this.ctx = null;
+        this.textOverlay = null;
+        this.canvasWrapper = null;
+        
+        this.pdfDoc = null;
+        this.pageNum = 1;
+        this.scale = 1.0;
+        
+        // PDF dimensions in points (1/72 inch)
+        this.pdfWidth = 0;
+        this.pdfHeight = 0;
+        
+        // Conversion factors
+        this.POINTS_TO_MM = 0.352778; // 1 point = 0.352778 mm
+        this.PIXELS_TO_MM = 0.264583; // at 96 DPI (standard web)
+        
+        // Store current PDF URL
+        this.currentPdfUrl = null;
     }
     
-    currentPdfUrl = pdfUrl;
-    
-    try {
-        // Use proxy to avoid CORS issues
-        const proxyUrl = 'api/pdf-proxy.php?url=' + encodeURIComponent(pdfUrl);
+    init() {
+        // Create wrapper structure if doesn't exist
+        const container = document.getElementById('canvasContainer');
+        if (!container) return;
         
-        const loadingTask = pdfjsLib.getDocument(proxyUrl);
-        pdfDoc = await loadingTask.promise;
+        // Update HTML structure
+        container.innerHTML = `
+            <div class="canvas-wrapper" style="
+                width: 100%;
+                max-width: 900px;
+                height: 600px;
+                margin: 0 auto;
+                border: 2px solid #e1e8ed;
+                border-radius: 8px;
+                overflow: auto;
+                background: #f5f5f5;
+                position: relative;
+            ">
+                <div class="canvas-holder" id="canvasHolder" style="
+                    position: relative;
+                    display: inline-block;
+                    background: white;
+                    margin: 20px;
+                ">
+                    <canvas id="pdfCanvas"></canvas>
+                    <div id="textOverlay" class="text-overlay" style="
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        pointer-events: none;
+                    "></div>
+                </div>
+            </div>
+        `;
         
-        console.log('PDF loaded, pages:', pdfDoc.numPages);
+        this.canvas = document.getElementById('pdfCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.textOverlay = document.getElementById('textOverlay');
+        this.canvasWrapper = container.querySelector('.canvas-wrapper');
+        this.canvasHolder = document.getElementById('canvasHolder');
         
-        // Render first page
-        renderPage(pageNum);
-        
-        // After PDF loads, add existing text overlays
-        updateCanvasTexts();
-        
-        showStatus('PDF נטען בהצלחה', 'success');
-    } catch (error) {
-        console.error('Error loading PDF:', error);
-        showStatus('שגיאה בטעינת PDF', 'error');
+        // Load PDF.js if not loaded
+        if (!window.pdfjsLib) {
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+            script.onload = () => {
+                pdfjsLib.GlobalWorkerOptions.workerSrc = 
+                    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                console.log('PDF.js loaded');
+            };
+            document.head.appendChild(script);
+        }
     }
-}
-
-// Render PDF page
-function renderPage(num) {
-    pageRendering = true;
     
-    pdfDoc.getPage(num).then(page => {
-        const viewport = page.getViewport({ scale: scale });
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
+    async loadPdf(url) {
+        if (!url) {
+            showStatus('נא להזין כתובת PDF', 'error');
+            return;
+        }
         
-        // Update overlay size
-        textOverlay.style.width = viewport.width + 'px';
-        textOverlay.style.height = viewport.height + 'px';
+        this.currentPdfUrl = url;
         
+        try {
+            // Use proxy to avoid CORS
+            const proxyUrl = 'api/pdf-proxy.php?url=' + encodeURIComponent(url);
+            
+            const loadingTask = pdfjsLib.getDocument(proxyUrl);
+            this.pdfDoc = await loadingTask.promise;
+            
+            console.log('PDF loaded, pages:', this.pdfDoc.numPages);
+            
+            await this.renderPage();
+            this.syncWithValues();
+            
+            showStatus('PDF נטען בהצלחה', 'success');
+            debugLog(`PDF loaded: ${url}`, 'success');
+            
+        } catch (error) {
+            console.error('Error loading PDF:', error);
+            showStatus('שגיאה בטעינת PDF', 'error');
+            debugLog(`PDF load error: ${error.message}`, 'error');
+        }
+    }
+    
+    async renderPage() {
+        if (!this.pdfDoc) return;
+        
+        const page = await this.pdfDoc.getPage(this.pageNum);
+        
+        // Get original viewport (scale = 1.0 gives us PDF points)
+        const originalViewport = page.getViewport({ scale: 1.0 });
+        
+        // Store PDF dimensions in points
+        this.pdfWidth = originalViewport.width;
+        this.pdfHeight = originalViewport.height;
+        
+        // Calculate scale to fit in wrapper
+        const wrapperWidth = this.canvasWrapper.clientWidth - 40; // Account for margins
+        const wrapperHeight = this.canvasWrapper.clientHeight - 40;
+        
+        const scaleX = wrapperWidth / this.pdfWidth;
+        const scaleY = wrapperHeight / this.pdfHeight;
+        this.scale = Math.min(scaleX, scaleY, 2.0); // Cap at 2x zoom
+        
+        // Get scaled viewport
+        const viewport = page.getViewport({ scale: this.scale });
+        
+        // Set canvas dimensions
+        this.canvas.width = viewport.width;
+        this.canvas.height = viewport.height;
+        
+        // Set holder and overlay dimensions
+        this.canvasHolder.style.width = viewport.width + 'px';
+        this.canvasHolder.style.height = viewport.height + 'px';
+        this.textOverlay.style.width = viewport.width + 'px';
+        this.textOverlay.style.height = viewport.height + 'px';
+        
+        // Render PDF
         const renderContext = {
-            canvasContext: ctx,
+            canvasContext: this.ctx,
             viewport: viewport
         };
         
-        const renderTask = page.render(renderContext);
+        await page.render(renderContext).promise;
         
-        renderTask.promise.then(() => {
-            pageRendering = false;
-            if (pageNumPending !== null) {
-                renderPage(pageNumPending);
-                pageNumPending = null;
-            }
-            
-            // Update text positions after render
-            updateCanvasTexts();
+        // Update debug info
+        this.updateDebugInfo();
+        
+        // Re-render texts with new scale
+        this.renderAllTexts();
+    }
+    
+    // Convert coordinates from pixels to mm for mPDF
+    pixelsToMm(pixels) {
+        return pixels * this.PIXELS_TO_MM;
+    }
+    
+    // Convert coordinates from mm to canvas pixels
+    mmToCanvasPixels(mm) {
+        // Convert mm to PDF points, then apply canvas scale
+        const points = mm / this.POINTS_TO_MM;
+        return points * this.scale;
+    }
+    
+    // Add or update text on canvas
+    addTextToCanvas(value, index) {
+        // Remove existing element if updating
+        const existingElement = document.getElementById(`canvas-text-${index}`);
+        if (existingElement) {
+            existingElement.remove();
+        }
+        
+        // Convert stored pixel coordinates to canvas coordinates
+        const x_canvas = this.mmToCanvasPixels(value.x * this.PIXELS_TO_MM);
+        const y_canvas = this.mmToCanvasPixels(value.y * this.PIXELS_TO_MM);
+        
+        const textElement = document.createElement('div');
+        textElement.className = 'draggable-text';
+        textElement.id = `canvas-text-${index}`;
+        textElement.textContent = value.text;
+        textElement.style.position = 'absolute';
+        textElement.style.left = x_canvas + 'px';
+        textElement.style.top = y_canvas + 'px';
+        textElement.style.fontSize = (value.fontSize * this.scale) + 'px';
+        textElement.style.color = value.color;
+        textElement.style.fontFamily = value.fontFamily || 'Arial';
+        textElement.style.cursor = 'move';
+        textElement.style.pointerEvents = 'all';
+        textElement.style.userSelect = 'none';
+        
+        this.makeDraggable(textElement, index);
+        this.textOverlay.appendChild(textElement);
+    }
+    
+    makeDraggable(element, index) {
+        let isDragging = false;
+        let startX, startY;
+        
+        element.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            element.classList.add('dragging');
+            startX = e.pageX - element.offsetLeft;
+            startY = e.pageY - element.offsetTop;
+            e.preventDefault();
         });
-    });
-}
-
-// Add text to canvas overlay
-function addTextToCanvas(value, index) {
-    const textElement = document.createElement('div');
-    textElement.className = 'draggable-text';
-    textElement.id = `canvas-text-${index}`;
-    textElement.textContent = value.text;
-    textElement.style.left = value.x + 'px';
-    textElement.style.top = value.y + 'px';
-    textElement.style.fontSize = value.fontSize + 'px';
-    textElement.style.color = value.color;
-    textElement.style.fontFamily = value.fontFamily || 'Arial';
-    
-    // Make draggable
-    makeDraggable(textElement, index);
-    
-    textOverlay.appendChild(textElement);
-}
-
-// Make element draggable
-function makeDraggable(element, index) {
-    let isDragging = false;
-    let startX, startY, initialX, initialY;
-    
-    element.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        element.classList.add('dragging');
         
-        startX = e.clientX;
-        startY = e.clientY;
-        
-        const rect = element.getBoundingClientRect();
-        const parentRect = textOverlay.getBoundingClientRect();
-        initialX = rect.left - parentRect.left;
-        initialY = rect.top - parentRect.top;
-        
-        e.preventDefault();
-    });
-    
-    document.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
-        
-        const dx = e.clientX - startX;
-        const dy = e.clientY - startY;
-        
-        const newX = initialX + dx;
-        const newY = initialY + dy;
-        
-        element.style.left = newX + 'px';
-        element.style.top = newY + 'px';
-    });
-    
-    document.addEventListener('mouseup', (e) => {
-        if (!isDragging) return;
-        
-        isDragging = false;
-        element.classList.remove('dragging');
-        
-        // Update value in array
-        const newX = parseInt(element.style.left);
-        const newY = parseInt(element.style.top);
-        
-        if (values[index]) {
-            values[index].x = newX;
-            values[index].y = newY;
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
             
-            // Update list display
-            updateValuesList();
-            saveState();
+            const x = e.pageX - startX;
+            const y = e.pageY - startY;
             
-            debugLog(`Text moved: ${values[index].text} to (${newX}, ${newY})`, 'info');
+            // Constrain to canvas bounds
+            const maxX = this.canvas.width - element.offsetWidth;
+            const maxY = this.canvas.height - element.offsetHeight;
+            
+            element.style.left = Math.max(0, Math.min(x, maxX)) + 'px';
+            element.style.top = Math.max(0, Math.min(y, maxY)) + 'px';
+        });
+        
+        document.addEventListener('mouseup', (e) => {
+            if (!isDragging) return;
+            
+            isDragging = false;
+            element.classList.remove('dragging');
+            
+            // Update stored position
+            const x_canvas = parseFloat(element.style.left);
+            const y_canvas = parseFloat(element.style.top);
+            
+            // Convert canvas pixels to mm, then to storage pixels
+            const x_mm = (x_canvas / this.scale) * this.POINTS_TO_MM;
+            const y_mm = (y_canvas / this.scale) * this.POINTS_TO_MM;
+            
+            // Store as pixels (for compatibility with existing system)
+            if (values[index]) {
+                values[index].x = Math.round(x_mm / this.PIXELS_TO_MM);
+                values[index].y = Math.round(y_mm / this.PIXELS_TO_MM);
+                
+                // Update list display
+                updateValuesList();
+                saveState();
+                
+                debugLog(`Text moved: "${values[index].text}" to (${values[index].x}px, ${values[index].y}px) = (${x_mm.toFixed(1)}mm, ${y_mm.toFixed(1)}mm)`, 'info');
+            }
+        });
+        
+        // Double-click to edit
+        element.addEventListener('dblclick', (e) => {
+            e.stopPropagation();
+            const newText = prompt('ערוך טקסט:', element.textContent);
+            if (newText && values[index]) {
+                values[index].text = newText;
+                element.textContent = newText;
+                updateValuesList();
+                saveState();
+            }
+        });
+    }
+    
+    renderAllTexts() {
+        if (!this.textOverlay) return;
+        
+        // Clear overlay
+        this.textOverlay.innerHTML = '';
+        
+        // Add all values
+        values.forEach((value, index) => {
+            this.addTextToCanvas(value, index);
+        });
+    }
+    
+    syncWithValues() {
+        // Sync canvas with current values array
+        this.renderAllTexts();
+    }
+    
+    updateDebugInfo() {
+        const pdfSizeMm = {
+            width: this.pdfWidth * this.POINTS_TO_MM,
+            height: this.pdfHeight * this.POINTS_TO_MM
+        };
+        
+        debugLog(`PDF Dimensions: ${this.pdfWidth.toFixed(0)}×${this.pdfHeight.toFixed(0)} points = ${pdfSizeMm.width.toFixed(1)}×${pdfSizeMm.height.toFixed(1)} mm`, 'info');
+        debugLog(`Canvas Scale: ${this.scale.toFixed(2)}x`, 'info');
+        debugLog(`Canvas Size: ${this.canvas.width}×${this.canvas.height} pixels`, 'info');
+        
+        // Update zoom level display
+        const zoomSpan = document.querySelector('.zoom-level');
+        if (zoomSpan) {
+            zoomSpan.textContent = Math.round(this.scale * 100) + '%';
         }
-    });
+    }
     
-    // Double click to edit
-    element.addEventListener('dblclick', (e) => {
-        const newText = prompt('ערוך טקסט:', element.textContent);
-        if (newText && values[index]) {
-            values[index].text = newText;
-            element.textContent = newText;
-            updateValuesList();
-            saveState();
-        }
-    });
-}
-
-// Update canvas texts
-function updateCanvasTexts() {
-    if (!textOverlay) return;
+    // Zoom functions
+    zoomIn() {
+        this.scale *= 1.2;
+        if (this.pdfDoc) this.renderPage();
+    }
     
-    // Clear existing
-    textOverlay.innerHTML = '';
+    zoomOut() {
+        this.scale *= 0.8;
+        if (this.pdfDoc) this.renderPage();
+    }
     
-    // Add all values
-    values.forEach((value, index) => {
-        addTextToCanvas(value, index);
-    });
-}
-
-// Zoom functions
-function zoomIn() {
-    scale *= 1.2;
-    updateZoomLevel();
-    if (pdfDoc) renderPage(pageNum);
-}
-
-function zoomOut() {
-    scale *= 0.8;
-    updateZoomLevel();
-    if (pdfDoc) renderPage(pageNum);
-}
-
-function resetZoom() {
-    scale = 1.0;
-    updateZoomLevel();
-    if (pdfDoc) renderPage(pageNum);
-}
-
-function updateZoomLevel() {
-    const zoomSpan = document.querySelector('.zoom-level');
-    if (zoomSpan) {
-        zoomSpan.textContent = Math.round(scale * 100) + '%';
+    resetZoom() {
+        this.scale = 1.0;
+        if (this.pdfDoc) this.renderPage();
     }
 }
 
-// Hook into existing addValue function
-const originalAddValue2 = window.addValue;
-window.addValue = function() {
-    originalAddValue2();
-    updateCanvasTexts();
+// Create global instance
+let pdfPreview = null;
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', () => {
+    pdfPreview = new PDFCanvasPreview();
+    pdfPreview.init();
+});
+
+// Global functions for UI buttons
+window.loadPdfPreview = function() {
+    if (!pdfPreview) {
+        pdfPreview = new PDFCanvasPreview();
+        pdfPreview.init();
+    }
+    
+    const pdfUrl = document.getElementById('pdfUrl').value;
+    if (pdfUrl) {
+        pdfPreview.loadPdf(pdfUrl);
+    }
 };
 
-// Hook into removeValue
+window.zoomIn = function() {
+    if (pdfPreview) pdfPreview.zoomIn();
+};
+
+window.zoomOut = function() {
+    if (pdfPreview) pdfPreview.zoomOut();
+};
+
+window.resetZoom = function() {
+    if (pdfPreview) pdfPreview.resetZoom();
+};
+
+// Override addValue to update canvas
+const originalAddValue = window.addValue;
+window.addValue = function() {
+    originalAddValue();
+    if (pdfPreview) pdfPreview.syncWithValues();
+};
+
+// Override removeValue
 const originalRemoveValue = window.removeValue;
 window.removeValue = function(index) {
     originalRemoveValue(index);
-    updateCanvasTexts();
+    if (pdfPreview) pdfPreview.syncWithValues();
 };
 
-// Initialize on load
-document.addEventListener('DOMContentLoaded', () => {
-    initCanvas();
-});
+// Override clearAll
+const originalClearAll = window.clearAll;
+window.clearAll = function() {
+    originalClearAll();
+    if (pdfPreview) pdfPreview.syncWithValues();
+};

@@ -1,9 +1,9 @@
 /**
- * Canvas Preview System - Fixed Coordinate System
- * Version 3 - Consolidated and conflict-free
+ * Canvas Preview System - Fixed Scale
+ * Version 4 - Proper sizing
  */
 
-// Remove any existing global variables to avoid conflicts
+// Clear any existing instance
 if (window.pdfPreview) {
     window.pdfPreview = null;
 }
@@ -13,79 +13,59 @@ class PDFCanvasPreview {
         this.canvas = null;
         this.ctx = null;
         this.textOverlay = null;
-        this.canvasWrapper = null;
+        this.canvasContainer = null;
         
         this.pdfDoc = null;
         this.pageNum = 1;
-        this.scale = 1.0;
+        this.scale = 1.5; // Start with better default scale
         
         // PDF dimensions in points (1/72 inch)
         this.pdfWidth = 0;
         this.pdfHeight = 0;
         
-        // Conversion factors
+        // Conversion factors - CRITICAL FOR ACCURACY
         this.POINTS_TO_MM = 0.352778; // 1 point = 0.352778 mm
-        this.PIXELS_TO_MM = 0.264583; // at 96 DPI (standard web)
+        this.PIXELS_TO_MM = 0.264583; // at 96 DPI
         
-        // Store current PDF URL
         this.currentPdfUrl = null;
     }
     
     init() {
-        // Use existing canvas structure first
+        // Get container
+        this.canvasContainer = document.getElementById('canvasContainer');
+        if (!this.canvasContainer) {
+            console.error('Canvas container not found');
+            return;
+        }
+        
+        // Check if canvas already exists
         this.canvas = document.getElementById('pdfCanvas');
         this.textOverlay = document.getElementById('textOverlay');
         
-        if (this.canvas && this.textOverlay) {
-            // Use existing structure
-            this.ctx = this.canvas.getContext('2d');
-            this.canvasWrapper = document.getElementById('canvasContainer');
-            console.log('Using existing canvas structure');
-        } else {
-            // Create new structure if needed
-            const container = document.getElementById('canvasContainer');
-            if (!container) {
-                console.error('Canvas container not found');
-                return;
-            }
-            
-            // Create wrapper structure
-            container.innerHTML = `
-                <div class="canvas-wrapper" style="
-                    width: 100%;
-                    max-width: 900px;
-                    height: 600px;
+        if (!this.canvas) {
+            // Create canvas structure
+            this.canvasContainer.innerHTML = `
+                <canvas id="pdfCanvas" style="
+                    display: block;
                     margin: 0 auto;
-                    border: 2px solid #e1e8ed;
-                    border-radius: 8px;
-                    overflow: auto;
-                    background: #f5f5f5;
-                    position: relative;
-                ">
-                    <div class="canvas-holder" id="canvasHolder" style="
-                        position: relative;
-                        display: inline-block;
-                        background: white;
-                        margin: 20px;
-                    ">
-                        <canvas id="pdfCanvas"></canvas>
-                        <div id="textOverlay" class="text-overlay" style="
-                            position: absolute;
-                            top: 0;
-                            left: 0;
-                            pointer-events: none;
-                        "></div>
-                    </div>
-                </div>
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                "></canvas>
+                <div id="textOverlay" class="text-overlay" style="
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    pointer-events: none;
+                "></div>
             `;
             
             this.canvas = document.getElementById('pdfCanvas');
-            this.ctx = this.canvas.getContext('2d');
             this.textOverlay = document.getElementById('textOverlay');
-            this.canvasWrapper = container.querySelector('.canvas-wrapper');
         }
         
-        this.canvasHolder = document.getElementById('canvasHolder');
+        // Make container relative for overlay positioning
+        this.canvasContainer.style.position = 'relative';
+        
+        this.ctx = this.canvas.getContext('2d');
         
         // Load PDF.js if not loaded
         if (!window.pdfjsLib) {
@@ -119,14 +99,14 @@ class PDFCanvasPreview {
             
             console.log('PDF loaded, pages:', this.pdfDoc.numPages);
             
+            // Set initial scale based on container
+            this.calculateOptimalScale();
+            
             await this.renderPage();
             this.syncWithValues();
             
             if (typeof showStatus !== 'undefined') {
                 showStatus('PDF נטען בהצלחה', 'success');
-            }
-            if (typeof debugLog !== 'undefined') {
-                debugLog(`PDF loaded: ${url}`, 'success');
             }
             
         } catch (error) {
@@ -134,10 +114,19 @@ class PDFCanvasPreview {
             if (typeof showStatus !== 'undefined') {
                 showStatus('שגיאה בטעינת PDF', 'error');
             }
-            if (typeof debugLog !== 'undefined') {
-                debugLog(`PDF load error: ${error.message}`, 'error');
-            }
         }
+    }
+    
+    calculateOptimalScale() {
+        if (!this.pdfDoc) return;
+        
+        // Get container dimensions
+        const containerWidth = this.canvasContainer.clientWidth || 800;
+        const containerHeight = window.innerHeight * 0.6; // 60% of viewport height
+        
+        // We'll calculate this properly after getting page dimensions
+        // For now, set a reasonable default
+        this.scale = 1.5;
     }
     
     async renderPage() {
@@ -145,25 +134,24 @@ class PDFCanvasPreview {
         
         const page = await this.pdfDoc.getPage(this.pageNum);
         
-        // Get original viewport (scale = 1.0 gives us PDF points)
+        // Get original viewport
         const originalViewport = page.getViewport({ scale: 1.0 });
         
         // Store PDF dimensions in points
         this.pdfWidth = originalViewport.width;
         this.pdfHeight = originalViewport.height;
         
-        // Calculate scale to fit in wrapper
-        let maxWidth = 850; // Default max width
-        let maxHeight = 550; // Default max height
+        // Calculate optimal scale to fit container
+        const containerWidth = this.canvasContainer.clientWidth || 800;
+        const containerHeight = Math.min(window.innerHeight * 0.7, 800); // Max 70% of viewport or 800px
         
-        if (this.canvasWrapper) {
-            maxWidth = this.canvasWrapper.clientWidth - 40; // Account for margins
-            maxHeight = this.canvasWrapper.clientHeight - 40;
-        }
+        const scaleX = (containerWidth - 20) / this.pdfWidth; // Leave some margin
+        const scaleY = (containerHeight - 20) / this.pdfHeight;
         
-        const scaleX = maxWidth / this.pdfWidth;
-        const scaleY = maxHeight / this.pdfHeight;
-        this.scale = Math.min(scaleX, scaleY, 2.0); // Cap at 2x zoom
+        // Use the smaller scale to ensure PDF fits, but not too small
+        this.scale = Math.max(0.5, Math.min(scaleX, scaleY, 2.0));
+        
+        console.log(`Container: ${containerWidth}x${containerHeight}, PDF: ${this.pdfWidth}x${this.pdfHeight}, Scale: ${this.scale}`);
         
         // Get scaled viewport
         const viewport = page.getViewport({ scale: this.scale });
@@ -172,13 +160,18 @@ class PDFCanvasPreview {
         this.canvas.width = viewport.width;
         this.canvas.height = viewport.height;
         
-        // Set holder and overlay dimensions
-        if (this.canvasHolder) {
-            this.canvasHolder.style.width = viewport.width + 'px';
-            this.canvasHolder.style.height = viewport.height + 'px';
-        }
+        // Position overlay to match canvas
+        const canvasRect = this.canvas.getBoundingClientRect();
+        const containerRect = this.canvasContainer.getBoundingClientRect();
+        
         this.textOverlay.style.width = viewport.width + 'px';
         this.textOverlay.style.height = viewport.height + 'px';
+        this.textOverlay.style.position = 'absolute';
+        
+        // Center the overlay over the canvas
+        const offsetLeft = (containerRect.width - viewport.width) / 2;
+        this.textOverlay.style.left = offsetLeft + 'px';
+        this.textOverlay.style.top = '0px';
         
         // Render PDF
         const renderContext = {
@@ -188,50 +181,74 @@ class PDFCanvasPreview {
         
         await page.render(renderContext).promise;
         
+        console.log(`Canvas rendered: ${viewport.width}x${viewport.height}px at scale ${this.scale}`);
+        
         // Update debug info
         this.updateDebugInfo();
         
-        // Re-render texts with new scale
+        // Re-render texts
         this.renderAllTexts();
     }
     
-    // Convert coordinates from pixels to mm for mPDF
-    pixelsToMm(pixels) {
-        return pixels * this.PIXELS_TO_MM;
+    // Convert pixels to canvas coordinates
+    pixelsToCanvas(x_px, y_px) {
+        // Input is in pixels (as stored in values array)
+        // Convert to mm first
+        const x_mm = x_px * this.PIXELS_TO_MM;
+        const y_mm = y_px * this.PIXELS_TO_MM;
+        
+        // Convert mm to points
+        const x_points = x_mm / this.POINTS_TO_MM;
+        const y_points = y_mm / this.POINTS_TO_MM;
+        
+        // Apply canvas scale
+        const x_canvas = x_points * this.scale;
+        const y_canvas = y_points * this.scale;
+        
+        return { x: x_canvas, y: y_canvas };
     }
     
-    // Convert coordinates from mm to canvas pixels
-    mmToCanvasPixels(mm) {
-        // Convert mm to PDF points, then apply canvas scale
-        const points = mm / this.POINTS_TO_MM;
-        return points * this.scale;
+    // Convert canvas coordinates back to pixels
+    canvasToPixels(x_canvas, y_canvas) {
+        // Remove scale to get points
+        const x_points = x_canvas / this.scale;
+        const y_points = y_canvas / this.scale;
+        
+        // Convert points to mm
+        const x_mm = x_points * this.POINTS_TO_MM;
+        const y_mm = y_points * this.POINTS_TO_MM;
+        
+        // Convert mm to pixels
+        const x_px = x_mm / this.PIXELS_TO_MM;
+        const y_px = y_mm / this.PIXELS_TO_MM;
+        
+        return { x: Math.round(x_px), y: Math.round(y_px) };
     }
     
-    // Add or update text on canvas
     addTextToCanvas(value, index) {
-        // Remove existing element if updating
+        // Remove existing element
         const existingElement = document.getElementById(`canvas-text-${index}`);
         if (existingElement) {
             existingElement.remove();
         }
         
-        // Convert stored pixel coordinates to canvas coordinates
-        const x_canvas = this.mmToCanvasPixels(value.x * this.PIXELS_TO_MM);
-        const y_canvas = this.mmToCanvasPixels(value.y * this.PIXELS_TO_MM);
+        // Convert stored pixels to canvas coordinates
+        const canvasCoords = this.pixelsToCanvas(value.x, value.y);
         
         const textElement = document.createElement('div');
         textElement.className = 'draggable-text';
         textElement.id = `canvas-text-${index}`;
         textElement.textContent = value.text;
         textElement.style.position = 'absolute';
-        textElement.style.left = x_canvas + 'px';
-        textElement.style.top = y_canvas + 'px';
+        textElement.style.left = canvasCoords.x + 'px';
+        textElement.style.top = canvasCoords.y + 'px';
         textElement.style.fontSize = (value.fontSize * this.scale) + 'px';
         textElement.style.color = value.color;
         textElement.style.fontFamily = value.fontFamily || 'Arial';
         textElement.style.cursor = 'move';
         textElement.style.pointerEvents = 'all';
         textElement.style.userSelect = 'none';
+        textElement.style.whiteSpace = 'nowrap';
         
         this.makeDraggable(textElement, index);
         this.textOverlay.appendChild(textElement);
@@ -269,20 +286,18 @@ class PDFCanvasPreview {
             isDragging = false;
             element.classList.remove('dragging');
             
-            // Update stored position
+            // Get new canvas position
             const x_canvas = parseFloat(element.style.left);
             const y_canvas = parseFloat(element.style.top);
             
-            // Convert canvas pixels to mm, then to storage pixels
-            const x_mm = (x_canvas / this.scale) * this.POINTS_TO_MM;
-            const y_mm = (y_canvas / this.scale) * this.POINTS_TO_MM;
+            // Convert back to pixels for storage
+            const pixelCoords = this.canvasToPixels(x_canvas, y_canvas);
             
-            // Store as pixels (for compatibility with existing system)
             if (typeof values !== 'undefined' && values[index]) {
-                values[index].x = Math.round(x_mm / this.PIXELS_TO_MM);
-                values[index].y = Math.round(y_mm / this.PIXELS_TO_MM);
+                values[index].x = pixelCoords.x;
+                values[index].y = pixelCoords.y;
                 
-                // Update list display
+                // Update UI
                 if (typeof updateValuesList !== 'undefined') {
                     updateValuesList();
                 }
@@ -290,15 +305,13 @@ class PDFCanvasPreview {
                     saveState();
                 }
                 
-                if (typeof debugLog !== 'undefined') {
-                    debugLog(`Text moved: "${values[index].text}" to (${values[index].x}px, ${values[index].y}px) = (${x_mm.toFixed(1)}mm, ${y_mm.toFixed(1)}mm)`, 'info');
-                }
+                console.log(`Text moved to: ${pixelCoords.x}px, ${pixelCoords.y}px`);
             }
+            
+            // Clean up listeners
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
         };
-        
-        // Store handlers on element for cleanup
-        element._mouseMoveHandler = handleMouseMove;
-        element._mouseUpHandler = handleMouseUp;
         
         document.addEventListener('mousemove', handleMouseMove);
         document.addEventListener('mouseup', handleMouseUp);
@@ -335,7 +348,6 @@ class PDFCanvasPreview {
     }
     
     syncWithValues() {
-        // Sync canvas with current values array
         this.renderAllTexts();
     }
     
@@ -345,13 +357,15 @@ class PDFCanvasPreview {
             height: this.pdfHeight * this.POINTS_TO_MM
         };
         
+        const info = `PDF: ${this.pdfWidth.toFixed(0)}×${this.pdfHeight.toFixed(0)}pt (${pdfSizeMm.width.toFixed(1)}×${pdfSizeMm.height.toFixed(1)}mm) | Scale: ${this.scale.toFixed(2)}x | Canvas: ${this.canvas.width}×${this.canvas.height}px`;
+        
+        console.log(info);
+        
         if (typeof debugLog !== 'undefined') {
-            debugLog(`PDF Dimensions: ${this.pdfWidth.toFixed(0)}×${this.pdfHeight.toFixed(0)} points = ${pdfSizeMm.width.toFixed(1)}×${pdfSizeMm.height.toFixed(1)} mm`, 'info');
-            debugLog(`Canvas Scale: ${this.scale.toFixed(2)}x`, 'info');
-            debugLog(`Canvas Size: ${this.canvas.width}×${this.canvas.height} pixels`, 'info');
+            debugLog(info, 'info');
         }
         
-        // Update zoom level display
+        // Update zoom display
         const zoomSpan = document.querySelector('.zoom-level');
         if (zoomSpan) {
             zoomSpan.textContent = Math.round(this.scale * 100) + '%';
@@ -360,44 +374,34 @@ class PDFCanvasPreview {
     
     // Zoom functions
     zoomIn() {
-        this.scale *= 1.2;
+        this.scale = Math.min(this.scale * 1.2, 3.0);
         if (this.pdfDoc) this.renderPage();
     }
     
     zoomOut() {
-        this.scale *= 0.8;
+        this.scale = Math.max(this.scale * 0.8, 0.3);
         if (this.pdfDoc) this.renderPage();
     }
     
     resetZoom() {
-        this.scale = 1.0;
+        this.calculateOptimalScale();
         if (this.pdfDoc) this.renderPage();
     }
 }
 
-// Create global instance
+// Initialize global instance
 window.pdfPreview = new PDFCanvasPreview();
 
-// Initialize on page load
+// Initialize on DOM ready
 document.addEventListener('DOMContentLoaded', () => {
-    if (window.pdfPreview) {
-        window.pdfPreview.init();
-    }
+    window.pdfPreview.init();
 });
 
-// Global functions for UI buttons
+// Global functions
 window.loadPdfPreview = function() {
-    if (!window.pdfPreview) {
-        window.pdfPreview = new PDFCanvasPreview();
-        window.pdfPreview.init();
-    }
-    
-    const pdfUrlElement = document.getElementById('pdfUrl');
-    if (pdfUrlElement) {
-        const pdfUrl = pdfUrlElement.value;
-        if (pdfUrl) {
-            window.pdfPreview.loadPdf(pdfUrl);
-        }
+    const pdfUrl = document.getElementById('pdfUrl')?.value;
+    if (pdfUrl && window.pdfPreview) {
+        window.pdfPreview.loadPdf(pdfUrl);
     }
 };
 
@@ -413,21 +417,21 @@ window.resetZoom = function() {
     if (window.pdfPreview) window.pdfPreview.resetZoom();
 };
 
-// Store original functions only once
-if (!window._originalAddValue) {
-    window._originalAddValue = window.addValue;
+// Hook into existing functions - store originals once
+if (!window._addValueOriginal) {
+    window._addValueOriginal = window.addValue;
 }
-if (!window._originalRemoveValue) {
-    window._originalRemoveValue = window.removeValue;  
+if (!window._removeValueOriginal) {
+    window._removeValueOriginal = window.removeValue;  
 }
-if (!window._originalClearAll) {
-    window._originalClearAll = window.clearAll;
+if (!window._clearAllOriginal) {
+    window._clearAllOriginal = window.clearAll;
 }
 
 // Override functions
 window.addValue = function() {
-    if (window._originalAddValue) {
-        window._originalAddValue();
+    if (window._addValueOriginal) {
+        window._addValueOriginal();
     }
     if (window.pdfPreview) {
         window.pdfPreview.syncWithValues();
@@ -435,8 +439,8 @@ window.addValue = function() {
 };
 
 window.removeValue = function(index) {
-    if (window._originalRemoveValue) {
-        window._originalRemoveValue(index);
+    if (window._removeValueOriginal) {
+        window._removeValueOriginal(index);
     }
     if (window.pdfPreview) {
         window.pdfPreview.syncWithValues();
@@ -444,8 +448,8 @@ window.removeValue = function(index) {
 };
 
 window.clearAll = function() {
-    if (window._originalClearAll) {
-        window._originalClearAll();
+    if (window._clearAllOriginal) {
+        window._clearAllOriginal();
     }
     if (window.pdfPreview) {
         window.pdfPreview.syncWithValues();

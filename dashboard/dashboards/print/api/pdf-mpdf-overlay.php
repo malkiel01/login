@@ -121,7 +121,6 @@ try {
     //     ] + \Mpdf\Config\FontVariables::getDefaults()['fontdata']
     // ]);
 
-    // Create mPDF instance
     // Create mPDF instance עם פונטים
     $config = new \Mpdf\Config\ConfigVariables();
     $fontDirs = $config->getDefaults()['fontDir'];
@@ -132,14 +131,17 @@ try {
     // הוסף את התיקייה שלנו
     $fontDirs[] = dirname(__DIR__) . '/assets/fonts/';
 
-    // הוסף את הפונטים שלנו
+    // הוסף את הפונטים שלנו - עם הגדרות שמתאימות ל-mPDF
     $fontData['rubik'] = [
         'R' => 'Rubik-Regular.ttf',
         'useOTL' => 0xFF,
+        'useKashida' => 75,
     ];
+
+    // Heebo צריך הגדרות מיוחדות כי יש לו MarkGlyphSets
     $fontData['heebo'] = [
         'R' => 'Heebo-Regular.ttf',
-        'useOTL' => 0xFF,
+        'useOTL' => 0x00,  // ביטול OTL features שגורמות לבעיה
     ];
 
     $pdf = new \Mpdf\Mpdf([
@@ -153,7 +155,8 @@ try {
         'margin_bottom' => 0,
         'tempDir' => dirname(__DIR__) . '/temp',
         'fontDir' => $fontDirs,
-        'fontdata' => $fontData
+        'fontdata' => $fontData,
+        'allow_output_buffering' => true
     ]);
     
     // Set RTL if needed

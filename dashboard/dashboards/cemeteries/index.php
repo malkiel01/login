@@ -49,6 +49,9 @@ if (!checkPermission('view', 'cemetery')) {
                         </button>
                     </div>
                 </div>
+
+                <!-- מקום לכרטיס הפריט -->
+                <div id="itemCard"></div>
                 
                 <!-- Statistics Cards -->
                 <div class="stats-grid" id="statsGrid">

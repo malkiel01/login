@@ -159,3 +159,4 @@ async function deleteCemetery(id) {
         showError('שגיאה במחיקת בית העלמין');
     }
 }
+

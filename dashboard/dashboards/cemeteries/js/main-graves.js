@@ -33,7 +33,7 @@ async function loadAllGraves() {
 }
 
 // טעינת קברים לאחוזת קבר ספציפית
-async function loadGravesForAreaGrave(areaGraveId) {
+async function loadGravesForAreaGrave2(areaGraveId) {
     console.log('Loading graves for area grave:', areaGraveId);
     try {
         const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=grave&parent_id=${areaGraveId}`);
@@ -41,6 +41,34 @@ async function loadGravesForAreaGrave(areaGraveId) {
         
         if (data.success) {
             displayGravesInMainContent(data.data, window.selectedItems.areaGrave?.name);
+        }
+    } catch (error) {
+        console.error('Error loading graves:', error);
+        showError('שגיאה בטעינת קברים');
+    }
+}
+async function loadGravesForAreaGrave(areaGraveId) {
+    console.log('Loading graves for area grave:', areaGraveId);
+    try {
+        // תחילה הצג את כרטיס אחוזת הקבר
+        const cardHtml = await createAreaGraveCard(areaGraveId);
+        const mainContent = document.querySelector('.main-content');
+        
+        const cardContainer = document.getElementById('itemCard') || document.createElement('div');
+        cardContainer.id = 'itemCard';
+        cardContainer.innerHTML = cardHtml;
+        
+        const tableWrapper = document.querySelector('.table-wrapper');
+        if (tableWrapper && cardHtml) {
+            mainContent.insertBefore(cardContainer, tableWrapper);
+        }
+        
+        // אז טען את הקברים
+        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=grave&parent_id=${areaGraveId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            displayGravesInMainContent(data.data);
         }
     } catch (error) {
         console.error('Error loading graves:', error);

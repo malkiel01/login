@@ -588,6 +588,14 @@ function clearSidebarBelow(type) {
     }
 }
 
+// בקובץ main.js - הוסף את הפונקציה הזו
+function clearItemCard() {
+    const cardContainer = document.getElementById('itemCard');
+    if (cardContainer) {
+        cardContainer.remove();
+    }
+}
+
 
 // ייצוא הפונקציות כגלובליות
 window.updateSidebarSelection = updateSidebarSelection;
@@ -616,6 +624,7 @@ window.formatDate = formatDate;
 window.showSuccess = showSuccess;
 window.showError = showError;
 window.showWarning = showWarning;
+window.clearItemCard = clearItemCard;
 window.API_BASE = API_BASE;
 // ייצוא משתנים גלובליים
 window.currentType = currentType;

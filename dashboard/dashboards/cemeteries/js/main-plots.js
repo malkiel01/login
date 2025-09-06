@@ -64,6 +64,9 @@ async function loadPlotsForBlock(blockId) {
         if (tableWrapper && cardHtml) {
             mainContent.insertBefore(cardContainer, tableWrapper);
         }
+
+        // הכנס את התוכן
+        cardContainer.innerHTML = cardHtml;
         
         // אז טען את החלקות
         const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=plot&parent_id=${blockId}`);

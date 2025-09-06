@@ -64,6 +64,9 @@ async function loadGravesForAreaGrave(areaGraveId) {
         if (tableWrapper && cardHtml) {
             mainContent.insertBefore(cardContainer, tableWrapper);
         }
+
+        // הכנס את התוכן
+        cardContainer.innerHTML = cardHtml;
         
         // אז טען את הקברים
         const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=grave&parent_id=${areaGraveId}`);

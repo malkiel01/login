@@ -4,6 +4,8 @@
 // טעינת כל הקברים
 async function loadAllGraves() {
     console.log('Loading all graves...');
+
+    clearItemCard(); // נקה את הכרטיס כשעוברים לתצוגה כללית
     
     // נקה את כל הסידבר
     clearAllSidebarSelections();

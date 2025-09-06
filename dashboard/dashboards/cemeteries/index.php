@@ -20,6 +20,7 @@ if (!checkPermission('view', 'cemetery')) {
     <link rel="stylesheet" href="dashboards/cemeteries/css/dashboard.css">
     <link rel="stylesheet" href="dashboards/cemeteries/css/tables.css">
     <link rel="stylesheet" href="dashboards/cemeteries/css/forms.css">
+    <link rel="stylesheet" href="dashboards/cemeteries/css/cards.css">
 </head>
 <body>
     <div class="dashboard-wrapper">
@@ -105,10 +106,23 @@ if (!checkPermission('view', 'cemetery')) {
         <symbol id="icon-delete" viewBox="0 0 24 24">
             <path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         </symbol>
+        <symbol id="icon-map" viewBox="0 0 24 24">
+            <path d="M9 11H3v2h6v-2zm0-4H3v2h6V7zm0 8H3v2h6v-2zm12-8h-6v2h6V7zm0 4h-6v2h6v-2zm0 4h-6v2h6v-2z" fill="currentColor"/>
+        </symbol>
+        <symbol id="icon-print" viewBox="0 0 24 24">
+            <path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z" fill="currentColor"/>
+        </symbol>
+        <symbol id="icon-rows" viewBox="0 0 24 24">
+            <path d="M3 15h18v-2H3v2zm0 4h18v-2H3v2zm0-8h18V9H3v2zm0-6v2h18V5H3z" fill="currentColor"/>
+        </symbol>
+        <symbol id="icon-enter" viewBox="0 0 24 24">
+            <path d="M12 2l-5.5 9h11z M12 22l5.5-9h-11z" fill="currentColor"/>
+        </symbol>
     </svg>
     
     <!-- JavaScript Files -->
     <script src="dashboards/cemeteries/js/main.js"></script>
+    <script src="dashboards/cemeteries/js/cards.js"></script>
     <script src="dashboards/cemeteries/js/main-cemeteries.js"></script>
     <script src="dashboards/cemeteries/js/main-blocks.js"></script>
     <script src="dashboards/cemeteries/js/main-plots.js"></script>

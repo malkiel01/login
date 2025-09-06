@@ -5,6 +5,8 @@
 async function loadAllPlots() {
     console.log('Loading all plots...');
 
+    clearItemCard(); // נקה את הכרטיס כשעוברים לתצוגה כללית
+
     // נקה את כל הסידבר
     clearAllSidebarSelections();
 

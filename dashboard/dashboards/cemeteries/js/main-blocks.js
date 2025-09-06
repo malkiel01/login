@@ -5,6 +5,8 @@
 async function loadAllBlocks() {
     console.log('Loading all blocks...');
 
+    clearItemCard(); // נקה את הכרטיס כשעוברים לתצוגה כללית
+
     // נקה את כל הסידבר
     clearAllSidebarSelections();
 

@@ -10,6 +10,8 @@ window.goToItem = function(type, id) {
 // טעינת כל בתי העלמין
 async function loadAllCemeteries() {
     console.log('Loading all cemeteries...');
+
+    clearItemCard(); // נקה את הכרטיס כשעוברים לתצוגה כללית
     
     // נקה את כל הסידבר
     clearAllSidebarSelections();

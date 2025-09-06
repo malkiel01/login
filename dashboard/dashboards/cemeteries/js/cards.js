@@ -367,10 +367,12 @@ async function createAreaGraveCard(areaGraveId) {
     }
 }
 
-// פונקציות עזר לקבלת סטטיסטיקות
+// ---------
+
+// פונקציות עזר לקבלת סטטיסטיקות - גרסה מלאה
 async function getCemeteryStats(cemeteryId) {
     try {
-        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=stats&type=cemetery&id=${cemeteryId}`);
+        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=item_stats&item_type=cemetery&item_id=${cemeteryId}`);
         const data = await response.json();
         return data.success ? data.stats : {};
     } catch (error) {
@@ -381,7 +383,7 @@ async function getCemeteryStats(cemeteryId) {
 
 async function getBlockStats(blockId) {
     try {
-        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=stats&type=block&id=${blockId}`);
+        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=item_stats&item_type=block&item_id=${blockId}`);
         const data = await response.json();
         return data.success ? data.stats : {};
     } catch (error) {
@@ -392,7 +394,7 @@ async function getBlockStats(blockId) {
 
 async function getPlotStats(plotId) {
     try {
-        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=stats&type=plot&id=${plotId}`);
+        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=item_stats&item_type=plot&item_id=${plotId}`);
         const data = await response.json();
         return data.success ? data.stats : {};
     } catch (error) {
@@ -403,6 +405,53 @@ async function getPlotStats(plotId) {
 
 async function getAreaGraveStats(areaGraveId) {
     try {
+        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=item_stats&item_type=area_grave&item_id=${areaGraveId}`);
+        const data = await response.json();
+        return data.success ? data.stats : {};
+    } catch (error) {
+        console.error('Error getting area grave stats:', error);
+        return {};
+    }
+}
+
+// ---------
+
+// פונקציות עזר לקבלת סטטיסטיקות
+async function getCemeteryStats2(cemeteryId) {
+    try {
+        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=stats&type=cemetery&id=${cemeteryId}`);
+        const data = await response.json();
+        return data.success ? data.stats : {};
+    } catch (error) {
+        console.error('Error getting cemetery stats:', error);
+        return {};
+    }
+}
+
+async function getBlockStats2(blockId) {
+    try {
+        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=stats&type=block&id=${blockId}`);
+        const data = await response.json();
+        return data.success ? data.stats : {};
+    } catch (error) {
+        console.error('Error getting block stats:', error);
+        return {};
+    }
+}
+
+async function getPlotStats2(plotId) {
+    try {
+        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=stats&type=plot&id=${plotId}`);
+        const data = await response.json();
+        return data.success ? data.stats : {};
+    } catch (error) {
+        console.error('Error getting plot stats:', error);
+        return {};
+    }
+}
+
+async function getAreaGraveStats2(areaGraveId) {
+    try {
         const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=stats&type=area_grave&id=${areaGraveId}`);
         const data = await response.json();
         return data.success ? data.stats : {};
@@ -412,7 +461,7 @@ async function getAreaGraveStats(areaGraveId) {
     }
 }
 
-async function getPlotRows(plotId) {
+async function getPlotRows2(plotId) {
     try {
         const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=row&parent_id=${plotId}`);
         const data = await response.json();

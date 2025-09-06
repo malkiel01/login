@@ -72,7 +72,7 @@ async function loadBlocksForCemetery2(cemeteryId) {
         showError('שגיאה בטעינת גושים');
     }
 }
-async function loadBlocksForCemetery(cemeteryId) {
+async function loadBlocksForCemetery3(cemeteryId) {
     console.log('Loading blocks for cemetery:', cemeteryId);
     try {
         // תחילה הצג את כרטיס בית העלמין
@@ -88,6 +88,47 @@ async function loadBlocksForCemetery(cemeteryId) {
         if (tableWrapper && cardHtml) {
             mainContent.insertBefore(cardContainer, tableWrapper);
         }
+        
+        // אז טען את הגושים
+        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=block&parent_id=${cemeteryId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            displayBlocksInMainContent(data.data, selectedItems.cemetery?.name);
+        }
+    } catch (error) {
+        console.error('Error loading blocks:', error);
+        showError('שגיאה בטעינת גושים');
+    }
+}
+async function loadBlocksForCemetery(cemeteryId) {
+    console.log('Loading blocks for cemetery:', cemeteryId);
+    try {
+        // תחילה הצג את כרטיס בית העלמין
+        const cardHtml = await createCemeteryCard(cemeteryId);
+        const mainContent = document.querySelector('.main-content');
+        
+        // בדוק אם כבר יש container לכרטיס, אם לא - צור אחד
+        let cardContainer = document.getElementById('itemCard');
+        if (!cardContainer) {
+            cardContainer = document.createElement('div');
+            cardContainer.id = 'itemCard';
+            
+            // הכנס את הכרטיס אחרי statsGrid
+            const statsGrid = document.getElementById('statsGrid');
+            if (statsGrid) {
+                statsGrid.insertAdjacentElement('afterend', cardContainer);
+            } else {
+                // אם אין statsGrid, הכנס בתחילת main-content
+                const tableContainer = document.querySelector('.table-container');
+                if (tableContainer) {
+                    mainContent.insertBefore(cardContainer, tableContainer);
+                }
+            }
+        }
+        
+        // הכנס את התוכן
+        cardContainer.innerHTML = cardHtml;
         
         // אז טען את הגושים
         const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=block&parent_id=${cemeteryId}`);

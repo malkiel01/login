@@ -49,14 +49,13 @@ if (!checkPermission('view', 'cemetery')) {
                         </button>
                     </div>
                 </div>
-
-                <!-- מקום לכרטיס הפריט -->
-                <div id="itemCard"></div>
                 
                 <!-- Statistics Cards -->
                 <div class="stats-grid" id="statsGrid">
                     <!-- Will be populated by JS -->
                 </div>
+                                <!-- מקום לכרטיס הפריט -->
+                <div id="itemCard"></div>
                 
                 <!-- Data Table -->
                 <div class="table-container">

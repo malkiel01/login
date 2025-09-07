@@ -36,7 +36,7 @@ async function loadAllBlocks() {
 }
 
 // כשפותחים גוש ספציפי
-function openBlock(blockId, blockName) {
+function openBlock2(blockId, blockName) {
     console.log('Opening block:', blockId, blockName);
     
     // שמור את הבחירה
@@ -57,50 +57,71 @@ function openBlock(blockId, blockName) {
     updateBreadcrumb(path);
 }
 
-// טעינת גושים לבית עלמין ספציפי
-async function loadBlocksForCemetery2(cemeteryId) {
-    console.log('Loading blocks for cemetery:', cemeteryId);
-    try {
-        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=block&parent_id=${cemeteryId}`);
-        const data = await response.json();
-        
-        if (data.success) {
-            displayBlocksInMainContent(data.data, selectedItems.cemetery?.name);
-        }
-    } catch (error) {
-        console.error('Error loading blocks:', error);
-        showError('שגיאה בטעינת גושים');
-    }
+// --------
+
+// החלף את openBlock ב-main-blocks.js
+async function openBlock(blockId, blockName) {
+    console.log('Opening block:', blockId, blockName);
+    
+    // שמור את הבחירה
+    window.selectedItems.block = { id: blockId, name: blockName };
+    window.currentType = 'plot';
+    window.currentParentId = blockId;
+    
+    // עדכן את הסידבר - הצג את הגוש הנבחר
+    updateSidebarSelection('block', blockId, blockName);
+    
+    // טען את החלקות עם כרטיס הגוש
+    await loadPlotsForBlockWithCard(blockId);
+    
+    // עדכן breadcrumb
+    const path = window.selectedItems.cemetery 
+        ? `בתי עלמין › ${window.selectedItems.cemetery.name} › גושים › ${blockName}`
+        : `גושים › ${blockName}`;
+    updateBreadcrumb(path);
 }
-async function loadBlocksForCemetery3(cemeteryId) {
-    console.log('Loading blocks for cemetery:', cemeteryId);
+
+// הוסף פונקציה חדשה ב-main-blocks.js
+async function loadPlotsForBlockWithCard(blockId) {
     try {
-        // תחילה הצג את כרטיס בית העלמין
-        const cardHtml = await createCemeteryCard(cemeteryId);
+        // תחילה הצג את כרטיס הגוש
+        const cardHtml = await createBlockCard(blockId);
         const mainContent = document.querySelector('.main-content');
         
-        // הוסף את הכרטיס לפני הטבלה
-        const cardContainer = document.getElementById('itemCard') || document.createElement('div');
-        cardContainer.id = 'itemCard';
-        cardContainer.innerHTML = cardHtml;
-        
-        const tableWrapper = document.querySelector('.table-wrapper');
-        if (tableWrapper && cardHtml) {
-            mainContent.insertBefore(cardContainer, tableWrapper);
+        let cardContainer = document.getElementById('itemCard');
+        if (!cardContainer) {
+            cardContainer = document.createElement('div');
+            cardContainer.id = 'itemCard';
+            
+            const statsGrid = document.getElementById('statsGrid');
+            if (statsGrid) {
+                statsGrid.insertAdjacentElement('afterend', cardContainer);
+            } else {
+                const tableContainer = document.querySelector('.table-container');
+                if (tableContainer) {
+                    mainContent.insertBefore(cardContainer, tableContainer);
+                }
+            }
         }
         
-        // אז טען את הגושים
-        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=block&parent_id=${cemeteryId}`);
+        cardContainer.innerHTML = cardHtml;
+        
+        // אז טען את החלקות
+        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=plot&parent_id=${blockId}`);
         const data = await response.json();
         
         if (data.success) {
-            displayBlocksInMainContent(data.data, selectedItems.cemetery?.name);
+            displayPlotsInMainContent(data.data, window.selectedItems.block?.name);
         }
     } catch (error) {
-        console.error('Error loading blocks:', error);
-        showError('שגיאה בטעינת גושים');
+        console.error('Error loading plots with card:', error);
+        showError('שגיאה בטעינת החלקות');
     }
 }
+
+// --------
+
+// טעינת גושים לבית עלמין ספציפי
 async function loadBlocksForCemetery(cemeteryId) {
     console.log('Loading blocks for cemetery:', cemeteryId);
     try {

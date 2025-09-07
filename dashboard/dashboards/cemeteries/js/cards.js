@@ -275,6 +275,14 @@ async function createPlotCard(plotId) {
         return '';
     }
 }
+function addAreaGraveButtonToPlotCard() {
+    return `
+        <button class="info-card-btn" onclick="openAddAreaGrave()">
+            <svg class="icon-sm"><use xlink:href="#icon-plus"></use></svg>
+            הוסף אחוזת קבר
+        </button>
+    `;
+}
 
 // יצירת כרטיס מידע לאחוזת קבר
 async function createAreaGraveCard(areaGraveId) {

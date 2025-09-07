@@ -115,33 +115,6 @@ function displayAreaGravesInMainContent(areaGraves, rowName = null) {
 }
 
 // פתיחת אחוזת קבר ספציפית - מעבר לתצוגת קברים
-function openAreaGrave2(areaGraveId, areaGraveName) {
-    console.log('Opening area grave:', areaGraveId, areaGraveName);
-    
-    // שמור את הבחירה
-    window.selectedItems.areaGrave = { id: areaGraveId, name: areaGraveName };
-    window.currentType = 'grave';
-    window.currentParentId = areaGraveId;
-    
-    // עדכן את הסידבר
-    updateSidebarSelection('areaGrave', areaGraveId, areaGraveName);
-
-    // טען את הקברים
-    if (typeof loadGravesForAreaGrave === 'function') {
-        loadGravesForAreaGrave(areaGraveId);
-    }
-
-    // עדכן breadcrumb
-    let breadcrumbPath = `אחוזות קבר › ${areaGraveName}`;
-    if (window.selectedItems.cemetery && window.selectedItems.block && window.selectedItems.plot) {
-        breadcrumbPath = `בתי עלמין › ${window.selectedItems.cemetery.name} › גושים › ${window.selectedItems.block.name} › חלקות › ${window.selectedItems.plot.name} › אחוזות קבר › ${areaGraveName}`;
-    }
-    updateBreadcrumb(breadcrumbPath);
-}
-
-// ------
-
-// החלף את openAreaGrave ב-main-area-graves.js
 async function openAreaGrave(areaGraveId, areaGraveName) {
     console.log('Opening area grave:', areaGraveId, areaGraveName);
     
@@ -196,10 +169,8 @@ async function loadGravesForAreaGraveWithCard(areaGraveId) {
     }
 }
 
-// ------
-
 // הוספת אחוזת קבר חדשה
-async function openAddAreaGrave(preselectedRowId = null) {
+async function openAddAreaGrave2(preselectedRowId = null) {
     // אם אין שורה מוגדרת מראש ואין שורה נבחרת
     if (!preselectedRowId && !window.selectedItems.row) {
         // צריך לטעון את השורות של החלקה ולתת לבחור
@@ -227,6 +198,178 @@ async function openAddAreaGrave(preselectedRowId = null) {
         }
     }
 }
+async function openAddAreaGrave3(preselectedRowId = null) {
+    // אם אין שורה מוגדרת מראש ואין שורה נבחרת
+    if (!preselectedRowId && !window.selectedItems.row) {
+        // צריך לטעון את השורות של החלקה ולתת לבחור
+        if (window.selectedItems.plot) {
+            const rows = await loadRowsForSelection(window.selectedItems.plot.id);
+            if (rows && rows.length > 0) {
+                showRowSelectionModal(rows);
+            } else {
+                showError('אין שורות בחלקה. יש להוסיף שורה תחילה');
+                return;
+            }
+        } else {
+            showWarning('יש לבחור חלקה תחילה');
+            return;
+        }
+    } else {
+        const rowId = preselectedRowId || window.selectedItems.row.id;
+        createAreaGraveFormWithRowSelection(rowId);
+    }
+}
+async function openAddAreaGrave(preselectedRowId = null) {
+    // אם אין שורה מוגדרת מראש ואין שורה נבחרת
+    if (!preselectedRowId && !window.selectedItems.row) {
+        // צריך לטעון את השורות של החלקה ולתת לבחור
+        if (window.selectedItems.plot) {
+            const rows = await loadRowsForSelection(window.selectedItems.plot.id);
+            if (rows && rows.length > 0) {
+                // השתמש בטופס החדש עם בחירת שורה
+                createAreaGraveFormWithRowSelection();
+            } else {
+                showError('אין שורות בחלקה. יש להוסיף שורה תחילה');
+                return;
+            }
+        } else {
+            showWarning('יש לבחור חלקה תחילה');
+            return;
+        }
+    } else {
+        const rowId = preselectedRowId || window.selectedItems.row.id;
+        // השתמש בטופס החדש גם כאן
+        createAreaGraveFormWithRowSelection(rowId);
+    }
+}
+
+async function createAreaGraveFormWithRowSelection(selectedRowId = null) {
+    // טען את כל השורות של החלקה הנוכחית
+    let rows = [];
+    if (window.selectedItems.plot) {
+        rows = await loadRowsForSelection(window.selectedItems.plot.id);
+    }
+    
+    if (rows.length === 0) {
+        showError('אין שורות בחלקה. יש להוסיף שורה תחילה');
+        return;
+    }
+    
+    const form = document.createElement('div');
+    form.id = 'areaGraveAddForm';
+    form.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 0 30px rgba(0,0,0,0.3);
+        z-index: 10000;
+        min-width: 450px;
+    `;
+    
+    form.innerHTML = `
+        <h3>הוסף אחוזת קבר</h3>
+        <form onsubmit="submitAreaGraveFormWithRow(event)">
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">שורה: <span style="color: red;">*</span></label>
+                <select name="row_id" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="">-- בחר שורה --</option>
+                    ${rows.map(row => `
+                        <option value="${row.id}" ${selectedRowId == row.id ? 'selected' : ''}>
+                            ${row.name}${row.serial_number ? ` (מס' ${row.serial_number})` : ''}
+                        </option>
+                    `).join('')}
+                </select>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">שם: <span style="color: red;">*</span></label>
+                <input type="text" name="name" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">סוג קבר:</label>
+                <select name="grave_type" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="">-- בחר סוג --</option>
+                    <option value="1">רגיל</option>
+                    <option value="2">כפול</option>
+                    <option value="3">משפחתי</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">קואורדינטות:</label>
+                <input type="text" name="coordinates" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" placeholder="לדוגמה: 32.0853, 34.7818">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">הערות:</label>
+                <textarea name="notes" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; height: 60px;"></textarea>
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" onclick="document.getElementById('areaGraveAddForm').remove()" 
+                        style="padding: 8px 20px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    ביטול
+                </button>
+                <button type="submit" 
+                        style="padding: 8px 20px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    שמור
+                </button>
+            </div>
+        </form>
+    `;
+    
+    document.body.appendChild(form);
+}
+
+// 4. שליחת הטופס עם row_id
+window.submitAreaGraveFormWithRow = async function(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    
+    const rowId = formData.get('row_id');
+    if (!rowId) {
+        alert('יש לבחור שורה');
+        return;
+    }
+    
+    const data = {
+        name: formData.get('name'),
+        grave_type: formData.get('grave_type') || null,
+        coordinates: formData.get('coordinates') || null,
+        notes: formData.get('notes') || null,
+        row_id: rowId,
+        is_active: 1
+    };
+    
+    try {
+        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=create&type=area_grave`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            document.getElementById('areaGraveAddForm').remove();
+            showSuccess('אחוזת הקבר נוספה בהצלחה');
+            
+            // רענן את התצוגה
+            if (window.selectedItems.plot) {
+                loadAreaGravesForPlot(window.selectedItems.plot.id);
+            } else {
+                loadAllAreaGraves();
+            }
+        } else {
+            alert('שגיאה: ' + (result.error || 'Unknown error'));
+        }
+    } catch (error) {
+        alert('שגיאה בשמירה');
+        console.error(error);
+    }
+}
+
+// ----------------------------------------------------------------------------------------------------------
 
 // טעינת שורות לבחירה
 async function loadRowsForSelection(plotId) {
@@ -282,7 +425,30 @@ function showRowSelectionModal(rows) {
     document.body.appendChild(modal);
 }
 
-// המשך עם השורה שנבחרה
+// // המשך עם השורה שנבחרה
+// window.proceedWithRowSelection = function() {
+//     const select = document.getElementById('rowSelect');
+//     const rowId = select.value;
+    
+//     if (!rowId) {
+//         alert('יש לבחור שורה');
+//         return;
+//     }
+    
+//     // סגור את המודל
+//     select.closest('div[style*=fixed]').remove();
+    
+//     // פתח טופס הוספת אחוזת קבר
+//     window.currentType = 'areaGrave';
+//     window.currentParentId = rowId;
+    
+//     if (typeof window.openModal === 'function') {
+//         window.openModal('areaGrave', rowId, null);
+//     } else {
+//         createAreaGraveForm(rowId);
+//     }
+// }
+// עדכן את הפונקציה הזו
 window.proceedWithRowSelection = function() {
     const select = document.getElementById('rowSelect');
     const rowId = select.value;
@@ -295,19 +461,12 @@ window.proceedWithRowSelection = function() {
     // סגור את המודל
     select.closest('div[style*=fixed]').remove();
     
-    // פתח טופס הוספת אחוזת קבר
-    window.currentType = 'areaGrave';
-    window.currentParentId = rowId;
-    
-    if (typeof window.openModal === 'function') {
-        window.openModal('areaGrave', rowId, null);
-    } else {
-        createAreaGraveForm(rowId);
-    }
+    // פתח טופס הוספת אחוזת קבר עם השורה שנבחרה
+    createAreaGraveFormWithRowSelection(rowId);
 }
 
 // יצירת טופס פשוט לאחוזת קבר
-function createAreaGraveForm(rowId) {
+function createAreaGraveFormDel(rowId) {
     const form = document.createElement('div');
     form.id = 'simpleAddForm';
     form.style.cssText = `

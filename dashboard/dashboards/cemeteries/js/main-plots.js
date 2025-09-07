@@ -137,30 +137,6 @@ function displayPlotsInMainContent(plots, blockName = null) {
 }
 
 // פתיחת חלקה ספציפית - מעבר לתצוגת אחוזות קבר (דילוג על שורות!)
-function openPlot2(plotId, plotName) {
-    console.log('Opening plot:', plotId, plotName);
-    
-    // שמור את הבחירה
-    window.selectedItems.plot = { id: plotId, name: plotName };
-    window.currentType = 'areaGrave';
-    window.currentParentId = plotId;
-    
-    // עדכן את הסידבר - הצג את החלקה הנבחרת
-    updateSidebarSelection('plot', plotId, plotName);
-    
-    // טען את אחוזות הקבר של החלקה
-    loadAreaGravesForPlot(plotId);
-    
-    // עדכון breadcrumb
-    let breadcrumbPath = `חלקות › ${plotName}`;
-    if (window.selectedItems.cemetery && window.selectedItems.block) {
-        breadcrumbPath = `בתי עלמין › ${window.selectedItems.cemetery.name} › גושים › ${window.selectedItems.block.name} › חלקות › ${plotName}`;
-    }
-    updateBreadcrumb(breadcrumbPath);
-}
-
-// -------
-// החלף את openPlot ב-main-plots.js
 async function openPlot(plotId, plotName) {
     console.log('Opening plot:', plotId, plotName);
     
@@ -214,7 +190,6 @@ async function loadAreaGravesForPlotWithCard(plotId) {
         showError('שגיאה בטעינת אחוזות הקבר');
     }
 }
-// -------
 
 // טעינת אחוזות קבר לחלקה (דרך השורות)
 async function loadAreaGravesForPlot(plotId) {
@@ -247,6 +222,25 @@ async function loadAreaGravesForPlot(plotId) {
 }
 
 // הצגת חלקה ריקה
+function displayEmptyPlot2(plotName) {
+    const tbody = document.getElementById('tableBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="6" style="text-align: center; padding: 40px;">
+                <div style="color: #999;">
+                    <div style="font-size: 48px; margin-bottom: 20px;">📏</div>
+                    <div>אין שורות בחלקה ${plotName || ''}</div>
+                    <p style="margin-top: 10px;">יש להוסיף שורות לחלקה לפני הוספת אחוזות קבר</p>
+                    <button class="btn btn-primary mt-3" onclick="openAddRow()">
+                        הוסף שורה ראשונה
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `;
+}
 function displayEmptyPlot(plotName) {
     const tbody = document.getElementById('tableBody');
     if (!tbody) return;
@@ -268,7 +262,7 @@ function displayEmptyPlot(plotName) {
 }
 
 // הצגת אחוזות קבר עם מידע על השורות
-function displayAreaGravesWithRows(areaGraves, rows, plotName) {
+function displayAreaGravesWithRows2(areaGraves, rows, plotName) {
     const tbody = document.getElementById('tableBody');
     if (!tbody) return;
     
@@ -311,6 +305,94 @@ function displayAreaGravesWithRows(areaGraves, rows, plotName) {
                     <button class="btn btn-sm btn-primary" style="margin-right: 10px;" onclick="openAddAreaGrave(${row.id})">
                         הוסף אחוזת קבר
                     </button>
+                </td>
+            `;
+            tbody.appendChild(emptyRow);
+        } else {
+            rowAreas.forEach(area => {
+                const tr = document.createElement('tr');
+                tr.style.cursor = 'pointer';
+                tr.ondblclick = () => openAreaGrave(area.id, area.name);
+                
+                tr.innerHTML = `
+                    <td>${area.id}</td>
+                    <td>
+                        <strong>${area.name}</strong>
+                        ${area.grave_type ? `<br><small class="text-muted">סוג: ${getGraveTypeName(area.grave_type)}</small>` : ''}
+                    </td>
+                    <td>${area.coordinates || '-'}</td>
+                    <td><span class="badge badge-success">פעיל</span></td>
+                    <td>${formatDate(area.created_at)}</td>
+                    <td>
+                        <button class="btn btn-sm btn-secondary" onclick="event.stopPropagation(); editAreaGrave(${area.id})">
+                            <svg class="icon-sm"><use xlink:href="#icon-edit"></use></svg>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); deleteAreaGrave(${area.id})">
+                            <svg class="icon-sm"><use xlink:href="#icon-delete"></use></svg>
+                        </button>
+                        <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); openAreaGrave(${area.id}, '${area.name}')">
+                            <svg class="icon-sm"><use xlink:href="#icon-enter"></use></svg>
+                            כניסה
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+    });
+}
+function displayAreaGravesWithRows(areaGraves, rows, plotName) {
+    const tbody = document.getElementById('tableBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    // הוסף כותרת עם סיכום שורות
+    const summaryRow = document.createElement('tr');
+    summaryRow.innerHTML = `
+        <td colspan="6" style="background: #f8f9fa; padding: 15px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <strong>חלקה: ${plotName || ''}</strong> | 
+                    <span>סה"כ ${rows.length} שורות</span> | 
+                    <span>סה"כ ${areaGraves.length} אחוזות קבר</span>
+                </div>
+                <div>
+                    <button class="btn btn-sm btn-primary" onclick="manageRows()">
+                        ניהול שורות
+                    </button>
+                    <button class="btn btn-sm btn-success" onclick="openAddAreaGrave()" style="margin-right: 10px;">
+                        הוסף אחוזת קבר
+                    </button>
+                </div>
+            </div>
+        </td>
+    `;
+    tbody.appendChild(summaryRow);
+    
+    // הצג את אחוזות הקבר מקובצות לפי שורה
+    rows.forEach(row => {
+        const rowAreas = areaGraves.filter(area => area.row_id === row.id);
+        
+        // כותרת שורה
+        const rowHeader = document.createElement('tr');
+        rowHeader.style.background = '#e9ecef';
+        rowHeader.innerHTML = `
+            <td colspan="6" style="padding: 10px; font-weight: bold;">
+                📏 שורה ${row.name} (${rowAreas.length} אחוזות קבר)
+                <button class="btn btn-xs btn-primary" style="margin-right: 10px; font-size: 11px; padding: 4px 8px;" onclick="openAddAreaGrave(${row.id})">
+                    + הוסף כאן
+                </button>
+            </td>
+        `;
+        tbody.appendChild(rowHeader);
+        
+        // אחוזות הקבר של השורה
+        if (rowAreas.length === 0) {
+            const emptyRow = document.createElement('tr');
+            emptyRow.innerHTML = `
+                <td colspan="6" style="padding: 20px; text-align: center; color: #999;">
+                    אין אחוזות קבר בשורה זו
                 </td>
             `;
             tbody.appendChild(emptyRow);
@@ -668,3 +750,4 @@ function openAddRow() {
 window.manageRows = manageRows;
 window.openAddRow = openAddRow;
 window.openAddAreaGrave = openAddAreaGrave;
+window.createAreaGraveFormWithRowSelection = createAreaGraveFormWithRowSelection;

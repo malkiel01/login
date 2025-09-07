@@ -49,54 +49,15 @@ try {
                 throw new Exception('סוג לא תקין');
             }
             
-            // טיפול מיוחד באחוזות קבר
-            if ($type === 'area_grave') {
-                if (isset($_GET['plot_id'])) {
-                    // קודם מצא את כל השורות של החלקה
-                    $rows_query = "SELECT id FROM rows WHERE plot_id = :plot_id AND is_active = 1";
-                    $stmt = $pdo->prepare($rows_query);
-                    $stmt->execute(['plot_id' => $_GET['plot_id']]);
-                    $row_ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
-                    
-                    if (!empty($row_ids)) {
-                        $sql = "SELECT * FROM area_graves 
-                                WHERE row_id IN (" . implode(',', $row_ids) . ")
-                                AND is_active = 1";
-                        $params = [];
-                    } else {
-                        // אין שורות - החזר תוצאה ריקה
-                        echo json_encode([
-                            'success' => true,
-                            'data' => [],
-                            'pagination' => [
-                                'page' => 1,
-                                'limit' => 50,
-                                'total' => 0,
-                                'pages' => 0
-                            ]
-                        ]);
-                        exit;
-                    }
-                } elseif (isset($_GET['parent_id'])) {
-                    // זה לשורה ספציפית
-                    $sql = "SELECT * FROM area_graves WHERE row_id = :parent_id AND is_active = 1";
-                    $params = ['parent_id' => $_GET['parent_id']];
-                } else {
-                    // כל אחוזות הקבר
-                    $sql = "SELECT * FROM area_graves WHERE is_active = 1";
-                    $params = [];
-                }
-            } else {
-                // הקוד הקיים לשאר הסוגים
-                $sql = "SELECT * FROM $table WHERE is_active = 1";
-                $params = [];
-                
-                if (isset($_GET['parent_id'])) {
-                    $parentColumn = getParentColumn($type);
-                    if ($parentColumn) {
-                        $sql .= " AND $parentColumn = :parent_id";
-                        $params['parent_id'] = $_GET['parent_id'];
-                    }
+            $sql = "SELECT * FROM $table WHERE is_active = 1";
+            $params = [];
+            
+            // סינון לפי הורה
+            if (isset($_GET['parent_id'])) {
+                $parentColumn = getParentColumn($type);
+                if ($parentColumn) {
+                    $sql .= " AND $parentColumn = :parent_id";
+                    $params['parent_id'] = $_GET['parent_id'];
                 }
             }
             
@@ -110,7 +71,7 @@ try {
                 $params['search'] = '%' . $_GET['search'] . '%';
             }
             
-            // מיון
+            // מיון - תיקון כאן!
             if ($type === 'grave') {
                 $orderBy = $_GET['sort'] ?? 'grave_number';
             } else {
@@ -149,7 +110,6 @@ try {
                 ]
             ]);
             break;
-            
         case 'get':
             $table = getTableName($type);
             if (!$table || !$id) {
@@ -494,7 +454,6 @@ try {
                 'stats' => $stats
             ]);
             break;
-            
         case 'item_stats':
             $itemType = $_GET['item_type'] ?? '';
             $itemId = $_GET['item_id'] ?? null;
@@ -626,8 +585,7 @@ try {
                 'success' => true,
                 'stats' => $stats
             ]);
-            break;
-            
+            break;   
         default:
             throw new Exception('פעולה לא תקינה');
     }

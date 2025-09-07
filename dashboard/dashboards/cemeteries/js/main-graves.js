@@ -391,6 +391,10 @@ function createSimpleGraveForm() {
                 </select>
             </div>
             <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">קוד קבר:</label>
+                <input type="text" name="code" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            <div style="margin-bottom: 15px;">
                 <label style="display: block; margin-bottom: 5px;">עלות בנייה:</label>
                 <input type="number" name="construction_cost" step="0.01" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
             </div>

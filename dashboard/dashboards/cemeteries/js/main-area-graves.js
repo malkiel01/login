@@ -371,9 +371,9 @@ async function createAreaGraveFormWithRowSelection(selectedRowId = null) {
                 <label style="display: block; margin-bottom: 5px;">סוג קבר:</label>
                 <select name="grave_type" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                     <option value="">-- בחר סוג --</option>
-                    <option value="1">פטורה</option>
-                    <option value="2">חריגה</option>
-                    <option value="3">סגורה</option>
+                    <option value="1">שדה</option>
+                    <option value="2">רוויה</option>
+                    <option value="3">סנהדרין</option>
                 </select>
             </div>
             <div style="margin-bottom: 15px;">
@@ -513,9 +513,9 @@ async function deleteAreaGrave(id) {
 // פונקציות עזר
 function getGraveTypeName(type) {
     const types = {
-        1: 'פטורה',
-        2: 'חריגה', 
-        3: 'סגורה'
+        1: 'שדה',
+        2: 'רוויה',
+        3: 'סנהדרין'
     };
     return types[type] || 'לא מוגדר';
 }

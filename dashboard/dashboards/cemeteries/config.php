@@ -23,9 +23,17 @@ if (!defined('GRAVE_STATUS')) {
 
 if (!defined('PLOT_TYPES')) {
     define('PLOT_TYPES', [
-        1 => ['name' => 'פטור', 'icon' => '🟢'],
-        2 => ['name' => 'חריג', 'icon' => '🟡'],
-        3 => ['name' => 'סגור', 'icon' => '🔴']
+        1 => ['name' => 'הפטור', 'icon' => '🟢'],
+        2 => ['name' => 'חריגה', 'icon' => '🟡'],
+        3 => ['name' => 'סגורה', 'icon' => '🔴']
+    ]);
+}
+
+if (!defined('GRAVE_TYPES')) {
+    define('GRAVE_TYPES', [
+        1 => ['name' => 'שדה', 'icon' => '🌾'],
+        2 => ['name' => 'רוויה', 'icon' => '🏘️'],
+        3 => ['name' => 'סנהדרין', 'icon' => '⚖️']
     ]);
 }
 

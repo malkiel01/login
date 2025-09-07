@@ -750,4 +750,3 @@ function openAddRow() {
 window.manageRows = manageRows;
 window.openAddRow = openAddRow;
 window.openAddAreaGrave = openAddAreaGrave;
-window.createAreaGraveFormWithRowSelection = createAreaGraveFormWithRowSelection;

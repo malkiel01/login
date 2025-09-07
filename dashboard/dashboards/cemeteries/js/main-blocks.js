@@ -36,30 +36,6 @@ async function loadAllBlocks() {
 }
 
 // כשפותחים גוש ספציפי
-function openBlock2(blockId, blockName) {
-    console.log('Opening block:', blockId, blockName);
-    
-    // שמור את הבחירה
-    window.selectedItems.block = { id: blockId, name: blockName };
-    window.currentType = 'plot';
-    window.currentParentId = blockId;
-    
-    // עדכן את הסידבר - הצג את הגוש הנבחר
-    updateSidebarSelection('block', blockId, blockName);
-    
-    // טען את החלקות
-    loadPlotsForBlock(blockId);
-    
-    // עדכן breadcrumb
-    const path = window.selectedItems.cemetery 
-        ? `בתי עלמין › ${window.selectedItems.cemetery.name} › גושים › ${blockName}`
-        : `גושים › ${blockName}`;
-    updateBreadcrumb(path);
-}
-
-// --------
-
-// החלף את openBlock ב-main-blocks.js
 async function openBlock(blockId, blockName) {
     console.log('Opening block:', blockId, blockName);
     
@@ -118,8 +94,6 @@ async function loadPlotsForBlockWithCard(blockId) {
         showError('שגיאה בטעינת החלקות');
     }
 }
-
-// --------
 
 // טעינת גושים לבית עלמין ספציפי
 async function loadBlocksForCemetery(cemeteryId) {

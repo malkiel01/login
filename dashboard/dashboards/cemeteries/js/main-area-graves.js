@@ -32,33 +32,6 @@ async function loadAllAreaGraves() {
     }
 }
 
-// טעינת אחוזות קבר לחלקה (דרך השורות)
-async function loadAreaGravesForPlot2(plotId) {
-    console.log('Loading area graves for plot:', plotId);
-    try {
-        // תחילה טען את השורות
-        const rowsResponse = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=row&parent_id=${plotId}`);
-        const rowsData = await rowsResponse.json();
-        
-        if (!rowsData.success || rowsData.data.length === 0) {
-            displayEmptyPlot(window.selectedItems.plot?.name);
-            return;
-        }
-        
-        const rows = rowsData.data;
-        
-        // טען את אחוזות הקבר
-        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=area_grave&plot_id=${plotId}`);
-        const data = await response.json();
-        
-        if (data.success) {
-            displayAreaGravesWithRows(data.data, rows, window.selectedItems.plot?.name);
-        }
-    } catch (error) {
-        console.error('Error loading area graves for plot:', error);
-        showError('שגיאה בטעינת אחוזות קבר');
-    }
-}
 // טעינת אחוזות קבר לחלקה
 async function loadAreaGravesForPlot(plotId) {
     console.log('Loading area graves for plot:', plotId);
@@ -455,15 +428,17 @@ window.submitAreaGraveFormWithRow = async function(event) {
         });
         
         const result = await response.json();
-        
+
         if (result.success) {
             document.getElementById('areaGraveAddForm').remove();
             showSuccess('אחוזת הקבר נוספה בהצלחה');
             
             // רענן את התצוגה
             if (window.selectedItems.plot) {
-                // loadAreaGravesForPlot(window.selectedItems.plot.id);
-
+                // רענן את הטבלה
+                loadAreaGravesForPlot(window.selectedItems.plot.id);
+                
+                // רענן גם את הכרטיס
                 const cardHtml = await createPlotCard(window.selectedItems.plot.id);
                 const cardContainer = document.getElementById('itemCard');
                 if (cardContainer) {

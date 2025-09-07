@@ -115,7 +115,7 @@ function displayAreaGravesInMainContent(areaGraves, rowName = null) {
 }
 
 // פתיחת אחוזת קבר ספציפית - מעבר לתצוגת קברים
-function openAreaGrave(areaGraveId, areaGraveName) {
+function openAreaGrave2(areaGraveId, areaGraveName) {
     console.log('Opening area grave:', areaGraveId, areaGraveName);
     
     // שמור את הבחירה
@@ -138,6 +138,65 @@ function openAreaGrave(areaGraveId, areaGraveName) {
     }
     updateBreadcrumb(breadcrumbPath);
 }
+
+// ------
+
+// החלף את openAreaGrave ב-main-area-graves.js
+async function openAreaGrave(areaGraveId, areaGraveName) {
+    console.log('Opening area grave:', areaGraveId, areaGraveName);
+    
+    // שמור את הבחירה
+    window.selectedItems.areaGrave = { id: areaGraveId, name: areaGraveName };
+    window.currentType = 'grave';
+    window.currentParentId = areaGraveId;
+    
+    // עדכן את הסידבר
+    updateSidebarSelection('areaGrave', areaGraveId, areaGraveName);
+
+    // טען את הקברים עם כרטיס אחוזת הקבר
+    await loadGravesForAreaGraveWithCard(areaGraveId);
+
+    // עדכן breadcrumb
+    let breadcrumbPath = `אחוזות קבר › ${areaGraveName}`;
+    if (window.selectedItems.cemetery && window.selectedItems.block && window.selectedItems.plot) {
+        breadcrumbPath = `בתי עלמין › ${window.selectedItems.cemetery.name} › גושים › ${window.selectedItems.block.name} › חלקות › ${window.selectedItems.plot.name} › אחוזות קבר › ${areaGraveName}`;
+    }
+    updateBreadcrumb(breadcrumbPath);
+}
+
+// הוסף פונקציה חדשה ב-main-area-graves.js
+async function loadGravesForAreaGraveWithCard(areaGraveId) {
+    try {
+        const cardHtml = await createAreaGraveCard(areaGraveId);
+        const mainContent = document.querySelector('.main-content');
+        
+        let cardContainer = document.getElementById('itemCard');
+        if (!cardContainer) {
+            cardContainer = document.createElement('div');
+            cardContainer.id = 'itemCard';
+            
+            const statsGrid = document.getElementById('statsGrid');
+            if (statsGrid) {
+                statsGrid.insertAdjacentElement('afterend', cardContainer);
+            } else {
+                const tableContainer = document.querySelector('.table-container');
+                if (tableContainer) {
+                    mainContent.insertBefore(cardContainer, tableContainer);
+                }
+            }
+        }
+        
+        cardContainer.innerHTML = cardHtml;
+        
+        // טען קברים כרגיל
+        loadGravesForAreaGrave(areaGraveId);
+    } catch (error) {
+        console.error('Error loading graves with card:', error);
+        showError('שגיאה בטעינת הקברים');
+    }
+}
+
+// ------
 
 // הוספת אחוזת קבר חדשה
 async function openAddAreaGrave(preselectedRowId = null) {

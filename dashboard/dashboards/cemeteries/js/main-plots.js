@@ -35,20 +35,6 @@ async function loadAllPlots() {
 }
 
 // טעינת חלקות לגוש ספציפי
-async function loadPlotsForBlock2(blockId) {
-    console.log('Loading plots for block:', blockId);
-    try {
-        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=plot&parent_id=${blockId}`);
-        const data = await response.json();
-        
-        if (data.success) {
-            displayPlotsInMainContent(data.data, window.selectedItems.block?.name);
-        }
-    } catch (error) {
-        console.error('Error loading plots:', error);
-        showError('שגיאה בטעינת חלקות');
-    }
-}
 async function loadPlotsForBlock(blockId) {
     console.log('Loading plots for block:', blockId);
     try {
@@ -151,7 +137,7 @@ function displayPlotsInMainContent(plots, blockName = null) {
 }
 
 // פתיחת חלקה ספציפית - מעבר לתצוגת אחוזות קבר (דילוג על שורות!)
-function openPlot(plotId, plotName) {
+function openPlot2(plotId, plotName) {
     console.log('Opening plot:', plotId, plotName);
     
     // שמור את הבחירה
@@ -173,41 +159,64 @@ function openPlot(plotId, plotName) {
     updateBreadcrumb(breadcrumbPath);
 }
 
-// טעינת אחוזות קבר לחלקה (דרך השורות)
-async function loadAreaGravesForPlot2(plotId) {
-    console.log('Loading area graves for plot:', plotId);
+// -------
+// החלף את openPlot ב-main-plots.js
+async function openPlot(plotId, plotName) {
+    console.log('Opening plot:', plotId, plotName);
+    
+    // שמור את הבחירה
+    window.selectedItems.plot = { id: plotId, name: plotName };
+    window.currentType = 'areaGrave';
+    window.currentParentId = plotId;
+    
+    // עדכן את הסידבר - הצג את החלקה הנבחרת
+    updateSidebarSelection('plot', plotId, plotName);
+    
+    // טען את אחוזות הקבר עם כרטיס החלקה
+    await loadAreaGravesForPlotWithCard(plotId);
+    
+    // עדכון breadcrumb
+    let breadcrumbPath = `חלקות › ${plotName}`;
+    if (window.selectedItems.cemetery && window.selectedItems.block) {
+        breadcrumbPath = `בתי עלמין › ${window.selectedItems.cemetery.name} › גושים › ${window.selectedItems.block.name} › חלקות › ${plotName}`;
+    }
+    updateBreadcrumb(breadcrumbPath);
+}
+
+// הוסף פונקציה חדשה ב-main-plots.js
+async function loadAreaGravesForPlotWithCard(plotId) {
     try {
-        // קודם טען את השורות של החלקה
-        const rowsResponse = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=row&parent_id=${plotId}`);
-        const rowsData = await rowsResponse.json();
+        const cardHtml = await createPlotCard(plotId);
+        const mainContent = document.querySelector('.main-content');
         
-        if (rowsData.success && rowsData.data.length > 0) {
-            // טען את כל אחוזות הקבר של כל השורות
-            const areaGraves = [];
-            for (const row of rowsData.data) {
-                const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=area_grave&parent_id=${row.id}`);
-                const data = await response.json();
-                if (data.success) {
-                    // הוסף את מידע השורה לכל אחוזת קבר
-                    data.data.forEach(area => {
-                        area.row_name = row.name;
-                        area.row_id = row.id;
-                        areaGraves.push(area);
-                    });
+        let cardContainer = document.getElementById('itemCard');
+        if (!cardContainer) {
+            cardContainer = document.createElement('div');
+            cardContainer.id = 'itemCard';
+            
+            const statsGrid = document.getElementById('statsGrid');
+            if (statsGrid) {
+                statsGrid.insertAdjacentElement('afterend', cardContainer);
+            } else {
+                const tableContainer = document.querySelector('.table-container');
+                if (tableContainer) {
+                    mainContent.insertBefore(cardContainer, tableContainer);
                 }
             }
-            
-            // הצג את אחוזות הקבר עם מידע על השורות
-            displayAreaGravesWithRows(areaGraves, rowsData.data, window.selectedItems.plot?.name);
-        } else {
-            // אין שורות - הצע ליצור
-            displayEmptyPlot(window.selectedItems.plot?.name);
         }
+        
+        cardContainer.innerHTML = cardHtml;
+        
+        // טען אחוזות קבר כרגיל
+        loadAreaGravesForPlot(plotId);
     } catch (error) {
-        console.error('Error loading area graves for plot:', error);
-        showError('שגיאה בטעינת אחוזות קבר');
+        console.error('Error loading area graves with card:', error);
+        showError('שגיאה בטעינת אחוזות הקבר');
     }
 }
+// -------
+
+// טעינת אחוזות קבר לחלקה (דרך השורות)
 async function loadAreaGravesForPlot(plotId) {
     console.log('Loading area graves for plot:', plotId);
     try {

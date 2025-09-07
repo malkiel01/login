@@ -35,20 +35,6 @@ async function loadAllGraves() {
 }
 
 // טעינת קברים לאחוזת קבר ספציפית
-async function loadGravesForAreaGrave2(areaGraveId) {
-    console.log('Loading graves for area grave:', areaGraveId);
-    try {
-        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=grave&parent_id=${areaGraveId}`);
-        const data = await response.json();
-        
-        if (data.success) {
-            displayGravesInMainContent(data.data, window.selectedItems.areaGrave?.name);
-        }
-    } catch (error) {
-        console.error('Error loading graves:', error);
-        showError('שגיאה בטעינת קברים');
-    }
-}
 async function loadGravesForAreaGrave(areaGraveId) {
     console.log('Loading graves for area grave:', areaGraveId);
     try {

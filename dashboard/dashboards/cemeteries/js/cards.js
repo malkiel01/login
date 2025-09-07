@@ -461,7 +461,7 @@ async function getAreaGraveStats2(areaGraveId) {
     }
 }
 
-async function getPlotRows2(plotId) {
+async function getPlotRows(plotId) {
     try {
         const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=row&parent_id=${plotId}`);
         const data = await response.json();

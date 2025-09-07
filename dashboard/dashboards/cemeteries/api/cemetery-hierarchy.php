@@ -558,25 +558,57 @@ try {
                     $stats['occupied'] = $result['occupied'] ?? 0;
                     break;
                     
+                // case 'area_grave_old':
+                //     // ספירת קברים באחוזת קבר
+                //     $stmt = $pdo->prepare("
+                //         SELECT 
+                //             COUNT(*) as total,
+                //             SUM(CASE WHEN grave_status = 1 THEN 1 ELSE 0 END) as available,
+                //             SUM(CASE WHEN grave_status = 2 THEN 1 ELSE 0 END) as purchased,
+                //             SUM(CASE WHEN grave_status = 3 THEN 1 ELSE 0 END) as occupied
+                //         FROM graves 
+                //         WHERE area_grave_id = :id AND is_active = 1
+                //     ");
+                //     $stmt->execute(['id' => $itemId]);
+                //     $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                //     $stats['total'] = $result['total'] ?? 0;
+                //     $stats['available'] = $result['available'] ?? 0;
+                //     $stats['purchased'] = $result['purchased'] ?? 0;
+                //     $stats['occupied'] = $result['occupied'] ?? 0;
+                //     break;
                 case 'area_grave':
-                    // ספירת קברים באחוזת קבר
-                    $stmt = $pdo->prepare("
-                        SELECT 
-                            COUNT(*) as total,
-                            SUM(CASE WHEN grave_status = 1 THEN 1 ELSE 0 END) as available,
-                            SUM(CASE WHEN grave_status = 2 THEN 1 ELSE 0 END) as purchased,
-                            SUM(CASE WHEN grave_status = 3 THEN 1 ELSE 0 END) as occupied
-                        FROM graves 
-                        WHERE area_grave_id = :id AND is_active = 1
-                    ");
-                    $stmt->execute(['id' => $itemId]);
-                    $result = $stmt->fetch(PDO::FETCH_ASSOC);
-                    $stats['total'] = $result['total'] ?? 0;
-                    $stats['available'] = $result['available'] ?? 0;
-                    $stats['purchased'] = $result['purchased'] ?? 0;
-                    $stats['occupied'] = $result['occupied'] ?? 0;
-                    break;
-                    
+                    if (isset($_GET['plot_id'])) {
+                        // קודם מצא את כל השורות של החלקה
+                        $rows_query = "SELECT id FROM rows WHERE plot_id = :plot_id";
+                        $stmt = $pdo->prepare($rows_query);
+                        $stmt->execute(['plot_id' => $_GET['plot_id']]);
+                        $row_ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
+                        
+                        if (!empty($row_ids)) {
+                            $query = "SELECT * FROM area_graves 
+                                    WHERE row_id IN (" . implode(',', $row_ids) . ")
+                                    AND is_active = 1 
+                                    ORDER BY name";
+                            $stmt = $pdo->prepare($query);
+                            $stmt->execute();
+                            $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                        } else {
+                            $data = [];
+                        }
+                    } elseif (isset($_GET['parent_id'])) {
+                        // זה לשורה ספציפית
+                        $query = "SELECT * FROM area_graves WHERE row_id = :parent_id AND is_active = 1 ORDER BY name";
+                        $stmt = $pdo->prepare($query);
+                        $stmt->execute(['parent_id' => $_GET['parent_id']]);
+                        $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                    } else {
+                        // כל אחוזות הקבר
+                        $query = "SELECT * FROM area_graves WHERE is_active = 1 ORDER BY name";
+                        $stmt = $pdo->prepare($query);
+                        $stmt->execute();
+                        $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                    }
+                    break;    
                 default:
                     throw new Exception('סוג פריט לא תקין');
             }

@@ -200,6 +200,11 @@ async function createPlotCard(plotId) {
                             <svg class="icon-sm"><use xlink:href="#icon-rows"></use></svg>
                             ניהול שורות
                         </button>
+                        <!-- הוסף את הכפתור הזה! -->
+                        <button class="info-card-btn" onclick="openAddAreaGrave()">
+                            <svg class="icon-sm"><use xlink:href="#icon-plus"></use></svg>
+                            הוסף אחוזת קבר
+                        </button>
                     </div>
                 </div>
                 

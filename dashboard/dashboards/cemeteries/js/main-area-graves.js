@@ -462,7 +462,13 @@ window.submitAreaGraveFormWithRow = async function(event) {
             
             // רענן את התצוגה
             if (window.selectedItems.plot) {
-                loadAreaGravesForPlot(window.selectedItems.plot.id);
+                // loadAreaGravesForPlot(window.selectedItems.plot.id);
+
+                const cardHtml = await createPlotCard(window.selectedItems.plot.id);
+                const cardContainer = document.getElementById('itemCard');
+                if (cardContainer) {
+                    cardContainer.innerHTML = cardHtml;
+                }
             } else {
                 loadAllAreaGraves();
             }

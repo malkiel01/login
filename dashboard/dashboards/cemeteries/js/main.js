@@ -278,8 +278,33 @@ async function performQuickSearch(query) {
 }
 
 // תקן את openAddModal (במקום השורה 540)
+function openAddModal2() {
+    console.log('Opening add modal for type:', currentType);
+    
+    // בדיקה שיש הורה אם צריך
+    if (currentType !== 'cemetery' && !currentParentId) {
+        showWarning('יש לבחור ' + getParentName(currentType) + ' תחילה');
+        return;
+    }
+    
+    // בדיקה אם פונקציית המודל קיימת
+    if (typeof window.openModal === 'function') {
+        window.openModal(currentType, currentParentId, null);
+    } else {
+        // אם המודל לא נטען, הצג טופס פשוט
+        createSimpleAddForm();
+    }
+}
 function openAddModal() {
     console.log('Opening add modal for type:', currentType);
+    
+    // אם אנחנו במצב של אחוזת קבר, קרא לפונקציה הנכונה
+    if (currentType === 'areaGrave') {
+        if (typeof window.openAddAreaGrave === 'function') {
+            window.openAddAreaGrave();
+            return;
+        }
+    }
     
     // בדיקה שיש הורה אם צריך
     if (currentType !== 'cemetery' && !currentParentId) {

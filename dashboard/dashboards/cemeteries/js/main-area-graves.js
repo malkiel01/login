@@ -33,7 +33,7 @@ async function loadAllAreaGraves() {
 }
 
 // טעינת אחוזות קבר לחלקה (דרך השורות)
-async function loadAreaGravesForPlot(plotId) {
+async function loadAreaGravesForPlot2(plotId) {
     console.log('Loading area graves for plot:', plotId);
     try {
         // תחילה טען את השורות
@@ -53,6 +53,22 @@ async function loadAreaGravesForPlot(plotId) {
         
         if (data.success) {
             displayAreaGravesWithRows(data.data, rows, window.selectedItems.plot?.name);
+        }
+    } catch (error) {
+        console.error('Error loading area graves for plot:', error);
+        showError('שגיאה בטעינת אחוזות קבר');
+    }
+}
+// טעינת אחוזות קבר לחלקה
+async function loadAreaGravesForPlot(plotId) {
+    console.log('Loading area graves for plot:', plotId);
+    try {
+        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=area_grave&plot_id=${plotId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            // פשוט הצג את אחוזות הקבר בטבלה רגילה, בלי קיבוץ לפי שורות
+            displayAreaGravesInMainContent(data.data);
         }
     } catch (error) {
         console.error('Error loading area graves for plot:', error);

@@ -415,7 +415,7 @@ window.submitAreaGraveFormWithRow = async function(event) {
         name: formData.get('name'),
         grave_type: formData.get('grave_type') || null,
         coordinates: formData.get('coordinates') || null,
-        notes: formData.get('notes') || null,
+        // notes: formData.get('notes') || null,
         row_id: rowId,
         is_active: 1
     };

@@ -382,7 +382,7 @@ async function createAreaGraveFormWithRowSelection(selectedRowId = null) {
             </div>
             <div style="margin-bottom: 15px;">
                 <label style="display: block; margin-bottom: 5px;">הערות:</label>
-                <textarea name="notes" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; height: 60px;"></textarea>
+                <textarea name="comments" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; height: 60px;"></textarea>
             </div>
             <div style="display: flex; gap: 10px; justify-content: flex-end;">
                 <button type="button" onclick="document.getElementById('areaGraveAddForm').remove()" 
@@ -415,7 +415,7 @@ window.submitAreaGraveFormWithRow = async function(event) {
         name: formData.get('name'),
         grave_type: formData.get('grave_type') || null,
         coordinates: formData.get('coordinates') || null,
-        // notes: formData.get('notes') || null,
+        comments: formData.get('comments') || null,
         row_id: rowId,
         is_active: 1
     };

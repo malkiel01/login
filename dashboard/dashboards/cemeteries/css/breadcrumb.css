@@ -132,7 +132,7 @@
 }
 
 /* Responsive */
-@media (max-width: 768px) {
+/* @media (max-width: 768px) {
     .breadcrumb {
         gap: 0;
     }
@@ -151,7 +151,7 @@
         margin: 0 6px;
         font-size: 14px;
     }
-}
+} */
 
 /* Small Mobile */
 @media (max-width: 480px) {

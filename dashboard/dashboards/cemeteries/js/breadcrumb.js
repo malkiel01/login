@@ -130,11 +130,15 @@ const BreadcrumbManager = {
         const container = document.querySelector(this.config.containerSelector);
         if (!container) return;
         
-        let html = '<div class="breadcrumb-container"><div class="breadcrumb">';
+        let html = '';
         
         this.currentPath.forEach((item, index) => {
-            const isLast = index === this.currentPath.length - 1;
+            // Add separator (except for first item)
+            if (index > 0) {
+                html += `<span class="breadcrumb-separator">${this.config.separator}</span>`;
+            }
             
+            // Render item
             if (item.clickable) {
                 const isHome = item.type === 'home';
                 html += `
@@ -145,7 +149,6 @@ const BreadcrumbManager = {
                        data-index="${index}">
                         <span class="breadcrumb-icon">${item.icon}</span>
                         <span class="breadcrumb-text">${item.name}</span>
-                        ${!isLast ? `<span class="breadcrumb-separator">${this.config.separator}</span>` : ''}
                     </a>
                 `;
             } else {
@@ -159,10 +162,46 @@ const BreadcrumbManager = {
             }
         });
         
-        html += '</div></div>';
         container.innerHTML = html;
         this.attachEventHandlers();
     },
+    render() {
+       const container = document.querySelector(this.config.containerSelector);
+       if (!container) return;
+       
+       let html = '<div class="breadcrumb-container"><div class="breadcrumb">';
+       
+       this.currentPath.forEach((item, index) => {
+           const isLast = index === this.currentPath.length - 1;
+           
+           if (item.clickable) {
+               const isHome = item.type === 'home';
+               html += `
+                   <a href="#" 
+                      class="breadcrumb-item breadcrumb-clickable ${isHome ? 'breadcrumb-home' : ''}"
+                      data-type="${item.type}"
+                      data-id="${item.id || ''}"
+                      data-index="${index}">
+                       <span class="breadcrumb-icon">${item.icon}</span>
+                       <span class="breadcrumb-text">${item.name}</span>
+                       ${!isLast ? `<span class="breadcrumb-separator">${this.config.separator}</span>` : ''}
+                   </a>
+               `;
+           } else {
+               // Current item (not clickable)
+               html += `
+                   <span class="breadcrumb-item breadcrumb-current">
+                       <span class="breadcrumb-icon">${item.icon}</span>
+                       <span class="breadcrumb-text">${item.name}</span>
+                   </span>
+               `;
+           }
+       });
+       
+       html += '</div></div>';
+       container.innerHTML = html;
+       this.attachEventHandlers();
+   },
     
     /**
      * Attach click event handlers

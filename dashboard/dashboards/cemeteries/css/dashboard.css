@@ -1,16 +1,16 @@
 /* dashboard.css */
 
-.dashboard-wrapper {
+/* .dashboard-wrapper {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-}
+} */
 
-.dashboard-container {
+/* .dashboard-container {
     display: flex;
     flex: 1;
     position: relative;
-}
+} */
 
 .main-content {
     flex: 1;

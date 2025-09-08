@@ -261,28 +261,17 @@
 }
 
 /* ================================ */
-/* מסך קטן מאוד (שעונים חכמים)     */
+/* מסך קטן מאוד וטאבלט - הסתרה     */
 /* ================================ */
 @media (max-width: 380px) {
     .btn-home-responsive {
-        width: 35px;
-        height: 35px;
-        margin-left: 5px;
-    }
-    
-    .icon-home {
-        width: 18px;
-        height: 18px;
+        display: none !important;
     }
 }
 
-/* ================================ */
-/* Tablet portrait                  */
-/* ================================ */
 @media (min-width: 481px) and (max-width: 768px) {
     .btn-home-responsive {
-        width: 42px;
-        height: 42px;
+        display: none !important;
     }
 }
 

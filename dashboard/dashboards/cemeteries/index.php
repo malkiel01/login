@@ -134,7 +134,7 @@ if (!checkPermission('view', 'cemetery')) {
     </div>
     
     <!-- Modals -->
-    <?php include 'dashboards/cemeteries/includes/modals.php'; ?>
+    <!-- < ?php include 'dashboards/cemeteries/includes/modals.php'; ?> -->
     
     <!-- JavaScript Files - כולל הקובץ החדש לרספונסיביות -->
     <script src="dashboards/cemeteries/js/main.js"></script>

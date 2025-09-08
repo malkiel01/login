@@ -1,39 +1,32 @@
 // dashboard/dashboards/cemeteries/js/main.js
 
 // משתנים גלובליים
-
 window.currentType = 'cemetery';
 window.currentParentId = null;
 window.selectedItems = {};
 let currentPage = 1;
 let isLoading = false;
 
-
 // הגדרות API - נתיב מלא מהשורש
 const API_BASE = '/dashboard/dashboards/cemeteries/api/';
 
-
 // אתחול הדשבורד
-function initDashboard2() {
+function initDashboard() {
     console.log('Initializing Cemetery Dashboard...');
     
-    // טעינת סטטיסטיקות
+    // אתחול משתנים גלובליים
+    window.currentType = 'cemetery';
+    window.currentParentId = null;
+    window.selectedItems = window.selectedItems || {};
+    
+    // אתחול אירועים וסטטיסטיקות
+    setupEventListeners();
     loadStats();
     
-    // טעינת נתונים ראשוניים - רק אם הפונקציה קיימת
+    // טען נתונים ראשוניים
     if (typeof loadAllCemeteries === 'function') {
         loadAllCemeteries();
     }
-    
-    // הגדרת אירועים
-    setupEventListeners();
-    
-    // רענון אוטומטי כל 5 דקות
-    setInterval(() => {
-        if (!isLoading) {
-            refreshAllData();
-        }
-    }, 5 * 60 * 1000);
 }
 
 // הגדרת מאזינים לאירועים
@@ -104,24 +97,28 @@ function updateHeaderStats(stats) {
         });
     }
     
-    document.getElementById('headerTotalGraves').textContent = totalGraves.toLocaleString();
-    document.getElementById('headerAvailableGraves').textContent = available.toLocaleString();
-    document.getElementById('headerReservedGraves').textContent = reserved.toLocaleString();
-    document.getElementById('headerOccupiedGraves').textContent = occupied.toLocaleString();
+    const headerTotal = document.getElementById('headerTotalGraves');
+    const headerAvailable = document.getElementById('headerAvailableGraves');
+    const headerReserved = document.getElementById('headerReservedGraves');
+    const headerOccupied = document.getElementById('headerOccupiedGraves');
+    
+    if (headerTotal) headerTotal.textContent = totalGraves.toLocaleString();
+    if (headerAvailable) headerAvailable.textContent = available.toLocaleString();
+    if (headerReserved) headerReserved.textContent = reserved.toLocaleString();
+    if (headerOccupied) headerOccupied.textContent = occupied.toLocaleString();
 }
 
 // עדכון ספירות בסרגל צד
 function updateSidebarCounts(stats) {
     if (stats.counts) {
-        // השתמש בפונקציה הבודדת שיצרנו
         updateSidebarCount('cemeteriesCount', stats.counts.cemeteries?.count || 0);
         updateSidebarCount('blocksCount', stats.counts.blocks?.count || 0);
         updateSidebarCount('plotsCount', stats.counts.plots?.count || 0);
         updateSidebarCount('areaGravesCount', stats.counts.area_graves?.count || 0);
         updateSidebarCount('gravesCount', stats.counts.graves?.count || 0);
-        // הסרנו את rowsCount כי הסרנו את השורות מהתצוגה
     }
 }
+
 function updateSidebarCount(elementId, count) {
     const element = document.getElementById(elementId);
     if (element) {
@@ -141,122 +138,6 @@ function updateSelectedItem(type, id) {
     if (item) {
         item.classList.add('selected');
     }
-}
-
-// -------------
-
-// הוסף את זה לקובץ main.js - יחליף את הפונקציה הישנה
-
-/**
- * פונקציה מעודכנת שעובדת עם המערכת החדשה והישנה
- * @param {string|object} pathOrItems - מחרוזת נתיב או אובייקט פריטים
- */
-function updateBreadcrumb(pathOrItems) {
-    // אם זו מחרוזת (השיטה הישנה)
-    if (typeof pathOrItems === 'string') {
-        // נסה לבנות אובייקט מהמחרוזת אם אפשר
-        if (window.selectedItems && Object.keys(window.selectedItems).length > 0) {
-            // השתמש ב-selectedItems הגלובלי
-            BreadcrumbManager.setPath(window.selectedItems);
-        } else {
-            // אחרת השתמש בפונקציה לתאימות אחורה
-            BreadcrumbManager.updateFromString(pathOrItems);
-        }
-    } 
-    // אם זה אובייקט (השיטה החדשה)
-    else if (typeof pathOrItems === 'object') {
-        BreadcrumbManager.setPath(pathOrItems);
-    }
-    // אם לא קיבלנו כלום, השתמש ב-selectedItems הגלובלי
-    else {
-        BreadcrumbManager.setPath(window.selectedItems || {});
-    }
-}
-
-/**
- * פונקציה חדשה לאתחול ה-Breadcrumb בטעינת הדף
- */
-function initializeBreadcrumb() {
-    // בדוק אם יש נתיב שמור ב-sessionStorage
-    const savedPath = sessionStorage.getItem('breadcrumbPath');
-    if (savedPath) {
-        try {
-            const items = JSON.parse(savedPath);
-            BreadcrumbManager.setPath(items);
-            window.selectedItems = items;
-        } catch (e) {
-            console.error('Failed to restore breadcrumb:', e);
-            BreadcrumbManager.reset();
-        }
-    } else {
-        BreadcrumbManager.reset();
-    }
-}
-
-/**
- * שמירת הנתיב הנוכחי
- */
-function saveBreadcrumbPath() {
-    if (window.selectedItems) {
-        sessionStorage.setItem('breadcrumbPath', JSON.stringify(window.selectedItems));
-    }
-}
-
-// הוסף מאזין לשמירת הנתיב בכל שינוי
-window.addEventListener('beforeunload', saveBreadcrumbPath);
-
-// עדכון פונקציית האתחול הראשית
-function initDashboard() {
-    console.log('Initializing Cemetery Dashboard...');
-    
-    // אתחול ה-Breadcrumb
-    initializeBreadcrumb();
-    
-    // אתחול משתנים גלובליים
-    window.currentType = 'cemetery';
-    window.currentParentId = null;
-    window.selectedItems = window.selectedItems || {};
-    
-    // טען נתונים ראשוניים
-    loadInitialData();
-    
-    // אתחול אירועים
-    initializeEventListeners();
-    
-    // טען סטטיסטיקות
-    loadDashboardStats();
-}
-
-// -------------
-
-// עדכון שביל פירורים (Breadcrumb)
-function updateBreadcrumb2() {
-    const breadcrumb = document.getElementById('breadcrumb');
-    if (!breadcrumb) return;
-    
-    let path = [];
-    
-    if (selectedItems.cemetery) {
-        path.push(`<span class="breadcrumb-item">🏛️ ${selectedItems.cemetery.name}</span>`);
-    }
-    if (selectedItems.block) {
-        path.push(`<span class="breadcrumb-separator">›</span>`);
-        path.push(`<span class="breadcrumb-item">📦 ${selectedItems.block.name}</span>`);
-    }
-    if (selectedItems.plot) {
-        path.push(`<span class="breadcrumb-separator">›</span>`);
-        path.push(`<span class="breadcrumb-item">📋 ${selectedItems.plot.name}</span>`);
-    }
-    if (selectedItems.row) {
-        path.push(`<span class="breadcrumb-separator">›</span>`);
-        path.push(`<span class="breadcrumb-item">📏 ${selectedItems.row.name}</span>`);
-    }
-    if (selectedItems.areaGrave) {
-        path.push(`<span class="breadcrumb-separator">›</span>`);
-        path.push(`<span class="breadcrumb-item">🏘️ ${selectedItems.areaGrave.name}</span>`);
-    }
-    
-    breadcrumb.innerHTML = path.length > 0 ? path.join('') : '<span class="breadcrumb-item">ראשי</span>';
 }
 
 // עדכון טבלת נתונים
@@ -326,20 +207,6 @@ function toggleFullscreen() {
 }
 
 // רענון כל הנתונים
-// async function refreshAllData() {
-//     console.log('Refreshing all data...');
-//     isLoading = true;
-    
-//     await loadStats();
-//     await loadCemeteries();
-    
-//     if (selectedItems.cemetery) {
-//         await loadBlocks(selectedItems.cemetery.id);
-//     }
-    
-//     isLoading = false;
-//     showSuccess('הנתונים עודכנו בהצלחה');
-// }
 async function refreshAllData() {
     console.log('Refreshing all data...');
     isLoading = true;
@@ -363,7 +230,7 @@ async function performQuickSearch(query) {
     // TODO: implement search
 }
 
-// תקן את openAddModal (במקום השורה 540)
+// פתיחת מודל הוספה
 function openAddModal() {
     console.log('Opening add modal for type:', currentType);
     
@@ -390,7 +257,7 @@ function openAddModal() {
     }
 }
 
-// הוסף פונקציה חדשה לטופס פשוט
+// יצירת טופס פשוט להוספה
 function createSimpleAddForm() {
     const existingForm = document.getElementById('simpleAddForm');
     if (existingForm) existingForm.remove();
@@ -441,7 +308,7 @@ function createSimpleAddForm() {
     document.body.insertAdjacentHTML('beforeend', formHtml);
 }
 
-// הוסף פונקציה לשליחת הטופס
+// שליחת טופס פשוט
 window.submitSimpleForm = async function(event) {
     event.preventDefault();
     const formData = new FormData(event.target);
@@ -484,7 +351,7 @@ window.submitSimpleForm = async function(event) {
     }
 }
 
-// הוסף את הפונקציות העזר
+// פונקציות עזר
 function getHierarchyLevel(type) {
     const levels = {
         'cemetery': 'בית עלמין',
@@ -567,7 +434,15 @@ function closeAllModals() {
     });
 }
 
-// פונקציות עזר להודעות
+// שמירת הפריט הנוכחי (למקלדת)
+function saveCurrentItem() {
+    const saveBtn = document.querySelector('form button[type="submit"]');
+    if (saveBtn) {
+        saveBtn.click();
+    }
+}
+
+// פונקציות הודעות
 function showSuccess(message) {
     if (typeof showToast === 'function') {
         showToast('success', message);
@@ -604,15 +479,16 @@ function formatDate(dateString) {
     });
 }
 
-// פונקציה מעודכנת לניהול הסידבר
+// ניהול הסידבר
 function updateSidebarSelection(type, id, name) {
     console.log('updateSidebarSelection called:', type, id, name);
-    // 1. הסר את כל ה-active מהכותרות
+    
+    // הסר את כל ה-active מהכותרות
     document.querySelectorAll('.hierarchy-header').forEach(header => {
         header.classList.remove('active');
     });
     
-    // 2. הוסף active לכותרת הנוכחית
+    // הוסף active לכותרת הנוכחית
     const headers = {
         'cemetery': 0,
         'block': 1,
@@ -626,10 +502,10 @@ function updateSidebarSelection(type, id, name) {
         headerElements[headers[type]].classList.add('active');
     }
     
-    // 3. נקה את כל הבחירות מתחת לרמה הנוכחית
+    // נקה את כל הבחירות מתחת לרמה הנוכחית
     clearSidebarBelow(type);
     
-    // 4. הצג את הפריט הנבחר
+    // הצג את הפריט הנבחר
     const container = document.getElementById(`${type}SelectedItem`);
     if (container) {
         container.innerHTML = `
@@ -642,7 +518,7 @@ function updateSidebarSelection(type, id, name) {
     }
 }
 
-// פונקציה לניקוי כל הבחירות
+// ניקוי כל הבחירות בסידבר
 function clearAllSidebarSelections() {
     // הסר active מכל הכותרות
     document.querySelectorAll('.hierarchy-header').forEach(header => {
@@ -682,7 +558,7 @@ function clearSidebarBelow(type) {
     }
 }
 
-// בקובץ main.js - הוסף את הפונקציה הזו
+// ניקוי כרטיס פריט
 function clearItemCard() {
     const cardContainer = document.getElementById('itemCard');
     if (cardContainer) {
@@ -690,11 +566,15 @@ function clearItemCard() {
     }
 }
 
-
-// ייצוא הפונקציות כגלובליות
-window.updateSidebarSelection = updateSidebarSelection;
-window.clearAllSidebarSelections = clearAllSidebarSelections;
-window.clearSidebarBelow = clearSidebarBelow;
+// בחירת שורה בטבלה
+function selectTableRow(row) {
+    // הסר בחירה קודמת
+    document.querySelectorAll('#tableBody tr.selected').forEach(tr => {
+        tr.classList.remove('selected');
+    });
+    // הוסף בחירה לשורה הנוכחית
+    row.classList.add('selected');
+}
 
 // ייצוא פונקציות גלובליות
 window.initDashboard = initDashboard;
@@ -710,16 +590,19 @@ window.editItem = editItem;
 window.deleteItem = deleteItem;
 window.getHierarchyLevel = getHierarchyLevel;
 window.getParentColumn = getParentColumn;
-
-// הוסף בסוף main.js
+window.getParentName = getParentName;
+window.updateSidebarSelection = updateSidebarSelection;
+window.clearAllSidebarSelections = clearAllSidebarSelections;
+window.clearSidebarBelow = clearSidebarBelow;
 window.updateSidebarCount = updateSidebarCount;
-window.updateBreadcrumb = updateBreadcrumb;
 window.formatDate = formatDate;
 window.showSuccess = showSuccess;
 window.showError = showError;
 window.showWarning = showWarning;
 window.clearItemCard = clearItemCard;
+window.selectTableRow = selectTableRow;
 window.API_BASE = API_BASE;
+
 // ייצוא משתנים גלובליים
 window.currentType = currentType;
 window.currentParentId = currentParentId;

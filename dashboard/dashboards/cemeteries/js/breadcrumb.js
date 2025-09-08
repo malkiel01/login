@@ -1,12 +1,11 @@
 /**
- * מערכת Breadcrumb מרכזית
- * קובץ: /dashboard/dashboards/cemeteries/js/breadcrumb.js
+ * Breadcrumb Management System
+ * File: /dashboard/dashboards/cemeteries/js/breadcrumb.js
  */
 
-// אובייקט ראשי לניהול ה-Breadcrumb
 const BreadcrumbManager = {
     
-    // הגדרות בסיסיות
+    // Configuration
     config: {
         homeUrl: '/dashboard/',
         homeTitle: 'דף ראשי',
@@ -15,7 +14,7 @@ const BreadcrumbManager = {
         containerSelector: '#breadcrumb'
     },
     
-    // מבנה הנתיבים - ההיררכיה המלאה
+    // Hierarchy structure
     hierarchy: {
         cemetery: {
             name: 'בתי עלמין',
@@ -49,42 +48,51 @@ const BreadcrumbManager = {
         }
     },
     
-    // הנתיב הנוכחי
+    // Current breadcrumb path
     currentPath: [],
     
     /**
-     * איפוס הנתיב
+     * Initialize breadcrumb
      */
-    reset() {
-        this.currentPath = [];
-        this.render();
+    init() {
+        this.reset();
+        this.bindEventHandlers();
     },
     
     /**
-     * הגדרת נתיב מלא
-     * @param {Object} items - אובייקט עם כל הפריטים הנבחרים
-     * דוגמה: { cemetery: {id: 1, name: 'בית עלמין א'}, block: {id: 2, name: 'גוש 1'} }
+     * Reset breadcrumb to home
      */
-    setPath(items) {
-        this.currentPath = [];
-        
-        // הוסף את דף הבית תמיד
-        this.currentPath.push({
+    reset() {
+        this.currentPath = [{
             type: 'home',
             name: this.config.homeTitle,
             icon: this.config.homeIcon,
             url: this.config.homeUrl,
             clickable: true
-        });
+        }];
+        this.render();
+    },
+    
+    /**
+     * Update breadcrumb path
+     */
+    update(items) {
+        this.currentPath = [{
+            type: 'home',
+            name: this.config.homeTitle,
+            icon: this.config.homeIcon,
+            url: this.config.homeUrl,
+            clickable: true
+        }];
         
-        // בנה את הנתיב לפי ההיררכיה
+        // Build path from items
         const order = ['cemetery', 'block', 'plot', 'areaGrave', 'grave'];
         
         for (let type of order) {
             if (items[type]) {
                 const hierarchyItem = this.hierarchy[type];
                 
-                // הוסף את השם של הרמה (למשל "בתי עלמין")
+                // Add level name for cemetery
                 if (type === 'cemetery') {
                     this.currentPath.push({
                         type: 'level',
@@ -95,23 +103,20 @@ const BreadcrumbManager = {
                     });
                 }
                 
-                // הוסף את הפריט הספציפי
+                // Add specific item
                 this.currentPath.push({
                     type: type,
                     id: items[type].id,
                     name: items[type].name,
                     icon: hierarchyItem.icon,
                     clickable: true,
-                    item: items[type]
+                    data: items[type]
                 });
-            } else {
-                // אם הגענו לפריט שלא קיים, נעצור
-                break;
             }
         }
         
-        // הפריט האחרון לא צריך להיות לחיץ
-        if (this.currentPath.length > 0) {
+        // Mark last item as not clickable
+        if (this.currentPath.length > 1) {
             this.currentPath[this.currentPath.length - 1].clickable = false;
         }
         
@@ -119,70 +124,38 @@ const BreadcrumbManager = {
     },
     
     /**
-     * הוספת פריט בודד לנתיב
-     * @param {string} type - סוג הפריט
-     * @param {Object} item - הפריט עצמו
-     */
-    addItem(type, item) {
-        const hierarchyItem = this.hierarchy[type];
-        if (!hierarchyItem) return;
-        
-        this.currentPath.push({
-            type: type,
-            id: item.id,
-            name: item.name,
-            icon: hierarchyItem.icon,
-            clickable: true,
-            item: item
-        });
-        
-        this.render();
-    },
-    
-    /**
-     * עיבוד והצגת ה-Breadcrumb
+     * Render breadcrumb HTML
      */
     render() {
         const container = document.querySelector(this.config.containerSelector);
         if (!container) return;
         
-        // אם אין נתיב, הצג רק דף ראשי
-        if (this.currentPath.length === 0) {
-            container.innerHTML = `
-                <a href="${this.config.homeUrl}" class="breadcrumb-item breadcrumb-home">
-                    <span class="breadcrumb-icon">${this.config.homeIcon}</span>
-                    <span class="breadcrumb-text">${this.config.homeTitle}</span>
-                </a>
-            `;
-            return;
-        }
-        
-        // בנה את ה-HTML
         let html = '';
         
         this.currentPath.forEach((item, index) => {
-            // הוסף מפריד (חוץ מהפריט הראשון)
+            // Add separator (except for first item)
             if (index > 0) {
                 html += `<span class="breadcrumb-separator">${this.config.separator}</span>`;
             }
             
-            // בדוק אם הפריט לחיץ
+            // Render item
             if (item.clickable) {
+                const isHome = item.type === 'home';
                 html += `
                     <a href="#" 
-                       class="breadcrumb-item breadcrumb-clickable ${item.type === 'home' ? 'breadcrumb-home' : ''}"
+                       class="breadcrumb-item breadcrumb-clickable ${isHome ? 'breadcrumb-home' : ''}"
                        data-type="${item.type}"
                        data-id="${item.id || ''}"
                        data-index="${index}">
-                        ${item.icon ? `<span class="breadcrumb-icon">${item.icon}</span>` : ''}
+                        <span class="breadcrumb-icon">${item.icon}</span>
                         <span class="breadcrumb-text">${item.name}</span>
                     </a>
                 `;
             } else {
-                // פריט לא לחיץ (הנוכחי)
+                // Current item (not clickable)
                 html += `
                     <span class="breadcrumb-item breadcrumb-current">
-                        ${item.icon ? `<span class="breadcrumb-icon">${item.icon}</span>` : ''}
+                        <span class="breadcrumb-icon">${item.icon}</span>
                         <span class="breadcrumb-text">${item.name}</span>
                     </span>
                 `;
@@ -190,65 +163,76 @@ const BreadcrumbManager = {
         });
         
         container.innerHTML = html;
-        
-        // הוסף מאזינים לקליקים
-        this.attachClickHandlers();
+        this.attachEventHandlers();
     },
     
     /**
-     * הוספת מאזינים לקליקים על פריטי Breadcrumb
+     * Attach click event handlers
      */
-    attachClickHandlers() {
+    attachEventHandlers() {
         const container = document.querySelector(this.config.containerSelector);
         if (!container) return;
         
         container.querySelectorAll('.breadcrumb-clickable').forEach(item => {
-            item.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.handleClick(item);
-            });
+            item.removeEventListener('click', this.handleItemClick);
+            item.addEventListener('click', this.handleItemClick.bind(this));
         });
     },
     
     /**
-     * טיפול בלחיצה על פריט Breadcrumb
+     * Handle breadcrumb item click
      */
-    handleClick(element) {
+    handleItemClick(e) {
+        e.preventDefault();
+        
+        const element = e.currentTarget;
         const type = element.dataset.type;
         const id = element.dataset.id;
         const index = parseInt(element.dataset.index);
         
-        console.log('Breadcrumb clicked:', type, id, index);
-        
-        // אם זה דף הבית
+        // Navigate to home
         if (type === 'home') {
             window.location.href = this.config.homeUrl;
             return;
         }
         
-        // אם זה "בתי עלמין" הראשי
-        if (type === 'level' && this.currentPath[index].name === 'בתי עלמין') {
-            // טען את כל בתי העלמין
-            if (typeof loadAllCemeteries === 'function') {
-                loadAllCemeteries();
-            }
+        // Navigate to all items of a type
+        if (type === 'level') {
+            this.navigateToLevel(this.currentPath[index]);
             return;
         }
         
-        // נווט לפריט הספציפי
+        // Navigate to specific item
         this.navigateToItem(type, id, index);
     },
     
     /**
-     * ניווט לפריט ספציפי
+     * Navigate to a hierarchy level
+     */
+    navigateToLevel(levelItem) {
+        // Call appropriate function based on level
+        if (levelItem.name === 'בתי עלמין' && typeof loadAllCemeteries === 'function') {
+            loadAllCemeteries();
+        } else if (levelItem.name === 'גושים' && typeof loadAllBlocks === 'function') {
+            loadAllBlocks();
+        } else if (levelItem.name === 'חלקות' && typeof loadAllPlots === 'function') {
+            loadAllPlots();
+        } else if (levelItem.name === 'אחוזות קבר' && typeof loadAllAreaGraves === 'function') {
+            loadAllAreaGraves();
+        } else if (levelItem.name === 'קברים' && typeof loadAllGraves === 'function') {
+            loadAllGraves();
+        }
+    },
+    
+    /**
+     * Navigate to specific item
      */
     navigateToItem(type, id, index) {
-        // שמור רק את הנתיב עד הפריט שנלחץ
+        // Trim path to clicked item
         this.currentPath = this.currentPath.slice(0, index + 1);
         
-        // עדכן את הבחירות הגלובליות
+        // Update global selectedItems
         if (window.selectedItems) {
-            // נקה את כל הבחירות אחרי הפריט הנוכחי
             const order = ['cemetery', 'block', 'plot', 'areaGrave', 'grave'];
             let foundCurrent = false;
             
@@ -261,15 +245,15 @@ const BreadcrumbManager = {
             }
         }
         
-        // קרא לפונקציה המתאימה לפתיחת הפריט
-        const item = this.currentPath[index].item;
+        // Call appropriate navigation function
+        const item = this.currentPath[index].data;
         if (item) {
             this.openItem(type, item);
         }
     },
     
     /**
-     * פתיחת פריט לפי הסוג שלו
+     * Open specific item type
      */
     openItem(type, item) {
         switch(type) {
@@ -302,122 +286,49 @@ const BreadcrumbManager = {
     },
     
     /**
-     * עדכון Breadcrumb מפשוט - לשימוש מהקוד הקיים
-     * @param {string} pathString - מחרוזת נתיב כמו "בתי עלמין › גוש 1"
+     * Bind global event handlers
      */
-    updateFromString(pathString) {
-        // אם יש selectedItems, השתמש ב-setPath הרגיל
-        if (window.selectedItems && Object.keys(window.selectedItems).length > 0) {
-            this.setPath(window.selectedItems);
-            return;
-        }
-        
-        // אחרת, נסה לבנות נתיב מהמחרוזת
-        const container = document.querySelector(this.config.containerSelector);
-        if (!container) return;
-        
-        // תמיד התחל עם דף הבית (לחיץ)
-        let html = `
-            <a href="${this.config.homeUrl}" 
-               class="breadcrumb-item breadcrumb-clickable breadcrumb-home">
-                <span class="breadcrumb-icon">${this.config.homeIcon}</span>
-                <span class="breadcrumb-text">${this.config.homeTitle}</span>
-            </a>
-        `;
-        
-        // פרוק המחרוזת לחלקים
-        const parts = pathString.split(' › ');
-        
-        parts.forEach((part, index) => {
-            // הוסף מפריד
-            html += `<span class="breadcrumb-separator">${this.config.separator}</span>`;
-            
-            // נסה לזהות את סוג הפריט לפי הטקסט
-            let type = this.detectTypeFromText(part);
-            
-            if (index === parts.length - 1) {
-                // הפריט האחרון - לא לחיץ
-                html += `
-                    <span class="breadcrumb-item breadcrumb-current">
-                        ${this.getIconForText(part)}
-                        <span class="breadcrumb-text">${part}</span>
-                    </span>
-                `;
-            } else {
-                // פריטים באמצע - לחיצים
-                html += `
-                    <a href="#" 
-                       class="breadcrumb-item breadcrumb-clickable"
-                       onclick="BreadcrumbManager.handleTextClick('${part}', '${type}'); return false;">
-                        ${this.getIconForText(part)}
-                        <span class="breadcrumb-text">${part}</span>
-                    </a>
-                `;
+    bindEventHandlers() {
+        // Save path before unload
+        window.addEventListener('beforeunload', () => {
+            if (window.selectedItems) {
+                sessionStorage.setItem('breadcrumbPath', JSON.stringify(window.selectedItems));
             }
         });
-        
-        container.innerHTML = html;
-    },
-    
-    /**
-     * זיהוי סוג הפריט מהטקסט
-     */
-    detectTypeFromText(text) {
-        if (text.includes('בתי עלמין') || text.includes('בית עלמין')) return 'cemetery';
-        if (text.includes('גוש') || text.includes('גושים')) return 'block';
-        if (text.includes('חלק') || text.includes('חלקות')) return 'plot';
-        if (text.includes('אחוזת') || text.includes('אחוזות')) return 'areaGrave';
-        if (text.includes('קבר') || text.includes('קברים')) return 'grave';
-        return 'unknown';
-    },
-    
-    /**
-     * קבלת אייקון לפי הטקסט
-     */
-    getIconForText(text) {
-        if (text.includes('בתי עלמין') || text.includes('בית עלמין')) 
-            return '<span class="breadcrumb-icon">🏛️</span>';
-        if (text.includes('גוש'))
-            return '<span class="breadcrumb-icon">📦</span>';
-        if (text.includes('חלק'))
-            return '<span class="breadcrumb-icon">📋</span>';
-        if (text.includes('אחוז'))
-            return '<span class="breadcrumb-icon">🏘️</span>';
-        if (text.includes('קבר'))
-            return '<span class="breadcrumb-icon">⚰️</span>';
-        return '';
-    },
-    
-    /**
-     * טיפול בלחיצה על טקסט
-     */
-    handleTextClick(text, type) {
-        console.log('Breadcrumb text clicked:', text, type);
-        
-        // נסה לטעון לפי הטקסט
-        if (text === 'בתי עלמין' && typeof loadAllCemeteries === 'function') {
-            loadAllCemeteries();
-        } else if (text === 'גושים' && typeof loadAllBlocks === 'function') {
-            loadAllBlocks();
-        } else if (text === 'חלקות' && typeof loadAllPlots === 'function') {
-            loadAllPlots();
-        }
-        // אפשר להוסיף עוד מקרים לפי הצורך
     }
 };
 
-// פונקציה גלובלית לתאימות אחורה
-function updateBreadcrumb(pathString) {
-    if (pathString && typeof pathString === 'string') {
-        BreadcrumbManager.updateFromString(pathString);
-    } else if (typeof pathString === 'object') {
-        BreadcrumbManager.setPath(pathString);
+// Global function for backward compatibility
+function updateBreadcrumb(pathOrItems) {
+    if (typeof pathOrItems === 'object' && pathOrItems !== null) {
+        BreadcrumbManager.update(pathOrItems);
+    } else if (!pathOrItems || pathOrItems === 'ראשי') {
+        BreadcrumbManager.reset();
     } else {
-        BreadcrumbManager.setPath(window.selectedItems || {});
+        // For string paths, try to use selectedItems
+        if (window.selectedItems && Object.keys(window.selectedItems).length > 0) {
+            BreadcrumbManager.update(window.selectedItems);
+        }
     }
 }
 
-// אתחול בטעינת הדף
+// Initialize on DOM ready
 document.addEventListener('DOMContentLoaded', function() {
-    BreadcrumbManager.reset();
+    BreadcrumbManager.init();
+    
+    // Restore saved path if exists
+    const savedPath = sessionStorage.getItem('breadcrumbPath');
+    if (savedPath) {
+        try {
+            const items = JSON.parse(savedPath);
+            window.selectedItems = items;
+            BreadcrumbManager.update(items);
+        } catch (e) {
+            console.error('Failed to restore breadcrumb:', e);
+        }
+    }
 });
+
+// Export for global use
+window.BreadcrumbManager = BreadcrumbManager;
+window.updateBreadcrumb = updateBreadcrumb;

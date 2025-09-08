@@ -56,7 +56,8 @@ function openCemetery(cemeteryId, cemeteryName) {
     loadBlocksForCemetery(cemeteryId);
     
     // עדכן breadcrumb
-    updateBreadcrumb(`בתי עלמין › ${cemeteryName}`);
+    // updateBreadcrumb(`בתי עלמין › ${cemeteryName}`);
+    updateBreadcrumb(window.selectedItems);
 }
 
 // הצגת בתי עלמין בתוכן הראשי (לא בסידבר!)
@@ -116,7 +117,8 @@ function displayCemeteriesInMainContent(cemeteries) {
         tbody.appendChild(tr);
     });
     
-    updateBreadcrumb('בתי עלמין');
+    // updateBreadcrumb('בתי עלמין');
+    updateBreadcrumb({}); // או BreadcrumbManager.reset();
 }
 
 // הוספת בית עלמין חדש

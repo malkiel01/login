@@ -1,6 +1,6 @@
 <?php
 // cemetery_dashboard/index.php
-require_once __DIR__ . '/config.php';
+// require_once __DIR__ . '/config.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
 // require_once __DIR__ . '/dashboard/dashboards/cemeteries/config.php';
 // require_once __DIR__ . '/includes/functions.php';

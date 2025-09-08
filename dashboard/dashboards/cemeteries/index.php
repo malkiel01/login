@@ -16,13 +16,13 @@
     <title>< ?php echo DASHBOARD_NAME; ?></title>
     
     <!-- CSS Files - כל הקבצים כולל החדשים -->
-    <link rel="stylesheet" href="dashboards/cemeteries/css/main.css">
-    <link rel="stylesheet" href="dashboards/cemeteries/css/dashboard.css">
-    <link rel="stylesheet" href="dashboards/cemeteries/css/sidebar.css">
-    <link rel="stylesheet" href="dashboards/cemeteries/css/header.css">
-    <link rel="stylesheet" href="dashboards/cemeteries/css/tables.css">
-    <link rel="stylesheet" href="dashboards/cemeteries/css/forms.css">
-    <link rel="stylesheet" href="dashboards/cemeteries/css/cards.css">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/main.css">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/dashboard.css">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/sidebar.css">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/header.css">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/tables.css">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/forms.css">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/cards.css">
 </head>
 <body>
     <!-- SVG Icons - חייב להיות בתחילת ה-body -->

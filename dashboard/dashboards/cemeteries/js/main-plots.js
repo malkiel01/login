@@ -235,7 +235,21 @@ function displayEmptyPlot(plotName) {
 // הצגת אחוזות קבר עם מידע על השורות
 function displayAreaGravesWithRows(areaGraves, rows, plotName) {
     const tbody = document.getElementById('tableBody');
+    const thead = document.getElementById('tableHeaders'); // הוסף שורה זו
+    
     if (!tbody) return;
+    
+    // עדכון כותרות הטבלה לחלקות - הוסף בלוק זה
+    if (thead) {
+        thead.innerHTML = `
+            <th>מזהה</th>
+            <th>שם חלקה</th>
+            <th>קוד</th>
+            <th>מיקום</th>
+            <th>נוצר בתאריך</th>
+            <th>פעולות</th>
+        `;
+    }
     
     tbody.innerHTML = '';
     

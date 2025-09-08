@@ -179,7 +179,21 @@ async function loadAreaGravesForRow(rowId) {
 // הצגת אחוזות קבר בתוכן הראשי
 function displayAreaGravesInMainContent(areaGraves, rowName = null) {
     const tbody = document.getElementById('tableBody');
+    const thead = document.getElementById('tableHeaders'); // הוסף שורה זו
+    
     if (!tbody) return;
+    
+    // עדכון כותרות הטבלה לאחוזות קבר - הוסף בלוק זה
+    if (thead) {
+        thead.innerHTML = `
+            <th>מזהה</th>
+            <th>שם אחוזת קבר</th>
+            <th>סוג</th>
+            <th>מספר קברים</th>
+            <th>נוצר בתאריך</th>
+            <th>פעולות</th>
+        `;
+    }
     
     tbody.innerHTML = '';
     

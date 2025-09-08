@@ -138,7 +138,21 @@ async function loadBlocksForCemetery(cemeteryId) {
 // הצגת גושים בתוכן הראשי
 function displayBlocksInMainContent(blocks, cemeteryName = null) {
     const tbody = document.getElementById('tableBody');
+    const thead = document.getElementById('tableHeaders'); // הוסף שורה זו
+    
     if (!tbody) return;
+    
+    // עדכון כותרות הטבלה לגושים - הוסף בלוק זה
+    if (thead) {
+        thead.innerHTML = `
+            <th>מזהה</th>
+            <th>שם גוש</th>
+            <th>קוד</th>
+            <th>סטטוס</th>
+            <th>נוצר בתאריך</th>
+            <th>פעולות</th>
+        `;
+    }
     
     // נקה את הטבלה
     tbody.innerHTML = '';

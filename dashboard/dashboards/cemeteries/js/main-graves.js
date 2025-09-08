@@ -70,6 +70,8 @@ async function loadGravesForAreaGrave(areaGraveId) {
 // הצגת קברים בתוכן הראשי
 function displayGravesInMainContent(graves, areaGraveName = null) {
     const tbody = document.getElementById('tableBody');
+    const thead = document.getElementById('tableHeaders'); // וודא שזה קיים
+    
     if (!tbody) return;
     
     tbody.innerHTML = '';
@@ -108,8 +110,7 @@ function displayGravesInMainContent(graves, areaGraveName = null) {
     `;
     tbody.appendChild(statsRow);
     
-    // עדכון כותרות הטבלה לקברים
-    const thead = document.getElementById('tableHeaders');
+    // עדכון כותרות הטבלה לקברים - וודא שזה קיים
     if (thead) {
         thead.innerHTML = `
             <th>מזהה</th>

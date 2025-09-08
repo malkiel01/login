@@ -1,7 +1,7 @@
 <?php
 // cemetery_dashboard/index.php
-require_once 'dashboard/dashboards/cemeteries/config.php';
-require_once 'dashboard/dashboards/cemeteries/includes/functions.php';
+require_once '../dashboards/cemeteries/config.php';
+require_once '../dashboards/cemeteries/includes/functions.php';
 
 // בדיקת הרשאות
 // if (!checkPermission('view', 'cemetery')) {

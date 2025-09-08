@@ -1,10 +1,9 @@
-/* dashboard.css - מתוקן */
+/* dashboard.css */
 
 .dashboard-wrapper {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    position: relative;
 }
 
 .dashboard-container {
@@ -13,67 +12,38 @@
     position: relative;
 }
 
-/* Main Content - רספונסיבי */
 .main-content {
     flex: 1;
     padding: 2rem;
     background: #f8f9fa;
     min-height: calc(100vh - 80px);
-    margin-right: 280px;
-    transition: margin-right 0.3s ease;
+    margin-right: 280px; /* רוחב הסרגל צד */
 }
 
-/* Sidebar - תיקון z-index וחפיפות */
 .dashboard-sidebar {
     position: fixed;
     right: 0;
-    top: 80px;
+    top: 80px; /* גובה הכותרת */
     width: 280px;
     height: calc(100vh - 80px);
     overflow-y: auto;
     background: #fff;
     box-shadow: -2px 0 5px rgba(0,0,0,0.05);
-    z-index: 999; /* חשוב: מתחת להידר */
-    transition: transform 0.3s ease;
 }
 
-.dashboard-sidebar.collapsed {
-    transform: translateX(100%);
-}
-
-/* כשהסיידבר סגור */
-.main-content.sidebar-collapsed {
-    margin-right: 0;
-}
-
-/* כפתור המבורגר - מוסתר בדסקטופ, מוצג במובייל */
-.btn-toggle-sidebar {
-    display: none;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    padding: 0.5rem;
-    color: white;
-}
-
-/* Table Container */
 .table-container {
     background: white;
     border-radius: 8px;
     padding: 1rem;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     margin-top: 1rem;
-    overflow-x: auto; /* גלילה אופקית לטבלאות */
 }
 
-/* Action Bar */
 .action-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1rem;
-    flex-wrap: wrap;
-    gap: 1rem;
 }
 
 .breadcrumb {
@@ -82,199 +52,9 @@
     align-items: center;
     font-size: 14px;
     color: #666;
-    flex-wrap: wrap;
 }
 
 .action-buttons {
     display: flex;
     gap: 0.5rem;
-    flex-wrap: wrap;
-}
-
-/* Entity Items - תיקון תצוגה */
-.entity-item {
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 1rem;
-    margin-bottom: 0.5rem;
-    transition: all 0.3s ease;
-    cursor: pointer;
-}
-
-.entity-item:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    transform: translateY(-2px);
-}
-
-.entity-item-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-}
-
-.entity-item-title {
-    font-weight: 600;
-    font-size: 1rem;
-    color: #1e293b;
-}
-
-.entity-item-expand {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0.25rem;
-    color: #667eea;
-    transition: transform 0.3s ease;
-}
-
-.entity-item-expand:hover {
-    transform: rotate(90deg);
-}
-
-.entity-item-content {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 1rem;
-    margin-top: 0.5rem;
-}
-
-.entity-item-field {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.entity-item-label {
-    font-size: 0.75rem;
-    color: #94a3b8;
-    font-weight: 500;
-}
-
-.entity-item-value {
-    font-size: 0.875rem;
-    color: #475569;
-}
-
-/* Collapsible content for mobile */
-.entity-item-details {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease;
-}
-
-.entity-item.expanded .entity-item-details {
-    max-height: 500px;
-}
-
-/* Tablet - 768px to 1024px */
-@media (max-width: 1024px) {
-    .dashboard-header {
-        position: relative;
-        z-index: 1000; /* מעל הסיידבר */
-    }
-    
-    .btn-toggle-sidebar {
-        display: block;
-    }
-    
-    .main-content {
-        margin-right: 0;
-    }
-    
-    .dashboard-sidebar {
-        transform: translateX(100%);
-    }
-    
-    .dashboard-sidebar.open {
-        transform: translateX(0);
-    }
-    
-    /* Overlay כשהסיידבר פתוח */
-    .sidebar-overlay {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0,0,0,0.5);
-        z-index: 998;
-    }
-    
-    .sidebar-overlay.active {
-        display: block;
-    }
-}
-
-/* Mobile - פחות מ-768px */
-@media (max-width: 768px) {
-    .main-content {
-        padding: 1rem;
-    }
-    
-    .dashboard-sidebar {
-        width: 85%;
-        max-width: 300px;
-    }
-    
-    .action-bar {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    
-    .action-buttons {
-        width: 100%;
-    }
-    
-    .action-buttons .btn {
-        flex: 1;
-    }
-    
-    /* Entity items mobile optimization */
-    .entity-item-content {
-        grid-template-columns: 1fr;
-    }
-    
-    .entity-item {
-        position: relative;
-        padding-left: 2.5rem;
-    }
-    
-    .entity-item-expand {
-        position: absolute;
-        right: 0.5rem;
-        top: 0.5rem;
-    }
-    
-    /* טבלאות במובייל */
-    .table-responsive {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-    
-    table {
-        min-width: 500px;
-    }
-}
-
-/* Small Mobile - פחות מ-480px */
-@media (max-width: 480px) {
-    .dashboard-header h1 {
-        font-size: 1.25rem;
-    }
-    
-    .header-stats {
-        grid-template-columns: 1fr 1fr;
-    }
-    
-    .btn {
-        padding: 0.5rem 0.75rem;
-        font-size: 0.8rem;
-    }
-    
-    .breadcrumb {
-        font-size: 12px;
-    }
 }

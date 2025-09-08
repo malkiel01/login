@@ -4,7 +4,7 @@
  */
 
 /* Main Breadcrumb Container */
-#breadcrumb,
+/* #breadcrumb,
 .breadcrumb {
     display: flex;
     align-items: center;
@@ -15,10 +15,10 @@
     gap: 0;
     font-size: 14px;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-}
+} */
 
 /* Breadcrumb Items */
-.breadcrumb-item {
+/* .breadcrumb-item {
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -33,39 +33,39 @@
     transition: all 0.3s ease;
     position: relative;
     white-space: nowrap;
-}
+} */
 
 /* Clickable Items */
-.breadcrumb-clickable {
+/* .breadcrumb-clickable {
     cursor: pointer;
-}
+} */
 
-.breadcrumb-clickable:hover {
+/* .breadcrumb-clickable:hover {
     background: white;
     border-color: #cbd5e0;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     transform: translateY(-1px);
-}
+} */
 
-.breadcrumb-clickable:active {
+/* .breadcrumb-clickable:active {
     transform: translateY(0);
-}
+} */
 
 /* Current Item (not clickable) */
-.breadcrumb-current {
+/* .breadcrumb-current {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
     font-weight: 600;
     cursor: default;
     box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
-}
+} */
 
 /* Home Item Special Style */
-.breadcrumb-home {
+/* .breadcrumb-home {
     background: #f7fafc;
     border: 1px solid #e2e8f0;
-}
+} */
 
 .breadcrumb-home:hover {
     background: white;

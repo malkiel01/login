@@ -59,11 +59,25 @@ function openCemetery(cemeteryId, cemeteryName) {
     updateBreadcrumb(window.selectedItems);
 }
 
-// הצגת בתי עלמין בתוכן הראשי (לא בסידבר!)
+// הצגת בתי עלמין בתוכן הראשי
 function displayCemeteriesInMainContent(cemeteries) {
     const tbody = document.getElementById('tableBody');
+    const thead = document.getElementById('tableHeaders'); // הוסף שורה זו
+
     if (!tbody) return;
     
+    // עדכון כותרות הטבלה לבתי עלמין - הוסף בלוק זה
+    if (thead) {
+        thead.innerHTML = `
+            <th>מזהה</th>
+            <th>שם</th>
+            <th>קוד</th>
+            <th>סטטוס</th>
+            <th>נוצר בתאריך</th>
+            <th>פעולות</th>
+        `;
+    }
+
     // נקה את הטבלה
     tbody.innerHTML = '';
     

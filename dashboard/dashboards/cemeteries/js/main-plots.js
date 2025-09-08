@@ -59,7 +59,7 @@ async function loadPlotsForBlock(blockId) {
         const data = await response.json();
         
         if (data.success) {
-            displayPlotsInMainContent(data.data, selectedItems.block?.name);
+            displayPlotsInMainContent(data.data, window.selectedItems.block?.name);
         }
     } catch (error) {
         console.error('Error loading plots:', error);
@@ -127,13 +127,7 @@ function displayPlotsInMainContent(plots, blockName = null) {
     });
     
     // עדכן breadcrumb
-    let breadcrumbPath = 'חלקות';
-    if (window.selectedItems.cemetery && window.selectedItems.block) {
-        breadcrumbPath = `בתי עלמין › ${window.selectedItems.cemetery.name} › גושים › ${window.selectedItems.block.name} › חלקות`;
-    } else if (blockName) {
-        breadcrumbPath = `גושים › ${blockName} › חלקות`;
-    }
-    updateBreadcrumb(breadcrumbPath);
+    updateBreadcrumb(window.selectedItems);
 }
 
 // פתיחת חלקה ספציפית - מעבר לתצוגת אחוזות קבר (דילוג על שורות!)
@@ -152,11 +146,7 @@ async function openPlot(plotId, plotName) {
     await loadAreaGravesForPlotWithCard(plotId);
     
     // עדכון breadcrumb
-    let breadcrumbPath = `חלקות › ${plotName}`;
-    if (window.selectedItems.cemetery && window.selectedItems.block) {
-        breadcrumbPath = `בתי עלמין › ${window.selectedItems.cemetery.name} › גושים › ${window.selectedItems.block.name} › חלקות › ${plotName}`;
-    }
-    updateBreadcrumb(breadcrumbPath);
+    updateBreadcrumb(window.selectedItems);
 }
 
 // הוסף פונקציה חדשה ב-main-plots.js

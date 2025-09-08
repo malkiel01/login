@@ -51,10 +51,7 @@ async function openBlock(blockId, blockName) {
     await loadPlotsForBlockWithCard(blockId);
     
     // עדכן breadcrumb
-    const path = window.selectedItems.cemetery 
-        ? `בתי עלמין › ${window.selectedItems.cemetery.name} › גושים › ${blockName}`
-        : `גושים › ${blockName}`;
-    updateBreadcrumb(path);
+    updateBreadcrumb(window.selectedItems);
 }
 
 // הוסף פונקציה חדשה ב-main-blocks.js
@@ -130,7 +127,7 @@ async function loadBlocksForCemetery(cemeteryId) {
         const data = await response.json();
         
         if (data.success) {
-            displayBlocksInMainContent(data.data, selectedItems.cemetery?.name);
+            displayBlocksInMainContent(data.data, window.selectedItems.cemetery?.name);
         }
     } catch (error) {
         console.error('Error loading blocks:', error);
@@ -153,7 +150,7 @@ function displayBlocksInMainContent(blocks, cemeteryName = null) {
                     <div style="color: #999;">
                         <div style="font-size: 48px; margin-bottom: 20px;">📦</div>
                         <div>אין גושים ${cemeteryName ? `בבית עלמין ${cemeteryName}` : 'במערכת'}</div>
-                        ${selectedItems.cemetery ? `
+                        ${window.selectedItems.cemetery ? `
                             <button class="btn btn-primary mt-3" onclick="openAddBlock()">
                                 הוסף גוש חדש
                             </button>
@@ -198,25 +195,21 @@ function displayBlocksInMainContent(blocks, cemeteryName = null) {
     });
     
     // עדכן breadcrumb
-    if (cemeteryName) {
-        updateBreadcrumb(`בתי עלמין › ${cemeteryName} › גושים`);
-    } else {
-        updateBreadcrumb('גושים');
-    }
+    updateBreadcrumb(window.selectedItems);
 }
 
 // הוספת גוש חדש
 function openAddBlock() {
-    if (!selectedItems.cemetery) {
+    if (!window.selectedItems.cemetery) {
         showWarning('יש לבחור בית עלמין תחילה');
         return;
     }
     
-    currentType = 'block';
-    currentParentId = selectedItems.cemetery.id;
+    window.currentType = 'block';
+    window.currentParentId = window.selectedItems.cemetery.id;
     
     if (typeof window.openModal === 'function') {
-        window.openModal('block', selectedItems.cemetery.id, null);
+        window.openModal('block', window.selectedItems.cemetery.id, null);
     } else {
         createSimpleAddForm();
     }
@@ -224,9 +217,9 @@ function openAddBlock() {
 
 // עריכת גוש
 function editBlock(id) {
-    currentType = 'block';
+    window.currentType = 'block';
     if (typeof window.openModal === 'function') {
-        window.openModal('block', selectedItems.cemetery?.id, id);
+        window.openModal('block', window.selectedItems.cemetery.id, null);
     }
 }
 
@@ -243,8 +236,8 @@ async function deleteBlock(id) {
         
         if (data.success) {
             showSuccess('הגוש נמחק בהצלחה');
-            if (selectedItems.cemetery) {
-                loadBlocksForCemetery(selectedItems.cemetery.id);
+            if (window.selectedItems.cemetery) {
+                loadBlocksForCemetery(window.selectedItems.cemetery.id);
             } else {
                 loadAllBlocks();
             }

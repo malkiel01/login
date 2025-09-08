@@ -235,11 +235,7 @@ function displayAreaGravesInMainContent(areaGraves, rowName = null) {
     });
     
     // עדכן breadcrumb
-    let breadcrumbPath = 'אחוזות קבר';
-    if (window.selectedItems.cemetery && window.selectedItems.block && window.selectedItems.plot) {
-        breadcrumbPath = `בתי עלמין › ${window.selectedItems.cemetery.name} › גושים › ${window.selectedItems.block.name} › חלקות › ${window.selectedItems.plot.name} › אחוזות קבר`;
-    }
-    updateBreadcrumb(breadcrumbPath);
+    updateBreadcrumb(window.selectedItems);
 }
 
 // פתיחת אחוזת קבר ספציפית - מעבר לתצוגת קברים
@@ -258,11 +254,7 @@ async function openAreaGrave(areaGraveId, areaGraveName) {
     await loadGravesForAreaGraveWithCard(areaGraveId);
 
     // עדכן breadcrumb
-    let breadcrumbPath = `אחוזות קבר › ${areaGraveName}`;
-    if (window.selectedItems.cemetery && window.selectedItems.block && window.selectedItems.plot) {
-        breadcrumbPath = `בתי עלמין › ${window.selectedItems.cemetery.name} › גושים › ${window.selectedItems.block.name} › חלקות › ${window.selectedItems.plot.name} › אחוזות קבר › ${areaGraveName}`;
-    }
-    updateBreadcrumb(breadcrumbPath);
+    updateBreadcrumb(window.selectedItems);
 }
 
 // הוסף פונקציה חדשה ב-main-area-graves.js

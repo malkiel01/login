@@ -160,11 +160,7 @@ function displayGravesInMainContent(graves, areaGraveName = null) {
     });
     
     // עדכן breadcrumb
-    let breadcrumbPath = 'קברים';
-    if (window.selectedItems.cemetery && window.selectedItems.block && window.selectedItems.plot && window.selectedItems.areaGrave) {
-        breadcrumbPath = `בתי עלמין › ${window.selectedItems.cemetery.name} › גושים › ${window.selectedItems.block.name} › חלקות › ${window.selectedItems.plot.name} › אחוזות קבר › ${window.selectedItems.areaGrave.name} › קברים`;
-    }
-    updateBreadcrumb(breadcrumbPath);
+    updateBreadcrumb(window.selectedItems);
 }
 
 // חישוב סטטיסטיקות קברים

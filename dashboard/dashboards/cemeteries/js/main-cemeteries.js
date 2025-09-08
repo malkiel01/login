@@ -56,7 +56,6 @@ function openCemetery(cemeteryId, cemeteryName) {
     loadBlocksForCemetery(cemeteryId);
     
     // עדכן breadcrumb
-    // updateBreadcrumb(`בתי עלמין › ${cemeteryName}`);
     updateBreadcrumb(window.selectedItems);
 }
 
@@ -117,14 +116,14 @@ function displayCemeteriesInMainContent(cemeteries) {
         tbody.appendChild(tr);
     });
     
-    // updateBreadcrumb('בתי עלמין');
-    updateBreadcrumb({}); // או BreadcrumbManager.reset();
+    // כשמציגים את כל בתי העלמין - אין בחירה ספציפית
+    updateBreadcrumb({});
 }
 
 // הוספת בית עלמין חדש
 function openAddCemetery() {
-    currentType = 'cemetery';
-    currentParentId = null;
+    window.currentType = 'cemetery';
+    window.currentParentId = null;
     
     if (typeof window.openModal === 'function') {
         window.openModal('cemetery', null, null);
@@ -135,7 +134,7 @@ function openAddCemetery() {
 
 // עריכת בית עלמין
 function editCemetery(id) {
-    currentType = 'cemetery';
+    window.currentType = 'cemetery';
     if (typeof window.openModal === 'function') {
         window.openModal('cemetery', null, id);
     }

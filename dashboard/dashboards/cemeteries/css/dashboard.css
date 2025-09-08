@@ -31,28 +31,28 @@
     box-shadow: -2px 0 5px rgba(0,0,0,0.05);
 }
 
-.table-container {
+/* .table-container {
     background: white;
     border-radius: 8px;
     padding: 1rem;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     margin-top: 1rem;
-}
+} */
 
-.action-bar {
+/* .action-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1rem;
-}
+} */
 
-.breadcrumb {
+/* .breadcrumb {
     display: flex;
     gap: 0.5rem;
     align-items: center;
     font-size: 14px;
     color: #666;
-}
+} */
 
 .action-buttons {
     display: flex;

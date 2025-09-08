@@ -126,45 +126,45 @@ const BreadcrumbManager = {
     /**
      * Render breadcrumb HTML
      */
-    render() {
-        const container = document.querySelector(this.config.containerSelector);
-        if (!container) return;
+    // render() {
+    //     const container = document.querySelector(this.config.containerSelector);
+    //     if (!container) return;
         
-        let html = '';
+    //     let html = '';
         
-        this.currentPath.forEach((item, index) => {
-            // Add separator (except for first item)
-            if (index > 0) {
-                html += `<span class="breadcrumb-separator">${this.config.separator}</span>`;
-            }
+    //     this.currentPath.forEach((item, index) => {
+    //         // Add separator (except for first item)
+    //         if (index > 0) {
+    //             html += `<span class="breadcrumb-separator">${this.config.separator}</span>`;
+    //         }
             
-            // Render item
-            if (item.clickable) {
-                const isHome = item.type === 'home';
-                html += `
-                    <a href="#" 
-                       class="breadcrumb-item breadcrumb-clickable ${isHome ? 'breadcrumb-home' : ''}"
-                       data-type="${item.type}"
-                       data-id="${item.id || ''}"
-                       data-index="${index}">
-                        <span class="breadcrumb-icon">${item.icon}</span>
-                        <span class="breadcrumb-text">${item.name}</span>
-                    </a>
-                `;
-            } else {
-                // Current item (not clickable)
-                html += `
-                    <span class="breadcrumb-item breadcrumb-current">
-                        <span class="breadcrumb-icon">${item.icon}</span>
-                        <span class="breadcrumb-text">${item.name}</span>
-                    </span>
-                `;
-            }
-        });
+    //         // Render item
+    //         if (item.clickable) {
+    //             const isHome = item.type === 'home';
+    //             html += `
+    //                 <a href="#" 
+    //                    class="breadcrumb-item breadcrumb-clickable ${isHome ? 'breadcrumb-home' : ''}"
+    //                    data-type="${item.type}"
+    //                    data-id="${item.id || ''}"
+    //                    data-index="${index}">
+    //                     <span class="breadcrumb-icon">${item.icon}</span>
+    //                     <span class="breadcrumb-text">${item.name}</span>
+    //                 </a>
+    //             `;
+    //         } else {
+    //             // Current item (not clickable)
+    //             html += `
+    //                 <span class="breadcrumb-item breadcrumb-current">
+    //                     <span class="breadcrumb-icon">${item.icon}</span>
+    //                     <span class="breadcrumb-text">${item.name}</span>
+    //                 </span>
+    //             `;
+    //         }
+    //     });
         
-        container.innerHTML = html;
-        this.attachEventHandlers();
-    },
+    //     container.innerHTML = html;
+    //     this.attachEventHandlers();
+    // },
     render() {
        const container = document.querySelector(this.config.containerSelector);
        if (!container) return;
@@ -201,7 +201,7 @@ const BreadcrumbManager = {
        html += '</div></div>';
        container.innerHTML = html;
        this.attachEventHandlers();
-   },
+    },
     
     /**
      * Attach click event handlers

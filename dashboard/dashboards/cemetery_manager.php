@@ -337,7 +337,7 @@
     <main class="main-container">
         <div class="modules-grid">
             <!-- מודול ניהול בתי עלמין -->
-            <a href="/dashboard/dashboards/cemeteries/" class="module-card module-cemeteries">
+            <a href="/dashboard/dashboards/cemeteries/index.php" class="module-card module-cemeteries">
                 <div class="module-icon">🏛️</div>
                 <h3 class="module-title">ניהול בתי עלמין</h3>
                 <p class="module-description">

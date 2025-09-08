@@ -70,7 +70,21 @@ async function loadPlotsForBlock(blockId) {
 // הצגת חלקות בתוכן הראשי
 function displayPlotsInMainContent(plots, blockName = null) {
     const tbody = document.getElementById('tableBody');
+    const thead = document.getElementById('tableHeaders'); // הוסף שורה זו
+    
     if (!tbody) return;
+    
+    // עדכון כותרות הטבלה לחלקות - הוסף בלוק זה
+    if (thead) {
+        thead.innerHTML = `
+            <th>מזהה</th>
+            <th>שם חלקה</th>
+            <th>קוד</th>
+            <th>מיקום</th>
+            <th>נוצר בתאריך</th>
+            <th>פעולות</th>
+        `;
+    }
     
     // נקה את הטבלה
     tbody.innerHTML = '';
@@ -243,7 +257,7 @@ function displayAreaGravesWithRows(areaGraves, rows, plotName) {
     if (thead) {
         thead.innerHTML = `
             <th>מזהה</th>
-            <th>שם חלקה</th>
+            <th>שם אחוזת הקבר</th>
             <th>קוד</th>
             <th>מיקום</th>
             <th>נוצר בתאריך</th>

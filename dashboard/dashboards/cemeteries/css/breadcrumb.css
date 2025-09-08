@@ -1,0 +1,336 @@
+/**
+ * עיצוב Breadcrumb מודרני
+ * קובץ: /dashboard/dashboards/cemeteries/css/breadcrumb.css
+ */
+
+/* ================================ */
+/* מיכל ה-Breadcrumb הראשי         */
+/* ================================ */
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+    min-height: 48px;
+    gap: 5px;
+    font-size: 14px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* ================================ */
+/* פריטי Breadcrumb                */
+/* ================================ */
+.breadcrumb-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    position: relative;
+    white-space: nowrap;
+    text-decoration: none;
+    color: #4a5568;
+    font-weight: 500;
+}
+
+/* פריט לחיץ */
+.breadcrumb-clickable {
+    cursor: pointer;
+    background: white;
+    border: 1px solid transparent;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.breadcrumb-clickable:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    border-color: transparent;
+}
+
+.breadcrumb-clickable:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+}
+
+/* פריט נוכחי (לא לחיץ) */
+.breadcrumb-current {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-weight: 600;
+    cursor: default;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    animation: slideIn 0.3s ease;
+}
+
+/* דף הבית */
+.breadcrumb-home {
+    background: white;
+    border: 2px solid #667eea;
+}
+
+.breadcrumb-home:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: transparent;
+}
+
+.breadcrumb-home .breadcrumb-icon {
+    font-size: 16px;
+}
+
+/* ================================ */
+/* אייקונים וטקסט                 */
+/* ================================ */
+.breadcrumb-icon {
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.breadcrumb-text {
+    display: inline-flex;
+    align-items: center;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ================================ */
+/* מפריד בין פריטים               */
+/* ================================ */
+.breadcrumb-separator {
+    color: #a0aec0;
+    font-size: 16px;
+    margin: 0 5px;
+    font-weight: 300;
+    user-select: none;
+    opacity: 0.6;
+}
+
+/* ================================ */
+/* אנימציות                       */
+/* ================================ */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(102, 126, 234, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(102, 126, 234, 0);
+    }
+}
+
+.breadcrumb-item:focus {
+    outline: none;
+    animation: pulse 1.5s;
+}
+
+/* ================================ */
+/* Tooltip לפריטים ארוכים         */
+/* ================================ */
+.breadcrumb-item[title] {
+    position: relative;
+}
+
+.breadcrumb-item[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: -35px;
+    right: 50%;
+    transform: translateX(50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1000;
+    pointer-events: none;
+    opacity: 0;
+    animation: tooltipFadeIn 0.3s forwards;
+    animation-delay: 0.5s;
+}
+
+@keyframes tooltipFadeIn {
+    to {
+        opacity: 1;
+    }
+}
+
+/* ================================ */
+/* רספונסיבי - מובייל              */
+/* ================================ */
+@media (max-width: 768px) {
+    .breadcrumb {
+        padding: 10px 15px;
+        gap: 3px;
+        font-size: 13px;
+        border-radius: 10px;
+        min-height: 44px;
+    }
+    
+    .breadcrumb-item {
+        padding: 5px 10px;
+        border-radius: 16px;
+    }
+    
+    .breadcrumb-text {
+        max-width: 120px;
+    }
+    
+    /* במובייל - הסתר אייקונים חוץ מדף הבית */
+    .breadcrumb-icon:not(.breadcrumb-home .breadcrumb-icon) {
+        display: none;
+    }
+    
+    .breadcrumb-separator {
+        margin: 0 3px;
+        font-size: 14px;
+    }
+    
+    /* במובייל - הסתר טקסט ארוך */
+    .breadcrumb-item:not(.breadcrumb-current):not(.breadcrumb-home) .breadcrumb-text {
+        max-width: 80px;
+    }
+}
+
+/* ================================ */
+/* מסך קטן מאוד                    */
+/* ================================ */
+@media (max-width: 480px) {
+    .breadcrumb {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+    
+    .breadcrumb-item {
+        padding: 4px 8px;
+    }
+    
+    /* הצג רק את הבית, הקודם והנוכחי */
+    .breadcrumb-item:not(.breadcrumb-home):not(.breadcrumb-current):not(:nth-last-child(3)) {
+        display: none;
+    }
+    
+    .breadcrumb-separator:not(:last-of-type):not(:nth-last-of-type(2)) {
+        display: none;
+    }
+}
+
+/* ================================ */
+/* תמיכה ב-Dark Mode              */
+/* ================================ */
+@media (prefers-color-scheme: dark) {
+    .breadcrumb {
+        background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .breadcrumb-clickable {
+        background: #2d3748;
+        color: #e2e8f0;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+    
+    .breadcrumb-clickable:hover {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .breadcrumb-separator {
+        color: #4a5568;
+    }
+    
+    .breadcrumb-home {
+        background: #2d3748;
+        border-color: #667eea;
+    }
+}
+
+/* ================================ */
+/* אנימציה בטעינה                 */
+/* ================================ */
+.breadcrumb-loading {
+    position: relative;
+    overflow: hidden;
+}
+
+.breadcrumb-loading::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.4),
+        transparent
+    );
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        right: -100%;
+    }
+    100% {
+        right: 100%;
+    }
+}
+
+/* ================================ */
+/* נגישות                         */
+/* ================================ */
+.breadcrumb-item:focus-visible {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+}
+
+/* סמן חזותי לקורא מסך */
+.breadcrumb-item[aria-current="page"] {
+    font-weight: 700;
+}
+
+/* ================================ */
+/* הדפסה                          */
+/* ================================ */
+@media print {
+    .breadcrumb {
+        background: none;
+        border: 1px solid #000;
+        box-shadow: none;
+    }
+    
+    .breadcrumb-item {
+        background: none !important;
+        color: #000 !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+    
+    .breadcrumb-separator {
+        color: #000;
+    }
+}

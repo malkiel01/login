@@ -24,7 +24,7 @@ if (!checkPermission('view', 'cemetery')) {
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/tables.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/forms.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/cards.css">
-    <!-- <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/breadcrumb.css"> -->
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/breadcrumb.css">
 </head>
 <body>
     <!-- SVG Icons - חייב להיות בתחילת ה-body -->

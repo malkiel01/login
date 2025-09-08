@@ -167,7 +167,7 @@
 }
 
 /* Dark Mode (אם יש צורך) */
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
     .breadcrumb-container {
         background: #1a202c;
     }
@@ -186,4 +186,4 @@
     .breadcrumb-separator {
         color: #718096;
     }
-}
+} */

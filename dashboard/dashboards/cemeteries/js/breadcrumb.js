@@ -130,15 +130,11 @@ const BreadcrumbManager = {
         const container = document.querySelector(this.config.containerSelector);
         if (!container) return;
         
-        let html = '';
+        let html = '<div class="breadcrumb-container"><div class="breadcrumb">';
         
         this.currentPath.forEach((item, index) => {
-            // Add separator (except for first item)
-            if (index > 0) {
-                html += `<span class="breadcrumb-separator">${this.config.separator}</span>`;
-            }
+            const isLast = index === this.currentPath.length - 1;
             
-            // Render item
             if (item.clickable) {
                 const isHome = item.type === 'home';
                 html += `
@@ -149,6 +145,7 @@ const BreadcrumbManager = {
                        data-index="${index}">
                         <span class="breadcrumb-icon">${item.icon}</span>
                         <span class="breadcrumb-text">${item.name}</span>
+                        ${!isLast ? `<span class="breadcrumb-separator">${this.config.separator}</span>` : ''}
                     </a>
                 `;
             } else {
@@ -162,6 +159,7 @@ const BreadcrumbManager = {
             }
         });
         
+        html += '</div></div>';
         container.innerHTML = html;
         this.attachEventHandlers();
     },

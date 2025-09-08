@@ -134,22 +134,22 @@
     </div>
     
     <!-- Modals -->
-    <!-- < ?php include 'dashboards/cemeteries/includes/modals.php'; ?> -->
+    <!-- < ?php include '/dashboard/dashboards/cemeteries/includes/modals.php'; ?> -->
     
     <!-- JavaScript Files - כולל הקובץ החדש לרספונסיביות -->
-    <script src="dashboards/cemeteries/js/main.js"></script>
-    <script src="dashboards/cemeteries/js/cards.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/main.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/cards.js"></script>
     <!-- <script src="dashboards/cemeteries/js/hierarchy-cards.js"></script> -->
-    <script src="dashboards/cemeteries/js/responsive.js"></script>
-    <script src="dashboards/cemeteries/js/main-cemeteries.js"></script>
-    <script src="dashboards/cemeteries/js/main-blocks.js"></script>
-    <script src="dashboards/cemeteries/js/main-plots.js"></script>
-    <script src="dashboards/cemeteries/js/main-area-graves.js"></script>
-    <script src="dashboards/cemeteries/js/main-graves.js"></script>
-    <script src="dashboards/cemeteries/js/hierarchy.js"></script>
-    <script src="dashboards/cemeteries/js/customers.js"></script>
-    <script src="dashboards/cemeteries/js/purchases.js"></script>
-    <script src="dashboards/cemeteries/js/burials.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/responsive.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/main-cemeteries.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/main-blocks.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/main-plots.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/main-area-graves.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/main-graves.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/hierarchy.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/customers.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/purchases.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/burials.js"></script>
     
     <script>
         // Initialize dashboard on load

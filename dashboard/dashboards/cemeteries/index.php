@@ -7,16 +7,16 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/inclu
 // require_once __DIR__ . '/includes/functions.php';
 
 // בדיקת הרשאות
-// if (!checkPermission('view', 'cemetery')) {
-//     die('אין לך הרשאה לצפות בעמוד זה');
-// }
+if (!checkPermission('view', 'cemetery')) {
+    die('אין לך הרשאה לצפות בעמוד זה');
+}
 ?>
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>< ?php echo DASHBOARD_NAME; ?></title>
+    <title><?php echo DASHBOARD_NAME; ?></title>
     
     <!-- CSS Files - כל הקבצים כולל החדשים -->
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/main.css">
@@ -85,11 +85,11 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/inclu
 
     <div class="dashboard-wrapper">
         <!-- Header -->
-        <?php include 'dashboards/cemeteries/includes/header.php'; ?>
+        <?php include $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/includes/header.php'; ?>
         
         <div class="dashboard-container">
             <!-- Sidebar -->
-            <?php include 'dashboards/cemeteries/includes/sidebar.php'; ?>
+            <?php include $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/includes/sidebar.php'; ?>
             
             <!-- Overlay for mobile sidebar -->
             <div id="sidebarOverlay" class="sidebar-overlay"></div>

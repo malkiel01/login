@@ -22,6 +22,7 @@ if (!checkPermission('view', 'cemetery')) {
     <link rel="stylesheet" href="dashboards/cemeteries/css/header.css">
     <link rel="stylesheet" href="dashboards/cemeteries/css/tables.css">
     <link rel="stylesheet" href="dashboards/cemeteries/css/forms.css">
+    <link rel="stylesheet" href="dashboards/cemeteries/css/cards.css">
 </head>
 <body>
     <!-- SVG Icons - חייב להיות בתחילת ה-body -->
@@ -137,6 +138,8 @@ if (!checkPermission('view', 'cemetery')) {
     
     <!-- JavaScript Files - כולל הקובץ החדש לרספונסיביות -->
     <script src="dashboards/cemeteries/js/main.js"></script>
+    <script src="dashboards/cemeteries/js/cards.js"></script>
+    <!-- <script src="dashboards/cemeteries/js/hierarchy-cards.js"></script> -->
     <script src="dashboards/cemeteries/js/responsive.js"></script>
     <script src="dashboards/cemeteries/js/main-cemeteries.js"></script>
     <script src="dashboards/cemeteries/js/main-blocks.js"></script>

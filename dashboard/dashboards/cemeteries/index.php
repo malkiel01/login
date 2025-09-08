@@ -1,170 +1,112 @@
-<?php
-
-// cemetery_dashboard/index.php
-require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
-require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/includes/functions.php';
-
-// בדיקת הרשאות
-if (!checkPermission('view', 'cemetery')) {
-    die('אין לך הרשאה לצפות בעמוד זה');
-}
-?>
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo DASHBOARD_NAME; ?></title>
-    
-    <!-- CSS Files - כל הקבצים כולל החדשים -->
-    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/main.css">
-    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/dashboard.css">
-    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/sidebar.css">
-    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/header.css">
-    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/tables.css">
-    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/forms.css">
-    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/cards.css">
-    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/breadcrumb.css">
+    <title>וריאציות לכפתור חזרה</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .option-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .option-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #2d3748;
+        }
+
+        .button-demo {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        /* אופציה 5: כפתור עם breadcrumb */
+        .breadcrumb-home {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: #f7fafc;
+            border-radius: 20px;
+            color: #4a5568;
+            text-decoration: none;
+            font-size: 14px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .breadcrumb-home:hover {
+            background: white;
+            border-color: #cbd5e0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .separator {
+            color: #cbd5e0;
+            margin: 0 5px;
+        }
+
+        /* אייקונים */
+        .icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .code-example {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            margin-top: 15px;
+            border-left: 3px solid #667eea;
+            overflow-x: auto;
+        }
+    </style>
 </head>
 <body>
-    <!-- SVG Icons - חייב להיות בתחילת ה-body -->
-    <svg style="display: none;">
-        <!-- Refresh Icon -->
-        <symbol id="icon-refresh" viewBox="0 0 24 24">
-            <path d="M4 12a8 8 0 0 1 14.93-4H15.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h5a.5.5 0 0 0 .5-.5v-5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v2.22A10 10 0 1 0 22 12h-2a8 8 0 1 1-16 0z" fill="currentColor"/>
-        </symbol>
-        
-        <!-- Hamburger Menu -->
-        <symbol id="icon-menu" viewBox="0 0 24 24">
-            <path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"/>
-        </symbol>
-        
-        <!-- Close -->
-        <symbol id="icon-close" viewBox="0 0 24 24">
-            <path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M18 6L6 18M6 6l12 12"/>
-        </symbol>
-        
-        <!-- Plus -->
-        <symbol id="icon-plus" viewBox="0 0 24 24">
-            <path d="M12 5v14m-7-7h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </symbol>
-        
-        <!-- Edit -->
-        <symbol id="icon-edit" viewBox="0 0 24 24">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2"/>
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2"/>
-        </symbol>
-        
-        <!-- Delete -->
-        <symbol id="icon-delete" viewBox="0 0 24 24">
-            <path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </symbol>
-        
-        <!-- Download -->
-        <symbol id="icon-download" viewBox="0 0 24 24">
-            <path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4m4-5l5 5l5-5m-5 5V3"/>
-        </symbol>
-        
-        <!-- Fullscreen -->
-        <symbol id="icon-fullscreen" viewBox="0 0 24 24">
-            <path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
-        </symbol>
-        
-        <!-- Expand/Collapse -->
-        <symbol id="icon-expand" viewBox="0 0 24 24">
-            <path d="M7 10l5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </symbol>
-        
-        <!-- Search -->
-        <symbol id="icon-search" viewBox="0 0 24 24">
-            <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2" fill="none"/>
-            <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </symbol>
-    </svg>
 
-    <div class="dashboard-wrapper">
-        <!-- Header -->
-        <?php include $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/includes/header.php'; ?>
-        
-        <div class="dashboard-container">
-            <!-- Sidebar -->
-            <?php include $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/includes/sidebar.php'; ?>
-            
-            <!-- Overlay for mobile sidebar -->
-            <div id="sidebarOverlay" class="sidebar-overlay"></div>
-            
-            <!-- Main Content -->
-            <main class="main-content">
-                <!-- Action Bar -->
-                <div class="action-bar">
-                    <div class="breadcrumb" id="breadcrumb">
-                        <span class="breadcrumb-item">ראשי</span>
-                    </div>
-                    <div class="action-buttons">
-                        <button class="btn btn-secondary" onclick="refreshData()">
-                            <svg class="icon"><use xlink:href="#icon-refresh"></use></svg>
-                            רענון
-                        </button>
-                        <button class="btn btn-primary" onclick="openAddModal()">
-                            <svg class="icon"><use xlink:href="#icon-plus"></use></svg>
-                            הוספה
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Table Container -->
-                <div class="table-container">
-                    <div class="table-responsive">
-                        <table class="data-table" id="mainTable">
-                            <thead>
-                                <tr id="tableHeaders">
-                                    <th>טוען...</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tableBody">
-                                <tr>
-                                    <td colspan="6" class="text-center">טוען נתונים...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <!-- Entity cards for mobile will be generated here -->
-                    <div class="entity-cards" id="entityCards"></div>
-                </div>
-            </main>
+
+    <!-- אופציה 5: Breadcrumb סטייל -->
+    <div class="option-container">
+        <h3 class="option-title">אופציה 5: סגנון Breadcrumb</h3>
+        <div class="button-demo">
+            <a href="/dashboard/" class="breadcrumb-home">
+                <svg class="icon" viewBox="0 0 24 24" fill="none">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                ראשי
+                <span class="separator">›</span>
+                בתי עלמין
+            </a>
+        </div>
+        <div class="code-example">
+&lt;a href="/dashboard/" class="breadcrumb-home"&gt;<br>
+&nbsp;&nbsp;&lt;svg&gt;...&lt;/svg&gt;<br>
+&nbsp;&nbsp;ראשי<br>
+&nbsp;&nbsp;&lt;span class="separator"&gt;›&lt;/span&gt;<br>
+&nbsp;&nbsp;בתי עלמין<br>
+&lt;/a&gt;
         </div>
     </div>
-    
-    <!-- Modals -->
-    <!-- < ?php include '/dashboard/dashboards/cemeteries/includes/modals.php'; ?> -->
-    
-    <!-- JavaScript Files - כולל הקובץ החדש לרספונסיביות -->
-    <script src="/dashboard/dashboards/cemeteries/js/breadcrumb.js"></script>
-    <script src="/dashboard/dashboards/cemeteries/js/main.js"></script>
-    <script src="/dashboard/dashboards/cemeteries/js/cards.js"></script>
-    <script src="/dashboard/dashboards/cemeteries/js/responsive.js"></script>
-    <script src="/dashboard/dashboards/cemeteries/js/main-cemeteries.js"></script>
-    <script src="/dashboard/dashboards/cemeteries/js/main-blocks.js"></script>
-    <script src="/dashboard/dashboards/cemeteries/js/main-plots.js"></script>
-    <script src="/dashboard/dashboards/cemeteries/js/main-area-graves.js"></script>
-    <script src="/dashboard/dashboards/cemeteries/js/main-graves.js"></script>
-    <script src="/dashboard/dashboards/cemeteries/js/hierarchy.js"></script>
-    <script src="/dashboard/dashboards/cemeteries/js/customers.js"></script>
-    <script src="/dashboard/dashboards/cemeteries/js/purchases.js"></script>
-    <script src="/dashboard/dashboards/cemeteries/js/burials.js"></script>
-    
-    <script>
-        // Initialize dashboard on load
-        document.addEventListener('DOMContentLoaded', function() {
-            initDashboard();
-            // Initialize responsive features
-            if (typeof initializeEntityItems === 'function') {
-                initializeEntityItems();
-            }
-            if (typeof handleTableResponsive === 'function') {
-                handleTableResponsive();
-            }
-        });
-    </script>
 </body>
 </html>

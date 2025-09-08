@@ -14,7 +14,7 @@ const API_BASE = '/dashboard/dashboards/cemeteries/api/';
 
 
 // אתחול הדשבורד
-function initDashboard() {
+function initDashboard2() {
     console.log('Initializing Cemetery Dashboard...');
     
     // טעינת סטטיסטיקות
@@ -143,8 +143,94 @@ function updateSelectedItem(type, id) {
     }
 }
 
+// -------------
+
+// הוסף את זה לקובץ main.js - יחליף את הפונקציה הישנה
+
+/**
+ * פונקציה מעודכנת שעובדת עם המערכת החדשה והישנה
+ * @param {string|object} pathOrItems - מחרוזת נתיב או אובייקט פריטים
+ */
+function updateBreadcrumb(pathOrItems) {
+    // אם זו מחרוזת (השיטה הישנה)
+    if (typeof pathOrItems === 'string') {
+        // נסה לבנות אובייקט מהמחרוזת אם אפשר
+        if (window.selectedItems && Object.keys(window.selectedItems).length > 0) {
+            // השתמש ב-selectedItems הגלובלי
+            BreadcrumbManager.setPath(window.selectedItems);
+        } else {
+            // אחרת השתמש בפונקציה לתאימות אחורה
+            BreadcrumbManager.updateFromString(pathOrItems);
+        }
+    } 
+    // אם זה אובייקט (השיטה החדשה)
+    else if (typeof pathOrItems === 'object') {
+        BreadcrumbManager.setPath(pathOrItems);
+    }
+    // אם לא קיבלנו כלום, השתמש ב-selectedItems הגלובלי
+    else {
+        BreadcrumbManager.setPath(window.selectedItems || {});
+    }
+}
+
+/**
+ * פונקציה חדשה לאתחול ה-Breadcrumb בטעינת הדף
+ */
+function initializeBreadcrumb() {
+    // בדוק אם יש נתיב שמור ב-sessionStorage
+    const savedPath = sessionStorage.getItem('breadcrumbPath');
+    if (savedPath) {
+        try {
+            const items = JSON.parse(savedPath);
+            BreadcrumbManager.setPath(items);
+            window.selectedItems = items;
+        } catch (e) {
+            console.error('Failed to restore breadcrumb:', e);
+            BreadcrumbManager.reset();
+        }
+    } else {
+        BreadcrumbManager.reset();
+    }
+}
+
+/**
+ * שמירת הנתיב הנוכחי
+ */
+function saveBreadcrumbPath() {
+    if (window.selectedItems) {
+        sessionStorage.setItem('breadcrumbPath', JSON.stringify(window.selectedItems));
+    }
+}
+
+// הוסף מאזין לשמירת הנתיב בכל שינוי
+window.addEventListener('beforeunload', saveBreadcrumbPath);
+
+// עדכון פונקציית האתחול הראשית
+function initDashboard() {
+    console.log('Initializing Cemetery Dashboard...');
+    
+    // אתחול ה-Breadcrumb
+    initializeBreadcrumb();
+    
+    // אתחול משתנים גלובליים
+    window.currentType = 'cemetery';
+    window.currentParentId = null;
+    window.selectedItems = window.selectedItems || {};
+    
+    // טען נתונים ראשוניים
+    loadInitialData();
+    
+    // אתחול אירועים
+    initializeEventListeners();
+    
+    // טען סטטיסטיקות
+    loadDashboardStats();
+}
+
+// -------------
+
 // עדכון שביל פירורים (Breadcrumb)
-function updateBreadcrumb() {
+function updateBreadcrumb2() {
     const breadcrumb = document.getElementById('breadcrumb');
     if (!breadcrumb) return;
     

@@ -306,37 +306,103 @@ const BreadcrumbManager = {
      * @param {string} pathString - מחרוזת נתיב כמו "בתי עלמין › גוש 1"
      */
     updateFromString(pathString) {
-        // זו פונקציה לתאימות אחורה
-        // נעדיף להשתמש ב-setPath עם אובייקט מלא
-        const container = document.querySelector(this.config.containerSelector);
-        if (container) {
-            // הוסף דף ראשי בהתחלה
-            let html = `
-                <a href="${this.config.homeUrl}" class="breadcrumb-item breadcrumb-home">
-                    <span class="breadcrumb-icon">${this.config.homeIcon}</span>
-                    <span class="breadcrumb-text">${this.config.homeTitle}</span>
-                </a>
-                <span class="breadcrumb-separator">${this.config.separator}</span>
-            `;
-            
-            // הוסף את שאר הנתיב
-            const parts = pathString.split(' › ');
-            parts.forEach((part, index) => {
-                if (index > 0) {
-                    html += `<span class="breadcrumb-separator">${this.config.separator}</span>`;
-                }
-                
-                if (index === parts.length - 1) {
-                    // הפריט האחרון - לא לחיץ
-                    html += `<span class="breadcrumb-item breadcrumb-current">${part}</span>`;
-                } else {
-                    // פריטים באמצע - לחיצים (אבל בלי פונקציונליות מלאה)
-                    html += `<span class="breadcrumb-item">${part}</span>`;
-                }
-            });
-            
-            container.innerHTML = html;
+        // אם יש selectedItems, השתמש ב-setPath הרגיל
+        if (window.selectedItems && Object.keys(window.selectedItems).length > 0) {
+            this.setPath(window.selectedItems);
+            return;
         }
+        
+        // אחרת, נסה לבנות נתיב מהמחרוזת
+        const container = document.querySelector(this.config.containerSelector);
+        if (!container) return;
+        
+        // תמיד התחל עם דף הבית (לחיץ)
+        let html = `
+            <a href="${this.config.homeUrl}" 
+               class="breadcrumb-item breadcrumb-clickable breadcrumb-home">
+                <span class="breadcrumb-icon">${this.config.homeIcon}</span>
+                <span class="breadcrumb-text">${this.config.homeTitle}</span>
+            </a>
+        `;
+        
+        // פרוק המחרוזת לחלקים
+        const parts = pathString.split(' › ');
+        
+        parts.forEach((part, index) => {
+            // הוסף מפריד
+            html += `<span class="breadcrumb-separator">${this.config.separator}</span>`;
+            
+            // נסה לזהות את סוג הפריט לפי הטקסט
+            let type = this.detectTypeFromText(part);
+            
+            if (index === parts.length - 1) {
+                // הפריט האחרון - לא לחיץ
+                html += `
+                    <span class="breadcrumb-item breadcrumb-current">
+                        ${this.getIconForText(part)}
+                        <span class="breadcrumb-text">${part}</span>
+                    </span>
+                `;
+            } else {
+                // פריטים באמצע - לחיצים
+                html += `
+                    <a href="#" 
+                       class="breadcrumb-item breadcrumb-clickable"
+                       onclick="BreadcrumbManager.handleTextClick('${part}', '${type}'); return false;">
+                        ${this.getIconForText(part)}
+                        <span class="breadcrumb-text">${part}</span>
+                    </a>
+                `;
+            }
+        });
+        
+        container.innerHTML = html;
+    },
+    
+    /**
+     * זיהוי סוג הפריט מהטקסט
+     */
+    detectTypeFromText(text) {
+        if (text.includes('בתי עלמין') || text.includes('בית עלמין')) return 'cemetery';
+        if (text.includes('גוש') || text.includes('גושים')) return 'block';
+        if (text.includes('חלק') || text.includes('חלקות')) return 'plot';
+        if (text.includes('אחוזת') || text.includes('אחוזות')) return 'areaGrave';
+        if (text.includes('קבר') || text.includes('קברים')) return 'grave';
+        return 'unknown';
+    },
+    
+    /**
+     * קבלת אייקון לפי הטקסט
+     */
+    getIconForText(text) {
+        if (text.includes('בתי עלמין') || text.includes('בית עלמין')) 
+            return '<span class="breadcrumb-icon">🏛️</span>';
+        if (text.includes('גוש'))
+            return '<span class="breadcrumb-icon">📦</span>';
+        if (text.includes('חלק'))
+            return '<span class="breadcrumb-icon">📋</span>';
+        if (text.includes('אחוז'))
+            return '<span class="breadcrumb-icon">🏘️</span>';
+        if (text.includes('קבר'))
+            return '<span class="breadcrumb-icon">⚰️</span>';
+        return '';
+    },
+    
+    /**
+     * טיפול בלחיצה על טקסט
+     */
+    handleTextClick(text, type) {
+        console.log('Breadcrumb text clicked:', text, type);
+        
+        // נסה לטעון לפי הטקסט
+        if (text === 'בתי עלמין' && typeof loadAllCemeteries === 'function') {
+            loadAllCemeteries();
+        } else if (text === 'גושים' && typeof loadAllBlocks === 'function') {
+            loadAllBlocks();
+        } else if (text === 'חלקות' && typeof loadAllPlots === 'function') {
+            loadAllPlots();
+        }
+        // אפשר להוסיף עוד מקרים לפי הצורך
     }
 };
 

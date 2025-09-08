@@ -291,28 +291,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const homeBtn = document.querySelector('.btn-home-responsive');
     
     if (homeBtn) {
-        // הוספת אפקט גלים בלחיצה (Ripple effect)
-        homeBtn.addEventListener('click', function(e) {
-            // מחשב את המיקום של הלחיצה
-            const rect = this.getBoundingClientRect();
-            const ripple = document.createElement('span');
-            const size = Math.max(rect.width, rect.height);
-            const x = e.clientX - rect.left - size / 2;
-            const y = e.clientY - rect.top - size / 2;
-            
-            ripple.style.width = ripple.style.height = size + 'px';
-            ripple.style.left = x + 'px';
-            ripple.style.top = y + 'px';
-            ripple.classList.add('ripple-effect');
-            
-            this.appendChild(ripple);
-            
-            setTimeout(() => {
-                ripple.remove();
-            }, 600);
-        });
-        
-        // אנימציה בטעינת הדף
+        // אנימציה בטעינת הדף בלבד
         homeBtn.style.opacity = '0';
         setTimeout(() => {
             homeBtn.style.transition = 'opacity 0.5s ease';

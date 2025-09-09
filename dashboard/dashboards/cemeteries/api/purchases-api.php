@@ -1,6 +1,6 @@
 <?php
 // dashboards/cemeteries/api/purchases-api.php
-// API לניהול רכישות
+// API לניהול רכישות - מתוקן למבנה הטבלה האמיתי
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
@@ -8,7 +8,6 @@ header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
 header('Access-Control-Allow-Headers: Content-Type');
 
 // חיבור לבסיס נתונים
-// require_once __DIR__ . '/../config.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
 
 try {
@@ -31,7 +30,7 @@ try {
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
             $offset = ($page - 1) * $limit;
-            $sort = $_GET['sort'] ?? 'purchase_date';
+            $sort = $_GET['sort'] ?? 'created_at'; // שינוי מ-purchase_date ל-created_at
             $order = $_GET['order'] ?? 'DESC';
             
             // בניית השאילתה
@@ -55,6 +54,7 @@ try {
             if ($search) {
                 $sql .= " AND (
                     p.id LIKE :search OR 
+                    p.purchase_number LIKE :search OR
                     c.first_name LIKE :search OR 
                     c.last_name LIKE :search OR
                     c.id_number LIKE :search OR
@@ -82,10 +82,10 @@ try {
             $countStmt->execute($params);
             $total = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
             
-            // רשימת עמודות מותרות למיון
-            $allowedSortColumns = ['purchase_date', 'amount', 'purchase_status', 'created_at', 'id'];
+            // רשימת עמודות מותרות למיון - מותאם לטבלה שלך
+            $allowedSortColumns = ['created_at', 'opening_date', 'price', 'purchase_status', 'id', 'purchase_number'];
             if (!in_array($sort, $allowedSortColumns)) {
-                $sort = 'purchase_date';
+                $sort = 'created_at';
             }
             
             // בדיקת כיוון המיון
@@ -103,6 +103,12 @@ try {
             $stmt->execute();
             
             $purchases = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // הוסף את opening_date כ-purchase_date לתאימות אחורה
+            foreach ($purchases as &$purchase) {
+                $purchase['purchase_date'] = $purchase['opening_date'];
+                $purchase['amount'] = $purchase['price']; // הוסף תאימות ל-amount
+            }
             
             echo json_encode([
                 'success' => true,
@@ -139,6 +145,10 @@ try {
                 throw new Exception('Purchase not found');
             }
             
+            // הוסף תאימות
+            $purchase['purchase_date'] = $purchase['opening_date'];
+            $purchase['amount'] = $purchase['price'];
+            
             echo json_encode(['success' => true, 'data' => $purchase]);
             break;
             
@@ -168,11 +178,12 @@ try {
                 throw new Exception('הקבר אינו פנוי לרכישה');
             }
             
-            // בניית השאילתה
+            // בניית השאילתה - עם השדות הנכונים
             $fields = [
-                'customer_id', 'grave_id', 'purchase_date', 'amount',
-                'payment_method', 'purchase_status', 'contract_number',
-                'notes', 'created_by'
+                'customer_id', 'grave_id', 'purchase_number', 'purchase_status',
+                'buyer_status', 'price', 'num_payments', 'payment_end_date',
+                'refund_amount', 'refund_invoice', 'contact_id', 'opening_date',
+                'has_certificate', 'deed_number', 'kinship', 'comments'
             ];
             
             $insertFields = [];
@@ -187,11 +198,11 @@ try {
                 }
             }
             
-            // ברירת מחדל לתאריך רכישה
-            if (!isset($data['purchase_date'])) {
-                $insertFields[] = 'purchase_date';
-                $insertValues[] = ':purchase_date';
-                $params['purchase_date'] = date('Y-m-d');
+            // ברירת מחדל לתאריך פתיחה
+            if (!isset($data['opening_date'])) {
+                $insertFields[] = 'opening_date';
+                $insertValues[] = ':opening_date';
+                $params['opening_date'] = date('Y-m-d');
             }
             
             // ברירת מחדל לסטטוס
@@ -230,9 +241,10 @@ try {
             
             // בניית השאילתה
             $fields = [
-                'customer_id', 'grave_id', 'purchase_date', 'amount',
-                'payment_method', 'purchase_status', 'contract_number',
-                'notes', 'updated_by'
+                'customer_id', 'grave_id', 'purchase_number', 'purchase_status',
+                'buyer_status', 'price', 'num_payments', 'payment_end_date',
+                'refund_amount', 'refund_invoice', 'contact_id', 'opening_date',
+                'has_certificate', 'deed_number', 'kinship', 'comments'
             ];
             
             $updateFields = [];
@@ -297,7 +309,7 @@ try {
             
             // סה"כ רכישות לפי סטטוס
             $stmt = $pdo->query("
-                SELECT purchase_status, COUNT(*) as count, SUM(amount) as total
+                SELECT purchase_status, COUNT(*) as count, SUM(price) as total
                 FROM purchases 
                 WHERE is_active = 1 
                 GROUP BY purchase_status
@@ -306,20 +318,20 @@ try {
             
             // רכישות החודש
             $stmt = $pdo->query("
-                SELECT COUNT(*) as count, SUM(amount) as total
+                SELECT COUNT(*) as count, SUM(price) as total
                 FROM purchases 
                 WHERE is_active = 1 
-                AND MONTH(purchase_date) = MONTH(CURRENT_DATE())
-                AND YEAR(purchase_date) = YEAR(CURRENT_DATE())
+                AND MONTH(opening_date) = MONTH(CURRENT_DATE())
+                AND YEAR(opening_date) = YEAR(CURRENT_DATE())
             ");
             $stats['this_month'] = $stmt->fetch(PDO::FETCH_ASSOC);
             
             // רכישות השנה
             $stmt = $pdo->query("
-                SELECT COUNT(*) as count, SUM(amount) as total
+                SELECT COUNT(*) as count, SUM(price) as total
                 FROM purchases 
                 WHERE is_active = 1 
-                AND YEAR(purchase_date) = YEAR(CURRENT_DATE())
+                AND YEAR(opening_date) = YEAR(CURRENT_DATE())
             ");
             $stats['this_year'] = $stmt->fetch(PDO::FETCH_ASSOC);
             

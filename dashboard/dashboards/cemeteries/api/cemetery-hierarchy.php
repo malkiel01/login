@@ -1,7 +1,6 @@
 <?php
 // cemetery_dashboard/api/cemetery-hierarchy.php
-// קובץ מקור
-// API לניהול היררכיית בתי עלמין
+// API לניהול היררכיית בתי עלמין - גרסה מתוקנת
 
 require_once '../config.php';
 
@@ -107,19 +106,58 @@ try {
             if (isset($_GET['search']) && !empty($_GET['search'])) {
                 if ($type === 'grave') {
                     $sql .= " AND grave_number LIKE :search";
+                } elseif ($type === 'purchase') {
+                    // רכישות - חיפוש לפי מספר רכישה או סכום
+                    $sql .= " AND (id LIKE :search OR amount LIKE :search)";
+                } elseif ($type === 'customer') {
+                    // לקוחות - חיפוש לפי שם או ת.ז.
+                    $sql .= " AND (first_name LIKE :search OR last_name LIKE :search OR id_number LIKE :search)";
                 } else {
                     $sql .= " AND (name LIKE :search OR code LIKE :search)";
                 }
                 $params['search'] = '%' . $_GET['search'] . '%';
             }
             
-            // מיון
+            // מיון - טיפול מיוחד לכל סוג טבלה
             if ($type === 'grave') {
                 $orderBy = $_GET['sort'] ?? 'grave_number';
+            } elseif ($type === 'purchase') {
+                // לרכישות יש עמודות שונות
+                $orderBy = $_GET['sort'] ?? 'purchase_date';
+            } elseif ($type === 'customer') {
+                // ללקוחות יש עמודות שונות  
+                $orderBy = $_GET['sort'] ?? 'last_name';
             } else {
+                // לשאר הטבלאות יש עמודת name
                 $orderBy = $_GET['sort'] ?? 'name';
             }
+            
             $orderDir = $_GET['order'] ?? 'ASC';
+            
+            // בדיקה שהעמודה קיימת בטבלה (אבטחה)
+            $allowedColumns = [
+                'cemetery' => ['name', 'code', 'created_at'],
+                'block' => ['name', 'code', 'created_at'],
+                'plot' => ['name', 'code', 'created_at'],
+                'row' => ['name', 'serial_number', 'created_at'],
+                'area_grave' => ['name', 'code', 'grave_type', 'created_at'],
+                'grave' => ['grave_number', 'grave_status', 'plot_type', 'created_at'],
+                'purchase' => ['purchase_date', 'amount', 'purchase_status', 'created_at', 'id'],
+                'customer' => ['first_name', 'last_name', 'id_number', 'created_at']
+            ];
+            
+            // אם העמודה לא ברשימה המותרת, השתמש בברירת מחדל
+            if (isset($allowedColumns[$type]) && !in_array($orderBy, $allowedColumns[$type])) {
+                if ($type === 'purchase') {
+                    $orderBy = 'purchase_date';
+                } elseif ($type === 'customer') {
+                    $orderBy = 'last_name';
+                } elseif ($type === 'grave') {
+                    $orderBy = 'grave_number';
+                } else {
+                    $orderBy = 'name';
+                }
+            }
             
             $sql .= " ORDER BY $orderBy $orderDir";
             
@@ -642,3 +680,4 @@ try {
         'error' => $e->getMessage()
     ]);
 }
+?>

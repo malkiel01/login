@@ -8,7 +8,8 @@ header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
 header('Access-Control-Allow-Headers: Content-Type');
 
 // חיבור לבסיס נתונים
-require_once __DIR__ . '/../config.php';
+// require_once __DIR__ . '/../config.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
 
 try {
     $pdo = getDBConnection();

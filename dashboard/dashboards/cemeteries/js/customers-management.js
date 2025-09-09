@@ -24,117 +24,81 @@ async function loadCustomers() {
     // עדכון כותרת החלון
     document.title = 'ניהול לקוחות - מערכת בתי עלמין';
     
-    // בניית ממשק הטבלה
-    const mainContent = document.querySelector('.main-content');
-    if (!mainContent) {
-        console.error('Main content element not found');
+    // שמור את המבנה הקיים - אל תמחק אותו!
+    // השתמש בטבלה הקיימת במקום ליצור חדשה
+    const tableHeaders = document.getElementById('tableHeaders');
+    const tableBody = document.getElementById('tableBody');
+    
+    if (!tableHeaders || !tableBody) {
+        console.error('Table elements not found');
         return;
     }
     
-    mainContent.innerHTML = `
-        <div class="content-header" style="margin-bottom: 30px;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div style="display: flex; gap: 20px; align-items: center;">
-                    <h2 style="margin: 0; color: #1a1a1a;">
-                        <span style="margin-left: 10px;">👥</span>
-                        ניהול לקוחות
-                    </h2>
-                    <div id="customersStats" style="display: flex; gap: 15px;">
-                        <!-- סטטיסטיקות יוטענו כאן -->
-                    </div>
-                </div>
-                <div style="display: flex; gap: 10px;">
-                    <button class="btn btn-success" onclick="exportCustomers()">
-                        ייצוא
-                    </button>
-                    <button class="btn btn-primary" onclick="openAddCustomer()">
-                        לקוח חדש
-                    </button>
-                </div>
-            </div>
-        </div>
-        
-        <!-- סרגל חיפוש וסינון -->
-        <div class="filters-bar" style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 15px; align-items: center;">
-                <div style="position: relative;">
-                    <input type="text" id="customerSearch" placeholder="חיפוש לפי שם, ת.ז., טלפון או אימייל..." 
-                           style="width: 100%; padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px;"
-                           onkeyup="debounceSearch()">
-                </div>
-                <select id="customerStatusFilter" onchange="loadCustomers()" 
-                        style="padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px;">
-                    <option value="">כל הסטטוסים</option>
-                    <option value="1">פעיל</option>
-                    <option value="2">רכש</option>
-                    <option value="3">נפטר</option>
-                </select>
-                <select id="customerTypeFilter" onchange="loadCustomers()"
-                        style="padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px;">
-                    <option value="">כל הסוגים</option>
-                    <option value="1">רגיל</option>
-                    <option value="2">VIP</option>
-                </select>
-                <button class="btn btn-secondary" onclick="clearFilters()">
-                    נקה
-                </button>
-            </div>
-        </div>
-        
-        <!-- טבלת לקוחות -->
-        <div class="table-container" style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th style="width: 40px;">
-                            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
-                        </th>
-                        <th>ת.ז.</th>
-                        <th>שם מלא</th>
-                        <th>טלפון</th>
-                        <th>אימייל</th>
-                        <th>עיר</th>
-                        <th>סטטוס</th>
-                        <th>סוג</th>
-                        <th>תאריך הצטרפות</th>
-                        <th style="width: 120px;">פעולות</th>
-                    </tr>
-                </thead>
-                <tbody id="customersTableBody">
-                    <tr>
-                        <td colspan="10" style="text-align: center; padding: 40px;">
-                            <div class="spinner"></div>
-                            טוען נתונים...
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        
-        <!-- עימוד -->
-        <div id="customersPagination" style="margin-top: 20px; display: flex; justify-content: center;">
-            <!-- כפתורי עימוד יוטענו כאן -->
-        </div>
+    // עדכן את הכותרות של הטבלה
+    tableHeaders.innerHTML = `
+        <th style="width: 40px;">
+            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+        </th>
+        <th>ת.ז.</th>
+        <th>שם מלא</th>
+        <th>טלפון</th>
+        <th>אימייל</th>
+        <th>עיר</th>
+        <th>סטטוס</th>
+        <th>סוג</th>
+        <th>תאריך</th>
+        <th style="width: 120px;">פעולות</th>
     `;
     
-    // טעינת נתונים
+    // הצג הודעת טעינה
+    tableBody.innerHTML = `
+        <tr>
+            <td colspan="10" style="text-align: center; padding: 40px;">
+                טוען לקוחות...
+            </td>
+        </tr>
+    `;
+    
+    // עדכן את כפתורי הפעולה
+    const actionButtons = document.querySelector('.action-buttons');
+    if (actionButtons) {
+        actionButtons.innerHTML = `
+            <button class="btn btn-secondary" onclick="refreshData()">
+                <svg class="icon"><use xlink:href="#icon-refresh"></use></svg>
+                רענון
+            </button>
+            <button class="btn btn-primary" onclick="openAddCustomer()">
+                <svg class="icon"><use xlink:href="#icon-plus"></use></svg>
+                לקוח חדש
+            </button>
+        `;
+    }
+    
+    // טען את הנתונים
     await fetchCustomers();
     await loadCustomerStats();
+}
+
+// פונקציה נפרדת לרענון נתונים
+async function refreshData() {
+    if (document.querySelector('[data-customer-view]')) {
+        // אנחנו במצב לקוחות
+        await fetchCustomers();
+    } else {
+        // אנחנו במצב רגיל - קרא לפונקציה המקורית
+        if (typeof refreshAllData === 'function') {
+            refreshAllData();
+        }
+    }
 }
 
 // טעינת נתונים מהשרת
 async function fetchCustomers() {
     try {
-        const search = document.getElementById('customerSearch')?.value || '';
-        const status = document.getElementById('customerStatusFilter')?.value || '';
-        const type = document.getElementById('customerTypeFilter')?.value || '';
-        
         const params = new URLSearchParams({
             action: 'list',
             page: currentCustomerPage,
-            limit: 20,
-            search: search,
-            status: status
+            limit: 20
         });
         
         const response = await fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?${params}`);
@@ -142,8 +106,8 @@ async function fetchCustomers() {
         
         if (data.success) {
             currentCustomers = data.data;
-            displayCustomers(data.data);
-            displayPagination(data.pagination);
+            displayCustomersInTable(data.data);
+            // TODO: displayPagination(data.pagination);
         } else {
             showError('שגיאה בטעינת לקוחות');
         }
@@ -153,12 +117,16 @@ async function fetchCustomers() {
     }
 }
 
-// הצגת לקוחות בטבלה
-function displayCustomers(customers) {
-    const tbody = document.getElementById('customersTableBody');
+// הצגת לקוחות בטבלה הקיימת
+function displayCustomersInTable(customers) {
+    const tableBody = document.getElementById('tableBody');
+    if (!tableBody) return;
+    
+    // סמן שאנחנו במצב לקוחות
+    tableBody.setAttribute('data-customer-view', 'true');
     
     if (customers.length === 0) {
-        tbody.innerHTML = `
+        tableBody.innerHTML = `
             <tr>
                 <td colspan="10" style="text-align: center; padding: 40px;">
                     <div style="color: #999;">
@@ -174,7 +142,7 @@ function displayCustomers(customers) {
         return;
     }
     
-    tbody.innerHTML = customers.map(customer => `
+    tableBody.innerHTML = customers.map(customer => `
         <tr data-id="${customer.id}">
             <td><input type="checkbox" class="customer-checkbox" value="${customer.id}"></td>
             <td>${customer.id_number || '-'}</td>
@@ -184,7 +152,6 @@ function displayCustomers(customers) {
             </td>
             <td>
                 ${customer.mobile_phone || customer.phone || '-'}
-                ${customer.mobile_phone && customer.phone ? '<br>' + customer.phone : ''}
             </td>
             <td>${customer.email || '-'}</td>
             <td>${customer.city || '-'}</td>
@@ -193,20 +160,37 @@ function displayCustomers(customers) {
             <td>${formatDate(customer.created_at)}</td>
             <td>
                 <div class="action-buttons" style="display: flex; gap: 5px;">
-                    <button class="btn btn-sm btn-info" onclick="viewCustomer(${customer.id})" title="צפייה">
-                        👁️
+                    <button class="btn btn-sm" onclick="viewCustomer(${customer.id})" title="צפייה">
+                        <svg class="icon-sm"><use xlink:href="#icon-search"></use></svg>
                     </button>
-                    <button class="btn btn-sm btn-warning" onclick="editCustomer(${customer.id})" title="עריכה">
-                        ✏️
+                    <button class="btn btn-sm" onclick="editCustomer(${customer.id})" title="עריכה">
+                        <svg class="icon-sm"><use xlink:href="#icon-edit"></use></svg>
                     </button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteCustomer(${customer.id})" title="מחיקה">
-                        🗑️
+                    <button class="btn btn-sm" onclick="deleteCustomer(${customer.id})" title="מחיקה">
+                        <svg class="icon-sm"><use xlink:href="#icon-delete"></use></svg>
                     </button>
                 </div>
             </td>
         </tr>
     `).join('');
 }
+
+// כשעוברים חזרה לבתי עלמין - נקה את סימון הלקוחות
+window.addEventListener('load', function() {
+    // הוסף listener לכל הפונקציות של בתי עלמין
+    const originalLoadAllCemeteries = window.loadAllCemeteries;
+    if (originalLoadAllCemeteries) {
+        window.loadAllCemeteries = function() {
+            // הסר את הסימון של לקוחות
+            const tableBody = document.getElementById('tableBody');
+            if (tableBody) {
+                tableBody.removeAttribute('data-customer-view');
+            }
+            // קרא לפונקציה המקורית
+            return originalLoadAllCemeteries.apply(this, arguments);
+        };
+    }
+});
 
 // פונקציות עזר לתגיות סטטוס
 function getCustomerStatusBadge(status) {
@@ -455,86 +439,12 @@ async function loadCustomerStats() {
         
         if (data.success) {
             const stats = data.data;
-            const statsDiv = document.getElementById('customersStats');
-            if (statsDiv) {
-                statsDiv.innerHTML = `
-                    <span style="padding: 5px 15px; background: #10b98120; color: #10b981; border-radius: 20px;">
-                        פעילים: ${stats.by_status[1] || 0}
-                    </span>
-                    <span style="padding: 5px 15px; background: #3b82f620; color: #3b82f6; border-radius: 20px;">
-                        רכשו: ${stats.by_status[2] || 0}
-                    </span>
-                    <span style="padding: 5px 15px; background: #f59e0b20; color: #f59e0b; border-radius: 20px;">
-                        VIP: ${stats.by_type[2] || 0}
-                    </span>
-                `;
-            }
+            // לא נציג כרגע - אין לנו את האלמנט הזה
+            console.log('Customer stats loaded:', stats);
         }
     } catch (error) {
         console.error('Error loading stats:', error);
     }
-}
-
-// עימוד
-function displayPagination(pagination) {
-    const paginationDiv = document.getElementById('customersPagination');
-    if (!paginationDiv || !pagination) return;
-    
-    const { page, pages, total } = pagination;
-    
-    if (pages <= 1) {
-        paginationDiv.innerHTML = '';
-        return;
-    }
-    
-    let html = '<div style="display: flex; gap: 5px; align-items: center;">';
-    
-    if (page > 1) {
-        html += `<button class="btn btn-sm" onclick="goToCustomerPage(${page - 1})">‹ קודם</button>`;
-    }
-    
-    for (let i = 1; i <= Math.min(pages, 5); i++) {
-        const active = i === page ? 'btn-primary' : 'btn-secondary';
-        html += `<button class="btn btn-sm ${active}" onclick="goToCustomerPage(${i})">${i}</button>`;
-    }
-    
-    if (pages > 5) {
-        html += '<span>...</span>';
-        html += `<button class="btn btn-sm btn-secondary" onclick="goToCustomerPage(${pages})">${pages}</button>`;
-    }
-    
-    if (page < pages) {
-        html += `<button class="btn btn-sm" onclick="goToCustomerPage(${page + 1})">הבא ›</button>`;
-    }
-    
-    html += `<span style="margin-right: 20px; color: #666;">סה"כ: ${total} לקוחות</span>`;
-    html += '</div>';
-    
-    paginationDiv.innerHTML = html;
-}
-
-function goToCustomerPage(page) {
-    currentCustomerPage = page;
-    fetchCustomers();
-}
-
-// חיפוש עם השהייה
-let searchTimeout;
-function debounceSearch() {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-        currentCustomerPage = 1;
-        fetchCustomers();
-    }, 500);
-}
-
-// ניקוי פילטרים
-function clearFilters() {
-    document.getElementById('customerSearch').value = '';
-    document.getElementById('customerStatusFilter').value = '';
-    document.getElementById('customerTypeFilter').value = '';
-    currentCustomerPage = 1;
-    fetchCustomers();
 }
 
 // בחירת כל הלקוחות

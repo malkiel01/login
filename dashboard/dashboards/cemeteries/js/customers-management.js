@@ -11,19 +11,32 @@ async function loadCustomers() {
     console.log('Loading customers...');
     
     // נקה את כל הסידבר
-    clearAllSidebarSelections();
+    if (typeof clearAllSidebarSelections === 'function') {
+        clearAllSidebarSelections();
+    }
     
-    // עדכון כותרת
-    document.getElementById('pageTitle').textContent = 'ניהול לקוחות';
+    // עדכון ה-breadcrumb
+    const breadcrumb = document.getElementById('breadcrumb');
+    if (breadcrumb) {
+        breadcrumb.innerHTML = '<span class="breadcrumb-item">ראשי</span> / <span class="breadcrumb-item active">לקוחות</span>';
+    }
+    
+    // עדכון כותרת החלון
+    document.title = 'ניהול לקוחות - מערכת בתי עלמין';
     
     // בניית ממשק הטבלה
-    const mainContent = document.getElementById('mainContent');
+    const mainContent = document.querySelector('.main-content');
+    if (!mainContent) {
+        console.error('Main content element not found');
+        return;
+    }
+    
     mainContent.innerHTML = `
         <div class="content-header" style="margin-bottom: 30px;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div style="display: flex; gap: 20px; align-items: center;">
                     <h2 style="margin: 0; color: #1a1a1a;">
-                        <i class="fas fa-users" style="margin-left: 10px; color: #667eea;"></i>
+                        <span style="margin-left: 10px;">👥</span>
                         ניהול לקוחות
                     </h2>
                     <div id="customersStats" style="display: flex; gap: 15px;">
@@ -32,10 +45,10 @@ async function loadCustomers() {
                 </div>
                 <div style="display: flex; gap: 10px;">
                     <button class="btn btn-success" onclick="exportCustomers()">
-                        <i class="fas fa-download"></i> ייצוא
+                        ייצוא
                     </button>
                     <button class="btn btn-primary" onclick="openAddCustomer()">
-                        <i class="fas fa-plus"></i> לקוח חדש
+                        לקוח חדש
                     </button>
                 </div>
             </div>
@@ -45,9 +58,8 @@ async function loadCustomers() {
         <div class="filters-bar" style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
             <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 15px; align-items: center;">
                 <div style="position: relative;">
-                    <i class="fas fa-search" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #999;"></i>
                     <input type="text" id="customerSearch" placeholder="חיפוש לפי שם, ת.ז., טלפון או אימייל..." 
-                           style="width: 100%; padding: 10px 40px; border: 1px solid #e5e7eb; border-radius: 8px;"
+                           style="width: 100%; padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px;"
                            onkeyup="debounceSearch()">
                 </div>
                 <select id="customerStatusFilter" onchange="loadCustomers()" 
@@ -64,7 +76,7 @@ async function loadCustomers() {
                     <option value="2">VIP</option>
                 </select>
                 <button class="btn btn-secondary" onclick="clearFilters()">
-                    <i class="fas fa-times"></i> נקה
+                    נקה
                 </button>
             </div>
         </div>
@@ -150,7 +162,7 @@ function displayCustomers(customers) {
             <tr>
                 <td colspan="10" style="text-align: center; padding: 40px;">
                     <div style="color: #999;">
-                        <i class="fas fa-users" style="font-size: 48px; margin-bottom: 20px;"></i>
+                        <div style="font-size: 48px; margin-bottom: 20px;">👥</div>
                         <div>לא נמצאו לקוחות</div>
                         <button class="btn btn-primary mt-3" onclick="openAddCustomer()">
                             הוסף לקוח חדש
@@ -182,13 +194,13 @@ function displayCustomers(customers) {
             <td>
                 <div class="action-buttons" style="display: flex; gap: 5px;">
                     <button class="btn btn-sm btn-info" onclick="viewCustomer(${customer.id})" title="צפייה">
-                        <i class="fas fa-eye"></i>
+                        👁️
                     </button>
                     <button class="btn btn-sm btn-warning" onclick="editCustomer(${customer.id})" title="עריכה">
-                        <i class="fas fa-edit"></i>
+                        ✏️
                     </button>
                     <button class="btn btn-sm btn-danger" onclick="deleteCustomer(${customer.id})" title="מחיקה">
-                        <i class="fas fa-trash"></i>
+                        🗑️
                     </button>
                 </div>
             </td>
@@ -244,12 +256,12 @@ async function editCustomer(id) {
 function openCustomerModal(title, customer = null) {
     const modal = document.createElement('div');
     modal.className = 'modal show';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;';
+    
     modal.innerHTML = `
-        <div class="modal-overlay" onclick="closeCustomerModal()"></div>
-        <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
-            <div class="modal-header">
-                <h2>${title}</h2>
-                <button class="close-btn" onclick="closeCustomerModal()">×</button>
+        <div class="modal-content" style="background: white; padding: 30px; border-radius: 10px; max-width: 800px; max-height: 90vh; overflow-y: auto; width: 90%;">
+            <div class="modal-header" style="margin-bottom: 20px;">
+                <h2 style="margin: 0;">${title}</h2>
             </div>
             <form id="customerForm" onsubmit="saveCustomer(event)">
                 <div class="modal-body">
@@ -258,79 +270,19 @@ function openCustomerModal(title, customer = null) {
                         <legend style="padding: 0 10px; font-weight: bold;">פרטים אישיים</legend>
                         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
                             <div>
-                                <label>שם פרטי <span class="required">*</span></label>
+                                <label>שם פרטי <span style="color: red;">*</span></label>
                                 <input type="text" name="first_name" required value="${customer?.first_name || ''}" 
-                                       class="form-control">
+                                       style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                             </div>
                             <div>
-                                <label>שם משפחה <span class="required">*</span></label>
+                                <label>שם משפחה <span style="color: red;">*</span></label>
                                 <input type="text" name="last_name" required value="${customer?.last_name || ''}" 
-                                       class="form-control">
+                                       style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                             </div>
                             <div>
                                 <label>תעודת זהות</label>
                                 <input type="text" name="id_number" value="${customer?.id_number || ''}" 
-                                       class="form-control" pattern="[0-9]{9}" title="9 ספרות">
-                            </div>
-                            <div>
-                                <label>כינוי</label>
-                                <input type="text" name="nickname" value="${customer?.nickname || ''}" 
-                                       class="form-control">
-                            </div>
-                            <div>
-                                <label>שם קודם</label>
-                                <input type="text" name="old_name" value="${customer?.old_name || ''}" 
-                                       class="form-control">
-                            </div>
-                            <div>
-                                <label>מין</label>
-                                <select name="gender" class="form-control">
-                                    <option value="">-- בחר --</option>
-                                    <option value="1" ${customer?.gender == 1 ? 'selected' : ''}>זכר</option>
-                                    <option value="2" ${customer?.gender == 2 ? 'selected' : ''}>נקבה</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label>תאריך לידה</label>
-                                <input type="date" name="birth_date" value="${customer?.birth_date || ''}" 
-                                       class="form-control">
-                            </div>
-                            <div>
-                                <label>ארץ לידה</label>
-                                <input type="text" name="birth_country" value="${customer?.birth_country || ''}" 
-                                       class="form-control">
-                            </div>
-                            <div>
-                                <label>מצב משפחתי</label>
-                                <select name="marital_status" class="form-control">
-                                    <option value="">-- בחר --</option>
-                                    <option value="1" ${customer?.marital_status == 1 ? 'selected' : ''}>רווק/ה</option>
-                                    <option value="2" ${customer?.marital_status == 2 ? 'selected' : ''}>נשוי/אה</option>
-                                    <option value="3" ${customer?.marital_status == 3 ? 'selected' : ''}>גרוש/ה</option>
-                                    <option value="4" ${customer?.marital_status == 4 ? 'selected' : ''}>אלמן/ה</option>
-                                </select>
-                            </div>
-                        </div>
-                    </fieldset>
-                    
-                    <!-- פרטי משפחה -->
-                    <fieldset style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
-                        <legend style="padding: 0 10px; font-weight: bold;">פרטי משפחה</legend>
-                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
-                            <div>
-                                <label>שם האב</label>
-                                <input type="text" name="father_name" value="${customer?.father_name || ''}" 
-                                       class="form-control">
-                            </div>
-                            <div>
-                                <label>שם האם</label>
-                                <input type="text" name="mother_name" value="${customer?.mother_name || ''}" 
-                                       class="form-control">
-                            </div>
-                            <div>
-                                <label>שם בן/בת הזוג</label>
-                                <input type="text" name="spouse_name" value="${customer?.spouse_name || ''}" 
-                                       class="form-control">
+                                       style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                             </div>
                         </div>
                     </fieldset>
@@ -342,79 +294,30 @@ function openCustomerModal(title, customer = null) {
                             <div>
                                 <label>טלפון נייד</label>
                                 <input type="tel" name="mobile_phone" value="${customer?.mobile_phone || ''}" 
-                                       class="form-control">
+                                       style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                             </div>
                             <div>
                                 <label>טלפון</label>
                                 <input type="tel" name="phone" value="${customer?.phone || ''}" 
-                                       class="form-control">
+                                       style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                             </div>
                             <div>
                                 <label>אימייל</label>
                                 <input type="email" name="email" value="${customer?.email || ''}" 
-                                       class="form-control">
-                            </div>
-                            <div>
-                                <label>מדינה</label>
-                                <input type="text" name="country" value="${customer?.country || 'ישראל'}" 
-                                       class="form-control">
+                                       style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                             </div>
                             <div>
                                 <label>עיר</label>
                                 <input type="text" name="city" value="${customer?.city || ''}" 
-                                       class="form-control">
-                            </div>
-                            <div>
-                                <label>כתובת</label>
-                                <input type="text" name="address" value="${customer?.address || ''}" 
-                                       class="form-control">
+                                       style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                             </div>
                         </div>
-                    </fieldset>
-                    
-                    <!-- סטטוס וסיווג -->
-                    <fieldset style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
-                        <legend style="padding: 0 10px; font-weight: bold;">סטטוס וסיווג</legend>
-                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
-                            <div>
-                                <label>סוג לקוח</label>
-                                <select name="type_id" class="form-control">
-                                    <option value="1" ${customer?.type_id == 1 ? 'selected' : ''}>רגיל</option>
-                                    <option value="2" ${customer?.type_id == 2 ? 'selected' : ''}>VIP</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label>סטטוס לקוח</label>
-                                <select name="customer_status" class="form-control">
-                                    <option value="1" ${customer?.customer_status == 1 ? 'selected' : ''}>פעיל</option>
-                                    <option value="2" ${customer?.customer_status == 2 ? 'selected' : ''}>רכש</option>
-                                    <option value="3" ${customer?.customer_status == 3 ? 'selected' : ''}>נפטר</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label>סטטוס תושבות</label>
-                                <select name="resident_status" class="form-control">
-                                    <option value="">-- בחר --</option>
-                                    <option value="1" ${customer?.resident_status == 1 ? 'selected' : ''}>תושב</option>
-                                    <option value="2" ${customer?.resident_status == 2 ? 'selected' : ''}>תייר</option>
-                                </select>
-                            </div>
-                        </div>
-                    </fieldset>
-                    
-                    <!-- הערות -->
-                    <fieldset style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px;">
-                        <legend style="padding: 0 10px; font-weight: bold;">הערות</legend>
-                        <textarea name="comments" rows="3" class="form-control" 
-                                  style="width: 100%;">${customer?.comments || ''}</textarea>
                     </fieldset>
                 </div>
                 
-                <div class="modal-footer">
+                <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
                     <button type="button" class="btn btn-secondary" onclick="closeCustomerModal()">ביטול</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> שמור
-                    </button>
+                    <button type="submit" class="btn btn-primary">שמור</button>
                 </div>
             </form>
         </div>
@@ -438,13 +341,6 @@ async function saveCustomer(event) {
     
     const formData = new FormData(event.target);
     const data = Object.fromEntries(formData);
-    
-    // נקה ערכים ריקים
-    Object.keys(data).forEach(key => {
-        if (data[key] === '') {
-            delete data[key];
-        }
-    });
     
     try {
         const url = editingCustomerId 
@@ -517,90 +413,31 @@ async function viewCustomer(id) {
 function showCustomerDetails(customer) {
     const modal = document.createElement('div');
     modal.className = 'modal show';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;';
+    
     modal.innerHTML = `
-        <div class="modal-overlay" onclick="this.parentElement.remove()"></div>
-        <div class="modal-content" style="max-width: 700px;">
-            <div class="modal-header">
-                <h2>פרטי לקוח - ${customer.first_name} ${customer.last_name}</h2>
-                <button class="close-btn" onclick="this.closest('.modal').remove()">×</button>
+        <div class="modal-content" style="background: white; padding: 30px; border-radius: 10px; max-width: 700px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header" style="margin-bottom: 20px;">
+                <h2 style="margin: 0;">פרטי לקוח - ${customer.first_name} ${customer.last_name}</h2>
             </div>
-            <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+            <div class="modal-body">
                 <div style="display: grid; gap: 20px;">
-                    <!-- פרטים אישיים -->
                     <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
-                        <h4 style="margin-bottom: 15px; color: #667eea;">פרטים אישיים</h4>
+                        <h4 style="margin-bottom: 15px;">פרטים אישיים</h4>
                         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
                             <div><strong>ת.ז.:</strong> ${customer.id_number || '-'}</div>
-                            <div><strong>מין:</strong> ${customer.gender == 1 ? 'זכר' : customer.gender == 2 ? 'נקבה' : '-'}</div>
-                            <div><strong>תאריך לידה:</strong> ${formatDate(customer.birth_date) || '-'}</div>
-                            <div><strong>גיל:</strong> ${customer.age || '-'}</div>
-                            <div><strong>ארץ לידה:</strong> ${customer.birth_country || '-'}</div>
-                            <div><strong>מצב משפחתי:</strong> ${getMaritalStatus(customer.marital_status)}</div>
-                        </div>
-                    </div>
-                    
-                    <!-- פרטי משפחה -->
-                    ${(customer.father_name || customer.mother_name || customer.spouse_name) ? `
-                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
-                        <h4 style="margin-bottom: 15px; color: #667eea;">פרטי משפחה</h4>
-                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
-                            ${customer.father_name ? `<div><strong>שם האב:</strong> ${customer.father_name}</div>` : ''}
-                            ${customer.mother_name ? `<div><strong>שם האם:</strong> ${customer.mother_name}</div>` : ''}
-                            ${customer.spouse_name ? `<div><strong>בן/בת זוג:</strong> ${customer.spouse_name}</div>` : ''}
-                        </div>
-                    </div>
-                    ` : ''}
-                    
-                    <!-- פרטי התקשרות -->
-                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
-                        <h4 style="margin-bottom: 15px; color: #667eea;">פרטי התקשרות</h4>
-                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
                             <div><strong>טלפון נייד:</strong> ${customer.mobile_phone || '-'}</div>
                             <div><strong>טלפון:</strong> ${customer.phone || '-'}</div>
                             <div><strong>אימייל:</strong> ${customer.email || '-'}</div>
-                            <div><strong>כתובת:</strong> ${customer.address || '-'}, ${customer.city || ''}</div>
+                            <div><strong>עיר:</strong> ${customer.city || '-'}</div>
+                            <div><strong>סטטוס:</strong> ${getCustomerStatusBadge(customer.customer_status)}</div>
                         </div>
                     </div>
-                    
-                    <!-- רכישות -->
-                    ${customer.purchases && customer.purchases.length > 0 ? `
-                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
-                        <h4 style="margin-bottom: 15px; color: #667eea;">רכישות</h4>
-                        <table style="width: 100%;">
-                            <thead>
-                                <tr style="border-bottom: 1px solid #ddd;">
-                                    <th style="text-align: right; padding: 5px;">תאריך</th>
-                                    <th style="text-align: right; padding: 5px;">קבר</th>
-                                    <th style="text-align: right; padding: 5px;">מיקום</th>
-                                    <th style="text-align: right; padding: 5px;">סטטוס</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${customer.purchases.map(p => `
-                                    <tr>
-                                        <td style="padding: 5px;">${formatDate(p.purchase_date)}</td>
-                                        <td style="padding: 5px;">${p.grave_number || '-'}</td>
-                                        <td style="padding: 5px;">${p.grave_location || '-'}</td>
-                                        <td style="padding: 5px;">${getPurchaseStatus(p.purchase_status)}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                    ` : ''}
-                    
-                    <!-- הערות -->
-                    ${customer.comments ? `
-                    <div style="background: #fff3cd; padding: 15px; border-radius: 8px;">
-                        <h4 style="margin-bottom: 10px; color: #856404;">הערות</h4>
-                        <p style="margin: 0;">${customer.comments}</p>
-                    </div>
-                    ` : ''}
                 </div>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
                 <button class="btn btn-warning" onclick="this.closest('.modal').remove(); editCustomer(${customer.id})">
-                    <i class="fas fa-edit"></i> ערוך
+                    ערוך
                 </button>
                 <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">סגור</button>
             </div>
@@ -630,36 +467,12 @@ async function loadCustomerStats() {
                     <span style="padding: 5px 15px; background: #f59e0b20; color: #f59e0b; border-radius: 20px;">
                         VIP: ${stats.by_type[2] || 0}
                     </span>
-                    <span style="padding: 5px 15px; background: #667eea20; color: #667eea; border-radius: 20px;">
-                        חדשים החודש: ${stats.new_this_month || 0}
-                    </span>
                 `;
             }
         }
     } catch (error) {
         console.error('Error loading stats:', error);
     }
-}
-
-// פונקציות עזר
-function getMaritalStatus(status) {
-    const statuses = {
-        1: 'רווק/ה',
-        2: 'נשוי/אה',
-        3: 'גרוש/ה',
-        4: 'אלמן/ה'
-    };
-    return statuses[status] || '-';
-}
-
-function getPurchaseStatus(status) {
-    const statuses = {
-        1: 'טיוטה',
-        2: 'אושר',
-        3: 'שולם',
-        4: 'בוטל'
-    };
-    return statuses[status] || '-';
 }
 
 // עימוד
@@ -676,12 +489,10 @@ function displayPagination(pagination) {
     
     let html = '<div style="display: flex; gap: 5px; align-items: center;">';
     
-    // כפתור קודם
     if (page > 1) {
         html += `<button class="btn btn-sm" onclick="goToCustomerPage(${page - 1})">‹ קודם</button>`;
     }
     
-    // מספרי עמודים
     for (let i = 1; i <= Math.min(pages, 5); i++) {
         const active = i === page ? 'btn-primary' : 'btn-secondary';
         html += `<button class="btn btn-sm ${active}" onclick="goToCustomerPage(${i})">${i}</button>`;
@@ -692,7 +503,6 @@ function displayPagination(pagination) {
         html += `<button class="btn btn-sm btn-secondary" onclick="goToCustomerPage(${pages})">${pages}</button>`;
     }
     
-    // כפתור הבא
     if (page < pages) {
         html += `<button class="btn btn-sm" onclick="goToCustomerPage(${page + 1})">הבא ›</button>`;
     }
@@ -736,7 +546,6 @@ function toggleSelectAll() {
 
 // ייצוא לקוחות
 function exportCustomers() {
-    // TODO: implement export functionality
     showInfo('פונקציית הייצוא בפיתוח');
 }
 
@@ -754,22 +563,35 @@ function showInfo(message) {
 }
 
 function showToast(type, message) {
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.innerHTML = `
-        <span class="toast-icon">${type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ'}</span>
-        <span class="toast-message">${message}</span>
-        <button class="toast-close" onclick="this.parentElement.remove()">×</button>
-    `;
-    
-    let container = document.getElementById('toastContainer');
-    if (!container) {
-        container = document.createElement('div');
-        container.id = 'toastContainer';
-        document.body.appendChild(container);
+    const existingToast = document.querySelector('.toast');
+    if (existingToast) {
+        existingToast.remove();
     }
     
-    container.appendChild(toast);
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+        color: white;
+        padding: 15px 25px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    `;
+    
+    toast.innerHTML = `
+        <span>${type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ'}</span>
+        <span>${message}</span>
+    `;
+    
+    document.body.appendChild(toast);
     
     setTimeout(() => {
         toast.remove();
@@ -782,3 +604,6 @@ function formatDate(dateString) {
     const date = new Date(dateString);
     return date.toLocaleDateString('he-IL');
 }
+
+// הפוך את הפונקציה לגלובלית
+window.loadCustomers = loadCustomers;

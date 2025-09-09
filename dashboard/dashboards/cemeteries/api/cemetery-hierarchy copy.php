@@ -1,6 +1,5 @@
 <?php
 // cemetery_dashboard/api/cemetery-hierarchy.php
-// קובץ מקור
 // API לניהול היררכיית בתי עלמין
 
 require_once '../config.php';
@@ -23,9 +22,7 @@ function getTableName($type) {
         'plot' => 'plots',
         'row' => 'rows',
         'area_grave' => 'area_graves',
-        'grave' => 'graves',
-        'purchase' => 'purchases',
-        'customer' => 'customers',
+        'grave' => 'graves'
     ];
     return $tables[$type] ?? null;
 }

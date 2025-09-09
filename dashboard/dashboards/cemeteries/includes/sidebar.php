@@ -106,6 +106,32 @@
         </div>
     </div>
 
+    בדיקה
+
+    <!-- רכישות וקבורות -->
+<div class="sidebar-section" style="margin-top: 20px; border-top: 1px solid #e5e7eb; padding-top: 20px;">
+    <h4 class="sidebar-subtitle" style="margin-bottom: 15px; color: #4b5563; font-size: 14px; text-transform: uppercase;">ניהול עסקאות</h4>
+    
+    <!-- רכישות -->
+    <div class="sidebar-item" onclick="loadAllPurchases()" style="padding: 10px 15px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; border-radius: 6px; transition: background 0.2s;">
+        <div style="display: flex; align-items: center;">
+            <span style="margin-right: 10px;">💰</span>
+            <span>רכישות</span>
+        </div>
+        <span class="badge" id="purchasesCount" style="background: #667eea; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px;">0</span>
+    </div>
+    
+    <!-- קבורות -->
+    <div class="sidebar-item" onclick="loadAllBurials()" style="padding: 10px 15px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; border-radius: 6px; transition: background 0.2s;">
+        <div style="display: flex; align-items: center;">
+            <span style="margin-right: 10px;">⚰️</span>
+            <span>קבורות</span>
+        </div>
+        <span class="badge" id="burialsCount" style="background: #667eea; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px;">0</span>
+    </div>
+</div>
+
+
     <!-- פעולות מהירות -->
     <div class="sidebar-footer">
         <button class="btn btn-primary btn-block" onclick="openAddModal()">

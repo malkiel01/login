@@ -69,44 +69,6 @@
                     </select>
                 </div>
                 
-                <!-- שדות ספציפיים לרכישה -->
-                <div class="form-group purchase-only" style="display:none">
-                    <label class="form-label">מספר רכישה</label>
-                    <input type="text" class="form-control" id="purchaseNumber" name="purchase_number" 
-                           placeholder="יוצר אוטומטית אם ריק">
-                </div>
-                
-                <div class="form-group purchase-only" style="display:none">
-                    <label class="form-label required">לקוח</label>
-                    <select class="form-control" id="customerId" name="customer_id" required>
-                        <option value="">בחר לקוח</option>
-                    </select>
-                </div>
-                
-                <div class="form-group purchase-only" style="display:none">
-                    <label class="form-label required">קבר</label>
-                    <select class="form-control" id="graveId" name="grave_id" required>
-                        <option value="">בחר קבר</option>
-                    </select>
-                </div>
-                
-                <div class="form-group purchase-only" style="display:none">
-                    <label class="form-label">סטטוס רכישה</label>
-                    <select class="form-control" id="purchaseStatus" name="purchase_status">
-                        <?php foreach (PURCHASE_STATUS as $key => $status): ?>
-                            <option value="<?php echo $key; ?>">
-                                <?php echo $status['name']; ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                
-                <div class="form-group purchase-only" style="display:none">
-                    <label class="form-label">מחיר</label>
-                    <input type="number" class="form-control" id="price" name="price" 
-                           step="0.01" min="0">
-                </div>
-                
                 <!-- שדות משותפים -->
                 <div class="form-group">
                     <label class="form-label">מיקום</label>
@@ -350,6 +312,7 @@ function openModal(type = null, parentId = null, itemId = null) {
     form.reset();
     editingItemId = itemId;
     
+
     // הגדרת סוג ואב
     document.getElementById('itemType').value = type || currentType;
     document.getElementById('parentId').value = parentId || currentParentId;
@@ -377,9 +340,10 @@ function closeModal() {
 }
 
 // התאמת שדות לסוג הפריט
+// בפונקציה adjustFieldsForType - שורה ~197 בערך
 function adjustFieldsForType(type) {
     // הסתרת כל השדות הספציפיים
-    document.querySelectorAll('.grave-only, .area-grave-only, .purchase-only').forEach(el => {
+    document.querySelectorAll('.grave-only, .area-grave-only').forEach(el => {
         el.style.display = 'none';
     });
     
@@ -392,36 +356,22 @@ function adjustFieldsForType(type) {
         const nameField = document.getElementById('itemName');
         const nameContainer = nameField.parentElement;
         
+        // הסר את required מהשדה name כשהוא מוסתר
         nameField.removeAttribute('required');
         nameContainer.style.display = 'none';
         
+        // הוסף required לשדה grave_number
         const graveNumberField = document.getElementById('graveNumber');
         if (graveNumberField) {
             graveNumberField.setAttribute('required', 'required');
         }
-    } else if (type === 'purchase') {
-        document.querySelectorAll('.purchase-only').forEach(el => {
-            el.style.display = 'block';
-        });
-        
-        // הסתר שדות לא רלוונטיים
-        document.getElementById('itemName').parentElement.style.display = 'none';
-        document.getElementById('codeGroup').style.display = 'none';
-        document.getElementById('itemLocation').parentElement.style.display = 'none';
-        document.getElementById('itemCoordinates').parentElement.style.display = 'none';
-        
-        // טען לקוחות וקברים
-        loadCustomersAndGraves();
     } else {
-        // בכל המקרים האחרים
+        // בכל המקרים האחרים - החזר את השדה name
         const nameField = document.getElementById('itemName');
         const nameContainer = nameField.parentElement;
         
         nameField.setAttribute('required', 'required');
         nameContainer.style.display = 'block';
-        document.getElementById('codeGroup').style.display = 'block';
-        document.getElementById('itemLocation').parentElement.style.display = 'block';
-        document.getElementById('itemCoordinates').parentElement.style.display = 'block';
     }
     
     if (type === 'areaGrave') { 
@@ -431,49 +381,12 @@ function adjustFieldsForType(type) {
     }
 }
 
-// טעינת לקוחות וקברים לרכישה
-async function loadCustomersAndGraves() {
-    try {
-        // טען לקוחות
-        const customersResponse = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=customer`);
-        const customers = await customersResponse.json();
-        
-        const customerSelect = document.getElementById('customerId');
-        customerSelect.innerHTML = '<option value="">בחר לקוח</option>';
-        if (customers.data) {
-            customers.data.forEach(customer => {
-                customerSelect.innerHTML += `
-                    <option value="${customer.id}">
-                        ${customer.first_name} ${customer.last_name} 
-                        ${customer.id_number ? '- ' + customer.id_number : ''}
-                    </option>
-                `;
-            });
-        }
-        
-        // טען קברים
-        const gravesResponse = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=grave`);
-        const graves = await gravesResponse.json();
-        
-        const graveSelect = document.getElementById('graveId');
-        graveSelect.innerHTML = '<option value="">בחר קבר</option>';
-        if (graves.data) {
-            graves.data.forEach(grave => {
-                const isAvailable = grave.grave_status == 1;
-                graveSelect.innerHTML += `
-                    <option value="${grave.id}" ${!isAvailable ? 'disabled' : ''}>
-                        קבר ${grave.grave_number} 
-                        ${!isAvailable ? '(תפוס)' : ''}
-                    </option>
-                `;
-            });
-        }
-    } catch (error) {
-        console.error('Error loading customers and graves:', error);
-    }
-}
-
 // שמירת פריט
+// תיקון לפונקציית saveItem במודאל
+// להחליף את הפונקציה הקיימת ב-modals.php
+
+// בפונקציה saveItem - שורה ~245 בערך
+// בתחילת הפונקציה saveItem
 async function saveItem(event) {
     event.preventDefault();
     
@@ -485,8 +398,8 @@ async function saveItem(event) {
     // בניית אובייקט נתונים לפי סוג הפריט
     const data = {};
     
-    // שדות בסיסיים לכל הסוגים - חוץ מקברים ורכישות
-    if (type !== 'grave' && type !== 'purchase') {
+    // שדות בסיסיים לכל הסוגים - חוץ מקברים
+    if (type !== 'grave') {
         if (formData.get('name')) {
             data.name = formData.get('name');
         }
@@ -511,6 +424,7 @@ async function saveItem(event) {
     // שדות ספציפיים לפי סוג
     switch(type) {
         case 'cemetery':
+            // שדות ספציפיים לבית עלמין
             if (formData.get('address')) {
                 data.address = formData.get('address');
             }
@@ -523,20 +437,25 @@ async function saveItem(event) {
             break;
             
         case 'row':
+            // שדות ספציפיים לשורה
             if (formData.get('serial_number')) {
                 data.serial_number = formData.get('serial_number');
             }
             break;
             
         case 'areaGrave':
+            // שדות ספציפיים לאחוזת קבר
             if (formData.get('grave_type')) {
                 data.grave_type = formData.get('grave_type');
             }
             break;
             
         case 'grave':
+            // שדות ספציפיים לקבר - בלי השדה name!
             if (formData.get('grave_number')) {
                 data.grave_number = formData.get('grave_number');
+                // אל תוסיף את זה: data.name = data.grave_number;
+                // כי אין עמודת name בטבלת graves!
             }
             if (formData.get('plot_type')) {
                 data.plot_type = formData.get('plot_type');
@@ -552,27 +471,6 @@ async function saveItem(event) {
             }
             if (formData.get('is_small_grave')) {
                 data.is_small_grave = formData.get('is_small_grave') ? 1 : 0;
-            }
-            break;
-            
-        case 'purchase':
-            if (formData.get('customer_id')) {
-                data.customer_id = formData.get('customer_id');
-            }
-            if (formData.get('grave_id')) {
-                data.grave_id = formData.get('grave_id');
-            }
-            if (formData.get('purchase_number')) {
-                data.purchase_number = formData.get('purchase_number');
-            }
-            if (formData.get('purchase_status')) {
-                data.purchase_status = formData.get('purchase_status');
-            }
-            if (formData.get('price')) {
-                data.price = formData.get('price');
-            }
-            if (formData.get('comments')) {
-                data.comments = formData.get('comments');
             }
             break;
     }
@@ -593,7 +491,7 @@ async function saveItem(event) {
             
         const method = editingItemId ? 'PUT' : 'POST';
         
-        console.log('Sending data:', data);
+        console.log('Sending data:', data); // לוג לבדיקה
         
         const response = await fetch(url, {
             method: method,
@@ -608,11 +506,7 @@ async function saveItem(event) {
         if (result.success) {
             showToast('success', editingItemId ? 'הפריט עודכן בהצלחה' : 'הפריט נוצר בהצלחה');
             closeModal();
-            
-            // רענן את הנתונים המתאימים
-            if (type === 'purchase' && typeof loadAllPurchases === 'function') {
-                loadAllPurchases();
-            } else if (typeof refreshAllData === 'function') {
+            if (typeof refreshAllData === 'function') {
                 refreshAllData();
             }
         } else {
@@ -638,14 +532,11 @@ async function loadItemData(itemId) {
             
             // מילוי השדות
             document.getElementById('itemId').value = data.id;
-            
-            if (type !== 'purchase') {
-                document.getElementById('itemName').value = data.name || '';
-                document.getElementById('itemCode').value = data.code || '';
-                document.getElementById('itemLocation').value = data.location || '';
-                document.getElementById('itemCoordinates').value = data.coordinates || '';
-                document.getElementById('itemComments').value = data.comments || '';
-            }
+            document.getElementById('itemName').value = data.name || '';
+            document.getElementById('itemCode').value = data.code || '';
+            document.getElementById('itemLocation').value = data.location || '';
+            document.getElementById('itemCoordinates').value = data.coordinates || '';
+            document.getElementById('itemComments').value = data.comments || '';
             
             // שדות ספציפיים
             if (type === 'grave') {
@@ -656,17 +547,6 @@ async function loadItemData(itemId) {
             
             if (type === 'areaGrave') {
                 document.getElementById('graveType').value = data.grave_type || '';
-            }
-            
-            if (type === 'purchase') {
-                await loadCustomersAndGraves(); // טען קודם את הרשימות
-                
-                document.getElementById('purchaseNumber').value = data.purchase_number || '';
-                document.getElementById('customerId').value = data.customer_id || '';
-                document.getElementById('graveId').value = data.grave_id || '';
-                document.getElementById('purchaseStatus').value = data.purchase_status || 1;
-                document.getElementById('price').value = data.price || '';
-                document.getElementById('itemComments').value = data.comments || '';
             }
         }
     } catch (error) {
@@ -787,8 +667,7 @@ function getHierarchyLevel(type) {
         'plot': 'חלקה',
         'row': 'שורה',
         'area_grave': 'אחוזת קבר',
-        'grave': 'קבר',
-        'purchase': 'רכישה'
+        'grave': 'קבר'
     };
     return levels[type] || type;
 }

@@ -29,31 +29,26 @@ async function loadCustomers() {
     const tableHeaders = document.getElementById('tableHeaders');
     const tableBody = document.getElementById('tableBody');
     
-    console.log('Table elements:', { tableHeaders, tableBody });
-    
     if (!tableHeaders || !tableBody) {
         console.error('Table elements not found');
         return;
     }
     
     // עדכן את הכותרות של הטבלה
-    const headerRow = tableHeaders.parentElement; // מצא את ה-tr
-    if (headerRow) {
-        headerRow.innerHTML = `
-            <th style="width: 40px;">
-                <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
-            </th>
-            <th>ת.ז.</th>
-            <th>שם מלא</th>
-            <th>טלפון</th>
-            <th>אימייל</th>
-            <th>עיר</th>
-            <th>סטטוס</th>
-            <th>סוג</th>
-            <th>תאריך</th>
-            <th style="width: 120px;">פעולות</th>
-        `;
-    }
+    tableHeaders.innerHTML = `
+        <th style="width: 40px;">
+            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+        </th>
+        <th>ת.ז.</th>
+        <th>שם מלא</th>
+        <th>טלפון</th>
+        <th>אימייל</th>
+        <th>עיר</th>
+        <th>סטטוס</th>
+        <th>סוג</th>
+        <th>תאריך</th>
+        <th style="width: 120px;">פעולות</th>
+    `;
     
     // הצג הודעת טעינה
     tableBody.innerHTML = `
@@ -78,8 +73,6 @@ async function loadCustomers() {
             </button>
         `;
     }
-    
-    console.log('About to fetch customers...');
     
     // טען את הנתונים
     await fetchCustomers();
@@ -108,41 +101,18 @@ async function fetchCustomers() {
             limit: 20
         });
         
-        const url = `/dashboard/dashboards/cemeteries/api/customers-api.php?${params}`;
-        console.log('Fetching from URL:', url);
-        
-        const response = await fetch(url);
-        console.log('Response status:', response.status);
-        console.log('Response headers:', response.headers.get('content-type'));
-        
-        const responseText = await response.text();
-        console.log('Raw response:', responseText);
-        
-        let data;
-        try {
-            data = JSON.parse(responseText);
-        } catch (parseError) {
-            console.error('Failed to parse JSON:', parseError);
-            console.error('Response was:', responseText);
-            showError('שגיאה בפענוח התגובה מהשרת');
-            return;
-        }
-        
-        console.log('Parsed data:', data);
+        const response = await fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?${params}`);
+        const data = await response.json();
         
         if (data.success) {
             currentCustomers = data.data;
             displayCustomersInTable(data.data);
+            // TODO: displayPagination(data.pagination);
         } else {
-            console.error('Server returned error:', data.error);
-            showError(data.error || 'שגיאה בטעינת לקוחות');
+            showError('שגיאה בטעינת לקוחות');
         }
     } catch (error) {
         console.error('Error loading customers:', error);
-        console.error('Error details:', {
-            message: error.message,
-            stack: error.stack
-        });
         showError('שגיאה בטעינת נתונים');
     }
 }

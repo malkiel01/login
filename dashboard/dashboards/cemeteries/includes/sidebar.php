@@ -70,7 +70,42 @@
             <div id="graveSelectedItem" class="selected-item-container"></div>
         </div>
     </div>
+
+    <!-- קו מפריד -->
+    <div style="margin: 20px 15px; border-top: 2px solid #e5e7eb;"></div>
     
+    <!-- ניהול נוסף -->
+    <div class="management-section" style="padding: 0 15px;">
+        <h4 style="font-size: 14px; color: #718096; margin-bottom: 10px; font-weight: 600;">ניהול</h4>
+        
+        <!-- לקוחות -->
+        <div class="management-item" style="margin-bottom: 10px;">
+            <div class="hierarchy-header" onclick="loadCustomers()" style="background: #f7fafc;">
+                <span class="hierarchy-icon">👥</span>
+                <span class="hierarchy-title">לקוחות</span>
+                <span class="hierarchy-count" id="customersCount" style="background: #4facfe; color: white;">0</span>
+            </div>
+        </div>
+        
+        <!-- רכישות -->
+        <div class="management-item" style="margin-bottom: 10px;">
+            <div class="hierarchy-header" onclick="if(typeof loadPurchases === 'function') loadPurchases()" style="background: #f7fafc;">
+                <span class="hierarchy-icon">💰</span>
+                <span class="hierarchy-title">רכישות</span>
+                <span class="hierarchy-count" id="purchasesCount" style="background: #43e97b; color: white;">0</span>
+            </div>
+        </div>
+        
+        <!-- קבורות -->
+        <div class="management-item" style="margin-bottom: 10px;">
+            <div class="hierarchy-header" onclick="if(typeof loadBurials === 'function') loadBurials()" style="background: #f7fafc;">
+                <span class="hierarchy-icon">⚱️</span>
+                <span class="hierarchy-title">קבורות</span>
+                <span class="hierarchy-count" id="burialsCount" style="background: #fa709a; color: white;">0</span>
+            </div>
+        </div>
+    </div>
+
     <!-- פעולות מהירות -->
     <div class="sidebar-footer">
         <button class="btn btn-primary btn-block" onclick="openAddModal()">
@@ -99,211 +134,3 @@
         <path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M9 10l5-5m0 0h-4m4 0v4m1 7H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"/>
     </symbol>
 </svg>
-
-<!-- <style>
-    .dashboard-sidebar {
-        width: 280px;
-        background: var(--bg-secondary);
-        border-left: 1px solid var(--border-color);
-        height: calc(100vh - 80px);
-        overflow-y: auto;
-        transition: var(--transition);
-    }
-
-    .dashboard-sidebar.collapsed {
-        width: 60px;
-    }
-
-    .sidebar-header {
-        padding: 1.5rem;
-        border-bottom: 1px solid var(--border-color);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .sidebar-title {
-        font-size: 1.125rem;
-        font-weight: 600;
-        color: var(--text-primary);
-    }
-
-    .btn-toggle-sidebar {
-        background: transparent;
-        border: none;
-        cursor: pointer;
-        padding: 0.5rem;
-        display: none;
-    }
-
-    .sidebar-search {
-        padding: 1rem 1.5rem;
-        border-bottom: 1px solid var(--border-color);
-    }
-
-    .hierarchy-levels {
-        padding: 1rem;
-    }
-
-    .hierarchy-level {
-        margin-bottom: 1rem;
-    }
-
-    .hierarchy-header {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.75rem;
-        background: var(--bg-primary);
-        border-radius: var(--radius-md);
-        cursor: pointer;
-        transition: var(--transition);
-    }
-
-    .hierarchy-header:hover {
-        background: var(--bg-tertiary);
-        transform: translateX(-2px);
-    }
-
-    .hierarchy-header.active {
-        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-        color: white;
-    }
-
-    /* הוסף את הסגנונות האלה ב-sidebar.php אחרי שורה 170 בערך */
-
-    .hierarchy-level {
-        margin-bottom: 0.5rem;
-    }
-
-    .hierarchy-header.active {
-        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-        color: white;
-        font-weight: 600;
-    }
-
-    .selected-item-container {
-        margin-top: 0.5rem;
-        margin-right: 2rem;
-        padding: 0.5rem;
-        background: var(--bg-tertiary);
-        border-radius: var(--radius-sm);
-        font-size: 0.875rem;
-        display: none;
-        animation: slideIn 0.3s ease;
-    }
-
-    .selected-item-container:not(:empty) {
-        display: block;
-    }
-
-    @keyframes slideIn {
-        from {
-            opacity: 0;
-            transform: translateX(-10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
-
-    .selected-item {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.25rem 0.5rem;
-        background: white;
-        border-radius: var(--radius-sm);
-        cursor: pointer;
-        transition: var(--transition);
-    }
-
-    .selected-item:hover {
-        background: var(--primary-light);
-        transform: translateX(2px);
-    }
-
-    .hierarchy-icon {
-        font-size: 1.25rem;
-    }
-
-    .hierarchy-title {
-        flex: 1;
-        font-size: 0.875rem;
-        font-weight: 500;
-    }
-
-    .hierarchy-count {
-        background: var(--primary-color);
-        color: white;
-        padding: 0.125rem 0.5rem;
-        border-radius: 999px;
-        font-size: 0.75rem;
-        font-weight: 600;
-    }
-
-    .hierarchy-header.active .hierarchy-count {
-        background: white;
-        color: var(--primary-color);
-    }
-
-    /* תצוגת פריט נבחר */
-    .selected-item-container {
-        margin-top: 0.5rem;
-        margin-right: 2rem;
-        padding: 0.5rem;
-        background: var(--bg-tertiary);
-        border-radius: var(--radius-sm);
-        font-size: 0.8rem;
-        display: none;
-    }
-
-    .selected-item-container:not(:empty) {
-        display: block;
-    }
-
-    .selected-item {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .selected-icon {
-        color: var(--primary-color);
-    }
-
-    .selected-name {
-        font-weight: 500;
-        color: var(--text-secondary);
-    }
-
-    .sidebar-footer {
-        padding: 1.5rem;
-        border-top: 1px solid var(--border-color);
-    }
-
-    .btn-block {
-        width: 100%;
-    }
-
-    /* Mobile responsive */
-    @media (max-width: 1024px) {
-        .btn-toggle-sidebar {
-            display: block;
-        }
-        
-        .dashboard-sidebar {
-            position: fixed;
-            right: 0;
-            top: 80px;
-            z-index: 100;
-            box-shadow: var(--shadow-xl);
-            transform: translateX(0);
-        }
-        
-        .dashboard-sidebar.collapsed {
-            transform: translateX(100%);
-        }
-    }
-</style> -->

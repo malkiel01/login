@@ -150,10 +150,48 @@ async function fetchCustomers() {
 // הצגת לקוחות בטבלה הקיימת
 function displayCustomersInTable(customers) {
     const tableBody = document.getElementById('tableBody');
-    if (!tableBody) return;
+    const tableHeaders = document.getElementById('tableHeaders');
+    
+    if (!tableBody) {
+        console.error('Table body not found');
+        return;
+    }
+    
+    // עדכן כותרות רק אם יש tableHeaders
+    if (tableHeaders) {
+        tableHeaders.innerHTML = `
+            <th style="width: 40px;">
+                <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+            </th>
+            <th>ת.ז.</th>
+            <th>שם מלא</th>
+            <th>טלפון</th>
+            <th>אימייל</th>
+            <th>עיר</th>
+            <th>סטטוס</th>
+            <th>סוג</th>
+            <th>תאריך</th>
+            <th style="width: 120px;">פעולות</th>
+        `;
+    }
     
     // סמן שאנחנו במצב לקוחות
     tableBody.setAttribute('data-customer-view', 'true');
+    
+    // עדכן את כפתורי הפעולה
+    const actionButtons = document.querySelector('.action-buttons');
+    if (actionButtons) {
+        actionButtons.innerHTML = `
+            <button class="btn btn-secondary" onclick="refreshData()">
+                <svg class="icon"><use xlink:href="#icon-refresh"></use></svg>
+                רענון
+            </button>
+            <button class="btn btn-primary" onclick="openAddCustomer()">
+                <svg class="icon"><use xlink:href="#icon-plus"></use></svg>
+                לקוח חדש
+            </button>
+        `;
+    }
     
     if (customers.length === 0) {
         tableBody.innerHTML = `

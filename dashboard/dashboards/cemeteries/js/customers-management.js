@@ -208,18 +208,31 @@ function displayCustomersInTable(customers) {
 // כשעוברים חזרה לבתי עלמין - נקה את סימון הלקוחות
 window.addEventListener('load', function() {
     // הוסף listener לכל הפונקציות של בתי עלמין
-    const originalLoadAllCemeteries = window.loadAllCemeteries;
-    if (originalLoadAllCemeteries) {
-        window.loadAllCemeteries = function() {
-            // הסר את הסימון של לקוחות
-            const tableBody = document.getElementById('tableBody');
-            if (tableBody) {
-                tableBody.removeAttribute('data-customer-view');
-            }
-            // קרא לפונקציה המקורית
-            return originalLoadAllCemeteries.apply(this, arguments);
-        };
-    }
+    const hierarchyFunctions = [
+        'loadAllCemeteries',
+        'loadAllBlocks', 
+        'loadAllPlots',
+        'loadAllAreaGraves',
+        'loadAllGraves'
+    ];
+    
+    hierarchyFunctions.forEach(funcName => {
+        const originalFunc = window[funcName];
+        if (originalFunc) {
+            window[funcName] = function() {
+                // הסר את הסימון של לקוחות
+                const tableBody = document.getElementById('tableBody');
+                if (tableBody) {
+                    tableBody.removeAttribute('data-customer-view');
+                }
+                
+                // נקה את הכותרות אם צריך - הפונקציות המקוריות ידאגו לזה
+                
+                // קרא לפונקציה המקורית
+                return originalFunc.apply(this, arguments);
+            };
+        }
+    });
 });
 
 // פונקציות עזר לתגיות סטטוס

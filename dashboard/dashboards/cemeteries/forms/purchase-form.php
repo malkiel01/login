@@ -10,11 +10,12 @@ $parentId = $_GET['parent_id'] ?? null;
 try {
     $conn = getDBConnection();
     
-    // טען לקוחות פנויים
+    // טען רק לקוחות עם סטטוס 1 (פנוי)
     $customersStmt = $conn->prepare("
         SELECT id, CONCAT(last_name, ' ', first_name) as full_name, id_number 
         FROM customers 
-        WHERE customer_status = 1 AND is_active = 1 
+        WHERE customer_status = 1 
+        AND is_active = 1 
         ORDER BY last_name, first_name
     ");
     $customersStmt->execute();
@@ -26,6 +27,13 @@ try {
             $label .= ' (' . $row['id_number'] . ')';
         }
         $customers[$row['id']] = $label;
+    }
+    
+    // בדוק אם יש לקוחות פנויים
+    if (count($customers) <= 1) { // רק האופציה הריקה
+        echo "<div class='alert alert-warning'>אין לקוחות פנויים במערכת. יש להוסיף לקוח חדש תחילה.</div>";
+        echo "<button class='btn btn-primary' onclick='FormHandler.closeForm(); openAddCustomer();'>הוסף לקוח חדש</button>";
+        exit;
     }
     
     // אם עורכים רכישה קיימת
@@ -51,41 +59,40 @@ $formBuilder->addField('customer_id', 'לקוח', 'select', [
     'value' => $purchase['customer_id'] ?? ''
 ]);
 
-$formBuilder->addField('grave_id', 'קבר', 'select', [
+$formBuilder->addField('grave_id', 'קבר', 'number', [
     'required' => true,
-    'options' => ['0' => '-- יש לבחור קבר דרך המערכת --'],
     'value' => $purchase['grave_id'] ?? '',
-    'class' => 'form-control grave-selector'
+    'placeholder' => 'יש לבחור קבר',
+    'readonly' => true
 ]);
 
 $formBuilder->addField('buyer_status', 'סטטוס רוכש', 'select', [
     'options' => [
-        '' => '-- בחר סטטוס --',
         '1' => 'רוכש לעצמו',
         '2' => 'רוכש לאחר'
     ],
-    'value' => $purchase['buyer_status'] ?? ''
-]);
-
-$formBuilder->addField('price', 'מחיר כולל', 'number', [
-    'step' => '0.01',
-    'value' => $purchase['price'] ?? ''
-]);
-
-$formBuilder->addField('num_payments', 'מספר תשלומים', 'number', [
-    'min' => 1,
-    'value' => $purchase['num_payments'] ?? 1
+    'value' => $purchase['buyer_status'] ?? 1
 ]);
 
 $formBuilder->addField('purchase_status', 'סטטוס רכישה', 'select', [
     'options' => [
-        '' => '-- בחר סטטוס --',
         '1' => 'טיוטה',
         '2' => 'אושר',
         '3' => 'שולם',
         '4' => 'בוטל'
     ],
     'value' => $purchase['purchase_status'] ?? 1
+]);
+
+$formBuilder->addField('price', 'מחיר', 'number', [
+    'step' => '0.01',
+    'value' => $purchase['price'] ?? '',
+    'placeholder' => '0.00'
+]);
+
+$formBuilder->addField('num_payments', 'מספר תשלומים', 'number', [
+    'min' => 1,
+    'value' => $purchase['num_payments'] ?? 1
 ]);
 
 $formBuilder->addField('payment_end_date', 'תאריך סיום תשלומים', 'date', [
@@ -102,39 +109,20 @@ echo $formBuilder->renderModal();
 ?>
 
 <script>
-// אחרי שהטופס נטען, הוסף כפתור לבחירת קבר
+// הוסף כפתור לבחירת קבר
 document.addEventListener('DOMContentLoaded', function() {
-    const graveSelect = document.querySelector('select[name="grave_id"]');
-    if (graveSelect) {
+    const graveInput = document.querySelector('input[name="grave_id"]');
+    if (graveInput) {
         const button = document.createElement('button');
         button.type = 'button';
-        button.className = 'btn btn-secondary';
-        button.textContent = 'בחר קבר מהמערכת';
-        button.onclick = openGraveSelector;
-        button.style.marginTop = '10px';
-        graveSelect.parentElement.appendChild(button);
+        button.className = 'btn btn-info btn-sm';
+        button.textContent = 'בחר קבר';
+        button.style.marginTop = '5px';
+        button.onclick = function() {
+            alert('בחירת קבר - בפיתוח');
+            // TODO: פתח מודל לבחירת קבר
+        };
+        graveInput.parentElement.appendChild(button);
     }
 });
-
-function openGraveSelector() {
-    // פתח חלון לבחירת קבר
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.style.zIndex = '10001';
-    modal.innerHTML = `
-        <div class="modal-content" style="max-width: 600px;">
-            <div class="modal-header">
-                <h3>בחירת קבר</h3>
-                <button type="button" class="btn-close" onclick="this.closest('.modal-overlay').remove()">×</button>
-            </div>
-            <div class="modal-body">
-                <p>בחר קבר דרך ההיררכיה:</p>
-                <button class="btn btn-primary" onclick="alert('בחירת קבר בפיתוח')">
-                    פתח בוחר קברים
-                </button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-}
 </script>

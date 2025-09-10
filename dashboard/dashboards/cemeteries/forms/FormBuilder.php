@@ -418,6 +418,9 @@ class FormBuilder {
             case 'time':
                 $html .= $this->renderTime($field);
                 break;
+            case 'custom':
+                $html .= $field['html'];
+                break;
             default:
                 $html .= $this->renderText($field);
         }
@@ -607,6 +610,14 @@ class FormBuilder {
         $html .= '</div>';
         $html .= '</div>';
         return $html;
+    }
+
+    // בתוך class FormBuilder, הוסף מתודה:
+    public function addCustomHTML($html) {
+        $this->fields[] = [
+            'type' => 'custom',
+            'html' => $html
+        ];
     }
 }
 ?>

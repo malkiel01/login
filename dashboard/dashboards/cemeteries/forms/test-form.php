@@ -1,74 +1,88 @@
 <?php
-// /dashboards/cemeteries/forms/test-form.php
-// קובץ בדיקה לאבחון בעיות
+// /dashboards/cemeteries/forms/test-render.php
+// בדיקת רינדור הטופס
 
-echo "<h1>בדיקת מערכת טפסים</h1>";
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
-// בדיקה 1: האם PHP עובד
-echo "<p>✓ PHP עובד</p>";
+echo "<h1>בדיקת רינדור טופס</h1>";
 
-// בדיקה 2: האם הקבצים קיימים
-$files = [
-    'FormBuilder.php',
-    'forms-config.php',
-    'form-loader.php',
-    'form-handler.js'
-];
-
-foreach ($files as $file) {
-    $path = __DIR__ . '/' . $file;
-    if (file_exists($path)) {
-        echo "<p>✓ קובץ קיים: $file</p>";
-    } else {
-        echo "<p>✗ קובץ חסר: $file</p>";
-    }
-}
-
-// בדיקה 3: טעינת FormBuilder
 try {
+    // טען את הקבצים
     require_once __DIR__ . '/FormBuilder.php';
-    echo "<p>✓ FormBuilder נטען בהצלחה</p>";
-    
-    // בדיקה אם המחלקה קיימת
-    if (class_exists('FormBuilder')) {
-        echo "<p>✓ מחלקת FormBuilder קיימת</p>";
-    } else {
-        echo "<p>✗ מחלקת FormBuilder לא נמצאה</p>";
-    }
-} catch (Exception $e) {
-    echo "<p>✗ שגיאה בטעינת FormBuilder: " . $e->getMessage() . "</p>";
-}
-
-// בדיקה 4: טעינת forms-config
-try {
     require_once __DIR__ . '/forms-config.php';
-    echo "<p>✓ forms-config נטען בהצלחה</p>";
     
-    // בדיקה אם הפונקציות קיימות
-    if (function_exists('getFormFields')) {
-        echo "<p>✓ פונקציית getFormFields קיימת</p>";
-    } else {
-        echo "<p>✗ פונקציית getFormFields לא נמצאה</p>";
-    }
-} catch (Exception $e) {
-    echo "<p>✗ שגיאה בטעינת forms-config: " . $e->getMessage() . "</p>";
-}
-
-// בדיקה 5: יצירת FormBuilder
-try {
+    echo "<p>✓ קבצים נטענו</p>";
+    
+    // צור FormBuilder
     $formBuilder = new FormBuilder('cemetery', null, null);
-    echo "<p>✓ FormBuilder נוצר בהצלחה</p>";
-} catch (Exception $e) {
-    echo "<p>✗ שגיאה ביצירת FormBuilder: " . $e->getMessage() . "</p>";
-}
-
-// בדיקה 6: קבלת שדות
-try {
+    echo "<p>✓ FormBuilder נוצר</p>";
+    
+    // קבל שדות
     $fields = getFormFields('cemetery', null);
-    echo "<p>✓ השדות נטענו: " . count($fields) . " שדות</p>";
+    echo "<p>✓ נמצאו " . count($fields) . " שדות</p>";
+    
+    // הוסף שדות
+    foreach ($fields as $field) {
+        $options = [
+            'required' => $field['required'] ?? false,
+            'value' => '',
+            'placeholder' => $field['placeholder'] ?? '',
+            'options' => $field['options'] ?? [],
+            'class' => $field['class'] ?? '',
+            'readonly' => $field['readonly'] ?? false,
+            'min' => $field['min'] ?? null,
+            'max' => $field['max'] ?? null,
+            'step' => $field['step'] ?? null,
+            'rows' => $field['rows'] ?? 3
+        ];
+        
+        $formBuilder->addField(
+            $field['name'],
+            $field['label'],
+            $field['type'],
+            $options
+        );
+    }
+    echo "<p>✓ שדות נוספו ל-FormBuilder</p>";
+    
+    // נסה לרנדר
+    echo "<h2>מנסה לרנדר את הטופס...</h2>";
+    
+    // בדוק אם המתודה קיימת
+    if (method_exists($formBuilder, 'renderModal')) {
+        echo "<p>✓ מתודת renderModal קיימת</p>";
+        
+        // נסה לרנדר
+        $html = $formBuilder->renderModal();
+        
+        if ($html) {
+            echo "<p>✓ HTML נוצר בהצלחה - אורך: " . strlen($html) . " תווים</p>";
+            echo "<h3>תצוגה מקדימה:</h3>";
+            echo "<div style='border: 2px solid #ccc; padding: 20px; margin: 20px 0;'>";
+            echo $html;
+            echo "</div>";
+        } else {
+            echo "<p>✗ לא נוצר HTML</p>";
+        }
+    } else {
+        echo "<p>✗ מתודת renderModal לא נמצאה</p>";
+    }
+    
 } catch (Exception $e) {
-    echo "<p>✗ שגיאה בטעינת שדות: " . $e->getMessage() . "</p>";
+    echo "<div style='color: red; padding: 10px; background: #fee; border: 1px solid #fcc;'>";
+    echo "<h3>שגיאה:</h3>";
+    echo "<p>" . $e->getMessage() . "</p>";
+    echo "<pre>" . $e->getTraceAsString() . "</pre>";
+    echo "</div>";
 }
 
-phpinfo();
+// הצג שגיאות PHP אם יש
+$error = error_get_last();
+if ($error) {
+    echo "<h3>שגיאת PHP אחרונה:</h3>";
+    echo "<pre>";
+    print_r($error);
+    echo "</pre>";
+}
 ?>

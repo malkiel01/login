@@ -2,8 +2,9 @@
 // /dashboards/cemeteries/forms/form-loader.php
 // טוען טופס דינמי לפי סוג
 
-require_once 'FormBuilder.php';
-require_once 'forms-config.php';
+require_once __DIR__ . '/FormBuilder.php';
+require_once __DIR__ . '/forms-config.php';
+
 
 // קבלת פרמטרים
 $type = $_GET['type'] ?? '';

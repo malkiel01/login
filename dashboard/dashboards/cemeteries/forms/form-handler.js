@@ -31,38 +31,9 @@ const FormHandler = {
             }
             
             // הוסף את הטופס ל-DOM
-            // document.body.insertAdjacentHTML('beforeend', html);
-
             const range = document.createRange();
             const fragment = range.createContextualFragment(html);
             document.body.appendChild(fragment);
-
-            // // יצירת container זמני
-            // const tempDiv = document.createElement('div');
-            // tempDiv.innerHTML = html;
-
-            // // חלץ והרץ סקריפטים
-            // const scripts = tempDiv.querySelectorAll('script');
-            // const scriptContents = [];
-            // scripts.forEach(script => {
-            //     scriptContents.push(script.innerHTML);
-            //     script.remove(); // הסר את הסקריפט המקורי
-            // });
-
-            // // הוסף את ה-HTML בלי הסקריפטים
-            // document.body.appendChild(tempDiv.firstElementChild);
-
-            // // הרץ את הסקריפטים
-            // scriptContents.forEach(scriptContent => {
-            //     if (scriptContent.trim()) {
-            //         try {
-            //             eval(scriptContent);
-            //             console.log('Script executed successfully');
-            //         } catch (e) {
-            //             console.error('Error executing script:', e);
-            //         }
-            //     }
-            // });
             
             // הצג את המודל
             const modal = document.getElementById(type + 'FormModal');

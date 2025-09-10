@@ -186,25 +186,6 @@ $graveSelectorHTML .= '
     </div>
 </fieldset>';
 
-// אחרי סגירת ה-fieldset, לפני סוף $graveSelectorHTML
-$graveSelectorHTML .= '
-<script>
-setTimeout(function() {
-    console.log("!!!!! SCRIPT INSIDE HTML RUNNING !!!!!");
-    var blockSelect = document.getElementById("blockSelect");
-    console.log("Block select found:", blockSelect);
-    
-    if (blockSelect) {
-        // נסה למלא את הגושים
-        var option = document.createElement("option");
-        option.value = "test";
-        option.textContent = "גוש בדיקה";
-        blockSelect.appendChild(option);
-        console.log("Added test option to blocks");
-    }
-}, 1000);
-</script>';
-
 // הוסף את ה-HTML המותאם אישית
 $formBuilder->addCustomHTML($graveSelectorHTML);
 
@@ -243,27 +224,18 @@ echo $formBuilder->renderModal();
 ?>
 
 <script>
-console.log('!!!!! PURCHASE FORM SCRIPT STARTING !!!!!');
-console.log('Document ready state:', document.readyState);
-console.log('Looking for elements...');
-console.log('cemeterySelect:', document.getElementById('cemeterySelect'));
-console.log('blockSelect:', document.getElementById('blockSelect'));
-
 // העבר את כל הנתונים ל-JavaScript
 window.hierarchyData = <?php echo json_encode($hierarchyData); ?>;
-console.log('Hierarchy data loaded:', window.hierarchyData);
 
 // אתחול מיידי
 (function initializeForm() {
-    console.log('Initializing purchase form...');
-    
     // מלא את הגושים והחלקות הראשוניים
     populateBlocks();
     populatePlots();
 })();
 
 // פונקציה לסינון ההיררכיה
-function filterHierarchy(level) {
+window.filterHierarchy = function(level) {
     const cemetery = document.getElementById('cemeterySelect').value;
     const block = document.getElementById('blockSelect').value;
     const plot = document.getElementById('plotSelect').value;

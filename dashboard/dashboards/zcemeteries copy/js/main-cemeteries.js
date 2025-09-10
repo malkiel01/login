@@ -139,7 +139,11 @@ function openAddCemetery() {
     window.currentType = 'cemetery';
     window.currentParentId = null;
     
-    FormHandler.openForm('cemetery', null, null);
+    if (typeof window.openModal === 'function') {
+        window.openModal('cemetery', null, null);
+    } else {
+        createSimpleAddForm();
+    }
 }
 
 // עריכת בית עלמין

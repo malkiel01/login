@@ -1,0 +1,253 @@
+/* tables.css - עיצוב טבלאות רספונסיבי */
+
+/* Base Table Styles */
+.data-table {
+    width: 100%;
+    background: white;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.data-table thead {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.data-table th {
+    padding: 1rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    text-align: right;
+    border-bottom: 2px solid var(--border-color);
+    white-space: nowrap;
+}
+
+.data-table td {
+    padding: 0.875rem 1rem;
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+.data-table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.data-table tbody tr:hover {
+    background: var(--bg-secondary);
+}
+
+.data-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Responsive Table Wrapper */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 1rem;
+}
+
+.table-responsive::-webkit-scrollbar {
+    height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Entity Cards - חלופה לטבלאות במובייל */
+.entity-cards {
+    display: none;
+}
+
+.entity-card {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    position: relative;
+}
+
+.entity-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.entity-card-title {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.entity-card-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.entity-card-body {
+    display: grid;
+    gap: 0.5rem;
+}
+
+.entity-card-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.25rem 0;
+}
+
+.entity-card-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.entity-card-value {
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    font-weight: 500;
+    text-align: left;
+}
+
+/* Expand/Collapse for detailed view */
+.entity-card-toggle {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.entity-card-toggle:hover {
+    transform: scale(1.1);
+}
+
+.entity-card-toggle.expanded {
+    transform: rotate(180deg);
+}
+
+.entity-card-details {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    margin-top: 0;
+}
+
+.entity-card.expanded .entity-card-details {
+    max-height: 500px;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Table Actions */
+.table-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.table-actions .btn {
+    padding: 0.375rem 0.75rem;
+}
+
+/* Sticky Table Header */
+.table-sticky-header thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Tablet View */
+@media (max-width: 1024px) {
+    .data-table th,
+    .data-table td {
+        padding: 0.75rem;
+        font-size: 0.8rem;
+    }
+}
+
+/* Mobile View */
+@media (max-width: 768px) {
+    /* הסתר טבלה והצג כרטיסים */
+    .table-responsive {
+        display: none;
+    }
+    
+    .entity-cards {
+        display: block;
+    }
+    
+    /* אם רוצים להשאיר טבלה עם גלילה */
+    .table-mobile-scroll {
+        display: block;
+    }
+    
+    .table-mobile-scroll .data-table {
+        min-width: 600px;
+    }
+    
+    /* פעולות בכרטיסים */
+    .entity-card-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--border-color);
+    }
+    
+    .entity-card-actions .btn {
+        flex: 1;
+        padding: 0.5rem;
+        font-size: 0.75rem;
+    }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+    .entity-card {
+        padding: 0.75rem;
+    }
+    
+    .entity-card-title {
+        font-size: 0.9rem;
+    }
+    
+    .entity-card-label,
+    .entity-card-value {
+        font-size: 0.75rem;
+    }
+}

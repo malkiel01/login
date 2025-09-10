@@ -10,9 +10,18 @@ let editingCustomerId = null;
 async function loadCustomers() {
     console.log('Loading customers...');
     
+    // עדכן את הסוג הנוכחי
+    window.currentType = 'customer';
+    window.currentParentId = null;
+    
     // נקה את כל הסידבר
     if (typeof clearAllSidebarSelections === 'function') {
         clearAllSidebarSelections();
+    }
+    
+    // עדכן את כפתור ההוספה
+    if (typeof updateAddButtonText === 'function') {
+        updateAddButtonText();
     }
     
     // עדכון ה-breadcrumb

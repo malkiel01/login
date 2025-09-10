@@ -284,30 +284,71 @@ window.updateGraveSelectors = async function(changedLevel) {
    }
 }
 
+// // טעינת גושים
+// window.loadBlocks = async function(cemeteryId) {
+//    const blockSelect = document.getElementById('blockSelect');
+//    if (!blockSelect) return;
+   
+//    let url = `${window.API_BASE}cemetery-hierarchy.php?action=list&type=block`;
+//    if (cemeteryId) url += `&parent_id=${cemeteryId}`;
+   
+//    try {
+//        const response = await fetch(url);
+//        const data = await response.json();
+       
+//        blockSelect.innerHTML = '<option value="">-- כל הגושים --</option>';
+//        if (data.success && data.data) {
+//            data.data.forEach(block => {
+//                const option = document.createElement('option');
+//                option.value = block.id;
+//                option.textContent = block.name;
+//                blockSelect.appendChild(option);
+//            });
+//        }
+//    } catch (error) {
+//        console.error('Error loading blocks:', error);
+//    }
+// }
 // טעינת גושים
 window.loadBlocks = async function(cemeteryId) {
-   const blockSelect = document.getElementById('blockSelect');
-   if (!blockSelect) return;
-   
-   let url = `${window.API_BASE}cemetery-hierarchy.php?action=list&type=block`;
-   if (cemeteryId) url += `&parent_id=${cemeteryId}`;
-   
-   try {
-       const response = await fetch(url);
-       const data = await response.json();
-       
-       blockSelect.innerHTML = '<option value="">-- כל הגושים --</option>';
-       if (data.success && data.data) {
-           data.data.forEach(block => {
-               const option = document.createElement('option');
-               option.value = block.id;
-               option.textContent = block.name;
-               blockSelect.appendChild(option);
-           });
-       }
-   } catch (error) {
-       console.error('Error loading blocks:', error);
-   }
+    console.log('loadBlocks called with cemeteryId:', cemeteryId);
+    
+    const blockSelect = document.getElementById('blockSelect');
+    if (!blockSelect) {
+        console.error('blockSelect element not found!');
+        return;
+    }
+    
+    let url = `${window.API_BASE}cemetery-hierarchy.php?action=list&type=block`;
+    if (cemeteryId) url += `&parent_id=${cemeteryId}`;
+    
+    console.log('Fetching blocks from:', url);
+    
+    try {
+        const response = await fetch(url);
+        console.log('Response status:', response.status);
+        
+        const data = await response.json();
+        console.log('Blocks data:', data);
+        
+        blockSelect.innerHTML = '<option value="">-- כל הגושים --</option>';
+        
+        if (data.success && data.data) {
+            console.log('Number of blocks:', data.data.length);
+            
+            data.data.forEach(block => {
+                console.log('Adding block:', block);
+                const option = document.createElement('option');
+                option.value = block.id;
+                option.textContent = block.name;
+                blockSelect.appendChild(option);
+            });
+        } else {
+            console.warn('No blocks data or success=false');
+        }
+    } catch (error) {
+        console.error('Error loading blocks:', error);
+    }
 }
 
 // טעינת חלקות
@@ -456,34 +497,65 @@ window.clearSelectors = function(levels) {
 
 // טעינה ראשונית - טען גושים וחלקות
 setTimeout(() => {
-   if (document.getElementById('blockSelect')) {
-       loadBlocks('');
-   }
-   if (document.getElementById('plotSelect')) {
-       loadPlots('', '');
-   }
+    console.log('Initial load starting...');
+    
+    const blockSelect = document.getElementById('blockSelect');
+    console.log('blockSelect element:', blockSelect);
+    
+    if (blockSelect) {
+        console.log('Loading initial blocks...');
+        loadBlocks('');
+    }
+    
+    const plotSelect = document.getElementById('plotSelect');
+    console.log('plotSelect element:', plotSelect);
+    
+    if (plotSelect) {
+        console.log('Loading initial plots...');
+        loadPlots('', '');
+    }
+    
+    // הוסף event listeners
+    const cemeterySelect = document.getElementById('cemeterySelect');
+    if (cemeterySelect) {
+        console.log('Adding cemetery change listener');
+        cemeterySelect.addEventListener('change', function() {
+            console.log('Cemetery changed to:', this.value);
+            window.updateGraveSelectors('cemetery');
+        });
+    }
+   //  ------
 
-   // הוסף event listeners
-   const cemeterySelect = document.getElementById('cemeterySelect');
-   if (cemeterySelect) {
-       cemeterySelect.addEventListener('change', function() {
-           window.updateGraveSelectors('cemetery');
-       });
-   }
+
+
+   // if (document.getElementById('blockSelect')) {
+   //     loadBlocks('');
+   // }
+   // if (document.getElementById('plotSelect')) {
+   //     loadPlots('', '');
+   // }
+
+   // // הוסף event listeners
+   // const cemeterySelect = document.getElementById('cemeterySelect');
+   // if (cemeterySelect) {
+   //     cemeterySelect.addEventListener('change', function() {
+   //         window.updateGraveSelectors('cemetery');
+   //     });
+   // }
    
-   const blockSelect = document.getElementById('blockSelect');
-   if (blockSelect) {
-       blockSelect.addEventListener('change', function() {
-           window.updateGraveSelectors('block');
-       });
-   }
+   // const blockSelect = document.getElementById('blockSelect');
+   // if (blockSelect) {
+   //     blockSelect.addEventListener('change', function() {
+   //         window.updateGraveSelectors('block');
+   //     });
+   // }
    
-   const plotSelect = document.getElementById('plotSelect');
-   if (plotSelect) {
-       plotSelect.addEventListener('change', function() {
-           window.updateGraveSelectors('plot');
-       });
-   }
+   // const plotSelect = document.getElementById('plotSelect');
+   // if (plotSelect) {
+   //     plotSelect.addEventListener('change', function() {
+   //         window.updateGraveSelectors('plot');
+   //     });
+   // }
    
    const rowSelect = document.getElementById('rowSelect');
    if (rowSelect) {

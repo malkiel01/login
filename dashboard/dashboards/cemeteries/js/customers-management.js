@@ -29,11 +29,17 @@ async function loadCustomers() {
         updateAddButtonText();
     }
     
-    // עדכון ה-breadcrumb
-    const breadcrumb = document.getElementById('breadcrumb');
-    if (breadcrumb) {
-        breadcrumb.innerHTML = '<span class="breadcrumb-item">ראשי</span> / <span class="breadcrumb-item active">לקוחות</span>';
+    // // עדכון ה-breadcrumb
+    // const breadcrumb = document.getElementById('breadcrumb');
+    // if (breadcrumb) {
+    //     breadcrumb.innerHTML = '<span class="breadcrumb-item">ראשי</span> / <span class="breadcrumb-item active">לקוחות</span>';
+    // }
+
+        // עדכן breadcrumb
+    if (typeof updateBreadcrumb === 'function') {
+        updateBreadcrumb({ customer: { name: 'לקוחות' } });
     }
+    
     
     // עדכון כותרת החלון
     document.title = 'ניהול לקוחות - מערכת בתי עלמין';

@@ -107,7 +107,7 @@ if (!checkPermission('view', 'cemetery')) {
                         </button>
                         <button class="btn btn-primary" onclick="openAddModal()">
                             <svg class="icon"><use xlink:href="#icon-plus"></use></svg>
-                            הוס4פה
+                            הוספה
                         </button>
                     </div>
                 </div>

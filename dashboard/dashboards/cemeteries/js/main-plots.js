@@ -200,7 +200,7 @@ async function loadAreaGravesForPlotWithCard(plotId) {
 }
 
 // טעינת אחוזות קבר לחלקה (דרך השורות)
-async function loadAreaGravesForPlot(plotId) {
+async function loadAreaGravesForPlot2(plotId) {
     console.log('Loading area graves for plot:', plotId);
     try {
         // תחילה הצג את כרטיס החלקה (כולל השורות)
@@ -224,6 +224,22 @@ async function loadAreaGravesForPlot(plotId) {
             displayAreaGravesInMainContent(data.data);
             updateAddButtonText();
         }
+    } catch (error) {
+        console.error('Error loading area graves:', error);
+        showError('שגיאה בטעינת אחוזות קבר');
+    }
+}
+
+async function loadAreaGravesForPlot(plotId) {
+    console.log('Loading area graves for plot:', plotId);
+    try {
+        // בדוק אם יש שורות בחלקה
+        await checkIfPlotHasRows(plotId);
+        updateAddButtonText(); // עדכן את הכפתור בהתאם
+        
+        // המשך כרגיל...
+        const cardHtml = await createPlotCard(plotId);
+        // ...
     } catch (error) {
         console.error('Error loading area graves:', error);
         showError('שגיאה בטעינת אחוזות קבר');

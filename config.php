@@ -52,7 +52,10 @@ define('GOOGLE_CLIENT_ID', $_ENV['CLIENT_ID'] ?? '');
 // הגדרות כלליות
 define('SITE_NAME', 'חברה קדישא לעדת המערבים');
 define('TIMEZONE', 'Asia/Jerusalem');
-define('CURRENCY_SYMBOL', '₪');
+// define('CURRENCY_SYMBOL', '₪');
+if (!defined('CURRENCY_SYMBOL')) {
+    define('CURRENCY_SYMBOL', '₪');
+}
 
 // הגדרות העלאת קבצים
 define('UPLOAD_DIR', 'uploads/');

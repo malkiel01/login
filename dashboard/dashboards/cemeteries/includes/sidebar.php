@@ -89,7 +89,7 @@
         
         <!-- רכישות -->
         <div class="management-item" style="margin-bottom: 10px;">
-            <div class="hierarchy-header" onclick="if(typeof loadPurchases === 'function') loadPurchases()" style="background: #f7fafc;">
+            <div class="hierarchy-header" onclick="loadAllPurchases()" style="background: #f7fafc;">
                 <span class="hierarchy-icon">💰</span>
                 <span class="hierarchy-title">רכישות</span>
                 <span class="hierarchy-count" id="purchasesCount" style="background: #43e97b; color: white;">0</span>
@@ -98,39 +98,13 @@
         
         <!-- קבורות -->
         <div class="management-item" style="margin-bottom: 10px;">
-            <div class="hierarchy-header" onclick="if(typeof loadBurials === 'function') loadBurials()" style="background: #f7fafc;">
+            <div class="hierarchy-header" onclick="loadAllBurials()" style="background: #f7fafc;">
                 <span class="hierarchy-icon">⚱️</span>
                 <span class="hierarchy-title">קבורות</span>
                 <span class="hierarchy-count" id="burialsCount" style="background: #fa709a; color: white;">0</span>
             </div>
         </div>
     </div>
-
-    בדיקה
-
-    <!-- רכישות וקבורות -->
-<div class="sidebar-section" style="margin-top: 20px; border-top: 1px solid #e5e7eb; padding-top: 20px;">
-    <h4 class="sidebar-subtitle" style="margin-bottom: 15px; color: #4b5563; font-size: 14px; text-transform: uppercase;">ניהול עסקאות</h4>
-    
-    <!-- רכישות -->
-    <div class="sidebar-item" onclick="loadAllPurchases()" style="padding: 10px 15px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; border-radius: 6px; transition: background 0.2s;">
-        <div style="display: flex; align-items: center;">
-            <span style="margin-right: 10px;">💰</span>
-            <span>רכישות</span>
-        </div>
-        <span class="badge" id="purchasesCount" style="background: #667eea; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px;">0</span>
-    </div>
-    
-    <!-- קבורות -->
-    <div class="sidebar-item" onclick="loadAllBurials()" style="padding: 10px 15px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; border-radius: 6px; transition: background 0.2s;">
-        <div style="display: flex; align-items: center;">
-            <span style="margin-right: 10px;">⚰️</span>
-            <span>קבורות</span>
-        </div>
-        <span class="badge" id="burialsCount" style="background: #667eea; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px;">0</span>
-    </div>
-</div>
-
 
     <!-- פעולות מהירות -->
     <div class="sidebar-footer">

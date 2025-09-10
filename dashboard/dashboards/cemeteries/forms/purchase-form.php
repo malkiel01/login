@@ -1,5 +1,60 @@
 <?php
 // forms/purchase-form.php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// טען את הקונפיג
+require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
+
+$parentId = $_GET['parent_id'] ?? null;
+$itemId = $_GET['item_id'] ?? null;
+
+try {
+    // קבל חיבור למסד נתונים
+    $conn = getDBConnection();
+    
+    // טען לקוחות פנויים בלבד
+    $customersQuery = "SELECT id, first_name, last_name, id_number 
+                       FROM customers 
+                       WHERE customer_status = 1 AND is_active = 1 
+                       ORDER BY last_name, first_name";
+    $customersStmt = $conn->prepare($customersQuery);
+    $customersStmt->execute();
+    $customers = $customersStmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // טען בתי עלמין עם קברים פנויים
+    $cemeteriesQuery = "
+        SELECT DISTINCT c.id, c.name 
+        FROM cemeteries c
+        INNER JOIN blocks b ON b.cemetery_id = c.id
+        INNER JOIN plots p ON p.block_id = b.id
+        INNER JOIN rows r ON r.plot_id = p.id
+        INNER JOIN area_graves ag ON ag.row_id = r.id
+        INNER JOIN graves g ON g.area_grave_id = ag.id
+        WHERE g.grave_status = 1 AND g.is_active = 1
+        ORDER BY c.name";
+    $cemeteriesStmt = $conn->prepare($cemeteriesQuery);
+    $cemeteriesStmt->execute();
+    $cemeteries = $cemeteriesStmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // אם עורכים רכישה קיימת
+    $purchase = null;
+    if ($itemId) {
+        $stmt = $conn->prepare("SELECT * FROM purchases WHERE id = ?");
+        $stmt->execute([$itemId]);
+        $purchase = $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+    
+} catch (Exception $e) {
+    echo "<div style='color: red; padding: 20px;'>";
+    echo "שגיאה: " . $e->getMessage();
+    echo "</div>";
+    exit;
+}
+?>
+
+<!-- < ?php
+// forms/purchase-form.php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
 
 $parentId = $_GET['parent_id'] ?? null;
@@ -33,7 +88,7 @@ if ($itemId) {
     $stmt->execute();
     $purchase = $stmt->get_result()->fetch_assoc();
 }
-?>
+?> -->
 
 <style>
     .form-section {

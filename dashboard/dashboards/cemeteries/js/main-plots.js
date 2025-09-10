@@ -150,7 +150,7 @@ async function openPlot(plotId, plotName) {
     
     // שמור את הבחירה
     window.selectedItems.plot = { id: plotId, name: plotName };
-    window.currentType = 'areaGrave';
+    window.currentType = 'area_grave';
     window.currentParentId = plotId;
     
     // עדכן את הסידבר - הצג את החלקה הנבחרת

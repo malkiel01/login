@@ -150,7 +150,7 @@ function getFormFields($type, $data = null) {
                  'options' => CUSTOMER_STATUS ? array_map(function($status) { 
                      return $status['name']; 
                  }, CUSTOMER_STATUS) : []],
-                ['name' => 'comments', 'label' => 'הער4ות', 'type' => 'textarea']
+                ['name' => 'comments', 'label' => 'הערות', 'type' => 'textarea']
             ];
             
         case 'purchase':
@@ -171,7 +171,7 @@ function getFormFields($type, $data = null) {
                  'options' => PURCHASE_STATUS ? array_map(function($status) { 
                      return $status['name']; 
                  }, PURCHASE_STATUS) : []],
-                ['name' => 'comments', 'label' => 'הערות', 'type' => 'textarea']
+                ['name' => 'comments', 'label' => 'הע5רות', 'type' => 'textarea']
             ];
             
         case 'burial':

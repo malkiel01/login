@@ -150,7 +150,7 @@ function getFormFields($type, $data = null) {
                  'options' => CUSTOMER_STATUS ? array_map(function($status) { 
                      return $status['name']; 
                  }, CUSTOMER_STATUS) : []],
-                ['name' => 'comments', 'label' => 'הערות', 'type' => 'textarea']
+                ['name' => 'comments', 'label' => 'הער4ות', 'type' => 'textarea']
             ];
             
         case 'purchase':

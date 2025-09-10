@@ -13,9 +13,9 @@ const FormHandler = {
                 ...(parentId && { parent_id: parentId })
             });
             
-            console.log('Fetching form from:', `dashboards/cemeteries/forms/form-loader.php?${params}`);
+            console.log('Fetching form from:', `dashboard/dashboards/cemeteries/forms/form-loader.php?${params}`);
             
-            const response = await fetch(`/dashboards/cemeteries/forms/form-loader.php?${params}`);
+            const response = await fetch(`/dashboard/dashboards/cemeteries/forms/form-loader.php?${params}`);
             
             console.log('Response status:', response.status);
             

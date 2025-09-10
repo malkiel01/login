@@ -495,16 +495,93 @@ window.clearSelectors = function(levels) {
    });
 }
 
-// טעינה ראשונית - טען גושים וחלקות
-setTimeout(() => {
-    console.log('Initial load starting...');
+// // טעינה ראשונית - טען גושים וחלקות
+// setTimeout(() => {
+//     console.log('Initial load starting...');
+    
+//     const blockSelect = document.getElementById('blockSelect');
+//     console.log('blockSelect element:', blockSelect);
+    
+//     if (blockSelect) {
+//         console.log('Loading initial blocks...');
+//         loadBlocks('');
+//     }
+    
+//     const plotSelect = document.getElementById('plotSelect');
+//     console.log('plotSelect element:', plotSelect);
+    
+//     if (plotSelect) {
+//         console.log('Loading initial plots...');
+//         loadPlots('', '');
+//     }
+    
+//     // הוסף event listeners
+//     const cemeterySelect = document.getElementById('cemeterySelect');
+//     if (cemeterySelect) {
+//         console.log('Adding cemetery change listener');
+//         cemeterySelect.addEventListener('change', function() {
+//             console.log('Cemetery changed to:', this.value);
+//             window.updateGraveSelectors('cemetery');
+//         });
+//     }
+//    //  ------
+
+
+
+//    // if (document.getElementById('blockSelect')) {
+//    //     loadBlocks('');
+//    // }
+//    // if (document.getElementById('plotSelect')) {
+//    //     loadPlots('', '');
+//    // }
+
+//    // // הוסף event listeners
+//    // const cemeterySelect = document.getElementById('cemeterySelect');
+//    // if (cemeterySelect) {
+//    //     cemeterySelect.addEventListener('change', function() {
+//    //         window.updateGraveSelectors('cemetery');
+//    //     });
+//    // }
+   
+//    // const blockSelect = document.getElementById('blockSelect');
+//    // if (blockSelect) {
+//    //     blockSelect.addEventListener('change', function() {
+//    //         window.updateGraveSelectors('block');
+//    //     });
+//    // }
+   
+//    // const plotSelect = document.getElementById('plotSelect');
+//    // if (plotSelect) {
+//    //     plotSelect.addEventListener('change', function() {
+//    //         window.updateGraveSelectors('plot');
+//    //     });
+//    // }
+   
+//    const rowSelect = document.getElementById('rowSelect');
+//    if (rowSelect) {
+//        rowSelect.addEventListener('change', function() {
+//            window.updateGraveSelectors('row');
+//        });
+//    }
+   
+//    const areaGraveSelect = document.getElementById('areaGraveSelect');
+//    if (areaGraveSelect) {
+//        areaGraveSelect.addEventListener('change', function() {
+//            window.updateGraveSelectors('area_grave');
+//        });
+//    }
+// }, 100);
+
+// הרץ מיד כשהסקריפט נטען
+(function initGraveSelectors() {
+    console.log('Init grave selectors - running immediately');
     
     const blockSelect = document.getElementById('blockSelect');
     console.log('blockSelect element:', blockSelect);
     
     if (blockSelect) {
         console.log('Loading initial blocks...');
-        loadBlocks('');
+        window.loadBlocks('');
     }
     
     const plotSelect = document.getElementById('plotSelect');
@@ -512,7 +589,7 @@ setTimeout(() => {
     
     if (plotSelect) {
         console.log('Loading initial plots...');
-        loadPlots('', '');
+        window.loadPlots('', '');
     }
     
     // הוסף event listeners
@@ -524,51 +601,39 @@ setTimeout(() => {
             window.updateGraveSelectors('cemetery');
         });
     }
-   //  ------
-
-
-
-   // if (document.getElementById('blockSelect')) {
-   //     loadBlocks('');
-   // }
-   // if (document.getElementById('plotSelect')) {
-   //     loadPlots('', '');
-   // }
-
-   // // הוסף event listeners
-   // const cemeterySelect = document.getElementById('cemeterySelect');
-   // if (cemeterySelect) {
-   //     cemeterySelect.addEventListener('change', function() {
-   //         window.updateGraveSelectors('cemetery');
-   //     });
-   // }
-   
-   // const blockSelect = document.getElementById('blockSelect');
-   // if (blockSelect) {
-   //     blockSelect.addEventListener('change', function() {
-   //         window.updateGraveSelectors('block');
-   //     });
-   // }
-   
-   // const plotSelect = document.getElementById('plotSelect');
-   // if (plotSelect) {
-   //     plotSelect.addEventListener('change', function() {
-   //         window.updateGraveSelectors('plot');
-   //     });
-   // }
-   
-   const rowSelect = document.getElementById('rowSelect');
-   if (rowSelect) {
-       rowSelect.addEventListener('change', function() {
-           window.updateGraveSelectors('row');
-       });
-   }
-   
-   const areaGraveSelect = document.getElementById('areaGraveSelect');
-   if (areaGraveSelect) {
-       areaGraveSelect.addEventListener('change', function() {
-           window.updateGraveSelectors('area_grave');
-       });
-   }
-}, 100);
+    
+    const blockSelectForEvent = document.getElementById('blockSelect');
+    if (blockSelectForEvent) {
+        console.log('Adding block change listener');
+        blockSelectForEvent.addEventListener('change', function() {
+            console.log('Block changed to:', this.value);
+            window.updateGraveSelectors('block');
+        });
+    }
+    
+    const plotSelectForEvent = document.getElementById('plotSelect');
+    if (plotSelectForEvent) {
+        console.log('Adding plot change listener');
+        plotSelectForEvent.addEventListener('change', function() {
+            console.log('Plot changed to:', this.value);
+            window.updateGraveSelectors('plot');
+        });
+    }
+    
+    const rowSelect = document.getElementById('rowSelect');
+    if (rowSelect) {
+        console.log('Adding row change listener');
+        rowSelect.addEventListener('change', function() {
+            window.updateGraveSelectors('row');
+        });
+    }
+    
+    const areaGraveSelect = document.getElementById('areaGraveSelect');
+    if (areaGraveSelect) {
+        console.log('Adding area grave change listener');
+        areaGraveSelect.addEventListener('change', function() {
+            window.updateGraveSelectors('area_grave');
+        });
+    }
+})(); // הרץ מיד!
 </script>

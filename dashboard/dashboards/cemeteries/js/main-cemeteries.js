@@ -145,7 +145,7 @@ function openAddCemetery() {
 // עריכת בית עלמין
 function editCemetery(id) {
     window.currentType = 'cemetery';
-    FormHandler.openForm('cemetery', null, null);
+    FormHandler.openForm('cemetery', null, id); // <-- הוסף את id כאן!
 }
 
 // מחיקת בית עלמין

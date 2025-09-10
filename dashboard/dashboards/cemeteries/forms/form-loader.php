@@ -1,6 +1,12 @@
 <?php
 // /dashboards/cemeteries/forms/form-loader.php
 // טוען טופס דינמי לפי סוג
+// דיבוג זמני
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// הוסף header
+header('Content-Type: text/html; charset=utf-8');
 
 require_once __DIR__ . '/FormBuilder.php';
 require_once __DIR__ . '/forms-config.php';

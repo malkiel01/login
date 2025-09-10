@@ -86,6 +86,10 @@ const FormHandler = {
                     data[key] = value;
                 }
             }
+
+            if (key !== 'type') {
+                data[key] = value;
+            }
             
             // טיפול מיוחד בטבלת graves - אין עמודת name!
             if (type === 'grave' && data.grave_number && !data.name) {

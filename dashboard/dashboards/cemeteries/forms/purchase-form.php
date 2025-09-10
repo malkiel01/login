@@ -282,7 +282,7 @@ window.filterHierarchy = function(level) {
     }
 }
 
-// מילוי גושים
+// מילוי גושים - עם בדיקת קברים פנויים
 function populateBlocks(cemeteryId = null) {
     const blockSelect = document.getElementById('blockSelect');
     blockSelect.innerHTML = '<option value="">-- כל הגושים --</option>';
@@ -292,14 +292,24 @@ function populateBlocks(cemeteryId = null) {
         : window.hierarchyData.blocks;
     
     blocks.forEach(block => {
+        // בדוק אם יש קברים פנויים בגוש זה
+        const hasAvailableGraves = checkBlockHasGraves(block.id);
+        
         const option = document.createElement('option');
         option.value = block.id;
-        option.textContent = block.name;
+        option.textContent = block.name + (!hasAvailableGraves ? ' (אין קברים פנויים)' : '');
+        
+        if (!hasAvailableGraves) {
+            option.disabled = true;
+            option.style.color = '#999';
+        }
+        
         blockSelect.appendChild(option);
     });
 }
 
-// מילוי חלקות
+
+// מילוי חלקות - עם בדיקת קברים פנויים
 function populatePlots(cemeteryId = null, blockId = null) {
     const plotSelect = document.getElementById('plotSelect');
     plotSelect.innerHTML = '<option value="">-- כל החלקות --</option>';
@@ -313,11 +323,52 @@ function populatePlots(cemeteryId = null, blockId = null) {
     }
     
     plots.forEach(plot => {
+        // בדוק אם יש קברים פנויים בחלקה זו
+        const hasAvailableGraves = checkPlotHasGraves(plot.id);
+        
         const option = document.createElement('option');
         option.value = plot.id;
-        option.textContent = plot.name;
+        option.textContent = plot.name + (!hasAvailableGraves ? ' (אין קברים פנויים)' : '');
+        
+        if (!hasAvailableGraves) {
+            option.disabled = true;
+            option.style.color = '#999';
+        }
+        
         plotSelect.appendChild(option);
     });
+}
+
+// פונקציות עזר לבדיקת קברים פנויים
+function checkBlockHasGraves(blockId) {
+    // מצא את כל החלקות של הגוש
+    const blockPlots = window.hierarchyData.plots.filter(p => p.block_id == blockId);
+    
+    // בדוק אם יש קברים פנויים באחת החלקות
+    for (let plot of blockPlots) {
+        if (checkPlotHasGraves(plot.id)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function checkPlotHasGraves(plotId) {
+    // מצא את כל השורות של החלקה
+    const plotRows = window.hierarchyData.rows.filter(r => r.plot_id == plotId);
+    
+    // בדוק אם יש קברים פנויים באחת השורות
+    for (let row of plotRows) {
+        const rowAreaGraves = window.hierarchyData.areaGraves.filter(ag => ag.row_id == row.id);
+        
+        for (let areaGrave of rowAreaGraves) {
+            const graves = window.hierarchyData.graves.filter(g => g.area_grave_id == areaGrave.id);
+            if (graves.length > 0) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 // מילוי שורות

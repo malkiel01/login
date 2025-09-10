@@ -65,9 +65,7 @@ function getFormFields($type, $data = null) {
                 ['name' => 'address', 'label' => 'כתובת', 'type' => 'text'],
                 ['name' => 'contact_name', 'label' => 'איש קשר', 'type' => 'text'],
                 ['name' => 'contact_phone', 'label' => 'טלפון', 'type' => 'tel'],
-                // ['name' => 'location', 'label' => 'מיקום', 'type' => 'text'],
                 ['name' => 'coordinates', 'label' => 'קואורדינטות', 'type' => 'text', 'placeholder' => '31.7683, 35.2137'],
-                // ['name' => 'comments', 'label' => 'הערות', 'type' => 'textarea']
             ];
             
         case 'block':
@@ -101,6 +99,7 @@ function getFormFields($type, $data = null) {
             ];
             
         case 'area_grave':
+        case 'areaGrave':
             return [
                 ['name' => 'name', 'label' => 'שם אחוזת הקבר', 'type' => 'text', 'required' => true],
                 ['name' => 'grave_type', 'label' => 'סוג קבר', 'type' => 'select',

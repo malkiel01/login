@@ -56,9 +56,12 @@ class FormBuilder {
     }
     
     public function renderModal() {
-        $html = '<div class="modal fade" id="' . $this->formId . 'Modal">';
-        $html .= '<div class="modal-dialog">';
-        $html .= '<div class="modal-content">';
+        // $html = '<div class="modal fade" id="' . $this->formId . 'Modal">';
+        $html = '<div class="modal" id="' . $this->formId . 'Modal" style="display: block; position: fixed; z-index: 1050; top: 0; left: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5);">';
+        // $html .= '<div class="modal-dialog">';
+        $html .= '<div class="modal-dialog" style="position: relative; margin: 50px auto; max-width: 600px;">';
+        // $html .= '<div class="modal-content">';
+        $html .= '<div class="modal-content" style="background: white; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5);">';
         
         // Header
         $html .= '<div class="modal-header">';

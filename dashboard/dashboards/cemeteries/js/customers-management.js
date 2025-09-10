@@ -29,13 +29,7 @@ async function loadCustomers() {
         updateAddButtonText();
     }
     
-    // // עדכון ה-breadcrumb
-    // const breadcrumb = document.getElementById('breadcrumb');
-    // if (breadcrumb) {
-    //     breadcrumb.innerHTML = '<span class="breadcrumb-item">ראשי</span> / <span class="breadcrumb-item active">לקוחות</span>';
-    // }
-
-        // עדכן breadcrumb
+    // עדכן breadcrumb
     if (typeof updateBreadcrumb === 'function') {
         updateBreadcrumb({ customer: { name: 'לקוחות' } });
     }

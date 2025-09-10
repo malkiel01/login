@@ -11,10 +11,10 @@ async function loadAllPurchases(page = 1) {
     console.log('Loading all purchases...');
     currentPurchasePage = page;
     
-    // נקה את הסידבר אם קיים
-    if (typeof clearAllSidebarSelections === 'function') {
-        clearAllSidebarSelections();
-    }
+    clearItemCard(); // נקה את הכרטיס כשעוברים לתצוגה כללית
+    
+    // נקה את כל הסידבר
+    clearAllSidebarSelections();
     
     // עדכן סוג נוכחי
     window.currentType = 'purchase';

@@ -7,6 +7,42 @@ if (!function_exists('getDBConnection')) {
     require_once $_SERVER['DOCUMENT_ROOT'] . '/config.php';
 }
 
+
+// הגדר את הקבועים אם הם לא קיימים
+if (!defined('PLOT_TYPES')) {
+    define('PLOT_TYPES', [
+        1 => ['name' => 'פטור', 'icon' => '🟢'],
+        2 => ['name' => 'חריג', 'icon' => '🟡'],
+        3 => ['name' => 'סגור', 'icon' => '🔴']
+    ]);
+}
+
+if (!defined('GRAVE_STATUS')) {
+    define('GRAVE_STATUS', [
+        1 => ['name' => 'פנוי', 'color' => '#10b981'],
+        2 => ['name' => 'נרכש', 'color' => '#f97316'],
+        3 => ['name' => 'תפוס', 'color' => '#dc2626'],
+        4 => ['name' => 'שמור', 'color' => '#6366f1']
+    ]);
+}
+
+if (!defined('CUSTOMER_STATUS')) {
+    define('CUSTOMER_STATUS', [
+        1 => ['name' => 'פעיל', 'color' => '#10b981'],
+        2 => ['name' => 'רכש', 'color' => '#3b82f6'],
+        3 => ['name' => 'נפטר', 'color' => '#6b7280']
+    ]);
+}
+
+if (!defined('PURCHASE_STATUS')) {
+    define('PURCHASE_STATUS', [
+        1 => ['name' => 'טיוטה', 'color' => '#6b7280'],
+        2 => ['name' => 'אושר', 'color' => '#3b82f6'],
+        3 => ['name' => 'שולם', 'color' => '#10b981'],
+        4 => ['name' => 'בוטל', 'color' => '#dc2626']
+    ]);
+}
+
 // // כלול רק את הפונקציות הנחוצות, לא את כל הקונפיג
 // if (!function_exists('getDBConnection')) {
 //     require_once $_SERVER['DOCUMENT_ROOT'] . '/config.php';

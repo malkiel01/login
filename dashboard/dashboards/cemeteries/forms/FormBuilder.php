@@ -332,7 +332,7 @@ class FormBuilder {
     
     public function renderModal() {
         // Start with loading CSS
-        $html = $this->loadCSS();
+        $html = $this->getModalCSS();
         
         // Modal structure
         $html .= '<div class="modal show" id="' . $this->formId . 'Modal">';

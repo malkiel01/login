@@ -84,21 +84,6 @@ async function loadCustomers() {
         </tr>
     `;
     
-    // עדכן את כפתורי הפעולה
-    const actionButtons = document.querySelector('.action-buttons');
-    if (actionButtons) {
-        actionButtons.innerHTML = `
-            <button class="btn btn-secondary" onclick="refreshData()">
-                <svg class="icon"><use xlink:href="#icon-refresh"></use></svg>
-                רענון
-            </button>
-            <button class="btn btn-primary" onclick="openAddCustomer()">
-                <svg class="icon"><use xlink:href="#icon-plus"></use></svg>
-                לקוח חדש
-            </button>
-        `;
-    }
-    
     console.log('About to fetch customers...');
     
     // טען את הנתונים
@@ -180,21 +165,6 @@ function displayCustomersInTable(customers) {
     
     // סמן שאנחנו במצב לקוחות
     tableBody.setAttribute('data-customer-view', 'true');
-    
-    // עדכן את כפתורי הפעולה
-    const actionButtons = document.querySelector('.action-buttons');
-    if (actionButtons) {
-        actionButtons.innerHTML = `
-            <button class="btn btn-secondary" onclick="refreshData()">
-                <svg class="icon"><use xlink:href="#icon-refresh"></use></svg>
-                רענון
-            </button>
-            <button class="btn btn-primary" onclick="openAddCustomer()">
-                <svg class="icon"><use xlink:href="#icon-plus"></use></svg>
-                לקוח חדש
-            </button>
-        `;
-    }
     
     if (customers.length === 0) {
         tableBody.innerHTML = `
@@ -300,8 +270,10 @@ function getCustomerTypeBadge(type) {
 
 // פתיחת טופס הוספת לקוח
 function openAddCustomer() {
-    editingCustomerId = null;
-    openCustomerModal('הוסף לקוח חדש');
+    window.currentType = 'customer';
+    window.currentParentId = null;
+    
+    FormHandler.openForm('customer', null, null);
 }
 
 // עריכת לקוח

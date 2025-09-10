@@ -51,6 +51,8 @@ try {
 }
 ?>
 
+<link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/forms.css">
+
 <div class="modal-overlay">
     <div class="modal-content">
         <div class="modal-header">

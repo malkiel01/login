@@ -421,7 +421,7 @@ function updateAddButtonText() {
     });
 }
 // עדכון טקסט כפתור הוספה
-function updateAddButtonText2() {
+function updateAddButtonText() {
     const buttonTexts = {
         'cemetery': 'הוספת בית עלמין',
         'block': 'הוספת גוש',
@@ -469,8 +469,8 @@ function shouldHideAddButton() {
 // בדיקה האם לבטל את כפתור ההוספה
 function shouldDisableAddButton() {
     // אם אנחנו בחלקה ספציפית ורוצים להוסיף אחוזת קבר
-    if (window.currentType === 'area_grave' && window.selectedItems.plot) {
-        // בדוק אם יש שורות בחלקה
+    if (window.currentType === 'area_grave' && window.selectedItems.plot && !window.currentParentId) {
+        // רק אם אנחנו בתצוגה כללית של החלקה (לא בחרנו שורה ספציפית)
         return !window.hasRowsInCurrentPlot;
     }
     return false;

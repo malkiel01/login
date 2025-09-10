@@ -230,7 +230,7 @@ async function loadAreaGravesForPlot2(plotId) {
     }
 }
 
-async function loadAreaGravesForPlot(plotId) {
+async function loadAreaGravesForPlot3(plotId) {
     console.log('Loading area graves for plot:', plotId);
     try {
         // בדוק אם יש שורות בחלקה
@@ -240,6 +240,43 @@ async function loadAreaGravesForPlot(plotId) {
         // המשך כרגיל...
         const cardHtml = await createPlotCard(plotId);
         // ...
+    } catch (error) {
+        console.error('Error loading area graves:', error);
+        showError('שגיאה בטעינת אחוזות קבר');
+    }
+}
+async function loadAreaGravesForPlot(plotId) {
+    console.log('Loading area graves for plot:', plotId);
+    try {
+        // בדוק אם יש שורות בחלקה
+        const rowsResponse = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=row&parent_id=${plotId}`);
+        const rowsData = await rowsResponse.json();
+        window.hasRowsInCurrentPlot = rowsData.success && rowsData.data && rowsData.data.length > 0;
+        
+        // עדכן את הכפתור
+        updateAddButtonText();
+        
+        // המשך כרגיל...
+        const cardHtml = await createPlotCard(plotId);
+        const mainContent = document.querySelector('.main-content');
+        
+        const cardContainer = document.getElementById('itemCard') || document.createElement('div');
+        cardContainer.id = 'itemCard';
+        cardContainer.innerHTML = cardHtml;
+        
+        const tableWrapper = document.querySelector('.table-wrapper');
+        if (tableWrapper && cardHtml) {
+            mainContent.insertBefore(cardContainer, tableWrapper);
+        }
+        
+        // אז טען את אחוזות הקבר
+        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=area_grave&plot_id=${plotId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            displayAreaGravesInMainContent(data.data);
+            updateAddButtonText();
+        }
     } catch (error) {
         console.error('Error loading area graves:', error);
         showError('שגיאה בטעינת אחוזות קבר');

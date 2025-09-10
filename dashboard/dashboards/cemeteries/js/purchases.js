@@ -214,12 +214,34 @@ function showError(message) {
 }
 
 // הצגת הודעת הצלחה
+// הצגת הודעת הצלחה
 function showSuccess(message) {
-    // אם יש פונקציה גלובלית להודעות, השתמש בה
-    if (typeof window.showSuccess === 'function') {
-        window.showSuccess(message);
+    // השתמש בפונקציה אחרת אם קיימת
+    if (typeof window.showToast === 'function') {
+        window.showToast('success', message);
+    } else if (typeof window.displaySuccess === 'function') {
+        window.displaySuccess(message);
     } else {
-        alert(message);
+        // הצג הודעה בסיסית
+        alert('✅ ' + message);
+        
+        // או צור הודעה ב-DOM
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            z-index: 10000;
+            animation: slideIn 0.3s ease;
+        `;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => notification.remove(), 3000);
     }
 }
 

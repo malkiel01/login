@@ -235,6 +235,7 @@ window.hierarchyData = <?php echo json_encode($hierarchyData); ?>;
 })();
 
 // פונקציה לסינון ההיררכיה
+// פונקציה לסינון ההיררכיה
 window.filterHierarchy = function(level) {
     const cemetery = document.getElementById('cemeterySelect').value;
     const block = document.getElementById('blockSelect').value;
@@ -248,12 +249,47 @@ window.filterHierarchy = function(level) {
             populatePlots(cemetery, null);
             clearSelectors(['row', 'area_grave', 'grave']);
             break;
+            
         case 'block':
+            // אם נבחר גוש, בחר אוטומטית את בית העלמין שלו
+            if (block) {
+                const selectedBlock = window.hierarchyData.blocks.find(b => b.id == block);
+                if (selectedBlock && selectedBlock.cemetery_id) {
+                    // עדכן את בית העלמין
+                    document.getElementById('cemeterySelect').value = selectedBlock.cemetery_id;
+                    // טען גושים של בית העלמין הנבחר
+                    populateBlocks(selectedBlock.cemetery_id);
+                    // שמור מחדש את הגוש הנבחר
+                    document.getElementById('blockSelect').value = block;
+                }
+            }
             populatePlots(null, block);
             clearSelectors(['row', 'area_grave', 'grave']);
             break;
+            
         case 'plot':
+            // אם נבחרה חלקה, בחר אוטומטית את הגוש ובית העלמין
             if (plot) {
+                const selectedPlot = window.hierarchyData.plots.find(p => p.id == plot);
+                if (selectedPlot) {
+                    // עדכן את הגוש
+                    if (selectedPlot.block_id && document.getElementById('blockSelect').value != selectedPlot.block_id) {
+                        document.getElementById('blockSelect').value = selectedPlot.block_id;
+                        
+                        // עדכן גם את בית העלמין
+                        const selectedBlock = window.hierarchyData.blocks.find(b => b.id == selectedPlot.block_id);
+                        if (selectedBlock && selectedBlock.cemetery_id) {
+                            document.getElementById('cemeterySelect').value = selectedBlock.cemetery_id;
+                            populateBlocks(selectedBlock.cemetery_id);
+                            document.getElementById('blockSelect').value = selectedPlot.block_id;
+                        }
+                    }
+                    
+                    // טען חלקות של הגוש הנבחר
+                    populatePlots(null, selectedPlot.block_id);
+                    document.getElementById('plotSelect').value = plot;
+                }
+                
                 populateRows(plot);
                 document.getElementById('rowSelect').disabled = false;
             } else {
@@ -261,6 +297,7 @@ window.filterHierarchy = function(level) {
                 document.getElementById('rowSelect').disabled = true;
             }
             break;
+            
         case 'row':
             if (row) {
                 populateAreaGraves(row);
@@ -270,6 +307,7 @@ window.filterHierarchy = function(level) {
                 document.getElementById('areaGraveSelect').disabled = true;
             }
             break;
+            
         case 'area_grave':
             if (areaGrave) {
                 populateGraves(areaGrave);

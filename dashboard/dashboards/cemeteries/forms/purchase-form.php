@@ -224,8 +224,15 @@ echo $formBuilder->renderModal();
 ?>
 
 <script>
+console.log('!!!!! PURCHASE FORM SCRIPT STARTING !!!!!');
+console.log('Document ready state:', document.readyState);
+console.log('Looking for elements...');
+console.log('cemeterySelect:', document.getElementById('cemeterySelect'));
+console.log('blockSelect:', document.getElementById('blockSelect'));
+
 // העבר את כל הנתונים ל-JavaScript
 window.hierarchyData = <?php echo json_encode($hierarchyData); ?>;
+console.log('Hierarchy data loaded:', window.hierarchyData);
 
 // אתחול מיידי
 (function initializeForm() {

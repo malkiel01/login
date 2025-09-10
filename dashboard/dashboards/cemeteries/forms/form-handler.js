@@ -4,6 +4,7 @@
 const FormHandler = {
     // פתיחת טופס
     openForm: async function(type, parentId = null, itemId = null) {
+        console.log('FormHandler.openForm called with:', {type, parentId, itemId});
         try {
             // טען את הטופס מהשרת
             const params = new URLSearchParams({
@@ -12,8 +13,16 @@ const FormHandler = {
                 ...(parentId && { parent_id: parentId })
             });
             
+            console.log('Fetching form from:', `dashboards/cemeteries/forms/form-loader.php?${params}`);
+            
             const response = await fetch(`/dashboards/cemeteries/forms/form-loader.php?${params}`);
+            
+            console.log('Response status:', response.status);
+            
             const html = await response.text();
+            
+            console.log('Received HTML length:', html.length);
+            console.log('First 100 chars:', html.substring(0, 100));
             
             // הסר טופס קיים אם יש
             const existingModal = document.getElementById(type + 'FormModal');

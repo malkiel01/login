@@ -90,7 +90,7 @@ function displayCemeteriesInMainContent(cemeteries) {
                     <div style="color: #999;">
                         <div style="font-size: 48px; margin-bottom: 20px;">🏛️</div>
                         <div>אין בתי עלמין במערכת</div>
-                        <button class="btn btn-primary mt-3" onclick="openAddCemetery()">
+                        <button class="btn btn-primary mt-3" onclick="FormHandler.openForm('cemetery', null, null)">
                             הוסף בית עלמין ראשון
                         </button>
                     </div>

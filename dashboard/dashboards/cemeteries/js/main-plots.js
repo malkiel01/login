@@ -99,7 +99,7 @@ function displayPlotsInMainContent(plots, blockName = null) {
                         <div style="font-size: 48px; margin-bottom: 20px;">📋</div>
                         <div>אין חלקות ${blockName ? `בגוש ${blockName}` : 'במערכת'}</div>
                         ${window.selectedItems.block ? `
-                            <button class="btn btn-primary mt-3" onclick="openAddPlot()">
+                            <button class="btn btn-primary mt-3" onclick="FormHandler.openForm('plot', ${window.selectedItems.block.id}, null)">
                                 הוסף חלקה חדשה
                             </button>
                         ` : ''}
@@ -689,92 +689,6 @@ window.openAddRowForm = function(plotId) {
     window.currentParentId = plotId;
     FormHandler.openForm('row', plotId, null);
 }
-
-// הסרתי מהשיטה הישנה
-// // טופס הוספת שורה
-// window.openAddRowForm = function(plotId) {
-//     const form = document.createElement('div');
-//     form.style.cssText = `
-//         position: fixed;
-//         top: 50%;
-//         left: 50%;
-//         transform: translate(-50%, -50%);
-//         background: white;
-//         padding: 30px;
-//         border-radius: 10px;
-//         box-shadow: 0 0 30px rgba(0,0,0,0.3);
-//         z-index: 10001;
-//         min-width: 400px;
-//     `;
-    
-//     form.innerHTML = `
-//         <h3>הוסף שורה חדשה</h3>
-//         <form onsubmit="submitRowForm(event, ${plotId})">
-//             <div style="margin-bottom: 15px;">
-//                 <label style="display: block; margin-bottom: 5px;">שם:</label>
-//                 <input type="text" name="name" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-//             </div>
-//             <div style="margin-bottom: 15px;">
-//                 <label style="display: block; margin-bottom: 5px;">מספר סידורי:</label>
-//                 <input type="number" name="serial_number" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-//             </div>
-//             <div style="margin-bottom: 15px;">
-//                 <label style="display: block; margin-bottom: 5px;">מיקום:</label>
-//                 <input type="text" name="location" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-//             </div>
-//             <div style="display: flex; gap: 10px; justify-content: flex-end;">
-//                 <button type="button" onclick="this.closest('div[style*=fixed]').remove()" 
-//                         style="padding: 8px 20px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
-//                     ביטול
-//                 </button>
-//                 <button type="submit" 
-//                         style="padding: 8px 20px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">
-//                     שמור
-//                 </button>
-//             </div>
-//         </form>
-//     `;
-    
-//     document.body.appendChild(form);
-// }
-
-// // שליחת טופס שורה
-// window.submitRowForm = async function(event, plotId) {
-//     event.preventDefault();
-//     const formData = new FormData(event.target);
-    
-//     const data = {
-//         name: formData.get('name'),
-//         serial_number: formData.get('serial_number'),
-//         location: formData.get('location'),
-//         plot_id: plotId,
-//         is_active: 1
-//     };
-    
-//     try {
-//         const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=create&type=row`, {
-//             method: 'POST',
-//             headers: {'Content-Type': 'application/json'},
-//             body: JSON.stringify(data)
-//         });
-        
-//         const result = await response.json();
-        
-//         if (result.success) {
-//             event.target.closest('div[style*=fixed]').remove();
-//             showSuccess('השורה נוספה בהצלחה');
-            
-//             // סגור את החלון הקודם וטען מחדש
-//             document.querySelectorAll('div[style*=fixed]').forEach(el => el.remove());
-//             openRowsManagementModal(plotId, window.selectedItems.plot?.name);
-//         } else {
-//             alert('שגיאה: ' + (result.error || 'Unknown error'));
-//         }
-//     } catch (error) {
-//         alert('שגיאה בשמירה');
-//         console.error(error);
-//     }
-// }
 
 // עריכת שורה
 window.editRow = function(rowId) {

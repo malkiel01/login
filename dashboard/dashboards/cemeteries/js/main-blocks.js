@@ -169,7 +169,7 @@ function displayBlocksInMainContent(blocks, cemeteryName = null) {
                         <div style="font-size: 48px; margin-bottom: 20px;">📦</div>
                         <div>אין גושים ${cemeteryName ? `בבית עלמין ${cemeteryName}` : 'במערכת'}</div>
                         ${window.selectedItems.cemetery ? `
-                            <button class="btn btn-primary mt-3" onclick="openAddBlock()">
+                            <button class="btn btn-primary mt-3" onclick="FormHandler.openForm('block', ${window.selectedItems.cemetery.id}, null)">
                                 הוסף גוש חדש
                             </button>
                         ` : ''}

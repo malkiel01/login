@@ -86,7 +86,7 @@ function displayGravesInMainContent(graves, areaGraveName = null) {
                         <div style="font-size: 48px; margin-bottom: 20px;">🪦</div>
                         <div>אין קברים ${areaGraveName ? `באחוזת קבר ${areaGraveName}` : 'במערכת'}</div>
                         ${window.selectedItems.areaGrave ? `
-                            <button class="btn btn-primary mt-3" onclick="openAddGrave()">
+                            <button class="btn btn-primary mt-3" onclick="FormHandler.openForm('grave', ${window.selectedItems.areaGrave.id}, null)">
                                 הוסף קבר חדש
                             </button>
                         ` : ''}
@@ -331,7 +331,7 @@ function showGraveDetailsModal(grave) {
 }
 
 // הוספת קבר חדש
-function openAddGrave() {
+function openAddGrave2() {
     if (!window.selectedItems.areaGrave) {
         showWarning('יש לבחור אחוזת קבר תחילה');
         return;
@@ -345,6 +345,19 @@ function openAddGrave() {
     } else {
         createSimpleGraveForm();
     }
+}
+// הוספת קבר חדש
+function openAddGrave() {
+    if (!window.selectedItems.areaGrave) {
+        showWarning('יש לבחור אחוזת קבר תחילה');
+        return;
+    }
+    
+    window.currentType = 'grave';
+    window.currentParentId = window.selectedItems.areaGrave.id;
+    
+    // השתמש ב-FormHandler במקום בפונקציה שלא קיימת
+    FormHandler.openForm('grave', window.selectedItems.areaGrave.id, null);
 }
 
 // עריכת קבר

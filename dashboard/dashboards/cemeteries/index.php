@@ -107,7 +107,7 @@ if (!checkPermission('view', 'cemetery')) {
                         </button>
                         <button class="btn btn-primary" onclick="openAddModal()">
                             <svg class="icon"><use xlink:href="#icon-plus"></use></svg>
-                            הוספה
+                            הוס4פה
                         </button>
                     </div>
                 </div>
@@ -134,10 +134,7 @@ if (!checkPermission('view', 'cemetery')) {
             </main>
         </div>
     </div>
-    
-    <!-- Modals -->
-    <!-- < ?php include '/dashboard/dashboards/cemeteries/includes/modals.php'; ?> -->
-    
+     
     <!-- JavaScript Files - כולל הקובץ החדש לרספונסיביות -->
     <script src="/dashboard/dashboards/cemeteries/js/breadcrumb.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/main.js"></script>

@@ -100,8 +100,22 @@ function getFormFields($type, $data = null) {
             
         case 'area_grave':
         case 'areaGrave':
+
+            // קודם נטען את רשימת השורות
+            $rows_options = [];
+            if (isset($_GET['parent_id'])) {
+                // אם יש parent_id, זה plot_id - נטען את השורות שלו
+                $pdo = getDBConnection();
+                $stmt = $pdo->prepare("SELECT id, name FROM rows WHERE plot_id = :plot_id AND is_active = 1");
+                $stmt->execute(['plot_id' => $_GET['parent_id']]);
+                while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                    $rows_options[$row['id']] = $row['name'];
+                }
+            }
+
             return [
                 ['name' => 'name', 'label' => 'שם אחוזת הקבר', 'type' => 'text', 'required' => true],
+                ['name' => 'row_id', 'label' => 'בחר שורה', 'type' => 'select', 'required' => true, 'options' => $rows_options],
                 ['name' => 'grave_type', 'label' => 'סוג קבר', 'type' => 'select',
                  'options' => [
                      '1' => 'פטור',

@@ -531,6 +531,107 @@ async function openRowsManagementModal(plotId, plotName) {
     }
 }
 
+// הוספת אחוזת קבר עם בחירת שורה
+function openAddAreaGrave(preSelectedRowId = null) {
+    if (!window.selectedItems.plot) {
+        showWarning('יש לבחור חלקה תחילה');
+        return;
+    }
+    
+    // אם כבר יש שורה שנבחרה (מתוך ניהול שורות)
+    if (preSelectedRowId) {
+        window.currentType = 'area_grave';
+        window.currentParentId = preSelectedRowId;
+        FormHandler.openForm('area_grave', preSelectedRowId, null);
+        return;
+    }
+    
+    // אחרת - טען את השורות ותן למשתמש לבחור
+    fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=row&parent_id=${window.selectedItems.plot.id}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.data.length > 0) {
+                showRowSelectionModal(data.data);
+            } else {
+                showWarning('אין שורות בחלקה זו. יש להוסיף שורה תחילה.');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading rows:', error);
+            showError('שגיאה בטעינת שורות');
+        });
+}
+
+// מודל לבחירת שורה
+function showRowSelectionModal(rows) {
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 0 30px rgba(0,0,0,0.3);
+        z-index: 10001;
+        min-width: 400px;
+    `;
+    
+    modal.innerHTML = `
+        <h3>בחר שורה לאחוזת הקבר</h3>
+        <p>יש לבחור את השורה שתחתיה תיווצר אחוזת הקבר:</p>
+        <div style="margin: 20px 0;">
+            <select id="rowSelect" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                <option value="">-- בחר שורה --</option>
+                ${rows.map(row => `
+                    <option value="${row.id}">
+                        ${row.name} ${row.serial_number ? `(${row.serial_number})` : ''}
+                    </option>
+                `).join('')}
+            </select>
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button onclick="this.closest('div[style*=fixed]').remove()" 
+                    style="padding: 8px 20px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                ביטול
+            </button>
+            <button onclick="proceedWithRowSelection()" 
+                    style="padding: 8px 20px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                המשך
+            </button>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+// המשך עם השורה שנבחרה
+window.proceedWithRowSelection = function() {
+    const select = document.getElementById('rowSelect');
+    const rowId = select.value;
+    
+    if (!rowId) {
+        alert('יש לבחור שורה');
+        return;
+    }
+    
+    // סגור את המודל
+    select.closest('div[style*=fixed]').remove();
+    
+    // פתח את הטופס עם השורה שנבחרה כהורה
+    window.currentType = 'area_grave';
+    window.currentParentId = rowId;
+    FormHandler.openForm('area_grave', rowId, null);
+}
+
+// טופס הוספת שורה עם המערכת החדשה
+window.openAddRowForm = function(plotId) {
+    window.currentType = 'row';
+    window.currentParentId = plotId;
+    FormHandler.openForm('row', plotId, null);
+}
+
 // הסרתי מהשיטה הישנה
 // // טופס הוספת שורה
 // window.openAddRowForm = function(plotId) {
@@ -648,15 +749,16 @@ window.deleteRow = async function(rowId) {
     }
 }
 
-// הוספת אחוזת קבר - הפונקציה כבר מוגדרת ב-main-area-graves.js
-// רק מחבר אותה מהקונטקסט של החלקה
-function openAddAreaGrave(rowId) {
-    if (typeof window.openAddAreaGrave === 'function') {
-        window.openAddAreaGrave(rowId);
-    } else {
-        alert('פונקציית הוספת אחוזת קבר אינה זמינה');
-    }
-}
+// // הוספת אחוזת קבר - הפונקציה כבר מוגדרת ב-main-area-graves.js
+// // רק מחבר אותה מהקונטקסט של החלקה
+// function openAddAreaGrave(rowId) {
+//     if (typeof window.openAddAreaGrave === 'function') {
+//         window.openAddAreaGrave(rowId);
+//     } else {
+//         alert('פונקציית הוספת אחוזת קבר אינה זמינה');
+//     }
+// }
+
 
 // הוסף את הפונקציה הזו לפני הייצוא בסוף הקובץ (לפני שורה 580)
 function openAddRow() {

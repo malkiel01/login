@@ -389,7 +389,7 @@ function getTypeName(type) {
 }
 
 // עדכון טקסט כפתור הוספה
-function updateAddButtonText2() {
+function updateAddButtonText() {
     const buttonTexts = {
         'cemetery': 'הוספת בית עלמין',
         'block': 'הוספת גוש',
@@ -421,7 +421,7 @@ function updateAddButtonText2() {
     });
 }
 // עדכון טקסט כפתור הוספה
-function updateAddButtonText() {
+function updateAddButtonText2() {
     const buttonTexts = {
         'cemetery': 'הוספת בית עלמין',
         'block': 'הוספת גוש',

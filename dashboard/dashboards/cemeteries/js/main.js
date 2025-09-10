@@ -230,62 +230,6 @@ async function performQuickSearch(query) {
     // TODO: implement search
 }
 
-// // פתיחת מודל הוספה - עם טקסט דינמי
-// function openAddModal2() {
-//     // קבע את טקסט הכפתור לפי הסוג
-//     const buttonTexts = {
-//         'cemetery': 'הוספת בית עלמין',
-//         'block': 'הוספת גוש',
-//         'plot': 'הוספת חלקה',
-//         'row': 'הוספת שורה',
-//         'area_grave': 'הוספת אחוזת קבר',
-//         'grave': 'הוספת קבר',
-//         'customer': 'הוספת לקוח',
-//         'purchase': 'הוספת רכישה',
-//         'burial': 'הוספת קבורה'
-//     };
-    
-//     // עדכן את טקסט הכפתור אם קיים
-//     const addButton = document.querySelector('.btn-primary[onclick="openAddModal()"]');
-//     if (addButton) {
-//         const buttonText = buttonTexts[currentType] || 'הוסף';
-//         addButton.innerHTML = `<svg class="icon"><use xlink:href="#icon-plus"></use></svg> ${buttonText}`;
-//     }
-    
-//     // בדיקה אם צריך parent
-//     const parentRequired = ['block', 'plot', 'row', 'area_grave', 'grave'].includes(currentType);
-    
-//     if (parentRequired && !currentParentId) {
-//         showWarning('יש לבחור ' + getParentName(currentType) + ' תחילה');
-//         return;
-//     }
-    
-//     // השתמש במערכת הטפסים החדשה
-//     console.log('Opening form for:', currentType, 'Parent:', currentParentId);
-//     FormHandler.openForm(currentType, currentParentId, null);
-// }
-
-// // עדכון טקסט כפתור הוספה
-// function updateAddButtonText2() {
-//     const buttonTexts = {
-//         'cemetery': 'הוספת בית עלמין',
-//         'block': 'הוספת גוש',
-//         'plot': 'הוספת חלקה',
-//         'row': 'הוספת שורה',
-//         'area_grave': 'הוספת אחוזת קבר',
-//         'grave': 'הוספת קבר',
-//         'customer': 'הוספת לקוח',
-//         'purchase': 'הוספת רכישה',
-//         'burial': 'הוספת קבורה'
-//     };
-    
-//     const addButton = document.querySelector('.btn-primary[onclick="openAddModal()"]');
-//     if (addButton) {
-//         const buttonText = buttonTexts[window.currentType] || 'הוסף';
-//         addButton.innerHTML = `<svg class="icon"><use xlink:href="#icon-plus"></use></svg> ${buttonText}`;
-//     }
-// }
-
 // פתיחת מודל הוספה - עם בדיקת הקשר
 async function openAddModal() {
     // בדיקה אם צריך parent
@@ -445,7 +389,7 @@ function getTypeName(type) {
 }
 
 // עדכון טקסט כפתור הוספה
-function updateAddButtonText() {
+function updateAddButtonText2() {
     const buttonTexts = {
         'cemetery': 'הוספת בית עלמין',
         'block': 'הוספת גוש',
@@ -473,6 +417,42 @@ function updateAddButtonText() {
             button.style.display = '';
             button.disabled = false;
             button.innerHTML = `<svg class="icon"><use xlink:href="#icon-plus"></use></svg> ${buttonText}`;
+        }
+    });
+}
+// עדכון טקסט כפתור הוספה
+function updateAddButtonText() {
+    const buttonTexts = {
+        'cemetery': 'הוספת בית עלמין',
+        'block': 'הוספת גוש',
+        'plot': 'הוספת חלקה',
+        'row': 'הוספת שורה',
+        'area_grave': 'הוספת אחוזת קבר',
+        'grave': 'הוספת קבר',
+        'customer': 'הוספת לקוח',
+        'purchase': 'הוספת רכישה',
+        'burial': 'הוספת קבורה'
+    };
+    
+    // עדכן את כל הכפתורים - גם בסידבר וגם ב-action bar
+    const buttons = document.querySelectorAll('.btn-primary[onclick="openAddModal()"]');
+    buttons.forEach(button => {
+        const buttonText = buttonTexts[window.currentType] || 'הוסף';
+        
+        // בדיקה האם להציג או להסתיר את הכפתור
+        if (shouldHideAddButton()) {
+            button.style.display = 'none';
+        } else if (shouldDisableAddButton()) {
+            button.disabled = true;
+            button.innerHTML = `<svg class="icon"><use xlink:href="#icon-plus"></use></svg> ${buttonText}`;
+            button.style.opacity = '0.5';
+            button.style.cursor = 'not-allowed';
+        } else {
+            button.style.display = '';
+            button.disabled = false;
+            button.innerHTML = `<svg class="icon"><use xlink:href="#icon-plus"></use></svg> ${buttonText}`;
+            button.style.opacity = '1';
+            button.style.cursor = 'pointer';
         }
     });
 }
@@ -720,6 +700,53 @@ function selectTableRow(row) {
     // הוסף בחירה לשורה הנוכחית
     row.classList.add('selected');
 }
+
+// רענון נתונים - כפתור הרענון ב-action bar
+function refreshData() {
+    console.log('Refreshing current view...');
+    
+    // רענן לפי הסוג הנוכחי
+    switch(window.currentType) {
+        case 'cemetery':
+            if (typeof loadAllCemeteries === 'function') {
+                loadAllCemeteries();
+            }
+            break;
+        case 'block':
+            if (window.selectedItems.cemetery) {
+                loadBlocksForCemetery(window.selectedItems.cemetery.id);
+            } else {
+                loadAllBlocks();
+            }
+            break;
+        case 'plot':
+            if (window.selectedItems.block) {
+                loadPlotsForBlock(window.selectedItems.block.id);
+            } else {
+                loadAllPlots();
+            }
+            break;
+        case 'area_grave':
+            if (window.selectedItems.plot) {
+                loadAreaGravesForPlot(window.selectedItems.plot.id);
+            } else {
+                loadAllAreaGraves();
+            }
+            break;
+        case 'grave':
+            if (window.selectedItems.areaGrave) {
+                loadGravesForAreaGrave(window.selectedItems.areaGrave.id);
+            } else {
+                loadAllGraves();
+            }
+            break;
+    }
+    
+    showSuccess('הנתונים רועננו בהצלחה');
+}
+
+// הוסף את הפונקציה לייצוא
+window.refreshData = refreshData;
 
 // ייצוא פונקציות גלובליות
 window.initDashboard = initDashboard;

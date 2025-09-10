@@ -371,7 +371,7 @@ function checkPlotHasGraves(plotId) {
     return false;
 }
 
-// מילוי שורות
+// מילוי שורות - רק עם קברים פנויים
 function populateRows(plotId) {
     const rowSelect = document.getElementById('rowSelect');
     rowSelect.innerHTML = '<option value="">-- בחר שורה --</option>';
@@ -379,14 +379,37 @@ function populateRows(plotId) {
     const rows = window.hierarchyData.rows.filter(r => r.plot_id == plotId);
     
     rows.forEach(row => {
-        const option = document.createElement('option');
-        option.value = row.id;
-        option.textContent = row.name;
-        rowSelect.appendChild(option);
+        // בדוק אם יש קברים פנויים בשורה זו
+        const hasAvailableGraves = checkRowHasGraves(row.id);
+        
+        if (hasAvailableGraves) {
+            const option = document.createElement('option');
+            option.value = row.id;
+            option.textContent = row.name;
+            rowSelect.appendChild(option);
+        }
     });
+    
+    // אם אין שורות עם קברים פנויים
+    if (rowSelect.options.length === 1) {
+        rowSelect.innerHTML = '<option value="">-- אין שורות עם קברים פנויים --</option>';
+    }
 }
 
-// מילוי אחוזות קבר
+// פונקציית עזר לבדיקת קברים פנויים בשורה
+function checkRowHasGraves(rowId) {
+    const rowAreaGraves = window.hierarchyData.areaGraves.filter(ag => ag.row_id == rowId);
+    
+    for (let areaGrave of rowAreaGraves) {
+        const graves = window.hierarchyData.graves.filter(g => g.area_grave_id == areaGrave.id);
+        if (graves.length > 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// מילוי אחוזות קבר - רק עם קברים פנויים
 function populateAreaGraves(rowId) {
     const areaGraveSelect = document.getElementById('areaGraveSelect');
     areaGraveSelect.innerHTML = '<option value="">-- בחר אחוזת קבר --</option>';
@@ -394,11 +417,22 @@ function populateAreaGraves(rowId) {
     const areaGraves = window.hierarchyData.areaGraves.filter(ag => ag.row_id == rowId);
     
     areaGraves.forEach(areaGrave => {
-        const option = document.createElement('option');
-        option.value = areaGrave.id;
-        option.textContent = areaGrave.name;
-        areaGraveSelect.appendChild(option);
+        // בדוק אם יש קברים פנויים באחוזת קבר זו
+        const availableGraves = window.hierarchyData.graves.filter(g => g.area_grave_id == areaGrave.id);
+        
+        // הצג רק אחוזות קבר עם קברים פנויים
+        if (availableGraves.length > 0) {
+            const option = document.createElement('option');
+            option.value = areaGrave.id;
+            option.textContent = areaGrave.name + ` (${availableGraves.length} קברים פנויים)`;
+            areaGraveSelect.appendChild(option);
+        }
     });
+    
+    // אם אין אחוזות קבר עם קברים פנויים
+    if (areaGraveSelect.options.length === 1) {
+        areaGraveSelect.innerHTML = '<option value="">-- אין אחוזות קבר פנויות --</option>';
+    }
 }
 
 // מילוי קברים

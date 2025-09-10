@@ -2,20 +2,8 @@
 // /dashboards/cemeteries/forms/form-loader.php
 // טוען טופס דינמי לפי סוג
 
-// מנע הפניות והכללות של HTML
-define('AJAX_REQUEST', true);
-
-// כלול רק את הקבצים הנחוצים
-require_once __DIR__ . '/FormBuilder.php';
-require_once __DIR__ . '/forms-config.php';
-// require_once 'FormBuilder.php';
-// require_once 'forms-config.php';
-
-// וודא שזו קריאת AJAX
-if (!isset($_SERVER['HTTP_X_REQUESTED_WITH'])) {
-    header('Content-Type: text/html; charset=utf-8');
-}
-
+require_once 'FormBuilder.php';
+require_once 'forms-config.php';
 
 // קבלת פרמטרים
 $type = $_GET['type'] ?? '';

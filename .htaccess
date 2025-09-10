@@ -5,6 +5,9 @@ RewriteEngine On
 # אפשר גישה לכל ה-API
 RewriteRule ^api/.*\.php$ - [L]
 
+# אפשר גישה למערכת הטפסים
+RewriteRule ^dashboard/dashboards/cemeteries/forms/.*\.php$ - [L]
+
 # === אפשר גישה לקבצי PWA חשובים ===
 # אפשר גישה ל-manifest.json
 RewriteRule ^manifest\.json$ - [L]

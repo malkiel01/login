@@ -2,15 +2,20 @@
 // /dashboards/cemeteries/forms/forms-config.php
 // הגדרות מרכזיות לכל הטפסים במערכת
 
-// כלול רק את הפונקציות הנחוצות, לא את כל הקונפיג
+// טען רק את הקונפיג הראשי
 if (!function_exists('getDBConnection')) {
     require_once $_SERVER['DOCUMENT_ROOT'] . '/config.php';
 }
 
-// טען את ההגדרות של בתי העלמין אם לא קיימות
-if (!defined('GRAVE_STATUS')) {
-    require_once dirname(__DIR__) . '/config.php';
-}
+// // כלול רק את הפונקציות הנחוצות, לא את כל הקונפיג
+// if (!function_exists('getDBConnection')) {
+//     require_once $_SERVER['DOCUMENT_ROOT'] . '/config.php';
+// }
+
+// // טען את ההגדרות של בתי העלמין אם לא קיימות
+// if (!defined('GRAVE_STATUS')) {
+//     require_once dirname(__DIR__) . '/config.php';
+// }
 
 // הגדרת השדות לכל סוג טופס
 function getFormFields($type, $data = null) {

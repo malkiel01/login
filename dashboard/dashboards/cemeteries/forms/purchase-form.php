@@ -53,177 +53,180 @@ $gravesStmt = $conn->prepare("
 ");
 $gravesStmt->execute();
 $hierarchyData['graves'] = $gravesStmt->fetchAll(PDO::FETCH_ASSOC);
+
+// < ?php
+//  // forms/purchase-form.php
+//  require_once __DIR__ . '/FormBuilder.php';
+//  require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
+
+//  $itemId = $_GET['item_id'] ?? null;
+//  $parentId = $_GET['parent_id'] ?? null;
+
+//  try {
+//     $conn = getDBConnection();
+    
+//     // טען לקוחות פנויים
+//     $customersStmt = $conn->prepare("
+//         SELECT id, CONCAT(last_name, ' ', first_name) as full_name, id_number 
+//         FROM customers 
+//         WHERE customer_status = 1 AND is_active = 1 
+//         ORDER BY last_name, first_name
+//     ");
+//     $customersStmt->execute();
+//     $customers = [];
+//     while ($row = $customersStmt->fetch(PDO::FETCH_ASSOC)) {
+//         $label = $row['full_name'];
+//         if ($row['id_number']) {
+//             $label .= ' (' . $row['id_number'] . ')';
+//         }
+//         $customers[$row['id']] = $label;
+//     }
+    
+//     // טען בתי עלמין
+//     $cemeteriesStmt = $conn->prepare("
+//         SELECT c.id, c.name,
+//         EXISTS (
+//             SELECT 1 FROM graves g
+//             INNER JOIN area_graves ag ON g.area_grave_id = ag.id
+//             INNER JOIN rows r ON ag.row_id = r.id
+//             INNER JOIN plots p ON r.plot_id = p.id
+//             INNER JOIN blocks b ON p.block_id = b.id
+//             WHERE b.cemetery_id = c.id 
+//             AND g.grave_status = 1 
+//             AND g.is_active = 1
+//         ) as has_available_graves
+//         FROM cemeteries c
+//         WHERE c.is_active = 1
+//         ORDER BY c.name
+//     ");
+//     $cemeteriesStmt->execute();
+//     $cemeteries = $cemeteriesStmt->fetchAll(PDO::FETCH_ASSOC);
+    
+//     // טען רכישה אם קיימת
+//     $purchase = null;
+//     if ($itemId) {
+//         $stmt = $conn->prepare("SELECT * FROM purchases WHERE id = ?");
+//         $stmt->execute([$itemId]);
+//         $purchase = $stmt->fetch(PDO::FETCH_ASSOC);
+//     }
+    
+//  } catch (Exception $e) {
+//     die("שגיאה: " . $e->getMessage());
+//  }
+
+//  // יצירת FormBuilder
+//  $formBuilder = new FormBuilder('purchase', $itemId, $parentId);
+
+//  // הוספת שדה לקוח
+//  $formBuilder->addField('customer_id', 'לקוח', 'select', [
+//     'required' => true,
+//     'options' => $customers,
+//     'value' => $purchase['customer_id'] ?? ''
+//  ]);
+
+//  // הוספת שדה סטטוס רוכש
+//  $formBuilder->addField('buyer_status', 'סטטוס רוכש', 'select', [
+//     'options' => [
+//         1 => 'רוכש לעצמו',
+//         2 => 'רוכש לאחר'
+//     ],
+//     'value' => $purchase['buyer_status'] ?? 1
+//  ]);
+
+//  // HTML מותאם אישית לבחירת קבר
+//  $graveSelectorHTML = '
+//  <fieldset class="form-section" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+//     <legend style="padding: 0 10px; font-weight: bold;">בחירת קבר</legend>
+//     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+//         <div class="form-group">
+//             <label>בית עלמין</label>
+//             <select id="cemeterySelect" class="form-control">
+//                 <option value="">-- כל בתי העלמין --</option>';
+
+//  foreach ($cemeteries as $cemetery) {
+//     $disabled = !$cemetery['has_available_graves'] ? 'disabled style="color: #999;"' : '';
+//     $graveSelectorHTML .= '<option value="' . $cemetery['id'] . '" ' . $disabled . '>' . 
+//                           htmlspecialchars($cemetery['name']) . 
+//                           (!$cemetery['has_available_graves'] ? ' (אין קברים פנויים)' : '') . 
+//                           '</option>';
+//  }
+
+//  $graveSelectorHTML .= '
+//             </select>
+//         </div>
+//         <div class="form-group">
+//             <label>גוש</label>
+//             <select id="blockSelect" class="form-control">
+//                 <option value="">-- כל הגושים --</option>
+//             </select>
+//         </div>
+//         <div class="form-group">
+//             <label>חלקה</label>
+//             <select id="plotSelect" class="form-control">
+//                 <option value="">-- כל החלקות --</option>
+//             </select>
+//         </div>
+//         <div class="form-group">
+//             <label>שורה</label>
+//             <select id="rowSelect" class="form-control" disabled>
+//                 <option value="">-- בחר חלקה תחילה --</option>
+//             </select>
+//         </div>
+//         <div class="form-group">
+//             <label>אחוזת קבר</label>
+//             <select id="areaGraveSelect" class="form-control" disabled>
+//                 <option value="">-- בחר שורה תחילה --</option>
+//             </select>
+//         </div>
+//         <div class="form-group">
+//             <label>קבר <span class="text-danger">*</span></label>
+//             <select name="grave_id" id="graveSelect" class="form-control" required disabled>
+//                 <option value="">-- בחר אחוזת קבר תחילה --</option>
+//             </select>
+//         </div>
+//     </div>
+//  </fieldset>';
+
+//  // הוסף את ה-HTML המותאם אישית
+//  $formBuilder->addCustomHTML($graveSelectorHTML);
+
+//  // המשך השדות
+//  $formBuilder->addField('purchase_status', 'סטטוס רכישה', 'select', [
+//     'options' => [
+//         1 => 'טיוטה',
+//         2 => 'אושר',
+//         3 => 'שולם',
+//         4 => 'בוטל'
+//     ],
+//     'value' => $purchase['purchase_status'] ?? 1
+//  ]);
+
+//  $formBuilder->addField('price', 'מחיר', 'number', [
+//     'step' => '0.01',
+//     'value' => $purchase['price'] ?? ''
+//  ]);
+
+//  $formBuilder->addField('num_payments', 'מספר תשלומים', 'number', [
+//     'min' => 1,
+//     'value' => $purchase['num_payments'] ?? 1
+//  ]);
+
+//  $formBuilder->addField('payment_end_date', 'תאריך סיום תשלומים', 'date', [
+//     'value' => $purchase['payment_end_date'] ?? ''
+//  ]);
+
+//  $formBuilder->addField('comments', 'הערות', 'textarea', [
+//     'rows' => 3,
+//     'value' => $purchase['comments'] ?? ''
+//  ]);
+
+//  // הצג את הטופס
+//  echo $formBuilder->renderModal();
+// ?>
+
 ?>
 
-<!-- < ?php
- // forms/purchase-form.php
- require_once __DIR__ . '/FormBuilder.php';
- require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
 
- $itemId = $_GET['item_id'] ?? null;
- $parentId = $_GET['parent_id'] ?? null;
-
- try {
-    $conn = getDBConnection();
-    
-    // טען לקוחות פנויים
-    $customersStmt = $conn->prepare("
-        SELECT id, CONCAT(last_name, ' ', first_name) as full_name, id_number 
-        FROM customers 
-        WHERE customer_status = 1 AND is_active = 1 
-        ORDER BY last_name, first_name
-    ");
-    $customersStmt->execute();
-    $customers = [];
-    while ($row = $customersStmt->fetch(PDO::FETCH_ASSOC)) {
-        $label = $row['full_name'];
-        if ($row['id_number']) {
-            $label .= ' (' . $row['id_number'] . ')';
-        }
-        $customers[$row['id']] = $label;
-    }
-    
-    // טען בתי עלמין
-    $cemeteriesStmt = $conn->prepare("
-        SELECT c.id, c.name,
-        EXISTS (
-            SELECT 1 FROM graves g
-            INNER JOIN area_graves ag ON g.area_grave_id = ag.id
-            INNER JOIN rows r ON ag.row_id = r.id
-            INNER JOIN plots p ON r.plot_id = p.id
-            INNER JOIN blocks b ON p.block_id = b.id
-            WHERE b.cemetery_id = c.id 
-            AND g.grave_status = 1 
-            AND g.is_active = 1
-        ) as has_available_graves
-        FROM cemeteries c
-        WHERE c.is_active = 1
-        ORDER BY c.name
-    ");
-    $cemeteriesStmt->execute();
-    $cemeteries = $cemeteriesStmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    // טען רכישה אם קיימת
-    $purchase = null;
-    if ($itemId) {
-        $stmt = $conn->prepare("SELECT * FROM purchases WHERE id = ?");
-        $stmt->execute([$itemId]);
-        $purchase = $stmt->fetch(PDO::FETCH_ASSOC);
-    }
-    
- } catch (Exception $e) {
-    die("שגיאה: " . $e->getMessage());
- }
-
- // יצירת FormBuilder
- $formBuilder = new FormBuilder('purchase', $itemId, $parentId);
-
- // הוספת שדה לקוח
- $formBuilder->addField('customer_id', 'לקוח', 'select', [
-    'required' => true,
-    'options' => $customers,
-    'value' => $purchase['customer_id'] ?? ''
- ]);
-
- // הוספת שדה סטטוס רוכש
- $formBuilder->addField('buyer_status', 'סטטוס רוכש', 'select', [
-    'options' => [
-        1 => 'רוכש לעצמו',
-        2 => 'רוכש לאחר'
-    ],
-    'value' => $purchase['buyer_status'] ?? 1
- ]);
-
- // HTML מותאם אישית לבחירת קבר
- $graveSelectorHTML = '
- <fieldset class="form-section" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
-    <legend style="padding: 0 10px; font-weight: bold;">בחירת קבר</legend>
-    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
-        <div class="form-group">
-            <label>בית עלמין</label>
-            <select id="cemeterySelect" class="form-control">
-                <option value="">-- כל בתי העלמין --</option>';
-
- foreach ($cemeteries as $cemetery) {
-    $disabled = !$cemetery['has_available_graves'] ? 'disabled style="color: #999;"' : '';
-    $graveSelectorHTML .= '<option value="' . $cemetery['id'] . '" ' . $disabled . '>' . 
-                          htmlspecialchars($cemetery['name']) . 
-                          (!$cemetery['has_available_graves'] ? ' (אין קברים פנויים)' : '') . 
-                          '</option>';
- }
-
- $graveSelectorHTML .= '
-            </select>
-        </div>
-        <div class="form-group">
-            <label>גוש</label>
-            <select id="blockSelect" class="form-control">
-                <option value="">-- כל הגושים --</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>חלקה</label>
-            <select id="plotSelect" class="form-control">
-                <option value="">-- כל החלקות --</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>שורה</label>
-            <select id="rowSelect" class="form-control" disabled>
-                <option value="">-- בחר חלקה תחילה --</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>אחוזת קבר</label>
-            <select id="areaGraveSelect" class="form-control" disabled>
-                <option value="">-- בחר שורה תחילה --</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>קבר <span class="text-danger">*</span></label>
-            <select name="grave_id" id="graveSelect" class="form-control" required disabled>
-                <option value="">-- בחר אחוזת קבר תחילה --</option>
-            </select>
-        </div>
-    </div>
- </fieldset>';
-
- // הוסף את ה-HTML המותאם אישית
- $formBuilder->addCustomHTML($graveSelectorHTML);
-
- // המשך השדות
- $formBuilder->addField('purchase_status', 'סטטוס רכישה', 'select', [
-    'options' => [
-        1 => 'טיוטה',
-        2 => 'אושר',
-        3 => 'שולם',
-        4 => 'בוטל'
-    ],
-    'value' => $purchase['purchase_status'] ?? 1
- ]);
-
- $formBuilder->addField('price', 'מחיר', 'number', [
-    'step' => '0.01',
-    'value' => $purchase['price'] ?? ''
- ]);
-
- $formBuilder->addField('num_payments', 'מספר תשלומים', 'number', [
-    'min' => 1,
-    'value' => $purchase['num_payments'] ?? 1
- ]);
-
- $formBuilder->addField('payment_end_date', 'תאריך סיום תשלומים', 'date', [
-    'value' => $purchase['payment_end_date'] ?? ''
- ]);
-
- $formBuilder->addField('comments', 'הערות', 'textarea', [
-    'rows' => 3,
-    'value' => $purchase['comments'] ?? ''
- ]);
-
- // הצג את הטופס
- echo $formBuilder->renderModal();
-?> -->
 
 <script>
  console.log('Purchase form script loaded!');

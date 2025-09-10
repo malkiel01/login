@@ -231,7 +231,7 @@ async function performQuickSearch(query) {
 }
 
 // פתיחת מודל הוספה
-function openAddModal() {
+function openAddModal_old() {
     console.log('Opening add modal for type:', currentType);
     
     // אם אנחנו במצב של אחוזת קבר, קרא לפונקציה הנכונה
@@ -255,6 +255,10 @@ function openAddModal() {
         // אם המודל לא נטען, הצג טופס פשוט
         createSimpleAddForm();
     }
+}
+function openAddModal() {
+    // שימוש במערכת הטפסים החדשה
+    FormHandler.openForm(currentType, currentParentId, null);
 }
 
 // יצירת טופס פשוט להוספה

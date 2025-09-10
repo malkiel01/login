@@ -1,5 +1,6 @@
 <?php
 // forms/purchase-form.php
+require_once __DIR__ . '/FormBuilder.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
 
 $itemId = $_GET['item_id'] ?? null;
@@ -16,9 +17,16 @@ try {
         ORDER BY last_name, first_name
     ");
     $customersStmt->execute();
-    $customers = $customersStmt->fetchAll(PDO::FETCH_ASSOC);
+    $customers = [];
+    while ($row = $customersStmt->fetch(PDO::FETCH_ASSOC)) {
+        $label = $row['full_name'];
+        if ($row['id_number']) {
+            $label .= ' (' . $row['id_number'] . ')';
+        }
+        $customers[$row['id']] = $label;
+    }
     
-    // טען בתי עלמין עם סימון קברים פנויים
+    // טען בתי עלמין
     $cemeteriesStmt = $conn->prepare("
         SELECT c.id, c.name,
         EXISTS (
@@ -38,7 +46,7 @@ try {
     $cemeteriesStmt->execute();
     $cemeteries = $cemeteriesStmt->fetchAll(PDO::FETCH_ASSOC);
     
-    // אם עורכים רכישה קיימת
+    // טען רכישה אם קיימת
     $purchase = null;
     if ($itemId) {
         $stmt = $conn->prepare("SELECT * FROM purchases WHERE id = ?");
@@ -49,167 +57,123 @@ try {
 } catch (Exception $e) {
     die("שגיאה: " . $e->getMessage());
 }
+
+// יצירת FormBuilder
+$formBuilder = new FormBuilder('purchase', $itemId, $parentId);
+
+// הוספת שדה לקוח
+$formBuilder->addField('customer_id', 'לקוח', 'select', [
+    'required' => true,
+    'options' => $customers,
+    'value' => $purchase['customer_id'] ?? ''
+]);
+
+// הוספת שדה סטטוס רוכש
+$formBuilder->addField('buyer_status', 'סטטוס רוכש', 'select', [
+    'options' => [
+        1 => 'רוכש לעצמו',
+        2 => 'רוכש לאחר'
+    ],
+    'value' => $purchase['buyer_status'] ?? 1
+]);
+
+// HTML מותאם אישית לבחירת קבר
+$graveSelectorHTML = '
+<fieldset class="form-section" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+    <legend style="padding: 0 10px; font-weight: bold;">בחירת קבר</legend>
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+        <div class="form-group">
+            <label>בית עלמין</label>
+            <select id="cemeterySelect" class="form-control" onchange="updateGraveSelectors(\'cemetery\')">
+                <option value="">-- כל בתי העלמין --</option>';
+
+foreach ($cemeteries as $cemetery) {
+    $disabled = !$cemetery['has_available_graves'] ? 'disabled style="color: #999;"' : '';
+    $graveSelectorHTML .= '<option value="' . $cemetery['id'] . '" ' . $disabled . '>' . 
+                          htmlspecialchars($cemetery['name']) . 
+                          (!$cemetery['has_available_graves'] ? ' (אין קברים פנויים)' : '') . 
+                          '</option>';
+}
+
+$graveSelectorHTML .= '
+            </select>
+        </div>
+        <div class="form-group">
+            <label>גוש</label>
+            <select id="blockSelect" class="form-control" onchange="updateGraveSelectors(\'block\')">
+                <option value="">-- כל הגושים --</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>חלקה</label>
+            <select id="plotSelect" class="form-control" onchange="updateGraveSelectors(\'plot\')">
+                <option value="">-- כל החלקות --</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>שורה</label>
+            <select id="rowSelect" class="form-control" onchange="updateGraveSelectors(\'row\')" disabled>
+                <option value="">-- בחר חלקה תחילה --</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>אחוזת קבר</label>
+            <select id="areaGraveSelect" class="form-control" onchange="updateGraveSelectors(\'area_grave\')" disabled>
+                <option value="">-- בחר שורה תחילה --</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>קבר <span class="text-danger">*</span></label>
+            <select name="grave_id" id="graveSelect" class="form-control" required disabled>
+                <option value="">-- בחר אחוזת קבר תחילה --</option>
+            </select>
+        </div>
+    </div>
+</fieldset>';
+
+// הוסף את ה-HTML המותאם אישית באמצעות המתודה הנכונה
+$formBuilder->addCustomHTML($graveSelectorHTML);
+
+// המשך השדות
+$formBuilder->addField('purchase_status', 'סטטוס רכישה', 'select', [
+    'options' => [
+        1 => 'טיוטה',
+        2 => 'אושר',
+        3 => 'שולם',
+        4 => 'בוטל'
+    ],
+    'value' => $purchase['purchase_status'] ?? 1
+]);
+
+$formBuilder->addField('price', 'מחיר', 'number', [
+    'step' => '0.01',
+    'value' => $purchase['price'] ?? ''
+]);
+
+$formBuilder->addField('num_payments', 'מספר תשלומים', 'number', [
+    'min' => 1,
+    'value' => $purchase['num_payments'] ?? 1
+]);
+
+$formBuilder->addField('payment_end_date', 'תאריך סיום תשלומים', 'date', [
+    'value' => $purchase['payment_end_date'] ?? ''
+]);
+
+$formBuilder->addField('comments', 'הערות', 'textarea', [
+    'rows' => 3,
+    'value' => $purchase['comments'] ?? ''
+]);
+
+// הצג את הטופס
+echo $formBuilder->renderModal();
 ?>
 
-<link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/forms.css">
-
-<div class="modal-overlay">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3><?php echo $itemId ? 'עריכת רכישה' : 'רכישה חדשה'; ?></h3>
-            <button type="button" class="btn-close" onclick="FormHandler.closeForm()">×</button>
-        </div>
-        
-        <form id="genericForm" onsubmit="return FormHandler.submitForm(event, 'purchase')">
-            <div class="modal-body">
-                <?php if ($itemId): ?>
-                    <input type="hidden" name="id" value="<?php echo $itemId; ?>">
-                <?php endif; ?>
-                
-                <!-- בחירת לקוח -->
-                <fieldset class="form-section">
-                    <legend>פרטי הרוכש</legend>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>לקוח <span class="required">*</span></label>
-                            <select name="customer_id" class="form-control" required>
-                                <option value="">-- בחר לקוח --</option>
-                                <?php foreach ($customers as $customer): ?>
-                                    <option value="<?php echo $customer['id']; ?>" 
-                                        <?php echo ($purchase && $purchase['customer_id'] == $customer['id']) ? 'selected' : ''; ?>>
-                                        <?php echo $customer['full_name']; ?>
-                                        <?php if ($customer['id_number']): ?>
-                                            (<?php echo $customer['id_number']; ?>)
-                                        <?php endif; ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>סטטוס רוכש</label>
-                            <select name="buyer_status" class="form-control">
-                                <option value="1">רוכש לעצמו</option>
-                                <option value="2">רוכש לאחר</option>
-                            </select>
-                        </div>
-                    </div>
-                </fieldset>
-                
-                <!-- בחירת קבר -->
-                <fieldset class="form-section">
-                    <legend>בחירת קבר</legend>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>בית עלמין</label>
-                            <select id="cemeterySelect" class="form-control" onchange="updateGraveSelectors('cemetery')">
-                                <option value="">-- כל בתי העלמין --</option>
-                                <?php foreach ($cemeteries as $cemetery): ?>
-                                    <option value="<?php echo $cemetery['id']; ?>" 
-                                        <?php echo !$cemetery['has_available_graves'] ? 'disabled style="color: #999;"' : ''; ?>>
-                                        <?php echo htmlspecialchars($cemetery['name']); ?>
-                                        <?php echo !$cemetery['has_available_graves'] ? ' (אין קברים פנויים)' : ''; ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>גוש</label>
-                            <select id="blockSelect" class="form-control" onchange="updateGraveSelectors('block')">
-                                <option value="">-- כל הגושים --</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>חלקה</label>
-                            <select id="plotSelect" class="form-control" onchange="updateGraveSelectors('plot')">
-                                <option value="">-- כל החלקות --</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>שורה</label>
-                            <select id="rowSelect" class="form-control" onchange="updateGraveSelectors('row')" disabled>
-                                <option value="">-- בחר חלקה תחילה --</option>
-                            </select>
-                        </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>אחוזת קבר</label>
-                            <select id="areaGraveSelect" class="form-control" onchange="updateGraveSelectors('area_grave')" disabled>
-                                <option value="">-- בחר שורה תחילה --</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>קבר <span class="required">*</span></label>
-                            <select name="grave_id" id="graveSelect" class="form-control" required disabled>
-                                <option value="">-- בחר אחוזת קבר תחילה --</option>
-                            </select>
-                        </div>
-                    </div>
-                </fieldset>
-                
-                <!-- פרטי תשלום -->
-                <fieldset class="form-section">
-                    <legend>פרטי תשלום</legend>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>סטטוס רכישה</label>
-                            <select name="purchase_status" class="form-control">
-                                <option value="1">טיוטה</option>
-                                <option value="2">אושר</option>
-                                <option value="3">שולם</option>
-                                <option value="4">בוטל</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>מחיר</label>
-                            <input type="number" name="price" step="0.01" class="form-control" 
-                                   value="<?php echo $purchase['price'] ?? ''; ?>">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>מספר תשלומים</label>
-                            <input type="number" name="num_payments" min="1" class="form-control" 
-                                   value="<?php echo $purchase['num_payments'] ?? 1; ?>">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>תאריך סיום תשלומים</label>
-                            <input type="date" name="payment_end_date" class="form-control" 
-                                   value="<?php echo $purchase['payment_end_date'] ?? ''; ?>">
-                        </div>
-                    </div>
-                </fieldset>
-                
-                <!-- הערות -->
-                <div class="form-group">
-                    <label>הערות</label>
-                    <textarea name="comments" class="form-control" rows="3"><?php echo $purchase['comments'] ?? ''; ?></textarea>
-                </div>
-            </div>
-            
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" onclick="FormHandler.closeForm()">ביטול</button>
-                <button type="submit" class="btn btn-primary">שמור</button>
-            </div>
-        </form>
-    </div>
-</div>
-
 <script>
+// JavaScript לבחירת קבר
 if (typeof API_BASE === 'undefined') {
     window.API_BASE = '/dashboard/dashboards/cemeteries/api/';
 }
 
-// כל הפונקציות של בחירת הקבר
 async function updateGraveSelectors(changedLevel) {
     const cemetery = document.getElementById('cemeterySelect').value;
     const block = document.getElementById('blockSelect').value;
@@ -287,10 +251,6 @@ async function loadPlots(cemeteryId, blockId) {
     
     if (blockId) {
         url += `&parent_id=${blockId}`;
-    } else if (cemeteryId) {
-        // כאן צריך לטעון את כל החלקות של כל הגושים בבית העלמין
-        // זה דורש שינוי ב-API
-        url += `&block_parent_id=${cemeteryId}`;
     }
     
     try {

@@ -231,10 +231,64 @@ async function performQuickSearch(query) {
 }
 
 // פתיחת מודל הוספה
-function openAddModal() {
+function openAddModal2() {
     // שימוש במערכת הטפסים החדשה
     console.log('Opening form for:', currentType, 'Parent:', currentParentId);
     FormHandler.openForm(currentType, currentParentId, null);
+}
+// פתיחת מודל הוספה - עם טקסט דינמי
+function openAddModal() {
+    // קבע את טקסט הכפתור לפי הסוג
+    const buttonTexts = {
+        'cemetery': 'הוספת בית עלמין',
+        'block': 'הוספת גוש',
+        'plot': 'הוספת חלקה',
+        'row': 'הוספת שורה',
+        'area_grave': 'הוספת אחוזת קבר',
+        'grave': 'הוספת קבר',
+        'customer': 'הוספת לקוח',
+        'purchase': 'הוספת רכישה',
+        'burial': 'הוספת קבורה'
+    };
+    
+    // עדכן את טקסט הכפתור אם קיים
+    const addButton = document.querySelector('.btn-primary[onclick="openAddModal()"]');
+    if (addButton) {
+        const buttonText = buttonTexts[currentType] || 'הוסף';
+        addButton.innerHTML = `<svg class="icon"><use xlink:href="#icon-plus"></use></svg> ${buttonText}`;
+    }
+    
+    // בדיקה אם צריך parent
+    const parentRequired = ['block', 'plot', 'row', 'area_grave', 'grave'].includes(currentType);
+    
+    if (parentRequired && !currentParentId) {
+        showWarning('יש לבחור ' + getParentName(currentType) + ' תחילה');
+        return;
+    }
+    
+    // השתמש במערכת הטפסים החדשה
+    console.log('Opening form for:', currentType, 'Parent:', currentParentId);
+    FormHandler.openForm(currentType, currentParentId, null);
+}
+// עדכון טקסט כפתור הוספה
+function updateAddButtonText() {
+    const buttonTexts = {
+        'cemetery': 'הוספת בית עלמין',
+        'block': 'הוספת גוש',
+        'plot': 'הוספת חלקה',
+        'row': 'הוספת שורה',
+        'area_grave': 'הוספת אחוזת קבר',
+        'grave': 'הוספת קבר',
+        'customer': 'הוספת לקוח',
+        'purchase': 'הוספת רכישה',
+        'burial': 'הוספת קבורה'
+    };
+    
+    const addButton = document.querySelector('.btn-primary[onclick="openAddModal()"]');
+    if (addButton) {
+        const buttonText = buttonTexts[window.currentType] || 'הוסף';
+        addButton.innerHTML = `<svg class="icon"><use xlink:href="#icon-plus"></use></svg> ${buttonText}`;
+    }
 }
 
 // פונקציות עזר

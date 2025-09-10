@@ -25,6 +25,7 @@ async function loadAllAreaGraves() {
         if (data.success) {
             displayAreaGravesInMainContent(data.data);
             updateSidebarCount('areaGravesCount', data.data.length);
+            updateAddButtonText();
         }
     } catch (error) {
         console.error('Error loading area graves:', error);
@@ -269,6 +270,7 @@ async function openAreaGrave(areaGraveId, areaGraveName) {
 
     // עדכן breadcrumb
     updateBreadcrumb(window.selectedItems);
+    updateAddButtonText();
 }
 
 // הוסף פונקציה חדשה ב-main-area-graves.js

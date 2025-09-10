@@ -27,6 +27,7 @@ async function loadAllGraves() {
         if (data.success) {
             displayGravesInMainContent(data.data);
             updateSidebarCount('gravesCount', data.data.length);
+            updateAddButtonText();
         }
     } catch (error) {
         console.error('Error loading graves:', error);
@@ -60,6 +61,7 @@ async function loadGravesForAreaGrave(areaGraveId) {
         
         if (data.success) {
             displayGravesInMainContent(data.data);
+            updateAddButtonText();
         }
     } catch (error) {
         console.error('Error loading graves:', error);
@@ -344,123 +346,6 @@ function openAddGrave() {
         createSimpleGraveForm();
     }
 }
-
-// הסרתי מהגירסה הישנה
-// // יצירת טופס פשוט לקבר
-// function createSimpleGraveForm() {
-//     const form = document.createElement('div');
-//     form.id = 'simpleAddForm';
-//     form.style.cssText = `
-//         position: fixed;
-//         top: 50%;
-//         left: 50%;
-//         transform: translate(-50%, -50%);
-//         background: white;
-//         padding: 30px;
-//         border-radius: 10px;
-//         box-shadow: 0 0 30px rgba(0,0,0,0.3);
-//         z-index: 10000;
-//         min-width: 400px;
-//     `;
-    
-//     form.innerHTML = `
-//         <h3>הוסף קבר חדש</h3>
-//         <form onsubmit="submitGraveForm(event)">
-//             <div style="margin-bottom: 15px;">
-//                 <label style="display: block; margin-bottom: 5px;">מספר קבר:</label>
-//                 <input type="text" name="grave_number" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-//             </div>
-//             <div style="margin-bottom: 15px;">
-//                 <label style="display: block; margin-bottom: 5px;">סוג חלקה:</label>
-//                 <select name="plot_type" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-//                     <option value="">-- בחר סוג --</option>
-//                     <option value="1">פטור</option>
-//                     <option value="2">חריג</option>
-//                     <option value="3">סגור</option>
-//                 </select>
-//             </div>
-//             <div style="margin-bottom: 15px;">
-//                 <label style="display: block; margin-bottom: 5px;">סטטוס:</label>
-//                 <select name="grave_status" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-//                     <option value="1">פנוי</option>
-//                     <option value="2">נרכש</option>
-//                     <option value="3">תפוס</option>
-//                     <option value="4">שמור</option>
-//                 </select>
-//             </div>
-//             <div style="margin-bottom: 15px;">
-//                 <label style="display: block; margin-bottom: 5px;">קוד קבר:</label>
-//                 <input type="text" name="code" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-//             </div>
-//             <div style="margin-bottom: 15px;">
-//                 <label style="display: block; margin-bottom: 5px;">עלות בנייה:</label>
-//                 <input type="number" name="construction_cost" step="0.01" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-//             </div>
-//             <div style="margin-bottom: 15px;">
-//                 <label>
-//                     <input type="checkbox" name="is_small_grave" value="1">
-//                     קבר קטן
-//                 </label>
-//             </div>
-//             <div style="display: flex; gap: 10px; justify-content: flex-end;">
-//                 <button type="button" onclick="document.getElementById('simpleAddForm').remove()" 
-//                         style="padding: 8px 20px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
-//                     ביטול
-//                 </button>
-//                 <button type="submit" 
-//                         style="padding: 8px 20px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">
-//                     שמור
-//                 </button>
-//             </div>
-//         </form>
-//     `;
-    
-//     document.body.appendChild(form);
-// }
-
-// // שליחת טופס קבר
-// window.submitGraveForm = async function(event) {
-//     event.preventDefault();
-//     const formData = new FormData(event.target);
-    
-//     const data = {
-//         grave_number: formData.get('grave_number'),
-//         name: formData.get('grave_number'), // השם הוא מספר הקבר
-//         plot_type: formData.get('plot_type'),
-//         grave_status: formData.get('grave_status') || 1,
-//         construction_cost: formData.get('construction_cost'),
-//         is_small_grave: formData.get('is_small_grave') ? 1 : 0,
-//         area_grave_id: window.currentParentId,
-//         is_active: 1
-//     };
-    
-//     try {
-//         const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=create&type=grave`, {
-//             method: 'POST',
-//             headers: {'Content-Type': 'application/json'},
-//             body: JSON.stringify(data)
-//         });
-        
-//         const result = await response.json();
-        
-//         if (result.success) {
-//             document.getElementById('simpleAddForm').remove();
-//             showSuccess('הקבר נוסף בהצלחה');
-            
-//             // רענן את התצוגה
-//             if (window.selectedItems.areaGrave) {
-//                 loadGravesForAreaGrave(window.selectedItems.areaGrave.id);
-//             } else {
-//                 loadAllGraves();
-//             }
-//         } else {
-//             alert('שגיאה: ' + (result.error || 'Unknown error'));
-//         }
-//     } catch (error) {
-//         alert('שגיאה בשמירה');
-//         console.error(error);
-//     }
-// }
 
 // עריכת קבר
 function editGrave(id) {

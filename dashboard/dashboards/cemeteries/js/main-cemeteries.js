@@ -33,6 +33,7 @@ async function loadAllCemeteries() {
         if (data.success) {
             displayCemeteriesInMainContent(data.data);
             updateSidebarCount('cemeteriesCount', data.data.length);
+            updateAddButtonText();
         }
     } catch (error) {
         console.error('Error loading cemeteries:', error);
@@ -57,6 +58,7 @@ function openCemetery(cemeteryId, cemeteryName) {
     
     // עדכן breadcrumb
     updateBreadcrumb(window.selectedItems);
+    updateAddButtonText();
 }
 
 // הצגת בתי עלמין בתוכן הראשי

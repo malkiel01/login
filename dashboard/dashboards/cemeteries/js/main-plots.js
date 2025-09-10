@@ -27,6 +27,7 @@ async function loadAllPlots() {
         if (data.success) {
             displayPlotsInMainContent(data.data);
             updateSidebarCount('plotsCount', data.data.length);
+            updateAddButtonText();
         }
     } catch (error) {
         console.error('Error loading plots:', error);
@@ -60,6 +61,7 @@ async function loadPlotsForBlock(blockId) {
         
         if (data.success) {
             displayPlotsInMainContent(data.data, window.selectedItems.block?.name);
+            updateAddButtonText();
         }
     } catch (error) {
         console.error('Error loading plots:', error);
@@ -161,6 +163,7 @@ async function openPlot(plotId, plotName) {
     
     // עדכון breadcrumb
     updateBreadcrumb(window.selectedItems);
+    updateAddButtonText();
 }
 
 // הוסף פונקציה חדשה ב-main-plots.js
@@ -189,6 +192,7 @@ async function loadAreaGravesForPlotWithCard(plotId) {
         
         // טען אחוזות קבר כרגיל
         loadAreaGravesForPlot(plotId);
+        updateAddButtonText();
     } catch (error) {
         console.error('Error loading area graves with card:', error);
         showError('שגיאה בטעינת אחוזות הקבר');
@@ -218,6 +222,7 @@ async function loadAreaGravesForPlot(plotId) {
         
         if (data.success) {
             displayAreaGravesInMainContent(data.data);
+            updateAddButtonText();
         }
     } catch (error) {
         console.error('Error loading area graves:', error);

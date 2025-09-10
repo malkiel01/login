@@ -28,6 +28,7 @@ async function loadAllBlocks() {
         if (data.success) {
             displayBlocksInMainContent(data.data);
             updateSidebarCount('blocksCount', data.data.length);
+            updateAddButtonText();
         }
     } catch (error) {
         console.error('Error loading blocks:', error);
@@ -52,6 +53,7 @@ async function openBlock(blockId, blockName) {
     
     // עדכן breadcrumb
     updateBreadcrumb(window.selectedItems);
+    updateAddButtonText();
 }
 
 // הוסף פונקציה חדשה ב-main-blocks.js
@@ -85,6 +87,7 @@ async function loadPlotsForBlockWithCard(blockId) {
         
         if (data.success) {
             displayPlotsInMainContent(data.data, window.selectedItems.block?.name);
+            updateAddButtonText();
         }
     } catch (error) {
         console.error('Error loading plots with card:', error);
@@ -128,6 +131,7 @@ async function loadBlocksForCemetery(cemeteryId) {
         
         if (data.success) {
             displayBlocksInMainContent(data.data, window.selectedItems.cemetery?.name);
+            updateAddButtonText();
         }
     } catch (error) {
         console.error('Error loading blocks:', error);

@@ -78,15 +78,16 @@ $formBuilder->addField('buyer_status', 'סטטוס רוכש', 'select', [
 ]);
 
 // --------תחילת הקטע החדש-------------
-// HTML מותאם אישית לבחירת קבר
+
+ // HTML מותאם אישית לבחירת קבר - בלי הסקריפט בתוכו
 $graveSelectorHTML = '
- <fieldset class="form-section" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
-     <legend style="padding: 0 10px; font-weight: bold;">בחירת קבר</legend>
-     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
-         <div class="form-group">
-             <label>בית עלמין</label>
-             <select id="cemeterySelect" class="form-control">
-                 <option value="">-- כל בתי העלמין --</option>';
+<fieldset class="form-section" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+    <legend style="padding: 0 10px; font-weight: bold;">בחירת קבר</legend>
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+        <div class="form-group">
+            <label>בית עלמין</label>
+            <select id="cemeterySelect" class="form-control">
+                <option value="">-- כל בתי העלמין --</option>';
 
 foreach ($cemeteries as $cemetery) {
     $disabled = !$cemetery['has_available_graves'] ? 'disabled style="color: #999;"' : '';
@@ -130,76 +131,8 @@ $graveSelectorHTML .= '
             </select>
         </div>
     </div>
- </fieldset>
+</fieldset>';
 
- <script>
- // הגדר את הפונקציות מיד כאן
- window.updateGraveSelectors = async function(changedLevel) {
-     const cemetery = document.getElementById("cemeterySelect").value;
-     const block = document.getElementById("blockSelect").value;
-     const plot = document.getElementById("plotSelect").value;
-     
-     switch(changedLevel) {
-         case "cemetery":
-             await window.loadBlocks(cemetery);
-             await window.loadPlots(cemetery, null);
-             window.clearSelectors(["row", "area_grave", "grave"]);
-             break;
-         case "block":
-             await window.loadPlots(cemetery, block);
-             window.clearSelectors(["row", "area_grave", "grave"]);
-             break;
-         case "plot":
-             if (plot) {
-                 await window.loadRows(plot);
-                 document.getElementById("rowSelect").disabled = false;
-             } else {
-                 window.clearSelectors(["row", "area_grave", "grave"]);
-                 document.getElementById("rowSelect").disabled = true;
-             }
-             break;
-         case "row":
-             const row = document.getElementById("rowSelect").value;
-             if (row) {
-                 await window.loadAreaGraves(row);
-                 document.getElementById("areaGraveSelect").disabled = false;
-             } else {
-                 window.clearSelectors(["area_grave", "grave"]);
-                 document.getElementById("areaGraveSelect").disabled = true;
-             }
-             break;
-         case "area_grave":
-             const areaGrave = document.getElementById("areaGraveSelect").value;
-             if (areaGrave) {
-                 await window.loadGraves(areaGrave);
-                 document.getElementById("graveSelect").disabled = false;
-             } else {
-                 window.clearSelectors(["grave"]);
-                 document.getElementById("graveSelect").disabled = true;
-             }
-             break;
-     }
- }
-
- // הוסף event listeners אחרי שה-DOM נטען
- document.addEventListener("DOMContentLoaded", function() {
-     document.getElementById("cemeterySelect").addEventListener("change", function() {
-         window.updateGraveSelectors("cemetery");
-     });
-     document.getElementById("blockSelect").addEventListener("change", function() {
-         window.updateGraveSelectors("block");
-     });
-     document.getElementById("plotSelect").addEventListener("change", function() {
-         window.updateGraveSelectors("plot");
-     });
-     document.getElementById("rowSelect").addEventListener("change", function() {
-         window.updateGraveSelectors("row");
-     });
-     document.getElementById("areaGraveSelect").addEventListener("change", function() {
-         window.updateGraveSelectors("area_grave");
-     });
- });
- </script>';
 // --------סוף הקטע החדש-------------
 
 // HTML מותאם אישית לבחירת קבר
@@ -528,6 +461,42 @@ setTimeout(() => {
    }
    if (document.getElementById('plotSelect')) {
        loadPlots('', '');
+   }
+
+   // הוסף event listeners
+   const cemeterySelect = document.getElementById('cemeterySelect');
+   if (cemeterySelect) {
+       cemeterySelect.addEventListener('change', function() {
+           window.updateGraveSelectors('cemetery');
+       });
+   }
+   
+   const blockSelect = document.getElementById('blockSelect');
+   if (blockSelect) {
+       blockSelect.addEventListener('change', function() {
+           window.updateGraveSelectors('block');
+       });
+   }
+   
+   const plotSelect = document.getElementById('plotSelect');
+   if (plotSelect) {
+       plotSelect.addEventListener('change', function() {
+           window.updateGraveSelectors('plot');
+       });
+   }
+   
+   const rowSelect = document.getElementById('rowSelect');
+   if (rowSelect) {
+       rowSelect.addEventListener('change', function() {
+           window.updateGraveSelectors('row');
+       });
+   }
+   
+   const areaGraveSelect = document.getElementById('areaGraveSelect');
+   if (areaGraveSelect) {
+       areaGraveSelect.addEventListener('change', function() {
+           window.updateGraveSelectors('area_grave');
+       });
    }
 }, 100);
 </script>

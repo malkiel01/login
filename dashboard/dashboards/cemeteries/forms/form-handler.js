@@ -103,6 +103,10 @@ const FormHandler = {
                 delete data.parent_id;
             }
             
+            // תיקון שמות types
+            if (type === 'areaGrave') type = 'area_grave';
+
+
             // הוסף is_active
             data.is_active = 1;
             

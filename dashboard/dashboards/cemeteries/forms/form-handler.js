@@ -41,8 +41,7 @@ const FormHandler = {
                     const bsModal = new bootstrap.Modal(modal);
                     bsModal.show();
                 } else {
-                    // הצגה ידנית
-                    modal.style.display = 'block';
+                    // השתמש באותו מנגנון כמו במודל המקורי
                     modal.classList.add('show');
                 }
             }
@@ -105,7 +104,7 @@ const FormHandler = {
             data.is_active = 1;
             
             // שלח לשרת
-            const url = `/dashboards/cemeteries/api/cemetery-hierarchy.php?action=${action}&type=${type}`;
+            let url = `/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=${action}&type=${type}`;
             if (isEdit) {
                 url += `&id=${formData.get('id')}`;
             }

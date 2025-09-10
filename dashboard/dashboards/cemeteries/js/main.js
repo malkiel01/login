@@ -258,7 +258,7 @@ function openAddModal_old() {
 }
 function openAddModal() {
     // שימוש במערכת הטפסים החדשה
-    console.log('Opening form for:', currentType, 'Parent:', currentParentId);
+    console.log('Opening form for:', currentType, 'Parent:', window.currentParentId);
     FormHandler.openForm(currentType, currentParentId, null);
 }
 

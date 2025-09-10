@@ -79,16 +79,15 @@ const FormHandler = {
             // המר FormData לאובייקט
             const data = {};
             for (let [key, value] of formData.entries()) {
-                // טיפול מיוחד בשדות מסוימים
-                if (key === 'is_small_grave') {
-                    data[key] = value === 'on' ? 1 : 0;
-                } else if (value !== '') {
-                    data[key] = value;
+                // דלג על השדה type
+                if (key !== 'type') {
+                    // טיפול מיוחד בשדות מסוימים
+                    if (key === 'is_small_grave') {
+                        data[key] = value === 'on' ? 1 : 0;
+                    } else if (value !== '') {
+                        data[key] = value;
+                    }
                 }
-            }
-
-            if (key !== 'type') {
-                data[key] = value;
             }
             
             // טיפול מיוחד בטבלת graves - אין עמודת name!
@@ -106,6 +105,8 @@ const FormHandler = {
             
             // הוסף is_active
             data.is_active = 1;
+            
+            console.log('Sending data:', data); // דיבוג
             
             // שלח לשרת
             let url = `/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=${action}&type=${type}`;

@@ -1,3 +1,3 @@
 <?php
-phpinfo();
+die("ONLY THIS TEXT");
 ?>

@@ -65,9 +65,9 @@ function getFormFields($type, $data = null) {
                 ['name' => 'address', 'label' => 'כתובת', 'type' => 'text'],
                 ['name' => 'contact_name', 'label' => 'איש קשר', 'type' => 'text'],
                 ['name' => 'contact_phone', 'label' => 'טלפון', 'type' => 'tel'],
-                ['name' => 'location', 'label' => 'מיקום', 'type' => 'text'],
+                // ['name' => 'location', 'label' => 'מיקום', 'type' => 'text'],
                 ['name' => 'coordinates', 'label' => 'קואורדינטות', 'type' => 'text', 'placeholder' => '31.7683, 35.2137'],
-                ['name' => 'comments', 'label' => 'הערות', 'type' => 'textarea']
+                // ['name' => 'comments', 'label' => 'הערות', 'type' => 'textarea']
             ];
             
         case 'block':

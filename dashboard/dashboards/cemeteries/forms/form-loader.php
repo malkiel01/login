@@ -10,6 +10,27 @@ ini_set('display_errors', 1);
 header('Content-Type: text/html; charset=utf-8');
 
 try {
+    // קבלת פרמטרים
+    $type = $_GET['type'] ?? '';
+    $id = $_GET['id'] ?? null;
+    $parent_id = $_GET['parent_id'] ?? null;
+    $item_id = $_GET['item_id'] ?? null; // הוסף גם את זה
+    
+    // בדיקת סוג
+    if (!$type) {
+        throw new Exception('Type is required');
+    }
+    
+    // בדוק אם יש טופס מותאם אישית
+    $customFormFile = __DIR__ . "/{$type}-form.php";
+    if (file_exists($customFormFile)) {
+        // טען את הקונפיג אם צריך
+        require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
+        include $customFormFile;
+        exit; // חשוב! לא להמשיך לטופס הגנרי
+    }
+    
+    // אם אין טופס מותאם, המשך לטופס הגנרי
     // טען את הקבצים הנדרשים
     $formBuilderPath = __DIR__ . '/FormBuilder.php';
     $formsConfigPath = __DIR__ . '/forms-config.php';
@@ -24,16 +45,6 @@ try {
     
     require_once $formBuilderPath;
     require_once $formsConfigPath;
-    
-    // קבלת פרמטרים
-    $type = $_GET['type'] ?? '';
-    $id = $_GET['id'] ?? null;
-    $parent_id = $_GET['parent_id'] ?? null;
-    
-    // בדיקת סוג
-    if (!$type) {
-        throw new Exception('Type is required');
-    }
     
     // טעינת נתונים אם מדובר בעריכה
     $data = null;

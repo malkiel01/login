@@ -53,43 +53,6 @@ try {
 }
 ?>
 
-<!-- < ?php
-// forms/purchase-form.php
-require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
-
-$parentId = $_GET['parent_id'] ?? null;
-$itemId = $_GET['item_id'] ?? null;
-
-// טען לקוחות פנויים בלבד
-$customersQuery = "SELECT id, first_name, last_name, id_number 
-                   FROM customers 
-                   WHERE customer_status = 1 AND is_active = 1 
-                   ORDER BY last_name, first_name";
-$customers = $conn->query($customersQuery)->fetch_all(MYSQLI_ASSOC);
-
-// טען בתי עלמין עם קברים פנויים
-$cemeteriesQuery = "
-    SELECT DISTINCT c.id, c.name 
-    FROM cemeteries c
-    INNER JOIN blocks b ON b.cemetery_id = c.id
-    INNER JOIN plots p ON p.block_id = b.id
-    INNER JOIN rows r ON r.plot_id = p.id
-    INNER JOIN area_graves ag ON ag.row_id = r.id
-    INNER JOIN graves g ON g.area_grave_id = ag.id
-    WHERE g.grave_status = 1 AND g.is_active = 1
-    ORDER BY c.name";
-$cemeteries = $conn->query($cemeteriesQuery)->fetch_all(MYSQLI_ASSOC);
-
-// אם עורכים רכישה קיימת
-$purchase = null;
-if ($itemId) {
-    $stmt = $conn->prepare("SELECT * FROM purchases WHERE id = ?");
-    $stmt->bind_param("i", $itemId);
-    $stmt->execute();
-    $purchase = $stmt->get_result()->fetch_assoc();
-}
-?> -->
-
 <style>
     .form-section {
         background: #f8f9fa;
@@ -252,127 +215,127 @@ if ($itemId) {
 </div>
 
 <script>
-// טעינת גושים לפי בית עלמין
-async function loadBlocks(cemeteryId) {
-    if (!cemeteryId) {
-        resetSelects(['blockSelect', 'plotSelect', 'rowSelect', 'areaGraveSelect', 'graveSelect']);
-        return;
-    }
-    
-    try {
-        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=block&parent_id=${cemeteryId}&has_available_graves=1`);
-        const data = await response.json();
-        
-        if (data.success) {
-            populateSelect('blockSelect', data.data, 'id', 'name');
-        }
-    } catch (error) {
-        console.error('Error loading blocks:', error);
-    }
-}
+ // טעינת גושים לפי בית עלמין
+ async function loadBlocks(cemeteryId) {
+     if (!cemeteryId) {
+         resetSelects(['blockSelect', 'plotSelect', 'rowSelect', 'areaGraveSelect', 'graveSelect']);
+         return;
+     }
+     
+     try {
+         const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=block&parent_id=${cemeteryId}&has_available_graves=1`);
+         const data = await response.json();
+         
+         if (data.success) {
+             populateSelect('blockSelect', data.data, 'id', 'name');
+         }
+     } catch (error) {
+         console.error('Error loading blocks:', error);
+     }
+ }
 
-// טעינת חלקות לפי גוש
-async function loadPlots(blockId) {
-    if (!blockId) {
-        resetSelects(['plotSelect', 'rowSelect', 'areaGraveSelect', 'graveSelect']);
-        return;
-    }
-    
-    try {
-        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=plot&parent_id=${blockId}&has_available_graves=1`);
-        const data = await response.json();
-        
-        if (data.success) {
-            populateSelect('plotSelect', data.data, 'id', 'name');
-        }
-    } catch (error) {
-        console.error('Error loading plots:', error);
-    }
-}
+ // טעינת חלקות לפי גוש
+ async function loadPlots(blockId) {
+     if (!blockId) {
+         resetSelects(['plotSelect', 'rowSelect', 'areaGraveSelect', 'graveSelect']);
+         return;
+     }
+     
+     try {
+         const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=plot&parent_id=${blockId}&has_available_graves=1`);
+         const data = await response.json();
+         
+         if (data.success) {
+             populateSelect('plotSelect', data.data, 'id', 'name');
+         }
+     } catch (error) {
+         console.error('Error loading plots:', error);
+     }
+ }
 
-// טעינת שורות לפי חלקה
-async function loadRows(plotId) {
-    if (!plotId) {
-        resetSelects(['rowSelect', 'areaGraveSelect', 'graveSelect']);
-        return;
-    }
-    
-    try {
-        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=row&parent_id=${plotId}&has_available_graves=1`);
-        const data = await response.json();
-        
-        if (data.success) {
-            populateSelect('rowSelect', data.data, 'id', 'name');
-        }
-    } catch (error) {
-        console.error('Error loading rows:', error);
-    }
-}
+ // טעינת שורות לפי חלקה
+ async function loadRows(plotId) {
+     if (!plotId) {
+         resetSelects(['rowSelect', 'areaGraveSelect', 'graveSelect']);
+         return;
+     }
+     
+     try {
+         const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=row&parent_id=${plotId}&has_available_graves=1`);
+         const data = await response.json();
+         
+         if (data.success) {
+             populateSelect('rowSelect', data.data, 'id', 'name');
+         }
+     } catch (error) {
+         console.error('Error loading rows:', error);
+     }
+ }
 
-// טעינת אחוזות קבר לפי שורה
-async function loadAreaGraves(rowId) {
-    if (!rowId) {
-        resetSelects(['areaGraveSelect', 'graveSelect']);
-        return;
-    }
-    
-    try {
-        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=area_grave&parent_id=${rowId}&has_available_graves=1`);
-        const data = await response.json();
-        
-        if (data.success) {
-            populateSelect('areaGraveSelect', data.data, 'id', 'name');
-        }
-    } catch (error) {
-        console.error('Error loading area graves:', error);
-    }
-}
+ // טעינת אחוזות קבר לפי שורה
+ async function loadAreaGraves(rowId) {
+     if (!rowId) {
+         resetSelects(['areaGraveSelect', 'graveSelect']);
+         return;
+     }
+     
+     try {
+         const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=area_grave&parent_id=${rowId}&has_available_graves=1`);
+         const data = await response.json();
+         
+         if (data.success) {
+             populateSelect('areaGraveSelect', data.data, 'id', 'name');
+         }
+     } catch (error) {
+         console.error('Error loading area graves:', error);
+     }
+ }
 
-// טעינת קברים לפי אחוזת קבר
-async function loadGraves(areaGraveId) {
-    if (!areaGraveId) {
-        resetSelects(['graveSelect']);
-        return;
-    }
-    
-    try {
-        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=grave&parent_id=${areaGraveId}&grave_status=1`);
-        const data = await response.json();
-        
-        if (data.success) {
-            populateSelect('graveSelect', data.data, 'id', 'grave_number');
-        }
-    } catch (error) {
-        console.error('Error loading graves:', error);
-    }
-}
+ // טעינת קברים לפי אחוזת קבר
+ async function loadGraves(areaGraveId) {
+     if (!areaGraveId) {
+         resetSelects(['graveSelect']);
+         return;
+     }
+     
+     try {
+         const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=grave&parent_id=${areaGraveId}&grave_status=1`);
+         const data = await response.json();
+         
+         if (data.success) {
+             populateSelect('graveSelect', data.data, 'id', 'grave_number');
+         }
+     } catch (error) {
+         console.error('Error loading graves:', error);
+     }
+ }
 
-// מילוי select
-function populateSelect(selectId, items, valueField, textField) {
-    const select = document.getElementById(selectId);
-    select.disabled = false;
-    select.innerHTML = '<option value="">-- בחר --</option>';
-    
-    items.forEach(item => {
-        const option = document.createElement('option');
-        option.value = item[valueField];
-        option.textContent = item[textField];
-        select.appendChild(option);
-    });
-}
+ // מילוי select
+ function populateSelect(selectId, items, valueField, textField) {
+     const select = document.getElementById(selectId);
+     select.disabled = false;
+     select.innerHTML = '<option value="">-- בחר --</option>';
+     
+     items.forEach(item => {
+         const option = document.createElement('option');
+         option.value = item[valueField];
+         option.textContent = item[textField];
+         select.appendChild(option);
+     });
+ }
 
-// איפוס selects
-function resetSelects(selectIds) {
-    selectIds.forEach(id => {
-        const select = document.getElementById(id);
-        select.innerHTML = '<option value="">-- בחר --</option>';
-        select.disabled = true;
-    });
-}
+ // איפוס selects
+ function resetSelects(selectIds) {
+     selectIds.forEach(id => {
+         const select = document.getElementById(id);
+         select.innerHTML = '<option value="">-- בחר --</option>';
+         select.disabled = true;
+     });
+ }
 
-// פתיחת מודל תשלומים
-function openPaymentsModal() {
-    // TODO: יצירת מודל לניהול תשלומים מפורט
-    alert('מודל תשלומים בפיתוח');
-}
+ // פתיחת מודל תשלומים
+ function openPaymentsModal() {
+     // TODO: יצירת מודל לניהול תשלומים מפורט
+     alert('מודל תשלומים בפיתוח');
+ }
 </script>

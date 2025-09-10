@@ -4,7 +4,7 @@
 // משתנים גלובליים
 let allPurchases = [];
 let currentPurchasePage = 1;
-let currentSort = { field: 'purchase_date', order: 'DESC' };
+let currentSort = { field: 'created_at', order: 'DESC' };
 
 // טעינת כל הרכישות
 async function loadAllPurchases(page = 1) {
@@ -21,14 +21,8 @@ async function loadAllPurchases(page = 1) {
     window.currentParentId = null;
     
     try {
-        // נסה קודם עם purchases-api.php
-        let response = await fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=list&page=${page}&limit=50&sort=${currentSort.field}&order=${currentSort.order}`);
-        
-        // אם purchases-api.php לא קיים, נסה עם cemetery-hierarchy.php
-        if (!response.ok && response.status === 404) {
-            console.log('purchases-api.php not found, trying cemetery-hierarchy.php');
-            response = await fetch(`/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=list&type=purchase&page=${page}&limit=50&sort=${currentSort.field}&order=${currentSort.order}`);
-        }
+        // השתמש ישירות ב-cemetery-hierarchy.php שעובד
+        const response = await fetch(`/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=list&type=purchase&page=${page}&limit=50&sort=${currentSort.field}&order=${currentSort.order}`);
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -229,17 +223,8 @@ function showSuccess(message) {
     }
 }
 
-// פתיחת טופס הוספת רכישה
-function openAddPurchase() {
-    console.log('Opening add purchase form');
-    
-    // אם יש פונקציה גלובלית לפתיחת מודל
-    if (typeof window.openModal === 'function') {
-        window.openModal('purchase', null, null);
-    } else {
-        alert('פונקציונליות הוספת רכישה תיושם בקרוב');
-    }
-}
+// פונקציה זו מוגדרת ב-purchase-form.js
+// היא נשארת כאן רק כ-fallback
 
 // צפייה ברכישה
 function viewPurchase(id) {

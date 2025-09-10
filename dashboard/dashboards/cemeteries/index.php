@@ -151,6 +151,7 @@ if (!checkPermission('view', 'cemetery')) {
     <script src="/dashboard/dashboards/cemeteries/js/hierarchy.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/customers-management.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/purchases.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/purchase-form.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/burials.js"></script>
     
     <script>

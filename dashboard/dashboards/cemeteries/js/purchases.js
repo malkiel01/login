@@ -20,6 +20,11 @@ async function loadAllPurchases(page = 1) {
     window.currentType = 'purchase';
     window.currentParentId = null;
     
+    // עדכן את כפתור ההוספה
+    if (typeof updateAddButtonText === 'function') {
+        updateAddButtonText();
+    }
+    
     try {
         // השתמש ישירות ב-cemetery-hierarchy.php שעובד
         const response = await fetch(`/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=list&type=purchase&page=${page}&limit=50&sort=${currentSort.field}&order=${currentSort.order}`);

@@ -1,7 +1,7 @@
 <?php
 // dashboards/cemeteries/api/payments-api.php
 // API לניהול תשלומים
-
+ 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
@@ -15,6 +15,10 @@ try {
 } catch(PDOException $e) {
     die(json_encode(['success' => false, 'error' => 'Connection failed: ' . $e->getMessage()]));
 }
+
+// קבלת הפעולה
+$action = $_GET['action'] ?? '';
+$id = $_GET['id'] ?? null;
 
 // קבלת הפעולה
 $action = $_GET['action'] ?? '';

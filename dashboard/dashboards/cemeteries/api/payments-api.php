@@ -108,7 +108,7 @@ try {
             echo json_encode(['success' => true, 'data' => $payment]);
             break;
         // קבלת כל התשלומים
-        case 'getMatching':
+        case 'getMatching1':
             $params = json_decode(file_get_contents('php://input'), true);
             
             // בנה שאילתה לקבלת תשלומים מתאימים
@@ -156,7 +156,69 @@ try {
                 'payments' => $payments
             ]);
             break;
-        // הוספת תשלום חדש
+        case 'getMatching':
+            $params = json_decode(file_get_contents('php://input'), true);
+            
+            $sql = "SELECT * FROM payments WHERE isActive = 1";
+            $conditions = [];
+            $queryParams = [];
+            
+            // סנן לפי הפרמטרים שהתקבלו
+            if (isset($params['plotType'])) {
+                $conditions[] = "(plotType = :plotType OR plotType IS NULL)";
+                $queryParams['plotType'] = $params['plotType'];
+            }
+            
+            if (isset($params['graveType'])) {
+                $conditions[] = "(graveType = :graveType OR graveType IS NULL)";
+                $queryParams['graveType'] = $params['graveType'];
+            }
+            
+            if (isset($params['resident'])) {
+                $conditions[] = "(resident = :resident OR resident IS NULL)";
+                $queryParams['resident'] = $params['resident'];
+            }
+            
+            if (isset($params['buyerStatus'])) {
+                $conditions[] = "(buyerStatus = :buyerStatus OR buyerStatus IS NULL)";
+                $queryParams['buyerStatus'] = $params['buyerStatus'];
+            }
+            
+            if (count($conditions) > 0) {
+                $sql .= " AND " . implode(" AND ", $conditions);
+            }
+            
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($queryParams);
+            $payments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // הוסף מידע על כל תשלום
+            foreach ($payments as &$payment) {
+                // קבע אם התשלום הוא חובה
+                $payment['mandatory'] = in_array($payment['priceDefinition'], [1, 3]); // עלות קבר וקבורה = חובה
+                
+                // הוסף שם מתוך ההגדרות
+                $definitions = [
+                    1 => 'עלות קבר',
+                    2 => 'שירותי לוויה',
+                    3 => 'שירותי קבורה',
+                    4 => 'אגרת מצבה',
+                    5 => 'בדיקת עומק',
+                    6 => 'פירוק מצבה',
+                    7 => 'הובלה מנתב"ג',
+                    8 => 'טהרה',
+                    9 => 'תכריכים',
+                    10 => 'החלפת שם'
+                ];
+                $payment['name'] = $definitions[$payment['priceDefinition']] ?? 'לא ידוע';
+            }
+            
+            echo json_encode([
+                'success' => true,
+                'payments' => $payments
+            ]);
+            break;
+            // הוספת תשלום חדש
         case 'create':
             $data = json_decode(file_get_contents('php://input'), true);
             

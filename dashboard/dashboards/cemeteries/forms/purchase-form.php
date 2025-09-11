@@ -834,8 +834,21 @@ window.updateSmartTotal = function() {
     document.getElementById('optionalCount').textContent = optionalText;
 }
 
-// החלת התשלומים שנבחרו
-window.applySmartPayments2 = function(mandatoryPayments) {
+// החלת התשלומים שנבחרו - הגדר כפונקציה גלובלית
+window.applySmartPayments = function(mandatoryPaymentsJSON) {
+    // פענח את ה-JSON אם צריך
+    let mandatoryPayments;
+    if (typeof mandatoryPaymentsJSON === 'string') {
+        try {
+            mandatoryPayments = JSON.parse(mandatoryPaymentsJSON.replace(/&quot;/g, '"'));
+        } catch (e) {
+            console.error('Error parsing mandatory payments:', e);
+            mandatoryPayments = [];
+        }
+    } else {
+        mandatoryPayments = mandatoryPaymentsJSON || [];
+    }
+    
     // נקה תשלומים קיימים
     window.purchasePayments = [];
     
@@ -852,16 +865,19 @@ window.applySmartPayments2 = function(mandatoryPayments) {
     
     // הוסף תשלומים אופציונליים שנבחרו
     const modal = document.getElementById('smartPaymentsModal');
-    const selectedOptional = modal.querySelectorAll('input[type="checkbox"]:not(:disabled):checked');
-    selectedOptional.forEach(cb => {
-        window.purchasePayments.push({
-            type: 'auto_' + cb.dataset.definition,
-            type_name: cb.dataset.name,
-            amount: parseFloat(cb.dataset.price),
-            mandatory: false,
-            date: new Date().toISOString()
+    if (modal) {
+        const selectedOptional = modal.querySelectorAll('input[type="checkbox"]:not(:disabled):checked');
+        selectedOptional.forEach(cb => {
+            window.purchasePayments.push({
+                type: cb.dataset.custom ? 'custom' : 'auto_' + cb.dataset.definition,
+                type_name: cb.dataset.name,
+                amount: parseFloat(cb.dataset.price),
+                mandatory: false,
+                custom: cb.dataset.custom === 'true',
+                date: new Date().toISOString()
+            });
         });
-    });
+    }
     
     // עדכן תצוגה בטופס הראשי
     document.getElementById('total_price').value = calculatePaymentsTotal();
@@ -869,11 +885,16 @@ window.applySmartPayments2 = function(mandatoryPayments) {
     document.getElementById('payments_data').value = JSON.stringify(window.purchasePayments);
     
     // סגור מודל
-    modal.remove();
+    if (modal) {
+        modal.remove();
+    }
     
     // הודעה
-    alert(`נוספו ${window.purchasePayments.length} תשלומים בסכום כולל של ₪${calculatePaymentsTotal()}`);
+    const total = window.purchasePayments.reduce((sum, p) => sum + p.amount, 0);
+    console.log('Applied payments:', window.purchasePayments);
+    alert(`נוספו ${window.purchasePayments.length} תשלומים בסכום כולל של ₪${total.toFixed(2)}`);
 }
+
 function showSmartPaymentsModal(availablePayments) {
     // חלק את התשלומים לחובה ואופציונלי
     const mandatoryPayments = availablePayments.filter(p => p.mandatory);
@@ -1033,7 +1054,7 @@ function showSmartPaymentsModal(availablePayments) {
                     border-radius: 4px;
                     cursor: pointer;
                 ">ביטול</button>
-                <button onclick="applySmartPayments(${JSON.stringify(mandatoryPayments).replace(/"/g, '&quot;')})" style="
+                <button onclick="applySmartPayments('${JSON.stringify(mandatoryPayments).replace(/'/g, "\\'").replace(/"/g, '&quot;')}')" style="
                     padding: 10px 30px;
                     background: #28a745;
                     color: white;

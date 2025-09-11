@@ -54,6 +54,54 @@ if (!defined('PURCHASE_STATUS')) {
     ]);
 }
 
+// הגדרות תשלומים
+if (!defined('PAYMENT_PLOT_TYPES')) {
+    define('PAYMENT_PLOT_TYPES', [
+        1 => ['name' => 'פטורה', 'color' => '#10b981', 'icon' => '🟢'],
+        2 => ['name' => 'חריגה', 'color' => '#f97316', 'icon' => '🟡'],
+        3 => ['name' => 'סגורה', 'color' => '#dc2626', 'icon' => '🔴']
+    ]);
+}
+
+if (!defined('PAYMENT_GRAVE_TYPES')) {
+    define('PAYMENT_GRAVE_TYPES', [
+        1 => ['name' => 'שדה', 'icon' => '🌾'],
+        2 => ['name' => 'רוויה', 'icon' => '🏘️'],
+        3 => ['name' => 'סנהדרין', 'icon' => '⚖️']
+    ]);
+}
+
+if (!defined('PAYMENT_RESIDENT_TYPES')) {
+    define('PAYMENT_RESIDENT_TYPES', [
+        1 => ['name' => 'ירושלים והסביבה', 'color' => '#10b981'],
+        2 => ['name' => 'תושב חוץ', 'color' => '#f97316'],
+        3 => ['name' => 'תושב חו״ל', 'color' => '#dc2626']
+    ]);
+}
+
+if (!defined('PAYMENT_BUYER_STATUS')) {
+    define('PAYMENT_BUYER_STATUS', [
+        1 => ['name' => 'בחיים', 'color' => '#10b981'],
+        2 => ['name' => 'לאחר פטירה', 'color' => '#6b7280'],
+        3 => ['name' => 'בן זוג נפטר', 'color' => '#3b82f6']
+    ]);
+}
+
+if (!defined('PAYMENT_PRICE_DEFINITIONS')) {
+    define('PAYMENT_PRICE_DEFINITIONS', [
+        1 => ['name' => 'מחיר עלות הקבר', 'icon' => '💰'],
+        2 => ['name' => 'שירותי לוויה', 'icon' => '🕯️'],
+        3 => ['name' => 'שירותי קבורה', 'icon' => '⚰️'],
+        4 => ['name' => 'אגרת מצבה', 'icon' => '🪦'],
+        5 => ['name' => 'בדיקת עומק קבר', 'icon' => '📏'],
+        6 => ['name' => 'פירוק מצבה', 'icon' => '🔨'],
+        7 => ['name' => 'הובלה מנתבג', 'icon' => '✈️'],
+        8 => ['name' => 'טהרה', 'icon' => '💧'],
+        9 => ['name' => 'תכריכי פשתן', 'icon' => '🏳️'],
+        10 => ['name' => 'החלפת שם', 'icon' => '📝']
+    ]);
+}
+
 // פונקציות עזר ספציפיות לדשבורד
 function getHierarchyLevel($type) {
     $levels = [
@@ -71,15 +119,6 @@ function formatGraveLocation($cemetery, $block, $plot, $row, $area, $grave) {
     $parts = array_filter([$cemetery, $block, $plot, $row, $area, $grave]);
     return implode(' ← ', $parts);
 }
-
-// function calculateAge($birthDate, $deathDate = null) {
-//     if (!$birthDate) return null;
-    
-//     $from = new DateTime($birthDate);
-//     $to = $deathDate ? new DateTime($deathDate) : new DateTime();
-    
-//     return $from->diff($to)->y;
-// }
 
 // בדיקת הרשאות למשתמש (אם יש מערכת משתמשים)
 function checkPermission($action, $module = 'cemetery') {

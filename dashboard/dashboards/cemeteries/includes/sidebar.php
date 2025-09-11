@@ -106,6 +106,67 @@
         </div>
     </div>
 
+    <!-- קו מפריד -->
+    <div style="margin: 20px 15px; border-top: 2px solid #e5e7eb;"></div>
+
+    <!-- ניהול מערכת -->
+    <div class="system-management-section" style="padding: 0 15px;">
+        <h4 style="font-size: 14px; color: #718096; margin-bottom: 10px; font-weight: 600;">
+            <span style="margin-left: 5px;">⚙️</span>
+            ניהול מערכת
+        </h4>
+        
+        <!-- תשלומים -->
+        <div class="management-item" style="margin-bottom: 10px;">
+            <div class="hierarchy-header" onclick="loadPayments()" style="background: #f0f9ff; border: 1px solid #3b82f6;">
+                <span class="hierarchy-icon">💳</span>
+                <span class="hierarchy-title">ניהול תשלומים</span>
+                <span class="hierarchy-count" id="paymentsCount" style="background: #3b82f6; color: white;">0</span>
+            </div>
+        </div>
+        
+        <!-- אופציות עתידיות -->
+        <div class="management-item" style="margin-bottom: 10px; opacity: 0.5;">
+            <div class="hierarchy-header disabled" style="background: #f7fafc; cursor: not-allowed;">
+                <span class="hierarchy-icon">🗺️</span>
+                <span class="hierarchy-title">טריטוריית בית עלמין</span>
+                <span class="badge" style="background: #fbbf24; color: #78350f; font-size: 10px; padding: 2px 6px; border-radius: 4px;">בקרוב</span>
+            </div>
+        </div>
+        
+        <div class="management-item" style="margin-bottom: 10px; opacity: 0.5;">
+            <div class="hierarchy-header disabled" style="background: #f7fafc; cursor: not-allowed;">
+                <span class="hierarchy-icon">🗺️</span>
+                <span class="hierarchy-title">ניהול מפות</span>
+                <span class="badge" style="background: #fbbf24; color: #78350f; font-size: 10px; padding: 2px 6px; border-radius: 4px;">בקרוב</span>
+            </div>
+        </div>
+        
+        <div class="management-item" style="margin-bottom: 10px; opacity: 0.5;">
+            <div class="hierarchy-header disabled" style="background: #f7fafc; cursor: not-allowed;">
+                <span class="hierarchy-icon">🏙️</span>
+                <span class="hierarchy-title">ניהול ערים</span>
+                <span class="badge" style="background: #fbbf24; color: #78350f; font-size: 10px; padding: 2px 6px; border-radius: 4px;">בקרוב</span>
+            </div>
+        </div>
+        
+        <div class="management-item" style="margin-bottom: 10px; opacity: 0.5;">
+            <div class="hierarchy-header disabled" style="background: #f7fafc; cursor: not-allowed;">
+                <span class="hierarchy-icon">🔐</span>
+                <span class="hierarchy-title">ניהול הרשאות</span>
+                <span class="badge" style="background: #fbbf24; color: #78350f; font-size: 10px; padding: 2px 6px; border-radius: 4px;">בקרוב</span>
+            </div>
+        </div>
+        
+        <div class="management-item" style="margin-bottom: 10px; opacity: 0.5;">
+            <div class="hierarchy-header disabled" style="background: #f7fafc; cursor: not-allowed;">
+                <span class="hierarchy-icon">📊</span>
+                <span class="hierarchy-title">ניהול דוחות</span>
+                <span class="badge" style="background: #fbbf24; color: #78350f; font-size: 10px; padding: 2px 6px; border-radius: 4px;">בקרוב</span>
+            </div>
+        </div>
+    </div>
+
     <!-- פעולות מהירות -->
     <div class="sidebar-footer">
         <button class="btn btn-primary btn-block" onclick="openAddModal()">

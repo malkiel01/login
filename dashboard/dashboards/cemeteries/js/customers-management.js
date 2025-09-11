@@ -188,6 +188,38 @@ function displayCustomersInTable(customers) {
         return;
     }
     
+    // tableBody.innerHTML = customers.map(customer => `
+    //     <tr data-id="${customer.id}">
+    //         <td><input type="checkbox" class="customer-checkbox" value="${customer.id}"></td>
+    //         <td>${customer.id_number || '-'}</td>
+    //         <td>
+    //             <strong>${customer.first_name} ${customer.last_name}</strong>
+    //             ${customer.nickname ? `<br><small style="color: #666;">(${customer.nickname})</small>` : ''}
+    //         </td>
+    //         <td>
+    //             ${customer.mobile_phone || customer.phone || '-'}
+    //         </td>
+    //         <td>${customer.email || '-'}</td>
+    //         <td>${customer.city || '-'}</td>
+    //         <td>${getCustomerStatusBadge(customer.customer_status)}</td>
+    //         <td>${getCustomerTypeBadge(customer.type_id)}</td>
+    //         <td>${formatDate(customer.created_at)}</td>
+    //         <td>
+    //             <div class="action-buttons" style="display: flex; gap: 5px;">
+    //                 <button class="btn btn-sm" onclick="viewCustomer(${customer.id})" title="צפייה">
+    //                     <svg class="icon-sm"><use xlink:href="#icon-search"></use></svg>
+    //                 </button>
+    //                 <button class="btn btn-sm" onclick="editCustomer(${customer.id})" title="עריכה">
+    //                     <svg class="icon-sm"><use xlink:href="#icon-edit"></use></svg>
+    //                 </button>
+    //                 <button class="btn btn-sm" onclick="deleteCustomer(${customer.id})" title="מחיקה">
+    //                     <svg class="icon-sm"><use xlink:href="#icon-delete"></use></svg>
+    //                 </button>
+    //             </div>
+    //         </td>
+    //     </tr>
+    // `).join('');
+
     tableBody.innerHTML = customers.map(customer => `
         <tr data-id="${customer.id}">
             <td><input type="checkbox" class="customer-checkbox" value="${customer.id}"></td>
@@ -196,26 +228,14 @@ function displayCustomersInTable(customers) {
                 <strong>${customer.first_name} ${customer.last_name}</strong>
                 ${customer.nickname ? `<br><small style="color: #666;">(${customer.nickname})</small>` : ''}
             </td>
-            <td>
-                ${customer.mobile_phone || customer.phone || '-'}
-            </td>
+            <td>${customer.mobile_phone || customer.phone || '-'}</td>
             <td>${customer.email || '-'}</td>
-            <td>${customer.city || '-'}</td>
+            <td>${customer.city_name || '-'}</td>  <!-- שים לב לשינוי כאן -->
             <td>${getCustomerStatusBadge(customer.customer_status)}</td>
             <td>${getCustomerTypeBadge(customer.type_id)}</td>
             <td>${formatDate(customer.created_at)}</td>
             <td>
-                <div class="action-buttons" style="display: flex; gap: 5px;">
-                    <button class="btn btn-sm" onclick="viewCustomer(${customer.id})" title="צפייה">
-                        <svg class="icon-sm"><use xlink:href="#icon-search"></use></svg>
-                    </button>
-                    <button class="btn btn-sm" onclick="editCustomer(${customer.id})" title="עריכה">
-                        <svg class="icon-sm"><use xlink:href="#icon-edit"></use></svg>
-                    </button>
-                    <button class="btn btn-sm" onclick="deleteCustomer(${customer.id})" title="מחיקה">
-                        <svg class="icon-sm"><use xlink:href="#icon-delete"></use></svg>
-                    </button>
-                </div>
+                <!-- כפתורי פעולות... -->
             </td>
         </tr>
     `).join('');
@@ -298,7 +318,7 @@ async function editCustomer(id) {
 }
 
 // פתיחת מודל לקוח
-function openCustomerModal(title, customer = null) {
+function openCustomerModal2(title, customer = null) {
     const modal = document.createElement('div');
     modal.className = 'modal show';
     modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;';
@@ -369,6 +389,159 @@ function openCustomerModal(title, customer = null) {
     `;
     
     document.body.appendChild(modal);
+}
+// בפונקציה openCustomerModal, החלף את החלק של הכתובת:
+
+function openCustomerModal(title, customer = null) {
+    const modal = document.createElement('div');
+    modal.className = 'modal show';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;';
+    
+    modal.innerHTML = `
+        <div class="modal-content" style="background: white; padding: 30px; border-radius: 10px; max-width: 800px; max-height: 90vh; overflow-y: auto; width: 90%;">
+            <div class="modal-header" style="margin-bottom: 20px;">
+                <h2 style="margin: 0;">${title}</h2>
+            </div>
+            <form id="customerForm" onsubmit="saveCustomer(event)">
+                <div class="modal-body">
+                    <!-- פרטים אישיים -->
+                    <fieldset style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                        <legend style="padding: 0 10px; font-weight: bold;">פרטים אישיים</legend>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                            <div>
+                                <label>שם פרטי <span style="color: red;">*</span></label>
+                                <input type="text" name="first_name" required value="${customer?.first_name || ''}" 
+                                       style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            <div>
+                                <label>שם משפחה <span style="color: red;">*</span></label>
+                                <input type="text" name="last_name" required value="${customer?.last_name || ''}" 
+                                       style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            <div>
+                                <label>תעודת זהות</label>
+                                <input type="text" name="id_number" value="${customer?.id_number || ''}" 
+                                       style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                        </div>
+                    </fieldset>
+                    
+                    <!-- כתובת - עדכון -->
+                    <fieldset style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                        <legend style="padding: 0 10px; font-weight: bold;">כתובת</legend>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                            <div>
+                                <label>מדינה</label>
+                                <select name="country" id="countrySelect" class="form-control" 
+                                        onchange="loadCitiesForCountry(this.value)"
+                                        style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <option value="">בחר מדינה</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label>עיר</label>
+                                <select name="city" id="citySelect" class="form-control"
+                                        style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <option value="">בחר עיר</option>
+                                </select>
+                            </div>
+                            <div style="grid-column: span 2;">
+                                <label>כתובת</label>
+                                <input type="text" name="address" value="${customer?.address || ''}" 
+                                       style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                        </div>
+                    </fieldset>
+                    
+                    <!-- פרטי התקשרות -->
+                    <fieldset style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                        <legend style="padding: 0 10px; font-weight: bold;">פרטי התקשרות</legend>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                            <div>
+                                <label>טלפון נייד</label>
+                                <input type="tel" name="mobile_phone" value="${customer?.mobile_phone || ''}" 
+                                       style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            <div>
+                                <label>טלפון</label>
+                                <input type="tel" name="phone" value="${customer?.phone || ''}" 
+                                       style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            <div>
+                                <label>אימייל</label>
+                                <input type="email" name="email" value="${customer?.email || ''}" 
+                                       style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+                
+                <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeCustomerModal()">ביטול</button>
+                    <button type="submit" class="btn btn-primary">שמור</button>
+                </div>
+            </form>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // טען מדינות
+    loadCountriesForCustomer(customer);
+}
+
+// פונקציות לטעינת מדינות וערים
+async function loadCountriesForCustomer(customer = null) {
+    try {
+        const response = await fetch('/dashboard/dashboards/cemeteries/api/locations-api.php?action=getCountries');
+        const data = await response.json();
+        
+        if (data.success) {
+            const select = document.getElementById('countrySelect');
+            select.innerHTML = '<option value="">בחר מדינה</option>';
+            
+            data.data.forEach(country => {
+                select.innerHTML += `<option value="${country.unicId}">${country.countryNameHe}</option>`;
+            });
+            
+            // אם יש לקוח קיים, טען את המדינה והעיר שלו
+            if (customer?.country) {
+                select.value = customer.country;
+                await loadCitiesForCountry(customer.country, customer.city);
+            }
+        }
+    } catch (error) {
+        console.error('Error loading countries:', error);
+    }
+}
+
+async function loadCitiesForCountry(countryId, selectedCity = null) {
+    const citySelect = document.getElementById('citySelect');
+    
+    if (!countryId) {
+        citySelect.innerHTML = '<option value="">בחר עיר</option>';
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/dashboard/dashboards/cemeteries/api/locations-api.php?action=getCities&countryId=${countryId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            citySelect.innerHTML = '<option value="">בחר עיר</option>';
+            
+            data.data.forEach(city => {
+                citySelect.innerHTML += `<option value="${city.unicId}">${city.cityNameHe}</option>`;
+            });
+            
+            // אם יש עיר שנבחרה מראש
+            if (selectedCity) {
+                citySelect.value = selectedCity;
+            }
+        }
+    } catch (error) {
+        console.error('Error loading cities:', error);
+    }
 }
 
 // סגירת מודל לקוח

@@ -108,7 +108,7 @@
 
     <!-- קו מפריד -->
     <div style="margin: 20px 15px; border-top: 2px solid #e5e7eb;"></div>
-1111
+
     <!-- ניהול מערכת -->
     <div class="system-management-section" style="padding: 0 15px;">
         <h4 style="font-size: 14px; color: #718096; margin-bottom: 10px; font-weight: 600;">

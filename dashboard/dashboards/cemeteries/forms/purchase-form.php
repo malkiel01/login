@@ -784,15 +784,21 @@ window.updateSmartTotal = function() {
     mandatoryCheckboxes.forEach(cb => {
         const row = cb.closest('div');
         const priceText = row.querySelector('span:last-child').textContent;
-        const price = parseFloat(priceText.replace('₪', '').replace(',', ''));
-        total += price;
+        // תיקון: הסר את סמל המטבע ופסיקים לפני המרה למספר
+        const price = parseFloat(priceText.replace('₪', '').replace(/,/g, ''));
+        if (!isNaN(price)) {
+            total += price;
+        }
     });
     
     // סכום תשלומים אופציונליים שנבחרו
     const optionalCheckboxes = modal.querySelectorAll('input[type="checkbox"]:not(:disabled):checked');
     optionalCheckboxes.forEach(cb => {
-        total += parseFloat(cb.dataset.price);
-        optionalCount++;
+        const price = parseFloat(cb.dataset.price);
+        if (!isNaN(price)) {
+            total += price;
+            optionalCount++;
+        }
     });
     
     document.getElementById('smartModalTotal').textContent = total.toLocaleString();

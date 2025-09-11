@@ -113,10 +113,23 @@ const FormHandler = {
             // הוסף is_active
             data.is_active = 1;
             
-            console.log('Sending data:', data); // דיבוג
-            
             // שלח לשרת
-            let url = `/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=${action}&type=${type}`;
+            // let url = `/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=${action}&type=${type}`;
+            
+            // אחרי השורה של area_grave, הוסף:
+            if (type === 'customer') {
+                url = `/dashboard/dashboards/cemeteries/api/customers-api.php?action=${action}`;
+                if (isEdit) {
+                    url += `&id=${formData.get('id')}`;
+                }
+            } else {
+                // הקוד הקיים - cemetery-hierarchy
+                url = `/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=${action}&type=${type}`;
+                if (isEdit) {
+                    url += `&id=${formData.get('id')}`;
+                }
+            }            
+            
             if (isEdit) {
                 url += `&id=${formData.get('id')}`;
             }

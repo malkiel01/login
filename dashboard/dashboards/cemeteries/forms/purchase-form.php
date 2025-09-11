@@ -801,7 +801,7 @@ window.updateSmartTotal2 = function() {
     document.getElementById('optionalCount').textContent = optionalText;
 }
 // עדכון הסכום הכולל במודל החכם
-window.updateSmartTotal = function() {
+window.updateSmartTotal3 = function() {
     let total = 0;
     let optionalCount = 0;
     
@@ -832,6 +832,66 @@ window.updateSmartTotal = function() {
     
     const optionalText = optionalCount > 0 ? ` + ${optionalCount} תשלומים נוספים` : '';
     document.getElementById('optionalCount').textContent = optionalText;
+}
+// עדכון הסכום הכולל במודל החכם - גרסה מתוקנת
+window.updateSmartTotal = function() {
+    let total = 0;
+    let optionalCount = 0;
+    
+    const modal = document.getElementById('smartPaymentsModal');
+    if (!modal) return;
+    
+    // סכום תשלומי חובה
+    const mandatoryCheckboxes = modal.querySelectorAll('input[type="checkbox"]:disabled:checked');
+    mandatoryCheckboxes.forEach(cb => {
+        // חפש את המחיר בתוך אותו div של הצ'קבוקס
+        const parentDiv = cb.closest('div[style*="padding"]');
+        if (parentDiv) {
+            // חפש את כל ה-spans בתוך ה-div
+            const spans = parentDiv.querySelectorAll('span');
+            // המחיר נמצא בדרך כלל ב-span האחרון
+            const priceSpan = spans[spans.length - 1];
+            if (priceSpan) {
+                const priceText = priceSpan.textContent;
+                // הסר סמל מטבע, פסיקים ורווחים
+                const cleanPrice = priceText.replace(/[₪,\s]/g, '');
+                const price = parseFloat(cleanPrice);
+                
+                console.log('Mandatory payment found:', priceText, '→', price); // דיבוג
+                
+                if (!isNaN(price)) {
+                    total += price;
+                }
+            }
+        }
+    });
+    
+    // סכום תשלומים אופציונליים שנבחרו
+    const optionalCheckboxes = modal.querySelectorAll('input[type="checkbox"]:not(:disabled):checked');
+    optionalCheckboxes.forEach(cb => {
+        const price = parseFloat(cb.dataset.price);
+        
+        console.log('Optional payment:', cb.dataset.name, '→', price); // דיבוג
+        
+        if (!isNaN(price)) {
+            total += price;
+            optionalCount++;
+        }
+    });
+    
+    console.log('Total calculated:', total); // דיבוג
+    
+    // עדכן התצוגה
+    const totalElement = document.getElementById('smartModalTotal');
+    if (totalElement) {
+        totalElement.textContent = total.toLocaleString();
+    }
+    
+    const optionalCountElement = document.getElementById('optionalCount');
+    if (optionalCountElement) {
+        const optionalText = optionalCount > 0 ? ` + ${optionalCount} תשלומים נוספים` : '';
+        optionalCountElement.textContent = optionalText;
+    }
 }
 
 // החלת התשלומים שנבחרו - הגדר כפונקציה גלובלית

@@ -220,169 +220,14 @@ function getPriceDefinitionBadge(type) {
 // פתיחת טופס הוספת תשלום
 function openAddPayment() {
     window.currentType = 'payment';
+    window.currentParentId = null;
     FormHandler.openForm('payment', null, null);
 }
 
 // עריכת תשלום
 async function editPayment(id) {
-    editingPaymentId = id;
-    
-    try {
-        const response = await fetch(`/dashboard/dashboards/cemeteries/api/payments-api.php?action=get&id=${id}`);
-        const data = await response.json();
-        
-        if (data.success) {
-            openPaymentModal('ערוך תשלום', data.data);
-        }
-    } catch (error) {
-        showError('שגיאה בטעינת פרטי התשלום');
-    }
-}
-
-// פתיחת מודל תשלום
-function openPaymentModal(title, payment = null) {
-    const modal = document.createElement('div');
-    modal.className = 'modal show';
-    modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;';
-    
-    modal.innerHTML = `
-        <div class="modal-content" style="background: white; padding: 30px; border-radius: 10px; max-width: 900px; max-height: 90vh; overflow-y: auto; width: 90%;">
-            <div class="modal-header" style="margin-bottom: 20px;">
-                <h2 style="margin: 0;">${title}</h2>
-            </div>
-            <form id="paymentForm" onsubmit="savePayment(event)">
-                <div class="modal-body">
-                    <!-- סוגים -->
-                    <fieldset style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
-                        <legend style="padding: 0 10px; font-weight: bold;">סוגים</legend>
-                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
-                            <div>
-                                <label>סוג חלקה</label>
-                                <select name="plotType" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                    <option value="">בחר סוג</option>
-                                    <option value="1" ${payment?.plotType == 1 ? 'selected' : ''}>פטורה</option>
-                                    <option value="2" ${payment?.plotType == 2 ? 'selected' : ''}>חריגה</option>
-                                    <option value="3" ${payment?.plotType == 3 ? 'selected' : ''}>סגורה</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label>סוג קבר</label>
-                                <select name="graveType" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                    <option value="">בחר סוג</option>
-                                    <option value="1" ${payment?.graveType == 1 ? 'selected' : ''}>שדה</option>
-                                    <option value="2" ${payment?.graveType == 2 ? 'selected' : ''}>רוויה</option>
-                                    <option value="3" ${payment?.graveType == 3 ? 'selected' : ''}>סנהדרין</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label>סוג תושב</label>
-                                <select name="resident" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                    <option value="">בחר סוג</option>
-                                    <option value="1" ${payment?.resident == 1 ? 'selected' : ''}>ירושלים והסביבה</option>
-                                    <option value="2" ${payment?.resident == 2 ? 'selected' : ''}>תושב חוץ</option>
-                                    <option value="3" ${payment?.resident == 3 ? 'selected' : ''}>תושב חו״ל</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label>סטטוס רוכש</label>
-                                <select name="buyerStatus" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                    <option value="">בחר סטטוס</option>
-                                    <option value="1" ${payment?.buyerStatus == 1 ? 'selected' : ''}>בחיים</option>
-                                    <option value="2" ${payment?.buyerStatus == 2 ? 'selected' : ''}>לאחר פטירה</option>
-                                    <option value="3" ${payment?.buyerStatus == 3 ? 'selected' : ''}>בן זוג נפטר</option>
-                                </select>
-                            </div>
-                        </div>
-                    </fieldset>
-                    
-                    <!-- מחיר ותשלום -->
-                    <fieldset style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
-                        <legend style="padding: 0 10px; font-weight: bold;">מחיר ותשלום</legend>
-                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
-                            <div>
-                                <label>הגדרת מחיר</label>
-                                <select name="priceDefinition" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                    <option value="">בחר הגדרה</option>
-                                    <option value="1" ${payment?.priceDefinition == 1 ? 'selected' : ''}>מחיר עלות הקבר</option>
-                                    <option value="2" ${payment?.priceDefinition == 2 ? 'selected' : ''}>שירותי לוויה</option>
-                                    <option value="3" ${payment?.priceDefinition == 3 ? 'selected' : ''}>שירותי קבורה</option>
-                                    <option value="4" ${payment?.priceDefinition == 4 ? 'selected' : ''}>אגרת מצבה</option>
-                                    <option value="5" ${payment?.priceDefinition == 5 ? 'selected' : ''}>בדיקת עומק קבר</option>
-                                    <option value="6" ${payment?.priceDefinition == 6 ? 'selected' : ''}>פירוק מצבה</option>
-                                    <option value="7" ${payment?.priceDefinition == 7 ? 'selected' : ''}>הובלה מנתבג</option>
-                                    <option value="8" ${payment?.priceDefinition == 8 ? 'selected' : ''}>טהרה</option>
-                                    <option value="9" ${payment?.priceDefinition == 9 ? 'selected' : ''}>תכריכי פשתן</option>
-                                    <option value="10" ${payment?.priceDefinition == 10 ? 'selected' : ''}>החלפת שם</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label>מחיר <span style="color: red;">*</span></label>
-                                <input type="number" name="price" required value="${payment?.price || ''}" 
-                                       step="0.01" min="0"
-                                       style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                            </div>
-                            <div>
-                                <label>תאריך התחלת תשלום</label>
-                                <input type="date" name="startPayment" value="${payment?.startPayment || ''}" 
-                                       style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                            </div>
-                        </div>
-                    </fieldset>
-                </div>
-                
-                <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
-                    <button type="button" class="btn btn-secondary" onclick="closePaymentModal()">ביטול</button>
-                    <button type="submit" class="btn btn-primary">שמור</button>
-                </div>
-            </form>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-}
-
-// סגירת מודל תשלום
-function closePaymentModal() {
-    const modal = document.querySelector('.modal.show');
-    if (modal) {
-        modal.remove();
-    }
-    editingPaymentId = null;
-}
-
-// שמירת תשלום
-async function savePayment(event) {
-    event.preventDefault();
-    
-    const formData = new FormData(event.target);
-    const data = Object.fromEntries(formData);
-    
-    try {
-        const url = editingPaymentId 
-            ? `/dashboard/dashboards/cemeteries/api/payments-api.php?action=update&id=${editingPaymentId}`
-            : '/dashboard/dashboards/cemeteries/api/payments-api.php?action=create';
-            
-        const response = await fetch(url, {
-            method: editingPaymentId ? 'PUT' : 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showSuccess(result.message);
-            closePaymentModal();
-            fetchPayments();
-        } else {
-            showError(result.error || 'שגיאה בשמירת התשלום');
-        }
-    } catch (error) {
-        console.error('Error saving payment:', error);
-        showError('שגיאה בשמירה');
-    }
+    window.currentType = 'payment';
+    FormHandler.openForm('payment', null, id);
 }
 
 // מחיקת תשלום
@@ -412,54 +257,9 @@ async function deletePayment(id) {
 
 // צפייה בתשלום
 async function viewPayment(id) {
-    try {
-        const response = await fetch(`/dashboard/dashboards/cemeteries/api/payments-api.php?action=get&id=${id}`);
-        const data = await response.json();
-        
-        if (data.success) {
-            showPaymentDetails(data.data);
-        }
-    } catch (error) {
-        showError('שגיאה בטעינת פרטי התשלום');
-    }
-}
-
-// הצגת פרטי תשלום
-function showPaymentDetails(payment) {
-    const modal = document.createElement('div');
-    modal.className = 'modal show';
-    modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;';
-    
-    modal.innerHTML = `
-        <div class="modal-content" style="background: white; padding: 30px; border-radius: 10px; max-width: 700px; max-height: 90vh; overflow-y: auto;">
-            <div class="modal-header" style="margin-bottom: 20px;">
-                <h2 style="margin: 0;">פרטי תשלום #${payment.id}</h2>
-            </div>
-            <div class="modal-body">
-                <div style="display: grid; gap: 20px;">
-                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
-                        <h4 style="margin-bottom: 15px;">פרטי התשלום</h4>
-                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
-                            <div><strong>סוג חלקה:</strong> ${getPlotTypeBadge(payment.plotType)}</div>
-                            <div><strong>סוג קבר:</strong> ${getGraveTypeBadge(payment.graveType)}</div>
-                            <div><strong>תושב:</strong> ${getResidentBadge(payment.resident)}</div>
-                            <div><strong>הגדרת מחיר:</strong> ${getPriceDefinitionBadge(payment.priceDefinition)}</div>
-                            <div><strong>מחיר:</strong> ₪${parseFloat(payment.price || 0).toLocaleString()}</div>
-                            <div><strong>תאריך התחלה:</strong> ${formatDate(payment.startPayment)}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
-                <button class="btn btn-warning" onclick="this.closest('.modal').remove(); editPayment(${payment.id})">
-                    ערוך
-                </button>
-                <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">סגור</button>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
+    // פשוט פתח לעריכה במצב קריאה בלבד
+    // או צור מודל צפייה ייעודי
+    editPayment(id);
 }
 
 // טעינת סטטיסטיקות

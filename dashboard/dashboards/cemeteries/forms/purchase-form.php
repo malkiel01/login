@@ -891,8 +891,6 @@ window.applySmartPayments = function(mandatoryPaymentsJSON) {
     
     // הודעה
     const total = window.purchasePayments.reduce((sum, p) => sum + p.amount, 0);
-    console.log('Applied payments:', window.purchasePayments);
-    alert(`נוספו ${window.purchasePayments.length} תשלומים בסכום כולל של ₪${total.toFixed(2)}`);
 }
 
 function showSmartPaymentsModal(availablePayments) {

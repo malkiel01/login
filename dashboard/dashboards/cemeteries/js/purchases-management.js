@@ -1,5 +1,4 @@
-// purchases.js - ניהול רכישות
-// גרסה מתוקנת וסופית
+// purchases-management.js - ניהול רכישות
 
 // משתנים גלובליים
 let allPurchases = [];

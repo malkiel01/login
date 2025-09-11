@@ -508,3 +508,229 @@ function clearSelectors(levels) {
     });
 }
 </script>
+
+<script>
+    // משתנים גלובליים לתשלומים
+    window.purchasePayments = <?php echo $purchase ? json_encode(json_decode($purchase['payments_data'] ?? '[]', true)) : '[]'; ?>;
+
+    // פתיחת מנהל תשלומים
+    window.openPaymentsManager = function() {
+        const modal = document.createElement('div');
+        modal.id = 'paymentsManagerModal';
+        modal.className = 'modal-overlay';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10001;
+        `;
+        
+        modal.innerHTML = `
+            <div class="modal-content" style="
+                background: white;
+                padding: 30px;
+                border-radius: 8px;
+                width: 600px;
+                max-height: 80vh;
+                overflow-y: auto;
+            ">
+                <h3 style="margin-bottom: 20px;">ניהול תשלומים</h3>
+                
+                <form onsubmit="addPayment(event)">
+                    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 5px;">סוג תשלום</label>
+                            <select id="payment_type" required style="
+                                width: 100%;
+                                padding: 8px;
+                                border: 1px solid #ddd;
+                                border-radius: 4px;
+                            ">
+                                <option value="">-- בחר --</option>
+                                <option value="grave_cost">עלות קבר</option>
+                                <option value="service_cost">עלות שירות</option>
+                                <option value="tombstone_cost">עלות מצבה</option>
+                                <option value="maintenance">תחזוקה</option>
+                                <option value="other">אחר</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px;">סכום</label>
+                            <input type="number" id="payment_amount" step="0.01" required style="
+                                width: 100%;
+                                padding: 8px;
+                                border: 1px solid #ddd;
+                                border-radius: 4px;
+                            ">
+                        </div>
+                        <div>
+                            <button type="submit" style="
+                                margin-top: 24px;
+                                padding: 8px 15px;
+                                background: #28a745;
+                                color: white;
+                                border: none;
+                                border-radius: 4px;
+                                cursor: pointer;
+                                width: 100%;
+                            ">הוסף</button>
+                        </div>
+                    </div>
+                </form>
+                
+                <div id="paymentsList" style="
+                    max-height: 300px;
+                    overflow-y: auto;
+                    margin-bottom: 20px;
+                ">
+                    ${displayPaymentsList()}
+                </div>
+                
+                <div style="
+                    padding: 10px;
+                    background: #f8f9fa;
+                    border-radius: 4px;
+                    margin-bottom: 20px;
+                    font-weight: bold;
+                ">
+                    סה"כ: ₪<span id="paymentsTotal">${calculatePaymentsTotal()}</span>
+                </div>
+                
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button onclick="closePaymentsManager()" style="
+                        padding: 10px 30px;
+                        background: #667eea;
+                        color: white;
+                        border: none;
+                        border-radius: 4px;
+                        cursor: pointer;
+                    ">אישור</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+    }
+
+    // סגירת מנהל תשלומים
+    window.closePaymentsManager = function() {
+        const modal = document.getElementById('paymentsManagerModal');
+        if (modal) {
+            modal.remove();
+            
+            // עדכן את הסכום הכולל
+            document.getElementById('total_price').value = calculatePaymentsTotal();
+            
+            // עדכן את התצוגה
+            document.getElementById('paymentsDisplay').innerHTML = displayPaymentsSummary();
+            
+            // עדכן את ה-JSON
+            document.getElementById('payments_data').value = JSON.stringify(window.purchasePayments);
+        }
+    }
+
+    // הוספת תשלום
+    window.addPayment = function(event) {
+        event.preventDefault();
+        
+        const type = document.getElementById('payment_type').value;
+        const amount = parseFloat(document.getElementById('payment_amount').value);
+        
+        const typeNames = {
+            'grave_cost': 'עלות קבר',
+            'service_cost': 'עלות שירות',
+            'tombstone_cost': 'עלות מצבה',
+            'maintenance': 'תחזוקה',
+            'other': 'אחר'
+        };
+        
+        window.purchasePayments.push({
+            type: type,
+            type_name: typeNames[type],
+            amount: amount,
+            date: new Date().toISOString()
+        });
+        
+        // רענן את התצוגה
+        document.getElementById('paymentsList').innerHTML = displayPaymentsList();
+        document.getElementById('paymentsTotal').textContent = calculatePaymentsTotal();
+        
+        // נקה את הטופס
+        document.getElementById('payment_type').value = '';
+        document.getElementById('payment_amount').value = '';
+    }
+
+    // הסרת תשלום
+    window.removePayment = function(index) {
+        window.purchasePayments.splice(index, 1);
+        document.getElementById('paymentsList').innerHTML = displayPaymentsList();
+        document.getElementById('paymentsTotal').textContent = calculatePaymentsTotal();
+    }
+
+    // הצגת רשימת תשלומים
+    window.displayPaymentsList = function() {
+        if (window.purchasePayments.length === 0) {
+            return '<p style="text-align: center; color: #999;">אין תשלומים</p>';
+        }
+        
+        return `
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: #f8f9fa;">
+                        <th style="padding: 8px; text-align: right; border-bottom: 1px solid #ddd;">סוג</th>
+                        <th style="padding: 8px; text-align: right; border-bottom: 1px solid #ddd;">סכום</th>
+                        <th style="padding: 8px; text-align: center; border-bottom: 1px solid #ddd;">פעולה</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${window.purchasePayments.map((payment, index) => `
+                        <tr>
+                            <td style="padding: 8px; border-bottom: 1px solid #eee;">${payment.type_name}</td>
+                            <td style="padding: 8px; border-bottom: 1px solid #eee;">₪${payment.amount.toFixed(2)}</td>
+                            <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">
+                                <button onclick="removePayment(${index})" style="
+                                    background: #dc3545;
+                                    color: white;
+                                    border: none;
+                                    padding: 4px 8px;
+                                    border-radius: 4px;
+                                    cursor: pointer;
+                                ">הסר</button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+    }
+
+    // הצגת סיכום תשלומים
+    window.displayPaymentsSummary = function() {
+        if (window.purchasePayments.length === 0) {
+            return '<p style="color: #999;">לא הוגדרו תשלומים</p>';
+        }
+        
+        const summary = {};
+        window.purchasePayments.forEach(payment => {
+            if (!summary[payment.type_name]) {
+                summary[payment.type_name] = 0;
+            }
+            summary[payment.type_name] += payment.amount;
+        });
+        
+        return Object.entries(summary).map(([type, amount]) => 
+            `${type}: ₪${amount.toFixed(2)}`
+        ).join(' | ') + `<br><strong>סה"כ: ₪${calculatePaymentsTotal()}</strong>`;
+    }
+
+    // חישוב סכום כולל
+    window.calculatePaymentsTotal = function() {
+        return window.purchasePayments.reduce((total, payment) => total + payment.amount, 0).toFixed(2);
+    }
+</script>

@@ -31,7 +31,16 @@ try {
             $offset = ($page - 1) * $limit;
             
             // בניית השאילתה
-            $sql = "SELECT * FROM customers WHERE is_active = 1";
+            $sql = "
+                    SELECT 
+                        c.*,
+                        co.countryNameHe as country_name,
+                        ci.cityNameHe as city_name
+                    FROM customers c
+                    LEFT JOIN countries co ON c.country = co.unicId
+                    LEFT JOIN cities ci ON c.city = ci.unicId
+                    WHERE c.is_active = 1
+                ";
             $params = [];
             
             // חיפוש
@@ -54,7 +63,7 @@ try {
             }
             
             // ספירת סה"כ תוצאות
-            $countSql = str_replace("SELECT *", "SELECT COUNT(*) as total", $sql);
+            $countSql = "SELECT COUNT(*) as total FROM customers WHERE is_active = 1";
             $countStmt = $pdo->prepare($countSql);
             $countStmt->execute($params);
             $total = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];

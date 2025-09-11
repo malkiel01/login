@@ -187,38 +187,6 @@ function displayCustomersInTable(customers) {
         `;
         return;
     }
-    
-    // tableBody.innerHTML = customers.map(customer => `
-    //     <tr data-id="${customer.id}">
-    //         <td><input type="checkbox" class="customer-checkbox" value="${customer.id}"></td>
-    //         <td>${customer.id_number || '-'}</td>
-    //         <td>
-    //             <strong>${customer.first_name} ${customer.last_name}</strong>
-    //             ${customer.nickname ? `<br><small style="color: #666;">(${customer.nickname})</small>` : ''}
-    //         </td>
-    //         <td>
-    //             ${customer.mobile_phone || customer.phone || '-'}
-    //         </td>
-    //         <td>${customer.email || '-'}</td>
-    //         <td>${customer.city || '-'}</td>
-    //         <td>${getCustomerStatusBadge(customer.customer_status)}</td>
-    //         <td>${getCustomerTypeBadge(customer.type_id)}</td>
-    //         <td>${formatDate(customer.created_at)}</td>
-    //         <td>
-    //             <div class="action-buttons" style="display: flex; gap: 5px;">
-    //                 <button class="btn btn-sm" onclick="viewCustomer(${customer.id})" title="צפייה">
-    //                     <svg class="icon-sm"><use xlink:href="#icon-search"></use></svg>
-    //                 </button>
-    //                 <button class="btn btn-sm" onclick="editCustomer(${customer.id})" title="עריכה">
-    //                     <svg class="icon-sm"><use xlink:href="#icon-edit"></use></svg>
-    //                 </button>
-    //                 <button class="btn btn-sm" onclick="deleteCustomer(${customer.id})" title="מחיקה">
-    //                     <svg class="icon-sm"><use xlink:href="#icon-delete"></use></svg>
-    //                 </button>
-    //             </div>
-    //         </td>
-    //     </tr>
-    // `).join('');
 
     tableBody.innerHTML = customers.map(customer => `
         <tr data-id="${customer.id}">

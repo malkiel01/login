@@ -219,8 +219,8 @@ function getPriceDefinitionBadge(type) {
 
 // פתיחת טופס הוספת תשלום
 function openAddPayment() {
-    editingPaymentId = null;
-    openPaymentModal('הוסף תשלום חדש', null);
+    window.currentType = 'payment';
+    FormHandler.openForm('payment', null, null);
 }
 
 // עריכת תשלום

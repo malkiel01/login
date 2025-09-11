@@ -112,10 +112,7 @@ const FormHandler = {
 
             // הוסף is_active
             data.is_active = 1;
-            
-            // שלח לשרת
-            // let url = `/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=${action}&type=${type}`;
-            
+     
             // אחרי השורה של area_grave, הוסף:
             if (type === 'customer') {
                 url = `/dashboard/dashboards/cemeteries/api/customers-api.php?action=${action}`;
@@ -126,6 +123,15 @@ const FormHandler = {
                 url = `/dashboard/dashboards/cemeteries/api/purchases-api.php?action=${action}`;
                 if (isEdit) {
                     url += `&id=${formData.get('id')}`;
+                }
+            } else if (type === 'payment') {
+                // טיפול בתשלומים
+                if (isEdit) {
+                    url = `/dashboard/dashboards/cemeteries/api/payments-api.php?action=update&id=${formData.get('id')}`;
+                    method = 'PUT';
+                } else {
+                    url = '/dashboard/dashboards/cemeteries/api/payments-api.php?action=create';
+                    method = 'POST';
                 }
             } else {
                 // הקוד הקיים - cemetery-hierarchy

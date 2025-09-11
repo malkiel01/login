@@ -107,7 +107,55 @@ try {
             
             echo json_encode(['success' => true, 'data' => $payment]);
             break;
+        // קבלת כל התשלומים
+        case 'getMatching':
+            $params = json_decode(file_get_contents('php://input'), true);
             
+            // בנה שאילתה לקבלת תשלומים מתאימים
+            $sql = "SELECT * FROM payments WHERE isActive = 1";
+            $conditions = [];
+            $queryParams = [];
+            
+            // סנן לפי פרמטרים
+            if (isset($params['plotType'])) {
+                $conditions[] = "(plotType = :plotType OR plotType IS NULL)";
+                $queryParams['plotType'] = $params['plotType'];
+            }
+            
+            if (isset($params['graveType'])) {
+                $conditions[] = "(graveType = :graveType OR graveType IS NULL)";
+                $queryParams['graveType'] = $params['graveType'];
+            }
+            
+            if (isset($params['resident'])) {
+                $conditions[] = "(resident = :resident OR resident IS NULL)";
+                $queryParams['resident'] = $params['resident'];
+            }
+            
+            if (isset($params['buyerStatus'])) {
+                $conditions[] = "(buyerStatus = :buyerStatus OR buyerStatus IS NULL)";
+                $queryParams['buyerStatus'] = $params['buyerStatus'];
+            }
+            
+            if (count($conditions) > 0) {
+                $sql .= " AND " . implode(" AND ", $conditions);
+            }
+            
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($queryParams);
+            $payments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // הוסף פרטים נוספים
+            foreach ($payments as &$payment) {
+                $payment['name'] = PAYMENT_PRICE_DEFINITIONS[$payment['priceDefinition']]['name'] ?? 'לא ידוע';
+                $payment['mandatory'] = in_array($payment['priceDefinition'], [1, 3]); // עלות קבר ושירותי קבורה הם חובה
+            }
+            
+            echo json_encode([
+                'success' => true,
+                'payments' => $payments
+            ]);
+            break;
         // הוספת תשלום חדש
         case 'create':
             $data = json_decode(file_get_contents('php://input'), true);

@@ -172,8 +172,7 @@ function getFormFields($type, $data = null) {
                      return $status['name']; 
                  }, PURCHASE_STATUS) : []],
                 ['name' => 'comments', 'label' => 'הע5רות', 'type' => 'textarea']
-            ];
-            
+            ];   
         case 'burial':
             return [
                 ['name' => 'burial_date', 'label' => 'תאריך קבורה', 'type' => 'date', 'required' => true],

@@ -1,14 +1,11 @@
 <?php
 // dashboards/cemeteries/forms/payment-form.php
-// טופס תשלומים
-
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
 
 $id = $_GET['id'] ?? null;
 $payment = null;
 
 if ($id) {
-    // טען נתוני תשלום לעריכה
     $pdo = getDBConnection();
     $stmt = $pdo->prepare("SELECT * FROM payments WHERE id = :id AND isActive = 1");
     $stmt->execute(['id' => $id]);
@@ -16,6 +13,7 @@ if ($id) {
 }
 ?>
 
+<!-- בדיוק כמו הטפסים האחרים במערכת -->
 <div class="modal show" id="paymentFormModal">
     <div class="modal-overlay" onclick="FormHandler.closeForm('payment')"></div>
     <div class="modal-content" style="max-width: 900px;">
@@ -164,112 +162,112 @@ if ($id) {
 </div>
 
 <script>
-// טעינת בתי עלמין
-async function loadCemeteriesForPayment() {
-    try {
-        const response = await fetch('/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=list&type=cemetery');
-        const data = await response.json();
-        
-        if (data.success) {
-            const select = document.getElementById('cemeterySelect');
-            select.innerHTML = '<option value="">בחר בית עלמין</option>';
-            data.data.forEach(cemetery => {
-                select.innerHTML += `<option value="${cemetery.id}">${cemetery.name}</option>`;
-            });
-            
-            <?php if ($payment && $payment['cemeteryId']): ?>
-            select.value = '<?php echo $payment['cemeteryId']; ?>';
-            loadBlocksForPayment('<?php echo $payment['cemeteryId']; ?>');
-            <?php endif; ?>
-        }
-    } catch (error) {
-        console.error('Error loading cemeteries:', error);
-    }
-}
+ // טעינת בתי עלמין
+ async function loadCemeteriesForPayment() {
+     try {
+         const response = await fetch('/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=list&type=cemetery');
+         const data = await response.json();
+         
+         if (data.success) {
+             const select = document.getElementById('cemeterySelect');
+             select.innerHTML = '<option value="">בחר בית עלמין</option>';
+             data.data.forEach(cemetery => {
+                 select.innerHTML += `<option value="${cemetery.id}">${cemetery.name}</option>`;
+             });
+             
+             <?php if ($payment && $payment['cemeteryId']): ?>
+             select.value = '<?php echo $payment['cemeteryId']; ?>';
+             loadBlocksForPayment('<?php echo $payment['cemeteryId']; ?>');
+             <?php endif; ?>
+         }
+     } catch (error) {
+         console.error('Error loading cemeteries:', error);
+     }
+ }
 
-// טעינת גושים
-async function loadBlocksForPayment(cemeteryId) {
-    if (!cemeteryId) {
-        document.getElementById('blockSelect').innerHTML = '<option value="">בחר גוש</option>';
-        return;
-    }
-    
-    try {
-        const response = await fetch(`/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=list&type=block&parent_id=${cemeteryId}`);
-        const data = await response.json();
-        
-        if (data.success) {
-            const select = document.getElementById('blockSelect');
-            select.innerHTML = '<option value="">בחר גוש</option>';
-            data.data.forEach(block => {
-                select.innerHTML += `<option value="${block.id}">${block.name}</option>`;
-            });
-            
-            <?php if ($payment && $payment['blockId']): ?>
-            select.value = '<?php echo $payment['blockId']; ?>';
-            loadPlotsForPayment('<?php echo $payment['blockId']; ?>');
-            <?php endif; ?>
-        }
-    } catch (error) {
-        console.error('Error loading blocks:', error);
-    }
-}
+ // טעינת גושים
+ async function loadBlocksForPayment(cemeteryId) {
+     if (!cemeteryId) {
+         document.getElementById('blockSelect').innerHTML = '<option value="">בחר גוש</option>';
+         return;
+     }
+     
+     try {
+         const response = await fetch(`/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=list&type=block&parent_id=${cemeteryId}`);
+         const data = await response.json();
+         
+         if (data.success) {
+             const select = document.getElementById('blockSelect');
+             select.innerHTML = '<option value="">בחר גוש</option>';
+             data.data.forEach(block => {
+                 select.innerHTML += `<option value="${block.id}">${block.name}</option>`;
+             });
+             
+             <?php if ($payment && $payment['blockId']): ?>
+             select.value = '<?php echo $payment['blockId']; ?>';
+             loadPlotsForPayment('<?php echo $payment['blockId']; ?>');
+             <?php endif; ?>
+         }
+     } catch (error) {
+         console.error('Error loading blocks:', error);
+     }
+ }
 
-// טעינת חלקות
-async function loadPlotsForPayment(blockId) {
-    if (!blockId) {
-        document.getElementById('plotSelect').innerHTML = '<option value="">בחר חלקה</option>';
-        return;
-    }
-    
-    try {
-        const response = await fetch(`/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=list&type=plot&parent_id=${blockId}`);
-        const data = await response.json();
-        
-        if (data.success) {
-            const select = document.getElementById('plotSelect');
-            select.innerHTML = '<option value="">בחר חלקה</option>';
-            data.data.forEach(plot => {
-                select.innerHTML += `<option value="${plot.id}">${plot.name}</option>`;
-            });
-            
-            <?php if ($payment && $payment['plotId']): ?>
-            select.value = '<?php echo $payment['plotId']; ?>';
-            loadLinesForPayment('<?php echo $payment['plotId']; ?>');
-            <?php endif; ?>
-        }
-    } catch (error) {
-        console.error('Error loading plots:', error);
-    }
-}
+ // טעינת חלקות
+ async function loadPlotsForPayment(blockId) {
+     if (!blockId) {
+         document.getElementById('plotSelect').innerHTML = '<option value="">בחר חלקה</option>';
+         return;
+     }
+     
+     try {
+         const response = await fetch(`/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=list&type=plot&parent_id=${blockId}`);
+         const data = await response.json();
+         
+         if (data.success) {
+             const select = document.getElementById('plotSelect');
+             select.innerHTML = '<option value="">בחר חלקה</option>';
+             data.data.forEach(plot => {
+                 select.innerHTML += `<option value="${plot.id}">${plot.name}</option>`;
+             });
+             
+             <?php if ($payment && $payment['plotId']): ?>
+             select.value = '<?php echo $payment['plotId']; ?>';
+             loadLinesForPayment('<?php echo $payment['plotId']; ?>');
+             <?php endif; ?>
+         }
+     } catch (error) {
+         console.error('Error loading plots:', error);
+     }
+ }
 
-// טעינת שורות
-async function loadLinesForPayment(plotId) {
-    if (!plotId) {
-        document.getElementById('lineSelect').innerHTML = '<option value="">בחר שורה</option>';
-        return;
-    }
-    
-    try {
-        const response = await fetch(`/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=list&type=row&parent_id=${plotId}`);
-        const data = await response.json();
-        
-        if (data.success) {
-            const select = document.getElementById('lineSelect');
-            select.innerHTML = '<option value="">בחר שורה</option>';
-            data.data.forEach(line => {
-                select.innerHTML += `<option value="${line.id}">${line.name}</option>`;
-            });
-            
-            <?php if ($payment && $payment['lineId']): ?>
-            select.value = '<?php echo $payment['lineId']; ?>';
-            <?php endif; ?>
-        }
-    } catch (error) {
-        console.error('Error loading lines:', error);
-    }
-}
+ // טעינת שורות
+ async function loadLinesForPayment(plotId) {
+     if (!plotId) {
+         document.getElementById('lineSelect').innerHTML = '<option value="">בחר שורה</option>';
+         return;
+     }
+     
+     try {
+         const response = await fetch(`/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=list&type=row&parent_id=${plotId}`);
+         const data = await response.json();
+         
+         if (data.success) {
+             const select = document.getElementById('lineSelect');
+             select.innerHTML = '<option value="">בחר שורה</option>';
+             data.data.forEach(line => {
+                 select.innerHTML += `<option value="${line.id}">${line.name}</option>`;
+             });
+             
+             <?php if ($payment && $payment['lineId']): ?>
+             select.value = '<?php echo $payment['lineId']; ?>';
+             <?php endif; ?>
+         }
+     } catch (error) {
+         console.error('Error loading lines:', error);
+     }
+ }
 
-// טען בתי עלמין בטעינת הדף
-loadCemeteriesForPayment();
+ // טען בתי עלמין בטעינת הדף
+ loadCemeteriesForPayment();
 </script>

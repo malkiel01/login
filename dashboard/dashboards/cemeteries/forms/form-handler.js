@@ -16,6 +16,7 @@ const FormHandler = {
             console.log('Fetching form from:', `dashboard/dashboards/cemeteries/forms/form-loader.php?${params}`);
             
             const response = await fetch(`/dashboard/dashboards/cemeteries/forms/form-loader.php?${params}`);
+
             
             console.log('Response status:', response.status);
             

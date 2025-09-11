@@ -122,6 +122,11 @@ const FormHandler = {
                 if (isEdit) {
                     url += `&id=${formData.get('id')}`;
                 }
+            } else if (type === 'purchase') {
+                url = `/dashboard/dashboards/cemeteries/api/purchases-api.php?action=${action}`;
+                if (isEdit) {
+                    url += `&id=${formData.get('id')}`;
+                }
             } else {
                 // הקוד הקיים - cemetery-hierarchy
                 url = `/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=${action}&type=${type}`;

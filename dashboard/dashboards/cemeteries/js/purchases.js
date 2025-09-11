@@ -260,8 +260,45 @@ function viewPurchase(id) {
     alert('צפייה ברכישה #' + id);
 }
 
+// פתיחת טופס רכישה חדשה
+function openAddPurchase() {
+    window.currentType = 'purchase';
+    FormHandler.openForm('purchase', null, null);
+}
+
 // עריכת רכישה
 function editPurchase(id) {
+    window.currentType = 'purchase';
+    FormHandler.openForm('purchase', null, id);
+}
+
+// מחיקת רכישה
+async function deletePurchase(id) {
+    if (!confirm('האם אתה בטוח שברצונך למחוק רכישה זו?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=delete&id=${id}`, {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showSuccess('הרכישה נמחקה בהצלחה');
+            loadAllPurchases(); // רענן את הרשימה
+        } else {
+            showError(result.error || 'שגיאה במחיקת הרכישה');
+        }
+    } catch (error) {
+        console.error('Error deleting purchase:', error);
+        showError('שגיאה במחיקה');
+    }
+}
+
+// עריכת רכישה
+function editPurchase2(id) {
     console.log('Editing purchase:', id);
     
     // אם יש פונקציה גלובלית לפתיחת מודל
@@ -273,7 +310,7 @@ function editPurchase(id) {
 }
 
 // מחיקת רכישה
-async function deletePurchase(id) {
+async function deletePurchase2(id) {
     if (!confirm('האם אתה בטוח שברצונך למחוק רכישה זו?')) {
         return;
     }

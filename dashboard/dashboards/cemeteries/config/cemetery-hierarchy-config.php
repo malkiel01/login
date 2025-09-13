@@ -34,7 +34,7 @@ return [
         
         // מיפוי שדות לתצוגה
         'displayFields' => [
-            'name' => 'cemeteryNameH1e',
+            'name' => 'cemeteryNameHe',
             'nameEn' => 'cemeteryNameEn',
             'code' => 'cemeteryCode',
             'address' => 'address',
@@ -49,7 +49,7 @@ return [
             [
                 'field' => 'index',
                 'title' => 'מס׳',
-                'width' => '60px',
+                'width' => '6px',
                 'type' => 'index',
                 'sortable' => false
             ],

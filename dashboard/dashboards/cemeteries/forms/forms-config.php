@@ -1,18 +1,19 @@
 <?php
 // dashboard/dashboards/cemeteries/forms/forms-config.php
-// הגדרת שדות לטפסים - משתמש בקונפיג המרכזי
+// הגדרת שדות לטפסים - עם מיפוי הרשאות נכון
 
 // טען את המחלקה והקונפיג
 require_once __DIR__ . '/../classes/HierarchyManager.php';
 require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../includes/permissions-mapper.php';
 
 /**
  * קבלת שדות לטופס מהקונפיג המרכזי
  */
 function getFormFields($type, $data = null) {
     try {
-        // קבל את תפקיד המשתמש
-        $userRole = $_SESSION['user_role'] ?? 'viewer';
+        // קבל את תפקיד המשתמש מה-dashboard_type
+        $userRole = getCurrentUserRole();  // משתמש בפונקציה החדשה
         
         // צור מופע של HierarchyManager
         $pdo = getDBConnection();
@@ -71,10 +72,16 @@ function getFormFields($type, $data = null) {
  */
 function getFormData($type, $id) {
     try {
+        // בדוק הרשאות צפייה
+        if (!hasPermission('view')) {
+            error_log("User doesn't have view permission");
+            return null;
+        }
+        
         $pdo = getDBConnection();
         
         // קבל את תפקיד המשתמש
-        $userRole = $_SESSION['user_role'] ?? 'viewer';
+        $userRole = getCurrentUserRole();
         $manager = new HierarchyManager($pdo, $userRole);
         
         // קבל את הקונפיג לסוג
@@ -112,7 +119,7 @@ function getFormData($type, $id) {
 function getFormTitle($type, $isEdit = false) {
     try {
         // קבל את תפקיד המשתמש
-        $userRole = $_SESSION['user_role'] ?? 'viewer';
+        $userRole = getCurrentUserRole();
         
         // צור מופע של HierarchyManager
         $pdo = getDBConnection();
@@ -137,71 +144,7 @@ function getFormTitle($type, $isEdit = false) {
  * בדיקת הרשאות לשדה
  */
 function canUserEditField($fieldName, $type) {
-    try {
-        // קבל את תפקיד המשתמש
-        $userRole = $_SESSION['user_role'] ?? 'viewer';
-        
-        // צור מופע של HierarchyManager
-        $pdo = getDBConnection();
-        $manager = new HierarchyManager($pdo, $userRole);
-        
-        // קבל את הקונפיג
-        $config = $manager->getConfig($type);
-        if (!$config) {
-            return false;
-        }
-        
-        // חפש את השדה בקונפיג
-        foreach ($config['form_fields'] as $field) {
-            if ($field['name'] === $fieldName) {
-                // בדוק הרשאות
-                if (isset($field['permissions'])) {
-                    return in_array($userRole, $field['permissions']);
-                }
-                // אם אין הגדרת הרשאות, השדה פתוח לכולם
-                return true;
-            }
-        }
-        
-        return false;
-        
-    } catch (Exception $e) {
-        error_log('Error checking field permissions: ' . $e->getMessage());
-        return false;
-    }
-}
-
-/**
- * קבלת אפשרויות לשדה select
- */
-function getFieldOptions($type, $fieldName) {
-    try {
-        // קבל את תפקיד המשתמש
-        $userRole = $_SESSION['user_role'] ?? 'viewer';
-        
-        // צור מופע של HierarchyManager
-        $pdo = getDBConnection();
-        $manager = new HierarchyManager($pdo, $userRole);
-        
-        // קבל את הקונפיג
-        $config = $manager->getConfig($type);
-        if (!$config) {
-            return [];
-        }
-        
-        // חפש את השדה
-        foreach ($config['form_fields'] as $field) {
-            if ($field['name'] === $fieldName && isset($field['options'])) {
-                return $field['options'];
-            }
-        }
-        
-        return [];
-        
-    } catch (Exception $e) {
-        error_log('Error getting field options: ' . $e->getMessage());
-        return [];
-    }
+    return canAccessField($fieldName, $type);  // משתמש בפונקציה החדשה
 }
 
 /**
@@ -209,8 +152,14 @@ function getFieldOptions($type, $fieldName) {
  */
 function validateFormData($type, $data) {
     try {
+        // בדוק הרשאות יצירה/עריכה
+        $mode = isset($data['id']) ? 'edit' : 'create';
+        if (!hasPermission($mode)) {
+            return ['success' => false, 'errors' => ['אין לך הרשאה לבצע פעולה זו']];
+        }
+        
         // קבל את תפקיד המשתמש
-        $userRole = $_SESSION['user_role'] ?? 'viewer';
+        $userRole = getCurrentUserRole();
         
         // צור מופע של HierarchyManager
         $pdo = getDBConnection();
@@ -226,6 +175,11 @@ function validateFormData($type, $data) {
         
         // עבור על כל השדות בקונפיג
         foreach ($config['form_fields'] as $field) {
+            // בדוק אם למשתמש יש גישה לשדה זה
+            if (!canAccessField($field['name'], $type)) {
+                continue; // דלג על שדות שאין למשתמש גישה אליהם
+            }
+            
             $fieldName = $field['name'];
             $fieldValue = $data[$fieldName] ?? null;
             
@@ -304,7 +258,7 @@ function validateFormData($type, $data) {
 function filterFormData($type, $data) {
     try {
         // קבל את תפקיד המשתמש
-        $userRole = $_SESSION['user_role'] ?? 'viewer';
+        $userRole = getCurrentUserRole();
         
         // צור מופע של HierarchyManager
         $pdo = getDBConnection();
@@ -331,20 +285,17 @@ function filterFormData($type, $data) {
 }
 
 /**
- * פונקציה לדיבאג - הדפסת הקונפיג
+ * פונקציה לדיבאג - הדפסת מידע הרשאות
  */
-function debugConfig($type) {
-    try {
-        $pdo = getDBConnection();
-        $manager = new HierarchyManager($pdo, 'admin');
-        $config = $manager->getConfig($type);
-        
-        error_log("=== Config for type: $type ===");
-        error_log(print_r($config, true));
-        error_log("=================");
-        
-    } catch (Exception $e) {
-        error_log('Debug error: ' . $e->getMessage());
-    }
+function debugPermissions() {
+    error_log("=== Debug Permissions ===");
+    error_log("Dashboard Type: " . ($_SESSION['dashboard_type'] ?? 'not set'));
+    error_log("Mapped Role: " . getCurrentUserRole());
+    error_log("Is Cemetery Manager: " . (isCemeteryManager() ? 'YES' : 'NO'));
+    error_log("Can View: " . (hasPermission('view') ? 'YES' : 'NO'));
+    error_log("Can Edit: " . (hasPermission('edit') ? 'YES' : 'NO'));
+    error_log("Can Delete: " . (hasPermission('delete') ? 'YES' : 'NO'));
+    error_log("Can Create: " . (hasPermission('create') ? 'YES' : 'NO'));
+    error_log("========================");
 }
 ?>

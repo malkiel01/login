@@ -119,7 +119,7 @@ return [
                 'required' => true,
                 'placeholder' => 'הזן שם בית עלמין בעברית',
                 'validation' => ['required', 'minLength:2'],
-                'permissions' => ['admin', 'manager', 'editor']
+                'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
             ],
             [
                 'name' => 'cemeteryNameEn',
@@ -127,7 +127,7 @@ return [
                 'type' => 'text',
                 'required' => false,
                 'placeholder' => 'Enter cemetery name in English',
-                'permissions' => ['admin', 'manager', 'editor']
+                'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
             ],
             [
                 'name' => 'cemeteryCode',
@@ -135,14 +135,14 @@ return [
                 'type' => 'text',
                 'required' => false,
                 'placeholder' => 'קוד ייחודי',
-                'permissions' => ['admin', 'manager']
+                'permissions' => ['admin', 'cemetery_manager', 'manager']
             ],
             [
                 'name' => 'nationalInsuranceCode',
                 'label' => 'קוד ביטוח לאומי',
                 'type' => 'text',
                 'required' => false,
-                'permissions' => ['admin']
+                'permissions' => ['admin', 'cemetery_manager']
             ],
             [
                 'name' => 'address',
@@ -150,27 +150,27 @@ return [
                 'type' => 'textarea',
                 'rows' => 2,
                 'placeholder' => 'הזן כתובת מלאה',
-                'permissions' => ['admin', 'manager', 'editor']
+                'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
             ],
             [
                 'name' => 'coordinates',
                 'label' => 'קואורדינטות',
                 'type' => 'text',
                 'placeholder' => 'lat,lng',
-                'permissions' => ['admin', 'manager']
+                'permissions' => ['admin', 'cemetery_manager', 'manager']
             ],
             [
                 'name' => 'contactName',
                 'label' => 'שם איש קשר',
                 'type' => 'text',
-                'permissions' => ['admin', 'manager', 'editor']
+                'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
             ],
             [
                 'name' => 'contactPhoneName',
                 'label' => 'טלפון איש קשר',
                 'type' => 'tel',
                 'placeholder' => '050-0000000',
-                'permissions' => ['admin', 'manager', 'editor']
+                'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
             ],
             [
                 'name' => 'isActive',
@@ -181,7 +181,7 @@ return [
                     0 => 'לא פעיל'
                 ],
                 'default' => 1,
-                'permissions' => ['admin']
+                'permissions' => ['admin', 'cemetery_manager']
             ]
         ]
     ],
@@ -285,46 +285,46 @@ return [
                 'type' => 'text',
                 'required' => true,
                 'placeholder' => 'הזן שם גוש',
-                'permissions' => ['admin', 'manager', 'editor']
+                'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
             ],
             [
                 'name' => 'blockNameEn',
                 'label' => 'שם גוש באנגלית',
                 'type' => 'text',
                 'placeholder' => 'Enter block name',
-                'permissions' => ['admin', 'manager', 'editor']
+                'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
             ],
             [
                 'name' => 'blockCode',
                 'label' => 'קוד גוש',
                 'type' => 'text',
-                'permissions' => ['admin', 'manager']
+                'permissions' => ['admin', 'cemetery_manager', 'manager']
             ],
             [
                 'name' => 'blockLocation',
                 'label' => 'מיקום',
                 'type' => 'text',
-                'permissions' => ['admin', 'manager', 'editor']
+                'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
             ],
             [
                 'name' => 'nationalInsuranceCode',
                 'label' => 'קוד ביטוח לאומי',
                 'type' => 'text',
-                'permissions' => ['admin']
+                'permissions' => ['admin', 'cemetery_manager']
             ],
             [
                 'name' => 'coordinates',
                 'label' => 'קואורדינטות',
                 'type' => 'text',
                 'placeholder' => 'lat,lng',
-                'permissions' => ['admin', 'manager']
+                'permissions' => ['admin', 'cemetery_manager', 'manager']
             ],
             [
                 'name' => 'comments',
                 'label' => 'הערות',
                 'type' => 'textarea',
                 'rows' => 3,
-                'permissions' => ['admin', 'manager', 'editor']
+                'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
             ],
             [
                 'name' => 'isActive',
@@ -335,7 +335,7 @@ return [
                     0 => 'לא פעיל'
                 ],
                 'default' => 1,
-                'permissions' => ['admin']
+                'permissions' => ['admin', 'cemetery_manager']
             ]
         ]
     ],
@@ -782,7 +782,7 @@ return [
                 'title' => 'עלות בנייה',
                 'type' => 'currency',
                 'width' => '120px',
-                'permissions' => ['admin', 'manager']
+                'permissions' => ['admin', 'cemetery_manager', 'manager']
             ],
             [
                 'field' => 'createDate',
@@ -847,7 +847,7 @@ return [
                 'label' => 'עלות בנייה',
                 'type' => 'number',
                 'step' => '0.01',
-                'permissions' => ['admin', 'manager']
+                'permissions' => ['admin', 'cemetery_manager', 'manager']
             ],
             [
                 'name' => 'comments',
@@ -865,6 +865,13 @@ return [
         'roles' => [
             'admin' => [
                 'title' => 'מנהל מערכת',
+                'can_view_all' => true,
+                'can_edit_all' => true,
+                'can_delete_all' => true,
+                'can_create_all' => true
+            ],
+            'cemetery_manager' => [
+                'title' => 'מנהל בית עלמין',
                 'can_view_all' => true,
                 'can_edit_all' => true,
                 'can_delete_all' => true,

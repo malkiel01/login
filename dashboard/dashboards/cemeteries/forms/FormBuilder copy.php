@@ -1,6 +1,6 @@
 <?php
-// dashboard/dashboards/cemeteries/forms/FormBuilder.php
-// מחלקה מרכזית לבניית טפסים דינמיים - משתמשת בקונפיג המרכזי
+// /dashboards/cemeteries/forms/FormBuilder.php
+// מחלקה מרכזית לבניית טפסים דינמיים
 
 class FormBuilder {
     private $formId;
@@ -11,109 +11,30 @@ class FormBuilder {
     private $type;
     private $itemId;
     private $parentId;
-    private $config;
     
     public function __construct($type, $itemId = null, $parentId = null) {
         $this->type = $type;
         $this->itemId = $itemId;
         $this->parentId = $parentId;
         $this->formId = $type . 'Form';
-        
-        // טען את הקונפיג המרכזי
-        $configPath = dirname(__DIR__) . '/config/cemetery-hierarchy-config.php';
-        $this->config = require $configPath;
-        
         $this->setFormTitle();
     }
     
     private function setFormTitle() {
-        // קבל כותרת מהקונפיג
-        if (isset($this->config[$this->type])) {
-            $singular = $this->config[$this->type]['singular'] ?? 'פריט';
-            $this->formTitle = $this->itemId ? "עריכת $singular" : "הוספת $singular";
-        } else {
-            // fallback
-            $this->formTitle = $this->itemId ? 'עריכת פריט' : 'הוספת פריט';
-        }
-    }
-    
-    /**
-     * קבלת שם ההורה מהקונפיג
-     */
-    private function getParentInfo() {
-        if (!$this->parentId || !isset($this->config[$this->type])) {
-            return null;
-        }
+        $titles = [
+            'cemetery' => 'בית עלמין',
+            'block' => 'גוש',
+            'plot' => 'חלקה',
+            'row' => 'שורה',
+            'area_grave' => 'אחוזת קבר',
+            'grave' => 'קבר',
+            'customer' => 'לקוח',
+            'purchase' => 'רכישה',
+            'burial' => 'קבורה'
+        ];
         
-        $typeConfig = $this->config[$this->type];
-        $parentKey = $typeConfig['parentKey'] ?? null;
-        
-        if (!$parentKey) {
-            return null;
-        }
-        
-        // מצא את סוג ההורה
-        $parentType = null;
-        foreach ($this->config as $key => $conf) {
-            if (isset($conf['table'])) {
-                // בדוק אם ה-parentKey מתאים לטבלה
-                $tableName = $conf['table'];
-                // המר את שם השדה לשם טבלה (לדוגמה: cemeteryId -> cemeteries)
-                if (strpos($parentKey, 'Id') !== false) {
-                    $expectedTable = str_replace('Id', '', $parentKey);
-                    // בדוק התאמות אפשריות
-                    if ($expectedTable === 'cemetery' && $tableName === 'cemeteries') {
-                        $parentType = $key;
-                        break;
-                    } elseif ($expectedTable === 'block' && $tableName === 'blocks') {
-                        $parentType = $key;
-                        break;
-                    } elseif ($expectedTable === 'plot' && $tableName === 'plots') {
-                        $parentType = $key;
-                        break;
-                    } elseif ($expectedTable === 'line' && $tableName === 'rows') {
-                        $parentType = $key;
-                        break;
-                    } elseif ($expectedTable === 'areaGrave' && $tableName === 'areaGraves') {
-                        $parentType = $key;
-                        break;
-                    }
-                }
-            }
-        }
-        
-        if (!$parentType) {
-            return null;
-        }
-        
-        try {
-            $parentConfig = $this->config[$parentType];
-            $parentTable = $parentConfig['table'];
-            $parentPrimaryKey = $parentConfig['primaryKey'] ?? 'id';
-            $parentDisplayField = $parentConfig['displayFields']['name'] ?? 'name';
-            
-            // חבר למסד נתונים
-            require_once dirname(__DIR__) . '/config.php';
-            $pdo = getDBConnection();
-            
-            $sql = "SELECT $parentDisplayField as name FROM $parentTable 
-                    WHERE $parentPrimaryKey = :id LIMIT 1";
-            
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute(['id' => $this->parentId]);
-            
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            return $result ? [
-                'name' => $result['name'],
-                'type' => $parentType,
-                'field' => $parentKey
-            ] : null;
-            
-        } catch (Exception $e) {
-            error_log('Error getting parent info: ' . $e->getMessage());
-            return null;
-        }
+        $baseTitle = $titles[$this->type] ?? 'פריט';
+        $this->formTitle = $this->itemId ? "עריכת $baseTitle" : "הוספת $baseTitle";
     }
     
     public function addField($name, $label, $type = 'text', $options = []) {
@@ -246,29 +167,6 @@ class FormBuilder {
                 overflow-y: auto;
             }
             
-            /* Parent Info Alert */
-            #' . $this->formId . 'Modal .parent-info {
-                margin-bottom: 15px;
-                padding: 12px 15px;
-                background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
-                border-right: 4px solid #667eea;
-                border-radius: 8px;
-                font-size: 0.9rem;
-                color: #475569;
-                display: flex;
-                align-items: center;
-                gap: 10px;
-            }
-            
-            #' . $this->formId . 'Modal .parent-info-icon {
-                font-size: 1.2rem;
-            }
-            
-            #' . $this->formId . 'Modal .parent-info strong {
-                color: #667eea;
-                font-weight: 600;
-            }
-            
             /* Modal Footer */
             #' . $this->formId . 'Modal .modal-footer {
                 padding: 1rem 1.5rem;
@@ -394,6 +292,40 @@ class FormBuilder {
                 cursor: pointer;
                 font-size: 0.875rem;
             }
+            
+            /* Scrollbar styling */
+            #' . $this->formId . 'Modal .modal-body::-webkit-scrollbar {
+                width: 8px;
+            }
+            
+            #' . $this->formId . 'Modal .modal-body::-webkit-scrollbar-track {
+                background: #f1f5f9;
+                border-radius: 4px;
+            }
+            
+            #' . $this->formId . 'Modal .modal-body::-webkit-scrollbar-thumb {
+                background: #cbd5e0;
+                border-radius: 4px;
+            }
+            
+            #' . $this->formId . 'Modal .modal-body::-webkit-scrollbar-thumb:hover {
+                background: #94a3b8;
+            }
+            
+            /* Mobile responsiveness */
+            @media (max-width: 640px) {
+                #' . $this->formId . 'Modal .modal-dialog {
+                    margin: 10px;
+                }
+                
+                #' . $this->formId . 'Modal .modal-content {
+                    border-radius: 12px;
+                }
+                
+                #' . $this->formId . 'Modal .modal-body {
+                    padding: 1rem;
+                }
+            }
         </style>
         ';
     }
@@ -417,20 +349,6 @@ class FormBuilder {
         // Body with form
         $html .= '<form id="' . $this->formId . '" onsubmit="handleFormSubmit(event, \'' . $this->type . '\')">';
         $html .= '<div class="modal-body">';
-        
-        // הצג מידע על ההורה אם קיים
-        if ($this->parentId && !$this->itemId) {
-            $parentInfo = $this->getParentInfo();
-            if ($parentInfo) {
-                $html .= '<div class="parent-info">';
-                $html .= '<span class="parent-info-icon">📍</span>';
-                $html .= 'הוספה ל: <strong>' . htmlspecialchars($parentInfo['name']) . '</strong>';
-                $html .= '</div>';
-                
-                // הוסף דיבוג כהערה
-                $html .= '<!-- Parent field: ' . $parentInfo['field'] . ' = ' . $this->parentId . ' -->';
-            }
-        }
         
         // Hidden fields
         $html .= '<input type="hidden" name="type" value="' . $this->type . '">';
@@ -692,6 +610,14 @@ class FormBuilder {
         $html .= '</div>';
         $html .= '</div>';
         return $html;
+    }
+
+    // בתוך class FormBuilder, הוסף מתודה:
+    public function addCustomHTML($html) {
+        $this->fields[] = [
+            'type' => 'custom',
+            'html' => $html
+        ];
     }
 }
 ?>

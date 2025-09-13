@@ -1,45 +1,312 @@
 <?php
 // /dashboards/cemeteries/forms/forms-config.php
-// הגדרת שדות לטפסים - משתמש בקונפיג המרכזי
+// הגדרת שדות לטפסים - גרסה זמנית עד שנעדכן את הקונפיג המרכזי
 
-require_once __DIR__ . '/../classes/HierarchyManager.php';
 require_once __DIR__ . '/../config.php';
 
 /**
- * קבלת שדות לטופס מהקונפיג המרכזי
+ * קבלת שדות לטופס - גרסה זמנית עם הגדרות קשיחות
  */
 function getFormFields($type, $data = null) {
-    // קבל את תפקיד המשתמש
-    $userRole = $_SESSION['user_role'] ?? 'viewer';
     
-    // צור מופע של HierarchyManager
-    $pdo = getDBConnection();
-    $manager = new HierarchyManager($pdo, $userRole);
+    // בינתיים, עד שנטמיע את הקונפיג המרכזי, נגדיר את השדות ישירות כאן
+    // התאמה למבנה החדש של הטבלאות
     
-    // קבל את השדות מהקונפיג
-    $mode = $data ? 'edit' : 'create';
-    $formFields = $manager->getFormFields($type, $mode);
-    
-    // המר לפורמט שה-FormBuilder מצפה לו
-    $fields = [];
-    foreach ($formFields as $field) {
-        $fields[] = [
-            'name' => $field['name'],
-            'label' => $field['label'],
-            'type' => $field['type'],
-            'required' => $field['required'] ?? false,
-            'placeholder' => $field['placeholder'] ?? '',
-            'options' => $field['options'] ?? [],
-            'default' => $field['default'] ?? '',
-            'min' => $field['min'] ?? null,
-            'max' => $field['max'] ?? null,
-            'step' => $field['step'] ?? null,
-            'rows' => $field['rows'] ?? 3,
-            'readonly' => false // יתעדכן בהמשך לפי הרשאות
-        ];
+    switch($type) {
+        case 'cemetery':
+            return [
+                [
+                    'name' => 'cemeteryNameHe',
+                    'label' => 'שם בית עלמין בעברית',
+                    'type' => 'text',
+                    'required' => true,
+                    'placeholder' => 'הזן שם בית עלמין'
+                ],
+                [
+                    'name' => 'cemeteryNameEn',
+                    'label' => 'שם בית עלמין באנגלית',
+                    'type' => 'text',
+                    'required' => false,
+                    'placeholder' => 'Enter cemetery name'
+                ],
+                [
+                    'name' => 'cemeteryCode',
+                    'label' => 'קוד בית עלמין',
+                    'type' => 'text',
+                    'required' => false,
+                    'placeholder' => 'קוד ייחודי'
+                ],
+                [
+                    'name' => 'nationalInsuranceCode',
+                    'label' => 'קוד ביטוח לאומי',
+                    'type' => 'text',
+                    'required' => false
+                ],
+                [
+                    'name' => 'address',
+                    'label' => 'כתובת',
+                    'type' => 'textarea',
+                    'required' => false,
+                    'rows' => 2,
+                    'placeholder' => 'הזן כתובת מלאה'
+                ],
+                [
+                    'name' => 'coordinates',
+                    'label' => 'קואורדינטות',
+                    'type' => 'text',
+                    'required' => false,
+                    'placeholder' => 'lat,lng'
+                ],
+                [
+                    'name' => 'contactName',
+                    'label' => 'שם איש קשר',
+                    'type' => 'text',
+                    'required' => false
+                ],
+                [
+                    'name' => 'contactPhoneName',
+                    'label' => 'טלפון איש קשר',
+                    'type' => 'text',
+                    'required' => false,
+                    'placeholder' => '050-0000000'
+                ]
+            ];
+            
+        case 'block':
+            return [
+                [
+                    'name' => 'blockNameHe',
+                    'label' => 'שם גוש בעברית',
+                    'type' => 'text',
+                    'required' => true,
+                    'placeholder' => 'הזן שם גוש'
+                ],
+                [
+                    'name' => 'blockNameEn',
+                    'label' => 'שם גוש באנגלית',
+                    'type' => 'text',
+                    'required' => false
+                ],
+                [
+                    'name' => 'blockCode',
+                    'label' => 'קוד גוש',
+                    'type' => 'text',
+                    'required' => false
+                ],
+                [
+                    'name' => 'blockLocation',
+                    'label' => 'מיקום',
+                    'type' => 'text',
+                    'required' => false
+                ],
+                [
+                    'name' => 'nationalInsuranceCode',
+                    'label' => 'קוד ביטוח לאומי',
+                    'type' => 'text',
+                    'required' => false
+                ],
+                [
+                    'name' => 'coordinates',
+                    'label' => 'קואורדינטות',
+                    'type' => 'text',
+                    'required' => false
+                ],
+                [
+                    'name' => 'comments',
+                    'label' => 'הערות',
+                    'type' => 'textarea',
+                    'required' => false,
+                    'rows' => 3
+                ]
+            ];
+            
+        case 'plot':
+            return [
+                [
+                    'name' => 'plotNameHe',
+                    'label' => 'שם חלקה בעברית',
+                    'type' => 'text',
+                    'required' => true,
+                    'placeholder' => 'הזן שם חלקה'
+                ],
+                [
+                    'name' => 'plotNameEn',
+                    'label' => 'שם חלקה באנגלית',
+                    'type' => 'text',
+                    'required' => false
+                ],
+                [
+                    'name' => 'plotCode',
+                    'label' => 'קוד חלקה',
+                    'type' => 'text',
+                    'required' => false
+                ],
+                [
+                    'name' => 'plotLocation',
+                    'label' => 'מיקום',
+                    'type' => 'text',
+                    'required' => false
+                ],
+                [
+                    'name' => 'nationalInsuranceCode',
+                    'label' => 'קוד ביטוח לאומי',
+                    'type' => 'text',
+                    'required' => false
+                ],
+                [
+                    'name' => 'coordinates',
+                    'label' => 'קואורדינטות',
+                    'type' => 'text',
+                    'required' => false
+                ],
+                [
+                    'name' => 'comments',
+                    'label' => 'הערות',
+                    'type' => 'textarea',
+                    'required' => false,
+                    'rows' => 3
+                ]
+            ];
+            
+        case 'row':
+            return [
+                [
+                    'name' => 'lineNameHe',
+                    'label' => 'שם שורה בעברית',
+                    'type' => 'text',
+                    'required' => true,
+                    'placeholder' => 'הזן שם שורה'
+                ],
+                [
+                    'name' => 'lineNameEn',
+                    'label' => 'שם שורה באנגלית',
+                    'type' => 'text',
+                    'required' => false
+                ],
+                [
+                    'name' => 'serialNumber',
+                    'label' => 'מספר סידורי',
+                    'type' => 'number',
+                    'required' => false
+                ],
+                [
+                    'name' => 'lineLocation',
+                    'label' => 'מיקום',
+                    'type' => 'text',
+                    'required' => false
+                ],
+                [
+                    'name' => 'comments',
+                    'label' => 'הערות',
+                    'type' => 'textarea',
+                    'required' => false,
+                    'rows' => 3
+                ]
+            ];
+            
+        case 'area_grave':
+            return [
+                [
+                    'name' => 'areaGraveNameHe',
+                    'label' => 'שם אחוזת קבר',
+                    'type' => 'text',
+                    'required' => true,
+                    'placeholder' => 'הזן שם אחוזת קבר'
+                ],
+                [
+                    'name' => 'graveType',
+                    'label' => 'סוג אחוזת קבר',
+                    'type' => 'select',
+                    'required' => false,
+                    'options' => [
+                        '' => '-- בחר סוג --',
+                        '1' => 'שדה',
+                        '2' => 'רוויה',
+                        '3' => 'סנהדרין'
+                    ]
+                ],
+                [
+                    'name' => 'coordinates',
+                    'label' => 'קואורדינטות',
+                    'type' => 'text',
+                    'required' => false
+                ],
+                [
+                    'name' => 'comments',
+                    'label' => 'הערות',
+                    'type' => 'textarea',
+                    'required' => false,
+                    'rows' => 3
+                ]
+            ];
+            
+        case 'grave':
+            return [
+                [
+                    'name' => 'graveNameHe',
+                    'label' => 'מספר קבר',
+                    'type' => 'text',
+                    'required' => true,
+                    'placeholder' => 'הזן מספר קבר'
+                ],
+                [
+                    'name' => 'plotType',
+                    'label' => 'סוג חלקה',
+                    'type' => 'select',
+                    'required' => true,
+                    'options' => [
+                        '' => '-- בחר סוג --',
+                        '1' => 'פטורה',
+                        '2' => 'חריגה',
+                        '3' => 'סגורה'
+                    ]
+                ],
+                [
+                    'name' => 'graveStatus',
+                    'label' => 'סטטוס קבר',
+                    'type' => 'select',
+                    'required' => true,
+                    'options' => [
+                        '1' => 'פנוי',
+                        '2' => 'נרכש',
+                        '3' => 'קבור',
+                        '4' => 'שמור'
+                    ],
+                    'default' => '1'
+                ],
+                [
+                    'name' => 'graveLocation',
+                    'label' => 'מיקום בשורה',
+                    'type' => 'number',
+                    'required' => false,
+                    'min' => 1
+                ],
+                [
+                    'name' => 'isSmallGrave',
+                    'label' => 'קבר קטן',
+                    'type' => 'checkbox',
+                    'required' => false,
+                    'default' => 0
+                ],
+                [
+                    'name' => 'constructionCost',
+                    'label' => 'עלות בנייה',
+                    'type' => 'number',
+                    'required' => false,
+                    'step' => '0.01'
+                ],
+                [
+                    'name' => 'comments',
+                    'label' => 'הערות',
+                    'type' => 'textarea',
+                    'required' => false,
+                    'rows' => 3
+                ]
+            ];
+            
+        default:
+            return [];
     }
-    
-    return $fields;
 }
 
 /**
@@ -49,21 +316,23 @@ function getFormData($type, $id) {
     try {
         $pdo = getDBConnection();
         
-        // קבל את תפקיד המשתמש
-        $userRole = $_SESSION['user_role'] ?? 'viewer';
-        $manager = new HierarchyManager($pdo, $userRole);
+        // מיפוי סוג לטבלה
+        $tables = [
+            'cemetery' => 'cemeteries',
+            'block' => 'blocks',
+            'plot' => 'plots',
+            'row' => 'rows',
+            'area_grave' => 'areaGraves',
+            'grave' => 'graves'
+        ];
         
-        // קבל את הקונפיג לסוג
-        $config = $manager->getConfig($type);
-        if (!$config) {
+        $table = $tables[$type] ?? null;
+        if (!$table) {
             return null;
         }
         
-        $table = $config['table'];
-        $primaryKey = $config['primaryKey'];
-        
-        // טען את הנתונים
-        $stmt = $pdo->prepare("SELECT * FROM $table WHERE $primaryKey = :id OR id = :id");
+        // טען את הנתונים - נסה קודם לפי unicId ואז לפי id
+        $stmt = $pdo->prepare("SELECT * FROM $table WHERE unicId = :id OR id = :id LIMIT 1");
         $stmt->execute(['id' => $id]);
         
         return $stmt->fetch(PDO::FETCH_ASSOC);
@@ -77,160 +346,37 @@ function getFormData($type, $id) {
  * קבלת כותרת הטופס
  */
 function getFormTitle($type, $isEdit = false) {
-    // קבל את תפקיד המשתמש
-    $userRole = $_SESSION['user_role'] ?? 'viewer';
+    $titles = [
+        'cemetery' => ['singular' => 'בית עלמין', 'plural' => 'בתי עלמין'],
+        'block' => ['singular' => 'גוש', 'plural' => 'גושים'],
+        'plot' => ['singular' => 'חלקה', 'plural' => 'חלקות'],
+        'row' => ['singular' => 'שורה', 'plural' => 'שורות'],
+        'area_grave' => ['singular' => 'אחוזת קבר', 'plural' => 'אחוזות קבר'],
+        'grave' => ['singular' => 'קבר', 'plural' => 'קברים']
+    ];
     
-    // צור מופע של HierarchyManager
-    $pdo = getDBConnection();
-    $manager = new HierarchyManager($pdo, $userRole);
-    
-    // קבל את הקונפיג
-    $config = $manager->getConfig($type);
-    if (!$config) {
-        return $isEdit ? 'עריכת פריט' : 'הוספת פריט';
-    }
-    
-    $singular = $config['singular'] ?? 'פריט';
-    return $isEdit ? "עריכת $singular" : "הוספת $singular";
+    $typeTitle = $titles[$type]['singular'] ?? 'פריט';
+    return $isEdit ? "עריכת $typeTitle" : "הוספת $typeTitle";
 }
 
 /**
- * בדיקת הרשאות
+ * בדיקת הרשאות - בינתיים מחזיר true לכולם
  */
 function canUserEditField($fieldName, $type) {
-    // קבל את תפקיד המשתמש
-    $userRole = $_SESSION['user_role'] ?? 'viewer';
-    
-    // צור מופע של HierarchyManager
-    $pdo = getDBConnection();
-    $manager = new HierarchyManager($pdo, $userRole);
-    
-    // קבל את הקונפיג
-    $config = $manager->getConfig($type);
-    if (!$config) {
-        return false;
-    }
-    
-    // חפש את השדה בקונפיג
-    foreach ($config['form_fields'] as $field) {
-        if ($field['name'] === $fieldName) {
-            // בדוק הרשאות
-            if (isset($field['permissions'])) {
-                return in_array($userRole, $field['permissions']);
-            }
-            // אם אין הגדרת הרשאות, השדה פתוח לכולם
-            return true;
-        }
-    }
-    
-    return false;
+    // TODO: להוסיף בדיקת הרשאות אמיתית
+    return true;
 }
 
 /**
- * קבלת אפשרויות לשדה select
- */
-function getFieldOptions($type, $fieldName) {
-    // קבל את תפקיד המשתמש
-    $userRole = $_SESSION['user_role'] ?? 'viewer';
-    
-    // צור מופע של HierarchyManager
-    $pdo = getDBConnection();
-    $manager = new HierarchyManager($pdo, $userRole);
-    
-    // קבל את הקונפיג
-    $config = $manager->getConfig($type);
-    if (!$config) {
-        return [];
-    }
-    
-    // חפש את השדה
-    foreach ($config['form_fields'] as $field) {
-        if ($field['name'] === $fieldName && isset($field['options'])) {
-            return $field['options'];
-        }
-    }
-    
-    return [];
-}
-
-/**
- * ולידציה של נתונים
+ * ולידציה בסיסית
  */
 function validateFormData($type, $data) {
-    // קבל את תפקיד המשתמש
-    $userRole = $_SESSION['user_role'] ?? 'viewer';
-    
-    // צור מופע של HierarchyManager
-    $pdo = getDBConnection();
-    $manager = new HierarchyManager($pdo, $userRole);
-    
-    // קבל את הקונפיג
-    $config = $manager->getConfig($type);
-    if (!$config) {
-        return ['success' => false, 'errors' => ['סוג לא תקין']];
-    }
-    
     $errors = [];
+    $fields = getFormFields($type);
     
-    // עבור על כל השדות בקונפיג
-    foreach ($config['form_fields'] as $field) {
-        $fieldName = $field['name'];
-        $fieldValue = $data[$fieldName] ?? null;
-        
-        // בדיקת שדה חובה
-        if ($field['required'] && empty($fieldValue)) {
+    foreach ($fields as $field) {
+        if ($field['required'] && empty($data[$field['name']])) {
             $errors[] = "השדה {$field['label']} הוא חובה";
-        }
-        
-        // בדיקות ולידציה נוספות
-        if (isset($field['validation'])) {
-            foreach ($field['validation'] as $rule) {
-                if (is_string($rule)) {
-                    // ולידציות פשוטות
-                    switch ($rule) {
-                        case 'required':
-                            if (empty($fieldValue)) {
-                                $errors[] = "השדה {$field['label']} הוא חובה";
-                            }
-                            break;
-                            
-                        case 'email':
-                            if (!empty($fieldValue) && !filter_var($fieldValue, FILTER_VALIDATE_EMAIL)) {
-                                $errors[] = "השדה {$field['label']} חייב להכיל כתובת אימייל תקינה";
-                            }
-                            break;
-                    }
-                } elseif (strpos($rule, ':') !== false) {
-                    // ולידציות עם פרמטרים
-                    list($ruleName, $ruleValue) = explode(':', $rule);
-                    
-                    switch ($ruleName) {
-                        case 'minLength':
-                            if (!empty($fieldValue) && strlen($fieldValue) < $ruleValue) {
-                                $errors[] = "השדה {$field['label']} חייב להכיל לפחות {$ruleValue} תווים";
-                            }
-                            break;
-                            
-                        case 'maxLength':
-                            if (!empty($fieldValue) && strlen($fieldValue) > $ruleValue) {
-                                $errors[] = "השדה {$field['label']} לא יכול להכיל יותר מ-{$ruleValue} תווים";
-                            }
-                            break;
-                            
-                        case 'min':
-                            if (!empty($fieldValue) && $fieldValue < $ruleValue) {
-                                $errors[] = "הערך בשדה {$field['label']} חייב להיות לפחות {$ruleValue}";
-                            }
-                            break;
-                            
-                        case 'max':
-                            if (!empty($fieldValue) && $fieldValue > $ruleValue) {
-                                $errors[] = "הערך בשדה {$field['label']} לא יכול להיות יותר מ-{$ruleValue}";
-                            }
-                            break;
-                    }
-                }
-            }
         }
     }
     
@@ -245,20 +391,10 @@ function validateFormData($type, $data) {
  * סינון נתונים לפני שמירה
  */
 function filterFormData($type, $data) {
-    // קבל את תפקיד המשתמש
-    $userRole = $_SESSION['user_role'] ?? 'viewer';
-    
-    // צור מופע של HierarchyManager
-    $pdo = getDBConnection();
-    $manager = new HierarchyManager($pdo, $userRole);
-    
-    // קבל את השדות המותרים
-    $mode = isset($data['id']) ? 'edit' : 'create';
-    $allowedFields = $manager->getFormFields($type, $mode);
-    
-    // סנן רק שדות מותרים
+    $fields = getFormFields($type);
     $filtered = [];
-    foreach ($allowedFields as $field) {
+    
+    foreach ($fields as $field) {
         if (isset($data[$field['name']])) {
             $filtered[$field['name']] = $data[$field['name']];
         }

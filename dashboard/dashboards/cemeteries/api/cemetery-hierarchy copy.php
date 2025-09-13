@@ -1,6 +1,6 @@
 <?php
 // cemetery_dashboard/api/cemetery-hierarchy.php
-// API לניהול היררכיית בתי עלמין - גרסה מתוקנת
+// API לניהול היררכיית בתי עלמין - גרסה מעודכנת למבנה החדש
 
 require_once '../config.php';
 
@@ -21,7 +21,7 @@ function getTableName($type) {
         'block' => 'blocks',
         'plot' => 'plots',
         'row' => 'rows',
-        'area_grave' => 'area_graves',
+        'area_grave' => 'areaGraves',
         'grave' => 'graves',
         'purchase' => 'purchases',
         'customer' => 'customers',
@@ -29,16 +29,42 @@ function getTableName($type) {
     return $tables[$type] ?? null;
 }
 
-// המרת סוג לעמודת הורה
+// המרת סוג לעמודת הורה - עכשיו עם unicId
 function getParentColumn($type) {
     $parents = [
-        'block' => 'cemetery_id',
-        'plot' => 'block_id',
-        'row' => 'plot_id',
-        'area_grave' => 'row_id',
-        'grave' => 'area_grave_id'
+        'block' => 'cemeteryId',      // מצביע ל-unicId של cemetery
+        'plot' => 'blockId',           // מצביע ל-unicId של block
+        'row' => 'plotId',             // מצביע ל-unicId של plot
+        'area_grave' => 'lineId',      // מצביע ל-unicId של row (שימו לב: lineId)
+        'grave' => 'areaGraveId'       // מצביע ל-unicId של areaGrave
     ];
     return $parents[$type] ?? null;
+}
+
+// המרת סוג לעמודת שם
+function getNameColumn($type) {
+    $names = [
+        'cemetery' => 'cemeteryNameHe',
+        'block' => 'blockNameHe',
+        'plot' => 'plotNameHe',
+        'row' => 'lineNameHe',
+        'area_grave' => 'areaGraveNameHe',
+        'grave' => 'graveNameHe',
+        'customer' => "CONCAT(firstName, ' ', lastName) as name"
+    ];
+    return $names[$type] ?? 'name';
+}
+
+// המרת סוג לעמודת קוד
+function getCodeColumn($type) {
+    $codes = [
+        'cemetery' => 'cemeteryCode',
+        'block' => 'blockCode',
+        'plot' => 'plotCode',
+        'row' => 'serialNumber',
+        'grave' => 'graveNameHe'
+    ];
+    return $codes[$type] ?? null;
 }
 
 try {
@@ -51,22 +77,35 @@ try {
                 throw new Exception('סוג לא תקין');
             }
             
+            $nameColumn = getNameColumn($type);
+            $codeColumn = getCodeColumn($type);
+            
+            // בניית השאילתה הבסיסית
+            if ($type === 'customer') {
+                $sql = "SELECT *, $nameColumn FROM $table WHERE isActive = 1";
+            } else {
+                $sql = "SELECT * FROM $table WHERE isActive = 1";
+            }
+            $params = [];
+            
             // טיפול מיוחד באחוזות קבר
             if ($type === 'area_grave') {
                 if (isset($_GET['plot_id'])) {
                     // קודם מצא את כל השורות של החלקה
-                    $rows_query = "SELECT id FROM rows WHERE plot_id = :plot_id AND is_active = 1";
+                    $rows_query = "SELECT unicId FROM rows WHERE plotId = :plot_id AND isActive = 1";
                     $stmt = $pdo->prepare($rows_query);
                     $stmt->execute(['plot_id' => $_GET['plot_id']]);
                     $row_ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
                     
                     if (!empty($row_ids)) {
-                        $sql = "SELECT * FROM area_graves 
-                                WHERE row_id IN (" . implode(',', $row_ids) . ")
-                                AND is_active = 1";
-                        $params = [];
+                        $placeholders = array_map(function($i) { return ":row_id_$i"; }, array_keys($row_ids));
+                        $sql = "SELECT * FROM areaGraves 
+                                WHERE lineId IN (" . implode(',', $placeholders) . ")
+                                AND isActive = 1";
+                        foreach ($row_ids as $i => $row_id) {
+                            $params["row_id_$i"] = $row_id;
+                        }
                     } else {
-                        // אין שורות - החזר תוצאה ריקה
                         echo json_encode([
                             'success' => true,
                             'data' => [],
@@ -81,18 +120,14 @@ try {
                     }
                 } elseif (isset($_GET['parent_id'])) {
                     // זה לשורה ספציפית
-                    $sql = "SELECT * FROM area_graves WHERE row_id = :parent_id AND is_active = 1";
-                    $params = ['parent_id' => $_GET['parent_id']];
+                    $sql = "SELECT * FROM areaGraves WHERE lineId = :parent_id AND isActive = 1";
+                    $params['parent_id'] = $_GET['parent_id'];
                 } else {
                     // כל אחוזות הקבר
-                    $sql = "SELECT * FROM area_graves WHERE is_active = 1";
-                    $params = [];
+                    $sql = "SELECT * FROM areaGraves WHERE isActive = 1";
                 }
             } else {
-                // הקוד הקיים לשאר הסוגים
-                $sql = "SELECT * FROM $table WHERE is_active = 1";
-                $params = [];
-                
+                // לשאר הסוגים
                 if (isset($_GET['parent_id'])) {
                     $parentColumn = getParentColumn($type);
                     if ($parentColumn) {
@@ -105,58 +140,54 @@ try {
             // חיפוש
             if (isset($_GET['search']) && !empty($_GET['search'])) {
                 if ($type === 'grave') {
-                    $sql .= " AND grave_number LIKE :search";
-                } elseif ($type === 'purchase') {
-                    // רכישות - חיפוש לפי מספר רכישה או סכום
-                    $sql .= " AND (id LIKE :search OR amount LIKE :search)";
+                    $sql .= " AND graveNameHe LIKE :search";
                 } elseif ($type === 'customer') {
-                    // לקוחות - חיפוש לפי שם או ת.ז.
-                    $sql .= " AND (first_name LIKE :search OR last_name LIKE :search OR id_number LIKE :search)";
+                    $sql .= " AND (firstName LIKE :search OR lastName LIKE :search OR numId LIKE :search)";
                 } else {
-                    $sql .= " AND (name LIKE :search OR code LIKE :search)";
+                    $searchColumns = [];
+                    if ($nameColumn && $nameColumn !== "CONCAT(firstName, ' ', lastName) as name") {
+                        $searchColumns[] = "$nameColumn LIKE :search";
+                    }
+                    if ($codeColumn) {
+                        $searchColumns[] = "$codeColumn LIKE :search";
+                    }
+                    if (!empty($searchColumns)) {
+                        $sql .= " AND (" . implode(' OR ', $searchColumns) . ")";
+                    }
                 }
                 $params['search'] = '%' . $_GET['search'] . '%';
             }
             
-            // מיון - טיפול מיוחד לכל סוג טבלה
-            if ($type === 'grave') {
-                $orderBy = $_GET['sort'] ?? 'grave_number';
-            } elseif ($type === 'purchase') {
-                // לרכישות יש עמודות שונות
-                $orderBy = $_GET['sort'] ?? 'purchase_date';
-            } elseif ($type === 'customer') {
-                // ללקוחות יש עמודות שונות  
-                $orderBy = $_GET['sort'] ?? 'last_name';
-            } else {
-                // לשאר הטבלאות יש עמודת name
-                $orderBy = $_GET['sort'] ?? 'name';
-            }
-            
+            // מיון
+            $orderBy = $_GET['sort'] ?? null;
             $orderDir = $_GET['order'] ?? 'ASC';
             
-            // בדיקה שהעמודה קיימת בטבלה (אבטחה)
+            // בחירת עמודת מיון ברירת מחדל
+            if (!$orderBy) {
+                if ($type === 'grave') {
+                    $orderBy = 'graveNameHe';
+                } elseif ($type === 'customer') {
+                    $orderBy = 'lastName';
+                } elseif ($type === 'row') {
+                    $orderBy = 'serialNumber';
+                } else {
+                    $orderBy = $nameColumn;
+                }
+            }
+            
+            // וידוא שהעמודה קיימת (אבטחה)
             $allowedColumns = [
-                'cemetery' => ['name', 'code', 'created_at'],
-                'block' => ['name', 'code', 'created_at'],
-                'plot' => ['name', 'code', 'created_at'],
-                'row' => ['name', 'serial_number', 'created_at'],
-                'area_grave' => ['name', 'code', 'grave_type', 'created_at'],
-                'grave' => ['grave_number', 'grave_status', 'plot_type', 'created_at'],
-                'purchase' => ['purchase_date', 'amount', 'purchase_status', 'created_at', 'id'],
-                'customer' => ['first_name', 'last_name', 'id_number', 'created_at']
+                'cemetery' => ['cemeteryNameHe', 'cemeteryCode', 'createDate', 'unicId'],
+                'block' => ['blockNameHe', 'blockCode', 'createDate', 'unicId'],
+                'plot' => ['plotNameHe', 'plotCode', 'createDate', 'unicId'],
+                'row' => ['lineNameHe', 'serialNumber', 'createDate', 'unicId'],
+                'area_grave' => ['areaGraveNameHe', 'graveType', 'createDate', 'unicId'],
+                'grave' => ['graveNameHe', 'graveStatus', 'plotType', 'createDate', 'unicId'],
+                'customer' => ['firstName', 'lastName', 'numId', 'createDate', 'unicId']
             ];
             
-            // אם העמודה לא ברשימה המותרת, השתמש בברירת מחדל
             if (isset($allowedColumns[$type]) && !in_array($orderBy, $allowedColumns[$type])) {
-                if ($type === 'purchase') {
-                    $orderBy = 'purchase_date';
-                } elseif ($type === 'customer') {
-                    $orderBy = 'last_name';
-                } elseif ($type === 'grave') {
-                    $orderBy = 'grave_number';
-                } else {
-                    $orderBy = 'name';
-                }
+                $orderBy = $allowedColumns[$type][0]; // ברירת מחדל
             }
             
             $sql .= " ORDER BY $orderBy $orderDir";
@@ -168,6 +199,9 @@ try {
             
             // ספירת סך הכל
             $countSql = str_replace('SELECT *', 'SELECT COUNT(*)', $sql);
+            if ($type === 'customer') {
+                $countSql = str_replace("SELECT *, $nameColumn", 'SELECT COUNT(*)', $sql);
+            }
             $stmt = $pdo->prepare($countSql);
             $stmt->execute($params);
             $total = $stmt->fetchColumn();
@@ -178,6 +212,16 @@ try {
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // הוספת שדה name לתצוגה
+            foreach ($data as &$item) {
+                if ($type !== 'customer' && !isset($item['name'])) {
+                    $item['name'] = $item[$nameColumn] ?? '';
+                }
+                if ($codeColumn && !isset($item['code'])) {
+                    $item['code'] = $item[$codeColumn] ?? '';
+                }
+            }
             
             echo json_encode([
                 'success' => true,
@@ -197,9 +241,17 @@ try {
                 throw new Exception('פרמטרים חסרים');
             }
             
-            $stmt = $pdo->prepare("SELECT * FROM $table WHERE id = :id");
+            // תמיד חפש לפי unicId במבנה החדש
+            $stmt = $pdo->prepare("SELECT * FROM $table WHERE unicId = :id");
             $stmt->execute(['id' => $id]);
             $item = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$item) {
+                // נסה לחפש לפי id רגיל (תאימות לאחור)
+                $stmt = $pdo->prepare("SELECT * FROM $table WHERE id = :id");
+                $stmt->execute(['id' => $id]);
+                $item = $stmt->fetch(PDO::FETCH_ASSOC);
+            }
             
             if (!$item) {
                 throw new Exception('הפריט לא נמצא');
@@ -208,24 +260,24 @@ try {
             // הוספת מידע על הילדים
             $children = [];
             $childTypes = [
-                'cemetery' => 'block',
-                'block' => 'plot',
-                'plot' => 'row',
-                'row' => 'area_grave',
-                'area_grave' => 'grave'
+                'cemetery' => ['type' => 'block', 'column' => 'cemeteryId'],
+                'block' => ['type' => 'plot', 'column' => 'blockId'],
+                'plot' => ['type' => 'row', 'column' => 'plotId'],
+                'row' => ['type' => 'area_grave', 'column' => 'lineId'],
+                'area_grave' => ['type' => 'grave', 'column' => 'areaGraveId']
             ];
             
             if (isset($childTypes[$type])) {
-                $childType = $childTypes[$type];
-                $childTable = getTableName($childType);
-                $parentColumn = getParentColumn($childType);
+                $childInfo = $childTypes[$type];
+                $childTable = getTableName($childInfo['type']);
+                $parentColumn = $childInfo['column'];
                 
                 $stmt = $pdo->prepare(
                     "SELECT COUNT(*) as total,
-                     SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active
+                     SUM(CASE WHEN isActive = 1 THEN 1 ELSE 0 END) as active
                      FROM $childTable WHERE $parentColumn = :id"
                 );
-                $stmt->execute(['id' => $id]);
+                $stmt->execute(['id' => $item['unicId']]);
                 $children = $stmt->fetch(PDO::FETCH_ASSOC);
             }
             
@@ -251,10 +303,12 @@ try {
                 throw new Exception('נתונים לא תקינים');
             }
             
-            // בניית שאילתה
-            $columns = [];
-            $values = [];
-            $params = [];
+            // יצירת unicId חדש
+            $data['unicId'] = uniqid($type . '_', true);
+            
+            // הוספת תאריכים
+            $data['createDate'] = date('Y-m-d H:i:s');
+            $data['updateDate'] = date('Y-m-d H:i:s');
             
             // הוספת עמודת הורה אם נדרש
             $parentColumn = getParentColumn($type);
@@ -262,8 +316,13 @@ try {
                 $data[$parentColumn] = $_GET['parent_id'];
             }
             
+            // בניית שאילתה
+            $columns = [];
+            $values = [];
+            $params = [];
+            
             foreach ($data as $key => $value) {
-                if (!in_array($key, ['id', 'created_at', 'updated_at'])) {
+                if (!in_array($key, ['id', 'inactiveDate'])) {
                     $columns[] = $key;
                     $values[] = ":$key";
                     $params[$key] = $value;
@@ -284,7 +343,8 @@ try {
             echo json_encode([
                 'success' => true,
                 'message' => 'הפריט נוצר בהצלחה',
-                'id' => $newId
+                'id' => $newId,
+                'unicId' => $data['unicId']
             ]);
             break;
             
@@ -303,12 +363,15 @@ try {
                 throw new Exception('נתונים לא תקינים');
             }
             
+            // הוספת תאריך עדכון
+            $data['updateDate'] = date('Y-m-d H:i:s');
+            
             // בניית שאילתה
             $updates = [];
             $params = ['id' => $id];
             
             foreach ($data as $key => $value) {
-                if (!in_array($key, ['id', 'created_at', 'updated_at'])) {
+                if (!in_array($key, ['id', 'unicId', 'createDate'])) {
                     $updates[] = "$key = :$key";
                     $params[$key] = $value;
                 }
@@ -318,7 +381,8 @@ try {
                 throw new Exception('אין נתונים לעדכון');
             }
             
-            $sql = "UPDATE $table SET " . implode(', ', $updates) . " WHERE id = :id";
+            // עדכון לפי unicId או id
+            $sql = "UPDATE $table SET " . implode(', ', $updates) . " WHERE unicId = :id OR id = :id";
             
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
@@ -344,29 +408,37 @@ try {
             
             // בדיקה אם יש ילדים
             $childTypes = [
-                'cemetery' => ['table' => 'blocks', 'column' => 'cemetery_id'],
-                'block' => ['table' => 'plots', 'column' => 'block_id'],
-                'plot' => ['table' => 'rows', 'column' => 'plot_id'],
-                'row' => ['table' => 'area_graves', 'column' => 'row_id'],
-                'area_grave' => ['table' => 'graves', 'column' => 'area_grave_id']
+                'cemetery' => ['table' => 'blocks', 'column' => 'cemeteryId'],
+                'block' => ['table' => 'plots', 'column' => 'blockId'],
+                'plot' => ['table' => 'rows', 'column' => 'plotId'],
+                'row' => ['table' => 'areaGraves', 'column' => 'lineId'],
+                'area_grave' => ['table' => 'graves', 'column' => 'areaGraveId']
             ];
             
             if (isset($childTypes[$type])) {
                 $childInfo = $childTypes[$type];
-                $stmt = $pdo->prepare(
-                    "SELECT COUNT(*) FROM {$childInfo['table']} 
-                     WHERE {$childInfo['column']} = :id AND is_active = 1"
-                );
-                $stmt->execute(['id' => $id]);
                 
-                if ($stmt->fetchColumn() > 0) {
-                    throw new Exception('לא ניתן למחוק פריט שיש לו פריטים משויכים');
+                // קודם מצא את ה-unicId של הפריט
+                $stmt = $pdo->prepare("SELECT unicId FROM $table WHERE unicId = :id OR id = :id");
+                $stmt->execute(['id' => $id]);
+                $unicId = $stmt->fetchColumn();
+                
+                if ($unicId) {
+                    $stmt = $pdo->prepare(
+                        "SELECT COUNT(*) FROM {$childInfo['table']} 
+                         WHERE {$childInfo['column']} = :id AND isActive = 1"
+                    );
+                    $stmt->execute(['id' => $unicId]);
+                    
+                    if ($stmt->fetchColumn() > 0) {
+                        throw new Exception('לא ניתן למחוק פריט שיש לו פריטים משויכים');
+                    }
                 }
             }
             
             // מחיקה רכה
-            $stmt = $pdo->prepare("UPDATE $table SET is_active = 0 WHERE id = :id");
-            $stmt->execute(['id' => $id]);
+            $stmt = $pdo->prepare("UPDATE $table SET isActive = 0, inactiveDate = :date WHERE unicId = :id OR id = :id");
+            $stmt->execute(['id' => $id, 'date' => date('Y-m-d H:i:s')]);
             
             // רישום בלוג
             logActivity('delete', $type, $id);
@@ -380,40 +452,42 @@ try {
         case 'hierarchy':
             $cemeteryId = $_GET['cemetery_id'] ?? null;
             
+            // שאילתה מעודכנת למבנה החדש
             $sql = "
                 SELECT 
-                    c.id as cemetery_id,
-                    c.name as cemetery_name,
-                    b.id as block_id,
-                    b.name as block_name,
-                    p.id as plot_id,
-                    p.name as plot_name,
-                    r.id as row_id,
-                    r.name as row_name,
-                    ag.id as area_grave_id,
-                    ag.name as area_grave_name,
-                    ag.grave_type,
-                    g.id as grave_id,
-                    g.grave_number,
-                    g.grave_status,
-                    g.plot_type
+                    c.unicId as cemetery_id,
+                    c.cemeteryNameHe as cemetery_name,
+                    b.unicId as block_id,
+                    b.blockNameHe as block_name,
+                    p.unicId as plot_id,
+                    p.plotNameHe as plot_name,
+                    r.unicId as row_id,
+                    r.lineNameHe as row_name,
+                    ag.unicId as area_grave_id,
+                    ag.areaGraveNameHe as area_grave_name,
+                    ag.graveType,
+                    g.unicId as grave_id,
+                    g.graveNameHe as grave_number,
+                    g.graveStatus as grave_status,
+                    g.plotType as plot_type
                 FROM cemeteries c
-                LEFT JOIN blocks b ON b.cemetery_id = c.id AND b.is_active = 1
-                LEFT JOIN plots p ON p.block_id = b.id AND p.is_active = 1
-                LEFT JOIN rows r ON r.plot_id = p.id AND r.is_active = 1
-                LEFT JOIN area_graves ag ON ag.row_id = r.id AND ag.is_active = 1
-                LEFT JOIN graves g ON g.area_grave_id = ag.id AND g.is_active = 1
-                WHERE c.is_active = 1
+                LEFT JOIN blocks b ON b.cemeteryId = c.unicId AND b.isActive = 1
+                LEFT JOIN plots p ON p.blockId = b.unicId AND p.isActive = 1
+                LEFT JOIN rows r ON r.plotId = p.unicId AND r.isActive = 1
+                LEFT JOIN areaGraves ag ON ag.lineId = r.unicId AND ag.isActive = 1
+                LEFT JOIN graves g ON g.areaGraveId = ag.unicId AND g.isActive = 1
+                WHERE c.isActive = 1
             ";
             
             $params = [];
             if ($cemeteryId) {
-                $sql .= " AND c.id = :cemetery_id";
+                $sql .= " AND (c.unicId = :cemetery_id OR c.id = :cemetery_id_alt)";
                 $params['cemetery_id'] = $cemeteryId;
+                $params['cemetery_id_alt'] = $cemeteryId;
             }
             
-            $sql .= " ORDER BY c.name, b.name, p.name, r.serial_number, r.name, ag.name, 
-                      CAST(g.grave_number AS UNSIGNED), g.grave_number";
+            $sql .= " ORDER BY c.cemeteryNameHe, b.blockNameHe, p.plotNameHe, r.serialNumber, 
+                      r.lineNameHe, ag.areaGraveNameHe, g.graveNameHe";
             
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
@@ -448,8 +522,6 @@ try {
                             'plots' => []
                         ];
                     }
-                    
-                    // המשך בניית ההיררכיה לפי הצורך...
                 }
                 
                 // עדכון סטטיסטיקות
@@ -480,12 +552,12 @@ try {
                 'blocks' => 'גושים',
                 'plots' => 'חלקות',
                 'rows' => 'שורות',
-                'area_graves' => 'אחוזות קבר',
+                'areaGraves' => 'אחוזות קבר',
                 'graves' => 'קברים'
             ];
             
             foreach ($tables as $table => $label) {
-                $stmt = $pdo->query("SELECT COUNT(*) FROM $table WHERE is_active = 1");
+                $stmt = $pdo->query("SELECT COUNT(*) FROM $table WHERE isActive = 1");
                 $stats['counts'][$table] = [
                     'label' => $label,
                     'count' => $stmt->fetchColumn()
@@ -494,39 +566,39 @@ try {
             
             // סטטוס קברים
             $stmt = $pdo->query("
-                SELECT grave_status, COUNT(*) as count 
+                SELECT graveStatus, COUNT(*) as count 
                 FROM graves 
-                WHERE is_active = 1 
-                GROUP BY grave_status
+                WHERE isActive = 1 
+                GROUP BY graveStatus
             ");
             $graveStatuses = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             $stats['grave_status'] = [];
             foreach ($graveStatuses as $status) {
                 $stats['grave_status'][] = [
-                    'status' => $status['grave_status'],
-                    'name' => GRAVE_STATUS[$status['grave_status']]['name'] ?? 'לא ידוע',
+                    'status' => $status['graveStatus'],
+                    'name' => GRAVE_STATUS[$status['graveStatus']]['name'] ?? 'לא ידוע',
                     'count' => $status['count'],
-                    'color' => GRAVE_STATUS[$status['grave_status']]['color'] ?? '#6b7280'
+                    'color' => GRAVE_STATUS[$status['graveStatus']]['color'] ?? '#6b7280'
                 ];
             }
             
             // סוגי חלקות
             $stmt = $pdo->query("
-                SELECT plot_type, COUNT(*) as count 
+                SELECT plotType, COUNT(*) as count 
                 FROM graves 
-                WHERE is_active = 1 
-                GROUP BY plot_type
+                WHERE isActive = 1 
+                GROUP BY plotType
             ");
             $plotTypes = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             $stats['plot_types'] = [];
             foreach ($plotTypes as $plotType) {
                 $stats['plot_types'][] = [
-                    'type' => $plotType['plot_type'],
-                    'name' => PLOT_TYPES[$plotType['plot_type']]['name'] ?? 'לא ידוע',
+                    'type' => $plotType['plotType'],
+                    'name' => PLOT_TYPES[$plotType['plotType']]['name'] ?? 'לא ידוע',
                     'count' => $plotType['count'],
-                    'icon' => PLOT_TYPES[$plotType['plot_type']]['icon'] ?? ''
+                    'icon' => PLOT_TYPES[$plotType['plotType']]['icon'] ?? ''
                 ];
             }
             
@@ -549,15 +621,15 @@ try {
             switch($itemType) {
                 case 'cemetery':
                     // ספירת גושים ישירים
-                    $stmt = $pdo->prepare("SELECT COUNT(*) FROM blocks WHERE cemetery_id = :id AND is_active = 1");
+                    $stmt = $pdo->prepare("SELECT COUNT(*) FROM blocks WHERE cemeteryId = :id AND isActive = 1");
                     $stmt->execute(['id' => $itemId]);
                     $stats['blocks'] = $stmt->fetchColumn();
                     
                     // ספירת כל החלקות
                     $stmt = $pdo->prepare("
                         SELECT COUNT(*) FROM plots p 
-                        JOIN blocks b ON p.block_id = b.id 
-                        WHERE b.cemetery_id = :id AND p.is_active = 1
+                        JOIN blocks b ON p.blockId = b.unicId 
+                        WHERE b.cemeteryId = :id AND p.isActive = 1
                     ");
                     $stmt->execute(['id' => $itemId]);
                     $stats['plots'] = $stmt->fetchColumn();
@@ -566,14 +638,14 @@ try {
                     $stmt = $pdo->prepare("
                         SELECT 
                             COUNT(*) as total,
-                            SUM(CASE WHEN g.grave_status = 1 THEN 1 ELSE 0 END) as available,
-                            SUM(CASE WHEN g.grave_status = 3 THEN 1 ELSE 0 END) as occupied
+                            SUM(CASE WHEN g.graveStatus = 1 THEN 1 ELSE 0 END) as available,
+                            SUM(CASE WHEN g.graveStatus = 3 THEN 1 ELSE 0 END) as occupied
                         FROM graves g
-                        JOIN area_graves ag ON g.area_grave_id = ag.id
-                        JOIN rows r ON ag.row_id = r.id
-                        JOIN plots p ON r.plot_id = p.id
-                        JOIN blocks b ON p.block_id = b.id
-                        WHERE b.cemetery_id = :id AND g.is_active = 1
+                        JOIN areaGraves ag ON g.areaGraveId = ag.unicId
+                        JOIN rows r ON ag.lineId = r.unicId
+                        JOIN plots p ON r.plotId = p.unicId
+                        JOIN blocks b ON p.blockId = b.unicId
+                        WHERE b.cemeteryId = :id AND g.isActive = 1
                     ");
                     $stmt->execute(['id' => $itemId]);
                     $result = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -584,7 +656,7 @@ try {
                     
                 case 'block':
                     // ספירת חלקות
-                    $stmt = $pdo->prepare("SELECT COUNT(*) FROM plots WHERE block_id = :id AND is_active = 1");
+                    $stmt = $pdo->prepare("SELECT COUNT(*) FROM plots WHERE blockId = :id AND isActive = 1");
                     $stmt->execute(['id' => $itemId]);
                     $stats['plots'] = $stmt->fetchColumn();
                     
@@ -592,13 +664,13 @@ try {
                     $stmt = $pdo->prepare("
                         SELECT 
                             COUNT(*) as total,
-                            SUM(CASE WHEN g.grave_status = 1 THEN 1 ELSE 0 END) as available,
-                            SUM(CASE WHEN g.grave_status = 3 THEN 1 ELSE 0 END) as occupied
+                            SUM(CASE WHEN g.graveStatus = 1 THEN 1 ELSE 0 END) as available,
+                            SUM(CASE WHEN g.graveStatus = 3 THEN 1 ELSE 0 END) as occupied
                         FROM graves g
-                        JOIN area_graves ag ON g.area_grave_id = ag.id
-                        JOIN rows r ON ag.row_id = r.id
-                        JOIN plots p ON r.plot_id = p.id
-                        WHERE p.block_id = :id AND g.is_active = 1
+                        JOIN areaGraves ag ON g.areaGraveId = ag.unicId
+                        JOIN rows r ON ag.lineId = r.unicId
+                        JOIN plots p ON r.plotId = p.unicId
+                        WHERE p.blockId = :id AND g.isActive = 1
                     ");
                     $stmt->execute(['id' => $itemId]);
                     $result = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -609,15 +681,15 @@ try {
                     
                 case 'plot':
                     // ספירת שורות
-                    $stmt = $pdo->prepare("SELECT COUNT(*) FROM rows WHERE plot_id = :id AND is_active = 1");
+                    $stmt = $pdo->prepare("SELECT COUNT(*) FROM rows WHERE plotId = :id AND isActive = 1");
                     $stmt->execute(['id' => $itemId]);
                     $stats['rows'] = $stmt->fetchColumn();
                     
                     // ספירת אחוזות קבר
                     $stmt = $pdo->prepare("
-                        SELECT COUNT(*) FROM area_graves ag
-                        JOIN rows r ON ag.row_id = r.id
-                        WHERE r.plot_id = :id AND ag.is_active = 1
+                        SELECT COUNT(*) FROM areaGraves ag
+                        JOIN rows r ON ag.lineId = r.unicId
+                        WHERE r.plotId = :id AND ag.isActive = 1
                     ");
                     $stmt->execute(['id' => $itemId]);
                     $stats['areaGraves'] = $stmt->fetchColumn();
@@ -626,12 +698,12 @@ try {
                     $stmt = $pdo->prepare("
                         SELECT 
                             COUNT(*) as total,
-                            SUM(CASE WHEN g.grave_status = 1 THEN 1 ELSE 0 END) as available,
-                            SUM(CASE WHEN g.grave_status = 3 THEN 1 ELSE 0 END) as occupied
+                            SUM(CASE WHEN g.graveStatus = 1 THEN 1 ELSE 0 END) as available,
+                            SUM(CASE WHEN g.graveStatus = 3 THEN 1 ELSE 0 END) as occupied
                         FROM graves g
-                        JOIN area_graves ag ON g.area_grave_id = ag.id
-                        JOIN rows r ON ag.row_id = r.id
-                        WHERE r.plot_id = :id AND g.is_active = 1
+                        JOIN areaGraves ag ON g.areaGraveId = ag.unicId
+                        JOIN rows r ON ag.lineId = r.unicId
+                        WHERE r.plotId = :id AND g.isActive = 1
                     ");
                     $stmt->execute(['id' => $itemId]);
                     $result = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -645,11 +717,11 @@ try {
                     $stmt = $pdo->prepare("
                         SELECT 
                             COUNT(*) as total,
-                            SUM(CASE WHEN grave_status = 1 THEN 1 ELSE 0 END) as available,
-                            SUM(CASE WHEN grave_status = 2 THEN 1 ELSE 0 END) as purchased,
-                            SUM(CASE WHEN grave_status = 3 THEN 1 ELSE 0 END) as occupied
+                            SUM(CASE WHEN graveStatus = 1 THEN 1 ELSE 0 END) as available,
+                            SUM(CASE WHEN graveStatus = 2 THEN 1 ELSE 0 END) as purchased,
+                            SUM(CASE WHEN graveStatus = 3 THEN 1 ELSE 0 END) as occupied
                         FROM graves 
-                        WHERE area_grave_id = :id AND is_active = 1
+                        WHERE areaGraveId = :id AND isActive = 1
                     ");
                     $stmt->execute(['id' => $itemId]);
                     $result = $stmt->fetch(PDO::FETCH_ASSOC);

@@ -1,4 +1,4 @@
-<?php
+<!-- < ?php
 // cemetery-api.php - API לניהול היררכיית בתי עלמין
 
 header('Content-Type: application/json; charset=utf-8');
@@ -301,4 +301,4 @@ try {
         'error' => $e->getMessage()
     ]);
 }
-?>
+?> -->

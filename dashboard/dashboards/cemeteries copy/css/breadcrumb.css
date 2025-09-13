@@ -1,0 +1,196 @@
+/**
+ * Breadcrumb Modern Design
+ * File: /dashboard/dashboards/cemeteries/css/breadcrumb.css
+ */
+
+/* Main Breadcrumb Container */
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 6px 10px;
+    margin-bottom: 5px;
+    min-height: 48px;
+    gap: 5px;
+    font-size: 14px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Breadcrumb Items */
+.breadcrumb-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    position: relative;
+    white-space: nowrap;
+    text-decoration: none;
+    color: #4a5568;
+    font-weight: 500;
+}
+
+/* Clickable Items */
+.breadcrumb-clickable {
+    cursor: pointer;
+    background: white;
+    border: 1px solid transparent;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.breadcrumb-clickable:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    border-color: transparent;
+}
+
+.breadcrumb-clickable:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+}
+
+/* Current Item (not clickable) */
+.breadcrumb-current {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-weight: 600;
+    cursor: default;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    animation: slideIn 0.3s ease;
+}
+
+/* Home Item */
+.breadcrumb-home {
+    background: white;
+    border: 2px solid #667eea;
+}
+
+.breadcrumb-home:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: transparent;
+}
+
+.breadcrumb-home .breadcrumb-icon {
+    font-size: 16px;
+}
+
+/* Icons and Text */
+.breadcrumb-icon {
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.breadcrumb-text {
+    display: inline-flex;
+    align-items: center;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Separator between items */
+.breadcrumb-separator {
+    color: #cbd5e0 !important;
+    font-size: 14px !important;
+    margin: 0 3px !important;
+    font-weight: 400 !important;
+    user-select: none !important;
+    opacity: 0.7 !important;
+    display: inline-block !important;
+}
+
+/* Animations */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Focus States */
+.breadcrumb-item:focus-visible {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .breadcrumb {
+        padding: 10px 15px;
+        gap: 3px;
+        font-size: 13px;
+        border-radius: 10px;
+        min-height: 44px;
+    }
+    
+    .breadcrumb-item {
+        padding: 5px 10px;
+        border-radius: 16px;
+    }
+    
+    .breadcrumb-text {
+        max-width: 120px;
+    }
+    
+    .breadcrumb-separator {
+        margin: 0 3px;
+        font-size: 14px;
+    }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+    .breadcrumb {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+    
+    .breadcrumb-item {
+        padding: 4px 8px;
+    }
+    
+    /* Show only home, previous and current on very small screens */
+    .breadcrumb-item:not(.breadcrumb-home):not(.breadcrumb-current):not(:nth-last-child(3)) {
+        display: none;
+    }
+    
+    .breadcrumb-separator:not(:last-of-type):not(:nth-last-of-type(2)) {
+        display: none;
+    }
+}
+
+/* Dark Mode Support */
+/* @media (prefers-color-scheme: dark) {
+    .breadcrumb {
+        background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .breadcrumb-clickable {
+        background: #2d3748;
+        color: #e2e8f0;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+    
+    .breadcrumb-clickable:hover {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .breadcrumb-separator {
+        color: #4a5568;
+    }
+    
+    .breadcrumb-home {
+        background: #2d3748;
+        border-color: #667eea;
+    }
+} */

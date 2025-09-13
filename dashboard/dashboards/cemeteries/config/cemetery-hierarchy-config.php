@@ -8,7 +8,7 @@ return [
     // ========================================
     'cemetery' => [
         'table' => 'cemeteries',
-        'title' => 'בת2י עלמין',
+        'title' => 'בתי עלמין',
         'singular' => 'בית עלמין',
         'icon' => '🏛️',
         'primaryKey' => 'unicId',
@@ -34,7 +34,7 @@ return [
         
         // מיפוי שדות לתצוגה
         'displayFields' => [
-            'name' => 'cemeteryNameHe',
+            'name' => 'cemeteryNameH1e',
             'nameEn' => 'cemeteryNameEn',
             'code' => 'cemeteryCode',
             'address' => 'address',

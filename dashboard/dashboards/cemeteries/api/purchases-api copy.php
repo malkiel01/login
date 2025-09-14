@@ -1,7 +1,7 @@
 <?php
 // dashboards/cemeteries/api/purchases-api.php
-// API לניהול רכישות - מותאם למבנה הטבלה האמיתי
-
+// API לניהול רכישות - מתוקן למבנה הטבלה האמיתי
+ 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
@@ -30,33 +30,22 @@ try {
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
             $offset = ($page - 1) * $limit;
-            $sort = $_GET['sort'] ?? 'createDate';
+            $sort = $_GET['sort'] ?? 'created_at'; // שינוי מ-purchase_date ל-created_at
             $order = $_GET['order'] ?? 'DESC';
             
             // בניית השאילתה
             $sql = "
                 SELECT 
                     p.*,
-                    CONCAT(c.firstName, ' ', c.lastName) as customer_name,
-                    c.numId as customer_id_number,
+                    CONCAT(c.first_name, ' ', c.last_name) as customer_name,
+                    c.id_number as customer_id_number,
                     c.phone as customer_phone,
-                    c.phoneMobile as customer_mobile,
-                    g.graveNameHe as grave_number,
-                    g.graveLocation as grave_location,
-                    g.graveStatus,
-                    ag.areaGraveNameHe,
-                    r.lineNameHe,
-                    pl.plotNameHe,
-                    b.blockNameHe,
-                    ce.cemeteryNameHe
+                    g.grave_number,
+                    g.grave_location,
+                    g.grave_status
                 FROM purchases p
-                LEFT JOIN customers c ON p.clientId = c.unicId
-                LEFT JOIN graves g ON p.graveId = g.unicId
-                LEFT JOIN areaGraves ag ON g.areaGraveId = ag.unicId
-                LEFT JOIN rows r ON ag.lineId = r.unicId
-                LEFT JOIN plots pl ON r.plotId = pl.unicId
-                LEFT JOIN blocks b ON pl.blockId = b.unicId
-                LEFT JOIN cemeteries ce ON b.cemeteryId = ce.unicId
+                LEFT JOIN customers c ON p.customer_id = c.id
+                LEFT JOIN graves g ON p.grave_id = g.id
                 WHERE p.isActive = 1
             ";
             $params = [];
@@ -65,41 +54,38 @@ try {
             if ($search) {
                 $sql .= " AND (
                     p.id LIKE :search OR 
-                    p.serialPurchaseId LIKE :search OR
-                    c.firstName LIKE :search OR 
-                    c.lastName LIKE :search OR
-                    c.numId LIKE :search OR
-                    g.graveNameHe LIKE :search
+                    p.purchase_number LIKE :search OR
+                    c.first_name LIKE :search OR 
+                    c.last_name LIKE :search OR
+                    c.id_number LIKE :search OR
+                    g.grave_number LIKE :search OR
+                    g.grave_location LIKE :search
                 )";
                 $params['search'] = "%$search%";
             }
             
             // סינון לפי סטטוס
             if ($status) {
-                $sql .= " AND p.purchaseStatus = :status";
+                $sql .= " AND p.purchase_status = :status";
                 $params['status'] = $status;
             }
             
             // סינון לפי לקוח
             if ($customer_id) {
-                $sql .= " AND p.clientId = :customer_id";
+                $sql .= " AND p.customer_id = :customer_id";
                 $params['customer_id'] = $customer_id;
             }
             
             // ספירת סה"כ תוצאות
-            $countSql = "SELECT COUNT(*) as total FROM purchases p WHERE p.isActive = 1";
-            if (!empty($params)) {
-                $countStmt = $pdo->prepare($countSql);
-                $countStmt->execute($params);
-            } else {
-                $countStmt = $pdo->query($countSql);
-            }
+            $countSql = str_replace("SELECT p.*, CONCAT(c.first_name, ' ', c.last_name) as customer_name, c.id_number as customer_id_number, c.phone as customer_phone, g.grave_number, g.grave_location, g.grave_status", "SELECT COUNT(*) as total", $sql);
+            $countStmt = $pdo->prepare($countSql);
+            $countStmt->execute($params);
             $total = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
             
-            // רשימת עמודות מותרות למיון
-            $allowedSortColumns = ['createDate', 'dateOpening', 'price', 'purchaseStatus', 'id', 'serialPurchaseId'];
+            // רשימת עמודות מותרות למיון - מותאם לטבלה שלך
+            $allowedSortColumns = ['created_at', 'opening_date', 'price', 'purchase_status', 'id', 'purchase_number'];
             if (!in_array($sort, $allowedSortColumns)) {
-                $sort = 'createDate';
+                $sort = 'created_at';
             }
             
             // בדיקת כיוון המיון
@@ -118,12 +104,10 @@ try {
             
             $purchases = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            // הוסף תאימות לאחור
+            // הוסף את opening_date כ-purchase_date לתאימות אחורה
             foreach ($purchases as &$purchase) {
-                $purchase['purchase_date'] = $purchase['dateOpening'];
-                $purchase['amount'] = $purchase['price'];
-                $purchase['purchase_number'] = $purchase['serialPurchaseId'];
-                $purchase['purchase_status'] = $purchase['purchaseStatus'];
+                $purchase['purchase_date'] = $purchase['opening_date'];
+                $purchase['amount'] = $purchase['price']; // הוסף תאימות ל-amount
             }
             
             echo json_encode([
@@ -147,11 +131,11 @@ try {
             $stmt = $pdo->prepare("
                 SELECT 
                     p.*,
-                    c.firstName, c.lastName, c.numId, c.phone, c.phoneMobile,
-                    g.graveNameHe, g.graveLocation, g.graveStatus
+                    c.first_name, c.last_name, c.id_number, c.phone, c.email,
+                    g.grave_number, g.grave_location, g.grave_status
                 FROM purchases p
-                LEFT JOIN customers c ON p.clientId = c.unicId
-                LEFT JOIN graves g ON p.graveId = g.unicId
+                LEFT JOIN customers c ON p.customer_id = c.id
+                LEFT JOIN graves g ON p.grave_id = g.id
                 WHERE p.id = :id AND p.isActive = 1
             ");
             $stmt->execute(['id' => $id]);
@@ -162,7 +146,7 @@ try {
             }
             
             // הוסף תאימות
-            $purchase['purchase_date'] = $purchase['dateOpening'];
+            $purchase['purchase_date'] = $purchase['opening_date'];
             $purchase['amount'] = $purchase['price'];
             
             echo json_encode(['success' => true, 'data' => $purchase]);
@@ -173,62 +157,33 @@ try {
             $data = json_decode(file_get_contents('php://input'), true);
             
             // ולידציה
-            if (empty($data['clientId'])) {
+            if (empty($data['customer_id'])) {
                 throw new Exception('לקוח הוא שדה חובה');
             }
             
-            if (empty($data['graveId'])) {
+            if (empty($data['grave_id'])) {
                 throw new Exception('קבר הוא שדה חובה');
             }
             
             // בדיקה שהקבר פנוי
-            $stmt = $pdo->prepare("SELECT graveStatus, graveNameHe FROM graves WHERE unicId = :id AND isActive = 1");
-            $stmt->execute(['id' => $data['graveId']]);
+            $stmt = $pdo->prepare("SELECT grave_status FROM graves WHERE id = :id AND isActive = 1");
+            $stmt->execute(['id' => $data['grave_id']]);
             $grave = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if (!$grave) {
                 throw new Exception('הקבר לא נמצא');
             }
             
-            if ($grave['graveStatus'] != 1) { // 1 = פנוי
+            if ($grave['grave_status'] != 1) { // 1 = פנוי
                 throw new Exception('הקבר אינו פנוי לרכישה');
             }
             
-            // יצירת unicId
-            if (!isset($data['unicId'])) {
-                $data['unicId'] = uniqid('purchase_', true);
-            }
-            
-            // יצירת מספר סידורי לרכישה
-            if (!isset($data['serialPurchaseId'])) {
-                $year = date('Y');
-                $stmt = $pdo->query("SELECT MAX(CAST(SUBSTRING(serialPurchaseId, 6) AS UNSIGNED)) as max_serial 
-                                     FROM purchases 
-                                     WHERE serialPurchaseId LIKE '$year-%'");
-                $maxSerial = $stmt->fetch(PDO::FETCH_ASSOC)['max_serial'] ?? 0;
-                $data['serialPurchaseId'] = $year . '-' . str_pad($maxSerial + 1, 5, '0', STR_PAD_LEFT);
-            }
-            
-            // הוספת תאריכים
-            $data['createDate'] = date('Y-m-d H:i:s');
-            $data['updateDate'] = date('Y-m-d H:i:s');
-            
-            // ברירת מחדל לתאריך פתיחה
-            if (!isset($data['dateOpening'])) {
-                $data['dateOpening'] = date('Y-m-d');
-            }
-            
-            // ברירת מחדל לסטטוס
-            if (!isset($data['purchaseStatus'])) {
-                $data['purchaseStatus'] = 1; // פתוח
-            }
-            
-            // בניית השאילתה
+            // בניית השאילתה - עם השדות הנכונים
             $fields = [
-                'unicId', 'clientId', 'graveId', 'serialPurchaseId', 'purchaseStatus',
-                'buyerStatus', 'price', 'numOfPayments', 'PaymentEndDate',
-                'refundAmount', 'refundInvoiceNumber', 'contactId', 'dateOpening',
-                'ifCertificate', 'deedNum', 'kinship', 'comment', 'createDate', 'updateDate'
+                'customer_id', 'grave_id', 'purchase_number', 'purchase_status',
+                'buyer_status', 'price', 'num_payments', 'payment_end_date',
+                'refund_amount', 'refund_invoice', 'contact_id', 'opening_date',
+                'has_certificate', 'deed_number', 'kinship', 'comments'
             ];
             
             $insertFields = [];
@@ -243,6 +198,20 @@ try {
                 }
             }
             
+            // ברירת מחדל לתאריך פתיחה
+            if (!isset($data['opening_date'])) {
+                $insertFields[] = 'opening_date';
+                $insertValues[] = ':opening_date';
+                $params['opening_date'] = date('Y-m-d');
+            }
+            
+            // ברירת מחדל לסטטוס
+            if (!isset($data['purchase_status'])) {
+                $insertFields[] = 'purchase_status';
+                $insertValues[] = ':purchase_status';
+                $params['purchase_status'] = 1; // טיוטה
+            }
+            
             $sql = "INSERT INTO purchases (" . implode(', ', $insertFields) . ") 
                     VALUES (" . implode(', ', $insertValues) . ")";
             
@@ -251,19 +220,14 @@ try {
             
             $purchaseId = $pdo->lastInsertId();
             
-            // עדכון סטטוס הקבר לנרכש
-            $stmt = $pdo->prepare("UPDATE graves SET graveStatus = 2 WHERE unicId = :id");
-            $stmt->execute(['id' => $data['graveId']]);
-            
-            // עדכון סטטוס הלקוח לרוכש
-            $stmt = $pdo->prepare("UPDATE customers SET statusCustomer = 2 WHERE unicId = :id");
-            $stmt->execute(['id' => $data['clientId']]);
+            // עדכון סטטוס הקבר
+            $stmt = $pdo->prepare("UPDATE graves SET grave_status = 2 WHERE id = :id"); // 2 = נרכש
+            $stmt->execute(['id' => $data['grave_id']]);
             
             echo json_encode([
                 'success' => true,
                 'message' => 'הרכישה נוספה בהצלחה',
-                'id' => $purchaseId,
-                'unicId' => $data['unicId']
+                'id' => $purchaseId
             ]);
             break;
             
@@ -275,15 +239,12 @@ try {
             
             $data = json_decode(file_get_contents('php://input'), true);
             
-            // עדכון תאריך
-            $data['updateDate'] = date('Y-m-d H:i:s');
-            
             // בניית השאילתה
             $fields = [
-                'clientId', 'graveId', 'serialPurchaseId', 'purchaseStatus',
-                'buyerStatus', 'price', 'numOfPayments', 'PaymentEndDate',
-                'refundAmount', 'refundInvoiceNumber', 'contactId', 'dateOpening',
-                'ifCertificate', 'deedNum', 'kinship', 'comment', 'updateDate'
+                'customer_id', 'grave_id', 'purchase_number', 'purchase_status',
+                'buyer_status', 'price', 'num_payments', 'payment_end_date',
+                'refund_amount', 'refund_invoice', 'contact_id', 'opening_date',
+                'has_certificate', 'deed_number', 'kinship', 'comments'
             ];
             
             $updateFields = [];
@@ -318,7 +279,7 @@ try {
             }
             
             // קבלת פרטי הרכישה
-            $stmt = $pdo->prepare("SELECT graveId, clientId FROM purchases WHERE id = :id AND isActive = 1");
+            $stmt = $pdo->prepare("SELECT grave_id FROM purchases WHERE id = :id AND isActive = 1");
             $stmt->execute(['id' => $id]);
             $purchase = $stmt->fetch(PDO::FETCH_ASSOC);
             
@@ -327,28 +288,13 @@ try {
             }
             
             // מחיקה רכה
-            $stmt = $pdo->prepare("UPDATE purchases SET isActive = 0, inactiveDate = :date WHERE id = :id");
-            $stmt->execute(['id' => $id, 'date' => date('Y-m-d H:i:s')]);
+            $stmt = $pdo->prepare("UPDATE purchases SET isActive = 0 WHERE id = :id");
+            $stmt->execute(['id' => $id]);
             
             // עדכון סטטוס הקבר חזרה לפנוי
-            if ($purchase['graveId']) {
-                $stmt = $pdo->prepare("UPDATE graves SET graveStatus = 1 WHERE unicId = :id");
-                $stmt->execute(['id' => $purchase['graveId']]);
-            }
-            
-            // בדוק אם ללקוח יש רכישות אחרות
-            if ($purchase['clientId']) {
-                $stmt = $pdo->prepare("
-                    SELECT COUNT(*) FROM purchases 
-                    WHERE clientId = :clientId AND id != :purchaseId AND isActive = 1
-                ");
-                $stmt->execute(['clientId' => $purchase['clientId'], 'purchaseId' => $id]);
-                
-                // אם אין לו רכישות אחרות, החזר אותו לסטטוס פעיל
-                if ($stmt->fetchColumn() == 0) {
-                    $stmt = $pdo->prepare("UPDATE customers SET statusCustomer = 1 WHERE unicId = :id");
-                    $stmt->execute(['id' => $purchase['clientId']]);
-                }
+            if ($purchase['grave_id']) {
+                $stmt = $pdo->prepare("UPDATE graves SET grave_status = 1 WHERE id = :id"); // 1 = פנוי
+                $stmt->execute(['id' => $purchase['grave_id']]);
             }
             
             echo json_encode([
@@ -363,10 +309,10 @@ try {
             
             // סה"כ רכישות לפי סטטוס
             $stmt = $pdo->query("
-                SELECT purchaseStatus, COUNT(*) as count, SUM(price) as total
+                SELECT purchase_status, COUNT(*) as count, SUM(price) as total
                 FROM purchases 
                 WHERE isActive = 1 
-                GROUP BY purchaseStatus
+                GROUP BY purchase_status
             ");
             $stats['by_status'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
@@ -375,8 +321,8 @@ try {
                 SELECT COUNT(*) as count, SUM(price) as total
                 FROM purchases 
                 WHERE isActive = 1 
-                AND MONTH(dateOpening) = MONTH(CURRENT_DATE())
-                AND YEAR(dateOpening) = YEAR(CURRENT_DATE())
+                AND MONTH(opening_date) = MONTH(CURRENT_DATE())
+                AND YEAR(opening_date) = YEAR(CURRENT_DATE())
             ");
             $stats['this_month'] = $stmt->fetch(PDO::FETCH_ASSOC);
             
@@ -385,55 +331,11 @@ try {
                 SELECT COUNT(*) as count, SUM(price) as total
                 FROM purchases 
                 WHERE isActive = 1 
-                AND YEAR(dateOpening) = YEAR(CURRENT_DATE())
+                AND YEAR(opening_date) = YEAR(CURRENT_DATE())
             ");
             $stats['this_year'] = $stmt->fetch(PDO::FETCH_ASSOC);
             
-            // סה"כ רכישות פעילות
-            $stmt = $pdo->query("
-                SELECT 
-                    COUNT(*) as total_purchases,
-                    COUNT(DISTINCT clientId) as total_customers,
-                    COUNT(DISTINCT graveId) as total_graves,
-                    SUM(price) as total_revenue
-                FROM purchases 
-                WHERE isActive = 1
-            ");
-            $stats['totals'] = $stmt->fetch(PDO::FETCH_ASSOC);
-            
             echo json_encode(['success' => true, 'data' => $stats]);
-            break;
-            
-        // חיפוש מהיר לאוטוקומפליט
-        case 'search':
-            $query = $_GET['q'] ?? '';
-            if (strlen($query) < 2) {
-                echo json_encode(['success' => true, 'data' => []]);
-                break;
-            }
-            
-            $stmt = $pdo->prepare("
-                SELECT 
-                    p.id, p.serialPurchaseId, p.dateOpening, p.price,
-                    CONCAT(c.firstName, ' ', c.lastName) as customer_name,
-                    g.graveNameHe as grave_name
-                FROM purchases p
-                LEFT JOIN customers c ON p.clientId = c.unicId
-                LEFT JOIN graves g ON p.graveId = g.unicId
-                WHERE p.isActive = 1 
-                AND (
-                    p.serialPurchaseId LIKE :query OR 
-                    c.firstName LIKE :query OR 
-                    c.lastName LIKE :query OR
-                    c.numId LIKE :query OR
-                    g.graveNameHe LIKE :query
-                )
-                LIMIT 10
-            ");
-            $stmt->execute(['query' => "%$query%"]);
-            $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            echo json_encode(['success' => true, 'data' => $results]);
             break;
             
         default:

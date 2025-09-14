@@ -167,8 +167,14 @@ const FormHandler = {
             if (data.parent_id) {
                 const parentColumn = this.getParentColumn(type);
                 if (parentColumn) {
-                    data[parentColumn] = data.parent_id;
-                    delete data.parent_id;
+                    // עבור area_grave, אל תדרוס את lineId אם הוא נבחר מהטופס
+                    if (type === 'area_grave' && data.lineId) {
+                        // lineId כבר נבחר מהטופס, אל תדרוס אותו
+                        delete data.parent_id;
+                    } else {
+                        data[parentColumn] = data.parent_id;
+                        delete data.parent_id;
+                    }
                 }
             }
             

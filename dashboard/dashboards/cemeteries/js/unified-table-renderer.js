@@ -330,7 +330,8 @@ class UnifiedTableRenderer {
 
     // פתיחת טופס הוספה - הפונקציה הראשית
     openAddModal() {
-        const type = this.currentType || window.currentType;
+        // const type = this.currentType || window.currentType;
+        const type = window.currentType || this.currentType;
         const parentId = window.currentParentId;
         
         console.log('openAddModal - type:', type, 'parentId:', parentId);

@@ -148,6 +148,82 @@ const FormHandler = {
                         }
                     }, 100);
                 }
+
+                // טען נתונים אם זה טופס עריכה של לקוח
+                if (type === 'customer' && itemId) {
+                    const loadCustomerData = () => {
+                        const form = document.querySelector('#customerFormModal form');
+                        if (!form || !form.elements || form.elements.length < 5) {
+                            return false; // הטופס עדיין לא מוכן
+                        }
+                        
+                        // הטופס מוכן, טען נתונים
+                        fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?action=get&id=${itemId}`)
+                            .then(response => response.json())
+                            .then(result => {
+                                if (result.success && result.data) {
+                                    const data = result.data;
+                                    
+                                    // מלא את השדות
+                                    Object.keys(data).forEach(key => {
+                                        const field = form.elements[key];
+                                        if (field) {
+                                            if (field.type === 'checkbox') {
+                                                field.checked = data[key] == 1;
+                                            } else if (field.type === 'select-one') {
+                                                field.value = data[key] || '';
+                                                // אם זה שדה המדינה, הפעל את פילטור הערים
+                                                if (key === 'countryId' && window.filterCities) {
+                                                    window.filterCities();
+                                                    // המתן לטעינת הערים ואז בחר
+                                                    const cityWatcher = setInterval(() => {
+                                                        const cityField = form.elements['cityId'];
+                                                        if (cityField && cityField.options.length > 1) {
+                                                            clearInterval(cityWatcher);
+                                                            if (data.cityId) {
+                                                                cityField.value = data.cityId;
+                                                            }
+                                                        }
+                                                    }, 50);
+                                                    // הפסק אחרי 2 שניות למקרה הביטחון
+                                                    setTimeout(() => clearInterval(cityWatcher), 2000);
+                                                }
+                                            } else {
+                                                field.value = data[key] || '';
+                                            }
+                                        }
+                                    });
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error loading customer data:', error);
+                            });
+                        
+                        return true; // הצלחנו לטעון
+                    };
+                    
+                    // נסה לטעון מיד
+                    if (!loadCustomerData()) {
+                        // אם לא הצליח, השתמש ב-MutationObserver
+                        const observer = new MutationObserver((mutations, obs) => {
+                            if (loadCustomerData()) {
+                                obs.disconnect(); // הפסק לצפות
+                            }
+                        });
+                        
+                        // התחל לצפות בשינויים
+                        const modal = document.getElementById('customerFormModal');
+                        if (modal) {
+                            observer.observe(modal, {
+                                childList: true,
+                                subtree: true
+                            });
+                        }
+                        
+                        // הגבלת זמן של 5 שניות
+                        setTimeout(() => observer.disconnect(), 5000);
+                    }
+                }
                 
                 // טען נתונים אם זה טופס עריכה
                 if (itemId) {

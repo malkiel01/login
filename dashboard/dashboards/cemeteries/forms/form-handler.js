@@ -77,6 +77,31 @@ const FormHandler = {
                 
                 // מנע גלילה בדף הראשי
                 document.body.style.overflow = 'hidden';
+
+                // טעינת שורות דינמית עבור אחוזת קבר
+                if (type === 'area_grave' && parentId) {
+                    setTimeout(() => {
+                        const lineSelect = document.querySelector('#area_graveFormModal select[name="lineId"]');
+                        if (lineSelect) {
+                            fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=row&parent_id=${parentId}`)
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success && data.data.length > 0) {
+                                        lineSelect.innerHTML = '<option value="">-- בחר שורה --</option>';
+                                        data.data.forEach(row => {
+                                            const option = document.createElement('option');
+                                            option.value = row.unicId;
+                                            option.textContent = row.lineNameHe || `שורה ${row.serialNumber}`;
+                                            lineSelect.appendChild(option);
+                                        });
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error loading rows:', error);
+                                });
+                        }
+                    }, 300);
+                }
                 
             } else {
                 console.error('Modal not found in HTML, trying alternative approach...');

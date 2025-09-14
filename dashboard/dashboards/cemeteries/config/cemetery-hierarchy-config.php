@@ -657,6 +657,17 @@ return [
                 'required' => true
             ],
             [
+                'name' => 'lineId',
+                'label' => 'שורה',
+                'type' => 'select',
+                'required' => true,
+                'placeholder' => 'בחר שורה',
+                'validation' => [
+                    'required' => true,
+                    'message' => 'חובה לבחור שורה'
+                ]
+            ],
+            [
                 'name' => 'graveType',
                 'label' => 'סוג אחוזת קבר',
                 'type' => 'select',

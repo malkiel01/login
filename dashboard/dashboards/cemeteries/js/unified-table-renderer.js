@@ -502,14 +502,19 @@ class UnifiedTableRenderer {
         const parentId = window.currentParentId;
         
         console.log('addItem - type:', type, 'parentId:', parentId);
+        console.log('Type is not cemetery?', type !== 'cemetery');
+        console.log('No parentId?', !parentId);
+        console.log('Should open dialog?', !parentId && type !== 'cemetery');
         
         // בדוק אם צריך לבחור הורה קודם
         if (!parentId && type !== 'cemetery') {
+            console.log('Opening parent selection dialog...');
             // פתח דיאלוג בחירת הורה
             this.openParentSelectionDialog(type);
             return;
         }
         
+        console.log('Opening form directly...');
         FormHandler.openForm(type, parentId, null);
     }
 

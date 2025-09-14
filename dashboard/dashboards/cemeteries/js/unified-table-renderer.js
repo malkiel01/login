@@ -448,15 +448,77 @@ class UnifiedTableRenderer {
     /**
      * הוספת פריט חדש
      */
+    // addItem() {
+    //     const type = this.currentType;
+    //     const parentId = window.currentParentId;
+        
+    //     console.log('addItem - type:', type, 'parentId:', parentId);
+        
+    //     // קריאה פשוטה עם פרמטרים
+    //     FormHandler.openForm(type, parentId, null);
+    // }
+
     addItem() {
-        const type = this.currentType;
-        const parentId = window.currentParentId;
-        
-        console.log('addItem - type:', type, 'parentId:', parentId);
-        
-        // קריאה פשוטה עם פרמטרים
-        FormHandler.openForm(type, parentId, null);
+    const type = this.currentType;
+    const parentId = window.currentParentId;
+    
+    console.log('addItem - type:', type, 'parentId:', parentId);
+    
+    // בדוק אם צריך לבחור הורה קודם
+    if (!parentId && type !== 'cemetery') {
+        // פתח דיאלוג בחירת הורה
+        this.openParentSelectionDialog(type);
+        return;
     }
+    
+    FormHandler.openForm(type, parentId, null);
+}
+
+async openParentSelectionDialog(type) {
+    const parentType = this.getParentType(type);
+    
+    // טען רשימת הורים אפשריים
+    const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=${parentType}`);
+    const data = await response.json();
+    
+    if (data.success && data.data.length > 0) {
+        // יצירת דיאלוג בחירה
+        const modal = document.createElement('div');
+        modal.className = 'modal show';
+        modal.style.display = 'flex';
+        modal.innerHTML = `
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5>בחר ${this.getParentTypeName(parentType)}</h5>
+                        <button onclick="this.closest('.modal').remove()">×</button>
+                    </div>
+                    <div class="modal-body">
+                        <select id="parentSelector" class="form-control">
+                            <option value="">בחר...</option>
+                            ${data.data.map(item => 
+                                `<option value="${item.unicId}">${item[this.config.displayFields.name]}</option>`
+                            ).join('')}
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-primary" onclick="
+                            const selected = document.getElementById('parentSelector').value;
+                            if(selected) {
+                                window.currentParentId = selected;
+                                FormHandler.openForm('${type}', selected, null);
+                                this.closest('.modal').remove();
+                            }
+                        ">המשך</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    } else {
+        this.showMessage('אין פריטי הורה זמינים', 'error');
+    }
+}
     
     /**
      * עריכת פריט

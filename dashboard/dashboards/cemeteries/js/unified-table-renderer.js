@@ -35,7 +35,7 @@ class UnifiedTableRenderer {
         if (typeof clearAllHierarchyCards === 'function') {
             clearAllHierarchyCards();
         }
-        
+
         // טען קונפיג אם צריך
         if (!this.config || this.currentType !== type) {
             await this.loadConfig(type);
@@ -878,6 +878,11 @@ window.loadAllCemeteries = async function() {
     window.currentType = 'cemetery';
     window.currentParentId = null;
     window.selectedItems = {};
+
+    // נקה כרטיסים
+    if (typeof clearAllHierarchyCards === 'function') {
+        clearAllHierarchyCards();
+    }
     
     DashboardCleaner.clear({ targetLevel: 'cemetery' });
     BreadcrumbManager.update({}, 'cemetery');
@@ -888,7 +893,13 @@ window.loadAllBlocks = async function() {
     console.log('📍 Loading all blocks');
     window.currentType = 'block';
     window.currentParentId = null;
-    
+
+
+    // נקה כרטיסים
+    if (typeof clearAllHierarchyCards === 'function') {
+        clearAllHierarchyCards();
+    }
+
     // שמור רק את בית העלמין אם קיים
     const temp = window.selectedItems?.cemetery;
     window.selectedItems = {};
@@ -903,7 +914,12 @@ window.loadAllPlots = async function() {
     console.log('📍 Loading all plots');
     window.currentType = 'plot';
     window.currentParentId = null;
-    
+
+    // נקה כרטיסים
+    if (typeof clearAllHierarchyCards === 'function') {
+        clearAllHierarchyCards();
+    }
+
     // שמור רק עד גוש
     const tempCemetery = window.selectedItems?.cemetery;
     const tempBlock = window.selectedItems?.block;
@@ -920,6 +936,11 @@ window.loadAllAreaGraves = async function() {
     console.log('📍 Loading all area graves');
     window.currentType = 'area_grave';
     window.currentParentId = null;
+
+    // נקה כרטיסים
+    if (typeof clearAllHierarchyCards === 'function') {
+        clearAllHierarchyCards();
+    }
     
     // שמור עד חלקה
     const temp = { ...window.selectedItems };

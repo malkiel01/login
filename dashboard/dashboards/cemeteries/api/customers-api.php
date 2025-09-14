@@ -37,8 +37,8 @@ try {
                         co.countryNameHe as country_name,
                         ci.cityNameHe as city_name
                     FROM customers c
-                    LEFT JOIN countries co ON c.country = co.unicId
-                    LEFT JOIN cities ci ON c.city = ci.unicId
+                    LEFT JOIN countries co ON c.countryId = co.unicId
+                    LEFT JOIN cities ci ON c.cityId = ci.unicId
                     WHERE c.isActive = 1
                 ";
             $params = [];

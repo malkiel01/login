@@ -94,6 +94,50 @@ try {
     
     // הוספת השדות לפי הסוג
     error_log("Getting form fields for type: $type");
+
+    if ($type === 'parent_selector') {
+        // טען רשימת הורים
+        $parentType = $_GET['parent_id'] ?? '';
+        
+        // חיבור למסד נתונים
+        require_once dirname(__DIR__) . '/config.php';
+        $pdo = getDBConnection();
+        
+        // טען את הקונפיג כדי לדעת איזו טבלה ושדות
+        if (isset($config[$parentType])) {
+            $parentConfig = $config[$parentType];
+            $table = $parentConfig['table'];
+            $nameField = $parentConfig['displayFields']['name'] ?? 'name';
+            $primaryKey = $parentConfig['primaryKey'] ?? 'id';
+            
+            // שאילתה לטעינת הרשימה
+            $sql = "SELECT $primaryKey, $nameField FROM $table WHERE isActive = 1 ORDER BY $nameField";
+            $stmt = $pdo->query($sql);
+            $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // המר לפורמט של options
+            $options = [];
+            foreach ($items as $item) {
+                $options[$item[$primaryKey]] = $item[$nameField];
+            }
+            
+            // עדכן את השדות
+            $fields = [
+                [
+                    'name' => 'selected_parent',
+                    'label' => 'בחר ' . ($parentConfig['singular'] ?? 'הורה'),
+                    'type' => 'select',
+                    'required' => true,
+                    'options' => $options,
+                    'placeholder' => '-- בחר --'
+                ]
+            ];
+        }
+    } else {
+        // הקוד הקיים - טעינת שדות רגילים
+        $fields = getFormFields($type, $data);
+    }
+
     $fields = getFormFields($type, $data);
     
     if (empty($fields)) {

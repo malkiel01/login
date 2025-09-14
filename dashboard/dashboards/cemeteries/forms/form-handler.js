@@ -210,7 +210,7 @@ const FormHandler = {
 
             for (let [key, value] of formData.entries()) {
                 // דלג על שדות שלא צריכים להישלח
-                if (key === 'type' || key === 'id' || key === 'unicId') {
+                if (key === 'type' || key === 'id') {
                     continue;
                 }
                 

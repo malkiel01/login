@@ -398,10 +398,10 @@ if (!document.getElementById('hierarchy-cards-styles')) {
 }
 
 // הגדר את הפונקציות ב-window object
-window.createCemeteryCard = createCemeteryCard;
-window.createBlockCard = createBlockCard;
-window.createPlotCard = createPlotCard;
-window.createAreaGraveCard = createAreaGraveCard;
+// window.createCemeteryCard = createCemeteryCard;
+// window.createBlockCard = createBlockCard;
+// window.createPlotCard = createPlotCard;
+// window.createAreaGraveCard = createAreaGraveCard;
 window.closeHierarchyCard = closeHierarchyCard;
 window.displayHierarchyCard = displayHierarchyCard;
 window.clearAllHierarchyCards = clearAllHierarchyCards;

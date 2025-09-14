@@ -501,27 +501,16 @@ class UnifiedTableRenderer {
         
         switch(type) {
             case 'cemetery':
-                if (typeof createCemeteryCard === 'function') {
-                    cardPromise = createCemeteryCard(itemId); // שלח רק ID
-                }
+                cardPromise = createCemeteryCard(itemId); // שלח רק ID
                 break;
-                
             case 'block':
-                if (typeof createBlockCard === 'function') {
-                    cardPromise = createBlockCard(itemId); // שלח רק ID
-                }
+                cardPromise = createBlockCard(itemId); // שלח רק ID
                 break;
-                
             case 'plot':
-                if (typeof createPlotCard === 'function') {
-                    cardPromise = createPlotCard(itemId); // שלח רק ID
-                }
+                cardPromise = createPlotCard(itemId); // שלח רק ID
                 break;
-                
             case 'area_grave':
-                if (typeof createAreaGraveCard === 'function') {
-                    cardPromise = createAreaGraveCard(itemId); // שלח רק ID
-                }
+                cardPromise = createAreaGraveCard(itemId); // שלח רק ID
                 break;
         }
         

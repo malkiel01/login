@@ -48,9 +48,18 @@ class UnifiedTableRenderer {
      */
     async loadData(type, parentId = null) {
         try {
+            // let url = `${API_BASE}cemetery-hierarchy.php?action=list&type=${type}`;
+            // if (parentId) {
+            //     url += `&parent_id=${parentId}`;
+            // }
             let url = `${API_BASE}cemetery-hierarchy.php?action=list&type=${type}`;
             if (parentId) {
-                url += `&parent_id=${parentId}`;
+                // עבור אחוזות קבר, שלח plot_id במקום parent_id
+                if (type === 'area_grave') {
+                    url += `&plot_id=${parentId}`;
+                } else {
+                    url += `&parent_id=${parentId}`;
+                }
             }
             
             const response = await fetch(url);
@@ -947,76 +956,3 @@ window.loadGravesForAreaGrave = async function(areaGraveId) {
     
     await tableRenderer.loadAndDisplay('grave', areaGraveId);
 };
-
-
-// --------
-
-// // פונקציות גלובליות לתאימות לאחור
-// window.loadAllCemeteries = async function() {
-//     window.currentType = 'cemetery';
-//     window.currentParentId = null;
-//     DashboardCleaner.clear({ targetLevel: 'cemetery' });
-//     BreadcrumbManager.update({}, 'cemetery');
-//     await tableRenderer.loadAndDisplay('cemetery');
-// };
-
-// window.loadAllBlocks = async function() {
-//     window.currentType = 'block';
-//     window.currentParentId = null;
-//     DashboardCleaner.clear({ targetLevel: 'block' });
-//     BreadcrumbManager.update({}, 'block');
-//     await tableRenderer.loadAndDisplay('block');
-// };
-
-// window.loadAllPlots = async function() {
-//     window.currentType = 'plot';
-//     window.currentParentId = null;
-//     DashboardCleaner.clear({ targetLevel: 'plot' });
-//     BreadcrumbManager.update({}, 'plot');
-//     await tableRenderer.loadAndDisplay('plot');
-// };
-
-// window.loadAllAreaGraves = async function() {
-//     window.currentType = 'area_grave';
-//     window.currentParentId = null;
-//     DashboardCleaner.clear({ targetLevel: 'area_grave' });
-//     BreadcrumbManager.update({}, 'area_grave');
-//     await tableRenderer.loadAndDisplay('area_grave');
-// };
-
-// window.loadAllGraves = async function() {
-//     window.currentType = 'grave';
-//     window.currentParentId = null;
-//     DashboardCleaner.clear({ targetLevel: 'grave' });
-//     BreadcrumbManager.update({}, 'grave');
-//     await tableRenderer.loadAndDisplay('grave');
-// };
-
-// // פונקציות לטעינה עם הורה
-// window.loadBlocksForCemetery = async function(cemeteryId) {
-//     window.currentCemeteryId = cemeteryId;  // הוסף את זה
-//     window.currentType = 'block';
-//     window.currentParentId = cemeteryId;
-//     await tableRenderer.loadAndDisplay('block', cemeteryId);
-// };
-
-// window.loadPlotsForBlock = async function(blockId) {
-//     window.currentBlockId = blockId;  // הוסף את זה
-//     window.currentType = 'plot';
-//     window.currentParentId = blockId;
-//     await tableRenderer.loadAndDisplay('plot', blockId);
-// };
-
-// window.loadAreaGravesForPlot = async function(plotId) {
-//     window.currentPlotId = plotId;  // הוסף את זה
-//     window.currentType = 'area_grave';
-//     window.currentParentId = plotId;
-//     await tableRenderer.loadAndDisplay('area_grave', plotId);
-// };
-
-// window.loadGravesForAreaGrave = async function(areaGraveId) {
-//     window.currentAreaGraveId = areaGraveId;  // הוסף את זה
-//     window.currentType = 'grave';
-//     window.currentParentId = areaGraveId;
-//     await tableRenderer.loadAndDisplay('grave', areaGraveId);
-// };

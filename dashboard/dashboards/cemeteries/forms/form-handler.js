@@ -103,50 +103,59 @@ const FormHandler = {
                     }, 300);
                 }
                 
-// טען נתונים אם זה טופס עריכה
-if (itemId) {
-    // פונקציה שמנסה למלא את הטופס
-    const fillForm = () => {
-        const form = document.querySelector(`#${type}FormModal form`);
-        
-        // בדוק אם הטופס קיים ויש בו שדות
-        if (form && form.elements && form.elements.length > 2) {
-            fetch(`${API_BASE}cemetery-hierarchy.php?action=get&type=${type}&id=${itemId}`)
-                .then(response => response.json())
-                .then(result => {
-                    if (result.success && result.data) {
-                        Object.keys(result.data).forEach(key => {
-                            const field = form.elements[key];
-                            if (field) {
-                                if (field.type === 'checkbox') {
-                                    field.checked = result.data[key] == 1;
-                                } else {
-                                    field.value = result.data[key] || '';
-                                }
+                // טען נתונים אם זה טופס עריכה
+                if (itemId) {
+                    // פונקציה שמנסה למלא את הטופס
+                    const fillForm = () => {
+                        const form = document.querySelector(`#${type}FormModal form`);
+                        
+                        // בדוק אם הטופס קיים ויש בו שדות
+                        if (form && form.elements && form.elements.length > 2) {
+                            fetch(`${API_BASE}cemetery-hierarchy.php?action=get&type=${type}&id=${itemId}`)
+                                .then(response => response.json())
+                                .then(result => {
+                                    if (result.success && result.data) {
+                                        Object.keys(result.data).forEach(key => {
+                                            const field = form.elements[key];
+                                            if (field) {
+                                                if (field.type === 'checkbox') {
+                                                    field.checked = result.data[key] == 1;
+                                                } else {
+                                                    field.value = result.data[key] || '';
+                                                }
+                                            }
+                                        });
+                                        
+                                        // וודא ש-unicId נשמר כשדה מוסתר
+                                        if (result.data.unicId && !form.elements['unicId']) {
+                                            const hiddenField = document.createElement('input');
+                                            hiddenField.type = 'hidden';
+                                            hiddenField.name = 'unicId';
+                                            hiddenField.value = result.data.unicId;
+                                            form.appendChild(hiddenField);
+                                        }
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error loading item data:', error);
+                                });
+                            return true; // הצלחנו
+                        }
+                        return false; // עדיין לא מוכן
+                    };
+                    
+                    // נסה מיד
+                    if (!fillForm()) {
+                        // אם לא הצליח, נסה כל 100ms עד 10 פעמים
+                        let attempts = 0;
+                        const interval = setInterval(() => {
+                            attempts++;
+                            if (fillForm() || attempts >= 10) {
+                                clearInterval(interval);
                             }
-                        });
+                        }, 100);
                     }
-                })
-                .catch(error => {
-                    console.error('Error loading item data:', error);
-                });
-            return true; // הצלחנו
-        }
-        return false; // עדיין לא מוכן
-    };
-    
-    // נסה מיד
-    if (!fillForm()) {
-        // אם לא הצליח, נסה כל 100ms עד 10 פעמים
-        let attempts = 0;
-        const interval = setInterval(() => {
-            attempts++;
-            if (fillForm() || attempts >= 10) {
-                clearInterval(interval);
-            }
-        }, 100);
-    }
-}
+                }
                 
             } else {
                 console.error('Modal not found in HTML, trying alternative approach...');
@@ -242,7 +251,9 @@ if (itemId) {
             }
             
             if (isEdit) {
-                url += `&id=${formData.get('id')}`;
+                // נסה למצוא unicId או id
+                const recordId = formData.get('unicId') || formData.get('id');
+                url += `&id=${recordId}`;
             }
             
             console.log('Saving to:', url);

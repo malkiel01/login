@@ -200,11 +200,6 @@ async function createPlotCard(plotId) {
                             <svg class="icon-sm"><use xlink:href="#icon-rows"></use></svg>
                             ניהול שורות
                         </button>
-                        <!-- הוסף את הכפתור הזה! -->
-                        <button class="info-card-btn" onclick="openAddAreaGrave()">
-                            <svg class="icon-sm"><use xlink:href="#icon-plus"></use></svg>
-                            הוסף אחוזת קבר
-                        </button>
                     </div>
                 </div>
                 
@@ -279,14 +274,6 @@ async function createPlotCard(plotId) {
         console.error('Error creating plot card:', error);
         return '';
     }
-}
-function addAreaGraveButtonToPlotCard() {
-    return `
-        <button class="info-card-btn" onclick="openAddAreaGrave()">
-            <svg class="icon-sm"><use xlink:href="#icon-plus"></use></svg>
-            הוסף אחו22זת קבר
-        </button>
-    `;
 }
 
 // יצירת כרטיס מידע לאחוזת קבר

@@ -444,51 +444,101 @@ class UnifiedTableRenderer {
         this.loadAndDisplay(nextType, itemId);
     }
 
+    // /**
+    //  * הצגת כרטיס לפריט שנבחר
+    //  */
+    // displayItemCard2(type, itemId, itemName) {
+    //     let cardHtml = '';
+        
+    //     switch(type) {
+    //         case 'cemetery':
+    //             if (typeof createCemeteryCard === 'function') {
+    //                 cardHtml = createCemeteryCard({ 
+    //                     id: itemId, 
+    //                     name: itemName 
+    //                 });
+    //             }
+    //             break;
+                
+    //         case 'block':
+    //             if (typeof createBlockCard === 'function') {
+    //                 cardHtml = createBlockCard({ 
+    //                     id: itemId, 
+    //                     name: itemName 
+    //                 });
+    //             }
+    //             break;
+                
+    //         case 'plot':
+    //             if (typeof createPlotCard === 'function') {
+    //                 cardHtml = createPlotCard({ 
+    //                     id: itemId, 
+    //                     name: itemName 
+    //                 });
+    //             }
+    //             break;
+                
+    //         case 'area_grave':
+    //             if (typeof createAreaGraveCard === 'function') {
+    //                 cardHtml = createAreaGraveCard({ 
+    //                     id: itemId, 
+    //                     name: itemName 
+    //                 });
+    //             }
+    //             break;
+    //     }
+        
+    //     if (cardHtml && typeof displayHierarchyCard === 'function') {
+    //         displayHierarchyCard(cardHtml);
+    //     }
+    // }
     /**
      * הצגת כרטיס לפריט שנבחר
      */
     displayItemCard(type, itemId, itemName) {
         let cardHtml = '';
         
+        // הכן אובייקט נתונים פשוט
+        const itemData = {
+            id: itemId,
+            name: itemName
+        };
+        
         switch(type) {
             case 'cemetery':
                 if (typeof createCemeteryCard === 'function') {
-                    cardHtml = createCemeteryCard({ 
-                        id: itemId, 
-                        name: itemName 
-                    });
+                    // שלח רק את הנתונים הבסיסיים
+                    cardHtml = createCemeteryCard(itemData);
                 }
                 break;
                 
             case 'block':
                 if (typeof createBlockCard === 'function') {
-                    cardHtml = createBlockCard({ 
-                        id: itemId, 
-                        name: itemName 
-                    });
+                    cardHtml = createBlockCard(itemData);
                 }
                 break;
                 
             case 'plot':
                 if (typeof createPlotCard === 'function') {
-                    cardHtml = createPlotCard({ 
-                        id: itemId, 
-                        name: itemName 
-                    });
+                    cardHtml = createPlotCard(itemData);
                 }
                 break;
                 
             case 'area_grave':
                 if (typeof createAreaGraveCard === 'function') {
-                    cardHtml = createAreaGraveCard({ 
-                        id: itemId, 
-                        name: itemName 
-                    });
+                    cardHtml = createAreaGraveCard(itemData);
                 }
                 break;
         }
         
-        if (cardHtml && typeof displayHierarchyCard === 'function') {
+        // בדוק אם הכרטיס הוא Promise (אם הפונקציה אסינכרונית)
+        if (cardHtml instanceof Promise) {
+            cardHtml.then(html => {
+                if (html && typeof displayHierarchyCard === 'function') {
+                    displayHierarchyCard(html);
+                }
+            });
+        } else if (cardHtml && typeof displayHierarchyCard === 'function') {
             displayHierarchyCard(cardHtml);
         }
     }

@@ -141,8 +141,8 @@ if (!checkPermission('view', 'cemetery')) {
     <script src="/dashboard/dashboards/cemeteries/js/clearDashboard.js"></script>
     <!-- מערכת טפסים חדשה -->
     <script src="/dashboard/dashboards/cemeteries/forms/form-handler.js"></script>
-    <script src="/dashboard/dashboards/cemeteries/js/hierarchy-cards.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/cards.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/hierarchy-cards.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/responsive.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/unified-table-renderer.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/hierarchy.js"></script>

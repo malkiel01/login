@@ -3,7 +3,7 @@
 // משתנים גלובליים
 let allPurchases = [];
 let currentPurchasePage = 1;
-let currentSort = { field: 'created_at', order: 'DESC' };
+let currentSort = { field: 'createDate', order: 'DESC' };
 
 // טעינת כל הרכישות
 async function loadAllPurchases(page = 1) {
@@ -21,8 +21,7 @@ async function loadAllPurchases(page = 1) {
     }
     
     try {
-        // השתמש ישירות ב-cemetery-hierarchy.php שעובד
-        const response = await fetch(`/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=list&type=purchase&page=${page}&limit=50&sort=${currentSort.field}&order=${currentSort.order}`);
+        const response = await fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=list&page=${page}&limit=50&sort=${currentSort.field}&order=${currentSort.order}`);
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -38,7 +37,7 @@ async function loadAllPurchases(page = 1) {
             
             // עדכן breadcrumb אם הפונקציה קיימת
             if (typeof updateBreadcrumb === 'function') {
-                updateBreadcrumb('רכישות');
+                updateBreadcrumb({ purchase: { name: 'רכישות' } });
             }
         } else {
             throw new Error(data.error || 'Failed to load purchases');
@@ -62,8 +61,8 @@ function displayPurchasesTable(purchases) {
     // כותרות הטבלה
     tableHeaders.innerHTML = `
         <tr>
-            <th>מס' רכישה</th>
-            <th>תאריך רכישה</th>
+            <th>מס׳ רכישה</th>
+            <th>תאריך</th>
             <th>לקוח</th>
             <th>מיקום קבר</th>
             <th>סכום</th>
@@ -91,34 +90,49 @@ function displayPurchasesTable(purchases) {
     }
     
     tableBody.innerHTML = purchases.map(purchase => {
-        const statusInfo = getPurchaseStatusInfo(purchase.purchase_status);
+        const statusInfo = getPurchaseStatusInfo(purchase.purchaseStatus || purchase.purchase_status);
+        
+        // בניית מיקום הקבר המלא
+        let graveLocation = '';
+        if (purchase.cemeteryNameHe) {
+            graveLocation = `${purchase.cemeteryNameHe}`;
+            if (purchase.blockNameHe) graveLocation += ` > ${purchase.blockNameHe}`;
+            if (purchase.plotNameHe) graveLocation += ` > ${purchase.plotNameHe}`;
+            if (purchase.lineNameHe) graveLocation += ` > ${purchase.lineNameHe}`;
+            if (purchase.areaGraveNameHe) graveLocation += ` > ${purchase.areaGraveNameHe}`;
+            if (purchase.grave_number) graveLocation += ` > ${purchase.grave_number}`;
+        } else {
+            graveLocation = purchase.grave_location || purchase.grave_number || 'לא הוגדר';
+        }
+        
         return `
             <tr>
-                <td>${purchase.id}</td>
-                <td>${formatDate(purchase.purchase_date)}</td>
                 <td>
-                    ${purchase.customer_name || 'לא ידוע'}
-                    ${purchase.customer_id_number ? `<br><small>${purchase.customer_id_number}</small>` : ''}
+                    <strong>${purchase.serialPurchaseId || purchase.purchase_number || purchase.id}</strong>
                 </td>
-                <td>${purchase.grave_location || purchase.grave_number || 'לא הוגדר'}</td>
-                <td>${purchase.amount ? '₪' + formatNumber(purchase.amount) : '-'}</td>
+                <td>${formatDate(purchase.dateOpening || purchase.purchase_date || purchase.createDate)}</td>
+                <td>
+                    <strong>${purchase.customer_name || 'לא ידוע'}</strong>
+                    ${purchase.customer_id_number ? `<br><small style="color: #666;">${purchase.customer_id_number}</small>` : ''}
+                </td>
+                <td>
+                    <small style="color: #666;">${graveLocation}</small>
+                </td>
+                <td>${purchase.price || purchase.amount ? '₪' + formatNumber(purchase.price || purchase.amount) : '-'}</td>
                 <td>
                     <span class="status-badge" style="background: ${statusInfo.color}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
                         ${statusInfo.name}
                     </span>
                 </td>
                 <td>
-                    <div class="action-buttons">
-                        <button class="btn-icon" onclick="viewPurchase(${purchase.id})" title="צפייה">
-                            <svg class="icon"><use xlink:href="#icon-view"></use></svg>
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-info" onclick="viewPurchase(${purchase.id})" title="צפייה">
                             👁️
                         </button>
-                        <button class="btn-icon" onclick="editPurchase(${purchase.id})" title="עריכה">
-                            <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
+                        <button class="btn btn-sm btn-warning" onclick="editPurchase(${purchase.id})" title="עריכה">
                             ✏️
                         </button>
-                        <button class="btn-icon btn-danger" onclick="deletePurchase(${purchase.id})" title="מחיקה">
-                            <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
+                        <button class="btn btn-sm btn-danger" onclick="deletePurchase(${purchase.id})" title="מחיקה">
                             🗑️
                         </button>
                     </div>
@@ -131,9 +145,9 @@ function displayPurchasesTable(purchases) {
 // קבלת מידע על סטטוס רכישה
 function getPurchaseStatusInfo(status) {
     const statuses = {
-        1: { name: 'טיוטה', color: '#6b7280' },
-        2: { name: 'אושר', color: '#3b82f6' },
-        3: { name: 'שולם', color: '#10b981' },
+        1: { name: 'פתוח', color: '#3b82f6' },
+        2: { name: 'שולם', color: '#10b981' },
+        3: { name: 'סגור', color: '#6b7280' },
         4: { name: 'בוטל', color: '#dc2626' }
     };
     return statuses[status] || { name: 'לא ידוע', color: '#6b7280' };
@@ -149,17 +163,18 @@ function updatePurchasesPagination(pagination) {
     const paginationContainer = document.getElementById('paginationContainer');
     if (paginationContainer) {
         let html = `
-            <div class="pagination">
+            <div class="pagination" style="display: flex; align-items: center; gap: 10px; padding: 10px;">
                 <span>עמוד ${pagination.page} מתוך ${pagination.pages}</span>
+                <span>|</span>
                 <span>סה"כ: ${pagination.total} רכישות</span>
         `;
         
         if (pagination.page > 1) {
-            html += `<button onclick="loadAllPurchases(${pagination.page - 1})">הקודם</button>`;
+            html += `<button class="btn btn-sm btn-secondary" onclick="loadAllPurchases(${pagination.page - 1})">הקודם</button>`;
         }
         
         if (pagination.page < pagination.pages) {
-            html += `<button onclick="loadAllPurchases(${pagination.page + 1})">הבא</button>`;
+            html += `<button class="btn btn-sm btn-secondary" onclick="loadAllPurchases(${pagination.page + 1})">הבא</button>`;
         }
         
         html += `</div>`;
@@ -170,14 +185,33 @@ function updatePurchasesPagination(pagination) {
 // עדכון סטטיסטיקות
 async function updatePurchaseStats() {
     try {
-        // נסה לטעון סטטיסטיקות
         const response = await fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=stats`);
         
         if (response.ok) {
             const data = await response.json();
             if (data.success) {
                 console.log('Purchase stats:', data.data);
-                // כאן תוסיף הצגת סטטיסטיקות ב-UI
+                
+                // הצג סטטיסטיקות אם יש אלמנט מתאים
+                const statsContainer = document.getElementById('purchaseStats');
+                if (statsContainer && data.data.totals) {
+                    statsContainer.innerHTML = `
+                        <div class="stats-row" style="display: flex; gap: 20px; margin-bottom: 20px;">
+                            <div class="stat-card" style="flex: 1; padding: 15px; background: #f3f4f6; border-radius: 8px;">
+                                <div style="font-size: 24px; font-weight: bold;">${data.data.totals.total_purchases || 0}</div>
+                                <div style="color: #6b7280;">סה"כ רכישות</div>
+                            </div>
+                            <div class="stat-card" style="flex: 1; padding: 15px; background: #f3f4f6; border-radius: 8px;">
+                                <div style="font-size: 24px; font-weight: bold;">${data.data.totals.total_customers || 0}</div>
+                                <div style="color: #6b7280;">לקוחות</div>
+                            </div>
+                            <div class="stat-card" style="flex: 1; padding: 15px; background: #f3f4f6; border-radius: 8px;">
+                                <div style="font-size: 24px; font-weight: bold;">₪${formatNumber(data.data.totals.total_revenue || 0)}</div>
+                                <div style="color: #6b7280;">סה"כ הכנסות</div>
+                            </div>
+                        </div>
+                    `;
+                }
             }
         }
     } catch (error) {
@@ -199,33 +233,29 @@ function formatNumber(num) {
 
 // הצגת שגיאה
 function showError(message) {
-    const tableBody = document.getElementById('tableBody');
-    if (tableBody) {
-        tableBody.innerHTML = `
-            <tr>
-                <td colspan="7" class="text-center text-danger">
-                    ${message}
-                </td>
-            </tr>
-        `;
+    if (typeof showToast === 'function') {
+        showToast('error', message);
     } else {
-        alert(message);
+        const tableBody = document.getElementById('tableBody');
+        if (tableBody) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="text-center text-danger">
+                        ${message}
+                    </td>
+                </tr>
+            `;
+        } else {
+            alert(message);
+        }
     }
 }
 
 // הצגת הודעת הצלחה
-// הצגת הודעת הצלחה
 function showSuccess(message) {
-    // השתמש בפונקציה אחרת אם קיימת
-    if (typeof window.showToast === 'function') {
-        window.showToast('success', message);
-    } else if (typeof window.displaySuccess === 'function') {
-        window.displaySuccess(message);
+    if (typeof showToast === 'function') {
+        showToast('success', message);
     } else {
-        // הצג הודעה בסיסית
-        alert('✅ ' + message);
-        
-        // או צור הודעה ב-DOM
         const notification = document.createElement('div');
         notification.style.cssText = `
             position: fixed;
@@ -236,7 +266,7 @@ function showSuccess(message) {
             padding: 15px 20px;
             border-radius: 8px;
             z-index: 10000;
-            animation: slideIn 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         `;
         notification.textContent = message;
         document.body.appendChild(notification);
@@ -245,14 +275,72 @@ function showSuccess(message) {
     }
 }
 
-// פונקציה זו מוגדרת ב-purchase-form.js
-// היא נשארת כאן רק כ-fallback
-
 // צפייה ברכישה
-function viewPurchase(id) {
-    console.log('Viewing purchase:', id);
-    // כאן תוסיף את הלוגיקה לצפייה ברכישה
-    alert('צפייה ברכישה #' + id);
+async function viewPurchase(id) {
+    try {
+        const response = await fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=get&id=${id}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            showPurchaseDetails(data.data);
+        }
+    } catch (error) {
+        showError('שגיאה בטעינת פרטי הרכישה');
+    }
+}
+
+// הצגת פרטי רכישה
+function showPurchaseDetails(purchase) {
+    const modal = document.createElement('div');
+    modal.className = 'modal show';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;';
+    
+    const statusInfo = getPurchaseStatusInfo(purchase.purchaseStatus);
+    
+    modal.innerHTML = `
+        <div class="modal-content" style="background: white; padding: 30px; border-radius: 10px; max-width: 700px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header" style="margin-bottom: 20px;">
+                <h2 style="margin: 0;">רכישה מס׳ ${purchase.serialPurchaseId || purchase.id}</h2>
+            </div>
+            <div class="modal-body">
+                <div style="display: grid; gap: 20px;">
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                        <h4 style="margin-bottom: 15px;">פרטי רכישה</h4>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                            <div><strong>תאריך:</strong> ${formatDate(purchase.dateOpening)}</div>
+                            <div><strong>סטטוס:</strong> ${statusInfo.name}</div>
+                            <div><strong>סכום:</strong> ${purchase.price ? '₪' + formatNumber(purchase.price) : '-'}</div>
+                            <div><strong>תשלומים:</strong> ${purchase.numOfPayments || '1'}</div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                        <h4 style="margin-bottom: 15px;">פרטי לקוח</h4>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                            <div><strong>שם:</strong> ${purchase.firstName || ''} ${purchase.lastName || ''}</div>
+                            <div><strong>ת.ז.:</strong> ${purchase.numId || '-'}</div>
+                            <div><strong>טלפון:</strong> ${purchase.phone || '-'}</div>
+                        </div>
+                    </div>
+                    
+                    ${purchase.comment ? `
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                        <h4 style="margin-bottom: 15px;">הערות</h4>
+                        <div>${purchase.comment}</div>
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                <button class="btn btn-warning" onclick="this.closest('.modal').remove(); editPurchase(${purchase.id})">
+                    ערוך
+                </button>
+                <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">סגור</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
 }
 
 // פתיחת טופס רכישה חדשה
@@ -282,58 +370,13 @@ async function deletePurchase(id) {
         
         if (result.success) {
             showSuccess('הרכישה נמחקה בהצלחה');
-            loadAllPurchases(); // רענן את הרשימה
+            loadAllPurchases(currentPurchasePage);
         } else {
             showError(result.error || 'שגיאה במחיקת הרכישה');
         }
     } catch (error) {
         console.error('Error deleting purchase:', error);
         showError('שגיאה במחיקה');
-    }
-}
-
-// עריכת רכישה
-function editPurchase2(id) {
-    console.log('Editing purchase:', id);
-    
-    // אם יש פונקציה גלובלית לפתיחת מודל
-    if (typeof window.openModal === 'function') {
-        window.openModal('purchase', null, id);
-    } else {
-        alert('עריכת רכישה #' + id);
-    }
-}
-
-// מחיקת רכישה
-async function deletePurchase2(id) {
-    if (!confirm('האם אתה בטוח שברצונך למחוק רכישה זו?')) {
-        return;
-    }
-    
-    try {
-        // נסה קודם עם purchases-api.php
-        let response = await fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=delete&id=${id}`, {
-            method: 'DELETE'
-        });
-        
-        // אם לא קיים, נסה עם cemetery-hierarchy.php
-        if (!response.ok && response.status === 404) {
-            response = await fetch(`/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=delete&type=purchase&id=${id}`, {
-                method: 'DELETE'
-            });
-        }
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showSuccess('הרכישה נמחקה בהצלחה');
-            loadAllPurchases(currentPurchasePage);
-        } else {
-            throw new Error(data.error || 'Failed to delete purchase');
-        }
-    } catch (error) {
-        console.error('Error deleting purchase:', error);
-        showError('שגיאה במחיקת הרכישה: ' + error.message);
     }
 }
 
@@ -350,9 +393,22 @@ function sortPurchases(field) {
 }
 
 // חיפוש רכישות
-function searchPurchases(query) {
-    console.log('Searching purchases:', query);
-    // כאן תוסיף לוגיקת חיפוש
+async function searchPurchases(query) {
+    if (!query || query.length < 2) {
+        loadAllPurchases(1);
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=list&search=${encodeURIComponent(query)}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            displayPurchasesTable(data.data || []);
+        }
+    } catch (error) {
+        console.error('Error searching purchases:', error);
+    }
 }
 
 // אתחול בטעינת העמוד
@@ -383,3 +439,6 @@ window.purchasesModule = {
     deletePurchase,
     viewPurchase
 };
+
+// הגדר פונקציה גלובלית
+window.loadAllPurchases = loadAllPurchases;

@@ -671,91 +671,43 @@ class UnifiedTableRenderer {
     //     }
     // }
     async openParentSelectionDialog(type) {
-    console.log('Opening parent selection dialog for type:', type);
-    
-    const parentType = this.getParentType(type);
-    
-    // טען רשימת הורים אפשריים
-    const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=${parentType}`);
-    const data = await response.json();
-    
-    if (data.success && data.data.length > 0) {
-        // קבע את שדה השם הנכון לפי הסוג
-        const nameFields = {
-            'cemetery': 'cemeteryNameHe',
-            'block': 'blockNameHe',
-            'plot': 'plotNameHe',
-            'row': 'lineNameHe',
-            'area_grave': 'areaGraveNameHe'
-        };
+        const parentType = this.getParentType(type);
         
-        const nameField = nameFields[parentType] || 'name';
+        // טען רשימת הורים
+        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=${parentType}`);
+        const data = await response.json();
         
-        // יצירת דיאלוג עם הקלאסים הקיימים במערכת
-        const modal = document.createElement('div');
-        modal.className = 'modal fade show';
-        modal.id = 'parentSelectionModal';
-        modal.style.display = 'block';
-        
-        modal.innerHTML = `
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">בחר ${this.getParentTypeName(parentType)}</h5>
-                        <button type="button" class="close" onclick="document.getElementById('parentSelectionModal').remove()">
-                            <span>&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <p>יש לבחור ${this.getParentTypeName(parentType)} להוספת ${this.getParentTypeName(type)}:</p>
-                        <div class="form-group">
-                            <select id="parentSelector" class="form-control">
-                                <option value="">-- בחר ${this.getParentTypeName(parentType)} --</option>
-                                ${data.data.map(item => 
-                                    `<option value="${item.unicId || item.id}">${item[nameField] || item.name || 'ללא שם'}</option>`
-                                ).join('')}
-                            </select>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('parentSelectionModal').remove()">
-                            ביטול
-                        </button>
-                        <button type="button" class="btn btn-primary" onclick="
-                            const selected = document.getElementById('parentSelector').value;
-                            if(selected) {
-                                window.currentParentId = selected;
-                                FormHandler.openForm('${type}', selected, null);
-                                document.getElementById('parentSelectionModal').remove();
-                            } else {
-                                alert('יש לבחור ${this.getParentTypeName(parentType)}');
-                            }
-                        ">
-                            המשך
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        // הוסף backdrop אם צריך
-        const backdrop = document.createElement('div');
-        backdrop.className = 'modal-backdrop fade show';
-        document.body.appendChild(backdrop);
-        
-        modal.onclick = function(e) {
-            if (e.target === modal) {
-                modal.remove();
-                backdrop.remove();
+        if (data.success && data.data.length > 0) {
+            const nameFields = {
+                'cemetery': 'cemeteryNameHe',
+                'block': 'blockNameHe', 
+                'plot': 'plotNameHe',
+                'row': 'lineNameHe',
+                'area_grave': 'areaGraveNameHe'
+            };
+            
+            const nameField = nameFields[parentType] || 'name';
+            
+            // במקום ליצור טופס חדש, פשוט צור דיאלוג בחירה פשוט
+            const selectedParent = prompt(
+                `בחר ${this.getParentTypeName(parentType)} להוספת ${this.getParentTypeName(type)}:\n\n` +
+                data.data.map((item, index) => 
+                    `${index + 1}. ${item[nameField] || 'ללא שם'}`
+                ).join('\n')
+            );
+            
+            if (selectedParent) {
+                const index = parseInt(selectedParent) - 1;
+                if (data.data[index]) {
+                    const parentId = data.data[index].unicId || data.data[index].id;
+                    window.currentParentId = parentId;
+                    FormHandler.openForm(type, parentId, null);
+                }
             }
-        };
-        
-        document.body.appendChild(modal);
-        
-    } else {
-        this.showMessage('אין פריטי הורה זמינים', 'error');
+        } else {
+            this.showMessage('אין פריטי הורה זמינים', 'error');
+        }
     }
-}
 
     /**
      * עריכת פריט

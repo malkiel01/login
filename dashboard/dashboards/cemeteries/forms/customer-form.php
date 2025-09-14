@@ -1,7 +1,21 @@
 <?php
 // forms/customer-form.php
+
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+header('Content-Type: text/html; charset=utf-8');
+
+echo "Test 1: PHP works<br>";
+
 require_once __DIR__ . '/FormBuilder.php';
+echo "Test 2: FormBuilder loaded<br>";
+
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
+echo "Test 3: Config loaded<br>";
+
+// $conn = getDBConnection();
+// echo "Test 4: DB connected<br>";
+
 
 $itemId = $_GET['item_id'] ?? $_GET['id'] ?? null;
 $parentId = $_GET['parent_id'] ?? null;
@@ -41,7 +55,8 @@ try {
     }
     
 } catch (Exception $e) {
-    die("שגיאה: " . $e->getMessage());
+    // die("שגיאה: " . $e->getMessage());
+    die(json_encode(['error' => $e->getMessage()]));
 }
 
 // יצירת FormBuilder

@@ -36,6 +36,66 @@ try {
             // בניית תנאי החיפוש
             $conditions = [];
             
+            // // טיפול מיוחד באחוזות קבר עם חלקות
+            // if ($type === 'area_grave' && isset($_GET['plot_id'])) {
+            //     // קודם מצא את כל השורות של החלקה
+            //     $rows_query = "SELECT unicId FROM rows WHERE plotId = :plot_id AND isActive = 1";
+            //     $stmt = $pdo->prepare($rows_query);
+            //     $stmt->execute(['plot_id' => $_GET['plot_id']]);
+            //     $row_ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
+                
+            //     if (empty($row_ids)) {
+            //         echo json_encode([
+            //             'success' => true,
+            //             'data' => [],
+            //             'pagination' => [
+            //                 'page' => 1,
+            //                 'limit' => 50,
+            //                 'total' => 0,
+            //                 'pages' => 0
+            //             ]
+            //         ]);
+            //         exit;
+            //     }
+                
+            //     // בנה תנאי מיוחד עבור אחוזות קבר
+            //     $placeholders = array_map(function($i) { return ":row_id_$i"; }, array_keys($row_ids));
+            //     $sql = "SELECT * FROM areaGraves 
+            //             WHERE lineId IN (" . implode(',', $placeholders) . ")
+            //             AND isActive = 1";
+            //     $params = [];
+            //     foreach ($row_ids as $i => $row_id) {
+            //         $params["row_id_$i"] = $row_id;
+            //     }
+            // } else {
+            //     // שימוש ב-HierarchyManager לבניית השאילתה
+            //     if (isset($_GET['parent_id'])) {
+            //         $parentKey = $manager->getParentKey($type);
+            //         if ($parentKey) {
+            //             $conditions[$parentKey] = $_GET['parent_id'];
+            //         }
+            //     }
+                
+            //     if (isset($_GET['search']) && !empty($_GET['search'])) {
+            //         $conditions['search'] = $_GET['search'];
+            //     }
+                
+            //     // בניית השאילתה עם HierarchyManager
+            //     $orderBy = $_GET['sort'] ?? null;
+            //     $orderDir = $_GET['order'] ?? 'ASC';
+            //     if ($orderBy) {
+            //         $orderBy = "$orderBy $orderDir";
+            //     }
+                
+            //     $page = intval($_GET['page'] ?? 1);
+            //     $limit = intval($_GET['limit'] ?? 50);
+            //     $offset = ($page - 1) * $limit;
+                
+            //     $queryData = $manager->buildSelectQuery($type, $conditions, $orderBy, $limit, $offset);
+            //     $sql = $queryData['sql'];
+            //     $params = $queryData['params'];
+            // }
+
             // טיפול מיוחד באחוזות קבר עם חלקות
             if ($type === 'area_grave' && isset($_GET['plot_id'])) {
                 // קודם מצא את כל השורות של החלקה
@@ -59,41 +119,33 @@ try {
                 }
                 
                 // בנה תנאי מיוחד עבור אחוזות קבר
-                $placeholders = array_map(function($i) { return ":row_id_$i"; }, array_keys($row_ids));
-                $sql = "SELECT * FROM areaGraves 
-                        WHERE lineId IN (" . implode(',', $placeholders) . ")
-                        AND isActive = 1";
                 $params = [];
-                foreach ($row_ids as $i => $row_id) {
-                    $params["row_id_$i"] = $row_id;
-                }
-            } else {
-                // שימוש ב-HierarchyManager לבניית השאילתה
-                if (isset($_GET['parent_id'])) {
-                    $parentKey = $manager->getParentKey($type);
-                    if ($parentKey) {
-                        $conditions[$parentKey] = $_GET['parent_id'];
-                    }
+                $placeholders = [];
+                foreach ($row_ids as $index => $row_id) {
+                    $param_name = "row_id_$index";
+                    $placeholders[] = ":$param_name";
+                    $params[$param_name] = $row_id;
                 }
                 
-                if (isset($_GET['search']) && !empty($_GET['search'])) {
-                    $conditions['search'] = $_GET['search'];
-                }
+                $sql = "SELECT * FROM areaGraves 
+                        WHERE lineId IN (" . implode(',', $placeholders) . ") 
+                        AND isActive = 1";
                 
-                // בניית השאילתה עם HierarchyManager
-                $orderBy = $_GET['sort'] ?? null;
-                $orderDir = $_GET['order'] ?? 'ASC';
-                if ($orderBy) {
-                    $orderBy = "$orderBy $orderDir";
-                }
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($params);
+                $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 
-                $page = intval($_GET['page'] ?? 1);
-                $limit = intval($_GET['limit'] ?? 50);
-                $offset = ($page - 1) * $limit;
-                
-                $queryData = $manager->buildSelectQuery($type, $conditions, $orderBy, $limit, $offset);
-                $sql = $queryData['sql'];
-                $params = $queryData['params'];
+                echo json_encode([
+                    'success' => true,
+                    'data' => $data,
+                    'pagination' => [
+                        'page' => 1,
+                        'limit' => 50,
+                        'total' => count($data),
+                        'pages' => 1
+                    ]
+                ]);
+                exit;
             }
             
             // ספירת סך הכל

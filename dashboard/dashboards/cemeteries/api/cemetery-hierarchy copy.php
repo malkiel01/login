@@ -33,14 +33,69 @@ try {
                 throw new Exception('סוג לא תקין');
             }
             
-            // אתחול משתנים
+            // בניית תנאי החיפוש
             $conditions = [];
-            $sql = '';
-            $params = [];
-            $page = intval($_GET['page'] ?? 1);
-            $limit = intval($_GET['limit'] ?? 50);
-            $offset = ($page - 1) * $limit;
             
+            // // טיפול מיוחד באחוזות קבר עם חלקות
+            // if ($type === 'area_grave' && isset($_GET['plot_id'])) {
+            //     // קודם מצא את כל השורות של החלקה
+            //     $rows_query = "SELECT unicId FROM rows WHERE plotId = :plot_id AND isActive = 1";
+            //     $stmt = $pdo->prepare($rows_query);
+            //     $stmt->execute(['plot_id' => $_GET['plot_id']]);
+            //     $row_ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
+                
+            //     if (empty($row_ids)) {
+            //         echo json_encode([
+            //             'success' => true,
+            //             'data' => [],
+            //             'pagination' => [
+            //                 'page' => 1,
+            //                 'limit' => 50,
+            //                 'total' => 0,
+            //                 'pages' => 0
+            //             ]
+            //         ]);
+            //         exit;
+            //     }
+                
+            //     // בנה תנאי מיוחד עבור אחוזות קבר
+            //     $placeholders = array_map(function($i) { return ":row_id_$i"; }, array_keys($row_ids));
+            //     $sql = "SELECT * FROM areaGraves 
+            //             WHERE lineId IN (" . implode(',', $placeholders) . ")
+            //             AND isActive = 1";
+            //     $params = [];
+            //     foreach ($row_ids as $i => $row_id) {
+            //         $params["row_id_$i"] = $row_id;
+            //     }
+            // } else {
+            //     // שימוש ב-HierarchyManager לבניית השאילתה
+            //     if (isset($_GET['parent_id'])) {
+            //         $parentKey = $manager->getParentKey($type);
+            //         if ($parentKey) {
+            //             $conditions[$parentKey] = $_GET['parent_id'];
+            //         }
+            //     }
+                
+            //     if (isset($_GET['search']) && !empty($_GET['search'])) {
+            //         $conditions['search'] = $_GET['search'];
+            //     }
+                
+            //     // בניית השאילתה עם HierarchyManager
+            //     $orderBy = $_GET['sort'] ?? null;
+            //     $orderDir = $_GET['order'] ?? 'ASC';
+            //     if ($orderBy) {
+            //         $orderBy = "$orderBy $orderDir";
+            //     }
+                
+            //     $page = intval($_GET['page'] ?? 1);
+            //     $limit = intval($_GET['limit'] ?? 50);
+            //     $offset = ($page - 1) * $limit;
+                
+            //     $queryData = $manager->buildSelectQuery($type, $conditions, $orderBy, $limit, $offset);
+            //     $sql = $queryData['sql'];
+            //     $params = $queryData['params'];
+            // }
+
             // טיפול מיוחד באחוזות קבר עם חלקות
             if ($type === 'area_grave' && isset($_GET['plot_id'])) {
                 // קודם מצא את כל השורות של החלקה
@@ -50,13 +105,12 @@ try {
                 $row_ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
                 
                 if (empty($row_ids)) {
-                    // אין שורות - החזר תוצאה ריקה
                     echo json_encode([
                         'success' => true,
                         'data' => [],
                         'pagination' => [
-                            'page' => $page,
-                            'limit' => $limit,
+                            'page' => 1,
+                            'limit' => 50,
                             'total' => 0,
                             'pages' => 0
                         ]
@@ -64,7 +118,7 @@ try {
                     exit;
                 }
                 
-                // יש שורות - בנה שאילתה מיוחדת
+                // בנה תנאי מיוחד עבור אחוזות קבר
                 $params = [];
                 $placeholders = [];
                 foreach ($row_ids as $index => $row_id) {
@@ -75,32 +129,23 @@ try {
                 
                 $sql = "SELECT * FROM areaGraves 
                         WHERE lineId IN (" . implode(',', $placeholders) . ") 
-                        AND isActive = 1
-                        LIMIT $limit OFFSET $offset";
-                        
-            } else {
-                // טיפול רגיל - כל שאר המקרים
-                if (isset($_GET['parent_id'])) {
-                    $parentKey = $manager->getParentKey($type);
-                    if ($parentKey) {
-                        $conditions[$parentKey] = $_GET['parent_id'];
-                    }
-                }
+                        AND isActive = 1";
                 
-                if (isset($_GET['search']) && !empty($_GET['search'])) {
-                    $conditions['search'] = $_GET['search'];
-                }
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($params);
+                $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 
-                // בניית השאילתה עם HierarchyManager
-                $orderBy = $_GET['sort'] ?? null;
-                $orderDir = $_GET['order'] ?? 'ASC';
-                if ($orderBy) {
-                    $orderBy = "$orderBy $orderDir";
-                }
-                
-                $queryData = $manager->buildSelectQuery($type, $conditions, $orderBy, $limit, $offset);
-                $sql = $queryData['sql'];
-                $params = $queryData['params'];
+                echo json_encode([
+                    'success' => true,
+                    'data' => $data,
+                    'pagination' => [
+                        'page' => 1,
+                        'limit' => 50,
+                        'total' => count($data),
+                        'pages' => 1
+                    ]
+                ]);
+                exit;
             }
             
             // ספירת סך הכל
@@ -436,38 +481,6 @@ try {
             echo json_encode([
                 'success' => true,
                 'config' => $response
-            ]);
-            break;
-            
-        case 'item_stats':
-            // סטטיסטיקות לפריט ספציפי
-            $itemType = $_GET['item_type'] ?? '';
-            $itemId = $_GET['item_id'] ?? '';
-            
-            if (!$itemType || !$itemId) {
-                throw new Exception('פרמטרים חסרים');
-            }
-            
-            $stats = [];
-            
-            // לדוגמה - סטטיסטיקות לאחוזת קבר
-            if ($itemType === 'area_grave') {
-                $stmt = $pdo->prepare("
-                    SELECT 
-                        COUNT(*) as total,
-                        SUM(CASE WHEN graveStatus = 1 THEN 1 ELSE 0 END) as available,
-                        SUM(CASE WHEN graveStatus = 2 THEN 1 ELSE 0 END) as purchased,
-                        SUM(CASE WHEN graveStatus = 3 THEN 1 ELSE 0 END) as occupied
-                    FROM graves 
-                    WHERE areaGraveId = :id AND isActive = 1
-                ");
-                $stmt->execute(['id' => $itemId]);
-                $stats = $stmt->fetch(PDO::FETCH_ASSOC);
-            }
-            
-            echo json_encode([
-                'success' => true,
-                'stats' => $stats
             ]);
             break;
             

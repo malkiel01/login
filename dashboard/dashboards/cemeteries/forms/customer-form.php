@@ -47,19 +47,35 @@ try {
 // יצירת FormBuilder
 $formBuilder = new FormBuilder('customer', $itemId, $parentId);
 
+// סוג זיהוי
+$formBuilder->addField('typeId', 'סוג זיהוי', 'select', [
+    'options' => [
+        1 => 'ת.ז.',
+        2 => 'דרכון',
+        3 => 'אלמוני',
+        4 => 'תינוק'
+    ],
+    'value' => $customer['typeId'] ?? 1
+]);
+
 // פרטים אישיים
-$formBuilder->addField('first_name', 'שם פרטי', 'text', [
+$formBuilder->addField('numId', 'מספר זיהוי', 'text', [
     'required' => true,
-    'value' => $customer['first_name'] ?? ''
+    'value' => $customer['numId'] ?? ''
 ]);
 
-$formBuilder->addField('last_name', 'שם משפחה', 'text', [
+$formBuilder->addField('firstName', 'שם פרטי', 'text', [
     'required' => true,
-    'value' => $customer['last_name'] ?? ''
+    'value' => $customer['firstName'] ?? ''
 ]);
 
-$formBuilder->addField('id_number', 'תעודת זהות', 'text', [
-    'value' => $customer['id_number'] ?? ''
+$formBuilder->addField('lastName', 'שם משפחה', 'text', [
+    'required' => true,
+    'value' => $customer['lastName'] ?? ''
+]);
+
+$formBuilder->addField('nom', 'כינוי', 'text', [
+    'value' => $customer['nom'] ?? ''
 ]);
 
 $formBuilder->addField('gender', 'מגדר', 'select', [
@@ -71,8 +87,27 @@ $formBuilder->addField('gender', 'מגדר', 'select', [
     'value' => $customer['gender'] ?? ''
 ]);
 
-$formBuilder->addField('birth_date', 'תאריך לידה', 'date', [
-    'value' => $customer['birth_date'] ?? ''
+$formBuilder->addField('dateBirth', 'תאריך לידה', 'date', [
+    'value' => $customer['dateBirth'] ?? ''
+]);
+
+$formBuilder->addField('nameFather', 'שם אב', 'text', [
+    'value' => $customer['nameFather'] ?? ''
+]);
+
+$formBuilder->addField('nameMother', 'שם אם', 'text', [
+    'value' => $customer['nameMother'] ?? ''
+]);
+
+$formBuilder->addField('maritalStatus', 'מצב משפחתי', 'select', [
+    'options' => [
+        '' => '-- בחר --',
+        1 => 'רווק/ה',
+        2 => 'נשוי/אה',
+        3 => 'אלמן/ה',
+        4 => 'גרוש/ה'
+    ],
+    'value' => $customer['maritalStatus'] ?? ''
 ]);
 
 // HTML מותאם אישית לבחירת כתובת
@@ -82,11 +117,11 @@ $addressSelectorHTML = '
     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
         <div class="form-group">
             <label>מדינה</label>
-            <select id="countrySelect" name="country" class="form-control" onchange="filterCities()">
+            <select id="countrySelect" name="countryId" class="form-control" onchange="filterCities()">
                 <option value="">-- בחר מדינה --</option>';
 
 foreach ($countries as $unicId => $name) {
-    $selected = ($customer && $customer['country'] == $unicId) ? 'selected' : '';
+    $selected = ($customer && $customer['countryId'] == $unicId) ? 'selected' : '';
     $addressSelectorHTML .= '<option value="' . $unicId . '" ' . $selected . '>' . 
                             htmlspecialchars($name) . '</option>';
 }
@@ -96,7 +131,7 @@ $addressSelectorHTML .= '
         </div>
         <div class="form-group">
             <label>עיר</label>
-            <select id="citySelect" name="city" class="form-control">
+            <select id="citySelect" name="cityId" class="form-control">
                 <option value="">-- בחר קודם מדינה --</option>
             </select>
         </div>
@@ -117,36 +152,47 @@ $formBuilder->addField('phone', 'טלפון', 'tel', [
     'value' => $customer['phone'] ?? ''
 ]);
 
-$formBuilder->addField('mobile_phone', 'טלפון נייד', 'tel', [
-    'value' => $customer['mobile_phone'] ?? ''
-]);
-
-$formBuilder->addField('email', 'אימייל', 'email', [
-    'value' => $customer['email'] ?? ''
+$formBuilder->addField('phoneMobile', 'טלפון נייד', 'tel', [
+    'value' => $customer['phoneMobile'] ?? ''
 ]);
 
 // סטטוסים
-$formBuilder->addField('customer_status', 'סטטוס לקוח', 'select', [
+$formBuilder->addField('statusCustomer', 'סטטוס לקוח', 'select', [
     'options' => [
         1 => 'פעיל',
-        2 => 'רכש',
+        2 => 'רוכש',
         3 => 'נפטר'
     ],
-    'value' => $customer['customer_status'] ?? 1
+    'value' => $customer['statusCustomer'] ?? 1
 ]);
 
-$formBuilder->addField('type_id', 'סוג לקוח', 'select', [
+$formBuilder->addField('resident', 'תושבות', 'select', [
     'options' => [
-        1 => 'רגיל',
-        2 => 'VIP'
+        1 => 'ירושלים והסביבה',
+        2 => 'תושב חוץ',
+        3 => 'תושב חו״ל'
     ],
-    'value' => $customer['type_id'] ?? 1
+    'value' => $customer['resident'] ?? 1
+]);
+
+$formBuilder->addField('association', 'שיוך', 'select', [
+    'options' => [
+        1 => 'ישראל',
+        2 => 'כהן',
+        3 => 'לוי'
+    ],
+    'value' => $customer['association'] ?? 1
+]);
+
+// בן/בת זוג
+$formBuilder->addField('spouse', 'בן/בת זוג', 'text', [
+    'value' => $customer['spouse'] ?? ''
 ]);
 
 // הערות
-$formBuilder->addField('comments', 'הערות', 'textarea', [
+$formBuilder->addField('comment', 'הערות', 'textarea', [
     'rows' => 3,
-    'value' => $customer['comments'] ?? ''
+    'value' => $customer['comment'] ?? ''
 ]);
 
 // הצג את הטופס
@@ -158,8 +204,8 @@ echo $formBuilder->renderModal();
 window.allCities = <?php echo json_encode($allCities); ?>;
 
 // המדינה והעיר הנוכחיות (בעריכה)
-window.currentCountry = '<?php echo $customer['country'] ?? ''; ?>';
-window.currentCity = '<?php echo $customer['city'] ?? ''; ?>';
+window.currentCountry = '<?php echo $customer['countryId'] ?? ''; ?>';
+window.currentCity = '<?php echo $customer['cityId'] ?? ''; ?>';
 
 // אתחול
 (function initializeForm() {

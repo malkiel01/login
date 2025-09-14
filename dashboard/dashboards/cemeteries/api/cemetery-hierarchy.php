@@ -329,8 +329,11 @@ try {
             $sql = "UPDATE $table SET " . implode(', ', $updates) . 
                    " WHERE $primaryKey = :id OR id = :id";
             
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($params);
+            // $stmt = $pdo->prepare($sql);
+            // $stmt->execute($params);
+
+            // דיבוג - החזר את השאילתה במקום לבצע
+            throw new Exception("DEBUG SQL: $sql | PARAMS: " . json_encode($params));
             
             // רישום בלוג
             logActivity('update', $type, $id);

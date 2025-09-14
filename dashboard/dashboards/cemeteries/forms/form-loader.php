@@ -96,29 +96,35 @@ try {
     error_log("Getting form fields for type: $type");
 
     if ($type === 'parent_selector') {
-        // טען רשימת הורים
-        $parentType = $_GET['parent_id'] ?? '';
+        // כאן parent_id מכיל את סוג ההורה (למשל 'cemetery')
+        $parentType = $parent_id;
+        
+        error_log("Parent selector - loading items for type: $parentType");
         
         // חיבור למסד נתונים
         require_once dirname(__DIR__) . '/config.php';
         $pdo = getDBConnection();
         
-        // טען את הקונפיג כדי לדעת איזו טבלה ושדות
+        // בדוק שיש קונפיג לסוג ההורה
         if (isset($config[$parentType])) {
             $parentConfig = $config[$parentType];
             $table = $parentConfig['table'];
             $nameField = $parentConfig['displayFields']['name'] ?? 'name';
             $primaryKey = $parentConfig['primaryKey'] ?? 'id';
             
+            error_log("Loading from table: $table, field: $nameField");
+            
             // שאילתה לטעינת הרשימה
-            $sql = "SELECT $primaryKey, $nameField FROM $table WHERE isActive = 1 ORDER BY $nameField";
+            $sql = "SELECT $primaryKey as id, $nameField as name FROM $table WHERE isActive = 1 ORDER BY $nameField";
             $stmt = $pdo->query($sql);
             $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            error_log("Found " . count($items) . " items");
             
             // המר לפורמט של options
             $options = [];
             foreach ($items as $item) {
-                $options[$item[$primaryKey]] = $item[$nameField];
+                $options[$item['id']] = $item['name'];
             }
             
             // עדכן את השדות
@@ -129,16 +135,17 @@ try {
                     'type' => 'select',
                     'required' => true,
                     'options' => $options,
-                    'placeholder' => '-- בחר --'
+                    'placeholder' => '-- בחר --',
+                    'value' => ''
                 ]
             ];
+        } else {
+            throw new Exception("No config found for parent type: $parentType");
         }
     } else {
         // הקוד הקיים - טעינת שדות רגילים
         $fields = getFormFields($type, $data);
     }
-
-    $fields = getFormFields($type, $data);
     
     if (empty($fields)) {
         error_log("No fields returned from getFormFields");

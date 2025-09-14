@@ -196,7 +196,7 @@ async function createPlotCard(plotId) {
                             <svg class="icon-sm"><use xlink:href="#icon-edit"></use></svg>
                             עריכה
                         </button>
-                        <button class="info-card-btn" onclick="managePlotRows(${plot.unicId})">
+                        <button class="info-card-btn" onclick="managePlotRows('${plot.unicId}')">
                             <svg class="icon-sm"><use xlink:href="#icon-rows"></use></svg>
                             ניהול שורות
                         </button>
@@ -231,7 +231,7 @@ async function createPlotCard(plotId) {
                             <span>📏</span>
                             שורות בחלקה (${rows.length})
                         </div>
-                        <button class="info-card-btn" onclick="addRowToPlot(${plot.unicId})">
+                        <button class="info-card-btn" onclick="addRowToPlot('${plot.unicId}')">
                             <svg class="icon-sm"><use xlink:href="#icon-plus"></use></svg>
                             הוסף שורה
                         </button>

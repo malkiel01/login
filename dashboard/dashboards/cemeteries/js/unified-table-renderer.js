@@ -496,50 +496,44 @@ class UnifiedTableRenderer {
      * הצגת כרטיס לפריט שנבחר
      */
     displayItemCard(type, itemId, itemName) {
-        let cardHtml = '';
-        
-        // הכן אובייקט נתונים פשוט
-        const itemData = {
-            id: itemId,
-            name: itemName
-        };
+        // קרא לפונקציה המקורית מ-cards.js עם ID בלבד
+        let cardPromise = null;
         
         switch(type) {
             case 'cemetery':
                 if (typeof createCemeteryCard === 'function') {
-                    // שלח רק את הנתונים הבסיסיים
-                    cardHtml = createCemeteryCard(itemData);
+                    cardPromise = createCemeteryCard(itemId); // שלח רק ID
                 }
                 break;
                 
             case 'block':
                 if (typeof createBlockCard === 'function') {
-                    cardHtml = createBlockCard(itemData);
+                    cardPromise = createBlockCard(itemId); // שלח רק ID
                 }
                 break;
                 
             case 'plot':
                 if (typeof createPlotCard === 'function') {
-                    cardHtml = createPlotCard(itemData);
+                    cardPromise = createPlotCard(itemId); // שלח רק ID
                 }
                 break;
                 
             case 'area_grave':
                 if (typeof createAreaGraveCard === 'function') {
-                    cardHtml = createAreaGraveCard(itemData);
+                    cardPromise = createAreaGraveCard(itemId); // שלח רק ID
                 }
                 break;
         }
         
-        // בדוק אם הכרטיס הוא Promise (אם הפונקציה אסינכרונית)
-        if (cardHtml instanceof Promise) {
-            cardHtml.then(html => {
-                if (html && typeof displayHierarchyCard === 'function') {
-                    displayHierarchyCard(html);
+        // טפל ב-Promise שמוחזר מהפונקציות האסינכרוניות
+        if (cardPromise && cardPromise instanceof Promise) {
+            cardPromise.then(cardHtml => {
+                if (cardHtml && typeof displayHierarchyCard === 'function') {
+                    displayHierarchyCard(cardHtml);
                 }
+            }).catch(error => {
+                console.error('Error creating card:', error);
             });
-        } else if (cardHtml && typeof displayHierarchyCard === 'function') {
-            displayHierarchyCard(cardHtml);
         }
     }
  

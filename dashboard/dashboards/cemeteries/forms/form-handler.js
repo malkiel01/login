@@ -103,45 +103,50 @@ const FormHandler = {
                     }, 300);
                 }
                 
-                // טען נתונים אם זה טופס עריכה
-                if (itemId) {
-                    // המתן שהטופס יטען במלואו
-                    const observer = new MutationObserver((mutations, obs) => {
-                        const form = document.querySelector(`#${type}FormModal form`);
-                        if (form && form.elements.length > 0) {
-                            obs.disconnect(); // הפסק להאזין
-                            
-                            // טען את הנתונים
-                            fetch(`${API_BASE}cemetery-hierarchy.php?action=get&type=${type}&id=${itemId}`)
-                                .then(response => response.json())
-                                .then(result => {
-                                    if (result.success && result.data) {
-                                        Object.keys(result.data).forEach(key => {
-                                            const field = form.elements[key];
-                                            if (field) {
-                                                if (field.type === 'checkbox') {
-                                                    field.checked = result.data[key] == 1;
-                                                } else {
-                                                    field.value = result.data[key] || '';
-                                                }
-                                            }
-                                        });
-                                    }
-                                })
-                                .catch(error => {
-                                    console.error('Error loading item data:', error);
-                                });
-                        }
-                    });
-                    
-                    observer.observe(document.body, {
-                        childList: true,
-                        subtree: true
-                    });
-                    
-                    // Fallback - אם אחרי 2 שניות עדיין לא נטען
-                    setTimeout(() => observer.disconnect(), 2000);
-                }
+// טען נתונים אם זה טופס עריכה
+if (itemId) {
+    // פונקציה שמנסה למלא את הטופס
+    const fillForm = () => {
+        const form = document.querySelector(`#${type}FormModal form`);
+        
+        // בדוק אם הטופס קיים ויש בו שדות
+        if (form && form.elements && form.elements.length > 2) {
+            fetch(`${API_BASE}cemetery-hierarchy.php?action=get&type=${type}&id=${itemId}`)
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success && result.data) {
+                        Object.keys(result.data).forEach(key => {
+                            const field = form.elements[key];
+                            if (field) {
+                                if (field.type === 'checkbox') {
+                                    field.checked = result.data[key] == 1;
+                                } else {
+                                    field.value = result.data[key] || '';
+                                }
+                            }
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading item data:', error);
+                });
+            return true; // הצלחנו
+        }
+        return false; // עדיין לא מוכן
+    };
+    
+    // נסה מיד
+    if (!fillForm()) {
+        // אם לא הצליח, נסה כל 100ms עד 10 פעמים
+        let attempts = 0;
+        const interval = setInterval(() => {
+            attempts++;
+            if (fillForm() || attempts >= 10) {
+                clearInterval(interval);
+            }
+        }, 100);
+    }
+}
                 
             } else {
                 console.error('Modal not found in HTML, trying alternative approach...');

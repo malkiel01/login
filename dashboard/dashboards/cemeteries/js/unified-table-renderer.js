@@ -941,7 +941,7 @@ window.loadAllAreaGraves = async function() {
     if (typeof clearAllHierarchyCards === 'function') {
         clearAllHierarchyCards();
     }
-    
+
     // שמור עד חלקה
     const temp = { ...window.selectedItems };
     window.selectedItems = {};
@@ -958,6 +958,11 @@ window.loadAllGraves = async function() {
     console.log('📍 Loading all graves');
     window.currentType = 'grave';
     window.currentParentId = null;
+
+    // נקה כרטיסים
+    if (typeof clearAllHierarchyCards === 'function') {
+        clearAllHierarchyCards();
+    }
     
     // שמור עד אחוזת קבר
     const temp = { ...window.selectedItems };

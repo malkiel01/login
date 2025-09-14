@@ -77,29 +77,52 @@ const DashboardCleaner = {
     /**
      * ניקוי כל הכרטיסים
      */
+    // clearCards2() {
+    //     // ניקוי כרטיס יחיד
+    //     const itemCard = document.getElementById('itemCard');
+    //     if (itemCard) {
+    //         itemCard.remove();
+    //         console.log('  ✓ Item card removed');
+    //     }
+        
+    //     // ניקוי כרטיסי היררכיה
+    //     const hierarchyCards = document.querySelectorAll('.hierarchy-card');
+    //     if (hierarchyCards.length > 0) {
+    //         hierarchyCards.forEach(card => card.remove());
+    //         console.log(`  ✓ ${hierarchyCards.length} hierarchy cards removed`);
+    //     }
+        
+    //     // ניקוי כרטיסים נוספים (אם יש)
+    //     const additionalCards = document.querySelectorAll('.card-container, .info-card, .detail-card');
+    //     additionalCards.forEach(card => {
+    //         if (!card.closest('.stats-grid')) { // אל תמחק כרטיסי סטטיסטיקה
+    //             card.remove();
+    //         }
+    //     });
+    // },
     clearCards() {
-        // ניקוי כרטיס יחיד
-        const itemCard = document.getElementById('itemCard');
-        if (itemCard) {
-            itemCard.remove();
-            console.log('  ✓ Item card removed');
+    // ניקוי כרטיסי היררכיה עם הפונקציה המיוחדת
+    if (typeof clearAllHierarchyCards === 'function') {
+        clearAllHierarchyCards();
+    }
+    
+    // ניקוי כרטיס יחיד
+    const itemCard = document.getElementById('itemCard');
+    if (itemCard) {
+        itemCard.remove();
+        console.log('  ✓ Item card removed');
+    }
+    
+    // ניקוי כרטיסים נוספים מסוג info-card
+    const infoCards = document.querySelectorAll('.info-card');
+    infoCards.forEach(card => {
+        if (!card.closest('.stats-grid')) {
+            card.remove();
         }
-        
-        // ניקוי כרטיסי היררכיה
-        const hierarchyCards = document.querySelectorAll('.hierarchy-card');
-        if (hierarchyCards.length > 0) {
-            hierarchyCards.forEach(card => card.remove());
-            console.log(`  ✓ ${hierarchyCards.length} hierarchy cards removed`);
-        }
-        
-        // ניקוי כרטיסים נוספים (אם יש)
-        const additionalCards = document.querySelectorAll('.card-container, .info-card, .detail-card');
-        additionalCards.forEach(card => {
-            if (!card.closest('.stats-grid')) { // אל תמחק כרטיסי סטטיסטיקה
-                card.remove();
-            }
-        });
-    },
+    });
+    
+    console.log('  ✓ All cards cleared');
+},
     
     /**
      * ניקוי הטבלה

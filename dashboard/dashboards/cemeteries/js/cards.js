@@ -231,7 +231,7 @@ async function createPlotCard(plotId) {
                             <span>📏</span>
                             שורות בחלקה (${rows.length})
                         </div>
-                        <button class="info-card-btn" onclick="addRowToPlot(${plot.id})">
+                        <button class="info-card-btn" onclick="addRowToPlot(${plot.unicId})">
                             <svg class="icon-sm"><use xlink:href="#icon-plus"></use></svg>
                             הוסף שורה
                         </button>

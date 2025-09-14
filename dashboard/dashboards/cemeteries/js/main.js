@@ -313,7 +313,27 @@ function openAddModal() {
         return;
     }
     
-    // קריאה פשוטה עם פרמטרים
+    // בדוק אם צריך לבחור הורה קודם
+    if (!parentId && type !== 'cemetery') {
+        // אם יש tableRenderer, השתמש בפונקציה שלו
+        if (window.tableRenderer && window.tableRenderer.openParentSelectionDialog) {
+            window.tableRenderer.openParentSelectionDialog(type);
+        } else {
+            // אחרת, הצג הודעה
+            const parentTypes = {
+                'block': 'בית עלמין',
+                'plot': 'גוש',
+                'row': 'חלקה',
+                'area_grave': 'שורה',
+                'grave': 'אחוזת קבר'
+            };
+            const parentType = parentTypes[type] || 'פריט הורה';
+            alert(`יש לבחור ${parentType} תחילה`);
+        }
+        return;
+    }
+    
+    // קריאה רגילה
     FormHandler.openForm(type, parentId, null);
 }
 

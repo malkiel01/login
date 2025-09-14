@@ -13,7 +13,7 @@ try {
     $customersStmt = $conn->prepare("
         SELECT id, CONCAT(last_name, ' ', first_name) as full_name, id_number 
         FROM customers 
-        WHERE customer_status = 1 AND is_active = 1 
+        WHERE customer_status = 1 AND isActive = 1 
         ORDER BY last_name, first_name
     ");
     $customersStmt->execute();
@@ -37,10 +37,10 @@ try {
             INNER JOIN blocks b ON p.block_id = b.id
             WHERE b.cemetery_id = c.id 
             AND g.grave_status = 1 
-            AND g.is_active = 1
+            AND g.isActive = 1
         ) as has_available_graves
         FROM cemeteries c
-        WHERE c.is_active = 1
+        WHERE c.isActive = 1
         ORDER BY c.name
     ");
     $cemeteriesStmt->execute();
@@ -54,7 +54,7 @@ try {
         SELECT b.*, c.id as cemetery_id 
         FROM blocks b 
         INNER JOIN cemeteries c ON b.cemetery_id = c.id 
-        WHERE b.is_active = 1
+        WHERE b.isActive = 1
         ORDER BY b.name
     ");
     $blocksStmt->execute();
@@ -65,7 +65,7 @@ try {
         SELECT p.*, b.cemetery_id 
         FROM plots p 
         INNER JOIN blocks b ON p.block_id = b.id 
-        WHERE p.is_active = 1
+        WHERE p.isActive = 1
         ORDER BY p.name
     ");
     $plotsStmt->execute();
@@ -75,7 +75,7 @@ try {
     $rowsStmt = $conn->prepare("
         SELECT r.* 
         FROM rows r 
-        WHERE r.is_active = 1
+        WHERE r.isActive = 1
         ORDER BY r.name
     ");
     $rowsStmt->execute();
@@ -85,7 +85,7 @@ try {
     $areaGravesStmt = $conn->prepare("
         SELECT ag.* 
         FROM area_graves ag 
-        WHERE ag.is_active = 1
+        WHERE ag.isActive = 1
         ORDER BY ag.name
     ");
     $areaGravesStmt->execute();
@@ -95,7 +95,7 @@ try {
     $gravesStmt = $conn->prepare("
         SELECT g.* 
         FROM graves g 
-        WHERE g.grave_status = 1 AND g.is_active = 1
+        WHERE g.grave_status = 1 AND g.isActive = 1
         ORDER BY g.grave_number
     ");
     $gravesStmt->execute();

@@ -583,8 +583,8 @@ async function saveItem(event) {
         data[parentColumn] = parentId;
     }
     
-    // הוספת is_active
-    data.is_active = 1;
+    // הוספת isActive
+    data.isActive = 1;
     
     try {
         const url = editingItemId 

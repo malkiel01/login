@@ -46,7 +46,7 @@ try {
                 FROM purchases p
                 LEFT JOIN customers c ON p.customer_id = c.id
                 LEFT JOIN graves g ON p.grave_id = g.id
-                WHERE p.is_active = 1
+                WHERE p.isActive = 1
             ";
             $params = [];
             
@@ -136,7 +136,7 @@ try {
                 FROM purchases p
                 LEFT JOIN customers c ON p.customer_id = c.id
                 LEFT JOIN graves g ON p.grave_id = g.id
-                WHERE p.id = :id AND p.is_active = 1
+                WHERE p.id = :id AND p.isActive = 1
             ");
             $stmt->execute(['id' => $id]);
             $purchase = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -166,7 +166,7 @@ try {
             }
             
             // בדיקה שהקבר פנוי
-            $stmt = $pdo->prepare("SELECT grave_status FROM graves WHERE id = :id AND is_active = 1");
+            $stmt = $pdo->prepare("SELECT grave_status FROM graves WHERE id = :id AND isActive = 1");
             $stmt->execute(['id' => $data['grave_id']]);
             $grave = $stmt->fetch(PDO::FETCH_ASSOC);
             
@@ -279,7 +279,7 @@ try {
             }
             
             // קבלת פרטי הרכישה
-            $stmt = $pdo->prepare("SELECT grave_id FROM purchases WHERE id = :id AND is_active = 1");
+            $stmt = $pdo->prepare("SELECT grave_id FROM purchases WHERE id = :id AND isActive = 1");
             $stmt->execute(['id' => $id]);
             $purchase = $stmt->fetch(PDO::FETCH_ASSOC);
             
@@ -288,7 +288,7 @@ try {
             }
             
             // מחיקה רכה
-            $stmt = $pdo->prepare("UPDATE purchases SET is_active = 0 WHERE id = :id");
+            $stmt = $pdo->prepare("UPDATE purchases SET isActive = 0 WHERE id = :id");
             $stmt->execute(['id' => $id]);
             
             // עדכון סטטוס הקבר חזרה לפנוי
@@ -311,7 +311,7 @@ try {
             $stmt = $pdo->query("
                 SELECT purchase_status, COUNT(*) as count, SUM(price) as total
                 FROM purchases 
-                WHERE is_active = 1 
+                WHERE isActive = 1 
                 GROUP BY purchase_status
             ");
             $stats['by_status'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -320,7 +320,7 @@ try {
             $stmt = $pdo->query("
                 SELECT COUNT(*) as count, SUM(price) as total
                 FROM purchases 
-                WHERE is_active = 1 
+                WHERE isActive = 1 
                 AND MONTH(opening_date) = MONTH(CURRENT_DATE())
                 AND YEAR(opening_date) = YEAR(CURRENT_DATE())
             ");
@@ -330,7 +330,7 @@ try {
             $stmt = $pdo->query("
                 SELECT COUNT(*) as count, SUM(price) as total
                 FROM purchases 
-                WHERE is_active = 1 
+                WHERE isActive = 1 
                 AND YEAR(opening_date) = YEAR(CURRENT_DATE())
             ");
             $stats['this_year'] = $stmt->fetch(PDO::FETCH_ASSOC);

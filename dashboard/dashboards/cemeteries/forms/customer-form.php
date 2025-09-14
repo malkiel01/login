@@ -35,7 +35,7 @@ try {
     // טען לקוח אם בעריכה
     $customer = null;
     if ($itemId) {
-        $stmt = $conn->prepare("SELECT * FROM customers WHERE id = ? AND is_active = 1");
+        $stmt = $conn->prepare("SELECT * FROM customers WHERE id = ? AND isActive = 1");
         $stmt->execute([$itemId]);
         $customer = $stmt->fetch(PDO::FETCH_ASSOC);
     }

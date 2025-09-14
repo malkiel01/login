@@ -210,7 +210,7 @@ function isGraveAvailable($graveId) {
         $stmt = $pdo->prepare("
             SELECT grave_status 
             FROM graves 
-            WHERE id = :id AND is_active = 1
+            WHERE id = :id AND isActive = 1
         ");
         $stmt->execute(['id' => $graveId]);
         $grave = $stmt->fetch();
@@ -232,7 +232,7 @@ function isGraveOccupied($graveId) {
         $stmt = $pdo->prepare("
             SELECT COUNT(*) 
             FROM burials 
-            WHERE grave_id = :id AND is_active = 1
+            WHERE grave_id = :id AND isActive = 1
         ");
         $stmt->execute(['id' => $graveId]);
         
@@ -259,20 +259,20 @@ function getDashboardStats() {
                 SUM(CASE WHEN grave_status = 3 THEN 1 ELSE 0 END) as occupied,
                 SUM(CASE WHEN grave_status = 4 THEN 1 ELSE 0 END) as saved
             FROM graves 
-            WHERE is_active = 1
+            WHERE isActive = 1
         ");
         $stats['graves'] = $stmt->fetch();
         
         // ספירת לקוחות
-        $stmt = $pdo->query("SELECT COUNT(*) as total FROM customers WHERE is_active = 1");
+        $stmt = $pdo->query("SELECT COUNT(*) as total FROM customers WHERE isActive = 1");
         $stats['customers'] = $stmt->fetchColumn();
         
         // ספירת רכישות
-        $stmt = $pdo->query("SELECT COUNT(*) as total FROM purchases WHERE is_active = 1");
+        $stmt = $pdo->query("SELECT COUNT(*) as total FROM purchases WHERE isActive = 1");
         $stats['purchases'] = $stmt->fetchColumn();
         
         // ספירת קבורות
-        $stmt = $pdo->query("SELECT COUNT(*) as total FROM burials WHERE is_active = 1");
+        $stmt = $pdo->query("SELECT COUNT(*) as total FROM burials WHERE isActive = 1");
         $stats['burials'] = $stmt->fetchColumn();
         
     } catch (Exception $e) {

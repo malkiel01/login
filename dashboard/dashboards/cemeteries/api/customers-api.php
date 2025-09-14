@@ -39,7 +39,7 @@ try {
                     FROM customers c
                     LEFT JOIN countries co ON c.country = co.unicId
                     LEFT JOIN cities ci ON c.city = ci.unicId
-                    WHERE c.is_active = 1
+                    WHERE c.isActive = 1
                 ";
             $params = [];
             
@@ -63,7 +63,7 @@ try {
             }
             
             // ספירת סה"כ תוצאות
-            $countSql = "SELECT COUNT(*) as total FROM customers WHERE is_active = 1";
+            $countSql = "SELECT COUNT(*) as total FROM customers WHERE isActive = 1";
             $countStmt = $pdo->prepare($countSql);
             $countStmt->execute($params);
             $total = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
@@ -99,7 +99,7 @@ try {
                 throw new Exception('Customer ID is required');
             }
             
-            $stmt = $pdo->prepare("SELECT * FROM customers WHERE id = :id AND is_active = 1");
+            $stmt = $pdo->prepare("SELECT * FROM customers WHERE id = :id AND isActive = 1");
             $stmt->execute(['id' => $id]);
             $customer = $stmt->fetch(PDO::FETCH_ASSOC);
             
@@ -112,7 +112,7 @@ try {
                 SELECT p.*, g.grave_number, g.grave_location 
                 FROM purchases p
                 LEFT JOIN graves g ON p.grave_id = g.id
-                WHERE p.customer_id = :customer_id AND p.is_active = 1
+                WHERE p.customer_id = :customer_id AND p.isActive = 1
                 ORDER BY p.opening_date DESC
             ");
             $stmt->execute(['customer_id' => $id]);
@@ -132,7 +132,7 @@ try {
             
             // בדיקת כפל תעודת זהות
             if (!empty($data['id_number'])) {
-                $stmt = $pdo->prepare("SELECT id FROM customers WHERE id_number = :id_number AND is_active = 1");
+                $stmt = $pdo->prepare("SELECT id FROM customers WHERE id_number = :id_number AND isActive = 1");
                 $stmt->execute(['id_number' => $data['id_number']]);
                 if ($stmt->fetch()) {
                     throw new Exception('לקוח עם תעודת זהות זו כבר קיים במערכת');
@@ -196,7 +196,7 @@ try {
             
             // בדיקת כפל תעודת זהות
             if (!empty($data['id_number'])) {
-                $stmt = $pdo->prepare("SELECT id FROM customers WHERE id_number = :id_number AND id != :id AND is_active = 1");
+                $stmt = $pdo->prepare("SELECT id FROM customers WHERE id_number = :id_number AND id != :id AND isActive = 1");
                 $stmt->execute(['id_number' => $data['id_number'], 'id' => $id]);
                 if ($stmt->fetch()) {
                     throw new Exception('לקוח עם תעודת זהות זו כבר קיים במערכת');
@@ -250,7 +250,7 @@ try {
             }
             
             // בדיקה אם יש רכישות או קבורות קשורות
-            $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM purchases WHERE customer_id = :id AND is_active = 1");
+            $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM purchases WHERE customer_id = :id AND isActive = 1");
             $stmt->execute(['id' => $id]);
             $purchases = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
             
@@ -259,7 +259,7 @@ try {
             }
             
             // מחיקה רכה
-            $stmt = $pdo->prepare("UPDATE customers SET is_active = 0 WHERE id = :id");
+            $stmt = $pdo->prepare("UPDATE customers SET isActive = 0 WHERE id = :id");
             $stmt->execute(['id' => $id]);
             
             echo json_encode([
@@ -276,7 +276,7 @@ try {
             $stmt = $pdo->query("
                 SELECT customer_status, COUNT(*) as count 
                 FROM customers 
-                WHERE is_active = 1 
+                WHERE isActive = 1 
                 GROUP BY customer_status
             ");
             $stats['by_status'] = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
@@ -285,7 +285,7 @@ try {
             $stmt = $pdo->query("
                 SELECT type_id, COUNT(*) as count 
                 FROM customers 
-                WHERE is_active = 1 
+                WHERE isActive = 1 
                 GROUP BY type_id
             ");
             $stats['by_type'] = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
@@ -294,7 +294,7 @@ try {
             $stmt = $pdo->query("
                 SELECT COUNT(*) as count 
                 FROM customers 
-                WHERE is_active = 1 
+                WHERE isActive = 1 
                 AND created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)
             ");
             $stats['new_this_month'] = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
@@ -313,7 +313,7 @@ try {
             $stmt = $pdo->prepare("
                 SELECT id, first_name, last_name, id_number, phone, mobile_phone
                 FROM customers 
-                WHERE is_active = 1 
+                WHERE isActive = 1 
                 AND (
                     first_name LIKE :query OR 
                     last_name LIKE :query OR 

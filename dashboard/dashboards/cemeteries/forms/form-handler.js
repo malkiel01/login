@@ -105,42 +105,42 @@ const FormHandler = {
                 
                 // טען נתונים אם זה טופס עריכה
                 if (itemId) {
-                    console.log('Loading data for edit, itemId:', itemId);
-                    setTimeout(() => {
-                        const url = `${API_BASE}cemetery-hierarchy.php?action=get&type=${type}&id=${itemId}`;
-                        console.log('Fetching from:', url);
-                        
-                        fetch(url)
-                            .then(response => response.json())
-                            .then(result => {
-                                console.log('Received data:', result);
-                                
-                                if (result.success && result.data) {
-                                    const form = document.querySelector(`#${type}FormModal form`);
-                                    console.log('Found form:', form);
-                                    
-                                    if (form) {
-                                        // מלא את השדות
+                    // המתן שהטופס יטען במלואו
+                    const observer = new MutationObserver((mutations, obs) => {
+                        const form = document.querySelector(`#${type}FormModal form`);
+                        if (form && form.elements.length > 0) {
+                            obs.disconnect(); // הפסק להאזין
+                            
+                            // טען את הנתונים
+                            fetch(`${API_BASE}cemetery-hierarchy.php?action=get&type=${type}&id=${itemId}`)
+                                .then(response => response.json())
+                                .then(result => {
+                                    if (result.success && result.data) {
                                         Object.keys(result.data).forEach(key => {
                                             const field = form.elements[key];
                                             if (field) {
-                                                console.log(`Setting field ${key} to:`, result.data[key]);
                                                 if (field.type === 'checkbox') {
                                                     field.checked = result.data[key] == 1;
                                                 } else {
                                                     field.value = result.data[key] || '';
                                                 }
-                                            } else {
-                                                console.log(`Field ${key} not found in form`);
                                             }
                                         });
                                     }
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Error loading item data:', error);
-                            });
-                    }, 500); // הגדלתי את הזמן ל-500ms
+                                })
+                                .catch(error => {
+                                    console.error('Error loading item data:', error);
+                                });
+                        }
+                    });
+                    
+                    observer.observe(document.body, {
+                        childList: true,
+                        subtree: true
+                    });
+                    
+                    // Fallback - אם אחרי 2 שניות עדיין לא נטען
+                    setTimeout(() => observer.disconnect(), 2000);
                 }
                 
             } else {

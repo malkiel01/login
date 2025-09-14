@@ -247,13 +247,13 @@ function getCustomerStatusBadge(status) {
 
 function getCustomerTypeBadge(type) {
     const types = {
-        1: { label: 'רגיל', color: '#6b7280' },
-        2: { label: 'VIP', color: '#f59e0b' },
-        3: { label: 'מוסד', color: '#8b5cf6' }
+        1: 'ת.ז.',
+        2: 'דרכון',
+        3: 'אלמוני',
+        4: 'תינוק'
     };
     
-    const typeInfo = types[type] || { label: 'רגיל', color: '#6b7280' };
-    return `<span style="background: ${typeInfo.color}20; color: ${typeInfo.color}; padding: 4px 12px; border-radius: 20px; font-size: 12px;">${typeInfo.label}</span>`;
+    return types[type] || 'לא מוגדר';
 }
 
 // פתיחת טופס הוספת לקוח

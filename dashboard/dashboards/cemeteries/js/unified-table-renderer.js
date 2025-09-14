@@ -475,6 +475,8 @@ class UnifiedTableRenderer {
 }
 
 async openParentSelectionDialog(type) {
+    console.log('test111');
+    
     const parentType = this.getParentType(type);
     
     // טען רשימת הורים אפשריים

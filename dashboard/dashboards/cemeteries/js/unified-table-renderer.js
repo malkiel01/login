@@ -325,7 +325,7 @@ class UnifiedTableRenderer {
     /**
      * פתיחת פריט
      */
-    openItem(itemId, itemName) {
+    openItem1(itemId, itemName) {
         console.log('Opening item:', this.currentType, itemId, itemName);
         
         // שמור בחירה
@@ -380,6 +380,54 @@ class UnifiedTableRenderer {
         if (nextType) {
             window.currentType = nextType;
             window.currentParentId = itemId;
+            
+            // עדכן סידבר
+            updateSidebarSelection(this.currentType, itemId, itemName);
+            
+            // טען את הרמה הבאה
+            this.loadAndDisplay(nextType, itemId);
+        }
+    }
+    openItem(itemId, itemName) {
+        console.log('Opening item:', this.currentType, itemId, itemName);
+        
+        // שמור בחירה
+        window.selectedItems[this.currentType] = {
+            id: itemId,
+            name: itemName,
+            unicId: itemId  // הוסף גם unicId
+        };
+        
+        // שמור את ה-unicId הספציפי לכל רמה
+        switch(this.currentType) {
+            case 'cemetery':
+                window.currentCemeteryId = itemId;
+                window.currentCemeteryUnicId = itemId;
+                break;
+            case 'block':
+                window.currentBlockId = itemId;
+                window.currentBlockUnicId = itemId;
+                break;
+            case 'plot':
+                window.currentPlotId = itemId;
+                window.currentPlotUnicId = itemId;
+                break;
+            case 'row':
+                window.currentRowId = itemId;
+                window.currentRowUnicId = itemId;
+                break;
+            case 'area_grave':
+                window.currentAreaGraveId = itemId;
+                window.currentAreaGraveUnicId = itemId;
+                break;
+        }
+        
+        // קבע את הסוג הבא בהיררכיה
+        const nextType = this.getNextType();
+        if (nextType) {
+            window.currentType = nextType;
+            window.currentParentId = itemId;  // זה כבר ה-unicId
+            window.currentParentUnicId = itemId;  // הוסף גם משתנה מפורש
             
             // עדכן סידבר
             updateSidebarSelection(this.currentType, itemId, itemName);

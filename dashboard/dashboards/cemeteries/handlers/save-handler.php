@@ -42,7 +42,18 @@ try {
     $typeConfig = $config[$type];
     $table = $typeConfig['table'];
     $primaryKey = $typeConfig['primaryKey'];
-    $parentKey = $typeConfig['parentKey']; // השתמש בשדה מהקונפיג!
+    // $parentKey = $typeConfig['parentKey']; // השתמש בשדה מהקונפיג!
+
+    // צריך להיות:
+    $parentKeyMapping = [
+        'block' => 'cemeteryId',
+        'plot' => 'blockId', 
+        'row' => 'plotId',
+        'area_grave' => 'lineId',
+        'grave' => 'areaGraveId'
+    ];
+
+    $parentKey = $parentKeyMapping[$type] ?? $typeConfig['parentKey'];
     
     error_log("Save handler - Type: $type, Table: $table, PrimaryKey: $primaryKey, ParentKey: $parentKey");
     

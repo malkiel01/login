@@ -220,6 +220,9 @@ const FormHandler = {
                     data[key] = value;
                 }
             }
+
+            // דיבוג - הצג את כל השדות מהטופס
+            console.log('All form fields:', Array.from(formData.entries()));
             
             // טיפול בשדה parent_id
             if (data.parent_id) {

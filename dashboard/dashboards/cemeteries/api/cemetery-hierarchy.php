@@ -440,7 +440,6 @@ try {
             break;
             
         case 'item_stats':
-            // סטטיסטיקות לפריט ספציפי
             $itemType = $_GET['item_type'] ?? '';
             $itemId = $_GET['item_id'] ?? '';
             
@@ -450,27 +449,117 @@ try {
             
             $stats = [];
             
-            // לדוגמה - סטטיסטיקות לאחוזת קבר
-            if ($itemType === 'area_grave') {
-                $stmt = $pdo->prepare("
-                    SELECT 
-                        COUNT(*) as total,
-                        SUM(CASE WHEN graveStatus = 1 THEN 1 ELSE 0 END) as available,
-                        SUM(CASE WHEN graveStatus = 2 THEN 1 ELSE 0 END) as purchased,
-                        SUM(CASE WHEN graveStatus = 3 THEN 1 ELSE 0 END) as occupied
-                    FROM graves 
-                    WHERE areaGraveId = :id AND isActive = 1
-                ");
-                $stmt->execute(['id' => $itemId]);
-                $stats = $stmt->fetch(PDO::FETCH_ASSOC);
+            switch($itemType) {
+                case 'cemetery':
+                    // ספירת גושים
+                    $stmt = $pdo->prepare("SELECT COUNT(*) FROM blocks WHERE cemeteryId = :id AND isActive = 1");
+                    $stmt->execute(['id' => $itemId]);
+                    $stats['blocks'] = $stmt->fetchColumn();
+                    
+                    // ספירת חלקות
+                    $stmt = $pdo->prepare("
+                        SELECT COUNT(*) FROM plots p 
+                        JOIN blocks b ON p.blockId = b.unicId 
+                        WHERE b.cemeteryId = :id AND p.isActive = 1
+                    ");
+                    $stmt->execute(['id' => $itemId]);
+                    $stats['plots'] = $stmt->fetchColumn();
+                    
+                    // ספירת קברים וסטטוסים
+                    $stmt = $pdo->prepare("
+                        SELECT 
+                            COUNT(*) as total,
+                            SUM(CASE WHEN g.graveStatus = 1 THEN 1 ELSE 0 END) as available
+                        FROM graves g
+                        JOIN areaGraves ag ON g.areaGraveId = ag.unicId
+                        JOIN rows r ON ag.lineId = r.unicId  
+                        JOIN plots p ON r.plotId = p.unicId
+                        JOIN blocks b ON p.blockId = b.unicId
+                        WHERE b.cemeteryId = :id AND g.isActive = 1
+                    ");
+                    $stmt->execute(['id' => $itemId]);
+                    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                    $stats['graves'] = $result['total'];
+                    $stats['available'] = $result['available'];
+                    break;
+                    
+                case 'block':
+                    // ספירת חלקות
+                    $stmt = $pdo->prepare("SELECT COUNT(*) FROM plots WHERE blockId = :id AND isActive = 1");
+                    $stmt->execute(['id' => $itemId]);
+                    $stats['plots'] = $stmt->fetchColumn();
+                    
+                    // ספירת קברים
+                    $stmt = $pdo->prepare("
+                        SELECT 
+                            COUNT(*) as total,
+                            SUM(CASE WHEN g.graveStatus = 1 THEN 1 ELSE 0 END) as available,
+                            SUM(CASE WHEN g.graveStatus = 3 THEN 1 ELSE 0 END) as occupied
+                        FROM graves g
+                        JOIN areaGraves ag ON g.areaGraveId = ag.unicId
+                        JOIN rows r ON ag.lineId = r.unicId
+                        JOIN plots p ON r.plotId = p.unicId
+                        WHERE p.blockId = :id AND g.isActive = 1
+                    ");
+                    $stmt->execute(['id' => $itemId]);
+                    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                    $stats['graves'] = $result['total'];
+                    $stats['available'] = $result['available'];
+                    $stats['occupied'] = $result['occupied'];
+                    break;
+                    
+                case 'plot':
+                    // ספירת שורות
+                    $stmt = $pdo->prepare("SELECT COUNT(*) FROM rows WHERE plotId = :id AND isActive = 1");
+                    $stmt->execute(['id' => $itemId]);
+                    $stats['rows'] = $stmt->fetchColumn();
+                    
+                    // ספירת אחוזות קבר
+                    $stmt = $pdo->prepare("
+                        SELECT COUNT(*) FROM areaGraves ag
+                        JOIN rows r ON ag.lineId = r.unicId
+                        WHERE r.plotId = :id AND ag.isActive = 1
+                    ");
+                    $stmt->execute(['id' => $itemId]);
+                    $stats['areaGraves'] = $stmt->fetchColumn();
+                    
+                    // ספירת קברים
+                    $stmt = $pdo->prepare("
+                        SELECT 
+                            COUNT(*) as total,
+                            SUM(CASE WHEN g.graveStatus = 1 THEN 1 ELSE 0 END) as available
+                        FROM graves g
+                        JOIN areaGraves ag ON g.areaGraveId = ag.unicId
+                        JOIN rows r ON ag.lineId = r.unicId
+                        WHERE r.plotId = :id AND g.isActive = 1
+                    ");
+                    $stmt->execute(['id' => $itemId]);
+                    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                    $stats['graves'] = $result['total'];
+                    $stats['available'] = $result['available'];
+                    break;
+                    
+                case 'area_grave':
+                    $stmt = $pdo->prepare("
+                        SELECT 
+                            COUNT(*) as total,
+                            SUM(CASE WHEN graveStatus = 1 THEN 1 ELSE 0 END) as available,
+                            SUM(CASE WHEN graveStatus = 2 THEN 1 ELSE 0 END) as purchased,
+                            SUM(CASE WHEN graveStatus = 3 THEN 1 ELSE 0 END) as occupied
+                        FROM graves 
+                        WHERE areaGraveId = :id AND isActive = 1
+                    ");
+                    $stmt->execute(['id' => $itemId]);
+                    $stats = $stmt->fetch(PDO::FETCH_ASSOC);
+                    break;
             }
             
             echo json_encode([
                 'success' => true,
                 'stats' => $stats
             ]);
-            break;
-            
+            break;  
+              
         case 'hierarchy':
             // שאילתה מעודכנת למבנה החדש עם שימוש בקונפיג
             $cemeteryConfig = $manager->getConfig('cemetery');

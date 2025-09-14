@@ -442,10 +442,18 @@ function getGraveTypeName(type) {
     return types[type] || 'לא מוגדר';
 }
 
-// פונקציות פעולה
+// // פונקציות פעולה
+// function addRowToPlot2(plotId) {
+//     if (typeof window.openAddRowForm === 'function') {
+//         window.openAddRowForm(plotId);
+//     }
+// }
 function addRowToPlot(plotId) {
-    if (typeof window.openAddRowForm === 'function') {
-        window.openAddRowForm(plotId);
+    // קרא ל-FormHandler עם הטיפוס הנכון
+    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
+        FormHandler.openForm('row', plotId, null);
+    } else {
+        console.error('FormHandler not available');
     }
 }
 

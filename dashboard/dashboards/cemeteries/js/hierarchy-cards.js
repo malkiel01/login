@@ -55,28 +55,6 @@ function closeHierarchyCard(level) {
 /**
  * הצגת כרטיס היררכיה בממשק
  */
-// function displayHierarchyCard2(cardHtml) {
-//     if (!cardHtml) return;
-    
-//     const mainContent = document.querySelector('.main-content');
-//     if (!mainContent) return;
-    
-//     // הסר כרטיסים קודמים מאותה רמה או נמוכה יותר
-//     const existingCards = mainContent.querySelectorAll('.hierarchy-card');
-//     existingCards.forEach(card => card.remove());
-    
-//     // הוסף את הכרטיס החדש לפני הטבלה
-//     const tableContainer = mainContent.querySelector('.table-container');
-//     if (tableContainer) {
-//         tableContainer.insertAdjacentHTML('beforebegin', cardHtml);
-//     } else {
-//         // אם אין טבלה, הוסף אחרי ה-action-bar
-//         const actionBar = mainContent.querySelector('.action-bar');
-//         if (actionBar) {
-//             actionBar.insertAdjacentHTML('afterend', cardHtml);
-//         }
-//     }
-// }
 function displayHierarchyCard(cardHtml) {
     if (!cardHtml) return;
     
@@ -108,10 +86,6 @@ function displayHierarchyCard(cardHtml) {
 /**
  * ניקוי כל כרטיסי ההיררכיה
  */
-// function clearAllHierarchyCards2() {
-//     const cards = document.querySelectorAll('.hierarchy-card');
-//     cards.forEach(card => card.remove());
-// }
 function clearAllHierarchyCards() {
     const infoCards = document.querySelectorAll('.info-card');
     infoCards.forEach(card => card.remove());

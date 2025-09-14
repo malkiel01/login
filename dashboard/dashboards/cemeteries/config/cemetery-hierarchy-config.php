@@ -862,18 +862,18 @@ return [
     // הגדרות לקבלת רשומת הורה
     // ========================================
     'parent_selector' => [
+        'table' => '',
         'title' => 'בחירת הורה',
         'singular' => 'הורה',
         'icon' => '📁',
-        'form_fields' => [
-            [
-                'name' => 'selected_parent',
-                'label' => 'בחר הורה',
-                'type' => 'select',
-                'required' => true,
-                'options' => [] // ימולא דינמית
-            ]
-        ]
+        'primaryKey' => '',
+        'parentKey' => null,
+        'permissions' => [
+            'can_create' => false,
+            'can_edit' => false,
+            'can_delete' => false
+        ],
+        'form_fields' => [] // ימולא דינמית
     ],
     
     // ========================================

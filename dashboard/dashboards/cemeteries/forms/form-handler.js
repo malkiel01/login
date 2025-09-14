@@ -2,6 +2,25 @@
 // טיפול בטפסים בצד הלקוח
 
 const FormHandler = {
+    // הוסף את הפונקציה החדשה כאן:
+    handleParentSelection: function() {
+        const select = document.getElementById('selected_parent');
+        const selectedParentId = select ? select.value : null;
+        
+        if (!selectedParentId) {
+            alert('יש לבחור הורה');
+            return;
+        }
+        
+        // קבל את הסוג הילד ששמרנו
+        const childType = window.pendingChildType;
+        
+        // סגור את טופס הבחירה
+        FormHandler.closeForm('parent_selector');
+        
+        // פתח את הטופס האמיתי עם ההורה שנבחר
+        FormHandler.openForm(childType, selectedParentId, null);
+    },
     openForm: async function(type, parentId = null, itemId = null) {
         if (!type || typeof type !== 'string') {
             console.error('Invalid type:', type);

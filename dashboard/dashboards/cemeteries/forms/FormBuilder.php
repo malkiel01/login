@@ -397,6 +397,11 @@ class FormBuilder {
         </style>
         ';
     }
+
+    // ב-FormBuilder.php, הוסף פונקציה חדשה:
+    public function setCustomButtons($buttons) {
+        $this->customButtons = $buttons;
+    }
     
     public function renderModal() {
         // Start with loading CSS
@@ -448,12 +453,18 @@ class FormBuilder {
         
         $html .= '</div>';
         
-        // Footer
+        // Footer 
         $html .= '<div class="modal-footer">';
-        $html .= '<button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="FormHandler.closeForm(\'' . $this->type . '\')">ביטול</button>';
-        $html .= '<button type="submit" class="btn btn-primary">';
-        $html .= $this->itemId ? 'עדכן' : 'שמור';
-        $html .= '</button>';
+        if ($this->type === 'parent_selector') {
+            $html .= '<button type="button" class="btn btn-secondary" onclick="FormHandler.closeForm(\'parent_selector\')">ביטול</button>';
+            $html .= '<button type="button" class="btn btn-primary" onclick="FormHandler.handleParentSelection()">המשך</button>';
+        } else {
+            // הכפתורים הרגילים
+            $html .= '<button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="FormHandler.closeForm(\'' . $this->type . '\')">ביטול</button>';
+            $html .= '<button type="submit" class="btn btn-primary">';
+            $html .= $this->itemId ? 'עדכן' : 'שמור';
+            $html .= '</button>';
+        }
         $html .= '</div>';
         
         $html .= '</form>';

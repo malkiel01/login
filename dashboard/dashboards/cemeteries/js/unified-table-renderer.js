@@ -478,239 +478,239 @@ class UnifiedTableRenderer {
         FormHandler.openForm(type, parentId, null);
     }
 
-    // async openParentSelectionDialog2(type) {
-    //     console.log('Opening parent selection dialog for type:', type);
-        
-    //     const parentType = this.getParentType(type);
-        
-    //     // טען רשימת הורים אפשריים
-    //     const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=${parentType}`);
-    //     const data = await response.json();
-        
-    //     if (data.success && data.data.length > 0) {
-    //         // קבע את שדה השם הנכון לפי הסוג
-    //         const nameFields = {
-    //             'cemetery': 'cemeteryNameHe',
-    //             'block': 'blockNameHe',
-    //             'plot': 'plotNameHe',
-    //             'row': 'lineNameHe',
-    //             'area_grave': 'areaGraveNameHe'
-    //         };
-            
-    //         const nameField = nameFields[parentType] || 'name';
-            
-    //         // יצירת דיאלוג בחירה עם עיצוב מלא
-    //         const modal = document.createElement('div');
-    //         modal.className = 'modal show';
-    //         modal.id = 'parentSelectionModal';
-            
-    //         // הוסף CSS ישירות
-    //         const style = document.createElement('style');
-    //         style.textContent = `
-    //             #parentSelectionModal {
-    //                 position: fixed;
-    //                 top: 0;
-    //                 left: 0;
-    //                 width: 100%;
-    //                 height: 100%;
-    //                 z-index: 10000;
-    //                 display: flex;
-    //                 align-items: center;
-    //                 justify-content: center;
-    //                 background: rgba(0, 0, 0, 0.5);
-    //             }
-                
-    //             #parentSelectionModal .modal-dialog {
-    //                 background: white;
-    //                 border-radius: 12px;
-    //                 box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-    //                 max-width: 500px;
-    //                 width: 90%;
-    //                 margin: 20px;
-    //             }
-                
-    //             #parentSelectionModal .modal-header {
-    //                 padding: 20px;
-    //                 border-bottom: 1px solid #e2e8f0;
-    //                 display: flex;
-    //                 justify-content: space-between;
-    //                 align-items: center;
-    //                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    //                 color: white;
-    //                 border-radius: 12px 12px 0 0;
-    //             }
-                
-    //             #parentSelectionModal .modal-header h3 {
-    //                 margin: 0;
-    //                 font-size: 1.25rem;
-    //                 font-weight: 600;
-    //             }
-                
-    //             #parentSelectionModal .close-btn {
-    //                 background: rgba(255,255,255,0.2);
-    //                 border: none;
-    //                 color: white;
-    //                 width: 32px;
-    //                 height: 32px;
-    //                 border-radius: 8px;
-    //                 cursor: pointer;
-    //                 font-size: 1.5rem;
-    //                 display: flex;
-    //                 align-items: center;
-    //                 justify-content: center;
-    //                 transition: all 0.3s;
-    //             }
-                
-    //             #parentSelectionModal .close-btn:hover {
-    //                 background: rgba(255,255,255,0.3);
-    //             }
-                
-    //             #parentSelectionModal .modal-body {
-    //                 padding: 25px;
-    //             }
-                
-    //             #parentSelectionModal .modal-body p {
-    //                 margin: 0 0 20px 0;
-    //                 color: #64748b;
-    //                 font-size: 0.95rem;
-    //             }
-                
-    //             #parentSelectionModal .form-control {
-    //                 width: 100%;
-    //                 padding: 12px;
-    //                 border: 1px solid #e2e8f0;
-    //                 border-radius: 8px;
-    //                 font-size: 1rem;
-    //                 direction: rtl;
-    //                 transition: all 0.3s;
-    //             }
-                
-    //             #parentSelectionModal .form-control:focus {
-    //                 outline: none;
-    //                 border-color: #667eea;
-    //                 box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-    //             }
-                
-    //             #parentSelectionModal .modal-footer {
-    //                 padding: 20px;
-    //                 border-top: 1px solid #e2e8f0;
-    //                 display: flex;
-    //                 justify-content: flex-end;
-    //                 gap: 12px;
-    //             }
-                
-    //             #parentSelectionModal .btn {
-    //                 padding: 10px 20px;
-    //                 border: none;
-    //                 border-radius: 8px;
-    //                 font-weight: 600;
-    //                 cursor: pointer;
-    //                 transition: all 0.3s;
-    //                 font-size: 0.9rem;
-    //             }
-                
-    //             #parentSelectionModal .btn-secondary {
-    //                 background: #f1f5f9;
-    //                 color: #475569;
-    //             }
-                
-    //             #parentSelectionModal .btn-secondary:hover {
-    //                 background: #e2e8f0;
-    //             }
-                
-    //             #parentSelectionModal .btn-primary {
-    //                 background: linear-gradient(135deg, #667eea, #764ba2);
-    //                 color: white;
-    //             }
-                
-    //             #parentSelectionModal .btn-primary:hover {
-    //                 box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-    //                 transform: translateY(-1px);
-    //             }
-    //         `;
-    //         document.head.appendChild(style);
-            
-    //         modal.innerHTML = `
-    //             <div class="modal-dialog">
-    //                 <div class="modal-header">
-    //                     <h3>בחר ${this.getParentTypeName(parentType)}</h3>
-    //                     <button class="close-btn" onclick="document.getElementById('parentSelectionModal').remove()">×</button>
-    //                 </div>
-    //                 <div class="modal-body">
-    //                     <p>יש לבחור ${this.getParentTypeName(parentType)} להוספת ${this.getParentTypeName(type)}:</p>
-    //                     <select id="parentSelector" class="form-control">
-    //                         <option value="">-- בחר ${this.getParentTypeName(parentType)} --</option>
-    //                         ${data.data.map(item => 
-    //                             `<option value="${item.unicId || item.id}">${item[nameField] || item.name || 'ללא שם'}</option>`
-    //                         ).join('')}
-    //                     </select>
-    //                 </div>
-    //                 <div class="modal-footer">
-    //                     <button class="btn btn-secondary" onclick="document.getElementById('parentSelectionModal').remove()">
-    //                         ביטול
-    //                     </button>
-    //                     <button class="btn btn-primary" onclick="
-    //                         const selected = document.getElementById('parentSelector').value;
-    //                         if(selected) {
-    //                             window.currentParentId = selected;
-    //                             FormHandler.openForm('${type}', selected, null);
-    //                             document.getElementById('parentSelectionModal').remove();
-    //                         } else {
-    //                             alert('יש לבחור ${this.getParentTypeName(parentType)}');
-    //                         }
-    //                     ">
-    //                         המשך
-    //                     </button>
-    //                 </div>
-    //             </div>
-    //         `;
-            
-    //         document.body.appendChild(modal);
-    //     } else {
-    //         this.showMessage('אין פריטי הורה זמינים', 'error');
-    //     }
-    // }
     async openParentSelectionDialog(type) {
+        console.log('Opening parent selection dialog for type:', type);
+        
         const parentType = this.getParentType(type);
+        
+        // טען רשימת הורים אפשריים
         const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=${parentType}`);
         const data = await response.json();
         
         if (data.success && data.data.length > 0) {
+            // קבע את שדה השם הנכון לפי הסוג
             const nameFields = {
                 'cemetery': 'cemeteryNameHe',
                 'block': 'blockNameHe',
-                'plot': 'plotNameHe', 
+                'plot': 'plotNameHe',
                 'row': 'lineNameHe',
                 'area_grave': 'areaGraveNameHe'
             };
             
             const nameField = nameFields[parentType] || 'name';
             
-            // צור select פשוט
-            const select = document.createElement('select');
-            select.innerHTML = `
-                <option value="">בחר ${this.getParentTypeName(parentType)}</option>
-                ${data.data.map(item => 
-                    `<option value="${item.unicId || item.id}">${item[nameField] || 'ללא שם'}</option>`
-                ).join('')}
+            // יצירת דיאלוג בחירה עם עיצוב מלא
+            const modal = document.createElement('div');
+            modal.className = 'modal show';
+            modal.id = 'parentSelectionModal';
+            
+            // הוסף CSS ישירות
+            const style = document.createElement('style');
+            style.textContent = `
+                #parentSelectionModal {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    z-index: 10000;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: rgba(0, 0, 0, 0.5);
+                }
+                
+                #parentSelectionModal .modal-dialog {
+                    background: white;
+                    border-radius: 12px;
+                    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+                    max-width: 500px;
+                    width: 90%;
+                    margin: 20px;
+                }
+                
+                #parentSelectionModal .modal-header {
+                    padding: 20px;
+                    border-bottom: 1px solid #e2e8f0;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    border-radius: 12px 12px 0 0;
+                }
+                
+                #parentSelectionModal .modal-header h3 {
+                    margin: 0;
+                    font-size: 1.25rem;
+                    font-weight: 600;
+                }
+                
+                #parentSelectionModal .close-btn {
+                    background: rgba(255,255,255,0.2);
+                    border: none;
+                    color: white;
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    font-size: 1.5rem;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: all 0.3s;
+                }
+                
+                #parentSelectionModal .close-btn:hover {
+                    background: rgba(255,255,255,0.3);
+                }
+                
+                #parentSelectionModal .modal-body {
+                    padding: 25px;
+                }
+                
+                #parentSelectionModal .modal-body p {
+                    margin: 0 0 20px 0;
+                    color: #64748b;
+                    font-size: 0.95rem;
+                }
+                
+                #parentSelectionModal .form-control {
+                    width: 100%;
+                    padding: 12px;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 8px;
+                    font-size: 1rem;
+                    direction: rtl;
+                    transition: all 0.3s;
+                }
+                
+                #parentSelectionModal .form-control:focus {
+                    outline: none;
+                    border-color: #667eea;
+                    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+                }
+                
+                #parentSelectionModal .modal-footer {
+                    padding: 20px;
+                    border-top: 1px solid #e2e8f0;
+                    display: flex;
+                    justify-content: flex-end;
+                    gap: 12px;
+                }
+                
+                #parentSelectionModal .btn {
+                    padding: 10px 20px;
+                    border: none;
+                    border-radius: 8px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.3s;
+                    font-size: 0.9rem;
+                }
+                
+                #parentSelectionModal .btn-secondary {
+                    background: #f1f5f9;
+                    color: #475569;
+                }
+                
+                #parentSelectionModal .btn-secondary:hover {
+                    background: #e2e8f0;
+                }
+                
+                #parentSelectionModal .btn-primary {
+                    background: linear-gradient(135deg, #667eea, #764ba2);
+                    color: white;
+                }
+                
+                #parentSelectionModal .btn-primary:hover {
+                    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+                    transform: translateY(-1px);
+                }
+            `;
+            document.head.appendChild(style);
+            
+            modal.innerHTML = `
+                <div class="modal-dialog">
+                    <div class="modal-header">
+                        <h3>בחר ${this.getParentTypeName(parentType)}</h3>
+                        <button class="close-btn" onclick="document.getElementById('parentSelectionModal').remove()">×</button>
+                    </div>
+                    <div class="modal-body">
+                        <p>יש לבחור ${this.getParentTypeName(parentType)} להוספת ${this.getParentTypeName(type)}:</p>
+                        <select id="parentSelector" class="form-control">
+                            <option value="">-- בחר ${this.getParentTypeName(parentType)} --</option>
+                            ${data.data.map(item => 
+                                `<option value="${item.unicId || item.id}">${item[nameField] || item.name || 'ללא שם'}</option>`
+                            ).join('')}
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="document.getElementById('parentSelectionModal').remove()">
+                            ביטול
+                        </button>
+                        <button class="btn btn-primary" onclick="
+                            const selected = document.getElementById('parentSelector').value;
+                            if(selected) {
+                                window.currentParentId = selected;
+                                FormHandler.openForm('${type}', selected, null);
+                                document.getElementById('parentSelectionModal').remove();
+                            } else {
+                                alert('יש לבחור ${this.getParentTypeName(parentType)}');
+                            }
+                        ">
+                            המשך
+                        </button>
+                    </div>
+                </div>
             `;
             
-            // הצג בדיאלוג פשוט
-            if (confirm(`בחר ${this.getParentTypeName(parentType)} ולחץ אישור`)) {
-                document.body.appendChild(select);
-                select.focus();
-                select.onchange = () => {
-                    if (select.value) {
-                        window.currentParentId = select.value;
-                        FormHandler.openForm(type, select.value, null);
-                        select.remove();
-                    }
-                };
-            }
+            document.body.appendChild(modal);
         } else {
             this.showMessage('אין פריטי הורה זמינים', 'error');
         }
     }
+    // async openParentSelectionDialog2(type) {
+    //     const parentType = this.getParentType(type);
+    //     const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=${parentType}`);
+    //     const data = await response.json();
+        
+    //     if (data.success && data.data.length > 0) {
+    //         const nameFields = {
+    //             'cemetery': 'cemeteryNameHe',
+    //             'block': 'blockNameHe',
+    //             'plot': 'plotNameHe', 
+    //             'row': 'lineNameHe',
+    //             'area_grave': 'areaGraveNameHe'
+    //         };
+            
+    //         const nameField = nameFields[parentType] || 'name';
+            
+    //         // צור select פשוט
+    //         const select = document.createElement('select');
+    //         select.innerHTML = `
+    //             <option value="">בחר ${this.getParentTypeName(parentType)}</option>
+    //             ${data.data.map(item => 
+    //                 `<option value="${item.unicId || item.id}">${item[nameField] || 'ללא שם'}</option>`
+    //             ).join('')}
+    //         `;
+            
+    //         // הצג בדיאלוג פשוט
+    //         if (confirm(`בחר ${this.getParentTypeName(parentType)} ולחץ אישור`)) {
+    //             document.body.appendChild(select);
+    //             select.focus();
+    //             select.onchange = () => {
+    //                 if (select.value) {
+    //                     window.currentParentId = select.value;
+    //                     FormHandler.openForm(type, select.value, null);
+    //                     select.remove();
+    //                 }
+    //             };
+    //         }
+    //     } else {
+    //         this.showMessage('אין פריטי הורה זמינים', 'error');
+    //     }
+    // }
 
     /**
      * עריכת פריט

@@ -371,6 +371,41 @@ class UnifiedTableRenderer {
         return hierarchy[this.currentType];
     }
     
+    // openItem2(itemId, itemName) {
+    //     const nextType = this.getChildType();
+    //     if (!nextType) return;
+        
+    //     // עדכן את הבחירה הגלובלית
+    //     window.selectedItems[this.currentType] = { 
+    //         id: itemId, 
+    //         name: itemName 
+    //     };
+        
+    //     // עדכן משתנים גלובליים
+    //     window.currentType = nextType;
+    //     window.currentParentId = itemId;
+        
+    //     // שמור ID ספציפי לכל רמה (לתאימות אחורה)
+    //     const idMapping = {
+    //         'cemetery': 'currentCemeteryId',
+    //         'block': 'currentBlockId',
+    //         'plot': 'currentPlotId',
+    //         'area_grave': 'currentAreaGraveId'
+    //     };
+        
+    //     if (idMapping[this.currentType]) {
+    //         window[idMapping[this.currentType]] = itemId;
+    //     }
+        
+    //     // עדכן את ה-Breadcrumb פעם אחת
+    //     if (window.BreadcrumbManager) {
+    //         window.BreadcrumbManager.update(window.selectedItems);
+    //     }
+        
+    //     // טען את הנתונים הבאים
+    //     this.loadAndDisplay(nextType, itemId);
+    // }
+
     openItem(itemId, itemName) {
         const nextType = this.getChildType();
         if (!nextType) return;
@@ -402,8 +437,60 @@ class UnifiedTableRenderer {
             window.BreadcrumbManager.update(window.selectedItems);
         }
         
+        // *** הוסף כאן: צור והצג את הכרטיס המתאים ***
+        this.displayItemCard(this.currentType, itemId, itemName);
+        
         // טען את הנתונים הבאים
         this.loadAndDisplay(nextType, itemId);
+    }
+
+    /**
+     * הצגת כרטיס לפריט שנבחר
+     */
+    displayItemCard(type, itemId, itemName) {
+        let cardHtml = '';
+        
+        switch(type) {
+            case 'cemetery':
+                if (typeof createCemeteryCard === 'function') {
+                    cardHtml = createCemeteryCard({ 
+                        id: itemId, 
+                        name: itemName 
+                    });
+                }
+                break;
+                
+            case 'block':
+                if (typeof createBlockCard === 'function') {
+                    cardHtml = createBlockCard({ 
+                        id: itemId, 
+                        name: itemName 
+                    });
+                }
+                break;
+                
+            case 'plot':
+                if (typeof createPlotCard === 'function') {
+                    cardHtml = createPlotCard({ 
+                        id: itemId, 
+                        name: itemName 
+                    });
+                }
+                break;
+                
+            case 'area_grave':
+                if (typeof createAreaGraveCard === 'function') {
+                    cardHtml = createAreaGraveCard({ 
+                        id: itemId, 
+                        name: itemName 
+                    });
+                }
+                break;
+        }
+        
+        if (cardHtml && typeof displayHierarchyCard === 'function') {
+            displayHierarchyCard(cardHtml);
+        }
     }
  
     /**

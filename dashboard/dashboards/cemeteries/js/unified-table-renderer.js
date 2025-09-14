@@ -325,7 +325,7 @@ class UnifiedTableRenderer {
     /**
      * פתיחת פריט
      */
-    openItem(itemId, itemName) {
+    openItem2(itemId, itemName) {
         console.log('Opening item:', this.currentType, itemId, itemName);
         
         // שמור בחירה
@@ -347,7 +347,7 @@ class UnifiedTableRenderer {
             this.loadAndDisplay(nextType, itemId);
         }
     }
-    openItem2(itemId, itemName) {
+    openItem(itemId, itemName) {
         console.log('Opening item:', this.currentType, itemId, itemName);
         
         // שמור בחירה

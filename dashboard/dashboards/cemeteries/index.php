@@ -136,7 +136,7 @@ if (!checkPermission('view', 'cemetery')) {
     </div>
      
     <!-- JavaScript Files - כולל הקובץ החדש לרספונסיביות -->
-    <script src="/dashboard/dashboards/cemeteries/js/breadcrumb1.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/breadcrumb.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/main.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/clearDashboard.js"></script>
     <!-- מערכת טפסים חדשה -->

@@ -55,7 +55,7 @@ function setupEventListeners() {
         // Ctrl/Cmd + N - הוספה חדשה
         if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
             e.preventDefault();
-            openAddModal();
+            tableRenderer.openAddModal();
         }
         
         // Ctrl/Cmd + S - שמירה
@@ -302,40 +302,13 @@ async function openAddModal2() {
 //         itemId: null
 //     });
 // }
-function openAddModal() {
-    const type = window.currentType;
-    const parentId = window.currentParentId;
-    
-    console.log('openAddModal - type:', type, 'parentId:', parentId);
-    
-    if (!type) {
-        console.error('No type defined');
-        return;
+window.openAddModal = function() {
+    if (window.tableRenderer) {
+        window.tableRenderer.openAddModal();
+    } else {
+        console.error('TableRenderer not initialized');
     }
-    
-    // בדוק אם צריך לבחור הורה קודם
-    if (!parentId && type !== 'cemetery') {
-        // אם יש tableRenderer, השתמש בפונקציה שלו
-        if (window.tableRenderer && window.tableRenderer.openParentSelectionDialog) {
-            window.tableRenderer.openParentSelectionDialog(type);
-        } else {
-            // אחרת, הצג הודעה
-            const parentTypes = {
-                'block': 'בית עלמין',
-                'plot': 'גוש',
-                'row': 'חלקה',
-                'area_grave': 'שורה',
-                'grave': 'אחוזת קבר'
-            };
-            const parentType = parentTypes[type] || 'פריט הורה';
-            alert(`יש לבחור ${parentType} תחילה`);
-        }
-        return;
-    }
-    
-    // קריאה רגילה
-    FormHandler.openForm(type, parentId, null);
-}
+};
 
 // פתיחת טופס עם בחירת parent
 async function openAddWithParentSelection() {

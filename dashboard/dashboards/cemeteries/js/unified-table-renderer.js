@@ -321,73 +321,32 @@ class UnifiedTableRenderer {
         
         return parentMap[this.currentType] || '';
     }
+
+    // פתיחת טופס הוספה - הפונקציה הראשית
+    openAddModal() {
+        const type = this.currentType || window.currentType;
+        const parentId = window.currentParentId;
+        
+        console.log('openAddModal - type:', type, 'parentId:', parentId);
+        
+        if (!type) {
+            console.error('No type defined');
+            return;
+        }
+        
+        // בדוק אם צריך לבחור הורה קודם
+        if (!parentId && type !== 'cemetery') {
+            this.openParentSelectionDialog(type);
+            return;
+        }
+        
+        // פתח את הטופס ישירות
+        FormHandler.openForm(type, parentId, null);
+    }
     
     /**
      * פתיחת פריט
      */
-    openItem1(itemId, itemName) {
-        console.log('Opening item:', this.currentType, itemId, itemName);
-        
-        // שמור בחירה
-        window.selectedItems[this.currentType] = {
-            id: itemId,
-            name: itemName
-        };
-        
-        // קבע את הסוג הבא בהיררכיה
-        const nextType = this.getNextType();
-        if (nextType) {
-            window.currentType = nextType;
-            window.currentParentId = itemId;
-            
-            // עדכן סידבר
-            updateSidebarSelection(this.currentType, itemId, itemName);
-            
-            // טען את הרמה הבאה
-            this.loadAndDisplay(nextType, itemId);
-        }
-    }
-    openItem2(itemId, itemName) {
-        console.log('Opening item:', this.currentType, itemId, itemName);
-        
-        // שמור בחירה
-        window.selectedItems[this.currentType] = {
-            id: itemId,
-            name: itemName
-        };
-        
-        // שמור את ה-ID הספציפי
-        switch(this.currentType) {
-            case 'cemetery':
-                window.currentCemeteryId = itemId;
-                break;
-            case 'block':
-                window.currentBlockId = itemId;
-                break;
-            case 'plot':
-                window.currentPlotId = itemId;
-                break;
-            case 'row':
-                window.currentRowId = itemId;
-                break;
-            case 'area_grave':
-                window.currentAreaGraveId = itemId;
-                break;
-        }
-        
-        // קבע את הסוג הבא בהיררכיה
-        const nextType = this.getNextType();
-        if (nextType) {
-            window.currentType = nextType;
-            window.currentParentId = itemId;
-            
-            // עדכן סידבר
-            updateSidebarSelection(this.currentType, itemId, itemName);
-            
-            // טען את הרמה הבאה
-            this.loadAndDisplay(nextType, itemId);
-        }
-    }
     openItem(itemId, itemName) {
         console.log('Opening item:', this.currentType, itemId, itemName);
         
@@ -497,6 +456,7 @@ class UnifiedTableRenderer {
         }
     }
 
+
     addItem() {
         const type = this.currentType;
         const parentId = window.currentParentId;
@@ -518,8 +478,55 @@ class UnifiedTableRenderer {
         FormHandler.openForm(type, parentId, null);
     }
 
+    // async openParentSelectionDialog2(type) {
+    //     console.log('test111');
+        
+    //     const parentType = this.getParentType(type);
+        
+    //     // טען רשימת הורים אפשריים
+    //     const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=${parentType}`);
+    //     const data = await response.json();
+        
+    //     if (data.success && data.data.length > 0) {
+    //         // יצירת דיאלוג בחירה
+    //         const modal = document.createElement('div');
+    //         modal.className = 'modal show';
+    //         modal.style.display = 'flex';
+    //         modal.innerHTML = `
+    //             <div class="modal-dialog">
+    //                 <div class="modal-content">
+    //                     <div class="modal-header">
+    //                         <h5>בחר ${this.getParentTypeName(parentType)}</h5>
+    //                         <button onclick="this.closest('.modal').remove()">×</button>
+    //                     </div>
+    //                     <div class="modal-body">
+    //                         <select id="parentSelector" class="form-control">
+    //                             <option value="">בחר...</option>
+    //                             ${data.data.map(item => 
+    //                                 `<option value="${item.unicId}">${item[this.config.displayFields.name]}</option>`
+    //                             ).join('')}
+    //                         </select>
+    //                     </div>
+    //                     <div class="modal-footer">
+    //                         <button class="btn btn-primary" onclick="
+    //                             const selected = document.getElementById('parentSelector').value;
+    //                             if(selected) {
+    //                                 window.currentParentId = selected;
+    //                                 FormHandler.openForm('${type}', selected, null);
+    //                                 this.closest('.modal').remove();
+    //                             }
+    //                         ">המשך</button>
+    //                     </div>
+    //                 </div>
+    //             </div>
+    //         `;
+    //         document.body.appendChild(modal);
+    //     } else {
+    //         this.showMessage('אין פריטי הורה זמינים', 'error');
+    //     }
+    // }
     async openParentSelectionDialog(type) {
-        console.log('test111');
+        console.log('Opening parent selection dialog for type:', type);
         
         const parentType = this.getParentType(type);
         
@@ -528,10 +535,31 @@ class UnifiedTableRenderer {
         const data = await response.json();
         
         if (data.success && data.data.length > 0) {
+            // קבע את שדה השם הנכון לפי הסוג
+            const nameFields = {
+                'cemetery': 'cemeteryNameHe',
+                'block': 'blockNameHe',
+                'plot': 'plotNameHe',
+                'row': 'lineNameHe',
+                'area_grave': 'areaGraveNameHe'
+            };
+            
+            const nameField = nameFields[parentType] || 'name';
+            
             // יצירת דיאלוג בחירה
             const modal = document.createElement('div');
             modal.className = 'modal show';
             modal.style.display = 'flex';
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = '100%';
+            modal.style.height = '100%';
+            modal.style.zIndex = '10000';
+            modal.style.alignItems = 'center';
+            modal.style.justifyContent = 'center';
+            modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+            
             modal.innerHTML = `
                 <div class="modal-dialog">
                     <div class="modal-content">
@@ -543,7 +571,7 @@ class UnifiedTableRenderer {
                             <select id="parentSelector" class="form-control">
                                 <option value="">בחר...</option>
                                 ${data.data.map(item => 
-                                    `<option value="${item.unicId}">${item[this.config.displayFields.name]}</option>`
+                                    `<option value="${item.unicId || item.id}">${item[nameField] || item.name || 'ללא שם'}</option>`
                                 ).join('')}
                             </select>
                         </div>

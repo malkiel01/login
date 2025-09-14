@@ -196,7 +196,7 @@ async function createPlotCard(plotId) {
                             <svg class="icon-sm"><use xlink:href="#icon-edit"></use></svg>
                             עריכה
                         </button>
-                        <button class="info-card-btn" onclick="managePlotRows(${plot.id})">
+                        <button class="info-card-btn" onclick="managePlotRows(${plot.unicId})">
                             <svg class="icon-sm"><use xlink:href="#icon-rows"></use></svg>
                             ניהול שורות
                         </button>

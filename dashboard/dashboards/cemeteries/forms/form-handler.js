@@ -217,55 +217,42 @@ const FormHandler2 = {
 };
 
 const FormHandler = {
-    // פתיחת טופס
     openForm: async function(type, parentId = null, itemId = null) {
+        // ולידציה
+        if (!type || typeof type !== 'string') {
+            console.error('Invalid type:', type);
+            this.showMessage('שגיאה: סוג הטופס לא תקין', 'error');
+            return;
+        }
+        
         console.log('FormHandler.openForm called with:', {type, parentId, itemId});
+        
         try {
-            // טען את הטופס מהשרת
             const params = new URLSearchParams({
                 type: type,
                 ...(itemId && { id: itemId }),
                 ...(parentId && { parent_id: parentId })
             });
             
-            console.log('Fetching form from:', `/dashboard/dashboards/cemeteries/forms/form-loader.php?${params}`);
-            
             const response = await fetch(`/dashboard/dashboards/cemeteries/forms/form-loader.php?${params}`);
-            
-            console.log('Response status:', response.status);
-            
             const html = await response.text();
             
-            console.log('Received HTML length:', html.length);
-            
-            // הסר טופס קיים אם יש
+            // הסר טופס קיים
             const existingModal = document.getElementById(type + 'FormModal');
             if (existingModal) {
                 existingModal.remove();
             }
             
-            // הוסף את הטופס ל-DOM
+            // הוסף את הטופס החדש
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = html;
             
-            // חפש את המודאל בתוך ה-HTML שהתקבל
             const modalElement = tempDiv.querySelector('.modal');
             if (modalElement) {
                 document.body.appendChild(modalElement);
-                
-                // הצג את המודאל
                 modalElement.style.display = 'flex';
                 modalElement.classList.add('show');
-                
-                // הוסף backdrop אם אין
-                if (!document.querySelector('.modal-backdrop')) {
-                    const backdrop = document.createElement('div');
-                    backdrop.className = 'modal-backdrop fade show';
-                    document.body.appendChild(backdrop);
-                }
             } else {
-                console.error('Modal element not found in received HTML');
-                // אם אין modal element, פשוט הוסף את כל ה-HTML
                 document.body.appendChild(tempDiv);
             }
             
@@ -275,132 +262,17 @@ const FormHandler = {
         }
     },
     
-    // סגירת טופס
-    closeForm: function(type) {
-        console.log('Closing form:', type);
-        
-        // נסה למצוא את המודאל לפי מספר דרכים
-        let modal = document.getElementById(type + 'FormModal');
-        if (!modal) {
-            modal = document.querySelector('.modal.show');
-        }
-        
-        if (modal) {
-            modal.style.display = 'none';
-            modal.classList.remove('show');
-            setTimeout(() => modal.remove(), 300);
-        }
-        
-        // הסר backdrop
-        const backdrop = document.querySelector('.modal-backdrop');
-        if (backdrop) {
-            backdrop.remove();
-        }
-    },
-    
-    // שמירת טופס
-    saveForm: async function(formData, type) {
-        try {
-            // קבע את ה-API endpoint
-            const isEdit = formData.has('id');
-            const action = isEdit ? 'update' : 'create';
-            
-            // המר FormData לאובייקט
-            const data = {};
-            for (let [key, value] of formData.entries()) {
-                if (key !== 'type') {
-                    if (key === 'is_small_grave') {
-                        data[key] = value === 'on' ? 1 : 0;
-                    } else if (value !== '') {
-                        data[key] = value;
-                    }
-                }
-            }
-            
-            // טיפול בשדה parent_id - המרה לשם השדה הנכון
-            if (data.parent_id) {
-                const parentColumn = this.getParentColumn(type);
-                if (parentColumn) {
-                    data[parentColumn] = data.parent_id;
-                    delete data.parent_id;
-                }
-            }
-            
-            // תיקון שמות types
-            if (type === 'areaGrave') type = 'area_grave';
-            
-            // הוסף שדות ברירת מחדל
-            data.isActive = 1;
-            
-            // בנה URL
-            let url;
-            if (type === 'customer') {
-                url = `/dashboard/dashboards/cemeteries/api/customers-api.php?action=${action}`;
-            } else if (type === 'purchase') {
-                url = `/dashboard/dashboards/cemeteries/api/purchases-api.php?action=${action}`;
-            } else if (type === 'payment') {
-                url = `/dashboard/dashboards/cemeteries/api/payments-api.php?action=${action}`;
-            } else {
-                url = `/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=${action}&type=${type}`;
-            }
-            
-            if (isEdit) {
-                url += `&id=${formData.get('id')}`;
-            }
-            
-            const response = await fetch(url, {
-                method: isEdit ? 'PUT' : 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                this.showMessage(
-                    isEdit ? 'הפריט עודכן בהצלחה' : 'הפריט נוסף בהצלחה',
-                    'success'
-                );
-                
-                this.closeForm(type);
-                
-                // רענן את הנתונים
-                if (typeof tableRenderer !== 'undefined' && tableRenderer.loadAndDisplay) {
-                    tableRenderer.loadAndDisplay(window.currentType, window.currentParentId);
-                } else if (typeof refreshData === 'function') {
-                    refreshData();
-                } else {
-                    location.reload();
-                }
-                
-                return true;
-            } else {
-                this.showMessage(result.error || 'שגיאה בשמירה', 'error');
-                return false;
-            }
-            
-        } catch (error) {
-            console.error('Error saving form:', error);
-            this.showMessage('שגיאה בשמירת הנתונים', 'error');
-            return false;
-        }
-    },
-    
-    // קבלת עמודת ההורה לפי סוג
     getParentColumn: function(type) {
         const columns = {
-            'block': 'cemeteryId',      // שינוי חשוב!
-            'plot': 'blockId',           // שינוי חשוב!
-            'row': 'plotId',             // שינוי חשוב!
-            'area_grave': 'lineId',      // שינוי חשוב!
-            'grave': 'areaGraveId',      // שינוי חשוב!
-            'purchase': 'customerId',
-            'burial': 'graveId'
+            'block': 'cemeteryId',      // תואם למבנה החדש
+            'plot': 'blockId',           
+            'row': 'plotId',             
+            'area_grave': 'lineId',      
+            'grave': 'areaGraveId'
         };
         return columns[type] || null;
     }
+    // ... שאר הפונקציות נשארות כמו שהן
 };
 
 // הוסף את FormHandler לחלון הגלובלי

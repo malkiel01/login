@@ -55,6 +55,7 @@ try {
 
     $parentKey = $parentKeyMapping[$type] ?? $typeConfig['parentKey'];
     
+    
     error_log("Save handler - Type: $type, Table: $table, PrimaryKey: $primaryKey, ParentKey: $parentKey");
     
     // קבל חיבור למסד נתונים

@@ -394,31 +394,25 @@ class UnifiedTableRenderer {
         // שמור בחירה
         window.selectedItems[this.currentType] = {
             id: itemId,
-            name: itemName,
-            unicId: itemId  // הוסף גם unicId
+            name: itemName
         };
         
-        // שמור את ה-unicId הספציפי לכל רמה
+        // שמור את ה-unicId הספציפי
         switch(this.currentType) {
             case 'cemetery':
                 window.currentCemeteryId = itemId;
-                window.currentCemeteryUnicId = itemId;
                 break;
             case 'block':
                 window.currentBlockId = itemId;
-                window.currentBlockUnicId = itemId;
                 break;
             case 'plot':
                 window.currentPlotId = itemId;
-                window.currentPlotUnicId = itemId;
                 break;
             case 'row':
                 window.currentRowId = itemId;
-                window.currentRowUnicId = itemId;
                 break;
             case 'area_grave':
                 window.currentAreaGraveId = itemId;
-                window.currentAreaGraveUnicId = itemId;
                 break;
         }
         
@@ -426,8 +420,7 @@ class UnifiedTableRenderer {
         const nextType = this.getNextType();
         if (nextType) {
             window.currentType = nextType;
-            window.currentParentId = itemId;  // זה כבר ה-unicId
-            window.currentParentUnicId = itemId;  // הוסף גם משתנה מפורש
+            window.currentParentId = itemId;  // זה ה-unicId
             
             // עדכן סידבר
             updateSidebarSelection(this.currentType, itemId, itemName);
@@ -456,14 +449,26 @@ class UnifiedTableRenderer {
      * הוספת פריט חדש
      */
     addItem() {
-        FormHandler.openForm(this.currentType, window.currentParentId, null);
+        const type = this.currentType;
+        const parentId = window.currentParentId;
+        
+        console.log('addItem - type:', type, 'parentId:', parentId);
+        
+        // קריאה פשוטה עם פרמטרים
+        FormHandler.openForm(type, parentId, null);
     }
     
     /**
      * עריכת פריט
      */
     editItem(itemId) {
-        FormHandler.openForm(this.currentType, window.currentParentId, itemId);
+        const type = this.currentType;
+        const parentId = window.currentParentId;
+        
+        console.log('editItem - type:', type, 'itemId:', itemId);
+        
+        // קריאה פשוטה עם פרמטרים
+        FormHandler.openForm(type, parentId, itemId);
     }
     
     /**

@@ -261,46 +261,60 @@ async function openAddModal2() {
     console.log('Opening form for:', window.currentType, 'Parent:', window.currentParentId);
     FormHandler.openForm(window.currentType, window.currentParentId, null);
 }
-async function openAddModal() {
-    // קבע את ה-parent_id הנכון בהתאם לסוג
-    let parentId = null;
+// async function openAddModal() {
+//     // קבע את ה-parent_id הנכון בהתאם לסוג
+//     let parentId = null;
     
-    switch(window.currentType) {
-        case 'cemetery':
-            parentId = null;
-            break;
-        case 'block':
-            parentId = window.currentCemeteryId;
-            break;
-        case 'plot':
-            parentId = window.currentBlockId;
-            break;
-        case 'row':
-            parentId = window.currentPlotId;
-            break;
-        case 'area_grave':
-            parentId = window.currentRowId;
-            break;
-        case 'grave':
-            parentId = window.currentAreaGraveId;
-            break;
-    }
+//     switch(window.currentType) {
+//         case 'cemetery':
+//             parentId = null;
+//             break;
+//         case 'block':
+//             parentId = window.currentCemeteryId;
+//             break;
+//         case 'plot':
+//             parentId = window.currentBlockId;
+//             break;
+//         case 'row':
+//             parentId = window.currentPlotId;
+//             break;
+//         case 'area_grave':
+//             parentId = window.currentRowId;
+//             break;
+//         case 'grave':
+//             parentId = window.currentAreaGraveId;
+//             break;
+//     }
     
-    // בדיקה אם יש parent כשצריך
-    if (window.currentType !== 'cemetery' && !parentId) {
-        await openAddWithParentSelection();
+//     // בדיקה אם יש parent כשצריך
+//     if (window.currentType !== 'cemetery' && !parentId) {
+//         await openAddWithParentSelection();
+//         return;
+//     }
+    
+//     // שמור את ה-parentId הנוכחי
+//     window.currentParentId = parentId;
+    
+//     // פתח את הטופס עם ה-parent_id
+//     FormHandler.openForm({
+//         type: window.currentType,
+//         parentId: parentId,
+//         itemId: null
+//     });
+// }
+function openAddModal() {
+    const type = window.currentType;
+    const parentId = window.currentParentId;
+    
+    console.log('openAddModal - type:', type, 'parentId:', parentId);
+    
+    if (!type) {
+        console.error('No type defined');
         return;
     }
     
-    // שמור את ה-parentId הנוכחי
-    window.currentParentId = parentId;
-    
-    // פתח את הטופס עם ה-parent_id
-    FormHandler.openForm({
-        type: window.currentType,
-        parentId: parentId,
-        itemId: null
-    });
+    // קריאה פשוטה עם פרמטרים
+    FormHandler.openForm(type, parentId, null);
 }
 
 // פתיחת טופס עם בחירת parent

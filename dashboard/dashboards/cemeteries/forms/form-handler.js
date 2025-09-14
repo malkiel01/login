@@ -1,7 +1,7 @@
 // /dashboards/cemeteries/forms/form-handler.js
 // טיפול בטפסים בצד הלקוח
 
-const FormHandler = {
+let FormHandler = {
     // // פתיחת טופס
     // openForm: async function(type, parentId = null, itemId = null) {
     //     console.log('FormHandler.openForm called with:', {type, parentId, itemId});

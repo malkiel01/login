@@ -216,6 +216,9 @@ const FormHandler2 = {
     }
 };
 
+// /dashboard/dashboards/cemeteries/forms/form-handler.js
+// טיפול בטפסים בצד הלקוח
+
 const FormHandler = {
     openForm: async function(type, parentId = null, itemId = null) {
         if (!type || typeof type !== 'string') {
@@ -238,28 +241,52 @@ const FormHandler = {
             
             console.log('Received HTML, looking for modal...');
             
-            // הסר טופס קיים
+            // הסר טופס קיים אם יש
             const existingModal = document.getElementById(type + 'FormModal');
             if (existingModal) {
                 existingModal.remove();
             }
             
-            // צור container זמני
+            // הסר backdrop קיים אם יש
+            const existingBackdrop = document.querySelector('.modal-backdrop');
+            if (existingBackdrop) {
+                existingBackdrop.remove();
+            }
+            
+            // צור container זמני לפירוק ה-HTML
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = html;
             
-            // חפש את המודאל - FormBuilder יוצר עם ID של type + 'FormModal'
+            // חפש את המודאל לפי ה-ID שה-FormBuilder יוצר
             const modal = tempDiv.querySelector('#' + type + 'FormModal');
             
             if (modal) {
                 console.log('Modal found, displaying...');
-                // הוסף את המודאל ל-DOM
+                
+                // הוסף את המודאל ל-body
                 document.body.appendChild(modal);
-                // המודאל כבר מכיל CSS עם display: flex
+                
+                // מנע גלילה בדף הראשי
+                document.body.style.overflow = 'hidden';
+                
             } else {
-                console.error('Modal not found in HTML');
-                // אם לא נמצא מודאל, הצג את כל התוכן
-                document.body.appendChild(tempDiv.firstElementChild || tempDiv);
+                console.error('Modal not found in HTML, trying alternative approach...');
+                
+                // אם לא נמצא מודאל עם ID, חפש לפי class
+                const alternativeModal = tempDiv.querySelector('.modal');
+                if (alternativeModal) {
+                    // וודא שיש לו ID
+                    alternativeModal.id = type + 'FormModal';
+                    document.body.appendChild(alternativeModal);
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    // אם אין מודאל כלל, הצג את התוכן כמו שהוא
+                    console.error('No modal found at all');
+                    const content = tempDiv.firstElementChild;
+                    if (content) {
+                        document.body.appendChild(content);
+                    }
+                }
             }
             
         } catch (error) {
@@ -270,10 +297,21 @@ const FormHandler = {
     
     closeForm: function(type) {
         console.log('Closing form:', type);
+        
+        // הסר את המודאל
         const modal = document.getElementById(type + 'FormModal');
         if (modal) {
             modal.remove();
         }
+        
+        // הסר backdrop אם יש
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) {
+            backdrop.remove();
+        }
+        
+        // החזר גלילה לדף
+        document.body.style.overflow = '';
     },
     
     saveForm: async function(formData, type) {
@@ -281,6 +319,7 @@ const FormHandler = {
             const isEdit = formData.has('id');
             const action = isEdit ? 'update' : 'create';
             
+            // המר FormData לאובייקט
             const data = {};
             for (let [key, value] of formData.entries()) {
                 if (key !== 'type') {
@@ -292,7 +331,7 @@ const FormHandler = {
                 }
             }
             
-            // טיפול ב-parent_id
+            // טיפול בשדה parent_id
             if (data.parent_id) {
                 const parentColumn = this.getParentColumn(type);
                 if (parentColumn) {
@@ -308,10 +347,23 @@ const FormHandler = {
             data.isActive = 1;
             
             // בנה URL
-            let url = `/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=${action}&type=${type}`;
+            let url;
+            if (type === 'customer') {
+                url = `/dashboard/dashboards/cemeteries/api/customers-api.php?action=${action}`;
+            } else if (type === 'purchase') {
+                url = `/dashboard/dashboards/cemeteries/api/purchases-api.php?action=${action}`;
+            } else if (type === 'payment') {
+                url = `/dashboard/dashboards/cemeteries/api/payments-api.php?action=${action}`;
+            } else {
+                url = `/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=${action}&type=${type}`;
+            }
+            
             if (isEdit) {
                 url += `&id=${formData.get('id')}`;
             }
+            
+            console.log('Saving to:', url);
+            console.log('Data:', data);
             
             const response = await fetch(url, {
                 method: isEdit ? 'PUT' : 'POST',
@@ -334,6 +386,10 @@ const FormHandler = {
                 // רענן נתונים
                 if (typeof tableRenderer !== 'undefined' && tableRenderer.loadAndDisplay) {
                     tableRenderer.loadAndDisplay(window.currentType, window.currentParentId);
+                } else if (typeof refreshData === 'function') {
+                    refreshData();
+                } else if (typeof loadAllData === 'function') {
+                    loadAllData();
                 } else {
                     location.reload();
                 }
@@ -353,11 +409,13 @@ const FormHandler = {
     
     getParentColumn: function(type) {
         const columns = {
-            'block': 'cemeteryId',      
-            'plot': 'blockId',           
-            'row': 'plotId',             
-            'area_grave': 'lineId',      
-            'grave': 'areaGraveId'
+            'block': 'cemeteryId',
+            'plot': 'blockId',
+            'row': 'plotId',
+            'area_grave': 'lineId',
+            'grave': 'areaGraveId',
+            'purchase': 'customerId',
+            'burial': 'graveId'
         };
         return columns[type] || null;
     },
@@ -378,13 +436,45 @@ const FormHandler = {
 // הגדר גלובלית
 window.FormHandler = FormHandler;
 
-// פונקציה גלובלית לטיפול בשליחת הטופס
+// פונקציה גלובלית לטיפול בשליחת טופס
 window.handleFormSubmit = function(event, type) {
     event.preventDefault();
     const form = event.target;
     const formData = new FormData(form);
     FormHandler.saveForm(formData, type);
 };
+
+// האזן לאירועי DOM
+document.addEventListener('DOMContentLoaded', function() {
+    // האזן לקליקים על כפתורי סגירה
+    document.addEventListener('click', function(e) {
+        if (e.target.matches('[data-dismiss="modal"]')) {
+            const modal = e.target.closest('.modal');
+            if (modal) {
+                const type = modal.id.replace('FormModal', '');
+                FormHandler.closeForm(type);
+            }
+        }
+    });
+    
+    // האזן ל-ESC לסגירת מודל
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const modal = document.querySelector('.modal.show');
+            if (!modal) {
+                // אם אין modal עם class show, חפש כל modal
+                const anyModal = document.querySelector('.modal');
+                if (anyModal) {
+                    const type = anyModal.id.replace('FormModal', '');
+                    FormHandler.closeForm(type);
+                }
+            } else {
+                const type = modal.id.replace('FormModal', '');
+                FormHandler.closeForm(type);
+            }
+        }
+    });
+});
 // -----
 
 // // פונקציה גלובלית לטיפול בשליחת טופס
@@ -406,27 +496,27 @@ window.closeFormModal = function(type) {
     FormHandler.closeForm(type);
 };
 
-// אתחול בטעינת הדף
-document.addEventListener('DOMContentLoaded', function() {
-    // האזן לקליקים על כפתורי סגירה
-    document.addEventListener('click', function(e) {
-        if (e.target.matches('[data-dismiss="modal"]')) {
-            const modal = e.target.closest('.modal');
-            if (modal) {
-                const type = modal.id.replace('FormModal', '');
-                FormHandler.closeForm(type);
-            }
-        }
-    });
+// // אתחול בטעינת הדף
+// document.addEventListener('DOMContentLoaded', function() {
+//     // האזן לקליקים על כפתורי סגירה
+//     document.addEventListener('click', function(e) {
+//         if (e.target.matches('[data-dismiss="modal"]')) {
+//             const modal = e.target.closest('.modal');
+//             if (modal) {
+//                 const type = modal.id.replace('FormModal', '');
+//                 FormHandler.closeForm(type);
+//             }
+//         }
+//     });
     
-    // האזן ל-ESC לסגירת מודל
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            const modal = document.querySelector('.modal.show');
-            if (modal) {
-                const type = modal.id.replace('FormModal', '');
-                FormHandler.closeForm(type);
-            }
-        }
-    });
-});
+//     // האזן ל-ESC לסגירת מודל
+//     document.addEventListener('keydown', function(e) {
+//         if (e.key === 'Escape') {
+//             const modal = document.querySelector('.modal.show');
+//             if (modal) {
+//                 const type = modal.id.replace('FormModal', '');
+//                 FormHandler.closeForm(type);
+//             }
+//         }
+//     });
+// });

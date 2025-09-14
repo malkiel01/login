@@ -731,6 +731,7 @@ window.loadAllCemeteries = async function() {
     window.currentType = 'cemetery';
     window.currentParentId = null;
     DashboardCleaner.clear({ targetLevel: 'cemetery' });
+    BreadcrumbManager.update({}, 'cemetery');
     await tableRenderer.loadAndDisplay('cemetery');
 };
 
@@ -738,6 +739,7 @@ window.loadAllBlocks = async function() {
     window.currentType = 'block';
     window.currentParentId = null;
     DashboardCleaner.clear({ targetLevel: 'block' });
+    BreadcrumbManager.update({}, 'block');
     await tableRenderer.loadAndDisplay('block');
 };
 
@@ -745,6 +747,7 @@ window.loadAllPlots = async function() {
     window.currentType = 'plot';
     window.currentParentId = null;
     DashboardCleaner.clear({ targetLevel: 'plot' });
+    BreadcrumbManager.update({}, 'plot');
     await tableRenderer.loadAndDisplay('plot');
 };
 
@@ -752,6 +755,7 @@ window.loadAllAreaGraves = async function() {
     window.currentType = 'area_grave';
     window.currentParentId = null;
     DashboardCleaner.clear({ targetLevel: 'area_grave' });
+    BreadcrumbManager.update({}, 'area_grave');
     await tableRenderer.loadAndDisplay('area_grave');
 };
 
@@ -759,6 +763,7 @@ window.loadAllGraves = async function() {
     window.currentType = 'grave';
     window.currentParentId = null;
     DashboardCleaner.clear({ targetLevel: 'grave' });
+    BreadcrumbManager.update({}, 'grave');
     await tableRenderer.loadAndDisplay('grave');
 };
 

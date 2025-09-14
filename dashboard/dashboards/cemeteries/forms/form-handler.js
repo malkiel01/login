@@ -218,7 +218,6 @@ const FormHandler2 = {
 
 const FormHandler = {
     openForm: async function(type, parentId = null, itemId = null) {
-        // ולידציה
         if (!type || typeof type !== 'string') {
             console.error('Invalid type:', type);
             this.showMessage('שגיאה: סוג הטופס לא תקין', 'error');
@@ -243,42 +242,24 @@ const FormHandler = {
                 existingModal.remove();
             }
             
-            // הוסף את הטופס החדש
+            // פשוט הוסף את ה-HTML שחזר - הוא כבר מכיל את כל העיצוב!
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = html;
-            
-            const modalElement = tempDiv.querySelector('.modal');
-            if (modalElement) {
-                document.body.appendChild(modalElement);
-                modalElement.style.display = 'flex';
-                modalElement.classList.add('show');
-            } else {
-                document.body.appendChild(tempDiv);
-            }
+            document.body.appendChild(tempDiv.firstElementChild);
             
         } catch (error) {
             console.error('Error loading form:', error);
             this.showMessage('שגיאה בטעינת הטופס', 'error');
         }
     },
-
-    // סגירת טופס
+    
     closeForm: function(type) {
         const modal = document.getElementById(type + 'FormModal');
         if (modal) {
-            if (typeof bootstrap !== 'undefined') {
-                const bsModal = bootstrap.Modal.getInstance(modal);
-                if (bsModal) bsModal.hide();
-            } else {
-                modal.style.display = 'none';
-                modal.classList.remove('show');
-            }
-            
-            // הסר מה-DOM אחרי סגירה
-            setTimeout(() => modal.remove(), 300);
+            modal.remove();
         }
     },
-
+    
     // שמירת טופס
     saveForm: async function(formData, type) {
         try {
@@ -393,13 +374,16 @@ const FormHandler = {
         }
     },
     
+    // קבלת עמודת ההורה לפי סוג
     getParentColumn: function(type) {
         const columns = {
-            'block': 'cemeteryId',      // תואם למבנה החדש
-            'plot': 'blockId',           
-            'row': 'plotId',             
-            'area_grave': 'lineId',      
-            'grave': 'areaGraveId'
+            'block': 'cemetery_id',
+            'plot': 'block_id',
+            'row': 'plot_id',
+            'area_grave': 'row_id',
+            'grave': 'area_grave_id',
+            'purchase': 'customer_id',
+            'burial': 'grave_id'
         };
         return columns[type] || null;
     },

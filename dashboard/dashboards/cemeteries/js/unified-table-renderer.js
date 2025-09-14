@@ -738,8 +738,26 @@ class UnifiedTableRenderer {
      * מחיקת פריט
      */
     async deleteItem(itemId) {
-        if (!confirm(`האם אתה בטוח שברצונך למחוק ${this.config.singular} זה?`)) return;
+        // בדוק אם יש ילדים
+        const childType = this.getChildType();
+        if (childType) {
+            try {
+                const response = await fetch(
+                    `${API_BASE}cemetery-hierarchy.php?action=list&type=${childType}&parent_id=${itemId}`
+                );
+                const data = await response.json();
+                if (data.success && data.data && data.data.length > 0) {
+                    showError(`לא ניתן למחוק ${this.config.singular} שמכיל ${data.data.length} פריטים משויכים`);
+                    return;
+                }
+            } catch (error) {
+                console.error('Error checking children:', error);
+            }
+        }
         
+        // המשך עם המחיקה הרגילה...
+        if (!confirm(`האם אתה בטוח שברצונך למחוק ${this.config.singular} זה?`)) return;
+
         try {
             const response = await fetch(
                 `${API_BASE}cemetery-hierarchy.php?action=delete&type=${this.currentType}&id=${itemId}`,
@@ -760,6 +778,7 @@ class UnifiedTableRenderer {
             showError('שגיאה במחיקת הפריט');
         }
     }
+    
 }
 
 // יצירת מופע גלובלי

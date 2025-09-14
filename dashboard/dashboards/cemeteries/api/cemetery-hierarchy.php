@@ -325,18 +325,13 @@ try {
                 throw new Exception('אין נתונים לעדכון');
             }
             
-            // עדכון לפי מפתח ראשי או id
-            // $sql = "UPDATE $table SET " . implode(', ', $updates) . 
-            //        " WHERE $primaryKey = :id OR id = :id";
+            // עדכון לפי מפתח ראשי
             $sql = "UPDATE $table SET " . implode(', ', $updates) . 
                     " WHERE $primaryKey = :id";
             
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
 
-            // דיבוג - החזר את השאילתה במקום לבצע
-            // throw new Exception("DEBUG SQL: $sql | PARAMS: " . json_encode($params));
-            
             // רישום בלוג
             logActivity('update', $type, $id);
             
@@ -379,7 +374,7 @@ try {
                 
                 if ($childConfig) {
                     // קודם מצא את המפתח הראשי של הפריט
-                    $stmt = $pdo->prepare("SELECT $primaryKey FROM $table WHERE $primaryKey = :id OR id = :id");
+                    $stmt = $pdo->prepare("SELECT $primaryKey FROM $table WHERE $primaryKey = :id");
                     $stmt->execute(['id' => $id]);
                     $itemKey = $stmt->fetchColumn();
                     
@@ -403,7 +398,7 @@ try {
             // מחיקה רכה
             $stmt = $pdo->prepare(
                 "UPDATE $table SET isActive = 0, inactiveDate = :date 
-                 WHERE $primaryKey = :id OR id = :id"
+                 WHERE $primaryKey = :id"
             );
             $stmt->execute(['id' => $id, 'date' => date('Y-m-d H:i:s')]);
             

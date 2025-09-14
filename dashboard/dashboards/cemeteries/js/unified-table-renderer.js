@@ -672,37 +672,40 @@ class UnifiedTableRenderer {
     // }
     async openParentSelectionDialog(type) {
         const parentType = this.getParentType(type);
-        
-        // טען רשימת הורים
         const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=${parentType}`);
         const data = await response.json();
         
         if (data.success && data.data.length > 0) {
             const nameFields = {
                 'cemetery': 'cemeteryNameHe',
-                'block': 'blockNameHe', 
-                'plot': 'plotNameHe',
+                'block': 'blockNameHe',
+                'plot': 'plotNameHe', 
                 'row': 'lineNameHe',
                 'area_grave': 'areaGraveNameHe'
             };
             
             const nameField = nameFields[parentType] || 'name';
             
-            // במקום ליצור טופס חדש, פשוט צור דיאלוג בחירה פשוט
-            const selectedParent = prompt(
-                `בחר ${this.getParentTypeName(parentType)} להוספת ${this.getParentTypeName(type)}:\n\n` +
-                data.data.map((item, index) => 
-                    `${index + 1}. ${item[nameField] || 'ללא שם'}`
-                ).join('\n')
-            );
+            // צור select פשוט
+            const select = document.createElement('select');
+            select.innerHTML = `
+                <option value="">בחר ${this.getParentTypeName(parentType)}</option>
+                ${data.data.map(item => 
+                    `<option value="${item.unicId || item.id}">${item[nameField] || 'ללא שם'}</option>`
+                ).join('')}
+            `;
             
-            if (selectedParent) {
-                const index = parseInt(selectedParent) - 1;
-                if (data.data[index]) {
-                    const parentId = data.data[index].unicId || data.data[index].id;
-                    window.currentParentId = parentId;
-                    FormHandler.openForm(type, parentId, null);
-                }
+            // הצג בדיאלוג פשוט
+            if (confirm(`בחר ${this.getParentTypeName(parentType)} ולחץ אישור`)) {
+                document.body.appendChild(select);
+                select.focus();
+                select.onchange = () => {
+                    if (select.value) {
+                        window.currentParentId = select.value;
+                        FormHandler.openForm(type, select.value, null);
+                        select.remove();
+                    }
+                };
             }
         } else {
             this.showMessage('אין פריטי הורה זמינים', 'error');

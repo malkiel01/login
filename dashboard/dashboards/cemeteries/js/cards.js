@@ -18,6 +18,7 @@ async function createCemeteryCard(cemeteryId) {
                     <div class="info-card-title">
                         <span class="info-card-icon">🏛️</span>
                         <div>
+                            <div class="info-card-type">בית עלמין</div>
                             <h2 class="info-card-name">${cemetery.cemeteryNameHe || cemetery.name || 'בית עלמין'}</h2>
                             ${cemetery.code ? `<div class="info-card-code">קוד: ${cemetery.code}</div>` : ''}
                         </div>
@@ -102,6 +103,7 @@ async function createBlockCard(blockId) {
                     <div class="info-card-title">
                         <span class="info-card-icon">📦</span>
                         <div>
+                            <div class="info-card-type">גוש</div>
                             <h2 class="info-card-name">${block.blockNameHe || block.name || 'גוש'}</h2>
                             ${block.code ? `<div class="info-card-code">קוד: ${block.code}</div>` : ''}
                         </div>
@@ -187,6 +189,7 @@ async function createPlotCard(plotId) {
                     <div class="info-card-title">
                         <span class="info-card-icon">📋</span>
                         <div>
+                            <div class="info-card-type">חלקה</div>
                             <h2 class="info-card-name">${plot.plotNameHe || plot.name || 'חלקה'}</h2>
                             ${plot.serial_number ? `<div class="info-card-code">מספר סידורי: ${plot.serial_number}</div>` : ''}
                         </div>
@@ -293,6 +296,7 @@ async function createAreaGraveCard(areaGraveId) {
                     <div class="info-card-title">
                         <span class="info-card-icon">🏘️</span>
                         <div>
+                            <div class="info-card-type">אחוזת קבר</div>
                             <h2 class="info-card-name">${areaGrave.areaGraveNameHe || areaGrave.name || 'אחוזת קבר'}</h2>
                             ${areaGrave.code ? `<div class="info-card-code">קוד: ${areaGrave.code}</div>` : ''}
                         </div>
@@ -442,12 +446,7 @@ function getGraveTypeName(type) {
     return types[type] || 'לא מוגדר';
 }
 
-// // פונקציות פעולה
-// function addRowToPlot2(plotId) {
-//     if (typeof window.openAddRowForm === 'function') {
-//         window.openAddRowForm(plotId);
-//     }
-// }
+// פונקציות פעולה
 function addRowToPlot(plotId) {
     // קרא ל-FormHandler עם הטיפוס הנכון
     if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {

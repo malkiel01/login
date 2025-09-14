@@ -3,6 +3,13 @@
 // משתנים גלובליים
 window.currentType = 'cemetery';
 window.currentParentId = null;
+
+window.currentCemeteryId = null;
+window.currentBlockId = null;
+window.currentPlotId = null;
+window.currentRowId = null;
+window.currentAreaGraveId = null;
+
 window.selectedItems = {};
 let currentPage = 1;
 let isLoading = false;
@@ -231,7 +238,7 @@ async function performQuickSearch(query) {
 }
 
 // פתיחת מודל הוספה - עם בדיקת הקשר
-async function openAddModal() {
+async function openAddModal2() {
     // בדיקה אם צריך parent
     const parentRequired = ['block', 'plot', 'row', 'area_grave', 'grave'].includes(window.currentType);
     
@@ -253,6 +260,47 @@ async function openAddModal() {
     // השתמש במערכת הטפסים החדשה
     console.log('Opening form for:', window.currentType, 'Parent:', window.currentParentId);
     FormHandler.openForm(window.currentType, window.currentParentId, null);
+}
+async function openAddModal() {
+    // קבע את ה-parent_id הנכון בהתאם לסוג
+    let parentId = null;
+    
+    switch(window.currentType) {
+        case 'cemetery':
+            parentId = null;
+            break;
+        case 'block':
+            parentId = window.currentCemeteryId;
+            break;
+        case 'plot':
+            parentId = window.currentBlockId;
+            break;
+        case 'row':
+            parentId = window.currentPlotId;
+            break;
+        case 'area_grave':
+            parentId = window.currentRowId;
+            break;
+        case 'grave':
+            parentId = window.currentAreaGraveId;
+            break;
+    }
+    
+    // בדיקה אם יש parent כשצריך
+    if (window.currentType !== 'cemetery' && !parentId) {
+        await openAddWithParentSelection();
+        return;
+    }
+    
+    // שמור את ה-parentId הנוכחי
+    window.currentParentId = parentId;
+    
+    // פתח את הטופס עם ה-parent_id
+    FormHandler.openForm({
+        type: window.currentType,
+        parentId: parentId,
+        itemId: null
+    });
 }
 
 // פתיחת טופס עם בחירת parent
@@ -525,8 +573,10 @@ function exportData() {
 
 // עריכת פריט
 async function editItem(id) {
-    console.log('Editing item:', id);
-    // TODO: implement edit
+    console.log('Editing item:', id, 'Type:', window.currentType);
+    
+    // השתמש ב-tableRenderer לעריכה
+    tableRenderer.editItem(id);
 }
 
 // מחיקת פריט
@@ -744,6 +794,39 @@ function refreshData() {
     
     showSuccess('הנתונים רועננו בהצלחה');
 }
+
+window.handleFormSubmit = function(event, type) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    console.log('Submitting form - Type:', type);
+    for (let [key, value] of formData.entries()) {
+        console.log(`  ${key}: ${value}`);
+    }
+    
+    fetch('dashboard/dashboards/cemeteries/handlers/save-handler.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showSuccess(data.message || 'הנתונים נשמרו בהצלחה');
+            FormHandler.closeForm(type);
+            
+            // רענן את התצוגה הנוכחית
+            tableRenderer.loadAndDisplay(window.currentType, window.currentParentId);
+        } else {
+            showError(data.error || 'שגיאה בשמירת הנתונים');
+        }
+    })
+    .catch(error => {
+        console.error('Save error:', error);
+        showError('שגיאה בשמירת הנתונים');
+    });
+};
 
 // הוסף את הפונקציה לייצוא
 window.refreshData = refreshData;

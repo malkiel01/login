@@ -325,6 +325,28 @@ class UnifiedTableRenderer {
     /**
      * פתיחת פריט
      */
+    openItem2(itemId, itemName) {
+        console.log('Opening item:', this.currentType, itemId, itemName);
+        
+        // שמור בחירה
+        window.selectedItems[this.currentType] = {
+            id: itemId,
+            name: itemName
+        };
+        
+        // קבע את הסוג הבא בהיררכיה
+        const nextType = this.getNextType();
+        if (nextType) {
+            window.currentType = nextType;
+            window.currentParentId = itemId;
+            
+            // עדכן סידבר
+            updateSidebarSelection(this.currentType, itemId, itemName);
+            
+            // טען את הרמה הבאה
+            this.loadAndDisplay(nextType, itemId);
+        }
+    }
     openItem(itemId, itemName) {
         console.log('Opening item:', this.currentType, itemId, itemName);
         
@@ -333,6 +355,25 @@ class UnifiedTableRenderer {
             id: itemId,
             name: itemName
         };
+        
+        // שמור את ה-ID הספציפי
+        switch(this.currentType) {
+            case 'cemetery':
+                window.currentCemeteryId = itemId;
+                break;
+            case 'block':
+                window.currentBlockId = itemId;
+                break;
+            case 'plot':
+                window.currentPlotId = itemId;
+                break;
+            case 'row':
+                window.currentRowId = itemId;
+                break;
+            case 'area_grave':
+                window.currentAreaGraveId = itemId;
+                break;
+        }
         
         // קבע את הסוג הבא בהיררכיה
         const nextType = this.getNextType();
@@ -446,24 +487,28 @@ window.loadAllGraves = async function() {
 
 // פונקציות לטעינה עם הורה
 window.loadBlocksForCemetery = async function(cemeteryId) {
+    window.currentCemeteryId = cemeteryId;  // הוסף את זה
     window.currentType = 'block';
     window.currentParentId = cemeteryId;
     await tableRenderer.loadAndDisplay('block', cemeteryId);
 };
 
 window.loadPlotsForBlock = async function(blockId) {
+    window.currentBlockId = blockId;  // הוסף את זה
     window.currentType = 'plot';
     window.currentParentId = blockId;
     await tableRenderer.loadAndDisplay('plot', blockId);
 };
 
 window.loadAreaGravesForPlot = async function(plotId) {
+    window.currentPlotId = plotId;  // הוסף את זה
     window.currentType = 'area_grave';
     window.currentParentId = plotId;
     await tableRenderer.loadAndDisplay('area_grave', plotId);
 };
 
 window.loadGravesForAreaGrave = async function(areaGraveId) {
+    window.currentAreaGraveId = areaGraveId;  // הוסף את זה
     window.currentType = 'grave';
     window.currentParentId = areaGraveId;
     await tableRenderer.loadAndDisplay('grave', areaGraveId);

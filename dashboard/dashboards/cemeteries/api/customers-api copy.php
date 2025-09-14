@@ -46,19 +46,19 @@ try {
             // חיפוש
             if ($search) {
                 $sql .= " AND (
-                    firstName LIKE :search OR 
-                    lastName LIKE :search OR 
-                    numId LIKE :search OR 
+                    first_name LIKE :search OR 
+                    last_name LIKE :search OR 
+                    id_number LIKE :search OR 
                     phone LIKE :search OR 
-                    phoneMobile LIKE :search OR
-                    fullNameHe LIKE :search
+                    mobile_phone LIKE :search OR
+                    email LIKE :search
                 )";
                 $params['search'] = "%$search%";
             }
             
-            // סינון לפי סטטוס
+            // סינון לפי סטטוס - חשוב לרכישות!
             if ($status !== '') {
-                $sql .= " AND statusCustomer = :status";
+                $sql .= " AND customer_status = :status";
                 $params['status'] = $status;
             }
             
@@ -109,11 +109,11 @@ try {
             
             // הוספת נתונים קשורים (רכישות, קבורות)
             $stmt = $pdo->prepare("
-                SELECT p.*, g.graveNameHe, g.graveLocation 
+                SELECT p.*, g.grave_number, g.grave_location 
                 FROM purchases p
-                LEFT JOIN graves g ON p.graveId = g.unicId
-                WHERE p.customerId = :customer_id AND p.isActive = 1
-                ORDER BY p.openingDate DESC
+                LEFT JOIN graves g ON p.grave_id = g.id
+                WHERE p.customer_id = :customer_id AND p.isActive = 1
+                ORDER BY p.opening_date DESC
             ");
             $stmt->execute(['customer_id' => $id]);
             $customer['purchases'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -126,40 +126,32 @@ try {
             $data = json_decode(file_get_contents('php://input'), true);
             
             // ולידציה
-            if (empty($data['firstName']) || empty($data['lastName'])) {
+            if (empty($data['first_name']) || empty($data['last_name'])) {
                 throw new Exception('שם פרטי ושם משפחה הם שדות חובה');
             }
             
             // בדיקת כפל תעודת זהות
-            if (!empty($data['numId'])) {
-                $stmt = $pdo->prepare("SELECT id FROM customers WHERE numId = :numId AND isActive = 1");
-                $stmt->execute(['numId' => $data['numId']]);
+            if (!empty($data['id_number'])) {
+                $stmt = $pdo->prepare("SELECT id FROM customers WHERE id_number = :id_number AND isActive = 1");
+                $stmt->execute(['id_number' => $data['id_number']]);
                 if ($stmt->fetch()) {
                     throw new Exception('לקוח עם תעודת זהות זו כבר קיים במערכת');
                 }
             }
             
             // חישוב גיל אם יש תאריך לידה
-            if (!empty($data['dateBirth'])) {
-                $birthDate = new DateTime($data['dateBirth']);
+            if (!empty($data['birth_date'])) {
+                $birthDate = new DateTime($data['birth_date']);
                 $today = new DateTime();
                 $data['age'] = $birthDate->diff($today)->y;
             }
             
-            // יצירת unicId
-            $data['unicId'] = uniqid('customer_', true);
-            
-            // הוספת תאריכים
-            $data['createDate'] = date('Y-m-d H:i:s');
-            $data['updateDate'] = date('Y-m-d H:i:s');
-            
             // בניית השאילתה
             $fields = [
-                'unicId', 'typeId', 'numId', 'firstName', 'lastName', 'oldName', 'nom',
-                'gender', 'nameFather', 'nameMother', 'maritalStatus', 'dateBirth',
-                'countryBirth', 'countryBirthId', 'age', 'resident', 'countryId', 'cityId', 
-                'address', 'phone', 'phoneMobile', 'statusCustomer', 'spouse', 'comment',
-                'association', 'dateBirthHe', 'tourist', 'createDate', 'updateDate'
+                'type_id', 'id_number', 'first_name', 'last_name', 'old_name', 'nickname',
+                'gender', 'father_name', 'mother_name', 'marital_status', 'birth_date',
+                'birth_country', 'age', 'resident_status', 'country', 'city', 'address',
+                'phone', 'mobile_phone', 'email', 'customer_status', 'spouse_name', 'comments'
             ];
             
             $insertFields = [];
@@ -198,36 +190,32 @@ try {
             $data = json_decode(file_get_contents('php://input'), true);
             
             // ולידציה
-            if (empty($data['firstName']) || empty($data['lastName'])) {
+            if (empty($data['first_name']) || empty($data['last_name'])) {
                 throw new Exception('שם פרטי ושם משפחה הם שדות חובה');
             }
             
             // בדיקת כפל תעודת זהות
-            if (!empty($data['numId'])) {
-                $stmt = $pdo->prepare("SELECT id FROM customers WHERE numId = :numId AND id != :id AND isActive = 1");
-                $stmt->execute(['numId' => $data['numId'], 'id' => $id]);
+            if (!empty($data['id_number'])) {
+                $stmt = $pdo->prepare("SELECT id FROM customers WHERE id_number = :id_number AND id != :id AND isActive = 1");
+                $stmt->execute(['id_number' => $data['id_number'], 'id' => $id]);
                 if ($stmt->fetch()) {
                     throw new Exception('לקוח עם תעודת זהות זו כבר קיים במערכת');
                 }
             }
             
             // חישוב גיל אם יש תאריך לידה
-            if (!empty($data['dateBirth'])) {
-                $birthDate = new DateTime($data['dateBirth']);
+            if (!empty($data['birth_date'])) {
+                $birthDate = new DateTime($data['birth_date']);
                 $today = new DateTime();
                 $data['age'] = $birthDate->diff($today)->y;
             }
             
-            // עדכון תאריך
-            $data['updateDate'] = date('Y-m-d H:i:s');
-            
             // בניית השאילתה
             $fields = [
-                'typeId', 'numId', 'firstName', 'lastName', 'oldName', 'nom',
-                'gender', 'nameFather', 'nameMother', 'maritalStatus', 'dateBirth',
-                'countryBirth', 'countryBirthId', 'age', 'resident', 'countryId', 'cityId',
-                'address', 'phone', 'phoneMobile', 'statusCustomer', 'spouse', 'comment',
-                'association', 'dateBirthHe', 'tourist', 'updateDate'
+                'type_id', 'id_number', 'first_name', 'last_name', 'old_name', 'nickname',
+                'gender', 'father_name', 'mother_name', 'marital_status', 'birth_date',
+                'birth_country', 'age', 'resident_status', 'country', 'city', 'address',
+                'phone', 'mobile_phone', 'email', 'customer_status', 'spouse_name', 'comments'
             ];
             
             $updateFields = [];
@@ -262,7 +250,7 @@ try {
             }
             
             // בדיקה אם יש רכישות או קבורות קשורות
-            $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM purchases WHERE customerId = :id AND isActive = 1");
+            $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM purchases WHERE customer_id = :id AND isActive = 1");
             $stmt->execute(['id' => $id]);
             $purchases = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
             
@@ -271,8 +259,8 @@ try {
             }
             
             // מחיקה רכה
-            $stmt = $pdo->prepare("UPDATE customers SET isActive = 0, inactiveDate = :date WHERE id = :id");
-            $stmt->execute(['id' => $id, 'date' => date('Y-m-d H:i:s')]);
+            $stmt = $pdo->prepare("UPDATE customers SET isActive = 0 WHERE id = :id");
+            $stmt->execute(['id' => $id]);
             
             echo json_encode([
                 'success' => true,
@@ -286,19 +274,19 @@ try {
             
             // סה"כ לקוחות לפי סטטוס
             $stmt = $pdo->query("
-                SELECT statusCustomer, COUNT(*) as count 
+                SELECT customer_status, COUNT(*) as count 
                 FROM customers 
                 WHERE isActive = 1 
-                GROUP BY statusCustomer
+                GROUP BY customer_status
             ");
             $stats['by_status'] = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
             
             // סה"כ לקוחות לפי סוג
             $stmt = $pdo->query("
-                SELECT typeId, COUNT(*) as count 
+                SELECT type_id, COUNT(*) as count 
                 FROM customers 
                 WHERE isActive = 1 
-                GROUP BY typeId
+                GROUP BY type_id
             ");
             $stats['by_type'] = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
             
@@ -307,7 +295,7 @@ try {
                 SELECT COUNT(*) as count 
                 FROM customers 
                 WHERE isActive = 1 
-                AND createDate >= DATE_SUB(NOW(), INTERVAL 1 MONTH)
+                AND created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)
             ");
             $stats['new_this_month'] = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
             
@@ -323,14 +311,14 @@ try {
             }
             
             $stmt = $pdo->prepare("
-                SELECT id, firstName, lastName, numId, phone, phoneMobile
+                SELECT id, first_name, last_name, id_number, phone, mobile_phone
                 FROM customers 
                 WHERE isActive = 1 
                 AND (
-                    firstName LIKE :query OR 
-                    lastName LIKE :query OR 
-                    numId LIKE :query OR
-                    fullNameHe LIKE :query
+                    first_name LIKE :query OR 
+                    last_name LIKE :query OR 
+                    id_number LIKE :query OR
+                    CONCAT(first_name, ' ', last_name) LIKE :query
                 )
                 LIMIT 10
             ");

@@ -8,12 +8,12 @@ require_once dirname(__DIR__) . '/classes/HierarchyManager.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
- // לוג מפורט של כל מה שמתקבל
-error_log("=== SAVE HANDLER DEBUG ===");
-error_log("POST data: " . print_r($_POST, true));
-error_log("Type: " . ($_POST['type'] ?? 'not set'));
-error_log("Parent ID: " . ($_POST['parent_id'] ?? 'not set'));
-error_log("ID: " . ($_POST['id'] ?? 'not set'));
+//  // לוג מפורט של כל מה שמתקבל
+// error_log("=== SAVE HANDLER DEBUG ===");
+// error_log("POST data: " . print_r($_POST, true));
+// error_log("Type: " . ($_POST['type'] ?? 'not set'));
+// error_log("Parent ID: " . ($_POST['parent_id'] ?? 'not set'));
+// error_log("ID: " . ($_POST['id'] ?? 'not set'));
 
 
 try {

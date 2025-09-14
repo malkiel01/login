@@ -18,7 +18,7 @@ async function createCemeteryCard(cemeteryId) {
                     <div class="info-card-title">
                         <span class="info-card-icon">🏛️</span>
                         <div>
-                            <h2 class="info-card-name">${cemetery.name}</h2>
+                            <h2 class="info-card-name">${cemetery.cemeteryNameHe || cemetery.name || 'בית עלמין'}</h2>
                             ${cemetery.code ? `<div class="info-card-code">קוד: ${cemetery.code}</div>` : ''}
                         </div>
                     </div>
@@ -102,7 +102,7 @@ async function createBlockCard(blockId) {
                     <div class="info-card-title">
                         <span class="info-card-icon">📦</span>
                         <div>
-                            <h2 class="info-card-name">${block.name}</h2>
+                            <h2 class="info-card-name">${block.blockNameHe || block.name || 'גוש'}</h2>
                             ${block.code ? `<div class="info-card-code">קוד: ${block.code}</div>` : ''}
                         </div>
                     </div>
@@ -187,7 +187,7 @@ async function createPlotCard(plotId) {
                     <div class="info-card-title">
                         <span class="info-card-icon">📋</span>
                         <div>
-                            <h2 class="info-card-name">${plot.name}</h2>
+                            <h2 class="info-card-name">${plot.plotNameHe || plot.name || 'חלקה'}</h2>
                             ${plot.serial_number ? `<div class="info-card-code">מספר סידורי: ${plot.serial_number}</div>` : ''}
                         </div>
                     </div>
@@ -306,7 +306,7 @@ async function createAreaGraveCard(areaGraveId) {
                     <div class="info-card-title">
                         <span class="info-card-icon">🏘️</span>
                         <div>
-                            <h2 class="info-card-name">${areaGrave.name}</h2>
+                            <h2 class="info-card-name">${areaGrave.areaGraveNameHe || areaGrave.name || 'אחוזת קבר'}</h2>
                             ${areaGrave.code ? `<div class="info-card-code">קוד: ${areaGrave.code}</div>` : ''}
                         </div>
                     </div>

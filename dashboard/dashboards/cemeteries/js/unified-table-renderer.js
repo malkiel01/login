@@ -31,11 +31,6 @@ class UnifiedTableRenderer {
      * טעינת נתונים וציור טבלה
      */
     async loadAndDisplay(type, parentId = null) {
-        // נקה כרטיסים קיימים
-        if (typeof clearAllHierarchyCards === 'function') {
-            clearAllHierarchyCards();
-        }
-
         // טען קונפיג אם צריך
         if (!this.config || this.currentType !== type) {
             await this.loadConfig(type);
@@ -53,10 +48,6 @@ class UnifiedTableRenderer {
      */
     async loadData(type, parentId = null) {
         try {
-            // let url = `${API_BASE}cemetery-hierarchy.php?action=list&type=${type}`;
-            // if (parentId) {
-            //     url += `&parent_id=${parentId}`;
-            // }
             let url = `${API_BASE}cemetery-hierarchy.php?action=list&type=${type}`;
             if (parentId) {
                 // עבור אחוזות קבר, שלח plot_id במקום parent_id
@@ -375,41 +366,6 @@ class UnifiedTableRenderer {
         
         return hierarchy[this.currentType];
     }
-    
-    // openItem2(itemId, itemName) {
-    //     const nextType = this.getChildType();
-    //     if (!nextType) return;
-        
-    //     // עדכן את הבחירה הגלובלית
-    //     window.selectedItems[this.currentType] = { 
-    //         id: itemId, 
-    //         name: itemName 
-    //     };
-        
-    //     // עדכן משתנים גלובליים
-    //     window.currentType = nextType;
-    //     window.currentParentId = itemId;
-        
-    //     // שמור ID ספציפי לכל רמה (לתאימות אחורה)
-    //     const idMapping = {
-    //         'cemetery': 'currentCemeteryId',
-    //         'block': 'currentBlockId',
-    //         'plot': 'currentPlotId',
-    //         'area_grave': 'currentAreaGraveId'
-    //     };
-        
-    //     if (idMapping[this.currentType]) {
-    //         window[idMapping[this.currentType]] = itemId;
-    //     }
-        
-    //     // עדכן את ה-Breadcrumb פעם אחת
-    //     if (window.BreadcrumbManager) {
-    //         window.BreadcrumbManager.update(window.selectedItems);
-    //     }
-        
-    //     // טען את הנתונים הבאים
-    //     this.loadAndDisplay(nextType, itemId);
-    // }
 
     openItem(itemId, itemName) {
         const nextType = this.getChildType();
@@ -449,54 +405,6 @@ class UnifiedTableRenderer {
         this.loadAndDisplay(nextType, itemId);
     }
 
-    // /**
-    //  * הצגת כרטיס לפריט שנבחר
-    //  */
-    // displayItemCard2(type, itemId, itemName) {
-    //     let cardHtml = '';
-        
-    //     switch(type) {
-    //         case 'cemetery':
-    //             if (typeof createCemeteryCard === 'function') {
-    //                 cardHtml = createCemeteryCard({ 
-    //                     id: itemId, 
-    //                     name: itemName 
-    //                 });
-    //             }
-    //             break;
-                
-    //         case 'block':
-    //             if (typeof createBlockCard === 'function') {
-    //                 cardHtml = createBlockCard({ 
-    //                     id: itemId, 
-    //                     name: itemName 
-    //                 });
-    //             }
-    //             break;
-                
-    //         case 'plot':
-    //             if (typeof createPlotCard === 'function') {
-    //                 cardHtml = createPlotCard({ 
-    //                     id: itemId, 
-    //                     name: itemName 
-    //                 });
-    //             }
-    //             break;
-                
-    //         case 'area_grave':
-    //             if (typeof createAreaGraveCard === 'function') {
-    //                 cardHtml = createAreaGraveCard({ 
-    //                     id: itemId, 
-    //                     name: itemName 
-    //                 });
-    //             }
-    //             break;
-    //     }
-        
-    //     if (cardHtml && typeof displayHierarchyCard === 'function') {
-    //         displayHierarchyCard(cardHtml);
-    //     }
-    // }
     /**
      * הצגת כרטיס לפריט שנבחר
      */
@@ -812,17 +720,6 @@ class UnifiedTableRenderer {
             this.showMessage('אין פריטי הורה זמינים', 'error');
         }
     }
-    async openParentSelectionDialog2(type) {
-        const parentType = this.getParentType(type);
-        
-        // במקום לבנות דיאלוג ידנית, פשוט:
-        // 1. שמור את הנתונים בזיכרון
-        window.pendingChildType = type;
-        window.pendingParentType = parentType;
-        
-        // 2. פתח טופס רגיל מסוג parent_selector
-        FormHandler.openForm('parent_selector', parentType, null);
-    }
 
     /**
      * עריכת פריט
@@ -879,12 +776,8 @@ window.loadAllCemeteries = async function() {
     window.currentParentId = null;
     window.selectedItems = {};
 
-    // נקה כרטיסים
-    if (typeof clearAllHierarchyCards === 'function') {
-        clearAllHierarchyCards();
-    }
-    
     DashboardCleaner.clear({ targetLevel: 'cemetery' });
+    DashboardCleaner.clearCards()
     BreadcrumbManager.update({}, 'cemetery');
     await tableRenderer.loadAndDisplay('cemetery');
 };
@@ -894,18 +787,13 @@ window.loadAllBlocks = async function() {
     window.currentType = 'block';
     window.currentParentId = null;
 
-
-    // נקה כרטיסים
-    if (typeof clearAllHierarchyCards === 'function') {
-        clearAllHierarchyCards();
-    }
-
     // שמור רק את בית העלמין אם קיים
     const temp = window.selectedItems?.cemetery;
     window.selectedItems = {};
     if (temp) window.selectedItems.cemetery = temp;
     
     DashboardCleaner.clear({ targetLevel: 'block' });
+    DashboardCleaner.clearCards()
     BreadcrumbManager.update({}, 'block');
     await tableRenderer.loadAndDisplay('block');
 };
@@ -915,11 +803,6 @@ window.loadAllPlots = async function() {
     window.currentType = 'plot';
     window.currentParentId = null;
 
-    // נקה כרטיסים
-    if (typeof clearAllHierarchyCards === 'function') {
-        clearAllHierarchyCards();
-    }
-
     // שמור רק עד גוש
     const tempCemetery = window.selectedItems?.cemetery;
     const tempBlock = window.selectedItems?.block;
@@ -928,6 +811,7 @@ window.loadAllPlots = async function() {
     if (tempBlock) window.selectedItems.block = tempBlock;
     
     DashboardCleaner.clear({ targetLevel: 'plot' });
+    DashboardCleaner.clearCards()
     BreadcrumbManager.update({}, 'plot');
     await tableRenderer.loadAndDisplay('plot');
 };
@@ -937,11 +821,6 @@ window.loadAllAreaGraves = async function() {
     window.currentType = 'area_grave';
     window.currentParentId = null;
 
-    // נקה כרטיסים
-    if (typeof clearAllHierarchyCards === 'function') {
-        clearAllHierarchyCards();
-    }
-
     // שמור עד חלקה
     const temp = { ...window.selectedItems };
     window.selectedItems = {};
@@ -950,6 +829,7 @@ window.loadAllAreaGraves = async function() {
     if (temp.plot) window.selectedItems.plot = temp.plot;
     
     DashboardCleaner.clear({ targetLevel: 'area_grave' });
+    DashboardCleaner.clearCards()
     BreadcrumbManager.update({}, 'area_grave');
     await tableRenderer.loadAndDisplay('area_grave');
 };
@@ -958,11 +838,6 @@ window.loadAllGraves = async function() {
     console.log('📍 Loading all graves');
     window.currentType = 'grave';
     window.currentParentId = null;
-
-    // נקה כרטיסים
-    if (typeof clearAllHierarchyCards === 'function') {
-        clearAllHierarchyCards();
-    }
     
     // שמור עד אחוזת קבר
     const temp = { ...window.selectedItems };
@@ -973,6 +848,7 @@ window.loadAllGraves = async function() {
     if (temp.areaGrave) window.selectedItems.areaGrave = temp.areaGrave;
     
     DashboardCleaner.clear({ targetLevel: 'grave' });
+    DashboardCleaner.clearCards()
     BreadcrumbManager.update({}, 'grave');
     await tableRenderer.loadAndDisplay('grave');
 };

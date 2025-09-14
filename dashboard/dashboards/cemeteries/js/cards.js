@@ -284,7 +284,7 @@ function addAreaGraveButtonToPlotCard() {
     return `
         <button class="info-card-btn" onclick="openAddAreaGrave()">
             <svg class="icon-sm"><use xlink:href="#icon-plus"></use></svg>
-            הוסף אחוזת קבר
+            הוסף אחו22זת קבר
         </button>
     `;
 }

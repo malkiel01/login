@@ -151,6 +151,33 @@ const FormHandler = {
 
                 // טען נתונים אם זה טופס עריכה של לקוח
                 if (type === 'customer' && itemId) {
+// הטופס מוכן, טען נתונים
+console.log('Fetching customer data for ID:', itemId);
+fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?action=get&id=${itemId}`)
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
+    .then(result => {
+        console.log('Customer data received:', result);
+        if (result.success && result.data) {
+            const data = result.data;
+            console.log('Starting to fill form with data:', data);
+            
+            // מלא את השדות
+            Object.keys(data).forEach(key => {
+                const field = form.elements[key];
+                if (field) {
+                    console.log(`Setting field ${key} to value:`, data[key]);
+                    // ... rest of the code
+                } else {
+                    console.log(`Field ${key} not found in form`);
+                }
+            });
+        }
+    })
+
+
                     const loadCustomerData = () => {
                         const form = document.querySelector('#customerFormModal form');
                         if (!form || !form.elements || form.elements.length < 5) {

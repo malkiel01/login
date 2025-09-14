@@ -49,8 +49,63 @@ try {
     die(json_encode(['error' => $e->getMessage()]));
 }
 
+// הכן את ה-JavaScript
+$citiesJson = json_encode($allCities);
+
 // יצירת FormBuilder
 $formBuilder = new FormBuilder('customer', $itemId, $parentId);
+
+// הוסף את ה-JavaScript כ-HTML מותאם אישית בתחילה
+$jsScript = '
+<script>
+console.log("Customer form script loaded!");
+
+// הגדר את הפונקציה גלובלית מיד
+window.customerCitiesData = ' . $citiesJson . ';
+
+window.filterCities = function() {
+    console.log("filterCities called!");
+    var countrySelect = document.getElementById("countrySelect");
+    var citySelect = document.getElementById("citySelect");
+    
+    if (!countrySelect || !citySelect) {
+        console.log("Elements not ready yet");
+        return;
+    }
+    
+    var selectedCountry = countrySelect.value;
+    console.log("Selected country:", selectedCountry);
+    
+    citySelect.innerHTML = \'<option value="">-- בחר עיר --</option>\';
+    
+    if (!selectedCountry) {
+        citySelect.innerHTML = \'<option value="">-- בחר קודם מדינה --</option>\';
+        return;
+    }
+    
+    var filteredCities = window.customerCitiesData.filter(function(city) {
+        return city.countryId === selectedCountry;
+    });
+    
+    console.log("Found", filteredCities.length, "cities");
+    
+    if (filteredCities.length === 0) {
+        citySelect.innerHTML = \'<option value="">-- אין ערים למדינה זו --</option>\';
+        return;
+    }
+    
+    filteredCities.forEach(function(city) {
+        var option = document.createElement("option");
+        option.value = city.unicId;
+        option.textContent = city.cityNameHe;
+        citySelect.appendChild(option);
+    });
+};
+
+console.log("filterCities function defined:", typeof window.filterCities);
+</script>';
+
+$formBuilder->addCustomHTML($jsScript);
 
 // סוג זיהוי
 $formBuilder->addField('typeId', 'סוג זיהוי', 'select', [
@@ -115,25 +170,42 @@ $formBuilder->addField('maritalStatus', 'מצב משפחתי', 'select', [
     'value' => $customer['maritalStatus'] ?? ''
 ]);
 
-// מדינה
-$formBuilder->addField('countryId', 'מדינה', 'select', [
-    'options' => $countries,
-    'value' => $customer['countryId'] ?? '',
-    'attributes' => 'id="countrySelect"'
-]);
+// HTML מותאם אישית לבחירת כתובת
+$addressSelectorHTML = '
+<fieldset class="form-section" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+    <legend style="padding: 0 10px; font-weight: bold;">כתובת</legend>
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+        <div class="form-group">
+            <label>מדינה</label>
+            <select id="countrySelect" name="countryId" class="form-control" onchange="window.filterCities()">
+                <option value="">-- בחר מדינה --</option>';
 
-// עיר
-$formBuilder->addField('cityId', 'עיר', 'select', [
-    'options' => [],
-    'value' => $customer['cityId'] ?? '',
-    'attributes' => 'id="citySelect"'
-]);
+foreach ($countries as $unicId => $name) {
+    $selected = ($customer && $customer['countryId'] == $unicId) ? 'selected' : '';
+    $addressSelectorHTML .= '<option value="' . $unicId . '" ' . $selected . '>' . 
+                            htmlspecialchars($name) . '</option>';
+}
 
-// כתובת
-$formBuilder->addField('address', 'כתובת מלאה', 'text', [
-    'placeholder' => 'רחוב, מספר בית',
-    'value' => $customer['address'] ?? ''
-]);
+$addressSelectorHTML .= '
+            </select>
+        </div>
+        <div class="form-group">
+            <label>עיר</label>
+            <select id="citySelect" name="cityId" class="form-control">
+                <option value="">-- בחר קודם מדינה --</option>
+            </select>
+        </div>
+        <div class="form-group" style="grid-column: span 2;">
+            <label>כתובת מלאה</label>
+            <input type="text" name="address" class="form-control" 
+                   value="' . ($customer['address'] ?? '') . '" 
+                   placeholder="רחוב, מספר בית">
+        </div>
+    </div>
+</fieldset>';
+
+// הוסף את ה-HTML המותאם אישית
+$formBuilder->addCustomHTML($addressSelectorHTML);
 
 // פרטי התקשרות
 $formBuilder->addField('phone', 'טלפון', 'tel', [
@@ -186,68 +258,3 @@ $formBuilder->addField('comment', 'הערות', 'textarea', [
 // הצג את הטופס
 echo $formBuilder->renderModal();
 ?>
-
-<script>
-// שמור את הנתונים
-window.citiesData = <?php echo json_encode($allCities); ?>;
-window.currentCountryId = '<?php echo $customer['countryId'] ?? ''; ?>';
-window.currentCityId = '<?php echo $customer['cityId'] ?? ''; ?>';
-
-// הגדר פונקציה גלובלית
-window.filterCities = function() {
-    console.log('filterCities called');
-    const countrySelect = document.getElementById('countrySelect');
-    const citySelect = document.getElementById('citySelect');
-    
-    if (!countrySelect || !citySelect) {
-        console.log('Elements not found');
-        return;
-    }
-    
-    const selectedCountry = countrySelect.value;
-    console.log('Selected country:', selectedCountry);
-    
-    citySelect.innerHTML = '<option value="">-- בחר עיר --</option>';
-    
-    if (!selectedCountry) {
-        citySelect.innerHTML = '<option value="">-- בחר קודם מדינה --</option>';
-        return;
-    }
-    
-    if (!window.citiesData) {
-        console.log('Cities data not found');
-        return;
-    }
-    
-    const filteredCities = window.citiesData.filter(city => city.countryId === selectedCountry);
-    console.log('Filtered cities:', filteredCities.length);
-    
-    if (filteredCities.length === 0) {
-        citySelect.innerHTML = '<option value="">-- אין ערים למדינה זו --</option>';
-        return;
-    }
-    
-    filteredCities.forEach(city => {
-        const option = document.createElement('option');
-        option.value = city.unicId;
-        option.textContent = city.cityNameHe;
-        if (window.currentCityId && city.unicId === window.currentCityId) {
-            option.selected = true;
-        }
-        citySelect.appendChild(option);
-    });
-};
-
-// הוסף event listener
-setTimeout(function() {
-    const countrySelect = document.getElementById('countrySelect');
-    if (countrySelect) {
-        countrySelect.addEventListener('change', window.filterCities);
-        
-        // טען ערים אם יש מדינה נבחרת
-        if (window.currentCountryId) {
-            window.filterCities();
-        }
-    }
-}, 500);
-</script>

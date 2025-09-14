@@ -1,405 +1,551 @@
-<?php
-// /dashboards/cemeteries/forms/forms-config.php
-// הגדרת שדות לטפסים - גרסה זמנית עד שנעדכן את הקונפיג המרכזי
+בפרוייקט שלי בתקיית
 
-require_once __DIR__ . '/../config.php';
+dashboear/dashboears/cemeteries
 
-/**
- * קבלת שדות לטופס - גרסה זמנית עם הגדרות קשיחות
- */
-function getFormFields($type, $data = null) {
-    
-    // בינתיים, עד שנטמיע את הקונפיג המרכזי, נגדיר את השדות ישירות כאן
-    // התאמה למבנה החדש של הטבלאות
-    
-    switch($type) {
-        case 'cemetery':
-            return [
-                [
-                    'name' => 'cemeteryNameHe',
-                    'label' => 'שם בית עלמין בעברית',
-                    'type' => 'text',
-                    'required' => true,
-                    'placeholder' => 'הזן שם בית עלמין'
-                ],
-                [
-                    'name' => 'cemeteryNameEn',
-                    'label' => 'שם בית עלמין באנגלית',
-                    'type' => 'text',
-                    'required' => false,
-                    'placeholder' => 'Enter cemetery name'
-                ],
-                [
-                    'name' => 'cemeteryCode',
-                    'label' => 'קוד בית עלמין',
-                    'type' => 'text',
-                    'required' => false,
-                    'placeholder' => 'קוד ייחודי'
-                ],
-                [
-                    'name' => 'nationalInsuranceCode',
-                    'label' => 'קוד ביטוח לאומי',
-                    'type' => 'text',
-                    'required' => false
-                ],
-                [
-                    'name' => 'address',
-                    'label' => 'כתובת',
-                    'type' => 'textarea',
-                    'required' => false,
-                    'rows' => 2,
-                    'placeholder' => 'הזן כתובת מלאה'
-                ],
-                [
-                    'name' => 'coordinates',
-                    'label' => 'קואורדינטות',
-                    'type' => 'text',
-                    'required' => false,
-                    'placeholder' => 'lat,lng'
-                ],
-                [
-                    'name' => 'contactName',
-                    'label' => 'שם איש קשר',
-                    'type' => 'text',
-                    'required' => false
-                ],
-                [
-                    'name' => 'contactPhoneName',
-                    'label' => 'טלפון איש קשר',
-                    'type' => 'text',
-                    'required' => false,
-                    'placeholder' => '050-0000000'
-                ]
-            ];
-            
-        case 'block':
-            return [
-                [
-                    'name' => 'blockNameHe',
-                    'label' => 'שם גוש בעברית',
-                    'type' => 'text',
-                    'required' => true,
-                    'placeholder' => 'הזן שם גוש'
-                ],
-                [
-                    'name' => 'blockNameEn',
-                    'label' => 'שם גוש באנגלית',
-                    'type' => 'text',
-                    'required' => false
-                ],
-                [
-                    'name' => 'blockCode',
-                    'label' => 'קוד גוש',
-                    'type' => 'text',
-                    'required' => false
-                ],
-                [
-                    'name' => 'blockLocation',
-                    'label' => 'מיקום',
-                    'type' => 'text',
-                    'required' => false
-                ],
-                [
-                    'name' => 'nationalInsuranceCode',
-                    'label' => 'קוד ביטוח לאומי',
-                    'type' => 'text',
-                    'required' => false
-                ],
-                [
-                    'name' => 'coordinates',
-                    'label' => 'קואורדינטות',
-                    'type' => 'text',
-                    'required' => false
-                ],
-                [
-                    'name' => 'comments',
-                    'label' => 'הערות',
-                    'type' => 'textarea',
-                    'required' => false,
-                    'rows' => 3
-                ]
-            ];
-            
-        case 'plot':
-            return [
-                [
-                    'name' => 'plotNameHe',
-                    'label' => 'שם חלקה בעברית',
-                    'type' => 'text',
-                    'required' => true,
-                    'placeholder' => 'הזן שם חלקה'
-                ],
-                [
-                    'name' => 'plotNameEn',
-                    'label' => 'שם חלקה באנגלית',
-                    'type' => 'text',
-                    'required' => false
-                ],
-                [
-                    'name' => 'plotCode',
-                    'label' => 'קוד חלקה',
-                    'type' => 'text',
-                    'required' => false
-                ],
-                [
-                    'name' => 'plotLocation',
-                    'label' => 'מיקום',
-                    'type' => 'text',
-                    'required' => false
-                ],
-                [
-                    'name' => 'nationalInsuranceCode',
-                    'label' => 'קוד ביטוח לאומי',
-                    'type' => 'text',
-                    'required' => false
-                ],
-                [
-                    'name' => 'coordinates',
-                    'label' => 'קואורדינטות',
-                    'type' => 'text',
-                    'required' => false
-                ],
-                [
-                    'name' => 'comments',
-                    'label' => 'הערות',
-                    'type' => 'textarea',
-                    'required' => false,
-                    'rows' => 3
-                ]
-            ];
-            
-        case 'row':
-            return [
-                [
-                    'name' => 'lineNameHe',
-                    'label' => 'שם שורה בעברית',
-                    'type' => 'text',
-                    'required' => true,
-                    'placeholder' => 'הזן שם שורה'
-                ],
-                [
-                    'name' => 'lineNameEn',
-                    'label' => 'שם שורה באנגלית',
-                    'type' => 'text',
-                    'required' => false
-                ],
-                [
-                    'name' => 'serialNumber',
-                    'label' => 'מספר סידורי',
-                    'type' => 'number',
-                    'required' => false
-                ],
-                [
-                    'name' => 'lineLocation',
-                    'label' => 'מיקום',
-                    'type' => 'text',
-                    'required' => false
-                ],
-                [
-                    'name' => 'comments',
-                    'label' => 'הערות',
-                    'type' => 'textarea',
-                    'required' => false,
-                    'rows' => 3
-                ]
-            ];
-            
-        case 'area_grave':
-            return [
-                [
-                    'name' => 'areaGraveNameHe',
-                    'label' => 'שם אחוזת קבר',
-                    'type' => 'text',
-                    'required' => true,
-                    'placeholder' => 'הזן שם אחוזת קבר'
-                ],
-                [
-                    'name' => 'graveType',
-                    'label' => 'סוג אחוזת קבר',
-                    'type' => 'select',
-                    'required' => false,
-                    'options' => [
-                        '' => '-- בחר סוג --',
-                        '1' => 'שדה',
-                        '2' => 'רוויה',
-                        '3' => 'סנהדרין'
-                    ]
-                ],
-                [
-                    'name' => 'coordinates',
-                    'label' => 'קואורדינטות',
-                    'type' => 'text',
-                    'required' => false
-                ],
-                [
-                    'name' => 'comments',
-                    'label' => 'הערות',
-                    'type' => 'textarea',
-                    'required' => false,
-                    'rows' => 3
-                ]
-            ];
-            
-        case 'grave':
-            return [
-                [
-                    'name' => 'graveNameHe',
-                    'label' => 'מספר קבר',
-                    'type' => 'text',
-                    'required' => true,
-                    'placeholder' => 'הזן מספר קבר'
-                ],
-                [
-                    'name' => 'plotType',
-                    'label' => 'סוג חלקה',
-                    'type' => 'select',
-                    'required' => true,
-                    'options' => [
-                        '' => '-- בחר סוג --',
-                        '1' => 'פטורה',
-                        '2' => 'חריגה',
-                        '3' => 'סגורה'
-                    ]
-                ],
-                [
-                    'name' => 'graveStatus',
-                    'label' => 'סטטוס קבר',
-                    'type' => 'select',
-                    'required' => true,
-                    'options' => [
-                        '1' => 'פנוי',
-                        '2' => 'נרכש',
-                        '3' => 'קבור',
-                        '4' => 'שמור'
-                    ],
-                    'default' => '1'
-                ],
-                [
-                    'name' => 'graveLocation',
-                    'label' => 'מיקום בשורה',
-                    'type' => 'number',
-                    'required' => false,
-                    'min' => 1
-                ],
-                [
-                    'name' => 'isSmallGrave',
-                    'label' => 'קבר קטן',
-                    'type' => 'checkbox',
-                    'required' => false,
-                    'default' => 0
-                ],
-                [
-                    'name' => 'constructionCost',
-                    'label' => 'עלות בנייה',
-                    'type' => 'number',
-                    'required' => false,
-                    'step' => '0.01'
-                ],
-                [
-                    'name' => 'comments',
-                    'label' => 'הערות',
-                    'type' => 'textarea',
-                    'required' => false,
-                    'rows' => 3
-                ]
-            ];
-            
-        default:
-            return [];
-    }
-}
+יש לי ניהול רשומות במבנה כזה
 
-/**
- * טעינת נתונים לעריכה
- */
-function getFormData($type, $id) {
-    try {
-        $pdo = getDBConnection();
+שים לב אני עדכנתי את הרשומות שהם מקושרות כך
+
+cemetery.unicId === block.cemeteryId
+
+block.unicId === plot.blockId
+
+plot.unicId === row.plotId
+
+row.unicId === areaGrave.lineId
+
+areaGrave.unicId === grave.areaGraveId
+
+אבל כעת זה לא עובד!
+
+ניסתי להחליף את
+
+    openItem(itemId, itemName) {
+        console.log('Opening item:', this.currentType, itemId, itemName);
         
-        // מיפוי סוג לטבלה
-        $tables = [
-            'cemetery' => 'cemeteries',
-            'block' => 'blocks',
-            'plot' => 'plots',
-            'row' => 'rows',
-            'area_grave' => 'areaGraves',
-            'grave' => 'graves'
-        ];
+        // שמור בחירה
+        window.selectedItems[this.currentType] = {
+            id: itemId,
+            name: itemName
+        };
         
-        $table = $tables[$type] ?? null;
-        if (!$table) {
-            return null;
-        }
-        
-        // טען את הנתונים - נסה קודם לפי unicId ואז לפי id
-        $stmt = $pdo->prepare("SELECT * FROM $table WHERE unicId = :id OR id = :id LIMIT 1");
-        $stmt->execute(['id' => $id]);
-        
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    } catch (Exception $e) {
-        error_log('Error loading form data: ' . $e->getMessage());
-        return null;
-    }
-}
-
-/**
- * קבלת כותרת הטופס
- */
-function getFormTitle($type, $isEdit = false) {
-    $titles = [
-        'cemetery' => ['singular' => 'בית עלמין', 'plural' => 'בתי עלמין'],
-        'block' => ['singular' => 'גוש', 'plural' => 'גושים'],
-        'plot' => ['singular' => 'חלקה', 'plural' => 'חלקות'],
-        'row' => ['singular' => 'שורה', 'plural' => 'שורות'],
-        'area_grave' => ['singular' => 'אחוזת קבר', 'plural' => 'אחוזות קבר'],
-        'grave' => ['singular' => 'קבר', 'plural' => 'קברים']
-    ];
-    
-    $typeTitle = $titles[$type]['singular'] ?? 'פריט';
-    return $isEdit ? "עריכת $typeTitle" : "הוספת $typeTitle";
-}
-
-/**
- * בדיקת הרשאות - בינתיים מחזיר true לכולם
- */
-function canUserEditField($fieldName, $type) {
-    // TODO: להוסיף בדיקת הרשאות אמיתית
-    return true;
-}
-
-/**
- * ולידציה בסיסית
- */
-function validateFormData($type, $data) {
-    $errors = [];
-    $fields = getFormFields($type);
-    
-    foreach ($fields as $field) {
-        if ($field['required'] && empty($data[$field['name']])) {
-            $errors[] = "השדה {$field['label']} הוא חובה";
+        // קבע את הסוג הבא בהיררכיה
+        const nextType = this.getNextType();
+        if (nextType) {
+            window.currentType = nextType;
+            window.currentParentId = itemId;
+            
+            // עדכן סידבר
+            updateSidebarSelection(this.currentType, itemId, itemName);
+            
+            // טען את הרמה הבאה
+            this.loadAndDisplay(nextType, itemId);
         }
     }
-    
-    if (!empty($errors)) {
-        return ['success' => false, 'errors' => $errors];
-    }
-    
-    return ['success' => true];
-}
 
-/**
- * סינון נתונים לפני שמירה
- */
-function filterFormData($type, $data) {
-    $fields = getFormFields($type);
-    $filtered = [];
-    
-    foreach ($fields as $field) {
-        if (isset($data[$field['name']])) {
-            $filtered[$field['name']] = $data[$field['name']];
+בזה
+
+    openItem(itemId, itemName) {
+        console.log('Opening item:', this.currentType, itemId, itemName);
+        
+        // שמור בחירה
+        window.selectedItems[this.currentType] = {
+            id: itemId,
+            name: itemName
+        };
+        
+        // שמור את ה-ID הספציפי
+        switch(this.currentType) {
+            case 'cemetery':
+                window.currentCemeteryId = itemId;
+                break;
+            case 'block':
+                window.currentBlockId = itemId;
+                break;
+            case 'plot':
+                window.currentPlotId = itemId;
+                break;
+            case 'row':
+                window.currentRowId = itemId;
+                break;
+            case 'area_grave':
+                window.currentAreaGraveId = itemId;
+                break;
+        }
+        
+        // קבע את הסוג הבא בהיררכיה
+        const nextType = this.getNextType();
+        if (nextType) {
+            window.currentType = nextType;
+            window.currentParentId = itemId;
+            
+            // עדכן סידבר
+            updateSidebarSelection(this.currentType, itemId, itemName);
+            
+            // טען את הרמה הבאה
+            this.loadAndDisplay(nextType, itemId);
         }
     }
+
+חוזרת לי שגיאה שהטופס כלל לא נפתח
+
+כשאני מחליף את 
+
+const FormHandler = {
+    // פתיחת טופס
+    openForm: async function(type, parentId = null, itemId = null) {
+        console.log('FormHandler.openForm called with:', {type, parentId, itemId});
+        try {
+            // טען את הטופס מהשרת
+            const params = new URLSearchParams({
+                type: type,
+                ...(itemId && { id: itemId }),
+                ...(parentId && { parent_id: parentId })
+            });
+            
+            console.log('Fetching form from:', `dashboard/dashboards/cemeteries/forms/form-loader.php?${params}`);
+            
+            const response = await fetch(`/dashboard/dashboards/cemeteries/forms/form-loader.php?${params}`);
+
+            
+            console.log('Response status:', response.status);
+            
+            const html = await response.text();
+            
+            console.log('Received HTML length:', html.length);
+            console.log('First 100 chars:', html.substring(0, 100));
+            
+            // הסר טופס קיים אם יש
+            const existingModal = document.getElementById(type + 'FormModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // הוסף את הטופס ל-DOM
+            const range = document.createRange();
+            const fragment = range.createContextualFragment(html);
+            document.body.appendChild(fragment);
+            
+            // הצג את המודל
+            const modal = document.getElementById(type + 'FormModal');
+            if (modal) {
+                // אם יש Bootstrap
+                if (typeof bootstrap !== 'undefined') {
+                    const bsModal = new bootstrap.Modal(modal);
+                    bsModal.show();
+                } else {
+                    // השתמש באותו מנגנון כמו במודל המקורי
+                    modal.classList.add('show');
+                }
+            }
+            
+        } catch (error) {
+            console.error('Error loading form:', error);
+            this.showMessage('שגיאה בטעינת הטופס', 'error');
+        }
+    },
     
-    return $filtered;
-}
-?>
+    // סגירת טופס
+    closeForm: function(type) {
+        const modal = document.getElementById(type + 'FormModal');
+        if (modal) {
+            if (typeof bootstrap !== 'undefined') {
+                const bsModal = bootstrap.Modal.getInstance(modal);
+                if (bsModal) bsModal.hide();
+            } else {
+                modal.style.display = 'none';
+                modal.classList.remove('show');
+            }
+            
+            // הסר מה-DOM אחרי סגירה
+            setTimeout(() => modal.remove(), 300);
+        }
+    },
+    
+    // שמירת טופס
+    saveForm: async function(formData, type) {
+        try {
+            // קבע את ה-API endpoint
+            const isEdit = formData.has('id');
+            const action = isEdit ? 'update' : 'create';
+            
+            // המר FormData לאובייקט
+            const data = {};
+            for (let [key, value] of formData.entries()) {
+                // דלג על השדה type
+                if (key !== 'type') {
+                    // טיפול מיוחד בשדות מסוימים
+                    if (key === 'is_small_grave') {
+                        data[key] = value === 'on' ? 1 : 0;
+                    } else if (value !== '') {
+                        data[key] = value;
+                    }
+                }
+            }
+            
+            // טיפול מיוחד בטבלת graves - אין עמודת name!
+            if (type === 'grave' && data.grave_number && !data.name) {
+                // לא להוסיף name לטבלת graves
+                delete data.name;
+            }
+            
+            // הוסף parent_id אם נדרש
+            const parentColumn = this.getParentColumn(type);
+            if (parentColumn && data.parent_id) {
+                data[parentColumn] = data.parent_id;
+                delete data.parent_id;
+            }
+            
+            // תיקון שמות types
+            if (type === 'areaGrave') type = 'area_grave';
+
+
+            // הוסף is_active
+            data.is_active = 1;
+     
+            // אחרי השורה של area_grave, הוסף:
+            if (type === 'customer') {
+                url = `/dashboard/dashboards/cemeteries/api/customers-api.php?action=${action}`;
+                if (isEdit) {
+                    url += `&id=${formData.get('id')}`;
+                }
+            } else if (type === 'purchase') {
+                url = `/dashboard/dashboards/cemeteries/api/purchases-api.php?action=${action}`;
+                if (isEdit) {
+                    url += `&id=${formData.get('id')}`;
+                }
+            } else if (type === 'payment') {
+                // טיפול בתשלומים
+                if (isEdit) {
+                    url = `/dashboard/dashboards/cemeteries/api/payments-api.php?action=update&id=${formData.get('id')}`;
+                    method = 'PUT';
+                } else {
+                    url = '/dashboard/dashboards/cemeteries/api/payments-api.php?action=create';
+                    method = 'POST';
+                }
+            } else {
+                // הקוד הקיים - cemetery-hierarchy
+                url = `/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=${action}&type=${type}`;
+                if (isEdit) {
+                    url += `&id=${formData.get('id')}`;
+                }
+            }            
+            
+            if (isEdit) {
+                url += `&id=${formData.get('id')}`;
+            }
+            
+            const response = await fetch(url, {
+                method: isEdit ? 'PUT' : 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                this.showMessage(
+                    isEdit ? 'הפריט עודכן בהצלחה' : 'הפריט נוסף בהצלחה',
+                    'success'
+                );
+                
+                // סגור את הטופס
+                this.closeForm(type);
+                
+                // רענן את הנתונים
+                if (typeof refreshData === 'function') {
+                    refreshData();
+                } else if (typeof loadAllData === 'function') {
+                    loadAllData();
+                } else {
+                    location.reload();
+                }
+                
+                return true;
+            } else {
+                this.showMessage(result.error || 'שגיאה בשמירה', 'error');
+                return false;
+            }
+            
+        } catch (error) {
+            console.error('Error saving form:', error);
+            this.showMessage('שגיאה בשמירת הנתונים', 'error');
+            return false;
+        }
+    },
+    
+    // קבלת עמודת ההורה לפי סוג
+    getParentColumn: function(type) {
+        const columns = {
+            'block': 'cemetery_id',
+            'plot': 'block_id',
+            'row': 'plot_id',
+            'area_grave': 'row_id',
+            'grave': 'area_grave_id',
+            'purchase': 'customer_id',
+            'burial': 'grave_id'
+        };
+        return columns[type] || null;
+    },
+    
+    // הצגת הודעה
+    showMessage: function(message, type = 'info') {
+        // בדוק אם יש פונקציה קיימת להודעות
+        if (typeof showToast === 'function') {
+            showToast(type, message);
+        } else if (typeof showSuccess === 'function' && type === 'success') {
+            showSuccess(message);
+        } else if (typeof showError === 'function' && type === 'error') {
+            showError(message);
+        } else {
+            // הודעה בסיסית
+            alert(message);
+        }
+    }
+};
+
+בזה
+
+window.FormHandler = {
+    openForm: function(typeOrConfig, parentId, itemId) {
+        // תמיכה בשני פורמטים
+        let type, finalParentId, finalItemId;
+        
+        if (typeof typeOrConfig === 'object') {
+            // אם קיבלנו אובייקט
+            type = typeOrConfig.type;
+            finalParentId = typeOrConfig.parentId;
+            finalItemId = typeOrConfig.itemId;
+        } else {
+            // אם קיבלנו פרמטרים בודדים
+            type = typeOrConfig;
+            finalParentId = parentId;
+            finalItemId = itemId;
+        }
+        
+        console.log('FormHandler.openForm called with:', {
+            type: type,
+            parentId: finalParentId,
+            itemId: finalItemId
+        });
+        
+        // בנה את ה-URL עם כל הפרמטרים
+        let url = `dashboard/dashboards/cemeteries/forms/form-loader.php?type=${type}`;
+        
+        if (finalParentId) {
+            url += `&parent_id=${finalParentId}`;
+        }
+        
+        if (finalItemId) {
+            url += `&id=${finalItemId}`;
+        }
+        
+        console.log('Fetching form from:', url);
+        
+        // טען את הטופס
+        fetch(url)
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.text();
+            })
+            .then(html => {
+                console.log('Received HTML length:', html.length);
+                
+                // הצג את הטופס
+                const container = document.getElementById('formContainer') || document.body;
+                
+                // מחק טפסים קודמים
+                const existingModal = document.getElementById(type + 'FormModal');
+                if (existingModal) {
+                    existingModal.remove();
+                }
+                
+                // הוסף את הטופס החדש
+                const div = document.createElement('div');
+                div.innerHTML = html;
+                container.appendChild(div);
+                
+                console.log('Form displayed successfully');
+            })
+            .catch(error => {
+                console.error('Error loading form:', error);
+                alert('שגיאה בטעינת הטופס');
+            });
+    },
+    
+    closeForm: function(type) {
+        console.log('Closing form:', type);
+        const modal = document.getElementById(type + 'FormModal');
+        if (modal) {
+            modal.remove();
+        }
+    },
+
+        // שמירת טופס
+    saveForm: async function(formData, type) {
+        try {
+            // קבע את ה-API endpoint
+            const isEdit = formData.has('id');
+            const action = isEdit ? 'update' : 'create';
+            
+            // המר FormData לאובייקט
+            const data = {};
+            for (let [key, value] of formData.entries()) {
+                // דלג על השדה type
+                if (key !== 'type') {
+                    // טיפול מיוחד בשדות מסוימים
+                    if (key === 'is_small_grave') {
+                        data[key] = value === 'on' ? 1 : 0;
+                    } else if (value !== '') {
+                        data[key] = value;
+                    }
+                }
+            }
+            
+            // טיפול מיוחד בטבלת graves - אין עמודת name!
+            if (type === 'grave' && data.grave_number && !data.name) {
+                // לא להוסיף name לטבלת graves
+                delete data.name;
+            }
+            
+            // הוסף parent_id אם נדרש
+            const parentColumn = this.getParentColumn(type);
+            if (parentColumn && data.parent_id) {
+                data[parentColumn] = data.parent_id;
+                delete data.parent_id;
+            }
+            
+            // תיקון שמות types
+            if (type === 'areaGrave') type = 'area_grave';
+
+
+            // הוסף is_active
+            data.is_active = 1;
+     
+            // אחרי השורה של area_grave, הוסף:
+            if (type === 'customer') {
+                url = `/dashboard/dashboards/cemeteries/api/customers-api.php?action=${action}`;
+                if (isEdit) {
+                    url += `&id=${formData.get('id')}`;
+                }
+            } else if (type === 'purchase') {
+                url = `/dashboard/dashboards/cemeteries/api/purchases-api.php?action=${action}`;
+                if (isEdit) {
+                    url += `&id=${formData.get('id')}`;
+                }
+            } else if (type === 'payment') {
+                // טיפול בתשלומים
+                if (isEdit) {
+                    url = `/dashboard/dashboards/cemeteries/api/payments-api.php?action=update&id=${formData.get('id')}`;
+                    method = 'PUT';
+                } else {
+                    url = '/dashboard/dashboards/cemeteries/api/payments-api.php?action=create';
+                    method = 'POST';
+                }
+            } else {
+                // הקוד הקיים - cemetery-hierarchy
+                url = `/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=${action}&type=${type}`;
+                if (isEdit) {
+                    url += `&id=${formData.get('id')}`;
+                }
+            }            
+            
+            if (isEdit) {
+                url += `&id=${formData.get('id')}`;
+            }
+            
+            const response = await fetch(url, {
+                method: isEdit ? 'PUT' : 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                this.showMessage(
+                    isEdit ? 'הפריט עודכן בהצלחה' : 'הפריט נוסף בהצלחה',
+                    'success'
+                );
+                
+                // סגור את הטופס
+                this.closeForm(type);
+                
+                // רענן את הנתונים
+                if (typeof refreshData === 'function') {
+                    refreshData();
+                } else if (typeof loadAllData === 'function') {
+                    loadAllData();
+                } else {
+                    location.reload();
+                }
+                
+                return true;
+            } else {
+                this.showMessage(result.error || 'שגיאה בשמירה', 'error');
+                return false;
+            }
+            
+        } catch (error) {
+            console.error('Error saving form:', error);
+            this.showMessage('שגיאה בשמירת הנתונים', 'error');
+            return false;
+        }
+    },
+    
+    // קבלת עמודת ההורה לפי סוג
+    getParentColumn: function(type) {
+        const columns = {
+            'block': 'cemetery_id',
+            'plot': 'block_id',
+            'row': 'plot_id',
+            'area_grave': 'row_id',
+            'grave': 'area_grave_id',
+            'purchase': 'customer_id',
+            'burial': 'grave_id'
+        };
+        return columns[type] || null;
+    },
+    
+    // הצגת הודעה
+    showMessage: function(message, type = 'info') {
+        // בדוק אם יש פונקציה קיימת להודעות
+        if (typeof showToast === 'function') {
+            showToast(type, message);
+        } else if (typeof showSuccess === 'function' && type === 'success') {
+            showSuccess(message);
+        } else if (typeof showError === 'function' && type === 'error') {
+            showError(message);
+        } else {
+            // הודעה בסיסית
+            alert(message);
+        }
+    }
+};
+
+חוזרת לי שגיאה בקונסול
+
+purchases-management.js:364 Purchases module loaded
+
+main.js:22 Initializing Cemetery Dashboard...
+
+unified-table-renderer.js:329 Opening item: cemetery cemetery_68c5f1943444c5.62473780 נסיון
+
+main.js:659 updateSidebarSelection called: cemetery cemetery_68c5f1943444c5.62473780 נסיון
+
+form-handler.js:238 FormHandler.openForm called with: {type: 'block', parentId: '5', itemId: null}
+
+form-handler.js:255 Fetching form from: dashboard/dashboards/cemeteries/forms/form-loader.php?type=block&parent_id=5
+
+form-handler.js:260 Response status: 200
+
+form-handler.js:264 Received HTML length: 24473
+
+form-handler.js:280 Form displayed successfully
+
+index.php:1 Refused to apply style from 'https://login.form.mbe-plus.com/auth/login.php' because its MIME type ('text/html') is not a supported stylesheet MIME type, and strict MIME checking is enabled.
+

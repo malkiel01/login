@@ -238,70 +238,6 @@ async function performQuickSearch(query) {
 }
 
 // פתיחת מודל הוספה - עם בדיקת הקשר
-async function openAddModal2() {
-    // בדיקה אם צריך parent
-    const parentRequired = ['block', 'plot', 'row', 'area_grave', 'grave'].includes(window.currentType);
-    
-    if (parentRequired && !window.currentParentId) {
-        // אם אין parent נבחר, צריך לבקש בחירה
-        await openAddWithParentSelection();
-        return;
-    }
-    
-    // בדיקה מיוחדת לאחוזת קבר - צריך שורות
-    if (window.currentType === 'area_grave' && window.selectedItems.plot) {
-        const hasRows = await checkIfPlotHasRows(window.selectedItems.plot.id);
-        if (!hasRows) {
-            showWarning('לא ניתן להוסיף אחוזת קבר - אין שורות בחלקה. יש להוסיף שורה תחילה.');
-            return;
-        }
-    }
-    
-    // השתמש במערכת הטפסים החדשה
-    console.log('Opening form for:', window.currentType, 'Parent:', window.currentParentId);
-    FormHandler.openForm(window.currentType, window.currentParentId, null);
-}
-// async function openAddModal() {
-//     // קבע את ה-parent_id הנכון בהתאם לסוג
-//     let parentId = null;
-    
-//     switch(window.currentType) {
-//         case 'cemetery':
-//             parentId = null;
-//             break;
-//         case 'block':
-//             parentId = window.currentCemeteryId;
-//             break;
-//         case 'plot':
-//             parentId = window.currentBlockId;
-//             break;
-//         case 'row':
-//             parentId = window.currentPlotId;
-//             break;
-//         case 'area_grave':
-//             parentId = window.currentRowId;
-//             break;
-//         case 'grave':
-//             parentId = window.currentAreaGraveId;
-//             break;
-//     }
-    
-//     // בדיקה אם יש parent כשצריך
-//     if (window.currentType !== 'cemetery' && !parentId) {
-//         await openAddWithParentSelection();
-//         return;
-//     }
-    
-//     // שמור את ה-parentId הנוכחי
-//     window.currentParentId = parentId;
-    
-//     // פתח את הטופס עם ה-parent_id
-//     FormHandler.openForm({
-//         type: window.currentType,
-//         parentId: parentId,
-//         itemId: null
-//     });
-// }
 window.openAddModal = function() {
     if (window.tableRenderer) {
         window.tableRenderer.openAddModal();
@@ -457,40 +393,8 @@ function updateAddButtonText() {
         'burial': 'הוספת קבורה'
     };
     
-    // עדכן את כל הכפתורים - גם בסידבר וגם ב-action bar
-    const buttons = document.querySelectorAll('.btn-primary[onclick="openAddModal()"]');
-    buttons.forEach(button => {
-        const buttonText = buttonTexts[window.currentType] || 'הוסף';
-        
-        // בדיקה האם להציג או להסתיר את הכפתור
-        if (shouldHideAddButton()) {
-            button.style.display = 'none';
-        } else if (shouldDisableAddButton()) {
-            button.disabled = true;
-            button.innerHTML = `<svg class="icon"><use xlink:href="#icon-plus"></use></svg> ${buttonText}`;
-        } else {
-            button.style.display = '';
-            button.disabled = false;
-            button.innerHTML = `<svg class="icon"><use xlink:href="#icon-plus"></use></svg> ${buttonText}`;
-        }
-    });
-}
-// עדכון טקסט כפתור הוספה
-function updateAddButtonText() {
-    const buttonTexts = {
-        'cemetery': 'הוספת בית עלמין',
-        'block': 'הוספת גוש',
-        'plot': 'הוספת חלקה',
-        'row': 'הוספת שורה',
-        'area_grave': 'הוספת אחוזת קבר',
-        'grave': 'הוספת קבר',
-        'customer': 'הוספת לקוח',
-        'purchase': 'הוספת רכישה',
-        'burial': 'הוספת קבורה'
-    };
-    
-    // עדכן את כל הכפתורים - גם בסידבר וגם ב-action bar
-    const buttons = document.querySelectorAll('.btn-primary[onclick="openAddModal()"]');
+    // עדכן את הסלקטור לחפש את הפונקציה החדשה
+    const buttons = document.querySelectorAll('.btn-primary[onclick="tableRenderer.openAddModal()"]');
     buttons.forEach(button => {
         const buttonText = buttonTexts[window.currentType] || 'הוסף';
         

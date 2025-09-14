@@ -511,7 +511,7 @@ class FormBuilder {
             case 'time':
                 $html .= $this->renderTime($field);
                 break;
-            case 'custom':
+            case 'custom_html':
                 $html .= $field['html'];
                 break;
             default:
@@ -703,6 +703,13 @@ class FormBuilder {
         $html .= '</div>';
         $html .= '</div>';
         return $html;
+    }
+
+    public function addCustomHTML($html) {
+        $this->fields[] = [
+            'type' => 'custom_html',
+            'html' => $html
+        ];
     }
 }
 ?>

@@ -5,17 +5,8 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 header('Content-Type: text/html; charset=utf-8');
 
-echo "Test 1: PHP works<br>";
-
 require_once __DIR__ . '/FormBuilder.php';
-echo "Test 2: FormBuilder loaded<br>";
-
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
-echo "Test 3: Config loaded<br>";
-
-// $conn = getDBConnection();
-// echo "Test 4: DB connected<br>";
-
 
 $itemId = $_GET['item_id'] ?? $_GET['id'] ?? null;
 $parentId = $_GET['parent_id'] ?? null;
@@ -132,7 +123,7 @@ $addressSelectorHTML = '
     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
         <div class="form-group">
             <label>מדינה</label>
-            <select id="countrySelect" name="countryId" class="form-control">
+            <select id="countrySelect" name="countryId" class="form-control" onchange="window.filterCities()">
                 <option value="">-- בחר מדינה --</option>';
 
 foreach ($countries as $unicId => $name) {
@@ -215,6 +206,65 @@ echo $formBuilder->renderModal();
 ?>
 
 <script>
+    // העבר את כל הערים ל-JavaScript
+    window.allCities = <?php echo json_encode($allCities); ?>;
+
+    // המדינה והעיר הנוכחיות (בעריכה)
+    window.currentCountry = '<?php echo $customer['countryId'] ?? ''; ?>';
+    window.currentCity = '<?php echo $customer['cityId'] ?? ''; ?>';
+
+    // פונקציה לסינון ערים לפי מדינה - הגדר גלובלית מיד
+    window.filterCities = function() {
+        const countrySelect = document.getElementById('countrySelect');
+        const citySelect = document.getElementById('citySelect');
+        const selectedCountry = countrySelect.value;
+        
+        // נקה את רשימת הערים
+        citySelect.innerHTML = '<option value="">-- בחר עיר --</option>';
+        
+        if (!selectedCountry) {
+            citySelect.innerHTML = '<option value="">-- בחר קודם מדינה --</option>';
+            return;
+        }
+        
+        // סנן ערים לפי המדינה הנבחרת
+        const filteredCities = window.allCities.filter(city => city.countryId === selectedCountry);
+        
+        if (filteredCities.length === 0) {
+            citySelect.innerHTML = '<option value="">-- אין ערים למדינה זו --</option>';
+            return;
+        }
+        
+        // הוסף את הערים לסלקט
+        filteredCities.forEach(city => {
+            const option = document.createElement('option');
+            option.value = city.unicId;
+            option.textContent = city.cityNameHe;
+            
+            // אם זו העיר הנוכחית (בעריכה), בחר אותה
+            if (window.currentCity && city.unicId === window.currentCity) {
+                option.selected = true;
+            }
+            
+            citySelect.appendChild(option);
+        });
+    }
+
+    // אתחול אחרי שה-DOM נטען
+    setTimeout(() => {
+        const countrySelect = document.getElementById('countrySelect');
+        if (countrySelect) {
+            countrySelect.addEventListener('change', window.filterCities);
+            
+            // אם יש מדינה נבחרת, טען את הערים שלה
+            if (window.currentCountry) {
+                window.filterCities();
+            }
+        }
+    }, 100);
+</script>
+
+<!-- <script>
 // העבר את כל הערים ל-JavaScript
 window.allCities = <?php echo json_encode($allCities); ?>;
 
@@ -287,4 +337,4 @@ setTimeout(() => {
     }
 }, 100);
 
-</script>
+</script> -->

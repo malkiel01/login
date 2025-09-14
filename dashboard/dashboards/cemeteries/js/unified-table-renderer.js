@@ -31,6 +31,11 @@ class UnifiedTableRenderer {
      * טעינת נתונים וציור טבלה
      */
     async loadAndDisplay(type, parentId = null) {
+        // נקה כרטיסים קיימים
+        if (typeof clearAllHierarchyCards === 'function') {
+            clearAllHierarchyCards();
+        }
+        
         // טען קונפיג אם צריך
         if (!this.config || this.currentType !== type) {
             await this.loadConfig(type);

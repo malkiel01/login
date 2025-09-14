@@ -9,6 +9,7 @@ let editingCustomerId = null;
 // טעינת לקוחות
 async function loadCustomers() {
     console.log('Loading customers...');
+
     
     // עדכן את הסוג הנוכחי
     window.currentType = 'customer';
@@ -29,6 +30,7 @@ async function loadCustomers() {
     if (typeof updateBreadcrumb === 'function') {
         updateBreadcrumb({ customer: { name: 'לקוחות' } });
     }
+    
     
     // עדכון כותרת החלון
     document.title = 'ניהול לקוחות - מערכת בתי עלמין';
@@ -59,7 +61,7 @@ async function loadCustomers() {
             <th>ת.ז.</th>
             <th>שם מלא</th>
             <th>טלפון</th>
-            <th>כתובת</th>
+            <th>אימייל</th>
             <th>עיר</th>
             <th>סטטוס</th>
             <th>סוג</th>
@@ -118,14 +120,17 @@ async function fetchCustomers() {
         
         const response = await fetch(url);
         console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers.get('content-type'));
         
         const responseText = await response.text();
+        console.log('Raw response:', responseText);
         
         let data;
         try {
             data = JSON.parse(responseText);
         } catch (parseError) {
             console.error('Failed to parse JSON:', parseError);
+            console.error('Response was:', responseText);
             showError('שגיאה בפענוח התגובה מהשרת');
             return;
         }
@@ -141,6 +146,10 @@ async function fetchCustomers() {
         }
     } catch (error) {
         console.error('Error loading customers:', error);
+        console.error('Error details:', {
+            message: error.message,
+            stack: error.stack
+        });
         showError('שגיאה בטעינת נתונים');
     }
 }
@@ -153,6 +162,8 @@ function displayCustomersInTable(customers) {
         console.error('Table body not found');
         return;
     }
+    
+    // אל תנסה לעדכן את tableHeaders כאן - זה כבר נעשה ב-loadCustomers
     
     // סמן שאנחנו במצב לקוחות
     tableBody.setAttribute('data-customer-view', 'true');
@@ -179,27 +190,17 @@ function displayCustomersInTable(customers) {
             <td><input type="checkbox" class="customer-checkbox" value="${customer.id}"></td>
             <td>${customer.numId || '-'}</td>
             <td>
-                <strong>${customer.firstName || ''} ${customer.lastName || ''}</strong>
+                <strong>${customer.firstName} ${customer.lastName}</strong>
                 ${customer.nom ? `<br><small style="color: #666;">(${customer.nom})</small>` : ''}
             </td>
             <td>${customer.phoneMobile || customer.phone || '-'}</td>
-            <td>${customer.address || '-'}</td>
-            <td>${customer.city_name || customer.cityNameHe || '-'}</td>
+            <td>${customer.email || '-'}</td>
+            <td>${customer.city_name || '-'}</td>
             <td>${getCustomerStatusBadge(customer.statusCustomer)}</td>
             <td>${getCustomerTypeBadge(customer.typeId)}</td>
             <td>${formatDate(customer.createDate)}</td>
             <td>
-                <div class="btn-group">
-                    <button class="btn btn-sm btn-info" onclick="viewCustomer(${customer.id})">
-                        צפה
-                    </button>
-                    <button class="btn btn-sm btn-warning" onclick="editCustomer(${customer.id})">
-                        ערוך
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteCustomer(${customer.id})">
-                        מחק
-                    </button>
-                </div>
+                <!-- כפתורי פעולות... -->
             </td>
         </tr>
     `).join('');
@@ -226,6 +227,8 @@ window.addEventListener('load', function() {
                     tableBody.removeAttribute('data-customer-view');
                 }
                 
+                // נקה את הכותרות אם צריך - הפונקציות המקוריות ידאגו לזה
+                
                 // קרא לפונקציה המקורית
                 return originalFunc.apply(this, arguments);
             };
@@ -248,8 +251,7 @@ function getCustomerStatusBadge(status) {
 function getCustomerTypeBadge(type) {
     const types = {
         1: { label: 'רגיל', color: '#6b7280' },
-        2: { label: 'VIP', color: '#f59e0b' },
-        3: { label: 'מוסד', color: '#8b5cf6' }
+        2: { label: 'VIP', color: '#f59e0b' }
     };
     
     const typeInfo = types[type] || { label: 'רגיל', color: '#6b7280' };
@@ -318,31 +320,21 @@ function showCustomerDetails(customer) {
     modal.innerHTML = `
         <div class="modal-content" style="background: white; padding: 30px; border-radius: 10px; max-width: 700px; max-height: 90vh; overflow-y: auto;">
             <div class="modal-header" style="margin-bottom: 20px;">
-                <h2 style="margin: 0;">פרטי לקוח - ${customer.firstName || ''} ${customer.lastName || ''}</h2>
+                <h2 style="margin: 0;">פרטי לקוח - ${customer.first_name} ${customer.last_name}</h2>
             </div>
             <div class="modal-body">
                 <div style="display: grid; gap: 20px;">
                     <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
                         <h4 style="margin-bottom: 15px;">פרטים אישיים</h4>
                         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
-                            <div><strong>ת.ז.:</strong> ${customer.numId || '-'}</div>
-                            <div><strong>טלפון נייד:</strong> ${customer.phoneMobile || '-'}</div>
+                            <div><strong>ת.ז.:</strong> ${customer.id_number || '-'}</div>
+                            <div><strong>טלפון נייד:</strong> ${customer.mobile_phone || '-'}</div>
                             <div><strong>טלפון:</strong> ${customer.phone || '-'}</div>
-                            <div><strong>כתובת:</strong> ${customer.address || '-'}</div>
-                            <div><strong>עיר:</strong> ${customer.cityNameHe || customer.city_name || '-'}</div>
-                            <div><strong>סטטוס:</strong> ${getCustomerStatusBadge(customer.statusCustomer)}</div>
-                            ${customer.nameFather ? `<div><strong>שם אב:</strong> ${customer.nameFather}</div>` : ''}
-                            ${customer.nameMother ? `<div><strong>שם אם:</strong> ${customer.nameMother}</div>` : ''}
-                            ${customer.dateBirth ? `<div><strong>תאריך לידה:</strong> ${formatDate(customer.dateBirth)}</div>` : ''}
-                            ${customer.age ? `<div><strong>גיל:</strong> ${customer.age}</div>` : ''}
+                            <div><strong>אימייל:</strong> ${customer.email || '-'}</div>
+                            <div><strong>עיר:</strong> ${customer.city || '-'}</div>
+                            <div><strong>סטטוס:</strong> ${getCustomerStatusBadge(customer.customer_status)}</div>
                         </div>
                     </div>
-                    ${customer.comment ? `
-                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
-                        <h4 style="margin-bottom: 15px;">הערות</h4>
-                        <div>${customer.comment}</div>
-                    </div>
-                    ` : ''}
                 </div>
             </div>
             <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
@@ -365,6 +357,7 @@ async function loadCustomerStats() {
         
         if (data.success) {
             const stats = data.data;
+            // לא נציג כרגע - אין לנו את האלמנט הזה
             console.log('Customer stats loaded:', stats);
         }
     } catch (error) {

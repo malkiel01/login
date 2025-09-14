@@ -337,7 +337,7 @@ class UnifiedTableRenderer {
         console.log('openAddModal - type:', type, 'parentId:', parentId);
 
         // לקוחות ורכישות לא צריכים הורה
-        const typesWithoutParent = ['customer', 'purchase', 'burial'];
+        const typesWithoutParent = ['cemetery', 'customer', 'purchase', 'burial'];
 
         if (!type) {
             console.error('No type defined');
@@ -348,7 +348,7 @@ class UnifiedTableRenderer {
             FormHandler.openForm(type, null, null);
             return;
         }
-        
+
         // בדוק אם צריך לבחור הורה קודם
         if (!parentId) {
             this.openParentSelectionDialog(type);
@@ -508,7 +508,7 @@ class UnifiedTableRenderer {
     console.log('addItem - type:', type, 'parentId:', parentId);
     
     // לקוחות ורכישות לא צריכים הורה
-    const typesWithoutParent = ['customer', 'purchase', 'burial'];
+    const typesWithoutParent = ['cemetery', 'customer', 'purchase', 'burial'];
     
     if (typesWithoutParent.includes(type)) {
         // פתח ישירות בלי הורה

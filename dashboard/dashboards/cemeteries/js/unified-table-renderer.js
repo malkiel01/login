@@ -478,7 +478,7 @@ class UnifiedTableRenderer {
         FormHandler.openForm(type, parentId, null);
     }
 
-    async openParentSelectionDialog(type) {
+    async openParentSelectionDialog2(type) {
         console.log('Opening parent selection dialog for type:', type);
         
         const parentType = this.getParentType(type);
@@ -670,7 +670,7 @@ class UnifiedTableRenderer {
             this.showMessage('אין פריטי הורה זמינים', 'error');
         }
     }
-    async openParentSelectionDialog2(type) {
+    async openParentSelectionDialog(type) {
         const parentType = this.getParentType(type);
         
         // במקום לבנות דיאלוג ידנית, פשוט:

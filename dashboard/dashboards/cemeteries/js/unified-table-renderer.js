@@ -335,17 +335,26 @@ class UnifiedTableRenderer {
         const parentId = window.currentParentId;
         
         console.log('openAddModal - type:', type, 'parentId:', parentId);
-        
+
+        // לקוחות ורכישות לא צריכים הורה
+        const typesWithoutParent = ['customer', 'purchase', 'burial'];
+
         if (!type) {
             console.error('No type defined');
             return;
         }
         
+        if (typesWithoutParent.includes(type)) {
+            FormHandler.openForm(type, null, null);
+            return;
+        }
+        
         // בדוק אם צריך לבחור הורה קודם
-        if (!parentId && type !== 'cemetery') {
+        if (!parentId) {
             this.openParentSelectionDialog(type);
             return;
         }
+
         
         // פתח את הטופס ישירות
         FormHandler.openForm(type, parentId, null);
@@ -454,21 +463,6 @@ class UnifiedTableRenderer {
         
         return hierarchy[this.currentType];
     }
-    
-    /**
-     * הוספת פריט חדש
-     */
-    // addItem() {
-    //     const type = this.currentType;
-    //     const parentId = window.currentParentId;
-        
-    //     console.log('addItem - type:', type, 'parentId:', parentId);
-        
-    //     // קריאה פשוטה עם פרמטרים
-    //     FormHandler.openForm(type, parentId, null);
-    // }
-
-    // הוסף את הפונקציות האלה בתוך ה-class UnifiedTableRenderer:
 
 // פונקציה לקבלת סוג ההורה
     getParentType(type) {
@@ -507,27 +501,31 @@ class UnifiedTableRenderer {
         }
     }
 
-
     addItem() {
-        const type = this.currentType;
-        const parentId = window.currentParentId;
-        
-        console.log('addItem - type:', type, 'parentId:', parentId);
-        console.log('Type is not cemetery?', type !== 'cemetery');
-        console.log('No parentId?', !parentId);
-        console.log('Should open dialog?', !parentId && type !== 'cemetery');
-        
-        // בדוק אם צריך לבחור הורה קודם
-        if (!parentId && type !== 'cemetery') {
-            console.log('Opening parent selection dialog...');
-            // פתח דיאלוג בחירת הורה
-            this.openParentSelectionDialog(type);
-            return;
-        }
-        
-        console.log('Opening form directly...');
-        FormHandler.openForm(type, parentId, null);
+    const type = window.currentType || this.currentType;
+    const parentId = window.currentParentId;
+    
+    console.log('addItem - type:', type, 'parentId:', parentId);
+    
+    // לקוחות ורכישות לא צריכים הורה
+    const typesWithoutParent = ['customer', 'purchase', 'burial'];
+    
+    if (typesWithoutParent.includes(type)) {
+        // פתח ישירות בלי הורה
+        FormHandler.openForm(type, null, null);
+        return;
     }
+    
+    // בדוק אם צריך לבחור הורה קודם
+    if (!parentId && type !== 'cemetery') {
+        console.log('Opening parent selection dialog...');
+        this.openParentSelectionDialog(type);
+        return;
+    }
+    
+    console.log('Opening form directly...');
+    FormHandler.openForm(type, parentId, null);
+}
 
     async openParentSelectionDialog(type) {
         console.log('Opening parent selection dialog for type:', type);

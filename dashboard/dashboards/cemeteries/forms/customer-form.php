@@ -49,63 +49,19 @@ try {
     die(json_encode(['error' => $e->getMessage()]));
 }
 
+// דיבוג - בדוק אם הנתונים נטענו
+echo '<!-- DEBUG START -->';
+echo '<div style="background:yellow; padding:10px; margin:10px;">';
+echo 'מספר ערים שנטענו: ' . count($allCities) . '<br>';
+echo 'מספר מדינות שנטענו: ' . count($countries) . '<br>';
+echo '</div>';
+echo '<!-- DEBUG END -->';
+
 // הכן את ה-JavaScript
 $citiesJson = json_encode($allCities);
 
 // יצירת FormBuilder
 $formBuilder = new FormBuilder('customer', $itemId, $parentId);
-
-// הוסף את ה-JavaScript כ-HTML מותאם אישית בתחילה
-$jsScript = '
-<script>
-console.log("Customer form script loaded!");
-
-// הגדר את הפונקציה גלובלית מיד
-window.customerCitiesData = ' . $citiesJson . ';
-
-window.filterCities = function() {
-    console.log("filterCities called!");
-    var countrySelect = document.getElementById("countrySelect");
-    var citySelect = document.getElementById("citySelect");
-    
-    if (!countrySelect || !citySelect) {
-        console.log("Elements not ready yet");
-        return;
-    }
-    
-    var selectedCountry = countrySelect.value;
-    console.log("Selected country:", selectedCountry);
-    
-    citySelect.innerHTML = \'<option value="">-- בחר עיר --</option>\';
-    
-    if (!selectedCountry) {
-        citySelect.innerHTML = \'<option value="">-- בחר קודם מדינה --</option>\';
-        return;
-    }
-    
-    var filteredCities = window.customerCitiesData.filter(function(city) {
-        return city.countryId === selectedCountry;
-    });
-    
-    console.log("Found", filteredCities.length, "cities");
-    
-    if (filteredCities.length === 0) {
-        citySelect.innerHTML = \'<option value="">-- אין ערים למדינה זו --</option>\';
-        return;
-    }
-    
-    filteredCities.forEach(function(city) {
-        var option = document.createElement("option");
-        option.value = city.unicId;
-        option.textContent = city.cityNameHe;
-        citySelect.appendChild(option);
-    });
-};
-
-console.log("filterCities function defined:", typeof window.filterCities);
-</script>';
-
-$formBuilder->addCustomHTML($jsScript);
 
 // סוג זיהוי
 $formBuilder->addField('typeId', 'סוג זיהוי', 'select', [
@@ -257,4 +213,45 @@ $formBuilder->addField('comment', 'הערות', 'textarea', [
 
 // הצג את הטופס
 echo $formBuilder->renderModal();
+
+// נסיון דיבוג ישיר
+echo '<div id="debug-test" style="background:red; color:white; padding:10px;">אם אתה רואה את זה, ה-HTML נטען</div>';
+echo '<script>';
+echo 'console.log("DEBUG: Script after modal loaded");';
+echo 'document.getElementById("debug-test").style.background = "green";';
+echo 'document.getElementById("debug-test").innerHTML = "JavaScript עובד!";';
+echo 'window.testFilterCities = function() { console.log("Test function works!"); };';
+echo 'window.citiesData = ' . $citiesJson . ';';
+echo 'window.filterCities = function() {';
+echo '    console.log("filterCities called!");';
+echo '    var countrySelect = document.getElementById("countrySelect");';
+echo '    var citySelect = document.getElementById("citySelect");';
+echo '    if (!countrySelect || !citySelect) {';
+echo '        console.log("Elements not found");';
+echo '        return;';
+echo '    }';
+echo '    var selectedCountry = countrySelect.value;';
+echo '    console.log("Selected country:", selectedCountry);';
+echo '    citySelect.innerHTML = \'<option value="">-- בחר עיר --</option>\';';
+echo '    if (!selectedCountry) {';
+echo '        citySelect.innerHTML = \'<option value="">-- בחר קודם מדינה --</option>\';';
+echo '        return;';
+echo '    }';
+echo '    var filteredCities = window.citiesData.filter(function(city) {';
+echo '        return city.countryId === selectedCountry;';
+echo '    });';
+echo '    console.log("Found", filteredCities.length, "cities");';
+echo '    if (filteredCities.length === 0) {';
+echo '        citySelect.innerHTML = \'<option value="">-- אין ערים למדינה זו --</option>\';';
+echo '        return;';
+echo '    }';
+echo '    filteredCities.forEach(function(city) {';
+echo '        var option = document.createElement("option");';
+echo '        option.value = city.unicId;';
+echo '        option.textContent = city.cityNameHe;';
+echo '        citySelect.appendChild(option);';
+echo '    });';
+echo '};';
+echo 'console.log("filterCities defined:", typeof window.filterCities);';
+echo '</script>';
 ?>

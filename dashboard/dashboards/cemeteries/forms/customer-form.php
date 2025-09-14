@@ -132,7 +132,7 @@ $addressSelectorHTML = '
     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
         <div class="form-group">
             <label>מדינה</label>
-            <select id="countrySelect" name="countryId" class="form-control" onchange="filterCities()">
+            <select id="countrySelect" name="countryId" class="form-control">
                 <option value="">-- בחר מדינה --</option>';
 
 foreach ($countries as $unicId => $name) {
@@ -231,7 +231,8 @@ window.currentCity = '<?php echo $customer['cityId'] ?? ''; ?>';
 })();
 
 // פונקציה לסינון ערים לפי מדינה
-window.filterCities = function() {
+// window.filterCities = function() {
+function filterCities() {
     const countrySelect = document.getElementById('countrySelect');
     const citySelect = document.getElementById('citySelect');
     const selectedCountry = countrySelect.value;
@@ -266,4 +267,24 @@ window.filterCities = function() {
         citySelect.appendChild(option);
     });
 }
+
+// הגדר את הפונקציה גלובלית
+window.filterCities = filterCities;
+
+// אתחול אחרי שה-DOM מוכן
+setTimeout(() => {
+    // אם יש מדינה נבחרת, טען את הערים שלה
+    if (window.currentCountry) {
+        filterCities();
+    }
+}, 100);
+
+// הוסף event listener אחרי שה-DOM נטען
+setTimeout(() => {
+    const countrySelect = document.getElementById('countrySelect');
+    if (countrySelect) {
+        countrySelect.addEventListener('change', filterCities);
+    }
+}, 100);
+
 </script>

@@ -478,7 +478,7 @@ class UnifiedTableRenderer {
         FormHandler.openForm(type, parentId, null);
     }
 
-    async openParentSelectionDialog2(type) {
+    async openParentSelectionDialog(type) {
         console.log('Opening parent selection dialog for type:', type);
         
         const parentType = this.getParentType(type);
@@ -670,7 +670,7 @@ class UnifiedTableRenderer {
             this.showMessage('אין פריטי הורה זמינים', 'error');
         }
     }
-    async openParentSelectionDialog(type) {
+    async openParentSelectionDialog2(type) {
         const parentType = this.getParentType(type);
         
         // במקום לבנות דיאלוג ידנית, פשוט:
@@ -730,35 +730,35 @@ window.tableRenderer = new UnifiedTableRenderer();
 window.loadAllCemeteries = async function() {
     window.currentType = 'cemetery';
     window.currentParentId = null;
-    clearAllSidebarSelections();
+    DashboardCleaner.clear({ targetLevel: 'cemetery' });
     await tableRenderer.loadAndDisplay('cemetery');
 };
 
 window.loadAllBlocks = async function() {
     window.currentType = 'block';
     window.currentParentId = null;
-    clearAllSidebarSelections();
+    DashboardCleaner.clear({ targetLevel: 'block' });
     await tableRenderer.loadAndDisplay('block');
 };
 
 window.loadAllPlots = async function() {
     window.currentType = 'plot';
     window.currentParentId = null;
-    clearAllSidebarSelections();
+    DashboardCleaner.clear({ targetLevel: 'plot' });
     await tableRenderer.loadAndDisplay('plot');
 };
 
 window.loadAllAreaGraves = async function() {
     window.currentType = 'area_grave';
     window.currentParentId = null;
-    clearAllSidebarSelections();
+    DashboardCleaner.clear({ targetLevel: 'area_grave' });
     await tableRenderer.loadAndDisplay('area_grave');
 };
 
 window.loadAllGraves = async function() {
     window.currentType = 'grave';
     window.currentParentId = null;
-    clearAllSidebarSelections();
+    DashboardCleaner.clear({ targetLevel: 'grave' });
     await tableRenderer.loadAndDisplay('grave');
 };
 

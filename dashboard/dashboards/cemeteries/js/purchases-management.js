@@ -10,14 +10,10 @@ async function loadAllPurchases(page = 1) {
     console.log('Loading all purchases...');
     currentPurchasePage = page;
     
-    clearItemCard(); // נקה את הכרטיס כשעוברים לתצוגה כללית
-    
-    // נקה את כל הסידבר
-    clearAllSidebarSelections();
-    
     // עדכן סוג נוכחי
     window.currentType = 'purchase';
     window.currentParentId = null;
+    DashboardCleaner.clear({ targetLevel: 'purchase' });
     
     // עדכן את כפתור ההוספה
     if (typeof updateAddButtonText === 'function') {

@@ -10,14 +10,11 @@ let editingCustomerId = null;
 async function loadCustomers() {
     console.log('Loading customers...');
 
-    clearItemCard(); // נקה את הכרטיס כשעוברים לתצוגה כללית
-    
-    // נקה את כל הסידבר
-    clearAllSidebarSelections();
     
     // עדכן את הסוג הנוכחי
     window.currentType = 'customer';
     window.currentParentId = null;
+    DashboardCleaner.clear({ targetLevel: 'customer' });
     
     // נקה את כל הסידבר
     if (typeof clearAllSidebarSelections === 'function') {

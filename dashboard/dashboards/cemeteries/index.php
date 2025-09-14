@@ -138,6 +138,7 @@ if (!checkPermission('view', 'cemetery')) {
     <!-- JavaScript Files - כולל הקובץ החדש לרספונסיביות -->
     <script src="/dashboard/dashboards/cemeteries/js/breadcrumb.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/main.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/clearDashboard.js"></script>
     <!-- מערכת טפסים חדשה -->
     <script src="/dashboard/dashboards/cemeteries/forms/form-handler.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/cards.js"></script>

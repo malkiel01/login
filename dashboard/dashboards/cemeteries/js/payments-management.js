@@ -9,15 +9,11 @@ let editingPaymentId = null;
 // טעינת תשלומים
 async function loadPayments() {
     console.log('Loading payments...');
-
-    clearItemCard();
-    
-    // נקה את כל הסידבר
-    clearAllSidebarSelections();
     
     // עדכן את הסוג הנוכחי
     window.currentType = 'payment';
     window.currentParentId = null;
+    DashboardCleaner.clear({ targetLevel: 'payment' });
     
     // נקה את כל הסידבר
     if (typeof clearAllSidebarSelections === 'function') {

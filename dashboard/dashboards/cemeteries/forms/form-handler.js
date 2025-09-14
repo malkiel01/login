@@ -207,13 +207,17 @@ const FormHandler = {
             
             // המר FormData לאובייקט
             const data = {};
+
             for (let [key, value] of formData.entries()) {
-                if (key !== 'type') {
-                    if (key === 'is_small_grave' || key === 'isSmallGrave') {
-                        data[key] = value === 'on' ? 1 : 0;
-                    } else if (value !== '') {
-                        data[key] = value;
-                    }
+                // דלג על שדות שלא צריכים להישלח
+                if (key === 'type' || key === 'id' || key === 'unicId') {
+                    continue;
+                }
+                
+                if (key === 'is_small_grave' || key === 'isSmallGrave') {
+                    data[key] = value === 'on' ? 1 : 0;
+                } else if (value !== '') {
+                    data[key] = value;
                 }
             }
             
@@ -251,9 +255,12 @@ const FormHandler = {
             }
             
             if (isEdit) {
-                // נסה למצוא unicId או id
-                const recordId = formData.get('unicId') || formData.get('id');
-                url += `&id=${recordId}`;
+                const unicId = formData.get('unicId');
+                if (!unicId) {
+                    this.showMessage('שגיאה: חסר מזהה ייחודי', 'error');
+                    return false;
+                }
+                url += `&id=${unicId}`;
             }
             
             console.log('Saving to:', url);

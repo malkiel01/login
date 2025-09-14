@@ -102,6 +102,52 @@ const FormHandler = {
                         }
                     }, 300);
                 }
+
+                // טיפול בטפסים ספציפיים
+                if (type === 'customer') {
+                    setTimeout(() => {
+                        const fieldset = document.getElementById('address-fieldset');
+                        if (fieldset && fieldset.dataset.cities) {
+                            const citiesData = JSON.parse(fieldset.dataset.cities);
+                            console.log('Cities data loaded:', citiesData.length);
+                            
+                            window.filterCities = function() {
+                                const countrySelect = document.getElementById('countrySelect');
+                                const citySelect = document.getElementById('citySelect');
+                                
+                                if (!countrySelect || !citySelect) return;
+                                
+                                const selectedCountry = countrySelect.value;
+                                citySelect.innerHTML = '<option value="">-- בחר עיר --</option>';
+                                
+                                if (!selectedCountry) {
+                                    citySelect.innerHTML = '<option value="">-- בחר קודם מדינה --</option>';
+                                    return;
+                                }
+                                
+                                const filteredCities = citiesData.filter(city => city.countryId === selectedCountry);
+                                
+                                if (filteredCities.length === 0) {
+                                    citySelect.innerHTML = '<option value="">-- אין ערים למדינה זו --</option>';
+                                    return;
+                                }
+                                
+                                filteredCities.forEach(city => {
+                                    const option = document.createElement('option');
+                                    option.value = city.unicId;
+                                    option.textContent = city.cityNameHe;
+                                    citySelect.appendChild(option);
+                                });
+                            };
+                            
+                            // הוסף event listener
+                            const countrySelect = document.getElementById('countrySelect');
+                            if (countrySelect) {
+                                countrySelect.addEventListener('change', window.filterCities);
+                            }
+                        }
+                    }, 100);
+                }
                 
                 // טען נתונים אם זה טופס עריכה
                 if (itemId) {

@@ -49,7 +49,7 @@ try {
     die(json_encode(['error' => $e->getMessage()]));
 }
 
-// הכן את ה-JavaScript
+// הכן את ה-JSON של הערים
 $citiesJson = json_encode($allCities);
 
 // יצירת FormBuilder
@@ -118,9 +118,12 @@ $formBuilder->addField('maritalStatus', 'מצב משפחתי', 'select', [
     'value' => $customer['maritalStatus'] ?? ''
 ]);
 
-// HTML מותאם אישית לבחירת כתובת - עם JavaScript מוטמע
+// HTML מותאם אישית לבחירת כתובת עם data attribute
 $addressSelectorHTML = '
-<fieldset class="form-section" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+<fieldset class="form-section" 
+          id="address-fieldset"
+          style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;"
+          data-cities=\'' . htmlspecialchars($citiesJson, ENT_QUOTES, 'UTF-8') . '\'>
     <legend style="padding: 0 10px; font-weight: bold;">כתובת</legend>
     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
         <div class="form-group">
@@ -142,7 +145,7 @@ $addressSelectorHTML .= '
             <select id="citySelect" name="cityId" class="form-control">
                 <option value="">-- בחר קודם מדינה --</option>';
 
-// אם יש מדינה נבחרת, טען את הערים שלה
+// אם יש מדינה נבחרת (בעריכה), טען את הערים שלה
 if ($customer && $customer['countryId']) {
     foreach ($allCities as $city) {
         if ($city['countryId'] == $customer['countryId']) {
@@ -163,51 +166,7 @@ $addressSelectorHTML .= '
                    placeholder="רחוב, מספר בית">
         </div>
     </div>
-</fieldset>
-
-<script>
-(function() {
-    var citiesData = ' . $citiesJson . ';
-    
-    function setupCityFilter() {
-        var countrySelect = document.getElementById("countrySelect");
-        var citySelect = document.getElementById("citySelect");
-        
-        if (!countrySelect || !citySelect) {
-            setTimeout(setupCityFilter, 100);
-            return;
-        }
-        
-        countrySelect.addEventListener("change", function() {
-            var selectedCountry = this.value;
-            citySelect.innerHTML = "<option value=\"\">-- בחר עיר --</option>";
-            
-            if (!selectedCountry) {
-                citySelect.innerHTML = "<option value=\"\">-- בחר קודם מדינה --</option>";
-                return;
-            }
-            
-            var filteredCities = citiesData.filter(function(city) {
-                return city.countryId === selectedCountry;
-            });
-            
-            if (filteredCities.length === 0) {
-                citySelect.innerHTML = "<option value=\"\">-- אין ערים למדינה זו --</option>";
-                return;
-            }
-            
-            filteredCities.forEach(function(city) {
-                var option = document.createElement("option");
-                option.value = city.unicId;
-                option.textContent = city.cityNameHe;
-                citySelect.appendChild(option);
-            });
-        });
-    }
-    
-    setupCityFilter();
-})();
-</script>';
+</fieldset>';
 
 // הוסף את ה-HTML המותאם אישית
 $formBuilder->addCustomHTML($addressSelectorHTML);

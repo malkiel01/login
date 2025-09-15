@@ -269,6 +269,8 @@ const FormHandler = {
                 
                 switch(level) {
                     case 'cemetery':
+                        console.log('cemetery: ', cemetery);
+                        
                         populateBlocks(cemetery);
                         populatePlots(cemetery, null);
                         clearSelectors(['row', 'area_grave', 'grave']);

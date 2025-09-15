@@ -33,7 +33,7 @@
         
         // טען בתי עלמין
         $cemeteriesStmt = $conn->prepare("
-            SELECT c.id, c.cemeteryNameHe as name,
+            SELECT c.unicId, c.cemeteryNameHe as name,
             EXISTS (
                 SELECT 1 FROM graves g
                 INNER JOIN areaGraves ag ON g.areaGraveId = ag.unicId
@@ -156,7 +156,7 @@
 
     foreach ($cemeteries as $cemetery) {
         $disabled = !$cemetery['has_available_graves'] ? 'disabled style="color: #999;"' : '';
-        $graveSelectorHTML .= '<option value="' . $cemetery['id'] . '" ' . $disabled . '>' . 
+        $graveSelectorHTML .= '<option value="' . $cemetery['unicId'] . '" ' . $disabled . '>' . 
                             htmlspecialchars($cemetery['name']) .
                             (!$cemetery['has_available_graves'] ? ' (אין קברים פנויים)' : '') . 
                             '</option>';

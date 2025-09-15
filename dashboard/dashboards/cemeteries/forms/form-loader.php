@@ -25,7 +25,7 @@ try {
     }
     
     // דיבוג - בדיקת קבצים
-    error_log("=== Form Loader Debug 1 ===");
+    error_log("=== Form Loader Debug ===");
     error_log("Type: $type");
     error_log("Current directory: " . __DIR__);
 

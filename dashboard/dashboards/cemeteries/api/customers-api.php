@@ -131,12 +131,29 @@ try {
                 throw new Exception('שם פרטי ושם משפחה הם שדות חובה');
             }
             
-            // בדיקת כפל תעודת זהות
+            // // בדיקת כפל תעודת זהות
+            // if (!empty($data['numId'])) {
+            //     $stmt = $pdo->prepare("SELECT unicId FROM customers WHERE numId = :numId AND unicId != :id AND isActive = 1");
+            //     $stmt->execute(['numId' => $data['numId']]);
+            //     if ($stmt->fetch()) {
+            //         throw new Exception('לקוח עם תעודת זהות זו כבר קיים במערכת');
+            //     }
+            // }
+
+            // בדיקת כפל תעודת זהות - רק אם השתנה
             if (!empty($data['numId'])) {
-                $stmt = $pdo->prepare("SELECT id FROM customers WHERE numId = :numId AND isActive = 1");
-                $stmt->execute(['numId' => $data['numId']]);
-                if ($stmt->fetch()) {
-                    throw new Exception('לקוח עם תעודת זהות זו כבר קיים במערכת');
+                // קודם בדוק מה היה המספר הקודם
+                $checkStmt = $pdo->prepare("SELECT numId FROM customers WHERE unicId = :id");
+                $checkStmt->execute(['id' => $id]);
+                $currentNumId = $checkStmt->fetchColumn();
+                
+                // בדוק כפילות רק אם המספר השתנה
+                if ($currentNumId != $data['numId']) {
+                    $stmt = $pdo->prepare("SELECT unicId FROM customers WHERE numId = :numId AND isActive = 1");
+                    $stmt->execute(['numId' => $data['numId']]);
+                    if ($stmt->fetch()) {
+                        throw new Exception('לקוח עם תעודת זהות זו כבר קיים במערכת');
+                    }
                 }
             }
             

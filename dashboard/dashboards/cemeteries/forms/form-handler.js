@@ -174,38 +174,6 @@ const FormHandler = {
                                     console.log('Starting to fill form with data:', data);
                                     
                                     // מלא את השדות
-                                    // Object.keys(data).forEach(key => {
-                                    //     const field = form.elements[key];
-                                    //     if (field) {
-                                    //         console.log(`Setting field ${key} to value:`, data[key]);
-                                    //         if (field.type === 'checkbox') {
-                                    //             field.checked = data[key] == 1;
-                                    //         } else if (field.type === 'select-one') {
-                                    //             field.value = data[key] || '';
-                                    //             // אם זה שדה המדינה, הפעל את פילטור הערים
-                                    //             if (key === 'countryId' && window.filterCities) {
-                                    //                 window.filterCities();
-                                    //                 // המתן לטעינת הערים ואז בחר
-                                    //                 const cityWatcher = setInterval(() => {
-                                    //                     const cityField = form.elements['cityId'];
-                                    //                     if (cityField && cityField.options.length > 1) {
-                                    //                         clearInterval(cityWatcher);
-                                    //                         if (data.cityId) {
-                                    //                             cityField.value = data.cityId;
-                                    //                         }
-                                    //                     }
-                                    //                 }, 50);
-                                    //                 // הפסק אחרי 2 שניות למקרה הביטחון
-                                    //                 setTimeout(() => clearInterval(cityWatcher), 2000);
-                                    //             }
-                                    //         } else {
-                                    //             field.value = data[key] || '';
-                                    //         }
-                                    //     } else {
-                                    //         console.log(`Field ${key} not found in form`);
-                                    //     }
-                                    // });
-
                                     Object.keys(data).forEach(key => {
                                         const field = form.elements[key];
                                         if (field) {
@@ -237,17 +205,39 @@ const FormHandler = {
                                             console.log(`Field ${key} not found in form`);
                                         }
                                     });
+
+                                    // Object.keys(data).forEach(key => {
+                                    //     const field = form.elements[key];
+                                    //     if (field) {
+                                    //         console.log(`Setting field ${key} to value:`, data[key]);
+                                    //         if (field.type === 'checkbox') {
+                                    //             field.checked = data[key] == 1;
+                                    //         } else if (field.type === 'select-one') {
+                                    //             field.value = data[key] || '';
+                                    //             // אם זה שדה המדינה, הפעל את פילטור הערים
+                                    //             if (key === 'countryId' && window.filterCities) {
+                                    //                 window.filterCities();
+                                    //                 // המתן לטעינת הערים ואז בחר
+                                    //                 const cityWatcher = setInterval(() => {
+                                    //                     const cityField = form.elements['cityId'];
+                                    //                     if (cityField && cityField.options.length > 1) {
+                                    //                         clearInterval(cityWatcher);
+                                    //                         if (data.cityId) {
+                                    //                             cityField.value = data.cityId;
+                                    //                         }
+                                    //                     }
+                                    //                 }, 50);
+                                    //                 // הפסק אחרי 2 שניות למקרה הביטחון
+                                    //                 setTimeout(() => clearInterval(cityWatcher), 2000);
+                                    //             }
+                                    //         } else {
+                                    //             field.value = data[key] || '';
+                                    //         }
+                                    //     } else {
+                                    //         console.log(`Field ${key} not found in form`);
+                                    //     }
+                                    // });
                                     
-                                    // // הוסף את זה כאן - אחרי הלולאה!
-                                    // // וודא ש-unicId נשמר כשדה מוסתר
-                                    // if (data.unicId && !form.elements['unicId']) {
-                                    //     const hiddenField = document.createElement('input');
-                                    //     hiddenField.type = 'hidden';
-                                    //     hiddenField.name = 'unicId';
-                                    //     hiddenField.value = data.unicId;
-                                    //     form.appendChild(hiddenField);
-                                    //     console.log('Added hidden unicId field:', data.unicId);
-                                    // }
                                 }
                             })
                             .catch(error => {

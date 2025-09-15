@@ -326,11 +326,21 @@ if (strpos($modalHTML, 'purchaseFormModal') === false) {
     // העבר את כל הנתונים ל-JavaScript
     window.hierarchyData = <?php echo json_encode($hierarchyData); ?>;
 
-    // אתחול מיידי
-    (function initializeForm() {
-        populateBlocks();
-        populatePlots();
-    })();
+    // // אתחול מיידי
+    // (function initializeForm() {
+    //     populateBlocks();
+    //     populatePlots();
+    // })();
+
+    // אתחול בטוח
+    document.addEventListener('DOMContentLoaded', function() {
+        // בדוק אם המודל קיים
+        const modal = document.getElementById('purchaseFormModal');
+        if (modal) {
+            populateBlocks();
+            populatePlots();
+        }
+    });
 
     // פונקציה לסינון ההיררכיה
     window.filterHierarchy = function(level) {

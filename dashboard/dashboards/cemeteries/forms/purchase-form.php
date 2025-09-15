@@ -31,25 +31,25 @@
             $customers[$row['unicId']] = $label;
         }
         
-        // // טען בתי עלמין
-        // $cemeteriesStmt = $conn->prepare("
-        //     SELECT c.id, c.name,
-        //     EXISTS (
-        //         SELECT 1 FROM graves g
-        //         INNER JOIN area_graves ag ON g.area_grave_id = ag.id
-        //         INNER JOIN rows r ON ag.row_id = r.id
-        //         INNER JOIN plots p ON r.plot_id = p.id
-        //         INNER JOIN blocks b ON p.block_id = b.id
-        //         WHERE b.cemetery_id = c.id 
-        //         AND g.grave_status = 1 
-        //         AND g.isActive = 1
-        //     ) as has_available_graves
-        //     FROM cemeteries c
-        //     WHERE c.isActive = 1
-        //     ORDER BY c.name
-        // ");
-        // $cemeteriesStmt->execute();
-        // $cemeteries = $cemeteriesStmt->fetchAll(PDO::FETCH_ASSOC);
+        // טען בתי עלמין
+        $cemeteriesStmt = $conn->prepare("
+            SELECT c.id, c.name,
+            EXISTS (
+                SELECT 1 FROM graves g
+                INNER JOIN area_graves ag ON g.area_grave_id = ag.id
+                INNER JOIN rows r ON ag.row_id = r.id
+                INNER JOIN plots p ON r.plot_id = p.id
+                INNER JOIN blocks b ON p.block_id = b.id
+                WHERE b.cemetery_id = c.id 
+                AND g.grave_status = 1 
+                AND g.isActive = 1
+            ) as has_available_graves
+            FROM cemeteries c
+            WHERE c.isActive = 1
+            ORDER BY c.name
+        ");
+        $cemeteriesStmt->execute();
+        $cemeteries = $cemeteriesStmt->fetchAll(PDO::FETCH_ASSOC);
         
         // // הכן את כל הנתונים להיררכיה
         // $hierarchyData = [];

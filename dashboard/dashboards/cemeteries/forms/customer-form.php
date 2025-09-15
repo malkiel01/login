@@ -219,6 +219,13 @@ $formBuilder->addField('comment', 'הערות', 'textarea', [
     'value' => $customer['comment'] ?? ''
 ]);
 
+// אם זה עריכה, הוסף את ה-unicId כשדה מוסתר
+if ($customer && $customer['unicId']) {
+    $formBuilder->addField('unicId', '', 'hidden', [
+        'value' => $customer['unicId']
+    ]);
+}
+
 // הצג את הטופס
 echo $formBuilder->renderModal();
 ?>

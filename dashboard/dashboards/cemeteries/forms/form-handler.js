@@ -152,67 +152,110 @@ const FormHandler = {
                 // טען נתונים אם זה טופס עריכה של לקוח
                 if (type === 'customer' && itemId) {
 
-const loadCustomerData = () => {
-    const form = document.querySelector('#customerFormModal form');
-    console.log('Checking form readiness:', form ? 'Found' : 'Not found');
-    if (!form || !form.elements || form.elements.length < 5) {
-        console.log('Form not ready yet, elements count:', form?.elements?.length);
-        return false; // הטופס עדיין לא מוכן
-    }
-    
-    // הטופס מוכן, טען נתונים
-    console.log('Fetching customer data for ID:', itemId);
-    fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?action=get&id=${itemId}`)
-        .then(response => {
-            console.log('Response status:', response.status);
-            return response.json();
-        })
-        .then(result => {
-            console.log('Customer data received:', result);
-            if (result.success && result.data) {
-                const data = result.data;
-                console.log('Starting to fill form with data:', data);
-                
-                // מלא את השדות
-                Object.keys(data).forEach(key => {
-                    const field = form.elements[key];
-                    if (field) {
-                        console.log(`Setting field ${key} to value:`, data[key]);
-                        if (field.type === 'checkbox') {
-                            field.checked = data[key] == 1;
-                        } else if (field.type === 'select-one') {
-                            field.value = data[key] || '';
-                            // אם זה שדה המדינה, הפעל את פילטור הערים
-                            if (key === 'countryId' && window.filterCities) {
-                                window.filterCities();
-                                // המתן לטעינת הערים ואז בחר
-                                const cityWatcher = setInterval(() => {
-                                    const cityField = form.elements['cityId'];
-                                    if (cityField && cityField.options.length > 1) {
-                                        clearInterval(cityWatcher);
-                                        if (data.cityId) {
-                                            cityField.value = data.cityId;
-                                        }
-                                    }
-                                }, 50);
-                                // הפסק אחרי 2 שניות למקרה הביטחון
-                                setTimeout(() => clearInterval(cityWatcher), 2000);
-                            }
-                        } else {
-                            field.value = data[key] || '';
+                    const loadCustomerData = () => {
+                        const form = document.querySelector('#customerFormModal form');
+                        console.log('Checking form readiness:', form ? 'Found' : 'Not found');
+                        if (!form || !form.elements || form.elements.length < 5) {
+                            console.log('Form not ready yet, elements count:', form?.elements?.length);
+                            return false; // הטופס עדיין לא מוכן
                         }
-                    } else {
-                        console.log(`Field ${key} not found in form`);
-                    }
-                });
-            }
-        })
-        .catch(error => {
-            console.error('Error loading customer data:', error);
-        });
-    
-    return true; // הצלחנו לטעון
-};
+                        
+                        // הטופס מוכן, טען נתונים
+                        console.log('Fetching customer data for ID:', itemId);
+                        fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?action=get&id=${itemId}`)
+                            .then(response => {
+                                console.log('Response status:', response.status);
+                                return response.json();
+                            })
+                            .then(result => {
+                                console.log('Customer data received:', result);
+                                if (result.success && result.data) {
+                                    const data = result.data;
+                                    console.log('Starting to fill form with data:', data);
+                                    
+                                    // מלא את השדות
+                                    // Object.keys(data).forEach(key => {
+                                    //     const field = form.elements[key];
+                                    //     if (field) {
+                                    //         console.log(`Setting field ${key} to value:`, data[key]);
+                                    //         if (field.type === 'checkbox') {
+                                    //             field.checked = data[key] == 1;
+                                    //         } else if (field.type === 'select-one') {
+                                    //             field.value = data[key] || '';
+                                    //             // אם זה שדה המדינה, הפעל את פילטור הערים
+                                    //             if (key === 'countryId' && window.filterCities) {
+                                    //                 window.filterCities();
+                                    //                 // המתן לטעינת הערים ואז בחר
+                                    //                 const cityWatcher = setInterval(() => {
+                                    //                     const cityField = form.elements['cityId'];
+                                    //                     if (cityField && cityField.options.length > 1) {
+                                    //                         clearInterval(cityWatcher);
+                                    //                         if (data.cityId) {
+                                    //                             cityField.value = data.cityId;
+                                    //                         }
+                                    //                     }
+                                    //                 }, 50);
+                                    //                 // הפסק אחרי 2 שניות למקרה הביטחון
+                                    //                 setTimeout(() => clearInterval(cityWatcher), 2000);
+                                    //             }
+                                    //         } else {
+                                    //             field.value = data[key] || '';
+                                    //         }
+                                    //     } else {
+                                    //         console.log(`Field ${key} not found in form`);
+                                    //     }
+                                    // });
+
+                                    Object.keys(data).forEach(key => {
+                                        const field = form.elements[key];
+                                        if (field) {
+                                            console.log(`Setting field ${key} to value:`, data[key]);
+                                            if (field.type === 'checkbox') {
+                                                field.checked = data[key] == 1;
+                                            } else if (field.type === 'select-one') {
+                                                field.value = data[key] || '';
+                                                // אם זה שדה המדינה, הפעל את פילטור הערים
+                                                if (key === 'countryId' && window.filterCities) {
+                                                    window.filterCities();
+                                                    // המתן לטעינת הערים ואז בחר
+                                                    const cityWatcher = setInterval(() => {
+                                                        const cityField = form.elements['cityId'];
+                                                        if (cityField && cityField.options.length > 1) {
+                                                            clearInterval(cityWatcher);
+                                                            if (data.cityId) {
+                                                                cityField.value = data.cityId;
+                                                            }
+                                                        }
+                                                    }, 50);
+                                                    // הפסק אחרי 2 שניות למקרה הביטחון
+                                                    setTimeout(() => clearInterval(cityWatcher), 2000);
+                                                }
+                                            } else {
+                                                field.value = data[key] || '';
+                                            }
+                                        } else {
+                                            console.log(`Field ${key} not found in form`);
+                                        }
+                                    });
+                                    
+                                    // // הוסף את זה כאן - אחרי הלולאה!
+                                    // // וודא ש-unicId נשמר כשדה מוסתר
+                                    // if (data.unicId && !form.elements['unicId']) {
+                                    //     const hiddenField = document.createElement('input');
+                                    //     hiddenField.type = 'hidden';
+                                    //     hiddenField.name = 'unicId';
+                                    //     hiddenField.value = data.unicId;
+                                    //     form.appendChild(hiddenField);
+                                    //     console.log('Added hidden unicId field:', data.unicId);
+                                    // }
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error loading customer data:', error);
+                            });
+                        
+                        return true; // הצלחנו לטעון
+                    };
                     
                     // נסה לטעון מיד
                     if (!loadCustomerData()) {

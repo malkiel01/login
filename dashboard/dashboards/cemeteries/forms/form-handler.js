@@ -455,10 +455,15 @@ const FormHandler = {
                 this.closeForm(type);
                 
                 // רענן נתונים
-                if (typeof tableRenderer !== 'undefined' && tableRenderer.loadAndDisplay) {
-                    tableRenderer.loadAndDisplay(window.currentType, window.currentParentId);
-                } else if (typeof refreshData === 'function') {
+                // if (typeof tableRenderer !== 'undefined' && tableRenderer.loadAndDisplay) {
+                //     tableRenderer.loadAndDisplay(window.currentType, window.currentParentId);
+                // } else if (typeof refreshData === 'function') {
+                //     refreshData();
+                
+                if (type === 'customer' || typeof refreshData === 'function') {
                     refreshData();
+                } else if (typeof tableRenderer !== 'undefined' && tableRenderer.loadAndDisplay) {
+                    tableRenderer.loadAndDisplay(window.currentType, window.currentParentId);
                 } else if (typeof loadAllData === 'function') {
                     loadAllData();
                 } else {

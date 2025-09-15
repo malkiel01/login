@@ -283,8 +283,11 @@ $formBuilder->addField('comments', 'הערות', 'textarea', [
     'value' => $purchase['comments'] ?? ''
 ]);
 
-// הצג את הטופס
-echo $formBuilder->renderModal();
+
+    // וודא שזה:
+    $modalId = 'purchaseFormModal'; // ללא רווחים או תווים מיוחדים
+    // הצג את הטופס
+    echo $formBuilder->renderModal($modalId);
 ?>
 
 <script>

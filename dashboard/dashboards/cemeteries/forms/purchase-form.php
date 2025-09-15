@@ -16,19 +16,21 @@
         
         // טען לקוחות פנויים
         $customersStmt = $conn->prepare("
-            SELECT id, CONCAT(last_name, ' ', first_name) as full_name, id_number 
+            SELECT unicId, CONCAT(lastName, ' ', firstName) as full_name, numId 
             FROM customers 
-            WHERE customer_status = 1 AND isActive = 1 
-            ORDER BY last_name, first_name
+            WHERE statusCustomer = 1 AND isActive = 1 
+            ORDER BY lastName, firstName
         ");
+
         $customersStmt->execute();
         $customers = [];
+
         while ($row = $customersStmt->fetch(PDO::FETCH_ASSOC)) {
             $label = $row['full_name'];
-            if ($row['id_number']) {
-                $label .= ' (' . $row['id_number'] . ')';
+            if ($row['numId']) {
+                $label .= ' (' . $row['numId'] . ')';
             }
-            $customers[$row['id']] = $label;
+            $customers[$row['unicId']] = $label; // שים לב - משתמשים ב-unicId
         }
         
         // טען בתי עלמין
@@ -122,10 +124,10 @@
     $formBuilder = new FormBuilder('purchase', $itemId, $parentId);
 
     // הוספת שדה לקוח
-    $formBuilder->addField('customer_id', 'לקוח', 'select', [
+    $formBuilder->addField('clientId', 'לקוח', 'select', [
         'required' => true,
         'options' => $customers,
-        'value' => $purchase['customer_id'] ?? ''
+        'value' => $purchase['clientId'] ?? ''
     ]);
 
     // הוספת שדה סטטוס רוכש
@@ -184,7 +186,7 @@
             </div>
             <div class="form-group">
                 <label>קבר <span class="text-danger">*</span></label>
-                <select name="grave_id" id="graveSelect" class="form-control" required disabled onchange="onGraveSelected(this.value)">
+                <select name="graveId" id="graveSelect" class="form-control" required disabled onchange="onGraveSelected(this.value)">
                     <option value="">-- בחר אחוזת קבר תחילה --</option>
                 </select>
             </div>
@@ -195,14 +197,14 @@
     $formBuilder->addCustomHTML($graveSelectorHTML);
 
     // המשך השדות
-    $formBuilder->addField('purchase_status', 'סטטוס רכישה', 'select', [
+    $formBuilder->addField('purchaseStatus', 'סטטוס רכישה', 'select', [
         'options' => [
-            1 => 'טיוטה',
-            2 => 'אושר',
-            3 => 'שולם',
+            1 => 'פתוח',
+            2 => 'שולם', 
+            3 => 'סגור',
             4 => 'בוטל'
         ],
-        'value' => $purchase['purchase_status'] ?? 1
+        'value' => $purchase['purchaseStatus'] ?? 1
     ]);
 
     // HTML מותאם אישית לניהול תשלומים חכם
@@ -269,27 +271,19 @@
 
     $formBuilder->addCustomHTML($paymentsHTML);
 
-    $formBuilder->addField('num_payments', 'מספר תשלומים', 'number', [
+    $formBuilder->addField('numOfPayments', 'מספר תשלומים', 'number', [
         'min' => 1,
-        'value' => $purchase['num_payments'] ?? 1
+        'value' => $purchase['numOfPayments'] ?? 1
     ]);
 
-    $formBuilder->addField('payment_end_date', 'תאריך סיום תשלומים', 'date', [
-        'value' => $purchase['payment_end_date'] ?? ''
+    $formBuilder->addField('PaymentEndDate', 'תאריך סיום תשלומים', 'date', [
+        'value' => $purchase['PaymentEndDate'] ?? ''
     ]);
 
-    $formBuilder->addField('comments', 'הערות', 'textarea', [
+    $formBuilder->addField('comment', 'הערות', 'textarea', [
         'rows' => 3,
-        'value' => $purchase['comments'] ?? ''
+        'value' => $purchase['comment'] ?? ''
     ]);
-
-
-    // וודא שזה:
-    $modalId = 'purchaseFormModal'; // ללא רווחים או תווים מיוחדים
-    $formBuilder->setModalId('purchaseFormModal');
-    // הצג את הטופס
-    echo $formBuilder->renderModal($modalId);
-
 
     // אם זה עריכה, הוסף את ה-unicId כשדה מוסתר
     if ($purchase && $purchase['unicId']) {

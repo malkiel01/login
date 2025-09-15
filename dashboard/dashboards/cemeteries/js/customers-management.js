@@ -193,10 +193,10 @@ function displayCustomersInTable(customers) {
                     <button class="btn btn-sm btn-info" onclick="viewCustomer(${customer.id})">
                         צפה
                     </button>
-                    <button class="btn btn-sm btn-warning" onclick="editCustomer(${customer.unicId})">
+                    <button class="btn btn-sm btn-warning" onclick="editCustomer('${customer.unicId}')">
                         ערוך
                     </button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteCustomer(${customer.unicId})">
+                    <button class="btn btn-sm btn-danger" onclick="deleteCustomer('${customer.unicId}')">
                         מחק
                     </button>
                 </div>
@@ -346,7 +346,7 @@ function showCustomerDetails(customer) {
                 </div>
             </div>
             <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
-                <button class="btn btn-warning" onclick="this.closest('.modal').remove(); editCustomer(${customer.unicId})">
+                <button class="btn btn-warning" onclick="this.closest('.modal').remove(); editCustomer('${customer.unicId}')">
                     ערוך
                 </button>
                 <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">סגור</button>

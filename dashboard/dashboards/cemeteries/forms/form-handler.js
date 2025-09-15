@@ -277,9 +277,9 @@ const FormHandler = {
                     case 'block':
                         if (block) {
                             const selectedBlock = window.hierarchyData.blocks.find(b => b.unicId == block);
-                            if (selectedBlock && selectedBlock.cemetery_id) {
-                                document.getElementById('cemeterySelect').value = selectedBlock.cemetery_id;
-                                populateBlocks(selectedBlock.cemetery_id);
+                            if (selectedBlock && selectedBlock.cemeteryId) {
+                                document.getElementById('cemeterySelect').value = selectedBlock.cemeteryId;
+                                populateBlocks(selectedBlock.cemeteryId);
                                 document.getElementById('blockSelect').value = block;
                             }
                         }
@@ -291,18 +291,18 @@ const FormHandler = {
                         if (plot) {
                             const selectedPlot = window.hierarchyData.plots.find(p => p.unicId == plot);
                             if (selectedPlot) {
-                                if (selectedPlot.block_id && document.getElementById('blockSelect').value != selectedPlot.block_id) {
-                                    document.getElementById('blockSelect').value = selectedPlot.block_id;
+                                if (selectedPlot.blockId && document.getElementById('blockSelect').value != selectedPlot.blockId) {
+                                    document.getElementById('blockSelect').value = selectedPlot.blockId;
                                     
-                                    const selectedBlock = window.hierarchyData.blocks.find(b => b.unicId == selectedPlot.block_id);
-                                    if (selectedBlock && selectedBlock.cemetery_id) {
-                                        document.getElementById('cemeterySelect').value = selectedBlock.cemetery_id;
-                                        populateBlocks(selectedBlock.cemetery_id);
-                                        document.getElementById('blockSelect').value = selectedPlot.block_id;
+                                    const selectedBlock = window.hierarchyData.blocks.find(b => b.unicId == selectedPlot.blockId);
+                                    if (selectedBlock && selectedBlock.cemeteryId) {
+                                        document.getElementById('cemeterySelect').value = selectedBlock.cemeteryId;
+                                        populateBlocks(selectedBlock.cemeteryId);
+                                        document.getElementById('blockSelect').value = selectedPlot.blockId;
                                     }
                                 }
                                 
-                                populatePlots(null, selectedPlot.block_id);
+                                populatePlots(null, selectedPlot.blockId);
                                 document.getElementById('plotSelect').value = plot;
                             }
                             
@@ -344,7 +344,7 @@ const FormHandler = {
                 blockSelect.innerHTML = '<option value="">-- כל הגושים --</option>';
                 
                 const blocks = cemeteryId 
-                    ? window.hierarchyData.blocks.filter(b => b.cemetery_id == cemeteryId)
+                    ? window.hierarchyData.blocks.filter(b => b.cemeteryId == cemeteryId)
                     : window.hierarchyData.blocks;
                 
                 blocks.forEach(block => {
@@ -373,9 +373,9 @@ const FormHandler = {
                 let plots = window.hierarchyData.plots;
                 
                 if (blockId) {
-                    plots = plots.filter(p => p.block_id == blockId);
+                    plots = plots.filter(p => p.blockId == blockId);
                 } else if (cemeteryId) {
-                    plots = plots.filter(p => p.cemetery_id == cemeteryId);
+                    plots = plots.filter(p => p.cemeteryId == cemeteryId);
                 }
                 
                 plots.forEach(plot => {
@@ -395,7 +395,7 @@ const FormHandler = {
 
             // בדיקת קברים פנויים בגוש
             window.checkBlockHasGraves = function(blockId) {
-                const blockPlots = window.hierarchyData.plots.filter(p => p.block_id == blockId);
+                const blockPlots = window.hierarchyData.plots.filter(p => p.blockId == blockId);
                 
                 for (let plot of blockPlots) {
                     if (checkPlotHasGraves(plot.unicId)) {
@@ -407,13 +407,13 @@ const FormHandler = {
 
             // בדיקת קברים פנויים בחלקה
             window.checkPlotHasGraves = function(plotId) {
-                const plotRows = window.hierarchyData.rows.filter(r => r.plot_id == plotId);
+                const plotRows = window.hierarchyData.rows.filter(r => r.plotId == plotId);
                 
                 for (let row of plotRows) {
-                    const rowAreaGraves = window.hierarchyData.areaGraves.filter(ag => ag.row_id == row.unicId);
+                    const rowAreaGraves = window.hierarchyData.areaGraves.filter(ag => ag.lineId == row.unicId);
                     
                     for (let areaGrave of rowAreaGraves) {
-                        const graves = window.hierarchyData.graves.filter(g => g.area_grave_id == areaGrave.unicId);
+                        const graves = window.hierarchyData.graves.filter(g => g.areaGraveId == areaGrave.unicId);
                         if (graves.length > 0) {
                             return true;
                         }
@@ -429,7 +429,7 @@ const FormHandler = {
                 
                 rowSelect.innerHTML = '<option value="">-- בחר שורה --</option>';
                 
-                const rows = window.hierarchyData.rows.filter(r => r.plot_id == plotId);
+                const rows = window.hierarchyData.rows.filter(r => r.plotId == plotId);
                 
                 rows.forEach(row => {
                     const hasAvailableGraves = checkRowHasGraves(row.unicId);
@@ -449,10 +449,10 @@ const FormHandler = {
 
             // בדיקת קברים פנויים בשורה
             window.checkRowHasGraves = function(rowId) {
-                const rowAreaGraves = window.hierarchyData.areaGraves.filter(ag => ag.row_id == rowId);
+                const rowAreaGraves = window.hierarchyData.areaGraves.filter(ag => ag.lineId == rowId);
                 
                 for (let areaGrave of rowAreaGraves) {
-                    const graves = window.hierarchyData.graves.filter(g => g.area_grave_id == areaGrave.unicId);
+                    const graves = window.hierarchyData.graves.filter(g => g.areaGraveId == areaGrave.unicId);
                     if (graves.length > 0) {
                         return true;
                     }
@@ -467,10 +467,10 @@ const FormHandler = {
                 
                 areaGraveSelect.innerHTML = '<option value="">-- בחר אחוזת קבר --</option>';
                 
-                const areaGraves = window.hierarchyData.areaGraves.filter(ag => ag.row_id == rowId);
+                const areaGraves = window.hierarchyData.areaGraves.filter(ag => ag.lineId == rowId);
                 
                 areaGraves.forEach(areaGrave => {
-                    const availableGraves = window.hierarchyData.graves.filter(g => g.area_grave_id == areaGrave.unicId);
+                    const availableGraves = window.hierarchyData.graves.filter(g => g.areaGraveId == areaGrave.unicId);
                     
                     if (availableGraves.length > 0) {
                         const option = document.createElement('option');
@@ -492,7 +492,7 @@ const FormHandler = {
                 
                 graveSelect.innerHTML = '<option value="">-- בחר קבר --</option>';
                 
-                const graves = window.hierarchyData.graves.filter(g => g.area_grave_id == areaGraveId);
+                const graves = window.hierarchyData.graves.filter(g => g.areaGraveId == areaGraveId);
                 
                 graves.forEach(grave => {
                     const option = document.createElement('option');
@@ -1389,9 +1389,9 @@ const FormHandler = {
                     case 'block':
                         if (block) {
                             const selectedBlock = window.hierarchyData.blocks.find(b => b.unicId == block);
-                            if (selectedBlock && selectedBlock.cemetery_id) {
-                                document.getElementById('cemeterySelect').value = selectedBlock.cemetery_id;
-                                populateBlocks(selectedBlock.cemetery_id);
+                            if (selectedBlock && selectedBlock.cemeteryId) {
+                                document.getElementById('cemeterySelect').value = selectedBlock.cemeteryId;
+                                populateBlocks(selectedBlock.cemeteryId);
                                 document.getElementById('blockSelect').value = block;
                             }
                         }
@@ -1403,18 +1403,18 @@ const FormHandler = {
                         if (plot) {
                             const selectedPlot = window.hierarchyData.plots.find(p => p.unicId == plot);
                             if (selectedPlot) {
-                                if (selectedPlot.block_id && document.getElementById('blockSelect').value != selectedPlot.block_id) {
-                                    document.getElementById('blockSelect').value = selectedPlot.block_id;
+                                if (selectedPlot.blockId && document.getElementById('blockSelect').value != selectedPlot.blockId) {
+                                    document.getElementById('blockSelect').value = selectedPlot.blockId;
                                     
-                                    const selectedBlock = window.hierarchyData.blocks.find(b => b.unicId == selectedPlot.block_id);
-                                    if (selectedBlock && selectedBlock.cemetery_id) {
-                                        document.getElementById('cemeterySelect').value = selectedBlock.cemetery_id;
-                                        populateBlocks(selectedBlock.cemetery_id);
-                                        document.getElementById('blockSelect').value = selectedPlot.block_id;
+                                    const selectedBlock = window.hierarchyData.blocks.find(b => b.unicId == selectedPlot.blockId);
+                                    if (selectedBlock && selectedBlock.cemeteryId) {
+                                        document.getElementById('cemeterySelect').value = selectedBlock.cemeteryId;
+                                        populateBlocks(selectedBlock.cemeteryId);
+                                        document.getElementById('blockSelect').value = selectedPlot.blockId;
                                     }
                                 }
                                 
-                                populatePlots(null, selectedPlot.block_id);
+                                populatePlots(null, selectedPlot.blockId);
                                 document.getElementById('plotSelect').value = plot;
                             }
                             
@@ -1461,7 +1461,7 @@ const FormHandler = {
                 blockSelect.innerHTML = '<option value="">-- כל הגושים --</option>';
                 
                 const blocks = cemeteryId 
-                    ? window.hierarchyData.blocks.filter(b => b.cemetery_id == cemeteryId)
+                    ? window.hierarchyData.blocks.filter(b => b.cemeteryId == cemeteryId)
                     : window.hierarchyData.blocks;
 
                 console.log('blocks: ', blocks);
@@ -1493,9 +1493,9 @@ const FormHandler = {
                 let plots = window.hierarchyData.plots;
                 
                 if (blockId) {
-                    plots = plots.filter(p => p.block_id == blockId);
+                    plots = plots.filter(p => p.blockId == blockId);
                 } else if (cemeteryId) {
-                    plots = plots.filter(p => p.cemetery_id == cemeteryId);
+                    plots = plots.filter(p => p.cemeteryId == cemeteryId);
                 }
                 
                 plots.forEach(plot => {
@@ -1518,7 +1518,7 @@ const FormHandler = {
                 const blockPlots = window.hierarchyData.plots.filter(p => p.blockId == blockId);
                 
                 console.log('plots original: ',window.hierarchyData.plots);
-                console.log('filter: ',window.hierarchyData.plots[0].block_id, blockId);
+                console.log('filter: ',window.hierarchyData.plots[0].blockId, blockId);
                 console.log('plots: ', blockPlots);
                 
                 
@@ -1533,13 +1533,13 @@ const FormHandler = {
 
             // בדיקת קברים פנויים בחלקה
             window.checkPlotHasGraves = function(plotId) {
-                const plotRows = window.hierarchyData.rows.filter(r => r.plot_id == plotId);
+                const plotRows = window.hierarchyData.rows.filter(r => r.plotId == plotId);
                 
                 for (let row of plotRows) {
-                    const rowAreaGraves = window.hierarchyData.areaGraves.filter(ag => ag.row_id == row.unicId);
+                    const rowAreaGraves = window.hierarchyData.areaGraves.filter(ag => ag.lineId == row.unicId);
                     
                     for (let areaGrave of rowAreaGraves) {
-                        const graves = window.hierarchyData.graves.filter(g => g.area_grave_id == areaGrave.unicId);
+                        const graves = window.hierarchyData.graves.filter(g => g.areaGraveId == areaGrave.unicId);
                         if (graves.length > 0) {
                             return true;
                         }
@@ -1555,7 +1555,7 @@ const FormHandler = {
                 
                 rowSelect.innerHTML = '<option value="">-- בחר שורה --</option>';
                 
-                const rows = window.hierarchyData.rows.filter(r => r.plot_id == plotId);
+                const rows = window.hierarchyData.rows.filter(r => r.plotId == plotId);
                 
                 rows.forEach(row => {
                     const hasAvailableGraves = checkRowHasGraves(row.unicId);
@@ -1575,10 +1575,10 @@ const FormHandler = {
 
             // בדיקת קברים פנויים בשורה
             window.checkRowHasGraves = function(rowId) {
-                const rowAreaGraves = window.hierarchyData.areaGraves.filter(ag => ag.row_id == rowId);
+                const rowAreaGraves = window.hierarchyData.areaGraves.filter(ag => ag.lineId == rowId);
                 
                 for (let areaGrave of rowAreaGraves) {
-                    const graves = window.hierarchyData.graves.filter(g => g.area_grave_id == areaGrave.unicId);
+                    const graves = window.hierarchyData.graves.filter(g => g.areaGraveId == areaGrave.unicId);
                     if (graves.length > 0) {
                         return true;
                     }
@@ -1593,10 +1593,10 @@ const FormHandler = {
                 
                 areaGraveSelect.innerHTML = '<option value="">-- בחר אחוזת קבר --</option>';
                 
-                const areaGraves = window.hierarchyData.areaGraves.filter(ag => ag.row_id == rowId);
+                const areaGraves = window.hierarchyData.areaGraves.filter(ag => ag.lineId == rowId);
                 
                 areaGraves.forEach(areaGrave => {
-                    const availableGraves = window.hierarchyData.graves.filter(g => g.area_grave_id == areaGrave.unicId);
+                    const availableGraves = window.hierarchyData.graves.filter(g => g.areaGraveId == areaGrave.unicId);
                     
                     if (availableGraves.length > 0) {
                         const option = document.createElement('option');
@@ -1618,7 +1618,7 @@ const FormHandler = {
                 
                 graveSelect.innerHTML = '<option value="">-- בחר קבר --</option>';
                 
-                const graves = window.hierarchyData.graves.filter(g => g.area_grave_id == areaGraveId);
+                const graves = window.hierarchyData.graves.filter(g => g.areaGraveId == areaGraveId);
                 
                 graves.forEach(grave => {
                     const option = document.createElement('option');

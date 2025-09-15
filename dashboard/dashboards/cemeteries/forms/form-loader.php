@@ -16,36 +16,6 @@ try {
     $parent_id = $_GET['parent_id'] ?? null;
     $item_id = $_GET['item_id'] ?? null;
     
-
-    // die("TEST - הגענו לכאן");
-
-    // בדיקת סוג
-    if (!$type) {
-        throw new Exception('Type is required');
-    }
-    
-    // דיבוג - בדיקת קבצים
-    error_log("=== Form Loader Debug ===");
-    error_log("Type: $type");
-    error_log("Current directory: " . __DIR__);
-
-    // דיבוג
-    error_log("form-loader.php called with type: $type, itemId: $item_id, parentId: $parent_id");
-
-    $formFile = __DIR__ . '/' . $type . '-form.php';
-
-    // דיבוג
-    error_log("Looking for file: $formFile");
-    error_log("File exists: " . (file_exists($formFile) ? 'YES' : 'NO'));
-
-    if (!file_exists($formFile)) {
-        die("Form file not found: $formFile");
-    }
-
-    // כלול את הקובץ
-    include $formFile;
-
-    
     // בדוק אם יש טופס מותאם אישית
     $customFormFile = __DIR__ . "/{$type}-form.php";
     if (file_exists($customFormFile)) {

@@ -5,81 +5,19 @@
     ini_set('display_errors', 1);
     header('Content-Type: text/html; charset=utf-8');
 
-    error_log("purchase-form.php: START");
-    die("TEST ERROR");
+    error_log("purchase-form.php loaded!");
 
-
-    // בדיקה 1: האם אנחנו יכולים לטעון את הקבצים הנדרשים?
-    $formBuilderPath = __DIR__ . '/FormBuilder.php';
-    $configPath = $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
-
-    // require_once __DIR__ . '/FormBuilder.php';
-    // require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
-
-    error_log("FormBuilder path: " . $formBuilderPath . " - Exists: " . (file_exists($formBuilderPath) ? 'YES' : 'NO'));
-    error_log("Config path: " . $configPath . " - Exists: " . (file_exists($configPath) ? 'YES' : 'NO'));
-
-
-    if (!file_exists($formBuilderPath)) {
-        die("ERROR: FormBuilder.php not found at: " . $formBuilderPath);
-    }
-
-    if (!file_exists($configPath)) {
-        die("ERROR: config.php not found at: " . $configPath);
-    }
-
-    require_once $formBuilderPath;
-    require_once $configPath;
-
-    error_log("purchase-form.php: Files loaded successfully");
-
-    // בדיקה 2: האם יש פרמטרים?
-    $itemId = $_GET['item_id'] ?? null;
-    $parentId = $_GET['parent_id'] ?? null;
-
-    error_log("purchase-form.php: itemId = " . ($itemId ?? 'NULL'));
-    error_log("purchase-form.php: parentId = " . ($parentId ?? 'NULL'));
-
-    // בדיקה 3: האם אנחנו יכולים להתחבר למסד הנתונים?
-    try {
-        $conn = getDBConnection();
-        error_log("purchase-form.php: Database connection successful");
-    } catch (Exception $e) {
-        error_log("purchase-form.php: Database connection FAILED: " . $e->getMessage());
-        die("ERROR: Database connection failed: " . $e->getMessage());
-    }
-
-    // בדיקה 4: האם FormBuilder נטען כמו שצריך?
-    if (!class_exists('FormBuilder')) {
-        error_log("purchase-form.php: FormBuilder class NOT found");
-        die("ERROR: FormBuilder class not found");
-    }
-
-    error_log("purchase-form.php: Creating FormBuilder instance");
-    $formBuilder = new FormBuilder('purchase', $itemId, $parentId);
-
-    // בדיקה 5: נסה ליצור טופס פשוט
-    $formBuilder->addField('test', 'Test Field', 'text', ['value' => 'test value']);
-
-    error_log("purchase-form.php: Calling renderModal()");
-    $modalHTML = $formBuilder->renderModal();
-
-    error_log("purchase-form.php: Modal HTML length: " . strlen($modalHTML));
-
-    if (strlen($modalHTML) == 0) {
-        die("ERROR: renderModal() returned empty string");
-    }
-
-    // הדפס רק את הטופס הבסיסי לבדיקה
-    echo '<div id="purchaseFormModal" class="modal fade" tabindex="-1">';
-    echo '<div class="modal-dialog"><div class="modal-content">';
-    echo '<div class="modal-header"><h5>Test Form</h5></div>';
-    echo '<div class="modal-body">If you see this, the basic structure works!</div>';
-    echo '</div></div></div>';
-
-    error_log("purchase-form.php: END - Basic test form sent");
+    error_log("BEFORE DIE");
+    ob_end_clean(); // נקה את ה-buffer
+    echo "TEST - purchase form loaded successfully";
+    error_log("AFTER ECHO");
     exit;
 
+    require_once __DIR__ . '/FormBuilder.php';
+    require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
+
+    $itemId = $_GET['item_id'] ?? null;
+    $parentId = $_GET['parent_id'] ?? null;
 
     try {
         $conn = getDBConnection();

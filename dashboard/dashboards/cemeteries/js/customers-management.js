@@ -348,14 +348,14 @@ function showCustomerDetails(customer) {
             <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
                         ${JSON.stringify(customer)}
             </div>
-            <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
-                <button class="btn btn-warning" onclick="this.closest('.modal').remove(); editCustomer('${customer.unicId}')">
-                    ערוך
-                </button>
-                <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">סגור</button>
             </div>
-        </div>
-    `;
+            `;
+            // <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+            //     <button class="btn btn-warning" onclick="this.closest('.modal').remove(); editCustomer('${customer.unicId}')">
+            //         ערוך
+            //     </button>
+            //     <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">סגור</button>
+            // </div>
     
     document.body.appendChild(modal);
 }

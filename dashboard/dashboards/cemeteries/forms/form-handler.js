@@ -1378,6 +1378,10 @@ const FormHandler = {
                 const plot = document.getElementById('plotSelect').value;
                 const row = document.getElementById('rowSelect').value;
                 const areaGrave = document.getElementById('areaGraveSelect').value;
+
+                console.log('level: ',level);
+                console.log('cemetery: ',cemetery);
+                
                 
                 switch(level) {
                     case 'cemetery':

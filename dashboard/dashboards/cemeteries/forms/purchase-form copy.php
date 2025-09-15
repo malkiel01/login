@@ -820,66 +820,6 @@ if (strpos($modalHTML, 'purchaseFormModal') === false) {
         document.body.appendChild(modal);
     }
 
-    // עדכון הסכום הכולל במודל החכם
-    window.updateSmartTotal2 = function() {
-        let total = 0;
-        let optionalCount = 0;
-        
-        // סכום תשלומי חובה
-        const modal = document.getElementById('smartPaymentsModal');
-        const mandatoryCheckboxes = modal.querySelectorAll('input[type="checkbox"]:disabled:checked');
-        mandatoryCheckboxes.forEach(cb => {
-            const row = cb.closest('div');
-            const priceText = row.querySelector('span:last-child').textContent;
-            const price = parseFloat(priceText.replace('₪', '').replace(',', ''));
-            total += price;
-        });
-        
-        // סכום תשלומים אופציונליים שנבחרו
-        const optionalCheckboxes = modal.querySelectorAll('input[type="checkbox"]:not(:disabled):checked');
-        optionalCheckboxes.forEach(cb => {
-            total += parseFloat(cb.dataset.price);
-            optionalCount++;
-        });
-        
-        document.getElementById('smartModalTotal').textContent = total.toLocaleString();
-        
-        const optionalText = optionalCount > 0 ? ` + ${optionalCount} תשלומים נוספים` : '';
-        document.getElementById('optionalCount').textContent = optionalText;
-    }
-    // עדכון הסכום הכולל במודל החכם
-    window.updateSmartTotal3 = function() {
-        let total = 0;
-        let optionalCount = 0;
-        
-        // סכום תשלומי חובה
-        const modal = document.getElementById('smartPaymentsModal');
-        const mandatoryCheckboxes = modal.querySelectorAll('input[type="checkbox"]:disabled:checked');
-        mandatoryCheckboxes.forEach(cb => {
-            const row = cb.closest('div');
-            const priceText = row.querySelector('span:last-child').textContent;
-            // תיקון: הסר את סמל המטבע ופסיקים לפני המרה למספר
-            const price = parseFloat(priceText.replace('₪', '').replace(/,/g, ''));
-            if (!isNaN(price)) {
-                total += price;
-            }
-        });
-        
-        // סכום תשלומים אופציונליים שנבחרו
-        const optionalCheckboxes = modal.querySelectorAll('input[type="checkbox"]:not(:disabled):checked');
-        optionalCheckboxes.forEach(cb => {
-            const price = parseFloat(cb.dataset.price);
-            if (!isNaN(price)) {
-                total += price;
-                optionalCount++;
-            }
-        });
-        
-        document.getElementById('smartModalTotal').textContent = total.toLocaleString();
-        
-        const optionalText = optionalCount > 0 ? ` + ${optionalCount} תשלומים נוספים` : '';
-        document.getElementById('optionalCount').textContent = optionalText;
-    }
     // עדכון הסכום הכולל במודל החכם - גרסה מתוקנת
     window.updateSmartTotal = function() {
         let total = 0;

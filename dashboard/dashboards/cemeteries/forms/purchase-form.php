@@ -11,7 +11,6 @@
     $itemId = $_GET['item_id'] ?? null;
     $parentId = $_GET['parent_id'] ?? null;
 
-
     try {
         $conn = getDBConnection();
         
@@ -31,7 +30,7 @@
             if ($row['numId']) {
                 $label .= ' (' . $row['numId'] . ')';
             }
-            $customers[$row['unicId']] = $label; // שים לב - משתמשים ב-unicId
+            $customers[$row['unicId']] = $label;
         }
         
         // טען בתי עלמין
@@ -293,50 +292,27 @@
         ]);
     }
 
-//     // הצג את הטופס
-//     echo $formBuilder->renderModal();
+    // הצג את הטופס
+    $modalHTML = $formBuilder->renderModal();
 
-
-// // דיבוג - בדוק מה מוחזר
-// if (strpos($modalHTML, 'purchaseFormModal') === false) {
-//     // אם אין את ה-ID הנכון, עטוף ידנית
-//     echo '<div id="purchaseFormModal" class="modal fade" tabindex="-1">';
-//     echo $modalHTML;
-//     echo '</div>';
-// } else {
-//     echo $modalHTML;
-// }
-
-// הצג את הטופס
-$modalHTML = $formBuilder->renderModal();
-
-// דיבוג - בדוק מה מוחזר
-if (strpos($modalHTML, 'purchaseFormModal') === false) {
-    // אם אין את ה-ID הנכון, עטוף ידנית
-    echo '<div id="purchaseFormModal" class="modal fade" tabindex="-1">';
-    echo $modalHTML;
-    echo '</div>';
-} else {
-    echo $modalHTML;
-}
-
+    // דיבוג - בדוק מה מוחזר
+    if (strpos($modalHTML, 'purchaseFormModal') === false) {
+        // אם אין את ה-ID הנכון, עטוף ידנית
+        echo '<div id="purchaseFormModal" class="modal fade" tabindex="-1">';
+        echo $modalHTML;
+        echo '</div>';
+    } else {
+        echo $modalHTML;
+    }
 ?>
 
 <script>
     // העבר את כל הנתונים ל-JavaScript
     window.hierarchyData = <?php echo json_encode($hierarchyData); ?>;
 
-    // // אתחול מיידי
-    // (function initializeForm() {
-    //     populateBlocks();
-    //     populatePlots();
-    // })();
-
-    // אתחול בטוח
-    document.addEventListener('DOMContentLoaded', function() {
-        // בדוק אם המודל קיים
-        const modal = document.getElementById('purchaseFormModal');
-        if (modal) {
+    // האזן לאירוע מותאם אישית שישלח מ-form-handler.js
+    document.addEventListener('purchaseModalReady', function() {
+        if (typeof populateBlocks === 'function' && typeof populatePlots === 'function') {
             populateBlocks();
             populatePlots();
         }
@@ -422,6 +398,8 @@ if (strpos($modalHTML, 'purchaseFormModal') === false) {
     // מילוי גושים
     function populateBlocks(cemeteryId = null) {
         const blockSelect = document.getElementById('blockSelect');
+        if (!blockSelect) return;
+        
         blockSelect.innerHTML = '<option value="">-- כל הגושים --</option>';
         
         const blocks = cemeteryId 
@@ -446,6 +424,8 @@ if (strpos($modalHTML, 'purchaseFormModal') === false) {
     // מילוי חלקות
     function populatePlots(cemeteryId = null, blockId = null) {
         const plotSelect = document.getElementById('plotSelect');
+        if (!plotSelect) return;
+        
         plotSelect.innerHTML = '<option value="">-- כל החלקות --</option>';
         
         let plots = window.hierarchyData.plots;
@@ -503,6 +483,8 @@ if (strpos($modalHTML, 'purchaseFormModal') === false) {
     // מילוי שורות
     function populateRows(plotId) {
         const rowSelect = document.getElementById('rowSelect');
+        if (!rowSelect) return;
+        
         rowSelect.innerHTML = '<option value="">-- בחר שורה --</option>';
         
         const rows = window.hierarchyData.rows.filter(r => r.plot_id == plotId);
@@ -539,6 +521,8 @@ if (strpos($modalHTML, 'purchaseFormModal') === false) {
     // מילוי אחוזות קבר
     function populateAreaGraves(rowId) {
         const areaGraveSelect = document.getElementById('areaGraveSelect');
+        if (!areaGraveSelect) return;
+        
         areaGraveSelect.innerHTML = '<option value="">-- בחר אחוזת קבר --</option>';
         
         const areaGraves = window.hierarchyData.areaGraves.filter(ag => ag.row_id == rowId);
@@ -562,6 +546,8 @@ if (strpos($modalHTML, 'purchaseFormModal') === false) {
     // מילוי קברים
     function populateGraves(areaGraveId) {
         const graveSelect = document.getElementById('graveSelect');
+        if (!graveSelect) return;
+        
         graveSelect.innerHTML = '<option value="">-- בחר קבר --</option>';
         
         const graves = window.hierarchyData.graves.filter(g => g.area_grave_id == areaGraveId);
@@ -612,7 +598,10 @@ if (strpos($modalHTML, 'purchaseFormModal') === false) {
             }
         } else {
             window.selectedGraveData = null;
-            document.getElementById('selectedParameters').style.display = 'none';
+            const paramsElement = document.getElementById('selectedParameters');
+            if (paramsElement) {
+                paramsElement.style.display = 'none';
+            }
         }
     }
 
@@ -622,13 +611,24 @@ if (strpos($modalHTML, 'purchaseFormModal') === false) {
             const plotTypes = {1: 'פטורה', 2: 'חריגה', 3: 'סגורה'};
             const graveTypes = {1: 'שדה', 2: 'רוויה', 3: 'סנהדרין'};
             
-            document.getElementById('parametersDisplay').innerHTML = `
-                <span style="margin-right: 10px;">📍 חלקה: ${plotTypes[window.selectedGraveData.plotType] || 'לא ידוע'}</span>
-                <span style="margin-right: 10px;">⚰️ סוג קבר: ${graveTypes[window.selectedGraveData.graveType] || 'לא ידוע'}</span>
-                <span>👤 תושב: ירושלים</span>
-            `;
-            document.getElementById('selectedParameters').style.display = 'block';
-            document.getElementById('paymentsButtonText').textContent = 'חשב מחדש תשלומים';
+            const displayElement = document.getElementById('parametersDisplay');
+            if (displayElement) {
+                displayElement.innerHTML = `
+                    <span style="margin-right: 10px;">📍 חלקה: ${plotTypes[window.selectedGraveData.plotType] || 'לא ידוע'}</span>
+                    <span style="margin-right: 10px;">⚰️ סוג קבר: ${graveTypes[window.selectedGraveData.graveType] || 'לא ידוע'}</span>
+                    <span>👤 תושב: ירושלים</span>
+                `;
+            }
+            
+            const paramsElement = document.getElementById('selectedParameters');
+            if (paramsElement) {
+                paramsElement.style.display = 'block';
+            }
+            
+            const buttonText = document.getElementById('paymentsButtonText');
+            if (buttonText) {
+                buttonText.textContent = 'חשב מחדש תשלומים';
+            }
         }
     }
 
@@ -674,6 +674,7 @@ if (strpos($modalHTML, 'purchaseFormModal') === false) {
         }
     };
 
+    
     function showSmartPaymentsModal(availablePayments) {
         // חלק את התשלומים לחובה ואופציונלי
         const mandatoryPayments = availablePayments.filter(p => p.mandatory);
@@ -823,66 +824,6 @@ if (strpos($modalHTML, 'purchaseFormModal') === false) {
         document.body.appendChild(modal);
     }
 
-    // עדכון הסכום הכולל במודל החכם
-    window.updateSmartTotal2 = function() {
-        let total = 0;
-        let optionalCount = 0;
-        
-        // סכום תשלומי חובה
-        const modal = document.getElementById('smartPaymentsModal');
-        const mandatoryCheckboxes = modal.querySelectorAll('input[type="checkbox"]:disabled:checked');
-        mandatoryCheckboxes.forEach(cb => {
-            const row = cb.closest('div');
-            const priceText = row.querySelector('span:last-child').textContent;
-            const price = parseFloat(priceText.replace('₪', '').replace(',', ''));
-            total += price;
-        });
-        
-        // סכום תשלומים אופציונליים שנבחרו
-        const optionalCheckboxes = modal.querySelectorAll('input[type="checkbox"]:not(:disabled):checked');
-        optionalCheckboxes.forEach(cb => {
-            total += parseFloat(cb.dataset.price);
-            optionalCount++;
-        });
-        
-        document.getElementById('smartModalTotal').textContent = total.toLocaleString();
-        
-        const optionalText = optionalCount > 0 ? ` + ${optionalCount} תשלומים נוספים` : '';
-        document.getElementById('optionalCount').textContent = optionalText;
-    }
-    // עדכון הסכום הכולל במודל החכם
-    window.updateSmartTotal3 = function() {
-        let total = 0;
-        let optionalCount = 0;
-        
-        // סכום תשלומי חובה
-        const modal = document.getElementById('smartPaymentsModal');
-        const mandatoryCheckboxes = modal.querySelectorAll('input[type="checkbox"]:disabled:checked');
-        mandatoryCheckboxes.forEach(cb => {
-            const row = cb.closest('div');
-            const priceText = row.querySelector('span:last-child').textContent;
-            // תיקון: הסר את סמל המטבע ופסיקים לפני המרה למספר
-            const price = parseFloat(priceText.replace('₪', '').replace(/,/g, ''));
-            if (!isNaN(price)) {
-                total += price;
-            }
-        });
-        
-        // סכום תשלומים אופציונליים שנבחרו
-        const optionalCheckboxes = modal.querySelectorAll('input[type="checkbox"]:not(:disabled):checked');
-        optionalCheckboxes.forEach(cb => {
-            const price = parseFloat(cb.dataset.price);
-            if (!isNaN(price)) {
-                total += price;
-                optionalCount++;
-            }
-        });
-        
-        document.getElementById('smartModalTotal').textContent = total.toLocaleString();
-        
-        const optionalText = optionalCount > 0 ? ` + ${optionalCount} תשלומים נוספים` : '';
-        document.getElementById('optionalCount').textContent = optionalText;
-    }
     // עדכון הסכום הכולל במודל החכם - גרסה מתוקנת
     window.updateSmartTotal = function() {
         let total = 0;

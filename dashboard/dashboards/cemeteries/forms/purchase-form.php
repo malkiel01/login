@@ -251,8 +251,8 @@
     //     </div>
     // </fieldset>';
 
-    // // הוסף את ה-HTML המותאם אישית
-    // $formBuilder->addCustomHTML($graveSelectorHTML);
+    // הוסף את ה-HTML המותאם אישית
+    $formBuilder->addCustomHTML($graveSelectorHTML);
 
     // המשך השדות
     $formBuilder->addField('purchaseStatus', 'סטטוס רכישה', 'select', [

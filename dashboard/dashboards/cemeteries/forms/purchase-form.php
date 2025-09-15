@@ -295,6 +295,17 @@
     // הצג את הטופס
     echo $formBuilder->renderModal();
 
+
+// דיבוג - בדוק מה מוחזר
+if (strpos($modalHTML, 'purchaseFormModal') === false) {
+    // אם אין את ה-ID הנכון, עטוף ידנית
+    echo '<div id="purchaseFormModal" class="modal fade" tabindex="-1">';
+    echo $modalHTML;
+    echo '</div>';
+} else {
+    echo $modalHTML;
+}
+
 ?>
 
 <script>

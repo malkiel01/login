@@ -17,7 +17,7 @@ try {
     $item_id = $_GET['item_id'] ?? null;
     
 
-    die("TEST - purchase form loaded successfully");
+    die("TEST - הגענו לכאן");
 
     // בדיקת סוג
     if (!$type) {

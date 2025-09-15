@@ -155,7 +155,7 @@
 
     foreach ($cemeteries as $cemetery) {
         $disabled = !$cemetery['has_available_graves'] ? 'disabled style="color: #999;"' : '';
-        $graveSelectorHTML .= '<option value="' . $cemetery['id'] . '" ' . $disabled . '>' . 
+        $graveSelectorHTML .= '<option value="' . $cemetery['unicId'] . '" ' . $disabled . '>' . 
                             htmlspecialchars($cemetery['name']) . 
                             (!$cemetery['has_available_graves'] ? ' (אין קברים פנויים)' : '') . 
                             '</option>';

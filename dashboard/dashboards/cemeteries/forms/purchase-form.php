@@ -294,4 +294,10 @@
 
     // הצג את הטופס
     echo $formBuilder->renderModal();
+
+    // דיבוג - בדוק מה בדיוק מוחזר
+    error_log("Modal HTML first 500 chars: " . substr($modalHTML, 0, 500));
+    error_log("Looking for purchaseFormModal: " . (strpos($modalHTML, 'purchaseFormModal') !== false ? 'FOUND' : 'NOT FOUND'));
+
+    echo $modalHTML;
 ?>

@@ -13,32 +13,15 @@
 
     try {
         $conn = getDBConnection();
-    
-// טען לקוחות פנויים
-$customersStmt = $conn->prepare("
-    SELECT unicId, CONCAT(lastName, ' ', firstName) as full_name, numId 
-    FROM customers 
-    WHERE statusCustomer = 1 AND isActive = 1 
-    ORDER BY lastName, firstName
-");
-$customersStmt->execute();
-$customers = [];
-while ($row = $customersStmt->fetch(PDO::FETCH_ASSOC)) {
-    $label = $row['full_name'];
-    if ($row['numId']) {
-        $label .= ' (' . $row['numId'] . ')';
-    }
-    $customers[$row['unicId']] = $label;
-}
-
-// ערך ריק זמני לבתי עלמין
-$cemeteries = []; 
-$hierarchyData = [];
-
-// דיבוג
-error_log("Cemeteries data: " . json_encode($cemeteries));
-error_log("First cemetery: " . json_encode($cemeteries[0] ?? 'NO DATA'));
-
+        
+        // טען לקוחות פנויים
+        $customersStmt = $conn->prepare("
+            SELECT unicId, CONCAT(lastName, ' ', firstName) as full_name, numId 
+            FROM customers 
+            WHERE statusCustomer = 1 AND isActive = 1 
+            ORDER BY lastName, firstName
+        ");
+        $customersStmt->execute();
         $customers = [];
         while ($row = $customersStmt->fetch(PDO::FETCH_ASSOC)) {
             $label = $row['full_name'];
@@ -48,25 +31,25 @@ error_log("First cemetery: " . json_encode($cemeteries[0] ?? 'NO DATA'));
             $customers[$row['unicId']] = $label;
         }
         
-        // טען בתי עלמין
-        $cemeteriesStmt = $conn->prepare("
-            SELECT c.id, c.name,
-            EXISTS (
-                SELECT 1 FROM graves g
-                INNER JOIN area_graves ag ON g.area_grave_id = ag.id
-                INNER JOIN rows r ON ag.row_id = r.id
-                INNER JOIN plots p ON r.plot_id = p.id
-                INNER JOIN blocks b ON p.block_id = b.id
-                WHERE b.cemetery_id = c.id 
-                AND g.grave_status = 1 
-                AND g.isActive = 1
-            ) as has_available_graves
-            FROM cemeteries c
-            WHERE c.isActive = 1
-            ORDER BY c.name
-        ");
-        $cemeteriesStmt->execute();
-        $cemeteries = $cemeteriesStmt->fetchAll(PDO::FETCH_ASSOC);
+        // // טען בתי עלמין
+        // $cemeteriesStmt = $conn->prepare("
+        //     SELECT c.id, c.name,
+        //     EXISTS (
+        //         SELECT 1 FROM graves g
+        //         INNER JOIN area_graves ag ON g.area_grave_id = ag.id
+        //         INNER JOIN rows r ON ag.row_id = r.id
+        //         INNER JOIN plots p ON r.plot_id = p.id
+        //         INNER JOIN blocks b ON p.block_id = b.id
+        //         WHERE b.cemetery_id = c.id 
+        //         AND g.grave_status = 1 
+        //         AND g.isActive = 1
+        //     ) as has_available_graves
+        //     FROM cemeteries c
+        //     WHERE c.isActive = 1
+        //     ORDER BY c.name
+        // ");
+        // $cemeteriesStmt->execute();
+        // $cemeteries = $cemeteriesStmt->fetchAll(PDO::FETCH_ASSOC);
         
         // // הכן את כל הנתונים להיררכיה
         // $hierarchyData = [];

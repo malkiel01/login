@@ -351,7 +351,7 @@ const FormHandler = {
                 blockSelect.innerHTML = '<option value="">-- כל הגושים --</option>';
                 
                 const blocks = cemeteryId 
-                    ? window.hierarchyData.blocks.filter(b => b.cemetery_id == cemeteryId)
+                    ? window.hierarchyData.blocks.filter(b => b.cemeteryId == cemeteryId)
                     : window.hierarchyData.blocks;
 
                 console.log('blocks: ', blocks);

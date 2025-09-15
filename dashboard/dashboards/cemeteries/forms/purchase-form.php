@@ -13,23 +13,31 @@
 
     try {
         $conn = getDBConnection();
-        
-        // טען לקוחות פנויים
-        $customersStmt = $conn->prepare("
-            SELECT unicId, CONCAT(lastName, ' ', firstName) as full_name, numId 
-            FROM customers 
-            WHERE statusCustomer = 1 AND isActive = 1 
-            ORDER BY lastName, firstName
-        ");
-        $customersStmt->execute();
+    
+// טען לקוחות פנויים
+$customersStmt = $conn->prepare("
+    SELECT unicId, CONCAT(lastName, ' ', firstName) as full_name, numId 
+    FROM customers 
+    WHERE statusCustomer = 1 AND isActive = 1 
+    ORDER BY lastName, firstName
+");
+$customersStmt->execute();
+$customers = [];
+while ($row = $customersStmt->fetch(PDO::FETCH_ASSOC)) {
+    $label = $row['full_name'];
+    if ($row['numId']) {
+        $label .= ' (' . $row['numId'] . ')';
+    }
+    $customers[$row['unicId']] = $label;
+}
 
-$cemeteries = $cemeteriesStmt->fetchAll(PDO::FETCH_ASSOC);
+// ערך ריק זמני לבתי עלמין
+$cemeteries = []; 
+$hierarchyData = [];
 
 // דיבוג
 error_log("Cemeteries data: " . json_encode($cemeteries));
 error_log("First cemetery: " . json_encode($cemeteries[0] ?? 'NO DATA'));
-
-
 
         $customers = [];
         while ($row = $customersStmt->fetch(PDO::FETCH_ASSOC)) {

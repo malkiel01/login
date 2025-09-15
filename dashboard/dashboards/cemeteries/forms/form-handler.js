@@ -341,10 +341,6 @@ const FormHandler = {
             // מילוי גושים
             window.populateBlocks = function(cemeteryId = null) {
 
-                console.log('בית עלמין נבחר');
-                console.log(cemeteryId);
-                
-                
                 const blockSelect = document.getElementById('blockSelect');
                 if (!blockSelect) return;
                 
@@ -354,9 +350,7 @@ const FormHandler = {
                     ? window.hierarchyData.blocks.filter(b => b.cemeteryId == cemeteryId)
                     : window.hierarchyData.blocks;
 
-                console.log('blocks: ', blocks);
-                
-                
+
                 blocks.forEach(block => {
                     const hasAvailableGraves = checkBlockHasGraves(block.unicId);
                     const option = document.createElement('option');
@@ -405,13 +399,7 @@ const FormHandler = {
 
             // בדיקת קברים פנויים בגוש
             window.checkBlockHasGraves = function(blockId) {
-                const blockPlots = window.hierarchyData.plots.filter(p => p.block_id == blockId);
-                
-                // console.log('plots original: ',window.hierarchyData.plots);
-                // console.log('filter: ',window.hierarchyData.plots[0].block_id, blockId);
-                // console.log('plots: ', blockPlots);
-                
-                
+                const blockPlots = window.hierarchyData.plots.filter(p => p.blockId == blockId);
 
                 for (let plot of blockPlots) {
                     if (checkPlotHasGraves(plot.unicId)) {
@@ -423,13 +411,13 @@ const FormHandler = {
 
             // בדיקת קברים פנויים בחלקה
             window.checkPlotHasGraves = function(plotId) {
-                const plotRows = window.hierarchyData.rows.filter(r => r.plot_id == plotId);
+                const plotRows = window.hierarchyData.rows.filter(r => r.plotId == plotId);
                 
                 for (let row of plotRows) {
-                    const rowAreaGraves = window.hierarchyData.areaGraves.filter(ag => ag.row_id == row.unicId);
+                    const rowAreaGraves = window.hierarchyData.areaGraves.filter(ag => ag.lineId == row.unicId);
                     
                     for (let areaGrave of rowAreaGraves) {
-                        const graves = window.hierarchyData.graves.filter(g => g.area_grave_id == areaGrave.unicId);
+                        const graves = window.hierarchyData.graves.filter(g => g.areaGraveId == areaGrave.unicId);
                         if (graves.length > 0) {
                             return true;
                         }

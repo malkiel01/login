@@ -293,11 +293,11 @@
     }
 
     // הצג את הטופס
-    echo $formBuilder->renderModal();
+    $modalHTML = $formBuilder->renderModal();
 
-    // דיבוג - בדוק מה בדיוק מוחזר
-    error_log("Modal HTML first 500 chars: " . substr($modalHTML, 0, 500));
-    error_log("Looking for purchaseFormModal: " . (strpos($modalHTML, 'purchaseFormModal') !== false ? 'FOUND' : 'NOT FOUND'));
+    // הוסף את הנתונים כ-data attribute
+    $hierarchyJson = htmlspecialchars(json_encode($hierarchyData), ENT_QUOTES, 'UTF-8');
+    $modalHTML = str_replace('<div class="modal', '<div data-hierarchy=\'' . $hierarchyJson . '\' class="modal', $modalHTML);
 
     echo $modalHTML;
 ?>

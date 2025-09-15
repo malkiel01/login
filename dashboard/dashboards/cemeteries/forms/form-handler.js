@@ -1517,7 +1517,7 @@ const FormHandler = {
             window.checkBlockHasGraves = function(blockId) {
                 const blockPlots = window.hierarchyData.plots.filter(p => p.block_id == blockId);
                 
-                console.log('plots: ',plots);
+                console.log('plots: ',blockPlots);
                 
 
                 for (let plot of blockPlots) {

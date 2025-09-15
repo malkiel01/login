@@ -6,7 +6,11 @@
     header('Content-Type: text/html; charset=utf-8');
 
     error_log("purchase-form.php loaded!");
+
+    error_log("BEFORE DIE");
+    ob_end_clean(); // נקה את ה-buffer
     echo "TEST - purchase form loaded successfully";
+    error_log("AFTER ECHO");
     exit;
 
     require_once __DIR__ . '/FormBuilder.php';

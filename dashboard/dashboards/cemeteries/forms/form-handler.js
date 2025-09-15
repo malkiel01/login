@@ -530,9 +530,6 @@ const FormHandler = {
                 
                 levels.forEach(level => {
                     const config = configs[level];
-
-                    console.log('config: ', config);
-                    
                     if (config) {
                         const element = document.getElementById(config.id);
                         if (element) {

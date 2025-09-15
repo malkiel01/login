@@ -99,7 +99,7 @@ try {
                 throw new Exception('Customer ID is required');
             }
             
-            $stmt = $pdo->prepare("SELECT * FROM customers WHERE id = :id AND isActive = 1");
+            $stmt = $pdo->prepare("SELECT * FROM customers WHERE unicId = :id AND isActive = 1");
             $stmt->execute(['id' => $id]);
             $customer = $stmt->fetch(PDO::FETCH_ASSOC);
             
@@ -112,10 +112,11 @@ try {
                 SELECT p.*, g.graveNameHe, g.graveLocation 
                 FROM purchases p
                 LEFT JOIN graves g ON p.graveId = g.unicId
-                WHERE p.customerId = :customer_id AND p.isActive = 1
+                WHERE p.clientId = :customer_id AND p.isActive = 1
                 ORDER BY p.openingDate DESC
             ");
-            $stmt->execute(['customer_id' => $id]);
+
+            $stmt->execute(['customer_id' => $customer['unicId']]); // שים לב - משתמשים ב-unicId של הלקוח
             $customer['purchases'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             echo json_encode(['success' => true, 'data' => $customer]);
@@ -180,12 +181,12 @@ try {
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             
-            $customerId = $pdo->lastInsertId();
+            $clientId = $pdo->lastInsertId();
             
             echo json_encode([
                 'success' => true,
                 'message' => 'הלקוח נוסף בהצלחה',
-                'id' => $customerId
+                'id' => $clientId
             ]);
             break;
             
@@ -262,7 +263,7 @@ try {
             }
             
             // בדיקה אם יש רכישות או קבורות קשורות
-            $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM purchases WHERE customerId = :id AND isActive = 1");
+            $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM purchases WHERE clientId = :id AND isActive = 1");
             $stmt->execute(['id' => $id]);
             $purchases = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
             

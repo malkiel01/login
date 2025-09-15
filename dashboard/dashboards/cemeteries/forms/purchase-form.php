@@ -117,49 +117,49 @@ $blocksStmt = $conn->prepare("
 $blocksStmt->execute();
 $hierarchyData['blocks'] = $blocksStmt->fetchAll(PDO::FETCH_ASSOC);
 
-// טען את כל החלקות  
-$plotsStmt = $conn->prepare("
-    SELECT p.id, p.unicId, p.plotNameHe as name, p.blockId as block_id,
-           b.cemeteryId as cemetery_id
-    FROM plots p 
-    INNER JOIN blocks b ON p.blockId = b.unicId 
-    WHERE p.isActive = 1
-    ORDER BY p.plotNameHe
-");
-$plotsStmt->execute();
-$hierarchyData['plots'] = $plotsStmt->fetchAll(PDO::FETCH_ASSOC);
+// // טען את כל החלקות  
+// $plotsStmt = $conn->prepare("
+//     SELECT p.id, p.unicId, p.plotNameHe as name, p.blockId as block_id,
+//            b.cemeteryId as cemetery_id
+//     FROM plots p 
+//     INNER JOIN blocks b ON p.blockId = b.unicId 
+//     WHERE p.isActive = 1
+//     ORDER BY p.plotNameHe
+// ");
+// $plotsStmt->execute();
+// $hierarchyData['plots'] = $plotsStmt->fetchAll(PDO::FETCH_ASSOC);
 
-// טען את כל השורות
-$rowsStmt = $conn->prepare("
-    SELECT r.id, r.unicId, r.lineNameHe as name, r.plotId as plot_id
-    FROM rows r 
-    WHERE r.isActive = 1
-    ORDER BY r.lineNameHe
-");
-$rowsStmt->execute();
-$hierarchyData['rows'] = $rowsStmt->fetchAll(PDO::FETCH_ASSOC);
+// // טען את כל השורות
+// $rowsStmt = $conn->prepare("
+//     SELECT r.id, r.unicId, r.lineNameHe as name, r.plotId as plot_id
+//     FROM rows r 
+//     WHERE r.isActive = 1
+//     ORDER BY r.lineNameHe
+// ");
+// $rowsStmt->execute();
+// $hierarchyData['rows'] = $rowsStmt->fetchAll(PDO::FETCH_ASSOC);
 
-// טען את כל אחוזות הקבר
-$areaGravesStmt = $conn->prepare("
-    SELECT ag.id, ag.unicId, ag.areaGraveNameHe as name, ag.lineId as row_id
-    FROM areaGraves ag 
-    WHERE ag.isActive = 1
-    ORDER BY ag.areaGraveNameHe
-");
-$areaGravesStmt->execute();
-$hierarchyData['areaGraves'] = $areaGravesStmt->fetchAll(PDO::FETCH_ASSOC);
+// // טען את כל אחוזות הקבר
+// $areaGravesStmt = $conn->prepare("
+//     SELECT ag.id, ag.unicId, ag.areaGraveNameHe as name, ag.lineId as row_id
+//     FROM areaGraves ag 
+//     WHERE ag.isActive = 1
+//     ORDER BY ag.areaGraveNameHe
+// ");
+// $areaGravesStmt->execute();
+// $hierarchyData['areaGraves'] = $areaGravesStmt->fetchAll(PDO::FETCH_ASSOC);
 
-// טען את כל הקברים הפנויים
-$gravesStmt = $conn->prepare("
-    SELECT g.id, g.unicId, g.graveNameHe as grave_number, 
-           g.areaGraveId as area_grave_id,
-           g.plotType as plot_type, g.graveType as grave_type
-    FROM graves g 
-    WHERE g.graveStatus = 1 AND g.isActive = 1
-    ORDER BY g.graveNameHe
-");
-$gravesStmt->execute();
-$hierarchyData['graves'] = $gravesStmt->fetchAll(PDO::FETCH_ASSOC);
+// // טען את כל הקברים הפנויים
+// $gravesStmt = $conn->prepare("
+//     SELECT g.id, g.unicId, g.graveNameHe as grave_number, 
+//            g.areaGraveId as area_grave_id,
+//            g.plotType as plot_type, g.graveType as grave_type
+//     FROM graves g 
+//     WHERE g.graveStatus = 1 AND g.isActive = 1
+//     ORDER BY g.graveNameHe
+// ");
+// $gravesStmt->execute();
+// $hierarchyData['graves'] = $gravesStmt->fetchAll(PDO::FETCH_ASSOC);
 
         // טען רכישה אם קיימת
         $purchase = null;

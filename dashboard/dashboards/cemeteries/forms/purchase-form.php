@@ -21,10 +21,8 @@
             WHERE statusCustomer = 1 AND isActive = 1 
             ORDER BY lastName, firstName
         ");
-
         $customersStmt->execute();
         $customers = [];
-
         while ($row = $customersStmt->fetch(PDO::FETCH_ASSOC)) {
             $label = $row['full_name'];
             if ($row['numId']) {
@@ -117,7 +115,7 @@
         }
         
     } catch (Exception $e) {
-        die("שגיאה: " . $e->getMessage());
+        die(json_encode(['error' => $e->getMessage()]));
     }
 
     // יצירת FormBuilder
@@ -139,62 +137,62 @@
         'value' => $purchase['buyer_status'] ?? 1
     ]);
 
-    // HTML מותאם אישית לבחירת קבר
-    $graveSelectorHTML = '
-    <fieldset class="form-section" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
-        <legend style="padding: 0 10px; font-weight: bold;">בחירת קבר</legend>
-        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
-            <div class="form-group">
-                <label>בית עלמין</label>
-                <select id="cemeterySelect" class="form-control" onchange="filterHierarchy(\'cemetery\')">
-                    <option value="">-- כל בתי העלמין --</option>';
+    // // HTML מותאם אישית לבחירת קבר
+    // $graveSelectorHTML = '
+    // <fieldset class="form-section" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+    //     <legend style="padding: 0 10px; font-weight: bold;">בחירת קבר</legend>
+    //     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+    //         <div class="form-group">
+    //             <label>בית עלמין</label>
+    //             <select id="cemeterySelect" class="form-control" onchange="filterHierarchy(\'cemetery\')">
+    //                 <option value="">-- כל בתי העלמין --</option>';
 
-    foreach ($cemeteries as $cemetery) {
-        $disabled = !$cemetery['has_available_graves'] ? 'disabled style="color: #999;"' : '';
-        $graveSelectorHTML .= '<option value="' . $cemetery['id'] . '" ' . $disabled . '>' . 
-                            htmlspecialchars($cemetery['name']) . 
-                            (!$cemetery['has_available_graves'] ? ' (אין קברים פנויים)' : '') . 
-                            '</option>';
-    }
+    // foreach ($cemeteries as $cemetery) {
+    //     $disabled = !$cemetery['has_available_graves'] ? 'disabled style="color: #999;"' : '';
+    //     $graveSelectorHTML .= '<option value="' . $cemetery['id'] . '" ' . $disabled . '>' . 
+    //                         htmlspecialchars($cemetery['name']) . 
+    //                         (!$cemetery['has_available_graves'] ? ' (אין קברים פנויים)' : '') . 
+    //                         '</option>';
+    // }
 
-    $graveSelectorHTML .= '
-                </select>
-            </div>
-            <div class="form-group">
-                <label>גוש</label>
-                <select id="blockSelect" class="form-control" onchange="filterHierarchy(\'block\')">
-                    <option value="">-- כל הגושים --</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>חלקה</label>
-                <select id="plotSelect" class="form-control" onchange="filterHierarchy(\'plot\')">
-                    <option value="">-- כל החלקות --</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>שורה</label>
-                <select id="rowSelect" class="form-control" onchange="filterHierarchy(\'row\')" disabled>
-                    <option value="">-- בחר חלקה תחילה --</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>אחוזת קבר</label>
-                <select id="areaGraveSelect" class="form-control" onchange="filterHierarchy(\'area_grave\')" disabled>
-                    <option value="">-- בחר שורה תחילה --</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>קבר <span class="text-danger">*</span></label>
-                <select name="graveId" id="graveSelect" class="form-control" required disabled onchange="onGraveSelected(this.value)">
-                    <option value="">-- בחר אחוזת קבר תחילה --</option>
-                </select>
-            </div>
-        </div>
-    </fieldset>';
+    // $graveSelectorHTML .= '
+    //             </select>
+    //         </div>
+    //         <div class="form-group">
+    //             <label>גוש</label>
+    //             <select id="blockSelect" class="form-control" onchange="filterHierarchy(\'block\')">
+    //                 <option value="">-- כל הגושים --</option>
+    //             </select>
+    //         </div>
+    //         <div class="form-group">
+    //             <label>חלקה</label>
+    //             <select id="plotSelect" class="form-control" onchange="filterHierarchy(\'plot\')">
+    //                 <option value="">-- כל החלקות --</option>
+    //             </select>
+    //         </div>
+    //         <div class="form-group">
+    //             <label>שורה</label>
+    //             <select id="rowSelect" class="form-control" onchange="filterHierarchy(\'row\')" disabled>
+    //                 <option value="">-- בחר חלקה תחילה --</option>
+    //             </select>
+    //         </div>
+    //         <div class="form-group">
+    //             <label>אחוזת קבר</label>
+    //             <select id="areaGraveSelect" class="form-control" onchange="filterHierarchy(\'area_grave\')" disabled>
+    //                 <option value="">-- בחר שורה תחילה --</option>
+    //             </select>
+    //         </div>
+    //         <div class="form-group">
+    //             <label>קבר <span class="text-danger">*</span></label>
+    //             <select name="graveId" id="graveSelect" class="form-control" required disabled onchange="onGraveSelected(this.value)">
+    //                 <option value="">-- בחר אחוזת קבר תחילה --</option>
+    //             </select>
+    //         </div>
+    //     </div>
+    // </fieldset>';
 
-    // הוסף את ה-HTML המותאם אישית
-    $formBuilder->addCustomHTML($graveSelectorHTML);
+    // // הוסף את ה-HTML המותאם אישית
+    // $formBuilder->addCustomHTML($graveSelectorHTML);
 
     // המשך השדות
     $formBuilder->addField('purchaseStatus', 'סטטוס רכישה', 'select', [
@@ -207,69 +205,69 @@
         'value' => $purchase['purchaseStatus'] ?? 1
     ]);
 
-    // HTML מותאם אישית לניהול תשלומים חכם
-    $paymentsHTML = '
-    <fieldset class="form-section" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
-        <legend style="padding: 0 10px; font-weight: bold;">תשלומים</legend>
+    // // HTML מותאם אישית לניהול תשלומים חכם
+    // $paymentsHTML = '
+    // <fieldset class="form-section" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+    //     <legend style="padding: 0 10px; font-weight: bold;">תשלומים</legend>
         
-        <!-- הצגת פרמטרים נבחרים -->
-        <div id="selectedParameters" style="background: #f0f9ff; padding: 10px; border-radius: 5px; margin-bottom: 15px; display: none;">
-            <div style="font-size: 12px; color: #666;">פרמטרים לחישוב:</div>
-            <div id="parametersDisplay" style="margin-top: 5px;"></div>
-        </div>
+    //     <!-- הצגת פרמטרים נבחרים -->
+    //     <div id="selectedParameters" style="background: #f0f9ff; padding: 10px; border-radius: 5px; margin-bottom: 15px; display: none;">
+    //         <div style="font-size: 12px; color: #666;">פרמטרים לחישוב:</div>
+    //         <div id="parametersDisplay" style="margin-top: 5px;"></div>
+    //     </div>
         
-        <!-- סכום כולל -->
-        <div style="margin-bottom: 15px;">
-            <label>סכום כולל</label>
-            <input type="number" name="price" id="total_price" 
-                value="' . ($purchase['price'] ?? '0') . '" 
-                step="0.01" readonly
-                style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: #f8f9fa; font-size: 18px; font-weight: bold;">
-        </div>
+    //     <!-- סכום כולל -->
+    //     <div style="margin-bottom: 15px;">
+    //         <label>סכום כולל</label>
+    //         <input type="number" name="price" id="total_price" 
+    //             value="' . ($purchase['price'] ?? '0') . '" 
+    //             step="0.01" readonly
+    //             style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: #f8f9fa; font-size: 18px; font-weight: bold;">
+    //     </div>
         
-        <!-- כפתורי ניהול תשלומים -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <button type="button" onclick="openPaymentsManager()" style="
-                padding: 10px 20px;
-                background: #6c757d;
-                color: white;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-            ">
-                ניהול תשלומים ידני
-            </button>
+    //     <!-- כפתורי ניהול תשלומים -->
+    //     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+    //         <button type="button" onclick="openPaymentsManager()" style="
+    //             padding: 10px 20px;
+    //             background: #6c757d;
+    //             color: white;
+    //             border: none;
+    //             border-radius: 4px;
+    //             cursor: pointer;
+    //         ">
+    //             ניהול תשלומים ידני
+    //         </button>
             
-            <button type="button" onclick="openSmartPaymentsManager()" style="
-                padding: 10px 20px;
-                background: #17a2b8;
-                color: white;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-            ">
-                <span id="paymentsButtonText">חשב תשלומים אוטומטית</span>
-            </button>
-        </div>
+    //         <button type="button" onclick="openSmartPaymentsManager()" style="
+    //             padding: 10px 20px;
+    //             background: #17a2b8;
+    //             color: white;
+    //             border: none;
+    //             border-radius: 4px;
+    //             cursor: pointer;
+    //         ">
+    //             <span id="paymentsButtonText">חשב תשלומים אוטומטית</span>
+    //         </button>
+    //     </div>
         
-        <!-- תצוגת פירוט תשלומים -->
-        <div id="paymentsDisplay" style="
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 4px;
-            min-height: 50px;
-            margin-top: 15px;
-        ">' . 
-        ($purchase && $purchase['payments_data'] ? 
-            '<script>document.write(displayPaymentsSummary())</script>' : 
-            '<p style="color: #999; text-align: center;">לחץ על אחד הכפתורים לניהול תשלומים</p>') . 
-        '</div>
+    //     <!-- תצוגת פירוט תשלומים -->
+    //     <div id="paymentsDisplay" style="
+    //         background: #f8f9fa;
+    //         padding: 10px;
+    //         border-radius: 4px;
+    //         min-height: 50px;
+    //         margin-top: 15px;
+    //     ">' . 
+    //     ($purchase && $purchase['payments_data'] ? 
+    //         '<script>document.write(displayPaymentsSummary())</script>' : 
+    //         '<p style="color: #999; text-align: center;">לחץ על אחד הכפתורים לניהול תשלומים</p>') . 
+    //     '</div>
         
-        <input type="hidden" name="payments_data" id="payments_data" 
-            value=\'' . ($purchase['payments_data'] ?? '[]') . '\'>
-    </fieldset>';
+    //     <input type="hidden" name="payments_data" id="payments_data" 
+    //         value=\'' . ($purchase['payments_data'] ?? '[]') . '\'>
+    // </fieldset>';
 
-    $formBuilder->addCustomHTML($paymentsHTML);
+    // $formBuilder->addCustomHTML($paymentsHTML);
 
     $formBuilder->addField('numOfPayments', 'מספר תשלומים', 'number', [
         'min' => 1,
@@ -293,11 +291,5 @@
     }
 
     // הצג את הטופס
-    $modalHTML = $formBuilder->renderModal();
-
-    // הוסף את הנתונים כ-data attribute
-    $hierarchyJson = htmlspecialchars(json_encode($hierarchyData), ENT_QUOTES, 'UTF-8');
-    $modalHTML = str_replace('<div class="modal', '<div data-hierarchy=\'' . $hierarchyJson . '\' class="modal', $modalHTML);
-
-    echo $modalHTML;
+    echo $formBuilder->renderModal();
 ?>

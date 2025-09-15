@@ -6,7 +6,6 @@
     header('Content-Type: text/html; charset=utf-8');
 
     error_log("purchase-form.php: START");
-    die("TEST ERROR");
 
     // בדיקה 1: האם אנחנו יכולים לטעון את הקבצים הנדרשים?
     $formBuilderPath = __DIR__ . '/FormBuilder.php';
@@ -20,11 +19,11 @@
 
 
     if (!file_exists($formBuilderPath)) {
-        die("ERROR: FormBuilder.php not found at: " . $formBuilderPath);
+        error_log("ERROR: FormBuilder.php not found at: " . $formBuilderPath);
     }
 
     if (!file_exists($configPath)) {
-        die("ERROR: config.php not found at: " . $configPath);
+        error_log("ERROR: config.php not found at: " . $configPath);
     }
 
     require_once $formBuilderPath;
@@ -66,7 +65,7 @@
     error_log("purchase-form.php: Modal HTML length: " . strlen($modalHTML));
 
     if (strlen($modalHTML) == 0) {
-        die("ERROR: renderModal() returned empty string");
+        error_log("ERROR: renderModal() returned empty string");
     }
 
     // הדפס רק את הטופס הבסיסי לבדיקה

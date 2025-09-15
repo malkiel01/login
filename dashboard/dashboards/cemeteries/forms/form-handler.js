@@ -1450,6 +1450,11 @@ const FormHandler = {
 
             // מילוי גושים
             window.populateBlocks = function(cemeteryId = null) {
+
+                console.log('בית עלמין נבחר');
+                console.log(cemeteryId);
+                
+                
                 const blockSelect = document.getElementById('blockSelect');
                 if (!blockSelect) return;
                 
@@ -1458,6 +1463,9 @@ const FormHandler = {
                 const blocks = cemeteryId 
                     ? window.hierarchyData.blocks.filter(b => b.cemetery_id == cemeteryId)
                     : window.hierarchyData.blocks;
+
+                console.log('blocks: ', blocks);
+                
                 
                 blocks.forEach(block => {
                     const hasAvailableGraves = checkBlockHasGraves(block.unicId);
@@ -1509,6 +1517,9 @@ const FormHandler = {
             window.checkBlockHasGraves = function(blockId) {
                 const blockPlots = window.hierarchyData.plots.filter(p => p.block_id == blockId);
                 
+                console.log('plots: ',plots);
+                
+
                 for (let plot of blockPlots) {
                     if (checkPlotHasGraves(plot.unicId)) {
                         return true;

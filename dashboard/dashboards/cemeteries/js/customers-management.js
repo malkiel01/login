@@ -315,41 +315,41 @@ function showCustomerDetails(customer) {
     modal.className = 'modal show';
     modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;';
     
-    modal.innerHTML = `
-        <div class="modal-content" style="background: white; padding: 30px; border-radius: 10px; max-width: 700px; max-height: 90vh; overflow-y: auto;">
-            <div class="modal-header" style="margin-bottom: 20px;">
-                <h2 style="margin: 0;">פרטי לקוח - ${customer.firstName || ''} ${customer.lastName || ''}</h2>
-            </div>
-            <div class="modal-body">
-                <div style="display: grid; gap: 20px;">
-                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
-                        <h4 style="margin-bottom: 15px;">פרטים אישיים</h4>
-                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
-                            <div><strong>ת.ז.:</strong> ${customer.numId || '-'}</div>
-                            <div><strong>טלפון נייד:</strong> ${customer.phoneMobile || '-'}</div>
-                            <div><strong>טלפון:</strong> ${customer.phone || '-'}</div>
-                            <div><strong>כתובת:</strong> ${customer.address || '-'}</div>
-                            <div><strong>עיר:</strong> ${customer.cityNameHe || customer.city_name || '-'}</div>
-                            <div><strong>סטטוס:</strong> ${getCustomerStatusBadge(customer.statusCustomer)}</div>
-                            ${customer.nameFather ? `<div><strong>שם אב:</strong> ${customer.nameFather}</div>` : ''}
-                            ${customer.nameMother ? `<div><strong>שם אם:</strong> ${customer.nameMother}</div>` : ''}
-                            ${customer.dateBirth ? `<div><strong>תאריך לידה:</strong> ${formatDate(customer.dateBirth)}</div>` : ''}
-                            ${customer.age ? `<div><strong>גיל:</strong> ${customer.age}</div>` : ''}
-                        </div>
-                    </div>
-                    ${customer.comment ? `
-                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
-                        <h4 style="margin-bottom: 15px;">הערות</h4>
-                        <div>${customer.comment}</div>
-                    </div>
-                    ` : ''}
-                </div>
-            </div>
-            <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
-                        ${JSON.stringify(customer)}
-            </div>
-            </div>
-            `;
+    // modal.innerHTML = `
+    //     <div class="modal-content" style="background: white; padding: 30px; border-radius: 10px; max-width: 700px; max-height: 90vh; overflow-y: auto;">
+    //         <div class="modal-header" style="margin-bottom: 20px;">
+    //             <h2 style="margin: 0;">פרטי לקוח - ${customer.firstName || ''} ${customer.lastName || ''}</h2>
+    //         </div>
+    //         <div class="modal-body">
+    //             <div style="display: grid; gap: 20px;">
+    //                 <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+    //                     <h4 style="margin-bottom: 15px;">פרטים אישיים</h4>
+    //                     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+    //                         <div><strong>ת.ז.:</strong> ${customer.numId || '-'}</div>
+    //                         <div><strong>טלפון נייד:</strong> ${customer.phoneMobile || '-'}</div>
+    //                         <div><strong>טלפון:</strong> ${customer.phone || '-'}</div>
+    //                         <div><strong>כתובת:</strong> ${customer.address || '-'}</div>
+    //                         <div><strong>עיר:</strong> ${customer.cityNameHe || customer.city_name || '-'}</div>
+    //                         <div><strong>סטטוס:</strong> ${getCustomerStatusBadge(customer.statusCustomer)}</div>
+    //                         ${customer.nameFather ? `<div><strong>שם אב:</strong> ${customer.nameFather}</div>` : ''}
+    //                         ${customer.nameMother ? `<div><strong>שם אם:</strong> ${customer.nameMother}</div>` : ''}
+    //                         ${customer.dateBirth ? `<div><strong>תאריך לידה:</strong> ${formatDate(customer.dateBirth)}</div>` : ''}
+    //                         ${customer.age ? `<div><strong>גיל:</strong> ${customer.age}</div>` : ''}
+    //                     </div>
+    //                 </div>
+    //                 ${customer.comment ? `
+    //                 <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+    //                     <h4 style="margin-bottom: 15px;">הערות</h4>
+    //                     <div>${customer.comment}</div>
+    //                 </div>
+    //                 ` : ''}
+    //             </div>
+    //         </div>
+    //         <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+    //                     ${JSON.stringify(customer)}
+    //         </div>
+    //         </div>
+    //         `;
             // <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
             //     <button class="btn btn-warning" onclick="this.closest('.modal').remove(); editCustomer('${customer.unicId}')">
             //         ערוך
@@ -357,6 +357,8 @@ function showCustomerDetails(customer) {
             //     <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">סגור</button>
             // </div>
     
+
+    modal.innerHTML = 'rrrrr'
     document.body.appendChild(modal);
 }
 

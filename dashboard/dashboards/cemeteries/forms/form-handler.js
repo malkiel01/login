@@ -352,7 +352,7 @@ const FormHandler = {
                     ? window.hierarchyData.blocks.filter(b => b.cemetery_id == cemeteryId)
                     : window.hierarchyData.blocks;
 
-                console.log('blocks: ', blocks);
+                // console.log('blocks: ', blocks);
                 
                 
                 blocks.forEach(block => {
@@ -405,9 +405,9 @@ const FormHandler = {
             window.checkBlockHasGraves = function(blockId) {
                 const blockPlots = window.hierarchyData.plots.filter(p => p.block_id == blockId);
                 
-                console.log('plots original: ',window.hierarchyData.plots);
-                console.log('filter: ',window.hierarchyData.plots[0].block_id, blockId);
-                console.log('plots: ', blockPlots);
+                // console.log('plots original: ',window.hierarchyData.plots);
+                // console.log('filter: ',window.hierarchyData.plots[0].block_id, blockId);
+                // console.log('plots: ', blockPlots);
                 
                 
 

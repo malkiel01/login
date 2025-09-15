@@ -286,6 +286,7 @@ $formBuilder->addField('comments', 'הערות', 'textarea', [
 
     // וודא שזה:
     $modalId = 'purchaseFormModal'; // ללא רווחים או תווים מיוחדים
+    $formBuilder->setModalId('purchaseFormModal');
     // הצג את הטופס
     echo $formBuilder->renderModal($modalId);
 ?>

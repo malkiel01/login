@@ -22,6 +22,15 @@
             ORDER BY lastName, firstName
         ");
         $customersStmt->execute();
+
+$cemeteries = $cemeteriesStmt->fetchAll(PDO::FETCH_ASSOC);
+
+// דיבוג
+error_log("Cemeteries data: " . json_encode($cemeteries));
+error_log("First cemetery: " . json_encode($cemeteries[0] ?? 'NO DATA'));
+
+
+
         $customers = [];
         while ($row = $customersStmt->fetch(PDO::FETCH_ASSOC)) {
             $label = $row['full_name'];

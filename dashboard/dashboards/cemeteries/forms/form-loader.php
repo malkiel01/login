@@ -16,6 +16,9 @@ try {
     $parent_id = $_GET['parent_id'] ?? null;
     $item_id = $_GET['item_id'] ?? null;
     
+
+    die("TEST - purchase form loaded successfully");
+
     // בדיקת סוג
     if (!$type) {
         throw new Exception('Type is required');

@@ -354,7 +354,7 @@ const FormHandler = {
                     ? window.hierarchyData.blocks.filter(b => b.cemetery_id == cemeteryId)
                     : window.hierarchyData.blocks;
 
-                // console.log('blocks: ', blocks);
+                console.log('blocks: ', blocks);
                 
                 
                 blocks.forEach(block => {

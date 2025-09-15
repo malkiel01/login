@@ -53,59 +53,59 @@
         
         // הכן את כל הנתונים להיררכיה
         $hierarchyData = [];
-        
+
         // טען את כל הגושים
         $blocksStmt = $conn->prepare("
             SELECT b.*, c.id as cemetery_id 
             FROM blocks b 
-            INNER JOIN cemeteries c ON b.cemetery_id = c.id 
+            INNER JOIN cemeteries c ON b.cemeteryId = c.unicId 
             WHERE b.isActive = 1
-            ORDER BY b.name
+            ORDER BY b.blockNameHe
         ");
         $blocksStmt->execute();
         $hierarchyData['blocks'] = $blocksStmt->fetchAll(PDO::FETCH_ASSOC);
-        
+
         // טען את כל החלקות
         $plotsStmt = $conn->prepare("
-            SELECT p.*, b.cemetery_id 
+            SELECT p.*, b.cemeteryId as cemetery_id 
             FROM plots p 
-            INNER JOIN blocks b ON p.block_id = b.id 
+            INNER JOIN blocks b ON p.blockId = b.unicId 
             WHERE p.isActive = 1
-            ORDER BY p.name
+            ORDER BY p.plotNameHe
         ");
         $plotsStmt->execute();
         $hierarchyData['plots'] = $plotsStmt->fetchAll(PDO::FETCH_ASSOC);
-        
+
         // טען את כל השורות
         $rowsStmt = $conn->prepare("
-            SELECT r.* 
+            SELECT r.*, r.plotId as plot_id
             FROM rows r 
             WHERE r.isActive = 1
-            ORDER BY r.name
+            ORDER BY r.lineNameHe
         ");
         $rowsStmt->execute();
         $hierarchyData['rows'] = $rowsStmt->fetchAll(PDO::FETCH_ASSOC);
-        
+
         // טען את כל אחוזות הקבר
         $areaGravesStmt = $conn->prepare("
-            SELECT ag.* 
-            FROM area_graves ag 
+            SELECT ag.*, ag.lineId as row_id
+            FROM areaGraves ag 
             WHERE ag.isActive = 1
-            ORDER BY ag.name
+            ORDER BY ag.areaGraveNameHe
         ");
         $areaGravesStmt->execute();
         $hierarchyData['areaGraves'] = $areaGravesStmt->fetchAll(PDO::FETCH_ASSOC);
-        
+
         // טען את כל הקברים הפנויים
         $gravesStmt = $conn->prepare("
-            SELECT g.* 
+            SELECT g.*, g.areaGraveId as area_grave_id
             FROM graves g 
-            WHERE g.grave_status = 1 AND g.isActive = 1
-            ORDER BY g.grave_number
+            WHERE g.graveStatus = 1 AND g.isActive = 1
+            ORDER BY g.graveNameHe
         ");
         $gravesStmt->execute();
         $hierarchyData['graves'] = $gravesStmt->fetchAll(PDO::FETCH_ASSOC);
-        
+
         // טען רכישה אם קיימת
         $purchase = null;
         if ($itemId) {

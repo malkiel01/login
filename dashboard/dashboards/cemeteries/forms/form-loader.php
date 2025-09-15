@@ -19,31 +19,31 @@ try {
 
     // die("TEST - הגענו לכאן");
 
-    // // בדיקת סוג
-    // if (!$type) {
-    //     throw new Exception('Type is required');
-    // }
+    // בדיקת סוג
+    if (!$type) {
+        throw new Exception('Type is required');
+    }
     
-    // // דיבוג - בדיקת קבצים
-    // error_log("=== Form Loader Debug ===");
-    // error_log("Type: $type");
-    // error_log("Current directory: " . __DIR__);
+    // דיבוג - בדיקת קבצים
+    error_log("=== Form Loader Debug 1 ===");
+    error_log("Type: $type");
+    error_log("Current directory: " . __DIR__);
 
-    // // דיבוג
-    // error_log("form-loader.php called with type: $type, itemId: $item_id, parentId: $parent_id");
+    // דיבוג
+    error_log("form-loader.php called with type: $type, itemId: $item_id, parentId: $parent_id");
 
-    // $formFile = __DIR__ . '/' . $type . '-form.php';
+    $formFile = __DIR__ . '/' . $type . '-form.php';
 
-    // // דיבוג
-    // error_log("Looking for file: $formFile");
-    // error_log("File exists: " . (file_exists($formFile) ? 'YES' : 'NO'));
+    // דיבוג
+    error_log("Looking for file: $formFile");
+    error_log("File exists: " . (file_exists($formFile) ? 'YES' : 'NO'));
 
-    // if (!file_exists($formFile)) {
-    //     die("Form file not found: $formFile");
-    // }
+    if (!file_exists($formFile)) {
+        die("Form file not found: $formFile");
+    }
 
-    // // כלול את הקובץ
-    // include $formFile;
+    // כלול את הקובץ
+    include $formFile;
 
     
     // בדוק אם יש טופס מותאם אישית

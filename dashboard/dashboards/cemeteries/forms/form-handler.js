@@ -1515,7 +1515,7 @@ const FormHandler = {
 
             // בדיקת קברים פנויים בגוש
             window.checkBlockHasGraves = function(blockId) {
-                const blockPlots = window.hierarchyData.plots.filter(p => p.block_id == blockId);
+                const blockPlots = window.hierarchyData.plots.filter(p => p.blockId == blockId);
                 
                 console.log('plots original: ',window.hierarchyData.plots);
                 console.log('filter: ',window.hierarchyData.plots[0].block_id, blockId);

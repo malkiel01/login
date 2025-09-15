@@ -270,7 +270,7 @@ try {
                 throw new Exception('No fields to update');
             }
             
-            $sql = "UPDATE customers SET " . implode(', ', $updateFields) . " WHERE id = :id";
+            $sql = "UPDATE customers SET " . implode(', ', $updateFields) . " WHERE unicId = :id";
             
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);

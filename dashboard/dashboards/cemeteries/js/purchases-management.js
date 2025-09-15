@@ -350,9 +350,23 @@ function openAddPurchase() {
 }
 
 // עריכת רכישה
-function editPurchase(id) {
+async function editPurchase(id) {
     window.currentType = 'purchase';
-    FormHandler.openForm('purchase', null, id);
+    
+    // קודם תקבל את ה-unicId
+    try {
+        const response = await fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=get&id=${id}`);
+        const data = await response.json();
+        
+        if (data.success && data.data) {
+            FormHandler.openForm('purchase', null, data.data.unicId);
+        } else {
+            showError('לא ניתן לטעון את הרכישה');
+        }
+    } catch (error) {
+        console.error('Error loading purchase:', error);
+        FormHandler.openForm('purchase', null, id); // נסה עם ה-id הרגיל
+    }
 }
 
 // מחיקת רכישה

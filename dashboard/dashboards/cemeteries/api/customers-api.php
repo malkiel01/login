@@ -113,7 +113,7 @@ try {
                 FROM purchases p
                 LEFT JOIN graves g ON p.graveId = g.unicId
                 WHERE p.clientId = :customer_id AND p.isActive = 1
-                ORDER BY p.openingDate DESC
+                ORDER BY p.dateOpening DESC
             ");
 
             $stmt->execute(['customer_id' => $customer['unicId']]); // שים לב - משתמשים ב-unicId של הלקוח

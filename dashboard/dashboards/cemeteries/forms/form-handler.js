@@ -337,7 +337,7 @@ const FormHandler = {
             }
 
             // מילוי גושים
-            function populateBlocks(cemeteryId = null) {
+            window.populateBlocks = function(cemeteryId = null) {
                 const blockSelect = document.getElementById('blockSelect');
                 if (!blockSelect) return;
                 
@@ -363,7 +363,7 @@ const FormHandler = {
             }
 
             // מילוי חלקות
-            function populatePlots(cemeteryId = null, blockId = null) {
+            window.populatePlots = function(cemeteryId = null, blockId = null) {
                 const plotSelect = document.getElementById('plotSelect');
                 if (!plotSelect) return;
                 
@@ -393,7 +393,7 @@ const FormHandler = {
             }
 
             // בדיקת קברים פנויים בגוש
-            function checkBlockHasGraves(blockId) {
+            window.checkBlockHasGraves = function(blockId) {
                 const blockPlots = window.hierarchyData.plots.filter(p => p.block_id == blockId);
                 
                 for (let plot of blockPlots) {
@@ -405,7 +405,7 @@ const FormHandler = {
             }
 
             // בדיקת קברים פנויים בחלקה
-            function checkPlotHasGraves(plotId) {
+            window.checkPlotHasGraves = function(plotId) {
                 const plotRows = window.hierarchyData.rows.filter(r => r.plot_id == plotId);
                 
                 for (let row of plotRows) {
@@ -422,7 +422,7 @@ const FormHandler = {
             }
 
             // מילוי שורות
-            function populateRows(plotId) {
+            window.populateRows = function(plotId) {
                 const rowSelect = document.getElementById('rowSelect');
                 if (!rowSelect) return;
                 
@@ -447,7 +447,7 @@ const FormHandler = {
             }
 
             // בדיקת קברים פנויים בשורה
-            function checkRowHasGraves(rowId) {
+            window.checkRowHasGraves = function(rowId) {
                 const rowAreaGraves = window.hierarchyData.areaGraves.filter(ag => ag.row_id == rowId);
                 
                 for (let areaGrave of rowAreaGraves) {
@@ -460,7 +460,7 @@ const FormHandler = {
             }
 
             // מילוי אחוזות קבר
-            function populateAreaGraves(rowId) {
+            window.populateAreaGraves = function(rowId) {
                 const areaGraveSelect = document.getElementById('areaGraveSelect');
                 if (!areaGraveSelect) return;
                 
@@ -485,7 +485,7 @@ const FormHandler = {
             }
 
             // מילוי קברים
-            function populateGraves(areaGraveId) {
+            window.populateGraves = function(areaGraveId) {
                 const graveSelect = document.getElementById('graveSelect');
                 if (!graveSelect) return;
                 
@@ -502,7 +502,7 @@ const FormHandler = {
             }
 
             // ניקוי בוררים
-            function clearSelectors(levels) {
+            window.clearSelectors = function(levels) {
                 const configs = {
                     'row': { id: 'rowSelect', default: '-- בחר חלקה תחילה --', disabled: true },
                     'area_grave': { id: 'areaGraveSelect', default: '-- בחר שורה תחילה --', disabled: true },
@@ -522,7 +522,7 @@ const FormHandler = {
             }
 
             // כשנבחר קבר
-            function onGraveSelected(graveId) {
+            window.onGraveSelected = function(graveId) {
                 if (graveId) {
                     // מצא את פרטי הקבר
                     const grave = window.hierarchyData.graves.find(g => g.id == graveId);
@@ -547,7 +547,7 @@ const FormHandler = {
             }
 
             // עדכון תצוגת פרמטרים
-            function updatePaymentParameters() {
+            window.updatePaymentParameters = function() {
                 if (window.selectedGraveData) {
                     const plotTypes = {1: 'פטורה', 2: 'חריגה', 3: 'סגורה'};
                     const graveTypes = {1: 'שדה', 2: 'רוויה', 3: 'סנהדרין'};

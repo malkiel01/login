@@ -190,7 +190,7 @@ function displayCustomersInTable(customers) {
             <td>${formatDate(customer.createDate)}</td>
             <td>
                 <div class="btn-group">
-                    <button class="btn btn-sm btn-info" onclick="viewCustomer(${customer.unicId})">
+                    <button class="btn btn-sm btn-info" onclick="viewCustomer('${customer.unicId}')">
                         צפה
                     </button>
                     <button class="btn btn-sm btn-warning" onclick="editCustomer('${customer.unicId}')">

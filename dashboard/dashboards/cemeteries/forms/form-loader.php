@@ -9,12 +9,17 @@ ini_set('display_errors', 1);
 // הגדר headers
 header('Content-Type: text/html; charset=utf-8');
 
+    error_log("TEST START");
+    die("TEST ERROR");
+
 try {
     // קבלת פרמטרים
     $type = $_GET['type'] ?? '';
     $id = $_GET['id'] ?? null;
     $parent_id = $_GET['parent_id'] ?? null;
     $item_id = $_GET['item_id'] ?? null;
+
+
     
     // בדוק אם יש טופס מותאם אישית
     $customFormFile = __DIR__ . "/{$type}-form.php";

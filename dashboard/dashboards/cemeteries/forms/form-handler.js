@@ -271,7 +271,7 @@ const FormHandler = {
                 }
                 
                 // טען נתונים אם זה טופס עריכה
-                if (itemId) {
+                if (itemId && type !== 'customer') {
                     // פונקציה שמנסה למלא את הטופס
                     const fillForm = () => {
                         const form = document.querySelector(`#${type}FormModal form`);

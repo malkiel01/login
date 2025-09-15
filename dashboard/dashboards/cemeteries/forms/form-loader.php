@@ -9,9 +9,6 @@ ini_set('display_errors', 1);
 // הגדר headers
 header('Content-Type: text/html; charset=utf-8');
 
-    error_log("TEST START");
-    die("TEST ERROR");
-
 try {
     // קבלת פרמטרים
     $type = $_GET['type'] ?? '';

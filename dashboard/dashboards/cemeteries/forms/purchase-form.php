@@ -8,7 +8,6 @@
     error_log("purchase-form.php: START");
     die("TEST ERROR");
 
-
     // בדיקה 1: האם אנחנו יכולים לטעון את הקבצים הנדרשים?
     $formBuilderPath = __DIR__ . '/FormBuilder.php';
     $configPath = $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';

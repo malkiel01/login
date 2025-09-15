@@ -33,20 +33,20 @@
         
         // טען בתי עלמין
         $cemeteriesStmt = $conn->prepare("
-            SELECT c.id, c.name,
+            SELECT c.id, c.cemeteryNameHe as name,
             EXISTS (
                 SELECT 1 FROM graves g
-                INNER JOIN area_graves ag ON g.area_grave_id = ag.id
-                INNER JOIN rows r ON ag.row_id = r.id
-                INNER JOIN plots p ON r.plot_id = p.id
-                INNER JOIN blocks b ON p.block_id = b.id
-                WHERE b.cemetery_id = c.id 
-                AND g.grave_status = 1 
+                INNER JOIN areaGraves ag ON g.areaGraveId = ag.unicId
+                INNER JOIN rows r ON ag.lineId = r.unicId
+                INNER JOIN plots p ON r.plotId = p.unicId
+                INNER JOIN blocks b ON p.blockId = b.unicId
+                WHERE b.cemeteryId = c.unicId
+                AND g.graveStatus = 1 
                 AND g.isActive = 1
             ) as has_available_graves
             FROM cemeteries c
             WHERE c.isActive = 1
-            ORDER BY c.name
+            ORDER BY c.cemeteryNameHe
         ");
         $cemeteriesStmt->execute();
         $cemeteries = $cemeteriesStmt->fetchAll(PDO::FETCH_ASSOC);

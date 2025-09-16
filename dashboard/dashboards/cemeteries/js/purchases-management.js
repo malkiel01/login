@@ -350,14 +350,19 @@ function openAddPurchase() {
 }
 
 // עריכת רכישה
-async function editPurchase(unicId) {
+async function editPurchase(id) {
     window.currentType = 'purchase';
+
+    console.log('test11: ',id);
     
     
     // קודם תקבל את ה-unicId
     try {
-        const response = await fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=get&id=${unicId}`);
+        const response = await fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=get&id=${id}`);
         const data = await response.json();
+
+        console.log('test12: ',data);
+        console.log('test13: ',data.data.unicId);
         
         if (data.success && data.data) {
             FormHandler.openForm('purchase', null, data.data.unicId);
@@ -366,7 +371,7 @@ async function editPurchase(unicId) {
         }
     } catch (error) {
         console.error('Error loading purchase:', error);
-        FormHandler.openForm('purchase', null, unicId); // נסה עם ה-id הרגיל
+        FormHandler.openForm('purchase', null, id); // נסה עם ה-id הרגיל
     }
 }
 

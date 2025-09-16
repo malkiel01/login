@@ -89,7 +89,7 @@
 
         // טען את כל אחוזות הקבר
         $areaGravesStmt = $conn->prepare("
-            SELECT ag.*, ag.lineId as row_id
+            SELECT ag.*, ag.lineId as row_id, ag.areaGraveNameHe as name
             FROM areaGraves ag 
             WHERE ag.isActive = 1
             ORDER BY ag.areaGraveNameHe
@@ -99,7 +99,7 @@
 
         // טען את כל הקברים הפנויים
         $gravesStmt = $conn->prepare("
-            SELECT g.*, g.areaGraveId as area_grave_id
+            SELECT g.*, g.areaGraveId as area_grave_id, g.graveNameHe as name
             FROM graves g 
             WHERE g.graveStatus = 1 AND g.isActive = 1
             ORDER BY g.graveNameHe

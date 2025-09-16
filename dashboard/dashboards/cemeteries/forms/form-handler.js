@@ -1333,9 +1333,13 @@ const FormHandler = {
 
         // טען נתונים אם זה עריכה
         if (itemId) {
+            console.log('temp id: ', itemId);
+            
             const loadPurchaseData = () => {
                 const form = document.querySelector('#purchaseFormModal form');
                 console.log('Checking purchase form readiness:', form ? 'found' : 'not found');
+                console.log(data);
+                
                 
                 // בדוק שהטופס מוכן עם מספיק שדות
                 if (form && form.elements && form.elements.length > 5) {

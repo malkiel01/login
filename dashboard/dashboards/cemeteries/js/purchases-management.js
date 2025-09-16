@@ -126,13 +126,13 @@ function displayPurchasesTable(purchases) {
                 </td>
                 <td>
                     <div class="btn-group">
-                        <button class="btn btn-sm btn-info" onclick="viewPurchase(${purchase.unicId})" title="צפייה">
+                        <button class="btn btn-sm btn-info" onclick="viewPurchase(${purchase.id})" title="צפייה">
                             👁️
                         </button>
                         <button class="btn btn-sm btn-warning" onclick="editPurchase(${purchase.unicId})" title="עריכה">
                             ✏️
                         </button>
-                        <button class="btn btn-sm btn-danger" onclick="deletePurchase(${purchase.unicId})" title="מחיקה">
+                        <button class="btn btn-sm btn-danger" onclick="deletePurchase(${purchase.id})" title="מחיקה">
                             🗑️
                         </button>
                     </div>
@@ -332,7 +332,7 @@ function showPurchaseDetails(purchase) {
                 </div>
             </div>
             <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
-                <button class="btn btn-warning" onclick="this.closest('.modal').remove(); editPurchase(${purchase.unicId})">
+                <button class="btn btn-warning" onclick="this.closest('.modal').remove(); editPurchase(${purchase.id})">
                     ערוך
                 </button>
                 <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">סגור</button>

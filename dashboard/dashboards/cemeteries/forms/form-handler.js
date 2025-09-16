@@ -1364,12 +1364,13 @@ const FormHandler = {
         // }
 
         // טען נתונים אם זה עריכה - בדיוק כמו בלקוחות
+// טען נתונים אם זה עריכה - עם מיפוי שדות
+
         if (itemId) {
             const loadPurchaseData = () => {
                 const form = document.querySelector('#purchaseFormModal form');
                 console.log('Checking purchase form readiness:', form ? 'found' : 'not found');
                 
-                // בדוק שהטופס מוכן עם מספיק שדות
                 if (form && form.elements && form.elements.length > 5) {
                     console.log('Purchase form is ready, loading data...');
                     
@@ -1380,36 +1381,75 @@ const FormHandler = {
                                 const data = result.data;
                                 console.log('Filling purchase form with data:', Object.keys(data));
                                 
-                                // מלא את כל השדות
+                                // מיפוי שדות מהמסד לטופס
+                                const fieldMapping = {
+                                    'clientId': 'customer_id',
+                                    'graveId': 'grave_id', 
+                                    'serialPurchaseId': 'purchase_number',
+                                    'purchaseStatus': 'status',
+                                    'buyerStatus': 'buyer_status',
+                                    'PaymentEndDate': 'payment_end_date',
+                                    'dateOpening': 'purchase_date',
+                                    'numOfPayments': 'number_of_payments',
+                                    'price': 'total_amount'
+                                };
+                                
+                                // מלא שדות עם מיפוי
                                 Object.keys(data).forEach(key => {
-                                    const field = form.elements[key];
+                                    // בדוק אם יש מיפוי מיוחד
+                                    const fieldName = fieldMapping[key] || key;
+                                    const field = form.elements[fieldName];
+                                    
                                     if (field && data[key] !== null && data[key] !== undefined) {
-                                        if (field.type === 'checkbox') {
+                                        // טיפול מיוחד בתאריכים
+                                        if (key.includes('Date') || key.includes('date')) {
+                                            if (data[key] === '0000-00-00' || data[key] === '0000-00-00 00:00:00') {
+                                                return; // דלג על תאריכים לא תקינים
+                                            }
+                                            // המר תאריך לפורמט HTML
+                                            field.value = data[key].split(' ')[0]; // קח רק חלק התאריך
+                                        } else if (field.type === 'checkbox') {
                                             field.checked = data[key] == 1;
                                         } else {
                                             field.value = data[key];
                                         }
+                                        
+                                        console.log(`Mapped ${key} -> ${fieldName} = ${data[key]}`);
                                     }
                                 });
                                 
+                                // טיפול מיוחד בבחירת הקבר - טען היררכיה
+                                if (data.graveId && window.loadGraveHierarchy) {
+                                    console.log('Loading grave hierarchy for:', data.graveId);
+                                    window.loadGraveHierarchy(data.graveId);
+                                }
+                                
                                 // טען תשלומים אם יש
-                                if (data.payments_data) {
+                                if (data.paymentsList || data.payments_data) {
                                     try {
-                                        window.purchasePayments = JSON.parse(data.payments_data);
+                                        const paymentsData = data.paymentsList || data.payments_data;
+                                        window.purchasePayments = typeof paymentsData === 'string' ? 
+                                            JSON.parse(paymentsData) : paymentsData;
+                                            
                                         if (window.displayPaymentsSummary) {
-                                            document.getElementById('paymentsDisplay').innerHTML = window.displayPaymentsSummary();
+                                            const paymentsDisplay = document.getElementById('paymentsDisplay');
+                                            if (paymentsDisplay) {
+                                                paymentsDisplay.innerHTML = window.displayPaymentsSummary();
+                                            }
                                         }
                                     } catch(e) {
                                         console.error('Error parsing payments data:', e);
                                     }
                                 }
+                                
+                                console.log('Purchase data loaded successfully');
                             }
                         })
                         .catch(error => {
                             console.error('Error loading purchase data:', error);
                         });
                     
-                    return true; // הצלחנו לטעון
+                    return true;
                 }
                 return false;
             };
@@ -1419,11 +1459,10 @@ const FormHandler = {
                 // אם לא הצליח, השתמש ב-MutationObserver
                 const observer = new MutationObserver((mutations, obs) => {
                     if (loadPurchaseData()) {
-                        obs.disconnect(); // הפסק לצפות
+                        obs.disconnect();
                     }
                 });
                 
-                // התחל לצפות בשינויים
                 const modal = document.getElementById('purchaseFormModal');
                 if (modal) {
                     observer.observe(modal, {
@@ -1432,7 +1471,6 @@ const FormHandler = {
                     });
                 }
                 
-                // הגבלת זמן של 10 שניות
                 setTimeout(() => observer.disconnect(), 10000);
             }
         }

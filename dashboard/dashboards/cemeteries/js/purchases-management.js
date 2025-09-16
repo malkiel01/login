@@ -352,11 +352,17 @@ function openAddPurchase() {
 // עריכת רכישה
 async function editPurchase(id) {
     window.currentType = 'purchase';
+
+    console.log('test11: ',id);
+    
     
     // קודם תקבל את ה-unicId
     try {
         const response = await fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=get&id=${id}`);
         const data = await response.json();
+
+        console.log('test12: ',data);
+        console.log('test13: ',data.data.unicId);
         
         if (data.success && data.data) {
             FormHandler.openForm('purchase', null, data.data.unicId);

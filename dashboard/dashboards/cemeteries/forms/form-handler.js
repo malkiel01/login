@@ -278,6 +278,8 @@ const FormHandler = {
                         
                     case 'block':
                         if (block) {
+                            console.log('test blocks');
+                            
                             const selectedBlock = window.hierarchyData.blocks.find(b => b.unicId == block);
                             if (selectedBlock && selectedBlock.cemetery_id) {
                                 document.getElementById('cemeterySelect').value = selectedBlock.cemeteryId;

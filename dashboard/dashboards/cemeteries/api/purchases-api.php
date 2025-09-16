@@ -152,7 +152,7 @@ try {
                 FROM purchases p
                 LEFT JOIN customers c ON p.clientId = c.unicId
                 LEFT JOIN graves g ON p.graveId = g.unicId
-                WHERE p.id = :id AND p.isActive = 1
+                WHERE p.unicId = :id AND p.isActive = 1
             ");
             $stmt->execute(['id' => $id]);
             $purchase = $stmt->fetch(PDO::FETCH_ASSOC);

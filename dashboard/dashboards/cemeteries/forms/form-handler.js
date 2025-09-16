@@ -224,24 +224,23 @@ const FormHandler = {
                     .then(response => response.json())
                     .then(result => {
                         if (result.success && result.data) {
-                            const data = result.data;
-                            Object.keys(data).forEach(key => {
+                            Object.keys(result.data).forEach(key => {
                                 const field = form.elements[key];
                                 if (field) {
                                     if (field.type === 'checkbox') {
-                                        field.checked = data[key] == 1;
+                                        field.checked = result.data[key] == 1;
                                     } else if (field.type === 'select-one') {
-                                        field.value = data[key] || '';
+                                        field.value = result.data[key] || '';
                                         if (key === 'countryId' && window.filterCities) {
                                             window.filterCities();
                                             setTimeout(() => {
-                                                if (data.cityId && form.elements['cityId']) {
-                                                    form.elements['cityId'].value = data.cityId;
+                                                if (result.data.cityId && form.elements['cityId']) {
+                                                    form.elements['cityId'].value = result.data.cityId;
                                                 }
                                             }, 300);
                                         }
                                     } else {
-                                        field.value = data[key] || '';
+                                        field.value = result.data[key] || '';
                                     }
                                 }
                             });

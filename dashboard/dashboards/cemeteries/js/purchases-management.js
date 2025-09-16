@@ -126,13 +126,13 @@ function displayPurchasesTable(purchases) {
                 </td>
                 <td>
                     <div class="btn-group">
-                        <button class="btn btn-sm btn-info" onclick="viewPurchase(${purchase.id})" title="צפייה">
+                        <button class="btn btn-sm btn-info" onclick="viewPurchase(${purchase.unicId})" title="צפייה">
                             👁️
                         </button>
-                        <button class="btn btn-sm btn-warning" onclick="editPurchase(${purchase.id})" title="עריכה">
+                        <button class="btn btn-sm btn-warning" onclick="editPurchase(${purchase.unicId})" title="עריכה">
                             ✏️
                         </button>
-                        <button class="btn btn-sm btn-danger" onclick="deletePurchase(${purchase.id})" title="מחיקה">
+                        <button class="btn btn-sm btn-danger" onclick="deletePurchase(${purchase.unicId})" title="מחיקה">
                             🗑️
                         </button>
                     </div>
@@ -332,7 +332,7 @@ function showPurchaseDetails(purchase) {
                 </div>
             </div>
             <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
-                <button class="btn btn-warning" onclick="this.closest('.modal').remove(); editPurchase(${purchase.id})">
+                <button class="btn btn-warning" onclick="this.closest('.modal').remove(); editPurchase(${purchase.unicId})">
                     ערוך
                 </button>
                 <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">סגור</button>
@@ -350,19 +350,14 @@ function openAddPurchase() {
 }
 
 // עריכת רכישה
-async function editPurchase(id) {
+async function editPurchase(unicId) {
     window.currentType = 'purchase';
-
-    console.log('test11: ',id);
     
     
     // קודם תקבל את ה-unicId
     try {
-        const response = await fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=get&id=${id}`);
+        const response = await fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=get&id=${unicId}`);
         const data = await response.json();
-
-        console.log('test12: ',data);
-        console.log('test13: ',data.data.unicId);
         
         if (data.success && data.data) {
             FormHandler.openForm('purchase', null, data.data.unicId);
@@ -371,7 +366,7 @@ async function editPurchase(id) {
         }
     } catch (error) {
         console.error('Error loading purchase:', error);
-        FormHandler.openForm('purchase', null, id); // נסה עם ה-id הרגיל
+        FormHandler.openForm('purchase', null, unicId); // נסה עם ה-id הרגיל
     }
 }
 

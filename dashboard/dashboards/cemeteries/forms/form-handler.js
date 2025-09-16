@@ -1331,36 +1331,110 @@ const FormHandler = {
             window.populatePlots();
         });
 
-        // טען נתונים אם זה עריכה
-        if (itemId) {
-            this.waitForElement('#purchaseFormModal form', (form) => {
-                fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=get&id=${itemId}`)
-                    .then(response => response.json())
-                    .then(result => {
-                        if (result.success && result.data) {
-                            const data = result.data;
-                            Object.keys(data).forEach(key => {
-                                const field = form.elements[key];
-                                if (field) {
-                                    field.value = data[key] || '';
-                                }
-                            });
+        // // טען נתונים אם זה עריכה
+        // if (itemId) {
+        //     this.waitForElement('#purchaseFormModal form', (form) => {
+        //         fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=get&id=${itemId}`)
+        //             .then(response => response.json())
+        //             .then(result => {
+        //                 if (result.success && result.data) {
+        //                     const data = result.data;
+        //                     Object.keys(data).forEach(key => {
+        //                         const field = form.elements[key];
+        //                         if (field) {
+        //                             field.value = data[key] || '';
+        //                         }
+        //                     });
                             
-                            // טען גם את התשלומים אם יש
-                            if (data.payments_data) {
-                                try {
-                                    window.purchasePayments = JSON.parse(data.payments_data);
-                                    if (window.displayPaymentsSummary) {
-                                        document.getElementById('paymentsDisplay').innerHTML = window.displayPaymentsSummary();
+        //                     // טען גם את התשלומים אם יש
+        //                     if (data.payments_data) {
+        //                         try {
+        //                             window.purchasePayments = JSON.parse(data.payments_data);
+        //                             if (window.displayPaymentsSummary) {
+        //                                 document.getElementById('paymentsDisplay').innerHTML = window.displayPaymentsSummary();
+        //                             }
+        //                         } catch(e) {
+        //                             console.error('Error parsing payments data:', e);
+        //                         }
+        //                     }
+        //                 }
+        //             })
+        //             .catch(error => console.error('Error loading purchase data:', error));
+        //     });
+        // }
+
+        // טען נתונים אם זה עריכה - בדיוק כמו בלקוחות
+        if (itemId) {
+            const loadPurchaseData = () => {
+                const form = document.querySelector('#purchaseFormModal form');
+                console.log('Checking purchase form readiness:', form ? 'found' : 'not found');
+                
+                // בדוק שהטופס מוכן עם מספיק שדות
+                if (form && form.elements && form.elements.length > 5) {
+                    console.log('Purchase form is ready, loading data...');
+                    
+                    fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=get&id=${itemId}`)
+                        .then(response => response.json())
+                        .then(result => {
+                            if (result.success && result.data) {
+                                const data = result.data;
+                                console.log('Filling purchase form with data:', Object.keys(data));
+                                
+                                // מלא את כל השדות
+                                Object.keys(data).forEach(key => {
+                                    const field = form.elements[key];
+                                    if (field && data[key] !== null && data[key] !== undefined) {
+                                        if (field.type === 'checkbox') {
+                                            field.checked = data[key] == 1;
+                                        } else {
+                                            field.value = data[key];
+                                        }
                                     }
-                                } catch(e) {
-                                    console.error('Error parsing payments data:', e);
+                                });
+                                
+                                // טען תשלומים אם יש
+                                if (data.payments_data) {
+                                    try {
+                                        window.purchasePayments = JSON.parse(data.payments_data);
+                                        if (window.displayPaymentsSummary) {
+                                            document.getElementById('paymentsDisplay').innerHTML = window.displayPaymentsSummary();
+                                        }
+                                    } catch(e) {
+                                        console.error('Error parsing payments data:', e);
+                                    }
                                 }
                             }
-                        }
-                    })
-                    .catch(error => console.error('Error loading purchase data:', error));
-            });
+                        })
+                        .catch(error => {
+                            console.error('Error loading purchase data:', error);
+                        });
+                    
+                    return true; // הצלחנו לטעון
+                }
+                return false;
+            };
+            
+            // נסה לטעון מיד
+            if (!loadPurchaseData()) {
+                // אם לא הצליח, השתמש ב-MutationObserver
+                const observer = new MutationObserver((mutations, obs) => {
+                    if (loadPurchaseData()) {
+                        obs.disconnect(); // הפסק לצפות
+                    }
+                });
+                
+                // התחל לצפות בשינויים
+                const modal = document.getElementById('purchaseFormModal');
+                if (modal) {
+                    observer.observe(modal, {
+                        childList: true,
+                        subtree: true
+                    });
+                }
+                
+                // הגבלת זמן של 10 שניות
+                setTimeout(() => observer.disconnect(), 10000);
+            }
         }
     },
 

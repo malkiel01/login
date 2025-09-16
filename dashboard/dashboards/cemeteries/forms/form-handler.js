@@ -1351,7 +1351,7 @@ const FormHandler = {
                         .then(result => {
                             if (result.success && result.data) {
                                 const data = result.data;
-                                console.log('Filling purchase form with data:', Object.keys(data));
+                                console.log('Filling purchase form with data:', Object.entries(data));
                                 
                                 // מלא את כל השדות
                                 Object.keys(data).forEach(key => {

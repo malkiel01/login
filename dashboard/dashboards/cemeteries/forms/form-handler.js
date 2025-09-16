@@ -135,10 +135,14 @@ const FormHandler = {
                 break;
                 
             case 'customer':
+                console.log("case 'customer': ", itemId);
+                
                 this.handleCustomerForm(itemId);
                 break;
                 
             case 'purchase':
+                console.log("case 'purchase': ", itemId);
+
                 this.handlePurchaseForm(itemId);
                 break;
                 

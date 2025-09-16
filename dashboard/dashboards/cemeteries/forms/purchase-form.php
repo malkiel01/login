@@ -68,7 +68,7 @@
 
         // טען את כל החלקות
         $plotsStmt = $conn->prepare("
-            SELECT p.*, b.cemeteryId as cemetery_id 
+            SELECT p.*, b.cemeteryId as cemetery_id, p.plotNameHe as name 
             FROM plots p 
             INNER JOIN blocks b ON p.blockId = b.unicId 
             WHERE p.isActive = 1

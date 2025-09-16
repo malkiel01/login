@@ -79,7 +79,7 @@
 
         // טען את כל השורות
         $rowsStmt = $conn->prepare("
-            SELECT r.*, r.plotId as plot_id
+            SELECT r.*, r.plotId as plot_id, r.lineNameHe as name
             FROM rows r 
             WHERE r.isActive = 1
             ORDER BY r.lineNameHe

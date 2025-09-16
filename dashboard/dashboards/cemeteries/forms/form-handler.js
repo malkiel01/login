@@ -278,8 +278,6 @@ const FormHandler = {
                         
                     case 'block':
                         if (block) {
-                            console.log('test blocks');
-                            
                             const selectedBlock = window.hierarchyData.blocks.find(b => b.unicId == block);
                             if (selectedBlock && selectedBlock.cemetery_id) {
                                 document.getElementById('cemeterySelect').value = selectedBlock.cemeteryId;
@@ -379,9 +377,9 @@ const FormHandler = {
                 let plots = window.hierarchyData.plots;
                 
                 if (blockId) {
-                    plots = plots.filter(p => p.block_id == blockId);
+                    plots = plots.filter(p => p.blockId == blockId);
                 } else if (cemeteryId) {
-                    plots = plots.filter(p => p.cemetery_id == cemeteryId);
+                    plots = plots.filter(p => p.cemeteryId == cemeteryId);
                 }
                 
                 plots.forEach(plot => {

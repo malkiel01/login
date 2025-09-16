@@ -280,8 +280,8 @@ const FormHandler = {
                         if (block) {
                             const selectedBlock = window.hierarchyData.blocks.find(b => b.unicId == block);
                             if (selectedBlock && selectedBlock.cemetery_id) {
-                                document.getElementById('cemeterySelect').value = selectedBlock.cemetery_id;
-                                populateBlocks(selectedBlock.cemetery_id);
+                                document.getElementById('cemeterySelect').value = selectedBlock.cemeteryId;
+                                populateBlocks(selectedBlock.cemeteryId);
                                 document.getElementById('blockSelect').value = block;
                             }
                         }
@@ -293,18 +293,18 @@ const FormHandler = {
                         if (plot) {
                             const selectedPlot = window.hierarchyData.plots.find(p => p.unicId == plot);
                             if (selectedPlot) {
-                                if (selectedPlot.block_id && document.getElementById('blockSelect').value != selectedPlot.block_id) {
-                                    document.getElementById('blockSelect').value = selectedPlot.block_id;
+                                if (selectedPlot.blockId && document.getElementById('blockSelect').value != selectedPlot.blockId) {
+                                    document.getElementById('blockSelect').value = selectedPlot.blockId;
                                     
-                                    const selectedBlock = window.hierarchyData.blocks.find(b => b.unicId == selectedPlot.block_id);
-                                    if (selectedBlock && selectedBlock.cemetery_id) {
-                                        document.getElementById('cemeterySelect').value = selectedBlock.cemetery_id;
-                                        populateBlocks(selectedBlock.cemetery_id);
-                                        document.getElementById('blockSelect').value = selectedPlot.block_id;
+                                    const selectedBlock = window.hierarchyData.blocks.find(b => b.unicId == selectedPlot.blockId);
+                                    if (selectedBlock && selectedBlock.cemeteryId) {
+                                        document.getElementById('cemeterySelect').value = selectedBlock.cemeteryId;
+                                        populateBlocks(selectedBlock.cemeteryId);
+                                        document.getElementById('blockSelect').value = selectedPlot.blockId;
                                     }
                                 }
                                 
-                                populatePlots(null, selectedPlot.block_id);
+                                populatePlots(null, selectedPlot.blockId);
                                 document.getElementById('plotSelect').value = plot;
                             }
                             

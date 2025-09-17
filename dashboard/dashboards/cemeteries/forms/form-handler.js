@@ -257,9 +257,6 @@ const FormHandler = {
             // פונקציה לסינון ההיררכיה         
             if (fieldset.dataset.hierarchy) {
                 window.hierarchyData = JSON.parse(fieldset.dataset.hierarchy);
-                debugger;
-                console.log(window.hierarchyData);
-                alert('No hierarchy data found in fieldset!');
             } else {
                 alert('No hierarchy data found in fieldset!');
                 return;
@@ -1346,12 +1343,14 @@ const FormHandler = {
                 if (form && form.elements && form.elements.length > 5) {
                     console.log('Purchase form is ready, loading data...');
                     
-                    fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=get&id=${itemId}`)
+                    fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=get&unicId=${itemId}`)
                         .then(response => response.json())
                         .then(result => {
                             if (result.success && result.data) {
                                 const data = result.data;
                                 console.log('Filling purchase form with data:', Object.entries(data));
+
+                                alert(data)
                                 
                                 // מלא את כל השדות
                                 Object.keys(data).forEach(key => {

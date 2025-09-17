@@ -224,7 +224,10 @@
     // הוספת שדה לקוח
     $formBuilder->addField('clientId', 'לקוח', 'select', [
         'required' => true,
-        'options' => $customers,
+        'options' => array_merge(
+            ['' => '-- בחר לקוח --'],  // הוסף אופציה ריקה בהתחלה
+            $customers
+        ),
         'value' => $purchase['clientId'] ?? ''
     ]);
 

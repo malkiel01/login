@@ -1327,52 +1327,6 @@ const FormHandler = {
             // אתחל
             window.populateBlocks();
             window.populatePlots();
-
-            // // הוסף דיבאג לכל פונקציות המילוי
-            //     const originalPopulateBlocks = window.populateBlocks;
-            //     window.populateBlocks = function(cemeteryId) {
-            //         // debugLog(`populateBlocks called with cemeteryId: ${cemeteryId || 'ALL'}`, 'info');
-            //         const result = originalPopulateBlocks.apply(this, arguments);
-            //         // updateAvailableOptions();
-            //         // updateCurrentSelection();
-            //         return result;
-            //     };
-
-            //     const originalPopulatePlots = window.populatePlots;
-            //     window.populatePlots = function(cemeteryId, blockId) {
-            //         // debugLog(`populatePlots called - cemetery: ${cemeteryId || 'null'}, block: ${blockId || 'null'}`, 'info');
-            //         const result = originalPopulatePlots.apply(this, arguments);
-            //         // updateAvailableOptions();
-            //         // updateCurrentSelection();
-            //         return result;
-            //     };
-
-            //     const originalPopulateRows = window.populateRows;
-            //     window.populateRows = function(plotId) {
-            //         // debugLog(`populateRows called with plotId: ${plotId || 'null'}`, 'info');
-            //         const result = originalPopulateRows.apply(this, arguments);
-            //         // updateAvailableOptions();
-            //         // updateCurrentSelection();
-            //         return result;
-            //     };
-
-            //     const originalPopulateAreaGraves = window.populateAreaGraves;
-            //     window.populateAreaGraves = function(rowId) {
-            //         // debugLog(`populateAreaGraves called with rowId: ${rowId || 'null'}`, 'info');
-            //         const result = originalPopulateAreaGraves.apply(this, arguments);
-            //         // updateAvailableOptions();
-            //         // updateCurrentSelection();
-            //         return result;
-            //     };
-
-            //     const originalPopulateGraves = window.populateGraves;
-            //     window.populateGraves = function(areaGraveId) {
-            //     // debugLog(`populateGraves called with areaGraveId: ${areaGraveId || 'null'}`, 'info');
-            //     const result = originalPopulateGraves.apply(this, arguments);
-            //     // updateAvailableOptions();
-            //     // updateCurrentSelection();
-            //     return result;
-            //     };
          });
 
         // טען נתונים אם זה עריכה
@@ -1486,80 +1440,6 @@ const FormHandler = {
                 setTimeout(() => observer.disconnect(), 10000);
             }
         }
-
-        // // טען נתונים אם זה עריכה
-        // if (itemId) {            
-        //     const loadPurchaseData = () => {
-        //         const form = document.querySelector('#purchaseFormModal form');
-        //         console.log('Checking purchase form readiness:', form ? 'found' : 'not found');
-                
-        //         // בדוק שהטופס מוכן עם מספיק שדות
-        //         if (form && form.elements && form.elements.length > 5) {
-        //             console.log('Purchase form is ready, loading data...');
-                    
-        //             fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=get&id=${itemId}`)
-        //                 .then(response => response.json())
-        //                 .then(result => {
-        //                     if (result.success && result.data) {
-        //                         const data = result.data;
-        //                         console.log('Filling purchase form with data:', Object.entries(data));
-
-        //                         // מלא את כל השדות
-        //                         Object.keys(data).forEach(key => {
-        //                             const field = form.elements[key];
-        //                             if (field && data[key] !== null && data[key] !== undefined) {
-        //                                 if (field.type === 'checkbox') {
-        //                                     field.checked = data[key] == 1;
-        //                                 } else {
-        //                                     field.value = data[key];
-        //                                 }
-        //                             }
-        //                         });
-                                
-        //                         // טען תשלומים אם יש
-        //                         if (data.payments_data) {
-        //                             try {
-        //                                 window.purchasePayments = JSON.parse(data.payments_data);
-        //                                 if (window.displayPaymentsSummary) {
-        //                                     document.getElementById('paymentsDisplay').innerHTML = window.displayPaymentsSummary();
-        //                                 }
-        //                             } catch(e) {
-        //                                 console.error('Error parsing payments data:', e);
-        //                             }
-        //                         }
-        //                     }
-        //                 })
-        //                 .catch(error => {
-        //                     console.error('Error loading purchase data:', error);
-        //                 });
-                    
-        //             return true; // הצלחנו לטעון
-        //         }
-        //         return false;
-        //     };
-            
-        //     // נסה לטעון מיד
-        //     if (!loadPurchaseData()) {
-        //         // אם לא הצליח, השתמש ב-MutationObserver
-        //         const observer = new MutationObserver((mutations, obs) => {
-        //             if (loadPurchaseData()) {
-        //                 obs.disconnect(); // הפסק לצפות
-        //             }
-        //         });
-                
-        //         // התחל לצפות בשינויים
-        //         const modal = document.getElementById('purchaseFormModal');
-        //         if (modal) {
-        //             observer.observe(modal, {
-        //                 childList: true,
-        //                 subtree: true
-        //             });
-        //         }
-                
-        //         // הגבלת זמן של 10 שניות
-        //         setTimeout(() => observer.disconnect(), 10000);
-        //     }
-        // }
     },
     
     loadFormData: function(type, itemId) {

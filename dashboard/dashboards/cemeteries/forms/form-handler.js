@@ -258,13 +258,13 @@ const FormHandler = {
             `)
         // בדיוק כמו לקוח - חכה ל-fieldset עם הנתונים
         this.waitForElement('#grave-selector-fieldset', (fieldset) => {
-            // if (fieldset.dataset.hierarchy) {
-            //     window.hierarchyData = JSON.parse(fieldset.dataset.hierarchy);
-            //     console.log('Hierarchy data loaded from fieldset');
-            // } else {
-            //     console.error('No hierarchy data in fieldset');
-            //     return;
-            // }
+            if (fieldset.dataset.hierarchy) {
+                window.hierarchyData = JSON.parse(fieldset.dataset.hierarchy);
+                console.log('Hierarchy data loaded from fieldset');
+            } else {
+                console.error('No hierarchy data in fieldset');
+                return;
+            }
             
             // // פונקציה לסינון ההיררכיה
             // window.filterHierarchy = function(level) {

@@ -252,15 +252,13 @@ const FormHandler = {
     },
 
     handlePurchaseForm: function(itemId) {
-
-        alert(`step 1:
-            itemId: ${itemId}
-            `)
         // בדיוק כמו לקוח - חכה ל-fieldset עם הנתונים
         this.waitForElement('#grave-selector-fieldset', (fieldset) => {
             if (fieldset.dataset.hierarchy) {
                 window.hierarchyData = JSON.parse(fieldset.dataset.hierarchy);
                 console.log('Hierarchy data loaded from fieldset');
+
+                alert(window.hierarchyData)
             } else {
                 console.error('No hierarchy data in fieldset');
                 return;
@@ -1336,19 +1334,10 @@ const FormHandler = {
             // אתחל
             window.populateBlocks();
             window.populatePlots();
-
-                    alert(`step 2:
-                        itemId: ${itemId}
-                    `)
         });
 
         // טען נתונים אם זה עריכה
-        if (itemId) {
-                    alert(`step 3:
-                        itemId: ${itemId}
-                    `)
-            console.log('temp id: ', itemId);
-            
+        if (itemId) {            
             const loadPurchaseData = () => {
                 const form = document.querySelector('#purchaseFormModal form');
                 console.log('Checking purchase form readiness:', form ? 'found' : 'not found');

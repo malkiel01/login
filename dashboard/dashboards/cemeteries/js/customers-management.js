@@ -266,8 +266,7 @@ function openAddCustomer() {
 
 // עריכת לקוח
 async function editCustomer(id) {
-    window.currentType = 'customer';
-    console.log('step 1');   
+    window.currentType = 'customer';  
     FormHandler.openForm('customer', null, id);
 }
 

@@ -33,11 +33,6 @@ try {
     $formBuilderPath = __DIR__ . '/FormBuilder.php';
     $formsConfigPath = __DIR__ . '/forms-config.php';
     
-    // error_log("Config path: $configPath - Exists: " . (file_exists($configPath) ? 'YES' : 'NO'));
-    // error_log("HierarchyManager path: $hierarchyManagerPath - Exists: " . (file_exists($hierarchyManagerPath) ? 'YES' : 'NO'));
-    // error_log("FormBuilder path: $formBuilderPath - Exists: " . (file_exists($formBuilderPath) ? 'YES' : 'NO'));
-    // error_log("FormsConfig path: $formsConfigPath - Exists: " . (file_exists($formsConfigPath) ? 'YES' : 'NO'));
-    
     // בדוק אם הקונפיג המרכזי קיים
     if (file_exists($configPath)) {
         error_log("Loading config from: $configPath");

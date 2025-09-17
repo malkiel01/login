@@ -117,9 +117,6 @@ try {
             $stmt->execute();
             
             $purchases = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            // Debug - הסר אחרי הבדיקה
-            error_log("First purchase unicId: " . ($purchases[0]['unicId'] ?? 'NOT FOUND'));// Debug - הסר אחרי הבדיקה
-            error_log("First purchase unicId: " . ($purchases[1]['unicId'] ?? 'NOT FOUND'));
             
             // הוסף תאימות לאחור
             foreach ($purchases as &$purchase) {

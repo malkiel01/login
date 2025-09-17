@@ -350,11 +350,26 @@ function openAddPurchase() {
 }
 
 // עריכת רכישה
-async function editPurchase(id) {
+async function editPurchase2(id) {
     window.currentType = 'purchase';
     console.log('נכנסתי ל editPurchase', 'file: purchases-management.js, row: 355');
     
     FormHandler.openForm('purchase', null, id);
+}
+
+async function editPurchase(id) {
+    console.log('editPurchase called with:', id);
+    console.log('FormHandler exists?', typeof FormHandler);
+    console.log('FormHandler.openForm exists?', typeof FormHandler.openForm);
+    
+    window.currentType = 'purchase';
+    
+    try {
+        FormHandler.openForm('purchase', null, id);
+        console.log('FormHandler.openForm was called successfully');
+    } catch (error) {
+        console.error('Error calling FormHandler.openForm:', error);
+    }
 }
 
 // מחיקת רכישה

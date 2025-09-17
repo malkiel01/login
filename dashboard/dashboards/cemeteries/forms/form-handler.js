@@ -2881,213 +2881,213 @@ const FormHandler = {
             window.populateBlocks();
             window.populatePlots();
 
-                // יצירת DIV דיבאג מורחב
-                const debugContainer = document.createElement('div');
-                debugContainer.id = 'hierarchyDebugContainer';
-                debugContainer.style.cssText = `
-                    position: fixed;
-                    top: 10px;
-                    right: 10px;
-                    background: #1a1a1a;
-                    color: #00ff00;
-                    padding: 20px;
-                    z-index: 99999;
-                    width: 600px;
-                    max-height: 90vh;
-                    overflow-y: auto;
-                    border: 3px solid #00ff00;
-                    font-family: 'Courier New', monospace;
-                    font-size: 11px;
-                    box-shadow: 0 0 20px rgba(0,255,0,0.5);
-                `;
+                // // יצירת DIV דיבאג מורחב
+                // const debugContainer = document.createElement('div');
+                // debugContainer.id = 'hierarchyDebugContainer';
+                // debugContainer.style.cssText = `
+                //     position: fixed;
+                //     top: 10px;
+                //     right: 10px;
+                //     background: #1a1a1a;
+                //     color: #00ff00;
+                //     padding: 20px;
+                //     z-index: 99999;
+                //     width: 600px;
+                //     max-height: 90vh;
+                //     overflow-y: auto;
+                //     border: 3px solid #00ff00;
+                //     font-family: 'Courier New', monospace;
+                //     font-size: 11px;
+                //     box-shadow: 0 0 20px rgba(0,255,0,0.5);
+                // `;
 
-                debugContainer.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                        <h3 style="color: #00ff00; margin: 0;">🖥️ HIERARCHY DEBUG MONITOR</h3>
-                        <button onclick="this.parentElement.parentElement.remove()" style="background: #ff0000; color: white; border: none; padding: 5px 10px; cursor: pointer;">✖</button>
-                    </div>
+                // debugContainer.innerHTML = `
+                //     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                //         <h3 style="color: #00ff00; margin: 0;">🖥️ HIERARCHY DEBUG MONITOR</h3>
+                //         <button onclick="this.parentElement.parentElement.remove()" style="background: #ff0000; color: white; border: none; padding: 5px 10px; cursor: pointer;">✖</button>
+                //     </div>
                     
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                        <div>
-                            <h4 style="color: #ffff00; border-bottom: 1px solid #00ff00; padding-bottom: 5px;">📊 DATA STATUS</h4>
-                            <div id="dataStatus"></div>
-                        </div>
+                //     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                //         <div>
+                //             <h4 style="color: #ffff00; border-bottom: 1px solid #00ff00; padding-bottom: 5px;">📊 DATA STATUS</h4>
+                //             <div id="dataStatus"></div>
+                //         </div>
                         
-                        <div>
-                            <h4 style="color: #ffff00; border-bottom: 1px solid #00ff00; padding-bottom: 5px;">🎯 CURRENT SELECTION</h4>
-                            <div id="currentSelection"></div>
-                        </div>
-                    </div>
+                //         <div>
+                //             <h4 style="color: #ffff00; border-bottom: 1px solid #00ff00; padding-bottom: 5px;">🎯 CURRENT SELECTION</h4>
+                //             <div id="currentSelection"></div>
+                //         </div>
+                //     </div>
                     
-                    <div style="margin-top: 20px;">
-                        <h4 style="color: #ffff00; border-bottom: 1px solid #00ff00; padding-bottom: 5px;">📝 ACTION LOG</h4>
-                        <div id="actionLog" style="max-height: 200px; overflow-y: auto; background: #0a0a0a; padding: 10px; border: 1px solid #00ff00;"></div>
-                    </div>
+                //     <div style="margin-top: 20px;">
+                //         <h4 style="color: #ffff00; border-bottom: 1px solid #00ff00; padding-bottom: 5px;">📝 ACTION LOG</h4>
+                //         <div id="actionLog" style="max-height: 200px; overflow-y: auto; background: #0a0a0a; padding: 10px; border: 1px solid #00ff00;"></div>
+                //     </div>
                     
-                    <div style="margin-top: 20px;">
-                        <h4 style="color: #ffff00; border-bottom: 1px solid #00ff00; padding-bottom: 5px;">🔍 AVAILABLE OPTIONS</h4>
-                        <div id="availableOptions"></div>
-                    </div>
-                `;
+                //     <div style="margin-top: 20px;">
+                //         <h4 style="color: #ffff00; border-bottom: 1px solid #00ff00; padding-bottom: 5px;">🔍 AVAILABLE OPTIONS</h4>
+                //         <div id="availableOptions"></div>
+                //     </div>
+                // `;
 
-                document.body.appendChild(debugContainer);
+                // document.body.appendChild(debugContainer);
 
-                // פונקציית לוג
-                window.debugLog = function(message, type = 'info') {
-                    const logDiv = document.getElementById('actionLog');
-                    if (!logDiv) return;
+                // // פונקציית לוג
+                // window.debugLog = function(message, type = 'info') {
+                //     const logDiv = document.getElementById('actionLog');
+                //     if (!logDiv) return;
                     
-                    const colors = {
-                        'info': '#00ff00',
-                        'warning': '#ffff00',
-                        'error': '#ff0000',
-                        'success': '#00ffff'
-                    };
+                //     const colors = {
+                //         'info': '#00ff00',
+                //         'warning': '#ffff00',
+                //         'error': '#ff0000',
+                //         'success': '#00ffff'
+                //     };
                     
-                    const timestamp = new Date().toLocaleTimeString('he-IL');
-                    const logEntry = document.createElement('div');
-                    logEntry.style.color = colors[type] || '#00ff00';
-                    logEntry.innerHTML = `[${timestamp}] ${message}`;
-                    logDiv.insertBefore(logEntry, logDiv.firstChild);
+                //     const timestamp = new Date().toLocaleTimeString('he-IL');
+                //     const logEntry = document.createElement('div');
+                //     logEntry.style.color = colors[type] || '#00ff00';
+                //     logEntry.innerHTML = `[${timestamp}] ${message}`;
+                //     logDiv.insertBefore(logEntry, logDiv.firstChild);
                     
-                    // שמור רק 50 הודעות אחרונות
-                    while (logDiv.children.length > 50) {
-                        logDiv.removeChild(logDiv.lastChild);
-                    }
-                };
+                //     // שמור רק 50 הודעות אחרונות
+                //     while (logDiv.children.length > 50) {
+                //         logDiv.removeChild(logDiv.lastChild);
+                //     }
+                // };
 
-                // עדכון סטטוס הנתונים
-                window.updateDataStatus = function() {
-                    const statusDiv = document.getElementById('dataStatus');
-                    if (!statusDiv || !window.hierarchyData) return;
+                // // עדכון סטטוס הנתונים
+                // window.updateDataStatus = function() {
+                //     const statusDiv = document.getElementById('dataStatus');
+                //     if (!statusDiv || !window.hierarchyData) return;
                     
-                    statusDiv.innerHTML = `
-                        <div style="color: #00ffff;">📊 Hierarchy Data Loaded:</div>
-                        <div style="margin-left: 20px;">
-                            <div>• Cemeteries: <span style="color: yellow">${document.querySelectorAll('#cemeterySelect option').length - 1}</span></div>
-                            <div>• Blocks: <span style="color: yellow">${window.hierarchyData.blocks?.length || 0}</span></div>
-                            <div>• Plots: <span style="color: yellow">${window.hierarchyData.plots?.length || 0}</span></div>
-                            <div>• Rows: <span style="color: yellow">${window.hierarchyData.rows?.length || 0}</span></div>
-                            <div>• Area Graves: <span style="color: yellow">${window.hierarchyData.areaGraves?.length || 0}</span></div>
-                            <div>• Graves: <span style="color: yellow">${window.hierarchyData.graves?.length || 0}</span></div>
-                        </div>
-                    `;
-                };
+                //     statusDiv.innerHTML = `
+                //         <div style="color: #00ffff;">📊 Hierarchy Data Loaded:</div>
+                //         <div style="margin-left: 20px;">
+                //             <div>• Cemeteries: <span style="color: yellow">${document.querySelectorAll('#cemeterySelect option').length - 1}</span></div>
+                //             <div>• Blocks: <span style="color: yellow">${window.hierarchyData.blocks?.length || 0}</span></div>
+                //             <div>• Plots: <span style="color: yellow">${window.hierarchyData.plots?.length || 0}</span></div>
+                //             <div>• Rows: <span style="color: yellow">${window.hierarchyData.rows?.length || 0}</span></div>
+                //             <div>• Area Graves: <span style="color: yellow">${window.hierarchyData.areaGraves?.length || 0}</span></div>
+                //             <div>• Graves: <span style="color: yellow">${window.hierarchyData.graves?.length || 0}</span></div>
+                //         </div>
+                //     `;
+                // };
 
-                // עדכון הבחירה הנוכחית
-                window.updateCurrentSelection = function() {
-                    const selectionDiv = document.getElementById('currentSelection');
-                    if (!selectionDiv) return;
+                // // עדכון הבחירה הנוכחית
+                // window.updateCurrentSelection = function() {
+                //     const selectionDiv = document.getElementById('currentSelection');
+                //     if (!selectionDiv) return;
                     
-                    const cemetery = document.getElementById('cemeterySelect');
-                    const block = document.getElementById('blockSelect');
-                    const plot = document.getElementById('plotSelect');
-                    const row = document.getElementById('rowSelect');
-                    const areaGrave = document.getElementById('areaGraveSelect');
-                    const grave = document.getElementById('graveSelect');
+                //     const cemetery = document.getElementById('cemeterySelect');
+                //     const block = document.getElementById('blockSelect');
+                //     const plot = document.getElementById('plotSelect');
+                //     const row = document.getElementById('rowSelect');
+                //     const areaGrave = document.getElementById('areaGraveSelect');
+                //     const grave = document.getElementById('graveSelect');
                     
-                    selectionDiv.innerHTML = `
-                        <div>🏛️ Cemetery:</div>
-                        <div style="margin-left: 20px; color: ${cemetery?.value ? 'yellow' : 'gray'};">${cemetery?.value || '-- NONE --'}</div>
+                //     selectionDiv.innerHTML = `
+                //         <div>🏛️ Cemetery:</div>
+                //         <div style="margin-left: 20px; color: ${cemetery?.value ? 'yellow' : 'gray'};">${cemetery?.value || '-- NONE --'}</div>
                         
-                        <div>📦 Block:</div>
-                        <div style="margin-left: 20px; color: ${block?.value ? 'yellow' : 'gray'};">${block?.value || '-- NONE --'}</div>
+                //         <div>📦 Block:</div>
+                //         <div style="margin-left: 20px; color: ${block?.value ? 'yellow' : 'gray'};">${block?.value || '-- NONE --'}</div>
                         
-                        <div>📍 Plot:</div>
-                        <div style="margin-left: 20px; color: ${plot?.value ? 'yellow' : 'gray'};">${plot?.value || '-- NONE --'}</div>
+                //         <div>📍 Plot:</div>
+                //         <div style="margin-left: 20px; color: ${plot?.value ? 'yellow' : 'gray'};">${plot?.value || '-- NONE --'}</div>
                         
-                        <div>📏 Row:</div>
-                        <div style="margin-left: 20px; color: ${row?.value ? 'yellow' : 'gray'};">${row?.value || '-- NONE --'}</div>
+                //         <div>📏 Row:</div>
+                //         <div style="margin-left: 20px; color: ${row?.value ? 'yellow' : 'gray'};">${row?.value || '-- NONE --'}</div>
                         
-                        <div>🏘️ Area Grave:</div>
-                        <div style="margin-left: 20px; color: ${areaGrave?.value ? 'yellow' : 'gray'};">${areaGrave?.value || '-- NONE --'}</div>
+                //         <div>🏘️ Area Grave:</div>
+                //         <div style="margin-left: 20px; color: ${areaGrave?.value ? 'yellow' : 'gray'};">${areaGrave?.value || '-- NONE --'}</div>
                         
-                        <div>⚰️ Grave:</div>
-                        <div style="margin-left: 20px; color: ${grave?.value ? 'yellow' : 'gray'};">${grave?.value || '-- NONE --'}</div>
-                        <pre><code>${JSON.stringify(grave)}</code></pre>
-                    `;
-                };
+                //         <div>⚰️ Grave:</div>
+                //         <div style="margin-left: 20px; color: ${grave?.value ? 'yellow' : 'gray'};">${grave?.value || '-- NONE --'}</div>
+                //         <pre><code>${JSON.stringify(grave)}</code></pre>
+                //     `;
+                // };
 
-                // עדכון אפשרויות זמינות
-                window.updateAvailableOptions = function() {
-                    const optionsDiv = document.getElementById('availableOptions');
-                    if (!optionsDiv) return;
+                // // עדכון אפשרויות זמינות
+                // window.updateAvailableOptions = function() {
+                //     const optionsDiv = document.getElementById('availableOptions');
+                //     if (!optionsDiv) return;
                     
-                    const selects = {
-                        'Cemetery': document.getElementById('cemeterySelect'),
-                        'Block': document.getElementById('blockSelect'),
-                        'Plot': document.getElementById('plotSelect'),
-                        'Row': document.getElementById('rowSelect'),
-                        'Area Grave': document.getElementById('areaGraveSelect'),
-                        'Grave': document.getElementById('graveSelect')
-                    };
+                //     const selects = {
+                //         'Cemetery': document.getElementById('cemeterySelect'),
+                //         'Block': document.getElementById('blockSelect'),
+                //         'Plot': document.getElementById('plotSelect'),
+                //         'Row': document.getElementById('rowSelect'),
+                //         'Area Grave': document.getElementById('areaGraveSelect'),
+                //         'Grave': document.getElementById('graveSelect')
+                //     };
                     
-                    let html = '<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">';
+                //     let html = '<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">';
                     
-                    for (const [name, select] of Object.entries(selects)) {
-                        if (select) {
-                            const enabledOptions = Array.from(select.options).filter(o => !o.disabled && o.value);
-                            html += `
-                                <div style="background: #0a0a0a; padding: 10px; border: 1px solid #00ff00;">
-                                    <div style="color: #00ffff; font-weight: bold;">${name}:</div>
-                                    <div style="color: ${select.disabled ? 'gray' : 'lime'};">
-                                        Status: ${select.disabled ? 'DISABLED' : 'ENABLED'}
-                                    </div>
-                                    <div style="color: yellow;">
-                                        Options: ${enabledOptions.length} / ${select.options.length - 1}
-                                    </div>
-                                </div>
-                            `;
-                        }
-                    }
+                //     for (const [name, select] of Object.entries(selects)) {
+                //         if (select) {
+                //             const enabledOptions = Array.from(select.options).filter(o => !o.disabled && o.value);
+                //             html += `
+                //                 <div style="background: #0a0a0a; padding: 10px; border: 1px solid #00ff00;">
+                //                     <div style="color: #00ffff; font-weight: bold;">${name}:</div>
+                //                     <div style="color: ${select.disabled ? 'gray' : 'lime'};">
+                //                         Status: ${select.disabled ? 'DISABLED' : 'ENABLED'}
+                //                     </div>
+                //                     <div style="color: yellow;">
+                //                         Options: ${enabledOptions.length} / ${select.options.length - 1}
+                //                     </div>
+                //                 </div>
+                //             `;
+                //         }
+                //     }
                     
-                    html += '</div>';
-                    optionsDiv.innerHTML = html;
-                };
+                //     html += '</div>';
+                //     optionsDiv.innerHTML = html;
+                // };
 
                 // הוסף דיבאג לכל פונקציות המילוי
                 const originalPopulateBlocks = window.populateBlocks;
                 window.populateBlocks = function(cemeteryId) {
-                    debugLog(`populateBlocks called with cemeteryId: ${cemeteryId || 'ALL'}`, 'info');
+                    // debugLog(`populateBlocks called with cemeteryId: ${cemeteryId || 'ALL'}`, 'info');
                     const result = originalPopulateBlocks.apply(this, arguments);
-                    updateAvailableOptions();
-                    updateCurrentSelection();
+                    // updateAvailableOptions();
+                    // updateCurrentSelection();
                     return result;
                 };
 
                 const originalPopulatePlots = window.populatePlots;
                 window.populatePlots = function(cemeteryId, blockId) {
-                    debugLog(`populatePlots called - cemetery: ${cemeteryId || 'null'}, block: ${blockId || 'null'}`, 'info');
+                    // debugLog(`populatePlots called - cemetery: ${cemeteryId || 'null'}, block: ${blockId || 'null'}`, 'info');
                     const result = originalPopulatePlots.apply(this, arguments);
-                    updateAvailableOptions();
-                    updateCurrentSelection();
+                    // updateAvailableOptions();
+                    // updateCurrentSelection();
                     return result;
                 };
 
                 const originalPopulateRows = window.populateRows;
                 window.populateRows = function(plotId) {
-                    debugLog(`populateRows called with plotId: ${plotId || 'null'}`, 'info');
+                    // debugLog(`populateRows called with plotId: ${plotId || 'null'}`, 'info');
                     const result = originalPopulateRows.apply(this, arguments);
-                    updateAvailableOptions();
-                    updateCurrentSelection();
+                    // updateAvailableOptions();
+                    // updateCurrentSelection();
                     return result;
                 };
 
                 const originalPopulateAreaGraves = window.populateAreaGraves;
                 window.populateAreaGraves = function(rowId) {
-                    debugLog(`populateAreaGraves called with rowId: ${rowId || 'null'}`, 'info');
+                    // debugLog(`populateAreaGraves called with rowId: ${rowId || 'null'}`, 'info');
                     const result = originalPopulateAreaGraves.apply(this, arguments);
-                    updateAvailableOptions();
-                    updateCurrentSelection();
+                    // updateAvailableOptions();
+                    // updateCurrentSelection();
                     return result;
                 };
 
                 const originalPopulateGraves = window.populateGraves;
                 window.populateGraves = function(areaGraveId) {
-                debugLog(`populateGraves called with areaGraveId: ${areaGraveId || 'null'}`, 'info');
+                // debugLog(`populateGraves called with areaGraveId: ${areaGraveId || 'null'}`, 'info');
                 const result = originalPopulateGraves.apply(this, arguments);
-                updateAvailableOptions();
-                updateCurrentSelection();
+                // updateAvailableOptions();
+                // updateCurrentSelection();
                 return result;
             };
 
@@ -3124,10 +3124,10 @@ const FormHandler = {
                             if (result.success && result.data) {
                                 const data = result.data;
                                 
-                                // דיבאג: הצג את הנתונים שהגיעו
-                                debugLog(`=== PURCHASE DATA LOADED ===`, 'warning');
-                                debugLog(`Purchase ID: ${itemId}`, 'info');
-                                debugLog(`Grave ID in purchase: ${data.graveId}`, 'info');
+                                // // דיבאג: הצג את הנתונים שהגיעו
+                                // debugLog(`=== PURCHASE DATA LOADED ===`, 'warning');
+                                // debugLog(`Purchase ID: ${itemId}`, 'info');
+                                // debugLog(`Grave ID in purchase: ${data.graveId}`, 'info');
                                 
                                 // מלא שדות רגילים
                                 Object.keys(data).forEach(key => {
@@ -3139,106 +3139,106 @@ const FormHandler = {
                                 
                                 // אם יש קבר, מצא את ההיררכיה שלו
                                 if (data.graveId && window.hierarchyData) {
-                                    debugLog(`=== SEARCHING HIERARCHY FOR GRAVE ===`, 'warning');
-                                    debugLog(`Looking for grave: ${data.graveId}`, 'info');
+                                    // debugLog(`=== SEARCHING HIERARCHY FOR GRAVE ===`, 'warning');
+                                    // debugLog(`Looking for grave: ${data.graveId}`, 'info');
                                     
                                     // 1. מצא את הקבר
                                     const grave = window.hierarchyData.graves.find(g => g.unicId === data.graveId);
                                     if (!grave) {
-                                        debugLog(`❌ GRAVE NOT FOUND IN HIERARCHY!`, 'error');
+                                        // debugLog(`❌ GRAVE NOT FOUND IN HIERARCHY!`, 'error');
                                         return;
                                     }
-                                    debugLog(`✓ Found grave: ${JSON.stringify(grave)}`, 'success');
+                                    // debugLog(`✓ Found grave: ${JSON.stringify(grave)}`, 'success');
                                     
                                     // 2. מצא את אחוזת הקבר
-                                    debugLog(`Looking for area grave: ${grave.area_grave_id}`, 'info');
+                                    // debugLog(`Looking for area grave: ${grave.area_grave_id}`, 'info');
                                     const areaGrave = window.hierarchyData.areaGraves.find(ag => ag.unicId === grave.area_grave_id);
                                     if (!areaGrave) {
-                                        debugLog(`❌ AREA GRAVE NOT FOUND!`, 'error');
+                                        // debugLog(`❌ AREA GRAVE NOT FOUND!`, 'error');
                                         return;
                                     }
-                                    debugLog(`✓ Found area grave: ${areaGrave.name} (${areaGrave.unicId})`, 'success');
+                                    // debugLog(`✓ Found area grave: ${areaGrave.name} (${areaGrave.unicId})`, 'success');
                                     
                                     // 3. מצא את השורה
-                                    debugLog(`Looking for row: ${areaGrave.row_id}`, 'info');
+                                    // debugLog(`Looking for row: ${areaGrave.row_id}`, 'info');
                                     const row = window.hierarchyData.rows.find(r => r.unicId === areaGrave.row_id);
                                     if (!row) {
-                                        debugLog(`❌ ROW NOT FOUND!`, 'error');
+                                        // debugLog(`❌ ROW NOT FOUND!`, 'error');
                                         return;
                                     }
-                                    debugLog(`✓ Found row: ${row.name} (${row.unicId})`, 'success');
+                                    // debugLog(`✓ Found row: ${row.name} (${row.unicId})`, 'success');
                                     
                                     // 4. מצא את החלקה
-                                    debugLog(`Looking for plot: ${row.plot_id}`, 'info');
+                                    // debugLog(`Looking for plot: ${row.plot_id}`, 'info');
                                     const plot = window.hierarchyData.plots.find(p => p.unicId === row.plot_id);
                                     if (!plot) {
-                                        debugLog(`❌ PLOT NOT FOUND!`, 'error');
+                                        // debugLog(`❌ PLOT NOT FOUND!`, 'error');
                                         return;
                                     }
-                                    debugLog(`✓ Found plot: ${plot.name} (${plot.unicId})`, 'success');
+                                    // debugLog(`✓ Found plot: ${plot.name} (${plot.unicId})`, 'success');
                                     
                                     // 5. מצא את הגוש
-                                    debugLog(`Looking for block: ${plot.blockId}`, 'info');
+                                    // debugLog(`Looking for block: ${plot.blockId}`, 'info');
                                     const block = window.hierarchyData.blocks.find(b => b.unicId === plot.blockId);
                                     if (!block) {
-                                        debugLog(`❌ BLOCK NOT FOUND!`, 'error');
+                                        // debugLog(`❌ BLOCK NOT FOUND!`, 'error');
                                         return;
                                     }
-                                    debugLog(`✓ Found block: ${block.blockNameHe} (${block.unicId})`, 'success');
+                                    // debugLog(`✓ Found block: ${block.blockNameHe} (${block.unicId})`, 'success');
                                     
                                     // 6. בית העלמין
-                                    debugLog(`Cemetery ID in block: ${block.cemetery_id}`, 'info');
+                                    // debugLog(`Cemetery ID in block: ${block.cemetery_id}`, 'info');
                                     
                                     // סיכום
-                                    debugLog(`=== HIERARCHY CHAIN ===`, 'warning');
-                                    debugLog(`Cemetery: ${block.cemetery_id}`, 'success');
-                                    debugLog(`Block: ${block.unicId} - ${block.blockNameHe}`, 'success');
-                                    debugLog(`Plot: ${plot.unicId} - ${plot.name}`, 'success');
-                                    debugLog(`Row: ${row.unicId} - ${row.name}`, 'success');
-                                    debugLog(`AreaGrave: ${areaGrave.unicId} - ${areaGrave.name}`, 'success');
-                                    debugLog(`Grave: ${grave.unicId} - ${grave.graveNameHe}`, 'success');
+                                    // debugLog(`=== HIERARCHY CHAIN ===`, 'warning');
+                                    // debugLog(`Cemetery: ${block.cemetery_id}`, 'success');
+                                    // debugLog(`Block: ${block.unicId} - ${block.blockNameHe}`, 'success');
+                                    // debugLog(`Plot: ${plot.unicId} - ${plot.name}`, 'success');
+                                    // debugLog(`Row: ${row.unicId} - ${row.name}`, 'success');
+                                    // debugLog(`AreaGrave: ${areaGrave.unicId} - ${areaGrave.name}`, 'success');
+                                    // debugLog(`Grave: ${grave.unicId} - ${grave.graveNameHe}`, 'success');
                                     
                                     // עכשיו תבחר את הערכים בסלקטים
                                     setTimeout(() => {
-                                        debugLog(`=== SELECTING VALUES IN DROPDOWNS ===`, 'warning');
+                                        // debugLog(`=== SELECTING VALUES IN DROPDOWNS ===`, 'warning');
                                         
                                         // בחר בית עלמין
                                         if (block.cemetery_id) {
                                             document.getElementById('cemeterySelect').value = block.cemetery_id;
-                                            debugLog(`Selected cemetery: ${block.cemetery_id}`, 'success');
+                                            // debugLog(`Selected cemetery: ${block.cemetery_id}`, 'success');
                                             window.filterHierarchy('cemetery');
                                         }
                                         
                                         // בחר גוש
                                         setTimeout(() => {
                                             document.getElementById('blockSelect').value = block.unicId;
-                                            debugLog(`Selected block: ${block.unicId}`, 'success');
+                                            // debugLog(`Selected block: ${block.unicId}`, 'success');
                                             window.filterHierarchy('block');
                                             
                                             // בחר חלקה
                                             setTimeout(() => {
                                                 document.getElementById('plotSelect').value = plot.unicId;
-                                                debugLog(`Selected plot: ${plot.unicId}`, 'success');
+                                                // debugLog(`Selected plot: ${plot.unicId}`, 'success');
                                                 window.filterHierarchy('plot');
                                                 
                                                 // בחר שורה
                                                 setTimeout(() => {
                                                     document.getElementById('rowSelect').value = row.unicId;
-                                                    debugLog(`Selected row: ${row.unicId}`, 'success');
+                                                    // debugLog(`Selected row: ${row.unicId}`, 'success');
                                                     window.filterHierarchy('row');
                                                     
                                                     // בחר אחוזת קבר
                                                     setTimeout(() => {
                                                         document.getElementById('areaGraveSelect').value = areaGrave.unicId;
-                                                        debugLog(`Selected area grave: ${areaGrave.unicId}`, 'success');
+                                                        // debugLog(`Selected area grave: ${areaGrave.unicId}`, 'success');
                                                         window.filterHierarchy('area_grave');
                                                         
                                                         // בחר קבר
                                                         setTimeout(() => {
                                                             document.getElementById('graveSelect').value = grave.unicId;
-                                                            debugLog(`Selected grave: ${grave.unicId}`, 'success');
-                                                            debugLog(`Grave JSON: ${JSON.stringify(grave)}`, 'success');
-                                                            debugLog(`=== SELECTION COMPLETE ===`, 'warning');
+                                                            // debugLog(`Selected grave: ${grave.unicId}`, 'success');
+                                                            // debugLog(`Grave JSON: ${JSON.stringify(grave)}`, 'success');
+                                                            // debugLog(`=== SELECTION COMPLETE ===`, 'warning');
                                                         }, 100);
                                                     }, 100);
                                                 }, 100);

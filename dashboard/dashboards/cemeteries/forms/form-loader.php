@@ -9,6 +9,20 @@ ini_set('display_errors', 1);
 // הגדר headers
 header('Content-Type: text/html; charset=utf-8');
 
+// דיבאג
+error_log("=== FORM LOADER DEBUG ===");
+error_log("GET params: " . json_encode($_GET));
+error_log("Type: " . ($_GET['type'] ?? 'NOT SET'));
+error_log("Item ID: " . ($_GET['item_id'] ?? 'NOT SET'));
+error_log("Parent ID: " . ($_GET['parent_id'] ?? 'NOT SET'));
+
+$type = $_GET['type'] ?? null;
+$itemId = $_GET['item_id'] ?? null;
+$parentId = $_GET['parent_id'] ?? null;
+
+error_log("Variables set - Type: $type, ItemId: $itemId, ParentId: $parentId");
+
+
 try {
     // קבלת פרמטרים
     $type = $_GET['type'] ?? '';

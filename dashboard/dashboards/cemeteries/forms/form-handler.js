@@ -1330,34 +1330,103 @@ const FormHandler = {
             window.populateBlocks();
             window.populatePlots();
 
-            // יצירת DIV לדיבאג בחירות
-            const selectionDebugDiv = document.createElement('div');
-            selectionDebugDiv.id = 'selectionDebug';
-            selectionDebugDiv.style.cssText = `
-                position: fixed; 
-                bottom: 10px; 
-                right: 10px; 
-                background: #333; 
-                color: #0f0; 
-                padding: 15px; 
-                z-index: 99999; 
-                max-width: 400px; 
-                border: 2px solid #0f0; 
-                font-family: monospace;
-                font-size: 12px;
+            // יצירת DIV דיבאג מורחב
+            const debugContainer = document.createElement('div');
+            debugContainer.id = 'hierarchyDebugContainer';
+            debugContainer.style.cssText = `
+                position: fixed;
+                top: 10px;
+                right: 10px;
+                background: #1a1a1a;
+                color: #00ff00;
+                padding: 20px;
+                z-index: 99999;
+                width: 600px;
+                max-height: 90vh;
+                overflow-y: auto;
+                border: 3px solid #00ff00;
+                font-family: 'Courier New', monospace;
+                font-size: 11px;
+                box-shadow: 0 0 20px rgba(0,255,0,0.5);
             `;
 
-            selectionDebugDiv.innerHTML = `
-                <div style="color: #0f0; font-weight: bold; margin-bottom: 10px;">🔍 SELECTION DEBUG</div>
-                <div id="debugSelections"></div>
-                <button onclick="this.parentElement.remove()" style="margin-top: 10px; background: #f00; color: white; border: none; padding: 5px 10px;">X</button>
+            debugContainer.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="color: #00ff00; margin: 0;">🖥️ HIERARCHY DEBUG MONITOR</h3>
+                    <button onclick="this.parentElement.parentElement.remove()" style="background: #ff0000; color: white; border: none; padding: 5px 10px; cursor: pointer;">✖</button>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <h4 style="color: #ffff00; border-bottom: 1px solid #00ff00; padding-bottom: 5px;">📊 DATA STATUS</h4>
+                        <div id="dataStatus"></div>
+                    </div>
+                    
+                    <div>
+                        <h4 style="color: #ffff00; border-bottom: 1px solid #00ff00; padding-bottom: 5px;">🎯 CURRENT SELECTION</h4>
+                        <div id="currentSelection"></div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <h4 style="color: #ffff00; border-bottom: 1px solid #00ff00; padding-bottom: 5px;">📝 ACTION LOG</h4>
+                    <div id="actionLog" style="max-height: 200px; overflow-y: auto; background: #0a0a0a; padding: 10px; border: 1px solid #00ff00;"></div>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <h4 style="color: #ffff00; border-bottom: 1px solid #00ff00; padding-bottom: 5px;">🔍 AVAILABLE OPTIONS</h4>
+                    <div id="availableOptions"></div>
+                </div>
             `;
-            document.body.appendChild(selectionDebugDiv);
 
-            // פונקציה לעדכון הדיבאג
-            window.updateSelectionDebug = function() {
-                const debugDiv = document.getElementById('debugSelections');
-                if (!debugDiv) return;
+            document.body.appendChild(debugContainer);
+
+            // פונקציית לוג
+            window.debugLog = function(message, type = 'info') {
+                const logDiv = document.getElementById('actionLog');
+                if (!logDiv) return;
+                
+                const colors = {
+                    'info': '#00ff00',
+                    'warning': '#ffff00',
+                    'error': '#ff0000',
+                    'success': '#00ffff'
+                };
+                
+                const timestamp = new Date().toLocaleTimeString('he-IL');
+                const logEntry = document.createElement('div');
+                logEntry.style.color = colors[type] || '#00ff00';
+                logEntry.innerHTML = `[${timestamp}] ${message}`;
+                logDiv.insertBefore(logEntry, logDiv.firstChild);
+                
+                // שמור רק 50 הודעות אחרונות
+                while (logDiv.children.length > 50) {
+                    logDiv.removeChild(logDiv.lastChild);
+                }
+            };
+
+            // עדכון סטטוס הנתונים
+            window.updateDataStatus = function() {
+                const statusDiv = document.getElementById('dataStatus');
+                if (!statusDiv || !window.hierarchyData) return;
+                
+                statusDiv.innerHTML = `
+                    <div style="color: #00ffff;">📊 Hierarchy Data Loaded:</div>
+                    <div style="margin-left: 20px;">
+                        <div>• Cemeteries: <span style="color: yellow">${document.querySelectorAll('#cemeterySelect option').length - 1}</span></div>
+                        <div>• Blocks: <span style="color: yellow">${window.hierarchyData.blocks?.length || 0}</span></div>
+                        <div>• Plots: <span style="color: yellow">${window.hierarchyData.plots?.length || 0}</span></div>
+                        <div>• Rows: <span style="color: yellow">${window.hierarchyData.rows?.length || 0}</span></div>
+                        <div>• Area Graves: <span style="color: yellow">${window.hierarchyData.areaGraves?.length || 0}</span></div>
+                        <div>• Graves: <span style="color: yellow">${window.hierarchyData.graves?.length || 0}</span></div>
+                    </div>
+                `;
+            };
+
+            // עדכון הבחירה הנוכחית
+            window.updateCurrentSelection = function() {
+                const selectionDiv = document.getElementById('currentSelection');
+                if (!selectionDiv) return;
                 
                 const cemetery = document.getElementById('cemeterySelect');
                 const block = document.getElementById('blockSelect');
@@ -1366,29 +1435,129 @@ const FormHandler = {
                 const areaGrave = document.getElementById('areaGraveSelect');
                 const grave = document.getElementById('graveSelect');
                 
-                debugDiv.innerHTML = `
-                    <div>🏛️ Cemetery: <span style="color: yellow">${cemetery?.value || 'NONE'}</span></div>
-                    <div>📦 Block: <span style="color: yellow">${block?.value || 'NONE'}</span></div>
-                    <div>📍 Plot: <span style="color: yellow">${plot?.value || 'NONE'}</span></div>
-                    <div>📏 Row: <span style="color: yellow">${row?.value || 'NONE'}</span></div>
-                    <div>🏘️ AreaGrave: <span style="color: yellow">${areaGrave?.value || 'NONE'}</span></div>
-                    <div>⚰️ Grave: <span style="color: yellow">${grave?.value || 'NONE'}</span></div>
-                    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #0f0;">
-                        Last update: ${new Date().toLocaleTimeString('he-IL')}
-                    </div>
+                selectionDiv.innerHTML = `
+                    <div>🏛️ Cemetery:</div>
+                    <div style="margin-left: 20px; color: ${cemetery?.value ? 'yellow' : 'gray'};">${cemetery?.value || '-- NONE --'}</div>
+                    
+                    <div>📦 Block:</div>
+                    <div style="margin-left: 20px; color: ${block?.value ? 'yellow' : 'gray'};">${block?.value || '-- NONE --'}</div>
+                    
+                    <div>📍 Plot:</div>
+                    <div style="margin-left: 20px; color: ${plot?.value ? 'yellow' : 'gray'};">${plot?.value || '-- NONE --'}</div>
+                    
+                    <div>📏 Row:</div>
+                    <div style="margin-left: 20px; color: ${row?.value ? 'yellow' : 'gray'};">${row?.value || '-- NONE --'}</div>
+                    
+                    <div>🏘️ Area Grave:</div>
+                    <div style="margin-left: 20px; color: ${areaGrave?.value ? 'yellow' : 'gray'};">${areaGrave?.value || '-- NONE --'}</div>
+                    
+                    <div>⚰️ Grave:</div>
+                    <div style="margin-left: 20px; color: ${grave?.value ? 'yellow' : 'gray'};">${grave?.value || '-- NONE --'}</div>
                 `;
             };
 
-            // הוסף listener לכל select
-            ['cemeterySelect', 'blockSelect', 'plotSelect', 'rowSelect', 'areaGraveSelect', 'graveSelect'].forEach(id => {
-                const element = document.getElementById(id);
-                if (element) {
-                    element.addEventListener('change', window.updateSelectionDebug);
+            // עדכון אפשרויות זמינות
+            window.updateAvailableOptions = function() {
+                const optionsDiv = document.getElementById('availableOptions');
+                if (!optionsDiv) return;
+                
+                const selects = {
+                    'Cemetery': document.getElementById('cemeterySelect'),
+                    'Block': document.getElementById('blockSelect'),
+                    'Plot': document.getElementById('plotSelect'),
+                    'Row': document.getElementById('rowSelect'),
+                    'Area Grave': document.getElementById('areaGraveSelect'),
+                    'Grave': document.getElementById('graveSelect')
+                };
+                
+                let html = '<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">';
+                
+                for (const [name, select] of Object.entries(selects)) {
+                    if (select) {
+                        const enabledOptions = Array.from(select.options).filter(o => !o.disabled && o.value);
+                        html += `
+                            <div style="background: #0a0a0a; padding: 10px; border: 1px solid #00ff00;">
+                                <div style="color: #00ffff; font-weight: bold;">${name}:</div>
+                                <div style="color: ${select.disabled ? 'gray' : 'lime'};">
+                                    Status: ${select.disabled ? 'DISABLED' : 'ENABLED'}
+                                </div>
+                                <div style="color: yellow;">
+                                    Options: ${enabledOptions.length} / ${select.options.length - 1}
+                                </div>
+                            </div>
+                        `;
+                    }
                 }
-            });
+                
+                html += '</div>';
+                optionsDiv.innerHTML = html;
+            };
 
-            // עדכון ראשוני
-            window.updateSelectionDebug();
+            // הוסף דיבאג לכל פונקציות המילוי
+            const originalPopulateBlocks = window.populateBlocks;
+            window.populateBlocks = function(cemeteryId) {
+                debugLog(`populateBlocks called with cemeteryId: ${cemeteryId || 'ALL'}`, 'info');
+                const result = originalPopulateBlocks.apply(this, arguments);
+                updateAvailableOptions();
+                updateCurrentSelection();
+                return result;
+            };
+
+            const originalPopulatePlots = window.populatePlots;
+            window.populatePlots = function(cemeteryId, blockId) {
+                debugLog(`populatePlots called - cemetery: ${cemeteryId || 'null'}, block: ${blockId || 'null'}`, 'info');
+                const result = originalPopulatePlots.apply(this, arguments);
+                updateAvailableOptions();
+                updateCurrentSelection();
+                return result;
+            };
+
+            const originalPopulateRows = window.populateRows;
+            window.populateRows = function(plotId) {
+                debugLog(`populateRows called with plotId: ${plotId || 'null'}`, 'info');
+                const result = originalPopulateRows.apply(this, arguments);
+                updateAvailableOptions();
+                updateCurrentSelection();
+                return result;
+            };
+
+            const originalPopulateAreaGraves = window.populateAreaGraves;
+            window.populateAreaGraves = function(rowId) {
+                debugLog(`populateAreaGraves called with rowId: ${rowId || 'null'}`, 'info');
+                const result = originalPopulateAreaGraves.apply(this, arguments);
+                updateAvailableOptions();
+                updateCurrentSelection();
+                return result;
+            };
+
+            const originalPopulateGraves = window.populateGraves;
+            window.populateGraves = function(areaGraveId) {
+                debugLog(`populateGraves called with areaGraveId: ${areaGraveId || 'null'}`, 'info');
+                const result = originalPopulateGraves.apply(this, arguments);
+                updateAvailableOptions();
+                updateCurrentSelection();
+                return result;
+            };
+
+            // הוסף listener לכל select
+            setTimeout(() => {
+                ['cemeterySelect', 'blockSelect', 'plotSelect', 'rowSelect', 'areaGraveSelect', 'graveSelect'].forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.addEventListener('change', function() {
+                            debugLog(`${id} changed to: ${this.value}`, 'success');
+                            updateCurrentSelection();
+                            updateAvailableOptions();
+                        });
+                    }
+                });
+                
+                // עדכונים ראשוניים
+                updateDataStatus();
+                updateCurrentSelection();
+                updateAvailableOptions();
+                debugLog('Debug monitor initialized', 'success');
+            }, 500);
         });
 
         // טען נתונים אם זה עריכה
@@ -1408,8 +1577,6 @@ const FormHandler = {
                                 const data = result.data;
                                 console.log('Filling purchase form with data:', Object.entries(data));
 
-                                alert(data)
-                                
                                 // מלא את כל השדות
                                 Object.keys(data).forEach(key => {
                                     const field = form.elements[key];

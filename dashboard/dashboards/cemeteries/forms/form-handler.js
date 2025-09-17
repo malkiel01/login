@@ -3112,221 +3112,147 @@ const FormHandler = {
             // }, 5);
         });
 
-        // // טען נתונים אם זה עריכה
-        // if (itemId) {
-        //     const loadPurchaseData = () => {
-        //         const form = document.querySelector('#purchaseFormModal form');
-                
-        //         if (form && form.elements && form.elements.length > 5) {
-        //             fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=get&id=${itemId}`)
-        //                 .then(response => response.json())
-        //                 .then(result => {
-        //                     if (result.success && result.data) {
-        //                         const data = result.data;
-                                
-        //                         // דיבאג: הצג את הנתונים שהגיעו
-        //                         debugLog(`=== PURCHASE DATA LOADED ===`, 'warning');
-        //                         debugLog(`Purchase ID: ${itemId}`, 'info');
-        //                         debugLog(`Grave ID in purchase: ${data.graveId}`, 'info');
-                                
-        //                         // מלא שדות רגילים
-        //                         Object.keys(data).forEach(key => {
-        //                             const field = form.elements[key];
-        //                             if (field && data[key] !== null) {
-        //                                 field.value = data[key];
-        //                             }
-        //                         });
-                                
-        //                         // אם יש קבר, מצא את ההיררכיה שלו
-        //                         if (data.graveId && window.hierarchyData) {
-        //                             debugLog(`=== SEARCHING HIERARCHY FOR GRAVE ===`, 'warning');
-        //                             debugLog(`Looking for grave: ${data.graveId}`, 'info');
-                                    
-        //                             // 1. מצא את הקבר
-        //                             const grave = window.hierarchyData.graves.find(g => g.unicId === data.graveId);
-        //                             if (!grave) {
-        //                                 debugLog(`❌ GRAVE NOT FOUND IN HIERARCHY!`, 'error');
-        //                                 return;
-        //                             }
-        //                             debugLog(`✓ Found grave: ${JSON.stringify(grave)}`, 'success');
-                                    
-        //                             // 2. מצא את אחוזת הקבר
-        //                             debugLog(`Looking for area grave: ${grave.area_grave_id}`, 'info');
-        //                             const areaGrave = window.hierarchyData.areaGraves.find(ag => ag.unicId === grave.area_grave_id);
-        //                             if (!areaGrave) {
-        //                                 debugLog(`❌ AREA GRAVE NOT FOUND!`, 'error');
-        //                                 return;
-        //                             }
-        //                             debugLog(`✓ Found area grave: ${areaGrave.name} (${areaGrave.unicId})`, 'success');
-                                    
-        //                             // 3. מצא את השורה
-        //                             debugLog(`Looking for row: ${areaGrave.row_id}`, 'info');
-        //                             const row = window.hierarchyData.rows.find(r => r.unicId === areaGrave.row_id);
-        //                             if (!row) {
-        //                                 debugLog(`❌ ROW NOT FOUND!`, 'error');
-        //                                 return;
-        //                             }
-        //                             debugLog(`✓ Found row: ${row.name} (${row.unicId})`, 'success');
-                                    
-        //                             // 4. מצא את החלקה
-        //                             debugLog(`Looking for plot: ${row.plot_id}`, 'info');
-        //                             const plot = window.hierarchyData.plots.find(p => p.unicId === row.plot_id);
-        //                             if (!plot) {
-        //                                 debugLog(`❌ PLOT NOT FOUND!`, 'error');
-        //                                 return;
-        //                             }
-        //                             debugLog(`✓ Found plot: ${plot.name} (${plot.unicId})`, 'success');
-                                    
-        //                             // 5. מצא את הגוש
-        //                             debugLog(`Looking for block: ${plot.blockId}`, 'info');
-        //                             const block = window.hierarchyData.blocks.find(b => b.unicId === plot.blockId);
-        //                             if (!block) {
-        //                                 debugLog(`❌ BLOCK NOT FOUND!`, 'error');
-        //                                 return;
-        //                             }
-        //                             debugLog(`✓ Found block: ${block.blockNameHe} (${block.unicId})`, 'success');
-                                    
-        //                             // 6. בית העלמין
-        //                             debugLog(`Cemetery ID in block: ${block.cemetery_id}`, 'info');
-                                    
-        //                             // סיכום
-        //                             debugLog(`=== HIERARCHY CHAIN ===`, 'warning');
-        //                             debugLog(`Cemetery: ${block.cemetery_id}`, 'success');
-        //                             debugLog(`Block: ${block.unicId} - ${block.blockNameHe}`, 'success');
-        //                             debugLog(`Plot: ${plot.unicId} - ${plot.name}`, 'success');
-        //                             debugLog(`Row: ${row.unicId} - ${row.name}`, 'success');
-        //                             debugLog(`AreaGrave: ${areaGrave.unicId} - ${areaGrave.name}`, 'success');
-        //                             debugLog(`Grave: ${grave.unicId} - ${grave.graveNameHe}`, 'success');
-                                    
-        //                             // עכשיו תבחר את הערכים בסלקטים
-        //                             setTimeout(() => {
-        //                                 debugLog(`=== SELECTING VALUES IN DROPDOWNS ===`, 'warning');
-                                        
-        //                                 // בחר בית עלמין
-        //                                 if (block.cemetery_id) {
-        //                                     document.getElementById('cemeterySelect').value = block.cemetery_id;
-        //                                     debugLog(`Selected cemetery: ${block.cemetery_id}`, 'success');
-        //                                     window.filterHierarchy('cemetery');
-        //                                 }
-                                        
-        //                                 // בחר גוש
-        //                                 setTimeout(() => {
-        //                                     document.getElementById('blockSelect').value = block.unicId;
-        //                                     debugLog(`Selected block: ${block.unicId}`, 'success');
-        //                                     window.filterHierarchy('block');
-                                            
-        //                                     // בחר חלקה
-        //                                     setTimeout(() => {
-        //                                         document.getElementById('plotSelect').value = plot.unicId;
-        //                                         debugLog(`Selected plot: ${plot.unicId}`, 'success');
-        //                                         window.filterHierarchy('plot');
-                                                
-        //                                         // בחר שורה
-        //                                         setTimeout(() => {
-        //                                             document.getElementById('rowSelect').value = row.unicId;
-        //                                             debugLog(`Selected row: ${row.unicId}`, 'success');
-        //                                             window.filterHierarchy('row');
-                                                    
-        //                                             // בחר אחוזת קבר
-        //                                             setTimeout(() => {
-        //                                                 document.getElementById('areaGraveSelect').value = areaGrave.unicId;
-        //                                                 debugLog(`Selected area grave: ${areaGrave.unicId}`, 'success');
-        //                                                 window.filterHierarchy('area_grave');
-                                                        
-        //                                                 // בחר קבר
-        //                                                 setTimeout(() => {
-        //                                                     document.getElementById('graveSelect').value = grave.unicId;
-        //                                                     debugLog(`Selected grave: ${grave.unicId}`, 'success');
-        //                                                     debugLog(`Grave JSON: ${JSON.stringify(grave)}`, 'success');
-        //                                                     debugLog(`=== SELECTION COMPLETE ===`, 'warning');
-        //                                                 }, 100);
-        //                                             }, 100);
-        //                                         }, 100);
-        //                                     }, 100);
-        //                                 }, 100);
-        //                             }, 500);
-        //                         }
-        //                     }
-        //                 })
-        //                 .catch(error => {
-        //                     debugLog(`ERROR loading purchase: ${error.message}`, 'error');
-        //                 });
-                    
-        //             return true;
-        //         }
-        //         return false;
-        //     };
-            
-        //     // נסה לטעון מיד
-        //     if (!loadPurchaseData()) {
-        //         // אם לא הצליח, השתמש ב-MutationObserver
-        //         const observer = new MutationObserver((mutations, obs) => {
-        //             if (loadPurchaseData()) {
-        //                 obs.disconnect(); // הפסק לצפות
-        //             }
-        //         });
-                
-        //         // התחל לצפות בשינויים
-        //         const modal = document.getElementById('purchaseFormModal');
-        //         if (modal) {
-        //             observer.observe(modal, {
-        //                 childList: true,
-        //                 subtree: true
-        //             });
-        //         }
-                
-        //         // הגבלת זמן של 10 שניות
-        //         setTimeout(() => observer.disconnect(), 10000);
-        //     }
-        // }
-
         // טען נתונים אם זה עריכה
-        if (itemId) {            
+        if (itemId) {
             const loadPurchaseData = () => {
                 const form = document.querySelector('#purchaseFormModal form');
-                console.log('Checking purchase form readiness:', form ? 'found' : 'not found');
                 
-                // בדוק שהטופס מוכן עם מספיק שדות
                 if (form && form.elements && form.elements.length > 5) {
-                    console.log('Purchase form is ready, loading data...');
-                    
                     fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=get&id=${itemId}`)
                         .then(response => response.json())
                         .then(result => {
                             if (result.success && result.data) {
                                 const data = result.data;
-                                console.log('Filling purchase form with data:', Object.entries(data));
-
-                                // מלא את כל השדות
+                                
+                                // דיבאג: הצג את הנתונים שהגיעו
+                                debugLog(`=== PURCHASE DATA LOADED ===`, 'warning');
+                                debugLog(`Purchase ID: ${itemId}`, 'info');
+                                debugLog(`Grave ID in purchase: ${data.graveId}`, 'info');
+                                
+                                // מלא שדות רגילים
                                 Object.keys(data).forEach(key => {
                                     const field = form.elements[key];
-                                    if (field && data[key] !== null && data[key] !== undefined) {
-                                        if (field.type === 'checkbox') {
-                                            field.checked = data[key] == 1;
-                                        } else {
-                                            field.value = data[key];
-                                        }
+                                    if (field && data[key] !== null) {
+                                        field.value = data[key];
                                     }
                                 });
                                 
-                                // טען תשלומים אם יש
-                                if (data.payments_data) {
-                                    try {
-                                        window.purchasePayments = JSON.parse(data.payments_data);
-                                        if (window.displayPaymentsSummary) {
-                                            document.getElementById('paymentsDisplay').innerHTML = window.displayPaymentsSummary();
-                                        }
-                                    } catch(e) {
-                                        console.error('Error parsing payments data:', e);
+                                // אם יש קבר, מצא את ההיררכיה שלו
+                                if (data.graveId && window.hierarchyData) {
+                                    debugLog(`=== SEARCHING HIERARCHY FOR GRAVE ===`, 'warning');
+                                    debugLog(`Looking for grave: ${data.graveId}`, 'info');
+                                    
+                                    // 1. מצא את הקבר
+                                    const grave = window.hierarchyData.graves.find(g => g.unicId === data.graveId);
+                                    if (!grave) {
+                                        debugLog(`❌ GRAVE NOT FOUND IN HIERARCHY!`, 'error');
+                                        return;
                                     }
+                                    debugLog(`✓ Found grave: ${JSON.stringify(grave)}`, 'success');
+                                    
+                                    // 2. מצא את אחוזת הקבר
+                                    debugLog(`Looking for area grave: ${grave.area_grave_id}`, 'info');
+                                    const areaGrave = window.hierarchyData.areaGraves.find(ag => ag.unicId === grave.area_grave_id);
+                                    if (!areaGrave) {
+                                        debugLog(`❌ AREA GRAVE NOT FOUND!`, 'error');
+                                        return;
+                                    }
+                                    debugLog(`✓ Found area grave: ${areaGrave.name} (${areaGrave.unicId})`, 'success');
+                                    
+                                    // 3. מצא את השורה
+                                    debugLog(`Looking for row: ${areaGrave.row_id}`, 'info');
+                                    const row = window.hierarchyData.rows.find(r => r.unicId === areaGrave.row_id);
+                                    if (!row) {
+                                        debugLog(`❌ ROW NOT FOUND!`, 'error');
+                                        return;
+                                    }
+                                    debugLog(`✓ Found row: ${row.name} (${row.unicId})`, 'success');
+                                    
+                                    // 4. מצא את החלקה
+                                    debugLog(`Looking for plot: ${row.plot_id}`, 'info');
+                                    const plot = window.hierarchyData.plots.find(p => p.unicId === row.plot_id);
+                                    if (!plot) {
+                                        debugLog(`❌ PLOT NOT FOUND!`, 'error');
+                                        return;
+                                    }
+                                    debugLog(`✓ Found plot: ${plot.name} (${plot.unicId})`, 'success');
+                                    
+                                    // 5. מצא את הגוש
+                                    debugLog(`Looking for block: ${plot.blockId}`, 'info');
+                                    const block = window.hierarchyData.blocks.find(b => b.unicId === plot.blockId);
+                                    if (!block) {
+                                        debugLog(`❌ BLOCK NOT FOUND!`, 'error');
+                                        return;
+                                    }
+                                    debugLog(`✓ Found block: ${block.blockNameHe} (${block.unicId})`, 'success');
+                                    
+                                    // 6. בית העלמין
+                                    debugLog(`Cemetery ID in block: ${block.cemetery_id}`, 'info');
+                                    
+                                    // סיכום
+                                    debugLog(`=== HIERARCHY CHAIN ===`, 'warning');
+                                    debugLog(`Cemetery: ${block.cemetery_id}`, 'success');
+                                    debugLog(`Block: ${block.unicId} - ${block.blockNameHe}`, 'success');
+                                    debugLog(`Plot: ${plot.unicId} - ${plot.name}`, 'success');
+                                    debugLog(`Row: ${row.unicId} - ${row.name}`, 'success');
+                                    debugLog(`AreaGrave: ${areaGrave.unicId} - ${areaGrave.name}`, 'success');
+                                    debugLog(`Grave: ${grave.unicId} - ${grave.graveNameHe}`, 'success');
+                                    
+                                    // עכשיו תבחר את הערכים בסלקטים
+                                    setTimeout(() => {
+                                        debugLog(`=== SELECTING VALUES IN DROPDOWNS ===`, 'warning');
+                                        
+                                        // בחר בית עלמין
+                                        if (block.cemetery_id) {
+                                            document.getElementById('cemeterySelect').value = block.cemetery_id;
+                                            debugLog(`Selected cemetery: ${block.cemetery_id}`, 'success');
+                                            window.filterHierarchy('cemetery');
+                                        }
+                                        
+                                        // בחר גוש
+                                        setTimeout(() => {
+                                            document.getElementById('blockSelect').value = block.unicId;
+                                            debugLog(`Selected block: ${block.unicId}`, 'success');
+                                            window.filterHierarchy('block');
+                                            
+                                            // בחר חלקה
+                                            setTimeout(() => {
+                                                document.getElementById('plotSelect').value = plot.unicId;
+                                                debugLog(`Selected plot: ${plot.unicId}`, 'success');
+                                                window.filterHierarchy('plot');
+                                                
+                                                // בחר שורה
+                                                setTimeout(() => {
+                                                    document.getElementById('rowSelect').value = row.unicId;
+                                                    debugLog(`Selected row: ${row.unicId}`, 'success');
+                                                    window.filterHierarchy('row');
+                                                    
+                                                    // בחר אחוזת קבר
+                                                    setTimeout(() => {
+                                                        document.getElementById('areaGraveSelect').value = areaGrave.unicId;
+                                                        debugLog(`Selected area grave: ${areaGrave.unicId}`, 'success');
+                                                        window.filterHierarchy('area_grave');
+                                                        
+                                                        // בחר קבר
+                                                        setTimeout(() => {
+                                                            document.getElementById('graveSelect').value = grave.unicId;
+                                                            debugLog(`Selected grave: ${grave.unicId}`, 'success');
+                                                            debugLog(`Grave JSON: ${JSON.stringify(grave)}`, 'success');
+                                                            debugLog(`=== SELECTION COMPLETE ===`, 'warning');
+                                                        }, 100);
+                                                    }, 100);
+                                                }, 100);
+                                            }, 100);
+                                        }, 100);
+                                    }, 500);
                                 }
                             }
                         })
                         .catch(error => {
-                            console.error('Error loading purchase data:', error);
+                            debugLog(`ERROR loading purchase: ${error.message}`, 'error');
                         });
                     
-                    return true; // הצלחנו לטעון
+                    return true;
                 }
                 return false;
             };
@@ -3353,6 +3279,80 @@ const FormHandler = {
                 setTimeout(() => observer.disconnect(), 10000);
             }
         }
+
+        // // טען נתונים אם זה עריכה
+        // if (itemId) {            
+        //     const loadPurchaseData = () => {
+        //         const form = document.querySelector('#purchaseFormModal form');
+        //         console.log('Checking purchase form readiness:', form ? 'found' : 'not found');
+                
+        //         // בדוק שהטופס מוכן עם מספיק שדות
+        //         if (form && form.elements && form.elements.length > 5) {
+        //             console.log('Purchase form is ready, loading data...');
+                    
+        //             fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=get&id=${itemId}`)
+        //                 .then(response => response.json())
+        //                 .then(result => {
+        //                     if (result.success && result.data) {
+        //                         const data = result.data;
+        //                         console.log('Filling purchase form with data:', Object.entries(data));
+
+        //                         // מלא את כל השדות
+        //                         Object.keys(data).forEach(key => {
+        //                             const field = form.elements[key];
+        //                             if (field && data[key] !== null && data[key] !== undefined) {
+        //                                 if (field.type === 'checkbox') {
+        //                                     field.checked = data[key] == 1;
+        //                                 } else {
+        //                                     field.value = data[key];
+        //                                 }
+        //                             }
+        //                         });
+                                
+        //                         // טען תשלומים אם יש
+        //                         if (data.payments_data) {
+        //                             try {
+        //                                 window.purchasePayments = JSON.parse(data.payments_data);
+        //                                 if (window.displayPaymentsSummary) {
+        //                                     document.getElementById('paymentsDisplay').innerHTML = window.displayPaymentsSummary();
+        //                                 }
+        //                             } catch(e) {
+        //                                 console.error('Error parsing payments data:', e);
+        //                             }
+        //                         }
+        //                     }
+        //                 })
+        //                 .catch(error => {
+        //                     console.error('Error loading purchase data:', error);
+        //                 });
+                    
+        //             return true; // הצלחנו לטעון
+        //         }
+        //         return false;
+        //     };
+            
+        //     // נסה לטעון מיד
+        //     if (!loadPurchaseData()) {
+        //         // אם לא הצליח, השתמש ב-MutationObserver
+        //         const observer = new MutationObserver((mutations, obs) => {
+        //             if (loadPurchaseData()) {
+        //                 obs.disconnect(); // הפסק לצפות
+        //             }
+        //         });
+                
+        //         // התחל לצפות בשינויים
+        //         const modal = document.getElementById('purchaseFormModal');
+        //         if (modal) {
+        //             observer.observe(modal, {
+        //                 childList: true,
+        //                 subtree: true
+        //             });
+        //         }
+                
+        //         // הגבלת זמן של 10 שניות
+        //         setTimeout(() => observer.disconnect(), 10000);
+        //     }
+        // }
     },
     
     loadFormData: function(type, itemId) {

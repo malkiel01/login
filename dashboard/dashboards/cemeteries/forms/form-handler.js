@@ -2840,6 +2840,7 @@ const FormHandler = {
                         
                         <div>⚰️ Grave:</div>
                         <div style="margin-left: 20px; color: ${grave?.value ? 'yellow' : 'gray'};">${grave?.value || '-- NONE --'}</div>
+                        <pre><code>${JSON.stringify(grave)}</code></pre>
                     `;
                 };
 

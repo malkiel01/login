@@ -57,7 +57,6 @@
             }
             // סמן את הלקוח הנוכחי
             if ($purchase && $row['unicId'] === $purchase['clientId']) {
-                $label .= ' - לקוח נוכחי';
             }
             $customers[$row['unicId']] = $label;
         }

@@ -269,27 +269,27 @@ const FormHandler = {
             if (fieldset.dataset.hierarchy) {
                 window.hierarchyData = JSON.parse(fieldset.dataset.hierarchy);
                 
-                // יצירת DIV לדיבאג
-                const debugDiv = document.createElement('div');
-                debugDiv.id = 'hierarchyDebug';
-                debugDiv.style.cssText = 'position: fixed; top: 10px; left: 10px; background: yellow; padding: 20px; z-index: 99999; max-width: 500px; max-height: 400px; overflow: auto; border: 2px solid red;';
+                // // יצירת DIV לדיבאג
+                // const debugDiv = document.createElement('div');
+                // debugDiv.id = 'hierarchyDebug';
+                // debugDiv.style.cssText = 'position: fixed; top: 10px; left: 10px; background: yellow; padding: 20px; z-index: 99999; max-width: 500px; max-height: 400px; overflow: auto; border: 2px solid red;';
                 
-                let debugHTML = '<h3>HIERARCHY DATA DEBUG</h3>';
-                debugHTML += `<p>Blocks: ${window.hierarchyData.blocks?.length || 0}</p>`;
-                debugHTML += `<p>Plots: ${window.hierarchyData.plots?.length || 0}</p>`;
-                debugHTML += `<p>Rows: ${window.hierarchyData.rows?.length || 0}</p>`;
-                debugHTML += `<p>Area Graves: ${window.hierarchyData.areaGraves?.length || 0}</p>`;
-                debugHTML += `<p>Graves: ${window.hierarchyData.graves?.length || 0}</p>`;
+                // let debugHTML = '<h3>HIERARCHY DATA DEBUG</h3>';
+                // debugHTML += `<p>Blocks: ${window.hierarchyData.blocks?.length || 0}</p>`;
+                // debugHTML += `<p>Plots: ${window.hierarchyData.plots?.length || 0}</p>`;
+                // debugHTML += `<p>Rows: ${window.hierarchyData.rows?.length || 0}</p>`;
+                // debugHTML += `<p>Area Graves: ${window.hierarchyData.areaGraves?.length || 0}</p>`;
+                // debugHTML += `<p>Graves: ${window.hierarchyData.graves?.length || 0}</p>`;
                 
-                // הצג דוגמה
-                if (window.hierarchyData.blocks?.length > 0) {
-                    debugHTML += '<h4>First Block:</h4>';
-                    debugHTML += '<pre>' + JSON.stringify(window.hierarchyData.blocks[0], null, 2) + '</pre>';
-                }
+                // // הצג דוגמה
+                // if (window.hierarchyData.blocks?.length > 0) {
+                //     debugHTML += '<h4>First Block:</h4>';
+                //     debugHTML += '<pre>' + JSON.stringify(window.hierarchyData.blocks[0], null, 2) + '</pre>';
+                // }
                 
-                debugHTML += '<button onclick="this.parentElement.remove()">סגור</button>';
-                debugDiv.innerHTML = debugHTML;
-                document.body.appendChild(debugDiv);
+                // debugHTML += '<button onclick="this.parentElement.remove()">סגור</button>';
+                // debugDiv.innerHTML = debugHTML;
+                // document.body.appendChild(debugDiv);
                 
             } else {
                 alert('No hierarchy data found in fieldset!');
@@ -1366,16 +1366,16 @@ const FormHandler = {
             window.populateBlocks();
             window.populatePlots();
 
-                    // בדוק תוצאות אחרי 500ms
-        setTimeout(() => {
-            const blockSelect = document.getElementById('blockSelect');
-            const plotSelect = document.getElementById('plotSelect');
-            
-            alert(`After populate:
-                Blocks: ${blockSelect?.options.length || 0} options
-                Plots: ${plotSelect?.options.length || 0} options
-            `);
-        }, 500);
+            // // בדוק תוצאות אחרי 500ms
+            // setTimeout(() => {
+            //     const blockSelect = document.getElementById('blockSelect');
+            //     const plotSelect = document.getElementById('plotSelect');
+                
+            //     alert(`After populate:
+            //         Blocks: ${blockSelect?.options.length || 0} options
+            //         Plots: ${plotSelect?.options.length || 0} options
+            //     `);
+            // }, 500);
         });
 
         // טען נתונים אם זה עריכה

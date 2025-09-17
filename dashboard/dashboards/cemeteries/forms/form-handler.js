@@ -1266,7 +1266,8 @@ const FormHandler = {
                 
                 document.body.appendChild(modal);
             }
-                        // הפונקציות הקיימות לניהול תשלומים ידני
+            
+            // הפונקציות הקיימות לניהול תשלומים ידני
             window.openPaymentsManager = function() {
                 // בדוק אם זה מצב עריכה
                 if (window.isEditMode && window.existingPayments) {
@@ -1274,27 +1275,7 @@ const FormHandler = {
                     window.purchasePayments = window.existingPayments;
                 }
 
-
                 const modal = document.createElement('div');
-
-                 // הצג את התשלומים הקיימים
-                modal.innerHTML = `
-                    <div class="modal-content">
-                        <h3>ניהול תשלומים ${window.isEditMode ? '(מצב עריכה)' : ''}</h3>
-                        
-                        ${window.isEditMode ? `
-                            <div style="background: #fff3cd; padding: 10px; margin-bottom: 10px; border-radius: 5px;">
-                                ⚠️ <strong>שים לב:</strong> תשלומי חובה לא ניתנים לעריכה או מחיקה
-                            </div>
-                        ` : ''}
-                        
-                        <!-- הצג רשימת תשלומים קיימים -->
-                        <div id="paymentsList">
-                            ${displayPaymentsListWithEditMode()}
-                        </div>
-                        <!-- ... -->
-                    </div>
-                `;
                 modal.id = 'paymentsManagerModal';
                 modal.className = 'modal-overlay';
                 modal.style.cssText = `
@@ -1319,7 +1300,13 @@ const FormHandler = {
                         max-height: 80vh;
                         overflow-y: auto;
                     ">
-                        <h3 style="margin-bottom: 20px;">ניהול תשלומים</h3>
+                        <h3 style="margin-bottom: 20px;">ניהול תשלומים ${window.isEditMode ? '(מצב עריכה)' : ''}</h3>
+                        
+                        ${window.isEditMode ? `
+                            <div style="background: #fff3cd; padding: 10px; margin-bottom: 10px; border-radius: 5px;">
+                                ⚠️ <strong>שים לב:</strong> תשלומי חובה לא ניתנים לעריכה או מחיקה
+                            </div>
+                        ` : ''}
                         
                         <form onsubmit="addPayment(event)">
                             <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; margin-bottom: 20px;">
@@ -1368,7 +1355,7 @@ const FormHandler = {
                             overflow-y: auto;
                             margin-bottom: 20px;
                         ">
-                            ${displayPaymentsList()}
+                            ${window.isEditMode ? displayPaymentsListWithEditMode() : displayPaymentsList()}
                         </div>
                         
                         <div style="

@@ -2945,7 +2945,7 @@ const FormHandler = {
                 updateCurrentSelection();
                 updateAvailableOptions();
                 debugLog('Debug monitor initialized', 'success');
-            }, 500);
+            }, 5);
         });
 
         // טען נתונים אם זה עריכה

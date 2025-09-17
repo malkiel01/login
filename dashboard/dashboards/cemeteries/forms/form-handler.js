@@ -77,7 +77,7 @@ const FormHandler = {
         try {
             const params = new URLSearchParams({
                 type: type,
-                ...(itemId && { unicId: itemId }),
+                ...(itemId && { item_id: itemId }),
                 ...(parentId && { parent_id: parentId })
             });
         

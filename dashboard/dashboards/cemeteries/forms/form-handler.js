@@ -1343,7 +1343,7 @@ const FormHandler = {
                 if (form && form.elements && form.elements.length > 5) {
                     console.log('Purchase form is ready, loading data...');
                     
-                    fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=get&unicId=${itemId}`)
+                    fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=get&id=${itemId}`)
                         .then(response => response.json())
                         .then(result => {
                             if (result.success && result.data) {

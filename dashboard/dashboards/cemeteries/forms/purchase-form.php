@@ -14,26 +14,74 @@
     try {
         $conn = getDBConnection();
 
-        $customers = [];
-        $cemeteries = [];
-        
-        // // טען לקוחות פנויים
-        $customersStmt = $conn->prepare("
-            SELECT unicId, CONCAT(lastName, ' ', firstName) as full_name, numId 
-            FROM customers 
-            WHERE statusCustomer = 1 AND isActive = 1 
-            ORDER BY lastName, firstName
-        ");
+        // טען רכישה אם קיימת (העבר את זה לפני טעינת הלקוחות)
+        $purchase = null;
+        if ($itemId) {
+            $stmt = $conn->prepare("SELECT * FROM purchases WHERE unicId = ? AND isActive = 1");
+            $stmt->execute([$itemId]);
+            $purchase = $stmt->fetch(PDO::FETCH_ASSOC);
+        }
 
-        $customersStmt->execute();
+        // טען לקוחות
+        $customers = [];
+        if ($purchase && $purchase['clientId']) {
+            // אם זה עריכה, כלול גם את הלקוח הנוכחי
+            $customersStmt = $conn->prepare("
+                SELECT unicId, CONCAT(lastName, ' ', firstName) as full_name, numId,
+                    CASE WHEN unicId = :currentClient THEN 1 ELSE 0 END as is_current
+                FROM customers 
+                WHERE (statusCustomer = 1 OR unicId = :currentClient2)
+                AND isActive = 1 
+                ORDER BY is_current DESC, lastName, firstName
+            ");
+            $customersStmt->execute([
+                'currentClient' => $purchase['clientId'],
+                'currentClient2' => $purchase['clientId']
+            ]);
+        } else {
+            // רכישה חדשה - רק לקוחות פנויים
+            $customersStmt = $conn->prepare("
+                SELECT unicId, CONCAT(lastName, ' ', firstName) as full_name, numId 
+                FROM customers 
+                WHERE statusCustomer = 1 
+                AND isActive = 1 
+                ORDER BY lastName, firstName
+            ");
+            $customersStmt->execute();
+        }
 
         while ($row = $customersStmt->fetch(PDO::FETCH_ASSOC)) {
             $label = $row['full_name'];
             if ($row['numId']) {
                 $label .= ' (' . $row['numId'] . ')';
             }
+            // סמן את הלקוח הנוכחי
+            if ($purchase && $row['unicId'] === $purchase['clientId']) {
+                $label .= ' - לקוח נוכחי';
+            }
             $customers[$row['unicId']] = $label;
         }
+
+
+        $cemeteries = [];
+        
+        // // // טען לקוחות פנויים
+        // $customersStmt = $conn->prepare("
+        //     SELECT unicId, CONCAT(lastName, ' ', firstName) as full_name, numId 
+        //     FROM customers 
+        //     WHERE statusCustomer = 1 AND isActive = 1 
+        //     ORDER BY lastName, firstName
+        // ");
+
+        // $customersStmt->execute();
+
+        // while ($row = $customersStmt->fetch(PDO::FETCH_ASSOC)) {
+        //     $label = $row['full_name'];
+        //     if ($row['numId']) {
+        //         $label .= ' (' . $row['numId'] . ')';
+        //     }
+        //     $customers[$row['unicId']] = $label;
+        // }
         
         // טען בתי עלמין
         $cemeteriesStmt = $conn->prepare("

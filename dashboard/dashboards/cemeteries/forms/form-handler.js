@@ -1333,9 +1333,9 @@ const FormHandler = {
                 return window.purchasePayments.reduce((total, payment) => total + payment.amount, 0).toFixed(2);
             }
 
-            // // אתחל
-            // window.populateBlocks();
-            // window.populatePlots();
+            // אתחל
+            window.populateBlocks();
+            window.populatePlots();
 
                     alert(`step 2:
                         itemId: ${itemId}

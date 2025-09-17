@@ -58,7 +58,7 @@ const FormHandler = {
         this.openForm(childType, selectedParentId, null);
     },
 
-    openForm: async function(type, parentId = null, itemId = null) {
+    openForm: function(type, parentId = null, itemId = null) {
         if (!type || typeof type !== 'string') {
             console.error('Invalid type:', type);
             this.showMessage('שגיאה: סוג הטופס לא תקין', 'error');

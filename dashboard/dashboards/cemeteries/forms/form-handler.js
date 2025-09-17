@@ -1557,6 +1557,7 @@ const FormHandler = {
                                                         // בחר קבר
                                                         setTimeout(() => {
                                                             document.getElementById('graveSelect').value = grave.unicId;
+                                                            window.currentGraveId = data.graveId;
                                                         }, 50);
                                                     }, 50);
                                                 }, 50);

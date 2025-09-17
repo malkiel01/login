@@ -501,7 +501,7 @@ const FormHandler = {
                 graves.forEach(grave => {
                     const option = document.createElement('option');
                     option.value = grave.unicId;
-                    option.textContent = `קבר ${grave.grave_number}`;
+                    option.textContent = `קבר ${grave.graveNameHe}`;
                     graveSelect.appendChild(option);
                 });
             }
@@ -1453,6 +1453,7 @@ const FormHandler = {
                         
                         <div>⚰️ Grave:</div>
                         <div style="margin-left: 20px; color: ${grave?.value ? 'yellow' : 'gray'};">${grave?.value || '-- NONE --'}</div>
+                        <pre><code>${JSON.stringify(grave)}</code></pre>
                     `;
                 };
 
@@ -1887,7 +1888,7 @@ const FormHandler = {
                 graves.forEach(grave => {
                     const option = document.createElement('option');
                     option.value = grave.unicId;
-                    option.textContent = `קבר ${grave.grave_number}`;
+                    option.textContent = `קבר ${grave.graveNameHe}`;
                     graveSelect.appendChild(option);
                 });
             }
@@ -3030,7 +3031,7 @@ const FormHandler = {
                                     debugLog(`Plot: ${plot.unicId} - ${plot.name}`, 'success');
                                     debugLog(`Row: ${row.unicId} - ${row.name}`, 'success');
                                     debugLog(`AreaGrave: ${areaGrave.unicId} - ${areaGrave.name}`, 'success');
-                                    debugLog(`Grave: ${grave.unicId} - ${grave.grave_number}`, 'success');
+                                    debugLog(`Grave: ${grave.unicId} - ${grave.graveNameHe}`, 'success');
                                     
                                     // עכשיו תבחר את הערכים בסלקטים
                                     setTimeout(() => {

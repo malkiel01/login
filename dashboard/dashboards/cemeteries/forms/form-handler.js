@@ -83,7 +83,7 @@ const FormHandler = {
         
             // alert(`1. Params created: ${params.toString()}`);
             
-            const url = `/dashboard/dashboards/cemeteries/forms/form-loader.php?${params}`;
+            // const url = `/dashboard/dashboards/cemeteries/forms/form-loader.php?${params}`;
             
             // alert(`2. About to fetch URL: ${url}`);
             

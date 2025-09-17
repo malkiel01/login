@@ -1335,6 +1335,7 @@ const FormHandler = {
             const loadPurchaseData = () => {
                 // ...
                 fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=get&id=${itemId}`)
+                    .then(response => response.json())    
                     .then(result => {
                         if (result.success && result.data) {
                             const data = result.data;

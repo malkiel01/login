@@ -359,13 +359,13 @@ async function editPurchase2(id) {
 
 async function editPurchase(id) {
     console.log('editPurchase called with:', id);
-    console.log('FormHandler exists?', typeof FormHandler2);
-    console.log('FormHandler.openForm exists?', typeof FormHandler2.openForm);
+    console.log('FormHandler exists?', typeof FormHandler);
+    console.log('FormHandler.openForm exists?', typeof FormHandler.openForm);
     
     window.currentType = 'purchase';
     
     try {
-        FormHandler2.openForm('purchase', null, id);
+        FormHandler.openForm('purchase', null, id);
         console.log('FormHandler.openForm was called successfully');
     } catch (error) {
         console.error('Error calling FormHandler.openForm:', error);

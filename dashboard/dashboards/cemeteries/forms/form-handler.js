@@ -496,94 +496,94 @@ const FormHandler = {
                 }
             }
 
-            // // מילוי קברים
-            // window.populateGraves = function(areaGraveId) {
-            //     const graveSelect = document.getElementById('graveSelect');
-            //     if (!graveSelect) return;
+            // מילוי קברים
+            window.populateGraves = function(areaGraveId) {
+                const graveSelect = document.getElementById('graveSelect');
+                if (!graveSelect) return;
                 
-            //     graveSelect.innerHTML = '<option value="">-- בחר קבר --</option>';
+                graveSelect.innerHTML = '<option value="">-- בחר קבר --</option>';
                 
-            //     const graves = window.hierarchyData.graves.filter(g => g.area_grave_id == areaGraveId);
+                const graves = window.hierarchyData.graves.filter(g => g.area_grave_id == areaGraveId);
                 
-            //     graves.forEach(grave => {
-            //         const option = document.createElement('option');
-            //         option.value = grave.unicId;
-            //         option.textContent = `קבר ${grave.grave_number}`;
-            //         graveSelect.appendChild(option);
-            //     });
-            // }
+                graves.forEach(grave => {
+                    const option = document.createElement('option');
+                    option.value = grave.unicId;
+                    option.textContent = `קבר ${grave.grave_number}`;
+                    graveSelect.appendChild(option);
+                });
+            }
 
-            // // ניקוי בוררים
-            // window.clearSelectors = function(levels) {
-            //     const configs = {
-            //         'row': { id: 'rowSelect', default: '-- בחר חלקה תחילה --', disabled: true },
-            //         'area_grave': { id: 'areaGraveSelect', default: '-- בחר שורה תחילה --', disabled: true },
-            //         'grave': { id: 'graveSelect', default: '-- בחר אחוזת קבר תחילה --', disabled: true }
-            //     };
+            // ניקוי בוררים
+            window.clearSelectors = function(levels) {
+                const configs = {
+                    'row': { id: 'rowSelect', default: '-- בחר חלקה תחילה --', disabled: true },
+                    'area_grave': { id: 'areaGraveSelect', default: '-- בחר שורה תחילה --', disabled: true },
+                    'grave': { id: 'graveSelect', default: '-- בחר אחוזת קבר תחילה --', disabled: true }
+                };
                 
-            //     levels.forEach(level => {
-            //         const config = configs[level];
-            //         if (config) {
-            //             const element = document.getElementById(config.id);
-            //             if (element) {
-            //                 element.innerHTML = `<option value="">${config.default}</option>`;
-            //                 element.disabled = config.disabled;
-            //             }
-            //         }
-            //     });
-            // }
+                levels.forEach(level => {
+                    const config = configs[level];
+                    if (config) {
+                        const element = document.getElementById(config.id);
+                        if (element) {
+                            element.innerHTML = `<option value="">${config.default}</option>`;
+                            element.disabled = config.disabled;
+                        }
+                    }
+                });
+            }
 
-            // // כשנבחר קבר
-            // window.onGraveSelected = function(graveId) {
-            //     if (graveId) {
-            //         // מצא את פרטי הקבר
-            //         const grave = window.hierarchyData.graves.find(g => g.unicId == graveId);
-            //         if (grave) {
-            //             // עדכן את הפרמטרים לתשלומים החכמים
-            //             window.selectedGraveData = {
-            //                 graveId: graveId,
-            //                 plotType: grave.plot_type || 1,
-            //                 graveType: grave.grave_type || 1
-            //             };
+            // כשנבחר קבר
+            window.onGraveSelected = function(graveId) {
+                if (graveId) {
+                    // מצא את פרטי הקבר
+                    const grave = window.hierarchyData.graves.find(g => g.unicId == graveId);
+                    if (grave) {
+                        // עדכן את הפרמטרים לתשלומים החכמים
+                        window.selectedGraveData = {
+                            graveId: graveId,
+                            plotType: grave.plot_type || 1,
+                            graveType: grave.grave_type || 1
+                        };
                         
-            //             // הצג פרמטרים
-            //             updatePaymentParameters();
-            //         }
-            //     } else {
-            //         window.selectedGraveData = null;
-            //         const paramsElement = document.getElementById('selectedParameters');
-            //         if (paramsElement) {
-            //             paramsElement.style.display = 'none';
-            //         }
-            //     }
-            // }
+                        // הצג פרמטרים
+                        updatePaymentParameters();
+                    }
+                } else {
+                    window.selectedGraveData = null;
+                    const paramsElement = document.getElementById('selectedParameters');
+                    if (paramsElement) {
+                        paramsElement.style.display = 'none';
+                    }
+                }
+            }
 
-            // // עדכון תצוגת פרמטרים
-            // window.updatePaymentParameters = function() {
-            //     if (window.selectedGraveData) {
-            //         const plotTypes = {1: 'פטורה', 2: 'חריגה', 3: 'סגורה'};
-            //         const graveTypes = {1: 'שדה', 2: 'רוויה', 3: 'סנהדרין'};
+            // עדכון תצוגת פרמטרים
+            window.updatePaymentParameters = function() {
+                if (window.selectedGraveData) {
+                    const plotTypes = {1: 'פטורה', 2: 'חריגה', 3: 'סגורה'};
+                    const graveTypes = {1: 'שדה', 2: 'רוויה', 3: 'סנהדרין'};
                     
-            //         const displayElement = document.getElementById('parametersDisplay');
-            //         if (displayElement) {
-            //             displayElement.innerHTML = `
-            //                 <span style="margin-right: 10px;">📍 חלקה: ${plotTypes[window.selectedGraveData.plotType] || 'לא ידוע'}</span>
-            //                 <span style="margin-right: 10px;">⚰️ סוג קבר: ${graveTypes[window.selectedGraveData.graveType] || 'לא ידוע'}</span>
-            //                 <span>👤 תושב: ירושלים</span>
-            //             `;
-            //         }
+                    const displayElement = document.getElementById('parametersDisplay');
+                    if (displayElement) {
+                        displayElement.innerHTML = `
+                            <span style="margin-right: 10px;">📍 חלקה: ${plotTypes[window.selectedGraveData.plotType] || 'לא ידוע'}</span>
+                            <span style="margin-right: 10px;">⚰️ סוג קבר: ${graveTypes[window.selectedGraveData.graveType] || 'לא ידוע'}</span>
+                            <span>👤 תושב: ירושלים</span>
+                        `;
+                    }
                     
-            //         const paramsElement = document.getElementById('selectedParameters');
-            //         if (paramsElement) {
-            //             paramsElement.style.display = 'block';
-            //         }
+                    const paramsElement = document.getElementById('selectedParameters');
+                    if (paramsElement) {
+                        paramsElement.style.display = 'block';
+                    }
                     
-            //         const buttonText = document.getElementById('paymentsButtonText');
-            //         if (buttonText) {
-            //             buttonText.textContent = 'חשב מחדש תשלומים';
-            //         }
-            //     }
-            // }
+                    const buttonText = document.getElementById('paymentsButtonText');
+                    if (buttonText) {
+                        buttonText.textContent = 'חשב מחדש תשלומים';
+                    }
+                }
+            }
 
             // // משתנים גלובליים לתשלומים
             // window.purchasePayments = [];

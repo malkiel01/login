@@ -150,7 +150,9 @@
         style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
         <legend style="padding: 0 10px; font-weight: bold;">בחירת  קבר</legend>
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
-            <pre><code>' . htmlspecialchars($purchase, ENT_NOQUOTES, 'UTF-8') . '</code></pre>
+                <pre style="background: white; padding: 10px; overflow: auto; max-height: 300px;">' 
+                . json_encode($purchase, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . 
+                '</pre>
             <br/>
             <div class="form-group">
                 <label>בית עלמין</label>

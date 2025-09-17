@@ -141,6 +141,7 @@ const FormHandler = {
                 break;
                 
             case 'purchase':
+                alert(1.1)
                 this.handlePurchaseForm(itemId);
                 break;
                 

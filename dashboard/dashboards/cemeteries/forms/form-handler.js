@@ -2876,7 +2876,6 @@ const FormHandler = {
             window.calculatePaymentsTotal = function() {
                 return window.purchasePayments.reduce((total, payment) => total + payment.amount, 0).toFixed(2);
             }
-        alert(3)
 
             // אתחל
             window.populateBlocks();

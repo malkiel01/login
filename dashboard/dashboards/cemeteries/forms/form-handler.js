@@ -1584,7 +1584,7 @@ const FormHandler = {
 };
 
 // הגדר גלובלית
-window.FormHandler = FormHandler;
+// window.FormHandler = FormHandler;
 
 // פונקציה גלובלית לטיפול בשליחת טופס
 window.handleFormSubmit = function(event, type) {

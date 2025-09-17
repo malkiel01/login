@@ -129,8 +129,8 @@ function displayPurchasesTable(purchases) {
                         <button class="btn btn-sm btn-info" onclick="viewPurchase('${purchase.unicId}')" title="צפייה">
                             👁️
                         </button>
-                        <button class="btn btn-sm btn-warning" onclick="editPurchase('${purchase.unicId}')" title="ערי44כה">
-                            ✏️
+                        <button class="btn btn-sm btn-warning" onclick="editPurchase('${purchase.unicId}')" title="עריכה">
+                            ✏️ 777
                         </button>
                         <button class="btn btn-sm btn-danger" onclick="deletePurchase('${purchase.unicId}')" title="מחיקה">
                             🗑️

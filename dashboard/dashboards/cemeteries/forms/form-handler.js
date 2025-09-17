@@ -353,22 +353,22 @@ const FormHandler = {
                 
                 blockSelect.innerHTML = '<option value="">-- כל הגושים --</option>';
                 
-                const blocks = cemeteryId 
-                    ? window.hierarchyData.blocks.filter(b => b.cemeteryId == cemeteryId)
-                    : window.hierarchyData.blocks;
+                // const blocks = cemeteryId 
+                //     ? window.hierarchyData.blocks.filter(b => b.cemeteryId == cemeteryId)
+                //     : window.hierarchyData.blocks;
 
 
-                blocks.forEach(block => {
-                    const hasAvailableGraves = checkBlockHasGraves(block.unicId);
-                    const option = document.createElement('option');
-                    option.value = block.unicId;
-                    option.textContent = block.blockNameHe + (!hasAvailableGraves ? ' (אין קברים פנויים)' : '');
+                // blocks.forEach(block => {
+                //     const hasAvailableGraves = checkBlockHasGraves(block.unicId);
+                //     const option = document.createElement('option');
+                //     option.value = block.unicId;
+                //     option.textContent = block.blockNameHe + (!hasAvailableGraves ? ' (אין קברים פנויים)' : '');
 
                     
-                    if (!hasAvailableGraves) {
-                        option.disabled = true;
-                        option.style.color = '#999';
-                    }
+                //     if (!hasAvailableGraves) {
+                //         option.disabled = true;
+                //         option.style.color = '#999';
+                //     }
                     
                     blockSelect.appendChild(option);
                 });

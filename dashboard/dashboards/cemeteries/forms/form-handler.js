@@ -253,7 +253,9 @@ const FormHandler = {
 
     handlePurchaseForm: function(itemId) {
 
-        alert('step 1', itemId)
+        alert(`step 1:
+            itemId: ${itemId}
+            `)
         // בדיוק כמו לקוח - חכה ל-fieldset עם הנתונים
         this.waitForElement('#grave-selector-fieldset', (fieldset) => {
             if (fieldset.dataset.hierarchy) {

@@ -254,20 +254,12 @@ const FormHandler = {
     handlePurchaseForm: function(itemId) {
         // בדיוק כמו לקוח - חכה ל-fieldset עם הנתונים
         this.waitForElement('#grave-selector-fieldset', (fieldset) => {
-            // if (fieldset.dataset.hierarchy) {
-            //     window.hierarchyData = JSON.parse(fieldset.dataset.hierarchy);
-            //     console.log('Hierarchy data loaded from fieldset');
-
-            //     alert(window.hierarchyData)
-            // } else {
-            //     console.error('No hierarchy data in fieldset');
-            //     return;
-            // }
-            
-            // פונקציה לסינון ההיררכיה
-            
+            // פונקציה לסינון ההיררכיה         
             if (fieldset.dataset.hierarchy) {
                 window.hierarchyData = JSON.parse(fieldset.dataset.hierarchy);
+                debugger;
+                console.log(window.hierarchyData);
+                
             } else {
                 alert('No hierarchy data found in fieldset!');
                 return;

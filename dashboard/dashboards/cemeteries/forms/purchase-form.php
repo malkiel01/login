@@ -61,9 +61,9 @@
             $customers[$row['unicId']] = $label;
         }
 
-// -------------------------------------
-// 
-// -------------------------------------
+        // -------------------------------------
+        // 
+        // -------------------------------------
 
         // עכשיו טען את ההיררכיה
         $hierarchyData = [];
@@ -210,17 +210,6 @@
             $gravesStmt->execute();
         }
         $hierarchyData['graves'] = $gravesStmt->fetchAll(PDO::FETCH_ASSOC);
-
-
-        // // טען את כל הקברים הפנויים
-        // $gravesStmt = $conn->prepare("
-        //     SELECT g.*, g.areaGraveId as area_grave_id, g.graveNameHe as name
-        //     FROM graves g 
-        //     WHERE g.graveStatus = 1 AND g.isActive = 1
-        //     ORDER BY g.graveNameHe
-        // ");
-        // $gravesStmt->execute();
-        // $hierarchyData['graves'] = $gravesStmt->fetchAll(PDO::FETCH_ASSOC);
         
     } catch (Exception $e) {
         die(json_encode(['error' => $e->getMessage()]));

@@ -3198,53 +3198,53 @@ const FormHandler = {
                                     // debugLog(`AreaGrave: ${areaGrave.unicId} - ${areaGrave.name}`, 'success');
                                     // debugLog(`Grave: ${grave.unicId} - ${grave.graveNameHe}`, 'success');
                                     
-                                    // עכשיו תבחר את הערכים בסלקטים
-                                    setTimeout(() => {
-                                        // debugLog(`=== SELECTING VALUES IN DROPDOWNS ===`, 'warning');
+                                    // // עכשיו תבחר את הערכים בסלקטים
+                                    // setTimeout(() => {
+                                    //     // debugLog(`=== SELECTING VALUES IN DROPDOWNS ===`, 'warning');
                                         
-                                        // בחר בית עלמין
-                                        if (block.cemetery_id) {
-                                            document.getElementById('cemeterySelect').value = block.cemetery_id;
-                                            // debugLog(`Selected cemetery: ${block.cemetery_id}`, 'success');
-                                            window.filterHierarchy('cemetery');
-                                        }
+                                    //     // בחר בית עלמין
+                                    //     if (block.cemetery_id) {
+                                    //         document.getElementById('cemeterySelect').value = block.cemetery_id;
+                                    //         // debugLog(`Selected cemetery: ${block.cemetery_id}`, 'success');
+                                    //         window.filterHierarchy('cemetery');
+                                    //     }
                                         
-                                        // בחר גוש
-                                        setTimeout(() => {
-                                            document.getElementById('blockSelect').value = block.unicId;
-                                            // debugLog(`Selected block: ${block.unicId}`, 'success');
-                                            window.filterHierarchy('block');
+                                    //     // בחר גוש
+                                    //     setTimeout(() => {
+                                    //         document.getElementById('blockSelect').value = block.unicId;
+                                    //         // debugLog(`Selected block: ${block.unicId}`, 'success');
+                                    //         window.filterHierarchy('block');
                                             
-                                            // בחר חלקה
-                                            setTimeout(() => {
-                                                document.getElementById('plotSelect').value = plot.unicId;
-                                                // debugLog(`Selected plot: ${plot.unicId}`, 'success');
-                                                window.filterHierarchy('plot');
+                                    //         // בחר חלקה
+                                    //         setTimeout(() => {
+                                    //             document.getElementById('plotSelect').value = plot.unicId;
+                                    //             // debugLog(`Selected plot: ${plot.unicId}`, 'success');
+                                    //             window.filterHierarchy('plot');
                                                 
-                                                // בחר שורה
-                                                setTimeout(() => {
-                                                    document.getElementById('rowSelect').value = row.unicId;
-                                                    // debugLog(`Selected row: ${row.unicId}`, 'success');
-                                                    window.filterHierarchy('row');
+                                    //             // בחר שורה
+                                    //             setTimeout(() => {
+                                    //                 document.getElementById('rowSelect').value = row.unicId;
+                                    //                 // debugLog(`Selected row: ${row.unicId}`, 'success');
+                                    //                 window.filterHierarchy('row');
                                                     
-                                                    // בחר אחוזת קבר
-                                                    setTimeout(() => {
-                                                        document.getElementById('areaGraveSelect').value = areaGrave.unicId;
-                                                        // debugLog(`Selected area grave: ${areaGrave.unicId}`, 'success');
-                                                        window.filterHierarchy('area_grave');
+                                    //                 // בחר אחוזת קבר
+                                    //                 setTimeout(() => {
+                                    //                     document.getElementById('areaGraveSelect').value = areaGrave.unicId;
+                                    //                     // debugLog(`Selected area grave: ${areaGrave.unicId}`, 'success');
+                                    //                     window.filterHierarchy('area_grave');
                                                         
-                                                        // בחר קבר
-                                                        setTimeout(() => {
-                                                            document.getElementById('graveSelect').value = grave.unicId;
-                                                            // debugLog(`Selected grave: ${grave.unicId}`, 'success');
-                                                            // debugLog(`Grave JSON: ${JSON.stringify(grave)}`, 'success');
-                                                            // debugLog(`=== SELECTION COMPLETE ===`, 'warning');
-                                                        }, 100);
-                                                    }, 100);
-                                                }, 100);
-                                            }, 100);
-                                        }, 100);
-                                    }, 500);
+                                    //                     // בחר קבר
+                                    //                     setTimeout(() => {
+                                    //                         document.getElementById('graveSelect').value = grave.unicId;
+                                    //                         // debugLog(`Selected grave: ${grave.unicId}`, 'success');
+                                    //                         // debugLog(`Grave JSON: ${JSON.stringify(grave)}`, 'success');
+                                    //                         // debugLog(`=== SELECTION COMPLETE ===`, 'warning');
+                                    //                     }, 100);
+                                    //                 }, 100);
+                                    //             }, 100);
+                                    //         }, 100);
+                                    //     }, 100);
+                                    // }, 500);
                                 }
                             }
                         })

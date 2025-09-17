@@ -59,43 +59,22 @@ const FormHandler = {
     },
 
     openForm: async function(type, parentId = null, itemId = null) {
-        // alert(`נכנסתי ל FormHandler.openForm
-        //     type: ${type},
-        //     parentId: ${parentId},
-        //     itemId: ${itemId},
-        //     `);
-        // console.log('נכנסתי ל FormHandler.openForm', 'file: form-handler.js, row: 63');
-
         if (!type || typeof type !== 'string') {
             console.error('Invalid type:', type);
             this.showMessage('שגיאה: סוג הטופס לא תקין', 'error');
             return;
         }
-        
-        // console.log('FormHandler.openForm called with:', {type, parentId, itemId});
-        
+  
         try {
             const params = new URLSearchParams({
                 type: type,
                 ...(itemId && { item_id: itemId }),
                 ...(parentId && { parent_id: parentId })
             });
-        
-            // alert(`1. Params created: ${params.toString()}`);
-            
-            // const url = `/dashboard/dashboards/cemeteries/forms/form-loader.php?${params}`;
-            
-            // alert(`2. About to fetch URL: ${url}`);
-            
+  
             const response = await fetch(`/dashboard/dashboards/cemeteries/forms/form-loader.php?${params}`);
-            // const response = await fetch(url);
-            
-            // alert(`3. Fetch completed. Status: ${response.status}`);
-            
+      
             const html = await response.text();
-            
-            // alert(`4. HTML received. Length: ${html.length} characters`);
-            
             
             // הסר טופס קיים אם יש
             const existingModal = document.getElementById(type + 'FormModal');
@@ -273,6 +252,8 @@ const FormHandler = {
     },
 
     handlePurchaseForm: function(itemId) {
+
+        alert('step 1')
         // בדיוק כמו לקוח - חכה ל-fieldset עם הנתונים
         this.waitForElement('#grave-selector-fieldset', (fieldset) => {
             if (fieldset.dataset.hierarchy) {

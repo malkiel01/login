@@ -259,7 +259,7 @@ const FormHandler = {
                 window.hierarchyData = JSON.parse(fieldset.dataset.hierarchy);
                 debugger;
                 console.log(window.hierarchyData);
-                
+                alert('No hierarchy data found in fieldset!');
             } else {
                 alert('No hierarchy data found in fieldset!');
                 return;

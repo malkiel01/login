@@ -1338,6 +1338,7 @@ const FormHandler = {
 
         // טען נתונים אם זה עריכה
         if (itemId) {
+                    alert('step 2', itemId)
             console.log('temp id: ', itemId);
             
             const loadPurchaseData = () => {

@@ -1625,3 +1625,5 @@ window.openFormModal = function(type, parentId, itemId) {
 window.closeFormModal = function(type) {
     FormHandler.closeForm(type);
 };
+
+console.log('FormHandler loaded:', typeof FormHandler);

@@ -58,6 +58,8 @@ const FormHandler = {
     },
 
     openForm: async function(type, parentId = null, itemId = null) {
+        console.log('נכנסתי ל FormHandler.openForm', 'file: form-handler.js, row: 61');
+
         if (!type || typeof type !== 'string') {
             console.error('Invalid type:', type);
             this.showMessage('שגיאה: סוג הטופס לא תקין', 'error');

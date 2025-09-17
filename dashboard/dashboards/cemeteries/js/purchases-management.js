@@ -333,7 +333,7 @@ function showPurchaseDetails(purchase) {
             </div>
             <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
                 <button class="btn btn-warning" onclick="this.closest('.modal').remove(); editPurchase('${purchase.unicId}')">
-                    ער5וך
+                    ערוך
                 </button>
                 <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">סגור</button>
             </div>
@@ -352,6 +352,8 @@ function openAddPurchase() {
 // עריכת רכישה
 async function editPurchase(id) {
     window.currentType = 'purchase';
+    console.log('נכנסתי ל editPurchase', 'file: purchases-management.js, row: 355');
+    
     FormHandler.openForm('purchase', null, id);
 }
 

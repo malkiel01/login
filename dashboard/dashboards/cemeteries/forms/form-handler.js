@@ -1,7 +1,7 @@
 // /dashboards/cemeteries/forms/form-handler.js
 // טיפול בטפסים בצד הלקוח
 
-const FormHandler = {
+const FormHandler2 = {
 
     // פונקציה עזר אחידה לחכות לאלמנט או פונקציה
     waitForElement: function(selector, callback, timeout = 5000) {

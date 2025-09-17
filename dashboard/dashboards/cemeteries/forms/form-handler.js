@@ -58,8 +58,9 @@ const FormHandler = {
         this.openForm(childType, selectedParentId, null);
     },
 
-    openForm: function(type, parentId = null, itemId = null) {
-        console.log('נכנסתי ל FormHandler.openForm', 'file: form-handler.js, row: 61');
+    openForm: async function(type, parentId = null, itemId = null) {
+         debugger; // הוסף את זה
+        console.log('נכנסתי ל FormHandler.openForm', 'file: form-handler.js, row: 63');
 
         if (!type || typeof type !== 'string') {
             console.error('Invalid type:', type);

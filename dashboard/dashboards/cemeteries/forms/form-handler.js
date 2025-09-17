@@ -58,7 +58,7 @@ const FormHandler = {
         this.openForm(childType, selectedParentId, null);
     },
 
-    openForm: function(type, parentId = null, itemId = null) {
+    openForm: async function(type, parentId = null, itemId = null) {
         if (!type || typeof type !== 'string') {
             console.error('Invalid type:', type);
             this.showMessage('שגיאה: סוג הטופס לא תקין', 'error');
@@ -141,8 +141,6 @@ const FormHandler = {
                 break;
                 
             case 'purchase':
-                console.log("case 'purchase': ", itemId);
-
                 this.handlePurchaseForm(itemId);
                 break;
                 
@@ -1331,6 +1329,66 @@ const FormHandler = {
             // אתחל
             window.populateBlocks();
             window.populatePlots();
+
+            // יצירת DIV לדיבאג בחירות
+            const selectionDebugDiv = document.createElement('div');
+            selectionDebugDiv.id = 'selectionDebug';
+            selectionDebugDiv.style.cssText = `
+                position: fixed; 
+                bottom: 10px; 
+                right: 10px; 
+                background: #333; 
+                color: #0f0; 
+                padding: 15px; 
+                z-index: 99999; 
+                max-width: 400px; 
+                border: 2px solid #0f0; 
+                font-family: monospace;
+                font-size: 12px;
+            `;
+
+            selectionDebugDiv.innerHTML = `
+                <div style="color: #0f0; font-weight: bold; margin-bottom: 10px;">🔍 SELECTION DEBUG</div>
+                <div id="debugSelections"></div>
+                <button onclick="this.parentElement.remove()" style="margin-top: 10px; background: #f00; color: white; border: none; padding: 5px 10px;">X</button>
+            `;
+            document.body.appendChild(selectionDebugDiv);
+
+            // פונקציה לעדכון הדיבאג
+            window.updateSelectionDebug = function() {
+                const debugDiv = document.getElementById('debugSelections');
+                if (!debugDiv) return;
+                
+                const cemetery = document.getElementById('cemeterySelect');
+                const block = document.getElementById('blockSelect');
+                const plot = document.getElementById('plotSelect');
+                const row = document.getElementById('rowSelect');
+                const areaGrave = document.getElementById('areaGraveSelect');
+                const grave = document.getElementById('graveSelect');
+                
+                debugDiv.innerHTML = `
+                    <div>🏛️ Cemetery: <span style="color: yellow">${cemetery?.value || 'NONE'}</span></div>
+                    <div>📦 Block: <span style="color: yellow">${block?.value || 'NONE'}</span></div>
+                    <div>📍 Plot: <span style="color: yellow">${plot?.value || 'NONE'}</span></div>
+                    <div>📏 Row: <span style="color: yellow">${row?.value || 'NONE'}</span></div>
+                    <div>🏘️ AreaGrave: <span style="color: yellow">${areaGrave?.value || 'NONE'}</span></div>
+                    <div>⚰️ Grave: <span style="color: yellow">${grave?.value || 'NONE'}</span></div>
+                    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #0f0;">
+                        Last update: ${new Date().toLocaleTimeString('he-IL')}
+                    </div>
+                `;
+            };
+
+            // הוסף listener לכל select
+            ['cemeterySelect', 'blockSelect', 'plotSelect', 'rowSelect', 'areaGraveSelect', 'graveSelect'].forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('change', window.updateSelectionDebug);
+                }
+            });
+
+            // עדכון ראשוני
+            window.updateSelectionDebug();
         });
 
         // טען נתונים אם זה עריכה

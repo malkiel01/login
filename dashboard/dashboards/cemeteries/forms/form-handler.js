@@ -3073,6 +3073,7 @@ const FormHandler = {
                                                         setTimeout(() => {
                                                             document.getElementById('graveSelect').value = grave.unicId;
                                                             debugLog(`Selected grave: ${grave.unicId}`, 'success');
+                                                            debugLog(`Grave JSON: ${JSON.stringify(grave)}`, 'success');
                                                             debugLog(`=== SELECTION COMPLETE ===`, 'warning');
                                                         }, 100);
                                                     }, 100);

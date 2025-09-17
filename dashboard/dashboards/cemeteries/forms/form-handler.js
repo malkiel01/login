@@ -58,77 +58,77 @@ const FormHandler = {
         this.openForm(childType, selectedParentId, null);
     },
 
-    openForm: function(type, parentId = null, itemId = null) {
+    openForm: async function(type, parentId = null, itemId = null) {
         console.log('נכנסתי ל FormHandler.openForm', 'file: form-handler.js, row: 61');
 
-        // if (!type || typeof type !== 'string') {
-        //     console.error('Invalid type:', type);
-        //     this.showMessage('שגיאה: סוג הטופס לא תקין', 'error');
-        //     return;
-        // }
+        if (!type || typeof type !== 'string') {
+            console.error('Invalid type:', type);
+            this.showMessage('שגיאה: סוג הטופס לא תקין', 'error');
+            return;
+        }
         
-        // console.log('FormHandler.openForm called with:', {type, parentId, itemId});
+        console.log('FormHandler.openForm called with:', {type, parentId, itemId});
         
-        // try {
-        //     const params = new URLSearchParams({
-        //         type: type,
-        //         ...(itemId && { id: itemId }),
-        //         ...(parentId && { parent_id: parentId })
-        //     });
+        try {
+            const params = new URLSearchParams({
+                type: type,
+                ...(itemId && { id: itemId }),
+                ...(parentId && { parent_id: parentId })
+            });
             
-        //     const response = await fetch(`/dashboard/dashboards/cemeteries/forms/form-loader.php?${params}`);
-        //     const html = await response.text();
+            const response = await fetch(`/dashboard/dashboards/cemeteries/forms/form-loader.php?${params}`);
+            const html = await response.text();
             
-        //     // הסר טופס קיים אם יש
-        //     const existingModal = document.getElementById(type + 'FormModal');
-        //     if (existingModal) {
-        //         existingModal.remove();
-        //     }
+            // הסר טופס קיים אם יש
+            const existingModal = document.getElementById(type + 'FormModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
             
-        //     // הסר style קיים אם יש
-        //     const existingStyle = document.getElementById(type + 'FormStyle');
-        //     if (existingStyle) {
-        //         existingStyle.remove();
-        //     }
+            // הסר style קיים אם יש
+            const existingStyle = document.getElementById(type + 'FormStyle');
+            if (existingStyle) {
+                existingStyle.remove();
+            }
             
-        //     // צור container זמני לפירוק ה-HTML
-        //     const tempDiv = document.createElement('div');
-        //     tempDiv.innerHTML = html;
+            // צור container זמני לפירוק ה-HTML
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
             
-        //     // חפש את ה-style tag
-        //     const styleTag = tempDiv.querySelector('style');
-        //     if (styleTag) {
-        //         styleTag.id = type + 'FormStyle';
-        //         document.head.appendChild(styleTag);
-        //     }
+            // חפש את ה-style tag
+            const styleTag = tempDiv.querySelector('style');
+            if (styleTag) {
+                styleTag.id = type + 'FormStyle';
+                document.head.appendChild(styleTag);
+            }
             
-        //     // חפש את המודאל
-        //     const modal = tempDiv.querySelector('#' + type + 'FormModal');
+            // חפש את המודאל
+            const modal = tempDiv.querySelector('#' + type + 'FormModal');
             
-        //     if (modal) {
-        //         // הוסף את המודאל ל-body
-        //         document.body.appendChild(modal);
+            if (modal) {
+                // הוסף את המודאל ל-body
+                document.body.appendChild(modal);
                 
-        //         // מנע גלילה בדף הראשי
-        //         document.body.style.overflow = 'hidden';
+                // מנע גלילה בדף הראשי
+                document.body.style.overflow = 'hidden';
 
-        //         // טיפול לפי סוג הטופס
-        //         this.handleFormSpecificLogic(type, parentId, itemId);
+                // טיפול לפי סוג הטופס
+                this.handleFormSpecificLogic(type, parentId, itemId);
                 
-        //     } else {
-        //         console.error('Modal not found in HTML');
-        //         const alternativeModal = tempDiv.querySelector('.modal');
-        //         if (alternativeModal) {
-        //             alternativeModal.id = type + 'FormModal';
-        //             document.body.appendChild(alternativeModal);
-        //             document.body.style.overflow = 'hidden';
-        //         }
-        //     }
+            } else {
+                console.error('Modal not found in HTML');
+                const alternativeModal = tempDiv.querySelector('.modal');
+                if (alternativeModal) {
+                    alternativeModal.id = type + 'FormModal';
+                    document.body.appendChild(alternativeModal);
+                    document.body.style.overflow = 'hidden';
+                }
+            }
             
-        // } catch (error) {
-        //     console.error('Error loading form:', error);
-        //     this.showMessage('שגיאה בטעינת הטופס', 'error');
-        // }
+        } catch (error) {
+            console.error('Error loading form:', error);
+            this.showMessage('שגיאה בטעינת הטופס', 'error');
+        }
     },
 
     handleFormSpecificLogic: function(type, parentId, itemId) {

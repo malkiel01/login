@@ -1335,7 +1335,7 @@ const FormHandler = {
 
             // אתחל
             window.populateBlocks();
-            window.populatePlots();
+            // window.populatePlots();
 
                     alert(`step 2:
                         itemId: ${itemId}

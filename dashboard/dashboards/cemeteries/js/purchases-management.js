@@ -108,7 +108,7 @@ function displayPurchasesTable(purchases) {
         return `
             <tr>
                 <td>
-                    <strong>${purchase.serialPurchaseId || purchase.purchase_number || purchase.id}</strong>
+                    <strong>${purchase.serialPurchaseId || purchase.purchase_number || purchase.unicId}</strong>
                 </td>
                 <td>${formatDate(purchase.dateOpening || purchase.purchase_date || purchase.createDate)}</td>
                 <td>

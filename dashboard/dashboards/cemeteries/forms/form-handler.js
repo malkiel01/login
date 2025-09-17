@@ -3245,6 +3245,45 @@ const FormHandler = {
                                     //         }, 100);
                                     //     }, 100);
                                     // }, 500);
+
+                                    // עכשיו תבחר את הערכים בסלקטים
+                                    setTimeout(() => {
+                                        
+                                        // בחר בית עלמין
+                                        if (block.cemetery_id) {
+                                            document.getElementById('cemeterySelect').value = block.cemetery_id;
+                                            window.filterHierarchy('cemetery');
+                                        }
+                                        
+                                        // בחר גוש
+                                        setTimeout(() => {
+                                            document.getElementById('blockSelect').value = block.unicId;
+                                            window.filterHierarchy('block');
+                                            
+                                            // בחר חלקה
+                                            setTimeout(() => {
+                                                document.getElementById('plotSelect').value = plot.unicId;
+                                                window.filterHierarchy('plot');
+                                                
+                                                // בחר שורה
+                                                setTimeout(() => {
+                                                    document.getElementById('rowSelect').value = row.unicId;
+                                                    window.filterHierarchy('row');
+                                                    
+                                                    // בחר אחוזת קבר
+                                                    setTimeout(() => {
+                                                        document.getElementById('areaGraveSelect').value = areaGrave.unicId;
+                                                        window.filterHierarchy('area_grave');
+                                                        
+                                                        // בחר קבר
+                                                        setTimeout(() => {
+                                                            document.getElementById('graveSelect').value = grave.unicId;
+                                                        }, 50);
+                                                    }, 50);
+                                                }, 50);
+                                            }, 50);
+                                        }, 50);
+                                    }, 250);
                                 }
                             }
                         })

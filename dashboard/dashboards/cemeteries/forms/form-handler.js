@@ -59,7 +59,11 @@ const FormHandler = {
     },
 
     openForm: async function(type, parentId = null, itemId = null) {
-        alert('<p>666 </p>נכנסתי ל FormHandler.openForm', type, parentId, itemId);
+        alert(`נכנסתי ל FormHandler.openForm
+            type: ${type},
+            parentId: ${parentId},
+            itemId: ${itemId},
+            `);
         console.log('נכנסתי ל FormHandler.openForm', 'file: form-handler.js, row: 63');
 
         if (!type || typeof type !== 'string') {

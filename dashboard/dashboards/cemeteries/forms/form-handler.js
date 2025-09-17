@@ -370,8 +370,8 @@ const FormHandler = {
                 //         option.style.color = '#999';
                 //     }
                     
-                    blockSelect.appendChild(option);
-                });
+                //     blockSelect.appendChild(option);
+                // });
             }
 
             // מילוי חלקות

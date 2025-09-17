@@ -130,7 +130,7 @@ function displayPurchasesTable(purchases) {
                             👁️
                         </button>
                         <button class="btn btn-sm btn-warning" onclick="editPurchase('${purchase.unicId}')" title="עריכה">
-                            ✏️ 777
+                            ✏️
                         </button>
                         <button class="btn btn-sm btn-danger" onclick="deletePurchase('${purchase.unicId}')" title="מחיקה">
                             🗑️
@@ -333,7 +333,7 @@ function showPurchaseDetails(purchase) {
             </div>
             <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
                 <button class="btn btn-warning" onclick="this.closest('.modal').remove(); editPurchase('${purchase.unicId}')">
-                    ערוך
+                    ער5וך
                 </button>
                 <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">סגור</button>
             </div>

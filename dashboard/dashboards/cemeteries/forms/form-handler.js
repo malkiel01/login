@@ -109,8 +109,6 @@ const FormHandler = {
                 // מנע גלילה בדף הראשי
                 document.body.style.overflow = 'hidden';
 
-                alert(1.2)
-
                 // טיפול לפי סוג הטופס
                 this.handleFormSpecificLogic(type, parentId, itemId);
                 
@@ -143,7 +141,6 @@ const FormHandler = {
                 break;
                 
             case 'purchase':
-                alert(1.1)
                 this.handlePurchaseForm(itemId);
                 break;
                 
@@ -1806,7 +1803,6 @@ const FormHandler = {
     },
 
     handlePurchaseForm: function(itemId) {
-        alert(1)
         // בדיוק כמו לקוח - חכה ל-fieldset עם הנתונים
         this.waitForElement('#grave-selector-fieldset', (fieldset) => {
             // פונקציה לסינון ההיררכיה         
@@ -1817,7 +1813,6 @@ const FormHandler = {
                 return;
             }
             
-                    alert(2)
             window.filterHierarchy = function(level) {
                 const cemetery = document.getElementById('cemeterySelect').value;
                 const block = document.getElementById('blockSelect').value;

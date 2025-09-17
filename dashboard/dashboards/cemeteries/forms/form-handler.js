@@ -109,6 +109,8 @@ const FormHandler = {
                 // מנע גלילה בדף הראשי
                 document.body.style.overflow = 'hidden';
 
+                alert(1.2)
+
                 // טיפול לפי סוג הטופס
                 this.handleFormSpecificLogic(type, parentId, itemId);
                 

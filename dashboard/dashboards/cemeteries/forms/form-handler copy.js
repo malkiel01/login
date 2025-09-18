@@ -1172,7 +1172,7 @@ const FormHandler = {
                         overflow-y: auto;
                     ">
                         <h3 style="margin-bottom: 20px;">
-                            22ניהול תשלומים 
+                            ניהול תשלומים 
                             ${window.isEditMode ? '<span style="color: #ff9800;">(מצב עריכה)</span>' : ''}
                         </h3>
                         
@@ -1277,6 +1277,139 @@ const FormHandler = {
                 
                 document.body.appendChild(modal);
             }
+
+            // הפונקציה לניהול תשלומים ידני
+            window.openPaymentsManager2 = function() {
+                // במצב עריכה - השתמש רק בתשלומים השמורים מה-DB
+                if (window.isEditMode && window.existingPayments) {
+                    // יצירת עותק של התשלומים הקיימים
+                    window.purchasePayments = JSON.parse(JSON.stringify(window.existingPayments));
+                }
+
+                const modal = document.createElement('div');
+                modal.id = 'paymentsManagerModal';
+                modal.className = 'modal-overlay';
+                modal.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(0,0,0,0.5);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 10001;
+                `;
+                
+                modal.innerHTML = `
+                    <div class="modal-content" style="
+                        background: white;
+                        padding: 30px;
+                        border-radius: 8px;
+                        width: 600px;
+                        max-height: 80vh;
+                        overflow-y: auto;
+                    ">
+                        <h3 style="margin-bottom: 20px;">
+                            ניהול תשלומים 
+                            ${window.isEditMode ? '<span style="color: #ff9800;">(מצב עריכה)</span>' : ''}
+                        </h3>
+                        
+                        ${window.isEditMode ? `
+                            <div style="background: #fff3cd; padding: 15px; margin-bottom: 20px; border-radius: 5px; border-left: 4px solid #ff9800;">
+                                <strong>⚠️ שים לב - מצב עריכת רכישה:</strong><br>
+                                • תשלומי חובה (בסימון אדום) - לא ניתנים לשינוי או מחיקה<br>
+                                • תשלומים אופציונליים - ניתן להסיר או לערוך סכום<br>
+                                • ניתן להוסיף תשלומים חדשים
+                            </div>
+                        ` : ''}
+                        
+                        <form onsubmit="addPayment(event)">
+                            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                                <div>
+                                    <label style="display: block; margin-bottom: 5px;">סוג תשלום</label>
+                                    <select id="payment_type" required style="
+                                        width: 100%;
+                                        padding: 8px;
+                                        border: 1px solid #ddd;
+                                        border-radius: 4px;
+                                    ">
+                                        <option value="">-- בחר --</option>
+                                        <option value="grave_cost">עלות קבר</option>
+                                        <option value="service_cost">עלות שירות</option>
+                                        <option value="tombstone_cost">עלות מצבה</option>
+                                        <option value="maintenance">תחזוקה</option>
+                                        <option value="other">אחר</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="display: block; margin-bottom: 5px;">סכום</label>
+                                    <input type="number" id="payment_amount" step="0.01" required style="
+                                        width: 100%;
+                                        padding: 8px;
+                                        border: 1px solid #ddd;
+                                        border-radius: 4px;
+                                    ">
+                                </div>
+                                <div>
+                                    <button type="submit" style="
+                                        margin-top: 24px;
+                                        padding: 8px 15px;
+                                        background: #28a745;
+                                        color: white;
+                                        border: none;
+                                        border-radius: 4px;
+                                        cursor: pointer;
+                                        width: 100%;
+                                    ">הוסף תשלום</button>
+                                </div>
+                            </div>
+                        </form>
+                        
+                        <div id="paymentsList" style="
+                            max-height: 300px;
+                            overflow-y: auto;
+                            margin-bottom: 20px;
+                        ">
+                            ${displayPaymentsListForEdit()}
+                        </div>
+                        
+                        <div style="
+                            padding: 15px;
+                            background: #f8f9fa;
+                            border-radius: 4px;
+                            margin-bottom: 20px;
+                            font-weight: bold;
+                            font-size: 18px;
+                            text-align: center;
+                        ">
+                            סה"כ: ₪<span id="paymentsTotal">${calculatePaymentsTotal()}</span>
+                        </div>
+                        
+                        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                            <button onclick="closePaymentsManager()" style="
+                                padding: 10px 30px;
+                                background: #007bff;
+                                color: white;
+                                border: none;
+                                border-radius: 4px;
+                                cursor: pointer;
+                            ">שמור ואשר</button>
+                            <button onclick="document.getElementById('paymentsManagerModal').remove();" style="
+                                padding: 10px 30px;
+                                background: #6c757d;
+                                color: white;
+                                border: none;
+                                border-radius: 4px;
+                                cursor: pointer;
+                            ">ביטול</button>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+            } 
 
             // פונקציה חדשה להצגת תשלומים במצב עריכה
             window.displayPaymentsListForEdit = function() {
@@ -1417,6 +1550,12 @@ const FormHandler = {
                 document.getElementById('payment_type').value = '';
                 document.getElementById('payment_amount').value = '';
             }
+
+            // window.removePayment = function(index) {
+            //     window.purchasePayments.splice(index, 1);
+            //     document.getElementById('paymentsList').innerHTML = displayPaymentsList();
+            //     document.getElementById('paymentsTotal').textContent = calculatePaymentsTotal();
+            // }
 
             window.displayPaymentsList = function() {
                 if (window.purchasePayments.length === 0) {

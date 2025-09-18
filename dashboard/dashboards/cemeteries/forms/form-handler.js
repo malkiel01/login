@@ -1065,7 +1065,7 @@ const FormHandler = {
                         margin: 20px;
                     ">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                            <h3 style="margin: 0;">חישוב תשלומים אוטומטי</h3>
+                            <h3 style="margin: 0;">חישוב תשלומים4 אוטומטי</h3>
                             <button onclick="closeSmartPaymentsModal()" style="
                                 background: none;
                                 border: none;

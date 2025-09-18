@@ -1519,7 +1519,7 @@ const FormHandler = {
                 `;
                 
                 document.body.appendChild(modal);
-            }
+            } 
 
             // פונקציה חדשה להצגת תשלומים במצב עריכה
             window.displayPaymentsListForEdit = function() {

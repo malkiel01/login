@@ -606,7 +606,7 @@ const FormHandler = {
                     const data = await response.json();
                     
                     if (data.success && data.payments.length > 0) {
-                        showSmartPaymentsModal(data.payments);
+                        showSmartPaymentsModal(data.payments, data);
                     } else {
                         alert('לא נמצאו הגדרות תשלום מתאימות');
                     }
@@ -617,7 +617,7 @@ const FormHandler = {
             }
 
 // ------
-            function showSmartPaymentsModal(availablePayments) {
+            function showSmartPaymentsModal(availablePayments, data) {
                 // חלק את התשלומים לחובה ואופציונלי
                 const mandatoryPayments = availablePayments.filter(p => p.mandatory);
                 const optionalPayments = availablePayments.filter(p => !p.mandatory);
@@ -645,7 +645,7 @@ const FormHandler = {
                 // בדוק אם יש תשלומים קיימים ברכישה
                 const hasExistingPayments = window.purchasePayments && window.purchasePayments.length > 0;
                 const existingPaymentsJson = hasExistingPayments ? 
-                    JSON.stringify(window.purchasePayments, null, 2) : 
+                    JSON.stringify(data, null, 2) : 
                     'אין תשלומים קיימים ברכישה זו';
                 
                 modal.innerHTML = `

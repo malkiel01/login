@@ -605,9 +605,6 @@ const FormHandler = {
                     });
                     
                     const data = await response.json();
-
-                    alert(JSON.stringify(data))
-                    alert(JSON.stringify(data.payments))
                     
                     if (data.success && data.payments.length > 0) {
                         showSmartPaymentsModal(data.payments);
@@ -620,7 +617,7 @@ const FormHandler = {
                 }
             }
 
-            function showSmartPaymentsModal(availablePayments, data) {
+            function showSmartPaymentsModal(availablePayments) {
                 // חלק את התשלומים לחובה ואופציונלי
                 const mandatoryPayments = availablePayments.filter(p => p.mandatory);
                 const optionalPayments = availablePayments.filter(p => !p.mandatory);
@@ -643,7 +640,7 @@ const FormHandler = {
                 `;
                 
                 // חשב סכום התחלתי (רק תשלומי חובה)
-                let currentTotal = mandatoryPayments.reduce((sum, p) => sum + parseFloat(p.price || 0), 0);
+                let currentTotal = mandatoryPayments.reduce((sum, p) => sum + parseFloat(Number(p.price) || 0), 0);
                 
                 // בדוק אם יש תשלומים קיימים ברכישה
                 const hasExistingPayments = window.purchasePayments && window.purchasePayments.length > 0;

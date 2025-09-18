@@ -529,7 +529,7 @@ const FormHandler = {
                 if (graveId) {
                     // מצא את פרטי הקבר
                     const grave = window.hierarchyData.graves.find(g => g.unicId == graveId);
-                    const areaGrave = window.hierarchyData.graves.find(g => g.unicId == grave.areaGraveId);
+                    const areaGrave = window.hierarchyData.areaGraves.find(g => g.unicId == grave.areaGraveId);
                     if (grave) {
                         // עדכן את הפרמטרים לתשלומים החכמים
                         window.selectedGraveData = {
@@ -586,15 +586,10 @@ const FormHandler = {
                 const graveSelect = document.getElementById('graveSelect');
                 const graveId = graveSelect ? graveSelect.value : null;
                 
-                alert('graveId: ', graveId)
-                alert('plotType: ', window.selectedGraveData.plotType)
-                alert('graveType: ', window.selectedGraveData.graveType)
-
                 if (!graveId || !window.selectedGraveData) {
                     alert('יש לבחור קבר תחילה');
                     return;
                 }
-
                 
                 // טען תשלומים אוטומטיים
                 try {

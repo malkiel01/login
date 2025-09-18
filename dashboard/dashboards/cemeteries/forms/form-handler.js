@@ -1524,14 +1524,28 @@ const FormHandler = {
                     'other': 'אחר'
                 };
                 
+                // window.purchasePayments.push({
+                //     type: type,
+                //     type_name: typeNames[type],
+                //     amount: amount,
+                //     date: new Date().toISOString()
+                // });
+                
+                // document.getElementById('paymentsList').innerHTML = displayPaymentsList();
+                // document.getElementById('paymentsTotal').textContent = calculatePaymentsTotal();
+                // document.getElementById('payment_type').value = '';
+                // document.getElementById('payment_amount').value = '';
+
                 window.purchasePayments.push({
                     type: type,
                     type_name: typeNames[type],
                     amount: amount,
+                    mandatory: false,  // תשלום חדש הוא תמיד לא חובה
                     date: new Date().toISOString()
                 });
-                
-                document.getElementById('paymentsList').innerHTML = displayPaymentsList();
+
+                // שנה את זה:
+                document.getElementById('paymentsList').innerHTML = displayPaymentsListForEdit();  // לא displayPaymentsList
                 document.getElementById('paymentsTotal').textContent = calculatePaymentsTotal();
                 document.getElementById('payment_type').value = '';
                 document.getElementById('payment_amount').value = '';

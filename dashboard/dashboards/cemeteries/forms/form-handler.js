@@ -532,6 +532,8 @@ const FormHandler = {
                     if (grave) {
                         alert(1,JSON.stringify(grave.plot_type))
                         alert(2,JSON.stringify(grave.plotType))
+                        alert(grave.plot_type)
+                        alert(grave.plotType)
                         // עדכן את הפרמטרים לתשלומים החכמים
                         window.selectedGraveData = {
                             graveId: graveId,

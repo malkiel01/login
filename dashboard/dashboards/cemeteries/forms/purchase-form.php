@@ -330,18 +330,21 @@
                 step="0.01" readonly
                 style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: #f8f9fa; font-size: 18px; font-weight: bold;">
         </div>
-        
-        <!-- כפתורי ניהול תשלומים -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+
+        <!-- כפתור ניהול תשלומים -->
+        <div style="text-align: center;">
             <button type="button" onclick="openSmartPaymentsManager()" style="
-                padding: 10px 20px;
+                padding: 10px 30px;
                 background: #17a2b8;
                 color: white;
                 border: none;
                 border-radius: 4px;
                 cursor: pointer;
+                font-size: 16px;
             ">
-                <span id="paymentsButtonText">חשב תשלומים</span>
+                <span id="paymentsButtonText">
+                    ${window.isEditMode ? 'ערוך תשלומים' : 'חשב תשלומים'}
+                </span>
             </button>
         </div>
         

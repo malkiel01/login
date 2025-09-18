@@ -642,6 +642,8 @@ const FormHandler = {
                 // חשב סכום התחלתי (רק תשלומי חובה)
                 let currentTotal = mandatoryPayments.reduce((sum, p) => sum + parseFloat(Number(p.price) || 0), 0);
                 
+                alert(currentTotal)
+
                 // בדוק אם יש תשלומים קיימים ברכישה
                 const hasExistingPayments = window.purchasePayments && window.purchasePayments.length > 0;
                 const existingPaymentsJson = hasExistingPayments ? 

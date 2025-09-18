@@ -530,7 +530,8 @@ const FormHandler = {
                     // מצא את פרטי הקבר
                     const grave = window.hierarchyData.graves.find(g => g.unicId == graveId);
                     if (grave) {
-                        alert(JSON.stringify(grave))
+                        alert(1,JSON.stringify(grave.plot_type))
+                        alert(2,JSON.stringify(grave.plotType))
                         // עדכן את הפרמטרים לתשלומים החכמים
                         window.selectedGraveData = {
                             graveId: graveId,

@@ -683,7 +683,7 @@ const FormHandler = {
                             <div style="margin-bottom: 20px;">
                                 <h4 style="color: #dc3545; margin-bottom: 10px;">
                                     <span style="background: #ffc107; padding: 2px 8px; border-radius: 3px;">חובה</span>
-                                    תשלומים הכר11חיים
+                                    תשלומים הכרחיים
                                 </h4>
                                 <div style="border: 2px solid #ffc107; background: #fffbf0; padding: 15px; border-radius: 5px;">
                                     ${mandatoryPayments.map(payment => `
@@ -952,7 +952,7 @@ const FormHandler = {
                             <div style="margin-bottom: 20px;">
                                 <h4 style="color: #dc3545; margin-bottom: 10px;">
                                     <span style="background: #ffc107; padding: 2px 8px; border-radius: 3px;">חובה</span>
-                                    תשלומים הכר22חיים
+                                    תשלומים הכרחיים
                                 </h4>
                                 <div style="border: 2px solid #ffc107; background: #fffbf0; padding: 15px; border-radius: 5px;">
                                     ${mandatoryPayments.map(payment => `

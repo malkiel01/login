@@ -617,156 +617,156 @@ const FormHandler = {
             }
 
 // ------
-        function showSmartPaymentsModal(availablePayments) {
-            // חלק את התשלומים לחובה ואופציונלי
-            const mandatoryPayments = availablePayments.filter(p => p.mandatory);
-            const optionalPayments = availablePayments.filter(p => !p.mandatory);
-            
-            // יצירת המודל
-            const modal = document.createElement('div');
-            modal.id = 'smartPaymentsModal';
-            modal.className = 'modal-overlay';
-            modal.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0,0,0,0.5);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 10001;
-            `;
-            
-            // חשב סכום התחלתי (רק תשלומי חובה)
-            let currentTotal = mandatoryPayments.reduce((sum, p) => sum + parseFloat(p.price || 0), 0);
-            
-            modal.innerHTML = `
-                <div class="modal-content" style="
-                    background: white;
-                    padding: 30px;
-                    border-radius: 8px;
-                    width: 700px;
-                    max-height: 90vh;
-                    overflow-y: auto;
-                    margin: 20px;
-                ">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h3 style="margin: 0;">חישוב תשלומים אוטומטי</h3>
-                        <button onclick="closeSmartPaymentsModal()" style="
-                            background: none;
-                            border: none;
-                            font-size: 24px;
-                            cursor: pointer;
-                        ">×</button>
-                    </div>
-                    
-                    <!-- לוג: הצג את התשלומים שהגיעו מהשרת -->
-                    <div style="background: #f0f0f0; border: 2px solid #333; padding: 10px; margin-bottom: 20px; border-radius: 5px;">
-                        <div style="background: #333; color: #fff; padding: 5px 10px; margin: -10px -10px 10px -10px; border-radius: 3px 3px 0 0;">
-                            <strong>🔍 תשלומים שנמצאו במערכת:</strong>
+            function showSmartPaymentsModal(availablePayments) {
+                // חלק את התשלומים לחובה ואופציונלי
+                const mandatoryPayments = availablePayments.filter(p => p.mandatory);
+                const optionalPayments = availablePayments.filter(p => !p.mandatory);
+                
+                // יצירת המודל
+                const modal = document.createElement('div');
+                modal.id = 'smartPaymentsModal';
+                modal.className = 'modal-overlay';
+                modal.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(0,0,0,0.5);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 10001;
+                `;
+                
+                // חשב סכום התחלתי (רק תשלומי חובה)
+                let currentTotal = mandatoryPayments.reduce((sum, p) => sum + parseFloat(p.price || 0), 0);
+                
+                modal.innerHTML = `
+                    <div class="modal-content" style="
+                        background: white;
+                        padding: 30px;
+                        border-radius: 8px;
+                        width: 700px;
+                        max-height: 90vh;
+                        overflow-y: auto;
+                        margin: 20px;
+                    ">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h3 style="margin: 0;">חישוב תשלומים אוטומטי</h3>
+                            <button onclick="closeSmartPaymentsModal()" style="
+                                background: none;
+                                border: none;
+                                font-size: 24px;
+                                cursor: pointer;
+                            ">×</button>
                         </div>
-                        <pre style="margin: 0; font-family: 'Courier New', monospace; font-size: 11px; color: #333; max-height: 150px; overflow-y: auto; background: white; padding: 10px; border-radius: 3px;">${JSON.stringify(availablePayments, null, 2).replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
-                        <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #ccc; font-size: 12px;">
-                            <strong>סיכום:</strong> ${mandatoryPayments.length} תשלומי חובה, ${optionalPayments.length} תשלומים אופציונליים
-                        </div>
-                    </div>
-                    
-                    <!-- הצגת הפרמטרים -->
-                    <div style="background: #e3f2fd; padding: 10px; border-radius: 5px; margin-bottom: 20px;">
-                        <strong>פרמטרים נבחרים:</strong><br>
-                        סוג חלקה: ${window.selectedGraveData.plotType == 1 ? 'פטורה' : window.selectedGraveData.plotType == 2 ? 'חריגה' : 'סגורה'} | 
-                        סוג קבר: ${window.selectedGraveData.graveType == 1 ? 'שדה' : window.selectedGraveData.graveType == 2 ? 'רוויה' : 'סנהדרין'} | 
-                        תושבות: ירושלים
-                    </div>
-                    
-                    ${mandatoryPayments.length > 0 ? `
-                        <!-- תשלומי חובה -->
-                        <div style="margin-bottom: 20px;">
-                            <h4 style="color: #dc3545; margin-bottom: 10px;">
-                                <span style="background: #ffc107; padding: 2px 8px; border-radius: 3px;">חובה</span>
-                                תשלומים הכרחיים
-                            </h4>
-                            <div style="border: 2px solid #ffc107; background: #fffbf0; padding: 15px; border-radius: 5px;">
-                                ${mandatoryPayments.map(payment => `
-                                    <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ffe5b4;">
-                                        <label style="display: flex; align-items: center;">
-                                            <input type="checkbox" checked disabled style="margin-left: 10px;">
-                                            <span style="font-weight: bold; margin-right: 10px;">${payment.name}</span>
-                                        </label>
-                                        <span style="font-weight: bold; color: #dc3545;">₪${parseFloat(payment.price).toLocaleString()}</span>
-                                    </div>
-                                `).join('')}
+                        
+                        <!-- לוג: הצג את התשלומים שהגיעו מהשרת -->
+                        <div style="background: #f0f0f0; border: 2px solid #333; padding: 10px; margin-bottom: 20px; border-radius: 5px;">
+                            <div style="background: #333; color: #fff; padding: 5px 10px; margin: -10px -10px 10px -10px; border-radius: 3px 3px 0 0;">
+                                <strong>🔍 תשלומים שנמצאו במערכת:</strong>
+                            </div>
+                            <pre style="margin: 0; font-family: 'Courier New', monospace; font-size: 11px; color: #333; max-height: 150px; overflow-y: auto; background: white; padding: 10px; border-radius: 3px;">${JSON.stringify(availablePayments, null, 2).replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+                            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #ccc; font-size: 12px;">
+                                <strong>סיכום:</strong> ${mandatoryPayments.length} תשלומי חובה, ${optionalPayments.length} תשלומים אופציונליים
                             </div>
                         </div>
-                    ` : ''}
-                    
- 
-                        ${optionalPayments.length > 0 ? `
-                            <!-- תשלומים אופציונליים -->
+                        
+                        <!-- הצגת הפרמטרים -->
+                        <div style="background: #e3f2fd; padding: 10px; border-radius: 5px; margin-bottom: 20px;">
+                            <strong>פרמטרים נבחרים:</strong><br>
+                            סוג חלקה: ${window.selectedGraveData.plotType == 1 ? 'פטורה' : window.selectedGraveData.plotType == 2 ? 'חריגה' : 'סגורה'} | 
+                            סוג קבר: ${window.selectedGraveData.graveType == 1 ? 'שדה' : window.selectedGraveData.graveType == 2 ? 'רוויה' : 'סנהדרין'} | 
+                            תושבות: ירושלים
+                        </div>
+                        
+                        ${mandatoryPayments.length > 0 ? `
+                            <!-- תשלומי חובה -->
                             <div style="margin-bottom: 20px;">
-                                <h4 style="color: #28a745; margin-bottom: 10px;">
-                                    <span style="background: #d4edda; padding: 2px 8px; border-radius: 3px;">אופציונלי</span>
-                                    תשלומים נוספים
+                                <h4 style="color: #dc3545; margin-bottom: 10px;">
+                                    <span style="background: #ffc107; padding: 2px 8px; border-radius: 3px;">חובה</span>
+                                    תשלומים הכרחיים
                                 </h4>
-                                <div style="border: 1px solid #28a745; background: #f0fff4; padding: 15px; border-radius: 5px;">
-                                    ${optionalPayments.map((payment, index) => `
-                                        <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center; ${index < optionalPayments.length - 1 ? 'border-bottom: 1px solid #c3e6cb;' : ''}">
-                                            <label style="display: flex; align-items: center; cursor: pointer;">
-                                                <input type="checkbox" 
-                                                    id="optional_${payment.id || index}"
-                                                    data-price="${payment.price}"
-                                                    data-name="${payment.name}"
-                                                    data-definition="${payment.priceDefinition}"
-                                                    onchange="updateSmartTotal()"
-                                                    style="margin-left: 10px;">
-                                                <span style="margin-right: 10px;">${payment.name}</span>
+                                <div style="border: 2px solid #ffc107; background: #fffbf0; padding: 15px; border-radius: 5px;">
+                                    ${mandatoryPayments.map(payment => `
+                                        <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ffe5b4;">
+                                            <label style="display: flex; align-items: center;">
+                                                <input type="checkbox" checked disabled style="margin-left: 10px;">
+                                                <span style="font-weight: bold; margin-right: 10px;">${payment.name}</span>
                                             </label>
-                                            <span>₪${parseFloat(payment.price).toLocaleString()}</span>
+                                            <span style="font-weight: bold; color: #dc3545;">₪${parseFloat(payment.price).toLocaleString()}</span>
                                         </div>
                                     `).join('')}
                                 </div>
                             </div>
                         ` : ''}
                         
-                        <!-- סיכום -->
-                        <div style="background: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0; text-align: center;">
-                            <div style="font-size: 24px; font-weight: bold;">
-                                סה"כ לתשלום: ₪<span id="smartModalTotal">${currentTotal.toLocaleString()}</span>
+    
+                            ${optionalPayments.length > 0 ? `
+                                <!-- תשלומים אופציונליים -->
+                                <div style="margin-bottom: 20px;">
+                                    <h4 style="color: #28a745; margin-bottom: 10px;">
+                                        <span style="background: #d4edda; padding: 2px 8px; border-radius: 3px;">אופציונלי</span>
+                                        תשלומים נוספים
+                                    </h4>
+                                    <div style="border: 1px solid #28a745; background: #f0fff4; padding: 15px; border-radius: 5px;">
+                                        ${optionalPayments.map((payment, index) => `
+                                            <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center; ${index < optionalPayments.length - 1 ? 'border-bottom: 1px solid #c3e6cb;' : ''}">
+                                                <label style="display: flex; align-items: center; cursor: pointer;">
+                                                    <input type="checkbox" 
+                                                        id="optional_${payment.id || index}"
+                                                        data-price="${payment.price}"
+                                                        data-name="${payment.name}"
+                                                        data-definition="${payment.priceDefinition}"
+                                                        onchange="updateSmartTotal()"
+                                                        style="margin-left: 10px;">
+                                                    <span style="margin-right: 10px;">${payment.name}</span>
+                                                </label>
+                                                <span>₪${parseFloat(payment.price).toLocaleString()}</span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                            
+                            <!-- סיכום -->
+                            <div style="background: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0; text-align: center;">
+                                <div style="font-size: 24px; font-weight: bold;">
+                                    סה"כ לתשלום: ₪<span id="smartModalTotal">${currentTotal.toLocaleString()}</span>
+                                </div>
+                                <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                                    כולל ${mandatoryPayments.length} תשלומי חובה
+                                    <span id="optionalCount"></span>
+                                </div>
                             </div>
-                            <div style="font-size: 12px; color: #666; margin-top: 5px;">
-                                כולל ${mandatoryPayments.length} תשלומי חובה
-                                <span id="optionalCount"></span>
+                            
+                            <!-- כפתורים -->
+                            <div style="display: flex; gap: 10px; justify-content: space-between;">                            
+                                <div style="display: flex; gap: 10px;">
+                                    <button onclick="document.getElementById('smartPaymentsModal').remove()" style="
+                                        padding: 10px 30px;
+                                        background: #dc3545;
+                                        color: white;
+                                        border: none;
+                                        border-radius: 4px;
+                                        cursor: pointer;
+                                    ">ביטול</button>
+                                    <button onclick="applySmartPayments(${JSON.stringify(mandatoryPayments).replace(/"/g, '&quot;')})" style="
+                                        padding: 10px 30px;
+                                        background: #28a745;
+                                        color: white;
+                                        border: none;
+                                        border-radius: 4px;
+                                        cursor: pointer;
+                                        font-weight: bold;
+                                    ">אישור ושמירה</button>
+                                </div>
                             </div>
                         </div>
-                        
-                        <!-- כפתורים -->
-                        <div style="display: flex; gap: 10px; justify-content: space-between;">                            
-                            <div style="display: flex; gap: 10px;">
-                                <button onclick="document.getElementById('smartPaymentsModal').remove()" style="
-                                    padding: 10px 30px;
-                                    background: #dc3545;
-                                    color: white;
-                                    border: none;
-                                    border-radius: 4px;
-                                    cursor: pointer;
-                                ">ביטול</button>
-                                <button onclick="applySmartPayments(${JSON.stringify(mandatoryPayments).replace(/"/g, '&quot;')})" style="
-                                    padding: 10px 30px;
-                                    background: #28a745;
-                                    color: white;
-                                    border: none;
-                                    border-radius: 4px;
-                                    cursor: pointer;
-                                    font-weight: bold;
-                                ">אישור ושמירה</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            document.body.appendChild(modal);
-        }
+                    `;
+                document.body.appendChild(modal);
+            }
 // ------
             
             function showSmartPaymentsModal2(availablePayments) {
@@ -1029,7 +1029,7 @@ const FormHandler = {
                 const total = window.purchasePayments.reduce((sum, p) => sum + p.amount, 0);
             }
 
-            function showSmartPaymentsModal(availablePayments) {
+            function showSmartPaymentsModal3(availablePayments) {
                 // חלק את התשלומים לחובה ואופציונלי
                 const mandatoryPayments = availablePayments.filter(p => p.mandatory);
                 const optionalPayments = availablePayments.filter(p => !p.mandatory);
@@ -1065,7 +1065,7 @@ const FormHandler = {
                         margin: 20px;
                     ">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                            <h3 style="margin: 0;">חישוב תשלומים4 אוטומטי</h3>
+                            <h3 style="margin: 0;">חישוב תשלומים אוטומטי</h3>
                             <button onclick="closeSmartPaymentsModal()" style="
                                 background: none;
                                 border: none;

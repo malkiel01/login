@@ -686,7 +686,6 @@ const FormHandler = {
                             <div style="background: #333; color: #fff; padding: 5px 10px; margin: -10px -10px 10px -10px; border-radius: 3px 3px 0 0;">
                                 <strong>🔍 תשלומים חדשים מהמערכת:</strong>
                             </div>
-                            <pre style="margin: 0; font-family: 'Courier New', monospace; font-size: 11px; color: #333; max-height: 150px; overflow-y: auto; background: white; padding: 10px; border-radius: 3px;">${JSON.stringify(data, null, 2).replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
                             <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #ccc; font-size: 12px;">
                                 <strong>סיכום:</strong> ${mandatoryPayments.length} תשלומי חובה, ${optionalPayments.length} תשלומים אופציונליים
                             </div>

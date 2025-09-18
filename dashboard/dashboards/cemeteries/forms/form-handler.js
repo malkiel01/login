@@ -641,8 +641,6 @@ const FormHandler = {
                 
                 // חשב סכום התחלתי (רק תשלומי חובה)
                 let currentTotal = mandatoryPayments.reduce((sum, p) => sum + parseFloat(Number(p.price) || 0), 0);
-                
-                alert(currentTotal)
 
                 // בדוק אם יש תשלומים קיימים ברכישה
                 const hasExistingPayments = window.purchasePayments && window.purchasePayments.length > 0;
@@ -1152,8 +1150,19 @@ const FormHandler = {
                 ).join(' | ') + `<br><strong>סה"כ: ₪${calculatePaymentsTotal()}</strong>`;
             }
 
-            window.calculatePaymentsTotal = function() {
+            window.calculatePaymentsTotal2 = function() {
                 return window.purchasePayments.reduce((total, payment) => total + payment.amount, 0).toFixed(2);
+            }
+
+            window.calculatePaymentsTotal = function() {
+                if (!window.purchasePayments || !window.purchasePayments.length) {
+                    return "0.00";
+                }
+                
+                return window.purchasePayments.reduce((total, payment) => {
+                    const amount = Number(payment?.amount) || 0;
+                    return total + amount;
+                }, 0).toFixed(2);
             }
 
             // אתחל

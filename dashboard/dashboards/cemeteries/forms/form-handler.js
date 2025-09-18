@@ -586,13 +586,15 @@ const FormHandler = {
                 const graveSelect = document.getElementById('graveSelect');
                 const graveId = graveSelect ? graveSelect.value : null;
                 
+                alert('graveId: ', graveId)
+                alert('plotType: ', window.selectedGraveData.plotType)
+                alert('graveType: ', window.selectedGraveData.graveType)
+
                 if (!graveId || !window.selectedGraveData) {
                     alert('יש לבחור קבר תחילה');
                     return;
                 }
 
-                alert('plotType: ', window.selectedGraveData.plotType)
-                alert('graveType: ', window.selectedGraveData.graveType)
                 
                 // טען תשלומים אוטומטיים
                 try {

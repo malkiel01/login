@@ -312,6 +312,58 @@
     ]);
 
     // HTML מותאם אישית לניהול תשלומים חכם
+    // $paymentsHTML = '
+    // <fieldset class="form-section" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+    //     <legend style="padding: 0 10px; font-weight: bold;">תשלומים</legend>
+        
+    //     <!-- הצגת פרמטרים נבחרים -->
+    //     <div id="selectedParameters" style="background: #f0f9ff; padding: 10px; border-radius: 5px; margin-bottom: 15px; display: none;">
+    //         <div style="font-size: 12px; color: #666;">פרמטרים לחישוב:</div>
+    //         <div id="parametersDisplay" style="margin-top: 5px;"></div>
+    //     </div>
+        
+    //     <!-- סכום כולל -->
+    //     <div style="margin-bottom: 15px;">
+    //         <label>סכום כולל</label>
+    //         <input type="number" name="price" id="total_price" 
+    //             value="' . ($purchase['price'] ?? '0') . '" 
+    //             step="0.01" readonly
+    //             style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: #f8f9fa; font-size: 18px; font-weight: bold;">
+    //     </div>
+
+    //     <!-- כפתור ניהול תשלומים -->
+    //     <div style="text-align: center;">
+    //         <button type="button" onclick="openSmartPaymentsManager()" style="
+    //             padding: 10px 30px;
+    //             background: #17a2b8;
+    //             color: white;
+    //             border: none;
+    //             border-radius: 4px;
+    //             cursor: pointer;
+    //             font-size: 16px;
+    //         ">
+    //             <span id="paymentsButtonText">
+    //                 ${window.isEditMode ? 'ערוך תשלומים' : 'חשב תשלומים'}
+    //             </span>
+    //         </button>
+    //     </div>
+        
+    //     <!-- תצוגת פירוט תשלומים -->
+    //     <div id="paymentsDisplay" style="
+    //         background: #f8f9fa;
+    //         padding: 10px;
+    //         border-radius: 4px;
+    //         min-height: 50px;
+    //         margin-top: 15px;
+    //     ">' . 
+    //     ($purchase && $purchase['payments_data'] ? 
+    //         '<script>document.write(displayPaymentsSummary())</script>' : 
+    //         '<p style="color: #999; text-align: center;">לחץ על אחד הכפתורים לניהול תשלומים</p>') . 
+    //     '</div>
+        
+    //     <input type="hidden" name="payments_data" id="payments_data" 
+    //         value=\'' . ($purchase['payments_data'] ?? '[]') . '\'>
+    // </fieldset>';
     $paymentsHTML = '
     <fieldset class="form-section" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
         <legend style="padding: 0 10px; font-weight: bold;">תשלומים</legend>
@@ -342,9 +394,7 @@
                 cursor: pointer;
                 font-size: 16px;
             ">
-                <span id="paymentsButtonText">
-                    ${window.isEditMode ? 'ערוך תשלומים' : 'חשב תשלומים'}
-                </span>
+                <span id="paymentsButtonText">חשב תשלומים</span>
             </button>
         </div>
         
@@ -358,7 +408,7 @@
         ">' . 
         ($purchase && $purchase['payments_data'] ? 
             '<script>document.write(displayPaymentsSummary())</script>' : 
-            '<p style="color: #999; text-align: center;">לחץ על אחד הכפתורים לניהול תשלומים</p>') . 
+            '<p style="color: #999; text-align: center;">לחץ על הכפתור לחישוב תשלומים</p>') . 
         '</div>
         
         <input type="hidden" name="payments_data" id="payments_data" 

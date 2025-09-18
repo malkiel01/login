@@ -580,7 +580,7 @@ const FormHandler = {
             window.selectedGraveData = null;
 
             // פתיחת מנהל תשלומים חכם
-            window.openSmartPaymentsManager = async function() {
+            window.openSmartPaymentsManager2 = async function() {
                  // בדוק אם זה מצב עריכה
                 if (window.isEditMode) {
                     alert('ברכישה קיימת לא ניתן לחשב מחדש תשלומים אוטומטית.\nהשתמש בעריכה ידנית.');
@@ -623,6 +623,50 @@ const FormHandler = {
                     openPaymentsManager();
                 }
             };
+            window.openSmartPaymentsManager = async function() {
+                // במצב עריכה - פתח ישירות את מנהל העריכה
+                if (window.isEditMode) {
+                    openPaymentsManager();  // פתח את המודל עם התשלומים הקיימים
+                    return;
+                }
+                
+                // רכישה חדשה - המשך עם החישוב האוטומטי
+                const graveSelect = document.getElementById('graveSelect');
+                const graveId = graveSelect ? graveSelect.value : null;
+                
+                if (!graveId || !window.selectedGraveData) {
+                    alert('יש לבחור קבר תחילה');
+                    return;
+                }
+                
+                // טען תשלומים מתאימים מהשרת
+                try {
+                    const response = await fetch('/dashboard/dashboards/cemeteries/api/payments-api.php?action=getMatching', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            plotType: window.selectedGraveData.plotType,
+                            graveType: window.selectedGraveData.graveType,
+                            resident: 1, // תושב ירושלים
+                            buyerStatus: document.querySelector('[name="buyer_status"]').value || null
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success && data.payments.length > 0) {
+                        // הצג את התשלומים שנמצאו
+                        showSmartPaymentsModal(data.payments);
+                    } else {
+                        alert('לא נמצאו הגדרות תשלום מתאימות. השתמש בניהול ידני.');
+                        openPaymentsManager();
+                    }
+                } catch (error) {
+                    console.error('Error loading payments:', error);
+                    openPaymentsManager();
+                }
+            }
+
 
             
             function showSmartPaymentsModal(availablePayments) {

@@ -605,9 +605,12 @@ const FormHandler = {
                     });
                     
                     const data = await response.json();
+
+                    alert(JSON.stringify(data))
+                    alert(JSON.stringify(data.payments))
                     
                     if (data.success && data.payments.length > 0) {
-                        showSmartPaymentsModal(data.payments, data);
+                        showSmartPaymentsModal(data.payments);
                     } else {
                         alert('לא נמצאו הגדרות תשלום מתאימות');
                     }

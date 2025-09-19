@@ -524,6 +524,10 @@ const FormHandler = {
                 });
             }
 
+            // משתנים גלובליים לתשלומים
+            window.purchasePayments = [];
+            window.selectedGraveData = null;
+
             // כשנבחר קבר
             window.onGraveSelected = function(graveId) {
                 alert('window.onGraveSelected = function(graveId) {')
@@ -531,7 +535,11 @@ const FormHandler = {
                 if (graveId) {
                     // מצא את פרטי הקבר
                     const grave = window.hierarchyData.graves.find(g => g.unicId == graveId);
-                    const areaGrave = window.hierarchyData.areaGraves.find(g => g.unicId == areaGraveId);
+                    // מצא את אחוזת הקבר של הקבר הנבחר
+                    const areaGrave = window.hierarchyData.areaGraves.find(
+                        ag => ag.unicId == grave.areaGraveId
+                    );
+
                     if (grave) {
                         // עדכן את הפרמטרים לתשלומים החכמים
                         window.selectedGraveData = {
@@ -579,10 +587,6 @@ const FormHandler = {
                     }
                 }
             }
-
-            // משתנים גלובליים לתשלומים
-            window.purchasePayments = [];
-            window.selectedGraveData = null;
 
             // פתיחת מנהל תשלומים חכם
             window.openSmartPaymentsManager = async function() {

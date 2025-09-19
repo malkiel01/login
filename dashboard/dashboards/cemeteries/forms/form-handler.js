@@ -1051,7 +1051,7 @@ const FormHandler = {
                     modal.remove();
                     document.getElementById('total_price').value = calculatePaymentsTotal();
                     document.getElementById('paymentsDisplay').innerHTML = displayPaymentsSummary();
-                    document.getElementById('paymentsList').value = JSON.stringify(window.purchasePayments);
+                    document.getElementById('payments_data').value = JSON.stringify(window.purchasePayments);
                 }
             }
 

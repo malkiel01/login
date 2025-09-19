@@ -539,9 +539,11 @@ const FormHandler = {
                             plotType: grave.plotType || 10,
                             graveType: areaGrave.graveType || 10
                         };
-                        
-                        // הצג פרמטרים
-                        updatePaymentParameters();
+
+                        // עדכן תצוגת פרמטרים
+                        if (window.updatePaymentParameters) {
+                            window.updatePaymentParameters();
+                        }
                     }
                 } else {
                     window.selectedGraveData = null;

@@ -1413,7 +1413,7 @@ const FormHandler = {
                                                             document.getElementById('graveSelect').value = grave.unicId;
                                                             window.currentGraveId = data.graveId;
                                                             
-                                                            alert(JSON.stringify(grave))
+                                                            alert('JSON.stringify(grave)')
 
                                                             // הוסף את זה - הגדר את הנתונים לתשלומים
                                                             window.selectedGraveData = {

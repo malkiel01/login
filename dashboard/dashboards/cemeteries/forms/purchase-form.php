@@ -311,6 +311,7 @@
         'value' => $purchase['purchaseStatus'] ?? 1
     ]);
 
+    // HTML מותאם אישית לניהול תשלומים חכם
     $paymentsHTML = '
     <fieldset class="form-section" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
         <legend style="padding: 0 10px; font-weight: bold;">תשלומים</legend>
@@ -329,19 +330,29 @@
                 step="0.01" readonly
                 style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: #f8f9fa; font-size: 18px; font-weight: bold;">
         </div>
-
-        <!-- כפתור ניהול תשלומים -->
-        <div style="text-align: center;">
+        
+        <!-- כפתורי ניהול תשלומים -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <button type="button" onclick="openPaymentsManager()" style="
+                padding: 10px 20px;
+                background: #6c757d;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+            ">
+                ניהול תשלומים ידני
+            </button>
+            
             <button type="button" onclick="openSmartPaymentsManager()" style="
-                padding: 10px 30px;
+                padding: 10px 20px;
                 background: #17a2b8;
                 color: white;
                 border: none;
                 border-radius: 4px;
                 cursor: pointer;
-                font-size: 16px;
             ">
-                <span id="paymentsButtonText">חשב תשלומים</span>
+                <span id="paymentsButtonText">חשב תשלומים אוטומטית</span>
             </button>
         </div>
         
@@ -353,13 +364,13 @@
             min-height: 50px;
             margin-top: 15px;
         ">' . 
-        ($purchase && $purchase['paymentsList'] ? 
+        ($purchase && $purchase['payments_data'] ? 
             '<script>document.write(displayPaymentsSummary())</script>' : 
-            '<p style="color: #999; text-align: center;">לחץ על הכפתור לחישוב תשלומים</p>') . 
+            '<p style="color: #999; text-align: center;">לחץ על אחד הכפתורים לניהול תשלומים</p>') . 
         '</div>
         
-        <input type="hidden" name="paymentsList" id="paymentsList" 
-            value=\'' . ($purchase['paymentsList'] ?? '[]') . '\'>
+        <input type="hidden" name="payments_data" id="payments_data" 
+            value=\'' . ($purchase['payments_data'] ?? '[]') . '\'>
     </fieldset>';
 
     $formBuilder->addCustomHTML($paymentsHTML);

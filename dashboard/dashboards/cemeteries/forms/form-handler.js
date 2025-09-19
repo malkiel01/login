@@ -612,13 +612,14 @@ const FormHandler = {
                     
                     const data = await response.json();
 
-                    // בדוק אם זו עריכה או רכישה חדשה
-                    const isEditMode = window.isEditMode || (window.purchasePayments && window.purchasePayments.length > 0);
+                    // // בדוק אם זו עריכה או רכישה חדשה
+                    // const isEditMode = window.isEditMode || (window.purchasePayments && window.purchasePayments.length > 0);
                     
+                    alert('isEditMode')
                     alert(isEditMode)
-                    alert(window.isEditMode)
-                    alert(window.purchasePayments)
-                    alert(window.purchasePayments.length)
+                    // alert(window.isEditMode)
+                    // alert(window.purchasePayments)
+                    // alert(window.purchasePayments.length)
 
                     if (isEditMode) {
                         if (data.success && data.payments.length > 0) {

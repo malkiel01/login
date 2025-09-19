@@ -611,12 +611,23 @@ const FormHandler = {
                     });
                     
                     const data = await response.json();
+
+                    // בדוק אם זו עריכה או רכישה חדשה
+                    const isEditMode = window.isEditMode || (window.purchasePayments && window.purchasePayments.length > 0);
                     
-                    if (data.success && data.payments.length > 0) {
-                        showSmartPaymentsModal(data.payments);
+                    if (isEditMode) {
+                        // מצב עריכה - הצג את התשלומים הקיימים
+                        openExistingPaymentsManager();
                     } else {
-                        alert('לא נמצאו הגדרות תשלום מתאימות');
+                        // מצב רכישה חדשה - חשב אוטומטית
+                        openNewPaymentsCalculator();
                     }
+                    
+                    // if (data.success && data.payments.length > 0) {
+                    //     showSmartPaymentsModal(data.payments);
+                    // } else {
+                    //     alert('לא נמצאו הגדרות תשלום מתאימות');
+                    // }
                 } catch (error) {
                     console.error('Error loading payments:', error);
                     alert('שגיאה בטעינת התשלומים');
@@ -743,6 +754,7 @@ const FormHandler = {
                 const total = window.purchasePayments.reduce((sum, p) => sum + p.amount, 0);
             }
 
+            // מודול תשלומים ליצירת רכישה
             function showSmartPaymentsModal(availablePayments) {
                 // חלק את התשלומים לחובה ואופציונלי
                 const mandatoryPayments = availablePayments.filter(p => p.mandatory);
@@ -911,6 +923,75 @@ const FormHandler = {
                                 cursor: pointer;
                                 font-weight: bold;
                             ">אישור ושמירה</button>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+            }
+
+            // מודול תשלומים לעדכון רכישה
+            function openExistingPaymentsManager() {
+                const modal = document.createElement('div');
+                modal.id = 'existingPaymentsModal';
+                modal.className = 'modal-overlay';
+                // ... סטיילים ...
+                
+                // חלק את התשלומים הקיימים
+                const mandatoryPayments = window.purchasePayments.filter(p => p.mandatory === true);
+                const editablePayments = window.purchasePayments.filter(p => p.mandatory !== true);
+                
+                let currentTotal = window.purchasePayments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+                
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <h3>עריכת תשלומים קיימים</h3>
+                        
+                        <!-- תשלומי חובה מהרכישה המקורית - לא ניתנים לעריכה -->
+                        ${mandatoryPayments.length > 0 ? `
+                            <div class="mandatory-section">
+                                <h4>תשלומי חובה מקוריים (לא ניתנים לשינוי)</h4>
+                                ${mandatoryPayments.map(payment => `
+                                    <div class="payment-row">
+                                        <span>${payment.type_name}</span>
+                                        <span>₪${payment.amount}</span>
+                                        <span class="badge">נעול 🔒</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                        
+                        <!-- תשלומים ניתנים לעריכה -->
+                        <div class="editable-section">
+                            <h4>תשלומים נוספים</h4>
+                            <div id="editablePaymentsList">
+                                ${editablePayments.map((payment, index) => `
+                                    <div class="payment-row">
+                                        <input type="text" value="${payment.type_name}" 
+                                            data-index="${index}" 
+                                            onchange="updatePaymentName(${index}, this.value)">
+                                        <input type="number" value="${payment.amount}" 
+                                            data-index="${index}"
+                                            onchange="updatePaymentAmount(${index}, this.value)">
+                                        <button onclick="removeEditablePayment(${index})">הסר</button>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            
+                            <!-- כפתור להוסיף תשלום חדש -->
+                            <button onclick="addNewPaymentRow()">+ הוסף תשלום</button>
+                        </div>
+                        
+                        <!-- סיכום -->
+                        <div class="total-section">
+                            <h3>סה"כ: ₪<span id="existingTotal">${currentTotal}</span></h3>
+                        </div>
+                        
+                        <!-- כפתורים -->
+                        <div class="buttons">
+                            <button onclick="recalculatePayments()">🔄 חשב מחדש (ימחק הכל)</button>
+                            <button onclick="saveExistingPayments()">שמור שינויים</button>
+                            <button onclick="closeModal()">ביטול</button>
                         </div>
                     </div>
                 `;

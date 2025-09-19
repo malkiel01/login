@@ -1412,18 +1412,12 @@ const FormHandler = {
                                                         setTimeout(() => {
                                                             document.getElementById('graveSelect').value = grave.unicId;
                                                             window.currentGraveId = data.graveId;
-                                                            
-                                                            alert('JSON.stringify(grave)')
-
-                                                            alert(JSON.stringify(grave))
-                                                            alert(JSON.stringify(areaGrave))
-                                                            alert(grave)
-
+        
                                                             // הוסף את זה - הגדר את הנתונים לתשלומים
                                                             window.selectedGraveData = {
                                                                 graveId: grave.unicId,
                                                                 plotType: grave.plotType || 10,
-                                                                graveType: grave.grave_type || 10
+                                                                graveType: areaGrave.graveType || 10
                                                             };
                                                             
                                                             // עדכן תצוגת פרמטרים

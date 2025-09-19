@@ -615,14 +615,20 @@ const FormHandler = {
                     alert('מצב: ' + isEditMode)
 
                     if (isEditMode) {
+                        // מצב עריכה
                         if (data.success && data.payments.length > 0) {
-                            showSmartPaymentsModal(data.payments);
+                            // showSmartPaymentsModal(data.payments);
+                            openNewPaymentsCalculator();
                         } else {
                             alert('לא נמצאו הגדרות תשלום מתאימות');
                         }
                     } else {
                         // מצב רכישה חדשה - חשב אוטומטית
-                        openNewPaymentsCalculator();
+                        if (data.success && data.payments.length > 0) {
+                            showSmartPaymentsModal(data.payments);
+                        } else {
+                            alert('לא נמצאו הגדרות תשלום מתאימות');
+                        }
                     }
                     
 

@@ -889,6 +889,7 @@ const FormHandler = {
             }
 
             function showSmartPaymentsModal(availablePayments) {
+                alert('11 function showSmartPaymentsModal(availablePayments) {')
                 // חלק את התשלומים לחובה ואופציונלי
                 const mandatoryPayments = availablePayments.filter(p => p.mandatory);
                 const optionalPayments = availablePayments.filter(p => !p.mandatory);

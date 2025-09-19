@@ -333,17 +333,7 @@
         
         <!-- כפתורי ניהול תשלומים -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <button type="button" onclick="openPaymentsManager()" style="
-                padding: 10px 20px;
-                background: #6c757d;
-                color: white;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-            ">
-                ניהול תשלומים ידני
-            </button>
-            
+    
             <button type="button" onclick="openSmartPaymentsManager()" style="
                 padding: 10px 20px;
                 background: #17a2b8;

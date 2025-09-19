@@ -590,6 +590,8 @@ const FormHandler = {
                     alert('יש לבחור קבר תחילה');
                     return;
                 }
+
+                alert('window.selectedGraveData: ',JSON.stringify(window.selectedGraveData))
                 
                 // טען תשלומים אוטומטיים
                 try {

@@ -529,12 +529,13 @@ const FormHandler = {
                 if (graveId) {
                     // מצא את פרטי הקבר
                     const grave = window.hierarchyData.graves.find(g => g.unicId == graveId);
+                    const areaGrave = window.hierarchyData.areaGraves.find(g => g.unicId == areaGraveId);
                     if (grave) {
                         // עדכן את הפרמטרים לתשלומים החכמים
                         window.selectedGraveData = {
                             graveId: graveId,
-                            plotType: grave.plot_type || 1,
-                            graveType: grave.grave_type || 1
+                            plotType: grave.plotType || 10,
+                            graveType: areaGrave.graveType || 10
                         };
                         
                         // הצג פרמטרים

@@ -530,8 +530,6 @@ const FormHandler = {
 
             // כשנבחר קבר
             window.onGraveSelected = function(graveId) {
-                alert('window.onGraveSelected = function(graveId) {')
-                alert(graveId)
                 if (graveId) {
                     // מצא את פרטי הקבר
                     const grave = window.hierarchyData.graves.find(g => g.unicId == graveId);
@@ -544,8 +542,8 @@ const FormHandler = {
                         // עדכן את הפרמטרים לתשלומים החכמים
                         window.selectedGraveData = {
                             graveId: graveId,
-                            plotType: grave.plotType || 10,
-                            graveType: areaGrave.graveType || 10
+                            plotType: grave.plotType || -1,
+                            graveType: areaGrave.graveType || -1
                         };
 
                         // עדכן תצוגת פרמטרים
@@ -590,7 +588,7 @@ const FormHandler = {
 
             // פתיחת מנהל תשלומים חכם
             window.openSmartPaymentsManager = async function() {
-                
+                alert('window.openSmartPaymentsManager = async function() {')
                 // רכישה חדשה - המשך עם החישוב האוטומטי
                 const graveSelect = document.getElementById('graveSelect');
                 const graveId = graveSelect ? graveSelect.value : null;
@@ -1425,8 +1423,8 @@ const FormHandler = {
                                                             // הוסף את זה - הגדר את הנתונים לתשלומים
                                                             window.selectedGraveData = {
                                                                 graveId: grave.unicId,
-                                                                plotType: grave.plotType || 10,
-                                                                graveType: areaGrave.graveType || 10
+                                                                plotType: grave.plotType || -1,
+                                                                graveType: areaGrave.graveType || -1
                                                             };
                                                             
                                                             // עדכן תצוגת פרמטרים

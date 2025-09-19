@@ -1190,7 +1190,8 @@ const FormHandler = {
                                     }
                                 });
 
-                                alert('data.paymentsList: ', data.paymentsList)
+                                alert('data.paymentsList: ', data)
+                                alert('data.paymentsList: ', JSON.stringify(data))
 
                                 // טען תשלומים קיימים
                                 if (data.paymentsList) {

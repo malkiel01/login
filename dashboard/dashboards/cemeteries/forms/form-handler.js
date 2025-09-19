@@ -612,14 +612,7 @@ const FormHandler = {
                     
                     const data = await response.json();
 
-                    // // בדוק אם זו עריכה או רכישה חדשה
-                    // const isEditMode = window.isEditMode || (window.purchasePayments && window.purchasePayments.length > 0);
-                    
-                    alert('isEditMode')
-                    alert(isEditMode)
-                    // alert(window.isEditMode)
-                    // alert(window.purchasePayments)
-                    // alert(window.purchasePayments.length)
+                    alert('מצב: ' + isEditMode)
 
                     if (isEditMode) {
                         if (data.success && data.payments.length > 0) {
@@ -1265,6 +1258,7 @@ const FormHandler = {
         // טען נתונים אם זה עריכה
         if (itemId) {
             // סמן שזו עריכה - אסור לחשב מחדש!
+            alert('מסמן!')
             window.isEditMode = true;
 
             const loadPurchaseData = () => {

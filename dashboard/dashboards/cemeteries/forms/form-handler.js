@@ -615,6 +615,7 @@ const FormHandler = {
                     // בדוק אם זו עריכה או רכישה חדשה
                     const isEditMode = window.isEditMode || (window.purchasePayments && window.purchasePayments.length > 0);
                     
+                    alert(isEditMode)
                     alert(window.isEditMode)
                     alert(window.purchasePayments)
                     alert(window.purchasePayments.length)

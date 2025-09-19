@@ -529,13 +529,16 @@ const FormHandler = {
                 if (graveId) {
                     // מצא את פרטי הקבר
                     const grave = window.hierarchyData.graves.find(g => g.unicId == graveId);
-                    const areaGrave = window.hierarchyData.areaGraves.find(g => g.unicId == grave.areaGraveId);
                     if (grave) {
+                        alert(1,JSON.stringify(grave.plot_type))
+                        alert(2,JSON.stringify(grave.plotType))
+                        alert(grave.plot_type)
+                        alert(grave.plotType)
                         // עדכן את הפרמטרים לתשלומים החכמים
                         window.selectedGraveData = {
                             graveId: graveId,
                             plotType: grave.plotType || 1,
-                            graveType: areaGrave.graveType || 1
+                            graveType: grave.grave_type || 1
                         };
                         
                         // הצג פרמטרים
@@ -607,7 +610,7 @@ const FormHandler = {
                     const data = await response.json();
                     
                     if (data.success && data.payments.length > 0) {
-                        showSmartPaymentsModal(data.payments);
+                        showSmartPaymentsModal(data.payments, data);
                     } else {
                         alert('לא נמצאו הגדרות תשלום מתאימות');
                     }
@@ -617,11 +620,7 @@ const FormHandler = {
                 }
             }
 
-            function showSmartPaymentsModal(availablePayments) {
-
-                alert('fun showSmartPaymentsModal')
-                alert(availablePayments)
-
+            function showSmartPaymentsModal(availablePayments, data) {
                 // חלק את התשלומים לחובה ואופציונלי
                 const mandatoryPayments = availablePayments.filter(p => p.mandatory);
                 const optionalPayments = availablePayments.filter(p => !p.mandatory);
@@ -644,8 +643,8 @@ const FormHandler = {
                 `;
                 
                 // חשב סכום התחלתי (רק תשלומי חובה)
-                let currentTotal = mandatoryPayments.reduce((sum, p) => sum + parseFloat(Number(p.price) || 0), 0);
-
+                let currentTotal = mandatoryPayments.reduce((sum, p) => sum + parseFloat(p.price || 0), 0);
+                
                 // בדוק אם יש תשלומים קיימים ברכישה
                 const hasExistingPayments = window.purchasePayments && window.purchasePayments.length > 0;
                 const existingPaymentsJson = hasExistingPayments ? 
@@ -687,6 +686,7 @@ const FormHandler = {
                             <div style="background: #333; color: #fff; padding: 5px 10px; margin: -10px -10px 10px -10px; border-radius: 3px 3px 0 0;">
                                 <strong>🔍 תשלומים חדשים מהמערכת:</strong>
                             </div>
+                            <pre style="margin: 0; font-family: 'Courier New', monospace; font-size: 11px; color: #333; max-height: 150px; overflow-y: auto; background: white; padding: 10px; border-radius: 3px;">${JSON.stringify(data, null, 2).replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
                             <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #ccc; font-size: 12px;">
                                 <strong>סיכום:</strong> ${mandatoryPayments.length} תשלומי חובה, ${optionalPayments.length} תשלומים אופציונליים
                             </div>
@@ -1055,7 +1055,7 @@ const FormHandler = {
                     modal.remove();
                     document.getElementById('total_price').value = calculatePaymentsTotal();
                     document.getElementById('paymentsDisplay').innerHTML = displayPaymentsSummary();
-                    document.getElementById('payments_data').value = JSON.stringify(window.purchasePayments);
+                    document.getElementById('paymentsList').value = JSON.stringify(window.purchasePayments);
                 }
             }
 
@@ -1073,6 +1073,18 @@ const FormHandler = {
                     'other': 'אחר'
                 };
                 
+                // window.purchasePayments.push({
+                //     type: type,
+                //     type_name: typeNames[type],
+                //     amount: amount,
+                //     date: new Date().toISOString()
+                // });
+                
+                // document.getElementById('paymentsList').innerHTML = displayPaymentsList();
+                // document.getElementById('paymentsTotal').textContent = calculatePaymentsTotal();
+                // document.getElementById('payment_type').value = '';
+                // document.getElementById('payment_amount').value = '';
+
                 window.purchasePayments.push({
                     type: type,
                     type_name: typeNames[type],
@@ -1142,19 +1154,8 @@ const FormHandler = {
                 ).join(' | ') + `<br><strong>סה"כ: ₪${calculatePaymentsTotal()}</strong>`;
             }
 
-            window.calculatePaymentsTotal2 = function() {
-                return window.purchasePayments.reduce((total, payment) => total + payment.amount, 0).toFixed(2);
-            }
-
             window.calculatePaymentsTotal = function() {
-                if (!window.purchasePayments || !window.purchasePayments.length) {
-                    return "0.00";
-                }
-                
-                return window.purchasePayments.reduce((total, payment) => {
-                    const amount = Number(payment?.amount) || 0;
-                    return total + amount;
-                }, 0).toFixed(2);
+                return window.purchasePayments.reduce((total, payment) => total + payment.amount, 0).toFixed(2);
             }
 
             // אתחל

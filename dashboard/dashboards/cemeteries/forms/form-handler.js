@@ -1190,6 +1190,8 @@ const FormHandler = {
                                     }
                                 });
 
+                                alert('data.paymentsList: ', data.paymentsList)
+
                                 // טען תשלומים קיימים
                                 if (data.paymentsList) {
                                     try {

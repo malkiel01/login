@@ -527,6 +527,7 @@ const FormHandler = {
             // כשנבחר קבר
             window.onGraveSelected = function(graveId) {
                 alert('window.onGraveSelected = function(graveId) {')
+                alert(graveId)
                 if (graveId) {
                     // מצא את פרטי הקבר
                     const grave = window.hierarchyData.graves.find(g => g.unicId == graveId);

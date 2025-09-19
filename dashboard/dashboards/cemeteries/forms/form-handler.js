@@ -615,19 +615,22 @@ const FormHandler = {
                     // בדוק אם זו עריכה או רכישה חדשה
                     const isEditMode = window.isEditMode || (window.purchasePayments && window.purchasePayments.length > 0);
                     
+                    alert(window.isEditMode)
+                    alert(window.purchasePayments)
+                    alert(window.purchasePayments.length)
+
                     if (isEditMode) {
-                        // מצב עריכה - הצג את התשלומים הקיימים
-                        openExistingPaymentsManager();
+                        if (data.success && data.payments.length > 0) {
+                            showSmartPaymentsModal(data.payments);
+                        } else {
+                            alert('לא נמצאו הגדרות תשלום מתאימות');
+                        }
                     } else {
                         // מצב רכישה חדשה - חשב אוטומטית
                         openNewPaymentsCalculator();
                     }
                     
-                    // if (data.success && data.payments.length > 0) {
-                    //     showSmartPaymentsModal(data.payments);
-                    // } else {
-                    //     alert('לא נמצאו הגדרות תשלום מתאימות');
-                    // }
+
                 } catch (error) {
                     console.error('Error loading payments:', error);
                     alert('שגיאה בטעינת התשלומים');

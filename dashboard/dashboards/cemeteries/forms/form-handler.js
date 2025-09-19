@@ -592,8 +592,6 @@ const FormHandler = {
                 }
 
                 alert(JSON.stringify(window.selectedGraveData))
-                alert(window.selectedGraveData)
-                alert(JSON.stringify(graveId))
                 alert(graveId)
                 
                 // טען תשלומים אוטומטיים
@@ -1409,12 +1407,6 @@ const FormHandler = {
                                                     setTimeout(() => {
                                                         document.getElementById('areaGraveSelect').value = areaGrave.unicId;
                                                         window.filterHierarchy('area_grave');
-                                                        
-                                                        // // בחר קבר
-                                                        // setTimeout(() => {
-                                                        //     document.getElementById('graveSelect').value = grave.unicId;
-                                                        //     window.currentGraveId = data.graveId;
-                                                        // }, 50);
 
                                                         // בחר קבר
                                                         setTimeout(() => {
@@ -1424,8 +1416,8 @@ const FormHandler = {
                                                             // הוסף את זה - הגדר את הנתונים לתשלומים
                                                             window.selectedGraveData = {
                                                                 graveId: grave.unicId,
-                                                                plotType: grave.plot_type || 1,
-                                                                graveType: grave.grave_type || 1
+                                                                plotType: grave.plot_type || 10,
+                                                                graveType: grave.grave_type || 10
                                                             };
                                                             
                                                             // עדכן תצוגת פרמטרים

@@ -1258,7 +1258,6 @@ const FormHandler = {
         // טען נתונים אם זה עריכה
         if (itemId) {
             // סמן שזו עריכה - אסור לחשב מחדש!
-            alert('מסמן!')
             window.isEditMode = true;
 
             const loadPurchaseData = () => {

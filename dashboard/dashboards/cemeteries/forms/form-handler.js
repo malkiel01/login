@@ -1261,6 +1261,9 @@ const FormHandler = {
 
         // טען נתונים אם זה עריכה
         if (itemId) {
+            // סמן שזו עריכה - אסור לחשב מחדש!
+            window.isEditMode = true;
+            
             const loadPurchaseData = () => {
                 const form = document.querySelector('#purchaseFormModal form');
                 
@@ -1284,8 +1287,6 @@ const FormHandler = {
                                     try {
                                         window.purchasePayments = JSON.parse(data.payments_data);
                                         
-                                        // סמן שזו עריכה - אסור לחשב מחדש!
-                                        window.isEditMode = true;
                                         window.existingPayments = JSON.parse(data.payments_data);
                                         
                                         // עדכן תצוגה

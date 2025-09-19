@@ -588,8 +588,6 @@ const FormHandler = {
 
             // פתיחת מנהל תשלומים חכם
             window.openSmartPaymentsManager = async function() {
-                alert('2 window.openSmartPaymentsManager = async function() {')
-
                 // רכישה חדשה - המשך עם החישוב האוטומטי
                 const graveSelect = document.getElementById('graveSelect');
                 const graveId = graveSelect ? graveSelect.value : null;
@@ -613,12 +611,8 @@ const FormHandler = {
                     });
                     
                     const data = await response.json();
-
-                    alert(data.success)
-                    alert(JSON.stringify(data.payments))
                     
                     if (data.success && data.payments.length > 0) {
-                        alert('if (data.success && data.payments.length > 0) {')
                         showSmartPaymentsModal(data.payments);
                     } else {
                         alert('לא נמצאו הגדרות תשלום מתאימות');
@@ -750,7 +744,6 @@ const FormHandler = {
             }
 
             function showSmartPaymentsModal(availablePayments) {
-                alert('11 function showSmartPaymentsModal(availablePayments) {')
                 // חלק את התשלומים לחובה ואופציונלי
                 const mandatoryPayments = availablePayments.filter(p => p.mandatory);
                 const optionalPayments = availablePayments.filter(p => !p.mandatory);

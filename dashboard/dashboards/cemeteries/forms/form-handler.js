@@ -613,6 +613,9 @@ const FormHandler = {
                     });
                     
                     const data = await response.json();
+
+                    alert(data.success)
+                    alert(JSON.stringify(data.payments))
                     
                     if (data.success && data.payments.length > 0) {
                         alert('if (data.success && data.payments.length > 0) {')

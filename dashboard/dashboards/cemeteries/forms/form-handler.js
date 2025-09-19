@@ -589,6 +589,7 @@ const FormHandler = {
             // פתיחת מנהל תשלומים חכם
             window.openSmartPaymentsManager = async function() {
                 alert('window.openSmartPaymentsManager = async function() {')
+
                 // רכישה חדשה - המשך עם החישוב האוטומטי
                 const graveSelect = document.getElementById('graveSelect');
                 const graveId = graveSelect ? graveSelect.value : null;
@@ -598,9 +599,6 @@ const FormHandler = {
                     return;
                 }
 
-                alert(JSON.stringify(window.selectedGraveData))
-                alert(graveId)
-                
                 // טען תשלומים אוטומטיים
                 try {
                     const response = await fetch('/dashboard/dashboards/cemeteries/api/payments-api.php?action=getMatching', {
@@ -630,6 +628,7 @@ const FormHandler = {
 
             
             function showSmartPaymentsModal(availablePayments) {
+                alert('function showSmartPaymentsModal(availablePayments) {')
                 // חלק את התשלומים לחובה ואופציונלי
                 const mandatoryPayments = availablePayments.filter(p => p.mandatory);
                 const optionalPayments = availablePayments.filter(p => !p.mandatory);

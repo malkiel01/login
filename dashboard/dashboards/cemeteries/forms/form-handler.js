@@ -591,8 +591,10 @@ const FormHandler = {
                     return;
                 }
 
-                alert('window.selectedGraveData: ',JSON.stringify(window.selectedGraveData))
-                alert('window.graveId: ',graveId)
+                alert(JSON.stringify(window.selectedGraveData))
+                alert(window.selectedGraveData)
+                alert(JSON.stringify(graveId))
+                alert(graveId)
                 
                 // טען תשלומים אוטומטיים
                 try {

@@ -1415,6 +1415,9 @@ const FormHandler = {
                                                             
                                                             alert('JSON.stringify(grave)')
 
+                                                            alert(JSON.stringify(grave))
+                                                            alert(grave)
+
                                                             // הוסף את זה - הגדר את הנתונים לתשלומים
                                                             window.selectedGraveData = {
                                                                 graveId: grave.unicId,

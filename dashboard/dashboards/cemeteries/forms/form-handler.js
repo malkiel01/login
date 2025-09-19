@@ -618,6 +618,10 @@ const FormHandler = {
             }
 
             function showSmartPaymentsModal(availablePayments) {
+
+                alert('fun showSmartPaymentsModal')
+                alert(availablePayments)
+
                 // חלק את התשלומים לחובה ואופציונלי
                 const mandatoryPayments = availablePayments.filter(p => p.mandatory);
                 const optionalPayments = availablePayments.filter(p => !p.mandatory);
@@ -1069,18 +1073,6 @@ const FormHandler = {
                     'other': 'אחר'
                 };
                 
-                // window.purchasePayments.push({
-                //     type: type,
-                //     type_name: typeNames[type],
-                //     amount: amount,
-                //     date: new Date().toISOString()
-                // });
-                
-                // document.getElementById('paymentsList').innerHTML = displayPaymentsList();
-                // document.getElementById('paymentsTotal').textContent = calculatePaymentsTotal();
-                // document.getElementById('payment_type').value = '';
-                // document.getElementById('payment_amount').value = '';
-
                 window.purchasePayments.push({
                     type: type,
                     type_name: typeNames[type],
@@ -1189,9 +1181,6 @@ const FormHandler = {
                                         field.value = data[key];
                                     }
                                 });
-
-                                alert('itemId: ', itemId)
-                                alert('data.paymentsList: ', JSON.stringify(data))
 
                                 // טען תשלומים קיימים
                                 if (data.paymentsList) {

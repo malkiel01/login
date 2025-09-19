@@ -1259,11 +1259,13 @@ const FormHandler = {
             window.populatePlots();
          });
 
+        alert(itemId)
+
         // טען נתונים אם זה עריכה
         if (itemId) {
             // סמן שזו עריכה - אסור לחשב מחדש!
             window.isEditMode = true;
-            
+
             const loadPurchaseData = () => {
                 const form = document.querySelector('#purchaseFormModal form');
                 

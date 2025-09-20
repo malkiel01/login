@@ -617,7 +617,8 @@ const FormHandler = {
                 console.log('============================');
 
                 // השאר את הלוגיקה הקיימת אבל עם שינוי קטן
-                if (isEditMode && window.purchasePayments && window.purchasePayments.length > 0) {
+                // if (isEditMode && window.purchasePayments && window.purchasePayments.length > 0) {
+                if (isEditMode) {
                     // מצב עריכה - פתח ישירות את מנהל התשלומים הקיימים
                     console.log('Opening existing payments manager for editing');
                     ExistingPaymentsManager.open();

@@ -1024,6 +1024,11 @@ const FormHandler = {
                     }
                     
                     // חלוקת תשלומים
+
+                    // // TODO 1
+                    // const mandatoryPayments = window.purchasePayments.filter(p => p.mandatory === true);
+                    // const editablePayments = window.purchasePayments.filter(p => p.mandatory !== true);
+
                     // בדוק גם את required שזה השם הישן
                     const mandatoryPayments = window.purchasePayments.filter(p => 
                         p.mandatory === true || p.required === true
@@ -1340,8 +1345,28 @@ const FormHandler = {
                     }
                 },
 
+                // TODO 1
+                // updateName: function(index, value) {
+                //     const editablePayments = window.purchasePayments.filter(p => !p.required);
+                //     if (editablePayments[index]) {
+                //         const paymentIndex = window.purchasePayments.indexOf(editablePayments[index]);
+                //         window.purchasePayments[paymentIndex].customPaymentType = value;
+                //     }
+                // },
+
+                // updateAmount: function(index, value) {
+                //     const editablePayments = window.purchasePayments.filter(p => !p.required);
+                //     if (editablePayments[index]) {
+                //         const paymentIndex = window.purchasePayments.indexOf(editablePayments[index]);
+                //         window.purchasePayments[paymentIndex].paymentAmount = Number(value) || 0;
+                //         this.updateTotal();
+                //     }
+                // },
+
                 updateName: function(index, value) {
-                    const editablePayments = window.purchasePayments.filter(p => !p.required);
+                    const editablePayments = window.purchasePayments.filter(p => 
+                        p.mandatory !== true && p.required !== true
+                    );
                     if (editablePayments[index]) {
                         const paymentIndex = window.purchasePayments.indexOf(editablePayments[index]);
                         window.purchasePayments[paymentIndex].customPaymentType = value;
@@ -1349,7 +1374,9 @@ const FormHandler = {
                 },
 
                 updateAmount: function(index, value) {
-                    const editablePayments = window.purchasePayments.filter(p => !p.required);
+                    const editablePayments = window.purchasePayments.filter(p => 
+                        p.mandatory !== true && p.required !== true
+                    );
                     if (editablePayments[index]) {
                         const paymentIndex = window.purchasePayments.indexOf(editablePayments[index]);
                         window.purchasePayments[paymentIndex].paymentAmount = Number(value) || 0;
@@ -1363,8 +1390,22 @@ const FormHandler = {
                     if (element) element.textContent = total.toLocaleString();
                 },
                 
+                // TODO 1
+                // removePayment: function(index) {
+                //     const editablePayments = window.purchasePayments.filter(p => !p.required);
+                //     if (editablePayments[index]) {
+                //         const paymentIndex = window.purchasePayments.indexOf(editablePayments[index]);
+                //         window.purchasePayments.splice(paymentIndex, 1);
+                //         this.close();
+                //         this.open(); // רענן
+                //     }
+                // },
+
                 removePayment: function(index) {
-                    const editablePayments = window.purchasePayments.filter(p => !p.required);
+                    // תקן את הפילטור
+                    const editablePayments = window.purchasePayments.filter(p => 
+                        p.mandatory !== true && p.required !== true
+                    );
                     if (editablePayments[index]) {
                         const paymentIndex = window.purchasePayments.indexOf(editablePayments[index]);
                         window.purchasePayments.splice(paymentIndex, 1);

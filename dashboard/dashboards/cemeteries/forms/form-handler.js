@@ -1024,11 +1024,13 @@ const FormHandler = {
                     }
                     
                     // חלוקת תשלומים
-                    const mandatoryPayments = window.purchasePayments.filter(p => p.mandatory === true);
-                    const editablePayments = window.purchasePayments.filter(p => p.mandatory !== true);
-                    
-                    console.log('📊 Mandatory payments:', mandatoryPayments.length);
-                    console.log('📝 Editable payments:', editablePayments.length);
+                    // בדוק גם את required שזה השם הישן
+                    const mandatoryPayments = window.purchasePayments.filter(p => 
+                        p.mandatory === true || p.required === true
+                    );
+                    const editablePayments = window.purchasePayments.filter(p => 
+                        p.mandatory !== true && p.required !== true
+                    );
                     
                     // יצירת המודל
                     const modal = document.createElement('div');
@@ -1144,77 +1146,6 @@ const FormHandler = {
                     return `סוג חלקה: ${plotTypes[plotType]} | סוג קבר: ${graveTypes[graveType]} | תושבות: ירושלים`;
                 },
 
-                // // TODO 1
-                // // בניית סקציית תשלומי חובה
-                // buildMandatorySection: function(payments) {
-                //     return `
-                //         <div style="margin-bottom: 20px;">
-                //             <h4 style="color: #dc3545; margin-bottom: 10px;">
-                //                 <span style="background: #ffc107; padding: 2px 8px; border-radius: 3px;">נעול</span>
-                //                 תשלומי חובה מקוריים
-                //             </h4>
-                //             <div style="border: 2px solid #ffc107; background: #fffbf0; padding: 15px; border-radius: 5px;">
-                //                 ${payments.map(payment => `
-                //                     <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ffe5b4;">
-                //                         <span style="font-weight: bold;">${payment.customPaymentType || `תשלום מסוג ${payment.paymentType}`}</span>
-                //                         <div>
-                //                             <span style="font-weight: bold; color: #dc3545;">₪${Number(payment.paymentAmount).toLocaleString()}</span>
-                //                             <span style="margin-left: 10px; background: #ff9800; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px;">🔒</span>
-                //                         </div>
-                //                     </div>
-                //                 `).join('')}
-                //             </div>
-                //         </div>
-                //     `;
-                // },
-
-                // TODO 4
-                // buildMandatorySection: function(payments) {
-                //     // TODO 2
-                //     // // הגדרת שמות התשלומים
-                //     // const paymentTypeNames = {
-                //     //     1: 'עלות קבר',
-                //     //     2: 'שירותי לוויה',
-                //     //     3: 'שירותי קבורה',
-                //     //     4: 'אגרת מצבה',
-                //     //     5: 'בדיקת עומק',
-                //     //     6: 'פירוק מצבה',
-                //     //     7: 'הובלה מנתב״ג',
-                //     //     8: 'טהרה',
-                //     //     9: 'תכריכים',
-                //     //     10: 'החלפת שם',
-                //     //     99: 'אחר'
-                //     // };
-
-                //     // השתמש בקונפיג הגלובלי במקום להקשיח
-                //     const paymentTypeNames = window.PAYMENT_TYPES_CONFIG || {};
-                    
-                //     return `
-                //         <div style="margin-bottom: 20px;">
-                //             <h4 style="color: #dc3545; margin-bottom: 10px;">
-                //                 <span style="background: #ffc107; padding: 2px 8px; border-radius: 3px;">נעול</span>
-                //                 תשלומי חובה מקוריים
-                //             </h4>
-                //             <div style="border: 2px solid #ffc107; background: #fffbf0; padding: 15px; border-radius: 5px;">
-                //                 ${payments.map(payment => {
-                //                     const displayName = payment.customPaymentType || 
-                //                                     paymentTypeNames[payment.paymentType] || 
-                //                                     `תשלום מסוג ${payment.paymentType}`;
-                //                     return `
-                //                         <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ffe5b4;">
-                //                             <span style="font-weight: bold;">${displayName}</span>
-                //                             <div>
-                //                                 <span style="font-weight: bold; color: #dc3545;">₪${Number(payment.paymentAmount).toLocaleString()}</span>
-                //                                 <span style="margin-left: 10px; background: #ff9800; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px;">🔒</span>
-                //                             </div>
-                //                         </div>
-                //                     `;
-                //                 }).join('')}
-                //             </div>
-                //         </div>
-                //     `;
-                // },
-
                 buildMandatorySection: function(payments) {
                     // השתמש בקונפיג הגלובלי
                     const paymentTypes = window.PAYMENT_TYPES_CONFIG || {};
@@ -1297,66 +1228,6 @@ const FormHandler = {
                         </div>
                     `;
                 },
-
-                // TODO 4
-                // // שורת תשלום לעריכה
-                // buildEditablePaymentRow: function(payment, index) {
-
-                //     // השתמש בקונפיג הגלובלי במקום להקשיח
-                //     const paymentTypeNames = window.PAYMENT_TYPES_CONFIG || {};
-
-                //     // חפש את השם בכל המקומות האפשריים
-                //     const displayName = payment.customPaymentType || 
-                //                     payment.type_name ||
-                //                     paymentTypeNames[payment.paymentType] || 
-                //                     `תשלום מסוג ${payment.paymentType}`;
-                    
-                //     return `
-                //         <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #c3e6cb;">
-                //             <input type="text" 
-                //                 value="${displayName}"
-                //                 onchange="ExistingPaymentsManager.updateName(${index}, this.value)"
-                //                 style="flex: 1; padding: 6px; border: 1px solid #ddd; border-radius: 4px; margin-left: 10px;">
-                //             <input type="number" 
-                //                 value="${payment.paymentAmount}"
-                //                 step="0.01"
-                //                 onchange="ExistingPaymentsManager.updateAmount(${index}, this.value)"
-                //                 style="width: 120px; padding: 6px; border: 1px solid #ddd; border-radius: 4px; margin-left: 10px;">
-                //             <button onclick="ExistingPaymentsManager.removePayment(${index})" style="
-                //                 padding: 6px 12px;
-                //                 background: #dc3545;
-                //                 color: white;
-                //                 border: none;
-                //                 border-radius: 4px;
-                //                 cursor: pointer;
-                //                 margin-right: 10px;
-                //             ">הסר</button>
-                //         </div>
-                //     `;
-                //     // TODO 3
-                //     // return `
-                //     //     <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #c3e6cb;">
-                //     //         <input type="text" 
-                //     //             value="${payment.customPaymentType || `תשלום מסוג ${payment.paymentType}`}"
-                //     //             onchange="ExistingPaymentsManager.updateName(${index}, this.value)"
-                //     //             style="flex: 1; padding: 6px; border: 1px solid #ddd; border-radius: 4px; margin-left: 10px;">
-                //     //         <input type="number" 
-                //     //             value="${payment.paymentAmount}"
-                //     //             step="0.01"
-                //     //             onchange="ExistingPaymentsManager.updateAmount(${index}, this.value)"
-                //     //             style="width: 120px; padding: 6px; border: 1px solid #ddd; border-radius: 4px; margin-left: 10px;">
-                //     //         <button onclick="ExistingPaymentsManager.removePayment(${index})" style="
-                //     //             padding: 6px 12px;
-                //     //             background: #dc3545;
-                //     //             color: white;
-                //     //             border: none;
-                //     //             border-radius: 4px;
-                //     //             cursor: pointer;
-                //     //             margin-right: 10px;
-                //     //         ">הסר</button>
-                //     //     </div>
-                //     // `;
-                // },
 
                 buildEditablePaymentRow: function(payment, index) {
                     // השתמש בקונפיג הגלובלי
@@ -1770,63 +1641,6 @@ const FormHandler = {
                 `;
             }
 
-            // TODO 4
-            // window.displayPaymentsSummary = function() {
-            //     if (!window.purchasePayments || window.purchasePayments.length === 0) {
-            //         return '<p style="color: #999;">לא הוגדרו תשלומים</p>';
-            //     }
-
-            //     // TODO 2
-            //     // // הגדרת שמות התשלומים מהקונפיג
-            //     // const paymentTypeNames = {
-            //     //     1: 'עלות קבר',
-            //     //     2: 'שירותי לוויה',
-            //     //     3: 'שירותי קבורה',
-            //     //     4: 'אגרת מצבה',
-            //     //     5: 'בדיקת עומק',
-            //     //     6: 'פירוק מצבה',
-            //     //     7: 'הובלה מנתב״ג',
-            //     //     8: 'טהרה',
-            //     //     9: 'תכריכים',
-            //     //     10: 'החלפת שם',
-            //     //     99: 'אחר'
-            //     // };
-
-            //     // השתמש בקונפיג הגלובלי
-            //     const paymentTypeNames = window.PAYMENT_TYPES_CONFIG || {};
-
-            //     const summary = {};
-            //     window.purchasePayments.forEach(payment => {
-            //         // תחילה נסה customPaymentType, אחרי זה בדוק בקונפיג, ורק אז ברירת מחדל
-            //         const name = payment.customPaymentType || 
-            //                     paymentTypeNames[payment.paymentType] || 
-            //                     `תשלום מסוג ${payment.paymentType}`;
-                    
-            //         const amount = parseFloat(payment.paymentAmount) || 0;
-                    
-            //         if (!summary[name]) {
-            //             summary[name] = 0;
-            //         }
-            //         summary[name] += amount;
-            //     });
-
-            //     // TODO 1
-            //     // const summary = {};
-            //     // window.purchasePayments.forEach(payment => {
-            //     //     const name = payment.customPaymentType || `תשלום מסוג ${payment.paymentType}`;
-            //     //     const amount = parseFloat(payment.paymentAmount) || 0;
-                    
-            //     //     if (!summary[name]) {
-            //     //         summary[name] = 0;
-            //     //     }
-            //     //     summary[name] += amount;
-            //     // });
-                
-            //     return Object.entries(summary).map(([type, amount]) => 
-            //         `${type}: ₪${amount.toFixed(2)}`
-            //     ).join(' | ') + `<br><strong>סה"כ: ₪${calculatePaymentsTotal()}</strong>`;
-            // }
-
             window.displayPaymentsSummary = function() {
                 if (!window.purchasePayments || window.purchasePayments.length === 0) {
                     return '<p style="color: #999;">לא הוגדרו תשלומים</p>';
@@ -1899,17 +1713,6 @@ const FormHandler = {
                                     try {
                                         window.purchasePayments = JSON.parse(data.paymentsList);                                  
                                         window.existingPayments = JSON.parse(data.paymentsList);
-
-                                        alert('Raw paymentsList: ' + data.paymentsList);
-                                        alert('Raw paymentsList JSON: ' + JSON.stringify(data.paymentsList));
-
-                                        const parsedPayments = JSON.parse(data.paymentsList);
-                                        alert('Parsed payments count: ' + parsedPayments.length);
-                                        
-                                        // בדוק את המבנה של התשלום הראשון
-                                        if (parsedPayments.length > 0) {
-                                            alert('First payment structure: ' + JSON.stringify(parsedPayments[0]));
-                                        }
                                         
                                         // עדכן תצוגה
                                         if (window.displayPaymentsSummary) {

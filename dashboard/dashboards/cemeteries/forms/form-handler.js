@@ -1749,11 +1749,56 @@ const FormHandler = {
                                     }
                                 });
 
+                                // // TODO 2
+                                // // טען תשלומים קיימים
+                                // if (data.paymentsList) {
+                                //     try {
+                                //         window.purchasePayments = JSON.parse(data.paymentsList);                                  
+                                //         window.existingPayments = JSON.parse(data.paymentsList);
+                                        
+                                //         // עדכן תצוגה
+                                //         if (window.displayPaymentsSummary) {
+                                //             document.getElementById('paymentsDisplay').innerHTML = window.displayPaymentsSummary();
+                                //         }
+                                        
+                                //         // עדכן סכום
+                                //         document.getElementById('total_price').value = data.price || window.calculatePaymentsTotal();
+                                        
+                                //         // שנה טקסט כפתור
+                                //         const btn = document.getElementById('paymentsButtonText');
+                                //         if (btn) {
+                                //             btn.textContent = 'ערוך תשלומים';
+                                //         }
+                                //     } catch(e) {
+                                //         console.error('Error parsing payments data:', e);
+                                //     }
+                                // }
+
                                 // טען תשלומים קיימים
                                 if (data.paymentsList) {
                                     try {
-                                        window.purchasePayments = JSON.parse(data.paymentsList);                                  
-                                        window.existingPayments = JSON.parse(data.paymentsList);
+                                        window.purchasePayments = JSON.parse(data.paymentsList);
+                                        
+                                        // הוסף את השדה mandatory מהקונפיג לכל תשלום
+                                        window.purchasePayments.forEach(payment => {
+
+                                            console.log('Payment before fix:', {
+                                                name: payment.customPaymentType,
+                                                type: payment.paymentType,
+                                                mandatory: payment.mandatory,
+                                                required: payment.required
+                                            });
+
+                                            if (payment.paymentType && window.PAYMENT_TYPES_CONFIG) {
+                                                const config = window.PAYMENT_TYPES_CONFIG[payment.paymentType];
+                                                if (config) {
+                                                    // הוסף את השדה mandatory מהקונפיג
+                                                    payment.mandatory = config.mandatory || false;
+                                                    // הוסף גם required לתאימות אחורה
+                                                    payment.required = config.mandatory || false;
+                                                }
+                                            }
+                                        });
                                         
                                         // עדכן תצוגה
                                         if (window.displayPaymentsSummary) {

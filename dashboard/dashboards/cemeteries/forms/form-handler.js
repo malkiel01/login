@@ -536,39 +536,6 @@ const FormHandler = {
             window.purchasePayments = [];
             window.selectedGraveData = null;
 
-            // // TODO 1
-            // // כשנבחר קבר
-            // window.onGraveSelected = function(graveId) {
-            //     if (graveId) {
-            //         // מצא את פרטי הקבר
-            //         const grave = window.hierarchyData.graves.find(g => g.unicId == graveId);
-            //         // מצא את אחוזת הקבר של הקבר הנבחר
-            //         const areaGrave = window.hierarchyData.areaGraves.find(
-            //             ag => ag.unicId == grave.areaGraveId
-            //         );
-
-            //         if (grave) {
-            //             // עדכן את הפרמטרים לתשלומים החכמים
-            //             window.selectedGraveData = {
-            //                 graveId: graveId,
-            //                 plotType: grave.plotType || -1,
-            //                 graveType: areaGrave.graveType || -1
-            //             };
-
-            //             // עדכן תצוגת פרמטרים
-            //             if (window.updatePaymentParameters) {
-            //                 window.updatePaymentParameters();
-            //             }
-            //         }
-            //     } else {
-            //         window.selectedGraveData = null;
-            //         const paramsElement = document.getElementById('selectedParameters');
-            //         if (paramsElement) {
-            //             paramsElement.style.display = 'none';
-            //         }
-            //     }
-            // }
-
             // כשנבחר קבר
             window.onGraveSelected = async function(graveId) {
                 if (graveId) {
@@ -1176,8 +1143,46 @@ const FormHandler = {
                     return `סוג חלקה: ${plotTypes[plotType]} | סוג קבר: ${graveTypes[graveType]} | תושבות: ירושלים`;
                 },
 
-                // בניית סקציית תשלומי חובה
+                // // TODO 1
+                // // בניית סקציית תשלומי חובה
+                // buildMandatorySection: function(payments) {
+                //     return `
+                //         <div style="margin-bottom: 20px;">
+                //             <h4 style="color: #dc3545; margin-bottom: 10px;">
+                //                 <span style="background: #ffc107; padding: 2px 8px; border-radius: 3px;">נעול</span>
+                //                 תשלומי חובה מקוריים
+                //             </h4>
+                //             <div style="border: 2px solid #ffc107; background: #fffbf0; padding: 15px; border-radius: 5px;">
+                //                 ${payments.map(payment => `
+                //                     <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ffe5b4;">
+                //                         <span style="font-weight: bold;">${payment.customPaymentType || `תשלום מסוג ${payment.paymentType}`}</span>
+                //                         <div>
+                //                             <span style="font-weight: bold; color: #dc3545;">₪${Number(payment.paymentAmount).toLocaleString()}</span>
+                //                             <span style="margin-left: 10px; background: #ff9800; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px;">🔒</span>
+                //                         </div>
+                //                     </div>
+                //                 `).join('')}
+                //             </div>
+                //         </div>
+                //     `;
+                // },
+
                 buildMandatorySection: function(payments) {
+                    // הגדרת שמות התשלומים
+                    const paymentTypeNames = {
+                        1: 'עלות קבר',
+                        2: 'שירותי לוויה',
+                        3: 'שירותי קבורה',
+                        4: 'אגרת מצבה',
+                        5: 'בדיקת עומק',
+                        6: 'פירוק מצבה',
+                        7: 'הובלה מנתב״ג',
+                        8: 'טהרה',
+                        9: 'תכריכים',
+                        10: 'החלפת שם',
+                        99: 'אחר'
+                    };
+                    
                     return `
                         <div style="margin-bottom: 20px;">
                             <h4 style="color: #dc3545; margin-bottom: 10px;">
@@ -1185,15 +1190,20 @@ const FormHandler = {
                                 תשלומי חובה מקוריים
                             </h4>
                             <div style="border: 2px solid #ffc107; background: #fffbf0; padding: 15px; border-radius: 5px;">
-                                ${payments.map(payment => `
-                                    <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ffe5b4;">
-                                        <span style="font-weight: bold;">${payment.customPaymentType || `תשלום מסוג ${payment.paymentType}`}</span>
-                                        <div>
-                                            <span style="font-weight: bold; color: #dc3545;">₪${Number(payment.paymentAmount).toLocaleString()}</span>
-                                            <span style="margin-left: 10px; background: #ff9800; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px;">🔒</span>
+                                ${payments.map(payment => {
+                                    const displayName = payment.customPaymentType || 
+                                                    paymentTypeNames[payment.paymentType] || 
+                                                    `תשלום מסוג ${payment.paymentType}`;
+                                    return `
+                                        <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ffe5b4;">
+                                            <span style="font-weight: bold;">${displayName}</span>
+                                            <div>
+                                                <span style="font-weight: bold; color: #dc3545;">₪${Number(payment.paymentAmount).toLocaleString()}</span>
+                                                <span style="margin-left: 10px; background: #ff9800; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px;">🔒</span>
+                                            </div>
                                         </div>
-                                    </div>
-                                `).join('')}
+                                    `;
+                                }).join('')}
                             </div>
                         </div>
                     `;
@@ -1687,10 +1697,29 @@ const FormHandler = {
                 if (!window.purchasePayments || window.purchasePayments.length === 0) {
                     return '<p style="color: #999;">לא הוגדרו תשלומים</p>';
                 }
-                
+
+                // הגדרת שמות התשלומים מהקונפיג
+                const paymentTypeNames = {
+                    1: 'עלות קבר',
+                    2: 'שירותי לוויה',
+                    3: 'שירותי קבורה',
+                    4: 'אגרת מצבה',
+                    5: 'בדיקת עומק',
+                    6: 'פירוק מצבה',
+                    7: 'הובלה מנתב״ג',
+                    8: 'טהרה',
+                    9: 'תכריכים',
+                    10: 'החלפת שם',
+                    99: 'אחר'
+                };
+
                 const summary = {};
                 window.purchasePayments.forEach(payment => {
-                    const name = payment.customPaymentType || `תשלום מסוג ${payment.paymentType}`;
+                    // תחילה נסה customPaymentType, אחרי זה בדוק בקונפיג, ורק אז ברירת מחדל
+                    const name = payment.customPaymentType || 
+                                paymentTypeNames[payment.paymentType] || 
+                                `תשלום מסוג ${payment.paymentType}`;
+                    
                     const amount = parseFloat(payment.paymentAmount) || 0;
                     
                     if (!summary[name]) {
@@ -1698,6 +1727,18 @@ const FormHandler = {
                     }
                     summary[name] += amount;
                 });
+
+                // TODO 1
+                // const summary = {};
+                // window.purchasePayments.forEach(payment => {
+                //     const name = payment.customPaymentType || `תשלום מסוג ${payment.paymentType}`;
+                //     const amount = parseFloat(payment.paymentAmount) || 0;
+                    
+                //     if (!summary[name]) {
+                //         summary[name] = 0;
+                //     }
+                //     summary[name] += amount;
+                // });
                 
                 return Object.entries(summary).map(([type, amount]) => 
                     `${type}: ₪${amount.toFixed(2)}`

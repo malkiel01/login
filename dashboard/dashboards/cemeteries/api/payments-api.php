@@ -109,6 +109,11 @@ try {
             break;
         // קבלת כל התשלומים
        case 'getMatching':
+            // טען את הקונפיג
+            $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config/payment-types-config.php';
+            $paymentTypes = $paymentTypesConfig['payment_types'];
+
+
             $params = json_decode(file_get_contents('php://input'), true);
             
             $sql = "SELECT * FROM payments WHERE isActive = 1";
@@ -144,26 +149,39 @@ try {
             $stmt->execute($queryParams);
             $payments = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            // הוסף מידע על כל תשלום
-            foreach ($payments as &$payment) {
-                // קבע אם התשלום הוא חובה
-                $payment['mandatory'] = in_array($payment['priceDefinition'], [1, 3]); // עלות קבר וקבורה = חובה
+            // // TODO 1
+            // // הוסף מידע על כל תשלום
+            // foreach ($payments as &$payment) {
+            //     // קבע אם התשלום הוא חובה
+            //     $payment['mandatory'] = in_array($payment['priceDefinition'], [1, 3]); // עלות קבר וקבורה = חובה
                 
-                // הוסף שם מתוך ההגדרות
-                $definitions = [
-                    1 => 'עלות קבר',
-                    2 => 'שירותי לוויה',
-                    3 => 'שירותי קבורה',
-                    4 => 'אגרת מצבה',
-                    5 => 'בדיקת עומק',
-                    6 => 'פירוק מצבה',
-                    7 => 'הובלה מנתב"ג',
-                    8 => 'טהרה',
-                    9 => 'תכריכים',
-                    10 => 'החלפת שם'
-                ];
-                $payment['name'] = $definitions[$payment['priceDefinition']] ?? 'לא ידוע';
+            //     // הוסף שם מתוך ההגדרות
+            //     $definitions = [
+            //         1 => 'עלות קבר',
+            //         2 => 'שירותי לוויה',
+            //         3 => 'שירותי קבורה',
+            //         4 => 'אגרת מצבה',
+            //         5 => 'בדיקת עומק',
+            //         6 => 'פירוק מצבה',
+            //         7 => 'הובלה מנתב"ג',
+            //         8 => 'טהרה',
+            //         9 => 'תכריכים',
+            //         10 => 'החלפת שם'
+            //     ];
+            //     $payment['name'] = $definitions[$payment['priceDefinition']] ?? 'לא ידוע';
+            // }
+
+            // בתוך הלולאה על התשלומים
+            foreach ($payments as &$payment) {
+                $typeId = $payment['priceDefinition'];
+                
+                // קבע אם התשלום הוא חובה מהקונפיג
+                $payment['mandatory'] = $paymentTypes[$typeId]['mandatory'] ?? false;
+                
+                // קבל את השם מהקונפיג
+                $payment['name'] = $paymentTypes[$typeId]['name'] ?? 'לא מוגדר';
             }
+
             
             echo json_encode([
                 'success' => true,

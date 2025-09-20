@@ -9,6 +9,10 @@ if (!checkPermission('view', 'cemetery')) {
     die('אין לך הרשאה לצפות בעמוד זה');
 }
 ?>
+<?php
+// טען את הקונפיג תשלומים
+$paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config/payment-types-config.php';
+?>
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
@@ -163,6 +167,11 @@ if (!checkPermission('view', 'cemetery')) {
                 handleTableResponsive();
             }
         });
+    </script>
+
+    <script>
+        // העבר את הקונפיג ל-JavaScript
+        window.PAYMENT_TYPES_CONFIG = <?php echo json_encode($paymentTypesConfig['payment_types']); ?>;
     </script>
 </body>
 </html>

@@ -590,7 +590,8 @@ const FormHandler = {
                                             paymentAmount: parseFloat(payment.price) || 0,
                                             receiptDocuments: [],
                                             customPaymentType: payment.name,
-                                            isPaymentComplete: false
+                                            isPaymentComplete: false,
+                                            mandatory: true  // ← הוסף גם את זה!
                                         });
                                     });
                                     
@@ -1266,39 +1267,25 @@ const FormHandler = {
                     `;
                 },
                 
-                // TODO 1
-                // שורת תשלום לעריכה
-                // buildEditablePaymentRow: function(payment, index) {
-                //     return `
-                //         <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #c3e6cb;">
-                //             <input type="text" 
-                //                 value="${payment.type_name}"
-                //                 onchange="ExistingPaymentsManager.updateName(${index}, this.value)"
-                //                 style="flex: 1; padding: 6px; border: 1px solid #ddd; border-radius: 4px; margin-left: 10px;">
-                //             <input type="number" 
-                //                 value="${payment.amount}"
-                //                 step="0.01"
-                //                 onchange="ExistingPaymentsManager.updateAmount(${index}, this.value)"
-                //                 style="width: 120px; padding: 6px; border: 1px solid #ddd; border-radius: 4px; margin-left: 10px;">
-                //             <button onclick="ExistingPaymentsManager.removePayment(${index})" style="
-                //                 padding: 6px 12px;
-                //                 background: #dc3545;
-                //                 color: white;
-                //                 border: none;
-                //                 border-radius: 4px;
-                //                 cursor: pointer;
-                //                 margin-right: 10px;
-                //             ">הסר</button>
-                //         </div>
-                //     `;
-                // },
+    
+
 
                 // שורת תשלום לעריכה
                 buildEditablePaymentRow: function(payment, index) {
+
+                    // השתמש בקונפיג הגלובלי במקום להקשיח
+                    const paymentTypeNames = window.PAYMENT_TYPES_CONFIG || {};
+
+                    // חפש את השם בכל המקומות האפשריים
+                    const displayName = payment.customPaymentType || 
+                                    payment.type_name ||
+                                    paymentTypeNames[payment.paymentType] || 
+                                    `תשלום מסוג ${payment.paymentType}`;
+                    
                     return `
                         <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #c3e6cb;">
                             <input type="text" 
-                                value="${payment.customPaymentType || `תשלום מסוג ${payment.paymentType}`}"
+                                value="${displayName}"
                                 onchange="ExistingPaymentsManager.updateName(${index}, this.value)"
                                 style="flex: 1; padding: 6px; border: 1px solid #ddd; border-radius: 4px; margin-left: 10px;">
                             <input type="number" 
@@ -1317,6 +1304,29 @@ const FormHandler = {
                             ">הסר</button>
                         </div>
                     `;
+                    // TODO 3
+                    // return `
+                    //     <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #c3e6cb;">
+                    //         <input type="text" 
+                    //             value="${payment.customPaymentType || `תשלום מסוג ${payment.paymentType}`}"
+                    //             onchange="ExistingPaymentsManager.updateName(${index}, this.value)"
+                    //             style="flex: 1; padding: 6px; border: 1px solid #ddd; border-radius: 4px; margin-left: 10px;">
+                    //         <input type="number" 
+                    //             value="${payment.paymentAmount}"
+                    //             step="0.01"
+                    //             onchange="ExistingPaymentsManager.updateAmount(${index}, this.value)"
+                    //             style="width: 120px; padding: 6px; border: 1px solid #ddd; border-radius: 4px; margin-left: 10px;">
+                    //         <button onclick="ExistingPaymentsManager.removePayment(${index})" style="
+                    //             padding: 6px 12px;
+                    //             background: #dc3545;
+                    //             color: white;
+                    //             border: none;
+                    //             border-radius: 4px;
+                    //             cursor: pointer;
+                    //             margin-right: 10px;
+                    //         ">הסר</button>
+                    //     </div>
+                    // `;
                 },
                 
                 // כפתורים

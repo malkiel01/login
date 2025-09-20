@@ -1782,12 +1782,12 @@ const FormHandler = {
                                         // הוסף את השדה mandatory מהקונפיג לכל תשלום
                                         window.purchasePayments.forEach(payment => {
 
-                                            console.log('Payment before fix:', {
-                                                name: payment.customPaymentType,
-                                                type: payment.paymentType,
-                                                mandatory: payment.mandatory,
-                                                required: payment.required
-                                            });
+                                            // console.log('Payment before fix:', {
+                                            //     name: payment.customPaymentType,
+                                            //     type: payment.paymentType,
+                                            //     mandatory: payment.mandatory,
+                                            //     required: payment.required
+                                            // });
 
                                             if (payment.paymentType && window.PAYMENT_TYPES_CONFIG) {
                                                 const config = window.PAYMENT_TYPES_CONFIG[payment.paymentType];

@@ -59,6 +59,14 @@ const FormHandler = {
     },
 
     openForm: async function(type, parentId = null, itemId = null) {
+         
+        if (type === 'purchase' && !itemId) {
+            window.isEditMode = false;
+            window.purchasePayments = [];
+            window.selectedGraveData = null;
+            console.log('🆕 Opening NEW purchase form - cleared globals');
+        }
+        
         if (!type || typeof type !== 'string') {
             console.error('Invalid type:', type);
             this.showMessage('שגיאה: סוג הטופס לא תקין', 'error');
@@ -588,6 +596,7 @@ const FormHandler = {
 
             // פתיחת מנהל תשלומים חכם
             window.openSmartPaymentsManager = async function() {
+
                 // בדיקות ראשוניות
                 const graveSelect = document.getElementById('graveSelect');
                 const graveId = graveSelect ? graveSelect.value : null;
@@ -599,11 +608,16 @@ const FormHandler = {
 
                 // בדוק מצב עריכה
                 const isEditMode = window.isEditMode === true;
-                
-                console.log('Payment Manager - Mode:', isEditMode ? 'EDIT' : 'NEW');
-                console.log('Existing payments:', window.purchasePayments);
 
-                if (isEditMode) {
+                // 👈 הוסף את הדיבוג המורחב
+                console.log('=== Payment Manager Debug ===');
+                console.log('Mode:', isEditMode ? 'EDIT' : 'NEW');
+                console.log('isEditMode value:', window.isEditMode);
+                console.log('Existing payments count:', window.purchasePayments?.length || 0);
+                console.log('============================');
+
+                // השאר את הלוגיקה הקיימת אבל עם שינוי קטן
+                if (isEditMode && window.purchasePayments && window.purchasePayments.length > 0) {
                     // מצב עריכה - פתח ישירות את מנהל התשלומים הקיימים
                     console.log('Opening existing payments manager for editing');
                     ExistingPaymentsManager.open();
@@ -1327,7 +1341,7 @@ const FormHandler = {
                     const debug = document.getElementById('paymentsDebugWindow');
                     if (modal) modal.remove();
                     if (debug) debug.remove();
-                }
+                },
             };
 
             // הגדרה גלובלית
@@ -1589,8 +1603,6 @@ const FormHandler = {
             window.populatePlots();
          });
 
-        alert(itemId)
-
         // טען נתונים אם זה עריכה
         if (itemId) {
             // סמן שזו עריכה - אסור לחשב מחדש!
@@ -1789,6 +1801,13 @@ const FormHandler = {
         }
         
         document.body.style.overflow = '';
+
+        if (type === 'purchase') {
+            window.isEditMode = false;
+            window.purchasePayments = [];
+            window.selectedGraveData = null;
+            console.log('✨ Cleared purchase form globals');
+        }
     },
     
     saveForm: async function(formData, type) {

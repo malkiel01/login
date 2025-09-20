@@ -1087,6 +1087,29 @@ const FormHandler = {
                     return `סוג חלקה: ${plotTypes[plotType]} | סוג קבר: ${graveTypes[graveType]} | תושבות: ירושלים`;
                 },
                 
+                // TODO 1
+                    // buildMandatorySection: function(payments) {
+                    //     return `
+                    //         <div style="margin-bottom: 20px;">
+                    //             <h4 style="color: #dc3545; margin-bottom: 10px;">
+                    //                 <span style="background: #ffc107; padding: 2px 8px; border-radius: 3px;">נעול</span>
+                    //                 תשלומי חובה מקוריים
+                    //             </h4>
+                    //             <div style="border: 2px solid #ffc107; background: #fffbf0; padding: 15px; border-radius: 5px;">
+                    //                 ${payments.map(payment => `
+                    //                     <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ffe5b4;">
+                    //                         <span style="font-weight: bold;">${payment.type_name}</span>
+                    //                         <div>
+                    //                             <span style="font-weight: bold; color: #dc3545;">₪${Number(payment.amount).toLocaleString()}</span>
+                    //                             <span style="margin-left: 10px; background: #ff9800; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px;">🔒</span>
+                    //                         </div>
+                    //                     </div>
+                    //                 `).join('')}
+                    //             </div>
+                    //         </div>
+                    //     `;
+                    // },
+
                 // בניית סקציית תשלומי חובה
                 buildMandatorySection: function(payments) {
                     return `
@@ -1098,9 +1121,9 @@ const FormHandler = {
                             <div style="border: 2px solid #ffc107; background: #fffbf0; padding: 15px; border-radius: 5px;">
                                 ${payments.map(payment => `
                                     <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ffe5b4;">
-                                        <span style="font-weight: bold;">${payment.type_name}</span>
+                                        <span style="font-weight: bold;">${payment.customPaymentType || `תשלום מסוג ${payment.paymentType}`}</span>
                                         <div>
-                                            <span style="font-weight: bold; color: #dc3545;">₪${Number(payment.amount).toLocaleString()}</span>
+                                            <span style="font-weight: bold; color: #dc3545;">₪${Number(payment.paymentAmount).toLocaleString()}</span>
                                             <span style="margin-left: 10px; background: #ff9800; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px;">🔒</span>
                                         </div>
                                     </div>
@@ -1163,16 +1186,43 @@ const FormHandler = {
                     `;
                 },
                 
+                // TODO 1
+                // שורת תשלום לעריכה
+                // buildEditablePaymentRow: function(payment, index) {
+                //     return `
+                //         <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #c3e6cb;">
+                //             <input type="text" 
+                //                 value="${payment.type_name}"
+                //                 onchange="ExistingPaymentsManager.updateName(${index}, this.value)"
+                //                 style="flex: 1; padding: 6px; border: 1px solid #ddd; border-radius: 4px; margin-left: 10px;">
+                //             <input type="number" 
+                //                 value="${payment.amount}"
+                //                 step="0.01"
+                //                 onchange="ExistingPaymentsManager.updateAmount(${index}, this.value)"
+                //                 style="width: 120px; padding: 6px; border: 1px solid #ddd; border-radius: 4px; margin-left: 10px;">
+                //             <button onclick="ExistingPaymentsManager.removePayment(${index})" style="
+                //                 padding: 6px 12px;
+                //                 background: #dc3545;
+                //                 color: white;
+                //                 border: none;
+                //                 border-radius: 4px;
+                //                 cursor: pointer;
+                //                 margin-right: 10px;
+                //             ">הסר</button>
+                //         </div>
+                //     `;
+                // },
+
                 // שורת תשלום לעריכה
                 buildEditablePaymentRow: function(payment, index) {
                     return `
                         <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #c3e6cb;">
                             <input type="text" 
-                                value="${payment.type_name}"
+                                value="${payment.customPaymentType || `תשלום מסוג ${payment.paymentType}`}"
                                 onchange="ExistingPaymentsManager.updateName(${index}, this.value)"
                                 style="flex: 1; padding: 6px; border: 1px solid #ddd; border-radius: 4px; margin-left: 10px;">
                             <input type="number" 
-                                value="${payment.amount}"
+                                value="${payment.paymentAmount}"
                                 step="0.01"
                                 onchange="ExistingPaymentsManager.updateAmount(${index}, this.value)"
                                 style="width: 120px; padding: 6px; border: 1px solid #ddd; border-radius: 4px; margin-left: 10px;">
@@ -1266,22 +1316,46 @@ const FormHandler = {
                     }
                 },
                 
-                // פונקציות עדכון
+                // TODO 1
+                // // פונקציות עדכון
+                // updateName: function(index, value) {
+                //     const editablePayments = window.purchasePayments.filter(p => !p.mandatory);
+                //     if (editablePayments[index]) {
+                //         const paymentIndex = window.purchasePayments.indexOf(editablePayments[index]);
+                //         window.purchasePayments[paymentIndex].type_name = value;
+                //     }
+                // },
+                
+                // updateAmount: function(index, value) {
+                //     const editablePayments = window.purchasePayments.filter(p => !p.mandatory);
+                //     if (editablePayments[index]) {
+                //         const paymentIndex = window.purchasePayments.indexOf(editablePayments[index]);
+                //         window.purchasePayments[paymentIndex].amount = Number(value) || 0;
+                //         this.updateTotal();
+                //     }
+                // },
+
                 updateName: function(index, value) {
-                    const editablePayments = window.purchasePayments.filter(p => !p.mandatory);
+                    const editablePayments = window.purchasePayments.filter(p => !p.required);
                     if (editablePayments[index]) {
                         const paymentIndex = window.purchasePayments.indexOf(editablePayments[index]);
-                        window.purchasePayments[paymentIndex].type_name = value;
+                        window.purchasePayments[paymentIndex].customPaymentType = value;
                     }
                 },
-                
+
                 updateAmount: function(index, value) {
-                    const editablePayments = window.purchasePayments.filter(p => !p.mandatory);
+                    const editablePayments = window.purchasePayments.filter(p => !p.required);
                     if (editablePayments[index]) {
                         const paymentIndex = window.purchasePayments.indexOf(editablePayments[index]);
-                        window.purchasePayments[paymentIndex].amount = Number(value) || 0;
+                        window.purchasePayments[paymentIndex].paymentAmount = Number(value) || 0;
                         this.updateTotal();
                     }
+                },
+
+                updateTotal: function() {
+                    const total = window.purchasePayments.reduce((sum, p) => sum + (Number(p.paymentAmount) || 0), 0);
+                    const element = document.getElementById('existingModalTotal');
+                    if (element) element.textContent = total.toLocaleString();
                 },
                 
                 removePayment: function(index) {
@@ -1294,6 +1368,28 @@ const FormHandler = {
                     }
                 },
                 
+                // TODO 1
+                // addPayment: function() {
+                //     const name = document.getElementById('newPaymentName').value.trim();
+                //     const amount = Number(document.getElementById('newPaymentAmount').value);
+                    
+                //     if (!name || amount <= 0) {
+                //         alert('יש למלא שם וסכום תקין');
+                //         return;
+                //     }
+                    
+                //     window.purchasePayments.push({
+                //         type: 'custom',
+                //         type_name: name,
+                //         amount: amount,
+                //         mandatory: false,
+                //         date: new Date().toISOString()
+                //     });
+                    
+                //     this.close();
+                //     this.open(); // רענן
+                // },
+
                 addPayment: function() {
                     const name = document.getElementById('newPaymentName').value.trim();
                     const amount = Number(document.getElementById('newPaymentAmount').value);
@@ -1304,22 +1400,26 @@ const FormHandler = {
                     }
                     
                     window.purchasePayments.push({
-                        type: 'custom',
-                        type_name: name,
-                        amount: amount,
-                        mandatory: false,
-                        date: new Date().toISOString()
+                        locked: false,
+                        required: false,
+                        paymentDate: new Date().toISOString(),
+                        paymentType: 5, // אחר
+                        paymentAmount: amount,
+                        receiptDocuments: [],
+                        customPaymentType: name,
+                        isPaymentComplete: false
                     });
                     
                     this.close();
                     this.open(); // רענן
                 },
                 
-                updateTotal: function() {
-                    const total = window.purchasePayments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
-                    const element = document.getElementById('existingModalTotal');
-                    if (element) element.textContent = total.toLocaleString();
-                },
+                // TODO 1
+                // updateTotal: function() {
+                //     const total = window.purchasePayments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+                //     const element = document.getElementById('existingModalTotal');
+                //     if (element) element.textContent = total.toLocaleString();
+                // },
                 
                 recalculate: function() {
                     if (confirm('האם למחוק הכל ולחשב מחדש?')) {
@@ -1565,17 +1665,39 @@ const FormHandler = {
                 `;
             }
 
+            // TODO 1
+            // window.displayPaymentsSummary = function() {
+            //     if (window.purchasePayments.length === 0) {
+            //         return '<p style="color: #999;">לא הוגדרו תשלומים</p>';
+            //     }
+                
+            //     const summary = {};
+            //     window.purchasePayments.forEach(payment => {
+            //         if (!summary[payment.type_name]) {
+            //             summary[payment.type_name] = 0;
+            //         }
+            //         summary[payment.type_name] += payment.amount;
+            //     });
+                
+            //     return Object.entries(summary).map(([type, amount]) => 
+            //         `${type}: ₪${amount.toFixed(2)}`
+            //     ).join(' | ') + `<br><strong>סה"כ: ₪${calculatePaymentsTotal()}</strong>`;
+            // }
+
             window.displayPaymentsSummary = function() {
-                if (window.purchasePayments.length === 0) {
+                if (!window.purchasePayments || window.purchasePayments.length === 0) {
                     return '<p style="color: #999;">לא הוגדרו תשלומים</p>';
                 }
                 
                 const summary = {};
                 window.purchasePayments.forEach(payment => {
-                    if (!summary[payment.type_name]) {
-                        summary[payment.type_name] = 0;
+                    const name = payment.customPaymentType || `תשלום מסוג ${payment.paymentType}`;
+                    const amount = parseFloat(payment.paymentAmount) || 0;
+                    
+                    if (!summary[name]) {
+                        summary[name] = 0;
                     }
-                    summary[payment.type_name] += payment.amount;
+                    summary[name] += amount;
                 });
                 
                 return Object.entries(summary).map(([type, amount]) => 
@@ -1583,8 +1705,19 @@ const FormHandler = {
                 ).join(' | ') + `<br><strong>סה"כ: ₪${calculatePaymentsTotal()}</strong>`;
             }
 
+            // TODO 1
+            // window.calculatePaymentsTotal = function() {
+            //     return window.purchasePayments.reduce((total, payment) => total + payment.amount, 0).toFixed(2);
+            // }
             window.calculatePaymentsTotal = function() {
-                return window.purchasePayments.reduce((total, payment) => total + payment.amount, 0).toFixed(2);
+                if (!window.purchasePayments) return '0.00';
+                
+                const total = window.purchasePayments.reduce((sum, payment) => {
+                    const amount = parseFloat(payment.paymentAmount) || 0;
+                    return sum + amount;
+                }, 0);
+                
+                return total.toFixed(2);
             }
 
             // אתחל

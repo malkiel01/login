@@ -1513,18 +1513,6 @@ const FormHandler = {
                     'maintenance': 'תחזוקה',
                     'other': 'אחר'
                 };
-                
-                // window.purchasePayments.push({
-                //     type: type,
-                //     type_name: typeNames[type],
-                //     amount: amount,
-                //     date: new Date().toISOString()
-                // });
-                
-                // document.getElementById('paymentsList').innerHTML = displayPaymentsList();
-                // document.getElementById('paymentsTotal').textContent = calculatePaymentsTotal();
-                // document.getElementById('payment_type').value = '';
-                // document.getElementById('payment_amount').value = '';
 
                 window.purchasePayments.push({
                     type: type,
@@ -1535,7 +1523,7 @@ const FormHandler = {
                 });
 
                 // שנה את זה:
-                document.getElementById('paymentsList').innerHTML = displayPaymentsListForEdit();  // לא displayPaymentsList
+                document.getElementById('payments_data').innerHTML = displayPaymentsListForEdit();  // לא displayPaymentsList
                 document.getElementById('paymentsTotal').textContent = calculatePaymentsTotal();
                 document.getElementById('payment_type').value = '';
                 document.getElementById('payment_amount').value = '';
@@ -1630,9 +1618,19 @@ const FormHandler = {
                                 // טען תשלומים קיימים
                                 if (data.paymentsList) {
                                     try {
-                                        window.purchasePayments = JSON.parse(data.paymentsList);
-                                        
+                                        window.purchasePayments = JSON.parse(data.paymentsList);                                  
                                         window.existingPayments = JSON.parse(data.paymentsList);
+
+                                        alert('Raw paymentsList: ' + data.paymentsList);
+                                        alert('Raw paymentsList JSON: ' + JSON.stringify(data.paymentsList));
+
+                                        const parsedPayments = JSON.parse(data.paymentsList);
+                                        alert('Parsed payments count: ' + parsedPayments.length);
+                                        
+                                        // בדוק את המבנה של התשלום הראשון
+                                        if (parsedPayments.length > 0) {
+                                            alert('First payment structure: ' + JSON.stringify(parsedPayments[0]));
+                                        }
                                         
                                         // עדכן תצוגה
                                         if (window.displayPaymentsSummary) {

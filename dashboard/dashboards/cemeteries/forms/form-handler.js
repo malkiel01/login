@@ -1628,11 +1628,11 @@ const FormHandler = {
                                 });
 
                                 // טען תשלומים קיימים
-                                if (data.payments_data) {
+                                if (data.paymentsList) {
                                     try {
-                                        window.purchasePayments = JSON.parse(data.payments_data);
+                                        window.purchasePayments = JSON.parse(data.paymentsList);
                                         
-                                        window.existingPayments = JSON.parse(data.payments_data);
+                                        window.existingPayments = JSON.parse(data.paymentsList);
                                         
                                         // עדכן תצוגה
                                         if (window.displayPaymentsSummary) {

@@ -699,11 +699,15 @@ const FormHandler = {
                         if (data.success && data.payments) {
                             // תמיד פתח את המודל, גם אם אין תשלומים
                             console.log('Found', data.payments.length, 'payment definitions');
-                            showSmartPaymentsModal(data.payments || []);
+                            // TODO 2
+                            // showSmartPaymentsModal(data.payments || []);
+                            SmartPaymentsManager.open(data.payments || []);
                         } else if (data.success && !data.payments) {
                             // אין תשלומים אבל הבקשה הצליחה - פתח מודל ריק
                             console.log('No payment definitions found, opening empty modal');
-                            showSmartPaymentsModal([]);
+                            // TODO 2
+                            // showSmartPaymentsModal([]);
+                            SmartPaymentsManager.open([]);
                         } else {
                             // רק אם יש שגיאה אמיתית
                             alert('שגיאה בטעינת הגדרות תשלום');
@@ -717,154 +721,368 @@ const FormHandler = {
                 }
             }
 
-            // עדכון הסכום הכולל במודל החכם - גרסה מתוקנת
-            window.updateSmartTotal = function() {
-                let total = 0;
-                let optionalCount = 0;
+            // TODO 2
+            // // עדכון הסכום הכולל במודל החכם - גרסה מתוקנת
+            // window.updateSmartTotal = function() {
+            //     let total = 0;
+            //     let optionalCount = 0;
                 
-                const modal = document.getElementById('smartPaymentsModal');
-                if (!modal) return;
+            //     const modal = document.getElementById('smartPaymentsModal');
+            //     if (!modal) return;
                 
-                // סכום תשלומי חובה
-                const mandatoryCheckboxes = modal.querySelectorAll('input[type="checkbox"]:disabled:checked');
-                mandatoryCheckboxes.forEach(cb => {
-                    // חפש את המחיר בתוך אותו div של הצ'קבוקס
-                    const parentDiv = cb.closest('div[style*="padding"]');
-                    if (parentDiv) {
-                        // חפש את כל ה-spans בתוך ה-div
-                        const spans = parentDiv.querySelectorAll('span');
-                        // המחיר נמצא בדרך כלל ב-span האחרון
-                        const priceSpan = spans[spans.length - 1];
-                        if (priceSpan) {
-                            const priceText = priceSpan.textContent;
-                            // הסר סמל מטבע, פסיקים ורווחים
-                            const cleanPrice = priceText.replace(/[₪,\s]/g, '');
-                            const price = parseFloat(cleanPrice);
+            //     // סכום תשלומי חובה
+            //     const mandatoryCheckboxes = modal.querySelectorAll('input[type="checkbox"]:disabled:checked');
+            //     mandatoryCheckboxes.forEach(cb => {
+            //         // חפש את המחיר בתוך אותו div של הצ'קבוקס
+            //         const parentDiv = cb.closest('div[style*="padding"]');
+            //         if (parentDiv) {
+            //             // חפש את כל ה-spans בתוך ה-div
+            //             const spans = parentDiv.querySelectorAll('span');
+            //             // המחיר נמצא בדרך כלל ב-span האחרון
+            //             const priceSpan = spans[spans.length - 1];
+            //             if (priceSpan) {
+            //                 const priceText = priceSpan.textContent;
+            //                 // הסר סמל מטבע, פסיקים ורווחים
+            //                 const cleanPrice = priceText.replace(/[₪,\s]/g, '');
+            //                 const price = parseFloat(cleanPrice);
                             
-                            console.log('Mandatory payment found:', priceText, '→', price); // דיבוג
+            //                 console.log('Mandatory payment found:', priceText, '→', price); // דיבוג
                             
-                            if (!isNaN(price)) {
-                                total += price;
-                            }
-                        }
-                    }
-                });
+            //                 if (!isNaN(price)) {
+            //                     total += price;
+            //                 }
+            //             }
+            //         }
+            //     });
                 
-                // סכום תשלומים אופציונליים שנבחרו
-                const optionalCheckboxes = modal.querySelectorAll('input[type="checkbox"]:not(:disabled):checked');
-                optionalCheckboxes.forEach(cb => {
-                    const price = parseFloat(cb.dataset.price);
+            //     // סכום תשלומים אופציונליים שנבחרו
+            //     const optionalCheckboxes = modal.querySelectorAll('input[type="checkbox"]:not(:disabled):checked');
+            //     optionalCheckboxes.forEach(cb => {
+            //         const price = parseFloat(cb.dataset.price);
                     
-                    console.log('Optional payment:', cb.dataset.name, '→', price); // דיבוג
+            //         console.log('Optional payment:', cb.dataset.name, '→', price); // דיבוג
                     
-                    if (!isNaN(price)) {
-                        total += price;
-                        optionalCount++;
-                    }
-                });
+            //         if (!isNaN(price)) {
+            //             total += price;
+            //             optionalCount++;
+            //         }
+            //     });
                 
-                console.log('Total calculated:', total); // דיבוג
+            //     console.log('Total calculated:', total); // דיבוג
                 
-                // עדכן התצוגה
-                const totalElement = document.getElementById('smartModalTotal');
-                if (totalElement) {
-                    totalElement.textContent = total.toLocaleString();
-                }
+            //     // עדכן התצוגה
+            //     const totalElement = document.getElementById('smartModalTotal');
+            //     if (totalElement) {
+            //         totalElement.textContent = total.toLocaleString();
+            //     }
                 
-                const optionalCountElement = document.getElementById('optionalCount');
-                if (optionalCountElement) {
-                    const optionalText = optionalCount > 0 ? ` + ${optionalCount} תשלומים נוספים` : '';
-                    optionalCountElement.textContent = optionalText;
-                }
-            }
+            //     const optionalCountElement = document.getElementById('optionalCount');
+            //     if (optionalCountElement) {
+            //         const optionalText = optionalCount > 0 ? ` + ${optionalCount} תשלומים נוספים` : '';
+            //         optionalCountElement.textContent = optionalText;
+            //     }
+            // }
 
-            // החלת התשלומים שנבחרו - הגדר כפונקציה גלובלית
-            window.applySmartPayments = function(mandatoryPaymentsJSON) {
-                // פענח את ה-JSON אם צריך
-                let mandatoryPayments;
-                if (typeof mandatoryPaymentsJSON === 'string') {
-                    try {
-                        mandatoryPayments = JSON.parse(mandatoryPaymentsJSON.replace(/&quot;/g, '"'));
-                    } catch (e) {
-                        console.error('Error parsing mandatory payments:', e);
-                        mandatoryPayments = [];
-                    }
-                } else {
-                    mandatoryPayments = mandatoryPaymentsJSON || [];
-                }
+            // TODO 2
+            // // החלת התשלומים שנבחרו - הגדר כפונקציה גלובלית
+            // window.applySmartPayments = function(mandatoryPaymentsJSON) {
+            //     // פענח את ה-JSON אם צריך
+            //     let mandatoryPayments;
+            //     if (typeof mandatoryPaymentsJSON === 'string') {
+            //         try {
+            //             mandatoryPayments = JSON.parse(mandatoryPaymentsJSON.replace(/&quot;/g, '"'));
+            //         } catch (e) {
+            //             console.error('Error parsing mandatory payments:', e);
+            //             mandatoryPayments = [];
+            //         }
+            //     } else {
+            //         mandatoryPayments = mandatoryPaymentsJSON || [];
+            //     }
                 
-                // נקה תשלומים קיימים
-                window.purchasePayments = [];
+            //     // נקה תשלומים קיימים
+            //     window.purchasePayments = [];
                 
-                // הוסף תשלומי חובה
-                mandatoryPayments.forEach(payment => {
-                    window.purchasePayments.push({
-                        type: 'auto_' + payment.priceDefinition,
-                        type_name: payment.name,
-                        amount: parseFloat(payment.price),
-                        mandatory: true,
-                        date: new Date().toISOString()
-                    });
-                });
+            //     // הוסף תשלומי חובה
+            //     mandatoryPayments.forEach(payment => {
+            //         window.purchasePayments.push({
+            //             type: 'auto_' + payment.priceDefinition,
+            //             type_name: payment.name,
+            //             amount: parseFloat(payment.price),
+            //             mandatory: true,
+            //             date: new Date().toISOString()
+            //         });
+            //     });
                 
-                // הוסף תשלומים אופציונליים שנבחרו
-                const modal = document.getElementById('smartPaymentsModal');
-                if (modal) {
-                    const selectedOptional = modal.querySelectorAll('input[type="checkbox"]:not(:disabled):checked');
-                    selectedOptional.forEach(cb => {
-                        window.purchasePayments.push({
-                            type: cb.dataset.custom ? 'custom' : 'auto_' + cb.dataset.definition,
-                            type_name: cb.dataset.name,
-                            amount: parseFloat(cb.dataset.price),
-                            mandatory: false,
-                            custom: cb.dataset.custom === 'true',
-                            date: new Date().toISOString()
-                        });
-                    });
-                }
+            //     // הוסף תשלומים אופציונליים שנבחרו
+            //     const modal = document.getElementById('smartPaymentsModal');
+            //     if (modal) {
+            //         const selectedOptional = modal.querySelectorAll('input[type="checkbox"]:not(:disabled):checked');
+            //         selectedOptional.forEach(cb => {
+            //             window.purchasePayments.push({
+            //                 type: cb.dataset.custom ? 'custom' : 'auto_' + cb.dataset.definition,
+            //                 type_name: cb.dataset.name,
+            //                 amount: parseFloat(cb.dataset.price),
+            //                 mandatory: false,
+            //                 custom: cb.dataset.custom === 'true',
+            //                 date: new Date().toISOString()
+            //             });
+            //         });
+            //     }
                 
-                // עדכן תצוגה בטופס הראשי
-                document.getElementById('total_price').value = calculatePaymentsTotal();
-                document.getElementById('paymentsDisplay').innerHTML = displayPaymentsSummary();
-                document.getElementById('payments_data').value = JSON.stringify(window.purchasePayments);
+            //     // עדכן תצוגה בטופס הראשי
+            //     document.getElementById('total_price').value = calculatePaymentsTotal();
+            //     document.getElementById('paymentsDisplay').innerHTML = displayPaymentsSummary();
+            //     document.getElementById('payments_data').value = JSON.stringify(window.purchasePayments);
                 
-                // סגור מודל
-                if (modal) {
-                    modal.remove();
-                }
+            //     // סגור מודל
+            //     if (modal) {
+            //         modal.remove();
+            //     }
                 
-                // הודעה
-                const total = window.purchasePayments.reduce((sum, p) => sum + p.amount, 0);
-            }
+            //     // הודעה
+            //     const total = window.purchasePayments.reduce((sum, p) => sum + p.amount, 0);
+            // }
 
-            // מודול תשלומים ליצירת רכישה
-            function showSmartPaymentsModal(availablePayments) {
-                // חלק את התשלומים לחובה ואופציונלי
-                const mandatoryPayments = availablePayments.filter(p => p.mandatory);
-                const optionalPayments = availablePayments.filter(p => !p.mandatory);
+            // TODO 2
+            // // מודול תשלומים ליצירת רכישה
+            // function showSmartPaymentsModal(availablePayments) {
+            //     // חלק את התשלומים לחובה ואופציונלי
+            //     const mandatoryPayments = availablePayments.filter(p => p.mandatory);
+            //     const optionalPayments = availablePayments.filter(p => !p.mandatory);
                 
-                // יצירת המודל
-                const modal = document.createElement('div');
-                modal.id = 'smartPaymentsModal';
-                modal.className = 'modal-overlay';
-                modal.style.cssText = `
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background: rgba(0,0,0,0.5);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    z-index: 10001;
-                `;
+            //     // יצירת המודל
+            //     const modal = document.createElement('div');
+            //     modal.id = 'smartPaymentsModal';
+            //     modal.className = 'modal-overlay';
+            //     modal.style.cssText = `
+            //         position: fixed;
+            //         top: 0;
+            //         left: 0;
+            //         right: 0;
+            //         bottom: 0;
+            //         background: rgba(0,0,0,0.5);
+            //         display: flex;
+            //         align-items: center;
+            //         justify-content: center;
+            //         z-index: 10001;
+            //     `;
                 
-                // חשב סכום התחלתי (רק תשלומי חובה)
-                let currentTotal = mandatoryPayments.reduce((sum, p) => sum + parseFloat(p.price || 0), 0);
+            //     // חשב סכום התחלתי (רק תשלומי חובה)
+            //     let currentTotal = mandatoryPayments.reduce((sum, p) => sum + parseFloat(p.price || 0), 0);
                 
-                modal.innerHTML = `
-                    <div class="modal-content" style="
+            //     modal.innerHTML = `
+            //         <div class="modal-content" style="
+            //             background: white;
+            //             padding: 30px;
+            //             border-radius: 8px;
+            //             width: 700px;
+            //             max-height: 90vh;
+            //             overflow-y: auto;
+            //             margin: 20px;
+            //         ">
+            //             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            //                 <h3 style="margin: 0;">חישוב תשלומים אוטומטי</h3>
+            //                 <button onclick="closeSmartPaymentsModal()" style="
+            //                     background: none;
+            //                     border: none;
+            //                     font-size: 24px;
+            //                     cursor: pointer;
+            //                 ">×</button>
+            //             </div>
+                        
+            //             <!-- הצגת הפרמטרים -->
+            //             <div style="background: #e3f2fd; padding: 10px; border-radius: 5px; margin-bottom: 20px;">
+            //                 <strong>פרמטרים נבחרים:</strong><br>
+            //                 סוג חלקה: ${window.selectedGraveData.plotType == 1 ? 'פטורה' : window.selectedGraveData.plotType == 2 ? 'חריגה' : 'סגורה'} | 
+            //                 סוג קבר: ${window.selectedGraveData.graveType == 1 ? 'שדה' : window.selectedGraveData.graveType == 2 ? 'רוויה' : 'סנהדרין'} | 
+            //                 תושבות: ירושלים
+            //             </div>
+                        
+            //             ${mandatoryPayments.length > 0 ? `
+            //                 <!-- תשלומי חובה -->
+            //                 <div style="margin-bottom: 20px;">
+            //                     <h4 style="color: #dc3545; margin-bottom: 10px;">
+            //                         <span style="background: #ffc107; padding: 2px 8px; border-radius: 3px;">חובה</span>
+            //                         תשלומים הכרחיים
+            //                     </h4>
+            //                     <div style="border: 2px solid #ffc107; background: #fffbf0; padding: 15px; border-radius: 5px;">
+            //                         ${mandatoryPayments.map(payment => `
+            //                             <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ffe5b4;">
+            //                                 <label style="display: flex; align-items: center;">
+            //                                     <input type="checkbox" checked disabled style="margin-left: 10px;">
+            //                                     <span style="font-weight: bold; margin-right: 10px;">${payment.name}</span>
+            //                                 </label>
+            //                                 <span style="font-weight: bold; color: #dc3545;">₪${parseFloat(payment.price).toLocaleString()}</span>
+            //                             </div>
+            //                         `).join('')}
+            //                     </div>
+            //                 </div>
+            //             ` : ''}
+                        
+            //             <!-- תשלומים אופציונליים כולל הוספה מותאמת -->
+            //             <div style="margin-bottom: 20px;">
+            //                 <h4 style="color: #28a745; margin-bottom: 10px;">
+            //                     <span style="background: #d4edda; padding: 2px 8px; border-radius: 3px;">אופציונלי</span>
+            //                     תשלומים נוספים
+            //                 </h4>
+            //                 <div style="border: 1px solid #28a745; background: #f0fff4; padding: 15px; border-radius: 5px;">
+            //                     <div id="optionalPaymentsList">
+            //                         ${optionalPayments.map((payment, index) => `
+            //                             <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #c3e6cb;">
+            //                                 <label style="display: flex; align-items: center; cursor: pointer;">
+            //                                     <input type="checkbox" 
+            //                                         data-price="${payment.price}"
+            //                                         data-name="${payment.name}"
+            //                                         data-definition="${payment.priceDefinition}"
+            //                                         onchange="updateSmartTotal()"
+            //                                         style="margin-left: 10px;">
+            //                                     <span style="margin-right: 10px;">${payment.name}</span>
+            //                                 </label>
+            //                                 <span>₪${parseFloat(payment.price).toLocaleString()}</span>
+            //                             </div>
+            //                         `).join('')}
+            //                     </div>
+                                
+            //                     <!-- הוספת תשלום מותאם -->
+            //                     <div style="border-top: 2px solid #28a745; margin-top: 15px; padding-top: 15px;">
+            //                         <h5 style="margin-bottom: 10px;">הוסף תשלום מותאם:</h5>
+            //                         <div style="display: grid; grid-template-columns: 2fr 1fr auto; gap: 10px; align-items: end;">
+            //                             <div>
+            //                                 <label style="display: block; margin-bottom: 5px; font-size: 12px;">סיבת תשלום</label>
+            //                                 <input type="text" id="customPaymentName" 
+            //                                     list="paymentReasons"
+            //                                     placeholder="בחר או הקלד סיבה" 
+            //                                     style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            //                                 <datalist id="paymentReasons">
+            //                                     <option value="דמי רישום">
+            //                                     <option value="עלויות ניהול">
+            //                                     <option value="תחזוקה שנתית">
+            //                                     <option value="שירותים נוספים">
+            //                                     <option value="הובלה">
+            //                                     <option value="טקס מיוחד">
+            //                                 </datalist>
+            //                             </div>
+            //                             <div>
+            //                                 <label style="display: block; margin-bottom: 5px; font-size: 12px;">סכום</label>
+            //                                 <input type="number" id="customPaymentAmount" 
+            //                                     step="0.01" min="0"
+            //                                     placeholder="0.00" 
+            //                                     style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            //                             </div>
+            //                             <button onclick="addCustomPaymentToList()" style="
+            //                                 padding: 8px 15px;
+            //                                 background: #17a2b8;
+            //                                 color: white;
+            //                                 border: none;
+            //                                 border-radius: 4px;
+            //                                 cursor: pointer;
+            //                                 white-space: nowrap;
+            //                             ">+ הוסף</button>
+            //                         </div>
+            //                     </div>
+            //                 </div>
+            //             </div>
+                        
+            //             <!-- סיכום -->
+            //             <div style="background: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0; text-align: center;">
+            //                 <div style="font-size: 24px; font-weight: bold;">
+            //                     סה"כ לתשלום: ₪<span id="smartModalTotal">${currentTotal.toLocaleString()}</span>
+            //                 </div>
+            //                 <div style="font-size: 12px; color: #666; margin-top: 5px;">
+            //                     כולל ${mandatoryPayments.length} תשלומי חובה
+            //                     <span id="optionalCount"></span>
+            //                 </div>
+            //             </div>
+                        
+            //             <!-- כפתורים -->
+            //             <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            //                 <button onclick="closeSmartPaymentsModal()" style="
+            //                     padding: 10px 30px;
+            //                     background: #6c757d;
+            //                     color: white;
+            //                     border: none;
+            //                     border-radius: 4px;
+            //                     cursor: pointer;
+            //                 ">ביטול</button>
+            //                 <button onclick="applySmartPayments('${JSON.stringify(mandatoryPayments).replace(/'/g, "\\'").replace(/"/g, '&quot;')}')" style="
+            //                     padding: 10px 30px;
+            //                     background: #28a745;
+            //                     color: white;
+            //                     border: none;
+            //                     border-radius: 4px;
+            //                     cursor: pointer;
+            //                     font-weight: bold;
+            //                 ">אישור ושמירה</button>
+            //             </div>
+            //         </div>
+            //     `;
+                
+            //     document.body.appendChild(modal);
+            // }
+
+            // TODO 2
+            // מנהל תשלומים חכם לרכישה חדשה
+            const SmartPaymentsManager = {
+                // פתיחת המודל
+                open: function(availablePayments) {
+                    // חלק את התשלומים לחובה ואופציונלי
+                    const mandatoryPayments = availablePayments.filter(p => p.mandatory);
+                    const optionalPayments = availablePayments.filter(p => !p.mandatory);
+                    
+                    // יצירת המודל
+                    const modal = document.createElement('div');
+                    modal.id = 'smartPaymentsModal';
+                    modal.className = 'modal-overlay';
+                    modal.style.cssText = this.getModalStyle();
+                    
+                    // חשב סכום התחלתי
+                    const currentTotal = this.calculateInitialTotal(mandatoryPayments);
+                    
+                    // בנה HTML
+                    modal.innerHTML = this.buildModalHTML(mandatoryPayments, optionalPayments, currentTotal);
+                    
+                    // הוסף ל-DOM
+                    document.body.appendChild(modal);
+                },
+                
+                // סטיילים
+                getModalStyle: function() {
+                    return `
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        bottom: 0;
+                        background: rgba(0,0,0,0.5);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        z-index: 10001;
+                    `;
+                },
+                
+                // חישוב סכום התחלתי
+                calculateInitialTotal: function(mandatoryPayments) {
+                    return mandatoryPayments.reduce((sum, p) => sum + parseFloat(p.price || 0), 0);
+                },
+                
+                // בניית HTML
+                buildModalHTML: function(mandatoryPayments, optionalPayments, currentTotal) {
+                    return `
+                        <div class="modal-content" style="${this.getContentStyle()}">
+                            ${this.buildHeader()}
+                            ${this.buildParametersSection()}
+                            ${mandatoryPayments.length > 0 ? this.buildMandatorySection(mandatoryPayments) : ''}
+                            ${this.buildOptionalSection(optionalPayments)}
+                            ${this.buildSummarySection(currentTotal, mandatoryPayments.length)}
+                            ${this.buildButtonsSection(mandatoryPayments)}
+                        </div>
+                    `;
+                },
+                
+                // סטייל תוכן
+                getContentStyle: function() {
+                    return `
                         background: white;
                         padding: 30px;
                         border-radius: 8px;
@@ -872,47 +1090,70 @@ const FormHandler = {
                         max-height: 90vh;
                         overflow-y: auto;
                         margin: 20px;
-                    ">
+                    `;
+                },
+                
+                // כותרת
+                buildHeader: function() {
+                    return `
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                             <h3 style="margin: 0;">חישוב תשלומים אוטומטי</h3>
-                            <button onclick="closeSmartPaymentsModal()" style="
+                            <button onclick="SmartPaymentsManager.close()" style="
                                 background: none;
                                 border: none;
                                 font-size: 24px;
                                 cursor: pointer;
                             ">×</button>
                         </div>
-                        
-                        <!-- הצגת הפרמטרים -->
+                    `;
+                },
+                
+                // סקציית פרמטרים
+                buildParametersSection: function() {
+                    const plotTypes = {1: 'פטורה', 2: 'חריגה', 3: 'סגורה'};
+                    const graveTypes = {1: 'שדה', 2: 'רוויה', 3: 'סנהדרין'};
+                    
+                    return `
                         <div style="background: #e3f2fd; padding: 10px; border-radius: 5px; margin-bottom: 20px;">
                             <strong>פרמטרים נבחרים:</strong><br>
-                            סוג חלקה: ${window.selectedGraveData.plotType == 1 ? 'פטורה' : window.selectedGraveData.plotType == 2 ? 'חריגה' : 'סגורה'} | 
-                            סוג קבר: ${window.selectedGraveData.graveType == 1 ? 'שדה' : window.selectedGraveData.graveType == 2 ? 'רוויה' : 'סנהדרין'} | 
+                            סוג חלקה: ${plotTypes[window.selectedGraveData.plotType] || 'לא ידוע'} | 
+                            סוג קבר: ${graveTypes[window.selectedGraveData.graveType] || 'לא ידוע'} | 
                             תושבות: ירושלים
                         </div>
-                        
-                        ${mandatoryPayments.length > 0 ? `
-                            <!-- תשלומי חובה -->
-                            <div style="margin-bottom: 20px;">
-                                <h4 style="color: #dc3545; margin-bottom: 10px;">
-                                    <span style="background: #ffc107; padding: 2px 8px; border-radius: 3px;">חובה</span>
-                                    תשלומים הכרחיים
-                                </h4>
-                                <div style="border: 2px solid #ffc107; background: #fffbf0; padding: 15px; border-radius: 5px;">
-                                    ${mandatoryPayments.map(payment => `
-                                        <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ffe5b4;">
-                                            <label style="display: flex; align-items: center;">
-                                                <input type="checkbox" checked disabled style="margin-left: 10px;">
-                                                <span style="font-weight: bold; margin-right: 10px;">${payment.name}</span>
-                                            </label>
-                                            <span style="font-weight: bold; color: #dc3545;">₪${parseFloat(payment.price).toLocaleString()}</span>
-                                        </div>
-                                    `).join('')}
-                                </div>
+                    `;
+                },
+                
+                // תשלומי חובה
+                buildMandatorySection: function(payments) {
+                    return `
+                        <div style="margin-bottom: 20px;">
+                            <h4 style="color: #dc3545; margin-bottom: 10px;">
+                                <span style="background: #ffc107; padding: 2px 8px; border-radius: 3px;">חובה</span>
+                                תשלומים הכרחיים
+                            </h4>
+                            <div style="border: 2px solid #ffc107; background: #fffbf0; padding: 15px; border-radius: 5px;">
+                                ${payments.map(payment => this.buildMandatoryRow(payment)).join('')}
                             </div>
-                        ` : ''}
-                        
-                        <!-- תשלומים אופציונליים כולל הוספה מותאמת -->
+                        </div>
+                    `;
+                },
+                
+                // שורת תשלום חובה
+                buildMandatoryRow: function(payment) {
+                    return `
+                        <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ffe5b4;">
+                            <label style="display: flex; align-items: center;">
+                                <input type="checkbox" checked disabled style="margin-left: 10px;">
+                                <span style="font-weight: bold; margin-right: 10px;">${payment.name}</span>
+                            </label>
+                            <span style="font-weight: bold; color: #dc3545;">₪${parseFloat(payment.price).toLocaleString()}</span>
+                        </div>
+                    `;
+                },
+                
+                // תשלומים אופציונליים
+                buildOptionalSection: function(payments) {
+                    return `
                         <div style="margin-bottom: 20px;">
                             <h4 style="color: #28a745; margin-bottom: 10px;">
                                 <span style="background: #d4edda; padding: 2px 8px; border-radius: 3px;">אופציונלי</span>
@@ -920,76 +1161,94 @@ const FormHandler = {
                             </h4>
                             <div style="border: 1px solid #28a745; background: #f0fff4; padding: 15px; border-radius: 5px;">
                                 <div id="optionalPaymentsList">
-                                    ${optionalPayments.map((payment, index) => `
-                                        <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #c3e6cb;">
-                                            <label style="display: flex; align-items: center; cursor: pointer;">
-                                                <input type="checkbox" 
-                                                    data-price="${payment.price}"
-                                                    data-name="${payment.name}"
-                                                    data-definition="${payment.priceDefinition}"
-                                                    onchange="updateSmartTotal()"
-                                                    style="margin-left: 10px;">
-                                                <span style="margin-right: 10px;">${payment.name}</span>
-                                            </label>
-                                            <span>₪${parseFloat(payment.price).toLocaleString()}</span>
-                                        </div>
-                                    `).join('')}
+                                    ${payments.map(payment => this.buildOptionalRow(payment)).join('')}
                                 </div>
-                                
-                                <!-- הוספת תשלום מותאם -->
-                                <div style="border-top: 2px solid #28a745; margin-top: 15px; padding-top: 15px;">
-                                    <h5 style="margin-bottom: 10px;">הוסף תשלום מותאם:</h5>
-                                    <div style="display: grid; grid-template-columns: 2fr 1fr auto; gap: 10px; align-items: end;">
-                                        <div>
-                                            <label style="display: block; margin-bottom: 5px; font-size: 12px;">סיבת תשלום</label>
-                                            <input type="text" id="customPaymentName" 
-                                                list="paymentReasons"
-                                                placeholder="בחר או הקלד סיבה" 
-                                                style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                            <datalist id="paymentReasons">
-                                                <option value="דמי רישום">
-                                                <option value="עלויות ניהול">
-                                                <option value="תחזוקה שנתית">
-                                                <option value="שירותים נוספים">
-                                                <option value="הובלה">
-                                                <option value="טקס מיוחד">
-                                            </datalist>
-                                        </div>
-                                        <div>
-                                            <label style="display: block; margin-bottom: 5px; font-size: 12px;">סכום</label>
-                                            <input type="number" id="customPaymentAmount" 
-                                                step="0.01" min="0"
-                                                placeholder="0.00" 
-                                                style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                        </div>
-                                        <button onclick="addCustomPaymentToList()" style="
-                                            padding: 8px 15px;
-                                            background: #17a2b8;
-                                            color: white;
-                                            border: none;
-                                            border-radius: 4px;
-                                            cursor: pointer;
-                                            white-space: nowrap;
-                                        ">+ הוסף</button>
-                                    </div>
-                                </div>
+                                ${this.buildCustomPaymentSection()}
                             </div>
                         </div>
-                        
-                        <!-- סיכום -->
+                    `;
+                },
+                
+                // שורת תשלום אופציונלי
+                buildOptionalRow: function(payment) {
+                    return `
+                        <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #c3e6cb;">
+                            <label style="display: flex; align-items: center; cursor: pointer;">
+                                <input type="checkbox" 
+                                    data-price="${payment.price}"
+                                    data-name="${payment.name}"
+                                    data-definition="${payment.priceDefinition}"
+                                    onchange="SmartPaymentsManager.updateTotal()"
+                                    style="margin-left: 10px;">
+                                <span style="margin-right: 10px;">${payment.name}</span>
+                            </label>
+                            <span>₪${parseFloat(payment.price).toLocaleString()}</span>
+                        </div>
+                    `;
+                },
+                
+                // הוספת תשלום מותאם
+                buildCustomPaymentSection: function() {
+                    return `
+                        <div style="border-top: 2px solid #28a745; margin-top: 15px; padding-top: 15px;">
+                            <h5 style="margin-bottom: 10px;">הוסף תשלום מותאם:</h5>
+                            <div style="display: grid; grid-template-columns: 2fr 1fr auto; gap: 10px; align-items: end;">
+                                <div>
+                                    <label style="display: block; margin-bottom: 5px; font-size: 12px;">סיבת תשלום</label>
+                                    <input type="text" id="customPaymentName" 
+                                        list="paymentReasons"
+                                        placeholder="בחר או הקלד סיבה" 
+                                        style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <datalist id="paymentReasons">
+                                        <option value="דמי רישום">
+                                        <option value="עלויות ניהול">
+                                        <option value="תחזוקה שנתית">
+                                        <option value="שירותים נוספים">
+                                        <option value="הובלה">
+                                        <option value="טקס מיוחד">
+                                    </datalist>
+                                </div>
+                                <div>
+                                    <label style="display: block; margin-bottom: 5px; font-size: 12px;">סכום</label>
+                                    <input type="number" id="customPaymentAmount" 
+                                        step="0.01" min="0"
+                                        placeholder="0.00" 
+                                        style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                </div>
+                                <button onclick="SmartPaymentsManager.addCustomPayment()" style="
+                                    padding: 8px 15px;
+                                    background: #17a2b8;
+                                    color: white;
+                                    border: none;
+                                    border-radius: 4px;
+                                    cursor: pointer;
+                                    white-space: nowrap;
+                                ">+ הוסף</button>
+                            </div>
+                        </div>
+                    `;
+                },
+                
+                // סיכום
+                buildSummarySection: function(currentTotal, mandatoryCount) {
+                    return `
                         <div style="background: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0; text-align: center;">
                             <div style="font-size: 24px; font-weight: bold;">
                                 סה"כ לתשלום: ₪<span id="smartModalTotal">${currentTotal.toLocaleString()}</span>
                             </div>
                             <div style="font-size: 12px; color: #666; margin-top: 5px;">
-                                כולל ${mandatoryPayments.length} תשלומי חובה
+                                כולל ${mandatoryCount} תשלומי חובה
                                 <span id="optionalCount"></span>
                             </div>
                         </div>
-                        
-                        <!-- כפתורים -->
+                    `;
+                },
+                
+                // כפתורים
+                buildButtonsSection: function(mandatoryPayments) {
+                    return `
                         <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                            <button onclick="closeSmartPaymentsModal()" style="
+                            <button onclick="SmartPaymentsManager.close()" style="
                                 padding: 10px 30px;
                                 background: #6c757d;
                                 color: white;
@@ -997,7 +1256,7 @@ const FormHandler = {
                                 border-radius: 4px;
                                 cursor: pointer;
                             ">ביטול</button>
-                            <button onclick="applySmartPayments('${JSON.stringify(mandatoryPayments).replace(/'/g, "\\'").replace(/"/g, '&quot;')}')" style="
+                            <button onclick="SmartPaymentsManager.apply('${JSON.stringify(mandatoryPayments).replace(/'/g, "\\'").replace(/"/g, '&quot;')}')" style="
                                 padding: 10px 30px;
                                 background: #28a745;
                                 color: white;
@@ -1007,11 +1266,180 @@ const FormHandler = {
                                 font-weight: bold;
                             ">אישור ושמירה</button>
                         </div>
-                    </div>
-                `;
+                    `;
+                },
                 
-                document.body.appendChild(modal);
-            }
+                // עדכון סכום
+                updateTotal: function() {
+                    let total = 0;
+                    let optionalCount = 0;
+                    
+                    const modal = document.getElementById('smartPaymentsModal');
+                    if (!modal) return;
+                    
+                    // סכום תשלומי חובה
+                    const mandatoryCheckboxes = modal.querySelectorAll('input[type="checkbox"]:disabled:checked');
+                    mandatoryCheckboxes.forEach(cb => {
+                        // חפש את המחיר בתוך אותו div של הצ'קבוקס
+                        const parentDiv = cb.closest('div[style*="padding"]');
+                        if (parentDiv) {
+                            // חפש את כל ה-spans בתוך ה-div
+                            const spans = parentDiv.querySelectorAll('span');
+                            // המחיר נמצא בדרך כלל ב-span האחרון
+                            const priceSpan = spans[spans.length - 1];
+                            if (priceSpan) {
+                                const priceText = priceSpan.textContent;
+                                // הסר סמל מטבע, פסיקים ורווחים
+                                const cleanPrice = priceText.replace(/[₪,\s]/g, '');
+                                const price = parseFloat(cleanPrice);
+                                
+                                console.log('Mandatory payment found:', priceText, '→', price); // דיבוג
+                                
+                                if (!isNaN(price)) {
+                                    total += price;
+                                }
+                            }
+                        }
+                    });
+                    
+                    // סכום תשלומים אופציונליים שנבחרו
+                    const optionalCheckboxes = modal.querySelectorAll('input[type="checkbox"]:not(:disabled):checked');
+                    optionalCheckboxes.forEach(cb => {
+                        const price = parseFloat(cb.dataset.price);
+                        
+                        console.log('Optional payment:', cb.dataset.name, '→', price); // דיבוג
+                        
+                        if (!isNaN(price)) {
+                            total += price;
+                            optionalCount++;
+                        }
+                    });
+                    
+                    console.log('Total calculated:', total); // דיבוג
+                    
+                    // עדכן התצוגה
+                    const totalElement = document.getElementById('smartModalTotal');
+                    if (totalElement) {
+                        totalElement.textContent = total.toLocaleString();
+                    }
+                    
+                    const optionalCountElement = document.getElementById('optionalCount');
+                    if (optionalCountElement) {
+                        const optionalText = optionalCount > 0 ? ` + ${optionalCount} תשלומים נוספים` : '';
+                        optionalCountElement.textContent = optionalText;
+                    }
+                },
+                
+                // הוספת תשלום מותאם
+                addCustomPayment: function() {
+                    const name = document.getElementById('customPaymentName').value.trim();
+                    const amount = parseFloat(document.getElementById('customPaymentAmount').value);
+                    
+                    if (!name || !amount || amount <= 0) {
+                        alert('יש למלא שם וסכום תקין');
+                        return;
+                    }
+                    
+                    // הוסף לרשימה
+                    const optionalList = document.getElementById('optionalPaymentsList');
+                    const newPaymentId = 'custom_' + Date.now();
+                    
+                    const newPaymentHTML = `
+                        <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #c3e6cb; background: #ffffcc;">
+                            <label style="display: flex; align-items: center; cursor: pointer;">
+                                <input type="checkbox" 
+                                    checked
+                                    data-price="${amount}"
+                                    data-name="${name}"
+                                    data-definition="custom"
+                                    data-custom="true"
+                                    onchange="SmartPaymentsManager.updateTotal()"
+                                    style="margin-left: 10px;">
+                                <span style="margin-right: 10px;">${name} (מותאם)</span>
+                            </label>
+                            <span>₪${amount.toLocaleString()}</span>
+                        </div>
+                    `;
+                    
+                    optionalList.insertAdjacentHTML('beforeend', newPaymentHTML);
+                    
+                    // נקה את השדות
+                    document.getElementById('customPaymentName').value = '';
+                    document.getElementById('customPaymentAmount').value = '';
+                    
+                    // עדכן סכום
+                    this.updateTotal();
+                },
+                
+                // החלת תשלומים
+                apply: function(mandatoryPaymentsJSON) {
+                    // החלת התשלומים שנבחרו - הגדר כפונקציה גלובלית
+                    // פענח את ה-JSON אם צריך
+                    let mandatoryPayments;
+                    if (typeof mandatoryPaymentsJSON === 'string') {
+                        try {
+                            mandatoryPayments = JSON.parse(mandatoryPaymentsJSON.replace(/&quot;/g, '"'));
+                        } catch (e) {
+                            console.error('Error parsing mandatory payments:', e);
+                            mandatoryPayments = [];
+                        }
+                    } else {
+                        mandatoryPayments = mandatoryPaymentsJSON || [];
+                    }
+                    
+                    // נקה תשלומים קיימים
+                    window.purchasePayments = [];
+                    
+                    // הוסף תשלומי חובה
+                    mandatoryPayments.forEach(payment => {
+                        window.purchasePayments.push({
+                            type: 'auto_' + payment.priceDefinition,
+                            type_name: payment.name,
+                            amount: parseFloat(payment.price),
+                            mandatory: true,
+                            date: new Date().toISOString()
+                        });
+                    });
+                    
+                    // הוסף תשלומים אופציונליים שנבחרו
+                    const modal = document.getElementById('smartPaymentsModal');
+                    if (modal) {
+                        const selectedOptional = modal.querySelectorAll('input[type="checkbox"]:not(:disabled):checked');
+                        selectedOptional.forEach(cb => {
+                            window.purchasePayments.push({
+                                type: cb.dataset.custom ? 'custom' : 'auto_' + cb.dataset.definition,
+                                type_name: cb.dataset.name,
+                                amount: parseFloat(cb.dataset.price),
+                                mandatory: false,
+                                custom: cb.dataset.custom === 'true',
+                                date: new Date().toISOString()
+                            });
+                        });
+                    }
+                    
+                    // עדכן תצוגה בטופס הראשי
+                    document.getElementById('total_price').value = window.calculatePaymentsTotal();
+                    document.getElementById('paymentsDisplay').innerHTML = window.displayPaymentsSummary();
+                    document.getElementById('payments_data').value = JSON.stringify(window.purchasePayments);
+                    
+                    // סגור מודל
+                    if (modal) {
+                        modal.remove();
+                    }
+                    
+                    // הודעה
+                    const total = window.purchasePayments.reduce((sum, p) => sum + p.amount, 0);                
+                },
+                
+                // סגירת המודל
+                close: function() {
+                    const modal = document.getElementById('smartPaymentsModal');
+                    if (modal) modal.remove();
+                }
+            };
+
+            // הגדרה גלובלית
+            window.SmartPaymentsManager = SmartPaymentsManager;
 
             // מודול מלא לניהול תשלומים במצב עריכה
             const ExistingPaymentsManager = {
@@ -1433,54 +1861,56 @@ const FormHandler = {
             // הגדרה גלובלית
             window.ExistingPaymentsManager = ExistingPaymentsManager;
 
-            // פונקציה חדשה להוספת תשלום מותאם לרשימה
-            window.addCustomPaymentToList = function() {
-                const name = document.getElementById('customPaymentName').value.trim();
-                const amount = parseFloat(document.getElementById('customPaymentAmount').value);
+            // TODO 2
+            // // פונקציה חדשה להוספת תשלום מותאם לרשימה
+            // window.addCustomPaymentToList = function() {
+            //     const name = document.getElementById('customPaymentName').value.trim();
+            //     const amount = parseFloat(document.getElementById('customPaymentAmount').value);
                 
-                if (!name || !amount || amount <= 0) {
-                    alert('יש למלא שם וסכום תקין');
-                    return;
-                }
+            //     if (!name || !amount || amount <= 0) {
+            //         alert('יש למלא שם וסכום תקין');
+            //         return;
+            //     }
                 
-                // הוסף לרשימה
-                const optionalList = document.getElementById('optionalPaymentsList');
-                const newPaymentId = 'custom_' + Date.now();
+            //     // הוסף לרשימה
+            //     const optionalList = document.getElementById('optionalPaymentsList');
+            //     const newPaymentId = 'custom_' + Date.now();
                 
-                const newPaymentHTML = `
-                    <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #c3e6cb; background: #ffffcc;">
-                        <label style="display: flex; align-items: center; cursor: pointer;">
-                            <input type="checkbox" 
-                                checked
-                                data-price="${amount}"
-                                data-name="${name}"
-                                data-definition="custom"
-                                data-custom="true"
-                                onchange="updateSmartTotal()"
-                                style="margin-left: 10px;">
-                            <span style="margin-right: 10px;">${name} (מותאם)</span>
-                        </label>
-                        <span>₪${amount.toLocaleString()}</span>
-                    </div>
-                `;
+            //     const newPaymentHTML = `
+            //         <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #c3e6cb; background: #ffffcc;">
+            //             <label style="display: flex; align-items: center; cursor: pointer;">
+            //                 <input type="checkbox" 
+            //                     checked
+            //                     data-price="${amount}"
+            //                     data-name="${name}"
+            //                     data-definition="custom"
+            //                     data-custom="true"
+            //                     onchange="updateSmartTotal()"
+            //                     style="margin-left: 10px;">
+            //                 <span style="margin-right: 10px;">${name} (מותאם)</span>
+            //             </label>
+            //             <span>₪${amount.toLocaleString()}</span>
+            //         </div>
+            //     `;
                 
-                optionalList.insertAdjacentHTML('beforeend', newPaymentHTML);
+            //     optionalList.insertAdjacentHTML('beforeend', newPaymentHTML);
                 
-                // נקה את השדות
-                document.getElementById('customPaymentName').value = '';
-                document.getElementById('customPaymentAmount').value = '';
+            //     // נקה את השדות
+            //     document.getElementById('customPaymentName').value = '';
+            //     document.getElementById('customPaymentAmount').value = '';
                 
-                // עדכן סכום
-                updateSmartTotal();
-            }
+            //     // עדכן סכום
+            //     updateSmartTotal();
+            // }
 
-            // פונקציה לסגירת המודל
-            window.closeSmartPaymentsModal = function() {
-                const modal = document.getElementById('smartPaymentsModal');
-                if (modal) {
-                    modal.remove();
-                }
-            }
+            // TODO 2
+            // // פונקציה לסגירת המודל
+            // window.closeSmartPaymentsModal = function() {
+            //     const modal = document.getElementById('smartPaymentsModal');
+            //     if (modal) {
+            //         modal.remove();
+            //     }
+            // }
 
             // --------------------------------------------------------
             // -------- תחילת בדיקה

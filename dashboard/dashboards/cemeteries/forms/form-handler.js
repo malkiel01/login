@@ -695,18 +695,6 @@ const FormHandler = {
                         });
                         
                         const data = await response.json();
-                        
-                        // TODO 1
-                        // if (data.success && data.payments && data.payments.length > 0) {
-                        //     console.log('Found', data.payments.length, 'payment definitions');
-                        //     showSmartPaymentsModal(data.payments);
-                        // } else {
-                        //     alert('לא נמצאו הגדרות תשלום מתאימות לפרמטרים שנבחרו');
-                        //     console.error('No matching payments found for parameters:', {
-                        //         plotType: window.selectedGraveData.plotType,
-                        //         graveType: window.selectedGraveData.graveType
-                        //     });
-                        // }
 
                         if (data.success && data.payments) {
                             // תמיד פתח את המודל, גם אם אין תשלומים

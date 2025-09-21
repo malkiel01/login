@@ -222,6 +222,11 @@ try {
             if (!isset($data['purchaseStatus'])) {
                 $data['purchaseStatus'] = 1; // פתוח
             }
+
+            // ברירת מחדל ל-isActive
+            if (!isset($data['isActive'])) {
+                $data['isActive'] = 1;
+            }
             
             // בניית השאילתה
             $fields = [

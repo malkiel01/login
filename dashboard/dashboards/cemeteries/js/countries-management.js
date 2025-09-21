@@ -439,12 +439,12 @@ function showCountryDetails(country) {
                 border-top: 1px solid #f0f0f0;
             ">
                 <!-- בתוך הכרטיס של מדינה, הוסף כפתור להוספת עיר -->
-                <button class="btn btn-primary" onclick="openAddCity('<?= $country['unicId'] ?>')">
+                <button class="btn btn-primary" onclick="openAddCity('<?= $country["unicId"] ?>')">
                     <i class="fas fa-plus"></i> הוסף עיר למדינה זו
                 </button>
 
                 <!-- וכפתור לצפייה בערים של המדינה -->
-                <button class="btn btn-info" onclick="loadCities('<?= $country['unicId'] ?>')">
+                <button class="btn btn-info" onclick="loadCities('<?= $country["unicId"] ?>')">
                     <i class="fas fa-list"></i> הצג ערים במדינה זו
                 </button>
             </div>

@@ -230,18 +230,6 @@ try {
                 'refundAmount', 'refundInvoiceNumber', 'contactId', 'dateOpening',
                 'ifCertificate', 'deedNum', 'kinship', 'comment', 'createDate', 'updateDate'
             ];
-            
-            $insertFields = [];
-            $insertValues = [];
-            $params = [];
-            
-            foreach ($fields as $field) {
-                if (isset($data[$field])) {
-                    $insertFields[] = $field;
-                    $insertValues[] = ":$field";
-                    $params[$field] = $data[$field];
-                }
-            }
 
             // ניקוי paymentsList לפני השמירה
             if (isset($data['paymentsList']) && $data['paymentsList']) {
@@ -258,6 +246,18 @@ try {
                         ];
                     }, $payments);
                     $data['paymentsList'] = json_encode($cleanPayments);
+                }
+            }
+            
+            $insertFields = [];
+            $insertValues = [];
+            $params = [];
+            
+            foreach ($fields as $field) {
+                if (isset($data[$field])) {
+                    $insertFields[] = $field;
+                    $insertValues[] = ":$field";
+                    $params[$field] = $data[$field];
                 }
             }
             
@@ -370,20 +370,6 @@ try {
                 'refundAmount', 'refundInvoiceNumber', 'contactId', 'dateOpening',
                 'ifCertificate', 'deedNum', 'kinship', 'comment', 'updateDate'
             ];
-            
-            $updateFields = [];
-            $params = ['id' => $id];
-            
-            foreach ($fields as $field) {
-                if (isset($data[$field])) {
-                    $updateFields[] = "$field = :$field";
-                    $params[$field] = $data[$field];
-                }
-            }
-            
-            if (empty($updateFields)) {
-                throw new Exception('No fields to update');
-            }
 
             // ניקוי paymentsList לפני העדכון
             if (isset($data['paymentsList']) && $data['paymentsList']) {
@@ -401,6 +387,20 @@ try {
                     }, $payments);
                     $data['paymentsList'] = json_encode($cleanPayments);
                 }
+            }
+            
+            $updateFields = [];
+            $params = ['id' => $id];
+            
+            foreach ($fields as $field) {
+                if (isset($data[$field])) {
+                    $updateFields[] = "$field = :$field";
+                    $params[$field] = $data[$field];
+                }
+            }
+            
+            if (empty($updateFields)) {
+                throw new Exception('No fields to update');
             }
             
             $sql = "UPDATE purchases SET " . implode(', ', $updateFields) . " WHERE unicId = :id";

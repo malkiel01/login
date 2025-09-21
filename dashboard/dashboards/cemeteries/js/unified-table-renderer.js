@@ -337,7 +337,7 @@ class UnifiedTableRenderer {
         console.log('openAddModal - type:', type, 'parentId:', parentId);
 
         // לקוחות ורכישות לא צריכים הורה
-        const typesWithoutParent = ['cemetery', 'customer', 'purchase', 'burial'];
+        const typesWithoutParent = ['cemetery', 'customer', 'purchase', 'residency', 'burial'];
 
         if (!type) {
             console.error('No type defined');

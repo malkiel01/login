@@ -354,13 +354,13 @@
             min-height: 50px;
             margin-top: 15px;
         ">' . 
-        ($purchase && $purchase['payments_data'] ? 
+        ($purchase && $purchase['paymentsList'] ? 
             '<script>document.write(displayPaymentsSummary())</script>' : 
             '<p style="color: #999; text-align: center;">לחץ על אחד הכפתורים לניהול תשלומים</p>') . 
         '</div>
         
-        <input type="hidden" name="payments_data" id="payments_data" 
-            value=\'' . ($purchase['payments_data'] ?? '[]') . '\'>
+        <input type="hidden" name="paymentsList" id="paymentsList" 
+            value=\'' . ($purchase['paymentsList'] ?? '[]') . '\'>
     </fieldset>';
 
     $formBuilder->addCustomHTML($paymentsHTML);

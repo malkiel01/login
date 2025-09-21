@@ -600,7 +600,7 @@ const FormHandler = {
                                         document.getElementById('paymentsDisplay').innerHTML = window.displayPaymentsSummary();
                                     }
                                     document.getElementById('total_price').value = window.calculatePaymentsTotal();
-                                    document.getElementById('payments_data').value = JSON.stringify(window.purchasePayments);
+                                    document.getElementById('paymentsList').value = JSON.stringify(window.purchasePayments);
                                 }
                             } catch (error) {
                                 console.error('Error calculating payments:', error);
@@ -615,7 +615,7 @@ const FormHandler = {
                         window.purchasePayments = [];
                         document.getElementById('total_price').value = '0.00';
                         document.getElementById('paymentsDisplay').innerHTML = '<p style="color: #999;">לא הוגדרו תשלומים</p>';
-                        document.getElementById('payments_data').value = '[]';
+                        document.getElementById('paymentsList').value = '[]';
                     }
                     
                     const paramsElement = document.getElementById('selectedParameters');
@@ -1112,7 +1112,7 @@ const FormHandler = {
                     // עדכן תצוגה בטופס הראשי
                     document.getElementById('total_price').value = window.calculatePaymentsTotal();
                     document.getElementById('paymentsDisplay').innerHTML = window.displayPaymentsSummary();
-                    document.getElementById('payments_data').value = JSON.stringify(window.purchasePayments);
+                    document.getElementById('paymentsList').value = JSON.stringify(window.purchasePayments);
                     
                     // סגור מודל
                     this.close();
@@ -1532,7 +1532,7 @@ const FormHandler = {
                 save: function() {
                     document.getElementById('total_price').value = window.calculatePaymentsTotal();
                     document.getElementById('paymentsDisplay').innerHTML = window.displayPaymentsSummary();
-                    document.getElementById('payments_data').value = JSON.stringify(window.purchasePayments);
+                    document.getElementById('paymentsList').value = JSON.stringify(window.purchasePayments);
                     this.close();
                 },
                 
@@ -1576,9 +1576,9 @@ const FormHandler = {
                                         </td>
                                         <td style="padding: 8px; border-bottom: 1px solid #eee;">
                                             ${isLocked ? 
-                                                `₪${payment.amount.toFixed(2)}` :
+                                                `₪${(payment.paymentAmount || 0).toFixed(2)}` :
                                                 `<input type="number" 
-                                                    value="${payment.amount}" 
+                                                    value="${payment.paymentAmount}" 
                                                     step="0.01"
                                                     onchange="updatePaymentAmount(${index}, this.value)"
                                                     style="width: 100px; padding: 4px; border: 1px solid #ddd;">`
@@ -1614,7 +1614,7 @@ const FormHandler = {
             window.updatePaymentAmount = function(index, newAmount) {
                 if (window.purchasePayments[index] && !window.purchasePayments[index].mandatory) {
                     window.purchasePayments[index].paymentAmount = parseFloat(newAmount) || 0;
-                    document.getElementById('paymentsTotal').textContent = calculatePaymentsTotal();
+                    document.getElementById('paymentsTotal').textContent = window.calculatePaymentsTotal();
                 }
             }
 
@@ -1637,7 +1637,7 @@ const FormHandler = {
                     modal.remove();
                     document.getElementById('total_price').value = window.calculatePaymentsTotal();
                     document.getElementById('paymentsDisplay').innerHTML = window.displayPaymentsSummary();
-                    document.getElementById('payments_data').value = JSON.stringify(window.purchasePayments);
+                    document.getElementById('paymentsList').value = JSON.stringify(window.purchasePayments);
                 }
             }
 
@@ -1658,14 +1658,14 @@ const FormHandler = {
                 window.purchasePayments.push({
                     type: type,
                     type_name: typeNames[type],
-                    amount: amount,
+                    paymentAmount: amount,
                     mandatory: false,  // תשלום חדש הוא תמיד לא חובה
                     date: new Date().toISOString()
                 });
 
                 // שנה את זה:
-                document.getElementById('payments_data').innerHTML = displayPaymentsListForEdit();  // לא displayPaymentsList
-                document.getElementById('paymentsTotal').textContent = calculatePaymentsTotal();
+                document.getElementById('paymentsList').innerHTML = window.displayPaymentsListForEdit();  // לא displayPaymentsList
+                document.getElementById('paymentsTotal').textContent = window.calculatePaymentsTotal();
                 document.getElementById('payment_type').value = '';
                 document.getElementById('payment_amount').value = '';
             }
@@ -1688,7 +1688,7 @@ const FormHandler = {
                             ${window.purchasePayments.map((payment, index) => `
                                 <tr>
                                     <td style="padding: 8px; border-bottom: 1px solid #eee;">${payment.type_name}</td>
-                                    <td style="padding: 8px; border-bottom: 1px solid #eee;">₪${payment.amount.toFixed(2)}</td>
+                                    <td style="padding: 8px; border-bottom: 1px solid #eee;">₪${(payment.paymentAmount || 0).toFixed(2)}</td>
                                     <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">
                                         <button onclick="removePayment(${index})" style="
                                             background: #dc3545;
@@ -1731,7 +1731,7 @@ const FormHandler = {
                 
                 return Object.entries(summary).map(([type, amount]) => 
                     `${type}: ₪${amount.toFixed(2)}`
-                ).join(' | ') + `<br><strong>סה"כ: ₪${calculatePaymentsTotal()}</strong>`;
+                ).join(' | ') + `<br><strong>סה"כ: ₪${window.calculatePaymentsTotal()}</strong>`;
             }
 
             window.calculatePaymentsTotal = function() {

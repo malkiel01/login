@@ -614,18 +614,13 @@ function openResidencyFormModal(data = null) {
 // טעינת מדינות
 async function loadCountries(selectedId = null) {
     try {
-        const response = await fetch('/dashboard/dashboards/cemeteries/api/countries-api.php?action=select');
-        const result = await response.json();
-        
-        if (!result.success) {
-            console.error('Failed to load countries:', result.error);
-            return;
-        }
+        const response = await fetch('/dashboard/dashboards/cemeteries/api/get-countries.php');
+        const countries = await response.json();
         
         const select = document.getElementById('countrySelect');
         if (select) {
             select.innerHTML = '<option value="">-- בחר מדינה --</option>';
-            result.data.forEach(country => {
+            countries.forEach(country => {
                 const option = document.createElement('option');
                 option.value = country.unicId;
                 option.textContent = country.countryNameHe;
@@ -651,16 +646,11 @@ async function loadCitiesByCountry(countryId, selectedCityId = null) {
     }
     
     try {
-        const response = await fetch(`/dashboard/dashboards/cemeteries/api/cities-api.php?action=select&countryId=${countryId}`);
-        const result = await response.json();
-        
-        if (!result.success) {
-            console.error('Failed to load cities:', result.error);
-            return;
-        }
+        const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-cities.php?countryId=${countryId}`);
+        const cities = await response.json();
         
         citySelect.innerHTML = '<option value="">-- בחר עיר --</option>';
-        result.data.forEach(city => {
+        cities.forEach(city => {
             const option = document.createElement('option');
             option.value = city.unicId;
             option.textContent = city.cityNameHe;
@@ -677,18 +667,13 @@ async function loadCitiesByCountry(countryId, selectedCityId = null) {
 // טעינת כל הערים
 async function loadAllCities() {
     try {
-        const response = await fetch('/dashboard/dashboards/cemeteries/api/cities-api.php?action=select');
-        const result = await response.json();
-        
-        if (!result.success) {
-            console.error('Failed to load cities:', result.error);
-            return;
-        }
+        const response = await fetch('/dashboard/dashboards/cemeteries/api/get-cities.php');
+        const cities = await response.json();
         
         const citySelect = document.getElementById('citySelect');
         if (citySelect) {
             citySelect.innerHTML = '<option value="">-- בחר עיר --</option>';
-            result.data.forEach(city => {
+            cities.forEach(city => {
                 const option = document.createElement('option');
                 option.value = city.unicId;
                 option.textContent = city.cityNameHe;

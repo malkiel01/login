@@ -124,6 +124,15 @@
                 <span class="hierarchy-count" id="paymentsCount" style="background: #3b82f6; color: white;">0</span>
             </div>
         </div>
+
+        <!-- תושבויות -->
+        <div class="management-item" style="margin-bottom: 10px;">
+                <div class="hierarchy-header" onclick="loadResidencies()" id="residencyItem">
+                    <span class="hierarchy-icon">🏠</span>
+                    <span class="hierarchy-title">הגדרות תושבות</span>
+                    <span class="hierarchy-count" id="residencyCount">0</span>
+                </div>
+        </div>
         
         <!-- אופציות עתידיות -->
         <div class="management-item" style="margin-bottom: 10px; opacity: 0.5;">

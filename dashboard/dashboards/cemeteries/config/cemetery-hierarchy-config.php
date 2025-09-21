@@ -870,6 +870,186 @@ return [
     ],
 
     // ========================================
+    // הגדרות תושבות
+    // ========================================
+    'residency' => [
+        'table' => 'residency_settings',
+        'title' => 'הגדרות תושבות',
+        'singular' => 'הגדרת תושבות',
+        'icon' => '🏠',
+        'primaryKey' => 'unicId',
+        'parentKey' => null, // אין הורה - זו רשומה עצמאית
+        
+        'queryFields' => [
+            'id',
+            'unicId',
+            'residencyName',
+            'countryId',
+            'cityId',
+            'residencyType',
+            'description',
+            'countryNameHe',
+            'cityNameHe',
+            'createDate',
+            'updateDate',
+            'isActive'
+        ],
+        
+        'displayFields' => [
+            'name' => 'residencyName',
+            'type' => 'residencyType',
+            'country' => 'countryNameHe',
+            'city' => 'cityNameHe',
+            'created' => 'createDate',
+            'status' => 'isActive'
+        ],
+        
+        'table_columns' => [
+            [
+                'field' => 'index',
+                'title' => '#',
+                'type' => 'index',
+                'width' => '50px'
+            ],
+            [
+                'field' => 'residencyName',
+                'title' => 'שם הגדרה',
+                'type' => 'text',
+                'sortable' => true,
+                'searchable' => true,
+                'required' => true
+            ],
+            [
+                'field' => 'residencyType',
+                'title' => 'סוג תושבות',
+                'type' => 'badge',
+                'width' => '150px',
+                'badges' => [
+                    'jerusalem_area' => ['text' => 'ירושלים והסביבה', 'class' => 'badge-primary'],
+                    'israel' => ['text' => 'ישראל', 'class' => 'badge-info'],
+                    'abroad' => ['text' => 'חו״ל', 'class' => 'badge-warning']
+                ]
+            ],
+            [
+                'field' => 'countryNameHe',
+                'title' => 'מדינה',
+                'type' => 'text',
+                'width' => '120px'
+            ],
+            [
+                'field' => 'cityNameHe',
+                'title' => 'עיר',
+                'type' => 'text',
+                'width' => '120px'
+            ],
+            [
+                'field' => 'isActive',
+                'title' => 'סטטוס',
+                'type' => 'status',
+                'width' => '100px',
+                'badges' => [
+                    1 => ['text' => 'פעיל', 'class' => 'badge-success'],
+                    0 => ['text' => 'לא פעיל', 'class' => 'badge-danger']
+                ]
+            ],
+            [
+                'field' => 'createDate',
+                'title' => 'נוצר',
+                'type' => 'date',
+                'width' => '120px',
+                'sortable' => true
+            ],
+            [
+                'field' => 'actions',
+                'title' => 'פעולות',
+                'type' => 'actions',
+                'width' => '150px',
+                'actions' => ['view', 'edit', 'delete']
+            ]
+        ],
+        
+        // שדות לטופס הוספה/עריכה
+        'form_fields' => [
+            [
+                'name' => 'residencyName',
+                'label' => 'שם הגדרת תושבות',
+                'type' => 'text',
+                'required' => true,
+                'placeholder' => 'הכנס שם להגדרת התושבות',
+                'validation' => ['required', 'minLength:2'],
+                'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
+            ],
+            [
+                'name' => 'residencyType',
+                'label' => 'סוג תושבות',
+                'type' => 'select',
+                'required' => true,
+                'options' => [
+                    'jerusalem_area' => 'תושבי ירושלים והסביבה',
+                    'israel' => 'תושבי ישראל',
+                    'abroad' => 'תושבי חו״ל'
+                ],
+                'validation' => ['required'],
+                'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
+            ],
+            [
+                'name' => 'countryId',
+                'label' => 'מדינה',
+                'type' => 'select_search',
+                'required' => false,
+                'dataSource' => [
+                    'table' => 'countries',
+                    'valueField' => 'unicId',
+                    'displayField' => 'countryNameHe',
+                    'searchFields' => ['countryNameHe', 'countryNameEn'],
+                    'orderBy' => 'countryNameHe ASC'
+                ],
+                'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
+            ],
+            [
+                'name' => 'cityId',
+                'label' => 'עיר',
+                'type' => 'select_search',
+                'required' => false,
+                'dataSource' => [
+                    'table' => 'cities',
+                    'valueField' => 'unicId',
+                    'displayField' => 'cityNameHe',
+                    'searchFields' => ['cityNameHe', 'cityNameEn'],
+                    'orderBy' => 'cityNameHe ASC',
+                    'dependsOn' => 'countryId',
+                    'dependsOnField' => 'countryId'
+                ],
+                'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
+            ],
+            [
+                'name' => 'description',
+                'label' => 'תיאור',
+                'type' => 'textarea',
+                'required' => false,
+                'rows' => 4,
+                'placeholder' => 'תיאור ההגדרה (אופציונלי)',
+                'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
+            ]
+        ],
+        
+        // הגדרות נוספות
+        'api' => [
+            'endpoint' => '/dashboard/dashboards/cemeteries/api/residency-api.php',
+            'methods' => ['GET', 'POST', 'PUT', 'DELETE']
+        ],
+        
+        // הרשאות ספציפיות לסוג זה
+        'permissions' => [
+            'view' => ['admin', 'cemetery_manager', 'manager', 'editor', 'viewer'],
+            'create' => ['admin', 'cemetery_manager', 'manager'],
+            'edit' => ['admin', 'cemetery_manager', 'manager'],
+            'delete' => ['admin', 'cemetery_manager']
+        ]
+    ],
+
+
+    // ========================================
     // הגדרות לקבלת רשומת הורה
     // ========================================
     'parent_selector' => [

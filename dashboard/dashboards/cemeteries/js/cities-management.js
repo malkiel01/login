@@ -1,35 +1,41 @@
 // ========================================
-// קובץ 1: dashboard/dashboards/cemeteries/js/countries-management.js
-// ניהול מדינות - מבוסס על residency-management.js
+// קובץ 1: dashboard/dashboards/cemeteries/js/cities-management.js
+// ניהול ערים - עם תמיכה בהוספה מכרטיס מדינה
 // ========================================
 
 // משתנים גלובליים
-let currentCountries = [];
-let currentCountryPage = 1;
-let editingCountryId = null;
+let currentCities = [];
+let currentCityPage = 1;
+let editingCityId = null;
+let filterByCountryId = null; // לסינון לפי מדינה
 
-// טעינת מדינות - פונקציה ראשית
-async function loadCountries() {
-    console.log('Loading countries...');
+// טעינת ערים - פונקציה ראשית
+async function loadCities(countryId = null) {
+    console.log('Loading cities...', countryId ? `for country: ${countryId}` : 'all');
+    
+    // שמור את המדינה לסינון
+    filterByCountryId = countryId;
     
     // ========================================
     // שלב 1: ניקוי מלא של הדף
     // ========================================
     
     // עדכן את הסוג הנוכחי
-    window.currentType = 'country';
-    window.currentParentId = null;
+    window.currentType = 'city';
+    window.currentParentId = countryId; // שמור את המדינה כהורה
     
     // נקה את כל התוכן הקיים
     if (typeof DashboardCleaner !== 'undefined' && DashboardCleaner.clear) {
-        DashboardCleaner.clear({ targetLevel: 'country' });
+        DashboardCleaner.clear({ targetLevel: 'city' });
     }
     
-    // נקה את הכרטיס אם קיים
-    const cardContainer = document.querySelector('.entity-card-container');
-    if (cardContainer) {
-        cardContainer.innerHTML = '';
-        cardContainer.style.display = 'none';
+    // נקה את הכרטיס אם קיים (רק אם לא באים מכרטיס מדינה)
+    if (!countryId) {
+        const cardContainer = document.querySelector('.entity-card-container');
+        if (cardContainer) {
+            cardContainer.innerHTML = '';
+            cardContainer.style.display = 'none';
+        }
     }
     
     // נקה את כל הסידבר
@@ -41,9 +47,9 @@ async function loadCountries() {
     document.querySelectorAll('.hierarchy-header').forEach(header => {
         header.classList.remove('active');
     });
-    const countryItem = document.getElementById('countryItem');
-    if (countryItem) {
-        countryItem.classList.add('active');
+    const cityItem = document.getElementById('cityItem');
+    if (cityItem) {
+        cityItem.classList.add('active');
     }
     
     // ========================================
@@ -53,8 +59,8 @@ async function loadCountries() {
     // עדכן את טקסט כפתור ההוספה
     const addButton = document.querySelector('.btn-add-entity');
     if (addButton) {
-        addButton.innerHTML = '<i class="fas fa-plus"></i> הוספת מדינה';
-        addButton.onclick = openAddCountry;
+        addButton.innerHTML = '<i class="fas fa-plus"></i> הוספת עיר';
+        addButton.onclick = () => openAddCity(countryId);
     }
     
     // אם יש פונקציה גלובלית לעדכון כפתור
@@ -66,20 +72,40 @@ async function loadCountries() {
     // שלב 3: עדכון ה-Breadcrumb
     // ========================================
     
-    // עדכן breadcrumb
+    // אם יש מדינה, הצג אותה ב-breadcrumb
+    let breadcrumbHtml = `
+        <a href="/dashboard">דשבורד</a>
+        <span class="separator">/</span>
+        <a href="/dashboard/dashboards/cemeteries">בתי עלמין</a>
+    `;
+    
+    if (countryId) {
+        // טען את שם המדינה
+        try {
+            const response = await fetch(`/dashboard/dashboards/cemeteries/api/countries-api.php?action=get&id=${countryId}`);
+            const result = await response.json();
+            if (result.success) {
+                breadcrumbHtml += `
+                    <span class="separator">/</span>
+                    <a href="#" onclick="loadCountries()">${result.data.countryNameHe}</a>
+                `;
+            }
+        } catch (error) {
+            console.error('Error loading country name:', error);
+        }
+    }
+    
+    breadcrumbHtml += `
+        <span class="separator">/</span>
+        <span class="current">ניהול ערים</span>
+    `;
+    
     if (typeof updateBreadcrumb === 'function') {
-        updateBreadcrumb({ country: { name: 'ניהול מדינות' } });
+        updateBreadcrumb({ city: { name: 'ניהול ערים' } });
     } else {
-        // עדכון ידני של breadcrumb
         const breadcrumb = document.querySelector('.breadcrumb, .dashboard-breadcrumb');
         if (breadcrumb) {
-            breadcrumb.innerHTML = `
-                <a href="/dashboard">דשבורד</a>
-                <span class="separator">/</span>
-                <a href="/dashboard/dashboards/cemeteries">בתי עלמין</a>
-                <span class="separator">/</span>
-                <span class="current">ניהול מדינות</span>
-            `;
+            breadcrumb.innerHTML = breadcrumbHtml;
         }
     }
     
@@ -87,7 +113,7 @@ async function loadCountries() {
     // שלב 4: עדכון כותרת החלון
     // ========================================
     
-    document.title = 'ניהול מדינות - מערכת בתי עלמין';
+    document.title = 'ניהול ערים - מערכת בתי עלמין';
     
     // ========================================
     // שלב 5: הכנת מבנה הטבלה
@@ -108,11 +134,11 @@ async function loadCountries() {
         headerRow.id = 'tableHeaders';
         headerRow.innerHTML = `
             <th style="width: 40px;">
-                <input type="checkbox" id="selectAll" onchange="toggleSelectAllCountries()">
+                <input type="checkbox" id="selectAll" onchange="toggleSelectAllCities()">
             </th>
             <th>שם בעברית</th>
             <th>שם באנגלית</th>
-            <th>מספר ערים</th>
+            <th>מדינה</th>
             <th>סטטוס</th>
             <th>תאריך יצירה</th>
             <th style="width: 120px;">פעולות</th>
@@ -132,14 +158,14 @@ async function loadCountries() {
     // שלב 6: טעינת הנתונים
     // ========================================
     
-    await fetchCountries();
+    await fetchCities(countryId);
     
     // עדכון מונה בסיידבר
-    updateCountryCount();
+    updateCityCount();
 }
 
-// שליפת נתוני מדינות מהשרת
-async function fetchCountries(page = 1) {
+// שליפת נתוני ערים מהשרת
+async function fetchCities(countryId = null, page = 1) {
     try {
         // הצג לודר
         const tableBody = document.getElementById('tableBody');
@@ -155,29 +181,35 @@ async function fetchCountries(page = 1) {
             `;
         }
         
-        const response = await fetch(`/dashboard/dashboards/cemeteries/api/countries-api.php?action=list&page=${page}`);
+        // בנה את ה-URL עם פרמטרים
+        let url = `/dashboard/dashboards/cemeteries/api/cities-api.php?action=list&page=${page}`;
+        if (countryId) {
+            url += `&countryId=${countryId}`;
+        }
+        
+        const response = await fetch(url);
         const result = await response.json();
         
         if (result.success) {
-            currentCountries = result.data;
-            displayCountriesInTable(result.data);
+            currentCities = result.data;
+            displayCitiesInTable(result.data);
             
             // עדכון מונה בסיידבר
-            const countElement = document.getElementById('countryCount');
+            const countElement = document.getElementById('cityCount');
             if (countElement) {
                 countElement.textContent = result.pagination ? result.pagination.total : result.data.length;
             }
         } else {
-            showError(result.error || 'שגיאה בטעינת מדינות');
+            showError(result.error || 'שגיאה בטעינת ערים');
         }
     } catch (error) {
-        console.error('Error loading countries:', error);
+        console.error('Error loading cities:', error);
         showError('שגיאה בטעינת נתונים');
     }
 }
 
-// הצגת מדינות בטבלה
-function displayCountriesInTable(countries) {
+// הצגת ערים בטבלה
+function displayCitiesInTable(cities) {
     const tableBody = document.getElementById('tableBody');
     
     if (!tableBody) {
@@ -187,17 +219,17 @@ function displayCountriesInTable(countries) {
     
     // נקה את התוכן הקיים
     tableBody.innerHTML = '';
-    tableBody.setAttribute('data-country-view', 'true');
+    tableBody.setAttribute('data-city-view', 'true');
     
-    if (countries.length === 0) {
+    if (cities.length === 0) {
         tableBody.innerHTML = `
             <tr>
                 <td colspan="7" style="text-align: center; padding: 40px;">
                     <div style="color: #999;">
-                        <div style="font-size: 48px; margin-bottom: 20px;">🌍</div>
-                        <div style="font-size: 18px; margin-bottom: 10px;">לא נמצאו מדינות</div>
-                        <button class="btn btn-primary mt-3" onclick="openAddCountry()">
-                            <i class="fas fa-plus"></i> הוסף מדינה חדשה
+                        <div style="font-size: 48px; margin-bottom: 20px;">🏙️</div>
+                        <div style="font-size: 18px; margin-bottom: 10px;">לא נמצאו ערים</div>
+                        <button class="btn btn-primary mt-3" onclick="openAddCity(${filterByCountryId ? "'" + filterByCountryId + "'" : 'null'})">
+                            <i class="fas fa-plus"></i> הוסף עיר חדשה
                         </button>
                     </div>
                 </td>
@@ -207,39 +239,36 @@ function displayCountriesInTable(countries) {
     }
 
     // הצג את הרשומות
-    countries.forEach((country, index) => {
+    cities.forEach((city, index) => {
         const row = document.createElement('tr');
-        row.setAttribute('data-id', country.unicId);
-        
-        // חשב מספר ערים (אם קיים)
-        const citiesCount = country.cities_count || 0;
+        row.setAttribute('data-id', city.unicId);
         
         row.innerHTML = `
             <td>
-                <input type="checkbox" class="country-checkbox" value="${country.unicId}">
+                <input type="checkbox" class="city-checkbox" value="${city.unicId}">
             </td>
             <td>
-                <strong>${country.countryNameHe || '-'}</strong>
+                <strong>${city.cityNameHe || '-'}</strong>
             </td>
-            <td>${country.countryNameEn || '-'}</td>
+            <td>${city.cityNameEn || '-'}</td>
             <td>
-                <span class="badge badge-secondary">${citiesCount}</span>
+                <span class="badge badge-info">${city.country_name || city.countryNameHe || '-'}</span>
             </td>
             <td>
-                <span class="badge ${country.isActive == 1 ? 'badge-success' : 'badge-danger'}">
-                    ${country.isActive == 1 ? 'פעיל' : 'לא פעיל'}
+                <span class="badge ${city.isActive == 1 ? 'badge-success' : 'badge-danger'}">
+                    ${city.isActive == 1 ? 'פעיל' : 'לא פעיל'}
                 </span>
             </td>
-            <td>${formatDate(country.createDate)}</td>
+            <td>${formatDate(city.createDate)}</td>
             <td>
                 <div class="btn-group btn-group-sm" role="group">
-                    <button class="btn btn-info" onclick="viewCountry('${country.unicId}')" title="צפייה">
+                    <button class="btn btn-info" onclick="viewCity('${city.unicId}')" title="צפייה">
                         <i class="fas fa-eye"></i>
                     </button>
-                    <button class="btn btn-warning" onclick="editCountry('${country.unicId}')" title="עריכה">
+                    <button class="btn btn-warning" onclick="editCity('${city.unicId}')" title="עריכה">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn btn-danger" onclick="deleteCountry('${country.unicId}')" title="מחיקה">
+                    <button class="btn btn-danger" onclick="deleteCity('${city.unicId}')" title="מחיקה">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
@@ -254,101 +283,93 @@ function displayCountriesInTable(countries) {
 // פונקציות CRUD
 // ========================================
 
-// פתיחת טופס הוספת מדינה
-function openAddCountry() {
-    console.log('Opening add country form');
+// פתיחת טופס הוספת עיר
+function openAddCity(countryId = null) {
+    console.log('Opening add city form', countryId ? `with country: ${countryId}` : 'without country');
     
-    window.currentType = 'country';
-    window.currentParentId = null;
+    window.currentType = 'city';
+    window.currentParentId = countryId;
     
     // אם יש FormHandler, השתמש בו
     if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('country', null, null);
+        // אם יש מדינה, העבר אותה כ-parent_id
+        if (countryId) {
+            FormHandler.openForm('city', countryId, null);
+        } else {
+            // אם אין מדינה, פתח טופס רגיל שידרוש בחירת מדינה
+            FormHandler.openForm('city', null, null);
+        }
     } else {
-        // אחרת, פתח טופס מותאם אישית
         showError('FormHandler לא זמין');
     }
 }
 
-// עריכת מדינה
-async function editCountry(id) {
-    console.log('Editing country:', id);
+// עריכת עיר
+async function editCity(id) {
+    console.log('Editing city:', id);
     
-    window.currentType = 'country';
+    window.currentType = 'city';
     
     if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('country', null, id);
+        FormHandler.openForm('city', null, id);
     } else {
         showError('FormHandler לא זמין');
     }
 }
 
-// מחיקת מדינה
-async function deleteCountry(id) {
-    // בדוק אם יש ערים במדינה זו
-    try {
-        const response = await fetch(`/dashboard/dashboards/cemeteries/api/countries-api.php?action=get&id=${id}`);
-        const result = await response.json();
-        
-        if (result.success && result.data.cities_count > 0) {
-            showError(`לא ניתן למחוק מדינה עם ${result.data.cities_count} ערים. יש למחוק קודם את הערים.`);
-            return;
-        }
-    } catch (error) {
-        console.error('Error checking cities:', error);
-    }
-    
-    if (!confirm('האם אתה בטוח שברצונך למחוק מדינה זו?')) {
+// מחיקת עיר
+async function deleteCity(id) {
+    if (!confirm('האם אתה בטוח שברצונך למחוק עיר זו?')) {
         return;
     }
     
     try {
-        const response = await fetch(`/dashboard/dashboards/cemeteries/api/countries-api.php?action=delete&id=${id}`, {
+        const response = await fetch(`/dashboard/dashboards/cemeteries/api/cities-api.php?action=delete&id=${id}`, {
             method: 'DELETE'
         });
         
         const result = await response.json();
         
         if (result.success) {
-            showSuccess('המדינה נמחקה בהצלחה');
+            showSuccess('העיר נמחקה בהצלחה');
             
             // רענן את הטבלה
-            await fetchCountries();
+            await fetchCities(filterByCountryId);
             
             // עדכן מונה
-            updateCountryCount();
+            updateCityCount();
         } else {
-            showError(result.error || 'שגיאה במחיקת המדינה');
+            showError(result.error || 'שגיאה במחיקת העיר');
         }
     } catch (error) {
-        console.error('Error deleting country:', error);
+        console.error('Error deleting city:', error);
         showError('שגיאה במחיקה');
     }
 }
 
-// צפייה במדינה
-async function viewCountry(id) {
+// צפייה בעיר
+async function viewCity(id) {
     try {
-        const response = await fetch(`/dashboard/dashboards/cemeteries/api/countries-api.php?action=get&id=${id}`);
+        const response = await fetch(`/dashboard/dashboards/cemeteries/api/cities-api.php?action=get&id=${id}`);
         const result = await response.json();
         
         if (result.success) {
-            showCountryDetails(result.data);
+            showCityDetails(result.data);
         } else {
-            showError(result.error || 'שגיאה בטעינת פרטי המדינה');
+            showError(result.error || 'שגיאה בטעינת פרטי העיר');
         }
     } catch (error) {
-        showError('שגיאה בטעינת פרטי המדינה');
+        showError('שגיאה בטעינת פרטי העיר');
     }
 }
 
-// הצגת פרטי מדינה
-function showCountryDetails(country) {
+// הצגת פרטי עיר
+function showCityDetails(city) {
     // נקה מודלים קיימים
-    document.querySelectorAll('.modal.country-modal').forEach(modal => modal.remove());
+    document.querySelectorAll('.modal.city-modal').forEach(modal => modal.remove());
     
     const modal = document.createElement('div');
-    modal.className = 'modal show country-modal';
+    modal.className = 'modal show city-modal';
     modal.style.cssText = `
         position: fixed; 
         top: 0; 
@@ -380,50 +401,50 @@ function showCountryDetails(country) {
                 border-bottom: 2px solid #f0f0f0;
             ">
                 <h2 style="margin: 0; color: #333;">
-                    <i class="fas fa-globe" style="color: #667eea; margin-left: 10px;"></i>
-                    פרטי מדינה
+                    <i class="fas fa-city" style="color: #667eea; margin-left: 10px;"></i>
+                    פרטי עיר
                 </h2>
             </div>
             
             <div class="modal-body">
                 <div style="display: grid; gap: 20px;">
-                    <!-- פרטי המדינה -->
+                    <!-- פרטי העיר -->
                     <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
                         <h4 style="margin-bottom: 15px; color: #667eea;">
-                            <i class="fas fa-info-circle"></i> פרטי המדינה
+                            <i class="fas fa-info-circle"></i> פרטי העיר
                         </h4>
                         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
                             <div>
                                 <label style="font-weight: bold; color: #666; font-size: 0.9em;">שם בעברית:</label>
-                                <div style="font-size: 1.1em;">${country.countryNameHe || '-'}</div>
+                                <div style="font-size: 1.1em;">${city.cityNameHe || '-'}</div>
                             </div>
                             <div>
-                                <label style="font-weight: bold; color: #666; font-size: 0.9em;">שם באנג4לית:</label>
-                                <div style="font-size: 1.1em;">${country.countryNameEn || '-'}</div>
+                                <label style="font-weight: bold; color: #666; font-size: 0.9em;">שם באנגלית:</label>
+                                <div style="font-size: 1.1em;">${city.cityNameEn || '-'}</div>
                             </div>
                             <div>
-                                <label style="font-weight: bold; color: #666; font-size: 0.9em;">מספר ערים:</label>
+                                <label style="font-weight: bold; color: #666; font-size: 0.9em;">מדינה:</label>
                                 <div>
-                                    <span class="badge badge-info" style="font-size: 1em;">
-                                        ${country.cities_count || 0}
+                                    <span class="badge badge-primary" style="font-size: 1em;">
+                                        ${city.country_name || city.countryNameHe || '-'}
                                     </span>
                                 </div>
                             </div>
                             <div>
                                 <label style="font-weight: bold; color: #666; font-size: 0.9em;">סטטוס:</label>
                                 <div>
-                                    <span class="badge ${country.isActive == 1 ? 'badge-success' : 'badge-danger'}">
-                                        ${country.isActive == 1 ? 'פעיל' : 'לא פעיל'}
+                                    <span class="badge ${city.isActive == 1 ? 'badge-success' : 'badge-danger'}">
+                                        ${city.isActive == 1 ? 'פעיל' : 'לא פעיל'}
                                     </span>
                                 </div>
                             </div>
                             <div>
                                 <label style="font-weight: bold; color: #666; font-size: 0.9em;">תאריך יצירה:</label>
-                                <div style="font-size: 1.1em;">${formatDate(country.createDate)}</div>
+                                <div style="font-size: 1.1em;">${formatDate(city.createDate)}</div>
                             </div>
                             <div>
                                 <label style="font-weight: bold; color: #666; font-size: 0.9em;">עדכון אחרון:</label>
-                                <div style="font-size: 1.1em;">${formatDate(country.updateDate)}</div>
+                                <div style="font-size: 1.1em;">${formatDate(city.updateDate)}</div>
                             </div>
                         </div>
                     </div>
@@ -440,7 +461,7 @@ function showCountryDetails(country) {
             ">
                 <button class="btn btn-warning" onclick="
                     this.closest('.modal').remove(); 
-                    editCountry('${country.unicId}');
+                    editCity('${city.unicId}');
                 ">
                     <i class="fas fa-edit"></i> ערוך
                 </button>
@@ -459,17 +480,17 @@ function showCountryDetails(country) {
 // ========================================
 
 // עדכון מונה בסיידבר
-function updateCountryCount() {
-    const countElement = document.getElementById('countryCount');
-    if (countElement && currentCountries) {
-        countElement.textContent = currentCountries.length;
+function updateCityCount() {
+    const countElement = document.getElementById('cityCount');
+    if (countElement && currentCities) {
+        countElement.textContent = currentCities.length;
     }
 }
 
 // בחירת כל הרשומות
-function toggleSelectAllCountries() {
+function toggleSelectAllCities() {
     const selectAll = document.getElementById('selectAll');
-    const checkboxes = document.querySelectorAll('.country-checkbox');
+    const checkboxes = document.querySelectorAll('.city-checkbox');
     checkboxes.forEach(cb => cb.checked = selectAll.checked);
 }
 
@@ -537,4 +558,4 @@ function showToast(type, message) {
     }, 3000);
 }
 
-console.log('Countries Management Module Loaded');
+console.log('Cities Management Module Loaded');

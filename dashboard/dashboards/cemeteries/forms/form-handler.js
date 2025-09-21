@@ -2023,9 +2023,6 @@ const FormHandler = {
                 url += `&id=${unicId}`;
             }
             
-            console.log('Saving to:', url);
-            console.log('Data:', data);
-            
             const response = await fetch(url, {
                 method: isEdit ? 'PUT' : 'POST',
                 headers: {

@@ -242,6 +242,24 @@ try {
                     $params[$field] = $data[$field];
                 }
             }
+
+            // ניקוי paymentsList לפני השמירה
+            if (isset($data['paymentsList']) && $data['paymentsList']) {
+                $payments = json_decode($data['paymentsList'], true);
+                if ($payments) {
+                    $cleanPayments = array_map(function($payment) {
+                        return [
+                            'paymentType' => $payment['paymentType'] ?? 1,
+                            'paymentAmount' => $payment['paymentAmount'] ?? 0,
+                            'customPaymentType' => $payment['customPaymentType'] ?? '',
+                            'paymentDate' => $payment['paymentDate'] ?? '',
+                            'isPaymentComplete' => $payment['isPaymentComplete'] ?? false,
+                            'receiptDocuments' => $payment['receiptDocuments'] ?? []
+                        ];
+                    }, $payments);
+                    $data['paymentsList'] = json_encode($cleanPayments);
+                }
+            }
             
             $sql = "INSERT INTO purchases (" . implode(', ', $insertFields) . ") 
                     VALUES (" . implode(', ', $insertValues) . ")";
@@ -332,6 +350,15 @@ try {
                     unset($data['graveId']); // הסר אותו מהעדכון
                 }
             }
+            if (isset($data['clientId'])) {
+                $stmt = $pdo->prepare("SELECT clientId FROM purchases WHERE unicId = :id");
+                $stmt->execute(['id' => $id]);
+                $current = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if ($current && $current['clientId'] == $data['clientId']) {
+                    unset($data['clientId']); // הסר אותו מהעדכון
+                }
+            }
             
             // עדכון תאריך
             $data['updateDate'] = date('Y-m-d H:i:s');
@@ -357,8 +384,26 @@ try {
             if (empty($updateFields)) {
                 throw new Exception('No fields to update');
             }
+
+            // ניקוי paymentsList לפני העדכון
+            if (isset($data['paymentsList']) && $data['paymentsList']) {
+                $payments = json_decode($data['paymentsList'], true);
+                if ($payments) {
+                    $cleanPayments = array_map(function($payment) {
+                        return [
+                            'paymentType' => $payment['paymentType'] ?? 1,
+                            'paymentAmount' => $payment['paymentAmount'] ?? 0,
+                            'customPaymentType' => $payment['customPaymentType'] ?? '',
+                            'paymentDate' => $payment['paymentDate'] ?? '',
+                            'isPaymentComplete' => $payment['isPaymentComplete'] ?? false,
+                            'receiptDocuments' => $payment['receiptDocuments'] ?? []
+                        ];
+                    }, $payments);
+                    $data['paymentsList'] = json_encode($cleanPayments);
+                }
+            }
             
-            $sql = "UPDATE purchases SET " . implode(', ', $updateFields) . " WHERE id = :id";
+            $sql = "UPDATE purchases SET " . implode(', ', $updateFields) . " WHERE unicId = :id";
             
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);

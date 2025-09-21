@@ -1171,6 +1171,144 @@ return [
     ],
 
     // ========================================
+    // הגדרות ערים
+    // ========================================
+
+    'city' => [
+        'table' => 'cities',
+        'title' => 'ערים',
+        'singular' => 'עיר',
+        'icon' => '🏙️',
+        'primaryKey' => 'unicId',
+        'parentKey' => 'countryId', // עיר שייכת למדינה
+        
+        'queryFields' => [
+            'id',
+            'unicId',
+            'countryId',
+            'cityNameHe',
+            'cityNameEn',
+            'countryNameHe',
+            'createDate',
+            'updateDate',
+            'isActive'
+        ],
+        
+        'displayFields' => [
+            'name' => 'cityNameHe',
+            'nameEn' => 'cityNameEn',
+            'country' => 'countryNameHe',
+            'created' => 'createDate',
+            'status' => 'isActive'
+        ],
+        
+        'table_columns' => [
+            [
+                'field' => 'index',
+                'title' => '#',
+                'type' => 'index',
+                'width' => '50px'
+            ],
+            [
+                'field' => 'cityNameHe',
+                'title' => 'שם בעברית',
+                'type' => 'text',
+                'sortable' => true,
+                'searchable' => true,
+                'required' => true
+            ],
+            [
+                'field' => 'cityNameEn',
+                'title' => 'שם באנגלית',
+                'type' => 'text',
+                'sortable' => true,
+                'searchable' => true,
+                'required' => true
+            ],
+            [
+                'field' => 'countryNameHe',
+                'title' => 'מדינה',
+                'type' => 'badge',
+                'width' => '150px',
+                'badge_class' => 'badge-info'
+            ],
+            [
+                'field' => 'isActive',
+                'title' => 'סטטוס',
+                'type' => 'status',
+                'width' => '100px',
+                'badges' => [
+                    1 => ['text' => 'פעיל', 'class' => 'badge-success'],
+                    0 => ['text' => 'לא פעיל', 'class' => 'badge-danger']
+                ]
+            ],
+            [
+                'field' => 'createDate',
+                'title' => 'נוצר',
+                'type' => 'date',
+                'width' => '120px',
+                'sortable' => true
+            ],
+            [
+                'field' => 'actions',
+                'title' => 'פעולות',
+                'type' => 'actions',
+                'width' => '150px',
+                'actions' => ['view', 'edit', 'delete']
+            ]
+        ],
+        
+        // שדות לטופס הוספה/עריכה
+        'form_fields' => [
+            [
+                'name' => 'countryId',
+                'label' => 'מדינה',
+                'type' => 'select',
+                'required' => true,
+                'dataSource' => [
+                    'table' => 'countries',
+                    'valueField' => 'unicId',
+                    'displayField' => 'countryNameHe',
+                    'orderBy' => 'countryNameHe ASC'
+                ],
+                'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
+            ],
+            [
+                'name' => 'cityNameHe',
+                'label' => 'שם עיר בעברית',
+                'type' => 'text',
+                'required' => true,
+                'placeholder' => 'לדוגמה: ירושלים',
+                'validation' => ['required', 'minLength:2'],
+                'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
+            ],
+            [
+                'name' => 'cityNameEn',
+                'label' => 'שם עיר באנגלית',
+                'type' => 'text',
+                'required' => true,
+                'placeholder' => 'Example: Jerusalem',
+                'validation' => ['required', 'minLength:2'],
+                'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
+            ]
+        ],
+        
+        // הגדרות נוספות
+        'api' => [
+            'endpoint' => '/dashboard/dashboards/cemeteries/api/cities-api.php',
+            'methods' => ['GET', 'POST', 'PUT', 'DELETE']
+        ],
+        
+        // הרשאות ספציפיות לסוג זה
+        'permissions' => [
+            'view' => ['admin', 'cemetery_manager', 'manager', 'editor', 'viewer'],
+            'create' => ['admin', 'cemetery_manager', 'manager'],
+            'edit' => ['admin', 'cemetery_manager', 'manager'],
+            'delete' => ['admin', 'cemetery_manager']
+        ]
+    ],
+
+    // ========================================
     // הגדרות לקבלת רשומת הורה
     // ========================================
     'parent_selector' => [

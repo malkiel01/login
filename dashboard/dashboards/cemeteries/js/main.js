@@ -390,6 +390,7 @@ function updateAddButtonText() {
         'grave': 'הוספת קבר',
         'customer': 'הוספת לקוח',
         'purchase': 'הוספת רכישה',
+        'residency': 'הוספת חוק תושבות',
         'burial': 'הוספת קבורה'
     };
     

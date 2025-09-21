@@ -204,6 +204,179 @@
              echo json_encode(['success' => true, 'data' => $cities]);
              break;
              
+         case 'create':
+             $data = json_decode(file_get_contents('php://input'), true);
+             
+             // ולידציה
+             if (empty($data['cityNameHe']) || empty($data['cityNameEn'])) {
+                 throw new Exception('שם העיר בעברית ובאנגלית הם שדות חובה');
+             }
+             
+             if (empty($data['countryId'])) {
+                 throw new Exception('יש לבחור מדינה');
+             }
+             
+             // בדיקת כפילויות באותה מדינה
+             $stmt = $pdo->prepare("
+                 SELECT COUNT(*) FROM cities 
+                 WHERE countryId = :countryId
+                 AND (cityNameHe = :nameHe OR cityNameEn = :nameEn) 
+                 AND isActive = 1
+             ");
+             $stmt->execute([
+                 'countryId' => $data['countryId'],
+                 'nameHe' => $data['cityNameHe'],
+                 'nameEn' => $data['cityNameEn']
+             ]);
+             
+             if ($stmt->fetchColumn() > 0) {
+                 throw new Exception('עיר עם שם זה כבר קיימת במדינה זו');
+             }
+             
+             // יצירת unicId
+             $unicId = 'CITY_' . uniqid();
+             
+             // הוספת העיר
+             $stmt = $pdo->prepare("
+                 INSERT INTO cities (
+                     unicId, countryId, cityNameHe, cityNameEn, 
+                     countryNameHe, createDate, updateDate, isActive
+                 ) VALUES (
+                     :unicId, :countryId, :cityNameHe, :cityNameEn,
+                     :countryNameHe, NOW(), NOW(), 1
+                 )
+             ");
+             
+             $stmt->execute([
+                 'unicId' => $unicId,
+                 'countryId' => $data['countryId'],
+                 'cityNameHe' => $data['cityNameHe'],
+                 'cityNameEn' => $data['cityNameEn'],
+                 'countryNameHe' => $data['countryNameHe'] ?? ''
+             ]);
+             
+             echo json_encode([
+                 'success' => true,
+                 'message' => 'העיר נוספה בהצלחה',
+                 'id' => $unicId
+             ]);
+             break;
+
+         case 'update':
+             if (!$id) {
+                 throw new Exception('City ID is required');
+             }
+             
+             $data = json_decode(file_get_contents('php://input'), true);
+             
+             // ולידציה
+             if (empty($data['cityNameHe']) || empty($data['cityNameEn'])) {
+                 throw new Exception('שם העיר בעברית ובאנגלית הם שדות חובה');
+             }
+             
+             if (empty($data['countryId'])) {
+                 throw new Exception('יש לבחור מדינה');
+             }
+             
+             // בדיקת כפילויות (לא כולל את העיר הנוכחית)
+             $stmt = $pdo->prepare("
+                 SELECT COUNT(*) FROM cities 
+                 WHERE countryId = :countryId
+                 AND (cityNameHe = :nameHe OR cityNameEn = :nameEn) 
+                 AND unicId != :id
+                 AND isActive = 1
+             ");
+             $stmt->execute([
+                 'countryId' => $data['countryId'],
+                 'nameHe' => $data['cityNameHe'],
+                 'nameEn' => $data['cityNameEn'],
+                 'id' => $id
+             ]);
+             
+             if ($stmt->fetchColumn() > 0) {
+                 throw new Exception('עיר עם שם זה כבר קיימת במדינה זו');
+             }
+             
+             // עדכון העיר
+             $stmt = $pdo->prepare("
+                 UPDATE cities SET 
+                     countryId = :countryId,
+                     cityNameHe = :cityNameHe,
+                     cityNameEn = :cityNameEn,
+                     countryNameHe = :countryNameHe,
+                     updateDate = NOW()
+                 WHERE unicId = :id
+             ");
+             
+             $stmt->execute([
+                 'countryId' => $data['countryId'],
+                 'cityNameHe' => $data['cityNameHe'],
+                 'cityNameEn' => $data['cityNameEn'],
+                 'countryNameHe' => $data['countryNameHe'] ?? '',
+                 'id' => $id
+             ]);
+             
+             echo json_encode([
+                 'success' => true,
+                 'message' => 'העיר עודכנה בהצלחה'
+             ]);
+             break;
+
+         case 'delete':
+             if (!$id) {
+                 throw new Exception('City ID is required');
+             }
+             
+             // בדוק אם העיר משמשת במקומות אחרים (לדוגמה בלקוחות או הגדרות תושבות)
+             $checkUsage = false;
+             
+             // בדיקה בלקוחות
+             $stmt = $pdo->prepare("SELECT COUNT(*) FROM customers WHERE cityId = :cityId AND isActive = 1");
+             $stmt->execute(['cityId' => $id]);
+             if ($stmt->fetchColumn() > 0) {
+                 $checkUsage = true;
+             }
+             
+             // בדיקה בהגדרות תושבות
+             $stmt = $pdo->prepare("SELECT COUNT(*) FROM residency_settings WHERE cityId = :cityId AND isActive = 1");
+             $stmt->execute(['cityId' => $id]);
+             if ($stmt->fetchColumn() > 0) {
+                 $checkUsage = true;
+             }
+             
+             if ($checkUsage) {
+                 throw new Exception('לא ניתן למחוק עיר שנמצאת בשימוש. יש להסיר קודם את כל הקישורים לעיר זו.');
+             }
+             
+             // מחיקה רכה
+             $stmt = $pdo->prepare("
+                 UPDATE cities SET 
+                     isActive = 0,
+                     inactiveDate = NOW()
+                 WHERE unicId = :id
+             ");
+             $stmt->execute(['id' => $id]);
+             
+             echo json_encode([
+                 'success' => true,
+                 'message' => 'העיר נמחקה בהצלחה'
+             ]);
+             break;
+
+         case 'save':
+             // נתב ל-create או update בהתאם לנוכחות unicId
+             $data = json_decode(file_get_contents('php://input'), true);
+             
+             if (!empty($data['unicId'])) {
+                 $_GET['id'] = $data['unicId'];
+                 $_GET['action'] = 'update';
+                 include __FILE__;
+             } else {
+                 $_GET['action'] = 'create';
+                 include __FILE__;
+             }
+             break;
+         
          default:
              throw new Exception('Invalid action');
      }

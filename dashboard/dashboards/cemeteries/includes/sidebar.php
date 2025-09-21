@@ -142,6 +142,15 @@
                 <span class="hierarchy-count" id="countryCount">0</span>
             </div>
         </div>
+
+        <!-- ערים -->
+        <div class="management-item" style="margin-bottom: 10px;">
+            <div class="hierarchy-header" onclick="loadCities()" id="cityItem">
+                <span class="hierarchy-icon">🏙️</span>
+                <span class="hierarchy-title">ניהול ערים</span>
+                <span class="hierarchy-count" id="cityCount">0</span>
+            </div>
+        </div>
         
         <!-- אופציות עתידיות -->
         <div class="management-item" style="margin-bottom: 10px; opacity: 0.5;">

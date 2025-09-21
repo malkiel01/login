@@ -398,7 +398,7 @@ function showCountryDetails(country) {
                                 <div style="font-size: 1.1em;">${country.countryNameHe || '-'}</div>
                             </div>
                             <div>
-                                <label style="font-weight: bold; color: #666; font-size: 0.9em;">שם באנג4לית:</label>
+                                <label style="font-weight: bold; color: #666; font-size: 0.9em;">שם באנגלית:</label>
                                 <div style="font-size: 1.1em;">${country.countryNameEn || '-'}</div>
                             </div>
                             <div>
@@ -430,6 +430,24 @@ function showCountryDetails(country) {
                 </div>
             </div>
             
+            <div class="modal-footer" style="
+                display: flex; 
+                gap: 10px; 
+                justify-content: flex-start; 
+                margin-top: 25px;
+                padding-top: 15px;
+                border-top: 1px solid #f0f0f0;
+            ">
+                <!-- בתוך הכרטיס של מדינה, הוסף כפתור להוספת עיר -->
+                <button class="btn btn-primary" onclick="openAddCity('<?= $country['unicId'] ?>')">
+                    <i class="fas fa-plus"></i> הוסף עיר למדינה זו
+                </button>
+
+                <!-- וכפתור לצפייה בערים של המדינה -->
+                <button class="btn btn-info" onclick="loadCities('<?= $country['unicId'] ?>')">
+                    <i class="fas fa-list"></i> הצג ערים במדינה זו
+                </button>
+            </div>
             <div class="modal-footer" style="
                 display: flex; 
                 gap: 10px; 

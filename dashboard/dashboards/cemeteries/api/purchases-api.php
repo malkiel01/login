@@ -226,7 +226,7 @@ try {
             // בניית השאילתה
             $fields = [
                 'unicId', 'clientId', 'graveId', 'serialPurchaseId', 'purchaseStatus',
-                'buyerStatus', 'price', 'numOfPayments', 'PaymentEndDate',
+                'buyerStatus', 'price', 'numOfPayments', 'PaymentEndDate', 'paymentsList',
                 'refundAmount', 'refundInvoiceNumber', 'contactId', 'dateOpening',
                 'ifCertificate', 'deedNum', 'kinship', 'comment', 'createDate', 'updateDate'
             ];
@@ -267,6 +267,53 @@ try {
             ]);
             break;
             
+        // // TODO 1
+        // // עדכון רכישה
+        // case 'update':
+        //     if (!$id) {
+        //         throw new Exception('Purchase ID is required');
+        //     }
+            
+        //     $data = json_decode(file_get_contents('php://input'), true);
+            
+        //     // עדכון תאריך
+        //     $data['updateDate'] = date('Y-m-d H:i:s');
+            
+        //     // בניית השאילתה
+        //     $fields = [
+        //         'clientId', 'graveId', 'serialPurchaseId', 'purchaseStatus',
+        //         'buyerStatus', 'price', 'numOfPayments', 'PaymentEndDate',
+        //         'refundAmount', 'refundInvoiceNumber', 'contactId', 'dateOpening',
+        //         'ifCertificate', 'deedNum', 'kinship', 'comment', 'updateDate'
+        //     ];
+            
+        //     $updateFields = [];
+        //     $params = ['id' => $id];
+            
+        //     foreach ($fields as $field) {
+        //         if (isset($data[$field])) {
+        //             $updateFields[] = "$field = :$field";
+        //             $params[$field] = $data[$field];
+        //         }
+        //     }
+            
+        //     if (empty($updateFields)) {
+        //         throw new Exception('No fields to update');
+        //     }
+            
+        //     $sql = "UPDATE purchases SET " . implode(', ', $updateFields) . " WHERE id = :id";
+            
+        //     $stmt = $pdo->prepare($sql);
+        //     $stmt->execute($params);
+            
+        //     echo json_encode([
+        //         'success' => true,
+        //         'message' => 'הרכישה עודכנה בהצלחה'
+        //     ]);
+        //     break;
+            
+        // // מחיקת רכישה (מחיקה רכה)
+        
         // עדכון רכישה
         case 'update':
             if (!$id) {
@@ -274,14 +321,25 @@ try {
             }
             
             $data = json_decode(file_get_contents('php://input'), true);
+  
+            // בדוק אם graveId נשאר אותו דבר
+            if (isset($data['graveId'])) {
+                $stmt = $pdo->prepare("SELECT graveId FROM purchases WHERE unicId = :id");
+                $stmt->execute(['id' => $id]);
+                $current = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                if ($current && $current['graveId'] == $data['graveId']) {
+                    unset($data['graveId']); // הסר אותו מהעדכון
+                }
+            }
             
             // עדכון תאריך
             $data['updateDate'] = date('Y-m-d H:i:s');
             
             // בניית השאילתה
             $fields = [
-                'clientId', 'graveId', 'serialPurchaseId', 'purchaseStatus',
-                'buyerStatus', 'price', 'numOfPayments', 'PaymentEndDate',
+                'clientId', 'graveId', 'serialPurchaseId', 'purchaseStatus', 
+                'buyerStatus', 'price', 'numOfPayments', 'PaymentEndDate', 'paymentsList',
                 'refundAmount', 'refundInvoiceNumber', 'contactId', 'dateOpening',
                 'ifCertificate', 'deedNum', 'kinship', 'comment', 'updateDate'
             ];
@@ -310,8 +368,7 @@ try {
                 'message' => 'הרכישה עודכנה בהצלחה'
             ]);
             break;
-            
-        // מחיקת רכישה (מחיקה רכה)
+        
         case 'delete':
             if (!$id) {
                 throw new Exception('Purchase ID is required');

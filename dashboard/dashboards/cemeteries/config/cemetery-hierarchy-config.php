@@ -1048,6 +1048,127 @@ return [
         ]
     ],
 
+    // ========================================
+    // הגדרות מדינות
+    // ========================================
+
+    'country' => [
+        'table' => 'countries',
+        'title' => 'מדינות',
+        'singular' => 'מדינה',
+        'icon' => '🌍',
+        'primaryKey' => 'unicId',
+        'parentKey' => null, // אין הורה - זו רשומה עצמאית
+        
+        'queryFields' => [
+            'id',
+            'unicId',
+            'countryNameHe',
+            'countryNameEn',
+            'createDate',
+            'updateDate',
+            'isActive'
+        ],
+        
+        'displayFields' => [
+            'name' => 'countryNameHe',
+            'nameEn' => 'countryNameEn',
+            'created' => 'createDate',
+            'status' => 'isActive'
+        ],
+        
+        'table_columns' => [
+            [
+                'field' => 'index',
+                'title' => '#',
+                'type' => 'index',
+                'width' => '50px'
+            ],
+            [
+                'field' => 'countryNameHe',
+                'title' => 'שם בעברית',
+                'type' => 'text',
+                'sortable' => true,
+                'searchable' => true,
+                'required' => true
+            ],
+            [
+                'field' => 'countryNameEn',
+                'title' => 'שם באנגלית',
+                'type' => 'text',
+                'sortable' => true,
+                'searchable' => true,
+                'required' => true
+            ],
+            [
+                'field' => 'cities_count',
+                'title' => 'מספר ערים',
+                'type' => 'badge',
+                'width' => '100px',
+                'badge_class' => 'badge-secondary'
+            ],
+            [
+                'field' => 'isActive',
+                'title' => 'סטטוס',
+                'type' => 'status',
+                'width' => '100px',
+                'badges' => [
+                    1 => ['text' => 'פעיל', 'class' => 'badge-success'],
+                    0 => ['text' => 'לא פעיל', 'class' => 'badge-danger']
+                ]
+            ],
+            [
+                'field' => 'createDate',
+                'title' => 'נוצר',
+                'type' => 'date',
+                'width' => '120px',
+                'sortable' => true
+            ],
+            [
+                'field' => 'actions',
+                'title' => 'פעולות',
+                'type' => 'actions',
+                'width' => '150px',
+                'actions' => ['view', 'edit', 'delete']
+            ]
+        ],
+        
+        // שדות לטופס הוספה/עריכה
+        'form_fields' => [
+            [
+                'name' => 'countryNameHe',
+                'label' => 'שם מדינה בעברית',
+                'type' => 'text',
+                'required' => true,
+                'placeholder' => 'לדוגמה: ישראל',
+                'validation' => ['required', 'minLength:2'],
+                'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
+            ],
+            [
+                'name' => 'countryNameEn',
+                'label' => 'שם מדינה באנגלית',
+                'type' => 'text',
+                'required' => true,
+                'placeholder' => 'Example: Israel',
+                'validation' => ['required', 'minLength:2'],
+                'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
+            ]
+        ],
+        
+        // הגדרות נוספות
+        'api' => [
+            'endpoint' => '/dashboard/dashboards/cemeteries/api/countries-api.php',
+            'methods' => ['GET', 'POST', 'PUT', 'DELETE']
+        ],
+        
+        // הרשאות ספציפיות לסוג זה
+        'permissions' => [
+            'view' => ['admin', 'cemetery_manager', 'manager', 'editor', 'viewer'],
+            'create' => ['admin', 'cemetery_manager', 'manager'],
+            'edit' => ['admin', 'cemetery_manager', 'manager'],
+            'delete' => ['admin', 'cemetery_manager']
+        ]
+    ],
 
     // ========================================
     // הגדרות לקבלת רשומת הורה

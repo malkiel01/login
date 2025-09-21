@@ -133,6 +133,15 @@
                     <span class="hierarchy-count" id="residencyCount">0</span>
                 </div>
         </div>
+
+        <!-- מדינות -->
+        <div class="management-item" style="margin-bottom: 10px;">
+            <div class="hierarchy-header" onclick="loadCountries()" id="countryItem">
+                <span class="hierarchy-icon">🌍</span>
+                <span class="hierarchy-title">ניהול מדינות</span>
+                <span class="hierarchy-count" id="countryCount">0</span>
+            </div>
+        </div>
         
         <!-- אופציות עתידיות -->
         <div class="management-item" style="margin-bottom: 10px; opacity: 0.5;">

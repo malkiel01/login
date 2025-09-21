@@ -137,7 +137,151 @@
              
              echo json_encode(['success' => true, 'data' => $countries]);
              break;
+          case 'create':
+             $data = json_decode(file_get_contents('php://input'), true);
              
+             // ולידציה
+             if (empty($data['countryNameHe']) || empty($data['countryNameEn'])) {
+                 throw new Exception('שם המדינה בעברית ובאנגלית הם שדות חובה');
+             }
+             
+             // בדיקת כפילויות
+             $stmt = $pdo->prepare("
+                 SELECT COUNT(*) FROM countries 
+                 WHERE (countryNameHe = :nameHe OR countryNameEn = :nameEn) 
+                 AND isActive = 1
+             ");
+             $stmt->execute([
+                 'nameHe' => $data['countryNameHe'],
+                 'nameEn' => $data['countryNameEn']
+             ]);
+             
+             if ($stmt->fetchColumn() > 0) {
+                 throw new Exception('מדינה עם שם זה כבר קיימת במערכת');
+             }
+             
+             // יצירת unicId
+             $unicId = 'COUNTRY_' . uniqid();
+             
+             // הוספת המדינה
+             $stmt = $pdo->prepare("
+                 INSERT INTO countries (
+                     unicId, countryNameHe, countryNameEn, 
+                     createDate, updateDate, isActive
+                 ) VALUES (
+                     :unicId, :countryNameHe, :countryNameEn,
+                     NOW(), NOW(), 1
+                 )
+             ");
+             
+             $stmt->execute([
+                 'unicId' => $unicId,
+                 'countryNameHe' => $data['countryNameHe'],
+                 'countryNameEn' => $data['countryNameEn']
+             ]);
+             
+             echo json_encode([
+                 'success' => true,
+                 'message' => 'המדינה נוספה בהצלחה',
+                 'id' => $unicId
+             ]);
+             break;
+
+         case 'update':
+             if (!$id) {
+                 throw new Exception('Country ID is required');
+             }
+             
+             $data = json_decode(file_get_contents('php://input'), true);
+             
+             // ולידציה
+             if (empty($data['countryNameHe']) || empty($data['countryNameEn'])) {
+                 throw new Exception('שם המדינה בעברית ובאנגלית הם שדות חובה');
+             }
+             
+             // בדיקת כפילויות (לא כולל את המדינה הנוכחית)
+             $stmt = $pdo->prepare("
+                 SELECT COUNT(*) FROM countries 
+                 WHERE (countryNameHe = :nameHe OR countryNameEn = :nameEn) 
+                 AND unicId != :id
+                 AND isActive = 1
+             ");
+             $stmt->execute([
+                 'nameHe' => $data['countryNameHe'],
+                 'nameEn' => $data['countryNameEn'],
+                 'id' => $id
+             ]);
+             
+             if ($stmt->fetchColumn() > 0) {
+                 throw new Exception('מדינה עם שם זה כבר קיימת במערכת');
+             }
+             
+             // עדכון המדינה
+             $stmt = $pdo->prepare("
+                 UPDATE countries SET 
+                     countryNameHe = :countryNameHe,
+                     countryNameEn = :countryNameEn,
+                     updateDate = NOW()
+                 WHERE unicId = :id
+             ");
+             
+             $stmt->execute([
+                 'countryNameHe' => $data['countryNameHe'],
+                 'countryNameEn' => $data['countryNameEn'],
+                 'id' => $id
+             ]);
+             
+             echo json_encode([
+                 'success' => true,
+                 'message' => 'המדינה עודכנה בהצלחה'
+             ]);
+             break;
+
+         case 'delete':
+             if (!$id) {
+                 throw new Exception('Country ID is required');
+             }
+             
+             // בדיקה אם יש ערים במדינה
+             $stmt = $pdo->prepare("
+                 SELECT COUNT(*) FROM cities 
+                 WHERE countryId = :countryId 
+                 AND isActive = 1
+             ");
+             $stmt->execute(['countryId' => $id]);
+             
+             if ($stmt->fetchColumn() > 0) {
+                 throw new Exception('לא ניתן למחוק מדינה שיש בה ערים. יש למחוק קודם את הערים.');
+             }
+             
+             // מחיקה רכה
+             $stmt = $pdo->prepare("
+                 UPDATE countries SET 
+                     isActive = 0,
+                     inactiveDate = NOW()
+                 WHERE unicId = :id
+             ");
+             $stmt->execute(['id' => $id]);
+             
+             echo json_encode([
+                 'success' => true,
+                 'message' => 'המדינה נמחקה בהצלחה'
+             ]);
+             break;
+
+         case 'save':
+             // נתב ל-create או update בהתאם לנוכחות unicId
+             $data = json_decode(file_get_contents('php://input'), true);
+             
+             if (!empty($data['unicId'])) {
+                 $_GET['id'] = $data['unicId'];
+                 $_GET['action'] = 'update';
+                 include __FILE__;
+             } else {
+                 $_GET['action'] = 'create';
+                 include __FILE__;
+             }
+             break;
          default:
              throw new Exception('Invalid action');
      }

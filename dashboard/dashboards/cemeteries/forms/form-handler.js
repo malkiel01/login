@@ -696,15 +696,30 @@ const FormHandler = {
                         
                         const data = await response.json();
                         
-                        if (data.success && data.payments && data.payments.length > 0) {
+                        // TODO 1
+                        // if (data.success && data.payments && data.payments.length > 0) {
+                        //     console.log('Found', data.payments.length, 'payment definitions');
+                        //     showSmartPaymentsModal(data.payments);
+                        // } else {
+                        //     alert('לא נמצאו הגדרות תשלום מתאימות לפרמטרים שנבחרו');
+                        //     console.error('No matching payments found for parameters:', {
+                        //         plotType: window.selectedGraveData.plotType,
+                        //         graveType: window.selectedGraveData.graveType
+                        //     });
+                        // }
+
+                        if (data.success && data.payments) {
+                            // תמיד פתח את המודל, גם אם אין תשלומים
                             console.log('Found', data.payments.length, 'payment definitions');
-                            showSmartPaymentsModal(data.payments);
+                            showSmartPaymentsModal(data.payments || []);
+                        } else if (data.success && !data.payments) {
+                            // אין תשלומים אבל הבקשה הצליחה - פתח מודל ריק
+                            console.log('No payment definitions found, opening empty modal');
+                            showSmartPaymentsModal([]);
                         } else {
-                            alert('לא נמצאו הגדרות תשלום מתאימות לפרמטרים שנבחרו');
-                            console.error('No matching payments found for parameters:', {
-                                plotType: window.selectedGraveData.plotType,
-                                graveType: window.selectedGraveData.graveType
-                            });
+                            // רק אם יש שגיאה אמיתית
+                            alert('שגיאה בטעינת הגדרות תשלום');
+                            console.error('Error loading payments:', data);
                         }
                         
                     } catch (error) {
@@ -1024,12 +1039,6 @@ const FormHandler = {
                     }
                     
                     // חלוקת תשלומים
-
-                    // // TODO 1
-                    // const mandatoryPayments = window.purchasePayments.filter(p => p.mandatory === true);
-                    // const editablePayments = window.purchasePayments.filter(p => p.mandatory !== true);
-
-                    // בדוק גם את required שזה השם הישן
                     const mandatoryPayments = window.purchasePayments.filter(p => 
                         p.mandatory === true || p.required === true
                     );
@@ -1345,24 +1354,6 @@ const FormHandler = {
                     }
                 },
 
-                // TODO 1
-                // updateName: function(index, value) {
-                //     const editablePayments = window.purchasePayments.filter(p => !p.required);
-                //     if (editablePayments[index]) {
-                //         const paymentIndex = window.purchasePayments.indexOf(editablePayments[index]);
-                //         window.purchasePayments[paymentIndex].customPaymentType = value;
-                //     }
-                // },
-
-                // updateAmount: function(index, value) {
-                //     const editablePayments = window.purchasePayments.filter(p => !p.required);
-                //     if (editablePayments[index]) {
-                //         const paymentIndex = window.purchasePayments.indexOf(editablePayments[index]);
-                //         window.purchasePayments[paymentIndex].paymentAmount = Number(value) || 0;
-                //         this.updateTotal();
-                //     }
-                // },
-
                 updateName: function(index, value) {
                     const editablePayments = window.purchasePayments.filter(p => 
                         p.mandatory !== true && p.required !== true
@@ -1389,17 +1380,6 @@ const FormHandler = {
                     const element = document.getElementById('existingModalTotal');
                     if (element) element.textContent = total.toLocaleString();
                 },
-                
-                // TODO 1
-                // removePayment: function(index) {
-                //     const editablePayments = window.purchasePayments.filter(p => !p.required);
-                //     if (editablePayments[index]) {
-                //         const paymentIndex = window.purchasePayments.indexOf(editablePayments[index]);
-                //         window.purchasePayments.splice(paymentIndex, 1);
-                //         this.close();
-                //         this.open(); // רענן
-                //     }
-                // },
 
                 removePayment: function(index) {
                     // תקן את הפילטור
@@ -1749,31 +1729,6 @@ const FormHandler = {
                                     }
                                 });
 
-                                // // TODO 2
-                                // // טען תשלומים קיימים
-                                // if (data.paymentsList) {
-                                //     try {
-                                //         window.purchasePayments = JSON.parse(data.paymentsList);                                  
-                                //         window.existingPayments = JSON.parse(data.paymentsList);
-                                        
-                                //         // עדכן תצוגה
-                                //         if (window.displayPaymentsSummary) {
-                                //             document.getElementById('paymentsDisplay').innerHTML = window.displayPaymentsSummary();
-                                //         }
-                                        
-                                //         // עדכן סכום
-                                //         document.getElementById('total_price').value = data.price || window.calculatePaymentsTotal();
-                                        
-                                //         // שנה טקסט כפתור
-                                //         const btn = document.getElementById('paymentsButtonText');
-                                //         if (btn) {
-                                //             btn.textContent = 'ערוך תשלומים';
-                                //         }
-                                //     } catch(e) {
-                                //         console.error('Error parsing payments data:', e);
-                                //     }
-                                // }
-
                                 // טען תשלומים קיימים
                                 if (data.paymentsList) {
                                     try {
@@ -1781,13 +1736,6 @@ const FormHandler = {
                                         
                                         // הוסף את השדה mandatory מהקונפיג לכל תשלום
                                         window.purchasePayments.forEach(payment => {
-
-                                            // console.log('Payment before fix:', {
-                                            //     name: payment.customPaymentType,
-                                            //     type: payment.paymentType,
-                                            //     mandatory: payment.mandatory,
-                                            //     required: payment.required
-                                            // });
 
                                             if (payment.paymentType && window.PAYMENT_TYPES_CONFIG) {
                                                 const config = window.PAYMENT_TYPES_CONFIG[payment.paymentType];

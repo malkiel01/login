@@ -15,6 +15,7 @@ const RESIDENCY_TYPES = {
 
 // טעינת הגדרות תושבות - פונקציה ראשית
 async function loadResidencies() {
+    alert('step 1')
     console.log('Loading residency settings...');
     
     // ========================================
@@ -25,6 +26,9 @@ async function loadResidencies() {
     window.currentType = 'residency';
     window.currentParentId = null;
     
+    alert('typeof DashboardCleaner: ' + typeof DashboardCleaner !== 'undefined')
+    alert('DashboardCleaner.clear: ' + DashboardCleaner.clear)
+
     // נקה את כל התוכן הקיים
     if (typeof DashboardCleaner !== 'undefined' && DashboardCleaner.clear) {
         DashboardCleaner.clear({ targetLevel: 'residency' });

@@ -1371,10 +1371,69 @@ const FormHandler = {
                     this.updateTotal();
                 },
                 
-                // החלת תשלומים
+                // TODO 3 - עדכון הפוצקציה כי היא לא מעדכנת או מוסיפה תשלומים
+                // // החלת תשלומים
+                // apply: function(mandatoryPaymentsJSON) {
+                //     // החלת התשלומים שנבחרו - הגדר כפונקציה גלובלית
+                //     // פענח את ה-JSON אם צריך
+                //     let mandatoryPayments;
+                //     if (typeof mandatoryPaymentsJSON === 'string') {
+                //         try {
+                //             mandatoryPayments = JSON.parse(mandatoryPaymentsJSON.replace(/&quot;/g, '"'));
+                //         } catch (e) {
+                //             console.error('Error parsing mandatory payments:', e);
+                //             mandatoryPayments = [];
+                //         }
+                //     } else {
+                //         mandatoryPayments = mandatoryPaymentsJSON || [];
+                //     }
+                    
+                //     // נקה תשלומים קיימים
+                //     window.purchasePayments = [];
+                    
+                //     // הוסף תשלומי חובה
+                //     mandatoryPayments.forEach(payment => {
+                //         window.purchasePayments.push({
+                //             type: 'auto_' + payment.priceDefinition,
+                //             type_name: payment.name,
+                //             amount: parseFloat(payment.price),
+                //             mandatory: true,
+                //             date: new Date().toISOString()
+                //         });
+                //     });
+                    
+                //     // הוסף תשלומים אופציונליים שנבחרו
+                //     const modal = document.getElementById('smartPaymentsModal');
+                //     if (modal) {
+                //         const selectedOptional = modal.querySelectorAll('input[type="checkbox"]:not(:disabled):checked');
+                //         selectedOptional.forEach(cb => {
+                //             window.purchasePayments.push({
+                //                 type: cb.dataset.custom ? 'custom' : 'auto_' + cb.dataset.definition,
+                //                 type_name: cb.dataset.name,
+                //                 amount: parseFloat(cb.dataset.price),
+                //                 mandatory: false,
+                //                 custom: cb.dataset.custom === 'true',
+                //                 date: new Date().toISOString()
+                //             });
+                //         });
+                //     }
+                    
+                //     // עדכן תצוגה בטופס הראשי
+                //     document.getElementById('total_price').value = window.calculatePaymentsTotal();
+                //     document.getElementById('paymentsDisplay').innerHTML = window.displayPaymentsSummary();
+                //     document.getElementById('payments_data').value = JSON.stringify(window.purchasePayments);
+                    
+                //     // סגור מודל
+                //     if (modal) {
+                //         modal.remove();
+                //     }
+                    
+                //     // הודעה
+                //     const total = window.purchasePayments.reduce((sum, p) => sum + p.amount, 0);                
+                // },
+
                 apply: function(mandatoryPaymentsJSON) {
-                    // החלת התשלומים שנבחרו - הגדר כפונקציה גלובלית
-                    // פענח את ה-JSON אם צריך
+                    // פענח את ה-JSON
                     let mandatoryPayments;
                     if (typeof mandatoryPaymentsJSON === 'string') {
                         try {
@@ -1390,14 +1449,18 @@ const FormHandler = {
                     // נקה תשלומים קיימים
                     window.purchasePayments = [];
                     
-                    // הוסף תשלומי חובה
+                    // הוסף תשלומי חובה - תקן את השדות!
                     mandatoryPayments.forEach(payment => {
                         window.purchasePayments.push({
-                            type: 'auto_' + payment.priceDefinition,
-                            type_name: payment.name,
-                            amount: parseFloat(payment.price),
-                            mandatory: true,
-                            date: new Date().toISOString()
+                            locked: false,
+                            required: true,
+                            paymentDate: new Date().toISOString(),
+                            paymentType: payment.priceDefinition || 1,
+                            paymentAmount: parseFloat(payment.price),  // ⚠️ paymentAmount, לא amount
+                            receiptDocuments: [],
+                            customPaymentType: payment.name,
+                            isPaymentComplete: false,
+                            mandatory: true
                         });
                     });
                     
@@ -1407,12 +1470,16 @@ const FormHandler = {
                         const selectedOptional = modal.querySelectorAll('input[type="checkbox"]:not(:disabled):checked');
                         selectedOptional.forEach(cb => {
                             window.purchasePayments.push({
-                                type: cb.dataset.custom ? 'custom' : 'auto_' + cb.dataset.definition,
-                                type_name: cb.dataset.name,
-                                amount: parseFloat(cb.dataset.price),
+                                locked: false,
+                                required: false,
+                                paymentDate: new Date().toISOString(),
+                                paymentType: cb.dataset.custom ? 5 : cb.dataset.definition,
+                                paymentAmount: parseFloat(cb.dataset.price),  // ⚠️ paymentAmount, לא amount
+                                receiptDocuments: [],
+                                customPaymentType: cb.dataset.name,
+                                isPaymentComplete: false,
                                 mandatory: false,
-                                custom: cb.dataset.custom === 'true',
-                                date: new Date().toISOString()
+                                custom: cb.dataset.custom === 'true'
                             });
                         });
                     }
@@ -1423,12 +1490,7 @@ const FormHandler = {
                     document.getElementById('payments_data').value = JSON.stringify(window.purchasePayments);
                     
                     // סגור מודל
-                    if (modal) {
-                        modal.remove();
-                    }
-                    
-                    // הודעה
-                    const total = window.purchasePayments.reduce((sum, p) => sum + p.amount, 0);                
+                    this.close();
                 },
                 
                 // סגירת המודל

@@ -322,7 +322,7 @@
                 $fields = [
                     'typeId', 'numId', 'firstName', 'lastName', 'oldName', 'nom',
                     'gender', 'nameFather', 'nameMother', 'maritalStatus', 'dateBirth',
-                    'countryBirth', 'countryBirthId', 'age', 'countryId', 'cityId',
+                    'countryBirth', 'countryBirthId', 'age', 'resident', 'countryId', 'cityId',
                     'address', 'phone', 'phoneMobile', 'statusCustomer', 'spouse', 'comment',
                     'association', 'dateBirthHe', 'tourist', 'updateDate'
                 ];

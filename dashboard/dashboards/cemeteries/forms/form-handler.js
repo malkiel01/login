@@ -307,25 +307,25 @@ const FormHandler = {
                                     } else if (field.type === 'select-one') {
                                         field.value = result.data[key] || '';
 
-                                        // // טיפול מיוחד בשדה תושבות
-                                        // if (key === 'resident' && field.disabled) {
-                                        //     // עדכן גם אם השדה disabled
-                                        //     field.value = result.data[key] || 3;
+                                        // טיפול מיוחד בשדה תושבות
+                                        if (key === 'resident' && field.disabled) {
+                                            // עדכן גם אם השדה disabled
+                                            field.value = result.data[key] || 3;
                                             
-                                        //     // עדכן צבע רקע
-                                        //     const colors = {
-                                        //         '1': '#e8f5e9', // ירוק - ירושלים
-                                        //         '2': '#e3f2fd', // כחול - ישראל
-                                        //         '3': '#fff3e0'  // כתום - חו"ל
-                                        //     };
-                                        //     field.style.backgroundColor = colors[result.data[key]] || '#f5f5f5';
+                                            // עדכן צבע רקע
+                                            const colors = {
+                                                '1': '#e8f5e9', // ירוק - ירושלים
+                                                '2': '#e3f2fd', // כחול - ישראל
+                                                '3': '#fff3e0'  // כתום - חו"ל
+                                            };
+                                            field.style.backgroundColor = colors[result.data[key]] || '#f5f5f5';
                                             
-                                        //     // עדכן גם את השדה הנסתר
-                                        //     const hiddenField = form.elements['resident_hidden'];
-                                        //     if (hiddenField) {
-                                        //         hiddenField.value = result.data[key] || 3;
-                                        //     }
-                                        // }
+                                            // עדכן גם את השדה הנסתר
+                                            const hiddenField = form.elements['resident_hidden'];
+                                            if (hiddenField) {
+                                                hiddenField.value = result.data[key] || 3;
+                                            }
+                                        }
 
                                         if (key === 'countryId' && window.filterCities) {
                                             window.filterCities();

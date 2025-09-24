@@ -196,7 +196,7 @@ $formBuilder->addField('resident', 'תושבות', 'select', [
         2 => 'תושב חוץ',
         3 => 'תושב חו״ל'
     ],
-    'value' => $customer['resident'] ?? 3,
+    'value' => $customer['resident'] ?? 1,
     'readonly' => true,
     'disabled' => true,
     'help_text' => 'מחושב אוטומטית על פי הגדרות התושבות',

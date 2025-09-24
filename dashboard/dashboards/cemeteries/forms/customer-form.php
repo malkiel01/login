@@ -190,13 +190,35 @@
         'value' => $customer['statusCustomer'] ?? 1
     ]);
 
+    // $formBuilder->addField('resident', 'תושבות', 'select', [
+    //     'options' => [
+    //         1 => 'ירושלים והסביבה',
+    //         2 => 'תושב חוץ',
+    //         3 => 'תושב חו״ל'
+    //     ],
+    //     'value' => $customer['resident'] ?? 1
+    // ]);
+
+    // שדה תושבות - קריאה בלבד
     $formBuilder->addField('resident', 'תושבות', 'select', [
         'options' => [
             1 => 'ירושלים והסביבה',
             2 => 'תושב חוץ',
             3 => 'תושב חו״ל'
         ],
-        'value' => $customer['resident'] ?? 1
+        'value' => $customer['resident'] ?? 3,
+        'readonly' => true,
+        'disabled' => true,
+        'help_text' => 'מחושב אוטומטית על פי הגדרות התושבות',
+        'attributes' => [
+            'style' => 'background-color: #f5f5f5; cursor: not-allowed;'
+        ]
+    ]);
+
+    // הוסף שדה נסתר לשמירת הערך
+    $formBuilder->addField('resident_hidden', '', 'hidden', [
+        'value' => $customer['resident'] ?? 3,
+        'name' => 'resident'
     ]);
 
     $formBuilder->addField('association', 'שיוך', 'select', [
@@ -229,3 +251,95 @@
     // הצג את הטופס
     echo $formBuilder->renderModal();
 ?>
+<script>
+    // פונקציה לחישוב תושבות בצד הלקוח (לתצוגה בלבד)
+    function calculateResidencyClient() {
+        const typeId = document.querySelector('[name="typeId"]')?.value;
+        const countryId = document.querySelector('[name="countryId"]')?.value;
+        const cityId = document.querySelector('[name="cityId"]')?.value;
+        
+        let residency = 3; // ברירת מחדל - תושב חו"ל
+        
+        // אם סוג הזיהוי הוא דרכון (2) - תמיד תושב חו"ל
+        if (typeId == 2) {
+            residency = 3;
+        } else if (countryId) {
+            // כאן צריך לבדוק מול הגדרות התושבות
+            // נעשה קריאת AJAX לשרת לחישוב
+            fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=calculate_residency', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    typeId: typeId,
+                    countryId: countryId,
+                    cityId: cityId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.residency) {
+                    updateResidencyDisplay(data.residency);
+                }
+            })
+            .catch(error => {
+                console.error('Error calculating residency:', error);
+            });
+        } else {
+            updateResidencyDisplay(residency);
+        }
+    }
+
+    // עדכון התצוגה של שדה התושבות
+    function updateResidencyDisplay(value) {
+        const selectElement = document.querySelector('[name="resident"]');
+        const hiddenElement = document.querySelector('[name="resident_hidden"]');
+        
+        if (selectElement) {
+            selectElement.value = value;
+            // עדכון צבע רקע לפי הערך
+            switch(value) {
+                case 1:
+                    selectElement.style.backgroundColor = '#e8f5e9'; // ירוק בהיר
+                    break;
+                case 2:
+                    selectElement.style.backgroundColor = '#e3f2fd'; // כחול בהיר
+                    break;
+                case 3:
+                    selectElement.style.backgroundColor = '#fff3e0'; // כתום בהיר
+                    break;
+            }
+        }
+        
+        if (hiddenElement) {
+            hiddenElement.value = value;
+        }
+    }
+
+    // הוסף מאזינים לשינויים בשדות הרלוונטיים
+    document.addEventListener('DOMContentLoaded', function() {
+        // רק אם זה טופס הוספה (לא עריכה)
+        const isEdit = <?php echo $itemId ? 'true' : 'false'; ?>;
+        
+        if (!isEdit) {
+            // הוסף מאזינים לשינויים
+            const typeSelect = document.querySelector('[name="typeId"]');
+            const countrySelect = document.querySelector('[name="countryId"]');
+            const citySelect = document.querySelector('[name="cityId"]');
+            
+            if (typeSelect) {
+                typeSelect.addEventListener('change', calculateResidencyClient);
+            }
+            if (countrySelect) {
+                countrySelect.addEventListener('change', calculateResidencyClient);
+            }
+            if (citySelect) {
+                citySelect.addEventListener('change', calculateResidencyClient);
+            }
+            
+            // חשב תושבות ראשונית
+            calculateResidencyClient();
+        }
+    });
+</script>

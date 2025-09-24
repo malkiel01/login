@@ -238,6 +238,8 @@ const FormHandler = {
                     const typeId = typeSelect?.value;
                     const countryId = countrySelect?.value;
                     const cityId = citySelect?.value;
+
+                    alert('typeId: ' + typeId + ', countryId: ' + countryId + ', cityId: ' + cityId)
                     
                     console.log("Calculating residency:", {typeId, countryId, cityId});
                     

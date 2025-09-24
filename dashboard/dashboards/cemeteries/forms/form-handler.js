@@ -223,6 +223,75 @@ const FormHandler = {
             }
         });
 
+        // הוסף כאן את חישוב התושבות - רק להוספת לקוח חדש
+        if (!itemId) {  // רק אם זה לא עריכה
+            console.log("Setting up residency calculation for new customer");
+            
+            this.waitForElement('#customerFormModal form', (form) => {
+                // חישוב תושבות אוטומטי
+                const typeSelect = form.elements['typeId'];
+                const countrySelect = form.elements['countryId'];
+                const citySelect = form.elements['cityId'];
+                const residentField = form.elements['resident'];
+                
+                function calculateResidency() {
+                    const typeId = typeSelect?.value;
+                    const countryId = countrySelect?.value;
+                    const cityId = citySelect?.value;
+                    
+                    console.log("Calculating residency:", {typeId, countryId, cityId});
+                    
+                    // אם סוג הזיהוי הוא דרכון (2) - תמיד תושב חו"ל
+                    if (typeId == 2) {
+                        updateResidencyField(3);
+                        return;
+                    }
+                    
+                    // אם אין מדינה - תושב חו"ל
+                    if (!countryId) {
+                        updateResidencyField(3);
+                        return;
+                    }
+                    
+                    // שלח לשרת לחישוב
+                    fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=calculate_residency', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({typeId, countryId, cityId})
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.residency) {
+                            updateResidencyField(data.residency);
+                        }
+                    })
+                    .catch(error => console.error('Error calculating residency:', error));
+                }
+                
+                function updateResidencyField(value) {
+                    if (residentField) {
+                        residentField.value = value;
+                        
+                        // עדכון צבע רקע
+                        const colors = {
+                            1: '#e8f5e9', // ירוק - ירושלים
+                            2: '#e3f2fd', // כחול - ישראל
+                            3: '#fff3e0'  // כתום - חו"ל
+                        };
+                        residentField.style.backgroundColor = colors[value] || '#f5f5f5';
+                    }
+                }
+                
+                // הוסף מאזינים
+                if (typeSelect) typeSelect.addEventListener('change', calculateResidency);
+                if (countrySelect) countrySelect.addEventListener('change', calculateResidency);
+                if (citySelect) citySelect.addEventListener('change', calculateResidency);
+                
+                // חישוב ראשוני
+                calculateResidency();
+            });
+        }
+
         // טען נתונים אם זה עריכה
         if (itemId) {
             this.waitForElement('#customerFormModal form', (form) => {

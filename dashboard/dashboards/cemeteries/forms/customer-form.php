@@ -238,162 +238,162 @@ if ($customer && $customer['unicId']) {
     ]);
 }
 
-// הכן את הסקריפט
-$scriptHTML = '
-    <script>
-    console.log("Script loaded successfully!");
+// // הכן את הסקריפט
+// $scriptHTML = '
+//     <script>
+//     console.log("Script loaded successfully!");
 
-    // פונקציה לחישוב תושבות בצד הלקוח
-    function calculateResidencyClient() {
-        console.log("calculateResidencyClient started");
-        alert("calculateResidencyClient התחיל");
+//     // פונקציה לחישוב תושבות בצד הלקוח
+//     function calculateResidencyClient() {
+//         console.log("calculateResidencyClient started");
+//         alert("calculateResidencyClient התחיל");
         
-        const typeId = document.querySelector(\'[name="typeId"]\')?.value;
-        const countryId = document.querySelector(\'[name="countryId"]\')?.value;
-        const cityId = document.querySelector(\'[name="cityId"]\')?.value;
+//         const typeId = document.querySelector(\'[name="typeId"]\')?.value;
+//         const countryId = document.querySelector(\'[name="countryId"]\')?.value;
+//         const cityId = document.querySelector(\'[name="cityId"]\')?.value;
         
-        console.log("Data:", {typeId, countryId, cityId});
-        alert(`נתונים שנשלפו:\\ntypeId: ${typeId}\\ncountryId: ${countryId}\\ncityId: ${cityId}`);
+//         console.log("Data:", {typeId, countryId, cityId});
+//         alert(`נתונים שנשלפו:\\ntypeId: ${typeId}\\ncountryId: ${countryId}\\ncityId: ${cityId}`);
         
-        let residency = 3; // ברירת מחדל - תושב חו"ל
+//         let residency = 3; // ברירת מחדל - תושב חו"ל
         
-        // אם סוג הזיהוי הוא דרכון (2) - תמיד תושב חו"ל
-        if (typeId == 2) {
-            alert("סוג זיהוי = דרכון, מגדיר תושב חו״ל (3)");
-            residency = 3;
-            updateResidencyDisplay(residency);
-        } else if (countryId) {
-            alert(`יש מדינה: ${countryId}, שולח לשרת לחישוב...`);
+//         // אם סוג הזיהוי הוא דרכון (2) - תמיד תושב חו"ל
+//         if (typeId == 2) {
+//             alert("סוג זיהוי = דרכון, מגדיר תושב חו״ל (3)");
+//             residency = 3;
+//             updateResidencyDisplay(residency);
+//         } else if (countryId) {
+//             alert(`יש מדינה: ${countryId}, שולח לשרת לחישוב...`);
             
-            // קריאת AJAX לשרת לחישוב
-            fetch("/dashboard/dashboards/cemeteries/api/customers-api.php?action=calculate_residency", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    typeId: typeId,
-                    countryId: countryId,
-                    cityId: cityId
-                })
-            })
-            .then(response => {
-                alert("קיבלנו תגובה מהשרת");
-                return response.json();
-            })
-            .then(data => {
-                alert(`תוצאה מהשרת:\\nsuccess: ${data.success}\\nresidency: ${data.residency}\\ntext: ${data.residency_text}`);
+//             // קריאת AJAX לשרת לחישוב
+//             fetch("/dashboard/dashboards/cemeteries/api/customers-api.php?action=calculate_residency", {
+//                 method: "POST",
+//                 headers: {
+//                     "Content-Type": "application/json"
+//                 },
+//                 body: JSON.stringify({
+//                     typeId: typeId,
+//                     countryId: countryId,
+//                     cityId: cityId
+//                 })
+//             })
+//             .then(response => {
+//                 alert("קיבלנו תגובה מהשרת");
+//                 return response.json();
+//             })
+//             .then(data => {
+//                 alert(`תוצאה מהשרת:\\nsuccess: ${data.success}\\nresidency: ${data.residency}\\ntext: ${data.residency_text}`);
                 
-                if (data.success && data.residency) {
-                    updateResidencyDisplay(data.residency);
-                }
-            })
-            .catch(error => {
-                alert(`שגיאה בקריאה לשרת: ${error.message}`);
-                console.error("Error calculating residency:", error);
-            });
-        } else {
-            alert("אין מדינה, מגדיר תושב חו״ל (3)");
-            updateResidencyDisplay(residency);
-        }
-    }
+//                 if (data.success && data.residency) {
+//                     updateResidencyDisplay(data.residency);
+//                 }
+//             })
+//             .catch(error => {
+//                 alert(`שגיאה בקריאה לשרת: ${error.message}`);
+//                 console.error("Error calculating residency:", error);
+//             });
+//         } else {
+//             alert("אין מדינה, מגדיר תושב חו״ל (3)");
+//             updateResidencyDisplay(residency);
+//         }
+//     }
 
-    // עדכון התצוגה של שדה התושבות
-    function updateResidencyDisplay(value) {
-        console.log("updateResidencyDisplay:", value);
-        alert(`updateResidencyDisplay: מעדכן ערך ל-${value}`);
+//     // עדכון התצוגה של שדה התושבות
+//     function updateResidencyDisplay(value) {
+//         console.log("updateResidencyDisplay:", value);
+//         alert(`updateResidencyDisplay: מעדכן ערך ל-${value}`);
         
-        const selectElement = document.querySelector(\'[name="resident"]\');
-        const hiddenElement = document.querySelector(\'[name="resident_hidden"]\');
+//         const selectElement = document.querySelector(\'[name="resident"]\');
+//         const hiddenElement = document.querySelector(\'[name="resident_hidden"]\');
         
-        if (selectElement) {
-            selectElement.value = value;
-            alert(`שדה SELECT עודכן ל-${value}`);
+//         if (selectElement) {
+//             selectElement.value = value;
+//             alert(`שדה SELECT עודכן ל-${value}`);
             
-            // עדכון צבע רקע לפי הערך
-            switch(parseInt(value)) {
-                case 1:
-                    selectElement.style.backgroundColor = "#e8f5e9"; // ירוק בהיר
-                    alert("צבע רקע: ירוק (תושב העיר)");
-                    break;
-                case 2:
-                    selectElement.style.backgroundColor = "#e3f2fd"; // כחול בהיר
-                    alert("צבע רקע: כחול (תושב הארץ)");
-                    break;
-                case 3:
-                    selectElement.style.backgroundColor = "#fff3e0"; // כתום בהיר
-                    alert("צבע רקע: כתום (תושב חו״ל)");
-                    break;
-            }
-        } else {
-            alert("לא נמצא שדה SELECT של resident!");
-        }
+//             // עדכון צבע רקע לפי הערך
+//             switch(parseInt(value)) {
+//                 case 1:
+//                     selectElement.style.backgroundColor = "#e8f5e9"; // ירוק בהיר
+//                     alert("צבע רקע: ירוק (תושב העיר)");
+//                     break;
+//                 case 2:
+//                     selectElement.style.backgroundColor = "#e3f2fd"; // כחול בהיר
+//                     alert("צבע רקע: כחול (תושב הארץ)");
+//                     break;
+//                 case 3:
+//                     selectElement.style.backgroundColor = "#fff3e0"; // כתום בהיר
+//                     alert("צבע רקע: כתום (תושב חו״ל)");
+//                     break;
+//             }
+//         } else {
+//             alert("לא נמצא שדה SELECT של resident!");
+//         }
         
-        if (hiddenElement) {
-            hiddenElement.value = value;
-            alert(`שדה נסתר עודכן ל-${value}`);
-        } else {
-            alert("לא נמצא שדה נסתר של resident!");
-        }
-    }
+//         if (hiddenElement) {
+//             hiddenElement.value = value;
+//             alert(`שדה נסתר עודכן ל-${value}`);
+//         } else {
+//             alert("לא נמצא שדה נסתר של resident!");
+//         }
+//     }
 
-    // מחכה שהמודל ייטען במלואו
-    setTimeout(function() {
-        console.log("Setting up event listeners...");
-        alert("DOMContentLoaded - מתחיל אתחול");
+//     // מחכה שהמודל ייטען במלואו
+//     setTimeout(function() {
+//         console.log("Setting up event listeners...");
+//         alert("DOMContentLoaded - מתחיל אתחול");
         
-        // רק אם זה טופס הוספה (לא עריכה)
-        const isEdit = ' . ($itemId ? 'true' : 'false') . ';
-        alert(`מצב טופס: ${isEdit ? "עריכה" : "הוספה חדשה"}`);
+//         // רק אם זה טופס הוספה (לא עריכה)
+//         const isEdit = ' . ($itemId ? 'true' : 'false') . ';
+//         alert(`מצב טופס: ${isEdit ? "עריכה" : "הוספה חדשה"}`);
         
-        if (!isEdit) {
-            // הוסף מאזינים לשינויים
-            const typeSelect = document.querySelector(\'[name="typeId"]\');
-            const countrySelect = document.querySelector(\'[name="countryId"]\');
-            const citySelect = document.querySelector(\'[name="cityId"]\');
+//         if (!isEdit) {
+//             // הוסף מאזינים לשינויים
+//             const typeSelect = document.querySelector(\'[name="typeId"]\');
+//             const countrySelect = document.querySelector(\'[name="countryId"]\');
+//             const citySelect = document.querySelector(\'[name="cityId"]\');
             
-            if (typeSelect) {
-                alert("מוסיף מאזין לשדה סוג זיהוי");
-                typeSelect.addEventListener("change", function() {
-                    alert("שדה סוג זיהוי השתנה");
-                    calculateResidencyClient();
-                });
-            } else {
-                alert("לא נמצא שדה typeId!");
-            }
+//             if (typeSelect) {
+//                 alert("מוסיף מאזין לשדה סוג זיהוי");
+//                 typeSelect.addEventListener("change", function() {
+//                     alert("שדה סוג זיהוי השתנה");
+//                     calculateResidencyClient();
+//                 });
+//             } else {
+//                 alert("לא נמצא שדה typeId!");
+//             }
             
-            if (countrySelect) {
-                alert("מוסיף מאזין לשדה מדינה");
-                countrySelect.addEventListener("change", function() {
-                    alert("שדה מדינה השתנה");
-                    calculateResidencyClient();
-                });
-            } else {
-                alert("לא נמצא שדה countryId!");
-            }
+//             if (countrySelect) {
+//                 alert("מוסיף מאזין לשדה מדינה");
+//                 countrySelect.addEventListener("change", function() {
+//                     alert("שדה מדינה השתנה");
+//                     calculateResidencyClient();
+//                 });
+//             } else {
+//                 alert("לא נמצא שדה countryId!");
+//             }
             
-            if (citySelect) {
-                alert("מוסיף מאזין לשדה עיר");
-                citySelect.addEventListener("change", function() {
-                    alert("שדה עיר השתנה");
-                    calculateResidencyClient();
-                });
-            } else {
-                alert("לא נמצא שדה cityId!");
-            }
+//             if (citySelect) {
+//                 alert("מוסיף מאזין לשדה עיר");
+//                 citySelect.addEventListener("change", function() {
+//                     alert("שדה עיר השתנה");
+//                     calculateResidencyClient();
+//                 });
+//             } else {
+//                 alert("לא נמצא שדה cityId!");
+//             }
             
-            // חשב תושבות ראשונית
-            alert("מבצע חישוב תושבות ראשוני");
-            calculateResidencyClient();
-        } else {
-            alert("מצב עריכה - לא מבצעים חישוב תושבות");
-        }
-    }, 500); // מחכה חצי שנייה שהמודל ייטען
-    </script>
-    ';
+//             // חשב תושבות ראשונית
+//             alert("מבצע חישוב תושבות ראשוני");
+//             calculateResidencyClient();
+//         } else {
+//             alert("מצב עריכה - לא מבצעים חישוב תושבות");
+//         }
+//     }, 500); // מחכה חצי שנייה שהמודל ייטען
+//     </script>
+//     ';
 
-// הוסף את הסקריפט לטופס
-$formBuilder->addCustomHTML($scriptHTML);
+// // הוסף את הסקריפט לטופס
+// $formBuilder->addCustomHTML($scriptHTML);
 
 // הצג את הטופס
 echo $formBuilder->renderModal();

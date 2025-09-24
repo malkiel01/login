@@ -207,7 +207,7 @@ $formBuilder->addField('resident', 'תושבות', 'select', [
 
 // הוסף שדה נסתר לשמירת הערך
 $formBuilder->addField('resident_hidden', '', 'hidden', [
-    'value' => $customer['resident'] ?? 3,
+    'value' => $customer['resident'] ?? 1,
     'name' => 'resident'
 ]);
 

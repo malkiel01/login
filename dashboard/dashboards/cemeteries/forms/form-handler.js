@@ -238,8 +238,6 @@ const FormHandler = {
                     const typeId = typeSelect?.value;
                     const countryId = countrySelect?.value;
                     const cityId = citySelect?.value;
-
-                    alert('typeId: ' + typeId + ', countryId: ' + countryId + ', cityId: ' + cityId)
                     
                     console.log("Calculating residency:", {typeId, countryId, cityId});
                     
@@ -311,6 +309,8 @@ const FormHandler = {
 
                                         // טיפול מיוחד בשדה תושבות
                                         if (key === 'resident' && field.disabled) {
+
+                                            alert('field.value: ' + field.value + ', result.data[key]: ' + result.data[key])
                                             // עדכן גם אם השדה disabled
                                             field.value = result.data[key] || 3;
                                             

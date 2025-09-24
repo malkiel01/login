@@ -681,7 +681,7 @@ const FormHandler = {
                         }
 
                         // אם לא במצב עריכה - חשב תשלומים אוטומטית
-                        if (!window.isEditMode) {
+                        if (!window.isEditMode && window.selectedCustomerData) { 
                             try {
                                 const response = await fetch('/dashboard/dashboards/cemeteries/api/payments-api.php?action=getMatching', {
                                     method: 'POST',
@@ -689,7 +689,7 @@ const FormHandler = {
                                     body: JSON.stringify({
                                         plotType: window.selectedGraveData.plotType,
                                         graveType: window.selectedGraveData.graveType,
-                                        resident: 1,
+                                        resident: window.selectedCustomerData?.resident || 3,
                                         buyerStatus: document.querySelector('[name="buyer_status"]')?.value || null
                                     })
                                 });

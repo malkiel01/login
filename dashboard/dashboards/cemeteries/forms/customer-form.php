@@ -196,7 +196,7 @@ $formBuilder->addField('resident', 'תושבות', 'select', [
         2 => 'תושב חוץ',
         3 => 'תושב חו״ל'
     ],
-    'value' => $customer['resident'] ?? 1,
+    'value' => $customer['resident'] ?? 3,
     'readonly' => true,
     'disabled' => true,
     'help_text' => 'מחושב אוטומטית על פי הגדרות התושבות',
@@ -204,12 +204,6 @@ $formBuilder->addField('resident', 'תושבות', 'select', [
         'style' => 'background-color: #f5f5f5; cursor: not-allowed;'
     ]
 ]);
-
-// // הוסף שדה נסתר לשמירת הערך
-// $formBuilder->addField('resident_hidden', '', 'hidden', [
-//     'value' => $customer['resident'] ?? 1,
-//     'name' => 'resident'
-// ]);
 
 $formBuilder->addField('association', 'שיוך', 'select', [
     'options' => [

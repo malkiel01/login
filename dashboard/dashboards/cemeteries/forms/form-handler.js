@@ -310,7 +310,6 @@ const FormHandler = {
                                         // טיפול מיוחד בשדה תושבות
                                         if (key === 'resident' && field.disabled) {
 
-                                            alert('field.value: ' + field.value + ', result.data[key]: ' + result.data[key])
                                             // עדכן גם אם השדה disabled
                                             field.value = result.data[key] || 3;
                                             
@@ -358,6 +357,36 @@ const FormHandler = {
             } else {
                 alert('No hierarchy data found in fieldset!');
                 return;
+            }
+
+            // אחרי שה-fieldset נטען
+            const customerSelect = document.querySelector('[name="clientId"]');
+            if (customerSelect) {
+                customerSelect.addEventListener('change', async function() {
+                    const customerId = this.value;
+                    if (customerId) {
+                        try {
+                            const response = await fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?action=get&id=${customerId}`);
+                            const data = await response.json();
+                            if (data.success && data.data) {
+                                window.selectedCustomerData = {
+                                    id: customerId,
+                                    resident: data.data.resident || 3, // ברירת מחדל חו"ל
+                                    name: data.data.firstName + ' ' + data.data.lastName
+                                };
+                                
+                                // עדכן תצוגת פרמטרים אם יש קבר נבחר
+                                if (window.selectedGraveData && window.updatePaymentParameters) {
+                                    window.updatePaymentParameters();
+                                }
+                            }
+                        } catch (error) {
+                            console.error('Error loading customer data:', error);
+                        }
+                    } else {
+                        window.selectedCustomerData = null;
+                    }
+                });
             }
             
             window.filterHierarchy = function(level) {
@@ -627,6 +656,7 @@ const FormHandler = {
             // משתנים גלובליים לתשלומים
             window.purchasePayments = [];
             window.selectedGraveData = null;
+            window.selectedCustomerData = null;
 
             // כשנבחר קבר
             window.onGraveSelected = async function(graveId) {
@@ -721,13 +751,18 @@ const FormHandler = {
                 if (window.selectedGraveData) {
                     const plotTypes = {1: 'פטורה', 2: 'חריגה', 3: 'סגורה'};
                     const graveTypes = {1: 'שדה', 2: 'רוויה', 3: 'סנהדרין'};
+                    const residentTypes = {1: 'ירושלים', 2: 'ישראל', 3: 'חו"ל'};
+
+                    // קבע תושבות - מהלקוח או ברירת מחדל
+                    const residentValue = window.selectedCustomerData?.resident || 3;
+                    const residentText = residentTypes[residentValue] || 'לא ידוע';
                     
                     const displayElement = document.getElementById('parametersDisplay');
                     if (displayElement) {
                         displayElement.innerHTML = `
                             <span style="margin-right: 10px;">📍 חלקה: ${plotTypes[window.selectedGraveData.plotType] || 'לא ידוע'}</span>
                             <span style="margin-right: 10px;">⚰️ סוג קבר: ${graveTypes[window.selectedGraveData.graveType] || 'לא ידוע'}</span>
-                            <span>👤 תושב: ירושלים</span>
+                            <span>👤 תושב: ${residentText}</span>
                         `;
                     }
                     
@@ -754,6 +789,11 @@ const FormHandler = {
                     alert('יש לבחור קבר תחילה');
                     return;
                 }
+                                
+                if (!window.selectedCustomerData?.resident) {
+                    alert('יש לבחור לקוח תחילה');
+                    return;
+                }
 
                 // בדוק מצב עריכה
                 const isEditMode = window.isEditMode === true;
@@ -771,9 +811,9 @@ const FormHandler = {
                             method: 'POST',
                             headers: {'Content-Type': 'application/json'},
                             body: JSON.stringify({
-                                plotType: window.selectedGraveData.plotType,
-                                graveType: window.selectedGraveData.graveType,
-                                resident: 1,
+                                plotType: window.selectedGraveData?.plotType,
+                                graveType: window.selectedGraveData?.graveType,
+                                resident: window.selectedCustomerData?.resident,
                                 buyerStatus: document.querySelector('[name="buyer_status"]').value || null
                             })
                         });
@@ -1864,6 +1904,28 @@ const FormHandler = {
                                         field.value = data[key];
                                     }
                                 });
+
+                                // *** הוסף כאן - אחרי מילוי השדות ***
+                                // טען גם נתוני לקוח
+                                if (data.clientId) {
+                                    fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?action=get&id=${data.clientId}`)
+                                        .then(response => response.json())
+                                        .then(customerResult => {
+                                            if (customerResult.success && customerResult.data) {
+                                                window.selectedCustomerData = {
+                                                    id: data.clientId,
+                                                    resident: customerResult.data.resident || 3,
+                                                    name: customerResult.data.firstName + ' ' + customerResult.data.lastName
+                                                };
+                                                
+                                                // עדכן תצוגת פרמטרים
+                                                if (window.updatePaymentParameters) {
+                                                    window.updatePaymentParameters();
+                                                }
+                                            }
+                                        })
+                                        .catch(error => console.error('Error loading customer data:', error));
+                                }
 
                                 // טען תשלומים קיימים
                                 if (data.paymentsList) {

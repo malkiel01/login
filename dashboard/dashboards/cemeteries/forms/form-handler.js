@@ -931,13 +931,18 @@ const FormHandler = {
                 buildParametersSection: function() {
                     const plotTypes = {1: 'פטורה', 2: 'חריגה', 3: 'סגורה'};
                     const graveTypes = {1: 'שדה', 2: 'רוויה', 3: 'סנהדרין'};
+                    const residentTypes = {1: 'ירושלים', 2: 'ישראל', 3: 'חו"ל'};
+
+                    // קבע תושבות - מהלקוח או ברירת מחדל
+                    const residentValue = window.selectedCustomerData?.resident || 3;
+                    const residentText = residentTypes[residentValue] || 'לא ידוע';
                     
                     return `
                         <div style="background: #e3f2fd; padding: 10px; border-radius: 5px; margin-bottom: 20px;">
                             <strong>פרמטרים נבחרים:</strong><br>
                             סוג חלקה: ${plotTypes[window.selectedGraveData.plotType] || 'לא ידוע'} | 
                             סוג קבר: ${graveTypes[window.selectedGraveData.graveType] || 'לא ידוע'} | 
-                            תושבות: ירושלים
+                            תושבות: ${residentText}
                         </div>
                     `;
                 },
@@ -1387,11 +1392,16 @@ const FormHandler = {
                 getParametersDisplay: function() {
                     const plotTypes = {1: 'פטורה', 2: 'חריגה', 3: 'סגורה', '-1': 'לא מוגדר'};
                     const graveTypes = {1: 'שדה', 2: 'רוויה', 3: 'סנהדרין', '-1': 'לא מוגדר'};
+                    const residentTypes = {1: 'ירושלים', 2: 'ישראל', 3: 'חו"ל'};
+
+                    // קבע תושבות - מהלקוח או ברירת מחדל
+                    const residentValue = window.selectedCustomerData?.resident || 3;
+                    const residentText = residentTypes[residentValue] || 'לא ידוע';
                     
                     const plotType = window.selectedGraveData?.plotType || -1;
                     const graveType = window.selectedGraveData?.graveType || -1;
                     
-                    return `סוג חלקה: ${plotTypes[plotType]} | סוג קבר: ${graveTypes[graveType]} | תושבות: ירושלים`;
+                    return `סוג חלקה: ${plotTypes[plotType]} | סוג קבר: ${graveTypes[graveType]} | תושבות: ${residentText}`;
                 },
 
                 buildMandatorySection: function(payments) {

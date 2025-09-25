@@ -3,7 +3,7 @@
 // משתנים גלובליים
 let allBurials = [];
 let currentBurialPage = 1;
-let currentSort = { field: 'createDate', order: 'DESC' };
+let currentBurialSort = { field: 'createDate', order: 'DESC' };
 
 // טעינת כל הקבורות
 async function loadAllBurials(page = 1) {
@@ -25,7 +25,7 @@ async function loadAllBurials(page = 1) {
     }
     
     try {
-        const response = await fetch(`/dashboard/dashboards/cemeteries/api/burials-api.php?action=list&page=${page}&limit=50&sort=${currentSort.field}&order=${currentSort.order}`);
+        const response = await fetch(`/dashboard/dashboards/cemeteries/api/burials-api.php?action=list&page=${page}&limit=50&sort=${currentBurialSort.field}&order=${currentBurialSort.order}`);
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -424,11 +424,11 @@ async function deleteBurial(id) {
 
 // מיון טבלה
 function sortBurials(field) {
-    if (currentSort.field === field) {
-        currentSort.order = currentSort.order === 'ASC' ? 'DESC' : 'ASC';
+    if (currentBurialSort.field === field) {
+        currentBurialSort.order = currentBurialSort.order === 'ASC' ? 'DESC' : 'ASC';
     } else {
-        currentSort.field = field;
-        currentSort.order = 'ASC';
+        currentBurialSort.field = field;
+        currentBurialSort.order = 'ASC';
     }
     
     loadAllBurials(1);

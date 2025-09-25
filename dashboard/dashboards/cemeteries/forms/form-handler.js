@@ -3651,6 +3651,13 @@ const FormHandler = {
 
     handleBurialForm: function(itemId) {
         this.waitForElement('#grave-selector-fieldset', (fieldset) => {
+            // טען את נתוני ההיררכיה
+            if (fieldset.dataset.hierarchy) {
+                window.hierarchyData = JSON.parse(fieldset.dataset.hierarchy);
+            } else {
+                alert('No hierarchy data found in fieldset!');
+                return;
+            }
             
             // אתחל את מנהל ההיררכיה - קברים פנויים (1) ורכישות (2)
             GraveHierarchyManager.init({

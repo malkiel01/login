@@ -379,6 +379,7 @@ function printBurial(id) {
 
 // פתיחת טופס קבורה חדשה
 function openAddBurial() {
+    console.log('openAddBurial called');
     window.currentType = 'burial';
     if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
         FormHandler.openForm('burial', null, null);
@@ -523,5 +524,19 @@ window.sortBurials = sortBurials;
 window.searchBurials = searchBurials;
 window.openAddBurial = openAddBurial;
 window.printBurial = printBurial;
+
+// התאמה למערכת האחידה - כשהמערכת קוראת ל-openAddModal
+if (typeof window.tableRenderer !== 'undefined') {
+    // וודא שכשקוראים ל-openAddModal עם סוג burial, זה יעבוד
+    const originalOpenAddModal = window.tableRenderer.openAddModal;
+    window.tableRenderer.openAddModal = function() {
+        if (window.currentType === 'burial') {
+            console.log('Intercepting openAddModal for burial type');
+            openAddBurial();
+        } else {
+            originalOpenAddModal.call(this);
+        }
+    };
+}
 
 console.log('✅ Burials management module initialized successfully');

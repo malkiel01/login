@@ -13,7 +13,11 @@ async function loadAllBurials(page = 1) {
     // עדכן סוג נוכחי
     window.currentType = 'burial';
     window.currentParentId = null;
-    DashboardCleaner.clear({ targetLevel: 'burial' });
+    
+    // נקה את הדשבורד
+    if (typeof DashboardCleaner !== 'undefined' && DashboardCleaner.clear) {
+        DashboardCleaner.clear({ targetLevel: 'burial' });
+    }
     
     // עדכן את כפתור ההוספה
     if (typeof updateAddButtonText === 'function') {
@@ -376,13 +380,21 @@ function printBurial(id) {
 // פתיחת טופס קבורה חדשה
 function openAddBurial() {
     window.currentType = 'burial';
-    FormHandler.openForm('burial', null, null);
+    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
+        FormHandler.openForm('burial', null, null);
+    } else {
+        showError('מערכת הטפסים לא זמינה');
+    }
 }
 
 // עריכת קבורה
 async function editBurial(id) {
     window.currentType = 'burial';
-    FormHandler.openForm('burial', null, id);
+    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
+        FormHandler.openForm('burial', null, id);
+    } else {
+        showError('מערכת הטפסים לא זמינה');
+    }
 }
 
 // מחיקת קבורה
@@ -438,12 +450,34 @@ async function searchBurials(query) {
         }
     } catch (error) {
         console.error('Error searching burials:', error);
+        showError('שגיאה בחיפוש');
     }
+}
+
+// פונקציות עזר להודעות
+function showSuccess(message) {
+    console.log('Success:', message);
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-success';
+    alertDiv.textContent = message;
+    alertDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; padding: 15px; background: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 5px;';
+    document.body.appendChild(alertDiv);
+    setTimeout(() => alertDiv.remove(), 3000);
+}
+
+function showError(message) {
+    console.error('Error:', message);
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-danger';
+    alertDiv.textContent = message;
+    alertDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; padding: 15px; background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 5px;';
+    document.body.appendChild(alertDiv);
+    setTimeout(() => alertDiv.remove(), 5000);
 }
 
 // אתחול בטעינת העמוד
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Burials module loaded');
+    console.log('Burials module loaded and ready');
     
     // בדוק אם אנחנו בעמוד קבורות
     if (window.location.hash === '#burials' || window.currentView === 'burials') {
@@ -467,8 +501,27 @@ window.burialsModule = {
     openAddBurial,
     editBurial,
     deleteBurial,
-    viewBurial
+    viewBurial,
+    printBurial,
+    getBurialStatusBadge,
+    getGraveStatusName,
+    formatDate,
+    updateBurialsPagination,
+    updateBurialStats,
+    showSuccess,
+    showError
 };
 
 // הגדר פונקציה גלובלית
 window.loadAllBurials = loadAllBurials;
+
+// הוסף את הפונקציות הנוספות לחלון הגלובלי אם צריך
+window.viewBurial = viewBurial;
+window.editBurial = editBurial;
+window.deleteBurial = deleteBurial;
+window.sortBurials = sortBurials;
+window.searchBurials = searchBurials;
+window.openAddBurial = openAddBurial;
+window.printBurial = printBurial;
+
+console.log('✅ Burials management module initialized successfully');

@@ -5,8 +5,8 @@ let allBurials = [];
 let currentBurialPage = 1;
 let currentBurialSort = { field: 'createDate', order: 'DESC' };
 
-// טעינת כל הקבורות
-async function loadAllBurials(page = 1) {
+// טעינת כל הקבורות - הגדר גלובלית מיד
+window.loadAllBurials = async function(page = 1) {
     console.log('Loading all burials...');
     currentBurialPage = page;
     
@@ -493,30 +493,7 @@ window.addEventListener('hashchange', function() {
     }
 });
 
-// אקספורט פונקציות למקרה שצריך גישה גלובלית
-window.burialsModule = {
-    loadAllBurials,
-    displayBurialsTable,
-    searchBurials,
-    sortBurials,
-    openAddBurial,
-    editBurial,
-    deleteBurial,
-    viewBurial,
-    printBurial,
-    getBurialStatusBadge,
-    getGraveStatusName,
-    formatDate,
-    updateBurialsPagination,
-    updateBurialStats,
-    showSuccess,
-    showError
-};
-
-// הגדר פונקציה גלובלית
-window.loadAllBurials = loadAllBurials;
-
-// הוסף את הפונקציות הנוספות לחלון הגלובלי אם צריך
+// הגדר פונקציות גלובליות
 window.viewBurial = viewBurial;
 window.editBurial = editBurial;
 window.deleteBurial = deleteBurial;
@@ -525,62 +502,18 @@ window.searchBurials = searchBurials;
 window.openAddBurial = openAddBurial;
 window.printBurial = printBurial;
 
-// התאמה למערכת - הגדר פונקציה גלובלית openAddModal
+// פונקציה גלובלית openAddModal - בדיוק כמו ברכישות
 window.openAddModal = function() {
     console.log('Global openAddModal called, currentType:', window.currentType);
     
-    // בדוק איזה סוג נוכחי
     if (window.currentType === 'burial') {
-        console.log('Opening burial form');
         openAddBurial();
     } else if (window.currentType === 'purchase') {
-        console.log('Opening purchase form');
         if (typeof openAddPurchase === 'function') {
             openAddPurchase();
-        } else {
-            console.error('openAddPurchase function not found');
-        }
-    } else if (window.currentType === 'customer') {
-        console.log('Opening customer form');
-        if (typeof openAddCustomer === 'function') {
-            openAddCustomer();
-        } else {
-            console.error('openAddCustomer function not found');
-        }
-    } else if (window.currentType === 'payment') {
-        console.log('Opening payment form');
-        if (typeof openAddPayment === 'function') {
-            openAddPayment();
-        } else {
-            console.error('openAddPayment function not found');
-        }
-    } else if (window.currentType === 'residency') {
-        console.log('Opening residency form');
-        if (typeof openAddResidency === 'function') {
-            openAddResidency();
-        } else {
-            console.error('openAddResidency function not found');
-        }
-    } else if (window.currentType === 'country') {
-        console.log('Opening country form');
-        if (typeof openAddCountry === 'function') {
-            openAddCountry();
-        } else {
-            console.error('openAddCountry function not found');
-        }
-    } else if (window.currentType === 'city') {
-        console.log('Opening city form');
-        if (typeof openAddCity === 'function') {
-            openAddCity();
-        } else {
-            console.error('openAddCity function not found');
         }
     } else if (window.tableRenderer && typeof window.tableRenderer.openAddModal === 'function') {
-        // אם זה סוג אחר (cemetery, block, plot וכו'), תעביר למערכת הרגילה
-        console.log('Passing to tableRenderer for type:', window.currentType);
         window.tableRenderer.openAddModal();
-    } else {
-        console.error('Cannot open modal - unknown type:', window.currentType);
     }
 };
 

@@ -85,65 +85,141 @@ const FormHandler = {
             return;
         }
   
+        // try {
+        //     const params = new URLSearchParams({
+        //         type: type,
+        //         ...(itemId && { item_id: itemId }),
+        //         ...(parentId && { parent_id: parentId })
+        //     });
+  
+        //     const response = await fetch(`/dashboard/dashboards/cemeteries/forms/form-loader.php?${params}`);
+      
+        //     const html = await response.text();
+            
+        //     // הסר טופס קיים אם יש
+        //     const existingModal = document.getElementById(type + 'FormModal');
+        //     if (existingModal) {
+        //         existingModal.remove();
+        //     }
+            
+        //     // הסר style קיים אם יש
+        //     const existingStyle = document.getElementById(type + 'FormStyle');
+        //     if (existingStyle) {
+        //         existingStyle.remove();
+        //     }
+            
+        //     // צור container זמני לפירוק ה-HTML
+        //     const tempDiv = document.createElement('div');
+        //     tempDiv.innerHTML = html;
+            
+        //     // חפש את ה-style tag
+        //     const styleTag = tempDiv.querySelector('style');
+        //     if (styleTag) {
+        //         styleTag.id = type + 'FormStyle';
+        //         document.head.appendChild(styleTag);
+        //     }
+            
+        //     // חפש את המודאל
+        //     const modal = tempDiv.querySelector('#' + type + 'FormModal');
+            
+        //     if (modal) {
+        //         // הוסף את המודאל ל-body
+        //         document.body.appendChild(modal);
+                
+        //         // מנע גלילה בדף הראשי
+        //         document.body.style.overflow = 'hidden';
+
+        //         // טיפול לפי סוג הטופס
+        //         this.handleFormSpecificLogic(type, parentId, itemId);
+                
+        //     } else {
+        //         console.error('Modal not found in HTML');
+        //         const alternativeModal = tempDiv.querySelector('.modal');
+        //         if (alternativeModal) {
+        //             alternativeModal.id = type + 'FormModal';
+        //             document.body.appendChild(alternativeModal);
+        //             document.body.style.overflow = 'hidden';
+        //         }
+        //     }
+            
+        // } catch (error) {
+        //     console.error('Error loading form:', error);
+        //     this.showMessage('שגיאה בטעינת הטופס', 'error');
+        // }
+
         try {
             const params = new URLSearchParams({
                 type: type,
                 ...(itemId && { item_id: itemId }),
                 ...(parentId && { parent_id: parentId })
             });
-  
+            
+            console.log('📝 URL params:', params.toString());
+            alert('Fetching: /dashboard/dashboards/cemeteries/forms/form-loader.php?' + params.toString());
+    
             const response = await fetch(`/dashboard/dashboards/cemeteries/forms/form-loader.php?${params}`);
-      
+            
+            console.log('📨 Response status:', response.status);
+            
+            if (!response.ok) {
+                alert('ERROR: Response not OK - status: ' + response.status);
+                return;
+            }
+        
             const html = await response.text();
+            
+            console.log('📄 HTML received, length:', html.length);
+            console.log('First 200 chars:', html.substring(0, 200));
+            
+            // בדוק אם יש שגיאה ב-HTML
+            if (html.includes('Error') || html.includes('error')) {
+                console.warn('⚠️ HTML contains error word');
+                alert('Warning: HTML might contain error');
+            }
             
             // הסר טופס קיים אם יש
             const existingModal = document.getElementById(type + 'FormModal');
             if (existingModal) {
+                console.log('🗑️ Removing existing modal');
                 existingModal.remove();
-            }
-            
-            // הסר style קיים אם יש
-            const existingStyle = document.getElementById(type + 'FormStyle');
-            if (existingStyle) {
-                existingStyle.remove();
             }
             
             // צור container זמני לפירוק ה-HTML
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = html;
             
-            // חפש את ה-style tag
-            const styleTag = tempDiv.querySelector('style');
-            if (styleTag) {
-                styleTag.id = type + 'FormStyle';
-                document.head.appendChild(styleTag);
-            }
-            
             // חפש את המודאל
             const modal = tempDiv.querySelector('#' + type + 'FormModal');
             
             if (modal) {
+                console.log('✅ Modal found in HTML');
                 // הוסף את המודאל ל-body
                 document.body.appendChild(modal);
                 
                 // מנע גלילה בדף הראשי
                 document.body.style.overflow = 'hidden';
 
+                console.log('🎯 About to call handleFormSpecificLogic with type:', type);
+                alert('Calling handleFormSpecificLogic for: ' + type);
+                
                 // טיפול לפי סוג הטופס
                 this.handleFormSpecificLogic(type, parentId, itemId);
                 
             } else {
-                console.error('Modal not found in HTML');
-                const alternativeModal = tempDiv.querySelector('.modal');
-                if (alternativeModal) {
-                    alternativeModal.id = type + 'FormModal';
-                    document.body.appendChild(alternativeModal);
-                    document.body.style.overflow = 'hidden';
-                }
+                console.error('❌ Modal not found in HTML');
+                alert('ERROR: Modal not found! Looking for: #' + type + 'FormModal');
+                
+                // נסה למצוא מה כן יש
+                const allModals = tempDiv.querySelectorAll('.modal');
+                console.log('Found modals:', allModals.length);
+                allModals.forEach(m => {
+                    console.log('Modal id:', m.id);
+                });
             }
             
         } catch (error) {
-            console.error('Error loading form:', error);
+            console.error('❌ Error in openForm:', error);
+            alert('ERROR in openForm: ' + error.message);
             this.showMessage('שגיאה בטעינת הטופס', 'error');
         }
     },

@@ -164,6 +164,9 @@ if (typeof loadAllBurials === 'undefined') {
     window.loadAllBurials = function() {
         alert('הפונקציה loadAllBurials לא נטענה מהקובץ');
     }
+} else {
+
+    alert('555')
 }
 </script>
 

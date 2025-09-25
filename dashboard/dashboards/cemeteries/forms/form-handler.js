@@ -137,6 +137,10 @@ const FormHandler = {
     },
 
     handleFormSpecificLogic: function(type, parentId, itemId) {
+
+    console.log('🎯 handleFormSpecificLogic - type:', type, 'parentId:', parentId, 'itemId:', itemId);
+    alert('DEBUG: handleFormSpecificLogic - type: ' + type);
+    
         switch(type) {
             case 'area_grave':
                 this.handleAreaGraveForm(parentId);

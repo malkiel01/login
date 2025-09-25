@@ -373,25 +373,41 @@ function printBurial(id) {
     window.open(`/dashboard/dashboards/cemeteries/print/burial.php?id=${id}`, '_blank');
 }
 
+
+
+function showError(message) {
+ console.error('Error:', message);
+ const alertDiv = document.createElement('div');
+ alertDiv.className = 'alert alert-danger';
+ alertDiv.textContent = message;
+ alertDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; padding: 15px; background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 5px;';
+ document.body.appendChild(alertDiv);
+ setTimeout(() => alertDiv.remove(), 5000);
+}
+
+// פונקציות עזר להודעות
+function showSuccess(message) {
+ console.log('Success:', message);
+ const alertDiv = document.createElement('div');
+ alertDiv.className = 'alert alert-success';
+ alertDiv.textContent = message;
+ alertDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; padding: 15px; background: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 5px;';
+ document.body.appendChild(alertDiv);
+ setTimeout(() => alertDiv.remove(), 3000);
+}
+
 // פתיחת טופס קבורה חדשה
 function openAddBurial() {
-    console.log('openAddBurial called');
     window.currentType = 'burial';
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('burial', null, null);
-    } else {
-        showError('מערכת הטפסים לא זמינה');
-    }
+    FormHandler.openForm('burial', null, null);
 }
 
 // עריכת קבורה
 async function editBurial(id) {
     window.currentType = 'burial';
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('burial', null, id);
-    } else {
-        showError('מערכת הטפסים לא זמינה');
-    }
+    window.currentParentId = null;
+    
+    FormHandler.openForm('burial', null, id);
 }
 
 // מחיקת קבורה
@@ -451,27 +467,6 @@ async function searchBurials(query) {
     }
 }
 
-// פונקציות עזר להודעות
-function showSuccess(message) {
-    console.log('Success:', message);
-    const alertDiv = document.createElement('div');
-    alertDiv.className = 'alert alert-success';
-    alertDiv.textContent = message;
-    alertDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; padding: 15px; background: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 5px;';
-    document.body.appendChild(alertDiv);
-    setTimeout(() => alertDiv.remove(), 3000);
-}
-
-function showError(message) {
-    console.error('Error:', message);
-    const alertDiv = document.createElement('div');
-    alertDiv.className = 'alert alert-danger';
-    alertDiv.textContent = message;
-    alertDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; padding: 15px; background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 5px;';
-    document.body.appendChild(alertDiv);
-    setTimeout(() => alertDiv.remove(), 5000);
-}
-
 // אתחול בטעינת העמוד
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Burials module loaded and ready');
@@ -489,29 +484,17 @@ window.addEventListener('hashchange', function() {
     }
 });
 
-// הגדר פונקציות גלובליות
-window.viewBurial = viewBurial;
-window.editBurial = editBurial;
-window.deleteBurial = deleteBurial;
-window.sortBurials = sortBurials;
-window.searchBurials = searchBurials;
-window.openAddBurial = openAddBurial;
-window.printBurial = printBurial;
-
-// // פונקציה גלובלית openAddModal - בדיוק כמו ברכישות
-// window.openAddModal = function() {
-//     console.log('Global openAddModal called, currentType:', window.currentType);
-    
-//     if (window.currentType === 'burial') {
-//         openAddBurial();
-//     } else if (window.currentType === 'purchase') {
-//         if (typeof openAddPurchase === 'function') {
-//             openAddPurchase();
-//         }
-//     } else if (window.tableRenderer && typeof window.tableRenderer.openAddModal === 'function') {
-//         window.tableRenderer.openAddModal();
-//     }
-// };
+// אקספורט פונקציות למקרה שצריך גישה גלובלית
+window.burialsModule = {
+    loadAllBurials,
+    displayBurialsTable,
+    searchBurials,
+    sortBurials,
+    openAddBurial,
+    editBurial,
+    deleteBurial,
+    viewBurial
+};
 
 // הגדר פונקציה גלובלית
 window.loadAllBurials = loadAllBurials;

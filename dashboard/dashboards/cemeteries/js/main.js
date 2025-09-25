@@ -390,8 +390,9 @@ function updateAddButtonText() {
         'grave': 'הוספת קבר',
         'customer': 'הוספת לקוח',
         'purchase': 'הוספת רכישה',
+        'burial': 'הוספת קבורה',
         'residency': 'הוספת חוק תושבות',
-        'burial': 'הוספת קבורה'
+        'payment': 'הוספת חוק תשלום'
     };
     
     // עדכן את הסלקטור לחפש את הפונקציה החדשה

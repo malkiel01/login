@@ -166,7 +166,7 @@ try {
                 'payments' => $payments
             ]);
             break;
-        case 'getMatching':
+        case 'getMatching2':
             error_log("=== START PAYMENT MATCHING ===");
             
             // קבל פרמטרים
@@ -315,7 +315,147 @@ try {
                 ]
             ]);
             break;
-            // הוספת תשלום חדש
+
+        case 'getMatching':
+            error_log("=== START PAYMENT MATCHING ===");
+            
+            // קבל פרמטרים
+            $data = json_decode(file_get_contents('php://input'), true);
+            
+            $plotType = $data['plotType'] ?? -1;
+            $graveType = $data['graveType'] ?? -1;
+            $resident = $data['resident'] ?? -1;
+            $buyerStatus = $data['buyerStatus'] ?? -1;
+            $cemeteryId = $data['cemeteryId'] ?? '-1';
+            $blockId = $data['blockId'] ?? '-1';
+            $plotId = $data['plotId'] ?? '-1';
+            $lineId = $data['lineId'] ?? '-1';
+            
+            error_log("Parameters received:");
+            error_log("- Resident: $resident");
+            error_log("- Plot Type: $plotType");
+            error_log("- Grave Type: $graveType");
+            error_log("- Buyer Status: $buyerStatus");
+            error_log("- Cemetery: $cemeteryId");
+            error_log("- Block: $blockId");
+            error_log("- Plot: $plotId");
+            error_log("- Line: $lineId");
+            
+            try {
+                // שאילתה פשוטה יותר
+                $sql = "
+                    SELECT p.*
+                    FROM payments p
+                    WHERE p.isActive = 1
+                    AND (p.startPayment IS NULL OR p.startPayment <= CURDATE())
+                    AND (p.resident = :resident OR p.resident = -1)
+                    AND (p.plotType = :plotType OR p.plotType = -1)
+                    AND (p.graveType = :graveType OR p.graveType = -1)
+                    AND (p.buyerStatus = :buyerStatus OR p.buyerStatus = -1 OR p.buyerStatus IS NULL)
+                    AND (
+                        (p.lineId = :lineId AND p.lineId != '-1') OR
+                        (p.plotId = :plotId AND p.lineId = '-1' AND p.plotId != '-1') OR
+                        (p.blockId = :blockId AND p.plotId = '-1' AND p.blockId != '-1') OR
+                        (p.cemeteryId = :cemeteryId AND p.blockId = '-1' AND p.cemeteryId != '-1') OR
+                        (p.cemeteryId = '-1' OR p.cemeteryId IS NULL)
+                    )
+                    ORDER BY 
+                        p.startPayment DESC,
+                        p.id DESC
+                ";
+                
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute([
+                    ':resident' => $resident,
+                    ':plotType' => $plotType,
+                    ':graveType' => $graveType,
+                    ':buyerStatus' => $buyerStatus,
+                    ':cemeteryId' => $cemeteryId,
+                    ':blockId' => $blockId,
+                    ':plotId' => $plotId,
+                    ':lineId' => $lineId
+                ]);
+                
+                $allPayments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                error_log("Found " . count($allPayments) . " matching payment rules");
+                
+                // סנן כפילויות - השאר רק את החדש ביותר לכל סוג תשלום
+                $uniquePayments = [];
+                $seenDefinitions = [];
+                
+                foreach ($allPayments as $payment) {
+                    $defId = $payment['priceDefinition'];
+                    
+                    if (!isset($seenDefinitions[$defId])) {
+                        $seenDefinitions[$defId] = true;
+                        
+                        // קבל שם התשלום מטבלת הגדרות אם יש
+                        $definitionName = '';
+                        $mandatory = 0;
+                        
+                        // נסה לקבל הגדרה מטבלה נפרדת אם קיימת
+                        if ($defId) {
+                            try {
+                                $defStmt = $pdo->prepare("SELECT name, mandatory FROM payment_definitions WHERE id = :id");
+                                $defStmt->execute([':id' => $defId]);
+                                $definition = $defStmt->fetch(PDO::FETCH_ASSOC);
+                                if ($definition) {
+                                    $definitionName = $definition['name'];
+                                    $mandatory = $definition['mandatory'] ?? 0;
+                                }
+                            } catch (Exception $e) {
+                                // אם אין טבלת הגדרות, השתמש בשמות ברירת מחדל
+                                $defaultNames = [
+                                    1 => 'עלות קבר',
+                                    2 => 'שירותי לוויה',
+                                    3 => 'שירותי קבורה',
+                                    4 => 'אגרת מצבה',
+                                    5 => 'בדיקת עומק',
+                                    6 => 'פירוק מצבה',
+                                    7 => 'הובלה מנתב״ג',
+                                    8 => 'טהרה',
+                                    9 => 'תכריכים',
+                                    10 => 'החלפת שם'
+                                ];
+                                $definitionName = $defaultNames[$defId] ?? "תשלום מסוג $defId";
+                                // הגדר חובה לתשלומים בסיסיים
+                                $mandatory = in_array($defId, [1, 2, 3]) ? 1 : 0;
+                            }
+                        }
+                        
+                        $uniquePayments[] = [
+                            'id' => $payment['id'],
+                            'name' => $definitionName,
+                            'price' => $payment['price'],
+                            'priceDefinition' => $defId,
+                            'mandatory' => $mandatory
+                        ];
+                        
+                        error_log("Added payment: $definitionName, Price: {$payment['price']}, Mandatory: $mandatory");
+                    }
+                }
+                
+                error_log("After deduplication: " . count($uniquePayments) . " unique payments");
+                error_log("=== END PAYMENT MATCHING ===");
+                
+                // החזר תוצאות
+                echo json_encode([
+                    'success' => true,
+                    'payments' => $uniquePayments
+                ]);
+                
+            } catch (Exception $e) {
+                error_log("ERROR in getMatching: " . $e->getMessage());
+                error_log("SQL: " . $sql);
+                
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'שגיאה בטעינת חוקי תשלום: ' . $e->getMessage()
+                ]);
+            }
+            break;
+        // הוספת תשלום חדש
         case 'create':
             $data = json_decode(file_get_contents('php://input'), true);
             

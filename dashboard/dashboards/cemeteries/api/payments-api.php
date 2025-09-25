@@ -108,7 +108,7 @@ try {
             echo json_encode(['success' => true, 'data' => $payment]);
             break;
         // קבלת כל התשלומים
-       case 'getMatching':
+       case 'getMatching1':
             // טען את הקונפיג
             $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config/payment-types-config.php';
             $paymentTypes = $paymentTypesConfig['payment_types'];
@@ -164,6 +164,155 @@ try {
             echo json_encode([
                 'success' => true,
                 'payments' => $payments
+            ]);
+            break;
+        case 'getMatching':
+            error_log("=== START PAYMENT MATCHING ===");
+            
+            // קבל פרמטרים
+            $data = json_decode(file_get_contents('php://input'), true);
+            
+            $plotType = $data['plotType'] ?? -1;
+            $graveType = $data['graveType'] ?? -1;
+            $resident = $data['resident'] ?? -1;
+            $buyerStatus = $data['buyerStatus'] ?? -1;
+            $cemeteryId = $data['cemeteryId'] ?? '-1';
+            $blockId = $data['blockId'] ?? '-1';
+            $plotId = $data['plotId'] ?? '-1';
+            $lineId = $data['lineId'] ?? '-1';
+            
+            error_log("Parameters received:");
+            error_log("- Resident: $resident");
+            error_log("- Plot Type: $plotType");
+            error_log("- Grave Type: $graveType");
+            error_log("- Buyer Status: $buyerStatus");
+            error_log("- Cemetery: $cemeteryId");
+            error_log("- Block: $blockId");
+            error_log("- Plot: $plotId");
+            error_log("- Line: $lineId");
+            
+            // בניית השאילתה עם סדר עדיפויות
+            $sql = "
+                SELECT p.*, 
+                    pd.name as definition_name,
+                    pd.mandatory,
+                    -- חישוב ציון התאמה (גבוה יותר = יותר ספציפי)
+                    (
+                        CASE WHEN p.resident = :resident1 THEN 4 WHEN p.resident = -1 THEN 0 ELSE -100 END +
+                        CASE WHEN p.plotType = :plotType1 THEN 3 WHEN p.plotType = -1 THEN 0 ELSE -100 END +
+                        CASE WHEN p.graveType = :graveType1 THEN 2 WHEN p.graveType = -1 THEN 0 ELSE -100 END +
+                        CASE WHEN p.buyerStatus = :buyerStatus1 THEN 1 WHEN p.buyerStatus = -1 OR p.buyerStatus IS NULL THEN 0 ELSE -100 END +
+                        CASE WHEN p.lineId = :lineId1 AND p.lineId != '-1' THEN 8 ELSE 0 END +
+                        CASE WHEN p.plotId = :plotId1 AND p.plotId != '-1' THEN 4 ELSE 0 END +
+                        CASE WHEN p.blockId = :blockId1 AND p.blockId != '-1' THEN 2 ELSE 0 END +
+                        CASE WHEN p.cemeteryId = :cemeteryId1 AND p.cemeteryId != '-1' THEN 1 ELSE 0 END
+                    ) as match_score
+                FROM payments p
+                LEFT JOIN payment_definitions pd ON p.priceDefinition = pd.id
+                WHERE p.isActive = 1
+                AND (p.startPayment IS NULL OR p.startPayment <= CURDATE())
+                AND (
+                    -- תושבות
+                    (p.resident = :resident2 OR p.resident = -1) AND
+                    -- סוג חלקה
+                    (p.plotType = :plotType2 OR p.plotType = -1) AND
+                    -- סוג קבר
+                    (p.graveType = :graveType2 OR p.graveType = -1) AND
+                    -- סטטוס רוכש
+                    (p.buyerStatus = :buyerStatus2 OR p.buyerStatus = -1 OR p.buyerStatus IS NULL) AND
+                    -- מיקום - היררכי
+                    (
+                        -- אם מוגדרת שורה ספציפית
+                        (p.lineId = :lineId2 AND p.lineId != '-1') OR
+                        -- אם מוגדרת חלקה ספציפית (וכולל את כל השורות שלה)
+                        (p.plotId = :plotId2 AND p.lineId = '-1' AND p.plotId != '-1') OR
+                        -- אם מוגדר גוש ספציפי (וכולל את כל החלקות שלו)
+                        (p.blockId = :blockId2 AND p.plotId = '-1' AND p.blockId != '-1') OR
+                        -- אם מוגדר בית עלמין ספציפי (וכולל את כל הגושים שלו)
+                        (p.cemeteryId = :cemeteryId2 AND p.blockId = '-1' AND p.cemeteryId != '-1') OR
+                        -- או שזה חוק כללי לכולם
+                        (p.cemeteryId = '-1' OR p.cemeteryId IS NULL)
+                    )
+                )
+                ORDER BY 
+                    match_score DESC,           -- הכי ספציפי קודם
+                    p.startPayment DESC,         -- תאריך חדש יותר קודם
+                    p.priceDefinition ASC        -- סדר לפי סוג התשלום
+            ";
+            
+            // הכן פרמטרים
+            $params = [
+                // לחישוב ציון
+                ':resident1' => $resident,
+                ':plotType1' => $plotType,
+                ':graveType1' => $graveType,
+                ':buyerStatus1' => $buyerStatus,
+                ':cemeteryId1' => $cemeteryId,
+                ':blockId1' => $blockId,
+                ':plotId1' => $plotId,
+                ':lineId1' => $lineId,
+                // לסינון
+                ':resident2' => $resident,
+                ':plotType2' => $plotType,
+                ':graveType2' => $graveType,
+                ':buyerStatus2' => $buyerStatus,
+                ':cemeteryId2' => $cemeteryId,
+                ':blockId2' => $blockId,
+                ':plotId2' => $plotId,
+                ':lineId2' => $lineId
+            ];
+            
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            $allPayments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            error_log("Found " . count($allPayments) . " matching payment rules");
+            
+            // סנן כפילויות - השאר רק את החדש ביותר לכל סוג תשלום
+            $uniquePayments = [];
+            $seenDefinitions = [];
+            
+            foreach ($allPayments as $payment) {
+                $defId = $payment['priceDefinition'];
+                
+                // דיבוג
+                error_log("Payment: Definition=$defId, Score={$payment['match_score']}, Date={$payment['startPayment']}");
+                
+                if (!isset($seenDefinitions[$defId])) {
+                    $seenDefinitions[$defId] = true;
+                    $uniquePayments[] = [
+                        'id' => $payment['id'],
+                        'name' => $payment['definition_name'] ?? "תשלום מסוג $defId",
+                        'price' => $payment['price'],
+                        'priceDefinition' => $defId,
+                        'mandatory' => $payment['mandatory'] ?? false,
+                        'match_score' => $payment['match_score'],
+                        'debug' => [
+                            'resident' => $payment['resident'],
+                            'plotType' => $payment['plotType'],
+                            'graveType' => $payment['graveType'],
+                            'buyerStatus' => $payment['buyerStatus'],
+                            'location' => "{$payment['cemeteryId']}/{$payment['blockId']}/{$payment['plotId']}/{$payment['lineId']}",
+                            'startDate' => $payment['startPayment']
+                        ]
+                    ];
+                } else {
+                    error_log("- Skipped (duplicate definition)");
+                }
+            }
+            
+            error_log("After deduplication: " . count($uniquePayments) . " unique payments");
+            error_log("=== END PAYMENT MATCHING ===");
+            
+            // החזר תוצאות
+            echo json_encode([
+                'success' => true,
+                'payments' => $uniquePayments,
+                'debug' => [
+                    'total_found' => count($allPayments),
+                    'unique_payments' => count($uniquePayments),
+                    'parameters' => $data
+                ]
             ]);
             break;
             // הוספת תשלום חדש

@@ -508,7 +508,7 @@ class UnifiedTableRenderer {
     console.log('addItem - type:', type, 'parentId:', parentId);
     
     // לקוחות ורכישות לא צריכים הורה
-    const typesWithoutParent = ['cemetery', 'customer', 'purchase', 'burial'];
+    const typesWithoutParent = ['cemetery', 'payment', 'customer', 'purchase', 'burial'];
     
     if (typesWithoutParent.includes(type)) {
         // פתח ישירות בלי הורה

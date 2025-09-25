@@ -55,6 +55,8 @@ function setupEventListeners() {
         // Ctrl/Cmd + N - הוספה חדשה
         if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
             e.preventDefault();
+            console.log('123456');
+            
             tableRenderer.openAddModal();
         }
         

@@ -6,18 +6,14 @@ let currentBurialPage = 1;
 let currentBurialSort = { field: 'createDate', order: 'DESC' };
 
 // טעינת כל הקבורות - הגדר גלובלית מיד
-window.loadAllBurials = async function(page = 1) {
+async function loadAllBurials(page = 1) {
     console.log('Loading all burials...');
     currentBurialPage = page;
     
     // עדכן סוג נוכחי
     window.currentType = 'burial';
     window.currentParentId = null;
-    
-    // נקה את הדשבורד
-    if (typeof DashboardCleaner !== 'undefined' && DashboardCleaner.clear) {
-        DashboardCleaner.clear({ targetLevel: 'burial' });
-    }
+    DashboardCleaner.clear({ targetLevel: 'burial' });
     
     // עדכן את כפתור ההוספה
     if (typeof updateAddButtonText === 'function') {
@@ -517,4 +513,5 @@ window.openAddModal = function() {
     }
 };
 
-console.log('✅ Burials management module initialized successfully');
+// הגדר פונקציה גלובלית
+window.loadAllBurials = loadAllBurials;

@@ -156,18 +156,6 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <script src="/dashboard/dashboards/cemeteries/js/residency-management.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/countries-management.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/cities-management.js"></script>
-    
-<script>
-// בדיקה זמנית
-if (typeof loadAllBurials === 'undefined') {
-    window.loadAllBurials = function() {
-        alert('הפונקציה loadAllBurials לא נטענה מהקובץ');
-    }
-} else {
-
-    alert('555')
-}
-</script>
 
     <script>
         // Initialize dashboard on load

@@ -55,7 +55,6 @@ function setupEventListeners() {
         // Ctrl/Cmd + N - הוספה חדשה
         if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
             e.preventDefault();
-            console.log('123456');
             
             tableRenderer.openAddModal();
         }
@@ -241,6 +240,7 @@ async function performQuickSearch(query) {
 
 // פתיחת מודל הוספה - עם בדיקת הקשר
 window.openAddModal = function() {
+    alert('test 1')
     if (window.tableRenderer) {
         window.tableRenderer.openAddModal();
     } else {

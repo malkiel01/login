@@ -151,6 +151,10 @@ const FormHandler = {
             case 'purchase':
                 this.handlePurchaseForm(itemId);
                 break;
+
+            case 'payment':  // הוסף את זה
+                this.handlePaymentForm(itemId);
+                break;
                 
             default:
                 if (itemId) {
@@ -2078,6 +2082,161 @@ const FormHandler = {
                 setTimeout(() => observer.disconnect(), 10000);
             }
         }
+    },
+
+    handlePaymentForm: function(itemId) {
+        // חכה ל-fieldset עם הנתונים
+        this.waitForElement('#payment-location-fieldset', (fieldset) => {
+            if (fieldset.dataset.hierarchy) {
+                window.paymentHierarchy = JSON.parse(fieldset.dataset.hierarchy);
+            } else {
+                console.error('No hierarchy data found in payment fieldset!');
+                return;
+            }
+            
+            // פונקציה לסינון המיקום
+            window.filterPaymentLocation = function(level) {
+                const cemeteryId = document.getElementById("paymentCemeterySelect").value;
+                const blockId = document.getElementById("paymentBlockSelect").value;
+                const plotId = document.getElementById("paymentPlotSelect").value;
+                
+                switch(level) {
+                    case "cemetery":
+                        // נקה ילדים
+                        populatePaymentBlocks(cemeteryId);
+                        populatePaymentPlots(cemeteryId, "-1");
+                        document.getElementById("paymentLineSelect").innerHTML = '<option value="-1">-- בחר חלקה תחילה --</option>';
+                        document.getElementById("paymentLineSelect").disabled = true;
+                        break;
+                        
+                    case "block":
+                        if (blockId !== "-1") {
+                            populatePaymentPlots("-1", blockId);
+                        } else if (cemeteryId !== "-1") {
+                            populatePaymentPlots(cemeteryId, "-1");
+                        } else {
+                            populatePaymentPlots("-1", "-1");
+                        }
+                        document.getElementById("paymentLineSelect").innerHTML = '<option value="-1">-- בחר חלקה תחילה --</option>';
+                        document.getElementById("paymentLineSelect").disabled = true;
+                        break;
+                        
+                    case "plot":
+                        if (plotId !== "-1") {
+                            document.getElementById("paymentLineSelect").disabled = false;
+                            populatePaymentRows(plotId);
+                        } else {
+                            document.getElementById("paymentLineSelect").innerHTML = '<option value="-1">-- בחר חלקה תחילה --</option>';
+                            document.getElementById("paymentLineSelect").disabled = true;
+                        }
+                        break;
+                }
+            }
+            
+            // מילוי גושים
+            window.populatePaymentBlocks = function(cemeteryId) {
+                const select = document.getElementById("paymentBlockSelect");
+                select.innerHTML = '<option value="-1">-- כל הגושים --</option>';
+                
+                if (cemeteryId === "-1") return;
+                
+                const blocks = window.paymentHierarchy.blocks.filter(b => b.cemeteryId === cemeteryId);
+                blocks.forEach(block => {
+                    const option = document.createElement("option");
+                    option.value = block.unicId;
+                    option.textContent = block.blockNameHe;
+                    select.appendChild(option);
+                });
+            }
+            
+            // מילוי חלקות
+            window.populatePaymentPlots = function(cemeteryId, blockId) {
+                const select = document.getElementById("paymentPlotSelect");
+                select.innerHTML = '<option value="-1">-- כל החלקות --</option>';
+                
+                let plots = window.paymentHierarchy.plots;
+                
+                if (blockId !== "-1") {
+                    plots = plots.filter(p => p.blockId === blockId);
+                } else if (cemeteryId !== "-1") {
+                    const blockIds = window.paymentHierarchy.blocks
+                        .filter(b => b.cemeteryId === cemeteryId)
+                        .map(b => b.unicId);
+                    plots = plots.filter(p => blockIds.includes(p.blockId));
+                }
+                
+                plots.forEach(plot => {
+                    const option = document.createElement("option");
+                    option.value = plot.unicId;
+                    option.textContent = plot.plotNameHe;
+                    select.appendChild(option);
+                });
+            }
+            
+            // מילוי שורות
+            window.populatePaymentRows = function(plotId) {
+                const select = document.getElementById("paymentLineSelect");
+                select.innerHTML = '<option value="-1">-- כל השורות --</option>';
+                
+                const rows = window.paymentHierarchy.rows.filter(r => r.plotId === plotId);
+                rows.forEach(row => {
+                    const option = document.createElement("option");
+                    option.value = row.unicId;
+                    option.textContent = row.lineNameHe || "שורה " + row.serialNumber;
+                    select.appendChild(option);
+                });
+            }
+            
+            // אם זה עריכה, טען את הערכים השמורים
+            if (itemId) {
+                this.waitForElement('#paymentFormModal form', (form) => {
+                    fetch(`/dashboard/dashboards/cemeteries/api/payments-api.php?action=get&id=${itemId}`)
+                        .then(response => response.json())
+                        .then(result => {
+                            if (result.success && result.data) {
+                                const payment = result.data;
+                                
+                                // מלא שדות רגילים
+                                Object.keys(payment).forEach(key => {
+                                    const field = form.elements[key];
+                                    if (field) {
+                                        field.value = payment[key] || '';
+                                    }
+                                });
+                                
+                                // טען היררכיה אם יש
+                                if (payment.cemeteryId && payment.cemeteryId !== "-1") {
+                                    setTimeout(() => {
+                                        document.getElementById("paymentCemeterySelect").value = payment.cemeteryId;
+                                        filterPaymentLocation("cemetery");
+                                        
+                                        setTimeout(() => {
+                                            if (payment.blockId && payment.blockId !== "-1") {
+                                                document.getElementById("paymentBlockSelect").value = payment.blockId;
+                                                filterPaymentLocation("block");
+                                            }
+                                            
+                                            setTimeout(() => {
+                                                if (payment.plotId && payment.plotId !== "-1") {
+                                                    document.getElementById("paymentPlotSelect").value = payment.plotId;
+                                                    filterPaymentLocation("plot");
+                                                }
+                                                
+                                                setTimeout(() => {
+                                                    if (payment.lineId && payment.lineId !== "-1") {
+                                                        document.getElementById("paymentLineSelect").value = payment.lineId;
+                                                    }
+                                                }, 100);
+                                            }, 100);
+                                        }, 100);
+                                    }, 100);
+                                }
+                            }
+                        })
+                        .catch(error => console.error('Error loading payment data:', error));
+                });
+            }
+        });
     },
     
     loadFormData: function(type, itemId) {

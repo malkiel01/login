@@ -59,12 +59,24 @@ const FormHandler = {
     },
 
     openForm: async function(type, parentId = null, itemId = null) {
-         
+        // דיבוג מיידי - עוד לפני הבדיקות
+        console.log('🚀🚀🚀 FormHandler.openForm CALLED!');
+        console.log('Type received:', type);
+        console.log('Type is string?', typeof type === 'string');
+        console.log('Type value exactly:', JSON.stringify(type));
+        alert('FormHandler.openForm - type: ' + type);
+
         if (type === 'purchase' && !itemId) {
             window.isEditMode = false;
             window.purchasePayments = [];
             window.selectedGraveData = null;
             console.log('🆕 Opening NEW purchase form - cleared globals');
+        }
+        
+        // הוסף כאן בדיקה ספציפית
+        if (type === 'burial') {
+            console.log('✅✅✅ BURIAL TYPE DETECTED!');
+            alert('BURIAL TYPE CONFIRMED!');
         }
         
         if (!type || typeof type !== 'string') {
@@ -140,7 +152,7 @@ const FormHandler = {
 
     console.log('🎯 handleFormSpecificLogic - type:', type, 'parentId:', parentId, 'itemId:', itemId);
     alert('DEBUG: handleFormSpecificLogic - type: ' + type);
-    
+
         switch(type) {
             case 'area_grave':
                 this.handleAreaGraveForm(parentId);

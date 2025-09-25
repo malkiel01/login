@@ -498,20 +498,20 @@ window.searchBurials = searchBurials;
 window.openAddBurial = openAddBurial;
 window.printBurial = printBurial;
 
-// פונקציה גלובלית openAddModal - בדיוק כמו ברכישות
-window.openAddModal = function() {
-    console.log('Global openAddModal called, currentType:', window.currentType);
+// // פונקציה גלובלית openAddModal - בדיוק כמו ברכישות
+// window.openAddModal = function() {
+//     console.log('Global openAddModal called, currentType:', window.currentType);
     
-    if (window.currentType === 'burial') {
-        openAddBurial();
-    } else if (window.currentType === 'purchase') {
-        if (typeof openAddPurchase === 'function') {
-            openAddPurchase();
-        }
-    } else if (window.tableRenderer && typeof window.tableRenderer.openAddModal === 'function') {
-        window.tableRenderer.openAddModal();
-    }
-};
+//     if (window.currentType === 'burial') {
+//         openAddBurial();
+//     } else if (window.currentType === 'purchase') {
+//         if (typeof openAddPurchase === 'function') {
+//             openAddPurchase();
+//         }
+//     } else if (window.tableRenderer && typeof window.tableRenderer.openAddModal === 'function') {
+//         window.tableRenderer.openAddModal();
+//     }
+// };
 
 // הגדר פונקציה גלובלית
 window.loadAllBurials = loadAllBurials;

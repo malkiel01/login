@@ -3649,7 +3649,7 @@ const FormHandler = {
         }
     },
 
-    handleBurialForm: function(itemId) {
+    handleBurialFormOld: function(itemId) {
         this.waitForElement('#grave-selector-fieldset', (fieldset) => {
             // טען את נתוני ההיררכיה
             if (fieldset.dataset.hierarchy) {
@@ -3826,6 +3826,103 @@ const FormHandler = {
                 // הגבלת זמן של 10 שניות
                 setTimeout(() => observer.disconnect(), 10000);
             }
+        }
+    },
+
+    handleBurialForm: function(itemId) {
+        // דיבוג ישיר - יופיע מיד
+        console.log('🚀 handleBurialForm START - itemId:', itemId);
+        alert('DEBUG: handleBurialForm נקרא!');
+        
+        // נסה למצוא את ה-fieldset מיד
+        const fieldsetImmediate = document.querySelector('#grave-selector-fieldset');
+        console.log('🔍 Fieldset found immediately?', fieldsetImmediate);
+        
+        this.waitForElement('#grave-selector-fieldset', (fieldset) => {
+            console.log('✅ Fieldset found by waitForElement!');
+            alert('DEBUG: Fieldset נמצא!');
+            
+            // בדוק אם יש נתוני היררכיה
+            console.log('📊 Fieldset dataset:', fieldset.dataset);
+            
+            if (fieldset.dataset.hierarchy) {
+                console.log('📦 Hierarchy data exists, length:', fieldset.dataset.hierarchy.length);
+                
+                try {
+                    window.hierarchyData = JSON.parse(fieldset.dataset.hierarchy);
+                    console.log('✅ Hierarchy parsed successfully:', window.hierarchyData);
+                    alert('DEBUG: היררכיה נטענה! קברים: ' + (window.hierarchyData.graves ? window.hierarchyData.graves.length : 0));
+                } catch(e) {
+                    console.error('❌ Error parsing hierarchy:', e);
+                    alert('ERROR: בעיה בפענוח ההיררכיה');
+                    return;
+                }
+            } else {
+                console.error('❌ No hierarchy data in fieldset!');
+                alert('ERROR: אין נתוני היררכיה ב-fieldset!');
+                
+                // נסה לחפש בדרכים אחרות
+                console.log('Fieldset attributes:', fieldset.attributes);
+                console.log('Fieldset innerHTML (first 500 chars):', fieldset.innerHTML.substring(0, 500));
+                return;
+            }
+            
+            // בדוק אם GraveHierarchyManager קיים
+            console.log('🔧 GraveHierarchyManager exists?', typeof window.GraveHierarchyManager);
+            
+            if (typeof window.GraveHierarchyManager !== 'undefined') {
+                console.log('📌 Calling GraveHierarchyManager.init');
+                
+                GraveHierarchyManager.init({
+                    allowedStatuses: [1, 2],
+                    onGraveSelected: function(graveId) {
+                        console.log('🎯 Grave selected:', graveId);
+                        alert('DEBUG: קבר נבחר: ' + graveId);
+                    }
+                });
+            } else {
+                console.error('❌ GraveHierarchyManager not found!');
+                alert('ERROR: GraveHierarchyManager לא נמצא!');
+                
+                // נסה לאתחל ידנית
+                console.log('🔄 Trying manual initialization...');
+                
+                // בדוק אם הפונקציות הגלובליות קיימות
+                console.log('window.filterHierarchy exists?', typeof window.filterHierarchy);
+                console.log('window.populateBlocks exists?', typeof window.populateBlocks);
+            }
+            
+            // בדוק אם האלמנטים של הבוררים קיימים
+            const selectors = ['cemeterySelect', 'blockSelect', 'plotSelect', 'rowSelect', 'areaGraveSelect', 'graveSelect'];
+            selectors.forEach(id => {
+                const element = document.getElementById(id);
+                console.log(`📋 ${id} exists?`, !!element, element ? 'options: ' + element.options.length : '');
+            });
+            
+        });
+        
+        // דיבוג נוסף - בדוק אם waitForElement בכלל עובד
+        setTimeout(() => {
+            console.log('⏰ After 2 seconds - checking fieldset again...');
+            const fieldset = document.querySelector('#grave-selector-fieldset');
+            if (fieldset) {
+                console.log('✅ Fieldset exists after timeout');
+                console.log('Dataset keys:', Object.keys(fieldset.dataset));
+            } else {
+                console.log('❌ Fieldset still not found after timeout');
+                
+                // חפש אלמנטים דומים
+                const allFieldsets = document.querySelectorAll('fieldset');
+                console.log('All fieldsets found:', allFieldsets.length);
+                allFieldsets.forEach((fs, index) => {
+                    console.log(`Fieldset ${index} id:`, fs.id, 'classes:', fs.className);
+                });
+            }
+        }, 2000);
+        
+        // אם זו עריכה
+        if (itemId) {
+            console.log('📝 Edit mode - itemId:', itemId);
         }
     },
 

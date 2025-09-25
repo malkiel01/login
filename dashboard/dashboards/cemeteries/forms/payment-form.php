@@ -50,42 +50,43 @@ $formBuilder = new FormBuilder('payment', $itemId, null);
 // הוספת כל השדות
 $formBuilder->addField('plotType', 'סוג חלקה', 'select', [
     'options' => [
-        '' => '-- בחר --',
+        -1 => '-- כל הסוגים --',
         1 => 'פטורה',
         2 => 'חריגה', 
         3 => 'סגורה'
     ],
-    'value' => $payment['plotType'] ?? ''
+    'value' => $payment['plotType'] ?? -1
 ]);
+
 
 $formBuilder->addField('graveType', 'סוג קבר', 'select', [
     'options' => [
-        '' => '-- בחר --',
+        -1 => '-- כל הסוגים --',
         1 => 'שדה',
         2 => 'רוויה',
         3 => 'סנהדרין'
     ],
-    'value' => $payment['graveType'] ?? ''
+    'value' => $payment['graveType'] ?? -1
 ]);
 
 $formBuilder->addField('resident', 'סוג תושב', 'select', [
     'options' => [
-        '' => '-- בחר --',
+        -1 => '-- כל הסוגים --',
         1 => 'ירושלים והסביבה',
         2 => 'תושב חוץ',
         3 => 'תושב חו״ל'
     ],
-    'value' => $payment['resident'] ?? ''
+    'value' => $payment['resident'] ?? -1
 ]);
 
 $formBuilder->addField('buyerStatus', 'סטטוס רוכש', 'select', [
     'options' => [
-        '' => '-- בחר --',
+        -1 => '-- כל הסוגים --',
         1 => 'בחיים',
         2 => 'לאחר פטירה',
         3 => 'בן זוג נפטר'
     ],
-    'value' => $payment['buyerStatus'] ?? ''
+    'value' => $payment['buyerStatus'] ?? -1
 ]);
 
 // הוסף HTML מותאם אישית למיקום
@@ -136,6 +137,7 @@ $formBuilder->addCustomHTML($locationHTML);
 
 
 $formBuilder->addField('priceDefinition', 'הגדרת מחיר', 'select', [
+    'required' => true,  // הוסף שדה חובה
     'options' => [
         '' => '-- בחר --',
         1 => 'עלות קבר',

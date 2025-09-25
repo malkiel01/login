@@ -336,10 +336,8 @@ class UnifiedTableRenderer {
         
         console.log('openAddModal - type:', type, 'parentId:', parentId);
 
-        alert('type: ' + type)
-
         // לקוחות ורכישות לא צריכים הורה
-        const typesWithoutParent = ['cemetery', 'customer', 'purchase', 'residency', 'burial'];
+        const typesWithoutParent = ['cemetery', 'payment', 'customer', 'purchase', 'residency', 'burial'];
 
         if (!type) {
             console.error('No type defined');
@@ -509,10 +507,9 @@ class UnifiedTableRenderer {
     
     console.log('addItem - type:', type, 'parentId:', parentId);
 
-    alert('type: ' + type)
-    
     // לקוחות ורכישות לא צריכים הורה
-    const typesWithoutParent = ['cemetery', 'residency', 'customer', 'purchase', 'burial'];
+    const typesWithoutParent = ['cemetery', 'payment', 'customer', 'purchase', 'residency', 'burial'];
+
     
     if (typesWithoutParent.includes(type)) {
         // פתח ישירות בלי הורה
@@ -525,12 +522,6 @@ class UnifiedTableRenderer {
         this.openParentSelectionDialog(type);
         return;
     }
-
-    // if (!parentId && type !== 'cemetery') {
-    //     console.log('Opening parent selection dialog...');
-    //     this.openParentSelectionDialog(type);
-    //     return;
-    // }
     
     console.log('Opening form directly...');
     FormHandler.openForm(type, parentId, null);

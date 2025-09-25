@@ -239,7 +239,7 @@ async function updateBurialStats() {
 }
 
 // צפייה בקבורה
-async function viewBurial(id) {
+async function viewBurial2(id) {
     try {
         const response = await fetch(`/dashboard/dashboards/cemeteries/api/burials-api.php?action=get&id=${id}`);
         const data = await response.json();
@@ -355,6 +355,125 @@ async function viewBurial(id) {
     } catch (error) {
         showError('שגיאה בטעינת פרטי הקבורה');
     }
+}
+async function viewBurial(id) {
+    try {
+        const response = await fetch(`/dashboard/dashboards/cemeteries/api/burials-api.php?action=get&id=${id}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            showBurialDetails(data.data);
+        }
+    } catch (error) {
+        showError('שגיאה בטעינת פרטי הקבורה');
+    }
+}
+
+// הצגת פרטי רכישה
+function showBurialDetails(burial) {
+    const modal = document.createElement('div');
+    modal.className = 'modal show';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;';
+    
+    const customerName = `${burial.customerLastName || ''} ${burial.customerFirstName || ''}`.trim();
+    const deathDate = formatDate(burial.dateDeath);
+    const burialDate = formatDate(burial.dateBurial);
+    const burialTime = burial.timeBurial ? burial.timeBurial.substring(0, 5) : '';
+            
+    modal.innerHTML = `
+        <div class="modal-content" style="background: white; padding: 30px; border-radius: 10px; max-width: 800px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header" style="margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 15px;">
+                <h2 style="margin: 0; color: #333;">כרטיס קבורה - ${burial.serialBurialId}</h2>
+                <div style="margin-top: 10px;">
+                    ${getBurialStatusBadge(burial.burialStatus)}
+                </div>
+            </div>
+            <div class="modal-body">
+                <div style="display: grid; gap: 20px;">
+                    <!-- פרטי הנפטר -->
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                        <h4 style="margin-bottom: 15px; color: #495057;">פרטי הנפטר/ת</h4>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                            <div><strong>שם:</strong> ${customerName}</div>
+                            <div><strong>ת.ז.:</strong> ${burial.customerNumId || '-'}</div>
+                            <div><strong>טלפון:</strong> ${burial.customerPhone || '-'}</div>
+                            <div><strong>כתובת:</strong> ${burial.customerAddress || '-'}</div>
+                        </div>
+                    </div>
+                    
+                    <!-- פרטי פטירה וקבורה -->
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                        <h4 style="margin-bottom: 15px; color: #495057;">פרטי פטירה וקבורה</h4>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                            <div><strong>תאריך פטירה:</strong> ${deathDate}</div>
+                            <div><strong>שעת פטירה:</strong> ${burial.timeDeath || '-'}</div>
+                            <div><strong>מקום פטירה:</strong> ${burial.placeDeath || '-'}</div>
+                            <div><strong>פטירה בחו"ל:</strong> ${burial.deathAbroad || 'לא'}</div>
+                            <div style="border-top: 1px solid #dee2e6; padding-top: 10px; grid-column: span 2;"></div>
+                            <div><strong>תאריך קבורה:</strong> ${burialDate}</div>
+                            <div><strong>שעת קבורה:</strong> ${burialTime}</div>
+                            <div><strong>רשיון קבורה:</strong> ${burial.buriaLicense || '-'}</div>
+                            <div><strong>ביטוח לאומי:</strong> ${burial.nationalInsuranceBurial || 'לא'}</div>
+                        </div>
+                    </div>
+                    
+                    <!-- פרטי קבר -->
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                        <h4 style="margin-bottom: 15px; color: #495057;">פרטי קבר</h4>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                            <div><strong>מיקום:</strong> ${burial.fullLocation || burial.graveName || '-'}</div>
+                            <div><strong>סטטוס קבר:</strong> ${getGraveStatusName(burial.graveStatus)}</div>
+                            ${burial.purchaseSerial ? `
+                                <div><strong>מס׳ רכישה:</strong> ${burial.purchaseSerial}</div>
+                                <div><strong>מחיר רכישה:</strong> ₪${burial.purchasePrice || 0}</div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    
+                    <!-- איש קשר -->
+                    ${burial.contactId || burial.kinship ? `
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                        <h4 style="margin-bottom: 15px; color: #495057;">איש קשר</h4>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                            ${burial.contactId ? `<div><strong>מזהה איש קשר:</strong> ${burial.contactId}</div>` : ''}
+                            ${burial.kinship ? `<div><strong>קרבה:</strong> ${burial.kinship}</div>` : ''}
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    <!-- הערות -->
+                    ${burial.comment ? `
+                    <div style="background: #fff3cd; padding: 15px; border-radius: 8px;">
+                        <h4 style="margin-bottom: 15px; color: #856404;">הערות</h4>
+                        <div>${burial.comment}</div>
+                    </div>
+                    ` : ''}
+                    
+                    <!-- תאריכי מערכת -->
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                        <h4 style="margin-bottom: 15px; color: #495057;">מידע מערכת</h4>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 14px;">
+                            <div><strong>נוצר:</strong> ${formatDate(burial.createDate)}</div>
+                            <div><strong>עודכן:</strong> ${formatDate(burial.updateDate)}</div>
+                            ${burial.reportingBL ? `<div><strong>דווח לביטוח לאומי:</strong> ${formatDate(burial.reportingBL)}</div>` : ''}
+                            ${burial.cancelDate ? `<div style="color: red;"><strong>בוטל:</strong> ${formatDate(burial.cancelDate)}</div>` : ''}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                <button class="btn btn-primary" onclick="printBurial('${burial.unicId}')">
+                    הדפסה
+                </button>
+                <button class="btn btn-warning" onclick="this.closest('.modal').remove(); editBurial('${burial.unicId}')">
+                    ערוך
+                </button>
+                <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">סגור</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
 }
 
 // פונקציית עזר לסטטוס קבר

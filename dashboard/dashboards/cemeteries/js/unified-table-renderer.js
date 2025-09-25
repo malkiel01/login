@@ -506,9 +506,11 @@ class UnifiedTableRenderer {
     const parentId = window.currentParentId;
     
     console.log('addItem - type:', type, 'parentId:', parentId);
+
+    alert('type: ' + type)
     
     // לקוחות ורכישות לא צריכים הורה
-    const typesWithoutParent = ['cemetery', 'payment', 'customer', 'purchase', 'burial'];
+    const typesWithoutParent = ['cemetery', 'residency', 'customer', 'purchase', 'burial'];
     
     if (typesWithoutParent.includes(type)) {
         // פתח ישירות בלי הורה
@@ -517,11 +519,16 @@ class UnifiedTableRenderer {
     }
     
     // בדוק אם צריך לבחור הורה קודם
-    if (!parentId && type !== 'cemetery') {
-        console.log('Opening parent selection dialog...');
+    if (!parentId && !typesWithoutParent.includes(type)) {
         this.openParentSelectionDialog(type);
         return;
     }
+
+    // if (!parentId && type !== 'cemetery') {
+    //     console.log('Opening parent selection dialog...');
+    //     this.openParentSelectionDialog(type);
+    //     return;
+    // }
     
     console.log('Opening form directly...');
     FormHandler.openForm(type, parentId, null);

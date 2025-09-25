@@ -884,7 +884,7 @@ window.openCemetery = function(cemeteryId, cemeteryName) {
     BreadcrumbManager.update(window.selectedItems);
     
     // טען גושים
-    tableRenderer.loadAndDisplay('block', cemeteryId);
+    window.tableRenderer.loadAndDisplay('block', cemeteryId);
 };
 
 window.openBlock = function(blockId, blockName) {
@@ -899,7 +899,7 @@ window.openBlock = function(blockId, blockName) {
     BreadcrumbManager.update(window.selectedItems);
     
     // טען חלקות
-    tableRenderer.loadAndDisplay('plot', blockId);
+    window.tableRenderer.loadAndDisplay('plot', blockId);
 };
 
 window.openPlot = function(plotId, plotName) {
@@ -914,7 +914,7 @@ window.openPlot = function(plotId, plotName) {
     BreadcrumbManager.update(window.selectedItems);
     
     // טען אחוזות קבר
-    tableRenderer.loadAndDisplay('area_grave', plotId);
+    window.tableRenderer.loadAndDisplay('area_grave', plotId);
 };
 
 window.openAreaGrave = function(areaGraveId, areaGraveName) {
@@ -929,7 +929,7 @@ window.openAreaGrave = function(areaGraveId, areaGraveName) {
     BreadcrumbManager.update(window.selectedItems);
     
     // טען קברים
-    tableRenderer.loadAndDisplay('grave', areaGraveId);
+    window.tableRenderer.loadAndDisplay('grave', areaGraveId);
 };
 
 window.viewGraveDetails = function(graveId) {

@@ -4528,12 +4528,3 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
-
-// פונקציות גלובליות לתאימות אחורה
-window.openFormModal = function(type, parentId, itemId) {
-    FormHandler.openForm(type, parentId, itemId);
-};
-
-window.closeFormModal = function(type) {
-    FormHandler.closeForm(type);
-};

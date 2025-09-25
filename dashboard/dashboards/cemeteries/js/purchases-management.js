@@ -350,13 +350,6 @@ function openAddPurchase() {
 }
 
 // עריכת רכישה
-async function editPurchase2(id) {
-    window.currentType = 'purchase';
-    console.log('נכנסתי ל editPurchase', 'file: purchases-management.js, row: 355');
-    
-    FormHandler.openForm('purchase', null, id);
-}
-
 async function editPurchase(id) {
     window.currentType = 'purchase';
     window.currentParentId = null;

@@ -493,7 +493,6 @@ function printBurial(id) {
 }
 
 
-
 function showError(message) {
  console.error('Error:', message);
  const alertDiv = document.createElement('div');

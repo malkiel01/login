@@ -322,6 +322,15 @@ const FormHandler = {
             
             const html = await response.text();
 
+            // צור div לתצוגה
+            const resultDiv = document.createElement('div');
+            resultDiv.style.cssText = 'position:fixed;top:50px;left:0;right:0;background:white;border:2px solid black;padding:10px;z-index:99999;max-height:300px;overflow:auto';
+            resultDiv.innerHTML = '<h3>Server Response:</h3><pre>' + html.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</pre>';
+            document.body.appendChild(resultDiv);
+
+            // הסר אחרי 10 שניות
+            setTimeout(() => resultDiv.remove(), 10000);
+
             // הוסף מכאן:
             console.log('=== FULL HTML FROM SERVER ===');
             console.log(html);

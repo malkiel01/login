@@ -4070,6 +4070,8 @@ const FormHandler = {
         // טען נתונים אם זו עריכה
         if (itemId) {
             window.isEditMode = true;
+
+            alert(itemId)
             
             const loadBurialData = () => {
                 const form = document.querySelector('#burialFormModal form');

@@ -26,7 +26,6 @@ try {
     // טען לקוחות - רק לא בסטטוס נפטר (או הלקוח הנוכחי בעריכה)
     $customers = [];
     if ($burial && $burial['clientId']) {
-        // אם זה עריכה, כלול גם את הלקוח הנוכחי
         $customersStmt = $conn->prepare("
             SELECT unicId, CONCAT(lastName, ' ', firstName) as full_name, numId,
                 CASE WHEN unicId = :currentClient THEN 1 ELSE 0 END as is_current
@@ -40,7 +39,6 @@ try {
             'currentClient2' => $burial['clientId']
         ]);
     } else {
-        // קבורה חדשה - רק לקוחות שאינם נפטרים
         $customersStmt = $conn->prepare("
             SELECT unicId, CONCAT(lastName, ' ', firstName) as full_name, numId 
             FROM customers 
@@ -84,13 +82,12 @@ try {
         $purchases[$row['unicId']] = $label;
     }
 
-    // הכן את נתוני ההיררכיה לבחירת קבר (זהה לרכישות)
+    // הכן את נתוני ההיררכיה לבחירת קבר
     $hierarchyData = [];
     $cemeteries = [];
 
     // בתי עלמין
     if ($burial && $burial['graveId']) {
-        // אם עורכים קבורה, כלול את הקבר הנוכחי
         $cemeteriesStmt = $conn->prepare("
             SELECT c.unicId, c.cemeteryNameHe as name,
             (EXISTS (
@@ -100,7 +97,7 @@ try {
                 INNER JOIN plots p ON r.plotId = p.unicId
                 INNER JOIN blocks b ON p.blockId = b.unicId
                 WHERE b.cemeteryId = c.unicId
-                AND g.graveStatus IN (1, 2)  -- פנוי או שמור
+                AND g.graveStatus IN (1, 2)
                 AND g.isActive = 1
             ) OR EXISTS (
                 SELECT 1 FROM graves g
@@ -117,7 +114,6 @@ try {
         ");
         $cemeteriesStmt->execute(['currentGrave' => $burial['graveId']]);
     } else {
-        // קבורה חדשה - קברים פנויים או ברכישה (לא תפוסים בקבורה)
         $cemeteriesStmt = $conn->prepare("
             SELECT c.unicId, c.cemeteryNameHe as name,
             EXISTS (
@@ -127,7 +123,7 @@ try {
                 INNER JOIN plots p ON r.plotId = p.unicId
                 INNER JOIN blocks b ON p.blockId = b.unicId
                 WHERE b.cemeteryId = c.unicId
-                AND g.graveStatus IN (1, 2)  -- פנוי או שמור (רכישה)
+                AND g.graveStatus IN (1, 2)
                 AND g.isActive = 1
             ) as has_available_graves
             FROM cemeteries c
@@ -138,7 +134,7 @@ try {
     }
     $cemeteries = $cemeteriesStmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // טען את כל ההיררכיה (גושים, חלקות, שורות, אחוזות קבר, קברים)
+    // טען את כל ההיררכיה
     // גושים
     $blocksStmt = $conn->prepare("
         SELECT b.*, c.id as cemetery_id 
@@ -181,7 +177,7 @@ try {
     $areaGravesStmt->execute();
     $hierarchyData['areaGraves'] = $areaGravesStmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // קברים - כלול את הקבר הנוכחי או קברים זמינים
+    // קברים
     if ($burial && $burial['graveId']) {
         $gravesStmt = $conn->prepare("
             SELECT g.*, g.areaGraveId as area_grave_id, g.graveNameHe as name,
@@ -196,11 +192,10 @@ try {
             'currentGrave2' => $burial['graveId']
         ]);
     } else {
-        // קבורה חדשה - רק קברים פנויים או ברכישה (לא תפוסים)
         $gravesStmt = $conn->prepare("
             SELECT g.*, g.areaGraveId as area_grave_id, g.graveNameHe as name
             FROM graves g 
-            WHERE g.graveStatus IN (1, 2)  -- פנוי או שמור (רכישה)
+            WHERE g.graveStatus IN (1, 2)
             AND g.isActive = 1
             ORDER BY g.graveNameHe
         ");
@@ -228,62 +223,64 @@ $formBuilder->addField('clientId', 'נפטר/ת', 'select', [
     'value' => $burial['clientId'] ?? ''
 ]);
 
-// HTML מותאם אישית לבחירת קבר (זהה לרכישות)
+// HTML מותאם אישית לבחירת קבר
 $graveSelectorHTML = '
-    <fieldset class="form-section" 
-        id="grave-selector-fieldset"
-        data-hierarchy=\'' . htmlspecialchars($hierarchyJson, ENT_QUOTES, 'UTF-8') . '\'
-        data-cemeteries=\'' . htmlspecialchars(json_encode($cemeteries), ENT_QUOTES, 'UTF-8') . '\'>
-        <legend>בחירת מיקום קבר</legend>
-        
-        <div class="form-row">
-            <div class="form-group col-md-4">
-                <label for="cemeterySelect">בית עלמין</label>
-                <select id="cemeterySelect" class="form-control" onchange="filterHierarchy(\'cemetery\')">
-                    <option value="">-- בחר בית עלמין --</option>
-                </select>
-            </div>
-            
-            <div class="form-group col-md-4">
-                <label for="blockSelect">גוש</label>
-                <select id="blockSelect" class="form-control" onchange="filterHierarchy(\'block\')" disabled>
-                    <option value="">-- בחר גוש --</option>
-                </select>
-            </div>
-            
-            <div class="form-group col-md-4">
-                <label for="plotSelect">חלקה</label>
-                <select id="plotSelect" class="form-control" onchange="filterHierarchy(\'plot\')" disabled>
-                    <option value="">-- בחר חלקה --</option>
-                </select>
-            </div>
-        </div>
-        
-        <div class="form-row">
-            <div class="form-group col-md-4">
-                <label for="rowSelect">שורה</label>
-                <select id="rowSelect" class="form-control" onchange="filterHierarchy(\'row\')" disabled>
-                    <option value="">-- בחר שורה --</option>
-                </select>
-            </div>
-            
-            <div class="form-group col-md-4">
-                <label for="areaGraveSelect">אחוזת קבר</label>
-                <select id="areaGraveSelect" class="form-control" onchange="filterHierarchy(\'area_grave\')" disabled>
-                    <option value="">-- בחר אחוזת קבר --</option>
-                </select>
-            </div>
-            
-            <div class="form-group col-md-4">
-                <label for="graveSelect">קבר <span class="text-danger">*</span></label>
-                <select id="graveSelect" name="graveId" class="form-control" required disabled>
-                    <option value="">-- בחר קבר --</option>
-                </select>
-            </div>
-        </div>
-    </fieldset>';
+<fieldset class="form-section" 
+    id="grave-selector-fieldset"
+    data-hierarchy=\'' . htmlspecialchars($hierarchyJson, ENT_QUOTES, 'UTF-8') . '\'
+    style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+    <legend style="padding: 0 10px; font-weight: bold;">בחירת קבר</legend>
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+        <div class="form-group">
+            <label>בית עלמין</label>
+            <select id="cemeterySelect" class="form-control" onchange="filterHierarchy(\'cemetery\')">
+                <option value="">-- כל בתי העלמין --</option>';
 
-// הוסף את בורר הקבר לטופס
+foreach ($cemeteries as $cemetery) {
+    $disabled = !$cemetery['has_available_graves'] ? 'disabled style="color: #999;"' : '';
+    $graveSelectorHTML .= '<option value="' . $cemetery['unicId'] . '" ' . $disabled . '>' . 
+                        htmlspecialchars($cemetery['name']) .
+                        (!$cemetery['has_available_graves'] ? ' (אין קברים זמינים)' : '') . 
+                        '</option>';
+}
+
+$graveSelectorHTML .= '
+            </select>
+        </div>
+        <div class="form-group">
+            <label>גוש</label>
+            <select id="blockSelect" class="form-control" onchange="filterHierarchy(\'block\')">
+                <option value="">-- כל הגושים --</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>חלקה</label>
+            <select id="plotSelect" class="form-control" onchange="filterHierarchy(\'plot\')">
+                <option value="">-- כל החלקות --</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>שורה</label>
+            <select id="rowSelect" class="form-control" onchange="filterHierarchy(\'row\')" disabled>
+                <option value="">-- בחר חלקה תחילה --</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>אחוזת קבר</label>
+            <select id="areaGraveSelect" class="form-control" onchange="filterHierarchy(\'area_grave\')" disabled>
+                <option value="">-- בחר שורה תחילה --</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>קבר <span class="text-danger">*</span></label>
+            <select name="graveId" id="graveSelect" class="form-control" required disabled onchange="onGraveSelected(this.value)">
+                <option value="">-- בחר אחוזת קבר תחילה --</option>
+            </select>
+        </div>
+    </div>
+</fieldset>';
+
+// הוסף את ה-HTML המותאם אישית
 $formBuilder->addCustomHTML($graveSelectorHTML);
 
 // שדה רכישה (אופציונלי)
@@ -374,220 +371,5 @@ $formBuilder->addField('comment', 'הערות', 'textarea', [
 ]);
 
 // הצג את הטופס
-// $formBuilder->render();
 echo $formBuilder->renderModal();
 ?>
-
-<script>
-// JavaScript לטיפול בהיררכיית בחירת הקבר
-document.addEventListener('DOMContentLoaded', function() {
-    const fieldset = document.getElementById('grave-selector-fieldset');
-    if (!fieldset) return;
-    
-    // טען את נתוני ההיררכיה
-    window.hierarchyData = JSON.parse(fieldset.getAttribute('data-hierarchy'));
-    window.cemeteries = JSON.parse(fieldset.getAttribute('data-cemeteries'));
-    
-    // אתחל בתי עלמין
-    populateCemeteries();
-    
-    // אם זו עריכה, טען את הבחירה הקיימת
-    <?php if ($burial && $burial['graveId']): ?>
-    loadExistingSelection('<?php echo $burial['graveId']; ?>');
-    <?php endif; ?>
-});
-
-// אכלס בתי עלמין
-function populateCemeteries() {
-    const select = document.getElementById('cemeterySelect');
-    select.innerHTML = '<option value="">-- בחר בית עלמין --</option>';
-    
-    window.cemeteries.forEach(cemetery => {
-        const option = document.createElement('option');
-        option.value = cemetery.unicId;
-        option.textContent = cemetery.name;
-        if (!cemetery.has_available_graves) {
-            option.disabled = true;
-            option.textContent += ' (אין קברים זמינים)';
-        }
-        select.appendChild(option);
-    });
-}
-
-// פונקציה לסינון היררכיה
-function filterHierarchy(level) {
-    const cemetery = document.getElementById('cemeterySelect').value;
-    const block = document.getElementById('blockSelect').value;
-    const plot = document.getElementById('plotSelect').value;
-    const row = document.getElementById('rowSelect').value;
-    const areaGrave = document.getElementById('areaGraveSelect').value;
-    
-    switch(level) {
-        case 'cemetery':
-            populateBlocks(cemetery);
-            clearSelectors(['plot', 'row', 'area_grave', 'grave']);
-            break;
-            
-        case 'block':
-            populatePlots(cemetery, block);
-            clearSelectors(['row', 'area_grave', 'grave']);
-            break;
-            
-        case 'plot':
-            populateRows(plot);
-            clearSelectors(['area_grave', 'grave']);
-            break;
-            
-        case 'row':
-            populateAreaGraves(row);
-            clearSelectors(['grave']);
-            break;
-            
-        case 'area_grave':
-            populateGraves(areaGrave);
-            break;
-    }
-}
-
-// אכלס גושים
-function populateBlocks(cemeteryId) {
-    const select = document.getElementById('blockSelect');
-    select.innerHTML = '<option value="">-- בחר גוש --</option>';
-    select.disabled = !cemeteryId;
-    
-    if (!cemeteryId) return;
-    
-    const blocks = window.hierarchyData.blocks.filter(b => b.cemeteryId === cemeteryId);
-    blocks.forEach(block => {
-        const option = document.createElement('option');
-        option.value = block.unicId;
-        option.textContent = block.blockNameHe || block.unicId;
-        select.appendChild(option);
-    });
-}
-
-// אכלס חלקות
-function populatePlots(cemeteryId, blockId) {
-    const select = document.getElementById('plotSelect');
-    select.innerHTML = '<option value="">-- בחר חלקה --</option>';
-    select.disabled = !blockId;
-    
-    if (!blockId) return;
-    
-    const plots = window.hierarchyData.plots.filter(p => p.blockId === blockId);
-    plots.forEach(plot => {
-        const option = document.createElement('option');
-        option.value = plot.unicId;
-        option.textContent = plot.name || plot.unicId;
-        select.appendChild(option);
-    });
-}
-
-// אכלס שורות
-function populateRows(plotId) {
-    const select = document.getElementById('rowSelect');
-    select.innerHTML = '<option value="">-- בחר שורה --</option>';
-    select.disabled = !plotId;
-    
-    if (!plotId) return;
-    
-    const rows = window.hierarchyData.rows.filter(r => r.plot_id === plotId);
-    rows.forEach(row => {
-        const option = document.createElement('option');
-        option.value = row.unicId;
-        option.textContent = row.name || row.unicId;
-        select.appendChild(option);
-    });
-}
-
-// אכלס אחוזות קבר
-function populateAreaGraves(rowId) {
-    const select = document.getElementById('areaGraveSelect');
-    select.innerHTML = '<option value="">-- בחר אחוזת קבר --</option>';
-    select.disabled = !rowId;
-    
-    if (!rowId) return;
-    
-    const areaGraves = window.hierarchyData.areaGraves.filter(ag => ag.row_id === rowId);
-    areaGraves.forEach(areaGrave => {
-        const option = document.createElement('option');
-        option.value = areaGrave.unicId;
-        option.textContent = areaGrave.name || areaGrave.unicId;
-        select.appendChild(option);
-    });
-}
-
-// אכלס קברים
-function populateGraves(areaGraveId) {
-    const select = document.getElementById('graveSelect');
-    select.innerHTML = '<option value="">-- בחר קבר --</option>';
-    select.disabled = !areaGraveId;
-    
-    if (!areaGraveId) return;
-    
-    const graves = window.hierarchyData.graves.filter(g => g.area_grave_id === areaGraveId);
-    graves.forEach(grave => {
-        const option = document.createElement('option');
-        option.value = grave.unicId;
-        option.textContent = grave.name || grave.unicId;
-        
-        // סמן קברים לא זמינים
-        if (grave.graveStatus == 3 && !grave.is_current) {
-            option.disabled = true;
-            option.textContent += ' (תפוס)';
-        } else if (grave.graveStatus == 2) {
-            option.textContent += ' (רכישה)';
-        }
-        
-        select.appendChild(option);
-    });
-}
-
-// נקה בוררים
-function clearSelectors(levels) {
-    levels.forEach(level => {
-        const selectId = level + 'Select';
-        const select = document.getElementById(selectId);
-        if (select) {
-            select.innerHTML = '<option value="">-- בחר --</option>';
-            select.disabled = true;
-        }
-    });
-}
-
-// טען בחירה קיימת (בעריכה)
-function loadExistingSelection(graveId) {
-    const grave = window.hierarchyData.graves.find(g => g.unicId === graveId);
-    if (!grave) return;
-    
-    const areaGrave = window.hierarchyData.areaGraves.find(ag => ag.unicId === grave.area_grave_id);
-    if (!areaGrave) return;
-    
-    const row = window.hierarchyData.rows.find(r => r.unicId === areaGrave.row_id);
-    if (!row) return;
-    
-    const plot = window.hierarchyData.plots.find(p => p.unicId === row.plot_id);
-    if (!plot) return;
-    
-    const block = window.hierarchyData.blocks.find(b => b.unicId === plot.blockId);
-    if (!block) return;
-    
-    // הגדר את הערכים בסדר הנכון
-    document.getElementById('cemeterySelect').value = block.cemeteryId;
-    filterHierarchy('cemetery');
-    
-    document.getElementById('blockSelect').value = block.unicId;
-    filterHierarchy('block');
-    
-    document.getElementById('plotSelect').value = plot.unicId;
-    filterHierarchy('plot');
-    
-    document.getElementById('rowSelect').value = row.unicId;
-    filterHierarchy('row');
-    
-    document.getElementById('areaGraveSelect').value = areaGrave.unicId;
-    filterHierarchy('area_grave');
-    
-    document.getElementById('graveSelect').value = graveId;
-}
-</script>

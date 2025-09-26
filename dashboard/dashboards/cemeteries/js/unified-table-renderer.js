@@ -347,9 +347,6 @@ class UnifiedTableRenderer {
         if (typesWithoutParent.includes(type)) {
             console.log('About to call FormHandler.openForm for burial');
             
-            // עצור את הקוד כאן!
-            debugger;
-            
             // בדוק אם FormHandler קיים
             if (typeof FormHandler === 'undefined') {
                 alert('ERROR: FormHandler is undefined!');
@@ -369,10 +366,10 @@ class UnifiedTableRenderer {
             return;
         }
 
-        // if (typesWithoutParent.includes(type)) {
-        //     FormHandler.openForm(type, null, null);
-        //     return;
-        // }
+        if (typesWithoutParent.includes(type)) {
+            FormHandler.openForm(type, null, null);
+            return;
+        }
 
         // בדוק אם צריך לבחור הורה קודם
         if (!parentId) {

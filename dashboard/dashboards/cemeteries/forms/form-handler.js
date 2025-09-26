@@ -4287,7 +4287,97 @@ const FormHandler = {
                     fetch(`/dashboard/dashboards/cemeteries/api/burials-api.php?action=get&id=${itemId}`)
                         .then(response => response.json())
                         .then(result => {
-                            // כל הקוד של טעינת הנתונים...
+                            if (result.success && result.data) {
+                                const data = result.data;
+                            
+                                // מלא שדות רגילים
+                                Object.keys(data).forEach(key => {
+                                    const field = form.elements[key];
+                                    if (field && data[key] !== null) {
+                                        field.value = data[key];
+                                    }
+                                });
+
+                                // טען גם נתוני לקוח
+                                if (data.clientId) {
+                                    fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?action=get&id=${data.clientId}`)
+                                        .then(response => response.json())
+                                        .then(customerResult => {
+                                            if (customerResult.success && customerResult.data) {
+                                                window.selectedCustomerData = {
+                                                    id: data.clientId,
+                                                    name: customerResult.data.firstName + ' ' + customerResult.data.lastName,
+                                                    statusCustomer: customerResult.data.statusCustomer
+                                                };
+                                            }
+                                        })
+                                        .catch(error => console.error('Error loading customer data:', error));
+                                }
+                                
+                                // אם יש קבר, מצא את ההיררכיה שלו
+                                if (data.graveId && window.hierarchyData) {
+                                    // 1. מצא את הקבר
+                                    const grave = window.hierarchyData.graves.find(g => g.unicId === data.graveId);
+                                    if (!grave) return;
+                                    // 2. מצא את אחוזת הקבר
+                                    const areaGrave = window.hierarchyData.areaGraves.find(ag => ag.unicId === grave.area_grave_id);
+                                    if (!areaGrave) return;
+                                    // 3. מצא את השורה
+                                    const row = window.hierarchyData.rows.find(r => r.unicId === areaGrave.row_id);
+                                    if (!row) return;
+                                    // 4. מצא את החלקה
+                                    const plot = window.hierarchyData.plots.find(p => p.unicId === row.plot_id);
+                                    if (!plot) return;
+                                    // 5. מצא את הגוש
+                                    const block = window.hierarchyData.blocks.find(b => b.unicId === plot.blockId);
+                                    if (!block) return;
+
+                                    // עכשיו תבחר את הערכים בסלקטים
+                                    setTimeout(() => {
+                                        
+                                        // בחר בית עלמין
+                                        if (block.cemetery_id) {
+                                            document.getElementById('cemeterySelect').value = block.cemetery_id;
+                                            window.filterHierarchy('cemetery');
+                                        }
+                                        
+                                        // בחר גוש
+                                        setTimeout(() => {
+                                            document.getElementById('blockSelect').value = block.unicId;
+                                            window.filterHierarchy('block');
+                                            
+                                            // בחר חלקה
+                                            setTimeout(() => {
+                                                document.getElementById('plotSelect').value = plot.unicId;
+                                                window.filterHierarchy('plot');
+                                                
+                                                // בחר שורה
+                                                setTimeout(() => {
+                                                    document.getElementById('rowSelect').value = row.unicId;
+                                                    window.filterHierarchy('row');
+                                                    
+                                                    // בחר אחוזת קבר
+                                                    setTimeout(() => {
+                                                        document.getElementById('areaGraveSelect').value = areaGrave.unicId;
+                                                        window.filterHierarchy('area_grave');
+
+                                                        // בחר קבר
+                                                        setTimeout(() => {
+                                                            document.getElementById('graveSelect').value = grave.unicId;
+                                                            
+                                                            // הגדר את נתוני הקבר
+                                                            window.selectedGraveData = {
+                                                                graveId: grave.unicId,
+                                                                graveStatus: grave.graveStatus
+                                                            };
+                                                        }, 50);
+                                                    }, 50);
+                                                }, 50);
+                                            }, 50);
+                                        }, 50);
+                                    }, 250);
+                                }
+                            }
                         });
                     return true;
                 }

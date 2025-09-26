@@ -322,6 +322,44 @@ const FormHandler = {
             
             const html = await response.text();
 
+            updateDebug('Step 5: Reading HTML');
+
+            updateDebug('Step 6: Got HTML - length: ' + html.length);
+
+            // הוסף כאן בדיקה אם ה-HTML תקין
+            if (!html) {
+                updateDebug('ERROR: Empty HTML');
+                return;
+            }
+
+            // נסה לפענח את ה-HTML
+            try {
+                updateDebug('Step 7: Creating temp div');
+                const tempDiv = document.createElement('div');
+                
+                updateDebug('Step 8: Setting innerHTML');
+                tempDiv.innerHTML = html;
+                
+                updateDebug('Step 9: Looking for modal');
+                const modal = tempDiv.querySelector('#' + type + 'FormModal');
+                
+                if (modal) {
+                    updateDebug('Step 10: Modal found!');
+                    document.body.appendChild(modal);
+                    document.body.style.overflow = 'hidden';
+                    
+                    updateDebug('Step 11: Calling handleFormSpecificLogic');
+                    this.handleFormSpecificLogic(type, parentId, itemId);
+                    
+                    updateDebug('Step 12: Done!');
+                } else {
+                    updateDebug('ERROR: Modal not found');
+                }
+            } catch (innerError) {
+                updateDebug('ERROR in processing: ' + innerError.message);
+                console.error('Error details:', innerError);
+            }
+
             // צור div לתצוגה
             const resultDiv = document.createElement('div');
             resultDiv.style.cssText = 'position:fixed;top:50px;left:0;right:0;background:white;border:2px solid black;padding:10px;z-index:99999;max-height:300px;overflow:auto';

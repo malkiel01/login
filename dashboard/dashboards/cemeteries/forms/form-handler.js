@@ -4144,132 +4144,134 @@ const FormHandler = {
                 return;
             }
 
-            // אתחל את מנהל ההיררכיה - רק קברים פנויים (סטטוס 1)
-            GraveHierarchyManager.init({
-                allowedStatuses: [1], // רק פנויים לרכישות
-                onGraveSelected: async function(graveId) {
-                    // כאן כל הלוגיקה של חישוב תשלומים כשנבחר קבר
-                    if (graveId) {
-                        // מצא את פרטי הקבר
-                        const grave = window.hierarchyData.graves.find(g => g.unicId == graveId);
-                        const areaGrave = window.hierarchyData.areaGraves.find(
-                            ag => ag.unicId == grave.areaGraveId
-                        );
+            alert('TODO')
 
-                        if (grave) {
-                            // עדכן את הפרמטרים לתשלומים החכמים
-                            window.selectedGraveData = {
-                                graveId: graveId,
-                                plotType: grave.plotType || -1,
-                                graveType: areaGrave.graveType || -1
-                            };
+            // // אתחל את מנהל ההיררכיה - רק קברים פנויים (סטטוס 1)
+            // GraveHierarchyManager.init({
+            //     allowedStatuses: [1], // רק פנויים לרכישות
+            //     onGraveSelected: async function(graveId) {
+            //         // כאן כל הלוגיקה של חישוב תשלומים כשנבחר קבר
+            //         if (graveId) {
+            //             // מצא את פרטי הקבר
+            //             const grave = window.hierarchyData.graves.find(g => g.unicId == graveId);
+            //             const areaGrave = window.hierarchyData.areaGraves.find(
+            //                 ag => ag.unicId == grave.areaGraveId
+            //             );
 
-                            // עדכן תצוגת פרמטרים
-                            if (window.updatePaymentParameters) {
-                                window.updatePaymentParameters();
-                            }
+            //             if (grave) {
+            //                 // עדכן את הפרמטרים לתשלומים החכמים
+            //                 window.selectedGraveData = {
+            //                     graveId: graveId,
+            //                     plotType: grave.plotType || -1,
+            //                     graveType: areaGrave.graveType || -1
+            //                 };
 
-                            // אם לא במצב עריכה - חשב תשלומים אוטומטית
-                            if (!window.isEditMode && window.selectedCustomerData) { 
-                                try {
-                                    const response = await fetch('/dashboard/dashboards/cemeteries/api/payments-api.php?action=getMatching', {
-                                        method: 'POST',
-                                        headers: {'Content-Type': 'application/json'},
-                                        body: JSON.stringify({
-                                            plotType: window.selectedGraveData.plotType,
-                                            graveType: window.selectedGraveData.graveType,
-                                            resident: window.selectedCustomerData?.resident || 3,
-                                            buyerStatus: document.querySelector('[name="buyer_status"]')?.value || null
-                                        })
-                                    });
+            //                 // עדכן תצוגת פרמטרים
+            //                 if (window.updatePaymentParameters) {
+            //                     window.updatePaymentParameters();
+            //                 }
+
+            //                 // אם לא במצב עריכה - חשב תשלומים אוטומטית
+            //                 if (!window.isEditMode && window.selectedCustomerData) { 
+            //                     try {
+            //                         const response = await fetch('/dashboard/dashboards/cemeteries/api/payments-api.php?action=getMatching', {
+            //                             method: 'POST',
+            //                             headers: {'Content-Type': 'application/json'},
+            //                             body: JSON.stringify({
+            //                                 plotType: window.selectedGraveData.plotType,
+            //                                 graveType: window.selectedGraveData.graveType,
+            //                                 resident: window.selectedCustomerData?.resident || 3,
+            //                                 buyerStatus: document.querySelector('[name="buyer_status"]')?.value || null
+            //                             })
+            //                         });
                                     
-                                    const data = await response.json();
+            //                         const data = await response.json();
                                     
-                                    if (data.success && data.payments) {
-                                        // נקה תשלומים קיימים
-                                        window.purchasePayments = [];
+            //                         if (data.success && data.payments) {
+            //                             // נקה תשלומים קיימים
+            //                             window.purchasePayments = [];
                                         
-                                        // הוסף רק תשלומי חובה
-                                        const mandatoryPayments = data.payments.filter(p => p.mandatory);
+            //                             // הוסף רק תשלומי חובה
+            //                             const mandatoryPayments = data.payments.filter(p => p.mandatory);
                                         
-                                        mandatoryPayments.forEach(payment => {
-                                            window.purchasePayments.push({
-                                                locked: false,
-                                                required: true,
-                                                paymentDate: "",
-                                                paymentType: payment.priceDefinition || 1,
-                                                paymentAmount: parseFloat(payment.price) || 0,
-                                                receiptDocuments: [],
-                                                customPaymentType: payment.name,
-                                                isPaymentComplete: false,
-                                                mandatory: true
-                                            });
-                                        });
+            //                             mandatoryPayments.forEach(payment => {
+            //                                 window.purchasePayments.push({
+            //                                     locked: false,
+            //                                     required: true,
+            //                                     paymentDate: "",
+            //                                     paymentType: payment.priceDefinition || 1,
+            //                                     paymentAmount: parseFloat(payment.price) || 0,
+            //                                     receiptDocuments: [],
+            //                                     customPaymentType: payment.name,
+            //                                     isPaymentComplete: false,
+            //                                     mandatory: true
+            //                                 });
+            //                             });
                                         
-                                        // עדכן תצוגה
-                                        if (window.displayPaymentsSummary) {
-                                            document.getElementById('paymentsDisplay').innerHTML = window.displayPaymentsSummary();
-                                        }
-                                        document.getElementById('total_price').value = window.calculatePaymentsTotal();
-                                        document.getElementById('paymentsList').value = JSON.stringify(window.purchasePayments);
-                                    }
-                                } catch (error) {
-                                    console.error('Error calculating payments:', error);
-                                }
-                            }
-                        }
-                    } else {
-                        // אם ביטלו בחירת קבר - נקה הכל
-                        window.selectedGraveData = null;
+            //                             // עדכן תצוגה
+            //                             if (window.displayPaymentsSummary) {
+            //                                 document.getElementById('paymentsDisplay').innerHTML = window.displayPaymentsSummary();
+            //                             }
+            //                             document.getElementById('total_price').value = window.calculatePaymentsTotal();
+            //                             document.getElementById('paymentsList').value = JSON.stringify(window.purchasePayments);
+            //                         }
+            //                     } catch (error) {
+            //                         console.error('Error calculating payments:', error);
+            //                     }
+            //                 }
+            //             }
+            //         } else {
+            //             // אם ביטלו בחירת קבר - נקה הכל
+            //             window.selectedGraveData = null;
                         
-                        if (!window.isEditMode) {
-                            window.purchasePayments = [];
-                            document.getElementById('total_price').value = '0.00';
-                            document.getElementById('paymentsDisplay').innerHTML = '<p style="color: #999;">לא הוגדרו תשלומים</p>';
-                            document.getElementById('paymentsList').value = '[]';
-                        }
+            //             if (!window.isEditMode) {
+            //                 window.purchasePayments = [];
+            //                 document.getElementById('total_price').value = '0.00';
+            //                 document.getElementById('paymentsDisplay').innerHTML = '<p style="color: #999;">לא הוגדרו תשלומים</p>';
+            //                 document.getElementById('paymentsList').value = '[]';
+            //             }
                         
-                        const paramsElement = document.getElementById('selectedParameters');
-                        if (paramsElement) {
-                            paramsElement.style.display = 'none';
-                        }
-                    }
-                }
-            });
+            //             const paramsElement = document.getElementById('selectedParameters');
+            //             if (paramsElement) {
+            //                 paramsElement.style.display = 'none';
+            //             }
+            //         }
+            //     }
+            // });
 
-                        // אחרי שה-fieldset נטען
-            const customerSelect = document.querySelector('[name="clientId"]');
-            if (customerSelect) {
-                customerSelect.addEventListener('change', async function() {
-                    const customerId = this.value;
-                    if (customerId) {
-                        try {
-                            const response = await fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?action=get&id=${customerId}`);
-                            const data = await response.json();
-                            if (data.success && data.data) {
-                                window.selectedCustomerData = {
-                                    id: customerId,
-                                    resident: data.data.resident || 3, // ברירת מחדל חו"ל
-                                    name: data.data.firstName + ' ' + data.data.lastName
-                                };
+            //             // אחרי שה-fieldset נטען
+            // const customerSelect = document.querySelector('[name="clientId"]');
+            // if (customerSelect) {
+            //     customerSelect.addEventListener('change', async function() {
+            //         const customerId = this.value;
+            //         if (customerId) {
+            //             try {
+            //                 const response = await fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?action=get&id=${customerId}`);
+            //                 const data = await response.json();
+            //                 if (data.success && data.data) {
+            //                     window.selectedCustomerData = {
+            //                         id: customerId,
+            //                         resident: data.data.resident || 3, // ברירת מחדל חו"ל
+            //                         name: data.data.firstName + ' ' + data.data.lastName
+            //                     };
                                 
-                                // עדכן תצוגת פרמטרים אם יש קבר נבחר
-                                if (window.selectedGraveData && window.updatePaymentParameters) {
-                                    window.updatePaymentParameters();
-                                }
-                            }
-                        } catch (error) {
-                            console.error('Error loading customer data:', error);
-                        }
-                    } else {
-                        window.selectedCustomerData = null;
-                    }
-                });
-            }
+            //                     // עדכן תצוגת פרמטרים אם יש קבר נבחר
+            //                     if (window.selectedGraveData && window.updatePaymentParameters) {
+            //                         window.updatePaymentParameters();
+            //                     }
+            //                 }
+            //             } catch (error) {
+            //                 console.error('Error loading customer data:', error);
+            //             }
+            //         } else {
+            //             window.selectedCustomerData = null;
+            //         }
+            //     });
+            // }
 
-            // אתחל
-            window.populateBlocks();
-            window.populatePlots();
+            // // אתחל
+            // window.populateBlocks();
+            // window.populatePlots();
         });
         
         // טען נתונים אם זו עריכה

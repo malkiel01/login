@@ -265,57 +265,110 @@ const FormHandler = {
     },
 
     openForm: async function(type, parentId = null, itemId = null) {
-        // דיבוג מיידי - השורה הראשונה!
+        // דיבוג מיידי
         console.log('🚀 FormHandler.openForm STARTED!');
         console.log('Type:', type);
-        console.log('ParentId:', parentId);
-        console.log('ItemId:', itemId);
         
-        // נסה להדפיס משהו שיישאר
         const debugDiv = document.createElement('div');
         debugDiv.style.cssText = 'position:fixed;top:0;left:0;background:red;color:white;z-index:99999;padding:10px';
         debugDiv.textContent = 'FormHandler.openForm called with type: ' + type;
         document.body.appendChild(debugDiv);
         
-        // המשך עם שאר הקוד...
+        // עדכן את הדיב עם התקדמות
+        const updateDebug = (msg) => {
+            debugDiv.textContent += ' | ' + msg;
+            console.log('📍 ' + msg);
+        };
+        
+        updateDebug('Step 1: Checking type');
+        
         if (type === 'purchase' && !itemId) {
             window.isEditMode = false;
             window.purchasePayments = [];
             window.selectedGraveData = null;
-            console.log('🆕 Opening NEW purchase form - cleared globals');
         }
         
         if (!type || typeof type !== 'string') {
+            updateDebug('ERROR: Invalid type');
             console.error('Invalid type:', type);
-            this.showMessage('שגיאה: סוג הטופס לא תקין', 'error');
             return;
         }
 
+        updateDebug('Step 2: Creating params');
+
         try {
-            console.log('📍 Starting try block...');
-            
             const params = new URLSearchParams({
                 type: type,
                 ...(itemId && { item_id: itemId }),
                 ...(parentId && { parent_id: parentId })
             });
             
-            console.log('📝 URL params:', params.toString());
+            updateDebug('Step 3: Fetching from server');
             
-            // בדוק אם הדף נטען מחדש
-            window.beforeunload = function() {
-                console.log('⚠️ PAGE IS RELOADING!');
-                return 'Page is reloading!';
-            };
+            const url = `/dashboard/dashboards/cemeteries/forms/form-loader.php?${params}`;
+            console.log('Fetching URL:', url);
             
-            const response = await fetch(`/dashboard/dashboards/cemeteries/forms/form-loader.php?${params}`);
+            const response = await fetch(url);
             
-            console.log('📨 Response received:', response);
+            updateDebug('Step 4: Got response - status: ' + response.status);
             
-            // המשך...
+            if (!response.ok) {
+                updateDebug('ERROR: Bad response');
+                console.error('Response not OK:', response.status);
+                return;
+            }
+            
+            updateDebug('Step 5: Reading HTML');
+            
+            const html = await response.text();
+            
+            updateDebug('Step 6: Got HTML - length: ' + html.length);
+            
+            console.log('HTML first 100 chars:', html.substring(0, 100));
+            
+            // אם ה-HTML ריק
+            if (!html || html.trim() === '') {
+                updateDebug('ERROR: Empty HTML');
+                console.error('Empty response from server');
+                return;
+            }
+            
+            updateDebug('Step 7: Parsing HTML');
+            
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            
+            // חפש את המודאל
+            const modal = tempDiv.querySelector('#' + type + 'FormModal');
+            
+            if (modal) {
+                updateDebug('Step 8: Modal found! Adding to page');
+                document.body.appendChild(modal);
+                document.body.style.overflow = 'hidden';
+                
+                updateDebug('Step 9: Calling handleFormSpecificLogic');
+                this.handleFormSpecificLogic(type, parentId, itemId);
+                
+                updateDebug('Step 10: Done!');
+                
+                // הסר את הדיבוג אחרי 3 שניות
+                setTimeout(() => debugDiv.remove(), 3000);
+                
+            } else {
+                updateDebug('ERROR: Modal not found in HTML');
+                console.error('Modal not found');
+                
+                // הדפס מה כן נמצא
+                const allElements = tempDiv.querySelectorAll('*[id]');
+                console.log('Elements with ID:', allElements.length);
+                allElements.forEach(el => {
+                    console.log('- ID:', el.id, 'Tag:', el.tagName);
+                });
+            }
+            
         } catch (error) {
-            console.error('❌ Error in openForm:', error);
-            alert('ERROR: ' + error.message);
+            updateDebug('ERROR: ' + error.message);
+            console.error('Error in openForm:', error);
         }
     },
 

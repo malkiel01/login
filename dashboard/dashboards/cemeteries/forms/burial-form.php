@@ -375,7 +375,7 @@ $formBuilder->addField('comment', 'הערות', 'textarea', [
 
 // הצג את הטופס
 // $formBuilder->render();
-echo $formBuilder->build();
+echo $formBuilder->renderModal();
 ?>
 
 <script>

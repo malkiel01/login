@@ -245,14 +245,61 @@ const FormHandler = {
                 console.log('🎯 About to call handleFormSpecificLogic with type:', type);
                 this.handleFormSpecificLogic(type, parentId, itemId);
                 
+            // } else {
+            //     console.error('❌ Modal not found in HTML');
+            //     alert('ERROR: Modal not found! Looking for: #' + type + 'FormModal');
+                
+            //     const allModals = tempDiv.querySelectorAll('.modal');
+            //     console.log('Found modals:', allModals.length);
+            //     allModals.forEach(m => {
+            //         console.log('Modal id:', m.id);
+            //     });
+            // }
             } else {
                 console.error('❌ Modal not found in HTML');
                 alert('ERROR: Modal not found! Looking for: #' + type + 'FormModal');
                 
+                // בדוק מה כן יש ב-HTML
+                console.log('=== DEBUGGING WHAT WE GOT ===');
+                
+                // הדפס את כל ה-HTML
+                console.log('Raw HTML:', html);
+                
+                // בדוק אם יש משהו בכלל
+                if (!html || html.trim() === '') {
+                    console.error('HTML is empty!');
+                    alert('ERROR: Server returned empty response!');
+                    return;
+                }
+                
+                // חפש כל מודאל
                 const allModals = tempDiv.querySelectorAll('.modal');
                 console.log('Found modals:', allModals.length);
                 allModals.forEach(m => {
-                    console.log('Modal id:', m.id);
+                    console.log('Modal id:', m.id, 'classes:', m.className);
+                });
+                
+                // חפש כל div עם ID
+                const allDivsWithId = tempDiv.querySelectorAll('div[id]');
+                console.log('All DIVs with ID:', allDivsWithId.length);
+                allDivsWithId.forEach(d => {
+                    console.log('DIV id:', d.id);
+                });
+                
+                // אולי יש הודעת שגיאה?
+                const errorDivs = tempDiv.querySelectorAll('.error, .alert, .warning');
+                errorDivs.forEach(e => {
+                    console.log('Error/Alert element:', e.textContent);
+                });
+                
+                // הדפס את כל הטקסט
+                console.log('All text content:', tempDiv.textContent);
+                
+                // נסה לחפש כל דבר שקשור ל-burial
+                const burialElements = tempDiv.querySelectorAll('*[id*="burial"], *[class*="burial"]');
+                console.log('Elements with "burial":', burialElements.length);
+                burialElements.forEach(e => {
+                    console.log('Burial element:', e.tagName, 'id:', e.id, 'class:', e.className);
                 });
             }
             

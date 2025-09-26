@@ -172,6 +172,30 @@ try {
         case 'create':
             $data = json_decode(file_get_contents('php://input'), true);
             
+            // === דיבאג להבנת השגיאה ===
+            error_log("=== DEBUG DUPLICATE KEY ERROR ===");
+            error_log("Action: CREATE");
+            error_log("Data received: " . json_encode($data));
+            
+            // בדוק מה המבנה של האינדקס clientId
+            $stmt = $pdo->query("SHOW INDEX FROM purchases WHERE Key_name = 'clientId'");
+            $indexes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            error_log("Index 'clientId' structure: " . json_encode($indexes));
+
+                        // בדוק אם כבר יש רכישה עם אותו clientId
+            if (isset($data['clientId'])) {
+                $checkStmt = $pdo->prepare("SELECT unicId, graveId, serialPurchaseId FROM purchases WHERE clientId = ? AND isActive = 1");
+                $checkStmt->execute([$data['clientId']]);
+                $existing = $checkStmt->fetchAll(PDO::FETCH_ASSOC);
+                error_log("Existing purchases for this client: " . json_encode($existing));
+            }
+            
+            // בדוק אם יש אינדקס ייחודי על השילוב clientId + משהו אחר
+            $stmt = $pdo->query("SHOW CREATE TABLE purchases");
+            $tableStructure = $stmt->fetch(PDO::FETCH_ASSOC);
+            error_log("Table structure: " . $tableStructure['Create Table']);
+            // === סוף דיבאג ===
+
             // ולידציה
             if (empty($data['clientId'])) {
                 throw new Exception('לקוח הוא שדה חובה');

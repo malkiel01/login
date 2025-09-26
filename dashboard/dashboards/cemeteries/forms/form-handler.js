@@ -4146,6 +4146,8 @@ const FormHandler = {
 
             alert('TODO')
 
+            debugger;
+
             // // אתחל את מנהל ההיררכיה - רק קברים פנויים (סטטוס 1)
             // GraveHierarchyManager.init({
             //     allowedStatuses: [1], // רק פנויים לרכישות

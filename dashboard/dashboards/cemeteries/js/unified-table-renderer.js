@@ -345,9 +345,34 @@ class UnifiedTableRenderer {
         }
         
         if (typesWithoutParent.includes(type)) {
+            console.log('About to call FormHandler.openForm for burial');
+            
+            // עצור את הקוד כאן!
+            debugger;
+            
+            // בדוק אם FormHandler קיים
+            if (typeof FormHandler === 'undefined') {
+                alert('ERROR: FormHandler is undefined!');
+                console.error('FormHandler not found!');
+                return;
+            }
+            
+            if (typeof FormHandler.openForm !== 'function') {
+                alert('ERROR: FormHandler.openForm is not a function!');
+                console.error('FormHandler.openForm is not a function!');
+                return;
+            }
+            
+            console.log('FormHandler exists, calling openForm...');
             FormHandler.openForm(type, null, null);
+            console.log('FormHandler.openForm was called');
             return;
         }
+
+        // if (typesWithoutParent.includes(type)) {
+        //     FormHandler.openForm(type, null, null);
+        //     return;
+        // }
 
         // בדוק אם צריך לבחור הורה קודם
         if (!parentId) {

@@ -265,38 +265,38 @@ const FormHandler = {
 
     handleFormSpecificLogic: function(type, parentId, itemId) {
 
-    console.log('🎯 handleFormSpecificLogic - type:', type, 'parentId:', parentId, 'itemId:', itemId);
-    alert('DEBUG: handleFormSpecificLogic - type: ' + type);
+        console.log('🎯 handleFormSpecificLogic - type:', type, 'parentId:', parentId, 'itemId:', itemId);
+        alert('DEBUG: handleFormSpecificLogic - type: ' + type);
 
-        switch(type) {
-            case 'area_grave':
-                this.handleAreaGraveForm(parentId);
-                break;
-                
-            case 'customer':
-                console.log("case 'customer': ", itemId);
-                
-                this.handleCustomerForm(itemId);
-                break;
-                
-            case 'purchase':
-                this.handlePurchaseForm(itemId);
-                break;  
+            switch(type) {
+                case 'area_grave':
+                    this.handleAreaGraveForm(parentId);
+                    break;
+                    
+                case 'customer':
+                    console.log("case 'customer': ", itemId);
+                    
+                    this.handleCustomerForm(itemId);
+                    break;
+                    
+                case 'purchase':
+                    this.handlePurchaseForm(itemId);
+                    break;  
 
-            case 'burial':
-                this.handleBurialForm(itemId);
-                break;
+                case 'burial':
+                    this.handleBurialForm(itemId);
+                    break;
 
-            case 'payment':  // הוסף את זה
-                this.handlePaymentForm(itemId);
-                break;
-                
-            default:
-                if (itemId) {
-                    this.loadFormData(type, itemId);
-                }
-                break;
-        }
+                case 'payment':  // הוסף את זה
+                    this.handlePaymentForm(itemId);
+                    break;
+                    
+                default:
+                    if (itemId) {
+                        this.loadFormData(type, itemId);
+                    }
+                    break;
+            }
     },
 
     handleAreaGraveForm: function(parentId) {

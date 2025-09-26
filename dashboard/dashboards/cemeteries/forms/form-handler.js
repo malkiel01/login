@@ -2202,7 +2202,7 @@ const FormHandler = {
             // אתחל את מנהל ההיררכיה - רק קברים פנויים (סטטוס 1)
             GraveHierarchyManager.init({
                 allowedStatuses: [1], // רק פנויים לרכישות
-                excludeGraveId: data.graveId,
+                excludeGraveId: null,
                 onGraveSelected: async function(graveId) {
                     // כאן כל הלוגיקה של חישוב תשלומים כשנבחר קבר
                     if (graveId) {
@@ -3646,6 +3646,40 @@ const FormHandler = {
                                 
                                 // אם יש קבר, מצא את ההיררכיה שלו
                                 if (data.graveId && window.hierarchyData) {
+                                    GraveHierarchyManager.init({
+                                        allowedStatuses: [1], // רק פנויים
+                                        excludeGraveId: data.graveId, // ← התעלם מהקבר הנוכחי!
+                                        onGraveSelected: async function(graveId) {
+                                            // אותה לוגיקה של onGraveSelected כמו למעלה
+                                            if (graveId) {
+                                                const grave = window.hierarchyData.graves.find(g => g.unicId == graveId);
+                                                const areaGrave = window.hierarchyData.areaGraves.find(
+                                                    ag => ag.unicId == grave.areaGraveId
+                                                );
+                                                
+                                                if (grave) {
+                                                    window.selectedGraveData = {
+                                                        graveId: graveId,
+                                                        plotType: grave.plotType || -1,
+                                                        graveType: areaGrave.graveType || -1
+                                                    };
+                                                    
+                                                    if (window.updatePaymentParameters) {
+                                                        window.updatePaymentParameters();
+                                                    }
+                                                    
+                                                    // במצב עריכה לא מחשבים מחדש תשלומים אוטומטית
+                                                }
+                                            } else {
+                                                window.selectedGraveData = null;
+                                                const paramsElement = document.getElementById('selectedParameters');
+                                                if (paramsElement) {
+                                                    paramsElement.style.display = 'none';
+                                                }
+                                            }
+                                        }
+                                    });
+
                                     // 1. מצא את הקבר
                                     const grave = window.hierarchyData.graves.find(g => g.unicId === data.graveId);
                                     if (!grave) return;

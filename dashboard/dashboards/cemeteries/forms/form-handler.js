@@ -142,11 +142,7 @@ const FormHandler = {
         }
     },
 
-    openForm: async function(type, parentId = null, itemId = null) {
-        console.log('🚀🚀🚀 FormHandler.openForm CALLED!');
-        console.log('Type received:', type);
-        alert('FormHandler.openForm - type: ' + type);
-        
+    openForm: async function(type, parentId = null, itemId = null) {        
         if (type === 'purchase' && !itemId) {
             window.isEditMode = false;
             window.purchasePayments = [];
@@ -166,13 +162,9 @@ const FormHandler = {
                 ...(itemId && { item_id: itemId }),
                 ...(parentId && { parent_id: parentId })
             });
-            
-            console.log('📝 URL params:', params.toString());
 
             const response = await fetch(`/dashboard/dashboards/cemeteries/forms/form-loader.php?${params}`);
-            
-            console.log('📨 Response status:', response.status);
-            
+     
             if (!response.ok) {
                 alert('ERROR: Response not OK - status: ' + response.status);
                 return;
@@ -180,9 +172,6 @@ const FormHandler = {
         
             const html = await response.text();
             
-            console.log('📄 HTML received, length:', html.length);
-            console.log('Full HTML:', html);
-
             // בדוק מה יש ב-HTML
             if (html.includes('error') || html.includes('Error')) {
                 console.log('⚠️ Error found in HTML');
@@ -193,27 +182,9 @@ const FormHandler = {
                 }
             }
 
-            // בדוק אם יש משהו שקשור לקבורה
-            if (html.includes('burial')) {
-                console.log('✅ HTML contains "burial"');
-            } else {
-                console.log('❌ HTML does NOT contain "burial"');
-            }
-
             // צור container זמני לפירוק ה-HTML
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = html;
-
-            // חפש כל אלמנט עם ID
-            const elementsWithId = tempDiv.querySelectorAll('[id]');
-            console.log('Elements with ID found:', elementsWithId.length);
-            elementsWithId.forEach(el => {
-                console.log('Element ID:', el.id, 'Tag:', el.tagName);
-            });
-
-            // אם אין מודאל, אולי יש הודעת שגיאה?
-            const allText = tempDiv.textContent || tempDiv.innerText;
-            console.log('All text content (first 500 chars):', allText.substring(0, 500));
 
             // הסר טופס קיים אם יש
             const existingModal = document.getElementById(type + 'FormModal');
@@ -238,11 +209,9 @@ const FormHandler = {
             const modal = tempDiv.querySelector('#' + type + 'FormModal');
             
             if (modal) {
-                console.log('✅ Modal found in HTML');
                 document.body.appendChild(modal);
                 document.body.style.overflow = 'hidden';
                 
-                console.log('🎯 About to call handleFormSpecificLogic with type:', type);
                 this.handleFormSpecificLogic(type, parentId, itemId);
                 
             } else {
@@ -264,92 +233,10 @@ const FormHandler = {
         }
     },
 
-    openForm3: async function(type, parentId = null, itemId = null) {
-        // דיבוג
-        console.log('🚀 FormHandler.openForm STARTED!');
-        console.log('Type:', type, 'ParentId:', parentId, 'ItemId:', itemId);
-        
-        if (type === 'purchase' && !itemId) {
-            window.isEditMode = false;
-            window.purchasePayments = [];
-            window.selectedGraveData = null;
-        }
-        
-        if (!type || typeof type !== 'string') {
-            console.error('Invalid type:', type);
-            return;
-        }
-
-        try {
-            const params = new URLSearchParams({
-                type: type,
-                ...(itemId && { item_id: itemId }),
-                ...(parentId && { parent_id: parentId })
-            });
-            
-            const url = `/dashboard/dashboards/cemeteries/forms/form-loader.php?${params}`;
-            console.log('Fetching URL:', url);
-            
-            const response = await fetch(url);
-            
-            if (!response.ok) {
-                console.error('Response not OK:', response.status);
-                return;
-            }
-            
-            const html = await response.text();
-            console.log('HTML received, length:', html.length);
-
-            if (!html || html.trim() === '') {
-                console.error('Empty HTML received');
-                return;
-            }
-
-            // בדוק אם יש שגיאת PHP
-            if (html.includes('Fatal error') || html.includes('Parse error')) {
-                console.error('PHP Error in response:', html);
-                return;
-            }
-
-            // פענח את ה-HTML
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = html;
-            
-            // חפש את המודאל
-            const modal = tempDiv.querySelector('#' + type + 'FormModal');
-            
-            if (modal) {
-                console.log('✅ Modal found and added to page');
-                
-                // הסר מודאל קיים אם יש
-                const existingModal = document.getElementById(type + 'FormModal');
-                if (existingModal) {
-                    existingModal.remove();
-                }
-                
-                // הוסף את המודאל החדש
-                document.body.appendChild(modal);
-                document.body.style.overflow = 'hidden';
-                
-                // קרא לפונקציה הספציפית
-                console.log('Calling handleFormSpecificLogic for type:', type);
-                this.handleFormSpecificLogic(type, parentId, itemId);
-                
-            } else {
-                console.error('Modal not found in HTML');
-                console.log('Available elements with ID:', 
-                    Array.from(tempDiv.querySelectorAll('[id]')).map(el => el.id));
-            }
-            
-        } catch (error) {
-            console.error('Error in openForm:', error);
-        }
-    },
-
     handleFormSpecificLogic: function(type, parentId, itemId) {
 
         console.log('🎯 handleFormSpecificLogic - type:', type, 'parentId:', parentId, 'itemId:', itemId);
-        alert('DEBUG: handleFormSpecificLogic - type: ' + type);
+        alert('DEBUG: handleFormSpecificLogic - type: ' + type + ', itemId: ' + itemId);
 
             switch(type) {
                 case 'area_grave':

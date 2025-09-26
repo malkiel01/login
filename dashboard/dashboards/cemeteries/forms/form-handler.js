@@ -3941,7 +3941,7 @@ const FormHandler = {
 
             // אתחל את מנהל ההיררכיה - רק קברים פנויים (סטטוס 1)
             GraveHierarchyManager.init({
-                allowedStatuses: [1], // רק פנויים לרכישות
+                allowedStatuses: [1, 2], // רק פנויים לרכישות
                 onGraveSelected: async function(graveId) {
                     // כאן כל הלוגיקה של חישוב תשלומים כשנבחר קבר
                     if (graveId) {

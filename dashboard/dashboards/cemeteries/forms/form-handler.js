@@ -265,22 +265,9 @@ const FormHandler = {
     },
 
     openForm: async function(type, parentId = null, itemId = null) {
-        // דיבוג מיידי
+        // דיבוג
         console.log('🚀 FormHandler.openForm STARTED!');
-        console.log('Type:', type);
-        
-        const debugDiv = document.createElement('div');
-        debugDiv.style.cssText = 'position:fixed;top:0;left:0;background:red;color:white;z-index:99999;padding:10px';
-        debugDiv.textContent = 'FormHandler.openForm called with type: ' + type;
-        document.body.appendChild(debugDiv);
-        
-        // עדכן את הדיב עם התקדמות
-        const updateDebug = (msg) => {
-            debugDiv.textContent += ' | ' + msg;
-            console.log('📍 ' + msg);
-        };
-        
-        updateDebug('Step 1: Checking type');
+        console.log('Type:', type, 'ParentId:', parentId, 'ItemId:', itemId);
         
         if (type === 'purchase' && !itemId) {
             window.isEditMode = false;
@@ -289,12 +276,9 @@ const FormHandler = {
         }
         
         if (!type || typeof type !== 'string') {
-            updateDebug('ERROR: Invalid type');
             console.error('Invalid type:', type);
             return;
         }
-
-        updateDebug('Step 2: Creating params');
 
         try {
             const params = new URLSearchParams({
@@ -303,137 +287,61 @@ const FormHandler = {
                 ...(parentId && { parent_id: parentId })
             });
             
-            updateDebug('Step 3: Fetching from server');
-            
             const url = `/dashboard/dashboards/cemeteries/forms/form-loader.php?${params}`;
             console.log('Fetching URL:', url);
             
             const response = await fetch(url);
             
-            updateDebug('Step 4: Got response - status: ' + response.status);
-            
             if (!response.ok) {
-                updateDebug('ERROR: Bad response');
                 console.error('Response not OK:', response.status);
                 return;
             }
             
-            updateDebug('Step 5: Reading HTML');
-            
             const html = await response.text();
+            console.log('HTML received, length:', html.length);
 
-            updateDebug('Step 5: Reading HTML');
-
-            updateDebug('Step 6: Got HTML - length: ' + html.length);
-
-            // הוסף כאן בדיקה אם ה-HTML תקין
-            if (!html) {
-                updateDebug('ERROR: Empty HTML');
+            if (!html || html.trim() === '') {
+                console.error('Empty HTML received');
                 return;
             }
 
-            // נסה לפענח את ה-HTML
-            try {
-                updateDebug('Step 7: Creating temp div');
-                const tempDiv = document.createElement('div');
-                
-                updateDebug('Step 8: Setting innerHTML');
-                tempDiv.innerHTML = html;
-                
-                updateDebug('Step 9: Looking for modal');
-                const modal = tempDiv.querySelector('#' + type + 'FormModal');
-                
-                if (modal) {
-                    updateDebug('Step 10: Modal found!');
-                    document.body.appendChild(modal);
-                    document.body.style.overflow = 'hidden';
-                    
-                    updateDebug('Step 11: Calling handleFormSpecificLogic');
-                    this.handleFormSpecificLogic(type, parentId, itemId);
-                    
-                    updateDebug('Step 12: Done!');
-                } else {
-                    updateDebug('ERROR: Modal not found');
-                }
-            } catch (innerError) {
-                updateDebug('ERROR in processing: ' + innerError.message);
-                console.error('Error details:', innerError);
+            // בדוק אם יש שגיאת PHP
+            if (html.includes('Fatal error') || html.includes('Parse error')) {
+                console.error('PHP Error in response:', html);
+                return;
             }
 
-            // צור div לתצוגה
-            const resultDiv = document.createElement('div');
-            resultDiv.style.cssText = 'position:fixed;top:50px;left:0;right:0;background:white;border:2px solid black;padding:10px;z-index:99999;max-height:300px;overflow:auto';
-            resultDiv.innerHTML = '<h3>Server Response:</h3><pre>' + html.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</pre>';
-            document.body.appendChild(resultDiv);
-
-            // הסר אחרי 10 שניות
-            setTimeout(() => resultDiv.remove(), 10000);
-
-            // הוסף מכאן:
-            console.log('=== FULL HTML FROM SERVER ===');
-            console.log(html);
-            console.log('=== END HTML ===');
-
-            updateDebug('Step 6: Got HTML - length: ' + html.length);
-
-            // בדוק אם זו הודעת שגיאה
-            if (html.includes('not found') || html.includes('error') || html.includes('Error')) {
-                console.log('⚠️ Possible error message in HTML');
-            }
-
-            // בדוק אם זה PHP שמחזיר משהו אחר
-            if (html.includes('<?php') || html.includes('<!DOCTYPE')) {
-                console.log('⚠️ Raw PHP or full page returned instead of modal');
-            }
-
-            // המשך עם הפירוק
-            updateDebug('Step 7: Parsing HTML');
-
+            // פענח את ה-HTML
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = html;
-
-            // הדפס מה יש בתוכן
-            console.log('Text content:', tempDiv.textContent.trim());
-
-            // חפש כל דבר עם ID
-            const allWithId = tempDiv.querySelectorAll('[id]');
-            console.log('Elements with ID:');
-            allWithId.forEach(el => {
-                console.log(`- ${el.tagName} #${el.id}`);
-            });
-
-            // עד כאן, והמשך עם הקוד הקיים:
+            
             // חפש את המודאל
             const modal = tempDiv.querySelector('#' + type + 'FormModal');
-
-                        
+            
             if (modal) {
-                updateDebug('Step 8: Modal found! Adding to page');
+                console.log('✅ Modal found and added to page');
+                
+                // הסר מודאל קיים אם יש
+                const existingModal = document.getElementById(type + 'FormModal');
+                if (existingModal) {
+                    existingModal.remove();
+                }
+                
+                // הוסף את המודאל החדש
                 document.body.appendChild(modal);
                 document.body.style.overflow = 'hidden';
                 
-                updateDebug('Step 9: Calling handleFormSpecificLogic');
+                // קרא לפונקציה הספציפית
+                console.log('Calling handleFormSpecificLogic for type:', type);
                 this.handleFormSpecificLogic(type, parentId, itemId);
                 
-                updateDebug('Step 10: Done!');
-                
-                // הסר את הדיבוג אחרי 3 שניות
-                setTimeout(() => debugDiv.remove(), 3000);
-                
             } else {
-                updateDebug('ERROR: Modal not found in HTML');
-                console.error('Modal not found');
-                
-                // הדפס מה כן נמצא
-                const allElements = tempDiv.querySelectorAll('*[id]');
-                console.log('Elements with ID:', allElements.length);
-                allElements.forEach(el => {
-                    console.log('- ID:', el.id, 'Tag:', el.tagName);
-                });
+                console.error('Modal not found in HTML');
+                console.log('Available elements with ID:', 
+                    Array.from(tempDiv.querySelectorAll('[id]')).map(el => el.id));
             }
             
         } catch (error) {
-            updateDebug('ERROR: ' + error.message);
             console.error('Error in openForm:', error);
         }
     },

@@ -321,26 +321,45 @@ const FormHandler = {
             updateDebug('Step 5: Reading HTML');
             
             const html = await response.text();
-            
+
+            // הוסף מכאן:
+            console.log('=== FULL HTML FROM SERVER ===');
+            console.log(html);
+            console.log('=== END HTML ===');
+
             updateDebug('Step 6: Got HTML - length: ' + html.length);
-            
-            console.log('HTML first 100 chars:', html.substring(0, 100));
-            
-            // אם ה-HTML ריק
-            if (!html || html.trim() === '') {
-                updateDebug('ERROR: Empty HTML');
-                console.error('Empty response from server');
-                return;
+
+            // בדוק אם זו הודעת שגיאה
+            if (html.includes('not found') || html.includes('error') || html.includes('Error')) {
+                console.log('⚠️ Possible error message in HTML');
             }
-            
+
+            // בדוק אם זה PHP שמחזיר משהו אחר
+            if (html.includes('<?php') || html.includes('<!DOCTYPE')) {
+                console.log('⚠️ Raw PHP or full page returned instead of modal');
+            }
+
+            // המשך עם הפירוק
             updateDebug('Step 7: Parsing HTML');
-            
+
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = html;
-            
+
+            // הדפס מה יש בתוכן
+            console.log('Text content:', tempDiv.textContent.trim());
+
+            // חפש כל דבר עם ID
+            const allWithId = tempDiv.querySelectorAll('[id]');
+            console.log('Elements with ID:');
+            allWithId.forEach(el => {
+                console.log(`- ${el.tagName} #${el.id}`);
+            });
+
+            // עד כאן, והמשך עם הקוד הקיים:
             // חפש את המודאל
             const modal = tempDiv.querySelector('#' + type + 'FormModal');
-            
+
+                        
             if (modal) {
                 updateDebug('Step 8: Modal found! Adding to page');
                 document.body.appendChild(modal);

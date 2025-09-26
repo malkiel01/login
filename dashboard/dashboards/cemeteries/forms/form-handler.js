@@ -142,7 +142,7 @@ const FormHandler = {
         }
     },
 
-    openForm: async function(type, parentId = null, itemId = null) {
+    openForm2: async function(type, parentId = null, itemId = null) {
         console.log('🚀🚀🚀 FormHandler.openForm CALLED!');
         console.log('Type received:', type);
         alert('FormHandler.openForm - type: ' + type);
@@ -245,68 +245,77 @@ const FormHandler = {
                 console.log('🎯 About to call handleFormSpecificLogic with type:', type);
                 this.handleFormSpecificLogic(type, parentId, itemId);
                 
-            // } else {
-            //     console.error('❌ Modal not found in HTML');
-            //     alert('ERROR: Modal not found! Looking for: #' + type + 'FormModal');
-                
-            //     const allModals = tempDiv.querySelectorAll('.modal');
-            //     console.log('Found modals:', allModals.length);
-            //     allModals.forEach(m => {
-            //         console.log('Modal id:', m.id);
-            //     });
-            // }
             } else {
                 console.error('❌ Modal not found in HTML');
                 alert('ERROR: Modal not found! Looking for: #' + type + 'FormModal');
                 
-                // בדוק מה כן יש ב-HTML
-                console.log('=== DEBUGGING WHAT WE GOT ===');
-                
-                // הדפס את כל ה-HTML
-                console.log('Raw HTML:', html);
-                
-                // בדוק אם יש משהו בכלל
-                if (!html || html.trim() === '') {
-                    console.error('HTML is empty!');
-                    alert('ERROR: Server returned empty response!');
-                    return;
-                }
-                
-                // חפש כל מודאל
                 const allModals = tempDiv.querySelectorAll('.modal');
                 console.log('Found modals:', allModals.length);
                 allModals.forEach(m => {
-                    console.log('Modal id:', m.id, 'classes:', m.className);
-                });
-                
-                // חפש כל div עם ID
-                const allDivsWithId = tempDiv.querySelectorAll('div[id]');
-                console.log('All DIVs with ID:', allDivsWithId.length);
-                allDivsWithId.forEach(d => {
-                    console.log('DIV id:', d.id);
-                });
-                
-                // אולי יש הודעת שגיאה?
-                const errorDivs = tempDiv.querySelectorAll('.error, .alert, .warning');
-                errorDivs.forEach(e => {
-                    console.log('Error/Alert element:', e.textContent);
-                });
-                
-                // הדפס את כל הטקסט
-                console.log('All text content:', tempDiv.textContent);
-                
-                // נסה לחפש כל דבר שקשור ל-burial
-                const burialElements = tempDiv.querySelectorAll('*[id*="burial"], *[class*="burial"]');
-                console.log('Elements with "burial":', burialElements.length);
-                burialElements.forEach(e => {
-                    console.log('Burial element:', e.tagName, 'id:', e.id, 'class:', e.className);
+                    console.log('Modal id:', m.id);
                 });
             }
+    
             
         } catch (error) {
             console.error('❌ Error in openForm:', error);
             alert('ERROR in openForm: ' + error.message);
             this.showMessage('שגיאה בטעינת הטופס', 'error');
+        }
+    },
+
+    openForm: async function(type, parentId = null, itemId = null) {
+        // דיבוג מיידי - השורה הראשונה!
+        console.log('🚀 FormHandler.openForm STARTED!');
+        console.log('Type:', type);
+        console.log('ParentId:', parentId);
+        console.log('ItemId:', itemId);
+        
+        // נסה להדפיס משהו שיישאר
+        const debugDiv = document.createElement('div');
+        debugDiv.style.cssText = 'position:fixed;top:0;left:0;background:red;color:white;z-index:99999;padding:10px';
+        debugDiv.textContent = 'FormHandler.openForm called with type: ' + type;
+        document.body.appendChild(debugDiv);
+        
+        // המשך עם שאר הקוד...
+        if (type === 'purchase' && !itemId) {
+            window.isEditMode = false;
+            window.purchasePayments = [];
+            window.selectedGraveData = null;
+            console.log('🆕 Opening NEW purchase form - cleared globals');
+        }
+        
+        if (!type || typeof type !== 'string') {
+            console.error('Invalid type:', type);
+            this.showMessage('שגיאה: סוג הטופס לא תקין', 'error');
+            return;
+        }
+
+        try {
+            console.log('📍 Starting try block...');
+            
+            const params = new URLSearchParams({
+                type: type,
+                ...(itemId && { item_id: itemId }),
+                ...(parentId && { parent_id: parentId })
+            });
+            
+            console.log('📝 URL params:', params.toString());
+            
+            // בדוק אם הדף נטען מחדש
+            window.beforeunload = function() {
+                console.log('⚠️ PAGE IS RELOADING!');
+                return 'Page is reloading!';
+            };
+            
+            const response = await fetch(`/dashboard/dashboards/cemeteries/forms/form-loader.php?${params}`);
+            
+            console.log('📨 Response received:', response);
+            
+            // המשך...
+        } catch (error) {
+            console.error('❌ Error in openForm:', error);
+            alert('ERROR: ' + error.message);
         }
     },
 

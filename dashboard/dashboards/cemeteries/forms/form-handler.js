@@ -142,7 +142,7 @@ const FormHandler = {
         }
     },
 
-    openForm2: async function(type, parentId = null, itemId = null) {
+    openForm: async function(type, parentId = null, itemId = null) {
         console.log('🚀🚀🚀 FormHandler.openForm CALLED!');
         console.log('Type received:', type);
         alert('FormHandler.openForm - type: ' + type);
@@ -264,7 +264,7 @@ const FormHandler = {
         }
     },
 
-    openForm: async function(type, parentId = null, itemId = null) {
+    openForm3: async function(type, parentId = null, itemId = null) {
         // דיבוג
         console.log('🚀 FormHandler.openForm STARTED!');
         console.log('Type:', type, 'ParentId:', parentId, 'ItemId:', itemId);

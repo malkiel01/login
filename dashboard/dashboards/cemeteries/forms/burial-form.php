@@ -230,58 +230,58 @@ $formBuilder->addField('clientId', 'נפטר/ת', 'select', [
 
 // HTML מותאם אישית לבחירת קבר (זהה לרכישות)
 $graveSelectorHTML = '
-<fieldset class="form-section" 
-    id="grave-selector-fieldset"
-    data-hierarchy=\'' . htmlspecialchars($hierarchyJson, ENT_QUOTES, 'UTF-8') . '\'
-    data-cemeteries=\'' . htmlspecialchars(json_encode($cemeteries), ENT_QUOTES, 'UTF-8') . '\'>
-    <legend>בחירת מיקום קבר</legend>
-    
-    <div class="form-row">
-        <div class="form-group col-md-4">
-            <label for="cemeterySelect">בית עלמין</label>
-            <select id="cemeterySelect" class="form-control" onchange="filterHierarchy(\'cemetery\')">
-                <option value="">-- בחר בית עלמין --</option>
-            </select>
+    <fieldset class="form-section" 
+        id="grave-selector-fieldset"
+        data-hierarchy=\'' . htmlspecialchars($hierarchyJson, ENT_QUOTES, 'UTF-8') . '\'
+        data-cemeteries=\'' . htmlspecialchars(json_encode($cemeteries), ENT_QUOTES, 'UTF-8') . '\'>
+        <legend>בחירת מיקום קבר</legend>
+        
+        <div class="form-row">
+            <div class="form-group col-md-4">
+                <label for="cemeterySelect">בית עלמין</label>
+                <select id="cemeterySelect" class="form-control" onchange="filterHierarchy(\'cemetery\')">
+                    <option value="">-- בחר בית עלמין --</option>
+                </select>
+            </div>
+            
+            <div class="form-group col-md-4">
+                <label for="blockSelect">גוש</label>
+                <select id="blockSelect" class="form-control" onchange="filterHierarchy(\'block\')" disabled>
+                    <option value="">-- בחר גוש --</option>
+                </select>
+            </div>
+            
+            <div class="form-group col-md-4">
+                <label for="plotSelect">חלקה</label>
+                <select id="plotSelect" class="form-control" onchange="filterHierarchy(\'plot\')" disabled>
+                    <option value="">-- בחר חלקה --</option>
+                </select>
+            </div>
         </div>
         
-        <div class="form-group col-md-4">
-            <label for="blockSelect">גוש</label>
-            <select id="blockSelect" class="form-control" onchange="filterHierarchy(\'block\')" disabled>
-                <option value="">-- בחר גוש --</option>
-            </select>
+        <div class="form-row">
+            <div class="form-group col-md-4">
+                <label for="rowSelect">שורה</label>
+                <select id="rowSelect" class="form-control" onchange="filterHierarchy(\'row\')" disabled>
+                    <option value="">-- בחר שורה --</option>
+                </select>
+            </div>
+            
+            <div class="form-group col-md-4">
+                <label for="areaGraveSelect">אחוזת קבר</label>
+                <select id="areaGraveSelect" class="form-control" onchange="filterHierarchy(\'area_grave\')" disabled>
+                    <option value="">-- בחר אחוזת קבר --</option>
+                </select>
+            </div>
+            
+            <div class="form-group col-md-4">
+                <label for="graveSelect">קבר <span class="text-danger">*</span></label>
+                <select id="graveSelect" name="graveId" class="form-control" required disabled>
+                    <option value="">-- בחר קבר --</option>
+                </select>
+            </div>
         </div>
-        
-        <div class="form-group col-md-4">
-            <label for="plotSelect">חלקה</label>
-            <select id="plotSelect" class="form-control" onchange="filterHierarchy(\'plot\')" disabled>
-                <option value="">-- בחר חלקה --</option>
-            </select>
-        </div>
-    </div>
-    
-    <div class="form-row">
-        <div class="form-group col-md-4">
-            <label for="rowSelect">שורה</label>
-            <select id="rowSelect" class="form-control" onchange="filterHierarchy(\'row\')" disabled>
-                <option value="">-- בחר שורה --</option>
-            </select>
-        </div>
-        
-        <div class="form-group col-md-4">
-            <label for="areaGraveSelect">אחוזת קבר</label>
-            <select id="areaGraveSelect" class="form-control" onchange="filterHierarchy(\'area_grave\')" disabled>
-                <option value="">-- בחר אחוזת קבר --</option>
-            </select>
-        </div>
-        
-        <div class="form-group col-md-4">
-            <label for="graveSelect">קבר <span class="text-danger">*</span></label>
-            <select id="graveSelect" name="graveId" class="form-control" required disabled>
-                <option value="">-- בחר קבר --</option>
-            </select>
-        </div>
-    </div>
-</fieldset>';
+    </fieldset>';
 
 // הוסף את בורר הקבר לטופס
 $formBuilder->addCustomHTML($graveSelectorHTML);

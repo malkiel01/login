@@ -407,9 +407,14 @@ const FormHandler = {
                     
                     // עדכן תצוגה
                     if (window.displayPaymentsSummary) {
-                        document.getElementById('paymentsDisplay').innerHTML = window.displayPaymentsSummary();
+                        // TODO 1
+                        // document.getElementById('paymentsDisplay').innerHTML = window.displayPaymentsSummary();
+                        document.getElementById('paymentsDisplay').innerHTML = 
+                            PaymentDisplayManager.render(window.purchasePayments, 'summary');
                     }
-                    document.getElementById('total_price').value = window.calculatePaymentsTotal();
+                    // TODO 1
+                    // document.getElementById('total_price').value = window.calculatePaymentsTotal();
+                    document.getElementById('total_price').value = PaymentDisplayManager.calculateTotal();
                     document.getElementById('paymentsList').value = JSON.stringify(window.purchasePayments);
                     
                     console.log('Payments calculated successfully');
@@ -1021,8 +1026,12 @@ const FormHandler = {
                     }
                     
                     // עדכן תצוגה בטופס הראשי
-                    document.getElementById('total_price').value = window.calculatePaymentsTotal();
-                    document.getElementById('paymentsDisplay').innerHTML = window.displayPaymentsSummary();
+                    // TODO 1
+                    // document.getElementById('total_price').value = window.calculatePaymentsTotal();
+                    // document.getElementById('paymentsDisplay').innerHTML = window.displayPaymentsSummary();
+                    document.getElementById('total_price').value = PaymentDisplayManager.calculateTotal();
+                    document.getElementById('paymentsDisplay').innerHTML = 
+                        PaymentDisplayManager.render(window.purchasePayments, 'summary');
                     document.getElementById('paymentsList').value = JSON.stringify(window.purchasePayments);
                     
                     // סגור מודל
@@ -1384,8 +1393,12 @@ const FormHandler = {
                 },
                 
                 save: function() {
-                    document.getElementById('total_price').value = window.calculatePaymentsTotal();
-                    document.getElementById('paymentsDisplay').innerHTML = window.displayPaymentsSummary();
+                    // TODO 1
+                    // document.getElementById('total_price').value = window.calculatePaymentsTotal();
+                    // document.getElementById('paymentsDisplay').innerHTML = window.displayPaymentsSummary();
+                    document.getElementById('total_price').value = PaymentDisplayManager.calculateTotal();
+                    document.getElementById('paymentsDisplay').innerHTML = 
+                        PaymentDisplayManager.render(window.purchasePayments, 'summary');
                     document.getElementById('paymentsList').value = JSON.stringify(window.purchasePayments);
                     this.close();
                 },
@@ -1399,45 +1412,45 @@ const FormHandler = {
             // הגדרה גלובלית
             window.ExistingPaymentsManager = ExistingPaymentsManager;
 
+            // TODO 1
+            // window.displayPaymentsSummary = function() {
+            //     if (!window.purchasePayments || window.purchasePayments.length === 0) {
+            //         return '<p style="color: #999;">לא הוגדרו תשלומים</p>';
+            //     }
 
-            window.displayPaymentsSummary = function() {
-                if (!window.purchasePayments || window.purchasePayments.length === 0) {
-                    return '<p style="color: #999;">לא הוגדרו תשלומים</p>';
-                }
+            //     // השתמש בקונפיג הגלובלי
+            //     const paymentTypes = window.PAYMENT_TYPES_CONFIG || {};
 
-                // השתמש בקונפיג הגלובלי
-                const paymentTypes = window.PAYMENT_TYPES_CONFIG || {};
-
-                const summary = {};
-                window.purchasePayments.forEach(payment => {
-                    // תחילה נסה customPaymentType, אחרי זה בדוק בקונפיג, ורק אז ברירת מחדל
-                    const name = payment.customPaymentType || 
-                                (paymentTypes[payment.paymentType] && paymentTypes[payment.paymentType].name) || 
-                                `תשלום מסוג ${payment.paymentType}`;
+            //     const summary = {};
+            //     window.purchasePayments.forEach(payment => {
+            //         // תחילה נסה customPaymentType, אחרי זה בדוק בקונפיג, ורק אז ברירת מחדל
+            //         const name = payment.customPaymentType || 
+            //                     (paymentTypes[payment.paymentType] && paymentTypes[payment.paymentType].name) || 
+            //                     `תשלום מסוג ${payment.paymentType}`;
                     
-                    const amount = parseFloat(payment.paymentAmount) || 0;
+            //         const amount = parseFloat(payment.paymentAmount) || 0;
                     
-                    if (!summary[name]) {
-                        summary[name] = 0;
-                    }
-                    summary[name] += amount;
-                });
+            //         if (!summary[name]) {
+            //             summary[name] = 0;
+            //         }
+            //         summary[name] += amount;
+            //     });
                 
-                return Object.entries(summary).map(([type, amount]) => 
-                    `${type}: ₪${amount.toFixed(2)}`
-                ).join(' | ') + `<br><strong>סה"כ: ₪${window.calculatePaymentsTotal()}</strong>`;
-            }
-
-            window.calculatePaymentsTotal = function() {
-                if (!window.purchasePayments) return '0.00';
+            //     return Object.entries(summary).map(([type, amount]) => 
+            //         `${type}: ₪${amount.toFixed(2)}`
+            //     ).join(' | ') + `<br><strong>סה"כ: ₪${window.calculatePaymentsTotal()}</strong>`;
+            // }
+            // TODO 1
+            // window.calculatePaymentsTotal = function() {
+            //     if (!window.purchasePayments) return '0.00';
                 
-                const total = window.purchasePayments.reduce((sum, payment) => {
-                    const amount = parseFloat(payment.paymentAmount) || 0;
-                    return sum + amount;
-                }, 0);
+            //     const total = window.purchasePayments.reduce((sum, payment) => {
+            //         const amount = parseFloat(payment.paymentAmount) || 0;
+            //         return sum + amount;
+            //     }, 0);
                 
-                return total.toFixed(2);
-            }
+            //     return total.toFixed(2);
+            // }
 
             // סמן שהטופס מוכן אחרי חצי שנייה
             setTimeout(() => {
@@ -1514,7 +1527,10 @@ const FormHandler = {
                                         
                                         // עדכן תצוגה
                                         if (window.displayPaymentsSummary) {
-                                            document.getElementById('paymentsDisplay').innerHTML = window.displayPaymentsSummary();
+                                            // TODO 1
+                                            // document.getElementById('paymentsDisplay').innerHTML = window.displayPaymentsSummary();
+                                            document.getElementById('paymentsDisplay').innerHTML = 
+                                                PaymentDisplayManager.render(window.purchasePayments, 'summary');
                                         }
                                         
                                         // עדכן סכום
@@ -1743,9 +1759,14 @@ const FormHandler = {
                                         
                                         // עדכן תצוגה
                                         if (window.displayPaymentsSummary) {
-                                            document.getElementById('paymentsDisplay').innerHTML = window.displayPaymentsSummary();
+                                            // TODO 1
+                                            // document.getElementById('paymentsDisplay').innerHTML = window.displayPaymentsSummary();
+                                            document.getElementById('paymentsDisplay').innerHTML = 
+                                                PaymentDisplayManager.render(window.purchasePayments, 'summary');
                                         }
-                                        document.getElementById('total_price').value = window.calculatePaymentsTotal();
+                                        // TODO 1
+                                        // document.getElementById('total_price').value = window.calculatePaymentsTotal();
+                                        document.getElementById('total_price').value = PaymentDisplayManager.calculateTotal();
                                         document.getElementById('paymentsList').value = JSON.stringify(window.purchasePayments);
                                     }
                                 } catch (error) {
@@ -2265,6 +2286,11 @@ const FormHandler = {
         }
     }
 };
+
+// טען את מנהל התשלומים
+if (typeof PaymentDisplayManager !== 'undefined') {
+    window.PaymentDisplayManager = PaymentDisplayManager;
+}
 
 // grave-hierarchy-manager.js - מנהל היררכיית קברים משותף
 const GraveHierarchyManager = {

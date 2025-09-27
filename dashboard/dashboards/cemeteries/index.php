@@ -29,6 +29,7 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/forms.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/cards.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/breadcrumb.css">
+
 </head>
 <body>
     <!-- SVG Icons - חייב להיות בתחילת ה-body -->
@@ -144,6 +145,7 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <script src="/dashboard/dashboards/cemeteries/js/main.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/clearDashboard.js"></script>
     <!-- מערכת טפסים חדשה -->
+     <script src="/dashboard/dashboards/cemeteries/forms/payment-display-manager.js"></script>
     <script src="/dashboard/dashboards/cemeteries/forms/form-handler.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/hierarchy-cards.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/cards.js"></script>

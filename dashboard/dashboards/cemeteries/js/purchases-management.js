@@ -139,6 +139,42 @@ function displayPurchasesTable(purchases) {
                 </td>
             </tr>
         `;
+
+        // TODO 1
+        // return `
+        //     <tr>
+        //         <td>
+        //             <strong>${purchase.serialPurchaseId || purchase.purchase_number || purchase.unicId}</strong>
+        //         </td>
+        //         <td>${formatDate(purchase.dateOpening || purchase.purchase_date || purchase.createDate)}</td>
+        //         <td>
+        //             <strong>${purchase.customer_name || 'לא ידוע'}</strong>
+        //             ${purchase.customer_id_number ? `<br><small style="color: #666;">${purchase.customer_id_number}</small>` : ''}
+        //         </td>
+        //         <td>
+        //             <small style="color: #666;">${graveLocation}</small>
+        //         </td>
+        //         <td>${purchase.price || purchase.amount ? '₪' + formatNumber(purchase.price || purchase.amount) : '-'}</td>
+        //         <td>
+        //             <span class="status-badge" style="background: ${statusInfo.color}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
+        //                 ${statusInfo.name}
+        //             </span>
+        //         </td>
+        //         <td>
+        //             <div class="btn-group">
+        //                 <button class="btn btn-sm btn-info" onclick="viewPurchase('${purchase.unicId}')" title="צפייה">
+        //                     👁️
+        //                 </button>
+        //                 <button class="btn btn-sm btn-warning" onclick="editPurchase('${purchase.unicId}')" title="עריכה">
+        //                     ✏️
+        //                 </button>
+        //                 <button class="btn btn-sm btn-danger" onclick="deletePurchase('${purchase.unicId}')" title="מחיקה">
+        //                     🗑️
+        //                 </button>
+        //             </div>
+        //         </td>
+        //     </tr>
+        // `;
     }).join('');
 }
 

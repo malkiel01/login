@@ -314,53 +314,6 @@ try {
             ]);
             break;
             
-        // // TODO 1
-        // // עדכון רכישה
-        // case 'update':
-        //     if (!$id) {
-        //         throw new Exception('Purchase ID is required');
-        //     }
-            
-        //     $data = json_decode(file_get_contents('php://input'), true);
-            
-        //     // עדכון תאריך
-        //     $data['updateDate'] = date('Y-m-d H:i:s');
-            
-        //     // בניית השאילתה
-        //     $fields = [
-        //         'clientId', 'graveId', 'serialPurchaseId', 'purchaseStatus',
-        //         'buyerStatus', 'price', 'numOfPayments', 'PaymentEndDate',
-        //         'refundAmount', 'refundInvoiceNumber', 'contactId', 'dateOpening',
-        //         'ifCertificate', 'deedNum', 'kinship', 'comment', 'updateDate'
-        //     ];
-            
-        //     $updateFields = [];
-        //     $params = ['id' => $id];
-            
-        //     foreach ($fields as $field) {
-        //         if (isset($data[$field])) {
-        //             $updateFields[] = "$field = :$field";
-        //             $params[$field] = $data[$field];
-        //         }
-        //     }
-            
-        //     if (empty($updateFields)) {
-        //         throw new Exception('No fields to update');
-        //     }
-            
-        //     $sql = "UPDATE purchases SET " . implode(', ', $updateFields) . " WHERE id = :id";
-            
-        //     $stmt = $pdo->prepare($sql);
-        //     $stmt->execute($params);
-            
-        //     echo json_encode([
-        //         'success' => true,
-        //         'message' => 'הרכישה עודכנה בהצלחה'
-        //     ]);
-        //     break;
-            
-        // // מחיקת רכישה (מחיקה רכה)
-        
         // עדכון רכישה
         case 'update':
             if (!$id) {
@@ -567,6 +520,62 @@ try {
             echo json_encode(['success' => true, 'data' => $results]);
             break;
             
+        // הוסף לאחר case 'search': וליפני default:
+
+case 'getByCustomer':
+    $customerId = $_GET['customerId'] ?? '';
+    if (!$customerId) {
+        throw new Exception('Customer ID is required');
+    }
+    
+    $stmt = $pdo->prepare("
+        SELECT p.*, g.graveNameHe, g.graveStatus,
+               ag.areaGraveNameHe, r.lineNameHe, pl.plotNameHe, 
+               b.blockNameHe, ce.cemeteryNameHe
+        FROM purchases p
+        LEFT JOIN graves g ON p.graveId = g.unicId
+        LEFT JOIN areaGraves ag ON g.areaGraveId = ag.unicId
+        LEFT JOIN rows r ON ag.lineId = r.unicId
+        LEFT JOIN plots pl ON r.plotId = pl.unicId
+        LEFT JOIN blocks b ON pl.blockId = b.unicId
+        LEFT JOIN cemeteries ce ON b.cemeteryId = ce.unicId
+        WHERE p.clientId = :customerId AND p.isActive = 1
+        ORDER BY p.createDate DESC
+        LIMIT 1
+    ");
+    $stmt->execute(['customerId' => $customerId]);
+    $purchase = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    echo json_encode([
+        'success' => true,
+        'purchase' => $purchase
+    ]);
+    break;
+
+    case 'getByGrave':
+        $graveId = $_GET['graveId'] ?? '';
+        if (!$graveId) {
+            throw new Exception('Grave ID is required');
+        }
+        
+        $stmt = $pdo->prepare("
+            SELECT p.*, CONCAT(c.firstName, ' ', c.lastName) as customerName,
+                c.numId as customerIdNumber
+            FROM purchases p
+            LEFT JOIN customers c ON p.clientId = c.unicId
+            WHERE p.graveId = :graveId AND p.isActive = 1
+            ORDER BY p.createDate DESC
+            LIMIT 1
+        ");
+        $stmt->execute(['graveId' => $graveId]);
+        $purchase = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        echo json_encode([
+            'success' => true,
+            'purchase' => $purchase
+        ]);
+        break;
+
         default:
             throw new Exception('Invalid action');
     }

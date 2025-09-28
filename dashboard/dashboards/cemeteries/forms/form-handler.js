@@ -407,13 +407,9 @@ const FormHandler = {
                     
                     // עדכן תצוגה
                     if (window.displayPaymentsSummary) {
-                        // TODO 1
-                        // document.getElementById('paymentsDisplay').innerHTML = window.displayPaymentsSummary();
                         document.getElementById('paymentsDisplay').innerHTML = 
                             PaymentDisplayManager.render(window.purchasePayments, 'summary');
                     }
-                    // TODO 1
-                    // document.getElementById('total_price').value = window.calculatePaymentsTotal();
                     document.getElementById('total_price').value = PaymentDisplayManager.calculateTotal();
                     document.getElementById('paymentsList').value = JSON.stringify(window.purchasePayments);
                     
@@ -1026,9 +1022,6 @@ const FormHandler = {
                     }
                     
                     // עדכן תצוגה בטופס הראשי
-                    // TODO 1
-                    // document.getElementById('total_price').value = window.calculatePaymentsTotal();
-                    // document.getElementById('paymentsDisplay').innerHTML = window.displayPaymentsSummary();
                     document.getElementById('total_price').value = PaymentDisplayManager.calculateTotal();
                     document.getElementById('paymentsDisplay').innerHTML = 
                         PaymentDisplayManager.render(window.purchasePayments, 'summary');
@@ -1393,9 +1386,6 @@ const FormHandler = {
                 },
                 
                 save: function() {
-                    // TODO 1
-                    // document.getElementById('total_price').value = window.calculatePaymentsTotal();
-                    // document.getElementById('paymentsDisplay').innerHTML = window.displayPaymentsSummary();
                     document.getElementById('total_price').value = PaymentDisplayManager.calculateTotal();
                     document.getElementById('paymentsDisplay').innerHTML = 
                         PaymentDisplayManager.render(window.purchasePayments, 'summary');
@@ -1411,46 +1401,6 @@ const FormHandler = {
 
             // הגדרה גלובלית
             window.ExistingPaymentsManager = ExistingPaymentsManager;
-
-            // TODO 1
-            // window.displayPaymentsSummary = function() {
-            //     if (!window.purchasePayments || window.purchasePayments.length === 0) {
-            //         return '<p style="color: #999;">לא הוגדרו תשלומים</p>';
-            //     }
-
-            //     // השתמש בקונפיג הגלובלי
-            //     const paymentTypes = window.PAYMENT_TYPES_CONFIG || {};
-
-            //     const summary = {};
-            //     window.purchasePayments.forEach(payment => {
-            //         // תחילה נסה customPaymentType, אחרי זה בדוק בקונפיג, ורק אז ברירת מחדל
-            //         const name = payment.customPaymentType || 
-            //                     (paymentTypes[payment.paymentType] && paymentTypes[payment.paymentType].name) || 
-            //                     `תשלום מסוג ${payment.paymentType}`;
-                    
-            //         const amount = parseFloat(payment.paymentAmount) || 0;
-                    
-            //         if (!summary[name]) {
-            //             summary[name] = 0;
-            //         }
-            //         summary[name] += amount;
-            //     });
-                
-            //     return Object.entries(summary).map(([type, amount]) => 
-            //         `${type}: ₪${amount.toFixed(2)}`
-            //     ).join(' | ') + `<br><strong>סה"כ: ₪${window.calculatePaymentsTotal()}</strong>`;
-            // }
-            // TODO 1
-            // window.calculatePaymentsTotal = function() {
-            //     if (!window.purchasePayments) return '0.00';
-                
-            //     const total = window.purchasePayments.reduce((sum, payment) => {
-            //         const amount = parseFloat(payment.paymentAmount) || 0;
-            //         return sum + amount;
-            //     }, 0);
-                
-            //     return total.toFixed(2);
-            // }
 
             // סמן שהטופס מוכן אחרי חצי שנייה
             setTimeout(() => {
@@ -1527,14 +1477,12 @@ const FormHandler = {
                                         
                                         // עדכן תצוגה
                                         if (window.displayPaymentsSummary) {
-                                            // TODO 1
-                                            // document.getElementById('paymentsDisplay').innerHTML = window.displayPaymentsSummary();
                                             document.getElementById('paymentsDisplay').innerHTML = 
                                                 PaymentDisplayManager.render(window.purchasePayments, 'summary');
                                         }
                                         
                                         // עדכן סכום
-                                        document.getElementById('total_price').value = data.price || window.calculatePaymentsTotal();
+                                        document.getElementById('total_price').value = data.price || PaymentDisplayManager.calculateTotal();
                                         
                                         // שנה טקסט כפתור
                                         const btn = document.getElementById('paymentsButtonText');
@@ -1686,7 +1634,7 @@ const FormHandler = {
         }
     },
 
-    handleBurialForm: function(itemId) {
+    handleBurialForm2: function(itemId) {
         this.waitForElement('#grave-selector-fieldset', (fieldset) => {
             // טען את נתוני ההיררכיה
             if (fieldset.dataset.hierarchy) {
@@ -1759,13 +1707,9 @@ const FormHandler = {
                                         
                                         // עדכן תצוגה
                                         if (window.displayPaymentsSummary) {
-                                            // TODO 1
-                                            // document.getElementById('paymentsDisplay').innerHTML = window.displayPaymentsSummary();
                                             document.getElementById('paymentsDisplay').innerHTML = 
                                                 PaymentDisplayManager.render(window.purchasePayments, 'summary');
                                         }
-                                        // TODO 1
-                                        // document.getElementById('total_price').value = window.calculatePaymentsTotal();
                                         document.getElementById('total_price').value = PaymentDisplayManager.calculateTotal();
                                         document.getElementById('paymentsList').value = JSON.stringify(window.purchasePayments);
                                     }
@@ -1939,6 +1883,374 @@ const FormHandler = {
             if (!loadBurialData()) {
                 const observer = new MutationObserver((mutations, obs) => {
                     if (loadBurialData()) {
+                        obs.disconnect();
+                    }
+                });
+                
+                const modal = document.getElementById('burialFormModal');
+                if (modal) {
+                    observer.observe(modal, {
+                        childList: true,
+                        subtree: true
+                    });
+                }
+                
+                setTimeout(() => observer.disconnect(), 10000);
+            }
+        }
+    },
+
+    handleBurialForm: function(itemId) {
+        this.waitForElement('#grave-selector-fieldset', (fieldset) => {
+            // טען את נתוני ההיררכיה
+            if (fieldset.dataset.hierarchy) {
+                window.hierarchyData = JSON.parse(fieldset.dataset.hierarchy);
+            } else {
+                return;
+            }
+
+            // אתחל את מנהל ההיררכיה - קברים פנויים ונרכשים (סטטוס 1, 2)
+            GraveHierarchyManager.init({
+                allowedStatuses: [1, 2], // פנויים ונרכשים
+                onGraveSelected: async function(graveId) {
+                    await handleGraveSelection(graveId);
+                }
+            });
+
+            // מאזין לשינויים בבחירת לקוח
+            const customerSelect = document.querySelector('[name="clientId"]');
+            if (customerSelect) {
+                customerSelect.addEventListener('change', async function() {
+                    await handleCustomerSelection(this.value);
+                });
+            }
+
+            // אתחל
+            window.populateBlocks();
+            window.populatePlots();
+        });
+        
+        // טען נתונים אם זו עריכה
+        if (itemId) {
+            window.isEditMode = true;
+            loadBurialData(itemId);
+        }
+        
+        // === פונקציות עזר לסינכרון דו-כיווני ===
+        
+        // טיפול בבחירת לקוח
+        async function handleCustomerSelection(customerId) {
+            if (!customerId) {
+                clearGraveSelection();
+                return;
+            }
+            
+            try {
+                // בדוק אם ללקוח יש רכישה פעילה
+                const response = await fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=getByCustomer&customerId=${customerId}`);
+                const data = await response.json();
+                
+                if (data.success && data.purchase) {
+                    const purchase = data.purchase;
+                    
+                    // הצג הודעה למשתמש
+                    showSyncNotification('info', 'נתוני הקבר התמלאו אוטומטית לפי הרכישה של הלקוח');
+                    
+                    // מלא אוטומטית את היררכיית הקבר
+                    await fillGraveHierarchy(purchase.graveId);
+                    
+                    // עדכן את שדה הרכישה הקשורה אם קיים
+                    const purchaseSelect = document.querySelector('[name="purchaseId"]');
+                    if (purchaseSelect) {
+                        purchaseSelect.value = purchase.unicId;
+                    }
+                } else {
+                    // לקוח ללא רכישה - נקה בחירת קבר רק אם לא במצב עריכה
+                    if (!window.isEditMode) {
+                        clearGraveSelection();
+                    }
+                }
+                
+                // טען נתוני לקוח עבור שדות נוספים
+                const customerResponse = await fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?action=get&id=${customerId}`);
+                const customerData = await customerResponse.json();
+                if (customerData.success && customerData.data) {
+                    window.selectedCustomerData = {
+                        id: customerId,
+                        name: customerData.data.firstName + ' ' + customerData.data.lastName,
+                        statusCustomer: customerData.data.statusCustomer
+                    };
+                }
+            } catch (error) {
+                console.error('Error loading customer purchase data:', error);
+            }
+        }
+        
+        // טיפול בבחירת קבר
+        async function handleGraveSelection(graveId) {
+            if (!graveId) {
+                window.selectedGraveData = null;
+                hideGraveStatusNotification();
+                return;
+            }
+            
+            try {
+                // מצא את פרטי הקבר
+                const grave = window.hierarchyData.graves.find(g => g.unicId == graveId);
+                if (grave) {
+                    window.selectedGraveData = {
+                        graveId: graveId,
+                        graveStatus: grave.graveStatus
+                    };
+                    
+                    // הצג סטטוס הקבר
+                    if (grave.graveStatus == 2) {
+                        showGraveStatusNotification('warning', 'שים לב: קבר זה נמצא בסטטוס נרכש');
+                    } else if (grave.graveStatus == 1) {
+                        showGraveStatusNotification('success', 'קבר פנוי');
+                    }
+                    
+                    // בדוק אם לקבר יש רכישה פעילה
+                    const response = await fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=getByGrave&graveId=${graveId}`);
+                    const data = await response.json();
+                    
+                    if (data.success && data.purchase) {
+                        const purchase = data.purchase;
+                        
+                        // הצג הודעה למשתמש
+                        showSyncNotification('info', 'נתוני הלקוח התמלאו אוטומטית לפי הרכישה של הקבר');
+                        
+                        // מלא אוטומטית את נתוני הלקוח
+                        const customerSelect = document.querySelector('[name="clientId"]');
+                        if (customerSelect) {
+                            customerSelect.value = purchase.clientId;
+                            
+                            // עדכן נתוני הלקוח הנבחר
+                            window.selectedCustomerData = {
+                                id: purchase.clientId,
+                                name: purchase.customerName
+                            };
+                        }
+                        
+                        // עדכן את שדה הרכישה הקשורה אם קיים
+                        const purchaseSelect = document.querySelector('[name="purchaseId"]');
+                        if (purchaseSelect) {
+                            purchaseSelect.value = purchase.unicId;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading grave purchase data:', error);
+            }
+        }
+        
+        // מילוי היררכיית הקבר לפי graveId
+        async function fillGraveHierarchy(graveId) {
+            if (!window.hierarchyData || !graveId) return;
+            
+            // מצא את הקבר
+            const grave = window.hierarchyData.graves.find(g => g.unicId === graveId);
+            if (!grave) return;
+            
+            // מצא את אחוזת הקבר
+            const areaGrave = window.hierarchyData.areaGraves.find(ag => ag.unicId === grave.area_grave_id);
+            if (!areaGrave) return;
+            
+            // מצא את השורה
+            const row = window.hierarchyData.rows.find(r => r.unicId === areaGrave.row_id);
+            if (!row) return;
+            
+            // מצא את החלקה
+            const plot = window.hierarchyData.plots.find(p => p.unicId === row.plot_id);
+            if (!plot) return;
+            
+            // מצא את הגוש
+            const block = window.hierarchyData.blocks.find(b => b.unicId === plot.blockId);
+            if (!block) return;
+            
+            // מלא את הסלקטים בסדר היררכי עם השהיות
+            setTimeout(() => {
+                document.getElementById('cemeterySelect').value = block.cemetery_id;
+                window.filterHierarchy('cemetery');
+                
+                setTimeout(() => {
+                    document.getElementById('blockSelect').value = block.unicId;
+                    window.filterHierarchy('block');
+                    
+                    setTimeout(() => {
+                        document.getElementById('plotSelect').value = plot.unicId;
+                        window.filterHierarchy('plot');
+                        
+                        setTimeout(() => {
+                            document.getElementById('rowSelect').value = row.unicId;
+                            window.filterHierarchy('row');
+                            
+                            setTimeout(() => {
+                                document.getElementById('areaGraveSelect').value = areaGrave.unicId;
+                                window.filterHierarchy('area_grave');
+                                
+                                setTimeout(() => {
+                                    document.getElementById('graveSelect').value = grave.unicId;
+                                }, 50);
+                            }, 50);
+                        }, 50);
+                    }, 50);
+                }, 50);
+            }, 100);
+        }
+        
+        // ניקוי בחירת קבר
+        function clearGraveSelection() {
+            document.getElementById('cemeterySelect').value = '';
+            document.getElementById('blockSelect').value = '';
+            document.getElementById('plotSelect').value = '';
+            document.getElementById('rowSelect').value = '';
+            document.getElementById('areaGraveSelect').value = '';
+            document.getElementById('graveSelect').value = '';
+            
+            // נקה את מצב הבחירה
+            window.selectedGraveData = null;
+            hideGraveStatusNotification();
+        }
+        
+        // הצגת הודעות סינכרון
+        function showSyncNotification(type, message) {
+            const notificationId = 'syncNotification';
+            let notification = document.getElementById(notificationId);
+            
+            if (!notification) {
+                notification = document.createElement('div');
+                notification.id = notificationId;
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    z-index: 9999;
+                    max-width: 300px;
+                    padding: 12px 16px;
+                    border-radius: 6px;
+                    color: white;
+                    font-size: 14px;
+                    font-weight: 500;
+                    transition: all 0.3s ease;
+                `;
+                document.body.appendChild(notification);
+            }
+            
+            // עיצוב לפי סוג
+            const colors = {
+                'info': '#3b82f6',
+                'success': '#10b981',
+                'warning': '#f59e0b',
+                'error': '#ef4444'
+            };
+            
+            notification.style.backgroundColor = colors[type] || colors['info'];
+            notification.textContent = message;
+            notification.style.display = 'block';
+            notification.style.opacity = '1';
+            
+            // הסתר אחרי 4 שניות
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => {
+                    notification.style.display = 'none';
+                }, 300);
+            }, 4000);
+        }
+        
+        // הצגת סטטוס קבר
+        function showGraveStatusNotification(type, message) {
+            let statusDiv = document.getElementById('graveStatusNotification');
+            
+            if (!statusDiv) {
+                statusDiv = document.createElement('div');
+                statusDiv.id = 'graveStatusNotification';
+                statusDiv.style.cssText = 'margin-top: 10px; border-radius: 5px; padding: 10px;';
+                
+                const graveFieldset = document.getElementById('grave-selector-fieldset');
+                if (graveFieldset) {
+                    graveFieldset.appendChild(statusDiv);
+                }
+            }
+            
+            const colors = {
+                'success': '#d1fae5',
+                'warning': '#fef3c7',
+                'error': '#fecaca'
+            };
+            
+            const textColors = {
+                'success': '#065f46',
+                'warning': '#92400e',
+                'error': '#991b1b'
+            };
+            
+            statusDiv.style.backgroundColor = colors[type] || colors['info'];
+            statusDiv.style.color = textColors[type] || textColors['info'];
+            statusDiv.innerHTML = `<strong>${type === 'success' ? '✅' : type === 'warning' ? '⚠️' : '❌'}</strong> ${message}`;
+            statusDiv.style.display = 'block';
+        }
+        
+        // הסתרת סטטוס קבר
+        function hideGraveStatusNotification() {
+            const statusDiv = document.getElementById('graveStatusNotification');
+            if (statusDiv) {
+                statusDiv.style.display = 'none';
+            }
+        }
+        
+        // טעינת נתוני קבורה לעריכה
+        function loadBurialData(itemId) {
+            const loadData = () => {
+                const form = document.querySelector('#burialFormModal form');
+                
+                if (form && form.elements && form.elements.length > 5) {
+                    fetch(`/dashboard/dashboards/cemeteries/api/burials-api.php?action=get&id=${itemId}`)
+                        .then(response => response.json())
+                        .then(result => {
+                            if (result.success && result.data) {
+                                const data = result.data;
+                            
+                                // מלא שדות רגילים
+                                Object.keys(data).forEach(key => {
+                                    const field = form.elements[key];
+                                    if (field && data[key] !== null) {
+                                        field.value = data[key];
+                                    }
+                                });
+
+                                // טען נתוני לקוח
+                                if (data.clientId) {
+                                    handleCustomerSelection(data.clientId);
+                                }
+                                
+                                // אם יש קבר, מצא את ההיררכיה שלו
+                                if (data.graveId && window.hierarchyData) {
+                                    setTimeout(() => {
+                                        fillGraveHierarchy(data.graveId).then(() => {
+                                            // עדכן נתוני הקבר הנבחר
+                                            const grave = window.hierarchyData.graves.find(g => g.unicId === data.graveId);
+                                            if (grave) {
+                                                window.selectedGraveData = {
+                                                    graveId: data.graveId,
+                                                    graveStatus: grave.graveStatus
+                                                };
+                                            }
+                                        });
+                                    }, 500);
+                                }
+                            }
+                        })
+                        .catch(error => console.error('Error loading burial data:', error));
+                    return true;
+                }
+                return false;
+            };
+            
+            if (!loadData()) {
+                const observer = new MutationObserver((mutations, obs) => {
+                    if (loadData()) {
                         obs.disconnect();
                     }
                 });
@@ -2284,6 +2596,20 @@ const FormHandler = {
         } else {
             alert(message);
         }
+    }
+};
+
+// פונקציה גלובלית לטיפול בבחירת קבר - להתאמה עם ההיררכיה הקיימת
+window.onGraveSelected = function(graveId) {
+    // קרא לפונקציה המקורית של GraveHierarchyManager אם יש
+    if (window.GraveHierarchyManager && window.GraveHierarchyManager.onGraveSelected) {
+        window.GraveHierarchyManager.onGraveSelected(graveId);
+    }
+    
+    // בדוק אם אנחנו בטופס קבורה
+    if (document.getElementById('burialFormModal')) {
+        // הפונקציה תופעל אוטומטית דרך הלוגיקה החדשה
+        return;
     }
 };
 

@@ -1,5 +1,5 @@
 <?php
-// dashboards/cemeteries/api/burials-api.php
+// dashboards/cemeteries/api/burials-api-old.php
 // API לניהול קבורות - מותאם למבנה הטבלה
 
 header('Content-Type: application/json; charset=utf-8');

@@ -2709,7 +2709,7 @@ const GraveHierarchyManager = {
         };
         
         // ========== מילוי שורות ==========
-        window.populateRows = function(plotId) {
+        window.populateRows2 = function(plotId) {
             const rowSelect = document.getElementById('rowSelect');
             if (!rowSelect) return;
             
@@ -2732,7 +2732,46 @@ const GraveHierarchyManager = {
                 rowSelect.innerHTML = '<option value="">-- אין שורות עם קברים זמינים --</option>';
             }
         };
-        
+        window.populateRows = function(plotId) {
+            const rowSelect = document.getElementById('rowSelect');
+            if (!rowSelect) return;
+            
+            rowSelect.innerHTML = '<option value="">-- בחר שורה --</option>';
+            
+            const rows = window.hierarchyData.rows.filter(r => r.plot_id == plotId);
+            
+            rows.forEach(row => {
+                const hasAvailableGraves = self.checkRowHasGraves(row.unicId);
+                
+                if (hasAvailableGraves) {
+                    const option = document.createElement('option');
+                    option.value = row.unicId;
+                    option.textContent = row.name;
+                    rowSelect.appendChild(option);
+                }
+            });
+            
+            if (rowSelect.options.length === 1) {
+                rowSelect.innerHTML = '<option value="">-- אין שורות עם קברים זמינים --</option>';
+            }
+            
+            // ⚠️ הוסף את זה בסוף הפונקציה:
+            // נקה את האחוזות והקברים כי שינוי חלקה = אין אחוזת קבר או קבר נבחרים
+            const areaGraveSelect = document.getElementById('areaGraveSelect');
+            if (areaGraveSelect) {
+                areaGraveSelect.innerHTML = '<option value="">-- בחר שורה תחילה --</option>';
+                areaGraveSelect.value = '';
+                areaGraveSelect.disabled = true;
+            }
+
+            const graveSelect = document.getElementById('graveSelect');
+            if (graveSelect) {
+                graveSelect.innerHTML = '<option value="">-- בחר אחוזת קבר תחילה --</option>';
+                graveSelect.value = '';
+                graveSelect.disabled = true;
+            }
+        };
+
         // ========== מילוי אחוזות קבר ==========
         window.populateAreaGraves = function(rowId) {
             const areaGraveSelect = document.getElementById('areaGraveSelect');

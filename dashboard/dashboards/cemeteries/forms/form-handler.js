@@ -2408,93 +2408,6 @@ const GraveHierarchyManager = {
                     populateBlocks(cemetery);
                     populatePlots(cemetery, null);
                     clearSelectors(['row', 'area_grave', 'grave']);
-                    break;
-                    
-                case 'block':
-                    if (block) {
-                        const selectedBlock = window.hierarchyData.blocks.find(b => b.unicId == block);
-                        if (selectedBlock && selectedBlock.cemetery_id) {
-                            document.getElementById('cemeterySelect').value = selectedBlock.cemeteryId;
-                            populateBlocks(selectedBlock.cemeteryId);
-                            document.getElementById('blockSelect').value = block;
-                        }
-                    }
-                    populatePlots(null, block);
-                    clearSelectors(['row', 'area_grave', 'grave']);
-                    break;
-                    
-                case 'plot':
-                    if (plot) {
-                        const selectedPlot = window.hierarchyData.plots.find(p => p.unicId == plot);
-                        if (selectedPlot) {
-                            if (selectedPlot.blockId && document.getElementById('blockSelect').value != selectedPlot.blockId) {
-                                document.getElementById('blockSelect').value = selectedPlot.blockId;
-                                
-                                const selectedBlock = window.hierarchyData.blocks.find(b => b.unicId == selectedPlot.blockId);
-                                if (selectedBlock && selectedBlock.cemeteryId) {
-                                    document.getElementById('cemeterySelect').value = selectedBlock.cemeteryId;
-                                    populateBlocks(selectedBlock.cemeteryId);
-                                    document.getElementById('blockSelect').value = selectedPlot.blockId;
-                                }
-                            }
-                            
-                            populatePlots(null, selectedPlot.blockId);
-                            document.getElementById('plotSelect').value = plot;
-                        }
-                        
-                        populateRows(plot);
-                        document.getElementById('rowSelect').disabled = false;
-                    } else {
-                        clearSelectors(['row', 'area_grave', 'grave']);
-                        document.getElementById('rowSelect').disabled = true;
-                    }
-                    break;
-                    
-                case 'row':
-                    if (row) {
-                        populateAreaGraves(row);
-                        document.getElementById('areaGraveSelect').disabled = false;
-                    } else {
-                        clearSelectors(['area_grave', 'grave']);
-                        document.getElementById('areaGraveSelect').disabled = true;
-                    }
-                    break;
-                    
-                case 'area_grave':
-                    if (areaGrave) {
-                        populateGraves(areaGrave);
-                        document.getElementById('graveSelect').disabled = false;
-                    } else {
-                        clearSelectors(['grave']);
-                        document.getElementById('graveSelect').disabled = true;
-                    }
-                    break;
-                    
-                case 'grave':
-                    // כשנבחר קבר - קרא ל-callback
-                    const graveId = document.getElementById('graveSelect').value;
-                    if (graveId && self.onGraveSelected) {
-                        self.onGraveSelected(graveId);
-                    }
-                    break;
-            }
-        };
-
-        // תיקון לפונקציה filterHierarchy ב-GraveHierarchyManager
-        // החלף את הפונקציה filterHierarchy עם הגרסה המתוקנת:
-
-        window.filterHierarchy = function(level) {
-            const cemetery = document.getElementById('cemeterySelect').value;
-            const block = document.getElementById('blockSelect').value;
-            const plot = document.getElementById('plotSelect').value;
-            const row = document.getElementById('rowSelect').value;
-            const areaGrave = document.getElementById('areaGraveSelect').value;
-            
-            switch(level) {
-                case 'cemetery':
-                    populateBlocks(cemetery);
-                    populatePlots(cemetery, null);
-                    clearSelectors(['row', 'area_grave', 'grave']);
                     // נקה גם את נתוני הלקוח והקבר
                     clearCustomerAndGraveData();
                     break;
@@ -2563,6 +2476,136 @@ const GraveHierarchyManager = {
                         clearSelectors(['grave']);
                         document.getElementById('graveSelect').disabled = true;
                         // נקה גם את נתוני הלקוח והקבר כי אין קבר נבחר
+                        clearCustomerAndGraveData();
+                    }
+                    break;
+                    
+                case 'grave':
+                    // כשנבחר קבר - קרא ל-callback
+                    const graveId = document.getElementById('graveSelect').value;
+                    if (graveId && self.onGraveSelected) {
+                        self.onGraveSelected(graveId);
+                    } else if (!graveId) {
+                        // אם ביטלו בחירת קבר - נקה נתונים
+                        clearCustomerAndGraveData();
+                    }
+                    break;
+            }
+        };
+
+        // פונקציה חדשה לניקוי נתוני לקוח וקבר
+        function clearCustomerAndGraveData2() {
+            // נקה את נתוני הקבר הנבחר
+            window.selectedGraveData = null;
+            
+            // נקה את בחירת הלקוח (רק אם לא במצב עריכה)
+            if (!window.isEditMode) {
+                const customerSelect = document.querySelector('[name="clientId"]');
+                if (customerSelect) {
+                    customerSelect.value = '';
+                }
+                window.selectedCustomerData = null;
+            }
+            
+            // קרא ל-callback עם null כדי לנקות
+            if (window.GraveHierarchyManager && window.GraveHierarchyManager.onGraveSelected) {
+                window.GraveHierarchyManager.onGraveSelected(null);
+            }
+            
+            // נקה הודעות סטטוס
+            const statusDiv = document.getElementById('graveStatusNotification');
+            if (statusDiv) {
+                statusDiv.style.display = 'none';
+            }
+        }
+
+        // תיקון לפונקציה filterHierarchy ב-GraveHierarchyManager
+        // החלף את הפונקציה filterHierarchy עם הגרסה המתוקנת:
+
+        window.filterHierarchy = function(level) {
+            const cemetery = document.getElementById('cemeterySelect').value;
+            const block = document.getElementById('blockSelect').value;
+            const plot = document.getElementById('plotSelect').value;
+            const row = document.getElementById('rowSelect').value;
+            const areaGrave = document.getElementById('areaGraveSelect').value;
+            
+            switch(level) {
+                case 'cemetery':
+                    populateBlocks(cemetery);
+                    populatePlots(cemetery, null);
+                    clearSelectors(['row', 'area_grave', 'grave']);
+                    // נקה גם את נתוני הלקוח והקבר
+                    clearCustomerAndGraveData();
+                    break;
+                    
+                case 'block':
+                    if (block) {
+                        const selectedBlock = window.hierarchyData.blocks.find(b => b.unicId == block);
+                        if (selectedBlock && selectedBlock.cemetery_id) {
+                            document.getElementById('cemeterySelect').value = selectedBlock.cemeteryId;
+                            populateBlocks(selectedBlock.cemeteryId);
+                            document.getElementById('blockSelect').value = block;
+                        }
+                    }
+                    populatePlots(null, block);
+                    clearSelectors(['row', 'area_grave', 'grave']);
+                    // נקה גם את נתוני הלקוח והקבר
+                    clearCustomerAndGraveData();
+                    break;
+                    
+                case 'plot':
+                    if (plot) {
+                        const selectedPlot = window.hierarchyData.plots.find(p => p.unicId == plot);
+                        if (selectedPlot) {
+                            if (selectedPlot.blockId && document.getElementById('blockSelect').value != selectedPlot.blockId) {
+                                document.getElementById('blockSelect').value = selectedPlot.blockId;
+                                
+                                const selectedBlock = window.hierarchyData.blocks.find(b => b.unicId == selectedPlot.blockId);
+                                if (selectedBlock && selectedBlock.cemeteryId) {
+                                    document.getElementById('cemeterySelect').value = selectedBlock.cemeteryId;
+                                    populateBlocks(selectedBlock.cemeteryId);
+                                    document.getElementById('blockSelect').value = selectedPlot.blockId;
+                                }
+                            }
+                            
+                            populatePlots(null, selectedPlot.blockId);
+                            document.getElementById('plotSelect').value = plot;
+                        }
+                        
+                        populateRows(plot);
+                        document.getElementById('rowSelect').disabled = false;
+                    } else {
+                        clearSelectors(['row', 'area_grave', 'grave']);
+                        document.getElementById('rowSelect').disabled = true;
+                    }
+                    // נקה גם את נתוני הלקוח והקבר
+                    clearCustomerAndGraveData();
+                    break;
+                    
+                case 'row':
+                    if (row) {
+                        populateAreaGraves(row);
+                        document.getElementById('areaGraveSelect').disabled = false;
+                        // נקה רק אחרי שמילאנו את האחוזות החדשות
+                        setTimeout(() => clearCustomerAndGraveData(), 50);
+                    } else {
+                        clearSelectors(['area_grave', 'grave']);
+                        document.getElementById('areaGraveSelect').disabled = true;
+                        // נקה מיד כי אין שורה
+                        clearCustomerAndGraveData();
+                    }
+                    break;
+                    
+                case 'area_grave':
+                    if (areaGrave) {
+                        populateGraves(areaGrave);
+                        document.getElementById('graveSelect').disabled = false;
+                        // נקה רק אחרי שמילאנו את הקברים החדשים
+                        setTimeout(() => clearCustomerAndGraveData(), 50);
+                    } else {
+                        clearSelectors(['grave']);
+                        document.getElementById('graveSelect').disabled = true;
+                        // נקה מיד כי אין אחוזת קבר
                         clearCustomerAndGraveData();
                     }
                     break;

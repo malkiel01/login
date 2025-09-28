@@ -2522,6 +2522,9 @@ const GraveHierarchyManager = {
         // תיקון לפונקציה filterHierarchy ב-GraveHierarchyManager
         // החלף את הפונקציה filterHierarchy עם הגרסה המתוקנת:
 
+        // תיקון לפונקציה filterHierarchy ב-GraveHierarchyManager
+        // החלף את הפונקציה filterHierarchy עם הגרסה המתוקנת:
+
         window.filterHierarchy = function(level) {
             const cemetery = document.getElementById('cemeterySelect').value;
             const block = document.getElementById('blockSelect').value;

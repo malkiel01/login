@@ -1,35 +1,45 @@
 <?php
-// test-final.php
-error_reporting(E_ALL);
+// show-real-error.php
 ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
 echo "<pre>";
-echo "Testing complete loading sequence:\n\n";
 
-echo "1. Loading main config...\n";
-require_once $_SERVER['DOCUMENT_ROOT'] . '/config.php';
-echo "   ✓ Done\n\n";
+// נסה לטעון את index.php ולתפוס את השגיאה
+echo "Attempting to load index.php components:\n\n";
 
-echo "2. Loading PDF config...\n";
+echo "1. Config: ";
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/printPDF/config.php';
-echo "   ✓ Done\n\n";
+echo "OK\n";
 
-echo "3. Loading functions...\n";
+echo "2. Functions: ";
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/printPDF/includes/functions.php';
-echo "   ✓ Done\n\n";
+echo "OK\n";
 
-echo "4. Testing functionality:\n";
-$db = getPDFEditorDB();
-echo "   Database: " . ($db ? "Connected" : "Failed") . "\n";
+echo "3. Permission check: ";
+$result = checkPermission('view', 'pdf_editor');
+echo ($result ? "OK" : "FAILED") . "\n";
 
+echo "4. CSRF token: ";
 $token = generateCSRFToken();
-echo "   CSRF Token: " . substr($token, 0, 10) . "...\n";
+echo "OK\n";
 
-$permission = checkPermission('view', 'pdf_editor');
-echo "   Permission: " . ($permission ? "Granted" : "Denied") . "\n";
+echo "\nEverything works in isolation.\n";
+echo "The error 500 might be from:\n";
+echo "- Missing CSS/JS files\n";
+echo "- PHP timeout\n";
+echo "- Memory limit\n";
 
-echo "\n✅ ALL TESTS PASSED!\n\n";
-echo "<strong>The site should work now!</strong>\n";
-echo "<a href='index.php' target='_blank' style='font-size: 20px; color: green;'>→ Click here to open index.php</a>";
-echo "</pre>";
+// בדוק את error log
+$error_log = ini_get('error_log');
+echo "\nError log location: $error_log\n";
+
+if (file_exists($error_log)) {
+    echo "Last 5 errors:\n";
+    $errors = array_slice(file($error_log), -5);
+    foreach ($errors as $error) {
+        echo $error;
+    }
+}
 ?>

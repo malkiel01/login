@@ -30,6 +30,30 @@ class PDFEditorApp {
             // Initialize layers manager
             this.layersManager = new LayersManager(this.canvasManager);
             
+            // Initialize properties manager
+            if (window.PropertiesManager) {
+                this.propertiesManager = new PropertiesManager(this.canvasManager);
+                window.propertiesManager = this.propertiesManager;
+            }
+            
+            // Initialize templates manager
+            if (window.TemplatesManager) {
+                this.templatesManager = new TemplatesManager(this.canvasManager, this.apiConnector);
+                window.templatesManager = this.templatesManager;
+            }
+            
+            // Initialize cloud save manager
+            if (window.CloudSaveManager) {
+                this.cloudSaveManager = new CloudSaveManager(this.canvasManager, this.apiConnector);
+                window.cloudSaveManager = this.cloudSaveManager;
+            }
+            
+            // Initialize batch processor
+            if (window.BatchProcessor) {
+                this.batchProcessor = new BatchProcessor(this.canvasManager, this.apiConnector);
+                window.batchProcessor = this.batchProcessor;
+            }
+            
             // Initialize UI
             this.initializeUI();
             

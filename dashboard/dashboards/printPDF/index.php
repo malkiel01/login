@@ -432,6 +432,7 @@ $csrfToken = generateCSRFToken();
     </script>
     
     <!-- Application Scripts -->
+   <!-- קודם את כל הספריות -->
     <script src="assets/js/config.js"></script>
     <script src="assets/js/language-manager.js"></script>
     <script src="assets/js/notification-manager.js"></script>

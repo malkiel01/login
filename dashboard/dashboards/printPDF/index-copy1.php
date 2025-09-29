@@ -442,19 +442,317 @@ $csrfToken = generateCSRFToken();
     <script src="assets/js/layers-manager.js"></script>
     <script src="assets/js/properties-manager.js"></script>
     <script src="assets/js/templates-manager.js"></script>
+    <script src="assets/js/cloud-save-manager.js"></script>
     <script src="assets/js/batch-processor.js"></script>
+    <script src="assets/js/api-connector.js"></script>
     <!-- Replace the existing api-connector.js with the fixed version -->
     <script src="assets/js/api-connector-fixed.js"></script>
     <!-- Replace the existing cloud-save-manager.js with the fixed version -->
     <script src="assets/js/cloud-save-manager-fixed.js"></script>
     <script src="assets/js/app.js"></script>
-
-    <!-- אתחול יחיד ונקי -->
+    
     <script>
+        // Initialize application when DOM is ready
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Starting initialization...');
-            
             // Hide loading screen
+            setTimeout(() => {
+                document.getElementById('loadingScreen').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('loadingScreen').style.display = 'none';
+                    document.getElementById('appContainer').style.display = 'flex';
+                    
+                    // Initialize the application
+                    if (typeof PDFEditorApp !== 'undefined') {
+                        window.app = new PDFEditorApp();
+                        window.app.init();
+                    }
+                }, 500);
+            }, 1000);
+        });
+
+        // Initialize the application
+        if (typeof PDFEditorApp !== 'undefined') {
+            window.app = new PDFEditorApp();
+            // Initialize API connector
+            window.apiConnector = new APIConnector();
+            // Initialize cloud save manager
+            window.cloudSaveManager = new CloudSaveManager(window.apiConnector);
+            // Initialize app
+            window.app.init();
+        }
+    </script>
+
+    <!-- 
+    הוסיפי את הקוד הזה בתחתית קובץ index.php, במקום הקוד הקיים
+    מיד אחרי טעינת כל קבצי ה-JS ולפני סגירת ה-body 
+    -->
+
+    <script>
+        // Initialize application when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Initializing PDF Editor Application...');
+            
+            // Hide loading screen after a delay
+            setTimeout(() => {
+                const loadingScreen = document.getElementById('loadingScreen');
+                const appContainer = document.getElementById('appContainer');
+                
+                if (loadingScreen) {
+                    loadingScreen.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        loadingScreen.style.display = 'none';
+                        if (appContainer) {
+                            appContainer.style.display = 'flex';
+                        }
+                        
+                        // Initialize the application
+                        try {
+                            // 1. First create API Connector
+                            if (typeof APIConnector !== 'undefined') {
+                                window.apiConnector = new APIConnector();
+                                console.log('✅ API Connector initialized');
+                            } else {
+                                console.error('❌ APIConnector not found');
+                            }
+                            
+                            // 2. Then create the main app
+                            if (typeof PDFEditorApp !== 'undefined') {
+                                window.app = new PDFEditorApp();
+                                console.log('✅ PDFEditorApp created');
+                                
+                                // 3. Initialize the app (this will create other managers)
+                                window.app.init().then(() => {
+                                    console.log('✅ App initialized successfully');
+                                    
+                                    // 4. Create CloudSaveManager with proper parameters
+                                    if (typeof CloudSaveManager !== 'undefined') {
+                                        // Pass both canvas manager and API connector
+                                        window.cloudSaveManager = new CloudSaveManager(
+                                            window.app.canvasManager,
+                                            window.apiConnector
+                                        );
+                                        console.log('✅ CloudSaveManager initialized');
+                                        
+                                        // Update app's reference
+                                        window.app.cloudSaveManager = window.cloudSaveManager;
+                                        
+                                        // Load projects list if cloud modal exists
+                                        if (document.getElementById('projectsList')) {
+                                            window.cloudSaveManager.loadProjectsList();
+                                        }
+                                    }
+                                    
+                                    // 5. Bind save button directly
+                                    const saveBtn = document.getElementById('btnSave');
+                                    if (saveBtn && window.cloudSaveManager) {
+                                        saveBtn.onclick = function() {
+                                            console.log('Save button clicked');
+                                            window.cloudSaveManager.saveProject();
+                                        };
+                                    }
+                                    
+                                    // 6. Bind cloud button
+                                    const cloudBtn = document.getElementById('btnCloudSave');
+                                    if (cloudBtn && window.cloudSaveManager) {
+                                        cloudBtn.onclick = function() {
+                                            console.log('Cloud button clicked');
+                                            showCloudModal();
+                                        };
+                                    }
+                                    
+                                    console.log('✅ All systems ready!');
+                                }).catch(error => {
+                                    console.error('❌ App initialization failed:', error);
+                                });
+                            } else {
+                                console.error('❌ PDFEditorApp not found');
+                            }
+                            
+                        } catch (error) {
+                            console.error('❌ Fatal initialization error:', error);
+                        }
+                    }, 500);
+                }
+            }, 1000);
+        });
+        
+        // Cloud Modal function
+        function showCloudModal() {
+            // Remove existing modal if any
+            const existingModal = document.getElementById('cloudModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Create new modal
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.id = 'cloudModal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>שמירה בענן</h2>
+                        <button class="modal-close" onclick="closeCloudModal()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="cloud-tabs">
+                            <button class="cloud-tab active" data-tab="projects" onclick="switchCloudTab('projects', this)">הפרויקטים שלי</button>
+                            <button class="cloud-tab" data-tab="save" onclick="switchCloudTab('save', this)">שמור פרויקט</button>
+                            <button class="cloud-tab" data-tab="settings" onclick="switchCloudTab('settings', this)">הגדרות</button>
+                        </div>
+                        
+                        <div class="tab-content" id="projectsTab" style="display: block;">
+                            <div id="projectsList" style="min-height: 200px;">
+                                <div class="loading-spinner" style="text-align: center; padding: 40px;">
+                                    <i class="fas fa-spinner fa-spin" style="font-size: 32px; color: #667eea;"></i>
+                                    <p>טוען פרויקטים...</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="tab-content" id="saveTab" style="display: none;">
+                            <div class="save-form">
+                                <h3>שמור פרויקט</h3>
+                                <div class="form-group">
+                                    <label>שם הפרויקט:</label>
+                                    <input type="text" id="projectName" class="form-control" 
+                                        placeholder="הכנס שם לפרויקט">
+                                </div>
+                                <div class="save-actions">
+                                    <button class="btn btn-primary" onclick="window.cloudSaveManager.saveProject()">
+                                        <i class="fas fa-save"></i> שמור עכשיו
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="tab-content" id="settingsTab" style="display: none;">
+                            <div class="settings-form">
+                                <h3>הגדרות אחסון</h3>
+                                <p>השמירה מתבצעת באופן מקומי במחשב שלך</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Load projects list
+            if (window.cloudSaveManager) {
+                window.cloudSaveManager.loadProjectsList();
+            }
+        }
+        
+        function closeCloudModal() {
+            const modal = document.getElementById('cloudModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+        
+        function switchCloudTab(tabName, buttonElement) {
+            // Update active button
+            document.querySelectorAll('.cloud-tab').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            buttonElement.classList.add('active');
+            
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.style.display = 'none';
+            });
+            
+            // Show selected tab
+            const selectedTab = document.getElementById(tabName + 'Tab');
+            if (selectedTab) {
+                selectedTab.style.display = 'block';
+            }
+            
+            // Load projects if switching to projects tab
+            if (tabName === 'projects' && window.cloudSaveManager) {
+                window.cloudSaveManager.loadProjectsList();
+            }
+        }
+        
+        // Override the default saveDocument function
+        window.saveDocument = function() {
+            console.log('saveDocument called');
+            if (window.cloudSaveManager) {
+                window.cloudSaveManager.saveProject();
+            } else {
+                console.error('CloudSaveManager not available');
+            }
+        };
+    </script>
+
+    <!-- 
+    הוסיפי את הקוד הזה בדיוק לפני </body> בקובץ index.php
+    אחרי כל טעינת קבצי ה-JS
+    -->
+
+    <script>
+        // Override save function globally
+        window.saveCurrentDocument = function() {
+            console.log('Save triggered');
+            
+            // Option 1: Try CloudSaveManager
+            if (window.cloudSaveManager && typeof window.cloudSaveManager.saveProject === 'function') {
+                console.log('Using cloudSaveManager');
+                window.cloudSaveManager.saveProject();
+                return;
+            }
+            
+            // Option 2: Try app.saveDocument
+            if (window.app && typeof window.app.saveDocument === 'function') {
+                console.log('Using app.saveDocument');
+                window.app.saveDocument();
+                return;
+            }
+            
+            // Option 3: Direct save
+            console.log('Using direct save');
+            const projectData = {
+                id: 'project_' + Date.now(),
+                name: document.getElementById('projectName')?.value || 'Untitled',
+                canvas: window.app?.canvasManager?.getCanvasJSON() || {},
+                timestamp: new Date().toISOString()
+            };
+            
+            // Save to localStorage
+            localStorage.setItem('pdf_editor_project_' + projectData.id, JSON.stringify(projectData));
+            
+            // Show notification
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                background: #48bb78;
+                color: white;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                z-index: 10000;
+                font-family: 'Rubik', sans-serif;
+            `;
+            notification.textContent = 'הפרויקט נשמר מקומית';
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        };
+
+        // Wait for DOM and initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Starting PDF Editor initialization...');
+            
+            // Initialize after loading screen
             setTimeout(() => {
                 const loadingScreen = document.getElementById('loadingScreen');
                 const appContainer = document.getElementById('appContainer');
@@ -465,139 +763,90 @@ $csrfToken = generateCSRFToken();
                         loadingScreen.style.display = 'none';
                         if (appContainer) appContainer.style.display = 'flex';
                         
-                        // Initialize ONCE
-                        initializeApp();
+                        initializeApplication();
                     }, 500);
+                } else {
+                    initializeApplication();
                 }
             }, 1000);
         });
 
-        async function initializeApp() {
+        async function initializeApplication() {
             try {
-                console.log('Initializing app...');
+                console.log('Initializing application components...');
                 
-                // Create instances
-                window.apiConnector = new APIConnector();
-                window.app = new PDFEditorApp();
-                
-                // Initialize app
-                await window.app.init();
-                
-                // Ensure CloudSaveManager is properly connected
-                if (!window.cloudSaveManager || !window.cloudSaveManager.api) {
-                    window.cloudSaveManager = new CloudSaveManager(
-                        window.app.canvasManager,
-                        window.apiConnector
-                    );
-                    window.app.cloudSaveManager = window.cloudSaveManager;
+                // 1. Create API Connector
+                if (typeof APIConnector !== 'undefined') {
+                    window.apiConnector = new APIConnector();
+                    console.log('✅ API Connector created');
                 }
                 
-                // Bind save button
-                const saveBtn = document.getElementById('btnSave');
-                if (saveBtn) {
-                    saveBtn.onclick = function() {
-                        console.log('Save clicked');
-                        if (window.cloudSaveManager && window.cloudSaveManager.saveProject) {
-                            window.cloudSaveManager.saveProject();
-                        } else {
-                            console.error('Save manager not ready');
-                        }
-                    };
-                }
-                
-                // Bind cloud button
-                const cloudBtn = document.getElementById('btnCloudSave');
-                if (cloudBtn) {
-                    cloudBtn.onclick = function() {
-                        showCloudModal();
-                    };
-                }
-                
-                // Keyboard shortcut
-                document.addEventListener('keydown', function(e) {
-                    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-                        e.preventDefault();
-                        if (window.cloudSaveManager) {
-                            window.cloudSaveManager.saveProject();
-                        }
+                // 2. Create main app
+                if (typeof PDFEditorApp !== 'undefined') {
+                    window.app = new PDFEditorApp();
+                    console.log('✅ Main app created');
+                    
+                    // 3. Initialize app
+                    await window.app.init();
+                    console.log('✅ App initialized');
+                    
+                    // 4. Fix CloudSaveManager if needed
+                    if (!window.cloudSaveManager && window.CloudSaveManager) {
+                        window.cloudSaveManager = new CloudSaveManager(
+                            window.app.canvasManager,
+                            window.apiConnector
+                        );
+                        window.app.cloudSaveManager = window.cloudSaveManager;
+                        console.log('✅ CloudSaveManager fixed');
                     }
-                });
-                
-                console.log('✅ App ready!');
+                    
+                    // 5. Bind save button
+                    const saveBtn = document.getElementById('btnSave');
+                    if (saveBtn) {
+                        // Remove old listeners
+                        const newSaveBtn = saveBtn.cloneNode(true);
+                        saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
+                        
+                        // Add new listener
+                        newSaveBtn.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            console.log('Save button clicked!');
+                            window.saveCurrentDocument();
+                        });
+                        console.log('✅ Save button bound');
+                    }
+                    
+                    // 6. Bind keyboard shortcut
+                    document.addEventListener('keydown', function(e) {
+                        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                            e.preventDefault();
+                            console.log('Ctrl+S pressed');
+                            window.saveCurrentDocument();
+                        }
+                    });
+                    
+                    console.log('✅ All systems ready!');
+                    
+                } else {
+                    console.error('❌ PDFEditorApp not found');
+                }
                 
             } catch (error) {
-                console.error('Initialization failed:', error);
+                console.error('❌ Initialization error:', error);
             }
         }
 
-        // Cloud modal
-        function showCloudModal() {
-            const existingModal = document.getElementById('cloudModal');
-            if (existingModal) {
-                existingModal.style.display = 'block';
-                if (window.cloudSaveManager) {
-                    window.cloudSaveManager.loadProjectsList();
-                }
-                return;
-            }
+        // Test function - you can call this from console
+        window.testSave = function() {
+            console.log('Testing save functionality...');
+            console.log('app:', window.app);
+            console.log('apiConnector:', window.apiConnector);
+            console.log('cloudSaveManager:', window.cloudSaveManager);
+            console.log('canvasManager:', window.app?.canvasManager);
             
-            const modal = document.createElement('div');
-            modal.className = 'modal';
-            modal.id = 'cloudModal';
-            modal.style.display = 'block';
-            modal.innerHTML = `
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2>שמירה בענן</h2>
-                        <button class="modal-close" onclick="this.closest('.modal').style.display='none'">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="cloud-tabs">
-                            <button class="cloud-tab active" onclick="switchTab('projects', this)">פרויקטים</button>
-                            <button class="cloud-tab" onclick="switchTab('save', this)">שמור</button>
-                        </div>
-                        
-                        <div class="tab-content" id="projectsTab">
-                            <div id="projectsList">
-                                <div style="text-align: center; padding: 20px;">
-                                    <i class="fas fa-spinner fa-spin"></i> טוען...
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="tab-content" id="saveTab" style="display: none;">
-                            <div class="form-group">
-                                <label>שם הפרויקט:</label>
-                                <input type="text" id="projectName" class="form-control" placeholder="הכנס שם">
-                            </div>
-                            <button class="btn btn-primary" onclick="window.cloudSaveManager.saveProject()">
-                                <i class="fas fa-save"></i> שמור
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            document.body.appendChild(modal);
-            
-            if (window.cloudSaveManager) {
-                window.cloudSaveManager.loadProjectsList();
-            }
-        }
-
-        function switchTab(tab, btn) {
-            document.querySelectorAll('.cloud-tab').forEach(t => t.classList.remove('active'));
-            btn.classList.add('active');
-            
-            document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
-            document.getElementById(tab + 'Tab').style.display = 'block';
-            
-            if (tab === 'projects' && window.cloudSaveManager) {
-                window.cloudSaveManager.loadProjectsList();
-            }
-        }
+            // Try to save
+            window.saveCurrentDocument();
+        };
     </script>
 </body>
 </html> 

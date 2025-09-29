@@ -1,66 +1,52 @@
 /**
- * API Connector for PDF Editor - FIXED VERSION
+ * API Connector for PDF Editor
  * Location: /dashboard/dashboards/printPDF/assets/js/api-connector.js
  */
 
 class APIConnector {
     constructor() {
-        this.baseUrl = PDFEditorConfig.api.baseUrl || '/dashboard/dashboards/printPDF/api/';
+        this.baseUrl = PDFEditorConfig.api.baseUrl;
         this.endpoints = PDFEditorConfig.api.endpoints;
-        this.csrfToken = this.getCSRFToken();
-        this.timeout = 30000; // 30 seconds
-        this.retries = 3;
-        this.retryDelay = 1000; // 1 second
+        this.timeout = PDFEditorConfig.request.timeout || 30000;
+        this.retries = PDFEditorConfig.request.retries || 3;
+        this.retryDelay = PDFEditorConfig.request.retryDelay || 1000;
+        
+        // Get CSRF token
+        this.csrfToken = document.getElementById('csrfToken')?.value || '';
     }
 
     /**
-     * Get CSRF token from DOM
-     */
-    getCSRFToken() {
-        const tokenElement = document.getElementById('csrfToken');
-        if (tokenElement) {
-            return tokenElement.value;
-        }
-        console.warn('CSRF token not found');
-        return '';
-    }
-
-    /**
-     * Sleep function for retry delay
-     */
-    sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
-    /**
-     * Base request method with retry logic
+     * Make API request with retry logic
      */
     async request(endpoint, options = {}, retryCount = 0) {
         const url = this.baseUrl + endpoint;
         
+        // Default options
         const defaultOptions = {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-Token': this.csrfToken
-            },
-            body: options.body ? JSON.stringify(options.body) : undefined
+                'X-CSRF-Token': this.csrfToken,
+                ...options.headers
+            }
         };
 
-        const fetchOptions = { ...defaultOptions, ...options };
+        // Merge options
+        const requestOptions = { ...defaultOptions, ...options };
 
-        // Override headers if provided
-        if (options.headers) {
-            fetchOptions.headers = { ...defaultOptions.headers, ...options.headers };
+        // Add body if provided
+        if (options.body && !(options.body instanceof FormData)) {
+            requestOptions.headers['Content-Type'] = 'application/json';
+            requestOptions.body = JSON.stringify(options.body);
         }
 
         try {
+            // Create abort controller for timeout
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
             const response = await fetch(url, {
-                ...fetchOptions,
+                ...requestOptions,
                 signal: controller.signal
             });
 
@@ -82,35 +68,46 @@ class APIConnector {
             console.error(`API request failed: ${endpoint}`, error);
 
             // Retry logic
-            if (retryCount < this.retries && !error.message.includes('abort')) {
-                console.log(`Retrying request... Attempt ${retryCount + 1}/${this.retries}`);
+            if (retryCount < this.retries) {
                 await this.sleep(this.retryDelay * (retryCount + 1));
                 return this.request(endpoint, options, retryCount + 1);
             }
 
-            // Return error response
-            return {
-                success: false,
-                message: error.message || 'שגיאה בחיבור לשרת'
-            };
+            throw error;
         }
     }
 
     /**
-     * Upload file with progress tracking
+     * Process document with elements
+     */
+    async processDocument(documentData, elements) {
+        const payload = {
+            document: documentData,
+            elements: elements
+        };
+
+        return this.request(this.endpoints.processDocument, {
+            body: payload
+        });
+    }
+
+    /**
+     * Upload file
      */
     async uploadFile(file, onProgress = null) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('csrf_token', this.csrfToken);
+
+        // Create XMLHttpRequest for progress tracking
         return new Promise((resolve, reject) => {
-            const formData = new FormData();
-            formData.append('file', file);
-            
             const xhr = new XMLHttpRequest();
 
             // Progress event
             if (onProgress) {
                 xhr.upload.addEventListener('progress', (e) => {
                     if (e.lengthComputable) {
-                        const percentComplete = Math.round((e.loaded / e.total) * 100);
+                        const percentComplete = (e.loaded / e.total) * 100;
                         onProgress(percentComplete);
                     }
                 });
@@ -118,41 +115,35 @@ class APIConnector {
 
             // Load event
             xhr.addEventListener('load', () => {
-                try {
-                    if (xhr.status === 200) {
+                if (xhr.status === 200) {
+                    try {
                         const response = JSON.parse(xhr.responseText);
                         if (response.success) {
                             resolve(response);
                         } else {
-                            reject(new Error(response.message || 'העלאה נכשלה'));
+                            reject(new Error(response.message || 'Upload failed'));
                         }
-                    } else {
-                        reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`));
+                    } catch (e) {
+                        reject(new Error('Invalid response'));
                     }
-                } catch (e) {
-                    reject(new Error('תגובה לא תקינה מהשרת'));
+                } else {
+                    reject(new Error(`HTTP ${xhr.status}`));
                 }
             });
 
             // Error event
             xhr.addEventListener('error', () => {
-                reject(new Error('שגיאת רשת'));
+                reject(new Error('Network error'));
             });
 
             // Timeout event
             xhr.addEventListener('timeout', () => {
-                reject(new Error('הבקשה חרגה מזמן המתנה'));
-            });
-
-            // Abort event
-            xhr.addEventListener('abort', () => {
-                reject(new Error('העלאה בוטלה'));
+                reject(new Error('Request timeout'));
             });
 
             // Setup request
             xhr.open('POST', this.baseUrl + this.endpoints.uploadFile);
             xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-            xhr.setRequestHeader('X-CSRF-Token', this.csrfToken);
             xhr.timeout = this.timeout;
 
             // Send request
@@ -161,119 +152,81 @@ class APIConnector {
     }
 
     /**
-     * Save project
+     * Cloud save operations
      */
+    async cloudSave(action, data = {}) {
+        return this.request(this.endpoints.cloudSave, {
+            body: {
+                action: action,
+                ...data
+            }
+        });
+    }
+
     async saveProject(projectData) {
-        return this.request(this.endpoints.cloudSave, {
-            body: {
-                action: 'save',
-                project: projectData
-            }
+        return this.cloudSave('save', {
+            project: projectData
         });
     }
 
-    /**
-     * Load project
-     */
     async loadProject(projectId) {
-        return this.request(this.endpoints.cloudSave, {
-            body: {
-                action: 'load',
-                projectId: projectId
-            }
+        return this.cloudSave('load', {
+            projectId: projectId
         });
     }
 
-    /**
-     * List projects
-     */
     async listProjects(page = 1, limit = 20) {
-        return this.request(this.endpoints.cloudSave, {
-            body: {
-                action: 'list',
-                page: page,
-                limit: limit
-            }
+        return this.cloudSave('list', {
+            page: page,
+            limit: limit
         });
     }
 
-    /**
-     * Delete project
-     */
     async deleteProject(projectId) {
-        return this.request(this.endpoints.cloudSave, {
-            body: {
-                action: 'delete',
-                projectId: projectId
-            }
+        return this.cloudSave('delete', {
+            projectId: projectId
+        });
+    }
+
+    async shareProject(projectId, expiresIn = 7) {
+        return this.cloudSave('share', {
+            projectId: projectId,
+            expiresIn: expiresIn * 24 * 60 * 60 // Convert days to seconds
         });
     }
 
     /**
-     * Share project
-     */
-    async shareProject(projectId, expiresIn = 604800) {
-        return this.request(this.endpoints.cloudSave, {
-            body: {
-                action: 'share',
-                projectId: projectId,
-                expiresIn: expiresIn
-            }
-        });
-    }
-
-    /**
-     * Load shared project
-     */
-    async loadSharedProject(shareToken) {
-        return this.request(this.endpoints.cloudSave, {
-            body: {
-                action: 'loadShared',
-                shareToken: shareToken
-            }
-        });
-    }
-
-    /**
-     * Get templates
+     * Template operations
      */
     async getTemplates(category = 'all') {
         return this.request(this.endpoints.templates, {
-            body: {
-                action: 'list',
-                category: category
-            }
+            method: 'GET',
+            body: null
         });
     }
 
-    /**
-     * Save template
-     */
     async saveTemplate(templateData) {
         return this.request(this.endpoints.templates, {
             body: {
                 action: 'save',
-                ...templateData
+                template: templateData
             }
         });
     }
 
-    /**
-     * Process document
-     */
-    async processDocument(documentData, elements) {
-        return this.request(this.endpoints.processDocument, {
+    async deleteTemplate(templateId) {
+        return this.request(this.endpoints.templates, {
             body: {
-                document: documentData,
-                elements: elements
+                action: 'delete',
+                templateId: templateId
             }
         });
     }
 
     /**
-     * Batch process
+     * Batch processing
      */
-    async batchProcess(files, elements, onProgress = null) {
+    async processBatch(files, elements, onProgress = null) {
         const formData = new FormData();
         
         // Add files
@@ -281,9 +234,10 @@ class APIConnector {
             formData.append(`files[${index}]`, file);
         });
         
-        // Add elements data
+        // Add elements as JSON
         formData.append('elements', JSON.stringify(elements));
-        
+        formData.append('csrf_token', this.csrfToken);
+
         return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
 
@@ -291,23 +245,23 @@ class APIConnector {
             if (onProgress) {
                 xhr.upload.addEventListener('progress', (e) => {
                     if (e.lengthComputable) {
-                        const percentComplete = Math.round((e.loaded / e.total) * 100);
-                        onProgress(percentComplete);
+                        const percentComplete = (e.loaded / e.total) * 100;
+                        onProgress(percentComplete, 'upload');
                     }
                 });
             }
 
             // Load event
             xhr.addEventListener('load', () => {
-                try {
-                    if (xhr.status === 200) {
+                if (xhr.status === 200) {
+                    try {
                         const response = JSON.parse(xhr.responseText);
                         resolve(response);
-                    } else {
-                        reject(new Error(`HTTP ${xhr.status}`));
+                    } catch (e) {
+                        reject(new Error('Invalid response'));
                     }
-                } catch (e) {
-                    reject(new Error('Invalid response'));
+                } else {
+                    reject(new Error(`HTTP ${xhr.status}`));
                 }
             });
 
@@ -319,8 +273,7 @@ class APIConnector {
             // Setup request
             xhr.open('POST', this.baseUrl + this.endpoints.batchProcess);
             xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-            xhr.setRequestHeader('X-CSRF-Token', this.csrfToken);
-            xhr.timeout = 60000; // 60 seconds for batch
+            xhr.timeout = this.timeout * files.length; // Increase timeout for batch
 
             // Send request
             xhr.send(formData);
@@ -328,31 +281,139 @@ class APIConnector {
     }
 
     /**
-     * Get fonts list
+     * Get available fonts
      */
     async getFonts(language = 'all') {
-        const url = this.baseUrl + this.endpoints.getFonts + '?language=' + language;
-        
-        try {
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
+        return this.request(this.endpoints.getFonts, {
+            method: 'GET',
+            body: null
+        });
+    }
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+    /**
+     * Load template data
+     */
+    async loadTemplate(templateId) {
+        return this.request(this.endpoints.templates, {
+            body: {
+                action: 'load',
+                templateId: templateId
             }
+        });
+    }
 
-            return await response.json();
+    /**
+     * Load shared project
+     */
+    async loadSharedProject(shareToken) {
+        return this.cloudSave('loadShared', {
+            shareToken: shareToken
+        });
+    }
+
+    /**
+     * Export document as PDF
+     */
+    async exportPDF(canvasData, documentInfo) {
+        return this.request('export-pdf.php', {
+            body: {
+                canvas: canvasData,
+                document: documentInfo,
+                format: 'pdf'
+            }
+        });
+    }
+
+    /**
+     * Export document as image
+     */
+    async exportImage(canvasData, format = 'png') {
+        return this.request('export-image.php', {
+            body: {
+                canvas: canvasData,
+                format: format
+            }
+        });
+    }
+
+    /**
+     * Helper function to sleep
+     */
+    sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    /**
+     * Download file from URL
+     */
+    downloadFile(url, filename) {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    /**
+     * Convert base64 to Blob
+     */
+    base64ToBlob(base64, contentType = '') {
+        const byteCharacters = atob(base64.split(',')[1]);
+        const byteArrays = [];
+
+        for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+            const slice = byteCharacters.slice(offset, offset + 512);
+            const byteNumbers = new Array(slice.length);
             
-        } catch (error) {
-            console.error('Failed to get fonts:', error);
-            return {
-                success: false,
-                message: error.message
-            };
+            for (let i = 0; i < slice.length; i++) {
+                byteNumbers[i] = slice.charCodeAt(i);
+            }
+            
+            const byteArray = new Uint8Array(byteNumbers);
+            byteArrays.push(byteArray);
+        }
+
+        return new Blob(byteArrays, { type: contentType });
+    }
+
+    /**
+     * Show loading indicator
+     */
+    showLoading(message = '') {
+        if (window.loadingManager) {
+            window.loadingManager.show(message);
+        }
+    }
+
+    /**
+     * Hide loading indicator
+     */
+    hideLoading() {
+        if (window.loadingManager) {
+            window.loadingManager.hide();
+        }
+    }
+
+    /**
+     * Show error message
+     */
+    showError(message) {
+        if (window.notificationManager) {
+            window.notificationManager.showError(message);
+        } else {
+            alert(message);
+        }
+    }
+
+    /**
+     * Show success message
+     */
+    showSuccess(message) {
+        if (window.notificationManager) {
+            window.notificationManager.showSuccess(message);
+        } else {
+            console.log(message);
         }
     }
 }

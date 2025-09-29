@@ -26,6 +26,7 @@ $csrfToken = generateCSRFToken();
     <link rel="stylesheet" href="assets/css/main.css">
     <link rel="stylesheet" href="assets/css/rtl.css">
     <link rel="stylesheet" href="assets/css/responsive.css">
+    <link rel="stylesheet" href="assets/css/cloud-storage.css">
     
     <!-- Libraries CSS -->
     <style>
@@ -443,6 +444,10 @@ $csrfToken = generateCSRFToken();
     <script src="assets/js/cloud-save-manager.js"></script>
     <script src="assets/js/batch-processor.js"></script>
     <script src="assets/js/api-connector.js"></script>
+    <!-- Replace the existing api-connector.js with the fixed version -->
+    <script src="assets/js/api-connector-fixed.js"></script>
+    <!-- Replace the existing cloud-save-manager.js with the fixed version -->
+    <script src="assets/js/cloud-save-manager-fixed.js"></script>
     <script src="assets/js/app.js"></script>
     
     <script>
@@ -463,6 +468,17 @@ $csrfToken = generateCSRFToken();
                 }, 500);
             }, 1000);
         });
+
+        // Initialize the application
+        if (typeof PDFEditorApp !== 'undefined') {
+            window.app = new PDFEditorApp();
+            // Initialize API connector
+            window.apiConnector = new APIConnector();
+            // Initialize cloud save manager
+            window.cloudSaveManager = new CloudSaveManager(window.apiConnector);
+            // Initialize app
+            window.app.init();
+        }
     </script>
 </body>
 </html>

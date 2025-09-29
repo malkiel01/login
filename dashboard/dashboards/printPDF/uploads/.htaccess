@@ -1,0 +1,23 @@
+# Protect uploads directory
+# Location: /dashboard/dashboards/printPDF/uploads/.htaccess
+
+# Allow access to uploaded files
+Options -Indexes
+
+# Prevent PHP execution in uploads
+<FilesMatch "\.php$">
+    Order Deny,Allow
+    Deny from all
+</FilesMatch>
+
+# Allow specific file types only
+<FilesMatch "\.(pdf|jpg|jpeg|png|webp)$">
+    Order Allow,Deny
+    Allow from all
+</FilesMatch>
+
+# Set headers for security
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+</IfModule>

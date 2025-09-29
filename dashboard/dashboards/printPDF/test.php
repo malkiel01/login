@@ -1,45 +1,51 @@
 <?php
-// show-real-error.php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+// check-tables.php
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config.php';
+
+$db = getDBConnection();
 
 echo "<pre>";
+echo "בדיקת טבלאות PDF Editor:\n\n";
 
-// נסה לטעון את index.php ולתפוס את השגיאה
-echo "Attempting to load index.php components:\n\n";
+// בדוק אילו טבלאות קיימות
+$tables = $db->query("SHOW TABLES LIKE 'pdf_editor_%'")->fetchAll(PDO::FETCH_COLUMN);
 
-echo "1. Config: ";
-require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/printPDF/config.php';
-echo "OK\n";
-
-echo "2. Functions: ";
-require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/printPDF/includes/functions.php';
-echo "OK\n";
-
-echo "3. Permission check: ";
-$result = checkPermission('view', 'pdf_editor');
-echo ($result ? "OK" : "FAILED") . "\n";
-
-echo "4. CSRF token: ";
-$token = generateCSRFToken();
-echo "OK\n";
-
-echo "\nEverything works in isolation.\n";
-echo "The error 500 might be from:\n";
-echo "- Missing CSS/JS files\n";
-echo "- PHP timeout\n";
-echo "- Memory limit\n";
-
-// בדוק את error log
-$error_log = ini_get('error_log');
-echo "\nError log location: $error_log\n";
-
-if (file_exists($error_log)) {
-    echo "Last 5 errors:\n";
-    $errors = array_slice(file($error_log), -5);
-    foreach ($errors as $error) {
-        echo $error;
+echo "טבלאות קיימות:\n";
+if (empty($tables)) {
+    echo "  ❌ אין טבלאות של PDF Editor\n";
+} else {
+    foreach ($tables as $table) {
+        echo "  ✓ $table\n";
     }
 }
+
+echo "\nניסיון ליצור את הטבלאות החסרות:\n";
+
+// נסה ליצור רק את הטבלה הבסיסית
+try {
+    $db->exec("
+        CREATE TABLE IF NOT EXISTS `pdf_editor_activity_log` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `user_id` INT NOT NULL,
+            `action` VARCHAR(100) NOT NULL,
+            `module` VARCHAR(50) NOT NULL,
+            `details` TEXT,
+            `metadata` TEXT,
+            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ");
+    echo "  ✓ טבלת activity_log נוצרה/קיימת\n";
+} catch (PDOException $e) {
+    echo "  ❌ שגיאה: " . $e->getMessage() . "\n";
+}
+
+// בדוק שוב
+$tables = $db->query("SHOW TABLES LIKE 'pdf_editor_%'")->fetchAll(PDO::FETCH_COLUMN);
+echo "\nטבלאות אחרי היצירה:\n";
+foreach ($tables as $table) {
+    echo "  ✓ $table\n";
+}
+
+echo "\nעכשיו אפשר להפעיל את הפונקציה logActivity בלי בעיה.\n";
+echo "</pre>";
 ?>

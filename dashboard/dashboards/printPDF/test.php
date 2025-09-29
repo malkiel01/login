@@ -1,191 +1,123 @@
 <?php
-// Enable all error reporting
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
 
-echo "<h2>PDF Editor Debug Test</h2>";
-echo "<pre>";
+echo "<h2>Connection Test</h2><pre>";
 
-// Step 1: Check PHP Version
-echo "1. PHP Version: " . PHP_VERSION . "\n";
-echo "   ✓ OK\n\n";
-
-// Step 2: Check main config
-echo "2. Checking main config.php:\n";
+// Step 1: Load main config
+echo "1. Loading main config...\n";
 $main_config = $_SERVER['DOCUMENT_ROOT'] . '/config.php';
 if (file_exists($main_config)) {
-    echo "   File exists: YES\n";
+    require_once $main_config;
+    echo "   ✓ Loaded\n\n";
+} else {
+    die("   ✗ Main config not found\n");
+}
+
+// Step 2: Check what's defined
+echo "2. Checking defined constants:\n";
+echo "   DB_HOST: " . (defined('DB_HOST') ? DB_HOST : 'NOT DEFINED') . "\n";
+echo "   DB_NAME: " . (defined('DB_NAME') ? DB_NAME : 'NOT DEFINED') . "\n";
+echo "   DB_USER: " . (defined('DB_USER') ? DB_USER : 'NOT DEFINED') . "\n";
+echo "   DB_PASSWORD: " . (defined('DB_PASSWORD') ? 'DEFINED (hidden)' : 'NOT DEFINED') . "\n";
+echo "   DB_PASS: " . (defined('DB_PASS') ? 'DEFINED (hidden)' : 'NOT DEFINED') . "\n";
+echo "   DB_CHARSET: " . (defined('DB_CHARSET') ? DB_CHARSET : 'NOT DEFINED') . "\n\n";
+
+// Step 3: Check if getDBConnection exists
+echo "3. Checking for getDBConnection function:\n";
+if (function_exists('getDBConnection')) {
+    echo "   ✓ Function exists\n\n";
     
-    // Check if we can read it
-    if (is_readable($main_config)) {
-        echo "   Readable: YES\n";
-        
-        // Try to include it
-        try {
-            @include_once $main_config;
-            echo "   Loaded: YES\n";
+    echo "4. Trying to connect using getDBConnection():\n";
+    try {
+        $db = getDBConnection();
+        if ($db) {
+            echo "   ✓ Connected successfully!\n";
             
-            // Check if database constants are defined
-            echo "   DB_HOST defined: " . (defined('DB_HOST') ? 'YES (' . DB_HOST . ')' : 'NO') . "\n";
-            echo "   DB_NAME defined: " . (defined('DB_NAME') ? 'YES (' . DB_NAME . ')' : 'NO') . "\n";
-            echo "   DB_USER defined: " . (defined('DB_USER') ? 'YES' : 'NO') . "\n";
-            echo "   DB_PASS defined: " . (defined('DB_PASS') ? 'YES' : 'NO') . "\n";
-        } catch (Exception $e) {
-            echo "   ERROR loading: " . $e->getMessage() . "\n";
+            // Test query
+            $result = $db->query("SELECT 1 as test");
+            if ($result) {
+                echo "   ✓ Test query successful\n";
+            }
+        } else {
+            echo "   ✗ Connection returned null\n";
         }
-    } else {
-        echo "   Readable: NO\n";
+    } catch (Exception $e) {
+        echo "   ✗ Error: " . $e->getMessage() . "\n";
     }
 } else {
-    echo "   File exists: NO\n";
-}
-echo "\n";
-
-// Step 3: Check PDF Editor config WITHOUT including it
-echo "3. Checking PDF Editor config.php:\n";
-$pdf_config = __DIR__ . '/config.php';
-if (file_exists($pdf_config)) {
-    echo "   File exists: YES\n";
-    echo "   File size: " . filesize($pdf_config) . " bytes\n";
-    echo "   Last modified: " . date('Y-m-d H:i:s', filemtime($pdf_config)) . "\n";
+    echo "   ✗ Function doesn't exist\n\n";
     
-    // Check syntax without executing
-    $output = shell_exec('php -l ' . escapeshellarg($pdf_config) . ' 2>&1');
-    echo "   Syntax check: " . trim($output) . "\n";
-} else {
-    echo "   File exists: NO\n";
+    echo "4. Trying manual connection:\n";
+    
+    // Try to connect manually
+    $host = defined('DB_HOST') ? DB_HOST : 'localhost';
+    $dbname = defined('DB_NAME') ? DB_NAME : '';
+    $user = defined('DB_USER') ? DB_USER : '';
+    $pass = defined('DB_PASSWORD') ? DB_PASSWORD : '';
+    $charset = defined('DB_CHARSET') ? DB_CHARSET : 'utf8mb4';
+    
+    if (empty($dbname) || empty($user)) {
+        echo "   ✗ Missing database name or username\n";
+    } else {
+        try {
+            $dsn = "mysql:host=$host;dbname=$dbname;charset=$charset";
+            echo "   DSN: $dsn\n";
+            echo "   User: $user\n";
+            echo "   Connecting...\n";
+            
+            $pdo = new PDO($dsn, $user, $pass);
+            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            
+            echo "   ✓ Connected successfully!\n";
+            
+            // Test query
+            $result = $pdo->query("SELECT 1 as test");
+            if ($result) {
+                echo "   ✓ Test query successful\n";
+            }
+            
+        } catch (PDOException $e) {
+            echo "   ✗ Connection failed: " . $e->getMessage() . "\n";
+        }
+    }
 }
-echo "\n";
 
-// Step 4: Check functions.php WITHOUT including it
-echo "4. Checking functions.php:\n";
+echo "\n5. Testing if includes/functions.php will work:\n";
 $functions_file = __DIR__ . '/includes/functions.php';
 if (file_exists($functions_file)) {
-    echo "   File exists: YES\n";
-    echo "   File size: " . filesize($functions_file) . " bytes\n";
+    echo "   File exists\n";
     
-    // Check syntax without executing
-    $output = shell_exec('php -l ' . escapeshellarg($functions_file) . ' 2>&1');
-    echo "   Syntax check: " . trim($output) . "\n";
-    
-    // Check for problematic lines
+    // Check if it tries to call getDBConnection
     $content = file_get_contents($functions_file);
-    if (strpos($content, "require_once \$_SERVER['DOCUMENT_ROOT'] . '/config.php'") !== false) {
-        echo "   ⚠️ WARNING: Found require_once for /config.php - This will cause loop!\n";
+    if (strpos($content, 'getDBConnection()') !== false) {
+        echo "   ✓ Uses getDBConnection() - good!\n";
     } else {
-        echo "   ✓ No problematic require_once found\n";
+        echo "   ⚠ Doesn't use getDBConnection()\n";
     }
 } else {
-    echo "   File exists: NO\n";
+    echo "   File not found\n";
 }
-echo "\n";
 
-// Step 5: Test database connection directly
-echo "5. Testing database connection:\n";
-if (defined('DB_HOST') && defined('DB_NAME') && defined('DB_USER')) {
-    try {
-        $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4";
-        $db = new PDO($dsn, DB_USER, DB_PASS);
-        echo "   Connection: SUCCESS\n";
-        
-        // Check if pdf_editor tables exist
-        $stmt = $db->query("SHOW TABLES LIKE 'pdf_editor_%'");
-        $tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
-        echo "   PDF Editor tables found: " . count($tables) . "\n";
-        if (count($tables) > 0) {
-            foreach ($tables as $table) {
-                echo "     - " . $table . "\n";
-            }
-        }
-    } catch (PDOException $e) {
-        echo "   Connection: FAILED\n";
-        echo "   Error: " . $e->getMessage() . "\n";
-    }
-} else {
-    echo "   Cannot test - DB constants not defined\n";
-}
-echo "\n";
-
-// Step 6: Check session
-echo "6. Session check:\n";
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-    echo "   Session started: YES\n";
-} else {
-    echo "   Session already active: YES\n";
-}
-echo "   Session ID: " . session_id() . "\n";
-echo "\n";
-
-// Step 7: Test loading config.php step by step
-echo "7. Testing config.php load (step by step):\n";
-if (file_exists($pdf_config)) {
-    // Read the file line by line
-    $lines = file($pdf_config);
-    echo "   Total lines: " . count($lines) . "\n";
+echo "\n6. Testing cemetery dashboard connection:\n";
+$cemetery_index = $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/index.php';
+if (file_exists($cemetery_index)) {
+    echo "   Cemetery dashboard exists\n";
     
-    // Look for potential issues
-    $line_num = 0;
-    foreach ($lines as $line) {
-        $line_num++;
-        // Check for includes/requires
-        if (preg_match('/^\s*(require|include)(_once)?\s/i', $line)) {
-            echo "   Line $line_num: Found " . trim($line) . "\n";
+    // Check how it connects
+    $cemetery_functions = $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/includes/functions.php';
+    if (file_exists($cemetery_functions)) {
+        echo "   Cemetery functions.php exists\n";
+        $content = file_get_contents($cemetery_functions);
+        if (strpos($content, 'getDBConnection()') !== false) {
+            echo "   ✓ Cemetery also uses getDBConnection()\n";
+        } else if (strpos($content, 'new PDO') !== false) {
+            echo "   ⚠ Cemetery creates its own PDO connection\n";
+        } else {
+            echo "   ℹ Cemetery might use different method\n";
         }
     }
 }
-echo "\n";
 
-// Step 8: Check permissions
-echo "8. Directory permissions:\n";
-echo "   Current dir: " . __DIR__ . "\n";
-echo "   Writable: " . (is_writable(__DIR__) ? 'YES' : 'NO') . "\n";
-
-$temp_dir = __DIR__ . '/temp';
-if (file_exists($temp_dir)) {
-    echo "   /temp exists: YES\n";
-    echo "   /temp writable: " . (is_writable($temp_dir) ? 'YES' : 'NO') . "\n";
-} else {
-    echo "   /temp exists: NO\n";
-}
-echo "\n";
-
-// Step 9: Try minimal config load
-echo "9. Attempting minimal config load:\n";
-try {
-    // Define constants if not defined
-    if (!defined('PDF_EDITOR_VERSION')) {
-        define('PDF_EDITOR_VERSION', '1.0.0');
-        echo "   PDF_EDITOR_VERSION defined: YES\n";
-    }
-    
-    if (!defined('CSRF_TOKEN_NAME')) {
-        define('CSRF_TOKEN_NAME', 'pdf_editor_csrf');
-        echo "   CSRF_TOKEN_NAME defined: YES\n";
-    }
-    
-    // Test CSRF function
-    if (!function_exists('generateCSRFToken')) {
-        function generateCSRFToken() {
-            if (!isset($_SESSION['pdf_editor_csrf'])) {
-                $_SESSION['pdf_editor_csrf'] = bin2hex(random_bytes(32));
-            }
-            return $_SESSION['pdf_editor_csrf'];
-        }
-        echo "   generateCSRFToken created: YES\n";
-    }
-    
-    $token = generateCSRFToken();
-    echo "   CSRF Token generated: " . substr($token, 0, 10) . "...\n";
-    
-} catch (Exception $e) {
-    echo "   ERROR: " . $e->getMessage() . "\n";
-}
-
-echo "\n</pre>";
-echo "<hr>";
-echo "<h3>Summary:</h3>";
-echo "<p>Check the output above for any errors or warnings.</p>";
-echo "<p>If all checks pass but index.php still gives 500 error, the problem is in the actual loading process.</p>";
+echo "</pre>";
 ?>

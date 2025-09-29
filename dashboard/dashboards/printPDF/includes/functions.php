@@ -13,10 +13,9 @@ function getPDFEditorDB() {
     
     if ($db === null) {
         try {
-            // קבל הגדרות מסד נתונים מהקובץ הראשי
-            require_once $_SERVER['DOCUMENT_ROOT'] . '/config.php';
+            // השתמש בהגדרות שכבר נטענו ב-config.php
+            // אל תטען את config.php שוב - זה יוצר לולאה!
             
-            // אם אין הגדרות, השתמש בברירת מחדל
             $host = defined('DB_HOST') ? DB_HOST : 'localhost';
             $dbname = defined('DB_NAME') ? DB_NAME : 'your_database';
             $username = defined('DB_USER') ? DB_USER : 'root';
@@ -34,7 +33,8 @@ function getPDFEditorDB() {
             
         } catch (PDOException $e) {
             error_log('PDF Editor DB Connection Error: ' . $e->getMessage());
-            throw new Exception('Database connection failed');
+            // החזר null במקום לזרוק שגיאה
+            return null;
         }
     }
     
@@ -45,6 +45,8 @@ function getPDFEditorDB() {
  * Create PDF Editor tables if not exists
  */
 function createPDFEditorTables($db) {
+    if (!$db) return;
+    
     try {
         // טבלת פרויקטים
         $db->exec("
@@ -100,7 +102,12 @@ function createPDFEditorTables($db) {
 function logActivity($action, $module = 'pdf_editor', $details = '', $metadata = []) {
     try {
         $db = getPDFEditorDB();
+        if (!$db) return;
+        
         $userId = $_SESSION['user_id'] ?? 0;
+        
+        // קודם צור את הטבלה אם לא קיימת
+        createActivityLogTable();
         
         $stmt = $db->prepare("
             INSERT INTO pdf_editor_activity_log 
@@ -127,6 +134,7 @@ function logActivity($action, $module = 'pdf_editor', $details = '', $metadata =
 function createActivityLogTable() {
     try {
         $db = getPDFEditorDB();
+        if (!$db) return;
         
         $db->exec("
             CREATE TABLE IF NOT EXISTS `pdf_editor_activity_log` (
@@ -148,8 +156,6 @@ function createActivityLogTable() {
     }
 }
 
-// אתחול טבלאות בטעינה ראשונה
-if (!defined('PDF_EDITOR_TABLES_INITIALIZED')) {
-    createActivityLogTable();
-    define('PDF_EDITOR_TABLES_INITIALIZED', true);
-}
+// אל תבצע אתחול אוטומטי בעת הטעינה - זה יכול לגרום לבעיות
+// האתחול יתבצע רק כשצריך
+?>

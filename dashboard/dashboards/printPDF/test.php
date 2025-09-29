@@ -1,96 +1,104 @@
 <?php
-// fix-functions-final.php
+// test-config-line-by-line.php
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
+set_time_limit(3);
 
 echo "<pre>";
 
-$correct_functions = '<?php
-/**
- * PDF Editor Functions - WORKING VERSION
- * Location: /dashboard/dashboards/printPDF/includes/functions.php
- */
-
-// אין צורך לטעון את config.php כאן - הוא כבר נטען ב-index.php
-
-/**
- * Get PDF Editor Database Connection
- */
-function getPDFEditorDB() {
-    // פשוט החזר את החיבור הקיים מהפונקציה הגלובלית
-    if (function_exists("getDBConnection")) {
-        return getDBConnection();
-    } else {
-        error_log("Error: getDBConnection not found");
-        return null;
-    }
-}
-
-/**
- * Create PDF Editor tables if needed
- */
-function createPDFEditorTables() {
-    $db = getPDFEditorDB();
-    if (!$db) return false;
-    
-    try {
-        $db->exec("
-            CREATE TABLE IF NOT EXISTS `pdf_editor_projects` (
-                `id` INT AUTO_INCREMENT PRIMARY KEY,
-                `project_id` VARCHAR(100) UNIQUE NOT NULL,
-                `user_id` INT NOT NULL,
-                `name` VARCHAR(255) NOT NULL,
-                `data` LONGTEXT,
-                `thumbnail` TEXT,
-                `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-        ");
-        
-        return true;
-    } catch (PDOException $e) {
-        error_log("Failed to create tables: " . $e->getMessage());
-        return false;
-    }
-}
-
-/**
- * Simple log function
- */
-function logActivity($action, $module = "pdf_editor", $details = "", $metadata = []) {
-    error_log("[$module] $action: $details");
-}
-?>';
-
-// Write the corrected version
-$functions_file = $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/printPDF/includes/functions.php';
-file_put_contents($functions_file, $correct_functions);
-echo "1. Updated functions.php with correct version\n";
-
-// Test with proper loading order
-echo "\n2. Testing with proper loading order:\n";
-echo "   Loading main config...\n";
+// First load main config
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config.php';
-echo "   ✓ Main config loaded\n";
+echo "Main config loaded\n\n";
 
-echo "   Loading PDF config...\n";
-require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/printPDF/config.php';
-echo "   ✓ PDF config loaded\n";
+// Now test each part of PDF config
+echo "Testing PDF config parts:\n\n";
 
-echo "   Loading functions...\n";
-require_once $functions_file;
-echo "   ✓ Functions loaded\n";
+// Test basic defines
+echo "1. Testing basic defines...\n";
+define('DASHBOARD_NAME', 'עורך PDF ותמונות');
+define('PDF_EDITOR_VERSION', '1.0.0');
+echo "   ✓ Basic defines work\n\n";
 
-echo "\n3. Testing getPDFEditorDB:\n";
-$db = getPDFEditorDB();
-if ($db) {
-    echo "   ✓ Database connection works\n";
+// Test path defines
+echo "2. Testing path defines...\n";
+define('PDF_EDITOR_PATH', '/dashboard/dashboards/printPDF');
+define('TEMP_PATH', '/dashboard/dashboards/printPDF/temp/');
+echo "   ✓ Path defines work\n\n";
+
+// Test TCPDF define
+echo "3. Testing TCPDF define...\n";
+define('TCPDF_PATH', '/dashboard/dashboards/printPDF/lib/tcpdf/');
+echo "   ✓ TCPDF define works\n\n";
+
+// Test checkPermission function
+echo "4. Testing checkPermission function...\n";
+if (!function_exists('checkPermission')) {
+    function checkPermission($action, $module = 'pdf_editor') {
+        return true;
+    }
+    echo "   ✓ checkPermission defined\n";
 } else {
-    echo "   ✗ Database connection failed\n";
+    echo "   ℹ checkPermission already exists\n";
+}
+echo "\n";
+
+// Test generateCSRFToken function
+echo "5. Testing generateCSRFToken function...\n";
+if (!function_exists('generateCSRFToken')) {
+    function generateCSRFToken() {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        if (!isset($_SESSION['pdf_editor_csrf'])) {
+            $_SESSION['pdf_editor_csrf'] = bin2hex(random_bytes(32));
+        }
+        return $_SESSION['pdf_editor_csrf'];
+    }
+    echo "   ✓ generateCSRFToken defined\n";
+} else {
+    echo "   ℹ generateCSRFToken already exists\n";
+}
+echo "\n";
+
+// Test other functions
+echo "6. Testing other config functions...\n";
+if (!function_exists('verifyCSRFToken')) {
+    function verifyCSRFToken($token) {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        return isset($_SESSION['pdf_editor_csrf']) && $token === $_SESSION['pdf_editor_csrf'];
+    }
+    echo "   ✓ verifyCSRFToken defined\n";
 }
 
-echo "\n4. SUCCESS! Now try index.php:\n";
-echo "   <a href='index.php' target='_blank' style='font-size: 18px; color: green;'>→ Click here to open index.php</a>\n";
+if (!function_exists('cleanTempFiles')) {
+    function cleanTempFiles() {
+        // Simple version
+        return true;
+    }
+    echo "   ✓ cleanTempFiles defined\n";
+}
+
+if (!function_exists('logActivity')) {
+    function logActivity($action, $module, $itemId = null, $details = []) {
+        error_log("[$module] $action");
+    }
+    echo "   ✓ logActivity defined\n";
+}
+
+echo "\n7. All config parts work individually!\n";
+
+echo "\n8. Now loading the actual config.php file:\n";
+$config_content = file_get_contents($_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/printPDF/config.php');
+echo "   File size: " . strlen($config_content) . " bytes\n";
+
+// Check for problematic code
+if (strpos($config_content, 'require_once') !== false && strpos($config_content, 'functions.php') !== false) {
+    echo "   ⚠ Config tries to load functions.php - THIS IS THE PROBLEM!\n";
+} else {
+    echo "   ✓ Config doesn't load functions.php\n";
+}
 
 echo "</pre>";
 ?>

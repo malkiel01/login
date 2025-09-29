@@ -1,0 +1,15 @@
+# Protect projects directory
+# Location: /dashboard/dashboards/printPDF/projects/.htaccess
+
+# Deny all direct access
+Order Deny,Allow
+Deny from all
+
+# Prevent directory listing
+Options -Indexes
+
+# Block access to JSON files
+<FilesMatch "\.json$">
+    Order Deny,Allow
+    Deny from all
+</FilesMatch>

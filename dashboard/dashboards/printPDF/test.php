@@ -1,34 +1,39 @@
 <?php
-// test-create-working-functions.php
+// fix-functions-final.php
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 echo "<pre>";
 
-$working_functions = '<?php
+$correct_functions = '<?php
 /**
- * PDF Editor Functions - MINIMAL WORKING VERSION
+ * PDF Editor Functions - WORKING VERSION
  * Location: /dashboard/dashboards/printPDF/includes/functions.php
  */
+
+// אין צורך לטעון את config.php כאן - הוא כבר נטען ב-index.php
 
 /**
  * Get PDF Editor Database Connection
  */
 function getPDFEditorDB() {
-    // פשוט החזר את החיבור הקיים
-    return getDBConnection();
+    // פשוט החזר את החיבור הקיים מהפונקציה הגלובלית
+    if (function_exists("getDBConnection")) {
+        return getDBConnection();
+    } else {
+        error_log("Error: getDBConnection not found");
+        return null;
+    }
 }
 
 /**
  * Create PDF Editor tables if needed
- * Call this manually when needed, not automatically
  */
 function createPDFEditorTables() {
-    $db = getDBConnection();
+    $db = getPDFEditorDB();
     if (!$db) return false;
     
     try {
-        // Create only the essential table for now
         $db->exec("
             CREATE TABLE IF NOT EXISTS `pdf_editor_projects` (
                 `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -53,36 +58,39 @@ function createPDFEditorTables() {
  * Simple log function
  */
 function logActivity($action, $module = "pdf_editor", $details = "", $metadata = []) {
-    // For now, just log to error_log
     error_log("[$module] $action: $details");
 }
 ?>';
 
-// Create backup of current functions.php
-$current_file = $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/printPDF/includes/functions.php';
-$backup_file = $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/printPDF/includes/functions.backup.php';
+// Write the corrected version
+$functions_file = $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/printPDF/includes/functions.php';
+file_put_contents($functions_file, $correct_functions);
+echo "1. Updated functions.php with correct version\n";
 
-if (file_exists($current_file)) {
-    copy($current_file, $backup_file);
-    echo "1. Created backup: functions.backup.php\n";
-}
+// Test with proper loading order
+echo "\n2. Testing with proper loading order:\n";
+echo "   Loading main config...\n";
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config.php';
+echo "   ✓ Main config loaded\n";
 
-// Write the new working version
-file_put_contents($current_file, $working_functions);
-echo "2. Created new functions.php (minimal version)\n";
+echo "   Loading PDF config...\n";
+require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/printPDF/config.php';
+echo "   ✓ PDF config loaded\n";
 
-// Test it
-echo "3. Testing the new file:\n";
-require_once $current_file;
-echo "   ✓ Loaded successfully\n";
+echo "   Loading functions...\n";
+require_once $functions_file;
+echo "   ✓ Functions loaded\n";
 
+echo "\n3. Testing getPDFEditorDB:\n";
 $db = getPDFEditorDB();
 if ($db) {
-    echo "   ✓ getPDFEditorDB() works\n";
+    echo "   ✓ Database connection works\n";
+} else {
+    echo "   ✗ Database connection failed\n";
 }
 
-echo "\n4. Now test if index.php works:\n";
-echo "   <a href='index.php' target='_blank'>Click here to test index.php</a>\n";
+echo "\n4. SUCCESS! Now try index.php:\n";
+echo "   <a href='index.php' target='_blank' style='font-size: 18px; color: green;'>→ Click here to open index.php</a>\n";
 
 echo "</pre>";
 ?>

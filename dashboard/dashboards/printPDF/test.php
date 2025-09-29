@@ -1,78 +1,82 @@
 <?php
-// test-index-steps.php
+// test-db-function.php
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 echo "<pre>";
-echo "=== Testing index.php loading sequence ===\n\n";
 
-echo "1. Loading config.php...\n";
+// Load config first
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/printPDF/config.php';
-echo "   ✓ Config loaded\n\n";
+echo "Config loaded\n\n";
 
-echo "2. Checking what's defined after config:\n";
-echo "   DASHBOARD_NAME: " . (defined('DASHBOARD_NAME') ? DASHBOARD_NAME : 'NOT DEFINED') . "\n";
-echo "   checkPermission: " . (function_exists('checkPermission') ? 'EXISTS' : 'NOT EXISTS') . "\n";
-echo "   generateCSRFToken: " . (function_exists('generateCSRFToken') ? 'EXISTS' : 'NOT EXISTS') . "\n";
-echo "   getPDFEditorDB: " . (function_exists('getPDFEditorDB') ? 'EXISTS' : 'NOT EXISTS') . "\n\n";
+// Now test the database function step by step
+echo "Testing getPDFEditorDB function:\n\n";
 
-echo "3. Checking functions.php file...\n";
-$functions_file = $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/printPDF/includes/functions.php';
-if (file_exists($functions_file)) {
-    echo "   File exists\n";
+// Manually create the function to test
+echo "1. Calling getDBConnection()...\n";
+try {
+    $db = getDBConnection();
+    echo "   ✓ Got connection\n";
     
-    // Check syntax
-    $output = shell_exec('php -l ' . escapeshellarg($functions_file) . ' 2>&1');
-    echo "   Syntax: " . trim($output) . "\n\n";
+    echo "\n2. Testing if we can run a simple query...\n";
+    $result = $db->query("SELECT 1");
+    echo "   ✓ Simple query works\n";
     
-    echo "4. Loading functions.php...\n";
-    ob_start();
-    $error_handler = set_error_handler(function($severity, $message, $file, $line) {
-        echo "   ERROR: $message in $file on line $line\n";
-    });
+    echo "\n3. Testing CREATE TABLE IF NOT EXISTS...\n";
+    $test_sql = "
+        CREATE TABLE IF NOT EXISTS `test_pdf_editor` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ";
+    $db->exec($test_sql);
+    echo "   ✓ CREATE TABLE works\n";
+    
+    echo "\n4. Now testing the actual PDF Editor tables creation...\n";
+    
+    // Test the projects table
+    echo "   Creating pdf_editor_projects table...\n";
+    $sql1 = "
+        CREATE TABLE IF NOT EXISTS `pdf_editor_projects` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `project_id` VARCHAR(100) UNIQUE NOT NULL,
+            `user_id` INT NOT NULL,
+            `name` VARCHAR(255) NOT NULL,
+            `data` LONGTEXT,
+            `thumbnail` TEXT,
+            `is_template` BOOLEAN DEFAULT 0,
+            `template_category` VARCHAR(50),
+            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            INDEX idx_user_id (user_id),
+            INDEX idx_project_id (project_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ";
+    
+    $db->exec($sql1);
+    echo "   ✓ pdf_editor_projects created\n";
+    
+    echo "\n5. Creating autosave table with foreign key...\n";
+    $sql2 = "
+        CREATE TABLE IF NOT EXISTS `pdf_editor_autosave` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `project_id` VARCHAR(100) NOT NULL,
+            `state_data` LONGTEXT,
+            `saved_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_project (project_id),
+            FOREIGN KEY (project_id) REFERENCES pdf_editor_projects(project_id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ";
     
     try {
-        require_once $functions_file;
-        echo "   ✓ Functions loaded\n";
-    } catch (Exception $e) {
-        echo "   ✗ Exception: " . $e->getMessage() . "\n";
-    } catch (ParseError $e) {
-        echo "   ✗ Parse Error: " . $e->getMessage() . "\n";
-    } catch (Error $e) {
-        echo "   ✗ Fatal Error: " . $e->getMessage() . "\n";
-    } finally {
-        restore_error_handler();
-        $output = ob_get_clean();
-        if ($output) {
-            echo "   Output: $output\n";
-        }
+        $db->exec($sql2);
+        echo "   ✓ pdf_editor_autosave created\n";
+    } catch (PDOException $e) {
+        echo "   ✗ Error: " . $e->getMessage() . "\n";
     }
-} else {
-    echo "   File NOT found\n";
+    
+} catch (Exception $e) {
+    echo "   ✗ Error: " . $e->getMessage() . "\n";
 }
 
-echo "\n5. Testing permission check...\n";
-if (function_exists('checkPermission')) {
-    $result = checkPermission('view', 'pdf_editor');
-    echo "   checkPermission returned: " . ($result ? 'TRUE' : 'FALSE') . "\n";
-}
-
-echo "\n6. Testing CSRF token generation...\n";
-if (function_exists('generateCSRFToken')) {
-    $token = generateCSRFToken();
-    echo "   Token generated: " . substr($token, 0, 10) . "...\n";
-}
-
-echo "\n7. Testing database function...\n";
-if (function_exists('getPDFEditorDB')) {
-    try {
-        $db = getPDFEditorDB();
-        echo "   Database connection: " . ($db ? 'SUCCESS' : 'NULL') . "\n";
-    } catch (Exception $e) {
-        echo "   Database error: " . $e->getMessage() . "\n";
-    }
-}
-
-echo "\n=== All tests completed ===\n";
 echo "</pre>";
 ?>

@@ -1,0 +1,169 @@
+/* 
+ * RTL Styles for PDF Editor
+ * Location: /dashboard/dashboards/printPDF/assets/css/rtl.css
+ */
+
+/* RTL Base */
+[dir="rtl"] {
+    direction: rtl;
+    text-align: right;
+}
+
+/* RTL Typography */
+[dir="rtl"] body {
+    font-family: 'Rubik', 'Heebo', 'Assistant', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* RTL Layout Adjustments */
+[dir="rtl"] .logo-section i {
+    margin-left: 0;
+    margin-right: 10px;
+}
+
+[dir="rtl"] .toolbar-btn i {
+    transform: scaleX(1);
+}
+
+[dir="rtl"] .btn i {
+    margin-left: 8px;
+    margin-right: 0;
+}
+
+/* RTL Sidebars */
+[dir="rtl"] .sidebar-left {
+    border-right: none;
+    border-left: 1px solid var(--border-color);
+}
+
+[dir="rtl"] .sidebar-right {
+    border-left: none;
+    border-right: 1px solid var(--border-color);
+}
+
+/* RTL Layer Items */
+[dir="rtl"] .layer-item.active,
+[dir="rtl"] .history-item.active {
+    border-left: none;
+    border-right: 3px solid var(--primary-color);
+}
+
+[dir="rtl"] .layer-lock {
+    margin-left: 0;
+    margin-right: auto;
+}
+
+/* RTL Modals */
+[dir="rtl"] .modal-close {
+    margin-left: 0;
+}
+
+/* RTL Tooltips */
+[dir="rtl"] [title]:hover::after {
+    left: auto;
+    right: 50%;
+    transform: translateX(50%);
+}
+
+/* RTL Form Elements */
+[dir="rtl"] .property-input,
+[dir="rtl"] .property-select {
+    text-align: right;
+}
+
+/* RTL Upload Area */
+[dir="rtl"] .upload-area {
+    direction: rtl;
+}
+
+/* RTL Canvas Tools */
+[dir="rtl"] .ruler-horizontal {
+    left: 0;
+    right: 30px;
+}
+
+[dir="rtl"] .ruler-vertical {
+    left: auto;
+    right: 0;
+}
+
+/* RTL Text Alignment Classes */
+[dir="rtl"] .text-left {
+    text-align: right;
+}
+
+[dir="rtl"] .text-right {
+    text-align: left;
+}
+
+/* RTL Animations */
+[dir="rtl"] @keyframes slideInRight {
+    from {
+        transform: translateX(-100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+[dir="rtl"] @keyframes slideInLeft {
+    from {
+        transform: translateX(100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+/* RTL Flexbox Adjustments */
+[dir="rtl"] .flex-row-reverse {
+    flex-direction: row;
+}
+
+[dir="rtl"] .flex-row {
+    flex-direction: row-reverse;
+}
+
+/* RTL Grid Adjustments */
+[dir="rtl"] .grid-reverse {
+    direction: ltr;
+}
+
+[dir="rtl"] .grid-reverse > * {
+    direction: rtl;
+}
+
+/* RTL Padding & Margin Utilities */
+[dir="rtl"] .ml-auto {
+    margin-left: 0;
+    margin-right: auto;
+}
+
+[dir="rtl"] .mr-auto {
+    margin-right: 0;
+    margin-left: auto;
+}
+
+[dir="rtl"] .pl-10 {
+    padding-left: 0;
+    padding-right: 10px;
+}
+
+[dir="rtl"] .pr-10 {
+    padding-right: 0;
+    padding-left: 10px;
+}
+
+/* RTL Border Radius */
+[dir="rtl"] .rounded-l {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+}
+
+[dir="rtl"] .rounded-r {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+}

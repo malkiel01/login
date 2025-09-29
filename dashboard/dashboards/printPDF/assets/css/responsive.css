@@ -1,0 +1,396 @@
+/* 
+ * Responsive Styles for PDF Editor
+ * Location: /dashboard/dashboards/printPDF/assets/css/responsive.css
+ */
+
+/* Large Desktop (1920px and up) */
+@media screen and (min-width: 1920px) {
+    :root {
+        --sidebar-width: 320px;
+    }
+    
+    .modal-content {
+        max-width: 800px;
+    }
+    
+    .modal-large {
+        max-width: 1200px;
+    }
+    
+    .templates-grid {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    }
+}
+
+/* Desktop (1024px - 1919px) */
+@media screen and (max-width: 1919px) and (min-width: 1024px) {
+    /* Default styles apply */
+}
+
+/* Tablet Landscape (768px - 1023px) */
+@media screen and (max-width: 1023px) and (min-width: 768px) {
+    :root {
+        --sidebar-width: 240px;
+    }
+    
+    .logo-section h1 {
+        display: none;
+    }
+    
+    .logo-section {
+        min-width: auto;
+    }
+    
+    .toolbar-group {
+        flex-wrap: wrap;
+        max-width: 500px;
+    }
+    
+    .language-switcher {
+        display: none;
+    }
+    
+    .templates-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+    
+    .quick-actions {
+        grid-template-columns: 1fr;
+    }
+    
+    /* Collapsible Sidebars */
+    .sidebar {
+        position: absolute;
+        z-index: 500;
+        height: 100%;
+        transform: translateX(-100%);
+        transition: transform var(--transition-normal);
+    }
+    
+    [dir="rtl"] .sidebar {
+        transform: translateX(100%);
+    }
+    
+    .sidebar.active {
+        transform: translateX(0);
+    }
+    
+    .sidebar-toggle {
+        display: block;
+        position: absolute;
+        top: 10px;
+        right: -40px;
+        width: 40px;
+        height: 40px;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 0 6px 6px 0;
+        cursor: pointer;
+    }
+    
+    [dir="rtl"] .sidebar-toggle {
+        right: auto;
+        left: -40px;
+        border-radius: 6px 0 0 6px;
+    }
+    
+    /* Adjust canvas for collapsed sidebars */
+    .canvas-container {
+        margin: 0;
+    }
+}
+
+/* Tablet Portrait (600px - 767px) */
+@media screen and (max-width: 767px) and (min-width: 600px) {
+    /* Hide sidebars completely */
+    .sidebar {
+        display: none;
+    }
+    
+    /* Simplify toolbar */
+    .toolbar-section {
+        display: none;
+    }
+    
+    /* Mobile-style top bar */
+    .top-bar {
+        padding: 0 10px;
+    }
+    
+    /* Floating action buttons */
+    .fab-container {
+        display: block;
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 1000;
+    }
+    
+    [dir="rtl"] .fab-container {
+        right: auto;
+        left: 20px;
+    }
+    
+    .fab {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary-gradient-start), var(--primary-gradient-end));
+        color: white;
+        border: none;
+        box-shadow: var(--shadow-lg);
+        cursor: pointer;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* Full-width modals */
+    .modal-content {
+        width: 100%;
+        height: 100%;
+        max-width: none;
+        max-height: none;
+        border-radius: 0;
+    }
+    
+    /* Responsive canvas */
+    .canvas-wrapper {
+        padding: 20px;
+    }
+    
+    /* Stack quick actions */
+    .quick-actions {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    /* Responsive upload area */
+    .upload-area {
+        padding: 20px;
+    }
+    
+    .upload-area i {
+        font-size: 36px;
+    }
+    
+    .upload-area h3 {
+        font-size: 16px;
+    }
+    
+    /* Templates grid */
+    .templates-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+}
+
+/* Mobile (below 600px) */
+@media screen and (max-width: 599px) {
+    /* Mobile-first approach */
+    body {
+        font-size: 14px;
+    }
+    
+    /* Simplified header */
+    .top-bar {
+        height: 50px;
+        padding: 0 10px;
+    }
+    
+    .logo-section i {
+        font-size: 20px;
+    }
+    
+    .logo-section h1 {
+        display: none;
+    }
+    
+    /* Hide desktop elements */
+    .toolbar-section,
+    .sidebar,
+    .language-switcher,
+    .btn-api,
+    .rulers {
+        display: none !important;
+    }
+    
+    /* Mobile navigation */
+    .mobile-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        border-top: 1px solid var(--border-color);
+        padding: 10px;
+        justify-content: space-around;
+        z-index: 1000;
+    }
+    
+    .mobile-nav-btn {
+        flex: 1;
+        padding: 10px;
+        border: none;
+        background: transparent;
+        color: var(--text-secondary);
+        font-size: 20px;
+        cursor: pointer;
+    }
+    
+    .mobile-nav-btn.active {
+        color: var(--primary-color);
+    }
+    
+    /* Full-screen canvas */
+    .main-content {
+        height: calc(100vh - 50px - 60px); /* Header + Bottom nav */
+    }
+    
+    .canvas-container {
+        padding: 10px;
+    }
+    
+    /* Mobile-optimized welcome */
+    .welcome-content {
+        padding: 20px;
+    }
+    
+    .welcome-icon {
+        font-size: 60px;
+    }
+    
+    .welcome-content h2 {
+        font-size: 20px;
+    }
+    
+    .welcome-content p {
+        font-size: 14px;
+    }
+    
+    .upload-area {
+        padding: 20px;
+        border-width: 2px;
+    }
+    
+    .upload-area i {
+        font-size: 32px;
+    }
+    
+    .upload-area h3 {
+        font-size: 14px;
+    }
+    
+    .upload-area p {
+        font-size: 12px;
+    }
+    
+    /* Single column layouts */
+    .quick-actions,
+    .templates-grid,
+    .tools-panel {
+        grid-template-columns: 1fr;
+    }
+    
+    /* Full-screen modals */
+    .modal-content {
+        width: 100%;
+        height: 100%;
+        max-width: none;
+        max-height: none;
+        border-radius: 0;
+    }
+    
+    .modal-header {
+        padding: 15px;
+    }
+    
+    .modal-body {
+        padding: 15px;
+    }
+    
+    /* Touch-friendly buttons */
+    .btn {
+        min-height: 44px;
+        font-size: 16px;
+    }
+    
+    .toolbar-btn,
+    .tool-btn {
+        min-width: 44px;
+        min-height: 44px;
+    }
+    
+    /* Simplified batch processing */
+    .batch-upload-area {
+        padding: 20px;
+    }
+    
+    .batch-queue {
+        max-height: 300px;
+    }
+    
+    /* API documentation adjustments */
+    .api-content pre {
+        font-size: 12px;
+        overflow-x: auto;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .top-bar,
+    .sidebar,
+    .toolbar,
+    .modal,
+    .mobile-nav {
+        display: none !important;
+    }
+    
+    .canvas-container {
+        padding: 0;
+        background: white;
+    }
+    
+    #mainCanvas {
+        box-shadow: none;
+        border: none;
+    }
+}
+
+/* High DPI Displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .loading-spinner {
+        border-width: 2px;
+    }
+    
+    .toolbar-btn,
+    .tool-btn {
+        image-rendering: crisp-edges;
+    }
+}
+
+/* Hover-capable devices only */
+@media (hover: hover) {
+    /* Keep hover effects */
+}
+
+/* Touch devices */
+@media (hover: none) {
+    /* Remove hover effects for better performance */
+    .toolbar-btn:hover,
+    .tool-btn:hover,
+    .btn:hover {
+        transform: none;
+    }
+    
+    /* Add active states instead */
+    .toolbar-btn:active,
+    .tool-btn:active,
+    .btn:active {
+        transform: scale(0.95);
+    }
+}

@@ -1,7 +1,12 @@
 <?php
 // Location: /dashboard/dashboards/printPDF/index.php
-require_once 'config.php';
-checkUserAccess();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/printPDF/config.php';
+
+// בדיקת הרשאות - בדיוק כמו בבתי עלמין
+if (!checkPermission('view', 'pdf_editor')) {
+    die('אין לך הרשאה לצפות בעמוד זה');
+}
+
 $csrfToken = generateCSRFToken();
 ?>
 <!DOCTYPE html>

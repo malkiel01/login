@@ -2,40 +2,24 @@
 /**
  * PDF Editor Functions
  * Location: /dashboard/dashboards/printPDF/includes/functions.php
+ * 
+ * משתמש בחיבור הקיים מהקובץ הראשי - בדיוק כמו בבתי עלמין!
  */
 
 /**
  * Get PDF Editor Database Connection
- * @return PDO Database connection
+ * משתמש בפונקציה הקיימת מהקובץ הראשי
  */
 function getPDFEditorDB() {
-    static $db = null;
+    static $initialized = false;
     
-    if ($db === null) {
-        try {
-            // השתמש בהגדרות שכבר נטענו ב-config.php
-            // אל תטען את config.php שוב - זה יוצר לולאה!
-            
-            $host = defined('DB_HOST') ? DB_HOST : 'localhost';
-            $dbname = defined('DB_NAME') ? DB_NAME : 'your_database';
-            $username = defined('DB_USER') ? DB_USER : 'root';
-            $password = defined('DB_PASS') ? DB_PASS : '';
-            
-            $dsn = "mysql:host=$host;dbname=$dbname;charset=utf8mb4";
-            
-            $db = new PDO($dsn, $username, $password);
-            $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            $db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-            $db->exec("SET NAMES 'utf8mb4'");
-            
-            // צור טבלאות אם לא קיימות
-            createPDFEditorTables($db);
-            
-        } catch (PDOException $e) {
-            error_log('PDF Editor DB Connection Error: ' . $e->getMessage());
-            // החזר null במקום לזרוק שגיאה
-            return null;
-        }
+    // קבל את החיבור מהפונקציה הראשית
+    $db = getDBConnection();
+    
+    // צור טבלאות רק בפעם הראשונה
+    if (!$initialized && $db) {
+        createPDFEditorTables($db);
+        $initialized = true;
     }
     
     return $db;
@@ -91,6 +75,22 @@ function createPDFEditorTables($db) {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ");
         
+        // טבלת לוג פעילות
+        $db->exec("
+            CREATE TABLE IF NOT EXISTS `pdf_editor_activity_log` (
+                `id` INT AUTO_INCREMENT PRIMARY KEY,
+                `user_id` INT NOT NULL,
+                `action` VARCHAR(100) NOT NULL,
+                `module` VARCHAR(50) NOT NULL,
+                `details` TEXT,
+                `metadata` JSON,
+                `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_user (user_id),
+                INDEX idx_action (action),
+                INDEX idx_created (created_at)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ");
+        
     } catch (PDOException $e) {
         error_log('Failed to create PDF Editor tables: ' . $e->getMessage());
     }
@@ -105,9 +105,6 @@ function logActivity($action, $module = 'pdf_editor', $details = '', $metadata =
         if (!$db) return;
         
         $userId = $_SESSION['user_id'] ?? 0;
-        
-        // קודם צור את הטבלה אם לא קיימת
-        createActivityLogTable();
         
         $stmt = $db->prepare("
             INSERT INTO pdf_editor_activity_log 
@@ -127,35 +124,4 @@ function logActivity($action, $module = 'pdf_editor', $details = '', $metadata =
         error_log('Failed to log activity: ' . $e->getMessage());
     }
 }
-
-/**
- * Create activity log table if not exists
- */
-function createActivityLogTable() {
-    try {
-        $db = getPDFEditorDB();
-        if (!$db) return;
-        
-        $db->exec("
-            CREATE TABLE IF NOT EXISTS `pdf_editor_activity_log` (
-                `id` INT AUTO_INCREMENT PRIMARY KEY,
-                `user_id` INT NOT NULL,
-                `action` VARCHAR(100) NOT NULL,
-                `module` VARCHAR(50) NOT NULL,
-                `details` TEXT,
-                `metadata` JSON,
-                `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                INDEX idx_user (user_id),
-                INDEX idx_action (action),
-                INDEX idx_created (created_at)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-        ");
-        
-    } catch (PDOException $e) {
-        error_log('Failed to create activity log table: ' . $e->getMessage());
-    }
-}
-
-// אל תבצע אתחול אוטומטי בעת הטעינה - זה יכול לגרום לבעיות
-// האתחול יתבצע רק כשצריך
 ?>

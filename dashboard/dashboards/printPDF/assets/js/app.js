@@ -268,12 +268,32 @@ class PDFEditorApp {
     }
 
     async loadPDFFromUrl(url) {
-        // Fetch PDF data
-        const response = await fetch(url);
-        const arrayBuffer = await response.arrayBuffer();
-        
-        // Load into canvas
-        this.canvasManager.loadPDF(arrayBuffer);
+        try {
+            // Check if PDF.js is loaded
+            if (typeof pdfjsLib === 'undefined') {
+                console.error('PDF.js is not loaded');
+                if (window.notificationManager) {
+                    window.notificationManager.error('ספריית PDF לא נטענה');
+                }
+                return;
+            }
+            
+            // Fetch PDF data
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error('Failed to fetch PDF');
+            }
+            const arrayBuffer = await response.arrayBuffer();
+            
+            // Load into canvas
+            this.canvasManager.loadPDF(arrayBuffer);
+            
+        } catch (error) {
+            console.error('Failed to load PDF:', error);
+            if (window.notificationManager) {
+                window.notificationManager.error('שגיאה בטעינת PDF');
+            }
+        }
     }
 
     async loadImageFromUrl(url) {
@@ -721,8 +741,108 @@ class PDFEditorApp {
     }
 
     showRecentFiles() {
-        // Load and display recent files
-        console.log('Showing recent files');
+        // Get recent files from localStorage
+        const recentFiles = this.getRecentFiles();
+        
+        if (recentFiles.length === 0) {
+            if (window.notificationManager) {
+                window.notificationManager.info('אין קבצים אחרונים');
+            }
+            return;
+        }
+        
+        // Create modal for recent files
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'flex';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>קבצים אחרונים</h2>
+                    <button class="modal-close" onclick="this.closest('.modal').remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="recent-files-list">
+                        ${recentFiles.map(file => `
+                            <div class="recent-file-item" style="padding: 10px; border-bottom: 1px solid #e5e7eb; cursor: pointer;">
+                                <i class="fas fa-file-${file.type === 'pdf' ? 'pdf' : 'image'}"></i>
+                                <span>${file.name}</span>
+                                <small style="color: #6b7280;">${new Date(file.date).toLocaleDateString('he-IL')}</small>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Add click handlers
+        modal.querySelectorAll('.recent-file-item').forEach((item, index) => {
+            item.addEventListener('click', () => {
+                this.loadRecentFile(recentFiles[index]);
+                modal.remove();
+            });
+        });
+    }
+    
+    getRecentFiles() {
+        const stored = localStorage.getItem('pdf_editor_recent_files');
+        if (!stored) return [];
+        
+        try {
+            return JSON.parse(stored);
+        } catch {
+            return [];
+        }
+    }
+    
+    saveToRecentFiles(fileInfo) {
+        let recentFiles = this.getRecentFiles();
+        
+        // Add new file to beginning
+        recentFiles.unshift({
+            name: fileInfo.name,
+            type: fileInfo.type,
+            url: fileInfo.url,
+            date: new Date()
+        });
+        
+        // Keep only last 10 files
+        recentFiles = recentFiles.slice(0, 10);
+        
+        localStorage.setItem('pdf_editor_recent_files', JSON.stringify(recentFiles));
+    }
+    
+    async loadRecentFile(file) {
+        try {
+            if (window.loadingManager) {
+                window.loadingManager.show('טוען קובץ...');
+            }
+            
+            if (file.type === 'pdf') {
+                await this.loadPDFFromUrl(file.url);
+            } else {
+                await this.loadImageFromUrl(file.url);
+            }
+            
+            this.showCanvas();
+            
+            if (window.notificationManager) {
+                window.notificationManager.success('הקובץ נטען בהצלחה');
+            }
+        } catch (error) {
+            console.error('Failed to load recent file:', error);
+            if (window.notificationManager) {
+                window.notificationManager.error('שגיאה בטעינת הקובץ');
+            }
+        } finally {
+            if (window.loadingManager) {
+                window.loadingManager.hide();
+            }
+        }
     }
 
     destroy() {

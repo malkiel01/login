@@ -357,16 +357,25 @@ class CanvasManager {
     }
 
     loadPDF(pdfData) {
+        // Check if PDF.js is available
+        if (typeof pdfjsLib === 'undefined') {
+            console.error('PDF.js library is not loaded');
+            if (window.notificationManager) {
+                window.notificationManager.error('ספריית PDF לא זמינה');
+            }
+            return;
+        }
+        
         // This would integrate with PDF.js to load PDF
         // For now, we'll use it as a background image
         pdfjsLib.getDocument({ data: pdfData }).promise.then((pdf) => {
             pdf.getPage(1).then((page) => {
                 const viewport = page.getViewport({ scale: 1 });
-                const canvas = document.createElement('canvas');
-                const context = canvas.getContext('2d');
+                const tempCanvas = document.createElement('canvas');
+                const context = tempCanvas.getContext('2d');
                 
-                canvas.width = viewport.width;
-                canvas.height = viewport.height;
+                tempCanvas.width = viewport.width;
+                tempCanvas.height = viewport.height;
                 
                 const renderContext = {
                     canvasContext: context,
@@ -374,7 +383,7 @@ class CanvasManager {
                 };
                 
                 page.render(renderContext).promise.then(() => {
-                    const imgData = canvas.toDataURL('image/png');
+                    const imgData = tempCanvas.toDataURL('image/png');
                     
                     fabric.Image.fromURL(imgData, (img) => {
                         // Set canvas size to match PDF
@@ -395,6 +404,11 @@ class CanvasManager {
                     });
                 });
             });
+        }).catch(error => {
+            console.error('Failed to load PDF:', error);
+            if (window.notificationManager) {
+                window.notificationManager.error('שגיאה בטעינת PDF');
+            }
         });
     }
 

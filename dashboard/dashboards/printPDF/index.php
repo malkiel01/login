@@ -689,5 +689,164 @@ $csrfToken = generateCSRFToken();
             }
         };
     </script>
+
+    <!-- 
+    הוסיפי את הקוד הזה בדיוק לפני </body> בקובץ index.php
+    אחרי כל טעינת קבצי ה-JS
+    -->
+
+    <script>
+        // Override save function globally
+        window.saveCurrentDocument = function() {
+            console.log('Save triggered');
+            
+            // Option 1: Try CloudSaveManager
+            if (window.cloudSaveManager && typeof window.cloudSaveManager.saveProject === 'function') {
+                console.log('Using cloudSaveManager');
+                window.cloudSaveManager.saveProject();
+                return;
+            }
+            
+            // Option 2: Try app.saveDocument
+            if (window.app && typeof window.app.saveDocument === 'function') {
+                console.log('Using app.saveDocument');
+                window.app.saveDocument();
+                return;
+            }
+            
+            // Option 3: Direct save
+            console.log('Using direct save');
+            const projectData = {
+                id: 'project_' + Date.now(),
+                name: document.getElementById('projectName')?.value || 'Untitled',
+                canvas: window.app?.canvasManager?.getCanvasJSON() || {},
+                timestamp: new Date().toISOString()
+            };
+            
+            // Save to localStorage
+            localStorage.setItem('pdf_editor_project_' + projectData.id, JSON.stringify(projectData));
+            
+            // Show notification
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                background: #48bb78;
+                color: white;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                z-index: 10000;
+                font-family: 'Rubik', sans-serif;
+            `;
+            notification.textContent = 'הפרויקט נשמר מקומית';
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        };
+
+        // Wait for DOM and initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Starting PDF Editor initialization...');
+            
+            // Initialize after loading screen
+            setTimeout(() => {
+                const loadingScreen = document.getElementById('loadingScreen');
+                const appContainer = document.getElementById('appContainer');
+                
+                if (loadingScreen) {
+                    loadingScreen.style.opacity = '0';
+                    setTimeout(() => {
+                        loadingScreen.style.display = 'none';
+                        if (appContainer) appContainer.style.display = 'flex';
+                        
+                        initializeApplication();
+                    }, 500);
+                } else {
+                    initializeApplication();
+                }
+            }, 1000);
+        });
+
+        async function initializeApplication() {
+            try {
+                console.log('Initializing application components...');
+                
+                // 1. Create API Connector
+                if (typeof APIConnector !== 'undefined') {
+                    window.apiConnector = new APIConnector();
+                    console.log('✅ API Connector created');
+                }
+                
+                // 2. Create main app
+                if (typeof PDFEditorApp !== 'undefined') {
+                    window.app = new PDFEditorApp();
+                    console.log('✅ Main app created');
+                    
+                    // 3. Initialize app
+                    await window.app.init();
+                    console.log('✅ App initialized');
+                    
+                    // 4. Fix CloudSaveManager if needed
+                    if (!window.cloudSaveManager && window.CloudSaveManager) {
+                        window.cloudSaveManager = new CloudSaveManager(
+                            window.app.canvasManager,
+                            window.apiConnector
+                        );
+                        window.app.cloudSaveManager = window.cloudSaveManager;
+                        console.log('✅ CloudSaveManager fixed');
+                    }
+                    
+                    // 5. Bind save button
+                    const saveBtn = document.getElementById('btnSave');
+                    if (saveBtn) {
+                        // Remove old listeners
+                        const newSaveBtn = saveBtn.cloneNode(true);
+                        saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
+                        
+                        // Add new listener
+                        newSaveBtn.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            console.log('Save button clicked!');
+                            window.saveCurrentDocument();
+                        });
+                        console.log('✅ Save button bound');
+                    }
+                    
+                    // 6. Bind keyboard shortcut
+                    document.addEventListener('keydown', function(e) {
+                        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                            e.preventDefault();
+                            console.log('Ctrl+S pressed');
+                            window.saveCurrentDocument();
+                        }
+                    });
+                    
+                    console.log('✅ All systems ready!');
+                    
+                } else {
+                    console.error('❌ PDFEditorApp not found');
+                }
+                
+            } catch (error) {
+                console.error('❌ Initialization error:', error);
+            }
+        }
+
+        // Test function - you can call this from console
+        window.testSave = function() {
+            console.log('Testing save functionality...');
+            console.log('app:', window.app);
+            console.log('apiConnector:', window.apiConnector);
+            console.log('cloudSaveManager:', window.cloudSaveManager);
+            console.log('canvasManager:', window.app?.canvasManager);
+            
+            // Try to save
+            window.saveCurrentDocument();
+        };
+    </script>
 </body>
 </html> 

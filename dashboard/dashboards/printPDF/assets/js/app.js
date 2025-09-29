@@ -1,6 +1,6 @@
 /**
- * Main Application for PDF Editor
- * Location: /dashboard/dashboards/printPDF/assets/js/app.js
+ * Main Application for PDF Editor - FIXED VERSION
+ * Location: /dashboard/dashboards/printPDF/assets/js/app-fixed.js
  */
 
 class PDFEditorApp {
@@ -9,6 +9,7 @@ class PDFEditorApp {
         this.undoRedoManager = null;
         this.layersManager = null;
         this.apiConnector = null;
+        this.cloudSaveManager = null;
         this.currentProject = null;
         this.autoSaveInterval = null;
         this.isInitialized = false;
@@ -18,11 +19,15 @@ class PDFEditorApp {
         try {
             console.log('Initializing PDF Editor...');
             
-            // Initialize API connector
-            this.apiConnector = new APIConnector();
+            // Initialize API connector FIRST
+            this.apiConnector = window.apiConnector || new APIConnector();
+            window.apiConnector = this.apiConnector;
+            console.log('API Connector initialized');
             
             // Initialize canvas manager
             this.canvasManager = new CanvasManager('mainCanvas');
+            window.canvasManager = this.canvasManager;
+            console.log('Canvas Manager initialized');
             
             // Initialize undo/redo manager
             this.undoRedoManager = new UndoRedoManager(this.canvasManager);
@@ -42,10 +47,11 @@ class PDFEditorApp {
                 window.templatesManager = this.templatesManager;
             }
             
-            // Initialize cloud save manager
+            // Initialize cloud save manager with BOTH parameters
             if (window.CloudSaveManager) {
                 this.cloudSaveManager = new CloudSaveManager(this.canvasManager, this.apiConnector);
                 window.cloudSaveManager = this.cloudSaveManager;
+                console.log('CloudSaveManager initialized with canvas and API');
             }
             
             // Initialize batch processor
@@ -61,7 +67,7 @@ class PDFEditorApp {
             this.bindEvents();
             
             // Setup auto-save if enabled
-            if (PDFEditorConfig.storage.autoSave) {
+            if (PDFEditorConfig && PDFEditorConfig.storage && PDFEditorConfig.storage.autoSave) {
                 this.setupAutoSave();
             }
             
@@ -76,7 +82,7 @@ class PDFEditorApp {
             
         } catch (error) {
             console.error('Failed to initialize PDF Editor:', error);
-            this.showError(t('errors.initFailed'));
+            this.showError('שגיאה באתחול המערכת');
         }
     }
 
@@ -93,15 +99,26 @@ class PDFEditorApp {
         // Setup drag and drop
         this.setupDragAndDrop();
         
-        // Update zoom display
-        this.canvasManager.updateZoomDisplay();
+        // Update zoom display if method exists
+        if (this.canvasManager && this.canvasManager.updateZoomDisplay) {
+            this.canvasManager.updateZoomDisplay();
+        }
     }
 
     bindEvents() {
         // Toolbar buttons
         document.getElementById('btnNew')?.addEventListener('click', () => this.newDocument());
         document.getElementById('btnOpen')?.addEventListener('click', () => this.openDocument());
-        document.getElementById('btnSave')?.addEventListener('click', () => this.saveDocument());
+        
+        // IMPORTANT: Bind save button properly
+        const saveBtn = document.getElementById('btnSave');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => {
+                console.log('Save button clicked');
+                this.saveDocument();
+            });
+        }
+        
         document.getElementById('btnUndo')?.addEventListener('click', () => this.undoRedoManager.undo());
         document.getElementById('btnRedo')?.addEventListener('click', () => this.undoRedoManager.redo());
         document.getElementById('btnZoomIn')?.addEventListener('click', () => this.canvasManager.zoomIn());
@@ -118,7 +135,9 @@ class PDFEditorApp {
         document.querySelectorAll('.tool-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const tool = btn.getAttribute('data-tool');
-                this.canvasManager.setTool(tool);
+                if (this.canvasManager && this.canvasManager.setTool) {
+                    this.canvasManager.setTool(tool);
+                }
             });
         });
         
@@ -135,17 +154,6 @@ class PDFEditorApp {
         document.getElementById('btnCloseBatch')?.addEventListener('click', () => this.closeModal('batchModal'));
         document.getElementById('btnCloseCloud')?.addEventListener('click', () => this.closeModal('cloudModal'));
         document.getElementById('btnCloseAPI')?.addEventListener('click', () => this.closeModal('apiModal'));
-        
-        // Canvas events
-        window.addEventListener('object:added', (e) => this.onObjectAdded(e.detail));
-        window.addEventListener('object:modified', (e) => this.onObjectModified(e.detail));
-        window.addEventListener('object:deleted', (e) => this.onObjectDeleted(e.detail));
-        
-        // Language change event
-        window.addEventListener('languageChanged', (e) => this.onLanguageChanged(e.detail));
-        
-        // Window resize
-        window.addEventListener('resize', () => this.onWindowResize());
         
         // Keyboard shortcuts
         this.setupGlobalShortcuts();
@@ -218,9 +226,83 @@ class PDFEditorApp {
                         e.preventDefault();
                         this.newDocument();
                         break;
+                    case 'z':
+                        e.preventDefault();
+                        if (e.shiftKey) {
+                            this.undoRedoManager?.redo();
+                        } else {
+                            this.undoRedoManager?.undo();
+                        }
+                        break;
                 }
             }
         });
+    }
+
+    async saveDocument() {
+        console.log('saveDocument called');
+        
+        // Use CloudSaveManager if available
+        if (this.cloudSaveManager) {
+            console.log('Using CloudSaveManager');
+            await this.cloudSaveManager.saveProject();
+            return;
+        }
+        
+        // Fallback to direct save
+        console.log('CloudSaveManager not available, using fallback');
+        
+        try {
+            if (!this.currentProject) {
+                this.currentProject = {
+                    id: `project_${Date.now()}`,
+                    name: 'Untitled',
+                    created: new Date()
+                };
+            }
+            
+            this.showLoading('שומר...');
+            
+            // Get canvas data
+            const canvasData = this.canvasManager?.getCanvasJSON();
+            if (!canvasData) {
+                throw new Error('אין נתונים לשמירה');
+            }
+            
+            // Prepare project data
+            const projectData = {
+                ...this.currentProject,
+                canvas: canvasData,
+                layers: this.layersManager?.exportLayers(),
+                history: this.undoRedoManager?.exportHistory(),
+                updated: new Date()
+            };
+            
+            // Try server save first
+            if (this.apiConnector) {
+                try {
+                    const response = await this.apiConnector.saveProject(projectData);
+                    if (response.success) {
+                        this.currentProject.id = response.data.projectId;
+                        this.showSuccess('הפרויקט נשמר בהצלחה');
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Server save failed:', error);
+                }
+            }
+            
+            // Fallback to localStorage
+            const key = `pdf_editor_project_${projectData.id}`;
+            localStorage.setItem(key, JSON.stringify(projectData));
+            this.showSuccess('הפרויקט נשמר מקומית');
+            
+        } catch (error) {
+            console.error('Failed to save document:', error);
+            this.showError('שגיאה בשמירה: ' + error.message);
+        } finally {
+            this.hideLoading();
+        }
     }
 
     async loadFile(file) {
@@ -230,7 +312,7 @@ class PDFEditorApp {
                 return;
             }
             
-            this.showLoading(t('loading.file'));
+            this.showLoading('טוען קובץ...');
             
             // Upload file to server
             const response = await this.apiConnector.uploadFile(file, (progress) => {
@@ -256,12 +338,12 @@ class PDFEditorApp {
                     created: new Date()
                 };
                 
-                this.showSuccess(t('success.loaded'));
+                this.showSuccess('הקובץ נטען בהצלחה');
             }
             
         } catch (error) {
             console.error('Failed to load file:', error);
-            this.showError(t('errors.loadFailed'));
+            this.showError('שגיאה בטעינת הקובץ');
         } finally {
             this.hideLoading();
         }
@@ -272,9 +354,7 @@ class PDFEditorApp {
             // Check if PDF.js is loaded
             if (typeof pdfjsLib === 'undefined') {
                 console.error('PDF.js is not loaded');
-                if (window.notificationManager) {
-                    window.notificationManager.error('ספריית PDF לא נטענה');
-                }
+                this.showError('ספריית PDF לא נטענה');
                 return;
             }
             
@@ -286,36 +366,38 @@ class PDFEditorApp {
             const arrayBuffer = await response.arrayBuffer();
             
             // Load into canvas
-            this.canvasManager.loadPDF(arrayBuffer);
+            if (this.canvasManager && this.canvasManager.loadPDF) {
+                this.canvasManager.loadPDF(arrayBuffer);
+            }
             
         } catch (error) {
             console.error('Failed to load PDF:', error);
-            if (window.notificationManager) {
-                window.notificationManager.error('שגיאה בטעינת PDF');
-            }
+            this.showError('שגיאה בטעינת PDF');
         }
     }
 
     async loadImageFromUrl(url) {
-        this.canvasManager.loadImage(url);
+        if (this.canvasManager && this.canvasManager.loadImage) {
+            this.canvasManager.loadImage(url);
+        }
     }
 
     validateFile(file) {
         // Check file size
-        if (file.size > PDFEditorConfig.file.maxSize) {
-            this.showError(t('errors.fileTooBig'));
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        if (file.size > maxSize) {
+            this.showError('הקובץ גדול מדי');
             return false;
         }
         
         // Check file type
-        const allowedTypes = PDFEditorConfig.file.allowedTypes;
+        const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
         if (!allowedTypes.includes(file.type)) {
-            // Check by extension
             const extension = file.name.split('.').pop().toLowerCase();
-            const allowedExtensions = PDFEditorConfig.file.allowedExtensions;
+            const allowedExtensions = ['pdf', 'jpg', 'jpeg', 'png', 'webp'];
             
             if (!allowedExtensions.includes(extension)) {
-                this.showError(t('errors.invalidFormat'));
+                this.showError('סוג קובץ לא נתמך');
                 return false;
             }
         }
@@ -323,19 +405,96 @@ class PDFEditorApp {
         return true;
     }
 
+    // UI State Management
+    updateUIState() {
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const canvasWrapper = document.getElementById('canvasWrapper');
+        
+        if (this.canvasManager && this.canvasManager.canvas && this.canvasManager.canvas.getObjects().length > 0) {
+            if (welcomeScreen) welcomeScreen.style.display = 'none';
+            if (canvasWrapper) canvasWrapper.style.display = 'block';
+        }
+    }
+
+    showCanvas() {
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const canvasWrapper = document.getElementById('canvasWrapper');
+        
+        if (welcomeScreen) welcomeScreen.style.display = 'none';
+        if (canvasWrapper) canvasWrapper.style.display = 'block';
+    }
+
+    // Loading/Notification helpers
+    showLoading(message = 'טוען...') {
+        if (window.loadingManager) {
+            window.loadingManager.show(message);
+        } else {
+            console.log('Loading:', message);
+        }
+    }
+
+    hideLoading() {
+        if (window.loadingManager) {
+            window.loadingManager.hide();
+        }
+    }
+
+    showSuccess(message) {
+        if (window.notificationManager) {
+            window.notificationManager.success(message);
+        } else {
+            console.log('Success:', message);
+            this.showNotification(message, 'success');
+        }
+    }
+
+    showError(message) {
+        if (window.notificationManager) {
+            window.notificationManager.error(message);
+        } else {
+            console.error('Error:', message);
+            this.showNotification(message, 'error');
+        }
+    }
+
+    showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background: ${type === 'success' ? '#48bb78' : type === 'error' ? '#f56565' : '#4299e1'};
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            z-index: 10000;
+            font-family: 'Rubik', sans-serif;
+            animation: slideIn 0.3s ease;
+        `;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }
+
+    // Document Management
     newDocument() {
-        if (this.canvasManager.canvas.getObjects().length > 0) {
-            if (!confirm(t('dialogs.unsavedChanges'))) {
+        if (this.canvasManager && this.canvasManager.canvas && this.canvasManager.canvas.getObjects().length > 0) {
+            if (!confirm('יש נתונים לא שמורים. להמשיך?')) {
                 return;
             }
         }
         
         // Clear canvas
-        this.canvasManager.clear();
+        if (this.canvasManager) this.canvasManager.clear();
         
         // Reset managers
-        this.undoRedoManager.clear();
-        this.layersManager.init();
+        if (this.undoRedoManager) this.undoRedoManager.clear();
+        if (this.layersManager) this.layersManager.init();
         
         // Reset project
         this.currentProject = null;
@@ -348,187 +507,22 @@ class PDFEditorApp {
         document.getElementById('fileInput')?.click();
     }
 
-    async saveDocument() {
-        try {
-            if (!this.currentProject) {
-                this.currentProject = {
-                    id: `project_${Date.now()}`,
-                    name: 'Untitled',
-                    created: new Date()
-                };
-            }
-            
-            this.showLoading(t('saving'));
-            
-            // Get canvas data
-            const canvasData = this.canvasManager.getCanvasJSON();
-            
-            // Save project
-            const projectData = {
-                ...this.currentProject,
-                canvas: canvasData,
-                layers: this.layersManager.exportLayers(),
-                history: this.undoRedoManager.exportHistory(),
-                updated: new Date()
-            };
-            
-            // Save to server or local storage
-            if (PDFEditorConfig.storage.mode === 'server') {
-                const response = await this.apiConnector.saveProject(projectData);
-                if (response.success) {
-                    this.currentProject.id = response.data.projectId;
-                    this.showSuccess(t('success.saved'));
-                }
-            } else {
-                // Save to local storage
-                localStorage.setItem(
-                    `${PDFEditorConfig.storage.projectPrefix}${projectData.id}`,
-                    JSON.stringify(projectData)
-                );
-                this.showSuccess(t('success.saved'));
-            }
-            
-        } catch (error) {
-            console.error('Failed to save document:', error);
-            this.showError(t('errors.saveFailed'));
-        } finally {
-            this.hideLoading();
-        }
+    // Modal Management
+    openModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) modal.style.display = 'block';
     }
 
-    setupAutoSave() {
-        const interval = PDFEditorConfig.storage.autoSaveInterval;
-        
-        this.autoSaveInterval = setInterval(() => {
-            if (this.currentProject && this.canvasManager.canvas.getObjects().length > 0) {
-                this.saveDocument();
-                this.updateSaveIndicator();
-            }
-        }, interval);
-    }
-
-    updateSaveIndicator() {
-        const indicator = document.getElementById('saveIndicator');
-        if (indicator) {
-            indicator.classList.add('saving');
-            setTimeout(() => {
-                indicator.classList.remove('saving');
-            }, 2000);
-        }
-    }
-
-    async loadLastProject() {
-        try {
-            if (PDFEditorConfig.storage.mode === 'local') {
-                const projectKeys = Object.keys(localStorage).filter(key => 
-                    key.startsWith(PDFEditorConfig.storage.projectPrefix)
-                );
-                
-                if (projectKeys.length > 0) {
-                    // Get most recent project
-                    const projects = projectKeys.map(key => {
-                        const project = JSON.parse(localStorage.getItem(key));
-                        return project;
-                    }).sort((a, b) => new Date(b.updated) - new Date(a.updated));
-                    
-                    if (projects.length > 0) {
-                        await this.loadProject(projects[0]);
-                    }
-                }
-            }
-        } catch (error) {
-            console.error('Failed to load last project:', error);
-        }
-    }
-
-    async loadProject(projectData) {
-        try {
-            this.showLoading(t('loading.project'));
-            
-            // Load canvas
-            if (projectData.canvas) {
-                this.canvasManager.loadFromJSON(projectData.canvas);
-            }
-            
-            // Load layers
-            if (projectData.layers) {
-                this.layersManager.importLayers(projectData.layers);
-            }
-            
-            // Load history
-            if (projectData.history) {
-                this.undoRedoManager.importHistory(projectData.history);
-            }
-            
-            // Set current project
-            this.currentProject = projectData;
-            
-            // Show canvas
-            this.showCanvas();
-            
-            this.showSuccess(t('success.loaded'));
-            
-        } catch (error) {
-            console.error('Failed to load project:', error);
-            this.showError(t('errors.loadFailed'));
-        } finally {
-            this.hideLoading();
-        }
-    }
-
-    async checkSharedProject() {
-        // Check URL for share token
-        const urlParams = new URLSearchParams(window.location.search);
-        const shareToken = urlParams.get('share');
-        
-        if (shareToken) {
-            try {
-                const response = await this.apiConnector.loadSharedProject(shareToken);
-                if (response.success) {
-                    await this.loadProject(response.data.project);
-                }
-            } catch (error) {
-                console.error('Failed to load shared project:', error);
-            }
-        }
-    }
-
-    showCanvas() {
-        document.getElementById('welcomeScreen')?.style.setProperty('display', 'none');
-        document.getElementById('canvasWrapper')?.style.setProperty('display', 'block');
-        document.getElementById('rightSidebar')?.style.setProperty('display', 'flex');
-        
-        // Fit canvas to screen
-        setTimeout(() => {
-            this.canvasManager.zoomToFit();
-        }, 100);
-    }
-
-    hideCanvas() {
-        document.getElementById('welcomeScreen')?.style.setProperty('display', 'flex');
-        document.getElementById('canvasWrapper')?.style.setProperty('display', 'none');
-        document.getElementById('rightSidebar')?.style.setProperty('display', 'none');
-    }
-
-    updateUIState() {
-        if (this.canvasManager && this.canvasManager.canvas.getObjects().length > 0) {
-            this.showCanvas();
-        } else {
-            this.hideCanvas();
-        }
-    }
-
-    toggleLayersPanel() {
-        const sidebar = document.getElementById('rightSidebar');
-        if (sidebar) {
-            const isVisible = sidebar.style.display !== 'none';
-            sidebar.style.display = isVisible ? 'none' : 'flex';
-        }
+    closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) modal.style.display = 'none';
     }
 
     openTemplatesModal() {
         this.openModal('templatesModal');
-        this.loadTemplates();
+        if (this.templatesManager) {
+            this.templatesManager.loadTemplates();
+        }
     }
 
     openBatchModal() {
@@ -536,390 +530,74 @@ class PDFEditorApp {
     }
 
     openCloudModal() {
-        this.openModal('cloudModal');
-        this.loadCloudProjects();
+        // Create cloud modal dynamically
+        if (window.showCloudModal) {
+            window.showCloudModal();
+        } else {
+            this.openModal('cloudModal');
+        }
+        
+        // Load projects list
+        if (this.cloudSaveManager) {
+            this.cloudSaveManager.loadProjectsList();
+        }
     }
 
     openAPIModal() {
         this.openModal('apiModal');
     }
 
-    openModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.style.display = 'flex';
+    // Placeholder methods
+    toggleLayersPanel() {
+        const panel = document.getElementById('rightSidebar');
+        if (panel) {
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
         }
-    }
-
-    closeModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.style.display = 'none';
-        }
-    }
-
-    async loadTemplates() {
-        try {
-            const response = await this.apiConnector.getTemplates();
-            if (response.success) {
-                this.displayTemplates(response.data.templates);
-            }
-        } catch (error) {
-            console.error('Failed to load templates:', error);
-        }
-    }
-
-    displayTemplates(templates) {
-        const grid = document.getElementById('templatesGrid');
-        if (!grid) return;
-        
-        grid.innerHTML = '';
-        
-        templates.forEach(template => {
-            const item = document.createElement('div');
-            item.className = 'template-item';
-            item.innerHTML = `
-                <div class="template-preview">
-                    ${template.thumbnail ? 
-                        `<img src="${template.thumbnail}" alt="${template.name}">` :
-                        `<i class="fas fa-file-alt"></i>`
-                    }
-                </div>
-                <div class="template-name">${template.name}</div>
-            `;
-            
-            item.addEventListener('click', () => {
-                this.useTemplate(template);
-                this.closeModal('templatesModal');
-            });
-            
-            grid.appendChild(item);
-        });
-    }
-
-    async useTemplate(template) {
-        if (template.data) {
-            this.canvasManager.loadFromJSON(template.data);
-            this.showCanvas();
-        }
-    }
-
-    async loadCloudProjects() {
-        try {
-            const response = await this.apiConnector.listProjects();
-            if (response.success) {
-                this.displayCloudProjects(response.data.projects);
-            }
-        } catch (error) {
-            console.error('Failed to load cloud projects:', error);
-        }
-    }
-
-    displayCloudProjects(projects) {
-        const grid = document.getElementById('projectsGrid');
-        if (!grid) return;
-        
-        grid.innerHTML = '';
-        
-        projects.forEach(project => {
-            const item = document.createElement('div');
-            item.className = 'project-item';
-            item.innerHTML = `
-                <div class="project-preview">
-                    ${project.thumbnail ? 
-                        `<img src="${project.thumbnail}" alt="${project.name}">` :
-                        `<i class="fas fa-file"></i>`
-                    }
-                </div>
-                <div class="project-info">
-                    <div class="project-name">${project.name}</div>
-                    <div class="project-date">${new Date(project.updated).toLocaleDateString()}</div>
-                </div>
-            `;
-            
-            item.addEventListener('click', async () => {
-                await this.loadCloudProject(project.id);
-                this.closeModal('cloudModal');
-            });
-            
-            grid.appendChild(item);
-        });
-    }
-
-    async loadCloudProject(projectId) {
-        try {
-            const response = await this.apiConnector.loadProject(projectId);
-            if (response.success) {
-                await this.loadProject(response.data.project);
-            }
-        } catch (error) {
-            console.error('Failed to load cloud project:', error);
-            this.showError(t('errors.loadFailed'));
-        }
-    }
-
-    async loadBatchFiles(files) {
-        // Validate files
-        const validFiles = files.filter(file => this.validateFile(file));
-        
-        if (validFiles.length === 0) {
-            return;
-        }
-        
-        if (validFiles.length > PDFEditorConfig.batch.maxFiles) {
-            this.showError(t('errors.tooManyFiles'));
-            return;
-        }
-        
-        // Open batch modal
-        this.openBatchModal();
-        
-        // Display files in queue
-        this.displayBatchQueue(validFiles);
-    }
-
-    displayBatchQueue(files) {
-        const queue = document.getElementById('batchQueue');
-        if (!queue) return;
-        
-        queue.innerHTML = '';
-        
-        files.forEach((file, index) => {
-            const item = document.createElement('div');
-            item.className = 'batch-item';
-            item.innerHTML = `
-                <span class="batch-index">${index + 1}</span>
-                <span class="batch-name">${file.name}</span>
-                <span class="batch-size">${(file.size / 1024 / 1024).toFixed(2)} MB</span>
-                <span class="batch-status" data-status="waiting">${t('batch.status.waiting')}</span>
-            `;
-            queue.appendChild(item);
-        });
-    }
-
-    onObjectAdded(detail) {
-        console.log('Object added:', detail);
-    }
-
-    onObjectModified(detail) {
-        console.log('Object modified:', detail);
-    }
-
-    onObjectDeleted(detail) {
-        console.log('Object deleted:', detail);
-    }
-
-    onLanguageChanged(detail) {
-        console.log('Language changed:', detail.language);
-        // Refresh UI texts if needed
-    }
-
-    onWindowResize() {
-        // Adjust canvas size if needed
-    }
-
-    async exportPDF() {
-        try {
-            if (window.loadingManager) {
-                window.loadingManager.show('מייצא PDF...');
-            }
-            
-            // Get canvas data
-            const canvasData = this.canvasManager.getCanvasJSON();
-            
-            // Get document info
-            const documentInfo = {
-                width: this.canvasManager.canvas.width,
-                height: this.canvasManager.canvas.height,
-                background: this.canvasManager.currentDocument
-            };
-            
-            // Export via API
-            const response = await this.apiConnector.exportPDF(canvasData, documentInfo);
-            
-            if (response.success) {
-                // Download the file
-                this.apiConnector.downloadFile(response.data.downloadUrl, 'exported.pdf');
-                
-                if (window.notificationManager) {
-                    window.notificationManager.success('PDF יוצא בהצלחה');
-                }
-            }
-            
-        } catch (error) {
-            console.error('Failed to export PDF:', error);
-            if (window.notificationManager) {
-                window.notificationManager.error('שגיאה בייצוא PDF');
-            }
-        } finally {
-            if (window.loadingManager) {
-                window.loadingManager.hide();
-            }
-        }
-    }
-    
-    async exportImage(format = 'png') {
-        try {
-            if (window.loadingManager) {
-                window.loadingManager.show('מייצא תמונה...');
-            }
-            
-            // Get canvas as image
-            const canvasData = this.canvasManager.exportAsPNG();
-            
-            // Export via API
-            const response = await this.apiConnector.exportImage(canvasData, format);
-            
-            if (response.success) {
-                // Download the file
-                this.apiConnector.downloadFile(response.data.downloadUrl, `exported.${format}`);
-                
-                if (window.notificationManager) {
-                    window.notificationManager.success('התמונה יוצאה בהצלחה');
-                }
-            }
-            
-        } catch (error) {
-            console.error('Failed to export image:', error);
-            if (window.notificationManager) {
-                window.notificationManager.error('שגיאה בייצוא תמונה');
-            }
-        } finally {
-            if (window.loadingManager) {
-                window.loadingManager.hide();
-            }
-        }
-    }
-    
-    initTooltips() {
-        // Initialize any tooltip library if used
-    }
-
-    showLoading(message = '') {
-        // Implement loading indicator
-        console.log('Loading:', message);
-    }
-
-    hideLoading() {
-        // Hide loading indicator
-        console.log('Loading complete');
-    }
-
-    showError(message) {
-        alert(message);
-    }
-
-    showSuccess(message) {
-        console.log('Success:', message);
     }
 
     showRecentFiles() {
-        // Get recent files from localStorage
-        const recentFiles = this.getRecentFiles();
-        
-        if (recentFiles.length === 0) {
-            if (window.notificationManager) {
-                window.notificationManager.info('אין קבצים אחרונים');
-            }
-            return;
-        }
-        
-        // Create modal for recent files
-        const modal = document.createElement('div');
-        modal.className = 'modal';
-        modal.style.display = 'flex';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>קבצים אחרונים</h2>
-                    <button class="modal-close" onclick="this.closest('.modal').remove()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="recent-files-list">
-                        ${recentFiles.map(file => `
-                            <div class="recent-file-item" style="padding: 10px; border-bottom: 1px solid #e5e7eb; cursor: pointer;">
-                                <i class="fas fa-file-${file.type === 'pdf' ? 'pdf' : 'image'}"></i>
-                                <span>${file.name}</span>
-                                <small style="color: #6b7280;">${new Date(file.date).toLocaleDateString('he-IL')}</small>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-        
-        // Add click handlers
-        modal.querySelectorAll('.recent-file-item').forEach((item, index) => {
-            item.addEventListener('click', () => {
-                this.loadRecentFile(recentFiles[index]);
-                modal.remove();
-            });
-        });
+        console.log('Show recent files');
+        // Implementation needed
     }
-    
-    getRecentFiles() {
-        const stored = localStorage.getItem('pdf_editor_recent_files');
-        if (!stored) return [];
+
+    setupAutoSave() {
+        const interval = 120000; // 2 minutes
         
-        try {
-            return JSON.parse(stored);
-        } catch {
-            return [];
+        this.autoSaveInterval = setInterval(() => {
+            if (this.currentProject && this.canvasManager?.canvas?.getObjects().length > 0) {
+                this.saveDocument();
+            }
+        }, interval);
+    }
+
+    async checkSharedProject() {
+        // Check URL for shared project token
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('share');
+        if (token) {
+            // Load shared project
+            console.log('Loading shared project:', token);
         }
     }
-    
-    saveToRecentFiles(fileInfo) {
-        let recentFiles = this.getRecentFiles();
-        
-        // Add new file to beginning
-        recentFiles.unshift({
-            name: fileInfo.name,
-            type: fileInfo.type,
-            url: fileInfo.url,
-            date: new Date()
-        });
-        
-        // Keep only last 10 files
-        recentFiles = recentFiles.slice(0, 10);
-        
-        localStorage.setItem('pdf_editor_recent_files', JSON.stringify(recentFiles));
-    }
-    
-    async loadRecentFile(file) {
-        try {
-            if (window.loadingManager) {
-                window.loadingManager.show('טוען קובץ...');
-            }
-            
-            if (file.type === 'pdf') {
-                await this.loadPDFFromUrl(file.url);
-            } else {
-                await this.loadImageFromUrl(file.url);
-            }
-            
-            this.showCanvas();
-            
-            if (window.notificationManager) {
-                window.notificationManager.success('הקובץ נטען בהצלחה');
-            }
-        } catch (error) {
-            console.error('Failed to load recent file:', error);
-            if (window.notificationManager) {
-                window.notificationManager.error('שגיאה בטעינת הקובץ');
-            }
-        } finally {
-            if (window.loadingManager) {
-                window.loadingManager.hide();
+
+    async loadLastProject() {
+        // Try to load last opened project
+        const lastProjectId = localStorage.getItem('pdf_editor_last_project');
+        if (lastProjectId && this.cloudSaveManager) {
+            try {
+                await this.cloudSaveManager.loadProject(lastProjectId);
+            } catch (error) {
+                console.error('Failed to load last project:', error);
             }
         }
     }
 
+    initTooltips() {
+        // Initialize tooltips if needed
+    }
+
+    // Cleanup
     destroy() {
-        // Cleanup
         if (this.autoSaveInterval) {
             clearInterval(this.autoSaveInterval);
         }

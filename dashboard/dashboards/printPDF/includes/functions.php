@@ -1,38 +1,24 @@
 <?php
 /**
- * PDF Editor Functions
- * Location: /dashboard/dashboards/printPDF/includes/functions.php
- * 
- * משתמש בחיבור הקיים מהקובץ הראשי - בדיוק כמו בבתי עלמין!
+ * PDF Editor Functions - FIXED VERSION
  */
 
-/**
- * Get PDF Editor Database Connection
- * משתמש בפונקציה הקיימת מהקובץ הראשי
- */
 function getPDFEditorDB() {
-    static $initialized = false;
-    
-    // קבל את החיבור מהפונקציה הראשית
-    $db = getDBConnection();
-    
-    // צור טבלאות רק בפעם הראשונה
-    if (!$initialized && $db) {
-        createPDFEditorTables($db);
-        $initialized = true;
-    }
-    
-    return $db;
+    // פשוט החזר את החיבור הקיים, בלי ליצור טבלאות אוטומטית
+    return getDBConnection();
 }
 
-/**
- * Create PDF Editor tables if not exists
- */
 function createPDFEditorTables($db) {
     if (!$db) return;
     
     try {
-        // טבלת פרויקטים
+        // בדוק אם הטבלאות כבר קיימות לפני יצירה
+        $result = $db->query("SHOW TABLES LIKE 'pdf_editor_projects'");
+        if ($result->rowCount() > 0) {
+            return; // הטבלאות כבר קיימות
+        }
+        
+        // צור טבלאות בלי FOREIGN KEY constraints
         $db->exec("
             CREATE TABLE IF NOT EXISTS `pdf_editor_projects` (
                 `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -50,19 +36,17 @@ function createPDFEditorTables($db) {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ");
         
-        // טבלת שמירה אוטומטית
+        // צור את שאר הטבלאות בלי FOREIGN KEY
         $db->exec("
             CREATE TABLE IF NOT EXISTS `pdf_editor_autosave` (
                 `id` INT AUTO_INCREMENT PRIMARY KEY,
                 `project_id` VARCHAR(100) NOT NULL,
                 `state_data` LONGTEXT,
                 `saved_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                INDEX idx_project (project_id),
-                FOREIGN KEY (project_id) REFERENCES pdf_editor_projects(project_id) ON DELETE CASCADE
+                INDEX idx_project (project_id)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ");
         
-        // טבלת שיתוף
         $db->exec("
             CREATE TABLE IF NOT EXISTS `pdf_editor_shares` (
                 `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -70,12 +54,10 @@ function createPDFEditorTables($db) {
                 `share_token` VARCHAR(64) UNIQUE NOT NULL,
                 `expires_at` TIMESTAMP NULL,
                 `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                INDEX idx_token (share_token),
-                FOREIGN KEY (project_id) REFERENCES pdf_editor_projects(project_id) ON DELETE CASCADE
+                INDEX idx_token (share_token)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ");
         
-        // טבלת לוג פעילות
         $db->exec("
             CREATE TABLE IF NOT EXISTS `pdf_editor_activity_log` (
                 `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -96,12 +78,9 @@ function createPDFEditorTables($db) {
     }
 }
 
-/**
- * Log activity to database
- */
 function logActivity($action, $module = 'pdf_editor', $details = '', $metadata = []) {
     try {
-        $db = getPDFEditorDB();
+        $db = getDBConnection(); // השתמש ישירות ב-getDBConnection
         if (!$db) return;
         
         $userId = $_SESSION['user_id'] ?? 0;

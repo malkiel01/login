@@ -1,16 +1,12 @@
 <?php
 // Location: /dashboard/dashboards/printPDF/index.php
-
-// טען את הקבצים בסדר הנכון - בדיוק כמו בבתי עלמין
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/printPDF/config.php';
-require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/printPDF/includes/functions.php';
 
-// בדיקת הרשאות
+// בדיקת הרשאות - בדיוק כמו בבתי עלמין
 if (!checkPermission('view', 'pdf_editor')) {
     die('אין לך הרשאה לצפות בעמוד זה');
 }
 
-// יצירת CSRF Token
 $csrfToken = generateCSRFToken();
 ?>
 <!DOCTYPE html>
@@ -18,7 +14,7 @@ $csrfToken = generateCSRFToken();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo DASHBOARD_NAME; ?></title>
+    <title>עורך PDF ותמונות - מערכת מתקדמת</title>
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700&family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -32,8 +28,9 @@ $csrfToken = generateCSRFToken();
     <link rel="stylesheet" href="assets/css/responsive.css">
     <link rel="stylesheet" href="assets/css/cloud-storage.css">
     
-    <!-- Initial Loading Styles -->
+    <!-- Libraries CSS -->
     <style>
+        /* Initial loading styles */
         .loading-screen {
             position: fixed;
             top: 0;
@@ -71,49 +68,6 @@ $csrfToken = generateCSRFToken();
             font-size: 20px;
             font-family: 'Rubik', sans-serif;
         }
-        
-        /* Welcome icon style */
-        .welcome-icon {
-            font-size: 80px;
-            color: #667eea;
-            margin-bottom: 20px;
-        }
-        
-        /* Quick actions grid */
-        .quick-actions {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-top: 30px;
-        }
-        
-        .quick-action-btn {
-            padding: 20px;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            background: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
-        }
-        
-        .quick-action-btn:hover {
-            border-color: #667eea;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
-        }
-        
-        .quick-action-btn i {
-            font-size: 30px;
-            color: #667eea;
-            display: block;
-            margin-bottom: 10px;
-        }
-        
-        .quick-action-btn span {
-            font-size: 14px;
-            color: #4a5568;
-        }
     </style>
 </head>
 <body>
@@ -132,7 +86,7 @@ $csrfToken = generateCSRFToken();
         <header class="top-bar">
             <div class="top-bar-section logo-section">
                 <i class="fas fa-file-pdf"></i>
-                <h1><?php echo DASHBOARD_NAME; ?></h1>
+                <h1>עורך PDF ותמונות</h1>
             </div>
             
             <div class="top-bar-section toolbar-section">
@@ -168,16 +122,34 @@ $csrfToken = generateCSRFToken();
                     <button class="toolbar-btn" id="btnGrid" title="רשת">
                         <i class="fas fa-th"></i>
                     </button>
+                    <button class="toolbar-btn" id="btnGuides" title="קווי עזר">
+                        <i class="fas fa-ruler-combined"></i>
+                    </button>
                     <button class="toolbar-btn" id="btnLayers" title="שכבות">
                         <i class="fas fa-layer-group"></i>
                     </button>
                     <button class="toolbar-btn" id="btnTemplates" title="תבניות">
                         <i class="fas fa-object-group"></i>
                     </button>
-                    <button class="toolbar-btn cloud-btn" id="btnCloudStorage" title="אחסון ענן">
-                        <i class="fas fa-cloud"></i>
+                    <button class="toolbar-btn" id="btnBatch" title="עיבוד קבוצתי">
+                        <i class="fas fa-clone"></i>
+                    </button>
+                    <button class="toolbar-btn cloud-btn" id="btnCloudSave" title="שמירה בענן">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <span class="save-indicator" id="saveIndicator"></span>
                     </button>
                 </div>
+            </div>
+            
+            <div class="top-bar-section actions-section">
+                <div class="language-switcher">
+                    <button class="lang-btn active" data-lang="he">עברית</button>
+                    <button class="lang-btn" data-lang="en">English</button>
+                    <button class="lang-btn" data-lang="ar">العربية</button>
+                </div>
+                <button class="btn-api" id="btnAPI" title="API">
+                    <i class="fas fa-code"></i>
+                </button>
             </div>
         </header>
 
@@ -190,7 +162,7 @@ $csrfToken = generateCSRFToken();
                     <h3>כלים</h3>
                 </div>
                 <div class="tools-panel">
-                    <button class="tool-btn active" id="toolSelect" data-tool="select" title="בחירה">
+                    <button class="tool-btn" id="toolSelect" data-tool="select" title="בחירה">
                         <i class="fas fa-mouse-pointer"></i>
                         <span>בחירה</span>
                     </button>
@@ -210,6 +182,15 @@ $csrfToken = generateCSRFToken();
                         <i class="fas fa-pencil-alt"></i>
                         <span>ציור</span>
                     </button>
+                </div>
+                
+                <div class="properties-panel" id="propertiesPanel">
+                    <div class="sidebar-header">
+                        <h3>מאפיינים</h3>
+                    </div>
+                    <div class="properties-content" id="propertiesContent">
+                        <!-- Dynamic properties will be loaded here -->
+                    </div>
                 </div>
             </aside>
 
@@ -255,12 +236,17 @@ $csrfToken = generateCSRFToken();
                 
                 <!-- Main Canvas -->
                 <div class="canvas-wrapper" id="canvasWrapper" style="display: none;">
-                    <canvas id="mainCanvas"></canvas>
+                    <div class="canvas-scroll">
+                        <div class="ruler ruler-horizontal" id="rulerH"></div>
+                        <div class="ruler ruler-vertical" id="rulerV"></div>
+                        <canvas id="mainCanvas"></canvas>
+                    </div>
                 </div>
             </div>
 
-            <!-- Right Sidebar - Layers (Hidden by default) -->
+            <!-- Right Sidebar - Layers & History -->
             <aside class="sidebar sidebar-right" id="rightSidebar" style="display: none;">
+                <!-- Layers Panel -->
                 <div class="panel-section layers-panel" id="layersPanel">
                     <div class="panel-header">
                         <h3>שכבות</h3>
@@ -277,18 +263,169 @@ $csrfToken = generateCSRFToken();
                         <!-- Layers will be added here dynamically -->
                     </div>
                 </div>
+                
+                <!-- History Panel -->
+                <div class="panel-section history-panel" id="historyPanel">
+                    <div class="panel-header">
+                        <h3>היסטוריה</h3>
+                        <button class="panel-action-btn" id="btnClearHistory" title="נקה היסטוריה">
+                            <i class="fas fa-eraser"></i>
+                        </button>
+                    </div>
+                    <div class="history-list" id="historyList">
+                        <!-- History items will be added here -->
+                    </div>
+                </div>
             </aside>
+        </div>
+
+        <!-- Templates Modal -->
+        <div class="modal" id="templatesModal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>תבניות</h2>
+                    <button class="modal-close" id="btnCloseTemplates">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="template-categories">
+                        <button class="category-btn active" data-category="all">הכל</button>
+                        <button class="category-btn" data-category="business">עסקי</button>
+                        <button class="category-btn" data-category="certificates">תעודות</button>
+                        <button class="category-btn" data-category="presentations">מצגות</button>
+                        <button class="category-btn" data-category="receipts">קבלות</button>
+                        <button class="category-btn" data-category="custom">מותאם אישית</button>
+                    </div>
+                    <div class="templates-grid" id="templatesGrid">
+                        <!-- Templates will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Batch Processing Modal -->
+        <div class="modal" id="batchModal" style="display: none;">
+            <div class="modal-content modal-large">
+                <div class="modal-header">
+                    <h2>עיבוד קבוצתי</h2>
+                    <button class="modal-close" id="btnCloseBatch">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="batch-upload-area">
+                        <i class="fas fa-file-upload"></i>
+                        <h3>העלה עד 20 קבצים</h3>
+                        <button class="btn btn-primary" id="btnBatchBrowse">בחר קבצים</button>
+                        <input type="file" id="batchFileInput" multiple accept=".pdf,.jpg,.jpeg,.png" style="display: none;">
+                    </div>
+                    <div class="batch-queue" id="batchQueue">
+                        <!-- Queue items will be shown here -->
+                    </div>
+                    <div class="batch-actions">
+                        <button class="btn btn-primary" id="btnStartBatch">התחל עיבוד</button>
+                        <button class="btn btn-secondary" id="btnClearBatch">נקה רשימה</button>
+                        <button class="btn btn-success" id="btnDownloadAll" style="display: none;">הורד הכל</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cloud Storage Modal -->
+        <div class="modal" id="cloudModal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>אחסון ענן</h2>
+                    <button class="modal-close" id="btnCloseCloud">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="cloud-tabs">
+                        <button class="cloud-tab active" data-tab="projects">הפרויקטים שלי</button>
+                        <button class="cloud-tab" data-tab="shared">שותף איתי</button>
+                        <button class="cloud-tab" data-tab="settings">הגדרות</button>
+                    </div>
+                    <div class="cloud-content">
+                        <div class="projects-grid" id="projectsGrid">
+                            <!-- Projects will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Documentation Modal -->
+        <div class="modal" id="apiModal" style="display: none;">
+            <div class="modal-content modal-large">
+                <div class="modal-header">
+                    <h2>API Documentation</h2>
+                    <button class="modal-close" id="btnCloseAPI">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="api-content">
+                        <h3>שימוש ב-API</h3>
+                        <div class="api-endpoint">
+                            <h4>POST /api/process-document.php</h4>
+                            <pre><code>{
+  "document": {
+    "file": {
+      "base64": "...",
+      "path": "...",
+      "url": "..."
+    },
+    "size": {
+      "unit": "mm",
+      "width": 210,
+      "height": 297
+    }
+  },
+  "elements": [
+    {
+      "type": "text",
+      "value": "טקסט לדוגמה",
+      "position": {
+        "unit": "mm",
+        "from_top": 50,
+        "from_left": 30
+      },
+      "style": {
+        "font_size_pt": 14,
+        "font_family": "Rubik",
+        "color": "#000000"
+      }
+    }
+  ]
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Hidden CSRF Token -->
     <input type="hidden" id="csrfToken" value="<?php echo $csrfToken; ?>">
 
-    <!-- JavaScript Libraries from CDN -->
+    <!-- JavaScript Libraries -->
+    <!-- Fabric.js for Canvas -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
+    <script>
+        if (typeof fabric === 'undefined') {
+            document.write('<script src="assets/js/lib/fabric.min.js"><\/script>');
+        }
+    </script>
+    
+    <!-- PDF.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script>
-        // Configure PDF.js worker
+        if (typeof pdfjsLib === 'undefined') {
+            document.write('<script src="assets/js/lib/pdf.min.js"><\/script>');
+        }
+        // Set worker source for PDF.js
         if (typeof pdfjsLib !== 'undefined') {
             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         }
@@ -296,79 +433,52 @@ $csrfToken = generateCSRFToken();
     
     <!-- Application Scripts -->
     <script src="assets/js/config.js"></script>
+    <script src="assets/js/language-manager.js"></script>
+    <script src="assets/js/notification-manager.js"></script>
+    <script src="assets/js/loading-manager.js"></script>
     <script src="assets/js/canvas-manager.js"></script>
     <script src="assets/js/undo-redo-manager.js"></script>
     <script src="assets/js/layers-manager.js"></script>
+    <script src="assets/js/properties-manager.js"></script>
     <script src="assets/js/templates-manager.js"></script>
+    <script src="assets/js/cloud-save-manager.js"></script>
     <script src="assets/js/batch-processor.js"></script>
+    <script src="assets/js/api-connector.js"></script>
+    <!-- Replace the existing api-connector.js with the fixed version -->
     <script src="assets/js/api-connector-fixed.js"></script>
+    <!-- Replace the existing cloud-save-manager.js with the fixed version -->
     <script src="assets/js/cloud-save-manager-fixed.js"></script>
     <script src="assets/js/app.js"></script>
     
-    <!-- Initialize Application -->
     <script>
+        // Initialize application when DOM is ready
         document.addEventListener('DOMContentLoaded', function() {
-            // Hide loading screen and show app
+            // Hide loading screen
             setTimeout(() => {
-                const loadingScreen = document.getElementById('loadingScreen');
-                const appContainer = document.getElementById('appContainer');
-                
-                if (loadingScreen && appContainer) {
-                    loadingScreen.style.opacity = '0';
+                document.getElementById('loadingScreen').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('loadingScreen').style.display = 'none';
+                    document.getElementById('appContainer').style.display = 'flex';
                     
-                    setTimeout(() => {
-                        loadingScreen.style.display = 'none';
-                        appContainer.style.display = 'flex';
-                        
-                        // Initialize the application
-                        if (typeof PDFEditorApp !== 'undefined') {
-                            try {
-                                // Create main app instance
-                                window.app = new PDFEditorApp();
-                                
-                                // Initialize API connector
-                                if (typeof APIConnector !== 'undefined') {
-                                    window.apiConnector = new APIConnector();
-                                }
-                                
-                                // Initialize cloud save manager
-                                if (typeof CloudSaveManager !== 'undefined' && window.apiConnector) {
-                                    window.cloudSaveManager = new CloudSaveManager(window.apiConnector);
-                                }
-                                
-                                // Initialize the main app
-                                window.app.init();
-                                
-                                console.log('✅ PDF Editor initialized successfully');
-                                
-                                // Bind button events
-                                document.getElementById('btnBrowse')?.addEventListener('click', () => {
-                                    document.getElementById('fileInput')?.click();
-                                });
-                                
-                                document.getElementById('btnQuickCloud')?.addEventListener('click', () => {
-                                    if (window.cloudSaveManager) {
-                                        window.cloudSaveManager.showCloudDialog();
-                                    }
-                                });
-                                
-                            } catch (error) {
-                                console.error('❌ Failed to initialize:', error);
-                                alert('שגיאה באתחול המערכת. אנא רענן את הדף.');
-                            }
-                        } else {
-                            console.error('❌ PDFEditorApp not found');
-                            alert('קובץ האפליקציה לא נמצא. אנא בדוק את הקבצים.');
-                        }
-                    }, 500);
-                }
+                    // Initialize the application
+                    if (typeof PDFEditorApp !== 'undefined') {
+                        window.app = new PDFEditorApp();
+                        window.app.init();
+                    }
+                }, 500);
             }, 1000);
         });
-        
-        // Global error handler
-        window.addEventListener('error', function(event) {
-            console.error('Global error:', event.error);
-        });
+
+        // Initialize the application
+        if (typeof PDFEditorApp !== 'undefined') {
+            window.app = new PDFEditorApp();
+            // Initialize API connector
+            window.apiConnector = new APIConnector();
+            // Initialize cloud save manager
+            window.cloudSaveManager = new CloudSaveManager(window.apiConnector);
+            // Initialize app
+            window.app.init();
+        }
     </script>
 </body>
 </html>

@@ -433,9 +433,12 @@ $csrfToken = generateCSRFToken();
     <!-- Application Scripts -->
     <script src="assets/js/config.js"></script>
     <script src="assets/js/language-manager.js"></script>
+    <script src="assets/js/notification-manager.js"></script>
+    <script src="assets/js/loading-manager.js"></script>
     <script src="assets/js/canvas-manager.js"></script>
     <script src="assets/js/undo-redo-manager.js"></script>
     <script src="assets/js/layers-manager.js"></script>
+    <script src="assets/js/properties-manager.js"></script>
     <script src="assets/js/templates-manager.js"></script>
     <script src="assets/js/cloud-save-manager.js"></script>
     <script src="assets/js/batch-processor.js"></script>

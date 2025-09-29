@@ -291,6 +291,27 @@ class APIConnector {
     }
 
     /**
+     * Load template data
+     */
+    async loadTemplate(templateId) {
+        return this.request(this.endpoints.templates, {
+            body: {
+                action: 'load',
+                templateId: templateId
+            }
+        });
+    }
+
+    /**
+     * Load shared project
+     */
+    async loadSharedProject(shareToken) {
+        return this.cloudSave('loadShared', {
+            shareToken: shareToken
+        });
+    }
+
+    /**
      * Export document as PDF
      */
     async exportPDF(canvasData, documentInfo) {

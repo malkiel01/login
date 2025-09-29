@@ -1,58 +1,78 @@
 <?php
-// test-specific.php
+// test-index-steps.php
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 echo "<pre>";
-echo "1. Loading main config...\n";
-require_once $_SERVER['DOCUMENT_ROOT'] . '/config.php';
-echo "   OK\n\n";
+echo "=== Testing index.php loading sequence ===\n\n";
 
-echo "2. Checking functions before PDF config:\n";
-echo "   checkPermission exists: " . (function_exists('checkPermission') ? 'YES' : 'NO') . "\n";
-echo "   generateCSRFToken exists: " . (function_exists('generateCSRFToken') ? 'YES' : 'NO') . "\n\n";
+echo "1. Loading config.php...\n";
+require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/printPDF/config.php';
+echo "   ✓ Config loaded\n\n";
 
-echo "3. Reading PDF config.php line by line:\n";
-$config_file = __DIR__ . '/config.php';
-$lines = file($config_file);
-foreach ($lines as $num => $line) {
-    $line_num = $num + 1;
+echo "2. Checking what's defined after config:\n";
+echo "   DASHBOARD_NAME: " . (defined('DASHBOARD_NAME') ? DASHBOARD_NAME : 'NOT DEFINED') . "\n";
+echo "   checkPermission: " . (function_exists('checkPermission') ? 'EXISTS' : 'NOT EXISTS') . "\n";
+echo "   generateCSRFToken: " . (function_exists('generateCSRFToken') ? 'EXISTS' : 'NOT EXISTS') . "\n";
+echo "   getPDFEditorDB: " . (function_exists('getPDFEditorDB') ? 'EXISTS' : 'NOT EXISTS') . "\n\n";
+
+echo "3. Checking functions.php file...\n";
+$functions_file = $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/printPDF/includes/functions.php';
+if (file_exists($functions_file)) {
+    echo "   File exists\n";
     
-    // Check for function definitions
-    if (preg_match('/function\s+(\w+)\s*\(/', $line, $matches)) {
-        echo "   Line $line_num: Defines function " . $matches[1] . "\n";
-        if (function_exists($matches[1])) {
-            echo "   ⚠️ WARNING: Function " . $matches[1] . " already exists!\n";
+    // Check syntax
+    $output = shell_exec('php -l ' . escapeshellarg($functions_file) . ' 2>&1');
+    echo "   Syntax: " . trim($output) . "\n\n";
+    
+    echo "4. Loading functions.php...\n";
+    ob_start();
+    $error_handler = set_error_handler(function($severity, $message, $file, $line) {
+        echo "   ERROR: $message in $file on line $line\n";
+    });
+    
+    try {
+        require_once $functions_file;
+        echo "   ✓ Functions loaded\n";
+    } catch (Exception $e) {
+        echo "   ✗ Exception: " . $e->getMessage() . "\n";
+    } catch (ParseError $e) {
+        echo "   ✗ Parse Error: " . $e->getMessage() . "\n";
+    } catch (Error $e) {
+        echo "   ✗ Fatal Error: " . $e->getMessage() . "\n";
+    } finally {
+        restore_error_handler();
+        $output = ob_get_clean();
+        if ($output) {
+            echo "   Output: $output\n";
         }
     }
-    
-    // Check for require/include statements
-    if (preg_match('/(require|include)(_once)?\s*[^\s]*functions\.php/', $line)) {
-        echo "   Line $line_num: Tries to load functions.php\n";
+} else {
+    echo "   File NOT found\n";
+}
+
+echo "\n5. Testing permission check...\n";
+if (function_exists('checkPermission')) {
+    $result = checkPermission('view', 'pdf_editor');
+    echo "   checkPermission returned: " . ($result ? 'TRUE' : 'FALSE') . "\n";
+}
+
+echo "\n6. Testing CSRF token generation...\n";
+if (function_exists('generateCSRFToken')) {
+    $token = generateCSRFToken();
+    echo "   Token generated: " . substr($token, 0, 10) . "...\n";
+}
+
+echo "\n7. Testing database function...\n";
+if (function_exists('getPDFEditorDB')) {
+    try {
+        $db = getPDFEditorDB();
+        echo "   Database connection: " . ($db ? 'SUCCESS' : 'NULL') . "\n";
+    } catch (Exception $e) {
+        echo "   Database error: " . $e->getMessage() . "\n";
     }
 }
-echo "\n";
 
-echo "4. Now trying to load PDF config.php...\n";
-ob_start();
-$error = null;
-try {
-    require_once __DIR__ . '/config.php';
-    echo "   SUCCESS!\n";
-} catch (ParseError $e) {
-    $error = "Parse Error: " . $e->getMessage() . " on line " . $e->getLine();
-} catch (Error $e) {
-    $error = "Fatal Error: " . $e->getMessage() . " on line " . $e->getLine();
-} catch (Exception $e) {
-    $error = "Exception: " . $e->getMessage();
-}
-$output = ob_get_clean();
-
-if ($error) {
-    echo "   FAILED: $error\n";
-    echo "   Output before error:\n$output\n";
-} else {
-    echo "   Output:\n$output\n";
-}
-
+echo "\n=== All tests completed ===\n";
 echo "</pre>";
+?>

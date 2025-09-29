@@ -1,51 +1,48 @@
 <?php
-// check-tables.php
+// check-table-structure.php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/config.php';
 
 $db = getDBConnection();
 
 echo "<pre>";
-echo "בדיקת טבלאות PDF Editor:\n\n";
+echo "מבנה הטבלה pdf_editor_activity_log:\n\n";
 
-// בדוק אילו טבלאות קיימות
-$tables = $db->query("SHOW TABLES LIKE 'pdf_editor_%'")->fetchAll(PDO::FETCH_COLUMN);
+$columns = $db->query("SHOW COLUMNS FROM pdf_editor_activity_log")->fetchAll();
 
-echo "טבלאות קיימות:\n";
-if (empty($tables)) {
-    echo "  ❌ אין טבלאות של PDF Editor\n";
-} else {
-    foreach ($tables as $table) {
-        echo "  ✓ $table\n";
-    }
+foreach ($columns as $col) {
+    echo sprintf("%-15s %-20s %s\n", 
+        $col['Field'], 
+        $col['Type'],
+        $col['Null'] === 'YES' ? 'NULL' : 'NOT NULL'
+    );
 }
 
-echo "\nניסיון ליצור את הטבלאות החסרות:\n";
+echo "\nבעיה אפשרית: אם metadata מוגדר כ-JSON וה-MySQL לא תומך בזה.\n";
 
-// נסה ליצור רק את הטבלה הבסיסית
+// נסה להכניס רשומת בדיקה
+echo "\nניסיון להכניס רשומת בדיקה:\n";
 try {
-    $db->exec("
-        CREATE TABLE IF NOT EXISTS `pdf_editor_activity_log` (
-            `id` INT AUTO_INCREMENT PRIMARY KEY,
-            `user_id` INT NOT NULL,
-            `action` VARCHAR(100) NOT NULL,
-            `module` VARCHAR(50) NOT NULL,
-            `details` TEXT,
-            `metadata` TEXT,
-            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    $stmt = $db->prepare("
+        INSERT INTO pdf_editor_activity_log 
+        (user_id, action, module, details, metadata, created_at) 
+        VALUES (?, ?, ?, ?, ?, NOW())
     ");
-    echo "  ✓ טבלת activity_log נוצרה/קיימת\n";
+    
+    $stmt->execute([
+        0,
+        'test',
+        'pdf_editor',
+        'test details',
+        '{"test": "data"}'  // JSON as string
+    ]);
+    
+    echo "✓ ההכנסה הצליחה!\n";
+    
 } catch (PDOException $e) {
-    echo "  ❌ שגיאה: " . $e->getMessage() . "\n";
+    echo "✗ שגיאה: " . $e->getMessage() . "\n";
 }
 
-// בדוק שוב
-$tables = $db->query("SHOW TABLES LIKE 'pdf_editor_%'")->fetchAll(PDO::FETCH_COLUMN);
-echo "\nטבלאות אחרי היצירה:\n";
-foreach ($tables as $table) {
-    echo "  ✓ $table\n";
-}
-
-echo "\nעכשיו אפשר להפעיל את הפונקציה logActivity בלי בעיה.\n";
+echo "\nהמסקנה: ";
+echo "אם ההכנסה הצליחה, אפשר להפעיל את כל הפונקציות ב-functions.php\n";
 echo "</pre>";
 ?>

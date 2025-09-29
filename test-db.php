@@ -1,4 +1,3 @@
-// צור קובץ test-db.php ושים אותו בשרת
 <?php
 // בדיקה 1: האם MySQL זמין
 if (function_exists('mysqli_connect')) {

@@ -718,6 +718,79 @@ class PDFEditorApp {
         // Adjust canvas size if needed
     }
 
+    async exportPDF() {
+        try {
+            if (window.loadingManager) {
+                window.loadingManager.show('מייצא PDF...');
+            }
+            
+            // Get canvas data
+            const canvasData = this.canvasManager.getCanvasJSON();
+            
+            // Get document info
+            const documentInfo = {
+                width: this.canvasManager.canvas.width,
+                height: this.canvasManager.canvas.height,
+                background: this.canvasManager.currentDocument
+            };
+            
+            // Export via API
+            const response = await this.apiConnector.exportPDF(canvasData, documentInfo);
+            
+            if (response.success) {
+                // Download the file
+                this.apiConnector.downloadFile(response.data.downloadUrl, 'exported.pdf');
+                
+                if (window.notificationManager) {
+                    window.notificationManager.success('PDF יוצא בהצלחה');
+                }
+            }
+            
+        } catch (error) {
+            console.error('Failed to export PDF:', error);
+            if (window.notificationManager) {
+                window.notificationManager.error('שגיאה בייצוא PDF');
+            }
+        } finally {
+            if (window.loadingManager) {
+                window.loadingManager.hide();
+            }
+        }
+    }
+    
+    async exportImage(format = 'png') {
+        try {
+            if (window.loadingManager) {
+                window.loadingManager.show('מייצא תמונה...');
+            }
+            
+            // Get canvas as image
+            const canvasData = this.canvasManager.exportAsPNG();
+            
+            // Export via API
+            const response = await this.apiConnector.exportImage(canvasData, format);
+            
+            if (response.success) {
+                // Download the file
+                this.apiConnector.downloadFile(response.data.downloadUrl, `exported.${format}`);
+                
+                if (window.notificationManager) {
+                    window.notificationManager.success('התמונה יוצאה בהצלחה');
+                }
+            }
+            
+        } catch (error) {
+            console.error('Failed to export image:', error);
+            if (window.notificationManager) {
+                window.notificationManager.error('שגיאה בייצוא תמונה');
+            }
+        } finally {
+            if (window.loadingManager) {
+                window.loadingManager.hide();
+            }
+        }
+    }
+    
     initTooltips() {
         // Initialize any tooltip library if used
     }

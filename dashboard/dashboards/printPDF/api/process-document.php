@@ -149,27 +149,75 @@ class PDFProcessor {
         // Initialize TCPDF
         $this->initializePDF();
         
-        // Import existing PDF
-        require_once TCPDF_PATH . 'tcpdi.php';
-        $this->pdf = new TCPDI();
-        
-        // Get page count
-        $pageCount = $this->pdf->setSourceFile($inputFile);
-        
-        // Process each page
-        for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
-            // Import page
-            $templateId = $this->pdf->importPage($pageNo);
-            $size = $this->pdf->getTemplateSize($templateId);
+        // Check if we have FPDI for PDF import
+        $fpdiPath = TCPDF_PATH . '../fpdi/src/autoload.php';
+        if (file_exists($fpdiPath)) {
+            require_once $fpdiPath;
+            $this->pdf = new \setasign\Fpdi\Tcpdf\Fpdi();
+        } else {
+            // Fallback - create new PDF and add as image
+            $this->pdf = new TCPDF();
             
-            // Add page
-            $this->pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
-            
-            // Use template
-            $this->pdf->useTemplate($templateId);
+            // Try to convert PDF to image (if Imagick is available)
+            if (extension_loaded('imagick')) {
+                $imagick = new \Imagick();
+                $imagick->readImage($inputFile . '[0]'); // First page
+                $imagick->setImageFormat('png');
+                $tempImage = TEMP_PATH . 'pdf_page_' . uniqid() . '.png';
+                $imagick->writeImage($tempImage);
+                
+                // Get dimensions
+                $width = $imagick->getImageWidth();
+                $height = $imagick->getImageHeight();
+                
+                // Convert pixels to mm
+                $widthMM = $width * 25.4 / 72;
+                $heightMM = $height * 25.4 / 72;
+                
+                // Add page with custom size
+                $this->pdf->AddPage('P', array($widthMM, $heightMM));
+                
+                // Add image
+                $this->pdf->Image($tempImage, 0, 0, $widthMM, $heightMM);
+                
+                // Clean up
+                @unlink($tempImage);
+            } else {
+                // If no Imagick, just create blank page
+                $this->pdf->AddPage();
+                
+                // Add note
+                $this->pdf->SetFont('helvetica', '', 12);
+                $this->pdf->Cell(0, 10, 'PDF import requires FPDI or ImageMagick', 0, 1, 'C');
+            }
             
             // Add elements to this page
-            $this->addElementsToPDF($pageNo);
+            $this->addElementsToPDF(1);
+            
+            // Output PDF
+            return $this->outputPDF();
+        }
+        
+        // If FPDI is available, use it
+        if ($this->pdf instanceof \setasign\Fpdi\Tcpdf\Fpdi) {
+            // Get page count
+            $pageCount = $this->pdf->setSourceFile($inputFile);
+            
+            // Process each page
+            for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+                // Import page
+                $templateId = $this->pdf->importPage($pageNo);
+                $size = $this->pdf->getTemplateSize($templateId);
+                
+                // Add page
+                $this->pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                
+                // Use template
+                $this->pdf->useTemplate($templateId);
+                
+                // Add elements to this page
+                $this->addElementsToPDF($pageNo);
+            }
         }
         
         // Output PDF

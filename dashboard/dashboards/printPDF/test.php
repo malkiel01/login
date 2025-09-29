@@ -1,81 +1,75 @@
 <?php
-// test-final-check.php
+// test-json-support.php
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
-set_time_limit(3); // הגבל ל-3 שניות
 
 echo "<pre>";
 
-// Load config
-require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/printPDF/config.php';
-echo "1. Config loaded\n";
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config.php';
 
-// Create a simplified version of getPDFEditorDB to test
-echo "2. Testing simplified getPDFEditorDB:\n";
+$db = getDBConnection();
 
-function getPDFEditorDB_test() {
-    echo "   - Entering getPDFEditorDB_test\n";
-    static $initialized = false;
-    
-    echo "   - Getting DB connection...\n";
-    $db = getDBConnection();
-    echo "   - Got DB connection\n";
-    
-    if (!$initialized && $db) {
-        echo "   - First run, would create tables here\n";
-        $initialized = true;
-    }
-    
-    echo "   - Returning DB\n";
-    return $db;
+echo "1. Testing MySQL version and JSON support:\n";
+$result = $db->query("SELECT VERSION() as version");
+$row = $result->fetch();
+echo "   MySQL Version: " . $row['version'] . "\n";
+
+// Check if JSON type is supported
+$version = floatval($row['version']);
+if ($version < 5.7) {
+    echo "   ⚠️ JSON column type requires MySQL 5.7+\n";
 }
 
-// Test it
+echo "\n2. Testing table creation with JSON column:\n";
 try {
-    $db = getPDFEditorDB_test();
-    echo "   ✓ Function completed successfully\n";
-} catch (Exception $e) {
-    echo "   ✗ Error: " . $e->getMessage() . "\n";
+    $db->exec("
+        CREATE TABLE IF NOT EXISTS `test_json_support` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `metadata` JSON
+        )
+    ");
+    echo "   ✓ JSON column works\n";
+    $db->exec("DROP TABLE IF EXISTS `test_json_support`");
+} catch (PDOException $e) {
+    echo "   ✗ JSON column failed: " . $e->getMessage() . "\n";
 }
 
-echo "\n3. Now checking the actual functions.php file:\n";
-
-// Let's check if there's an issue with the static variable
-$content = file_get_contents($_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/printPDF/includes/functions.php');
-
-// Look for the exact getPDFEditorDB function
-if (preg_match('/function getPDFEditorDB\(\)\s*\{(.*?)\n\}/s', $content, $matches)) {
-    echo "   Found getPDFEditorDB function\n";
-    $function_body = $matches[1];
-    
-    // Check what it does
-    if (strpos($function_body, 'static $initialized') !== false) {
-        echo "   - Uses static \$initialized\n";
-    }
-    if (strpos($function_body, 'getDBConnection()') !== false) {
-        echo "   - Calls getDBConnection()\n";
-    }
-    if (strpos($function_body, 'createPDFEditorTables') !== false) {
-        echo "   - Calls createPDFEditorTables\n";
-    }
+echo "\n3. Testing without JSON column:\n";
+try {
+    $db->exec("
+        CREATE TABLE IF NOT EXISTS `test_no_json` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `metadata` TEXT
+        )
+    ");
+    echo "   ✓ TEXT column works\n";
+    $db->exec("DROP TABLE IF EXISTS `test_no_json`");
+} catch (PDOException $e) {
+    echo "   ✗ TEXT column failed: " . $e->getMessage() . "\n";
 }
 
-echo "\n4. Final test - load functions.php with error handler:\n";
-set_error_handler(function($errno, $errstr, $errfile, $errline) {
-    echo "   ERROR: $errstr in " . basename($errfile) . " on line $errline\n";
-    return true;
-});
+echo "\n4. Creating a minimal functions.php to test:\n";
 
-register_shutdown_function(function() {
-    $error = error_get_last();
-    if ($error && $error['type'] === E_ERROR) {
-        echo "   FATAL: " . $error['message'] . " in " . basename($error['file']) . " on line " . $error['line'] . "\n";
-    }
-});
+$minimal_functions = '<?php
+function getPDFEditorDB() {
+    return getDBConnection();
+}
 
-echo "   Attempting to load...\n";
-require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/printPDF/includes/functions.php';
-echo "   ✓ Loaded!\n";
+function logActivity($action, $module = "pdf_editor", $details = "", $metadata = []) {
+    error_log("Activity: $action");
+}
+?>';
+
+file_put_contents(__DIR__ . '/test-functions.php', $minimal_functions);
+
+echo "   Created test-functions.php\n";
+
+echo "\n5. Loading the minimal version:\n";
+require_once __DIR__ . '/test-functions.php';
+echo "   ✓ Loaded successfully!\n";
+
+$db_test = getPDFEditorDB();
+echo "   ✓ getPDFEditorDB() works\n";
 
 echo "</pre>";
 ?>

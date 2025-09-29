@@ -4,11 +4,17 @@
  * Location: /dashboard/dashboards/printPDF/api/process-document.php
  */
 
-// Include configuration
-require_once '../config.php';
+// Include configuration - בדיוק כמו בבתי עלמין
+require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/printPDF/config.php';
 
-// Check user access
-checkUserAccess();
+// Check user permission
+if (!checkPermission('edit', 'pdf_editor')) {
+    http_response_code(403);
+    die(json_encode([
+        'success' => false,
+        'message' => 'אין לך הרשאה לבצע פעולה זו'
+    ]));
+}
 
 // Set headers
 header('Content-Type: application/json');

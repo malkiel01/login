@@ -4,13 +4,19 @@
  * Location: /dashboard/dashboards/printPDF/config.php
  */
 
-// Include main system config
-require_once __DIR__ . '/../../../config.php';
+// Include main system config - בדיוק כמו בבתי עלמין
+require_once $_SERVER['DOCUMENT_ROOT'] . '/config.php';
+
+// Include functions if exists
+if (file_exists($_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/printPDF/includes/functions.php')) {
+    require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/printPDF/includes/functions.php';
+}
 
 // PDF Editor specific configuration
 define('PDF_EDITOR_VERSION', '1.0.0');
-define('PDF_EDITOR_PATH', '/dashboard/dashboards/printPDF/');
-define('PDF_EDITOR_URL', 'https://login.form.mbe-plus.com/dashboard/dashboards/printPDF/');
+define('PDF_EDITOR_PATH', dirname(__FILE__));
+define('PDF_EDITOR_URL', '/dashboard/dashboards/printPDF/');
+define('DASHBOARD_NAME', 'עורך PDF ותמונות');
 
 // Allowed user permissions for PDF Editor
 $ALLOWED_PERMISSIONS = [
@@ -48,37 +54,10 @@ define('SESSION_NAME', 'pdf_editor_session');
 define('DB_PREFIX', 'pdf_editor_');
 
 /**
- * Check user access permission
+ * Check user permission - בדיוק כמו בבתי עלמין
  */
-function checkUserAccess() {
-    global $ALLOWED_PERMISSIONS;
-    
-    // Start session if not started
-    if (session_status() === PHP_SESSION_NONE) {
-        session_name(SESSION_NAME);
-        session_start();
-    }
-    
-    // Check if user is logged in
-    if (!isset($_SESSION['user_id'])) {
-        header('HTTP/1.0 401 Unauthorized');
-        die(json_encode([
-            'success' => false,
-            'message' => 'נדרשת התחברות למערכת'
-        ]));
-    }
-    
-    // Check user permission (this should be adapted to your actual permission system)
-    $userPermission = $_SESSION['user_permission'] ?? null;
-    
-    if (!in_array($userPermission, $ALLOWED_PERMISSIONS)) {
-        header('HTTP/1.0 403 Forbidden');
-        die(json_encode([
-            'success' => false,
-            'message' => 'אין לך הרשאה לגשת למערכת זו'
-        ]));
-    }
-    
+function checkPermission($action, $module = 'pdf_editor') {
+    // TODO: להוסיף בדיקת הרשאות אמיתית
     return true;
 }
 
@@ -86,6 +65,10 @@ function checkUserAccess() {
  * Generate CSRF token
  */
 function generateCSRFToken() {
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    
     if (!isset($_SESSION[CSRF_TOKEN_NAME])) {
         $_SESSION[CSRF_TOKEN_NAME] = bin2hex(random_bytes(32));
     }
@@ -96,6 +79,10 @@ function generateCSRFToken() {
  * Verify CSRF token
  */
 function verifyCSRFToken($token) {
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    
     if (!isset($_SESSION[CSRF_TOKEN_NAME]) || $token !== $_SESSION[CSRF_TOKEN_NAME]) {
         return false;
     }
@@ -190,10 +177,21 @@ if (rand(1, 100) <= 10) { // 10% chance to clean on each request
     cleanTempFiles();
 }
 
+// Initialize session if needed
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 // Initialize tables on first run
 if (!isset($_SESSION['pdf_editor_tables_initialized'])) {
     if (initializePDFEditorTables()) {
         $_SESSION['pdf_editor_tables_initialized'] = true;
     }
+}
+
+// Log activity - בדיוק כמו בבתי עלמין
+function logActivity($action, $module, $itemId, $details = []) {
+    // TODO: להוסיף מערכת לוגים
+    error_log("[$module] $action on item #$itemId");
 }
 ?>

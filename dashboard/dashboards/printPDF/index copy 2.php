@@ -1,16 +1,12 @@
 <?php
 // Location: /dashboard/dashboards/printPDF/index.php
-
-// טען את הקבצים בסדר הנכון - בדיוק כמו בבתי עלמין
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/printPDF/config.php';
-require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/printPDF/includes/functions.php';
 
 // בדיקת הרשאות
 if (!checkPermission('view', 'pdf_editor')) {
     die('אין לך הרשאה לצפות בעמוד זה');
 }
 
-// יצירת CSRF Token
 $csrfToken = generateCSRFToken();
 ?>
 <!DOCTYPE html>
@@ -18,7 +14,7 @@ $csrfToken = generateCSRFToken();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo DASHBOARD_NAME; ?></title>
+    <title>עורך PDF ותמונות - מערכת מתקדמת</title>
     
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700&family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -71,49 +67,6 @@ $csrfToken = generateCSRFToken();
             font-size: 20px;
             font-family: 'Rubik', sans-serif;
         }
-        
-        /* Welcome icon style */
-        .welcome-icon {
-            font-size: 80px;
-            color: #667eea;
-            margin-bottom: 20px;
-        }
-        
-        /* Quick actions grid */
-        .quick-actions {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-top: 30px;
-        }
-        
-        .quick-action-btn {
-            padding: 20px;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            background: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
-        }
-        
-        .quick-action-btn:hover {
-            border-color: #667eea;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
-        }
-        
-        .quick-action-btn i {
-            font-size: 30px;
-            color: #667eea;
-            display: block;
-            margin-bottom: 10px;
-        }
-        
-        .quick-action-btn span {
-            font-size: 14px;
-            color: #4a5568;
-        }
     </style>
 </head>
 <body>
@@ -132,7 +85,7 @@ $csrfToken = generateCSRFToken();
         <header class="top-bar">
             <div class="top-bar-section logo-section">
                 <i class="fas fa-file-pdf"></i>
-                <h1><?php echo DASHBOARD_NAME; ?></h1>
+                <h1>עורך PDF ותמונות</h1>
             </div>
             
             <div class="top-bar-section toolbar-section">
@@ -174,9 +127,21 @@ $csrfToken = generateCSRFToken();
                     <button class="toolbar-btn" id="btnTemplates" title="תבניות">
                         <i class="fas fa-object-group"></i>
                     </button>
+                    <button class="toolbar-btn" id="btnBatch" title="עיבוד קבוצתי">
+                        <i class="fas fa-clone"></i>
+                    </button>
                     <button class="toolbar-btn cloud-btn" id="btnCloudStorage" title="אחסון ענן">
                         <i class="fas fa-cloud"></i>
+                        <span class="save-indicator" id="saveIndicator"></span>
                     </button>
+                </div>
+            </div>
+            
+            <div class="top-bar-section actions-section">
+                <div class="language-switcher">
+                    <button class="lang-btn active" data-lang="he">עברית</button>
+                    <button class="lang-btn" data-lang="en">English</button>
+                    <button class="lang-btn" data-lang="ar">العربية</button>
                 </div>
             </div>
         </header>
@@ -210,6 +175,15 @@ $csrfToken = generateCSRFToken();
                         <i class="fas fa-pencil-alt"></i>
                         <span>ציור</span>
                     </button>
+                </div>
+                
+                <div class="properties-panel" id="propertiesPanel">
+                    <div class="sidebar-header">
+                        <h3>מאפיינים</h3>
+                    </div>
+                    <div class="properties-content" id="propertiesContent">
+                        <!-- Dynamic properties will be loaded here -->
+                    </div>
                 </div>
             </aside>
 
@@ -255,12 +229,15 @@ $csrfToken = generateCSRFToken();
                 
                 <!-- Main Canvas -->
                 <div class="canvas-wrapper" id="canvasWrapper" style="display: none;">
-                    <canvas id="mainCanvas"></canvas>
+                    <div class="canvas-scroll">
+                        <canvas id="mainCanvas"></canvas>
+                    </div>
                 </div>
             </div>
 
-            <!-- Right Sidebar - Layers (Hidden by default) -->
+            <!-- Right Sidebar - Layers & History -->
             <aside class="sidebar sidebar-right" id="rightSidebar" style="display: none;">
+                <!-- Layers Panel -->
                 <div class="panel-section layers-panel" id="layersPanel">
                     <div class="panel-header">
                         <h3>שכבות</h3>
@@ -277,6 +254,19 @@ $csrfToken = generateCSRFToken();
                         <!-- Layers will be added here dynamically -->
                     </div>
                 </div>
+                
+                <!-- History Panel -->
+                <div class="panel-section history-panel" id="historyPanel">
+                    <div class="panel-header">
+                        <h3>היסטוריה</h3>
+                        <button class="panel-action-btn" id="btnClearHistory" title="נקה היסטוריה">
+                            <i class="fas fa-eraser"></i>
+                        </button>
+                    </div>
+                    <div class="history-list" id="historyList">
+                        <!-- History items will be added here -->
+                    </div>
+                </div>
             </aside>
         </div>
     </div>
@@ -284,31 +274,76 @@ $csrfToken = generateCSRFToken();
     <!-- Hidden CSRF Token -->
     <input type="hidden" id="csrfToken" value="<?php echo $csrfToken; ?>">
 
-    <!-- JavaScript Libraries from CDN -->
+    <!-- JavaScript Libraries -->
+    <!-- Fabric.js for Canvas (from CDN only) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
+    
+    <!-- PDF.js (from CDN only) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script>
-        // Configure PDF.js worker
+        // Set worker source for PDF.js
         if (typeof pdfjsLib !== 'undefined') {
             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         }
     </script>
     
-    <!-- Application Scripts -->
+    <!-- Application Core Scripts -->
     <script src="assets/js/config.js"></script>
     <script src="assets/js/canvas-manager.js"></script>
     <script src="assets/js/undo-redo-manager.js"></script>
     <script src="assets/js/layers-manager.js"></script>
     <script src="assets/js/templates-manager.js"></script>
     <script src="assets/js/batch-processor.js"></script>
+    
+    <!-- Fixed API and Cloud Storage -->
     <script src="assets/js/api-connector-fixed.js"></script>
     <script src="assets/js/cloud-save-manager-fixed.js"></script>
+    
+    <!-- Optional Scripts (create empty files if they don't exist) -->
+    <script>
+        // Create empty placeholders for missing modules
+        if (typeof LanguageManager === 'undefined') {
+            window.LanguageManager = class {
+                constructor() {}
+                init() {}
+                t(key) { return key; }
+            };
+        }
+        
+        // Simple notification system if not exists
+        if (typeof NotificationManager === 'undefined') {
+            window.showNotification = function(message, type = 'info') {
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    bottom: 20px;
+                    right: 20px;
+                    padding: 15px 20px;
+                    background: ${type === 'success' ? '#48bb78' : type === 'error' ? '#f56565' : '#4299e1'};
+                    color: white;
+                    border-radius: 8px;
+                    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+                    z-index: 3000;
+                    animation: slideIn 0.3s ease;
+                `;
+                notification.textContent = message;
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.style.opacity = '0';
+                    setTimeout(() => notification.remove(), 300);
+                }, 3000);
+            };
+        }
+    </script>
+    
+    <!-- Main Application -->
     <script src="assets/js/app.js"></script>
     
     <!-- Initialize Application -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Hide loading screen and show app
+            // Hide loading screen
             setTimeout(() => {
                 const loadingScreen = document.getElementById('loadingScreen');
                 const appContainer = document.getElementById('appContainer');
@@ -323,7 +358,7 @@ $csrfToken = generateCSRFToken();
                         // Initialize the application
                         if (typeof PDFEditorApp !== 'undefined') {
                             try {
-                                // Create main app instance
+                                // Create instances
                                 window.app = new PDFEditorApp();
                                 
                                 // Initialize API connector
@@ -336,38 +371,32 @@ $csrfToken = generateCSRFToken();
                                     window.cloudSaveManager = new CloudSaveManager(window.apiConnector);
                                 }
                                 
-                                // Initialize the main app
+                                // Initialize main app
                                 window.app.init();
                                 
                                 console.log('✅ PDF Editor initialized successfully');
                                 
-                                // Bind button events
-                                document.getElementById('btnBrowse')?.addEventListener('click', () => {
-                                    document.getElementById('fileInput')?.click();
-                                });
-                                
-                                document.getElementById('btnQuickCloud')?.addEventListener('click', () => {
-                                    if (window.cloudSaveManager) {
-                                        window.cloudSaveManager.showCloudDialog();
-                                    }
-                                });
-                                
                             } catch (error) {
                                 console.error('❌ Failed to initialize:', error);
-                                alert('שגיאה באתחול המערכת. אנא רענן את הדף.');
+                                if (typeof showNotification !== 'undefined') {
+                                    showNotification('שגיאה באתחול המערכת', 'error');
+                                }
                             }
                         } else {
                             console.error('❌ PDFEditorApp not found');
-                            alert('קובץ האפליקציה לא נמצא. אנא בדוק את הקבצים.');
                         }
                     }, 500);
                 }
             }, 1000);
         });
         
-        // Global error handler
+        // Global error handlers
         window.addEventListener('error', function(event) {
             console.error('Global error:', event.error);
+        });
+        
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('Unhandled promise rejection:', event.reason);
         });
     </script>
 </body>

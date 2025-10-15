@@ -2217,7 +2217,7 @@ const FormHandler = {
             
             const data = {};
             for (let [key, value] of formData.entries()) {
-                if (key === 'type' || key === 'id') {
+                if (key === 'type' || key === 'itemId' || key === 'parentId') {
                     continue;
                 }
                 
@@ -2773,32 +2773,6 @@ const GraveHierarchyManager = {
         };
 
         // ========== מילוי אחוזות קבר ==========
-        window.populateAreaGraves2 = function(rowId) {
-            const areaGraveSelect = document.getElementById('areaGraveSelect');
-            if (!areaGraveSelect) return;
-            
-            areaGraveSelect.innerHTML = '<option value="">-- בחר אחוזת קבר --</option>';
-            
-            const areaGraves = window.hierarchyData.areaGraves.filter(ag => ag.row_id == rowId);
-            
-            areaGraves.forEach(areaGrave => {
-                const availableGraves = window.hierarchyData.graves.filter(g => 
-                    g.area_grave_id == areaGrave.unicId && 
-                    self.isGraveAvailable(g)  // תיקון - משתמש ב-isGraveAvailable
-                );
-                
-                if (availableGraves.length > 0) {
-                    const option = document.createElement('option');
-                    option.value = areaGrave.unicId;
-                    option.textContent = areaGrave.name + ` (${availableGraves.length} קברים זמינים)`;
-                    areaGraveSelect.appendChild(option);
-                }
-            });
-            
-            if (areaGraveSelect.options.length === 1) {
-                areaGraveSelect.innerHTML = '<option value="">-- אין אחוזות קבר פנויות --</option>';
-            }
-        };
         window.populateAreaGraves = function(rowId) {
             const areaGraveSelect = document.getElementById('areaGraveSelect');
             if (!areaGraveSelect) return;

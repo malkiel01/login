@@ -440,10 +440,10 @@ class FormBuilder {
         // Hidden fields
         $html .= '<input type="hidden" name="type" value="' . $this->type . '">';
         if ($this->itemId) {
-            $html .= '<input type="hidden" name="id" value="' . $this->itemId . '">';
+            $html .= '<input type="hidden" name="itemId" value="' . $this->itemId . '">';
         }
         if ($this->parentId) {
-            $html .= '<input type="hidden" name="parent_id" value="' . $this->parentId . '">';
+            $html .= '<input type="hidden" name="parentId" value="' . $this->parentId . '">';
         }
         
         // Render fields

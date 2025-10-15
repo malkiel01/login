@@ -1,6 +1,10 @@
 # הפעלת mod_rewrite
 RewriteEngine On
 
+# ========== QA System & Debug Files ==========
+# אפשר גישה ל-QA system
+RewriteRule ^dashboard/dashboards/cemeteries/qa-system\.html$ - [L]
+
 # === אפשר גישה לקבצי PWA וAPI חשובים - תמיד קודם! ===
 # אפשר גישה לכל ה-API
 RewriteRule ^api/.*\.php$ - [L]

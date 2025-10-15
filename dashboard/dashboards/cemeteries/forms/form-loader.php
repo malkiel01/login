@@ -14,7 +14,7 @@ try {
     $type = $_GET['type'] ?? '';
     $id = $_GET['id'] ?? null;
     $parent_id = $_GET['parent_id'] ?? null;
-    $item_id = $_GET['item_id'] ?? null;
+    $itemId = $_GET['itemId'] ?? null;
 
 
     

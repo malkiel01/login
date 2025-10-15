@@ -9,7 +9,7 @@ header('Content-Type: text/html; charset=utf-8');
 require_once __DIR__ . '/FormBuilder.php';
 require_once dirname(__DIR__) . '/config.php';
 
-$itemId = $_GET['item_id'] ?? $_GET['id'] ?? null;
+$itemId = $_GET['itemId'] ?? $_GET['id'] ?? null;
 $parentId = $_GET['parent_id'] ?? null;
 
 try {

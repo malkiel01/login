@@ -8,7 +8,7 @@
     require_once __DIR__ . '/FormBuilder.php';
     require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
 
-    $itemId = $_GET['item_id'] ?? null;
+    $itemId = $_GET['itemId'] ?? null;
     $parentId = $_GET['parent_id'] ?? null;
 
     try {

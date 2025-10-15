@@ -441,7 +441,7 @@ try {
             
         case 'item_stats':
             $itemType = $_GET['item_type'] ?? '';
-            $itemId = $_GET['item_id'] ?? '';
+            $itemId = $_GET['itemId'] ?? '';
             
             if (!$itemType || !$itemId) {
                 throw new Exception('פרמטרים חסרים');

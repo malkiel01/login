@@ -10,16 +10,15 @@ ini_set('display_errors', 1);
 header('Content-Type: text/html; charset=utf-8');
 
 try {
-    // קבלת פרמטרים
-    $type = $_GET['type'] ?? '';
-    $id = $_GET['id'] ?? null;
-    $parent_id = $_GET['parent_id'] ?? null;
-    $itemId = $_GET['itemId'] ?? null;
-
-
+    // ✅ קבלת פרמטרים - שמות אחידים בלבד (לא משתנים מקומיים!)
+    $formType = $_GET['formType'] ?? $_GET['type'] ?? '';
+    $itemId = $_GET['itemId'] ?? $_GET['id'] ?? null;
+    $parentId = $_GET['parentId'] ?? $_GET['parent_id'] ?? null;
+    
+    error_log("Form Loader - Type: $formType, ItemID: $itemId, ParentID: $parentId");
     
     // בדוק אם יש טופס מותאם אישית
-    $customFormFile = __DIR__ . "/{$type}-form.php";
+    $customFormFile = __DIR__ . "/{$formType}-form.php";
     if (file_exists($customFormFile)) {
         error_log("Custom form found: $customFormFile");
         require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
@@ -39,15 +38,15 @@ try {
         $config = require $configPath;
         
         // בדוק אם יש הגדרות לסוג המבוקש
-        if (isset($config[$type])) {
-            error_log("Config found for type: $type");
-            if (isset($config[$type]['form_fields'])) {
-                error_log("Form fields found: " . count($config[$type]['form_fields']) . " fields");
+        if (isset($config[$formType])) {
+            error_log("Config found for type: $formType");
+            if (isset($config[$formType]['form_fields'])) {
+                error_log("Form fields found: " . count($config[$formType]['form_fields']) . " fields");
             } else {
-                error_log("No form_fields in config for type: $type");
+                error_log("No form_fields in config for type: $formType");
             }
         } else {
-            error_log("No config for type: $type");
+            error_log("No config for type: $formType");
             error_log("Available types: " . implode(', ', array_keys($config)));
         }
     }
@@ -66,25 +65,25 @@ try {
     
     // טעינת נתונים אם מדובר בעריכה
     $data = null;
-    if ($id) {
-        error_log("Loading data for ID: $id");
-        $data = getFormData($type, $id);
+    if ($itemId) {
+        error_log("Loading data for ItemID: $itemId");
+        $data = getFormData($formType, $itemId);
         if ($data) {
             error_log("Data loaded successfully");
         } else {
-            error_log("No data found for ID: $id");
+            error_log("No data found for ItemID: $itemId");
         }
     }
     
     // בניית הטופס
-    $formBuilder = new FormBuilder($type, $id, $parent_id);
+    $formBuilder = new FormBuilder($formType, $itemId, $parentId);
     
     // הוספת השדות לפי הסוג
-    error_log("Getting form fields for type: $type");
+    error_log("Getting form fields for type: $formType");
 
-    if ($type === 'parent_selector') {
-        // כאן parent_id מכיל את סוג ההורה (למשל 'cemetery')
-        $parentType = $parent_id;
+    if ($formType === 'parent_selector') {
+        // כאן parentId מכיל את סוג ההורה (למשל 'cemetery')
+        $parentType = $parentId;
         
         error_log("Parent selector - loading items for type: $parentType");
         
@@ -131,7 +130,7 @@ try {
         }
     } else {
         // הקוד הקיים - טעינת שדות רגילים
-        $fields = getFormFields($type, $data);
+        $fields = getFormFields($formType, $data);
     }
     
     if (empty($fields)) {
@@ -140,10 +139,10 @@ try {
         // נסה לטעון ישירות מהקונפיג כפתרון זמני
         if (file_exists($configPath)) {
             $config = require $configPath;
-            if (isset($config[$type]) && isset($config[$type]['form_fields'])) {
+            if (isset($config[$formType]) && isset($config[$formType]['form_fields'])) {
                 error_log("Loading fields directly from config");
                 $fields = [];
-                foreach ($config[$type]['form_fields'] as $field) {
+                foreach ($config[$formType]['form_fields'] as $field) {
                     $fields[] = [
                         'name' => $field['name'],
                         'label' => $field['label'],
@@ -164,7 +163,7 @@ try {
         }
         
         if (empty($fields)) {
-            throw new Exception("No fields defined for type: " . $type);
+            throw new Exception("No fields defined for type: " . $formType);
         }
     }
     

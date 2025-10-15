@@ -8,21 +8,13 @@ require_once dirname(__DIR__) . '/classes/HierarchyManager.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
-//  // לוג מפורט של כל מה שמתקבל
-// error_log("=== SAVE HANDLER DEBUG ===");
-// error_log("POST data: " . print_r($_POST, true));
-// error_log("Type: " . ($_POST['type'] ?? 'not set'));
-// error_log("Parent ID: " . ($_POST['parent_id'] ?? 'not set'));
-// error_log("ID: " . ($_POST['id'] ?? 'not set'));
-
-
 try {
-    // קבל נתונים
-    $type = $_POST['type'] ?? '';
-    $id = $_POST['id'] ?? null;
-    $parentId = $_POST['parent_id'] ?? null;
+    // ✅ קבלת פרמטרים - שמות אחידים בלבד
+    $formType = $_POST['formType'] ?? $_POST['type'] ?? '';
+    $itemId = $_POST['itemId'] ?? $_POST['id'] ?? null;
+    $parentId = $_POST['parentId'] ?? $_POST['parent_id'] ?? null;
     
-    if (!$type) {
+    if (!$formType) {
         throw new Exception('סוג לא תקין');
     }
     
@@ -34,17 +26,16 @@ try {
     
     $config = require $configPath;
     
-    if (!isset($config[$type])) {
-        throw new Exception('סוג לא מוכר: ' . $type);
+    if (!isset($config[$formType])) {
+        throw new Exception('סוג לא מוכר: ' . $formType);
     }
     
     // קבל את הגדרות הסוג מהקונפיג
-    $typeConfig = $config[$type];
+    $typeConfig = $config[$formType];
     $table = $typeConfig['table'];
     $primaryKey = $typeConfig['primaryKey'];
-    // $parentKey = $typeConfig['parentKey']; // השתמש בשדה מהקונפיג!
 
-    // צריך להיות:
+    // מיפוי שדות ההורה לפי סוג
     $parentKeyMapping = [
         'block' => 'cemeteryId',
         'plot' => 'blockId', 
@@ -53,10 +44,9 @@ try {
         'grave' => 'areaGraveId'
     ];
 
-    $parentKey = $parentKeyMapping[$type] ?? $typeConfig['parentKey'];
+    $parentKey = $parentKeyMapping[$formType] ?? $typeConfig['parentKey'] ?? null;
     
-    
-    error_log("Save handler - Type: $type, Table: $table, PrimaryKey: $primaryKey, ParentKey: $parentKey");
+    error_log("Save handler - FormType: $formType, Table: $table, PrimaryKey: $primaryKey, ParentKey: $parentKey, ItemID: $itemId");
     
     // קבל חיבור למסד נתונים
     $pdo = getDBConnection();
@@ -66,7 +56,7 @@ try {
     $manager = new HierarchyManager($pdo, $userRole);
     
     // קבל את השדות המותרים מהקונפיג
-    $formFields = $manager->getFormFields($type, $id ? 'edit' : 'create');
+    $formFields = $manager->getFormFields($formType, $itemId ? 'edit' : 'create');
     
     // אסוף רק את השדות המותרים
     $data = [];
@@ -92,9 +82,9 @@ try {
     }
     
     // בדוק אם זו עריכה או הוספה
-    if ($id) {
-        // עריכה
-        error_log("Updating record: $id");
+    if ($itemId) {
+        // ✅ עריכה
+        error_log("Updating record: ItemID=$itemId, FormType=$formType");
         
         // בדוק הרשאות עריכה
         if (!$manager->canEdit()) {
@@ -110,13 +100,13 @@ try {
             $setClause[] = "$field = :$field";
         }
         
-        $sql = "UPDATE $table SET " . implode(', ', $setClause) . " WHERE $primaryKey = :primaryKey";
+        $sql = "UPDATE $table SET " . implode(', ', $setClause) . " WHERE $primaryKey = :itemId";
         
         $stmt = $pdo->prepare($sql);
-        $data['primaryKey'] = $id;
+        $data['itemId'] = $itemId;
         
         error_log("Update SQL: $sql");
-        error_log("Update data: " . print_r($data, true));
+        error_log("Update data: " . json_encode($data));
         
         if (!$stmt->execute($data)) {
             $errorInfo = $stmt->errorInfo();
@@ -124,11 +114,11 @@ try {
         }
         
         $message = 'הנתונים עודכנו בהצלחה';
-        $newId = $id;
+        $newId = $itemId;
         
     } else {
-        // הוספה חדשה
-        error_log("Creating new record");
+        // ✅ הוספה חדשה
+        error_log("Creating new record for FormType: $formType");
         
         // בדוק הרשאות יצירה
         if (!$manager->canCreate()) {
@@ -137,7 +127,7 @@ try {
         
         // צור מזהה ייחודי אם צריך
         if ($primaryKey === 'unicId' && !isset($data['unicId'])) {
-            $data['unicId'] = generateUnicId($type);
+            $data['unicId'] = generateUnicId($formType);
         }
         
         // הוסף תאריכים
@@ -164,7 +154,7 @@ try {
                 VALUES (" . implode(', ', $placeholders) . ")";
         
         error_log("Insert SQL: $sql");
-        error_log("Insert data: " . print_r($data, true));
+        error_log("Insert data: " . json_encode($data));
         
         $stmt = $pdo->prepare($sql);
         if (!$stmt->execute($data)) {
@@ -176,12 +166,12 @@ try {
         $newId = $data['unicId'] ?? $pdo->lastInsertId();
     }
     
-    // החזר תשובה
+    // ✅ החזר תשובה
     echo json_encode([
         'success' => true,
         'message' => $message,
         'id' => $newId,
-        'type' => $type,
+        'type' => $formType,
         'parentId' => $parentId
     ]);
     
@@ -194,9 +184,9 @@ try {
 }
 
 /**
- * יצירת unicId ייחודי לפי סוג
+ * ✅ יצירת unicId ייחודי לפי סוג
  */
-function generateUnicId($type) {
+function generateUnicId($formType) {
     // קידומת לפי סוג
     $prefixes = [
         'cemetery' => 'CEM',
@@ -207,7 +197,7 @@ function generateUnicId($type) {
         'grave' => 'GRV'
     ];
     
-    $prefix = $prefixes[$type] ?? 'UNI';
+    $prefix = $prefixes[$formType] ?? 'UNI';
     return $prefix . '_' . date('YmdHis') . '_' . rand(1000, 9999);
 }
 ?>

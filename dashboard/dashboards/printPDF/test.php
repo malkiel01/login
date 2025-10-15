@@ -13,7 +13,7 @@ echo "<!DOCTYPE html>
 <html dir='rtl' lang='he'>
 <head>
     <meta charset='UTF-8'>
-    <title>נתוני טסט למפת בית עלמין</title>
+    <title>נתוני טסט2 למפת בית עלמין</title>
     <style>
         body { font-family: Arial; padding: 20px; background: #f5f5f5; }
         .section { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }

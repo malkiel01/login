@@ -15,7 +15,7 @@
         <form id="itemForm" onsubmit="saveItem(event)">
             <div class="modal-body">
                 <input type="hidden" id="itemId" name="id">
-                <input type="hidden" id="itemType" name="type">
+                <input type="hidden" id="itemType" name="formType">
                 <input type="hidden" id="parentId" name="parent_id">
                 
                 <!-- שדות דינמיים לפי סוג -->

@@ -2217,7 +2217,7 @@ const FormHandler = {
             
             const data = {};
             for (let [key, value] of formData.entries()) {
-                if (key === 'type' || key === 'itemId' || key === 'parentId') {
+                if (key === 'formType' || key === 'itemId' || key === 'parentId') {
                     continue;
                 }
                 

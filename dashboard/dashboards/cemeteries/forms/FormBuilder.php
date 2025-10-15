@@ -438,7 +438,7 @@ class FormBuilder {
         }
         
         // Hidden fields
-        $html .= '<input type="hidden" name="type" value="' . $this->type . '">';
+        $html .= '<input type="hidden" name="formType" value="' . $this->type . '">';
         if ($this->itemId) {
             $html .= '<input type="hidden" name="itemId" value="' . $this->itemId . '">';
         }

@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QA & Debug System - בדיקות מלאות</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+        }
+        .sidebar {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+        .main {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+        h1 { font-size: 26px; margin-bottom: 20px; color: #333; }
+        h2 { font-size: 18px; margin: 20px 0 15px 0; color: #555; border-bottom: 3px solid #667eea; padding-bottom: 10px; }
+        h3 { font-size: 14px; margin: 15px 0 10px 0; color: #666; font-weight: 600; }
+        
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-primary:hover { background: #5568d3; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover { background: #218838; }
+        .btn-warning { background: #ffc107; color: black; }
+        .btn-warning:hover { background: #e0a800; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-info { background: #17a2b8; color: white; }
+        .btn-info:hover { background: #138496; }
+        
+        .section {
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 15px;
+        }
+        .section:last-child { border-bottom: none; }
+        
+        .status {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-weight: 600;
+            text-align: center;
+        }
+        .status-active { background: #d4edda; color: #155724; }
+        .status-idle { background: #e2e3e5; color: #383d41; }
+        .status-error { background: #f8d7da; color: #721c24; }
+        
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        .log-entry {
+            margin-bottom: 6px;
+            padding: 6px 10px;
+            border-radius: 3px;
+            border-right: 3px solid;
+        }
+        .log-success { background: #d4edda; border-color: #28a745; color: #155724; }
+        .log-error { background: #f8d7da; border-color: #dc3545; color: #721c24; }
+        .log-info { background: #d1ecf1; border-color: #17a2b8; color: #0c5460; }
+        .log-warning { background: #fff3cd; border-color: #ffc107; color: #856404; }
+        
+        .test-result {
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 6px;
+            border-right: 4px solid;
+        }
+        .test-pass { background: #d4edda; border-color: #28a745; }
+        .test-fail { background: #f8d7da; border-color: #dc3545; }
+        .test-running { background: #d1ecf1; border-color: #17a2b8; }
+        
+        .progress-bar {
+            width: 100%;
+            height: 25px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .stat-box {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 12px;
+            margin: 10px 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .stat {
+            text-align: center;
+        }
+        .stat-label { font-size: 12px; color: #666; }
+        .stat-value { font-size: 20px; font-weight: bold; color: #333; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <h1>QA System</h1>
+            <div class="status status-idle" id="status">מוכן</div>
+            
+            <div class="section">
+                <h3>בדיקות אוטומטיות</h3>
+                <div class="button-group">
+                    <button class="btn-success" onclick="runFullTest()">הרץ בדיקה מלאה</button>
+                    <button class="btn-info" onclick="runBasicTest()">בדיקה בסיסית</button>
+                    <button class="btn-warning" onclick="runErrorTest()">בדיקת שגיאות</button>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h3>בדיקות ביצועים</h3>
+                <div class="button-group">
+                    <button class="btn-primary" onclick="runPerformanceTest()">בדיקת ביצועים</button>
+                    <button class="btn-info" onclick="runStressTest()">בדיקת עומס</button>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h3>יצירה ידנית</h3>
+                <div class="button-group">
+                    <button class="btn-success" onclick="goToSection('manual')">יצור/עדכן ידני</button>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h3>ניהול</h3>
+                <div class="button-group">
+                    <button class="btn-info" onclick="clearLog()">נקה לוגים</button>
+                    <button class="btn-warning" onclick="exportLog()">ייצא לוגים</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main">
+            <h2>בדיקות QA מלאות</h2>
+            
+            <div id="manual" style="display:none;">
+                <h3>פעולה ידנית</h3>
+                <div style="margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 6px;">
+                    <input type="text" id="apiUrl" placeholder="https://..." value="http://localhost/dashboard/dashboards/cemeteries/api/">
+                    <textarea id="jsonData" placeholder='{"type": "country", "name": "..."}' style="margin-top: 10px; height: 150px;"></textarea>
+                    <select id="method" style="margin-top: 10px;">
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                        <option value="PUT">PUT</option>
+                        <option value="DELETE">DELETE</option>
+                    </select>
+                    <button class="btn-primary" onclick="runManualTest()" style="margin-top: 10px; width: 100%;">שלח בקשה</button>
+                </div>
+            </div>
+            
+            <!-- Results -->
+            <div id="results" style="margin-top: 30px;"></div>
+            
+            <!-- Statistics -->
+            <div id="statistics" style="margin-top: 30px; display: none;">
+                <h2>סטטיסטיקות</h2>
+                <div class="stat-box">
+                    <div class="stat">
+                        <div class="stat-label">בדיקות עברו</div>
+                        <div class="stat-value" id="passCount">0</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">בדיקות נכשלו</div>
+                        <div class="stat-value" id="failCount">0</div>
+                    </div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%">0%</div>
+                </div>
+            </div>
+            
+            <!-- Logs -->
+            <h2 style="margin-top: 40px;">לוגים</h2>
+            <div class="log" id="log"></div>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = '/dashboard/dashboards/cemeteries/api/';
+        let testStats = { pass: 0, fail: 0, total: 0 };
+        const log = [];
+        
+        function goToSection(section) {
+            document.querySelectorAll('[id$="manual"]').forEach(el => {
+                el.style.display = el.id === section ? 'block' : 'none';
+            });
+        }
+        
+        function addLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString('he-IL');
+            const entry = { message, type, timestamp };
+            log.push(entry);
+            
+            const logEl = document.getElementById('log');
+            const div = document.createElement('div');
+            div.className = `log-entry log-${type}`;
+            div.textContent = `[${timestamp}] ${message}`;
+            logEl.appendChild(div);
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+        
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+            log.length = 0;
+        }
+        
+        function setStatus(message, status = 'active') {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = `status status-${status}`;
+        }
+        
+        function updateStats() {
+            document.getElementById('passCount').textContent = testStats.pass;
+            document.getElementById('failCount').textContent = testStats.fail;
+            const percent = testStats.total > 0 ? Math.round((testStats.pass / testStats.total) * 100) : 0;
+            document.getElementById('progressFill').style.width = percent + '%';
+            document.getElementById('progressFill').textContent = percent + '%';
+            document.getElementById('statistics').style.display = 'block';
+        }
+        
+        function addTestResult(testName, passed, details = '') {
+            testStats.total++;
+            if (passed) {
+                testStats.pass++;
+                addLog(`✓ ${testName}: הצליח`, 'success');
+            } else {
+                testStats.fail++;
+                addLog(`✗ ${testName}: נכשל - ${details}`, 'error');
+            }
+            updateStats();
+        }
+        
+        async function runBasicTest() {
+            setStatus('מריץ בדיקה בסיסית...', 'active');
+            testStats = { pass: 0, fail: 0, total: 0 };
+            addLog('========== בדיקה בסיסית ==========', 'info');
+            
+            try {
+                // Test 1: יצור מדינה
+                addLog('בדיקה 1: יצור מדינה', 'info');
+                const createRes = await fetch(`${API_BASE}cemetery-hierarchy.php?action=create&type=country`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        countryNameHe: `בדיקה_${Date.now()}`,
+                        countryNameEn: `TEST_${Date.now()}`
+                    })
+                });
+                const createData = await createRes.json();
+                addTestResult('יצור מדינה', createData.success, createData.error);
+                
+                if (createData.success) {
+                    const countryId = createData.id;
+                    
+                    // Test 2: טעינת מדינה
+                    addLog('בדיקה 2: טעינת מדינה', 'info');
+                    const getRes = await fetch(`${API_BASE}cemetery-hierarchy.php?action=get&type=country&id=${countryId}`);
+                    const getData = await getRes.json();
+                    addTestResult('טעינת מדינה', getData.success, getData.error);
+                    
+                    // Test 3: עדכון מדינה
+                    addLog('בדיקה 3: עדכון מדינה', 'info');
+                    const updateRes = await fetch(`${API_BASE}cemetery-hierarchy.php?action=update&type=country&id=${countryId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ countryNameHe: `עודכן_${Date.now()}` })
+                    });
+                    const updateData = await updateRes.json();
+                    addTestResult('עדכון מדינה', updateData.success, updateData.error);
+                    
+                    // Test 4: מחיקת מדינה
+                    addLog('בדיקה 4: מחיקת מדינה', 'info');
+                    const deleteRes = await fetch(`${API_BASE}cemetery-hierarchy.php?action=delete&type=country&id=${countryId}`, {
+                        method: 'DELETE'
+                    });
+                    const deleteData = await deleteRes.json();
+                    addTestResult('מחיקת מדינה', deleteData.success, deleteData.error);
+                }
+            } catch (error) {
+                addTestResult('בדיקה בסיסית', false, error.message);
+            }
+            
+            setStatus('בדיקה בסיסית הסתיימה', 'idle');
+        }
+        
+        async function runErrorTest() {
+            setStatus('בדיקות שגיאות...', 'active');
+            testStats = { pass: 0, fail: 0, total: 0 };
+            addLog('========== בדיקות שגיאות ==========', 'info');
+            
+            try {
+                // Test 1: סוג לא תקין
+                addLog('בדיקה 1: סוג לא תקין', 'info');
+                const invalidType = await fetch(`${API_BASE}cemetery-hierarchy.php?action=create&type=invalid_type`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: 'test' })
+                });
+                const invalidData = await invalidType.json();
+                addTestResult('סוג לא תקין (צפוי להיכשל)', !invalidData.success);
+                
+                // Test 2: ID לא קיים
+                addLog('בדיקה 2: ID לא קיים', 'info');
+                const notFound = await fetch(`${API_BASE}cemetery-hierarchy.php?action=get&type=country&id=NONEXISTENT_ID`);
+                const notFoundData = await notFound.json();
+                addTestResult('ID לא קיים (צפוי להיכשל)', !notFoundData.success);
+                
+                // Test 3: שדות חסרים
+                addLog('בדיקה 3: שדות חסרים', 'info');
+                const missingFields = await fetch(`${API_BASE}cemetery-hierarchy.php?action=create&type=country`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                });
+                const missingData = await missingFields.json();
+                addTestResult('שדות חסרים', !missingData.success);
+            } catch (error) {
+                addTestResult('בדיקות שגיאות', false, error.message);
+            }
+            
+            setStatus('בדיקות שגיאות הסתיימו', 'idle');
+        }
+        
+        async function runPerformanceTest() {
+            setStatus('בדיקת ביצועים...', 'active');
+            testStats = { pass: 0, fail: 0, total: 0 };
+            addLog('========== בדיקת ביצועים ==========', 'info');
+            
+            try {
+                // בדיקת זמן תגובה
+                const iterations = 10;
+                const times = [];
+                
+                for (let i = 0; i < iterations; i++) {
+                    const start = performance.now();
+                    const res = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=country&limit=1`);
+                    const end = performance.now();
+                    times.push(end - start);
+                }
+                
+                const avgTime = times.reduce((a, b) => a + b) / times.length;
+                const maxTime = Math.max(...times);
+                const minTime = Math.min(...times);
+                
+                addLog(`זמן ממוצע: ${avgTime.toFixed(2)}ms`, 'info');
+                addLog(`זמן מינימום: ${minTime.toFixed(2)}ms`, 'info');
+                addLog(`זמן מקסימום: ${maxTime.toFixed(2)}ms`, 'info');
+                
+                addTestResult('ביצועים סביב', avgTime < 500);
+            } catch (error) {
+                addTestResult('בדיקת ביצועים', false, error.message);
+            }
+            
+            setStatus('בדיקת ביצועים הסתיימה', 'idle');
+        }
+        
+        async function runStressTest() {
+            setStatus('בדיקת עומס...', 'active');
+            testStats = { pass: 0, fail: 0, total: 0 };
+            addLog('========== בדיקת עומס ==========', 'info');
+            
+            try {
+                const requests = 20;
+                const promises = [];
+                
+                for (let i = 0; i < requests; i++) {
+                    promises.push(
+                        fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=country&limit=1`)
+                            .then(r => r.json())
+                    );
+                }
+                
+                const results = await Promise.all(promises);
+                const successCount = results.filter(r => r.success).length;
+                
+                addLog(`בקשות שהצליחו: ${successCount}/${requests}`, 'info');
+                addTestResult('בדיקת עומס', successCount === requests);
+            } catch (error) {
+                addTestResult('בדיקת עומס', false, error.message);
+            }
+            
+            setStatus('בדיקת עומס הסתיימה', 'idle');
+        }
+        
+        async function runFullTest() {
+            setStatus('מריץ בדיקה מלאה...', 'active');
+            testStats = { pass: 0, fail: 0, total: 0 };
+            addLog('========== בדיקה מלאה ==========', 'info');
+            
+            await runBasicTest();
+            await runErrorTest();
+            await runPerformanceTest();
+            await runStressTest();
+            
+            setStatus('בדיקה מלאה הסתיימה', 'idle');
+            addLog('========== סיום בדיקות ==========', 'success');
+        }
+        
+        async function runManualTest() {
+            const url = document.getElementById('apiUrl').value;
+            const method = document.getElementById('method').value;
+            const jsonData = document.getElementById('jsonData').value;
+            
+            setStatus('משדלח בקשה ידנית...', 'active');
+            addLog(`${method} ${url}`, 'info');
+            
+            try {
+                const options = { method };
+                if (method !== 'GET') {
+                    options.headers = { 'Content-Type': 'application/json' };
+                    options.body = jsonData || '{}';
+                }
+                
+                const response = await fetch(url, options);
+                const data = await response.json();
+                
+                addLog(JSON.stringify(data, null, 2), 'success');
+            } catch (error) {
+                addLog(`שגיאה: ${error.message}`, 'error');
+            }
+            
+            setStatus('מוכן', 'idle');
+        }
+        
+        function exportLog() {
+            const logText = log.map(e => `[${e.timestamp}] ${e.type.toUpperCase()}: ${e.message}`).join('\n');
+            const blob = new Blob([logText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `qa-log-${Date.now()}.txt`;
+            a.click();
+        }
+        
+        // Initialize
+        addLog('QA System מוכן', 'success');
+    </script>
+</body>
+</html>

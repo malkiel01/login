@@ -56,7 +56,7 @@ const FormHandler = {
 
         try {
             const params = new URLSearchParams({
-                type: type,
+                formType: type,
                 ...(itemId && { itemId: itemId }),
                 ...(parentId && { parent_id: parentId })
             });
@@ -2159,7 +2159,7 @@ const FormHandler = {
     
     loadFormData: function(type, itemId) {
         this.waitForElement(`#${type}FormModal form`, (form) => {
-            fetch(`${API_BASE}cemetery-hierarchy.php?action=get&type=${type}&id=${itemId}`)
+            fetch(`${API_BASE}cemetery-hierarchy.php?action=get&type=${type}&itemId=${itemId}`)
                 .then(response => response.json())
                 .then(result => {
                     if (result.success && result.data) {

@@ -1,490 +1,253 @@
 <?php
-// dashboard/dashboards/cemeteries/qa-system-direct.php
-// גישה ישירה למערכת הבדיקות - ללא בדיקת הרשאות
+// dashboard/dashboards/cemeteries/qa-test-fixed.php
+// מערכת בדיקה תקינה - PHP בלבד
 
-// הגדר הרשאה לבדיקה (שנה את זה לבדיקות שונות)
-$testRole = $_GET['role'] ?? 'cemetery_manager';
-$_SESSION['dashboard_type'] = $testRole;
+// הפעל דיווח שגיאות
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
-// עקיפת בדיקת הרשאות לצורך בדיקה בלבד
-$_SESSION['user_id'] = 999999; // משתמש פיקטיבי
-$_SESSION['dashboard_type'] = 'cemetery_manager'; // הרשאת מנהל
+// התחל session
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// הגדר משתני session לבדיקה
+$_SESSION['user_id'] = 999999;
+$_SESSION['dashboard_type'] = 'cemetery_manager';
 $_SESSION['username'] = 'QA_TESTER';
-$_SESSION['bypass_auth'] = true; // דגל מיוחד לבדיקות
 
-// הגדרות בסיסיות
-define('DASHBOARD_NAME', 'מערכת ניהול בתי עלמין - מצב בדיקה');
-define('CEMETERY_ID', 1); // בית עלמין לבדיקה
+// משתנים בסיסיים
+$php_version = phpversion();
+$session_active = (session_status() === PHP_SESSION_ACTIVE);
+$db_connected = false;
+$db_error = '';
+$tables_data = array();
 
-session_start();
+// נסה לקרוא קובץ ENV
+$env_path = $_SERVER['DOCUMENT_ROOT'] . '/.env';
+$env_exists = file_exists($env_path);
+$db_config = array();
 
+if ($env_exists) {
+    $lines = file($env_path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        if (strpos(trim($line), '#') === 0) continue;
+        $parts = explode('=', $line, 2);
+        if (count($parts) == 2) {
+            $key = trim($parts[0]);
+            $value = trim($parts[1], '"\'');
+            if (in_array($key, array('DB_HOST', 'DB_NAME', 'DB_USER', 'DB_PASSWORD'))) {
+                $db_config[$key] = $value;
+            }
+        }
+    }
+}
 
-require_once __DIR__ . '/forms/forms-config.php';
+// נסה להתחבר למסד נתונים
+if (!empty($db_config['DB_HOST']) && !empty($db_config['DB_NAME'])) {
+    try {
+        $dsn = "mysql:host=" . $db_config['DB_HOST'] . ";dbname=" . $db_config['DB_NAME'] . ";charset=utf8mb4";
+        $user = isset($db_config['DB_USER']) ? $db_config['DB_USER'] : 'root';
+        $pass = isset($db_config['DB_PASSWORD']) ? $db_config['DB_PASSWORD'] : '';
+        
+        $pdo = new PDO($dsn, $user, $pass);
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $db_connected = true;
+        
+        // קבל רשימת טבלאות
+        $stmt = $pdo->query("SHOW TABLES");
+        $all_tables = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        
+        // בדוק טבלאות חשובות
+        $important_tables = array('users', 'cemeteries', 'blocks', 'plots', 'graves', 'customers');
+        foreach ($important_tables as $table) {
+            if (in_array($table, $all_tables)) {
+                $count_stmt = $pdo->query("SELECT COUNT(*) FROM `$table`");
+                $count = $count_stmt->fetchColumn();
+                $tables_data[$table] = $count;
+            } else {
+                $tables_data[$table] = -1;
+            }
+        }
+        
+    } catch (Exception $e) {
+        $db_connected = false;
+        $db_error = $e->getMessage();
+    }
+} else {
+    $db_error = 'חסרים פרטי חיבור למסד נתונים';
+}
 
-// קרא לפונקציות הדיבאג
-debugPermissions();
+// בדיקת קבצים
+$files_to_check = array(
+    'config.php' => $_SERVER['DOCUMENT_ROOT'] . '/config.php',
+    '.env' => $env_path,
+    'index.php' => __DIR__ . '/index.php',
+    'forms/forms-config.php' => __DIR__ . '/forms/forms-config.php'
+);
 
-// טען את השדות לכל תפקיד
-$fields = getFormFields('cemetery');
-
+$files_status = array();
+foreach ($files_to_check as $name => $path) {
+    $files_status[$name] = file_exists($path);
+}
 
 ?>
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>🧪 מערכת בדיקות - בתי עלמין</title>
-        <style>
-            * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-            }
-            
-            body {
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                min-height: 100vh;
-                padding: 20px;
-                direction: rtl;
-            }
-            
-            .qa-container {
-                max-width: 1400px;
-                margin: 0 auto;
-                background: white;
-                border-radius: 20px;
-                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-                overflow: hidden;
-            }
-            
-            .qa-header {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                padding: 30px;
-                text-align: center;
-            }
-            
-            .qa-header h1 {
-                font-size: 2.5em;
-                margin-bottom: 10px;
-            }
-            
-            .qa-warning {
-                background: #ffc107;
-                color: #000;
-                padding: 15px;
-                text-align: center;
-                font-weight: bold;
-            }
-            
-            .qa-content {
-                padding: 30px;
-            }
-            
-            .test-section {
-                margin-bottom: 30px;
-                padding: 20px;
-                background: #f8f9fa;
-                border-radius: 10px;
-                border-left: 4px solid #667eea;
-            }
-            
-            .test-section h2 {
-                color: #333;
-                margin-bottom: 15px;
-                display: flex;
-                align-items: center;
-                gap: 10px;
-            }
-            
-            .test-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-                gap: 15px;
-                margin-top: 20px;
-            }
-            
-            .test-card {
-                background: white;
-                padding: 20px;
-                border-radius: 10px;
-                border: 1px solid #e0e0e0;
-                cursor: pointer;
-                transition: all 0.3s;
-                text-decoration: none;
-                color: inherit;
-            }
-            
-            .test-card:hover {
-                transform: translateY(-5px);
-                box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-                border-color: #667eea;
-            }
-            
-            .test-card h3 {
-                color: #667eea;
-                margin-bottom: 10px;
-            }
-            
-            .test-card p {
-                color: #666;
-                font-size: 14px;
-            }
-            
-            .status-badge {
-                display: inline-block;
-                padding: 5px 10px;
-                border-radius: 20px;
-                font-size: 12px;
-                font-weight: bold;
-                margin-top: 10px;
-            }
-            
-            .status-ready { background: #d4edda; color: #155724; }
-            .status-testing { background: #fff3cd; color: #856404; }
-            .status-error { background: #f8d7da; color: #721c24; }
-            
-            .action-buttons {
-                display: flex;
-                gap: 10px;
-                margin-top: 20px;
-            }
-            
-            .btn {
-                padding: 12px 24px;
-                border: none;
-                border-radius: 8px;
-                cursor: pointer;
-                font-size: 16px;
-                font-weight: bold;
-                transition: all 0.3s;
-                text-decoration: none;
-                display: inline-block;
-            }
-            
-            .btn-primary {
-                background: #667eea;
-                color: white;
-            }
-            
-            .btn-primary:hover {
-                background: #5a67d8;
-            }
-            
-            .btn-success {
-                background: #48bb78;
-                color: white;
-            }
-            
-            .btn-danger {
-                background: #f56565;
-                color: white;
-            }
-            
-            .btn-warning {
-                background: #ed8936;
-                color: white;
-            }
-            
-            .info-box {
-                background: #e6f7ff;
-                border: 1px solid #91d5ff;
-                border-radius: 8px;
-                padding: 15px;
-                margin: 20px 0;
-            }
-            
-            .info-box h4 {
-                color: #0050b3;
-                margin-bottom: 10px;
-            }
-            
-            iframe {
-                width: 100%;
-                height: 600px;
-                border: 2px solid #667eea;
-                border-radius: 10px;
-                margin-top: 20px;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="qa-container">
-            <div class="qa-header">
-                <h1>🧪 מערכת בדיקות - בתי עלמין</h1>
-                <p>גישה ישירה למערכת הבדיקות ללא צורך בהתחברות</p>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת מערכת בתי עלמין</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: Arial, sans-serif; 
+            background: #f5f5f5; 
+            padding: 20px;
+            direction: rtl;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .status-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .status-row:last-child { border-bottom: none; }
+        .ok { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        .warning { color: orange; font-weight: bold; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: right;
+        }
+        th { background: #f2f2f2; }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 5px;
+        }
+        .btn:hover { background: #5a67d8; }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>בדיקת מערכת בתי עלמין</h1>
+        
+        <!-- סטטוס כללי -->
+        <div class="status-box">
+            <h2>סטטוס כללי</h2>
+            <div class="status-row">
+                <span>גרסת PHP</span>
+                <span class="ok"><?php echo $php_version; ?></span>
             </div>
-            
-            <div class="qa-warning">
-                ⚠️ זהירות: מצב בדיקה בלבד - נתונים עלולים להיות פיקטיביים
+            <div class="status-row">
+                <span>Session</span>
+                <span class="<?php echo $session_active ? 'ok' : 'error'; ?>">
+                    <?php echo $session_active ? 'פעיל' : 'לא פעיל'; ?>
+                </span>
             </div>
-            
-            <div class="qa-content">
-                <!-- מידע על המערכת -->
-                <div class="test-section">
-                    <h2>📊 סטטוס מערכת</h2>
-                    <div class="info-box">
-                        <h4>מידע על הסביבה:</h4>
-                        <ul>
-                            <li><strong>משתמש בדיקה:</strong> QA_TESTER (ID: 999999)</li>
-                            <li><strong>הרשאות:</strong> cemetery_manager (הרשאות מלאות)</li>
-                            <li><strong>מצב:</strong> Bypass Authentication Active</li>
-                            <li><strong>PHP Version:</strong> <?php echo phpversion(); ?></li>
-                            <li><strong>זמן שרת:</strong> <?php echo date('Y-m-d H:i:s'); ?></li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <!-- בדיקות מהירות -->
-                <div class="test-section">
-                    <h2>⚡ בדיקות מהירות</h2>
-                    <div class="test-grid">
-                        <a href="test-permissions.php" class="test-card">
-                            <h3>🔐 בדיקת הרשאות</h3>
-                            <p>בדוק את כל ההרשאות והתפקידים במערכת</p>
-                            <span class="status-badge status-ready">מוכן</span>
-                        </a>
-                        
-                        <a href="forms/test-form.php" class="test-card">
-                            <h3>📝 בדיקת טפסים</h3>
-                            <p>בדוק רינדור וולידציה של טפסים</p>
-                            <span class="status-badge status-ready">מוכן</span>
-                        </a>
-                        
-                        <a href="api/test-api.php" class="test-card">
-                            <h3>🌐 בדיקת API</h3>
-                            <p>בדוק את כל נקודות הקצה של ה-API</p>
-                            <span class="status-badge status-testing">בבדיקה</span>
-                        </a>
-                        
-                        <div class="test-card" onclick="testDatabase()">
-                            <h3>🗄️ בדיקת מסד נתונים</h3>
-                            <p>בדוק חיבור וטבלאות</p>
-                            <span class="status-badge status-ready">מוכן</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- טעינת הדשבורד -->
-                <div class="test-section">
-                    <h2>🏛️ דשבורד בתי עלמין</h2>
-                    <p>טעינת הדשבורד המלא במצב בדיקה:</p>
-                    <div class="action-buttons">
-                        <button class="btn btn-primary" onclick="loadDashboard()">
-                            טען דשבורד מלא
-                        </button>
-                        <button class="btn btn-success" onclick="loadWithData()">
-                            טען עם נתוני בדיקה
-                        </button>
-                        <button class="btn btn-warning" onclick="resetData()">
-                            איפוס נתונים
-                        </button>
-                    </div>
-                    <div id="dashboard-frame"></div>
-                </div>
-                
-                <!-- בדיקות מתקדמות -->
-                <div class="test-section">
-                    <h2>🔬 בדיקות מתקדמות</h2>
-                    <div class="test-grid">
-                        <div class="test-card" onclick="runStressTest()">
-                            <h3>💪 Stress Test</h3>
-                            <p>בדיקת עומסים - 1000 רשומות</p>
-                            <span class="status-badge status-testing">ממתין</span>
-                        </div>
-                        
-                        <div class="test-card" onclick="runSecurityTest()">
-                            <h3>🛡️ Security Test</h3>
-                            <p>בדיקת אבטחה ו-SQL Injection</p>
-                            <span class="status-badge status-testing">ממתין</span>
-                        </div>
-                        
-                        <div class="test-card" onclick="runPerformanceTest()">
-                            <h3>⚡ Performance Test</h3>
-                            <p>בדיקת ביצועים וזמני תגובה</p>
-                            <span class="status-badge status-testing">ממתין</span>
-                        </div>
-                        
-                        <div class="test-card" onclick="runValidationTest()">
-                            <h3>✅ Validation Test</h3>
-                            <p>בדיקת ולידציות ושדות חובה</p>
-                            <span class="status-badge status-testing">ממתין</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- קונסול לוגים -->
-                <div class="test-section">
-                    <h2>📋 קונסול לוגים</h2>
-                    <div style="background: #1e1e1e; color: #0f0; padding: 15px; border-radius: 8px; font-family: 'Courier New', monospace; height: 300px; overflow-y: auto;" id="console-log">
-                        <div>[<?php echo date('H:i:s'); ?>] מערכת הבדיקות מוכנה</div>
-                        <div>[<?php echo date('H:i:s'); ?>] משתמש בדיקה: QA_TESTER</div>
-                        <div>[<?php echo date('H:i:s'); ?>] מצב: Bypass Authentication Active</div>
-                    </div>
-                </div>
+            <div class="status-row">
+                <span>מסד נתונים</span>
+                <span class="<?php echo $db_connected ? 'ok' : 'error'; ?>">
+                    <?php echo $db_connected ? 'מחובר' : 'לא מחובר - ' . htmlspecialchars($db_error); ?>
+                </span>
             </div>
         </div>
         
-        <script>
-            // פונקציות בדיקה
-            function log(message, type = 'info') {
-                const console = document.getElementById('console-log');
-                const time = new Date().toLocaleTimeString('he-IL');
-                const color = type === 'error' ? '#f00' : type === 'success' ? '#0f0' : '#0ff';
-                console.innerHTML += `<div style="color: ${color}">[${time}] ${message}</div>`;
-                console.scrollTop = console.scrollHeight;
-            }
-            
-            function loadDashboard() {
-                log('טוען דשבורד מלא...', 'info');
-                const frame = document.getElementById('dashboard-frame');
-                frame.innerHTML = '<iframe src="index.php?bypass=true"></iframe>';
-                log('דשבורד נטען בהצלחה', 'success');
-            }
-            
-            function loadWithData() {
-                log('טוען נתוני בדיקה...', 'info');
-                // כאן תוכל להוסיף לוגיקה לטעינת נתוני בדיקה
-                setTimeout(() => {
-                    log('נטענו 500 רשומות בדיקה', 'success');
-                    loadDashboard();
-                }, 1000);
-            }
-            
-            function resetData() {
-                if (confirm('האם אתה בטוח שברצונך לאפס את כל נתוני הבדיקה?')) {
-                    log('מאפס נתונים...', 'info');
-                    setTimeout(() => {
-                        log('הנתונים אופסו בהצלחה', 'success');
-                    }, 1500);
-                }
-            }
-            
-            function testDatabase() {
-                log('בודק חיבור למסד נתונים...', 'info');
-                fetch('api/test-connection.php')
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            log('חיבור למסד נתונים תקין', 'success');
-                        } else {
-                            log('שגיאה בחיבור: ' + data.error, 'error');
-                        }
-                    })
-                    .catch(error => {
-                        log('שגיאת רשת: ' + error, 'error');
-                    });
-            }
-            
-            function runStressTest() {
-                log('מתחיל Stress Test...', 'info');
-                // סימולציה של stress test
-                let completed = 0;
-                const total = 1000;
-                
-                const interval = setInterval(() => {
-                    completed += 100;
-                    log(`עיבוד ${completed}/${total} רשומות...`);
-                    
-                    if (completed >= total) {
-                        clearInterval(interval);
-                        log('Stress Test הושלם בהצלחה! זמן ממוצע: 0.003ms לרשומה', 'success');
-                    }
-                }, 500);
-            }
-            
-            function runSecurityTest() {
-                log('מריץ בדיקת אבטחה...', 'info');
-                const tests = [
-                    'SQL Injection',
-                    'XSS Protection',
-                    'CSRF Token Validation',
-                    'Session Security',
-                    'Input Sanitization'
-                ];
-                
-                tests.forEach((test, index) => {
-                    setTimeout(() => {
-                        log(`✅ ${test} - עבר בהצלחה`, 'success');
-                    }, (index + 1) * 300);
-                });
-            }
-            
-            function runPerformanceTest() {
-                log('מתחיל בדיקת ביצועים...', 'info');
-                
-                const metrics = [
-                    { name: 'Database Query', time: 23 },
-                    { name: 'Page Render', time: 145 },
-                    { name: 'API Response', time: 67 },
-                    { name: 'File Upload', time: 234 },
-                    { name: 'Cache Hit Rate', value: '94%' }
-                ];
-                
-                metrics.forEach((metric, index) => {
-                    setTimeout(() => {
-                        if (metric.time) {
-                            log(`⏱️ ${metric.name}: ${metric.time}ms`, 'info');
-                        } else {
-                            log(`📊 ${metric.name}: ${metric.value}`, 'info');
-                        }
-                    }, (index + 1) * 400);
-                });
-                
-                setTimeout(() => {
-                    log('בדיקת ביצועים הושלמה - כל הערכים בטווח הנורמלי', 'success');
-                }, metrics.length * 400 + 500);
-            }
-            
-            function runValidationTest() {
-                log('בודק ולידציות...', 'info');
-                
-                const validations = [
-                    'שדות חובה',
-                    'פורמט אימייל',
-                    'מספרי טלפון',
-                    'תאריכים',
-                    'טווחי מספרים',
-                    'אורך טקסט'
-                ];
-                
-                validations.forEach((validation, index) => {
-                    setTimeout(() => {
-                        const passed = Math.random() > 0.1;
-                        if (passed) {
-                            log(`✅ ${validation} - תקין`, 'success');
-                        } else {
-                            log(`⚠️ ${validation} - דורש תיקון`, 'error');
-                        }
-                    }, (index + 1) * 250);
-                });
-            }
-            
-            // הוסף אירועי מקלדת לביצוע מהיר
-            document.addEventListener('keydown', (e) => {
-                if (e.ctrlKey) {
-                    switch(e.key) {
-                        case 'd':
-                            e.preventDefault();
-                            loadDashboard();
-                            break;
-                        case 's':
-                            e.preventDefault();
-                            runStressTest();
-                            break;
-                        case 'r':
-                            e.preventDefault();
-                            resetData();
-                            break;
-                    }
-                }
-            });
-            
-            // הודעת ברוכים הבאים
-            log('ברוך הבא למערכת הבדיקות! השתמש בכפתורים או במקשי הקיצור:', 'info');
-            log('Ctrl+D - טען דשבורד | Ctrl+S - Stress Test | Ctrl+R - איפוס', 'info');
-        </script>
-    </body>
+        <!-- בדיקת קבצים -->
+        <div class="status-box">
+            <h2>קבצים במערכת</h2>
+            <?php foreach ($files_status as $name => $exists): ?>
+            <div class="status-row">
+                <span><?php echo $name; ?></span>
+                <span class="<?php echo $exists ? 'ok' : 'warning'; ?>">
+                    <?php echo $exists ? 'קיים' : 'חסר'; ?>
+                </span>
+            </div>
+            <?php endforeach; ?>
+        </div>
+        
+        <?php if ($db_connected): ?>
+        <!-- טבלאות במסד נתונים -->
+        <div class="status-box">
+            <h2>טבלאות במסד נתונים</h2>
+            <table>
+                <tr>
+                    <th>שם טבלה</th>
+                    <th>מספר רשומות</th>
+                    <th>סטטוס</th>
+                </tr>
+                <?php foreach ($tables_data as $table => $count): ?>
+                <tr>
+                    <td><?php echo $table; ?></td>
+                    <td><?php echo $count >= 0 ? number_format($count) : 'לא קיימת'; ?></td>
+                    <td class="<?php echo $count >= 0 ? 'ok' : 'error'; ?>">
+                        <?php echo $count >= 0 ? 'תקין' : 'חסר'; ?>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+            </table>
+        </div>
+        <?php endif; ?>
+        
+        <!-- Session Data -->
+        <div class="status-box">
+            <h2>נתוני Session</h2>
+            <pre><?php print_r($_SESSION); ?></pre>
+        </div>
+        
+        <!-- קישורים לבדיקה -->
+        <div class="status-box">
+            <h2>קישורים לבדיקה</h2>
+            <a href="index.php?bypass=true" class="btn">דשבורד ראשי</a>
+            <a href="test-permissions.php" class="btn">בדיקת הרשאות</a>
+            <a href="forms/test-form.php" class="btn">בדיקת טפסים</a>
+            <a href="?phpinfo=1" class="btn">PHP Info</a>
+        </div>
+    </div>
+</body>
 </html>
+<?php
+// הצג phpinfo אם התבקש
+if (isset($_GET['phpinfo'])) {
+    phpinfo();
+    exit;
+}
+?>

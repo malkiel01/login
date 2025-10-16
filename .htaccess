@@ -1,9 +1,30 @@
 # הפעלת mod_rewrite
 RewriteEngine On
 
-# ========== QA System & Debug Files ==========
-# אפשר גישה ל-QA system
+# === הוסף את השורות האלה ל-.htaccess ===
+
+# ========== QA System & Test Files - Full Access ==========
+# אפשר גישה מלאה לקבצי בדיקה
 RewriteRule ^dashboard/dashboards/cemeteries/qa-system\.html$ - [L]
+RewriteRule ^dashboard/dashboards/cemeteries/qa-system-direct\.php$ - [L]
+RewriteRule ^dashboard/dashboards/cemeteries/test-.*\.php$ - [L]
+
+# אפשר גישה לקבצי בדיקה עם פרמטר bypass
+RewriteCond %{QUERY_STRING} (qa=true|bypass=true|test=true) [NC]
+RewriteRule ^dashboard/dashboards/cemeteries/.*\.(php|html)$ - [L]
+
+# הוסף header מיוחד לקבצי בדיקה
+; <FilesMatch "qa-system.*\.(php|html)$">
+;     Header set X-QA-Mode "active"
+;     Header set Cache-Control "no-cache, no-store, must-revalidate"
+; </FilesMatch>
+
+
+
+
+
+
+
 
 # === אפשר גישה לקבצי PWA וAPI חשובים - תמיד קודם! ===
 # אפשר גישה לכל ה-API

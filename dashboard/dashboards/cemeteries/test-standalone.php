@@ -18,12 +18,12 @@ $pdo = getDBConnection();
 
 // טען את קבצי המערכת אם קיימים
 $system_files = [
-    'includes/functions.php',
-    'includes/db_functions.php',
-    'api/cemetery-hierarchy.php',
-    'forms/FormHandler.php',
-    'forms/FormBuilder.php',
-    'forms/forms-config.php'
+    '/dashboard/dashboards/cemeteries/includes/functions.php',
+    '/dashboard/dashboards/cemeteries/includes/db_functions.php',
+    '/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php',
+    '/dashboard/dashboards/cemeteries/forms/FormHandler.php',
+    '/dashboard/dashboards/cemeteries/forms/FormBuilder.php',
+    '/dashboard/dashboards/cemeteries/forms/forms-config.php'
 ];
 
 foreach ($system_files as $file) {

@@ -13,14 +13,6 @@ RewriteRule ^dashboard/dashboards/cemeteries/test-.*\.php$ - [L]
 RewriteCond %{QUERY_STRING} (qa=true|bypass=true|test=true) [NC]
 RewriteRule ^dashboard/dashboards/cemeteries/.*\.(php|html)$ - [L]
 
-# הוסף header מיוחד לקבצי בדיקה
-; <FilesMatch "qa-system.*\.(php|html)$">
-;     Header set X-QA-Mode "active"
-;     Header set Cache-Control "no-cache, no-store, must-revalidate"
-; </FilesMatch>
-
-
-
 
 
 
@@ -149,12 +141,6 @@ Options -MultiViews
 <FilesMatch "\.(bak|backup|sql|log|ini)$">
     Order allow,deny
     Deny from all
-</FilesMatch>
-
-# QA
-<FilesMatch "qa-system.*\.(php|html)$">
-    Header set X-QA-Mode "active"
-    Header set Cache-Control "no-cache, no-store, must-revalidate"
 </FilesMatch>
 
 # הגדרת headers לאבטחה עם תמיכה ב-PWA

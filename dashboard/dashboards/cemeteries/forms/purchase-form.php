@@ -6,9 +6,14 @@
     header('Content-Type: text/html; charset=utf-8');
 
     require_once __DIR__ . '/FormBuilder.php';
-    require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
+    require_once dirname(__DIR__) . '/config.php';
 
-    $itemId = $_GET['itemId'] ?? null;
+    
+// === קבלת פרמטרים אחידה ===
+$itemId = $_GET['itemId'] ?? $_GET['id'] ?? null;
+$parentId = $_GET['parentId'] ?? $_GET['parent_id'] ?? null;
+$formType = basename(__FILE__, '.php'); // מזהה אוטומטי של סוג הטופס
+
     $parentId = $_GET['parent_id'] ?? null;
 
     try {
@@ -208,7 +213,7 @@
         $hierarchyData['graves'] = $gravesStmt->fetchAll(PDO::FETCH_ASSOC);
         
     } catch (Exception $e) {
-        die(json_encode(['error' => $e->getMessage()]));
+        FormUtils::handleError($e);
     }
 
     // הכן את ה-JSON של ההיררכיה

@@ -1,3 +1,31 @@
+# Error logs
+error_log
+*/error_log
+**/error_log
+
+# Backup folders
+backup_*/
+**/backup_*/
+
+# Upload folders
+uploads/
+**/uploads/
+
+# Temporary documents
+documents/
+**/documents/
+
+# Guest projects
+**/guest/
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
 # Environment files
 .env
 .env.local

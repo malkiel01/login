@@ -22,10 +22,10 @@ $missingFiles = [];
 // רשימת קבצים לטעינה
 $requiredFiles = [
     'config' => $_SERVER['DOCUMENT_ROOT'] . '/config.php',
-    'functions' => __DIR__ . '/dashboard/dashboards/cemeteries/includes/functions.php',
-    'FormHandler' => __DIR__ . '/dashboard/dashboards/cemeteries/forms/FormHandler.php',
-    'FormBuilder' => __DIR__ . '/dashboard/dashboards/cemeteries/forms/FormBuilder.php',
-    'forms-config' => __DIR__ . '/dashboard/dashboards/cemeteries/forms/forms-config.php'
+    'functions' => __DIR__ . '/includes/functions.php',
+    'FormHandler' => __DIR__ . '/forms/FormHandler.php',
+    'FormBuilder' => __DIR__ . '/forms/FormBuilder.php',
+    'forms-config' => __DIR__ . '/forms/forms-config.php'
 ];
 
 foreach ($requiredFiles as $name => $path) {

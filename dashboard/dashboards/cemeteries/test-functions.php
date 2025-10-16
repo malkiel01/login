@@ -11,36 +11,48 @@ $_SESSION['user_id'] = 999999;
 $_SESSION['dashboard_type'] = 'cemetery_manager';
 $_SESSION['username'] = 'QA_TESTER';
 
-// הגדרת קבועים
-define('DASHBOARD_NAME', 'בדיקת פונקציות מערכת');
+// הגדרת קבועים אם לא מוגדרים
+if (!defined('DASHBOARD_NAME')) {
+    define('DASHBOARD_NAME', 'בדיקת פונקציות מערכת');
+}
 
 // טען את קבצי המערכת
 $systemLoaded = false;
 $loadedFiles = [];
 $missingFiles = [];
+$jsFiles = [];
 
-// רשימת קבצים לטעינה
-// $requiredFiles = [
-//     'config' => $_SERVER['DOCUMENT_ROOT'] . '/config.php',
-//     'functions' => __DIR__ . '/includes/functions.php',
-//     'FormHandler' => __DIR__ . '/forms/FormHandler.php',
-//     'FormBuilder' => __DIR__ . '/forms/FormBuilder.php',
-//     'forms-config' => __DIR__ . '/forms/forms-config.php'
-// ];
-
+// רשימת קבצי PHP לטעינה
 $requiredFiles = [
     'config' => $_SERVER['DOCUMENT_ROOT'] . '/config.php',
     'functions' => __DIR__ . '/includes/functions.php',
-    'form-loader' => __DIR__ . '/forms/form-loader.php',  // במקום FormHandler
+    'form-loader' => __DIR__ . '/forms/form-loader.php',
     'FormBuilder' => __DIR__ . '/forms/FormBuilder.php',
-    'forms-config' => __DIR__ . '/forms/forms-config.php',
-    'form-handler-js' => __DIR__ . '/forms/form-handler.js' // הוסף בדיקה ל-JS
+    'forms-config' => __DIR__ . '/forms/forms-config.php'
 ];
 
+// רשימת קבצי JS לבדיקה (לא לטעינה)
+$jsFilesToCheck = [
+    'form-handler-js' => __DIR__ . '/forms/form-handler.js'
+];
+
+// בדוק וטען קבצי PHP
 foreach ($requiredFiles as $name => $path) {
     if (file_exists($path)) {
-        require_once $path;
+        // טען רק אם לא נטען כבר
+        if ($name !== 'config' || !defined('DB_HOST')) {
+            require_once $path;
+        }
         $loadedFiles[$name] = $path;
+    } else {
+        $missingFiles[$name] = $path;
+    }
+}
+
+// בדוק קבצי JS (רק בדיקת קיום)
+foreach ($jsFilesToCheck as $name => $path) {
+    if (file_exists($path)) {
+        $jsFiles[$name] = $path;
     } else {
         $missingFiles[$name] = $path;
     }
@@ -160,6 +172,7 @@ $systemLoaded = empty($missingFiles);
         }
         
         .file-loaded { color: #28a745; }
+        .file-js { color: #17a2b8; }
         .file-missing { color: #dc3545; }
         
         .test-scenario {
@@ -200,31 +213,6 @@ $systemLoaded = empty($missingFiles);
             margin-bottom: 10px;
         }
         
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-        }
-        
-        .modal-content {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            width: 80%;
-            max-width: 600px;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-        
         pre {
             background: #f4f4f4;
             padding: 10px;
@@ -255,6 +243,7 @@ $systemLoaded = empty($missingFiles);
                     </div>
                 <?php endif; ?>
                 
+                <h3 style="margin-top: 15px;">קבצי PHP:</h3>
                 <?php foreach ($loadedFiles as $name => $path): ?>
                     <div class="file-item">
                         <span><?php echo $name; ?></span>
@@ -262,12 +251,23 @@ $systemLoaded = empty($missingFiles);
                     </div>
                 <?php endforeach; ?>
                 
-                <?php foreach ($missingFiles as $name => $path): ?>
+                <h3 style="margin-top: 15px;">קבצי JavaScript:</h3>
+                <?php foreach ($jsFiles as $name => $path): ?>
                     <div class="file-item">
                         <span><?php echo $name; ?></span>
-                        <span class="file-missing">❌ חסר</span>
+                        <span class="file-js">✅ קיים</span>
                     </div>
                 <?php endforeach; ?>
+                
+                <?php if (!empty($missingFiles)): ?>
+                    <h3 style="margin-top: 15px; color: red;">קבצים חסרים:</h3>
+                    <?php foreach ($missingFiles as $name => $path): ?>
+                        <div class="file-item">
+                            <span><?php echo $name; ?></span>
+                            <span class="file-missing">❌ חסר</span>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </div>
             
             <!-- תרחיש בדיקה אינטראקטיבי -->
@@ -301,20 +301,12 @@ $systemLoaded = empty($missingFiles);
             <!-- בדיקות פונקציות -->
             <?php if ($systemLoaded): ?>
                 
-                <!-- בדיקת FormBuilder -->
+                <!-- בדיקת FormLoader -->
                 <div class="function-test">
-                    <div class="function-name">📝 FormBuilder - יצירת טפסים</div>
-                    <div class="function-desc">בדיקת יצירת טופס דינמי לבית עלמין</div>
-                    <button class="test-btn" onclick="testFormBuilder()">בדוק FormBuilder</button>
-                    <div id="formbuilder-result" class="result-box"></div>
-                </div>
-                
-                <!-- בדיקת FormHandler -->
-                <div class="function-test">
-                    <div class="function-name">⚙️ FormHandler - טיפול בנתונים</div>
-                    <div class="function-desc">בדיקת שמירה וטעינת נתונים</div>
-                    <button class="test-btn" onclick="testFormHandler()">בדוק FormHandler</button>
-                    <div id="formhandler-result" class="result-box"></div>
+                    <div class="function-name">📝 FormLoader - טעינת טפסים</div>
+                    <div class="function-desc">בדיקת טעינת טופס דינמי</div>
+                    <button class="test-btn" onclick="testFormLoader()">בדוק FormLoader</button>
+                    <div id="formloader-result" class="result-box"></div>
                 </div>
                 
                 <!-- בדיקת API -->
@@ -322,17 +314,17 @@ $systemLoaded = empty($missingFiles);
                     <div class="function-name">🌐 API Endpoints</div>
                     <div class="function-desc">בדיקת נקודות קצה של ה-API</div>
                     <button class="test-btn" onclick="testAPI('cemetery-hierarchy')">היררכיה</button>
-                    <button class="test-btn" onclick="testAPI('get-data')">נתונים</button>
-                    <button class="test-btn" onclick="testAPI('save-data')">שמירה</button>
+                    <button class="test-btn" onclick="testAPI('customers')">לקוחות</button>
+                    <button class="test-btn" onclick="testAPI('purchases')">רכישות</button>
                     <div id="api-result" class="result-box"></div>
                 </div>
                 
-                <!-- בדיקת הרשאות -->
+                <!-- בדיקת form-handler.js -->
                 <div class="function-test">
-                    <div class="function-name">🔐 בדיקת הרשאות</div>
-                    <div class="function-desc">בדיקת פונקציות הרשאות המערכת</div>
-                    <button class="test-btn" onclick="testPermissionFunctions()">בדוק הרשאות</button>
-                    <div id="permissions-result" class="result-box"></div>
+                    <div class="function-name">🔧 FormHandler JavaScript</div>
+                    <div class="function-desc">בדיקת טעינת הקובץ form-handler.js</div>
+                    <button class="test-btn" onclick="testFormHandlerJS()">בדוק JS</button>
+                    <div id="js-result" class="result-box"></div>
                 </div>
                 
             <?php else: ?>
@@ -344,80 +336,32 @@ $systemLoaded = empty($missingFiles);
         </div>
     </div>
     
-    <!-- Modal לתצוגת תוצאות -->
-    <div id="resultModal" class="modal">
-        <div class="modal-content">
-            <h2>תוצאות בדיקה</h2>
-            <div id="modalContent"></div>
-            <button onclick="closeModal()" class="test-btn">סגור</button>
-        </div>
-    </div>
+    <!-- טען את form-handler.js אם קיים -->
+    <?php if (isset($jsFiles['form-handler-js'])): ?>
+        <script src="forms/form-handler.js"></script>
+    <?php endif; ?>
     
     <script>
-        // בדיקת FormBuilder
-        function testFormBuilder() {
-            const resultDiv = document.getElementById('formbuilder-result');
+        // בדיקת FormLoader
+        function testFormLoader() {
+            const resultDiv = document.getElementById('formloader-result');
             resultDiv.style.display = 'block';
             resultDiv.innerHTML = 'בודק...';
             
-            // קריאה ל-AJAX ליצירת טופס
-            fetch('forms/test-render.php')
+            fetch('forms/form-loader.php?formType=cemetery')
                 .then(response => response.text())
                 .then(html => {
                     resultDiv.className = 'result-box result-success';
                     resultDiv.innerHTML = `
-                        <strong>✅ FormBuilder עובד!</strong>
-                        <p>הטופס נוצר בהצלחה</p>
-                        <button onclick="showInModal('${escape(html)}')" class="test-btn">הצג טופס</button>
+                        <strong>✅ FormLoader עובד!</strong>
+                        <p>הטופס נטען בהצלחה</p>
+                        <p>אורך התוכן: ${html.length} תווים</p>
                     `;
                 })
                 .catch(error => {
                     resultDiv.className = 'result-box result-error';
                     resultDiv.innerHTML = `❌ שגיאה: ${error}`;
                 });
-        }
-        
-        // בדיקת FormHandler
-        function testFormHandler() {
-            const resultDiv = document.getElementById('formhandler-result');
-            resultDiv.style.display = 'block';
-            resultDiv.innerHTML = 'בודק...';
-            
-            // נתוני בדיקה
-            const testData = {
-                action: 'save',
-                type: 'cemetery',
-                data: {
-                    name: 'בית עלמין בדיקה ' + Date.now(),
-                    location: 'מיקום בדיקה',
-                    active: 1
-                }
-            };
-            
-            fetch('forms/FormHandler.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(testData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    resultDiv.className = 'result-box result-success';
-                    resultDiv.innerHTML = `
-                        <strong>✅ FormHandler עובד!</strong>
-                        <p>הנתונים נשמרו בהצלחה</p>
-                        <pre>${JSON.stringify(data, null, 2)}</pre>
-                    `;
-                } else {
-                    throw new Error(data.error || 'Unknown error');
-                }
-            })
-            .catch(error => {
-                resultDiv.className = 'result-box result-error';
-                resultDiv.innerHTML = `❌ שגיאה: ${error}`;
-            });
         }
         
         // בדיקת API
@@ -431,11 +375,11 @@ $systemLoaded = empty($missingFiles);
                 case 'cemetery-hierarchy':
                     url = 'api/cemetery-hierarchy.php?action=list&type=cemetery';
                     break;
-                case 'get-data':
-                    url = 'api/get_data.php?type=cemetery';
+                case 'customers':
+                    url = 'api/customers-api.php?action=list';
                     break;
-                case 'save-data':
-                    url = 'api/save_data.php';
+                case 'purchases':
+                    url = 'api/purchases-api.php?action=list';
                     break;
             }
             
@@ -454,57 +398,49 @@ $systemLoaded = empty($missingFiles);
                 });
         }
         
-        // בדיקת הרשאות
-        function testPermissionFunctions() {
-            const resultDiv = document.getElementById('permissions-result');
+        // בדיקת FormHandler JavaScript
+        function testFormHandlerJS() {
+            const resultDiv = document.getElementById('js-result');
             resultDiv.style.display = 'block';
             
-            <?php if (function_exists('checkPermission')): ?>
-                const permissions = {
-                    view: <?php echo json_encode(checkPermission('view', 'cemetery')); ?>,
-                    edit: <?php echo json_encode(checkPermission('edit', 'cemetery')); ?>,
-                    delete: <?php echo json_encode(checkPermission('delete', 'cemetery')); ?>,
-                    create: <?php echo json_encode(checkPermission('create', 'cemetery')); ?>
-                };
-                
+            if (typeof FormHandler !== 'undefined') {
                 resultDiv.className = 'result-box result-success';
                 resultDiv.innerHTML = `
-                    <strong>✅ מערכת הרשאות פעילה</strong>
-                    <p>הרשאות נוכחיות:</p>
+                    <strong>✅ FormHandler JavaScript טעון!</strong>
+                    <p>פונקציות זמינות:</p>
                     <ul>
-                        <li>צפייה: ${permissions.view ? '✅' : '❌'}</li>
-                        <li>עריכה: ${permissions.edit ? '✅' : '❌'}</li>
-                        <li>מחיקה: ${permissions.delete ? '✅' : '❌'}</li>
-                        <li>יצירה: ${permissions.create ? '✅' : '❌'}</li>
+                        <li>openForm: ${typeof FormHandler.openForm === 'function' ? '✅' : '❌'}</li>
+                        <li>closeForm: ${typeof FormHandler.closeForm === 'function' ? '✅' : '❌'}</li>
+                        <li>saveForm: ${typeof FormHandler.saveForm === 'function' ? '✅' : '❌'}</li>
                     </ul>
                 `;
-            <?php else: ?>
+            } else {
                 resultDiv.className = 'result-box result-error';
-                resultDiv.innerHTML = '❌ פונקציית checkPermission לא נמצאה';
-            <?php endif; ?>
+                resultDiv.innerHTML = '❌ FormHandler לא נטען';
+            }
         }
         
         // פונקציות תרחיש אינטראקטיבי
         function testFormCreation() {
-            alert('פותח טופס יצירת בית עלמין...');
-            // כאן תוכל להוסיף קוד לפתיחת טופס אמיתי
             if (typeof FormHandler !== 'undefined') {
+                alert('מנסה לפתוח טופס...');
                 FormHandler.openForm('cemetery', null, null);
+            } else {
+                alert('FormHandler לא נטען - בדוק את הקונסול');
             }
         }
         
         function testDataSubmit() {
             const data = {
                 name: 'בית עלמין בדיקה',
-                location: 'תל אביב',
-                area: 1000
+                location: 'תל אביב'
             };
             console.log('שולח נתונים:', data);
             alert('נתונים נשלחו לשרת (ראה קונסול)');
         }
         
         function testAPICall() {
-            fetch('api/cemetery-hierarchy.php?action=stats')
+            fetch('api/cemetery-hierarchy.php?action=list&type=cemetery')
                 .then(response => response.json())
                 .then(data => {
                     alert('קריאת API הצליחה! ראה קונסול');
@@ -514,28 +450,10 @@ $systemLoaded = empty($missingFiles);
         
         function testHierarchy() {
             alert('בודק היררכיית בתי עלמין > גושים > חלקות > קברים');
-            console.log('Hierarchy: Cemetery -> Block -> Plot -> Grave');
         }
         
         function testPermissions() {
             alert('בודק הרשאות משתמש: cemetery_manager');
-            testPermissionFunctions();
-        }
-        
-        // Modal functions
-        function showInModal(content) {
-            document.getElementById('modalContent').innerHTML = content;
-            document.getElementById('resultModal').style.display = 'block';
-        }
-        
-        function closeModal() {
-            document.getElementById('resultModal').style.display = 'none';
-        }
-        
-        function escape(html) {
-            const div = document.createElement('div');
-            div.textContent = html;
-            return div.innerHTML;
         }
     </script>
 </body>

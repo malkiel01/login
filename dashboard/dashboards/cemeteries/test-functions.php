@@ -11,9 +11,9 @@ $_SESSION['user_id'] = 999999;
 $_SESSION['dashboard_type'] = 'cemetery_manager';
 $_SESSION['username'] = 'QA_TESTER';
 
-// הגדרת קבועים אם לא מוגדרים
-if (!defined('DASHBOARD_NAME')) {
-    define('DASHBOARD_NAME', 'בדיקת פונקציות מערכת');
+// טען config רק אם לא נטען כבר
+if (!defined('DB_HOST')) {
+    require_once $_SERVER['DOCUMENT_ROOT'] . '/config.php';
 }
 
 // טען את קבצי המערכת
@@ -22,7 +22,7 @@ $loadedFiles = [];
 $missingFiles = [];
 $jsFiles = [];
 
-// רשימת קבצי PHP לטעינה
+// רשימת קבצי PHP לבדיקה בלבד (לא טעינה)
 $requiredFiles = [
     'config' => $_SERVER['DOCUMENT_ROOT'] . '/config.php',
     'functions' => __DIR__ . '/includes/functions.php',
@@ -31,16 +31,21 @@ $requiredFiles = [
     'forms-config' => __DIR__ . '/forms/forms-config.php'
 ];
 
-// רשימת קבצי JS לבדיקה (לא לטעינה)
+// רשימת קבצי JS לבדיקה
 $jsFilesToCheck = [
     'form-handler-js' => __DIR__ . '/forms/form-handler.js'
 ];
 
-// בדוק וטען קבצי PHP
+// בדוק קבצי PHP (רק בדיקת קיום, לא טעינה)
 foreach ($requiredFiles as $name => $path) {
     if (file_exists($path)) {
-        // טען רק אם לא נטען כבר
-        if ($name !== 'config' || !defined('DB_HOST')) {
+        // טען רק את הקבצים ההכרחיים שלא גורמים לבעיות
+        if ($name === 'functions' && !function_exists('checkPermission')) {
+            require_once $path;
+        } elseif ($name === 'FormBuilder' && !class_exists('FormBuilder')) {
+            require_once $path;
+        } elseif ($name === 'forms-config') {
+            // forms-config בטוח לטעינה
             require_once $path;
         }
         $loadedFiles[$name] = $path;
@@ -49,7 +54,7 @@ foreach ($requiredFiles as $name => $path) {
     }
 }
 
-// בדוק קבצי JS (רק בדיקת קיום)
+// בדוק קבצי JS
 foreach ($jsFilesToCheck as $name => $path) {
     if (file_exists($path)) {
         $jsFiles[$name] = $path;
@@ -175,50 +180,14 @@ $systemLoaded = empty($missingFiles);
         .file-js { color: #17a2b8; }
         .file-missing { color: #dc3545; }
         
-        .test-scenario {
-            background: linear-gradient(135deg, #f093fb, #f5576c);
-            color: white;
-            padding: 30px;
-            border-radius: 10px;
-            margin: 20px 0;
-        }
-        
-        .scenario-steps {
-            display: flex;
-            justify-content: space-around;
-            flex-wrap: wrap;
-            margin-top: 20px;
-        }
-        
-        .scenario-step {
-            background: rgba(255,255,255,0.2);
-            padding: 15px;
-            border-radius: 10px;
-            margin: 10px;
-            flex: 1;
-            min-width: 200px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .scenario-step:hover {
-            background: rgba(255,255,255,0.3);
-            transform: scale(1.05);
-        }
-        
-        .step-number {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        
         pre {
             background: #f4f4f4;
             padding: 10px;
             border-radius: 5px;
             overflow-x: auto;
             font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
         }
     </style>
 </head>
@@ -232,14 +201,14 @@ $systemLoaded = empty($missingFiles);
         <div class="test-content">
             <!-- סטטוס קבצים -->
             <div class="files-status">
-                <h2>📁 סטטוס טעינת קבצים</h2>
+                <h2>📁 סטטוס קבצים</h2>
                 <?php if ($systemLoaded): ?>
                     <div style="color: green; font-weight: bold; margin: 10px 0;">
-                        ✅ המערכת נטענה בהצלחה!
+                        ✅ כל הקבצים קיימים!
                     </div>
                 <?php else: ?>
                     <div style="color: red; font-weight: bold; margin: 10px 0;">
-                        ⚠️ חלק מקבצי המערכת חסרים
+                        ⚠️ חלק מהקבצים חסרים
                     </div>
                 <?php endif; ?>
                 
@@ -247,7 +216,7 @@ $systemLoaded = empty($missingFiles);
                 <?php foreach ($loadedFiles as $name => $path): ?>
                     <div class="file-item">
                         <span><?php echo $name; ?></span>
-                        <span class="file-loaded">✅ נטען</span>
+                        <span class="file-loaded">✅ קיים</span>
                     </div>
                 <?php endforeach; ?>
                 
@@ -270,34 +239,6 @@ $systemLoaded = empty($missingFiles);
                 <?php endif; ?>
             </div>
             
-            <!-- תרחיש בדיקה אינטראקטיבי -->
-            <div class="test-scenario">
-                <h2>🎯 תרחיש בדיקה אינטראקטיבי</h2>
-                <p>לחץ על כל שלב לביצוע</p>
-                <div class="scenario-steps">
-                    <div class="scenario-step" onclick="testFormCreation()">
-                        <div class="step-number">1️⃣</div>
-                        <div>פתיחת טופס יצירה</div>
-                    </div>
-                    <div class="scenario-step" onclick="testDataSubmit()">
-                        <div class="step-number">2️⃣</div>
-                        <div>שליחת נתונים</div>
-                    </div>
-                    <div class="scenario-step" onclick="testAPICall()">
-                        <div class="step-number">3️⃣</div>
-                        <div>קריאת API</div>
-                    </div>
-                    <div class="scenario-step" onclick="testHierarchy()">
-                        <div class="step-number">4️⃣</div>
-                        <div>בדיקת היררכיה</div>
-                    </div>
-                    <div class="scenario-step" onclick="testPermissions()">
-                        <div class="step-number">5️⃣</div>
-                        <div>בדיקת הרשאות</div>
-                    </div>
-                </div>
-            </div>
-            
             <!-- בדיקות פונקציות -->
             <?php if ($systemLoaded): ?>
                 
@@ -305,7 +246,9 @@ $systemLoaded = empty($missingFiles);
                 <div class="function-test">
                     <div class="function-name">📝 FormLoader - טעינת טפסים</div>
                     <div class="function-desc">בדיקת טעינת טופס דינמי</div>
-                    <button class="test-btn" onclick="testFormLoader()">בדוק FormLoader</button>
+                    <button class="test-btn" onclick="testFormLoader('cemetery')">טופס בית עלמין</button>
+                    <button class="test-btn" onclick="testFormLoader('customer')">טופס לקוח</button>
+                    <button class="test-btn" onclick="testFormLoader('purchase')">טופס רכישה</button>
                     <div id="formloader-result" class="result-box"></div>
                 </div>
                 
@@ -324,7 +267,16 @@ $systemLoaded = empty($missingFiles);
                     <div class="function-name">🔧 FormHandler JavaScript</div>
                     <div class="function-desc">בדיקת טעינת הקובץ form-handler.js</div>
                     <button class="test-btn" onclick="testFormHandlerJS()">בדוק JS</button>
+                    <button class="test-btn" onclick="testOpenForm()">נסה לפתוח טופס</button>
                     <div id="js-result" class="result-box"></div>
+                </div>
+                
+                <!-- בדיקת חיבור למסד נתונים -->
+                <div class="function-test">
+                    <div class="function-name">🗄️ חיבור למסד נתונים</div>
+                    <div class="function-desc">בדיקת חיבור ל-MySQL</div>
+                    <button class="test-btn" onclick="testDatabase()">בדוק חיבור</button>
+                    <div id="db-result" class="result-box"></div>
                 </div>
                 
             <?php else: ?>
@@ -342,21 +294,35 @@ $systemLoaded = empty($missingFiles);
     <?php endif; ?>
     
     <script>
+        // הגדר API_BASE אם לא מוגדר
+        if (typeof API_BASE === 'undefined') {
+            window.API_BASE = '/dashboard/dashboards/cemeteries/api/';
+        }
+        
         // בדיקת FormLoader
-        function testFormLoader() {
+        function testFormLoader(formType) {
             const resultDiv = document.getElementById('formloader-result');
             resultDiv.style.display = 'block';
-            resultDiv.innerHTML = 'בודק...';
+            resultDiv.innerHTML = 'בודק טופס ' + formType + '...';
             
-            fetch('forms/form-loader.php?formType=cemetery')
+            fetch(`forms/form-loader.php?formType=${formType}`)
                 .then(response => response.text())
                 .then(html => {
-                    resultDiv.className = 'result-box result-success';
-                    resultDiv.innerHTML = `
-                        <strong>✅ FormLoader עובד!</strong>
-                        <p>הטופס נטען בהצלחה</p>
-                        <p>אורך התוכן: ${html.length} תווים</p>
-                    `;
+                    const hasError = html.includes('שגיאה') || html.includes('error');
+                    
+                    if (hasError) {
+                        resultDiv.className = 'result-box result-error';
+                        resultDiv.innerHTML = `
+                            <strong>❌ בעיה בטעינת הטופס ${formType}</strong>
+                            <pre>${html.substring(0, 500)}</pre>
+                        `;
+                    } else {
+                        resultDiv.className = 'result-box result-success';
+                        resultDiv.innerHTML = `
+                            <strong>✅ טופס ${formType} נטען בהצלחה!</strong>
+                            <p>אורך התוכן: ${html.length} תווים</p>
+                        `;
+                    }
                 })
                 .catch(error => {
                     resultDiv.className = 'result-box result-error';
@@ -420,40 +386,44 @@ $systemLoaded = empty($missingFiles);
             }
         }
         
-        // פונקציות תרחיש אינטראקטיבי
-        function testFormCreation() {
-            if (typeof FormHandler !== 'undefined') {
-                alert('מנסה לפתוח טופס...');
-                FormHandler.openForm('cemetery', null, null);
+        // נסיון לפתוח טופס
+        function testOpenForm() {
+            if (typeof FormHandler !== 'undefined' && typeof FormHandler.openForm === 'function') {
+                try {
+                    FormHandler.openForm('cemetery', null, null);
+                    alert('✅ ניסיון פתיחת טופס הצליח - בדוק אם הטופס נפתח');
+                } catch (e) {
+                    alert('❌ שגיאה בפתיחת טופס: ' + e.message);
+                }
             } else {
-                alert('FormHandler לא נטען - בדוק את הקונסול');
+                alert('❌ FormHandler לא זמין');
             }
         }
         
-        function testDataSubmit() {
-            const data = {
-                name: 'בית עלמין בדיקה',
-                location: 'תל אביב'
-            };
-            console.log('שולח נתונים:', data);
-            alert('נתונים נשלחו לשרת (ראה קונסול)');
-        }
-        
-        function testAPICall() {
-            fetch('api/cemetery-hierarchy.php?action=list&type=cemetery')
+        // בדיקת חיבור למסד נתונים
+        function testDatabase() {
+            const resultDiv = document.getElementById('db-result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = 'בודק חיבור...';
+            
+            fetch('api/test-db.php')
                 .then(response => response.json())
                 .then(data => {
-                    alert('קריאת API הצליחה! ראה קונסול');
-                    console.log('API Response:', data);
+                    if (data.success) {
+                        resultDiv.className = 'result-box result-success';
+                        resultDiv.innerHTML = `
+                            <strong>✅ חיבור למסד נתונים תקין!</strong>
+                            <p>שרת: ${data.server || 'לא ידוע'}</p>
+                            <p>מסד נתונים: ${data.database || 'לא ידוע'}</p>
+                        `;
+                    } else {
+                        throw new Error(data.error || 'שגיאה לא ידועה');
+                    }
+                })
+                .catch(error => {
+                    resultDiv.className = 'result-box result-error';
+                    resultDiv.innerHTML = `❌ שגיאה בחיבור: ${error}`;
                 });
-        }
-        
-        function testHierarchy() {
-            alert('בודק היררכיית בתי עלמין > גושים > חלקות > קברים');
-        }
-        
-        function testPermissions() {
-            alert('בודק הרשאות משתמש: cemetery_manager');
         }
     </script>
 </body>

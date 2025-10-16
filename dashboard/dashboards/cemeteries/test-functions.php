@@ -23,11 +23,20 @@ $missingFiles = [];
 $requiredFiles = [
     'config' => $_SERVER['DOCUMENT_ROOT'] . '/config.php',
     'functions' => __DIR__ . '/includes/functions.php',
-    'form-loader' => __DIR__ . '/forms/form-loader.php',  // במקום FormHandler
+    // 'FormHandler' => __DIR__ . '/forms/FormHandler.php',
+    'FormHandler' => __DIR__ . '/forms/form-handler.js', // הוסף בדיקה ל-JS
     'FormBuilder' => __DIR__ . '/forms/FormBuilder.php',
-    'forms-config' => __DIR__ . '/forms/forms-config.php',
-    'form-handler-js' => __DIR__ . '/forms/form-handler.js' // הוסף בדיקה ל-JS
+    'forms-config' => __DIR__ . '/forms/forms-config.php'
 ];
+
+// $requiredFiles = [
+//     'config' => $_SERVER['DOCUMENT_ROOT'] . '/config.php',
+//     'functions' => __DIR__ . '/includes/functions.php',
+//     'form-loader' => __DIR__ . '/forms/form-loader.php',  // במקום FormHandler
+//     'FormBuilder' => __DIR__ . '/forms/FormBuilder.php',
+//     'forms-config' => __DIR__ . '/forms/forms-config.php',
+//     'form-handler-js' => __DIR__ . '/forms/form-handler.js' // הוסף בדיקה ל-JS
+// ];
 
 foreach ($requiredFiles as $name => $path) {
     if (file_exists($path)) {

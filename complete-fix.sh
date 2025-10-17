@@ -53,7 +53,7 @@ mkdir -p dashboard/dashboards/cemeteries/forms
 mkdir -p dashboard/dashboards/cemeteries/js  
 mkdir -p dashboard/dashboards/cemeteries/css
 mkdir -p dashboard/dashboards/cemeteries/api
-mkdir -p backup_$(date +%Y%m%d_%H%M%S)
+mkdir -p backup_$(date "+%Y%m%d_%H%M%S")
 
 # שלב 3: יצירת SmartSelect.php
 print_info "יוצר SmartSelect.php..."

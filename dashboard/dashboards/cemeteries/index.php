@@ -30,6 +30,7 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/cards.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/breadcrumb.css">
 
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/smart-select.css">
 </head>
 <body>
     <!-- SVG Icons - חייב להיות בתחילת ה-body -->
@@ -177,5 +178,6 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
         // העבר את הקונפיג ל-JavaScript
         window.PAYMENT_TYPES_CONFIG = <?php echo json_encode($paymentTypesConfig['payment_types']); ?>;
     </script>
+    <script src="/dashboard/dashboards/cemeteries/js/smart-select.js"></script>
 </body>
 </html>

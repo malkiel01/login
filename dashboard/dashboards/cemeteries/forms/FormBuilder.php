@@ -713,3 +713,17 @@ class FormBuilder {
     }
 }
 ?>
+    private function renderSmartSelect($field) {
+        $smartSelect = new SmartSelect(
+            $field["name"],
+            $field["label"],
+            $field["options"] ?? [],
+            [
+                "searchable" => $field["searchable"] ?? false,
+                "placeholder" => $field["placeholder"] ?? "בחר...",
+                "required" => $field["required"] ?? false,
+                "display_mode" => $field["display_mode"] ?? "simple"
+            ]
+        );
+        return $smartSelect->render();
+    }

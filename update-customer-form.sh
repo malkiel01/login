@@ -1,3 +1,115 @@
+#!/bin/bash
+
+# ========================================
+# Customer Form Update Script
+# מעדכן את טופס הלקוח עם כל השיפורים
+# ========================================
+
+echo ""
+echo "========================================" 
+echo "   📝 עדכון טופס הלקוח - Smart Select + Validation"
+echo "========================================" 
+echo ""
+
+# צבעים
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+# פונקציות עזר
+print_success() { echo -e "${GREEN}✅ $1${NC}"; }
+print_info() { echo -e "${YELLOW}ℹ️ $1${NC}"; }
+print_error() { echo -e "${RED}❌ $1${NC}"; }
+
+# בדיקת נתיב
+FORMS_PATH="dashboard/dashboards/cemeteries/forms"
+
+if [[ ! -d "$FORMS_PATH" ]]; then
+    print_error "תיקיית forms לא נמצאה"
+    exit 1
+fi
+
+# שלב 1: גיבוי הטופס הקיים
+print_info "יוצר גיבוי של הטופס הקיים..."
+BACKUP_DIR="backup_customer_$(date '+%Y%m%d_%H%M%S')"
+mkdir -p "$BACKUP_DIR"
+
+if [[ -f "$FORMS_PATH/customer-form.php" ]]; then
+    cp "$FORMS_PATH/customer-form.php" "$BACKUP_DIR/customer-form.php.bak"
+    print_success "גיבוי נוצר ב-$BACKUP_DIR"
+fi
+
+# שלב 2: עדכון FormBuilder כדי לתמוך ב-field groups
+print_info "מוסיף תמיכה ב-Field Groups ל-FormBuilder..."
+
+# בדוק אם כבר יש תמיכה
+if ! grep -q "addFieldGroup" "$FORMS_PATH/FormBuilder.php"; then
+    cat >> "$FORMS_PATH/FormBuilder.php" << 'FIELDGROUP'
+
+    /**
+     * Add field group
+     */
+    public function addFieldGroup($id, $title, $config = []) {
+        $html = '<fieldset class="field-group ' . ($config['collapsible'] ?? '') . '" id="' 
+. $id . '-group">';
+        $html .= '<legend>' . $title . '</legend>';
+        $html .= '<div class="form-fields ' . ($config['layout'] ?? '') . '">';
+        
+        if (isset($config['fields'])) {
+            foreach ($config['fields'] as $field) {
+                // Handle span
+                $wrapperClass = 'form-field';
+                if (isset($field['span'])) {
+                    $wrapperClass .= ' span-' . $field['span'];
+                }
+                
+                $html .= '<div class="' . $wrapperClass . '">';
+                
+                // Check if it's smart_select
+                if ($field['type'] === 'smart_select') {
+                    $smartSelect = new SmartSelect(
+                        $field['name'],
+                        $field['label'],
+                        $field['options'] ?? [],
+                        [
+                            'searchable' => $field['searchable'] ?? false,
+                            'placeholder' => $field['placeholder'] ?? 'בחר...',
+                            'required' => $field['required'] ?? false,
+                            'display_mode' => $field['display_mode'] ?? 'simple',
+                            'depends_on' => $field['depends_on'] ?? null,
+                            'ajax_url' => $field['ajax_url'] ?? null
+                        ]
+                    );
+                    $html .= $smartSelect->render();
+                } else {
+                    // Regular field
+                    $this->addField(
+                        $field['name'],
+                        $field['label'],
+                        $field['type'],
+                        $field
+                    );
+                }
+                
+                $html .= '</div>';
+            }
+        }
+        
+        $html .= '</div></fieldset>';
+        $this->customHTML[] = $html;
+        return $this;
+    }
+FIELDGROUP
+    print_success "תמיכה ב-Field Groups נוספה"
+else
+    print_info "תמיכה ב-Field Groups כבר קיימת"
+fi
+
+# שלב 3: יצירת טופס הלקוח המעודכן
+print_info "יוצר את טופס הלקוח המעודכן..."
+
+cat > "$FORMS_PATH/customer-form.php" << 'CUSTOMERFORM'
 <?php
 /**
  * Enhanced Customer Form with Smart Select
@@ -656,3 +768,68 @@ document.addEventListener('DOMContentLoaded', function() {
 
 </body>
 </html>
+CUSTOMERFORM
+
+print_success "טופס הלקוח עודכן בהצלחה!"
+
+# שלב 4: Commit ו-Push
+print_info "שומר שינויים בגיט..."
+git add .
+git commit -m "Customer Form Updated with Smart Select and Advanced Features
+
+- Implemented Smart Select for countries and cities
+- Added field groups for better organization
+- Added Israeli ID validation
+- Added phone number formatting
+- Dynamic residency calculation
+- Responsive grid layout
+- Collapsible sections
+- AJAX city loading based on country selection
+
+Features:
+✅ Smart searchable country selector
+✅ Dynamic city loading with AJAX
+✅ Automatic residency calculation
+✅ Real-time validation
+✅ Phone formatting
+✅ Field groups with grid layout
+✅ Collapsible sections
+✅ Full RTL support" 2>/dev/null
+
+if [[ $? -eq 0 ]]; then
+    print_success "Commit בוצע"
+    
+    git push origin main 2>/dev/null
+    if [[ $? -eq 0 ]]; then
+        print_success "Push בוצע"
+    else
+        print_info "בצע push ידנית: git push origin main"
+    fi
+else
+    print_info "אין שינויים חדשים"
+fi
+
+echo ""
+echo "========================================" 
+print_success "העדכון הושלם בהצלחה!"
+echo "========================================" 
+echo ""
+echo "📋 שיפורים שהוטמעו:"
+echo "  ✅ Smart Select למדינות עם חיפוש"
+echo "  ✅ Smart Select לערים עם טעינה דינמית"
+echo "  ✅ חישוב תושבות אוטומטי"
+echo "  ✅ Validation לת.ז. ישראלית"
+echo "  ✅ פורמט אוטומטי לטלפונים"
+echo "  ✅ Field Groups מאורגנים"
+echo "  ✅ Sections מתקפלים"
+echo "  ✅ עיצוב רספונסיבי"
+echo ""
+echo "🎯 בדיקה:"
+echo "  פתח את הטופס בדפדפן:"
+echo "  /dashboard/dashboards/cemeteries/forms/customer-form.php"
+echo ""
+echo "📥 במחשב המקומי:"
+echo "  cd /Users/malkiel/projects/login/login"
+echo "  git pull origin main"
+echo ""
+print_success "טופס הלקוח מוכן לשימוש! 🚀"

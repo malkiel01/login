@@ -727,3 +727,57 @@ class FormBuilder {
         );
         return $smartSelect->render();
     }
+
+    /**
+     * Add field group
+     */
+    public function addFieldGroup($id, $title, $config = []) {
+        $html = '<fieldset class="field-group ' . ($config['collapsible'] ?? '') . '" id="' 
+. $id . '-group">';
+        $html .= '<legend>' . $title . '</legend>';
+        $html .= '<div class="form-fields ' . ($config['layout'] ?? '') . '">';
+        
+        if (isset($config['fields'])) {
+            foreach ($config['fields'] as $field) {
+                // Handle span
+                $wrapperClass = 'form-field';
+                if (isset($field['span'])) {
+                    $wrapperClass .= ' span-' . $field['span'];
+                }
+                
+                $html .= '<div class="' . $wrapperClass . '">';
+                
+                // Check if it's smart_select
+                if ($field['type'] === 'smart_select') {
+                    $smartSelect = new SmartSelect(
+                        $field['name'],
+                        $field['label'],
+                        $field['options'] ?? [],
+                        [
+                            'searchable' => $field['searchable'] ?? false,
+                            'placeholder' => $field['placeholder'] ?? 'בחר...',
+                            'required' => $field['required'] ?? false,
+                            'display_mode' => $field['display_mode'] ?? 'simple',
+                            'depends_on' => $field['depends_on'] ?? null,
+                            'ajax_url' => $field['ajax_url'] ?? null
+                        ]
+                    );
+                    $html .= $smartSelect->render();
+                } else {
+                    // Regular field
+                    $this->addField(
+                        $field['name'],
+                        $field['label'],
+                        $field['type'],
+                        $field
+                    );
+                }
+                
+                $html .= '</div>';
+            }
+        }
+        
+        $html .= '</div></fieldset>';
+        $this->customHTML[] = $html;
+        return $this;
+    }

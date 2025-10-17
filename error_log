@@ -59,3 +59,5 @@ Stack trace:
 #3 /home2/mbeplusc/public_html/form/login/test-permissions.php(14): require_once('/home2/mbeplusc...')
 #4 {main}
   thrown in /home2/mbeplusc/public_html/form/login/permissions/core/PermissionStorage.php on line 35
+[17-Oct-2025 05:56:02 America/Boise] PHP Parse error:  syntax error, unexpected 'של' (T_STRING) in /home2/mbeplusc/public_html/form/login/fix-smart-select.php on line 1327
+[17-Oct-2025 05:57:11 America/Boise] PHP Parse error:  syntax error, unexpected 'של' (T_STRING) in /home2/mbeplusc/public_html/form/login/fix-smart-select.php on line 1327

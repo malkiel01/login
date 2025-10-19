@@ -125,57 +125,57 @@ $formBuilder->addField('maritalStatus', 'מצב משפחתי', 'select', [
     'value' => $customer['maritalStatus'] ?? ''
 ]);
 
-// HTML מותאם אישית לבחירת כתובת
-$addressSelectorHTML = '
-<fieldset class="form-section" 
-        id="address-fieldset"
-        style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;"
-        data-cities=\'' . htmlspecialchars($citiesJson, ENT_QUOTES, 'UTF-8') . '\'>
-    <legend style="padding: 0 10px; font-weight: bold;">כתובת</legend>
-    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
-        <div class="form-group">
-            <label>מדינה</label>
-            <select id="countrySelect" name="countryId" class="form-control">
-                <option value="">-- בחר מדינה --</option>';
+// // HTML מותאם אישית לבחירת כתובת
+// $addressSelectorHTML = '
+// <fieldset class="form-section" 
+//         id="address-fieldset"
+//         style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;"
+//         data-cities=\'' . htmlspecialchars($citiesJson, ENT_QUOTES, 'UTF-8') . '\'>
+//     <legend style="padding: 0 10px; font-weight: bold;">כתובת</legend>
+//     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+//         <div class="form-group">
+//             <label>מדינה</label>
+//             <select id="countrySelect" name="countryId" class="form-control">
+//                 <option value="">-- בחר מדינה --</option>';
 
-foreach ($countries as $unicId => $name) {
-    $selected = ($customer && $customer['countryId'] == $unicId) ? 'selected' : '';
-    $addressSelectorHTML .= '<option value="' . $unicId . '" ' . $selected . '>' . 
-                            htmlspecialchars($name) . '</option>';
-}
+// foreach ($countries as $unicId => $name) {
+//     $selected = ($customer && $customer['countryId'] == $unicId) ? 'selected' : '';
+//     $addressSelectorHTML .= '<option value="' . $unicId . '" ' . $selected . '>' . 
+//                             htmlspecialchars($name) . '</option>';
+// }
 
-$addressSelectorHTML .= '
-            </select>
-        </div>
-        <div class="form-group">
-            <label>עיר</label>
-            <select id="citySelect" name="cityId" class="form-control">
-                <option value="">-- בחר קודם מדינה --</option>';
+// $addressSelectorHTML .= '
+//             </select>
+//         </div>
+//         <div class="form-group">
+//             <label>עיר</label>
+//             <select id="citySelect" name="cityId" class="form-control">
+//                 <option value="">-- בחר קודם מדינה --</option>';
 
- // אם יש מדינה נבחרת (בעריכה), טען את הערים שלה
-if ($customer && $customer['countryId']) {
-    foreach ($allCities as $city) {
-        if ($city['countryId'] == $customer['countryId']) {
-            $selected = ($customer['cityId'] == $city['unicId']) ? 'selected' : '';
-            $addressSelectorHTML .= '<option value="' . $city['unicId'] . '" ' . $selected . '>' . 
-                                htmlspecialchars($city['cityNameHe']) . '</option>';
-        }
-    }
-}
+//  // אם יש מדינה נבחרת (בעריכה), טען את הערים שלה
+// if ($customer && $customer['countryId']) {
+//     foreach ($allCities as $city) {
+//         if ($city['countryId'] == $customer['countryId']) {
+//             $selected = ($customer['cityId'] == $city['unicId']) ? 'selected' : '';
+//             $addressSelectorHTML .= '<option value="' . $city['unicId'] . '" ' . $selected . '>' . 
+//                                 htmlspecialchars($city['cityNameHe']) . '</option>';
+//         }
+//     }
+// }
 
-$addressSelectorHTML .= '
-            </select>
-        </div>
-        <div class="form-group" style="grid-column: span 2;">
-            <label>כתובת מלאה</label>
-            <input type="text" name="address" class="form-control" 
-                value="' . ($customer['address'] ?? '') . '" 
-                placeholder="רחוב, מספר בית">
-        </div>
-    </div>
-</fieldset>';
+// $addressSelectorHTML .= '
+//             </select>
+//         </div>
+//         <div class="form-group" style="grid-column: span 2;">
+//             <label>כתובת מלאה</label>
+//             <input type="text" name="address" class="form-control" 
+//                 value="' . ($customer['address'] ?? '') . '" 
+//                 placeholder="רחוב, מספר בית">
+//         </div>
+//     </div>
+// </fieldset>';
 
-$formBuilder->addCustomHTML($addressSelectorHTML);
+// $formBuilder->addCustomHTML($addressSelectorHTML);
 
 // --------------------
 

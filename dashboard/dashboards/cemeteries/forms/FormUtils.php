@@ -1,6 +1,7 @@
 <?php
 /**
  * FormUtils - פונקציות עזר אחידות לטפסים
+ * מיקום: /dashboard/dashboards/cemeteries/forms/FormUtils.php
  */
 
 class FormUtils {
@@ -45,6 +46,13 @@ class FormUtils {
         } catch (Exception $e) {
             return null;
         }
+    }
+    
+    /**
+     * רישום לוג
+     */
+    public static function log($message) {
+        error_log("[FormUtils] " . date('Y-m-d H:i:s') . " - " . $message);
     }
 }
 ?>

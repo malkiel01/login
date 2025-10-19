@@ -150,13 +150,13 @@ try {
             $primaryKey = $config['primaryKey'];
             
             // חיפוש לפי מפתח ראשי
-            $stmt = $pdo->prepare("SELECT * FROM $table WHERE $primaryKey = :id");
+            $stmt = $pdo->prepare("SELECT * FROM $table WHERE $primaryKey = :id AND isActive = 1");
             $stmt->execute(['id' => $id]);
             $item = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if (!$item) {
                 // נסה לחפש לפי id רגיל (תאימות לאחור)
-                $stmt = $pdo->prepare("SELECT * FROM $table WHERE id = :id");
+                $stmt = $pdo->prepare("SELECT * FROM $table WHERE id = :id AND isActive = 1");
                 $stmt->execute(['id' => $id]);
                 $item = $stmt->fetch(PDO::FETCH_ASSOC);
             }
@@ -302,8 +302,12 @@ try {
             $table = $config['table'];
             $primaryKey = $config['primaryKey'];
             
+            // התעלמות משינוי אקטיב
+            unset($data['isActive']); 
+
             // הוספת תאריך עדכון
             $data['updateDate'] = date('Y-m-d H:i:s');
+
             
             // סינון שדות לפי הרשאות
             $formFields = $manager->getFormFields($type, 'edit');

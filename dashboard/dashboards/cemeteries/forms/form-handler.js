@@ -2242,8 +2242,6 @@ const FormHandler = {
             
             if (type === 'areaGrave') type = 'area_grave';
             
-            data.isActive = 1;
-            
             let url;
             if (type === 'customer') {
                 url = `/dashboard/dashboards/cemeteries/api/customers-api.php?action=${action}`;

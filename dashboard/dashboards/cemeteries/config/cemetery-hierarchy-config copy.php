@@ -84,6 +84,16 @@ return [
                 'show_secondary' => 'contactPhoneName',
                 'icon_secondary' => '📞'
             ],
+            // [
+            //     'field' => 'isActive',
+            //     'title' => 'סטטוס',
+            //     'type' => 'status',
+            //     'width' => '100px',
+            //     'badges' => [
+            //         1 => ['text' => 'פעיל', 'class' => 'badge-success'],
+            //         0 => ['text' => 'לא פעיל', 'class' => 'badge-danger']
+            //     ]
+            // ],
             [
                 'field' => 'createDate',
                 'title' => 'נוצר',
@@ -162,6 +172,17 @@ return [
                 'placeholder' => '050-0000000',
                 'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
             ],
+            // [
+            //     'name' => 'isActive',
+            //     'label' => 'סטטוס',
+            //     'type' => 'select',
+            //     'options' => [
+            //         1 => 'פעיל',
+            //         0 => 'לא פעיל'
+            //     ],
+            //     'default' => 1,
+            //     'permissions' => ['admin', 'cemetery_manager']
+            // ]
         ]
     ],
     
@@ -231,6 +252,16 @@ return [
                 'title' => 'מיקום',
                 'type' => 'text'
             ],
+            // [
+            //     'field' => 'isActive',
+            //     'title' => 'סטטוס',
+            //     'type' => 'status',
+            //     'width' => '100px',
+            //     'badges' => [
+            //         1 => ['text' => 'פעיל', 'class' => 'badge-success'],
+            //         0 => ['text' => 'לא פעיל', 'class' => 'badge-danger']
+            //     ]
+            // ],
             [
                 'field' => 'createDate',
                 'title' => 'נוצר',
@@ -294,7 +325,18 @@ return [
                 'type' => 'textarea',
                 'rows' => 3,
                 'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
-            ]
+            ],
+            // [
+            //     'name' => 'isActive',
+            //     'label' => 'סטטוס',
+            //     'type' => 'select',
+            //     'options' => [
+            //         1 => 'פעיל',
+            //         0 => 'לא פעיל'
+            //     ],
+            //     'default' => 1,
+            //     'permissions' => ['admin', 'cemetery_manager']
+            // ]
         ]
     ],
     
@@ -364,6 +406,12 @@ return [
                 'title' => 'מיקום',
                 'type' => 'text'
             ],
+            // [
+            //     'field' => 'isActive',
+            //     'title' => 'סטטוס',
+            //     'type' => 'status',
+            //     'width' => '100px'
+            // ],
             [
                 'field' => 'createDate',
                 'title' => 'נוצר',
@@ -465,6 +513,12 @@ return [
                 'title' => 'מיקום',
                 'type' => 'text'
             ],
+            // [
+            //     'field' => 'isActive',
+            //     'title' => 'סטטוס',
+            //     'type' => 'status',
+            //     'width' => '100px'
+            // ],
             [
                 'field' => 'createDate',
                 'title' => 'נוצר',
@@ -575,6 +629,12 @@ return [
                 'type' => 'text',
                 'width' => '100px'
             ],
+            // [
+            //     'field' => 'isActive',
+            //     'title' => 'סטטוס',
+            //     'type' => 'status',
+            //     'width' => '100px'
+            // ],
             [
                 'field' => 'createDate',
                 'title' => 'נוצר',
@@ -882,6 +942,16 @@ return [
                 'type' => 'text',
                 'width' => '120px'
             ],
+            // [
+            //     'field' => 'isActive',
+            //     'title' => 'סטטוס',
+            //     'type' => 'status',
+            //     'width' => '100px',
+            //     'badges' => [
+            //         1 => ['text' => 'פעיל', 'class' => 'badge-success'],
+            //         0 => ['text' => 'לא פעיל', 'class' => 'badge-danger']
+            //     ]
+            // ],
             [
                 'field' => 'createDate',
                 'title' => 'נוצר',
@@ -1037,6 +1107,16 @@ return [
                 'width' => '100px',
                 'badge_class' => 'badge-secondary'
             ],
+            // [
+            //     'field' => 'isActive',
+            //     'title' => 'סטטוס',
+            //     'type' => 'status',
+            //     'width' => '100px',
+            //     'badges' => [
+            //         1 => ['text' => 'פעיל', 'class' => 'badge-success'],
+            //         0 => ['text' => 'לא פעיל', 'class' => 'badge-danger']
+            //     ]
+            // ],
             [
                 'field' => 'createDate',
                 'title' => 'נוצר',
@@ -1152,6 +1232,16 @@ return [
                 'width' => '150px',
                 'badge_class' => 'badge-info'
             ],
+            // [
+            //     'field' => 'isActive',
+            //     'title' => 'סטטוס',
+            //     'type' => 'status',
+            //     'width' => '100px',
+            //     'badges' => [
+            //         1 => ['text' => 'פעיל', 'class' => 'badge-success'],
+            //         0 => ['text' => 'לא פעיל', 'class' => 'badge-danger']
+            //     ]
+            // ],
             [
                 'field' => 'createDate',
                 'title' => 'נוצר',

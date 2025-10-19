@@ -178,7 +178,7 @@ const FormHandler = {
         });
     },
 
-    handleCustomerForm2: function(itemId) {
+    handleCustomerForm: function(itemId) {
         // טיפול בפילטור ערים
         this.waitForElement('#address-fieldset', (fieldset) => {
             if (fieldset.dataset.cities) {
@@ -562,7 +562,7 @@ const FormHandler = {
         }
     },
 
-    handleCustomerForm: function(itemId) {
+    handleCustomerForm4: function(itemId) {
         console.log('🔧 handleCustomerForm called with itemId:', itemId);
         
         // ============================================

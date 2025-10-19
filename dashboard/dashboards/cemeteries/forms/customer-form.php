@@ -286,7 +286,7 @@ echo $formBuilder->renderModal();
 ?>
 
 <!-- טען SmartSelect CSS & JS -->
-<link rel="stylesheet" href="../css/smart-select.css">
+<!-- <link rel="stylesheet" href="../css/smart-select.css">
 <script src="../js/smart-select.js"></script>
 
 <script>
@@ -347,4 +347,4 @@ echo $formBuilder->renderModal();
             });
         }
     });
-</script>
+</script> -->

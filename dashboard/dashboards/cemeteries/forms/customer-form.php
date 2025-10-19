@@ -1,26 +1,30 @@
 <?php
 /**
- * Customer Form - Updated with SmartSelect
- * טופס לקוח משודרג עם סלקט חכם
+ * Enhanced Customer Form with Smart Select - COMPLETE VERSION
+ * Version: 3.0.0 - Fixed and Working
  */
 
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-header('Content-Type: text/html; charset=utf-8');
+// === DEBUG MODE ===
+$DEBUG_MODE = true;
 
-// טעינת קבצים נדרשים
+if ($DEBUG_MODE) {
+    error_reporting(E_ALL);
+    ini_set('display_errors', 1);
+}
+
+// === INCLUDES ===
 require_once __DIR__ . '/FormBuilder.php';
-require_once __DIR__ . '/SmartSelect.php';  // ⭐ הקובץ החדש שלנו!
+require_once __DIR__ . '/SmartSelect.php';
 require_once dirname(__DIR__) . '/config.php';
 
-// קבלת פרמטרים
+// === PARAMETERS ===
 $itemId = $_GET['itemId'] ?? $_GET['id'] ?? null;
-$parentId = $_GET['parentId'] ?? $_GET['parent_id'] ?? null;
 
+// === DATABASE ===
 try {
     $conn = getDBConnection();
     
-    // טען לקוח אם בעריכה
+    // Load customer
     $customer = null;
     if ($itemId) {
         $stmt = $conn->prepare("SELECT * FROM customers WHERE unicId = ? AND isActive = 1");
@@ -28,18 +32,13 @@ try {
         $customer = $stmt->fetch(PDO::FETCH_ASSOC);
     }
     
-    // טען מדינות - פורמט מתקדם
+    // Load countries for SmartSelect
     $countriesStmt = $conn->prepare("
-        SELECT 
-            c.unicId, 
-            c.countryNameHe, 
-            c.countryNameEn,
-            COUNT(DISTINCT ct.unicId) as cities_count
-        FROM countries c
-        LEFT JOIN cities ct ON ct.countryId = c.unicId AND ct.isActive = 1
-        WHERE c.isActive = 1
-        GROUP BY c.unicId, c.countryNameHe, c.countryNameEn
-        ORDER BY c.countryNameHe
+        SELECT unicId, countryNameHe, countryNameEn,
+               (SELECT COUNT(*) FROM cities WHERE countryId = countries.unicId AND isActive = 1) as cities_count
+        FROM countries 
+        WHERE isActive = 1 
+        ORDER BY countryNameHe
     ");
     $countriesStmt->execute();
     
@@ -52,7 +51,7 @@ try {
         ];
     }
     
-    // טען ערים של המדינה הנוכחית (אם בעריכה)
+    // Load cities if editing
     $cities = [];
     if ($customer && !empty($customer['countryId'])) {
         $citiesStmt = $conn->prepare("
@@ -74,7 +73,6 @@ try {
 } catch (Exception $e) {
     die("שגיאה: " . $e->getMessage());
 }
-
 ?>
 <!DOCTYPE html>
 <html dir="rtl" lang="he">
@@ -83,7 +81,7 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $itemId ? 'עריכת לקוח' : 'לקוח חדש' ?></title>
     
-    <!-- ⭐ טען את ה-CSS של SmartSelect -->
+    <!-- SmartSelect CSS -->
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/smart-select.css">
     
     <style>
@@ -97,10 +95,11 @@ try {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: #f5f7fa;
             padding: 20px;
+            direction: rtl;
         }
         
         .form-container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
             background: white;
             padding: 30px;
@@ -116,18 +115,21 @@ try {
         
         .form-header h1 {
             color: #667eea;
-            font-size: 28px;
-            margin-bottom: 8px;
+            font-size: 24px;
+            margin-bottom: 5px;
         }
         
         .form-section {
-            margin-bottom: 30px;
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 8px;
         }
         
         .form-section h2 {
             color: #374151;
-            font-size: 18px;
-            margin-bottom: 20px;
+            font-size: 16px;
+            margin-bottom: 15px;
             padding-bottom: 10px;
             border-bottom: 1px solid #e5e7eb;
         }
@@ -135,20 +137,16 @@ try {
         .form-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-        }
-        
-        .form-grid.single-column {
-            grid-template-columns: 1fr;
+            gap: 15px;
         }
         
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         
         .form-group label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
             font-weight: 600;
             color: #374151;
             font-size: 14px;
@@ -156,14 +154,14 @@ try {
         
         .form-group label .required {
             color: #dc3545;
-            margin-right: 4px;
+            margin-right: 3px;
         }
         
         .form-control {
             width: 100%;
-            padding: 10px 14px;
+            padding: 10px 12px;
             border: 2px solid #d1d5db;
-            border-radius: 8px;
+            border-radius: 6px;
             font-size: 14px;
             transition: all 0.2s;
         }
@@ -180,22 +178,22 @@ try {
         
         textarea.form-control {
             resize: vertical;
-            min-height: 100px;
+            min-height: 80px;
         }
         
         .form-actions {
             display: flex;
-            gap: 15px;
+            gap: 10px;
             justify-content: flex-end;
-            margin-top: 30px;
+            margin-top: 25px;
             padding-top: 20px;
             border-top: 2px solid #e5e7eb;
         }
         
         .btn {
-            padding: 12px 24px;
+            padding: 10px 20px;
             border: none;
-            border-radius: 8px;
+            border-radius: 6px;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
@@ -210,7 +208,6 @@ try {
         .btn-primary:hover {
             background: #5568d3;
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
         }
         
         .btn-secondary {
@@ -226,10 +223,6 @@ try {
             .form-grid {
                 grid-template-columns: 1fr;
             }
-            
-            .form-container {
-                padding: 20px;
-            }
         }
     </style>
 </head>
@@ -242,31 +235,24 @@ try {
         <form id="customerForm" method="POST" action="/dashboard/dashboards/cemeteries/api/customers-api.php">
             <input type="hidden" name="action" value="<?= $itemId ? 'update' : 'create' ?>">
             <?php if ($itemId): ?>
-                <input type="hidden" name="id" value="<?= htmlspecialchars($itemId) ?>">
+                <input type="hidden" name="unicId" value="<?= htmlspecialchars($customer['unicId']) ?>">
             <?php endif; ?>
             
-            <!-- פרטי זיהוי -->
+            <!-- זיהוי -->
             <div class="form-section">
-                <h2>📋 פרטי זיהוי</h2>
+                <h2>🆔 פרטי זיהוי</h2>
                 <div class="form-grid">
                     <div class="form-group">
-                        <label>
-                            <span class="required">*</span>
-                            סוג זיהוי
-                        </label>
+                        <label><span class="required">*</span> סוג זיהוי</label>
                         <select name="typeId" id="typeId" class="form-control" required>
-                            <option value="">-- בחר --</option>
-                            <option value="1" <?= ($customer['typeId'] ?? '') == 1 ? 'selected' : '' ?>>ת.ז.</option>
-                            <option value="2" <?= ($customer['typeId'] ?? '') == 2 ? 'selected' : '' ?>>דרכון</option>
-                            <option value="3" <?= ($customer['typeId'] ?? '') == 3 ? 'selected' : '' ?>>אלמוני</option>
+                            <option value="1" <?= ($customer['typeId'] ?? 1) == 1 ? 'selected' : '' ?>>ת.ז.</option>
+                            <option value="2" <?= ($customer['typeId'] ?? 1) == 2 ? 'selected' : '' ?>>דרכון</option>
+                            <option value="3" <?= ($customer['typeId'] ?? 1) == 3 ? 'selected' : '' ?>>אלמוני</option>
                         </select>
                     </div>
                     
                     <div class="form-group">
-                        <label>
-                            <span class="required">*</span>
-                            מספר זיהוי
-                        </label>
+                        <label><span class="required">*</span> מספר זיהוי</label>
                         <input type="text" name="numId" id="numId" class="form-control" 
                                value="<?= htmlspecialchars($customer['numId'] ?? '') ?>" required>
                     </div>
@@ -278,19 +264,13 @@ try {
                 <h2>👤 פרטים אישיים</h2>
                 <div class="form-grid">
                     <div class="form-group">
-                        <label>
-                            <span class="required">*</span>
-                            שם פרטי
-                        </label>
+                        <label><span class="required">*</span> שם פרטי</label>
                         <input type="text" name="firstName" class="form-control" 
                                value="<?= htmlspecialchars($customer['firstName'] ?? '') ?>" required>
                     </div>
                     
                     <div class="form-group">
-                        <label>
-                            <span class="required">*</span>
-                            שם משפחה
-                        </label>
+                        <label><span class="required">*</span> שם משפחה</label>
                         <input type="text" name="lastName" class="form-control" 
                                value="<?= htmlspecialchars($customer['lastName'] ?? '') ?>" required>
                     </div>
@@ -298,7 +278,7 @@ try {
                     <div class="form-group">
                         <label>מגדר</label>
                         <select name="gender" class="form-control">
-                            <option value="">-- בחר --</option>
+                            <option value="">בחר</option>
                             <option value="1" <?= ($customer['gender'] ?? '') == 1 ? 'selected' : '' ?>>זכר</option>
                             <option value="2" <?= ($customer['gender'] ?? '') == 2 ? 'selected' : '' ?>>נקבה</option>
                         </select>
@@ -312,17 +292,17 @@ try {
                 </div>
             </div>
             
-            <!-- כתובת - ⭐ כאן משתמשים ב-SmartSelect! -->
+            <!-- כתובת עם SmartSelect -->
             <div class="form-section">
                 <h2>🏠 כתובת</h2>
                 <div class="form-grid">
-                    <!-- מדינה עם SmartSelect -->
+                    <!-- מדינה -->
                     <div class="form-group">
                         <?php
                         $countrySelect = SmartSelect::create('countryId', 'מדינה', $countries, [
                             'searchable' => true,
                             'placeholder' => 'בחר מדינה...',
-                            'search_placeholder' => 'הקלד לחיפוש מדינה...',
+                            'search_placeholder' => 'הקלד לחיפוש...',
                             'display_mode' => 'advanced',
                             'value' => $customer['countryId'] ?? null
                         ]);
@@ -330,13 +310,13 @@ try {
                         ?>
                     </div>
                     
-                    <!-- עיר עם SmartSelect תלוי -->
+                    <!-- עיר -->
                     <div class="form-group">
                         <?php
                         $citySelect = SmartSelect::create('cityId', 'עיר', $cities, [
                             'searchable' => true,
                             'placeholder' => $cities ? 'בחר עיר...' : 'בחר תחילה מדינה...',
-                            'search_placeholder' => 'הקלד לחיפוש עיר...',
+                            'search_placeholder' => 'הקלד לחיפוש...',
                             'display_mode' => 'advanced',
                             'depends_on' => 'countryId',
                             'ajax_url' => '/dashboard/dashboards/cemeteries/api/get-cities.php',
@@ -351,14 +331,14 @@ try {
                 <div class="form-group">
                     <label>כתובת מלאה</label>
                     <input type="text" name="address" class="form-control" 
-                           placeholder="רחוב, מספר בית, דירה"
+                           placeholder="רחוב, מספר בית"
                            value="<?= htmlspecialchars($customer['address'] ?? '') ?>">
                 </div>
             </div>
             
-            <!-- פרטי התקשרות -->
+            <!-- פרטי קשר -->
             <div class="form-section">
-                <h2>📞 פרטי התקשרות</h2>
+                <h2>📞 פרטי קשר</h2>
                 <div class="form-grid">
                     <div class="form-group">
                         <label>טלפון</label>
@@ -368,47 +348,60 @@ try {
                     </div>
                     
                     <div class="form-group">
-                        <label>טלפון נייד</label>
+                        <label>נייד</label>
                         <input type="tel" name="phoneMobile" class="form-control" 
                                placeholder="050-1234567"
                                value="<?= htmlspecialchars($customer['phoneMobile'] ?? '') ?>">
                     </div>
+                </div>
+            </div>
+            
+            <!-- נוספים -->
+            <div class="form-section">
+                <h2>📝 פרטים נוספים</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>סטטוס</label>
+                        <select name="statusCustomer" class="form-control">
+                            <option value="1" <?= ($customer['statusCustomer'] ?? 1) == 1 ? 'selected' : '' ?>>פעיל</option>
+                            <option value="2" <?= ($customer['statusCustomer'] ?? 1) == 2 ? 'selected' : '' ?>>רוכש</option>
+                            <option value="3" <?= ($customer['statusCustomer'] ?? 1) == 3 ? 'selected' : '' ?>>נפטר</option>
+                        </select>
+                    </div>
                     
                     <div class="form-group">
-                        <label>אימייל</label>
-                        <input type="email" name="email" class="form-control" 
-                               placeholder="example@domain.com"
-                               value="<?= htmlspecialchars($customer['email'] ?? '') ?>">
+                        <label>תושבות</label>
+                        <select name="resident" class="form-control">
+                            <option value="1" <?= ($customer['resident'] ?? 3) == 1 ? 'selected' : '' ?>>ירושלים</option>
+                            <option value="2" <?= ($customer['resident'] ?? 3) == 2 ? 'selected' : '' ?>>תושב חוץ</option>
+                            <option value="3" <?= ($customer['resident'] ?? 3) == 3 ? 'selected' : '' ?>>תושב חו"ל</option>
+                        </select>
                     </div>
                 </div>
-            </div>
-            
-            <!-- הערות -->
-            <div class="form-section">
-                <h2>📝 הערות</h2>
+                
                 <div class="form-group">
-                    <textarea name="comment" class="form-control" 
-                              placeholder="הערות נוספות..."><?= htmlspecialchars($customer['comment'] ?? '') ?></textarea>
+                    <label>הערות</label>
+                    <textarea name="comment" class="form-control"><?= htmlspecialchars($customer['comment'] ?? '') ?></textarea>
                 </div>
             </div>
             
-            <!-- כפתורי פעולה -->
+            <!-- כפתורים -->
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary">
-                    <?= $itemId ? '💾 שמור שינויים' : '➕ הוסף לקוח' ?>
+                    <?= $itemId ? '💾 שמור' : '➕ הוסף' ?>
                 </button>
                 <button type="button" class="btn btn-secondary" onclick="window.close()">
-                    ✖️ ביטול
+                    ביטול
                 </button>
             </div>
         </form>
     </div>
     
-    <!-- ⭐ טען את ה-JavaScript של SmartSelect -->
+    <!-- SmartSelect JavaScript -->
     <script src="/dashboard/dashboards/cemeteries/js/smart-select.js"></script>
     
     <script>
-        // טיפול בשליחת הטופס
+        // Form submission
         document.getElementById('customerForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -421,22 +414,18 @@ try {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('✅ הלקוח נשמר בהצלחה!');
-                    
-                    // רענן את החלון האב
+                    alert('✅ נשמר בהצלחה!');
                     if (window.opener) {
                         window.opener.location.reload();
                     }
-                    
-                    // סגור את החלון
                     window.close();
                 } else {
-                    alert('❌ שגיאה: ' + (data.error || 'שגיאה לא ידועה'));
+                    alert('❌ שגיאה: ' + (data.error || 'לא ידוע'));
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('❌ שגיאה בשמירת הנתונים');
+                alert('❌ שגיאה בשמירה');
             });
         });
     </script>

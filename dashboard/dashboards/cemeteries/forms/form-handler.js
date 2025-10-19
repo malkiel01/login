@@ -626,7 +626,7 @@ const FormHandler = {
         }
     },
 
-    handleCustomerFormOld1: function(itemId) {
+    handleCustomerForm: function(itemId) {
         console.log('🔧 handleCustomerForm called with itemId:', itemId);
         
         // ============================================
@@ -909,7 +909,7 @@ const FormHandler = {
         }
     },
 
-    handleCustomerForm: function(itemId) {
+    handleCustomerFormOld2: function(itemId) {
         console.log('🔧 handleCustomerForm called with itemId:', itemId);
         
         // ============================================

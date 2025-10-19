@@ -219,6 +219,67 @@ $formBuilder->addField('address', 'כתובת מלאה', 'text', [
 
 // --------------------
 
+
+// === כתובת עם SmartSelect - בדיוק כמו שהיה! ===
+
+$citiesJson = json_encode($allCities, JSON_UNESCAPED_UNICODE);
+
+$addressHTML = '
+<fieldset class="form-section" 
+        id="address-fieldset"
+        style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;"
+        data-cities=\'' . htmlspecialchars($citiesJson, ENT_QUOTES) . '\'>
+    <legend style="padding: 0 10px; font-weight: bold;">כתובת</legend>
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+';
+
+// מדינה - SmartSelect
+$smartCountry = new SmartSelect('countryId', 'מדינה', $countries, [
+    'searchable' => true,
+    'placeholder' => 'בחר מדינה...',
+    'search_placeholder' => 'חפש מדינה...',
+    'required' => true,
+    'value' => $customer['countryId'] ?? ''
+]);
+
+$addressHTML .= '<div style="margin-bottom: 0;">' . $smartCountry->render() . '</div>';
+
+// עיר - SmartSelect
+$citiesForSelect = [];
+if ($customer && $customer['countryId']) {
+    foreach ($allCities as $city) {
+        if ($city['countryId'] == $customer['countryId']) {
+            $citiesForSelect[$city['unicId']] = $city['cityNameHe'];
+        }
+    }
+}
+
+$smartCity = new SmartSelect('cityId', 'עיר', $citiesForSelect, [
+    'searchable' => true,
+    'placeholder' => 'בחר עיר...',
+    'search_placeholder' => 'חפש עיר...',
+    'disabled' => empty($customer['countryId']),
+    'value' => $customer['cityId'] ?? ''
+]);
+
+$addressHTML .= '<div style="margin-bottom: 0;">' . $smartCity->render() . '</div>';
+
+// כתובת מלאה - תופסת 2 עמודות
+$addressHTML .= '
+        <div class="form-group" style="grid-column: span 2; margin-bottom: 0;">
+            <label>כתובת מלאה</label>
+            <input type="text" name="address" class="form-control" 
+                value="' . htmlspecialchars($customer['address'] ?? '') . '" 
+                placeholder="רחוב, מספר בית">
+        </div>
+    </div>
+</fieldset>';
+
+$formBuilder->addCustomHTML($addressHTML);
+
+
+// --------------------
+
 // פרטי התקשרות
 $formBuilder->addField('phone', 'טלפון', 'tel', [
     'value' => $customer['phone'] ?? ''
@@ -284,67 +345,3 @@ if ($customer && $customer['unicId']) {
 // הצג את הטופס
 echo $formBuilder->renderModal();
 ?>
-
-<!-- טען SmartSelect CSS & JS -->
-<!-- <link rel="stylesheet" href="../css/smart-select.css">
-<script src="../js/smart-select.js"></script>
-
-<script>
-    alert('test')
-    // נתוני כל הערים
-    const allCities = <?php echo json_encode($allCities, JSON_UNESCAPED_UNICODE); ?>;
-
-    // המתן לטעינת SmartSelect
-    document.addEventListener('DOMContentLoaded', function() {
-        
-        // כשבוחרים מדינה
-        const countryInput = document.getElementById('countryId');
-        if (countryInput) {
-            countryInput.addEventListener('change', function() {
-                const countryId = this.value;
-                const cityInstance = SmartSelectManager.instances['cityId'];
-                
-                if (!cityInstance) return;
-                
-                if (!countryId) {
-                    // אין מדינה - השבת את העיר
-                    cityInstance.wrapper.classList.add('disabled');
-                    cityInstance.hiddenInput.disabled = true;
-                    cityInstance.hiddenInput.value = '';
-                    cityInstance.valueSpan.textContent = 'בחר קודם מדינה...';
-                    return;
-                }
-                
-                // סנן ערים לפי המדינה
-                const filteredCities = allCities.filter(city => city.countryId == countryId);
-                
-                // נקה אופציות קיימות
-                cityInstance.optionsContainer.innerHTML = '';
-                cityInstance.allOptions = [];
-                
-                // הוסף ערים מסוננות
-                filteredCities.forEach(city => {
-                    const option = document.createElement('div');
-                    option.className = 'smart-select-option';
-                    option.dataset.value = city.unicId;
-                    option.textContent = city.cityNameHe;
-                    
-                    option.addEventListener('click', () => {
-                        SmartSelectManager.select('cityId', city.unicId);
-                    });
-                    
-                    cityInstance.optionsContainer.appendChild(option);
-                    cityInstance.allOptions.push(option);
-                });
-                
-                // הפעל את השדה
-                cityInstance.wrapper.classList.remove('disabled');
-                cityInstance.hiddenInput.disabled = false;
-                
-                // איפוס הערך
-                cityInstance.hiddenInput.value = '';
-                cityInstance.valueSpan.textContent = 'בחר עיר...';
-            });
-        }
-    });
-</script> -->

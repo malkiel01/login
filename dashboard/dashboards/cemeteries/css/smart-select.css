@@ -5,16 +5,22 @@
     width: 100%;
 }
 
+.smart-select-wrapper .form-group {
+    margin-bottom: 0 !important;
+}
+
 .smart-select-display {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.625rem 1rem;
+    padding: 0.5rem 0.75rem; /* ← קטן יותר! */
     background: white;
-    border: 1px solid #cbd5e0;
+    border: 1px solid #cbd5e0; /* ← 1px במקום 2px */
     border-radius: 0.375rem;
     cursor: pointer;
-    transition: border-color 0.2s;
+    transition: all 0.2s ease;
+    min-height: 38px; /* ← בדיוק כמו input רגיל */
+    height: 38px; /* ← גובה קבוע */
 }
 
 .smart-select-display:hover {
@@ -28,16 +34,19 @@
 
 .smart-select-value {
     flex: 1;
+    color: #2d3748;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    font-size: 0.875rem; /* ← קטן יותר */
+    line-height: 1.5;
 }
 
 .smart-select-arrow {
     margin-left: 0.5rem;
-    font-size: 0.75rem;
     color: #718096;
-    transition: transform 0.2s;
+    transition: transform 0.2s ease;
+    font-size: 0.7rem; /* ← קטן יותר */
 }
 
 .smart-select-display.active .smart-select-arrow {
@@ -111,5 +120,8 @@
 @media (max-width: 768px) {
     .smart-select-display {
         font-size: 16px; /* מונע zoom */
+    }
+    .form-section > div[style*="grid"] {
+        grid-template-columns: 1fr !important; /* ← עמודה אחת */
     }
 }

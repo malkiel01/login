@@ -9,6 +9,7 @@ require_once __DIR__ . '/FormBuilder.php';
 require_once __DIR__ . 
 '/FormUtils.php';
 require_once dirname(__DIR__) . '/config.php';
+require_once __DIR__ . '/SmartSelect.php';  // ← הוסף את זה!
 
 
 // === קבלת פרמטרים אחידה ===
@@ -176,6 +177,48 @@ $addressSelectorHTML .= '
 
 $formBuilder->addCustomHTML($addressSelectorHTML);
 
+// --------------------
+
+// === מדינה - SmartSelect עם חיפוש ===
+$smartCountry = new SmartSelect('countryId', 'מדינה', $countries, [
+    'searchable' => true,
+    'placeholder' => 'בחר מדינה...',
+    'search_placeholder' => 'חפש מדינה...',
+    'required' => true,
+    'value' => $customer['countryId'] ?? ''
+]);
+
+$formBuilder->addCustomHTML($smartCountry->render());
+
+// === עיר - SmartSelect עם תלות במדינה ===
+$citiesForSelect = [];
+if ($customer && $customer['countryId']) {
+    // בעריכה - טען את הערים של המדינה הנבחרת
+    foreach ($allCities as $city) {
+        if ($city['countryId'] == $customer['countryId']) {
+            $citiesForSelect[$city['unicId']] = $city['cityNameHe'];
+        }
+    }
+}
+
+$smartCity = new SmartSelect('cityId', 'עיר', $citiesForSelect, [
+    'searchable' => true,
+    'placeholder' => 'בחר עיר...',
+    'search_placeholder' => 'חפש עיר...',
+    'disabled' => empty($customer['countryId']),  // מושבת אם אין מדינה
+    'value' => $customer['cityId'] ?? ''
+]);
+
+$formBuilder->addCustomHTML($smartCity->render());
+
+// כתובת מלאה
+$formBuilder->addField('address', 'כתובת מלאה', 'text', [
+    'value' => $customer['address'] ?? '',
+    'placeholder' => 'רחוב, מספר בית'
+]);
+
+// --------------------
+
 // פרטי התקשרות
 $formBuilder->addField('phone', 'טלפון', 'tel', [
     'value' => $customer['phone'] ?? ''
@@ -241,3 +284,67 @@ if ($customer && $customer['unicId']) {
 // הצג את הטופס
 echo $formBuilder->renderModal();
 ?>
+
+<!-- טען SmartSelect CSS & JS -->
+<link rel="stylesheet" href="../css/smart-select.css">
+<script src="../js/smart-select.js"></script>
+
+<script>
+    alert('test')
+    // נתוני כל הערים
+    const allCities = <?php echo json_encode($allCities, JSON_UNESCAPED_UNICODE); ?>;
+
+    // המתן לטעינת SmartSelect
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // כשבוחרים מדינה
+        const countryInput = document.getElementById('countryId');
+        if (countryInput) {
+            countryInput.addEventListener('change', function() {
+                const countryId = this.value;
+                const cityInstance = SmartSelectManager.instances['cityId'];
+                
+                if (!cityInstance) return;
+                
+                if (!countryId) {
+                    // אין מדינה - השבת את העיר
+                    cityInstance.wrapper.classList.add('disabled');
+                    cityInstance.hiddenInput.disabled = true;
+                    cityInstance.hiddenInput.value = '';
+                    cityInstance.valueSpan.textContent = 'בחר קודם מדינה...';
+                    return;
+                }
+                
+                // סנן ערים לפי המדינה
+                const filteredCities = allCities.filter(city => city.countryId == countryId);
+                
+                // נקה אופציות קיימות
+                cityInstance.optionsContainer.innerHTML = '';
+                cityInstance.allOptions = [];
+                
+                // הוסף ערים מסוננות
+                filteredCities.forEach(city => {
+                    const option = document.createElement('div');
+                    option.className = 'smart-select-option';
+                    option.dataset.value = city.unicId;
+                    option.textContent = city.cityNameHe;
+                    
+                    option.addEventListener('click', () => {
+                        SmartSelectManager.select('cityId', city.unicId);
+                    });
+                    
+                    cityInstance.optionsContainer.appendChild(option);
+                    cityInstance.allOptions.push(option);
+                });
+                
+                // הפעל את השדה
+                cityInstance.wrapper.classList.remove('disabled');
+                cityInstance.hiddenInput.disabled = false;
+                
+                // איפוס הערך
+                cityInstance.hiddenInput.value = '';
+                cityInstance.valueSpan.textContent = 'בחר עיר...';
+            });
+        }
+    });
+</script>

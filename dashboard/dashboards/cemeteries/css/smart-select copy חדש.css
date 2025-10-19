@@ -1,0 +1,391 @@
+/**
+ * SmartSelect Styles - Full Featured
+ * עיצוב מלא ומקצועי לסלקט חכם
+ * 
+ * @version 2.0.0
+ */
+
+/* ========================================
+   Wrapper & Label
+======================================== */
+
+.smart-select-wrapper {
+    position: relative;
+    margin-bottom: 1rem;
+    width: 100%;
+}
+
+.smart-select-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    font-size: 14px;
+    color: #374151;
+}
+
+.smart-select-label .text-danger {
+    color: #dc3545;
+    margin-right: 2px;
+}
+
+/* ========================================
+   Container
+======================================== */
+
+.smart-select-container {
+    position: relative;
+    width: 100%;
+}
+
+.smart-select-container.disabled {
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+/* ========================================
+   Display (מה שנראה כשסגור)
+======================================== */
+
+.smart-select-display {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background-color: #ffffff;
+    border: 2px solid #d1d5db;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 44px;
+    user-select: none;
+}
+
+.smart-select-display:hover {
+    border-color: #9ca3af;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.smart-select-container.open .smart-select-display {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.smart-select-value {
+    flex: 1;
+    color: #1f2937;
+    font-size: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.smart-select-display:hover .smart-select-value {
+    color: #111827;
+}
+
+.smart-select-arrow {
+    margin-right: 8px;
+    color: #6b7280;
+    transition: transform 0.2s ease;
+    font-size: 12px;
+}
+
+.smart-select-container.open .smart-select-arrow {
+    transform: rotate(180deg);
+    color: #667eea;
+}
+
+/* ========================================
+   Dropdown (מה שנפתח)
+======================================== */
+
+.smart-select-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    left: 0;
+    background-color: #ffffff;
+    border: 2px solid #667eea;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    max-height: 320px;
+    display: flex;
+    flex-direction: column;
+    animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ========================================
+   Search Box
+======================================== */
+
+.smart-select-search-box {
+    padding: 12px;
+    border-bottom: 1px solid #e5e7eb;
+    background-color: #f9fafb;
+    border-radius: 6px 6px 0 0;
+}
+
+.smart-select-search-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.2s ease;
+    background-color: #ffffff;
+}
+
+.smart-select-search-input:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.smart-select-search-input::placeholder {
+    color: #9ca3af;
+}
+
+/* ========================================
+   Options Container
+======================================== */
+
+.smart-select-options {
+    overflow-y: auto;
+    max-height: 250px;
+    padding: 4px;
+}
+
+/* Custom Scrollbar */
+.smart-select-options::-webkit-scrollbar {
+    width: 8px;
+}
+
+.smart-select-options::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.smart-select-options::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 4px;
+}
+
+.smart-select-options::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+}
+
+/* ========================================
+   Option
+======================================== */
+
+.smart-select-option {
+    padding: 10px 12px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+    font-size: 14px;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2px;
+}
+
+.smart-select-option:hover {
+    background-color: #f3f4f6;
+    color: #111827;
+}
+
+.smart-select-option.selected {
+    background-color: #667eea;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.smart-select-option.selected:hover {
+    background-color: #5568d3;
+}
+
+.smart-select-option.focused {
+    background-color: #e0e7ff;
+    outline: 2px solid #667eea;
+    outline-offset: -2px;
+}
+
+.smart-select-option.selected.focused {
+    background-color: #5568d3;
+}
+
+/* ========================================
+   Advanced Option Display
+======================================== */
+
+.smart-select-option-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.smart-select-option-text {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.smart-select-option-subtitle {
+    font-size: 12px;
+    opacity: 0.8;
+    font-weight: normal;
+}
+
+.smart-select-option.selected .smart-select-option-subtitle {
+    opacity: 0.9;
+}
+
+.smart-select-option-badge {
+    background-color: #e5e7eb;
+    color: #374151;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-right: 8px;
+}
+
+.smart-select-option.selected .smart-select-option-badge {
+    background-color: rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+}
+
+/* ========================================
+   No Results
+======================================== */
+
+.smart-select-no-results {
+    padding: 20px;
+    text-align: center;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+/* ========================================
+   Loading
+======================================== */
+
+.smart-select-loading {
+    padding: 20px;
+    text-align: center;
+    color: #667eea;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.smart-select-loading::after {
+    content: '';
+    width: 16px;
+    height: 16px;
+    border: 2px solid #667eea;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ========================================
+   Responsive
+======================================== */
+
+@media (max-width: 768px) {
+    .smart-select-dropdown {
+        max-height: 280px;
+    }
+    
+    .smart-select-options {
+        max-height: 220px;
+    }
+    
+    .smart-select-display {
+        padding: 12px;
+    }
+    
+    .smart-select-option {
+        padding: 12px;
+    }
+}
+
+/* ========================================
+   RTL Support
+======================================== */
+
+[dir="rtl"] .smart-select-arrow {
+    margin-right: 0;
+    margin-left: 8px;
+}
+
+[dir="rtl"] .smart-select-option-badge {
+    margin-right: 0;
+    margin-left: 8px;
+}
+
+/* ========================================
+   Dark Mode Support (Optional)
+======================================== */
+
+@media (prefers-color-scheme: dark) {
+    .smart-select-display {
+        background-color: #1f2937;
+        border-color: #374151;
+        color: #f9fafb;
+    }
+    
+    .smart-select-value {
+        color: #f9fafb;
+    }
+    
+    .smart-select-dropdown {
+        background-color: #1f2937;
+        border-color: #667eea;
+    }
+    
+    .smart-select-search-box {
+        background-color: #111827;
+        border-color: #374151;
+    }
+    
+    .smart-select-search-input {
+        background-color: #374151;
+        border-color: #4b5563;
+        color: #f9fafb;
+    }
+    
+    .smart-select-option {
+        color: #e5e7eb;
+    }
+    
+    .smart-select-option:hover {
+        background-color: #374151;
+    }
+    
+    .smart-select-option-badge {
+        background-color: #374151;
+        color: #e5e7eb;
+    }
+}

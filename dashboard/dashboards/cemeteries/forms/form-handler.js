@@ -626,7 +626,7 @@ const FormHandler = {
         }
     },
 
-    handleCustomerForm: function(itemId) {
+    handleCustomerFormOld1: function(itemId) {
         console.log('🔧 handleCustomerForm called with itemId:', itemId);
         
         // ============================================
@@ -906,6 +906,254 @@ const FormHandler = {
                     console.error('❌ Error loading customer data:', error);
                     alert('שגיאה בטעינת נתוני הלקוח');
                 });
+        }
+    },
+
+    handleCustomerForm: function(itemId) {
+        console.log('🔧 handleCustomerForm called with itemId:', itemId);
+        
+        // ============================================
+        // חלק 1: המתן ל-SmartSelect להיות מוכן
+        // ============================================
+        this.waitForElement('#address-fieldset', async (fieldset) => {
+            
+            // קבל נתוני ערים
+            if (!fieldset.dataset.cities) {
+                console.warn('⚠️ No cities data found');
+                return;
+            }
+            
+            const citiesData = JSON.parse(fieldset.dataset.cities);
+            console.log('📊 Cities data loaded:', citiesData.length, 'cities');
+            
+            // ✅ חכה ש-SmartSelect יאתחל (על ידי smart-select.js)
+            const waitForSmartSelect = () => {
+                return new Promise((resolve) => {
+                    const checkReady = () => {
+                        const countryInstance = window.SmartSelectManager?.instances['countryId'];
+                        const cityInstance = window.SmartSelectManager?.instances['cityId'];
+                        
+                        if (countryInstance && cityInstance) {
+                            console.log('✅ SmartSelect instances ready!');
+                            resolve({ countryInstance, cityInstance });
+                        } else {
+                            console.log('⏳ Waiting for SmartSelect...');
+                            setTimeout(checkReady, 50);
+                        }
+                    };
+                    checkReady();
+                });
+            };
+            
+            // המתן לאתחול
+            const { countryInstance, cityInstance } = await waitForSmartSelect();
+            
+            // ============================================
+            // חלק 2: הגדר תלות מדינה-עיר
+            // ============================================
+            const countryInput = document.getElementById('countryId');
+            
+            if (!countryInput) {
+                console.warn('⚠️ Country input not found');
+                return;
+            }
+            
+            console.log('✅ Using SmartSelect mode');
+            
+            // מאזין לשינוי מדינה
+            countryInput.addEventListener('change', function() {
+                const countryId = this.value;
+                console.log('🌍 Country changed:', countryId);
+                
+                if (!countryId) {
+                    cityInstance.wrapper.classList.add('disabled');
+                    cityInstance.hiddenInput.disabled = true;
+                    cityInstance.hiddenInput.value = '';
+                    cityInstance.valueSpan.textContent = 'בחר קודם מדינה...';
+                    return;
+                }
+                
+                const filteredCities = citiesData.filter(city => city.countryId == countryId);
+                console.log('🏙️ Filtered cities:', filteredCities.length);
+                
+                cityInstance.optionsContainer.innerHTML = '';
+                cityInstance.allOptions = [];
+                
+                filteredCities.forEach(city => {
+                    const option = document.createElement('div');
+                    option.className = 'smart-select-option';
+                    option.dataset.value = city.unicId;
+                    option.textContent = city.cityNameHe;
+                    
+                    option.addEventListener('click', function() {
+                        window.SmartSelectManager.select('cityId', city.unicId);
+                    });
+                    
+                    cityInstance.optionsContainer.appendChild(option);
+                    cityInstance.allOptions.push(option);
+                });
+                
+                cityInstance.wrapper.classList.remove('disabled');
+                cityInstance.hiddenInput.disabled = false;
+                cityInstance.hiddenInput.value = '';
+                cityInstance.valueSpan.textContent = 'בחר עיר...';
+            });
+            
+            // ============================================
+            // חלק 3: טען נתונים בעריכה - רק אחרי שהכל מוכן
+            // ============================================
+            if (itemId) {
+                console.log('✏️ Edit mode - loading customer data');
+                await loadCustomerData(itemId, citiesData);
+            }
+        });
+        
+        // ============================================
+        // חלק 4: חישוב תושבות - רק ללקוח חדש
+        // ============================================
+        if (!itemId) {
+            console.log('➕ New customer - setting up residency calculation');
+            
+            this.waitForElement('#customerFormModal form', (form) => {
+                const typeSelect = form.elements['typeId'];
+                const countrySelect = form.elements['countryId'];
+                const citySelect = form.elements['cityId'];
+                const residentField = form.elements['resident'];
+                
+                function calculateResidency() {
+                    const typeId = typeSelect?.value;
+                    const countryId = countrySelect?.value;
+                    const cityId = citySelect?.value;
+                    
+                    console.log("🧮 Calculating residency:", {typeId, countryId, cityId});
+                    
+                    if (typeId == 2) {
+                        updateResidencyField(3);
+                        return;
+                    }
+                    
+                    if (!countryId) {
+                        updateResidencyField(3);
+                        return;
+                    }
+                    
+                    fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=calculate_residency', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({typeId, countryId, cityId})
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.residency) {
+                            updateResidencyField(data.residency);
+                        }
+                    })
+                    .catch(error => console.error('Error calculating residency:', error));
+                }
+                
+                function updateResidencyField(value) {
+                    if (residentField) {
+                        residentField.value = value;
+                        const colors = {
+                            1: '#e8f5e9',
+                            2: '#e3f2fd',
+                            3: '#fff3e0'
+                        };
+                        residentField.style.backgroundColor = colors[value] || '#f5f5f5';
+                    }
+                }
+                
+                if (typeSelect) typeSelect.addEventListener('change', calculateResidency);
+                if (countrySelect) countrySelect.addEventListener('change', calculateResidency);
+                if (citySelect) citySelect.addEventListener('change', calculateResidency);
+                
+                calculateResidency();
+            });
+        }
+        
+        // ============================================
+        // פונקציה עזר לטעינת נתוני לקוח
+        // ============================================
+        async function loadCustomerData(customerId, citiesData) {
+            console.log('✏️ Loading customer data for ID:', customerId);
+            
+            const form = document.querySelector('#customerFormModal form');
+            if (!form) {
+                console.error('❌ Form not found');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?action=get&id=${customerId}`);
+                const result = await response.json();
+                
+                if (!result.success || !result.data) {
+                    console.error('❌ Failed to load customer data:', result);
+                    alert('שגיאה בטעינת נתוני הלקוח');
+                    return;
+                }
+                
+                console.log('✅ Customer data loaded:', result.data);
+                
+                // מלא שדות רגילים
+                Object.keys(result.data).forEach(key => {
+                    const field = form.elements[key];
+                    if (!field) return;
+                    
+                    if (field.type === 'checkbox') {
+                        field.checked = result.data[key] == 1;
+                    } else if (field.type === 'select-one') {
+                        field.value = result.data[key] || '';
+
+                        if (key === 'resident' && field.disabled) {
+                            field.value = result.data[key] || 3;
+                            const colors = {
+                                '1': '#e8f5e9',
+                                '2': '#e3f2fd',
+                                '3': '#fff3e0'
+                            };
+                            field.style.backgroundColor = colors[result.data[key]] || '#f5f5f5';
+                            
+                            const hiddenField = form.elements['resident_hidden'];
+                            if (hiddenField) {
+                                hiddenField.value = result.data[key] || 3;
+                            }
+                        }
+                    } else {
+                        field.value = result.data[key] || '';
+                    }
+                });
+                
+                // ✅ טען מדינה וערים - רק אחרי שהשדות מולאו
+                if (result.data.countryId) {
+                    const countryInput = document.getElementById('countryId');
+                    if (countryInput) {
+                        // הגדר את הערך
+                        countryInput.value = result.data.countryId;
+                        
+                        // המתן קצת
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        
+                        // טריגר change event
+                        countryInput.dispatchEvent(new Event('change', { bubbles: true }));
+                        
+                        // אם יש עיר - המתן וטען
+                        if (result.data.cityId) {
+                            await new Promise(resolve => setTimeout(resolve, 200));
+                            
+                            const cityInput = document.getElementById('cityId');
+                            if (cityInput) {
+                                cityInput.value = result.data.cityId;
+                                cityInput.dispatchEvent(new Event('change', { bubbles: true }));
+                            }
+                        }
+                    }
+                }
+                
+            } catch (error) {
+                console.error('❌ Error loading customer data:', error);
+                alert('שגיאה בטעינת נתוני הלקוח');
+            }
         }
     },
 

@@ -179,43 +179,43 @@ $formBuilder->addCustomHTML($addressSelectorHTML);
 
 // --------------------
 
-// === מדינה - SmartSelect עם חיפוש ===
-$smartCountry = new SmartSelect('countryId', 'מדינה', $countries, [
-    'searchable' => true,
-    'placeholder' => 'בחר מדינה...',
-    'search_placeholder' => 'חפש מדינה...',
-    'required' => true,
-    'value' => $customer['countryId'] ?? ''
-]);
+// // === מדינה - SmartSelect עם חיפוש ===
+// $smartCountry = new SmartSelect('countryId', 'מדינה', $countries, [
+//     'searchable' => true,
+//     'placeholder' => 'בחר מדינה...',
+//     'search_placeholder' => 'חפש מדינה...',
+//     'required' => true,
+//     'value' => $customer['countryId'] ?? ''
+// ]);
 
-$formBuilder->addCustomHTML($smartCountry->render());
+// $formBuilder->addCustomHTML($smartCountry->render());
 
-// === עיר - SmartSelect עם תלות במדינה ===
-$citiesForSelect = [];
-if ($customer && $customer['countryId']) {
-    // בעריכה - טען את הערים של המדינה הנבחרת
-    foreach ($allCities as $city) {
-        if ($city['countryId'] == $customer['countryId']) {
-            $citiesForSelect[$city['unicId']] = $city['cityNameHe'];
-        }
-    }
-}
+// // === עיר - SmartSelect עם תלות במדינה ===
+// $citiesForSelect = [];
+// if ($customer && $customer['countryId']) {
+//     // בעריכה - טען את הערים של המדינה הנבחרת
+//     foreach ($allCities as $city) {
+//         if ($city['countryId'] == $customer['countryId']) {
+//             $citiesForSelect[$city['unicId']] = $city['cityNameHe'];
+//         }
+//     }
+// }
 
-$smartCity = new SmartSelect('cityId', 'עיר', $citiesForSelect, [
-    'searchable' => true,
-    'placeholder' => 'בחר עיר...',
-    'search_placeholder' => 'חפש עיר...',
-    'disabled' => empty($customer['countryId']),  // מושבת אם אין מדינה
-    'value' => $customer['cityId'] ?? ''
-]);
+// $smartCity = new SmartSelect('cityId', 'עיר', $citiesForSelect, [
+//     'searchable' => true,
+//     'placeholder' => 'בחר עיר...',
+//     'search_placeholder' => 'חפש עיר...',
+//     'disabled' => empty($customer['countryId']),  // מושבת אם אין מדינה
+//     'value' => $customer['cityId'] ?? ''
+// ]);
 
-$formBuilder->addCustomHTML($smartCity->render());
+// $formBuilder->addCustomHTML($smartCity->render());
 
-// כתובת מלאה
-$formBuilder->addField('address', 'כתובת מלאה', 'text', [
-    'value' => $customer['address'] ?? '',
-    'placeholder' => 'רחוב, מספר בית'
-]);
+// // כתובת מלאה
+// $formBuilder->addField('address', 'כתובת מלאה', 'text', [
+//     'value' => $customer['address'] ?? '',
+//     'placeholder' => 'רחוב, מספר בית'
+// ]);
 
 // --------------------
 

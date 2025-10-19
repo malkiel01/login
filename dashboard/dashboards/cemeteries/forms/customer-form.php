@@ -220,62 +220,62 @@ $formBuilder->addCustomHTML($addressSelectorHTML);
 // --------------------
 
 
-// === כתובת עם SmartSelect - בדיוק כמו שהיה! ===
+// // === כתובת עם SmartSelect - בדיוק כמו שהיה! ===
 
-$citiesJson = json_encode($allCities, JSON_UNESCAPED_UNICODE);
+// $citiesJson = json_encode($allCities, JSON_UNESCAPED_UNICODE);
 
-$addressHTML = '
-<fieldset class="form-section" 
-        id="address-fieldset"
-        style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;"
-        data-cities=\'' . htmlspecialchars($citiesJson, ENT_QUOTES) . '\'>
-    <legend style="padding: 0 10px; font-weight: bold;">כתובת</legend>
-    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
-';
+// $addressHTML = '
+// <fieldset class="form-section" 
+//         id="address-fieldset"
+//         style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;"
+//         data-cities=\'' . htmlspecialchars($citiesJson, ENT_QUOTES) . '\'>
+//     <legend style="padding: 0 10px; font-weight: bold;">כתובת</legend>
+//     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+// ';
 
-// מדינה - SmartSelect
-$smartCountry = new SmartSelect('countryId', 'מדינה', $countries, [
-    'searchable' => true,
-    'placeholder' => 'בחר מדינה...',
-    'search_placeholder' => 'חפש מדינה...',
-    'required' => true,
-    'value' => $customer['countryId'] ?? ''
-]);
+// // מדינה - SmartSelect
+// $smartCountry = new SmartSelect('countryId', 'מדינה', $countries, [
+//     'searchable' => true,
+//     'placeholder' => 'בחר מדינה...',
+//     'search_placeholder' => 'חפש מדינה...',
+//     'required' => true,
+//     'value' => $customer['countryId'] ?? ''
+// ]);
 
-$addressHTML .= '<div style="margin-bottom: 0;">' . $smartCountry->render() . '</div>';
+// $addressHTML .= '<div style="margin-bottom: 0;">' . $smartCountry->render() . '</div>';
 
-// עיר - SmartSelect
-$citiesForSelect = [];
-if ($customer && $customer['countryId']) {
-    foreach ($allCities as $city) {
-        if ($city['countryId'] == $customer['countryId']) {
-            $citiesForSelect[$city['unicId']] = $city['cityNameHe'];
-        }
-    }
-}
+// // עיר - SmartSelect
+// $citiesForSelect = [];
+// if ($customer && $customer['countryId']) {
+//     foreach ($allCities as $city) {
+//         if ($city['countryId'] == $customer['countryId']) {
+//             $citiesForSelect[$city['unicId']] = $city['cityNameHe'];
+//         }
+//     }
+// }
 
-$smartCity = new SmartSelect('cityId', 'עיר', $citiesForSelect, [
-    'searchable' => true,
-    'placeholder' => 'בחר עיר...',
-    'search_placeholder' => 'חפש עיר...',
-    'disabled' => empty($customer['countryId']),
-    'value' => $customer['cityId'] ?? ''
-]);
+// $smartCity = new SmartSelect('cityId', 'עיר', $citiesForSelect, [
+//     'searchable' => true,
+//     'placeholder' => 'בחר עיר...',
+//     'search_placeholder' => 'חפש עיר...',
+//     'disabled' => empty($customer['countryId']),
+//     'value' => $customer['cityId'] ?? ''
+// ]);
 
-$addressHTML .= '<div style="margin-bottom: 0;">' . $smartCity->render() . '</div>';
+// $addressHTML .= '<div style="margin-bottom: 0;">' . $smartCity->render() . '</div>';
 
-// כתובת מלאה - תופסת 2 עמודות
-$addressHTML .= '
-        <div class="form-group" style="grid-column: span 2; margin-bottom: 0;">
-            <label>כתובת מלאה</label>
-            <input type="text" name="address" class="form-control" 
-                value="' . htmlspecialchars($customer['address'] ?? '') . '" 
-                placeholder="רחוב, מספר בית">
-        </div>
-    </div>
-</fieldset>';
+// // כתובת מלאה - תופסת 2 עמודות
+// $addressHTML .= '
+//         <div class="form-group" style="grid-column: span 2; margin-bottom: 0;">
+//             <label>כתובת מלאה</label>
+//             <input type="text" name="address" class="form-control" 
+//                 value="' . htmlspecialchars($customer['address'] ?? '') . '" 
+//                 placeholder="רחוב, מספר בית">
+//         </div>
+//     </div>
+// </fieldset>';
 
-$formBuilder->addCustomHTML($addressHTML);
+// $formBuilder->addCustomHTML($addressHTML);
 
 
 // --------------------

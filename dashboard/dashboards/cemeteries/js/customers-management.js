@@ -254,10 +254,6 @@ function renderCustomersRows(data, container) {
     }
     
     container.innerHTML = data.map(customer => {
-        const statusText = customer.statusCustomer == 1 ? 'פעיל' : 'לא פעיל';
-        const statusColor = customer.statusCustomer == 1 ? '#10b981' : '#ef4444';
-        const date = customer.createDate ? new Date(customer.createDate).toLocaleDateString('he-IL') : '-';
-        
         return `
             <tr data-id="${customer.unicId}">
                 <td>
@@ -274,13 +270,9 @@ function renderCustomersRows(data, container) {
                 </td>
                 <td>${customer.streetAddress || '-'}</td>
                 <td>${customer.city_name || '-'}</td>
-                <td>
-                    <span style="background: ${statusColor}; color: white; padding: 3px 8px; border-radius: 4px; font-size: 12px; display: inline-block;">
-                        ${statusText}
-                    </span>
-                </td>
+                <td>${formatCustomerStatus(customer.statusCustomer)}</td>
                 <td>${formatCustomerType(customer.statusResident)}</td>
-                <td>${date}</td>
+                <td>${formatDate(customer.createDate)}</td>
                 <td>
                     <button class="btn btn-sm btn-secondary" onclick="editCustomer('${customer.unicId}')" title="עריכה">
                         <svg class="icon"><use xlink:href="#icon-edit"></use></svg>

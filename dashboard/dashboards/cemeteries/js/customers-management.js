@@ -66,7 +66,7 @@ async function loadCustomers() {
             thead.appendChild(headerRow);
         }
         
-        // עדכן את הכותרות
+        // עדכן את הכותרות - בדיוק לפי המבנה שלך
         headerRow.innerHTML = `
             <th style="width: 40px;">
                 <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
@@ -74,7 +74,6 @@ async function loadCustomers() {
             <th>ת.ז.</th>
             <th>שם מלא</th>
             <th>טלפון</th>
-            <th>אימייל</th>
             <th>כתובת</th>
             <th>עיר</th>
             <th>סטטוס</th>

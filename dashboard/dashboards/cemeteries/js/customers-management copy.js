@@ -1,4 +1,4 @@
-// dashboards/cemeteries/js/customers-management.js
+// dashboards/cemeteries/js/customers-management.js - מקור
 // ניהול לקוחות עם חיפוש חי
 
 // משתנים גלובליים

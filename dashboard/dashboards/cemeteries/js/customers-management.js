@@ -1,76 +1,9 @@
 // dashboards/cemeteries/js/customers-management.js
-// ניהול לקוחות עם חיפוש חי
+// ניהול לקוחות עם UniversalSearch
 
-// משתנים גלובליים
 let currentCustomers = [];
-let customersLiveSearch = null; // 🆕 מופע של LiveSearch
+let customerSearch = null;
 let editingCustomerId = null;
-
-// 🆕 אתחול החיפוש החי
-function initCustomersLiveSearch() {
-    customersLiveSearch = new LiveSearch({
-        searchInputId: 'customerSearchInput',
-        counterElementId: 'customerCounter',
-        resultContainerId: 'tableBody',
-        paginationContainerId: 'paginationContainer',
-        apiEndpoint: '/dashboard/dashboards/cemeteries/api/customers-api.php',
-        instanceName: 'customersLiveSearch',
-        debounceDelay: 300,
-        itemsPerPage: 50,
-        minSearchLength: 2,
-        renderFunction: renderCustomersRows
-    });
-    
-    console.log('✅ Customers LiveSearch initialized');
-}
-
-// 🆕 פונקציית רינדור מותאמת אישית
-function renderCustomersRows(data, container) {
-    if (data.length === 0) {
-        container.innerHTML = `
-            <tr>
-                <td colspan="10" style="text-align: center; padding: 40px;">
-                    <div style="color: #999;">
-                        <div style="font-size: 48px; margin-bottom: 20px;">🔍</div>
-                        <div>לא נמצאו לקוחות</div>
-                    </div>
-                </td>
-            </tr>
-        `;
-        return;
-    }
-    
-    currentCustomers = data;
-    
-    container.innerHTML = data.map(customer => `
-        <tr data-id="${customer.unicId}">
-            <td><input type="checkbox" class="customer-checkbox" value="${customer.unicId}"></td>
-            <td>${customer.numId || '-'}</td>
-            <td>
-                <strong>${customer.firstName || ''} ${customer.lastName || ''}</strong>
-                ${customer.nomPerson ? `<br><small style="color:#666;">${customer.nomPerson}</small>` : ''}
-            </td>
-            <td>
-                ${customer.phone || '-'}
-                ${customer.phoneMobile ? `<br><small>${customer.phoneMobile}</small>` : ''}
-            </td>
-            <td>${customer.email || '-'}</td>
-            <td>${customer.streetAddress || '-'}</td>
-            <td>${customer.city_name || '-'}</td>
-            <td>${formatCustomerStatus(customer.statusCustomer)}</td>
-            <td>${formatCustomerType(customer.statusResident)}</td>
-            <td>${formatDate(customer.createDate)}</td>
-            <td>
-                <button class="btn btn-sm btn-secondary" onclick="editCustomer('${customer.unicId}')" title="עריכה">
-                    <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
-                </button>
-                <button class="btn btn-sm btn-danger" onclick="deleteCustomer('${customer.unicId}')" title="מחיקה">
-                    <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
-                </button>
-            </td>
-        </tr>
-    `).join('');
-}
 
 // טעינת לקוחות (הפונקציה הראשית)
 async function loadCustomers() {
@@ -101,7 +34,7 @@ async function loadCustomers() {
     // עדכון כותרת החלון
     document.title = 'ניהול לקוחות - מערכת בתי עלמין';
     
-    // 🆕 הוסף שדה חיפוש לפני הטבלה
+    // הוסף קונטיינר חיפוש אם לא קיים
     const mainContent = document.querySelector('.main-content');
     let searchSection = document.getElementById('customerSearchSection');
     
@@ -109,18 +42,6 @@ async function loadCustomers() {
         searchSection = document.createElement('div');
         searchSection.id = 'customerSearchSection';
         searchSection.className = 'search-section';
-        searchSection.innerHTML = `
-            <div class="search-container">
-                <input 
-                    type="text" 
-                    id="customerSearchInput" 
-                    class="search-input" 
-                    placeholder="חיפוש לקוחות לפי שם, ת.ז., טלפון..."
-                />
-                <svg class="search-icon"><use xlink:href="#icon-search"></use></svg>
-            </div>
-            <div id="customerCounter" class="search-counter"></div>
-        `;
         
         // הוסף לפני הטבלה
         const tableContainer = document.querySelector('.table-container');
@@ -163,41 +84,124 @@ async function loadCustomers() {
         `;
     }
     
-    const tableBody = document.getElementById('tableBody');
-    if (tableBody) {
-        tableBody.setAttribute('data-customer-view', 'true');
-    }
-    
-    // 🆕 הוסף קונטיינר ל-pagination
-    let paginationContainer = document.getElementById('paginationContainer');
-    if (!paginationContainer) {
-        paginationContainer = document.createElement('div');
-        paginationContainer.id = 'paginationContainer';
-        document.querySelector('.table-container').appendChild(paginationContainer);
-    }
-    
-    // 🆕 אתחל את החיפוש החי
-    if (!customersLiveSearch) {
-        initCustomersLiveSearch();
+    // אתחל את UniversalSearch
+    if (!customerSearch) {
+        initUniversalSearch();
     } else {
-        customersLiveSearch.refresh();
+        customerSearch.refresh();
     }
     
     // טען סטטיסטיקות
     await loadCustomerStats();
 }
 
-// שאר הפונקציות נשארות זהות...
-// (formatCustomerStatus, formatCustomerType, deleteCustomer, editCustomer, וכו')
+// אתחול UniversalSearch
+function initUniversalSearch() {
+    customerSearch = createSearchFromPreset('customers', {
+        display: {
+            containerSelector: '#customerSearchSection',
+            showAdvanced: true,
+            placeholder: 'חיפוש לקוחות לפי שם, ת.ז, טלפון, אימייל...',
+            layout: 'horizontal'
+        },
+        
+        results: {
+            containerSelector: '#tableBody',
+            itemsPerPage: 50,
+            showCounter: true,
+            
+            renderFunction: renderCustomersRows
+        },
+        
+        behavior: {
+            realTime: true,
+            autoSubmit: true,
+            highlightResults: true
+        },
+        
+        callbacks: {
+            onInit: () => {
+                console.log('✅ UniversalSearch initialized for customers');
+            },
+            
+            onSearch: (query, filters) => {
+                console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()) });
+            },
+            
+            onResults: (data) => {
+                console.log('📦 Results:', data.total, 'customers found');
+                currentCustomers = data.data;
+            },
+            
+            onError: (error) => {
+                console.error('❌ Search error:', error);
+                showToast('שגיאה בחיפוש: ' + error.message, 'error');
+            },
+            
+            onEmpty: () => {
+                console.log('📭 No results');
+            }
+        }
+    });
+}
 
-// פורמט סטטוס לקוח
-function formatCustomerStatus(status) {
-    const statuses = {
-        1: { text: 'פעיל', color: '#10b981' },
-        0: { text: 'לא פעיל', color: '#ef4444' }
-    };
-    const statusInfo = statuses[status] || statuses[1];
-    return `<span style="background: ${statusInfo.color}; color: white; padding: 3px 8px; border-radius: 4px; font-size: 12px; display: inline-block;">${statusInfo.text}</span>`;
+// רינדור שורות לקוחות
+function renderCustomersRows(data, container) {
+    if (data.length === 0) {
+        container.innerHTML = `
+            <tr>
+                <td colspan="11" style="text-align: center; padding: 60px;">
+                    <div style="color: #9ca3af;">
+                        <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
+                        <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">לא נמצאו תוצאות</div>
+                        <div>נסה לשנות את מילות החיפוש או הפילטרים</div>
+                    </div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    container.innerHTML = data.map(customer => {
+        const statusText = customer.statusCustomer == 1 ? 'פעיל' : 'לא פעיל';
+        const statusColor = customer.statusCustomer == 1 ? '#10b981' : '#ef4444';
+        const date = customer.createDate ? new Date(customer.createDate).toLocaleDateString('he-IL') : '-';
+        
+        return `
+            <tr data-id="${customer.unicId}">
+                <td>
+                    <input type="checkbox" class="customer-checkbox" value="${customer.unicId}">
+                </td>
+                <td>${customer.numId || '-'}</td>
+                <td>
+                    <strong>${customer.firstName || ''} ${customer.lastName || ''}</strong>
+                    ${customer.nomPerson ? '<br><small style="color:#666;">' + customer.nomPerson + '</small>' : ''}
+                </td>
+                <td>
+                    ${customer.phone || '-'}
+                    ${customer.phoneMobile ? '<br><small style="color:#666;">' + customer.phoneMobile + '</small>' : ''}
+                </td>
+                <td>${customer.email || '-'}</td>
+                <td>${customer.streetAddress || '-'}</td>
+                <td>${customer.city_name || '-'}</td>
+                <td>
+                    <span style="background: ${statusColor}; color: white; padding: 3px 8px; border-radius: 4px; font-size: 12px; display: inline-block;">
+                        ${statusText}
+                    </span>
+                </td>
+                <td>${formatCustomerType(customer.resident)}</td>
+                <td>${date}</td>
+                <td>
+                    <button class="btn btn-sm btn-secondary" onclick="editCustomer('${customer.unicId}')" title="עריכה">
+                        <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteCustomer('${customer.unicId}')" title="מחיקה">
+                        <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
 }
 
 // פורמט סוג לקוח
@@ -208,13 +212,6 @@ function formatCustomerType(type) {
         3: 'אחר'
     };
     return types[type] || '-';
-}
-
-// פורמט תאריך
-function formatDate(dateString) {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('he-IL');
 }
 
 // מחיקת לקוח
@@ -232,7 +229,7 @@ async function deleteCustomer(customerId) {
         
         if (data.success) {
             showToast('הלקוח נמחק בהצלחה', 'success');
-            customersLiveSearch.refresh(); // 🆕 רענון עם LiveSearch
+            customerSearch.refresh();
         } else {
             showToast(data.error || 'שגיאה במחיקת לקוח', 'error');
         }
@@ -244,8 +241,8 @@ async function deleteCustomer(customerId) {
 
 // עריכת לקוח
 async function editCustomer(customerId) {
-    // הקוד הקיים שלך לעריכה...
     console.log('Edit customer:', customerId);
+    // הקוד שלך לעריכה...
 }
 
 // טעינת סטטיסטיקות
@@ -256,7 +253,6 @@ async function loadCustomerStats() {
         
         if (data.success) {
             console.log('Customer stats:', data.data);
-            // הוסף קוד להצגת סטטיסטיקות אם צריך
         }
     } catch (error) {
         console.error('Error loading customer stats:', error);
@@ -296,8 +292,8 @@ function showToast(message, type = 'info') {
 
 // פונקציה לרענון נתונים
 async function refreshData() {
-    if (customersLiveSearch) {
-        customersLiveSearch.refresh();
+    if (customerSearch) {
+        customerSearch.refresh();
     }
 }
 

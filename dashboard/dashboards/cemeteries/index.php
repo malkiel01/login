@@ -144,6 +144,13 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     </div>
      
     <!-- JavaScript Files - כולל הקובץ החדש לרספונסיביות -->
+
+    <!-- קודם: UniversalSearch (הבסיס) -->
+    <script src="/dashboard/dashboards/cemeteries/js/universal-search.js"></script>
+
+    <!-- אחרי זה: Presets (משתמש ב-UniversalSearch) -->
+    <script src="/dashboard/dashboards/cemeteries/js/search-presets.js"></script>
+
     <script src="/dashboard/dashboards/cemeteries/js/breadcrumb.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/main.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/sidebar-counts.js"></script>

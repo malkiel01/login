@@ -5,13 +5,14 @@
 
 const SearchPresets = {
     /**
-     * חיפוש לקוחות בלבד
+     * חיפוש לקוחות בלבד - משתמש ב-customers-api הקיים
      */
     customers: {
         dataSource: {
             type: 'api',
-            endpoint: '/dashboard/dashboards/cemeteries/api/universal-search-api.php',
-            action: 'search',
+            endpoint: '/dashboard/dashboards/cemeteries/api/customers-api.php',
+            action: 'list',
+            method: 'GET',  // ← שינוי ל-GET!
             tables: ['customers'],
             joins: []
         },

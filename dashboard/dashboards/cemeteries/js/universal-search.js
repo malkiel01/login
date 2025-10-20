@@ -438,14 +438,45 @@ class UniversalSearch {
             
             console.log('🔎 Searching with payload:', payload);
             
-            // קריאה ל-API
-            const response = await fetch(this.config.dataSource.endpoint, {
-                method: this.config.dataSource.method,
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            });
+            let response;
+            
+            // בדוק אם זה GET או POST
+            if (this.config.dataSource.method === 'GET') {
+                // שליחת GET עם query parameters
+                const params = new URLSearchParams();
+                params.append('action', payload.action);
+                
+                if (payload.query) {
+                    params.append('search', payload.query);
+                }
+                
+                if (payload.page) {
+                    params.append('page', payload.page);
+                }
+                
+                if (payload.itemsPerPage) {
+                    params.append('limit', payload.itemsPerPage);
+                }
+                
+                // הוסף פילטרים
+                payload.filters.forEach((filter, index) => {
+                    params.append(`filter_${index}_field`, filter.field);
+                    params.append(`filter_${index}_value`, filter.value);
+                    params.append(`filter_${index}_type`, filter.matchType);
+                });
+                
+                const url = `${this.config.dataSource.endpoint}?${params.toString()}`;
+                response = await fetch(url);
+            } else {
+                // שליחת POST עם body (ברירת מחדל)
+                response = await fetch(this.config.dataSource.endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+            }
             
             const data = await response.json();
             
@@ -453,7 +484,7 @@ class UniversalSearch {
             
             if (data.success) {
                 this.state.results = data.data || [];
-                this.state.totalResults = data.total || data.data.length;
+                this.state.totalResults = data.pagination?.total || data.total || data.data.length;
                 this.state.lastSearchTime = Date.now();
                 
                 this.renderResults(data.data);

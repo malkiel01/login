@@ -262,7 +262,7 @@
                     ]
                 ]);
                 break;
-            case 'list':
+            case 'list4':
                 $search = $_GET['search'] ?? '';
                 $status = $_GET['status'] ?? '';
                 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -341,6 +341,115 @@
                 $stmt = $pdo->prepare($sql);
                 foreach ($params as $key => $value) {
                     $stmt->bindValue($key, $value);
+                }
+                $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+                $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+                $stmt->execute();
+                
+                $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                echo json_encode([
+                    'success' => true,
+                    'data' => $customers,
+                    'pagination' => [
+                        'total' => $total,
+                        'totalAll' => $totalAll,
+                        'page' => $page,
+                        'limit' => $limit,
+                        'pages' => ceil($total / $limit)
+                    ]
+                ]);
+                break;
+            case 'list':
+                $search = $_GET['search'] ?? '';
+                $status = $_GET['status'] ?? '';
+                $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+                $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
+                $offset = ($page - 1) * $limit;
+                
+                // בניית השאילתה הראשית
+                $sql = "
+                    SELECT 
+                        c.*,
+                        co.countryNameHe as country_name,
+                        ci.cityNameHe as city_name
+                    FROM customers c
+                    LEFT JOIN countries co ON c.countryId = co.unicId
+                    LEFT JOIN cities ci ON c.cityId = ci.unicId
+                    WHERE c.isActive = 1
+                ";
+                $params = [];
+                
+                // חיפוש - כל שדה מקבל פרמטר משלו
+                if ($search) {
+                    $sql .= " AND (
+                        c.firstName LIKE :search1 OR 
+                        c.lastName LIKE :search2 OR 
+                        c.numId LIKE :search3 OR 
+                        c.phone LIKE :search4 OR 
+                        c.phoneMobile LIKE :search5 OR
+                        c.fullNameHe LIKE :search6
+                    )";
+                    $searchTerm = "%$search%";
+                    $params['search1'] = $searchTerm;
+                    $params['search2'] = $searchTerm;
+                    $params['search3'] = $searchTerm;
+                    $params['search4'] = $searchTerm;
+                    $params['search5'] = $searchTerm;
+                    $params['search6'] = $searchTerm;
+                }
+                
+                // סינון לפי סטטוס
+                if ($status !== '') {
+                    $sql .= " AND c.statusCustomer = :status";
+                    $params['status'] = $status;
+                }
+                
+                // ✅ ספירת תוצאות מסוננות
+                $countSql = "
+                    SELECT COUNT(*) 
+                    FROM customers c 
+                    WHERE c.isActive = 1
+                ";
+                
+                $countParams = [];
+                
+                if ($search) {
+                    $countSql .= " AND (
+                        c.firstName LIKE :search1 OR 
+                        c.lastName LIKE :search2 OR 
+                        c.numId LIKE :search3 OR 
+                        c.phone LIKE :search4 OR 
+                        c.phoneMobile LIKE :search5 OR
+                        c.fullNameHe LIKE :search6
+                    )";
+                    $countParams['search1'] = $searchTerm;
+                    $countParams['search2'] = $searchTerm;
+                    $countParams['search3'] = $searchTerm;
+                    $countParams['search4'] = $searchTerm;
+                    $countParams['search5'] = $searchTerm;
+                    $countParams['search6'] = $searchTerm;
+                }
+                
+                if ($status !== '') {
+                    $countSql .= " AND c.statusCustomer = :status";
+                    $countParams['status'] = $status;
+                }
+                
+                $countStmt = $pdo->prepare($countSql);
+                $countStmt->execute($countParams);
+                $total = $countStmt->fetchColumn();
+                
+                // ✅ ספירת כל הלקוחות (ללא סינון)
+                $totalAllSql = "SELECT COUNT(*) FROM customers WHERE isActive = 1";
+                $totalAll = $pdo->query($totalAllSql)->fetchColumn();
+                
+                // הוספת מיון ועימוד
+                $sql .= " ORDER BY c.createDate DESC LIMIT :limit OFFSET :offset";
+                
+                $stmt = $pdo->prepare($sql);
+                foreach ($params as $key => $value) {
+                    $stmt->bindValue(":$key", $value);
                 }
                 $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
                 $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);

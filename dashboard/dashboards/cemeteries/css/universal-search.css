@@ -1,12 +1,13 @@
 /**
  * UniversalSearch Styles
- * עיצוב מערכת חיפוש אוניברסלית
+ * עיצוב מערכת חיפוש אוניברסלית - RTL ורספונסיבי
  */
 
 /* Container */
 .universal-search-container {
     margin-bottom: 20px;
     direction: rtl;
+    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
 }
 
 /* Search Wrapper */
@@ -21,21 +22,29 @@
 .us-main-search {
     display: flex;
     gap: 12px;
-    align-items: center;
+    align-items: stretch;
+    flex-wrap: wrap;
 }
 
 .us-search-input-wrapper {
     position: relative;
     flex: 1;
+    min-width: 250px;
 }
 
 .us-search-input {
     width: 100%;
-    padding: 14px 50px 14px 16px;
+    padding: 14px 50px 14px 50px;
     border: 2px solid #e5e7eb;
     border-radius: 10px;
     font-size: 16px;
     transition: all 0.2s ease;
+    direction: rtl;
+    text-align: right;
+}
+
+.us-search-input::placeholder {
+    text-align: right;
     direction: rtl;
 }
 
@@ -118,12 +127,13 @@
     background: #f9fafb;
     border-radius: 10px;
     border: 2px solid #e5e7eb;
+    direction: rtl;
 }
 
 /* Filters Container */
 .us-filters-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 16px;
     margin-bottom: 20px;
 }
@@ -139,20 +149,28 @@
     font-size: 13px;
     font-weight: 600;
     color: #374151;
+    text-align: right;
 }
 
 .us-filter-controls {
     display: flex;
     gap: 8px;
+    flex-direction: column;
 }
 
 .us-filter-input {
-    flex: 1;
+    width: 100%;
     padding: 10px 14px;
     border: 1.5px solid #d1d5db;
     border-radius: 8px;
     font-size: 14px;
     transition: all 0.2s ease;
+    direction: rtl;
+    text-align: right;
+}
+
+.us-filter-input::placeholder {
+    text-align: right;
 }
 
 .us-filter-input:focus {
@@ -162,6 +180,7 @@
 }
 
 .us-match-type {
+    width: 100%;
     padding: 10px 12px;
     border: 1.5px solid #d1d5db;
     border-radius: 8px;
@@ -169,7 +188,8 @@
     background: white;
     cursor: pointer;
     transition: all 0.2s ease;
-    min-width: 120px;
+    direction: rtl;
+    text-align: right;
 }
 
 .us-match-type:focus {
@@ -185,7 +205,8 @@
 .us-actions {
     display: flex;
     gap: 12px;
-    justify-content: flex-end;
+    justify-content: flex-start;
+    flex-wrap: wrap;
 }
 
 .us-btn {
@@ -225,6 +246,7 @@
     background: #dbeafe;
     border-radius: 8px;
     border: 1px solid #3b82f6;
+    text-align: right;
 }
 
 .us-counter-text {
@@ -266,14 +288,45 @@ mark {
     border-radius: 3px;
 }
 
-/* Responsive */
+/* Responsive - Tablet */
+@media (max-width: 1024px) {
+    .us-filters-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Responsive - Mobile */
 @media (max-width: 768px) {
+    .us-search-wrapper {
+        padding: 16px;
+    }
+    
     .us-main-search {
         flex-direction: column;
+        gap: 12px;
+    }
+    
+    .us-search-input-wrapper {
+        min-width: 100%;
+    }
+    
+    .us-search-input {
+        font-size: 16px; /* למנוע זום אוטומטי ב-iOS */
+        padding: 12px 45px 12px 45px;
+    }
+    
+    .us-advanced-toggle {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .us-advanced-panel {
+        padding: 16px;
     }
     
     .us-filters-container {
         grid-template-columns: 1fr;
+        gap: 12px;
     }
     
     .us-filter-controls {
@@ -290,6 +343,42 @@ mark {
     
     .us-btn {
         width: 100%;
+        padding: 14px 24px;
+    }
+    
+    .us-results-counter {
+        font-size: 13px;
+    }
+}
+
+/* Responsive - Small Mobile */
+@media (max-width: 480px) {
+    .us-search-wrapper {
+        padding: 12px;
+    }
+    
+    .us-search-input {
+        font-size: 16px;
+        padding: 10px 40px 10px 40px;
+    }
+    
+    .us-advanced-panel {
+        padding: 12px;
+    }
+    
+    .us-filter-label {
+        font-size: 12px;
+    }
+    
+    .us-filter-input,
+    .us-match-type {
+        font-size: 14px;
+        padding: 8px 12px;
+    }
+    
+    .us-btn {
+        font-size: 13px;
+        padding: 12px 20px;
     }
 }
 
@@ -309,4 +398,40 @@ mark {
 .us-search-wrapper.compact .us-search-input {
     padding: 10px 45px 10px 12px;
     font-size: 14px;
+}
+
+/* RTL Fixes */
+[dir="rtl"] .us-search-icon {
+    right: 16px;
+    left: auto;
+}
+
+[dir="rtl"] .us-clear-btn {
+    left: 16px;
+    right: auto;
+}
+
+/* Dark Mode Support (Optional) */
+@media (prefers-color-scheme: dark) {
+    .us-search-wrapper {
+        background: #1f2937;
+    }
+    
+    .us-search-input {
+        background: #374151;
+        border-color: #4b5563;
+        color: #f9fafb;
+    }
+    
+    .us-advanced-panel {
+        background: #374151;
+        border-color: #4b5563;
+    }
+    
+    .us-filter-input,
+    .us-match-type {
+        background: #1f2937;
+        border-color: #4b5563;
+        color: #f9fafb;
+    }
 }

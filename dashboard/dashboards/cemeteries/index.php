@@ -33,6 +33,8 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/smart-select.css">
 
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/search.css">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/universal-search.css">
+
 </head>
 <body>
     <!-- SVG Icons - חייב להיות בתחילת ה-body -->

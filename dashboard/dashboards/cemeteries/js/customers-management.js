@@ -86,7 +86,9 @@ async function loadCustomers() {
     
     // אתחל את UniversalSearch
     if (!customerSearch) {
-        initUniversalSearch();
+        await initUniversalSearch();
+        // 🆕 טען את כל הלקוחות מיד לאחר האתחול
+        customerSearch.search();
     } else {
         customerSearch.refresh();
     }
@@ -96,13 +98,14 @@ async function loadCustomers() {
 }
 
 // אתחול UniversalSearch
-function initUniversalSearch() {
+async function initUniversalSearch() {
     customerSearch = createSearchFromPreset('customers', {
         display: {
             containerSelector: '#customerSearchSection',
             showAdvanced: true,
             placeholder: 'חיפוש לקוחות לפי שם, ת.ז, טלפון, אימייל...',
-            layout: 'horizontal'
+            layout: 'horizontal',
+            minSearchLength: 0  // 🆕 אפשר חיפוש גם עם 0 תווים (כל הרשומות)
         },
         
         results: {
@@ -129,7 +132,7 @@ function initUniversalSearch() {
             },
             
             onResults: (data) => {
-                console.log('📦 Results:', data.total, 'customers found');
+                console.log('📦 Results:', data.pagination?.total || data.total || 0, 'customers found');
                 currentCustomers = data.data;
             },
             
@@ -143,6 +146,8 @@ function initUniversalSearch() {
             }
         }
     });
+    
+    return customerSearch;
 }
 
 // רינדור שורות לקוחות

@@ -146,6 +146,7 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <!-- JavaScript Files - כולל הקובץ החדש לרספונסיביות -->
     <script src="/dashboard/dashboards/cemeteries/js/breadcrumb.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/main.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/sidebar-counts.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/clearDashboard.js"></script>
     <!-- מערכת טפסים חדשה -->
      <script src="/dashboard/dashboards/cemeteries/forms/payment-display-manager.js"></script>

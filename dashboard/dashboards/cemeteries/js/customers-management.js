@@ -75,6 +75,8 @@ function renderCustomersRows(data, container) {
 // טעינת לקוחות (הפונקציה הראשית)
 async function loadCustomers() {
     console.log('Loading customers...');
+
+    setActiveMenuItem('customersItem');
     
     // עדכן את הסוג הנוכחי
     window.currentType = 'customer';

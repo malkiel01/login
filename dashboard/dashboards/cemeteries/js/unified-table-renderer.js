@@ -812,6 +812,7 @@ window.tableRenderer = new UnifiedTableRenderer();
 
 window.loadAllCemeteries = async function() {
     console.log('📍 Loading all cemeteries');
+    setActiveMenuItem('cemeteryItem'); // ✅ הוסף את זה
     window.currentType = 'cemetery';
     window.currentParentId = null;
     window.selectedItems = {};
@@ -823,6 +824,7 @@ window.loadAllCemeteries = async function() {
 
 window.loadAllBlocks = async function() {
     console.log('📍 Loading all blocks');
+    setActiveMenuItem('blockItem'); // ✅ הוסף את זה
     window.currentType = 'block';
     window.currentParentId = null;
 
@@ -838,6 +840,7 @@ window.loadAllBlocks = async function() {
 
 window.loadAllPlots = async function() {
     console.log('📍 Loading all plots');
+    setActiveMenuItem('plotItem');
     window.currentType = 'plot';
     window.currentParentId = null;
 
@@ -855,6 +858,7 @@ window.loadAllPlots = async function() {
 
 window.loadAllAreaGraves = async function() {
     console.log('📍 Loading all area graves');
+    setActiveMenuItem('areaGraveItem');
     window.currentType = 'area_grave';
     window.currentParentId = null;
 
@@ -873,6 +877,7 @@ window.loadAllAreaGraves = async function() {
 
 window.loadAllGraves = async function() {
     console.log('📍 Loading all graves');
+    setActiveMenuItem('graveItem');
     window.currentType = 'grave';
     window.currentParentId = null;
     

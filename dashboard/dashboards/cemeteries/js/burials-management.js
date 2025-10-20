@@ -8,6 +8,9 @@ let currentBurialSort = { field: 'createDate', order: 'DESC' };
 // טעינת כל הקבורות - הגדר גלובלית מיד
 async function loadAllBurials(page = 1) {
     console.log('Loading all burials...');
+
+    setActiveMenuItem('burialsItem'); // ✅ הוסף
+
     currentBurialPage = page;
     
     // עדכן סוג נוכחי

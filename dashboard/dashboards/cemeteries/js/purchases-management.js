@@ -8,6 +8,9 @@ let currentSort = { field: 'createDate', order: 'DESC' };
 // טעינת כל הרכישות
 async function loadAllPurchases(page = 1) {
     console.log('Loading all purchases...');
+
+    setActiveMenuItem('purchasesItem'); // ✅ הוסף
+
     currentPurchasePage = page;
     
     // עדכן סוג נוכחי

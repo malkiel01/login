@@ -11,6 +11,8 @@ let editingCountryId = null;
 // טעינת מדינות - פונקציה ראשית
 async function loadCountries() {
     console.log('Loading countries...');
+
+    setActiveMenuItem('countryItem'); // ✅ הוסף
     
     // ========================================
     // שלב 1: ניקוי מלא של הדף

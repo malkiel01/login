@@ -12,6 +12,8 @@ let filterByCountryId = null; // לסינון לפי מדינה
 // טעינת ערים - פונקציה ראשית
 async function loadCities(countryId = null) {
     console.log('Loading cities...', countryId ? `for country: ${countryId}` : 'all');
+
+    setActiveMenuItem('cityItem'); // ✅ הוסף
     
     // שמור את המדינה לסינון
     filterByCountryId = countryId;

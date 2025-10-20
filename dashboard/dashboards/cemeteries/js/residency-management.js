@@ -15,8 +15,9 @@ const RESIDENCY_TYPES = {
 
 // טעינת הגדרות תושבות - פונקציה ראשית
 async function loadResidencies() {
-    alert('step 1')
     console.log('Loading residency settings...');
+
+    setActiveMenuItem('residencyItem'); // ✅ הוסף
     
     // ========================================
     // שלב 1: ניקוי מלא של הדף

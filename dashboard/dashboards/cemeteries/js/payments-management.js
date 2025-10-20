@@ -9,6 +9,8 @@ let editingPaymentId = null;
 // טעינת תשלומים
 async function loadPayments() {
     console.log('Loading payments...');
+
+    setActiveMenuItem('paymentsItem'); // ✅ הוסף את זה
     
     // עדכן את הסוג הנוכחי
     window.currentType = 'payment';

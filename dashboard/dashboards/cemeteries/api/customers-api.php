@@ -103,7 +103,7 @@
     try {
         switch ($action) {
             // רשימת כל הלקוחות
-            case 'list':
+            case 'list2':
                 $search = $_GET['search'] ?? '';
                 $status = $_GET['status'] ?? '';
                 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -174,6 +174,94 @@
                 ]);
                 break;
                 
+            case 'list':
+                $search = $_GET['search'] ?? '';
+                $status = $_GET['status'] ?? '';
+                $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+                $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
+                $offset = ($page - 1) * $limit;
+                
+                // בניית השאילתה
+                $sql = "
+                    SELECT 
+                        c.*,
+                        co.countryNameHe as country_name,
+                        ci.cityNameHe as city_name
+                    FROM customers c
+                    LEFT JOIN countries co ON c.countryId = co.unicId
+                    LEFT JOIN cities ci ON c.cityId = ci.unicId
+                    WHERE c.isActive = 1
+                ";
+                $params = [];
+                
+                // חיפוש
+                if ($search) {
+                    $sql .= " AND (
+                        c.firstName LIKE :search OR 
+                        c.lastName LIKE :search OR 
+                        c.numId LIKE :search OR 
+                        c.phone LIKE :search OR 
+                        c.phoneMobile LIKE :search OR
+                        c.fullNameHe LIKE :search
+                    )";
+                    $params['search'] = "%$search%";
+                }
+                
+                // סינון לפי סטטוס
+                if ($status !== '') {
+                    $sql .= " AND c.statusCustomer = :status";
+                    $params['status'] = $status;
+                }
+                
+                // ✅ 1. ספירת סה"כ תוצאות מסוננות
+                $countSql = "SELECT COUNT(*) FROM customers c WHERE c.isActive = 1";
+                if ($search) {
+                    $countSql .= " AND (
+                        c.firstName LIKE :search OR 
+                        c.lastName LIKE :search OR 
+                        c.numId LIKE :search OR 
+                        c.phone LIKE :search OR 
+                        c.phoneMobile LIKE :search OR
+                        c.fullNameHe LIKE :search
+                    )";
+                }
+                if ($status !== '') {
+                    $countSql .= " AND c.statusCustomer = :status";
+                }
+                
+                $countStmt = $pdo->prepare($countSql);
+                $countStmt->execute($params);
+                $total = $countStmt->fetchColumn();
+                
+                // ✅ 2. ספירת סה"כ לקוחות (ללא סינון!)
+                $totalAllSql = "SELECT COUNT(*) FROM customers WHERE isActive = 1";
+                $totalAll = $pdo->query($totalAllSql)->fetchColumn();
+                
+                // הוספת מיון ועימוד
+                $sql .= " ORDER BY c.createDate DESC LIMIT :limit OFFSET :offset";
+                
+                $stmt = $pdo->prepare($sql);
+                foreach ($params as $key => $value) {
+                    $stmt->bindValue($key, $value);
+                }
+                $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+                $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+                $stmt->execute();
+                
+                $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                echo json_encode([
+                    'success' => true,
+                    'data' => $customers,
+                    'pagination' => [
+                        'total' => $total,
+                        'totalAll' => $totalAll,  // ✅ עכשיו זה מוגדר!
+                        'page' => $page,
+                        'limit' => $limit,
+                        'pages' => ceil($total / $limit)
+                    ]
+                ]);
+                break;
             // קבלת לקוח בודד
             case 'get':
                 if (!$id) {

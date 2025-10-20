@@ -98,10 +98,96 @@ async function loadCustomers() {
 
 // אתחול UniversalSearch
 async function initUniversalSearch() {
-    customerSearch = createSearchFromPreset('customers', {
+    customerSearch = new UniversalSearch({
+        dataSource: {
+            type: 'api',
+            endpoint: '/dashboard/dashboards/cemeteries/api/customers-api.php',
+            action: 'list',
+            method: 'GET',
+            tables: ['customers'],
+            joins: []
+        },
+        
+        // 🎯 כאן אתה מגדיר בדיוק אלו שדות יהיו בפילטר!
+        searchableFields: [
+            {
+                name: 'firstName',
+                label: 'שם פרטי',
+                table: 'customers',
+                type: 'text',
+                matchType: ['exact', 'fuzzy', 'startsWith']
+            },
+            {
+                name: 'lastName',
+                label: 'שם משפחה',
+                table: 'customers',
+                type: 'text',
+                matchType: ['exact', 'fuzzy', 'startsWith']
+            },
+            {
+                name: 'numId',
+                label: 'תעודת זהות',
+                table: 'customers',
+                type: 'text',
+                matchType: ['exact', 'startsWith']
+            },
+            {
+                name: 'phone',
+                label: 'טלפון',
+                table: 'customers',
+                type: 'text',
+                matchType: ['exact', 'fuzzy']
+            },
+            {
+                name: 'phoneMobile',
+                label: 'נייד',
+                table: 'customers',
+                type: 'text',
+                matchType: ['exact', 'fuzzy']
+            },
+            {
+                name: 'cityId',
+                label: 'עיר',
+                table: 'customers',
+                type: 'text',
+                matchType: ['exact']
+            },
+            {
+                name: 'statusCustomer',
+                label: 'סטטוס',
+                table: 'customers',
+                type: 'select',
+                matchType: ['exact'],
+                options: [
+                    { value: '1', label: 'פעיל' },
+                    { value: '0', label: 'לא פעיל' }
+                ]
+            },
+            {
+                name: 'statusResident',
+                label: 'סוג תושבות',
+                table: 'customers',
+                type: 'select',
+                matchType: ['exact'],
+                options: [
+                    { value: '1', label: 'תושב' },
+                    { value: '2', label: 'תושב חוץ' },
+                    { value: '3', label: 'אחר' }
+                ]
+            },
+            {
+                name: 'createDate',
+                label: 'תאריך יצירה',
+                table: 'customers',
+                type: 'date',
+                matchType: ['exact', 'before', 'after', 'between', 'today', 'thisWeek', 'thisMonth']
+            }
+        ],
+        
         display: {
             containerSelector: '#customerSearchSection',
-            showAdvanced: true,  // ✅ מופעל - עכשיו ה-API תומך בפילטרים!
+            showAdvanced: true,
+            showFilters: true,
             placeholder: 'חיפוש לקוחות לפי שם, ת.ז, טלפון...',
             layout: 'horizontal',
             minSearchLength: 0
@@ -110,8 +196,9 @@ async function initUniversalSearch() {
         results: {
             containerSelector: '#tableBody',
             itemsPerPage: 50,
+            showPagination: true,
             showCounter: true,
-            
+            columns: ['numId', 'firstName', 'lastName', 'phone', 'streetAddress', 'city_name', 'statusCustomer', 'statusResident', 'createDate'],
             renderFunction: renderCustomersRows
         },
         

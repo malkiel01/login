@@ -166,6 +166,7 @@
                     'data' => $customers,
                     'pagination' => [
                         'total' => $total,
+                        'totalAll' => $totalAll,  // ← הוסף את זה!
                         'page' => $page,
                         'limit' => $limit,
                         'pages' => ceil($total / $limit)

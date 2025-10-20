@@ -31,6 +31,8 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/breadcrumb.css">
 
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/smart-select.css">
+
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/search.css">
 </head>
 <body>
     <!-- SVG Icons - חייב להיות בתחילת ה-body -->
@@ -159,6 +161,8 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <script src="/dashboard/dashboards/cemeteries/js/residency-management.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/countries-management.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/cities-management.js"></script>
+
+    <script src="/dashboard/dashboards/cemeteries/js/live-search.js"></script>
 
     <script>
         // Initialize dashboard on load

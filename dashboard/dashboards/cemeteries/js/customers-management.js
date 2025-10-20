@@ -101,10 +101,10 @@ async function initUniversalSearch() {
     customerSearch = createSearchFromPreset('customers', {
         display: {
             containerSelector: '#customerSearchSection',
-            showAdvanced: true,
-            placeholder: 'חיפוש לקוחות לפי שם, ת.ז, טלפון, אימייל...',
+            showAdvanced: true,  // ✅ מופעל - עכשיו ה-API תומך בפילטרים!
+            placeholder: 'חיפוש לקוחות לפי שם, ת.ז, טלפון...',
             layout: 'horizontal',
-            minSearchLength: 0  // 🆕 אפשר חיפוש גם עם 0 תווים (כל הרשומות)
+            minSearchLength: 0
         },
         
         results: {
@@ -154,7 +154,7 @@ function renderCustomersRows(data, container) {
     if (data.length === 0) {
         container.innerHTML = `
             <tr>
-                <td colspan="11" style="text-align: center; padding: 60px;">
+                <td colspan="10" style="text-align: center; padding: 60px;">
                     <div style="color: #9ca3af;">
                         <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
                         <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">לא נמצאו תוצאות</div>
@@ -185,7 +185,6 @@ function renderCustomersRows(data, container) {
                     ${customer.phone || '-'}
                     ${customer.phoneMobile ? '<br><small style="color:#666;">' + customer.phoneMobile + '</small>' : ''}
                 </td>
-                <td>${customer.email || '-'}</td>
                 <td>${customer.streetAddress || '-'}</td>
                 <td>${customer.city_name || '-'}</td>
                 <td>
@@ -193,7 +192,7 @@ function renderCustomersRows(data, container) {
                         ${statusText}
                     </span>
                 </td>
-                <td>${formatCustomerType(customer.resident)}</td>
+                <td>${formatCustomerType(customer.statusResident)}</td>
                 <td>${date}</td>
                 <td>
                     <button class="btn btn-sm btn-secondary" onclick="editCustomer('${customer.unicId}')" title="עריכה">

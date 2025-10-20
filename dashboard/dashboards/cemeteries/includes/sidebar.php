@@ -118,7 +118,8 @@
         
         <!-- תשלומים -->
         <div class="management-item" style="margin-bottom: 10px;">
-            <div class="hierarchy-header" onclick="loadPayments()" style="background: #f0f9ff; border: 1px solid #3b82f6;">
+            <div class="hierarchy-header" onclick="loadPayments()"
+             >
                 <span class="hierarchy-icon">💳</span>
                 <span class="hierarchy-title">ניהול תשלומים</span>
                 <span class="hierarchy-count" id="paymentsCount" style="background: #3b82f6; color: white;">0</span>

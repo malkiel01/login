@@ -118,19 +118,10 @@ class TableManager {
         // צור את המבנה החדש: wrapper > header-container + body-container
         const wrapper = document.createElement('div');
         wrapper.className = 'table-wrapper';
+        wrapper.setAttribute('data-fixed-width', 'true');
         
-        // הוסף CSS inline כ-fallback
-        wrapper.style.cssText = `
-            display: flex !important;
-            flex-direction: column !important;
-            height: calc(100vh - 250px) !important;
-            min-height: 500px !important;
-            border: 1px solid #e5e7eb !important;
-            border-radius: 8px !important;
-            overflow: hidden !important;
-            background: white !important;
-            position: relative !important;
-        `;
+        // הוסף CSS inline כ-fallback - עם !important בצורה אחרת
+        wrapper.setAttribute('style', 'display: flex !important; flex-direction: column !important; width: 500px !important; height: calc(100vh - 250px) !important; min-height: 500px !important; border: 1px solid #e5e7eb !important; border-radius: 8px !important; overflow: hidden !important; background: white !important; position: relative !important; box-sizing: border-box !important;');
         
         console.log('📦 Created wrapper');
         

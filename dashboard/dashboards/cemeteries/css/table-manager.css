@@ -118,7 +118,7 @@
 /* === תפיסה לשינוי גודל - RTL FIX === */
 .tm-resize-handle {
     position: absolute;
-    right: 0; /* שונה מ-left ל-right עבור RTL */
+    left: 0; /* חזרה ל-left! ב-RTL הצד השמאלי של העמודה הוא הקצה הימני */
     top: 0;
     bottom: 0;
     width: 8px;

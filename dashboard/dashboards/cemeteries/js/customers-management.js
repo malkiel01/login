@@ -1,6 +1,18 @@
 /**
  * customers-management.js
  * ניהול לקוחות עם TableManager + UniversalSearch
+ * 
+ * 📏 רוחבי עמודות ברירת מחדל:
+ * - checkbox: 40px
+ * - numId (ת.ז.): 120px
+ * - fullName (שם מלא): 200px
+ * - phone (טלפון): 150px
+ * - streetAddress (כתובת): 180px
+ * - city_name (עיר): 120px
+ * - statusCustomer (סטטוס): 100px
+ * - statusResident (סוג): 100px
+ * - createDate (תאריך): 120px
+ * - actions (פעולות): 120px
  */
 
 let currentCustomers = [];

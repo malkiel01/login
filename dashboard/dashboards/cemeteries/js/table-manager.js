@@ -140,7 +140,11 @@ class TableManager {
             const th = document.createElement('th');
             th.className = 'tm-header-cell';
             th.dataset.columnIndex = colIndex;
-            th.style.width = this.state.columnWidths[colIndex];
+            
+            // קבע רוחב מינימלי אם לא הוגדר
+            const width = this.state.columnWidths[colIndex];
+            th.style.width = width;
+            th.style.minWidth = width; // מבטיח שהעמודה לא תתכווץ
             
             // wrapper פנימי
             const wrapper = document.createElement('div');
@@ -187,6 +191,20 @@ class TableManager {
         
         this.elements.thead.innerHTML = '';
         this.elements.thead.appendChild(headerRow);
+        
+        // הדפס את רוחבי העמודות לקונסול
+        console.log('📏 Column Widths:', this.getColumnWidths());
+    }
+    
+    /**
+     * קבל רוחבי עמודות נוכחיים
+     */
+    getColumnWidths() {
+        const widths = {};
+        this.config.columns.forEach((col, index) => {
+            widths[col.field || col.label] = this.state.columnWidths[index];
+        });
+        return widths;
     }
     
     /**
@@ -211,6 +229,11 @@ class TableManager {
                 const column = this.config.columns[colIndex];
                 const td = document.createElement('td');
                 td.className = 'tm-cell';
+                
+                // החל את הרוחב מהכותרת
+                const width = this.state.columnWidths[colIndex];
+                td.style.width = width;
+                td.style.minWidth = width;
                 
                 // רינדור התא
                 if (this.config.renderCell) {
@@ -492,13 +515,26 @@ class TableManager {
             this.state.columnWidths[colIndex] = `${newWidth}px`;
             
             const th = this.elements.thead.querySelector(`th[data-column-index="${colIndex}"]`);
-            if (th) th.style.width = `${newWidth}px`;
+            if (th) {
+                th.style.width = `${newWidth}px`;
+                th.style.minWidth = `${newWidth}px`;
+            }
+            
+            // עדכן גם את התאים בגוף הטבלה
+            const cells = this.elements.tbody.querySelectorAll(`tr td:nth-child(${colIndex + 1})`);
+            cells.forEach(cell => {
+                cell.style.width = `${newWidth}px`;
+                cell.style.minWidth = `${newWidth}px`;
+            });
         };
         
         const onMouseUp = () => {
             this.state.isResizing = false;
             document.removeEventListener('mousemove', onMouseMove);
             document.removeEventListener('mouseup', onMouseUp);
+            
+            // הדפס את המידות החדשות
+            console.log('📏 Updated Column Widths:', this.getColumnWidths());
         };
         
         this.elements.thead.addEventListener('mousedown', onMouseDown);
@@ -633,6 +669,28 @@ class TableManager {
     
     getDisplayedData() {
         return this.state.displayedData;
+    }
+    
+    setColumnWidths(widths) {
+        // widths הוא אובייקט עם field: width
+        Object.keys(widths).forEach(field => {
+            const colIndex = this.config.columns.findIndex(col => 
+                (col.field || col.label) === field
+            );
+            if (colIndex !== -1) {
+                this.state.columnWidths[colIndex] = widths[field];
+            }
+        });
+        this.renderHeaders();
+        this.renderRows();
+    }
+    
+    resetColumnWidths() {
+        this.config.columns.forEach((col, index) => {
+            this.state.columnWidths[index] = col.width || 'auto';
+        });
+        this.renderHeaders();
+        this.renderRows();
     }
 }
 

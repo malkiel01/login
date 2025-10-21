@@ -88,13 +88,26 @@ class TableManager {
         console.log('🏗️ Building new table structure...');
         
         // מצא את ההורה של הטבלה המקורית
-        const parent = this.elements.table.parentNode;
+        let parent = this.elements.table.parentNode;
         
-        // נקה padding מההורה
-        if (parent) {
-            parent.style.padding = '0';
-            parent.style.margin = '0';
-            parent.style.overflow = 'visible';
+        // אם ההורה הוא .table-container, תקן אותו
+        if (parent && parent.classList.contains('table-container')) {
+            console.log('📦 Found .table-container - fixing it');
+            parent.style.cssText = `
+                padding: 0 !important;
+                margin: 0 !important;
+                overflow: visible !important;
+                max-height: none !important;
+                height: auto !important;
+                border: none !important;
+            `;
+        }
+        
+        // בדוק אם יש הורה נוסף עם padding
+        let grandParent = parent?.parentNode;
+        if (grandParent && (grandParent.classList.contains('main-content') || grandParent.classList.contains('content-wrapper'))) {
+            console.log('📦 Found parent container - fixing it');
+            grandParent.style.overflow = 'visible';
         }
         
         // צור את המבנה החדש: wrapper > header-container + body-container
@@ -107,11 +120,11 @@ class TableManager {
             flex-direction: column !important;
             height: calc(100vh - 250px) !important;
             min-height: 500px !important;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
+            border: 1px solid #e5e7eb !important;
+            border-radius: 8px !important;
             overflow: hidden !important;
-            background: white;
-            position: relative;
+            background: white !important;
+            position: relative !important;
         `;
         
         console.log('📦 Created wrapper');
@@ -123,11 +136,10 @@ class TableManager {
             flex-shrink: 0 !important;
             overflow-x: auto !important;
             overflow-y: hidden !important;
-            background: white;
-            border-bottom: 2px solid #e5e7eb;
-            position: sticky !important;
-            top: 0 !important;
-            z-index: 100;
+            background: white !important;
+            border-bottom: 2px solid #e5e7eb !important;
+            position: relative !important;
+            z-index: 100 !important;
         `;
         
         // קונטיינר תוכן
@@ -137,7 +149,8 @@ class TableManager {
             flex: 1 !important;
             overflow-x: auto !important;
             overflow-y: auto !important;
-            position: relative;
+            position: relative !important;
+            height: 100% !important;
         `;
         
         console.log('📦 Created header and body containers');
@@ -147,12 +160,12 @@ class TableManager {
         headerTable.className = 'tm-table tm-header-table';
         headerTable.id = 'headerTable';
         headerTable.style.cssText = `
-            width: max-content;
-            min-width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            background: white;
-            table-layout: fixed;
+            width: max-content !important;
+            min-width: 100% !important;
+            border-collapse: separate !important;
+            border-spacing: 0 !important;
+            background: white !important;
+            table-layout: fixed !important;
         `;
         const thead = document.createElement('thead');
         headerTable.appendChild(thead);
@@ -165,12 +178,12 @@ class TableManager {
         bodyTable.className = 'tm-table tm-body-table';
         bodyTable.id = 'bodyTable';
         bodyTable.style.cssText = `
-            width: max-content;
-            min-width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            background: white;
-            table-layout: fixed;
+            width: max-content !important;
+            min-width: 100% !important;
+            border-collapse: separate !important;
+            border-spacing: 0 !important;
+            background: white !important;
+            table-layout: fixed !important;
         `;
         const tbody = document.createElement('tbody');
         bodyTable.appendChild(tbody);
@@ -205,13 +218,20 @@ class TableManager {
             const wrapperStyles = window.getComputedStyle(wrapper);
             const headerStyles = window.getComputedStyle(headerContainer);
             const bodyStyles = window.getComputedStyle(bodyContainer);
+            const parentStyles = window.getComputedStyle(parent);
             
+            console.log('Parent overflow:', parentStyles.overflow, parentStyles.overflowY);
             console.log('Wrapper display:', wrapperStyles.display);
             console.log('Wrapper height:', wrapperStyles.height);
-            console.log('Header position:', headerStyles.position);
-            console.log('Header overflow:', headerStyles.overflow, headerStyles.overflowY);
-            console.log('Body overflow:', bodyStyles.overflow, bodyStyles.overflowY);
+            console.log('Wrapper overflow:', wrapperStyles.overflow);
+            console.log('Header overflow:', headerStyles.overflow, 'Y:', headerStyles.overflowY);
+            console.log('Body overflow:', bodyStyles.overflow, 'Y:', bodyStyles.overflowY);
             console.log('Body flex:', bodyStyles.flex);
+            
+            if (parentStyles.overflow !== 'visible') {
+                console.warn('⚠️ Parent has overflow! This will cause scrolling issues.');
+                console.log('Parent element:', parent);
+            }
             
             if (wrapperStyles.display !== 'flex') {
                 console.warn('⚠️ Wrapper is not flex! CSS might not be loaded.');

@@ -1,7 +1,7 @@
 /**
  * TableManager - מערכת טבלאות מתקדמת
  * תכונות: מיון, שינוי גודל, שינוי סדר, תפריט עמודה, סינון, Infinite Scroll
- * תמיכה מלאה ב-RTL
+ * תמיכה מלאה ב-RTL + תמיכה ברוחב דינמי
  */
 
 class TableManager {
@@ -10,6 +10,11 @@ class TableManager {
             tableSelector: null,
             columns: [],
             data: [],
+            
+            // ⭐ הגדרות רוחב חדשות
+            containerWidth: '100%',      // ברירת מחדל: תופס את כל הרוחב
+            containerPadding: '16px',    // ברירת מחדל: padding סביב
+            
             sortable: true,
             resizable: true,
             reorderable: true,
@@ -79,6 +84,8 @@ class TableManager {
         }
         
         console.log('✅ TableManager initialized with fixed header');
+        console.log('📐 Container width:', this.config.containerWidth);
+        console.log('📦 Container padding:', this.config.containerPadding);
     }
     
     /**
@@ -97,11 +104,20 @@ class TableManager {
         while (currentParent && currentParent !== document.body) {
             const styles = window.getComputedStyle(currentParent);
             
-            // אם זה table-container, תן לו את הרוחב והפדינג
+            // ⭐ אם זה table-container, תן לו את הרוחב והפדינג מה-config
             if (currentParent.classList.contains('table-container')) {
-                console.log('🎯 Setting .table-container to 500px with padding');
-                // הסר את כל ה-inline styles הקיימים ותן לו רק מה שאנחנו רוצים
-                currentParent.setAttribute('style', 'width: 500px !important; padding: 16px !important; margin: 0 !important; overflow: visible !important; max-height: none !important; height: auto !important; box-sizing: border-box !important; border: 1px solid #ddd !important; background: #f5f5f5 !important;');
+                console.log('🎯 Setting .table-container with custom dimensions');
+                currentParent.setAttribute('style', `
+                    width: ${this.config.containerWidth} !important; 
+                    padding: ${this.config.containerPadding} !important; 
+                    margin: 0 !important; 
+                    overflow: visible !important; 
+                    max-height: none !important; 
+                    height: auto !important; 
+                    box-sizing: border-box !important; 
+                    border: 1px solid #ddd !important; 
+                    background: #f5f5f5 !important;
+                `.replace(/\s+/g, ' ').trim());
                 fixed.push('table-container');
             }
             // אם יש overflow אחר, תקן אותו

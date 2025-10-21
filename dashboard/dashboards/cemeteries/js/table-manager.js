@@ -94,15 +94,42 @@ class TableManager {
         const wrapper = document.createElement('div');
         wrapper.className = 'table-wrapper';
         
+        // הוסף CSS inline כ-fallback
+        wrapper.style.cssText = `
+            display: flex !important;
+            flex-direction: column !important;
+            height: 100%;
+            max-height: calc(100vh - 250px);
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+            background: white;
+        `;
+        
         console.log('📦 Created wrapper');
         
         // קונטיינר כותרת
         const headerContainer = document.createElement('div');
         headerContainer.className = 'table-header-container';
+        headerContainer.style.cssText = `
+            flex-shrink: 0 !important;
+            overflow-x: auto !important;
+            overflow-y: hidden !important;
+            background: white;
+            border-bottom: 2px solid #e5e7eb;
+            position: relative;
+            z-index: 100;
+        `;
         
         // קונטיינר תוכן
         const bodyContainer = document.createElement('div');
         bodyContainer.className = 'table-body-container';
+        bodyContainer.style.cssText = `
+            flex: 1 !important;
+            overflow-x: auto !important;
+            overflow-y: auto !important;
+            position: relative;
+        `;
         
         console.log('📦 Created header and body containers');
         
@@ -110,6 +137,14 @@ class TableManager {
         const headerTable = document.createElement('table');
         headerTable.className = 'tm-table tm-header-table';
         headerTable.id = 'headerTable';
+        headerTable.style.cssText = `
+            width: max-content;
+            min-width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: white;
+            table-layout: fixed;
+        `;
         const thead = document.createElement('thead');
         headerTable.appendChild(thead);
         headerContainer.appendChild(headerTable);
@@ -120,6 +155,14 @@ class TableManager {
         const bodyTable = document.createElement('table');
         bodyTable.className = 'tm-table tm-body-table';
         bodyTable.id = 'bodyTable';
+        bodyTable.style.cssText = `
+            width: max-content;
+            min-width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: white;
+            table-layout: fixed;
+        `;
         const tbody = document.createElement('tbody');
         bodyTable.appendChild(tbody);
         bodyContainer.appendChild(bodyTable);
@@ -146,6 +189,25 @@ class TableManager {
         this.elements.tbody = tbody;
         
         console.log('📌 References saved');
+        console.log('📊 Checking computed styles...');
+        
+        // בדוק שה-CSS אכן הוחל
+        setTimeout(() => {
+            const wrapperStyles = window.getComputedStyle(wrapper);
+            const headerStyles = window.getComputedStyle(headerContainer);
+            const bodyStyles = window.getComputedStyle(bodyContainer);
+            
+            console.log('Wrapper display:', wrapperStyles.display);
+            console.log('Header overflow:', headerStyles.overflow, headerStyles.overflowY);
+            console.log('Body overflow:', bodyStyles.overflow, bodyStyles.overflowY);
+            console.log('Body flex:', bodyStyles.flex);
+            
+            if (wrapperStyles.display !== 'flex') {
+                console.warn('⚠️ Wrapper is not flex! CSS might not be loaded.');
+            } else {
+                console.log('✅ CSS applied correctly!');
+            }
+        }, 100);
         
         // סנכרן גלילה אופקית
         this.syncHorizontalScroll();
@@ -159,8 +221,6 @@ class TableManager {
         this.loadInitialData();
         
         console.log('🎉 Table structure complete!');
-        console.log('Header container:', headerContainer);
-        console.log('Body container:', bodyContainer);
     }
     
     /**

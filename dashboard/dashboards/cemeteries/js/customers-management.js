@@ -226,7 +226,7 @@ function initCustomersTable(data) {
         tableSelector: '#mainTable',
         
         // ⭐ הגדרות רוחב
-        containerWidth: '100%',      // תופס את כל הרוחב
+        containerWidth: '80vw',      // תופס את כל הרוחב
         containerPadding: '16px',    // padding סביב
         
         // ⭐ הגדרות Infinite Scroll

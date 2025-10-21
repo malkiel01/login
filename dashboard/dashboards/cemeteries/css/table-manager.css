@@ -17,27 +17,33 @@
 
 /* === כללי === */
 .tm-header-row {
-    background: inherit;
-    color: inherit;
     position: sticky;
     top: 0;
     z-index: 100;
+    background: white;
 }
 
 .tm-header-cell {
-    position: relative;
+    position: sticky;
+    top: 0;
     padding: 12px 16px;
     font-weight: 600;
     text-align: right;
     border-left: 1px solid #e5e7eb;
+    border-bottom: 2px solid #e5e7eb;
     user-select: none;
     white-space: nowrap;
-    background: white; /* חשוב! צריך רקע אטום */
-    box-shadow: 0 1px 0 0 #e5e7eb; /* צל קל כשגוללים */
+    background: white;
+    z-index: 100;
 }
 
 .tm-header-cell:first-child {
     border-right: none;
+}
+
+/* צל כשגוללים */
+.table-container.scrolled .tm-header-cell {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 .tm-header-wrapper {
@@ -46,6 +52,8 @@
     gap: 8px;
     cursor: pointer;
     direction: rtl;
+    position: relative;
+    z-index: 1;
 }
 
 .tm-header-label {
@@ -119,14 +127,14 @@
 /* === תפיסה לשינוי גודל - RTL FIX === */
 .tm-resize-handle {
     position: absolute;
-    left: 0; /* חזרה ל-left! ב-RTL הצד השמאלי של העמודה הוא הקצה הימני */
+    left: 0;
     top: 0;
     bottom: 0;
     width: 8px;
     cursor: col-resize;
     background: transparent;
     transition: background 0.2s;
-    z-index: 10;
+    z-index: 101; /* מעל הכותרת */
 }
 
 .tm-resize-handle:hover {
@@ -212,26 +220,40 @@
 
 /* === סטייל לטבלה כללי === */
 #mainTable {
-    width: max-content; /* שונה מ-100% כדי לאפשר גלילה אופקית */
+    width: max-content;
     min-width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     background: white;
-    table-layout: fixed; /* שונה ל-fixed כדי לשמור על רוחב עמודות */
+    table-layout: fixed;
 }
 
 #mainTable thead {
     position: sticky;
     top: 0;
     z-index: 100;
-    background: inherit;
 }
 
-/* קונטיינר הטבלה צריך להיות עם overflow */
+#mainTable thead tr {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+/* קונטיינר הטבלה - חובה! */
 .table-container {
     overflow-x: auto;
     overflow-y: auto;
-    max-height: calc(100vh - 200px);
+    max-height: calc(100vh - 250px); /* התאם לפי הגובה שלך */
     position: relative;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+}
+
+/* אם יש main-content, וודא שאין לו overflow */
+.main-content {
+    overflow: visible !important;
 }
 
 /* === אין תוצאות === */

@@ -59,6 +59,9 @@ class TableManager {
             return;
         }
         
+        // וודא שהטבלה בתוך .table-container
+        this.ensureTableContainer();
+        
         // אתחול סדר עמודות
         this.state.columnOrder = this.config.columns.map((col, index) => index);
         
@@ -79,6 +82,37 @@ class TableManager {
         }
         
         console.log('✅ TableManager initialized');
+    }
+    
+    /**
+     * וודא שהטבלה בתוך container מתאים
+     */
+    ensureTableContainer() {
+        let container = this.elements.table.closest('.table-container');
+        
+        if (!container) {
+            console.warn('⚠️ No .table-container found! Creating one...');
+            
+            // צור wrapper
+            container = document.createElement('div');
+            container.className = 'table-container';
+            
+            // עטוף את הטבלה
+            this.elements.table.parentNode.insertBefore(container, this.elements.table);
+            container.appendChild(this.elements.table);
+            
+            console.log('✅ Created .table-container wrapper');
+        }
+        
+        // וודא שיש overflow
+        const style = window.getComputedStyle(container);
+        if (style.overflow !== 'auto' && style.overflowY !== 'auto') {
+            console.warn('⚠️ .table-container needs overflow! Adding styles...');
+            container.style.overflowX = 'auto';
+            container.style.overflowY = 'auto';
+            container.style.maxHeight = 'calc(100vh - 250px)';
+            container.style.position = 'relative';
+        }
     }
     
     /**
@@ -560,6 +594,16 @@ class TableManager {
         
         scrollElement.addEventListener('scroll', () => {
             if (this.state.isLoading) return;
+            
+            // הוסף/הסר class לצל
+            if (this.elements.scrollContainer !== window) {
+                const scrollTop = this.elements.scrollContainer.scrollTop;
+                if (scrollTop > 0) {
+                    this.elements.scrollContainer.classList.add('scrolled');
+                } else {
+                    this.elements.scrollContainer.classList.remove('scrolled');
+                }
+            }
             
             const { scrollTop, scrollHeight, clientHeight } = 
                 this.elements.scrollContainer === window 

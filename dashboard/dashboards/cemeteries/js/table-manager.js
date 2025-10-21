@@ -90,24 +90,29 @@ class TableManager {
         // מצא את ההורה של הטבלה המקורית
         let parent = this.elements.table.parentNode;
         
-        // אם ההורה הוא .table-container, תקן אותו
-        if (parent && parent.classList.contains('table-container')) {
-            console.log('📦 Found .table-container - fixing it');
-            parent.style.cssText = `
-                padding: 0 !important;
-                margin: 0 !important;
-                overflow: visible !important;
-                max-height: none !important;
-                height: auto !important;
-                border: none !important;
-            `;
+        // תקן את כל ההורים עד שמוצאים אחד ללא overflow
+        let currentParent = parent;
+        let fixed = [];
+        
+        while (currentParent && currentParent !== document.body) {
+            const styles = window.getComputedStyle(currentParent);
+            
+            // אם יש overflow, תקן אותו
+            if (styles.overflow !== 'visible' || styles.overflowY !== 'visible' || styles.maxHeight !== 'none') {
+                console.log(`🔧 Fixing parent: ${currentParent.className || currentParent.tagName}`);
+                currentParent.style.cssText += `
+                    overflow: visible !important;
+                    max-height: none !important;
+                    height: auto !important;
+                `;
+                fixed.push(currentParent.className || currentParent.tagName);
+            }
+            
+            currentParent = currentParent.parentElement;
         }
         
-        // בדוק אם יש הורה נוסף עם padding
-        let grandParent = parent?.parentNode;
-        if (grandParent && (grandParent.classList.contains('main-content') || grandParent.classList.contains('content-wrapper'))) {
-            console.log('📦 Found parent container - fixing it');
-            grandParent.style.overflow = 'visible';
+        if (fixed.length > 0) {
+            console.log('✅ Fixed overflow on:', fixed.join(', '));
         }
         
         // צור את המבנה החדש: wrapper > header-container + body-container
@@ -229,8 +234,9 @@ class TableManager {
             console.log('Body flex:', bodyStyles.flex);
             
             if (parentStyles.overflow !== 'visible') {
-                console.warn('⚠️ Parent has overflow! This will cause scrolling issues.');
-                console.log('Parent element:', parent);
+                console.warn('⚠️ Parent still has overflow! Trying to fix again...');
+                parent.style.overflow = 'visible';
+                parent.style.maxHeight = 'none';
             }
             
             if (wrapperStyles.display !== 'flex') {

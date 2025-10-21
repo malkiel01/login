@@ -85,9 +85,16 @@ class TableManager {
      * בניית מבנה הטבלה
      */
     buildTable() {
+        console.log('🏗️ Building new table structure...');
+        
+        // מצא את ההורה של הטבלה המקורית
+        const parent = this.elements.table.parentNode;
+        
         // צור את המבנה החדש: wrapper > header-container + body-container
         const wrapper = document.createElement('div');
         wrapper.className = 'table-wrapper';
+        
+        console.log('📦 Created wrapper');
         
         // קונטיינר כותרת
         const headerContainer = document.createElement('div');
@@ -97,27 +104,37 @@ class TableManager {
         const bodyContainer = document.createElement('div');
         bodyContainer.className = 'table-body-container';
         
+        console.log('📦 Created header and body containers');
+        
         // טבלת כותרת
         const headerTable = document.createElement('table');
         headerTable.className = 'tm-table tm-header-table';
+        headerTable.id = 'headerTable';
         const thead = document.createElement('thead');
         headerTable.appendChild(thead);
         headerContainer.appendChild(headerTable);
         
+        console.log('📋 Created header table');
+        
         // טבלת תוכן
         const bodyTable = document.createElement('table');
         bodyTable.className = 'tm-table tm-body-table';
+        bodyTable.id = 'bodyTable';
         const tbody = document.createElement('tbody');
         bodyTable.appendChild(tbody);
         bodyContainer.appendChild(bodyTable);
+        
+        console.log('📋 Created body table');
         
         // הרכבה
         wrapper.appendChild(headerContainer);
         wrapper.appendChild(bodyContainer);
         
         // החלף את הטבלה המקורית
-        this.elements.table.parentNode.insertBefore(wrapper, this.elements.table);
+        parent.insertBefore(wrapper, this.elements.table);
         this.elements.table.style.display = 'none';
+        
+        console.log('✅ New structure inserted, original table hidden');
         
         // שמור references
         this.elements.wrapper = wrapper;
@@ -128,14 +145,22 @@ class TableManager {
         this.elements.thead = thead;
         this.elements.tbody = tbody;
         
+        console.log('📌 References saved');
+        
         // סנכרן גלילה אופקית
         this.syncHorizontalScroll();
+        
+        console.log('🔄 Horizontal scroll synced');
         
         // רינדור כותרות
         this.renderHeaders();
         
         // טען נתונים ראשוניים
         this.loadInitialData();
+        
+        console.log('🎉 Table structure complete!');
+        console.log('Header container:', headerContainer);
+        console.log('Body container:', bodyContainer);
     }
     
     /**
@@ -149,6 +174,8 @@ class TableManager {
         this.elements.bodyContainer.addEventListener('scroll', () => {
             this.elements.headerContainer.scrollLeft = this.elements.bodyContainer.scrollLeft;
         });
+        
+        console.log('🔗 Scroll sync listeners added');
     }
     
     /**

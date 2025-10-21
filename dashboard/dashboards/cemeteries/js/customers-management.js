@@ -2,27 +2,17 @@
  * customers-management.js
  * ניהול לקוחות עם TableManager + UniversalSearch
  * 
- * 🎨 הגדרות עיצוב מותאמות אישית:
- * 
- * רוחב ה-container (מכיל את כל הטבלה):
- * - containerWidth: '100%'     // ברירת מחדל - תופס את כל הרוחב
- * - containerWidth: '500px'    // רוחב קבוע
- * - containerWidth: '80vw'     // 80% מרוחב המסך
- * - containerWidth: 'auto'     // לפי התוכן
- * 
- * padding של ה-container:
- * - containerPadding: '0px'    // ברירת מחדל - ללא padding
- * - containerPadding: '16px'   // padding מסביב
- * - containerPadding: '20px 10px' // padding אנכי/אופקי
- * 
  * 📏 רוחבי עמודות ברירת מחדל:
- * כל עמודה מוגדרת בתוך columns[] עם:
- * - width: '40px'   // רוחב ברירת מחדל
- * - min-width       // רוחב מינימלי (אוטומטי מה-width)
- * 
- * דוגמאות:
- * { field: 'name', label: 'שם', width: '200px' }
- * { field: 'phone', label: 'טלפון', width: '150px' }
+ * - checkbox: 40px
+ * - numId (ת.ז.): 120px
+ * - fullName (שם מלא): 200px
+ * - phone (טלפון): 150px
+ * - streetAddress (כתובת): 180px
+ * - city_name (עיר): 120px
+ * - statusCustomer (סטטוס): 100px
+ * - statusResident (סוג): 100px
+ * - createDate (תאריך): 120px
+ * - actions (פעולות): 120px
  */
 
 let currentCustomers = [];
@@ -245,10 +235,6 @@ function initCustomersTable(data) {
     
     customersTable = new TableManager({
         tableSelector: '#mainTable',
-
-        // ⭐⭐⭐ כאן אתה מגדיר את הרוחב! ⭐⭐⭐
-        // containerWidth: '100%',      // שנה לפי הצורך
-        // containerPadding: '16px',    // שנה לפי הצורך
         
         // הגדרת עמודות
         columns: [
@@ -517,46 +503,11 @@ async function refreshData() {
     }
 }
 
-// פונקציה לשמירת רוחבי עמודות (לעתיד)
-function saveColumnWidths() {
-    if (customersTable) {
-        const widths = customersTable.getColumnWidths();
-        console.log('💾 Saving column widths:', widths);
-        // כאן תוכל לשמור ל-localStorage או לשרת
-        localStorage.setItem('customers_table_column_widths', JSON.stringify(widths));
-        showToast('רוחבי העמודות נשמרו', 'success');
-    }
-}
-
-// פונקציה לטעינת רוחבי עמודות (לעתיד)
-function loadColumnWidths() {
-    const saved = localStorage.getItem('customers_table_column_widths');
-    if (saved) {
-        const widths = JSON.parse(saved);
-        console.log('📂 Loading saved column widths:', widths);
-        return widths;
-    }
-    return null;
-}
-
-// פונקציה להדפסת רוחבי עמודות נוכחיים
-function printColumnWidths() {
-    if (customersTable) {
-        const widths = customersTable.getColumnWidths();
-        console.log('📏 Current Column Widths:', widths);
-        console.table(widths);
-    }
-}
-
 // הפוך את הפונקציות לגלובליות
 window.loadCustomers = loadCustomers;
 window.deleteCustomer = deleteCustomer;
 window.editCustomer = editCustomer;
 window.refreshData = refreshData;
 window.customersTable = customersTable;
-window.saveColumnWidths = saveColumnWidths;
-window.loadColumnWidths = loadColumnWidths;
-window.printColumnWidths = printColumnWidths;
 
 console.log('✅ Customers Management Module Loaded with TableManager');
-console.log('💡 Commands: printColumnWidths(), saveColumnWidths(), loadColumnWidths()');

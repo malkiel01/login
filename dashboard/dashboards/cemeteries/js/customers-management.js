@@ -245,6 +245,10 @@ function initCustomersTable(data) {
     
     customersTable = new TableManager({
         tableSelector: '#mainTable',
+
+        // ⭐⭐⭐ כאן אתה מגדיר את הרוחב! ⭐⭐⭐
+        containerWidth: '100%',      // שנה לפי הצורך
+        // containerPadding: '16px',    // שנה לפי הצורך
         
         // הגדרת עמודות
         columns: [

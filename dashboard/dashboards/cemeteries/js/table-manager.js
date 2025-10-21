@@ -1,6 +1,7 @@
 /**
  * TableManager - מערכת טבלאות מתקדמת
- * תכונות: מיון, שינוי גודל, שינוי סדר, תפריט עמודה, סינון
+ * תכונות: מיון, שינוי גודל, שינוי סדר, תפריט עמודה, סינון, Infinite Scroll
+ * תמיכה מלאה ב-RTL
  */
 
 class TableManager {
@@ -17,23 +18,31 @@ class TableManager {
             onSort: null,
             onFilter: null,
             onColumnReorder: null,
+            infiniteScroll: true,
+            itemsPerPage: 100,
+            scrollThreshold: 200, // פיקסלים מהתחתית לטעינה
             ...config
         };
         
         this.state = {
             sortColumn: null,
-            sortOrder: 'asc', // 'asc' or 'desc'
+            sortOrder: 'asc',
             columnWidths: {},
             columnOrder: [],
             filters: new Map(),
             isResizing: false,
-            isDragging: false
+            isDragging: false,
+            currentPage: 1,
+            isLoading: false,
+            filteredData: [],
+            displayedData: []
         };
         
         this.elements = {
             table: null,
             thead: null,
-            tbody: null
+            tbody: null,
+            scrollContainer: null
         };
         
         this.init();
@@ -64,6 +73,11 @@ class TableManager {
         // קישור אירועים
         this.bindEvents();
         
+        // אתחול Infinite Scroll
+        if (this.config.infiniteScroll) {
+            this.initInfiniteScroll();
+        }
+        
         console.log('✅ TableManager initialized');
     }
     
@@ -90,7 +104,27 @@ class TableManager {
         // רינדור כותרות
         this.renderHeaders();
         
-        // רינדור נתונים
+        // טען נתונים ראשוניים
+        this.loadInitialData();
+    }
+    
+    /**
+     * טעינת נתונים ראשוניים
+     */
+    loadInitialData() {
+        // סינון
+        this.state.filteredData = this.filterData(this.config.data);
+        
+        // מיון
+        if (this.state.sortColumn !== null) {
+            this.state.filteredData = this.sortData(this.state.filteredData);
+        }
+        
+        // טען עמוד ראשון
+        this.state.currentPage = 1;
+        this.state.displayedData = this.state.filteredData.slice(0, this.config.itemsPerPage);
+        
+        // רינדור
         this.renderRows();
     }
     
@@ -140,7 +174,7 @@ class TableManager {
             
             th.appendChild(wrapper);
             
-            // תפיסה לשינוי גודל
+            // תפיסה לשינוי גודל (RTL FIX)
             if (this.config.resizable) {
                 const resizeHandle = document.createElement('div');
                 resizeHandle.className = 'tm-resize-handle';
@@ -158,25 +192,18 @@ class TableManager {
     /**
      * רינדור שורות
      */
-    renderRows() {
-        if (!this.config.data || this.config.data.length === 0) {
+    renderRows(append = false) {
+        if (this.state.displayedData.length === 0 && !append) {
             this.elements.tbody.innerHTML = '<tr><td colspan="100" style="text-align: center; padding: 40px; color: #999;">אין נתונים להצגה</td></tr>';
             return;
         }
         
-        // מיון הנתונים
-        let sortedData = [...this.config.data];
-        if (this.state.sortColumn !== null) {
-            sortedData = this.sortData(sortedData);
-        }
-        
-        // סינון
-        if (this.state.filters.size > 0) {
-            sortedData = this.filterData(sortedData);
-        }
+        const dataToRender = append 
+            ? this.state.displayedData.slice((this.state.currentPage - 1) * this.config.itemsPerPage)
+            : this.state.displayedData;
         
         // בניית שורות
-        const rows = sortedData.map(rowData => {
+        const rows = dataToRender.map(rowData => {
             const tr = document.createElement('tr');
             tr.className = 'tm-row';
             
@@ -200,18 +227,22 @@ class TableManager {
             return tr;
         });
         
-        this.elements.tbody.innerHTML = '';
-        rows.forEach(row => this.elements.tbody.appendChild(row));
+        if (append) {
+            rows.forEach(row => this.elements.tbody.appendChild(row));
+        } else {
+            this.elements.tbody.innerHTML = '';
+            rows.forEach(row => this.elements.tbody.appendChild(row));
+        }
     }
     
     /**
-     * מיון נתונים
+     * מיון נתונים - FIX: עכשיו עובד נכון
      */
     sortData(data) {
         const column = this.config.columns[this.state.sortColumn];
         const field = column.field;
         
-        return data.sort((a, b) => {
+        return [...data].sort((a, b) => {
             let valA = a[field];
             let valB = b[field];
             
@@ -233,17 +264,25 @@ class TableManager {
             
             // השוואה
             let comparison = 0;
-            if (valA > valB) comparison = 1;
-            if (valA < valB) comparison = -1;
+            if (typeof valA === 'string' && typeof valB === 'string') {
+                comparison = valA.localeCompare(valB, 'he');
+            } else {
+                if (valA > valB) comparison = 1;
+                if (valA < valB) comparison = -1;
+            }
             
             return this.state.sortOrder === 'asc' ? comparison : -comparison;
         });
     }
     
     /**
-     * סינון נתונים
+     * סינון נתונים - על כל הדאטה, לא רק מה שמוצג
      */
     filterData(data) {
+        if (this.state.filters.size === 0) {
+            return data;
+        }
+        
         return data.filter(row => {
             let matches = true;
             
@@ -290,11 +329,6 @@ class TableManager {
         if (this.config.resizable) {
             this.bindResizeEvents();
         }
-        
-        // שינוי סדר עמודות
-        if (this.config.reorderable) {
-            this.bindReorderEvents();
-        }
     }
     
     /**
@@ -316,9 +350,11 @@ class TableManager {
             this.config.onSort(column.field, this.state.sortOrder);
         }
         
-        // עדכון תצוגה
+        // טען מחדש עם המיון החדש
+        this.loadInitialData();
+        
+        // עדכן כותרות
         this.renderHeaders();
-        this.renderRows();
     }
     
     /**
@@ -351,7 +387,7 @@ class TableManager {
         // מיקום התפריט
         const rect = button.getBoundingClientRect();
         menu.style.top = `${rect.bottom + 5}px`;
-        menu.style.left = `${rect.left - 150}px`;
+        menu.style.right = `${window.innerWidth - rect.right}px`;
         
         // אירועים
         menu.addEventListener('click', (e) => {
@@ -364,15 +400,15 @@ class TableManager {
                 case 'sort-asc':
                     this.state.sortColumn = colIndex;
                     this.state.sortOrder = 'asc';
+                    this.loadInitialData();
                     this.renderHeaders();
-                    this.renderRows();
                     break;
                     
                 case 'sort-desc':
                     this.state.sortColumn = colIndex;
                     this.state.sortOrder = 'desc';
+                    this.loadInitialData();
                     this.renderHeaders();
-                    this.renderRows();
                     break;
                     
                 case 'filter':
@@ -381,7 +417,7 @@ class TableManager {
                     
                 case 'clear-filter':
                     this.state.filters.delete(colIndex);
-                    this.renderRows();
+                    this.loadInitialData();
                     break;
             }
             
@@ -421,12 +457,13 @@ class TableManager {
                 this.config.onFilter(Array.from(this.state.filters.entries()));
             }
             
-            this.renderRows();
+            // טען מחדש עם הסינון
+            this.loadInitialData();
         }
     }
     
     /**
-     * קישור אירועי שינוי גודל
+     * קישור אירועי שינוי גודל - RTL FIX
      */
     bindResizeEvents() {
         let startX, startWidth, colIndex;
@@ -449,7 +486,8 @@ class TableManager {
         const onMouseMove = (e) => {
             if (!this.state.isResizing) return;
             
-            const diff = e.pageX - startX;
+            // RTL FIX: הפוך את הכיוון
+            const diff = startX - e.pageX; // שים לב: startX - e.pageX במקום e.pageX - startX
             const newWidth = Math.max(50, startWidth + diff);
             this.state.columnWidths[colIndex] = `${newWidth}px`;
             
@@ -467,11 +505,102 @@ class TableManager {
     }
     
     /**
-     * קישור אירועי שינוי סדר
+     * אתחול Infinite Scroll
      */
-    bindReorderEvents() {
-        // TODO: drag & drop לשינוי סדר עמודות
-        // נוסיף בשלב הבא אם צריך
+    initInfiniteScroll() {
+        // מצא את הקונטיינר הגלילה
+        this.elements.scrollContainer = this.elements.table.closest('.table-container') 
+            || window;
+        
+        const scrollElement = this.elements.scrollContainer === window 
+            ? window 
+            : this.elements.scrollContainer;
+        
+        scrollElement.addEventListener('scroll', () => {
+            if (this.state.isLoading) return;
+            
+            const { scrollTop, scrollHeight, clientHeight } = 
+                this.elements.scrollContainer === window 
+                    ? { 
+                        scrollTop: window.pageYOffset,
+                        scrollHeight: document.documentElement.scrollHeight,
+                        clientHeight: window.innerHeight
+                    }
+                    : this.elements.scrollContainer;
+            
+            const distanceFromBottom = scrollHeight - (scrollTop + clientHeight);
+            
+            if (distanceFromBottom < this.config.scrollThreshold) {
+                this.loadMoreData();
+            }
+        });
+    }
+    
+    /**
+     * טעינת עוד נתונים
+     */
+    async loadMoreData() {
+        const totalItems = this.state.filteredData.length;
+        const loadedItems = this.state.displayedData.length;
+        
+        if (loadedItems >= totalItems) {
+            console.log('📭 All items loaded');
+            return;
+        }
+        
+        this.state.isLoading = true;
+        console.log('📥 Loading more data...');
+        
+        // הוסף אינדיקטור טעינה
+        this.showLoadingIndicator();
+        
+        // סימולציה של טעינה
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        const nextBatch = this.state.filteredData.slice(
+            loadedItems,
+            loadedItems + this.config.itemsPerPage
+        );
+        
+        this.state.displayedData = [...this.state.displayedData, ...nextBatch];
+        this.state.currentPage++;
+        
+        this.renderRows(true); // append mode
+        
+        // הסר אינדיקטור טעינה
+        this.hideLoadingIndicator();
+        
+        this.state.isLoading = false;
+        console.log(`✅ Loaded ${nextBatch.length} more items (${this.state.displayedData.length}/${totalItems})`);
+    }
+    
+    /**
+     * הצגת אינדיקטור טעינה
+     */
+    showLoadingIndicator() {
+        const existing = this.elements.tbody.querySelector('.tm-loading-indicator');
+        if (existing) return;
+        
+        const row = document.createElement('tr');
+        row.className = 'tm-loading-indicator';
+        row.innerHTML = `
+            <td colspan="100" style="text-align: center; padding: 20px;">
+                <div class="tm-loading-spinner"></div>
+                <div style="margin-top: 10px; color: #6b7280;">טוען עוד נתונים...</div>
+            </td>
+        `;
+        
+        this.elements.tbody.appendChild(row);
+    }
+    
+    /**
+     * הסרת אינדיקטור טעינה
+     */
+    hideLoadingIndicator() {
+        const indicator = this.elements.tbody.querySelector('.tm-loading-indicator');
+        if (indicator) {
+            indicator.remove();
+        }
     }
     
     /**
@@ -480,22 +609,30 @@ class TableManager {
     
     setData(data) {
         this.config.data = data;
-        this.renderRows();
+        this.loadInitialData();
     }
     
     refresh() {
-        this.renderRows();
+        this.loadInitialData();
     }
     
     clearFilters() {
         this.state.filters.clear();
-        this.renderRows();
+        this.loadInitialData();
     }
     
     clearSort() {
         this.state.sortColumn = null;
+        this.loadInitialData();
         this.renderHeaders();
-        this.renderRows();
+    }
+    
+    getFilteredData() {
+        return this.state.filteredData;
+    }
+    
+    getDisplayedData() {
+        return this.state.displayedData;
     }
 }
 

@@ -282,7 +282,7 @@ function initCustomersTable(data) {
                 field: 'statusCustomer',
                 label: 'סטטוס',
                 width: '100px',
-                type: 'text',
+                type: 'number',
                 sortable: true,
                 render: (customer) => formatCustomerStatus(customer.statusCustomer)
             },
@@ -290,7 +290,7 @@ function initCustomersTable(data) {
                 field: 'statusResident',
                 label: 'סוג',
                 width: '100px',
-                type: 'text',
+                type: 'number',
                 sortable: true,
                 render: (customer) => formatCustomerType(customer.statusResident)
             },
@@ -324,16 +324,22 @@ function initCustomersTable(data) {
         // הגדרות
         sortable: true,
         resizable: true,
-        reorderable: true,
+        reorderable: false,
         filterable: true,
+        infiniteScroll: true,
+        itemsPerPage: 100,
+        scrollThreshold: 300,
         
         // callbacks
         onSort: (field, order) => {
-            console.log(`Sorted by ${field} ${order}`);
+            console.log(`📊 Sorted by ${field} ${order}`);
+            showToast(`ממוין לפי ${field} (${order === 'asc' ? 'עולה' : 'יורד'})`, 'info');
         },
         
         onFilter: (filters) => {
-            console.log('Active filters:', filters);
+            console.log('🔍 Active filters:', filters);
+            const count = customersTable.getFilteredData().length;
+            showToast(`נמצאו ${count} תוצאות`, 'info');
         }
     });
     

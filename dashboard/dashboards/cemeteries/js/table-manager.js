@@ -97,8 +97,15 @@ class TableManager {
         while (currentParent && currentParent !== document.body) {
             const styles = window.getComputedStyle(currentParent);
             
-            // אם יש overflow, תקן אותו
-            if (styles.overflow !== 'visible' || styles.overflowY !== 'visible' || styles.maxHeight !== 'none') {
+            // אם זה table-container, תן לו את הרוחב והפדינג
+            if (currentParent.classList.contains('table-container')) {
+                console.log('🎯 Setting .table-container to 500px with padding');
+                // הסר את כל ה-inline styles הקיימים ותן לו רק מה שאנחנו רוצים
+                currentParent.setAttribute('style', 'width: 500px !important; padding: 16px !important; margin: 0 !important; overflow: visible !important; max-height: none !important; height: auto !important; box-sizing: border-box !important; border: 1px solid #ddd !important; background: #f5f5f5 !important;');
+                fixed.push('table-container');
+            }
+            // אם יש overflow אחר, תקן אותו
+            else if (styles.overflow !== 'visible' || styles.overflowY !== 'visible' || styles.maxHeight !== 'none') {
                 console.log(`🔧 Fixing parent: ${currentParent.className || currentParent.tagName}`);
                 currentParent.style.cssText += `
                     overflow: visible !important;
@@ -120,8 +127,8 @@ class TableManager {
         wrapper.className = 'table-wrapper';
         wrapper.setAttribute('data-fixed-width', 'true');
         
-        // הוסף CSS inline כ-fallback - עם !important בצורה אחרת
-        wrapper.setAttribute('style', 'display: flex !important; flex-direction: column !important; width: 500px !important; height: calc(100vh - 250px) !important; min-height: 500px !important; border: 1px solid #e5e7eb !important; border-radius: 8px !important; overflow: hidden !important; background: white !important; position: relative !important; box-sizing: border-box !important;');
+        // הוסף CSS inline - wrapper יהיה 100% כדי להתאים לפנים ה-container
+        wrapper.setAttribute('style', 'display: flex !important; flex-direction: column !important; width: 100% !important; height: calc(100vh - 250px) !important; min-height: 500px !important; border: 1px solid #e5e7eb !important; border-radius: 8px !important; overflow: hidden !important; background: white !important; position: relative !important; box-sizing: border-box !important;');
         
         console.log('📦 Created wrapper');
         

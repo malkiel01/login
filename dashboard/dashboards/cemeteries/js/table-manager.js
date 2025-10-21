@@ -509,9 +509,11 @@ class TableManager {
         const onMouseMove = (e) => {
             if (!this.state.isResizing) return;
             
-            // RTL FIX: הפוך את הכיוון
-            const diff = startX - e.pageX; // שים לב: startX - e.pageX במקום e.pageX - startX
-            const newWidth = Math.max(50, startWidth + diff);
+            // RTL FIX: ב-RTL, הזזה שמאלה = הגדלה, הזזה ימינה = הקטנה
+            // אבל ה-handle נמצא בצד שמאל של העמודה (שזה הצד הימני ויזואלית)
+            // לכן: e.pageX - startX (הפוך מהניסיון הקודם!)
+            const diff = e.pageX - startX;
+            const newWidth = Math.max(50, startWidth - diff); // שים לב ל-MINUS
             this.state.columnWidths[colIndex] = `${newWidth}px`;
             
             const th = this.elements.thead.querySelector(`th[data-column-index="${colIndex}"]`);
@@ -545,8 +547,12 @@ class TableManager {
      */
     initInfiniteScroll() {
         // מצא את הקונטיינר הגלילה
-        this.elements.scrollContainer = this.elements.table.closest('.table-container') 
-            || window;
+        this.elements.scrollContainer = this.elements.table.closest('.table-container');
+        
+        if (!this.elements.scrollContainer) {
+            console.warn('⚠️ No .table-container found, using window as scroll container');
+            this.elements.scrollContainer = window;
+        }
         
         const scrollElement = this.elements.scrollContainer === window 
             ? window 
@@ -570,6 +576,9 @@ class TableManager {
                 this.loadMoreData();
             }
         });
+        
+        console.log('📜 Infinite scroll initialized on:', 
+            this.elements.scrollContainer === window ? 'window' : '.table-container');
     }
     
     /**

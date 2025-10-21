@@ -32,7 +32,8 @@
     border-left: 1px solid #e5e7eb;
     user-select: none;
     white-space: nowrap;
-    background: inherit;
+    background: white; /* חשוב! צריך רקע אטום */
+    box-shadow: 0 1px 0 0 #e5e7eb; /* צל קל כשגוללים */
 }
 
 .tm-header-cell:first-child {

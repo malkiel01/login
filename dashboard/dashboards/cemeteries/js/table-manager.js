@@ -90,6 +90,13 @@ class TableManager {
         // מצא את ההורה של הטבלה המקורית
         const parent = this.elements.table.parentNode;
         
+        // נקה padding מההורה
+        if (parent) {
+            parent.style.padding = '0';
+            parent.style.margin = '0';
+            parent.style.overflow = 'visible';
+        }
+        
         // צור את המבנה החדש: wrapper > header-container + body-container
         const wrapper = document.createElement('div');
         wrapper.className = 'table-wrapper';
@@ -98,12 +105,13 @@ class TableManager {
         wrapper.style.cssText = `
             display: flex !important;
             flex-direction: column !important;
-            height: 100%;
-            max-height: calc(100vh - 250px);
+            height: calc(100vh - 250px) !important;
+            min-height: 500px !important;
             border: 1px solid #e5e7eb;
             border-radius: 8px;
-            overflow: hidden;
+            overflow: hidden !important;
             background: white;
+            position: relative;
         `;
         
         console.log('📦 Created wrapper');
@@ -117,7 +125,8 @@ class TableManager {
             overflow-y: hidden !important;
             background: white;
             border-bottom: 2px solid #e5e7eb;
-            position: relative;
+            position: sticky !important;
+            top: 0 !important;
             z-index: 100;
         `;
         
@@ -198,6 +207,8 @@ class TableManager {
             const bodyStyles = window.getComputedStyle(bodyContainer);
             
             console.log('Wrapper display:', wrapperStyles.display);
+            console.log('Wrapper height:', wrapperStyles.height);
+            console.log('Header position:', headerStyles.position);
             console.log('Header overflow:', headerStyles.overflow, headerStyles.overflowY);
             console.log('Body overflow:', bodyStyles.overflow, bodyStyles.overflowY);
             console.log('Body flex:', bodyStyles.flex);

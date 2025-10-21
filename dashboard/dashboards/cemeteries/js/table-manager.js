@@ -59,9 +59,6 @@ class TableManager {
             return;
         }
         
-        // וודא שהטבלה בתוך .table-container
-        this.ensureTableContainer();
-        
         // אתחול סדר עמודות
         this.state.columnOrder = this.config.columns.map((col, index) => index);
         
@@ -81,65 +78,77 @@ class TableManager {
             this.initInfiniteScroll();
         }
         
-        console.log('✅ TableManager initialized');
-    }
-    
-    /**
-     * וודא שהטבלה בתוך container מתאים
-     */
-    ensureTableContainer() {
-        let container = this.elements.table.closest('.table-container');
-        
-        if (!container) {
-            console.warn('⚠️ No .table-container found! Creating one...');
-            
-            // צור wrapper
-            container = document.createElement('div');
-            container.className = 'table-container';
-            
-            // עטוף את הטבלה
-            this.elements.table.parentNode.insertBefore(container, this.elements.table);
-            container.appendChild(this.elements.table);
-            
-            console.log('✅ Created .table-container wrapper');
-        }
-        
-        // וודא שיש overflow
-        const style = window.getComputedStyle(container);
-        if (style.overflow !== 'auto' && style.overflowY !== 'auto') {
-            console.warn('⚠️ .table-container needs overflow! Adding styles...');
-            container.style.overflowX = 'auto';
-            container.style.overflowY = 'auto';
-            container.style.maxHeight = 'calc(100vh - 250px)';
-            container.style.position = 'relative';
-        }
+        console.log('✅ TableManager initialized with fixed header');
     }
     
     /**
      * בניית מבנה הטבלה
      */
     buildTable() {
-        // thead
-        let thead = this.elements.table.querySelector('thead');
-        if (!thead) {
-            thead = document.createElement('thead');
-            this.elements.table.appendChild(thead);
-        }
-        this.elements.thead = thead;
+        // צור את המבנה החדש: wrapper > header-container + body-container
+        const wrapper = document.createElement('div');
+        wrapper.className = 'table-wrapper';
         
-        // tbody
-        let tbody = this.elements.table.querySelector('tbody');
-        if (!tbody) {
-            tbody = document.createElement('tbody');
-            this.elements.table.appendChild(tbody);
-        }
+        // קונטיינר כותרת
+        const headerContainer = document.createElement('div');
+        headerContainer.className = 'table-header-container';
+        
+        // קונטיינר תוכן
+        const bodyContainer = document.createElement('div');
+        bodyContainer.className = 'table-body-container';
+        
+        // טבלת כותרת
+        const headerTable = document.createElement('table');
+        headerTable.className = 'tm-table tm-header-table';
+        const thead = document.createElement('thead');
+        headerTable.appendChild(thead);
+        headerContainer.appendChild(headerTable);
+        
+        // טבלת תוכן
+        const bodyTable = document.createElement('table');
+        bodyTable.className = 'tm-table tm-body-table';
+        const tbody = document.createElement('tbody');
+        bodyTable.appendChild(tbody);
+        bodyContainer.appendChild(bodyTable);
+        
+        // הרכבה
+        wrapper.appendChild(headerContainer);
+        wrapper.appendChild(bodyContainer);
+        
+        // החלף את הטבלה המקורית
+        this.elements.table.parentNode.insertBefore(wrapper, this.elements.table);
+        this.elements.table.style.display = 'none';
+        
+        // שמור references
+        this.elements.wrapper = wrapper;
+        this.elements.headerContainer = headerContainer;
+        this.elements.bodyContainer = bodyContainer;
+        this.elements.headerTable = headerTable;
+        this.elements.bodyTable = bodyTable;
+        this.elements.thead = thead;
         this.elements.tbody = tbody;
+        
+        // סנכרן גלילה אופקית
+        this.syncHorizontalScroll();
         
         // רינדור כותרות
         this.renderHeaders();
         
         // טען נתונים ראשוניים
         this.loadInitialData();
+    }
+    
+    /**
+     * סנכרון גלילה אופקית בין כותרת לתוכן
+     */
+    syncHorizontalScroll() {
+        this.elements.headerContainer.addEventListener('scroll', () => {
+            this.elements.bodyContainer.scrollLeft = this.elements.headerContainer.scrollLeft;
+        });
+        
+        this.elements.bodyContainer.addEventListener('scroll', () => {
+            this.elements.headerContainer.scrollLeft = this.elements.bodyContainer.scrollLeft;
+        });
     }
     
     /**
@@ -178,7 +187,7 @@ class TableManager {
             // קבע רוחב מינימלי אם לא הוגדר
             const width = this.state.columnWidths[colIndex];
             th.style.width = width;
-            th.style.minWidth = width; // מבטיח שהעמודה לא תתכווץ
+            th.style.minWidth = width;
             
             // wrapper פנימי
             const wrapper = document.createElement('div');
@@ -212,7 +221,7 @@ class TableManager {
             
             th.appendChild(wrapper);
             
-            // תפיסה לשינוי גודל (RTL FIX)
+            // תפיסה לשינוי גודל
             if (this.config.resizable) {
                 const resizeHandle = document.createElement('div');
                 resizeHandle.className = 'tm-resize-handle';
@@ -226,19 +235,40 @@ class TableManager {
         this.elements.thead.innerHTML = '';
         this.elements.thead.appendChild(headerRow);
         
+        // סנכרן רוחבים עם טבלת התוכן
+        this.syncColumnWidths();
+        
         // הדפס את רוחבי העמודות לקונסול
         console.log('📏 Column Widths:', this.getColumnWidths());
     }
     
     /**
-     * קבל רוחבי עמודות נוכחיים
+     * סנכרן רוחבי עמודות בין הכותרת לתוכן
      */
-    getColumnWidths() {
-        const widths = {};
-        this.config.columns.forEach((col, index) => {
-            widths[col.field || col.label] = this.state.columnWidths[index];
-        });
-        return widths;
+    syncColumnWidths() {
+        // יישם את אותם רוחבים על שתי הטבלאות
+        const headerCells = this.elements.headerTable.querySelectorAll('th');
+        const bodyCols = this.elements.bodyTable.querySelectorAll('colgroup col');
+        
+        // אם אין colgroup, צור אחד
+        if (bodyCols.length === 0) {
+            const colgroup = document.createElement('colgroup');
+            this.state.columnOrder.forEach(colIndex => {
+                const col = document.createElement('col');
+                const width = this.state.columnWidths[colIndex];
+                col.style.width = width;
+                col.style.minWidth = width;
+                colgroup.appendChild(col);
+            });
+            this.elements.bodyTable.insertBefore(colgroup, this.elements.tbody);
+        } else {
+            // עדכן קיימים
+            bodyCols.forEach((col, index) => {
+                const width = this.state.columnWidths[index];
+                col.style.width = width;
+                col.style.minWidth = width;
+            });
+        }
     }
     
     /**
@@ -263,11 +293,6 @@ class TableManager {
                 const column = this.config.columns[colIndex];
                 const td = document.createElement('td');
                 td.className = 'tm-cell';
-                
-                // החל את הרוחב מהכותרת
-                const width = this.state.columnWidths[colIndex];
-                td.style.width = width;
-                td.style.minWidth = width;
                 
                 // רינדור התא
                 if (this.config.renderCell) {
@@ -543,25 +568,24 @@ class TableManager {
         const onMouseMove = (e) => {
             if (!this.state.isResizing) return;
             
-            // RTL FIX: ב-RTL, הזזה שמאלה = הגדלה, הזזה ימינה = הקטנה
-            // אבל ה-handle נמצא בצד שמאל של העמודה (שזה הצד הימני ויזואלית)
-            // לכן: e.pageX - startX (הפוך מהניסיון הקודם!)
+            // RTL FIX
             const diff = e.pageX - startX;
-            const newWidth = Math.max(50, startWidth - diff); // שים לב ל-MINUS
+            const newWidth = Math.max(50, startWidth - diff);
             this.state.columnWidths[colIndex] = `${newWidth}px`;
             
-            const th = this.elements.thead.querySelector(`th[data-column-index="${colIndex}"]`);
+            // עדכן כותרת
+            const th = this.elements.headerTable.querySelector(`th[data-column-index="${colIndex}"]`);
             if (th) {
                 th.style.width = `${newWidth}px`;
                 th.style.minWidth = `${newWidth}px`;
             }
             
-            // עדכן גם את התאים בגוף הטבלה
-            const cells = this.elements.tbody.querySelectorAll(`tr td:nth-child(${colIndex + 1})`);
-            cells.forEach(cell => {
-                cell.style.width = `${newWidth}px`;
-                cell.style.minWidth = `${newWidth}px`;
-            });
+            // עדכן colgroup
+            const col = this.elements.bodyTable.querySelector(`colgroup col:nth-child(${colIndex + 1})`);
+            if (col) {
+                col.style.width = `${newWidth}px`;
+                col.style.minWidth = `${newWidth}px`;
+            }
         };
         
         const onMouseUp = () => {
@@ -573,47 +597,18 @@ class TableManager {
             console.log('📏 Updated Column Widths:', this.getColumnWidths());
         };
         
-        this.elements.thead.addEventListener('mousedown', onMouseDown);
+        this.elements.headerTable.addEventListener('mousedown', onMouseDown);
     }
     
     /**
      * אתחול Infinite Scroll
      */
     initInfiniteScroll() {
-        // מצא את הקונטיינר הגלילה
-        this.elements.scrollContainer = this.elements.table.closest('.table-container');
-        
-        if (!this.elements.scrollContainer) {
-            console.warn('⚠️ No .table-container found, using window as scroll container');
-            this.elements.scrollContainer = window;
-        }
-        
-        const scrollElement = this.elements.scrollContainer === window 
-            ? window 
-            : this.elements.scrollContainer;
-        
-        scrollElement.addEventListener('scroll', () => {
+        // גלילה על ה-body container
+        this.elements.bodyContainer.addEventListener('scroll', () => {
             if (this.state.isLoading) return;
             
-            // הוסף/הסר class לצל
-            if (this.elements.scrollContainer !== window) {
-                const scrollTop = this.elements.scrollContainer.scrollTop;
-                if (scrollTop > 0) {
-                    this.elements.scrollContainer.classList.add('scrolled');
-                } else {
-                    this.elements.scrollContainer.classList.remove('scrolled');
-                }
-            }
-            
-            const { scrollTop, scrollHeight, clientHeight } = 
-                this.elements.scrollContainer === window 
-                    ? { 
-                        scrollTop: window.pageYOffset,
-                        scrollHeight: document.documentElement.scrollHeight,
-                        clientHeight: window.innerHeight
-                    }
-                    : this.elements.scrollContainer;
-            
+            const { scrollTop, scrollHeight, clientHeight } = this.elements.bodyContainer;
             const distanceFromBottom = scrollHeight - (scrollTop + clientHeight);
             
             if (distanceFromBottom < this.config.scrollThreshold) {
@@ -621,8 +616,7 @@ class TableManager {
             }
         });
         
-        console.log('📜 Infinite scroll initialized on:', 
-            this.elements.scrollContainer === window ? 'window' : '.table-container');
+        console.log('📜 Infinite scroll initialized on body container');
     }
     
     /**
@@ -690,6 +684,17 @@ class TableManager {
         if (indicator) {
             indicator.remove();
         }
+    }
+    
+    /**
+     * קבל רוחבי עמודות נוכחיים
+     */
+    getColumnWidths() {
+        const widths = {};
+        this.config.columns.forEach((col, index) => {
+            widths[col.field || col.label] = this.state.columnWidths[index];
+        });
+        return widths;
     }
     
     /**

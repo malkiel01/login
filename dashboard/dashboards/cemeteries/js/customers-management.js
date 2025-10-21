@@ -173,8 +173,8 @@ async function initUniversalSearch() {
         
         results: {
             containerSelector: '#tableBody',
-            itemsPerPage: 50,
-            showPagination: true,
+            itemsPerPage: 10000,     // ⭐ טען הכל בבת אחת (או 99999)
+            showPagination: false,   // ⭐ כבה pagination של UniversalSearch
             showCounter: true,
             columns: ['numId', 'firstName', 'lastName', 'phone', 'streetAddress', 'city_name', 'statusCustomer', 'statusResident', 'createDate'],
             renderFunction: renderCustomersRows
@@ -226,7 +226,7 @@ function initCustomersTable(data) {
         tableSelector: '#mainTable',
         
         // ⭐ הגדרות רוחב
-        containerWidth: '80vw',      // תופס את כל הרוחב
+        containerWidth: '100%',      // תופס את כל הרוחב
         containerPadding: '16px',    // padding סביב
         
         // ⭐ הגדרות Infinite Scroll
@@ -360,6 +360,8 @@ function initCustomersTable(data) {
 
 // רינדור שורות לקוחות
 function renderCustomersRows(data, container) {
+    console.log('🎨 renderCustomersRows called with', data.length, 'items');
+    
     if (data.length === 0) {
         // במקרה של אין תוצאות - נקה את הטבלה
         if (customersTable) {
@@ -380,8 +382,14 @@ function renderCustomersRows(data, container) {
         return;
     }
     
-    // אתחל או עדכן את TableManager
-    initCustomersTable(data);
+    // ⭐ FIX: אתחל או עדכן את TableManager עם כל הנתונים
+    if (!customersTable) {
+        console.log('✅ Creating new TableManager with', data.length, 'total items');
+        initCustomersTable(data);
+    } else {
+        console.log('🔄 Updating TableManager with', data.length, 'total items');
+        customersTable.setData(data);
+    }
 }
 
 // פורמט סוג לקוח

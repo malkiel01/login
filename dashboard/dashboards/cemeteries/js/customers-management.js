@@ -23,18 +23,17 @@ async function loadCustomers() {
     const existingWrapper = document.querySelector('.table-wrapper[data-fixed-width="true"]');
     
     if (existingWrapper) {
-        console.log('🔄 TableManager already exists - showing it');
+        console.log('🔄 TableManager already exists - reactivating it');
         
-        // הצג את ה-main-container אם הוא מוסתר
-        const mainContainer = document.querySelector('.main-container');
-        if (mainContainer) {
-            mainContainer.style.display = 'block';
-        }
+        // ⭐ FIX: נקה קודם את תוכן המסכים האחרים (בתי עלמין וכו')
+        DashboardCleaner.clear({ targetLevel: 'customer' });
         
-        // הצג את TableManager
-        if (typeof DashboardCleaner !== 'undefined' && DashboardCleaner.showTableManager) {
-            DashboardCleaner.showTableManager();
-        }
+        // בנה מחדש את המבנה עם TableManager קיים
+        await buildCustomersContainer();
+        
+        // TableManager wrapper כבר קיים - פשוט הצג אותו
+        existingWrapper.style.display = 'flex';
+        console.log('  ✓ TableManager wrapper shown');
         
         // עדכן breadcrumb
         if (typeof updateBreadcrumb === 'function') {

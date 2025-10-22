@@ -10,7 +10,7 @@ const DashboardCleaner = {
      */
     clear(settings = {}) {
         const defaults = {
-            targetLevel: null,       // cemetery, block, plot, areaGrave, grave, customer
+            targetLevel: null,
             keepBreadcrumb: false,
             keepSidebar: false,
             keepCard: false,
@@ -27,20 +27,16 @@ const DashboardCleaner = {
             return;
         }
         
-        // 2. ניקוי כרטיסים
+        // 2. ⭐ קודם כל - מחק את TableManager אם הוא קיים!
+        this.destroyTableManager();
+        
+        // 3. ניקוי כרטיסים
         if (!settings.keepCard) {
             this.clearCards();
         }
         
-        // 3. ⭐ ניקוי TableManager אם עוברים ממצב לקוחות
-        if (window.currentType === 'customer' && settings.targetLevel !== 'customer') {
-            this.destroyTableManager();
-        }
-        
         // 4. ניקוי טבלה
-        if (!this.isTableManagerActive() || settings.targetLevel !== 'customer') {
-            this.clearTable();
-        }
+        this.clearTable();
         
         // 5. ניקוי sidebar
         if (!settings.keepSidebar && settings.targetLevel) {
@@ -66,6 +62,40 @@ const DashboardCleaner = {
         this.closeModals();
         
         console.log('✅ Dashboard cleaned successfully');
+    },
+    
+    /**
+     * ⭐ הרס מוחלט של TableManager - תמיד!
+     */
+    destroyTableManager() {
+        const wrapper = document.querySelector('.table-wrapper[data-fixed-width="true"]');
+        const searchSection = document.getElementById('customerSearchSection');
+        
+        // אם אין כלום - צא
+        if (!wrapper && !searchSection) {
+            return;
+        }
+        
+        console.log('💥 Destroying TableManager completely...');
+        
+        // מחק את ה-wrapper
+        if (wrapper) {
+            wrapper.remove();
+            console.log('  ✓ TableManager wrapper REMOVED');
+        }
+        
+        // מחק את סקשן החיפוש
+        if (searchSection) {
+            searchSection.remove();
+            console.log('  ✓ Customer search section REMOVED');
+        }
+        
+        // אפס את המשתנים הגלובליים
+        window.customersTable = null;
+        window.customerSearch = null;
+        
+        console.log('  ✓ Variables cleared');
+        console.log('✅ TableManager DESTROYED');
     },
     
     /**
@@ -301,12 +331,12 @@ const DashboardCleaner = {
             searchInput.value = '';
         }
         
-        // הסתר את חיפוש הלקוחות אם לא במצב לקוחות
+        // ⭐ מחק את חיפוש הלקוחות לגמרי אם לא במצב לקוחות
         if (window.currentType !== 'customer') {
             const customerSearchSection = document.getElementById('customerSearchSection');
             if (customerSearchSection) {
-                customerSearchSection.style.display = 'none';
-                console.log('  ✓ Customer search hidden');
+                customerSearchSection.remove();
+                console.log('  ✓ Customer search removed completely');
             }
         }
     },
@@ -414,15 +444,13 @@ const DashboardCleaner = {
     },
     
     /**
-     * ⭐ NEW: איפוס מלא - עם תמיכה ב-TableManager
+     * ⭐ NEW: איפוס מלא - עם הרס TableManager
      */
     fullReset() {
         console.log('🔄 Performing full dashboard reset...');
         
-        // הסתר TableManager אם קיים
-        if (this.isTableManagerActive()) {
-            this.hideTableManager();
-        }
+        // הרס TableManager אם קיים
+        this.destroyTableManager();
         
         // ניקוי כל הדברים
         this.clearCards();

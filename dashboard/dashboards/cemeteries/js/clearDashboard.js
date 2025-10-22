@@ -194,45 +194,16 @@ const DashboardCleaner = {
     },
     
     /**
-     * ניקוי הטבלה - ⭐ FIX: לא נוגע ב-TableManager
+     * ניקוי הטבלה - מחיקה פשוטה של table-container
      */
     clearTable() {
-        // אם TableManager פעיל, הסתר אותו במקום למחוק
-        if (this.isTableManagerActive()) {
-            this.hideTableManager();
-            return;
-        }
+        // מצא את table-container
+        const tableContainer = document.querySelector('.table-container');
         
-        // וודא שהטבלה הרגילה מוצגת
-        const container = document.querySelector('.table-container');
-        if (container) {
-            container.style.display = 'block';
-        }
-        
-        const mainTable = document.getElementById('mainTable');
-        if (mainTable) {
-            mainTable.style.display = 'table';
-        }
-        
-        const tbody = document.getElementById('tableBody');
-        const thead = document.getElementById('tableHeaders');
-        
-        if (tbody) {
-            tbody.innerHTML = '';
-            // הסר מאפיינים מיוחדים
-            tbody.removeAttribute('data-customer-view');
-            tbody.removeAttribute('data-current-type');
-            console.log('  ✓ Table body cleared');
-        }
-        
-        if (thead) {
-            // שמור כותרות ברירת מחדל או נקה לגמרי
-            if (window.currentType && window.currentType !== 'customer') {
-                this.setDefaultHeaders(window.currentType);
-            } else {
-                thead.innerHTML = '';
-            }
-            console.log('  ✓ Table headers reset');
+        if (tableContainer) {
+            // 🔥 פשוט תמחק אותו - זהו!
+            tableContainer.remove();
+            console.log('  ✓ Table container removed');
         }
     },
     

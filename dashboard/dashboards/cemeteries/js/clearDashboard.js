@@ -194,16 +194,53 @@ const DashboardCleaner = {
     },
     
     /**
-     * ניקוי הטבלה - מחיקה פשוטה של table-container
+     * ניקוי הטבלה - מחיקה ובניית container בסיסי
      */
     clearTable() {
-        // מצא את table-container
+        // מצא ומחק את table-container הקיים
         const tableContainer = document.querySelector('.table-container');
         
         if (tableContainer) {
-            // 🔥 פשוט תמחק אותו - זהו!
             tableContainer.remove();
             console.log('  ✓ Table container removed');
+        }
+        
+        // בנה container בסיסי חדש
+        const mainContent = document.getElementById('mainContent');
+        if (mainContent) {
+            const newContainer = document.createElement('div');
+            newContainer.className = 'table-container';
+            newContainer.innerHTML = `
+                <table id="mainTable" class="data-table">
+                    <thead>
+                        <tr id="tableHeaders">
+                            <th style="text-align: center; padding: 20px;">טוען...</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr>
+                            <td style="text-align: center; padding: 40px;">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">טוען נתונים...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+            
+            // מצא את המקום הנכון להוסיף (אחרי search-section או action-bar)
+            const searchSection = mainContent.querySelector('.search-section, #customerSearchSection');
+            const actionBar = mainContent.querySelector('.action-bar');
+            const insertAfter = searchSection || actionBar;
+            
+            if (insertAfter) {
+                insertAfter.insertAdjacentElement('afterend', newContainer);
+            } else {
+                mainContent.appendChild(newContainer);
+            }
+            
+            console.log('  ✓ New basic table container created');
         }
     },
     

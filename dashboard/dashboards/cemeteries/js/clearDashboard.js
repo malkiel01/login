@@ -32,12 +32,8 @@ const DashboardCleaner = {
             this.clearCards();
         }
         
-        // 3. ניקוי טבלה - ⭐ FIX: רק אם לא במצב TableManager
-        if (!this.isTableManagerActive()) {
-            this.clearTable();
-        } else {
-            console.log('  ⚠️ TableManager is active - skipping table clear');
-        }
+        // 3. ניקוי טבלה - מחיקת table-container
+        this.clearTable();
         
         // 4. ניקוי sidebar
         if (!settings.keepSidebar && settings.targetLevel) {
@@ -56,81 +52,13 @@ const DashboardCleaner = {
         // 6. ניקוי הודעות
         this.clearMessages();
         
-        // 7. ניקוי חיפוש (אבל לא אם TableManager פעיל)
-        if (!this.isTableManagerActive()) {
-            this.clearSearch();
-        }
+        // 7. ניקוי חיפוש
+        this.clearSearch();
         
         // 8. ניקוי מודלים פתוחים
         this.closeModals();
         
         console.log('✅ Dashboard cleaned successfully');
-    },
-    
-    /**
-     * ⭐ NEW: בדיקה אם TableManager פעיל
-     */
-    isTableManagerActive() {
-        // בדוק אם יש wrapper של TableManager
-        const wrapper = document.querySelector('.table-wrapper[data-fixed-width="true"]');
-        
-        // בדוק אם הוא מוצג
-        const isVisible = wrapper && 
-                         window.getComputedStyle(wrapper).display !== 'none' &&
-                         wrapper.offsetParent !== null;
-        
-        // בדוק אם אנחנו במצב לקוחות
-        const isCustomerMode = window.currentType === 'customer';
-        
-        return isVisible && isCustomerMode;
-    },
-    
-    /**
-     * ⭐ NEW: הסתרת TableManager (במקום מחיקה)
-     */
-    hideTableManager() {
-        const wrapper = document.querySelector('.table-wrapper[data-fixed-width="true"]');
-        if (wrapper) {
-            wrapper.style.display = 'none';
-            console.log('  ✓ TableManager hidden');
-        }
-        
-        // הסתר גם את סקשן החיפוש
-        const searchSection = document.getElementById('customerSearchSection');
-        if (searchSection) {
-            searchSection.style.display = 'none';
-        }
-        
-        // הצג את הטבלה הרגילה
-        const mainTable = document.getElementById('mainTable');
-        if (mainTable) {
-            mainTable.style.display = 'table';
-            console.log('  ✓ Main table shown');
-        }
-    },
-    
-    /**
-     * ⭐ NEW: הצגת TableManager
-     */
-    showTableManager() {
-        const wrapper = document.querySelector('.table-wrapper[data-fixed-width="true"]');
-        if (wrapper) {
-            wrapper.style.display = 'flex';
-            console.log('  ✓ TableManager shown');
-        }
-        
-        // הצג גם את סקשן החיפוש
-        const searchSection = document.getElementById('customerSearchSection');
-        if (searchSection) {
-            searchSection.style.display = 'block';
-        }
-        
-        // הסתר את הטבלה הרגילה
-        const mainTable = document.getElementById('mainTable');
-        if (mainTable && !mainTable.closest('.table-wrapper')) {
-            mainTable.style.display = 'none';
-            console.log('  ✓ Main table hidden');
-        }
     },
     
     /**
@@ -161,89 +89,15 @@ const DashboardCleaner = {
     },
     
     /**
-     * ניקוי הטבלה - ⭐ FIX: לא נוגע ב-TableManager
+     * ניקוי הטבלה - מחיקה פשוטה של table-container
      */
     clearTable() {
-        // אם TableManager פעיל, הסתר אותו במקום למחוק
-        if (this.isTableManagerActive()) {
-            this.hideTableManager();
-            return;
-        }
+        // פשוט תמחק את table-container - זהו!
+        const tableContainer = document.querySelector('.table-container');
         
-        const tbody = document.getElementById('tableBody');
-        const thead = document.getElementById('tableHeaders');
-        
-        if (tbody) {
-            tbody.innerHTML = '';
-            // הסר מאפיינים מיוחדים
-            tbody.removeAttribute('data-customer-view');
-            tbody.removeAttribute('data-current-type');
-            console.log('  ✓ Table body cleared');
-        }
-        
-        if (thead) {
-            // שמור כותרות ברירת מחדל או נקה לגמרי
-            if (window.currentType && window.currentType !== 'customer') {
-                this.setDefaultHeaders(window.currentType);
-            } else {
-                thead.innerHTML = '';
-            }
-            console.log('  ✓ Table headers reset');
-        }
-    },
-    
-    /**
-     * הגדרת כותרות ברירת מחדל לטבלה
-     */
-    setDefaultHeaders(type) {
-        const thead = document.getElementById('tableHeaders');
-        if (!thead) return;
-        
-        const headers = {
-            cemetery: `
-                <th>מזהה</th>
-                <th>שם</th>
-                <th>קוד</th>
-                <th>סטטוס</th>
-                <th>נוצר בתאריך</th>
-                <th>פעולות</th>
-            `,
-            block: `
-                <th>מזהה</th>
-                <th>שם גוש</th>
-                <th>קוד</th>
-                <th>סטטוס</th>
-                <th>נוצר בתאריך</th>
-                <th>פעולות</th>
-            `,
-            plot: `
-                <th>מזהה</th>
-                <th>שם חלקה</th>
-                <th>קוד</th>
-                <th>סטטוס</th>
-                <th>נוצר בתאריך</th>
-                <th>פעולות</th>
-            `,
-            areaGrave: `
-                <th>מזהה</th>
-                <th>שם אחוזת קבר</th>
-                <th>סוג</th>
-                <th>סטטוס</th>
-                <th>נוצר בתאריך</th>
-                <th>פעולות</th>
-            `,
-            grave: `
-                <th>מזהה</th>
-                <th>שם הנפטר</th>
-                <th>תאריך פטירה</th>
-                <th>מיקום</th>
-                <th>סטטוס</th>
-                <th>פעולות</th>
-            `
-        };
-        
-        if (headers[type]) {
-            thead.innerHTML = headers[type];
+        if (tableContainer) {
+            tableContainer.remove();
+            console.log('  ✓ Table container removed');
         }
     },
     
@@ -255,14 +109,6 @@ const DashboardCleaner = {
         const searchInput = document.getElementById('searchInput');
         if (searchInput) {
             searchInput.value = '';
-        }
-        
-        // אל תנקה את חיפוש הלקוחות אם הוא פעיל
-        if (window.currentType !== 'customer') {
-            const customerSearchSection = document.getElementById('customerSearchSection');
-            if (customerSearchSection) {
-                customerSearchSection.style.display = 'none';
-            }
         }
     },
     
@@ -369,15 +215,10 @@ const DashboardCleaner = {
     },
     
     /**
-     * ⭐ NEW: איפוס מלא - עם תמיכה ב-TableManager
+     * איפוס מלא של הדשבורד
      */
     fullReset() {
         console.log('🔄 Performing full dashboard reset...');
-        
-        // הסתר TableManager אם קיים
-        if (this.isTableManagerActive()) {
-            this.hideTableManager();
-        }
         
         // ניקוי כל הדברים
         this.clearCards();
@@ -402,59 +243,6 @@ const DashboardCleaner = {
         console.log('✅ Full reset completed');
     },
     
-    /**
-     * ניקוי לפני מעבר בין רמות
-     */
-    prepareTransition(fromType, toType, keepParentSelection = false) {
-        const hierarchy = ['cemetery', 'block', 'plot', 'areaGrave', 'grave'];
-        const fromIndex = hierarchy.indexOf(fromType);
-        const toIndex = hierarchy.indexOf(toType);
-        
-        // אם עוברים ללקוחות, הסתר את הטבלה הרגילה
-        if (toType === 'customer') {
-            // הסתר הטבלה הרגילה אבל אל תמחק
-            const mainTable = document.getElementById('mainTable');
-            if (mainTable) {
-                mainTable.style.display = 'none';
-            }
-            return;
-        }
-        
-        // אם יוצאים מלקוחות, הסתר את TableManager
-        if (fromType === 'customer') {
-            this.hideTableManager();
-            // הצג את הטבלה הרגילה
-            const mainTable = document.getElementById('mainTable');
-            if (mainTable) {
-                mainTable.style.display = 'table';
-            }
-        }
-        
-        // קבע מה לנקות לפי כיוון המעבר
-        if (toIndex < fromIndex) {
-            // חוזרים אחורה בהיררכיה
-            this.clear({
-                targetLevel: toType,
-                keepBreadcrumb: false,
-                keepSidebar: keepParentSelection
-            });
-        } else if (toIndex > fromIndex) {
-            // מתקדמים בהיררכיה
-            this.clear({
-                targetLevel: fromType,
-                keepBreadcrumb: true,
-                keepSidebar: true,
-                keepCard: false
-            });
-        } else {
-            // נשארים באותה רמה
-            this.clear({
-                targetLevel: toType,
-                keepBreadcrumb: true,
-                keepSidebar: true
-            });
-        }
-    }
 };
 
 // ==========================================
@@ -483,4 +271,4 @@ window.clearSidebarBelow = function(type) {
 // הפוך לגלובלי
 window.DashboardCleaner = DashboardCleaner;
 
-console.log('✅ DashboardCleaner loaded with TableManager protection');
+console.log('✅ DashboardCleaner loaded - Generic & Simple');

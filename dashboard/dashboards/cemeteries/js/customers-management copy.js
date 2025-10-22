@@ -173,7 +173,7 @@ async function initUniversalSearch() {
         
         results: {
             containerSelector: '#tableBody',
-            itemsPerPage: 10000,     // ⭐ טען הכל בבת אחת (או 99999)
+            itemsPerPage: 200,     // ⭐ טען הכל בבת אחת (או 99999)
             showPagination: false,   // ⭐ כבה pagination של UniversalSearch
             showCounter: true,
             columns: ['numId', 'firstName', 'lastName', 'phone', 'streetAddress', 'city_name', 'statusCustomer', 'statusResident', 'createDate'],

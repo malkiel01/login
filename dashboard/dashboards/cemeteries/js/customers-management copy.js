@@ -1,8 +1,12 @@
-// dashboards/cemeteries/js/customers-management.js
-// ניהול לקוחות עם UniversalSearch
+/**
+ * customers-management.js
+ * ניהול לקוחות עם TableManager + UniversalSearch
+ * גרסה עובדת עם Infinite Scroll
+ */
 
 let currentCustomers = [];
 let customerSearch = null;
+let customersTable = null;
 let editingCustomerId = null;
 
 // טעינת לקוחות (הפונקציה הראשית)
@@ -52,41 +56,15 @@ async function loadCustomers() {
     
     // וודא שמבנה הטבלה קיים
     const table = document.getElementById('mainTable');
-    if (table) {
-        let thead = table.querySelector('thead');
-        if (!thead) {
-            thead = document.createElement('thead');
-            table.insertBefore(thead, table.querySelector('tbody'));
-        }
-        
-        let headerRow = thead.querySelector('tr');
-        if (!headerRow) {
-            headerRow = document.createElement('tr');
-            headerRow.id = 'tableHeaders';
-            thead.appendChild(headerRow);
-        }
-        
-        // עדכן את הכותרות - בדיוק לפי המבנה שלך
-        headerRow.innerHTML = `
-            <th style="width: 40px;">
-                <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
-            </th>
-            <th>ת.ז.</th>
-            <th>שם מלא</th>
-            <th>טלפון</th>
-            <th>כתובת</th>
-            <th>עיר</th>
-            <th>סטטוס</th>
-            <th>סוג</th>
-            <th>תאריך</th>
-            <th style="width: 120px;">פעולות</th>
-        `;
+    if (!table) {
+        console.error('Table #mainTable not found!');
+        return;
     }
     
     // אתחל את UniversalSearch
     if (!customerSearch) {
         await initUniversalSearch();
-        // 🆕 טען את כל הלקוחות מיד לאחר האתחול
+        // טען את כל הלקוחות מיד לאחר האתחול
         customerSearch.search();
     } else {
         customerSearch.refresh();
@@ -108,7 +86,7 @@ async function initUniversalSearch() {
             joins: []
         },
         
-        // 🎯 כאן אתה מגדיר בדיוק אלו שדות יהיו בפילטר!
+        // שדות לחיפוש
         searchableFields: [
             {
                 name: 'firstName',
@@ -195,8 +173,8 @@ async function initUniversalSearch() {
         
         results: {
             containerSelector: '#tableBody',
-            itemsPerPage: 50,
-            showPagination: true,
+            itemsPerPage: 10000,     // ⭐ טען הכל בבת אחת (או 99999)
+            showPagination: false,   // ⭐ כבה pagination של UniversalSearch
             showCounter: true,
             columns: ['numId', 'firstName', 'lastName', 'phone', 'streetAddress', 'city_name', 'statusCustomer', 'statusResident', 'createDate'],
             renderFunction: renderCustomersRows
@@ -236,9 +214,160 @@ async function initUniversalSearch() {
     return customerSearch;
 }
 
+// אתחול TableManager
+function initCustomersTable(data) {
+    // אם הטבלה כבר קיימת, רק עדכן נתונים
+    if (customersTable) {
+        customersTable.setData(data);
+        return customersTable;
+    }
+    
+    customersTable = new TableManager({
+        tableSelector: '#mainTable',
+        
+        // ⭐ הגדרות רוחב
+        containerWidth: '100%',      // תופס את כל הרוחב
+        containerPadding: '16px',    // padding סביב
+        
+        // ⭐ הגדרות Infinite Scroll
+        infiniteScroll: true,        // הפעלת גלילה אינסופית
+        itemsPerPage: 100,          // כמה רשומות לטעון בכל פעם
+        scrollThreshold: 300,        // כמה פיקסלים מהתחתית להתחיל טעינה
+        
+        // הגדרת עמודות
+        columns: [
+            {
+                field: 'checkbox',
+                label: '',
+                width: '40px',
+                sortable: false,
+                render: (customer) => `
+                    <input type="checkbox" class="customer-checkbox" value="${customer.unicId}">
+                `
+            },
+            {
+                field: 'numId',
+                label: 'ת.ז.',
+                width: '120px',
+                type: 'text',
+                sortable: true
+            },
+            {
+                field: 'fullName',
+                label: 'שם מלא',
+                width: '200px',
+                type: 'text',
+                sortable: true,
+                render: (customer) => `
+                    <strong>${customer.firstName || ''} ${customer.lastName || ''}</strong>
+                    ${customer.nomPerson ? '<br><small style="color:#666;">' + customer.nomPerson + '</small>' : ''}
+                `
+            },
+            {
+                field: 'phone',
+                label: 'טלפון',
+                width: '150px',
+                type: 'text',
+                sortable: true,
+                render: (customer) => `
+                    ${customer.phone || '-'}
+                    ${customer.phoneMobile ? '<br><small style="color:#666;">' + customer.phoneMobile + '</small>' : ''}
+                `
+            },
+            {
+                field: 'streetAddress',
+                label: 'כתובת',
+                width: '180px',
+                type: 'text',
+                sortable: true
+            },
+            {
+                field: 'city_name',
+                label: 'עיר',
+                width: '120px',
+                type: 'text',
+                sortable: true
+            },
+            {
+                field: 'statusCustomer',
+                label: 'סטטוס',
+                width: '100px',
+                type: 'number',
+                sortable: true,
+                render: (customer) => formatCustomerStatus(customer.statusCustomer)
+            },
+            {
+                field: 'statusResident',
+                label: 'סוג',
+                width: '100px',
+                type: 'number',
+                sortable: true,
+                render: (customer) => formatCustomerType(customer.statusResident)
+            },
+            {
+                field: 'createDate',
+                label: 'תאריך',
+                width: '120px',
+                type: 'date',
+                sortable: true,
+                render: (customer) => formatDate(customer.createDate)
+            },
+            {
+                field: 'actions',
+                label: 'פעולות',
+                width: '120px',
+                sortable: false,
+                render: (customer) => `
+                    <button class="btn btn-sm btn-secondary" onclick="editCustomer('${customer.unicId}')" title="עריכה">
+                        <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteCustomer('${customer.unicId}')" title="מחיקה">
+                        <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
+                    </button>
+                `
+            }
+        ],
+        
+        // הנתונים
+        data: data,
+        
+        // הגדרות נוספות
+        sortable: true,
+        resizable: true,
+        reorderable: false,
+        filterable: true,
+        
+        // Callbacks
+        onSort: (field, order) => {
+            console.log(`📊 Sorted by ${field} ${order}`);
+            showToast(`ממוין לפי ${field} (${order === 'asc' ? 'עולה' : 'יורד'})`, 'info');
+        },
+        
+        onFilter: (filters) => {
+            console.log('🔍 Active filters:', filters);
+            const count = customersTable.getFilteredData().length;
+            showToast(`נמצאו ${count} תוצאות`, 'info');
+        }
+    });
+    
+    // הצג מידע על הנתונים
+    console.log('📊 Total customers loaded:', data.length);
+    console.log('📄 Items per page:', customersTable.config.itemsPerPage);
+    console.log('📏 Scroll threshold:', customersTable.config.scrollThreshold + 'px');
+    
+    return customersTable;
+}
+
 // רינדור שורות לקוחות
 function renderCustomersRows(data, container) {
+    console.log('🎨 renderCustomersRows called with', data.length, 'items');
+    
     if (data.length === 0) {
+        // במקרה של אין תוצאות - נקה את הטבלה
+        if (customersTable) {
+            customersTable.setData([]);
+        }
+        
         container.innerHTML = `
             <tr>
                 <td colspan="10" style="text-align: center; padding: 60px;">
@@ -253,37 +382,14 @@ function renderCustomersRows(data, container) {
         return;
     }
     
-    container.innerHTML = data.map(customer => {
-        return `
-            <tr data-id="${customer.unicId}">
-                <td>
-                    <input type="checkbox" class="customer-checkbox" value="${customer.unicId}">
-                </td>
-                <td>${customer.numId || '-'}</td>
-                <td>
-                    <strong>${customer.firstName || ''} ${customer.lastName || ''}</strong>
-                    ${customer.nomPerson ? '<br><small style="color:#666;">' + customer.nomPerson + '</small>' : ''}
-                </td>
-                <td>
-                    ${customer.phone || '-'}
-                    ${customer.phoneMobile ? '<br><small style="color:#666;">' + customer.phoneMobile + '</small>' : ''}
-                </td>
-                <td>${customer.streetAddress || '-'}</td>
-                <td>${customer.city_name || '-'}</td>
-                <td>${formatCustomerStatus(customer.statusCustomer)}</td>
-                <td>${formatCustomerType(customer.statusResident)}</td>
-                <td>${formatDate(customer.createDate)}</td>
-                <td>
-                    <button class="btn btn-sm btn-secondary" onclick="editCustomer('${customer.unicId}')" title="עריכה">
-                        <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteCustomer('${customer.unicId}')" title="מחיקה">
-                        <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
-                    </button>
-                </td>
-            </tr>
-        `;
-    }).join('');
+    // ⭐ FIX: אתחל או עדכן את TableManager עם כל הנתונים
+    if (!customersTable) {
+        console.log('✅ Creating new TableManager with', data.length, 'total items');
+        initCustomersTable(data);
+    } else {
+        console.log('🔄 Updating TableManager with', data.length, 'total items');
+        customersTable.setData(data);
+    }
 }
 
 // פורמט סוג לקוח
@@ -328,7 +434,11 @@ async function deleteCustomer(customerId) {
         
         if (data.success) {
             showToast('הלקוח נמחק בהצלחה', 'success');
-            customerSearch.refresh();
+            
+            // רענן את החיפוש
+            if (customerSearch) {
+                customerSearch.refresh();
+            }
         } else {
             showToast(data.error || 'שגיאה במחיקת לקוח', 'error');
         }
@@ -341,7 +451,8 @@ async function deleteCustomer(customerId) {
 // עריכת לקוח
 async function editCustomer(customerId) {
     console.log('Edit customer:', customerId);
-    // הקוד שלך לעריכה...
+    editingCustomerId = customerId;
+    showToast('עריכה בפיתוח...', 'info');
 }
 
 // טעינת סטטיסטיקות
@@ -375,6 +486,7 @@ function showToast(message, type = 'info') {
         display: flex;
         align-items: center;
         gap: 10px;
+        animation: slideDown 0.3s ease-out;
     `;
     
     toast.innerHTML = `
@@ -385,8 +497,9 @@ function showToast(message, type = 'info') {
     document.body.appendChild(toast);
     
     setTimeout(() => {
-        toast.remove();
-    }, 5000);
+        toast.style.animation = 'slideUp 0.3s ease-out';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
 }
 
 // פונקציה לרענון נתונים
@@ -396,8 +509,37 @@ async function refreshData() {
     }
 }
 
+// פונקציה לבדיקת סטטוס הטעינה
+function checkScrollStatus() {
+    if (!customersTable) {
+        console.log('❌ Table not initialized');
+        return;
+    }
+    
+    const total = customersTable.getFilteredData().length;
+    const displayed = customersTable.getDisplayedData().length;
+    const remaining = total - displayed;
+    
+    console.log('📊 Scroll Status:');
+    console.log(`   Total items: ${total}`);
+    console.log(`   Displayed: ${displayed}`);
+    console.log(`   Remaining: ${remaining}`);
+    console.log(`   Progress: ${Math.round((displayed / total) * 100)}%`);
+    
+    if (remaining > 0) {
+        console.log(`   🔽 Scroll down to load ${Math.min(customersTable.config.itemsPerPage, remaining)} more items`);
+    } else {
+        console.log('   ✅ All items loaded');
+    }
+}
+
 // הפוך את הפונקציות לגלובליות
 window.loadCustomers = loadCustomers;
 window.deleteCustomer = deleteCustomer;
 window.editCustomer = editCustomer;
 window.refreshData = refreshData;
+window.customersTable = customersTable;
+window.checkScrollStatus = checkScrollStatus;
+
+console.log('✅ Customers Management Module Loaded with TableManager');
+console.log('💡 Commands: checkScrollStatus() - בדוק כמה רשומות נטענו');

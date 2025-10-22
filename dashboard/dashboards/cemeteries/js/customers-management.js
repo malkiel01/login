@@ -18,6 +18,33 @@ async function loadCustomers() {
     // עדכן את הסוג הנוכחי
     window.currentType = 'customer';
     window.currentParentId = null;
+    
+    // ⭐ FIX: בדוק אם TableManager כבר קיים
+    const existingWrapper = document.querySelector('.table-wrapper[data-fixed-width="true"]');
+    
+    if (existingWrapper) {
+        console.log('🔄 TableManager already exists - showing it');
+        DashboardCleaner.showTableManager();
+        
+        // עדכן breadcrumb
+        if (typeof updateBreadcrumb === 'function') {
+            updateBreadcrumb({ customer: { name: 'לקוחות' } });
+        }
+        
+        // עדכן כפתור ההוספה
+        if (typeof updateAddButtonText === 'function') {
+            updateAddButtonText();
+        }
+        
+        // רענן את החיפוש אם יש
+        if (customerSearch) {
+            customerSearch.refresh();
+        }
+        
+        return;
+    }
+    
+    // נקה רק אם TableManager לא קיים
     DashboardCleaner.clear({ targetLevel: 'customer' });
     
     // נקה את כל הסידבר
@@ -52,6 +79,8 @@ async function loadCustomers() {
         if (tableContainer) {
             mainContent.insertBefore(searchSection, tableContainer);
         }
+    } else {
+        searchSection.style.display = 'block';
     }
     
     // וודא שמבנה הטבלה קיים

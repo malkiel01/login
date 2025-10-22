@@ -71,28 +71,41 @@ const DashboardCleaner = {
      * ⭐ NEW: בדיקה אם TableManager פעיל
      */
     isTableManagerActive() {
-        // בדוק אם יש טבלה עם TableManager
-        const hasTableManager = window.customersTable && 
-                               window.customersTable.elements && 
-                               window.customersTable.elements.wrapper;
+        // בדוק אם יש wrapper של TableManager
+        const wrapper = document.querySelector('.table-wrapper[data-fixed-width="true"]');
         
-        // בדוק אם הטבלה מוצגת
-        const wrapperVisible = hasTableManager && 
-                              window.customersTable.elements.wrapper.offsetParent !== null;
+        // בדוק אם הוא מוצג
+        const isVisible = wrapper && 
+                         window.getComputedStyle(wrapper).display !== 'none' &&
+                         wrapper.offsetParent !== null;
         
         // בדוק אם אנחנו במצב לקוחות
         const isCustomerMode = window.currentType === 'customer';
         
-        return hasTableManager && wrapperVisible && isCustomerMode;
+        return isVisible && isCustomerMode;
     },
     
     /**
      * ⭐ NEW: הסתרת TableManager (במקום מחיקה)
      */
     hideTableManager() {
-        if (window.customersTable && window.customersTable.elements.wrapper) {
-            window.customersTable.elements.wrapper.style.display = 'none';
-            console.log('  ✓ TableManager hidden (not destroyed)');
+        const wrapper = document.querySelector('.table-wrapper[data-fixed-width="true"]');
+        if (wrapper) {
+            wrapper.style.display = 'none';
+            console.log('  ✓ TableManager hidden');
+        }
+        
+        // הסתר גם את סקשן החיפוש
+        const searchSection = document.getElementById('customerSearchSection');
+        if (searchSection) {
+            searchSection.style.display = 'none';
+        }
+        
+        // הצג את הטבלה הרגילה
+        const mainTable = document.getElementById('mainTable');
+        if (mainTable) {
+            mainTable.style.display = 'table';
+            console.log('  ✓ Main table shown');
         }
     },
     
@@ -100,9 +113,23 @@ const DashboardCleaner = {
      * ⭐ NEW: הצגת TableManager
      */
     showTableManager() {
-        if (window.customersTable && window.customersTable.elements.wrapper) {
-            window.customersTable.elements.wrapper.style.display = 'flex';
+        const wrapper = document.querySelector('.table-wrapper[data-fixed-width="true"]');
+        if (wrapper) {
+            wrapper.style.display = 'flex';
             console.log('  ✓ TableManager shown');
+        }
+        
+        // הצג גם את סקשן החיפוש
+        const searchSection = document.getElementById('customerSearchSection');
+        if (searchSection) {
+            searchSection.style.display = 'block';
+        }
+        
+        // הסתר את הטבלה הרגילה
+        const mainTable = document.getElementById('mainTable');
+        if (mainTable && !mainTable.closest('.table-wrapper')) {
+            mainTable.style.display = 'none';
+            console.log('  ✓ Main table hidden');
         }
     },
     

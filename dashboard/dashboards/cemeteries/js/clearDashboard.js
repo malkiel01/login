@@ -32,22 +32,19 @@ const DashboardCleaner = {
             this.clearCards();
         }
         
-        // 3. ⭐ ניקוי TableManager אם עוברים ממצב לקוחות
-        if (window.currentType === 'customer' && settings.targetLevel !== 'customer') {
-            this.destroyTableManager();
-        }
-        
-        // 4. ניקוי טבלה
-        if (!this.isTableManagerActive() || settings.targetLevel !== 'customer') {
+        // 3. ניקוי טבלה - ⭐ FIX: רק אם לא במצב TableManager
+        if (!this.isTableManagerActive()) {
             this.clearTable();
+        } else {
+            console.log('  ⚠️ TableManager is active - skipping table clear');
         }
         
-        // 5. ניקוי sidebar
+        // 4. ניקוי sidebar
         if (!settings.keepSidebar && settings.targetLevel) {
             this.clearSidebarForLevel(settings.targetLevel);
         }
         
-        // 6. ניקוי/עדכון breadcrumb
+        // 5. ניקוי/עדכון breadcrumb
         if (!settings.keepBreadcrumb) {
             if (settings.targetLevel) {
                 this.updateBreadcrumbForLevel(settings.targetLevel);
@@ -56,13 +53,15 @@ const DashboardCleaner = {
             }
         }
         
-        // 7. ניקוי הודעות
+        // 6. ניקוי הודעות
         this.clearMessages();
         
-        // 8. ניקוי חיפוש
-        this.clearSearch();
+        // 7. ניקוי חיפוש (אבל לא אם TableManager פעיל)
+        if (!this.isTableManagerActive()) {
+            this.clearSearch();
+        }
         
-        // 9. ניקוי מודלים פתוחים
+        // 8. ניקוי מודלים פתוחים
         this.closeModals();
         
         console.log('✅ Dashboard cleaned successfully');
@@ -108,44 +107,12 @@ const DashboardCleaner = {
             mainTable.style.display = 'table';
             console.log('  ✓ Main table shown');
         }
-        
-        // ⭐ NEW: הסתר את כל ה-table-container אם רוצים
-        // (רק אם אין בו תוכן אחר)
-        const container = document.querySelector('.table-container');
-        if (container && !this.hasVisibleContent(container)) {
-            container.style.display = 'none';
-            console.log('  ✓ table-container hidden (empty)');
-        }
-    },
-    
-    /**
-     * ⭐ NEW: בדיקה אם יש תוכן גלוי ב-container
-     */
-    hasVisibleContent(container) {
-        const mainTable = container.querySelector('#mainTable');
-        if (mainTable && window.getComputedStyle(mainTable).display !== 'none') {
-            return true;
-        }
-        
-        const wrapper = container.querySelector('.table-wrapper[data-fixed-width="true"]');
-        if (wrapper && window.getComputedStyle(wrapper).display !== 'none') {
-            return true;
-        }
-        
-        return false;
     },
     
     /**
      * ⭐ NEW: הצגת TableManager
      */
     showTableManager() {
-        // הצג את ה-container אם הוא מוסתר
-        const container = document.querySelector('.table-container');
-        if (container && window.getComputedStyle(container).display === 'none') {
-            container.style.display = 'block';
-            console.log('  ✓ table-container shown');
-        }
-        
         const wrapper = document.querySelector('.table-wrapper[data-fixed-width="true"]');
         if (wrapper) {
             wrapper.style.display = 'flex';
@@ -194,53 +161,34 @@ const DashboardCleaner = {
     },
     
     /**
-     * ניקוי הטבלה - מחיקה ובניית container בסיסי
+     * ניקוי הטבלה - ⭐ FIX: לא נוגע ב-TableManager
      */
     clearTable() {
-        // מצא ומחק את table-container הקיים
-        const tableContainer = document.querySelector('.table-container');
-        
-        if (tableContainer) {
-            tableContainer.remove();
-            console.log('  ✓ Table container removed');
+        // אם TableManager פעיל, הסתר אותו במקום למחוק
+        if (this.isTableManagerActive()) {
+            this.hideTableManager();
+            return;
         }
         
-        // בנה container בסיסי חדש
-        const mainContent = document.getElementById('mainContent');
-        if (mainContent) {
-            const newContainer = document.createElement('div');
-            newContainer.className = 'table-container';
-            newContainer.innerHTML = `
-                <table id="mainTable" class="data-table">
-                    <thead>
-                        <tr id="tableHeaders">
-                            <th style="text-align: center; padding: 20px;">טוען...</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody">
-                        <tr>
-                            <td style="text-align: center; padding: 40px;">
-                                <div class="spinner-border" role="status">
-                                    <span class="visually-hidden">טוען נתונים...</span>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            `;
-            
-            // מצא את המקום הנכון להוסיף (אחרי search-section או action-bar)
-            const searchSection = mainContent.querySelector('.search-section, #customerSearchSection');
-            const actionBar = mainContent.querySelector('.action-bar');
-            const insertAfter = searchSection || actionBar;
-            
-            if (insertAfter) {
-                insertAfter.insertAdjacentElement('afterend', newContainer);
+        const tbody = document.getElementById('tableBody');
+        const thead = document.getElementById('tableHeaders');
+        
+        if (tbody) {
+            tbody.innerHTML = '';
+            // הסר מאפיינים מיוחדים
+            tbody.removeAttribute('data-customer-view');
+            tbody.removeAttribute('data-current-type');
+            console.log('  ✓ Table body cleared');
+        }
+        
+        if (thead) {
+            // שמור כותרות ברירת מחדל או נקה לגמרי
+            if (window.currentType && window.currentType !== 'customer') {
+                this.setDefaultHeaders(window.currentType);
             } else {
-                mainContent.appendChild(newContainer);
+                thead.innerHTML = '';
             }
-            
-            console.log('  ✓ New basic table container created');
+            console.log('  ✓ Table headers reset');
         }
     },
     
@@ -309,12 +257,11 @@ const DashboardCleaner = {
             searchInput.value = '';
         }
         
-        // הסתר את חיפוש הלקוחות אם לא במצב לקוחות
+        // אל תנקה את חיפוש הלקוחות אם הוא פעיל
         if (window.currentType !== 'customer') {
             const customerSearchSection = document.getElementById('customerSearchSection');
             if (customerSearchSection) {
                 customerSearchSection.style.display = 'none';
-                console.log('  ✓ Customer search hidden');
             }
         }
     },

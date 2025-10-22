@@ -420,9 +420,17 @@ function renderCustomersRows(data, container) {
         return;
     }
     
-    // ⭐ בדוק אם TableManager קיים גם בזיכרון וגם ב-DOM
+    // ⭐ בדוק אם ה-DOM של TableManager קיים
     const tableWrapperExists = document.querySelector('.table-wrapper[data-fixed-width="true"]');
     
+    // ⭐ אם המשתנה קיים אבל ה-DOM נמחק - אפס את המשתנה!
+    if (!tableWrapperExists && customersTable) {
+        console.log('🗑️ TableManager DOM was deleted, resetting customersTable variable');
+        customersTable = null;
+        window.customersTable = null;
+    }
+    
+    // עכשיו בדוק אם צריך לבנות מחדש
     if (!customersTable || !tableWrapperExists) {
         // אין TableManager או שה-DOM שלו נמחק - בנה מחדש!
         console.log('✅ Creating new TableManager with', data.length, 'total items');

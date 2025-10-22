@@ -244,6 +244,9 @@ async function initUniversalSearch() {
         }
     });
     
+    // ⭐ עדכן את window.customerSearch מיד!
+    window.customerSearch = customerSearch;
+    
     return customerSearch;
 }
 
@@ -383,6 +386,9 @@ function initCustomersTable(data) {
             showToast(`נמצאו ${count} תוצאות`, 'info');
         }
     });
+    
+    // ⭐ עדכן את window.customersTable מיד!
+    window.customersTable = customersTable;
     
     console.log('📊 Total customers loaded:', data.length);
     console.log('📄 Items per page:', customersTable.config.itemsPerPage);

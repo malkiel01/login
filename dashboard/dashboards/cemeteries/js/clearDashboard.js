@@ -32,19 +32,22 @@ const DashboardCleaner = {
             this.clearCards();
         }
         
-        // 3. ניקוי טבלה - ⭐ FIX: רק אם לא במצב TableManager
-        if (!this.isTableManagerActive()) {
-            this.clearTable();
-        } else {
-            console.log('  ⚠️ TableManager is active - skipping table clear');
+        // 3. ⭐ ניקוי TableManager אם עוברים ממצב לקוחות
+        if (window.currentType === 'customer' && settings.targetLevel !== 'customer') {
+            this.destroyTableManager();
         }
         
-        // 4. ניקוי sidebar
+        // 4. ניקוי טבלה
+        if (!this.isTableManagerActive() || settings.targetLevel !== 'customer') {
+            this.clearTable();
+        }
+        
+        // 5. ניקוי sidebar
         if (!settings.keepSidebar && settings.targetLevel) {
             this.clearSidebarForLevel(settings.targetLevel);
         }
         
-        // 5. ניקוי/עדכון breadcrumb
+        // 6. ניקוי/עדכון breadcrumb
         if (!settings.keepBreadcrumb) {
             if (settings.targetLevel) {
                 this.updateBreadcrumbForLevel(settings.targetLevel);
@@ -53,15 +56,13 @@ const DashboardCleaner = {
             }
         }
         
-        // 6. ניקוי הודעות
+        // 7. ניקוי הודעות
         this.clearMessages();
         
-        // 7. ניקוי חיפוש (אבל לא אם TableManager פעיל)
-        if (!this.isTableManagerActive()) {
-            this.clearSearch();
-        }
+        // 8. ניקוי חיפוש
+        this.clearSearch();
         
-        // 8. ניקוי מודלים פתוחים
+        // 9. ניקוי מודלים פתוחים
         this.closeModals();
         
         console.log('✅ Dashboard cleaned successfully');
@@ -107,12 +108,44 @@ const DashboardCleaner = {
             mainTable.style.display = 'table';
             console.log('  ✓ Main table shown');
         }
+        
+        // ⭐ NEW: הסתר את כל ה-table-container אם רוצים
+        // (רק אם אין בו תוכן אחר)
+        const container = document.querySelector('.table-container');
+        if (container && !this.hasVisibleContent(container)) {
+            container.style.display = 'none';
+            console.log('  ✓ table-container hidden (empty)');
+        }
+    },
+    
+    /**
+     * ⭐ NEW: בדיקה אם יש תוכן גלוי ב-container
+     */
+    hasVisibleContent(container) {
+        const mainTable = container.querySelector('#mainTable');
+        if (mainTable && window.getComputedStyle(mainTable).display !== 'none') {
+            return true;
+        }
+        
+        const wrapper = container.querySelector('.table-wrapper[data-fixed-width="true"]');
+        if (wrapper && window.getComputedStyle(wrapper).display !== 'none') {
+            return true;
+        }
+        
+        return false;
     },
     
     /**
      * ⭐ NEW: הצגת TableManager
      */
     showTableManager() {
+        // הצג את ה-container אם הוא מוסתר
+        const container = document.querySelector('.table-container');
+        if (container && window.getComputedStyle(container).display === 'none') {
+            container.style.display = 'block';
+            console.log('  ✓ table-container shown');
+        }
+        
         const wrapper = document.querySelector('.table-wrapper[data-fixed-width="true"]');
         if (wrapper) {
             wrapper.style.display = 'flex';
@@ -168,6 +201,17 @@ const DashboardCleaner = {
         if (this.isTableManagerActive()) {
             this.hideTableManager();
             return;
+        }
+        
+        // וודא שהטבלה הרגילה מוצגת
+        const container = document.querySelector('.table-container');
+        if (container) {
+            container.style.display = 'block';
+        }
+        
+        const mainTable = document.getElementById('mainTable');
+        if (mainTable) {
+            mainTable.style.display = 'table';
         }
         
         const tbody = document.getElementById('tableBody');
@@ -257,11 +301,12 @@ const DashboardCleaner = {
             searchInput.value = '';
         }
         
-        // אל תנקה את חיפוש הלקוחות אם הוא פעיל
+        // הסתר את חיפוש הלקוחות אם לא במצב לקוחות
         if (window.currentType !== 'customer') {
             const customerSearchSection = document.getElementById('customerSearchSection');
             if (customerSearchSection) {
                 customerSearchSection.style.display = 'none';
+                console.log('  ✓ Customer search hidden');
             }
         }
     },

@@ -106,6 +106,13 @@ const DashboardCleaner = {
         if (mainContainer) {
             console.log('  🆕 Using NEW method (main-container)');
             
+            // ⭐ מחק גם table-wrapper אם קיים (TableManager)
+            const tableWrapper = document.querySelector('.table-wrapper[data-fixed-width="true"]');
+            if (tableWrapper) {
+                tableWrapper.remove();
+                console.log('  🗑️ TableManager wrapper removed');
+            }
+            
             // מחק את main-container
             mainContainer.remove();
             console.log('  ✓ Main container removed');

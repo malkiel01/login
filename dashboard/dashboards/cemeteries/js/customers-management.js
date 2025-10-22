@@ -11,7 +11,7 @@ let editingCustomerId = null;
 
 // טעינת לקוחות (הפונקציה הראשית)
 async function loadCustomers() {
-    console.log('📋 Loading customers - STEP B...');
+    console.log('📋 Loading customers - FINAL VERSION...');
 
     setActiveMenuItem('customersItem');
     
@@ -19,41 +19,7 @@ async function loadCustomers() {
     window.currentType = 'customer';
     window.currentParentId = null;
     
-    // ⭐ בדוק אם TableManager כבר קיים
-    const existingWrapper = document.querySelector('.table-wrapper[data-fixed-width="true"]');
-    
-    if (existingWrapper) {
-        console.log('🔄 TableManager already exists - reactivating it');
-        
-        // ⭐ FIX: נקה קודם את תוכן המסכים האחרים (בתי עלמין וכו')
-        DashboardCleaner.clear({ targetLevel: 'customer' });
-        
-        // בנה מחדש את המבנה עם TableManager קיים
-        await buildCustomersContainer();
-        
-        // TableManager wrapper כבר קיים - פשוט הצג אותו
-        existingWrapper.style.display = 'flex';
-        console.log('  ✓ TableManager wrapper shown');
-        
-        // עדכן breadcrumb
-        if (typeof updateBreadcrumb === 'function') {
-            updateBreadcrumb({ customer: { name: 'לקוחות' } });
-        }
-        
-        // עדכן כפתור ההוספה
-        if (typeof updateAddButtonText === 'function') {
-            updateAddButtonText();
-        }
-        
-        // רענן את החיפוש אם יש
-        if (customerSearch) {
-            customerSearch.refresh();
-        }
-        
-        return;
-    }
-    
-    // ⭐ נקה - זה ימחק את main-container (או ינקה את השיטה הישנה)
+    // ⭐ נקה - DashboardCleaner ימחק גם את TableManager!
     DashboardCleaner.clear({ targetLevel: 'customer' });
     
     // נקה את כל הסידבר
@@ -80,7 +46,6 @@ async function loadCustomers() {
     // אתחל את UniversalSearch
     if (!customerSearch) {
         await initUniversalSearch();
-        // טען את כל הלקוחות מיד לאחר האתחול
         customerSearch.search();
     } else {
         customerSearch.refresh();
@@ -607,5 +572,5 @@ window.refreshData = refreshData;
 window.customersTable = customersTable;
 window.checkScrollStatus = checkScrollStatus;
 
-console.log('✅ Customers Management Module Loaded - STEP B: main-container ready');
+console.log('✅ Customers Management Module Loaded - FINAL: Clean & Simple');
 console.log('💡 Commands: checkScrollStatus() - בדוק כמה רשומות נטענו');

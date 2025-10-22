@@ -807,24 +807,85 @@ window.tableRenderer = new UnifiedTableRenderer();
 
 
 // ==========================================
+// ⭐ פונקציה חדשה - בניית מבנה היררכיה (STEP C)
+// ==========================================
+
+/**
+ * בניית המבנה הבסיסי של היררכיה ב-main-container
+ */
+function buildHierarchyContainer() {
+    console.log('🏗️ Building hierarchy container...');
+    
+    // מצא את main-container (צריך להיות קיים אחרי clear)
+    let mainContainer = document.querySelector('.main-container');
+    
+    if (!mainContainer) {
+        console.log('⚠️ main-container not found, creating one...');
+        const mainContent = document.querySelector('.main-content');
+        mainContainer = document.createElement('div');
+        mainContainer.className = 'main-container';
+        
+        const actionBar = mainContent.querySelector('.action-bar');
+        if (actionBar) {
+            actionBar.insertAdjacentElement('afterend', mainContainer);
+        } else {
+            mainContent.appendChild(mainContainer);
+        }
+    }
+    
+    // ⭐ בנה את המבנה הבסיסי של טבלה
+    mainContainer.innerHTML = `
+        <div class="table-container">
+            <table id="mainTable" class="data-table">
+                <thead>
+                    <tr id="tableHeaders">
+                        <th style="text-align: center;">טוען...</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr>
+                        <td style="text-align: center; padding: 40px;">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">טוען נתונים...</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    `;
+    
+    console.log('✅ Hierarchy container built');
+}
+
+
+// ==========================================
 // פונקציות גלובליות - טעינת כל הפריטים
 // ==========================================
 
 window.loadAllCemeteries = async function() {
-    console.log('📍 Loading all cemeteries');
-    setActiveMenuItem('cemeteryItem'); // ✅ הוסף את זה
+    console.log('📍 Loading all cemeteries - STEP C');
+    setActiveMenuItem('cemeteryItem');
     window.currentType = 'cemetery';
     window.currentParentId = null;
     window.selectedItems = {};
 
+    // ⭐ נקה (מוחק main-container או מנקה שיטה ישנה)
     DashboardCleaner.clear({ targetLevel: 'cemetery' });
+    
+    // ⭐ בנה את המבנה החדש
+    buildHierarchyContainer();
+    
+    // עדכן breadcrumb
     BreadcrumbManager.update({}, 'cemetery');
+    
+    // טען נתונים
     await tableRenderer.loadAndDisplay('cemetery');
 };
 
 window.loadAllBlocks = async function() {
-    console.log('📍 Loading all blocks');
-    setActiveMenuItem('blockItem'); // ✅ הוסף את זה
+    console.log('📍 Loading all blocks - STEP C');
+    setActiveMenuItem('blockItem');
     window.currentType = 'block';
     window.currentParentId = null;
 
@@ -833,13 +894,16 @@ window.loadAllBlocks = async function() {
     window.selectedItems = {};
     if (temp) window.selectedItems.cemetery = temp;
     
+    // ⭐ נקה ובנה מחדש
     DashboardCleaner.clear({ targetLevel: 'block' });
+    buildHierarchyContainer();
+    
     BreadcrumbManager.update({}, 'block');
     await tableRenderer.loadAndDisplay('block');
 };
 
 window.loadAllPlots = async function() {
-    console.log('📍 Loading all plots');
+    console.log('📍 Loading all plots - STEP C');
     setActiveMenuItem('plotItem');
     window.currentType = 'plot';
     window.currentParentId = null;
@@ -851,13 +915,16 @@ window.loadAllPlots = async function() {
     if (tempCemetery) window.selectedItems.cemetery = tempCemetery;
     if (tempBlock) window.selectedItems.block = tempBlock;
     
+    // ⭐ נקה ובנה מחדש
     DashboardCleaner.clear({ targetLevel: 'plot' });
+    buildHierarchyContainer();
+    
     BreadcrumbManager.update({}, 'plot');
     await tableRenderer.loadAndDisplay('plot');
 };
 
 window.loadAllAreaGraves = async function() {
-    console.log('📍 Loading all area graves');
+    console.log('📍 Loading all area graves - STEP C');
     setActiveMenuItem('areaGraveItem');
     window.currentType = 'area_grave';
     window.currentParentId = null;
@@ -869,14 +936,17 @@ window.loadAllAreaGraves = async function() {
     if (temp.block) window.selectedItems.block = temp.block;
     if (temp.plot) window.selectedItems.plot = temp.plot;
     
+    // ⭐ נקה ובנה מחדש
     DashboardCleaner.clear({ targetLevel: 'area_grave' });
-    DashboardCleaner.clearCards()
+    DashboardCleaner.clearCards();
+    buildHierarchyContainer();
+    
     BreadcrumbManager.update({}, 'area_grave');
     await tableRenderer.loadAndDisplay('area_grave');
 };
 
 window.loadAllGraves = async function() {
-    console.log('📍 Loading all graves');
+    console.log('📍 Loading all graves - STEP C');
     setActiveMenuItem('graveItem');
     window.currentType = 'grave';
     window.currentParentId = null;
@@ -889,7 +959,10 @@ window.loadAllGraves = async function() {
     if (temp.plot) window.selectedItems.plot = temp.plot;
     if (temp.areaGrave) window.selectedItems.areaGrave = temp.areaGrave;
     
+    // ⭐ נקה ובנה מחדש
     DashboardCleaner.clear({ targetLevel: 'grave' });
+    buildHierarchyContainer();
+    
     BreadcrumbManager.update({}, 'grave');
     await tableRenderer.loadAndDisplay('grave');
 };

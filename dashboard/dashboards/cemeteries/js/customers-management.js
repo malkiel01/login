@@ -420,12 +420,16 @@ function renderCustomersRows(data, container) {
         return;
     }
     
-    // אתחל או עדכן את TableManager
-    if (!customersTable) {
+    // ⭐ בדוק אם TableManager קיים גם בזיכרון וגם ב-DOM
+    const tableWrapperExists = document.querySelector('.table-wrapper[data-fixed-width="true"]');
+    
+    if (!customersTable || !tableWrapperExists) {
+        // אין TableManager או שה-DOM שלו נמחק - בנה מחדש!
         console.log('✅ Creating new TableManager with', data.length, 'total items');
         initCustomersTable(data);
     } else {
-        console.log('🔄 Updating TableManager with', data.length, 'total items');
+        // TableManager קיים וגם ה-DOM שלו - רק עדכן נתונים
+        console.log('🔄 Updating existing TableManager with', data.length, 'total items');
         customersTable.setData(data);
     }
 }

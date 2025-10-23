@@ -180,6 +180,8 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <script src="/dashboard/dashboards/cemeteries/js/generic-records-manager.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/configs/cemeteries-config.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/cemeteries-init.js"></script>
+    <!-- הוסף את זה: -->
+    <script src="/dashboard/dashboards/cemeteries/js/cemeteries-universal-search.js"></script>
 
     <script>
         // Initialize dashboard on load

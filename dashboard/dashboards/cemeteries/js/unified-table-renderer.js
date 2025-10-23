@@ -1098,7 +1098,9 @@ window.loadGravesForAreaGrave = async function(areaGraveId) {
     await tableRenderer.loadAndDisplay('grave', areaGraveId);
 };
 
-// ----------------------------
+// -------------------------------------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------------------------------
 
 // ==========================================
 // 🔄 REPLACE - החלף רק את window.loadAllCemeteries
@@ -1192,9 +1194,12 @@ async function initCemeteriesUniversalSearch() {
     cemeteriesSearch = new UniversalSearch({
         dataSource: {
             type: 'api',
-            endpoint: '/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?type=cemetery',
+            endpoint: '/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php',
             action: 'list',
             method: 'GET',
+            params: {
+                type: 'cemetery'
+            },
             tables: ['cemeteries'],
             joins: []
         },

@@ -1,23 +1,14 @@
 /**
- * מערכת ניקוי מרכזית לדשבורד בתי עלמין
- * File: /dashboard/dashboards/cemeteries/js/clearDashboard.js
- * 
- * פונקציה זו מחליפה את כל הניקויים המפוזרים במערכת
- * ומספקת ניקוי אחיד ועקבי בכל מעבר מסך
+ * DashboardCleaner - ניקוי חכם של הדשבורד
+ * שלב א: תמיכה בשתי שיטות - ישנה (table-container) וחדשה (main-container)
  */
 
 const DashboardCleaner = {
     
     /**
-     * פונקציית הניקוי הראשית
-     * @param {Object} options - אפשרויות ניקוי
-     * @param {string} options.targetLevel - הרמה אליה עוברים (cemetery/block/plot/areaGrave/grave)
-     * @param {boolean} options.keepBreadcrumb - האם לשמור את ה-breadcrumb
-     * @param {boolean} options.keepSidebar - האם לשמור את הסידבר
-     * @param {boolean} options.keepCard - האם לשמור את הכרטיס
-     * @param {boolean} options.fullReset - האם לבצע איפוס מלא
+     * ניקוי כללי של הדשבורד
      */
-    clear(options = {}) {
+    clear(settings = {}) {
         const defaults = {
             targetLevel: null,
             keepBreadcrumb: false,
@@ -26,34 +17,30 @@ const DashboardCleaner = {
             fullReset: false
         };
         
-        const settings = { ...defaults, ...options };
+        settings = { ...defaults, ...settings };
         
         console.log('🧹 Cleaning dashboard with settings:', settings);
         
-        // 1. ניקוי מלא אם נדרש
         if (settings.fullReset) {
             this.fullReset();
             return;
         }
         
-        // 2. ניקוי כרטיסים
         if (!settings.keepCard) {
             this.clearCards();
         }
         
-        // 3. ניקוי טבלה
-        this.clearTable();
-        
-        // 4. ניקוי סידבר
-        if (!settings.keepSidebar) {
-            if (settings.targetLevel) {
-                this.clearSidebarForLevel(settings.targetLevel);
-            } else {
-                this.clearAllSidebar();
-            }
+        // ניקוי טבלה/תוכן
+        if (!this.isTableManagerActive()) {
+            this.clearTable();
+        } else {
+            console.log('  ⚠️ TableManager is active - skipping table clear');
         }
         
-        // 5. ניקוי/עדכון breadcrumb
+        if (!settings.keepSidebar && settings.targetLevel) {
+            this.clearSidebarForLevel(settings.targetLevel);
+        }
+        
         if (!settings.keepBreadcrumb) {
             if (settings.targetLevel) {
                 this.updateBreadcrumbForLevel(settings.targetLevel);
@@ -62,86 +49,113 @@ const DashboardCleaner = {
             }
         }
         
-        // 6. ניקוי הודעות
         this.clearMessages();
         
-        // 7. ניקוי חיפוש
-        this.clearSearch();
+        if (!this.isTableManagerActive()) {
+            this.clearSearch();
+        }
         
-        // 8. ניקוי מודלים פתוחים
         this.closeModals();
         
         console.log('✅ Dashboard cleaned successfully');
     },
     
     /**
-     * ניקוי כל הכרטיסים
+     * בדיקה אם TableManager פעיל
      */
-    // clearCards2() {
-    //     // ניקוי כרטיס יחיד
-    //     const itemCard = document.getElementById('itemCard');
-    //     if (itemCard) {
-    //         itemCard.remove();
-    //         console.log('  ✓ Item card removed');
-    //     }
+    isTableManagerActive() {
+        const hasTableManager = window.customersTable && 
+                               window.customersTable.elements && 
+                               window.customersTable.elements.wrapper;
         
-    //     // ניקוי כרטיסי היררכיה
-    //     const hierarchyCards = document.querySelectorAll('.hierarchy-card');
-    //     if (hierarchyCards.length > 0) {
-    //         hierarchyCards.forEach(card => card.remove());
-    //         console.log(`  ✓ ${hierarchyCards.length} hierarchy cards removed`);
-    //     }
+        const wrapperVisible = hasTableManager && 
+                              window.customersTable.elements.wrapper.offsetParent !== null;
         
-    //     // ניקוי כרטיסים נוספים (אם יש)
-    //     const additionalCards = document.querySelectorAll('.card-container, .info-card, .detail-card');
-    //     additionalCards.forEach(card => {
-    //         if (!card.closest('.stats-grid')) { // אל תמחק כרטיסי סטטיסטיקה
-    //             card.remove();
-    //         }
-    //     });
-    // },
-    clearCards() {
-    // ניקוי כרטיסי היררכיה עם הפונקציה המיוחדת
-    if (typeof clearAllHierarchyCards === 'function') {
-        clearAllHierarchyCards();
-    }
-    
-    // ניקוי כרטיס יחיד
-    const itemCard = document.getElementById('itemCard');
-    if (itemCard) {
-        itemCard.remove();
-        console.log('  ✓ Item card removed');
-    }
-    
-    // ניקוי כרטיסים נוספים מסוג info-card
-    const infoCards = document.querySelectorAll('.info-card');
-    infoCards.forEach(card => {
-        if (!card.closest('.stats-grid')) {
-            card.remove();
-        }
-    });
-    
-    console.log('  ✓ All cards cleared');
-},
+        const isCustomerMode = window.currentType === 'customer';
+        
+        return hasTableManager && wrapperVisible && isCustomerMode;
+    },
     
     /**
-     * ניקוי הטבלה
+     * הסתרת TableManager
+     */
+    hideTableManager() {
+        if (window.customersTable && window.customersTable.elements.wrapper) {
+            window.customersTable.elements.wrapper.style.display = 'none';
+            console.log('  ✓ TableManager hidden');
+        }
+    },
+    
+    /**
+     * הצגת TableManager
+     */
+    showTableManager() {
+        if (window.customersTable && window.customersTable.elements.wrapper) {
+            window.customersTable.elements.wrapper.style.display = 'flex';
+            console.log('  ✓ TableManager shown');
+        }
+    },
+    
+    /**
+     * ⭐ ניקוי הטבלה/תוכן - תומך בשתי שיטות
      */
     clearTable() {
+        // ⭐ שיטה חדשה: בדוק אם יש main-container
+        const mainContainer = document.querySelector('.main-container');
+        
+        if (mainContainer) {
+            console.log('  🆕 Using NEW method (main-container)');
+            
+            // ⭐ מחק גם table-wrapper אם קיים (TableManager)
+            const tableWrapper = document.querySelector('.table-wrapper[data-fixed-width="true"]');
+            if (tableWrapper) {
+                tableWrapper.remove();
+                console.log('  🗑️ TableManager wrapper removed');
+            }
+            
+            // מחק את main-container
+            mainContainer.remove();
+            console.log('  ✓ Main container removed');
+            
+            // בנה main-container חדש ריק
+            const mainContent = document.querySelector('.main-content');
+            if (mainContent) {
+                const newContainer = document.createElement('div');
+                newContainer.className = 'main-container';
+                
+                // הוסף אחרי action-bar אם קיים
+                const actionBar = mainContent.querySelector('.action-bar');
+                if (actionBar) {
+                    actionBar.insertAdjacentElement('afterend', newContainer);
+                } else {
+                    mainContent.appendChild(newContainer);
+                }
+                console.log('  ✓ New main container created');
+            }
+            return;
+        }
+        
+        // ⭐ שיטה ישנה: עבודה עם table-container
+        console.log('  📜 Using OLD method (table-container)');
+        
+        // אם TableManager פעיל, הסתר אותו
+        if (this.isTableManagerActive()) {
+            this.hideTableManager();
+            return;
+        }
+        
         const tbody = document.getElementById('tableBody');
         const thead = document.getElementById('tableHeaders');
         
         if (tbody) {
             tbody.innerHTML = '';
-            // הסר מאפיינים מיוחדים
             tbody.removeAttribute('data-customer-view');
             tbody.removeAttribute('data-current-type');
             console.log('  ✓ Table body cleared');
         }
         
         if (thead) {
-            // שמור כותרות ברירת מחדל או נקה לגמרי
-            if (window.currentType) {
+            if (window.currentType && window.currentType !== 'customer') {
                 this.setDefaultHeaders(window.currentType);
             } else {
                 thead.innerHTML = '';
@@ -151,53 +165,18 @@ const DashboardCleaner = {
     },
     
     /**
-     * הגדרת כותרות ברירת מחדל לטבלה
+     * הגדרת כותרות ברירת מחדל (שיטה ישנה)
      */
     setDefaultHeaders(type) {
         const thead = document.getElementById('tableHeaders');
         if (!thead) return;
         
         const headers = {
-            cemetery: `
-                <th>מזהה</th>
-                <th>שם</th>
-                <th>קוד</th>
-                <th>סטטוס</th>
-                <th>נוצר בתאריך</th>
-                <th>פעולות</th>
-            `,
-            block: `
-                <th>מזהה</th>
-                <th>שם גוש</th>
-                <th>קוד</th>
-                <th>סטטוס</th>
-                <th>נוצר בתאריך</th>
-                <th>פעולות</th>
-            `,
-            plot: `
-                <th>מזהה</th>
-                <th>שם חלקה</th>
-                <th>קוד</th>
-                <th>סטטוס</th>
-                <th>נוצר בתאריך</th>
-                <th>פעולות</th>
-            `,
-            areaGrave: `
-                <th>מזהה</th>
-                <th>שם אחוזת קבר</th>
-                <th>סוג</th>
-                <th>סטטוס</th>
-                <th>נוצר בתאריך</th>
-                <th>פעולות</th>
-            `,
-            grave: `
-                <th>מזהה</th>
-                <th>שם הנפטר</th>
-                <th>תאריך פטירה</th>
-                <th>מיקום</th>
-                <th>סטטוס</th>
-                <th>פעולות</th>
-            `
+            cemetery: `<th>מזהה</th><th>שם</th><th>קוד</th><th>סטטוס</th><th>נוצר בתאריך</th><th>פעולות</th>`,
+            block: `<th>מזהה</th><th>שם גוש</th><th>קוד</th><th>סטטוס</th><th>נוצר בתאריך</th><th>פעולות</th>`,
+            plot: `<th>מזהה</th><th>שם חלקה</th><th>קוד</th><th>סטטוס</th><th>נוצר בתאריך</th><th>פעולות</th>`,
+            areaGrave: `<th>מזהה</th><th>שם אחוזת קבר</th><th>סוג</th><th>סטטוס</th><th>נוצר בתאריך</th><th>פעולות</th>`,
+            grave: `<th>מזהה</th><th>שם הנפטר</th><th>תאריך פטירה</th><th>מיקום</th><th>סטטוס</th><th>פעולות</th>`
         };
         
         if (headers[type]) {
@@ -206,15 +185,53 @@ const DashboardCleaner = {
     },
     
     /**
-     * ניקוי כל הסידבר
+     * ניקוי כרטיסים
+     */
+    clearCards() {
+        if (typeof clearAllHierarchyCards === 'function') {
+            clearAllHierarchyCards();
+        }
+        
+        const itemCard = document.getElementById('itemCard');
+        if (itemCard) {
+            itemCard.remove();
+        }
+        
+        const infoCards = document.querySelectorAll('.info-card');
+        infoCards.forEach(card => {
+            if (!card.closest('.stats-grid')) {
+                card.remove();
+            }
+        });
+        
+        console.log('  ✓ All cards cleared');
+    },
+    
+    /**
+     * ניקוי חיפוש
+     */
+    clearSearch() {
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.value = '';
+        }
+        
+        if (window.currentType !== 'customer') {
+            const customerSearchSection = document.getElementById('customerSearchSection');
+            if (customerSearchSection) {
+                customerSearchSection.style.display = 'none';
+            }
+        }
+    },
+    
+    /**
+     * ניקוי סידבר
      */
     clearAllSidebar() {
-        // הסר active מכל הכותרות
         document.querySelectorAll('.hierarchy-header').forEach(header => {
             header.classList.remove('active');
         });
         
-        // נקה את כל הפריטים הנבחרים
         const containers = [
             'cemeterySelectedItem',
             'blockSelectedItem', 
@@ -237,69 +254,44 @@ const DashboardCleaner = {
     /**
      * ניקוי סידבר לפי רמה
      */
-    clearSidebarForLevel(targetLevel) {
+    clearSidebarForLevel(level) {
         const hierarchy = ['cemetery', 'block', 'plot', 'areaGrave', 'grave'];
-        const targetIndex = hierarchy.indexOf(targetLevel);
+        const levelIndex = hierarchy.indexOf(level);
         
-        if (targetIndex === -1) {
-            console.warn(`Unknown level: ${targetLevel}`);
+        if (levelIndex === -1) {
+            console.log('Unknown level:', level);
             return;
         }
         
-        // הסר active מכל הכותרות
-        document.querySelectorAll('.hierarchy-header').forEach((header, index) => {
-            header.classList.remove('active');
-        });
-        
-        // הוסף active לרמה הנוכחית
-        const headers = document.querySelectorAll('.hierarchy-header');
-        if (headers[targetIndex]) {
-            headers[targetIndex].classList.add('active');
-        }
-        
-        // נקה רק את הרמות מתחת לרמה הנוכחית
-        for (let i = targetIndex; i < hierarchy.length; i++) {
-            const container = document.getElementById(`${hierarchy[i]}SelectedItem`);
-            if (container) {
-                container.innerHTML = '';
-                container.style.display = 'none';
+        for (let i = levelIndex + 1; i < hierarchy.length; i++) {
+            const containerId = hierarchy[i] + 'SelectedItem';
+            const element = document.getElementById(containerId);
+            if (element) {
+                element.innerHTML = '';
+                element.style.display = 'none';
             }
         }
         
-        console.log(`  ✓ Sidebar cleared below level: ${targetLevel}`);
+        console.log(`  ✓ Sidebar cleared below level: ${level}`);
     },
     
     /**
      * איפוס breadcrumb
      */
     resetBreadcrumb() {
-        if (window.BreadcrumbManager && typeof window.BreadcrumbManager.reset === 'function') {
-            window.BreadcrumbManager.reset();
+        if (typeof BreadcrumbManager !== 'undefined') {
+            BreadcrumbManager.reset();
             console.log('  ✓ Breadcrumb reset');
-        } else if (typeof window.updateBreadcrumb === 'function') {
-            window.updateBreadcrumb({});
-            console.log('  ✓ Breadcrumb updated (legacy)');
         }
     },
     
     /**
      * עדכון breadcrumb לפי רמה
      */
-    updateBreadcrumbForLevel(targetLevel) {
-        if (window.selectedItems && typeof window.updateBreadcrumb === 'function') {
-            // בניית אובייקט הבחירות עד הרמה הנוכחית
-            const hierarchy = ['cemetery', 'block', 'plot', 'areaGrave', 'grave'];
-            const targetIndex = hierarchy.indexOf(targetLevel);
-            const newSelection = {};
-            
-            for (let i = 0; i < targetIndex; i++) {
-                if (window.selectedItems[hierarchy[i]]) {
-                    newSelection[hierarchy[i]] = window.selectedItems[hierarchy[i]];
-                }
-            }
-            
-            window.updateBreadcrumb(newSelection);
-            console.log('  ✓ Breadcrumb updated for level:', targetLevel);
+    updateBreadcrumbForLevel(level) {
+        if (typeof BreadcrumbManager !== 'undefined') {
+            BreadcrumbManager.update(window.selectedItems || {}, level);
+            console.log(`  ✓ Breadcrumb updated for level: ${level}`);
         }
     },
     
@@ -307,69 +299,38 @@ const DashboardCleaner = {
      * ניקוי הודעות
      */
     clearMessages() {
-        // ניקוי toast messages
-        const toasts = document.querySelectorAll('.toast, .alert-toast, .notification-toast');
-        toasts.forEach(toast => toast.remove());
-        
-        // ניקוי inline messages
-        const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
-        alerts.forEach(alert => alert.remove());
-        
-        if (toasts.length || alerts.length) {
-            console.log(`  ✓ ${toasts.length + alerts.length} messages cleared`);
-        }
+        const messages = document.querySelectorAll('.alert, .toast, .notification');
+        messages.forEach(msg => msg.remove());
     },
     
     /**
-     * ניקוי שדה חיפוש
-     */
-    clearSearch() {
-        const searchInputs = document.querySelectorAll('#sidebarSearch, #quickSearch, .search-input');
-        searchInputs.forEach(input => {
-            if (input.value) {
-                input.value = '';
-                console.log('  ✓ Search field cleared');
-            }
-        });
-        
-        // ניקוי תוצאות חיפוש
-        const searchResults = document.querySelectorAll('.search-results, .search-dropdown');
-        searchResults.forEach(result => result.remove());
-    },
-    
-    /**
-     * סגירת מודלים פתוחים
+     * סגירת מודלים
      */
     closeModals() {
-        // סגירת Bootstrap modals
-        const modals = document.querySelectorAll('.modal.show');
+        const modals = document.querySelectorAll('.modal.show, [role="dialog"][style*="display: block"]');
         modals.forEach(modal => {
-            const bsModal = bootstrap.Modal.getInstance(modal);
-            if (bsModal) {
-                bsModal.hide();
+            if (modal.classList.contains('show')) {
+                modal.classList.remove('show');
+            }
+            modal.style.display = 'none';
+            
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) {
+                backdrop.remove();
             }
         });
-        
-        // הסרת backdrops
-        const backdrops = document.querySelectorAll('.modal-backdrop');
-        backdrops.forEach(backdrop => backdrop.remove());
-        
-        // הסרת class מה-body
-        document.body.classList.remove('modal-open');
-        document.body.style.removeProperty('padding-right');
-        
-        if (modals.length) {
-            console.log(`  ✓ ${modals.length} modals closed`);
-        }
     },
     
     /**
-     * איפוס מלא של הדשבורד
+     * איפוס מלא
      */
     fullReset() {
         console.log('🔄 Performing full dashboard reset...');
         
-        // ניקוי כל האלמנטים
+        if (this.isTableManagerActive()) {
+            this.hideTableManager();
+        }
+        
         this.clearCards();
         this.clearTable();
         this.clearAllSidebar();
@@ -378,7 +339,6 @@ const DashboardCleaner = {
         this.clearSearch();
         this.closeModals();
         
-        // איפוס משתנים גלובליים
         if (window.selectedItems) {
             window.selectedItems = {};
         }
@@ -394,23 +354,35 @@ const DashboardCleaner = {
     
     /**
      * ניקוי לפני מעבר בין רמות
-     * פונקציה נוחה לשימוש במעברים רגילים
      */
     prepareTransition(fromType, toType, keepParentSelection = false) {
         const hierarchy = ['cemetery', 'block', 'plot', 'areaGrave', 'grave'];
         const fromIndex = hierarchy.indexOf(fromType);
         const toIndex = hierarchy.indexOf(toType);
         
-        // קבע מה לנקות לפי כיוון המעבר
+        if (toType === 'customer') {
+            const mainTable = document.getElementById('mainTable');
+            if (mainTable) {
+                mainTable.style.display = 'none';
+            }
+            return;
+        }
+        
+        if (fromType === 'customer') {
+            this.hideTableManager();
+            const mainTable = document.getElementById('mainTable');
+            if (mainTable) {
+                mainTable.style.display = 'table';
+            }
+        }
+        
         if (toIndex < fromIndex) {
-            // חוזרים אחורה בהיררכיה
             this.clear({
                 targetLevel: toType,
                 keepBreadcrumb: false,
                 keepSidebar: keepParentSelection
             });
         } else if (toIndex > fromIndex) {
-            // מתקדמים בהיררכיה
             this.clear({
                 targetLevel: fromType,
                 keepBreadcrumb: true,
@@ -418,7 +390,6 @@ const DashboardCleaner = {
                 keepCard: false
             });
         } else {
-            // נשארים באותה רמה
             this.clear({
                 targetLevel: toType,
                 keepBreadcrumb: true,
@@ -428,67 +399,23 @@ const DashboardCleaner = {
     }
 };
 
-// ==========================================
-// פונקציות עזר גלובליות לתאימות אחורה
-// ==========================================
-
-/**
- * פונקציה גלובלית לניקוי כללי
- * מחליפה את כל הקריאות הישנות
- */
+// פונקציות עזר גלובליות
 window.clearDashboard = function(options) {
     DashboardCleaner.clear(options);
 };
 
-/**
- * תאימות אחורה - החלפת הפונקציות הישנות
- */
 window.clearItemCard = function() {
-    console.log('📌 Legacy call: clearItemCard()');
     DashboardCleaner.clearCards();
 };
 
 window.clearAllSidebarSelections = function() {
-    console.log('📌 Legacy call: clearAllSidebarSelections()');
     DashboardCleaner.clearAllSidebar();
 };
 
 window.clearSidebarBelow = function(type) {
-    console.log('📌 Legacy call: clearSidebarBelow()');
     DashboardCleaner.clearSidebarForLevel(type);
 };
 
-// ==========================================
-// דוגמאות שימוש
-// ==========================================
-
-/**
- * דוגמאות לשימוש בפונקציית הניקוי החדשה:
- * 
- * 1. ניקוי מלא:
- *    DashboardCleaner.fullReset();
- * 
- * 2. מעבר לרשימת בתי עלמין:
- *    DashboardCleaner.clear({ targetLevel: 'cemetery' });
- * 
- * 3. פתיחת בית עלמין ספציפי:
- *    DashboardCleaner.clear({ 
- *        targetLevel: 'block',
- *        keepSidebar: true,
- *        keepBreadcrumb: true 
- *    });
- * 
- * 4. חזרה אחורה בהיררכיה:
- *    DashboardCleaner.prepareTransition('plot', 'block');
- * 
- * 5. ניקוי רק הכרטיסים:
- *    DashboardCleaner.clearCards();
- */
-
-// ייצוא למודול אם נדרש
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = DashboardCleaner;
-}
-
-// הוסף לאובייקט window לזמינות גלובלית
 window.DashboardCleaner = DashboardCleaner;
+
+console.log('✅ DashboardCleaner loaded - STEP A: Supports both old and new methods');

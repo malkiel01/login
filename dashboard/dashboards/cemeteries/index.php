@@ -176,6 +176,11 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
 
     <script src="/dashboard/dashboards/cemeteries/js/live-search.js"></script>
 
+    <!-- Generic System -->
+    <script src="/dashboard/dashboards/cemeteries/js/generic-records-manager.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/configs/cemeteries-config.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/cemeteries-init.js"></script>
+
     <script>
         // Initialize dashboard on load
         document.addEventListener('DOMContentLoaded', function() {

@@ -86,12 +86,9 @@ async function initCemeteriesUniversalSearch() {
     cemeteriesSearch = new UniversalSearch({
         dataSource: {
             type: 'api',
-            endpoint: '/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php',
+            endpoint: '/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?type=cemetery',
             action: 'list',
             method: 'GET',
-            params: {
-                type: 'cemetery'
-            },
             tables: ['cemeteries'],
             joins: []
         },

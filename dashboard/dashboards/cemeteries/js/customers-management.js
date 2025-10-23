@@ -206,7 +206,7 @@ async function initUniversalSearch() {
         
         results: {
             containerSelector: '#tableBody',
-            itemsPerPage: 200,
+            itemsPerPage: 10000,
             showPagination: false,
             showCounter: true,
             columns: ['numId', 'firstName', 'lastName', 'phone', 'streetAddress', 'city_name', 'statusCustomer', 'statusResident', 'createDate'],

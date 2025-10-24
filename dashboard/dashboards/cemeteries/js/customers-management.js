@@ -53,14 +53,19 @@ async function loadCustomers() {
     
     // ⭐ בנה את המבנה החדש ב-main-container
     await buildCustomersContainer();
-    
-    // אתחל את UniversalSearch
-    if (!customerSearch) {
-        await initCustomersSearch();
-        customerSearch.search();
-    } else {
-        customerSearch.refresh();
+
+    // ⭐ תמיד השמד את החיפוש הקודם ובנה מחדש
+    if (customerSearch && typeof customerSearch.destroy === 'function') {
+        console.log('🗑️ Destroying previous customerSearch instance...');
+        customerSearch.destroy();
+        customerSearch = null;
+        window.customerSearch = null;
     }
+
+    // אתחל את UniversalSearch מחדש תמיד
+    console.log('🆕 Creating fresh customerSearch instance...');
+    await initCustomersSearch();
+    customerSearch.search();
     
     // טען סטטיסטיקות
     await loadCustomerStats();

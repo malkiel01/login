@@ -206,7 +206,7 @@ async function initUniversalSearch() {
         
         results: {
             containerSelector: '#tableBody',
-            itemsPerPage: 10000,
+            itemsPerPage: 200,
             showPagination: false,
             showCounter: true,
             columns: ['numId', 'firstName', 'lastName', 'phone', 'streetAddress', 'city_name', 'statusCustomer', 'statusResident', 'createDate'],
@@ -261,7 +261,7 @@ function initCustomersTable(data) {
     customersTable = new TableManager({
         tableSelector: '#mainTable',
         
-        containerWidth: '100%',
+        containerWidth: '80vw',
         fixedLayout: true,
         
         scrolling: {

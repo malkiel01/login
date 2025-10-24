@@ -129,20 +129,14 @@ async function buildCemeteriesContainer() {
 }
 
 // ===================================================================
-// אתחול UniversalSearch - שם ייחודי!
+// אתחול UniversalSearch - שימוש בפונקציה גלובלית!
 // ===================================================================
 async function initCemeteriesSearch() {
-    cemeterySearch = new UniversalSearch({
-        dataSource: {
-            type: 'api',
-            endpoint: '/dashboard/dashboards/cemeteries/api/cemeteries-api.php',
-            action: 'list',
-            method: 'GET',
-            tables: ['cemeteries'],
-            joins: []
-        },
+    cemeterySearch = window.initUniversalSearch({
+        entityType: 'cemetery',
+        apiEndpoint: '/dashboard/dashboards/cemeteries/api/cemeteries-api.php',
+        action: 'list',
         
-        // שדות לחיפוש
         searchableFields: [
             {
                 name: 'cemeteryNameHe',
@@ -195,29 +189,15 @@ async function initCemeteriesSearch() {
             }
         ],
         
-        display: {
-            containerSelector: '#cemeterySearchSection',
-            showAdvanced: true,
-            showFilters: true,
-            placeholder: 'חיפוש בתי עלמין לפי שם, קוד, כתובת...',
-            layout: 'horizontal',
-            minSearchLength: 0
-        },
+        displayColumns: ['cemeteryNameHe', 'cemeteryCode', 'address', 'contactName', 'contactPhoneName', 'blocks_count', 'createDate'],
         
-        results: {
-            containerSelector: '#tableBody',
-            itemsPerPage: 200,
-            showPagination: false,
-            showCounter: true,
-            columns: ['cemeteryNameHe', 'cemeteryCode', 'address', 'contactName', 'contactPhoneName', 'blocks_count', 'createDate'],
-            renderFunction: renderCemeteriesRows
-        },
+        searchContainerSelector: '#cemeterySearchSection',
+        resultsContainerSelector: '#tableBody',
         
-        behavior: {
-            realTime: true,
-            autoSubmit: true,
-            highlightResults: true
-        },
+        placeholder: 'חיפוש בתי עלמין לפי שם, קוד, כתובת...',
+        itemsPerPage: 200,
+        
+        renderFunction: renderCemeteriesRows,
         
         callbacks: {
             onInit: () => {

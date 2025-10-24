@@ -56,7 +56,7 @@ async function loadCustomers() {
     
     // אתחל את UniversalSearch
     if (!customerSearch) {
-        await initUniversalSearch();
+        await initCustomersSearch();
         customerSearch.search();
     } else {
         customerSearch.refresh();
@@ -119,20 +119,14 @@ async function buildCustomersContainer() {
 }
 
 // ===================================================================
-// אתחול UniversalSearch - שם ייחודי!
+// אתחול UniversalSearch - שימוש בפונקציה גלובלית!
 // ===================================================================
-async function initUniversalSearch() {
-    customerSearch = new UniversalSearch({
-        dataSource: {
-            type: 'api',
-            endpoint: '/dashboard/dashboards/cemeteries/api/customers-api.php',
-            action: 'list',
-            method: 'GET',
-            tables: ['customers'],
-            joins: []
-        },
+async function initCustomersSearch() {
+    customerSearch = window.initUniversalSearch({
+        entityType: 'customer',
+        apiEndpoint: '/dashboard/dashboards/cemeteries/api/customers-api.php',
+        action: 'list',
         
-        // שדות לחיפוש
         searchableFields: [
             {
                 name: 'firstName',
@@ -208,29 +202,15 @@ async function initUniversalSearch() {
             }
         ],
         
-        display: {
-            containerSelector: '#customerSearchSection',
-            showAdvanced: true,
-            showFilters: true,
-            placeholder: 'חיפוש לקוחות לפי שם, ת.ז, טלפון...',
-            layout: 'horizontal',
-            minSearchLength: 0
-        },
+        displayColumns: ['numId', 'firstName', 'lastName', 'phone', 'streetAddress', 'city_name', 'statusCustomer', 'statusResident', 'createDate'],
         
-        results: {
-            containerSelector: '#tableBody',
-            itemsPerPage: 200,
-            showPagination: false,
-            showCounter: true,
-            columns: ['numId', 'firstName', 'lastName', 'phone', 'streetAddress', 'city_name', 'statusCustomer', 'statusResident', 'createDate'],
-            renderFunction: renderCustomersRows
-        },
+        searchContainerSelector: '#customerSearchSection',
+        resultsContainerSelector: '#tableBody',
         
-        behavior: {
-            realTime: true,
-            autoSubmit: true,
-            highlightResults: true
-        },
+        placeholder: 'חיפוש לקוחות לפי שם, ת.ז, טלפון...',
+        itemsPerPage: 200,
+        
+        renderFunction: renderCustomersRows,
         
         callbacks: {
             onInit: () => {

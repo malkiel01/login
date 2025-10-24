@@ -131,11 +131,6 @@ async function initCustomersSearch() {
         entityType: 'customer',
         apiEndpoint: '/dashboard/dashboards/cemeteries/api/customers-api.php',
         action: 'list',
-        
-        // ⭐ הוסף את השדה הזה!
-        apiParams: {
-            limit: 999999  // או 50000 - תלוי בשרת
-        },
 
         searchableFields: [
             {
@@ -391,6 +386,34 @@ function initCustomersTable(data) {
             showToast(`נמצאו ${count} תוצאות`, 'info');
         }
     });
+
+
+    // מאזין לאירוע גלילה לסוף - טען עוד נתונים
+    const bodyContainer = document.querySelector('.table-body-container');
+    if (bodyContainer && customerSearch) {
+        bodyContainer.addEventListener('scroll', async function() {
+            const scrollTop = this.scrollTop;
+            const scrollHeight = this.scrollHeight;
+            const clientHeight = this.clientHeight;
+            
+            // אם הגענו לתחתית והטעינה עוד לא בתהליך
+            if (scrollHeight - scrollTop - clientHeight < 100) {
+                if (!customerSearch.state.isLoading && customerSearch.state.currentPage < customerSearch.state.totalPages) {
+                    console.log('📥 Reached bottom, loading more data...');
+                    
+                    // בקש עמוד הבא מ-UniversalSearch
+                    const nextPage = customerSearch.state.currentPage + 1;
+                    
+                    // עדכן את הדף הנוכחי
+                    customerSearch.state.currentPage = nextPage;
+                    customerSearch.state.isLoading = true;
+                    
+                    // בקש נתונים
+                    await customerSearch.search();
+                }
+            }
+        });
+    }
     
     // ⭐ עדכן את window.customersTable מיד!
     window.customersTable = customersTable;
@@ -436,7 +459,7 @@ function renderCustomersRows(data, container) {
         customersTable = null;
         window.customersTable = null;
     }
-    
+
     // עכשיו בדוק אם צריך לבנות מחדש
     if (!customersTable || !tableWrapperExists) {
         // אין TableManager או שה-DOM שלו נמחק - בנה מחדש!
@@ -445,6 +468,17 @@ function renderCustomersRows(data, container) {
     } else {
         // TableManager קיים וגם ה-DOM שלו - רק עדכן נתונים
         console.log('🔄 Updating existing TableManager with', data.length, 'total items');
+        
+        // ⭐ אם יש עוד נתונים ב-UniversalSearch, הוסף אותם!
+        if (customerSearch && customerSearch.state) {
+            const allData = customerSearch.state.results || [];
+            if (allData.length > data.length) {
+                console.log(`📦 UniversalSearch has ${allData.length} items, updating TableManager...`);
+                customersTable.setData(allData);
+                return;
+            }
+        }
+        
         customersTable.setData(data);
     }
 }

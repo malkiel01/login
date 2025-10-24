@@ -1,13 +1,12 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/cemeteries-management.js
- * Version: 4.0.0
+ * Version: 3.0.0
  * Updated: 2025-10-24
  * Author: Malkiel
  * Change Summary:
- * - תיקון קריטי: שימוש ב-cemeteries-api.php במקום cemetery-hierarchy.php
- * - התאמה מלאה ל-customers: כל מודול משתמש ב-API הספציפי שלו!
- * - customers → customers-api.php
- * - cemeteries → cemeteries-api.php ✅
+ * - שינוי מ-UniversalSearch ל-LiveSearch (כמו customers!)
+ * - שימוש ב-cemetery-api.php API (קיים במערכת)
+ * - התאמה מלאה לאדריכלות של customers-management.js
  */
 
 // ===================================================================
@@ -15,13 +14,13 @@
 // ===================================================================
 let cemeteriesLiveSearch = null;
 let currentCemeteries = [];
-const CEMETERIES_API_ENDPOINT = '/dashboard/dashboards/cemeteries/api/cemeteries-api.php'; // ✅ תוקן!
+const CEMETERIES_API_ENDPOINT = '/dashboard/dashboards/cemeteries/api/cemetery-api.php';
 
 // ===================================================================
-// טעינת בתי עלמין
+// טעינת בתי עלמין - FINAL VERSION
 // ===================================================================
 async function loadCemeteries() {
-    console.log('📋 Loading cemeteries - v4.0.0 (Correct API)...');
+    console.log('📋 Loading cemeteries - v3.0.0 (LiveSearch Integration)...');
 
     try {
         // ניקוי הדשבורד
@@ -50,7 +49,7 @@ async function loadCemeteries() {
             cemeteriesLiveSearch.refresh();
         }
 
-        console.log('✅ Cemeteries loaded successfully (v4.0.0)');
+        console.log('✅ Cemeteries loaded successfully (v3.0.0)');
 
     } catch (error) {
         console.error('❌ Error loading cemeteries:', error);
@@ -62,7 +61,7 @@ async function loadCemeteries() {
 // בניית קונטיינר בתי עלמין
 // ===================================================================
 function buildCemeteriesContainer() {
-    console.log('🏗️ Building cemeteries container - v4.0.0...');
+    console.log('🏗️ Building cemeteries container - v3.0.0...');
 
     // מציאת או יצירת main-container
     let mainContainer = document.getElementById('main-container');
@@ -80,7 +79,7 @@ function buildCemeteriesContainer() {
         }
     }
 
-    // יצירת מבנה HTML - זהה ל-customers
+    // יצירת מבנה HTML - כמו customers
     mainContainer.innerHTML = `
         <div id="cemeterySearchSection" class="search-section">
             <div class="search-container">
@@ -118,21 +117,21 @@ function buildCemeteriesContainer() {
         <div id="paginationContainer"></div>
     `;
 
-    console.log('✅ Cemeteries container built (v4.0.0)');
+    console.log('✅ Cemeteries container built (v3.0.0)');
 }
 
 // ===================================================================
 // אתחול LiveSearch
 // ===================================================================
 function initCemeteriesLiveSearch() {
-    console.log('🔍 Initializing LiveSearch for cemeteries - v4.0.0...');
+    console.log('🔍 Initializing LiveSearch for cemeteries - v3.0.0...');
 
     cemeteriesLiveSearch = new LiveSearch({
         searchInputId: 'cemeterySearchInput',
         counterElementId: 'cemeteryCounter',
         resultContainerId: 'tableBody',
         paginationContainerId: 'paginationContainer',
-        apiEndpoint: CEMETERIES_API_ENDPOINT + '?action=list', // ✅ cemeteries-api.php
+        apiEndpoint: CEMETERIES_API_ENDPOINT + '?action=list&type=cemetery',
         instanceName: 'cemeteriesLiveSearch',
         debounceDelay: 300,
         itemsPerPage: 50,
@@ -140,14 +139,14 @@ function initCemeteriesLiveSearch() {
         renderFunction: renderCemeteriesRows
     });
 
-    console.log('✅ LiveSearch initialized for cemeteries (v4.0.0)');
+    console.log('✅ LiveSearch initialized for cemeteries (v3.0.0)');
 }
 
 // ===================================================================
 // רינדור שורות בתי עלמין
 // ===================================================================
 function renderCemeteriesRows(data, container) {
-    console.log('🎨 renderCemeteriesRows called with', data.length, 'items (v4.0.0)');
+    console.log('🎨 renderCemeteriesRows called with', data.length, 'items (v3.0.0)');
 
     if (!container) {
         console.error('❌ Container not found!');
@@ -172,24 +171,24 @@ function renderCemeteriesRows(data, container) {
     // שמירת הנתונים הנוכחיים
     currentCemeteries = data;
 
-    // בניית השורות - התאמה מלאה למבנה של cemeteries-api.php
+    // בניית השורות
     container.innerHTML = data.map(cemetery => `
         <tr data-id="${cemetery.unicId || cemetery.id}" class="clickable-row">
             <td>
                 <input type="checkbox" class="cemetery-checkbox" value="${cemetery.unicId || cemetery.id}">
             </td>
             <td>
-                <strong>${cemetery.cemeteryNameHe || ''}</strong>
+                <strong>${cemetery.cemeteryNameHe || cemetery.name || ''}</strong>
                 ${cemetery.cemeteryNameEn ? `<br><small style="color:#666;">${cemetery.cemeteryNameEn}</small>` : ''}
             </td>
-            <td>${cemetery.cemeteryCode || '-'}</td>
+            <td>${cemetery.cemeteryCode || cemetery.code || '-'}</td>
             <td>
                 ${cemetery.address || '-'}
                 ${cemetery.coordinates ? `<br><small style="color:#666;">📍 ${cemetery.coordinates}</small>` : ''}
             </td>
-            <td>${cemetery.contactName || '-'}</td>
-            <td>${cemetery.contactPhoneName || '-'}</td>
-            <td>${cemetery.blocks_count || 0}</td>
+            <td>${cemetery.contactName || cemetery.contact || '-'}</td>
+            <td>${cemetery.contactPhoneName || cemetery.phone || '-'}</td>
+            <td>${cemetery.block_count || cemetery.blocks_count || 0}</td>
             <td>
                 <button class="btn btn-sm btn-secondary" onclick="editCemetery('${cemetery.unicId || cemetery.id}')" title="עריכה">
                     <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
@@ -215,7 +214,7 @@ function renderCemeteriesRows(data, container) {
         });
     });
 
-    console.log('✅ Rendered', data.length, 'cemetery rows (v4.0.0)');
+    console.log('✅ Rendered', data.length, 'cemetery rows (v3.0.0)');
 }
 
 // ===================================================================
@@ -260,8 +259,8 @@ function deleteCemetery(cemeteryId) {
         return;
     }
 
-    // ביצוע מחיקה דרך cemeteries-api.php
-    fetch(`${CEMETERIES_API_ENDPOINT}?action=delete&id=${cemeteryId}`, {
+    // ביצוע מחיקה
+    fetch(`${CEMETERIES_API_ENDPOINT}?action=delete&type=cemetery&id=${cemeteryId}`, {
         method: 'DELETE'
     })
     .then(response => response.json())
@@ -306,19 +305,15 @@ window.checkCemeteriesStatus = function() {
     console.log('📊 Cemeteries LiveSearch Status:');
     console.log('  - Current cemeteries:', currentCemeteries.length);
     console.log('  - API Endpoint:', CEMETERIES_API_ENDPOINT);
-    console.log('  - Full API URL:', CEMETERIES_API_ENDPOINT + '?action=list');
-    
     return {
         initialized: !!cemeteriesLiveSearch,
         count: currentCemeteries.length,
-        endpoint: CEMETERIES_API_ENDPOINT,
-        fullUrl: CEMETERIES_API_ENDPOINT + '?action=list'
+        endpoint: CEMETERIES_API_ENDPOINT
     };
 };
 
 // ===================================================================
 // אתחול מודול
 // ===================================================================
-console.log('✅ Cemeteries Management Module Loaded - v4.0.0: Correct API (cemeteries-api.php)');
-console.log('💡 API: ' + CEMETERIES_API_ENDPOINT);
+console.log('✅ Cemeteries Management Module Loaded - v3.0.0: LiveSearch Integration');
 console.log('💡 Commands: checkCemeteriesStatus() - בדוק סטטוס המערכת');

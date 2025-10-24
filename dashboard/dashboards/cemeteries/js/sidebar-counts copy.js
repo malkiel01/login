@@ -1,25 +1,17 @@
 /**
- * File: dashboards/dashboard/cemeteries/assets/js/sidebar-counts.js
- * Version: 4.1.0
- * Updated: 2025-10-24
- * Author: Malkiel
- * Change Summary:
- * - תיקון: שימוש ב-cemeteries-api.php לבתי עלמין (במקום cemetery-hierarchy.php)
- * - עקביות מלאה עם cemeteries-management.js v4.0.0
- * - השאר (blocks, plots, graves) נשארים עם cemetery-hierarchy.php (אין להם API ספציפי)
- */
-
-/**
  * Sidebar Counts Updater
  * ======================
  * מעדכן את כל המונים ב-Sidebar באופן אוטומטי
+ * 
+ * הוסף קוד זה ל: js/main.js
+ * או צור קובץ חדש: js/sidebar-counts.js
  */
 
 /**
  * עדכון כל המונים ב-Sidebar
  */
 async function updateAllSidebarCounts() {
-    console.log('🔄 מעדכן מונים ב-Sidebar... (v4.1.0)');
+    console.log('🔄 מעדכן מונים ב-Sidebar...');
     
     // הצג אנימציית Loading על כל המונים
     document.querySelectorAll('.hierarchy-count').forEach(el => {
@@ -27,43 +19,43 @@ async function updateAllSidebarCounts() {
     });
     
     try {
-        // 1️⃣ בתי עלמין - ✅ cemeteries-api.php (מתוקן!)
+        // 1️⃣ בתי עלמין
         await updateCemeteriesCount();
         
-        // 2️⃣ גושים - ✅ cemetery-hierarchy.php (נשאר)
+        // 2️⃣ גושים
         await updateBlocksCount();
         
-        // 3️⃣ חלקות - ✅ cemetery-hierarchy.php (נשאר)
+        // 3️⃣ חלקות
         await updatePlotsCount();
         
-        // 4️⃣ אחוזות קבר - ✅ cemetery-hierarchy.php (נשאר)
+        // 4️⃣ אחוזות קבר
         await updateAreaGravesCount();
         
-        // 5️⃣ קברים - ✅ cemetery-hierarchy.php (נשאר)
+        // 5️⃣ קברים
         await updateGravesCount();
         
-        // 6️⃣ לקוחות - ✅ customers-api.php
+        // 6️⃣ לקוחות
         await updateCustomersCount();
         
-        // 7️⃣ רכישות - ✅ purchases-api.php
+        // 7️⃣ רכישות
         await updatePurchasesCount();
         
-        // 8️⃣ קבורות - ✅ burials-api.php
+        // 8️⃣ קבורות
         await updateBurialsCount();
         
-        // 9️⃣ תשלומים - ✅ payments-api.php
+        // 9️⃣ תשלומים
         await updatePaymentsCount();
         
-        // 🔟 תושבויות - ✅ residency-api.php
+        // 🔟 תושבויות
         await updateResidencyCount();
         
-        // 1️⃣1️⃣ מדינות - ✅ countries-api.php
+        // 1️⃣1️⃣ מדינות
         await updateCountriesCount();
         
-        // 1️⃣2️⃣ ערים - ✅ cities-api.php
+        // 1️⃣2️⃣ ערים
         await updateCitiesCount();
         
-        console.log('✅ כל המונים עודכנו בהצלחה! (v4.1.0)');
+        console.log('✅ כל המונים עודכנו בהצלחה!');
         
     } catch (error) {
         console.error('❌ שגיאה בעדכון מונים:', error);
@@ -83,12 +75,11 @@ function updateCount(elementId, value) {
 
 /**
  * 1. בתי עלמין
- * ✅ תוקן ב-v4.1.0 - שימוש ב-cemeteries-api.php
  */
 async function updateCemeteriesCount() {
     try {
-        // ✅ v4.1.0: cemeteries-api.php (כמו customers!)
-        const response = await fetch('/dashboard/dashboards/cemeteries/api/cemeteries-api.php?action=list&limit=1');
+        const response = await 
+fetch('/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=list&type=cemetery&limit=1');
         const data = await response.json();
         
         if (data.success && data.pagination) {
@@ -102,11 +93,11 @@ async function updateCemeteriesCount() {
 
 /**
  * 2. גושים
- * ✅ נשאר עם cemetery-hierarchy.php (אין API ספציפי)
  */
 async function updateBlocksCount() {
     try {
-        const response = await fetch('/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=list&type=block&limit=1');
+        const response = await 
+fetch('/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=list&type=block&limit=1');
         const data = await response.json();
         
         if (data.success && data.pagination) {
@@ -120,11 +111,11 @@ async function updateBlocksCount() {
 
 /**
  * 3. חלקות
- * ✅ נשאר עם cemetery-hierarchy.php (אין API ספציפי)
  */
 async function updatePlotsCount() {
     try {
-        const response = await fetch('/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=list&type=plot&limit=1');
+        const response = await 
+fetch('/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=list&type=plot&limit=1');
         const data = await response.json();
         
         if (data.success && data.pagination) {
@@ -138,11 +129,11 @@ async function updatePlotsCount() {
 
 /**
  * 4. אחוזות קבר
- * ✅ נשאר עם cemetery-hierarchy.php (אין API ספציפי)
  */
 async function updateAreaGravesCount() {
     try {
-        const response = await fetch('/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=list&type=areaGrave&limit=1');
+        const response = await 
+fetch('/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=list&type=areaGrave&limit=1');
         const data = await response.json();
         
         if (data.success && data.pagination) {
@@ -156,11 +147,11 @@ async function updateAreaGravesCount() {
 
 /**
  * 5. קברים
- * ✅ נשאר עם cemetery-hierarchy.php (אין API ספציפי)
  */
 async function updateGravesCount() {
     try {
-        const response = await fetch('/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=list&type=grave&limit=1');
+        const response = await 
+fetch('/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=list&type=grave&limit=1');
         const data = await response.json();
         
         if (data.success && data.pagination) {
@@ -174,11 +165,11 @@ async function updateGravesCount() {
 
 /**
  * 6. לקוחות
- * ✅ customers-api.php
  */
 async function updateCustomersCount() {
     try {
-        const response = await fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=stats');
+        const response = await 
+fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=stats');
         const data = await response.json();
         
         if (data.success && data.data.by_status) {
@@ -195,11 +186,11 @@ async function updateCustomersCount() {
 
 /**
  * 7. רכישות
- * ✅ purchases-api.php
  */
 async function updatePurchasesCount() {
     try {
-        const response = await fetch('/dashboard/dashboards/cemeteries/api/purchases-api.php?action=stats');
+        const response = await 
+fetch('/dashboard/dashboards/cemeteries/api/purchases-api.php?action=stats');
         const data = await response.json();
         
         if (data.success && data.data.totals) {
@@ -213,11 +204,11 @@ async function updatePurchasesCount() {
 
 /**
  * 8. קבורות
- * ✅ burials-api.php
  */
 async function updateBurialsCount() {
     try {
-        const response = await fetch('/dashboard/dashboards/cemeteries/api/burials-api.php?action=stats');
+        const response = await 
+fetch('/dashboard/dashboards/cemeteries/api/burials-api.php?action=stats');
         const data = await response.json();
         
         if (data.success && data.data) {
@@ -232,11 +223,11 @@ async function updateBurialsCount() {
 
 /**
  * 9. תשלומים
- * ✅ payments-api.php
  */
 async function updatePaymentsCount() {
     try {
-        const response = await fetch('/dashboard/dashboards/cemeteries/api/payments-api.php?action=list&limit=1');
+        const response = await 
+fetch('/dashboard/dashboards/cemeteries/api/payments-api.php?action=list&limit=1');
         const data = await response.json();
         
         if (data.success && data.pagination) {
@@ -250,11 +241,11 @@ async function updatePaymentsCount() {
 
 /**
  * 10. תושבויות
- * ✅ residency-api.php
  */
 async function updateResidencyCount() {
     try {
-        const response = await fetch('/dashboard/dashboards/cemeteries/api/residency-api.php?action=list&limit=1');
+        const response = await 
+fetch('/dashboard/dashboards/cemeteries/api/residency-api.php?action=list&limit=1');
         const data = await response.json();
         
         if (data.success && data.pagination) {
@@ -268,11 +259,11 @@ async function updateResidencyCount() {
 
 /**
  * 11. מדינות
- * ✅ countries-api.php
  */
 async function updateCountriesCount() {
     try {
-        const response = await fetch('/dashboard/dashboards/cemeteries/api/countries-api.php?action=list&limit=1');
+        const response = await 
+fetch('/dashboard/dashboards/cemeteries/api/countries-api.php?action=list&limit=1');
         const data = await response.json();
         
         if (data.success && data.pagination) {
@@ -286,11 +277,11 @@ async function updateCountriesCount() {
 
 /**
  * 12. ערים
- * ✅ cities-api.php
  */
 async function updateCitiesCount() {
     try {
-        const response = await fetch('/dashboard/dashboards/cemeteries/api/cities-api.php?action=list&limit=1');
+        const response = await 
+fetch('/dashboard/dashboards/cemeteries/api/cities-api.php?action=list&limit=1');
         const data = await response.json();
         
         if (data.success && data.pagination) {
@@ -332,4 +323,4 @@ if (document.readyState === 'loading') {
     updateAllSidebarCounts();
 }
 
-console.log('✅ Sidebar Counts Updater initialized (v4.1.0 - Fixed Cemetery API)');
+console.log('✅ Sidebar Counts Updater initialized');

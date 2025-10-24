@@ -117,7 +117,7 @@
                 $search = $_GET['search'] ?? '';
                 $status = $_GET['status'] ?? '';
                 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-                $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 5000;
+                $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 999999;
                 $offset = ($page - 1) * $limit;
                 
                 // בניית השאילתה הראשית
@@ -226,7 +226,7 @@
                 $search = $_GET['search'] ?? '';
                 $status = $_GET['status'] ?? '';
                 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-                $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
+                $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 999999;
                 $offset = ($page - 1) * $limit;
                 
                 // 🆕 פילטרים מתקדמים

@@ -1,15 +1,17 @@
 <?php
 /*
  * File: api/cemeteries-api.php
- * Version: 3.0.0
+ * Version: 2.1.0
  * Updated: 2025-10-24
  * Author: Malkiel
  * Change Summary:
- * - v3.0.0: שיטה זהה ללקוחות
- * - הוספת blocks_count בתגובת list
- * - שיפור מבנה התגובות
- * - תיקון זהות שדות
+ * - תיקון: הסרת cityId שלא קיים בטבלה
+ * - תיקון: הסרת JOIN לטבלת cities
+ * - תיקון: הסרת city_name מהתגובות
  */
+
+// dashboards/cemeteries/api/cemeteries-api.php
+// API לניהול בתי עלמין
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
@@ -42,7 +44,7 @@ try {
             $sql = "SELECT c.* FROM cemeteries c WHERE c.isActive = 1";
             $params = [];
             
-            // חיפוש - כל שדה מקבל פרמטר משלו
+            // חיפוש
             if ($search) {
                 $sql .= " AND (
                     c.cemeteryNameHe LIKE :search1 OR 
@@ -61,7 +63,7 @@ try {
                 $params['search6'] = $searchTerm;
             }
             
-            // ✅ ספירת תוצאות מסוננות
+            // ספירת תוצאות מסוננות
             $countSql = "SELECT COUNT(*) FROM cemeteries c WHERE c.isActive = 1";
             $countParams = [];
             
@@ -86,7 +88,7 @@ try {
             $countStmt->execute($countParams);
             $total = $countStmt->fetchColumn();
             
-            // ✅ ספירת כל בתי העלמין (ללא סינון)
+            // ספירת כל בתי העלמין
             $totalAllSql = "SELECT COUNT(*) FROM cemeteries WHERE isActive = 1";
             $totalAll = $pdo->query($totalAllSql)->fetchColumn();
             
@@ -102,13 +104,6 @@ try {
             $stmt->execute();
             
             $cemeteries = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            // ✅ הוספת blocks_count לכל בית עלמין
-            foreach ($cemeteries as &$cemetery) {
-                $blockStmt = $pdo->prepare("SELECT COUNT(*) FROM blocks WHERE cemeteryId = :id AND isActive = 1");
-                $blockStmt->execute(['id' => $cemetery['unicId']]);
-                $cemetery['blocks_count'] = $blockStmt->fetchColumn();
-            }
             
             echo json_encode([
                 'success' => true,

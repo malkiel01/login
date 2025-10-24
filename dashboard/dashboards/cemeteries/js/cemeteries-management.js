@@ -1,11 +1,12 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/cemeteries-management.js
- * Version: 4.2.0
+ * Version: 4.3.0
  * Updated: 2025-10-24
  * Author: Malkiel
  * Change Summary:
  * - v4.0.0: תיקון API - שימוש ב-cemeteries-api.php במקום cemetery-hierarchy.php
  * - v4.2.0: תיקון backward compatibility - הוספת alias ל-loadAllCemeteries
+ * - v4.3.0: תיקון LiveSearch - הסרת ?action=list כפול (LiveSearch מוסיף בעצמו)
  */
 
 // ===================================================================
@@ -19,7 +20,7 @@ const CEMETERIES_API_ENDPOINT = '/dashboard/dashboards/cemeteries/api/cemeteries
 // טעינת בתי עלמין
 // ===================================================================
 async function loadCemeteries() {
-    console.log('📋 Loading cemeteries - v4.0.0 (Correct API)...');
+    console.log('📋 Loading cemeteries - v4.3.0 (LiveSearch Fixed)...');
 
     try {
         // ניקוי הדשבורד
@@ -48,7 +49,7 @@ async function loadCemeteries() {
             cemeteriesLiveSearch.refresh();
         }
 
-        console.log('✅ Cemeteries loaded successfully (v4.0.0)');
+        console.log('✅ Cemeteries loaded successfully (v4.3.0)');
 
     } catch (error) {
         console.error('❌ Error loading cemeteries:', error);
@@ -60,7 +61,7 @@ async function loadCemeteries() {
 // בניית קונטיינר בתי עלמין
 // ===================================================================
 function buildCemeteriesContainer() {
-    console.log('🏗️ Building cemeteries container - v4.0.0...');
+    console.log('🏗️ Building cemeteries container - v4.3.0...');
 
     // מציאת או יצירת main-container
     let mainContainer = document.getElementById('main-container');
@@ -116,21 +117,21 @@ function buildCemeteriesContainer() {
         <div id="paginationContainer"></div>
     `;
 
-    console.log('✅ Cemeteries container built (v4.0.0)');
+    console.log('✅ Cemeteries container built (v4.3.0)');
 }
 
 // ===================================================================
 // אתחול LiveSearch
 // ===================================================================
 function initCemeteriesLiveSearch() {
-    console.log('🔍 Initializing LiveSearch for cemeteries - v4.0.0...');
+    console.log('🔍 Initializing LiveSearch for cemeteries - v4.3.0...');
 
     cemeteriesLiveSearch = new LiveSearch({
         searchInputId: 'cemeterySearchInput',
         counterElementId: 'cemeteryCounter',
         resultContainerId: 'tableBody',
         paginationContainerId: 'paginationContainer',
-        apiEndpoint: CEMETERIES_API_ENDPOINT + '?action=list', // ✅ cemeteries-api.php
+        apiEndpoint: CEMETERIES_API_ENDPOINT, // ✅ LiveSearch יוסיף ?action=list בעצמו
         instanceName: 'cemeteriesLiveSearch',
         debounceDelay: 300,
         itemsPerPage: 50,
@@ -138,14 +139,14 @@ function initCemeteriesLiveSearch() {
         renderFunction: renderCemeteriesRows
     });
 
-    console.log('✅ LiveSearch initialized for cemeteries (v4.0.0)');
+    console.log('✅ LiveSearch initialized for cemeteries (v4.3.0)');
 }
 
 // ===================================================================
 // רינדור שורות בתי עלמין
 // ===================================================================
 function renderCemeteriesRows(data, container) {
-    console.log('🎨 renderCemeteriesRows called with', data.length, 'items (v4.0.0)');
+    console.log('🎨 renderCemeteriesRows called with', data.length, 'items (v4.3.0)');
 
     if (!container) {
         console.error('❌ Container not found!');
@@ -213,7 +214,7 @@ function renderCemeteriesRows(data, container) {
         });
     });
 
-    console.log('✅ Rendered', data.length, 'cemetery rows (v4.0.0)');
+    console.log('✅ Rendered', data.length, 'cemetery rows (v4.3.0)');
 }
 
 // ===================================================================
@@ -323,7 +324,8 @@ window.loadAllCemeteries = loadCemeteries; // ✅ Alias לשם הישן
 // ===================================================================
 // אתחול מודול
 // ===================================================================
-console.log('✅ Cemeteries Management Module Loaded - v4.2.0: Backward Compatible');
+console.log('✅ Cemeteries Management Module Loaded - v4.3.0: LiveSearch Fixed');
 console.log('💡 API: ' + CEMETERIES_API_ENDPOINT);
 console.log('💡 Aliases: loadAllCemeteries → loadCemeteries');
+console.log('💡 LiveSearch: No duplicate ?action=list');
 console.log('💡 Commands: checkCemeteriesStatus() - בדוק סטטוס המערכת');

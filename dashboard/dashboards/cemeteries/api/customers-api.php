@@ -1,6 +1,16 @@
 <?php
-    // dashboards/cemeteries/api/customers-api.php
-    // API לניהול לקוחות
+    /*
+    * File: api/customers-api.php
+    * Version: 2.5.0
+    * Updated: 2025-10-24
+    * Author: Malkiel
+    * Change Summary:
+    * - v2.5.0: הוספת Version Header לעקביות עם מערכת
+    * - תמיכה בחישוב תושבות דינמי
+    * - מנגנון חיפוש מתקדם ב-6 שדות
+    * - API מלא עם pagination ו-stats
+    * - פונקציות calculateResidency ו-mapResidencyTypeToValue
+    */
 
     header('Content-Type: application/json; charset=utf-8');
     header('Access-Control-Allow-Origin: *');

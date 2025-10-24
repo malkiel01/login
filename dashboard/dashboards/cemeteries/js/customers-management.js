@@ -1,8 +1,19 @@
-/**
- * customers-management.js - STEP B
- * ניהול לקוחות עם TableManager + UniversalSearch
- * מותאם למבנה החדש עם main-container
+/*
+ * File: dashboards/dashboard/cemeteries/assets/js/customers-management.js
+ * Version: 3.0.0
+ * Updated: 2025-10-24
+ * Author: Malkiel
+ * Change Summary:
+ * - v3.0.0: שיטה זהה לבתי עלמין - UniversalSearch + TableManager
+ * - תיקון Virtual Scroll - itemsPerPage: 200 (במקום 999999)
+ * - תיקון קונפליקט שמות - initCustomersSearch (במקום initUniversalSearch)
+ * - הוספת Backward Compatibility
+ * - שיפור הערות והפרדה ויזואלית
  */
+
+// ===================================================================
+// משתנים גלובליים
+// ===================================================================
 
 let currentCustomers = [];
 let customerSearch = null;
@@ -11,7 +22,7 @@ let editingCustomerId = null;
 
 // טעינת לקוחות (הפונקציה הראשית)
 async function loadCustomers() {
-    console.log('📋 Loading customers - FINAL VERSION...');
+    console.log('📋 Loading customers - v3.0.0 (תוקן Virtual Scroll וקונפליקט שמות)...');
 
     setActiveMenuItem('customersItem');
     
@@ -55,9 +66,9 @@ async function loadCustomers() {
     await loadCustomerStats();
 }
 
-/**
- * ⭐ פונקציה חדשה - בניית המבנה של לקוחות ב-main-container
- */
+// ===================================================================
+// ⭐ פונקציה חדשה - בניית המבנה של לקוחות ב-main-container
+// ===================================================================
 async function buildCustomersContainer() {
     console.log('🏗️ Building customers container...');
     
@@ -107,7 +118,9 @@ async function buildCustomersContainer() {
     console.log('✅ Customers container built');
 }
 
-// אתחול UniversalSearch
+// ===================================================================
+// אתחול UniversalSearch - שם ייחודי!
+// ===================================================================
 async function initUniversalSearch() {
     customerSearch = new UniversalSearch({
         dataSource: {
@@ -250,7 +263,9 @@ async function initUniversalSearch() {
     return customerSearch;
 }
 
+// ===================================================================
 // אתחול TableManager
+// ===================================================================
 function initCustomersTable(data) {
     // אם הטבלה כבר קיימת, רק עדכן נתונים
     if (customersTable) {
@@ -397,7 +412,9 @@ function initCustomersTable(data) {
     return customersTable;
 }
 
+// ===================================================================
 // רינדור שורות לקוחות
+// ===================================================================
 function renderCustomersRows(data, container) {
     console.log('🎨 renderCustomersRows called with', data.length, 'items');
     
@@ -442,7 +459,9 @@ function renderCustomersRows(data, container) {
     }
 }
 
-// פורמט סוג לקוח
+// ===================================================================
+// פונקציות פורמט ועזר
+// ===================================================================
 function formatCustomerType(type) {
     const types = {
         1: 'תושב',
@@ -469,7 +488,9 @@ function formatDate(dateString) {
     return date.toLocaleDateString('he-IL');
 }
 
-// מחיקת לקוח
+// ===================================================================
+// פונקציות CRUD
+// ===================================================================
 async function deleteCustomer(customerId) {
     if (!confirm('האם אתה בטוח שברצונך למחוק לקוח זה?')) {
         return;
@@ -504,7 +525,9 @@ async function editCustomer(customerId) {
     showToast('עריכה בפיתוח...', 'info');
 }
 
+// ===================================================================
 // טעינת סטטיסטיקות
+// ===================================================================
 async function loadCustomerStats() {
     try {
         const response = await fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=stats');

@@ -1,11 +1,15 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/cemeteries-management.js
- * Version: 5.1.0
+ * Version: 5.0.0
  * Updated: 2025-10-24
  * Author: Malkiel
  * Change Summary:
  * - v5.0.0: שיטה זהה ללקוחות - UniversalSearch + TableManager
- * - v5.1.0: תיקון קונפליקט שמות - initCemeteriesSearch (במקום initUniversalSearch)
+ * - הוחלף LiveSearch ב-UniversalSearch
+ * - הוחלף רינדור ידני ב-TableManager
+ * - הוספת toast messages
+ * - שימוש ב-DashboardCleaner
+ * - הסרת pagination (virtual scroll)
  */
 
 // ===================================================================
@@ -20,7 +24,7 @@ let editingCemeteryId = null;
 // טעינת בתי עלמין (הפונקציה הראשית)
 // ===================================================================
 async function loadCemeteries() {
-    console.log('📋 Loading cemeteries - v5.1.0 (תוקן קונפליקט שמות)...');
+    console.log('📋 Loading cemeteries - v5.0.0 (כמו לקוחות)...');
 
     // עדכון פריט תפריט אקטיבי
     if (typeof setActiveMenuItem === 'function') {
@@ -61,7 +65,7 @@ async function loadCemeteries() {
     
     // אתחל את UniversalSearch
     if (!cemeterySearch) {
-        await initCemeteriesSearch(); // ⭐ שם ייחודי!
+        await initUniversalSearch();
         cemeterySearch.search();
     } else {
         cemeterySearch.refresh();
@@ -124,9 +128,9 @@ async function buildCemeteriesContainer() {
 }
 
 // ===================================================================
-// אתחול UniversalSearch - שם ייחודי!
+// אתחול UniversalSearch
 // ===================================================================
-async function initCemeteriesSearch() {
+async function initUniversalSearch() {
     cemeterySearch = new UniversalSearch({
         dataSource: {
             type: 'api',
@@ -249,7 +253,7 @@ async function initCemeteriesSearch() {
 // אתחול TableManager
 // ===================================================================
 function initCemeteriesTable(data) {
-    console.log('📊 Initializing TableManager for cemeteries with', data.length, 'items (v5.1.0)...');
+    console.log('📊 Initializing TableManager for cemeteries with', data.length, 'items...');
     
     cemeteriesTable = new TableManager({
         containerSelector: '#tableBody',
@@ -616,7 +620,7 @@ window.checkScrollStatus = checkScrollStatus;
 // ===================================================================
 // אתחול מודול
 // ===================================================================
-console.log('✅ Cemeteries Management Module Loaded - v5.1.0: זהה ללקוחות (תוקן קונפליקט שמות)');
+console.log('✅ Cemeteries Management Module Loaded - v5.0.0: זהה ללקוחות!');
 console.log('💡 UniversalSearch + TableManager');
 console.log('💡 DashboardCleaner + Toast messages');
 console.log('💡 Virtual Scroll (no pagination)');

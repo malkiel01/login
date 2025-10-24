@@ -1,11 +1,13 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/cemeteries-management.js
- * Version: 4.2.0
+ * Version: 4.0.0
  * Updated: 2025-10-24
  * Author: Malkiel
  * Change Summary:
- * - v4.0.0: תיקון API - שימוש ב-cemeteries-api.php במקום cemetery-hierarchy.php
- * - v4.2.0: תיקון backward compatibility - הוספת alias ל-loadAllCemeteries
+ * - תיקון קריטי: שימוש ב-cemeteries-api.php במקום cemetery-hierarchy.php
+ * - התאמה מלאה ל-customers: כל מודול משתמש ב-API הספציפי שלו!
+ * - customers → customers-api.php
+ * - cemeteries → cemeteries-api.php ✅
  */
 
 // ===================================================================
@@ -315,15 +317,8 @@ window.checkCemeteriesStatus = function() {
 };
 
 // ===================================================================
-// Backward Compatibility - Aliases
-// ===================================================================
-// תמיכה בשמות ישנים שעדיין נמצאים ב-HTML
-window.loadAllCemeteries = loadCemeteries; // ✅ Alias לשם הישן
-
-// ===================================================================
 // אתחול מודול
 // ===================================================================
-console.log('✅ Cemeteries Management Module Loaded - v4.2.0: Backward Compatible');
+console.log('✅ Cemeteries Management Module Loaded - v4.0.0: Correct API (cemeteries-api.php)');
 console.log('💡 API: ' + CEMETERIES_API_ENDPOINT);
-console.log('💡 Aliases: loadAllCemeteries → loadCemeteries');
 console.log('💡 Commands: checkCemeteriesStatus() - בדוק סטטוס המערכת');

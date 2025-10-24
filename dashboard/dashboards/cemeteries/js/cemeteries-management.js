@@ -59,13 +59,18 @@ async function loadCemeteries() {
     // ⭐ בנה את המבנה החדש ב-main-container
     await buildCemeteriesContainer();
     
-    // אתחל את UniversalSearch
-    if (!cemeterySearch) {
-        await initCemeteriesSearch(); // ⭐ שם ייחודי!
-        cemeterySearch.search();
-    } else {
-        cemeterySearch.refresh();
+    // ⭐ תמיד השמד את החיפוש הקודם ובנה מחדש
+    if (cemeterySearch && typeof cemeterySearch.destroy === 'function') {
+        console.log('🗑️ Destroying previous cemeterySearch instance...');
+        cemeterySearch.destroy();
+        cemeterySearch = null;
+        window.cemeterySearch = null;
     }
+
+    // אתחל את UniversalSearch מחדש תמיד
+    console.log('🆕 Creating fresh cemeterySearch instance...');
+    await initCemeteriesSearch();
+    cemeterySearch.search();
     
     // טען סטטיסטיקות
     await loadCemeteryStats();

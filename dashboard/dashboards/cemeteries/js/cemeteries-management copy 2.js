@@ -1,11 +1,14 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/cemeteries-management.js
- * Version: 2.3.1
+ * Version: 2.3.0
  * Updated: 2025-10-24
  * Author: Malkiel
  * Change Summary:
- * - תוקן באג קריטי: שונה apiUrl ל-endpoint בקונפיגורציה של UniversalSearch
- * - זה התיקון היחיד הדרוש - שם הפרמטר היה שגוי
+ * - תוקן באג טעינת הטבלה - הטבלה נוצרת כעת בתוך renderCemeteriesRows
+ * - שונה מבנה ה-HTML להתאים למבנה של customers (קונטיינר תוצאות ריק)
+ * - תוקן containerId ב-UniversalSearch
+ * - הסרת פונקציות מיותרות (initCemeteriesTable)
+ * - שיפור לוגיקת טעינה והצגת הטבלה
  */
 
 // ===================================================================
@@ -20,7 +23,7 @@ const CEMETERIES_SCROLL_THRESHOLD = 200;
 // טעינת בתי עלמין
 // ===================================================================
 async function loadCemeteries() {
-    console.log('📋 Loading cemeteries - v2.3.1 (Configuration Fix)...');
+    console.log('📋 Loading cemeteries - v2.3.0 (Table Fix)...');
 
     try {
         // ניקוי הדשבורד - רק את מה שצריך
@@ -55,7 +58,7 @@ async function loadCemeteries() {
 // בניית קונטיינר בתי עלמין
 // ===================================================================
 function buildCemeteriesContainer() {
-    console.log('🏗️ Building cemeteries container - v2.3.1...');
+    console.log('🏗️ Building cemeteries container - v2.3.0...');
 
     // מציאת או יצירת main-container
     let mainContainer = document.getElementById('main-container');
@@ -87,18 +90,18 @@ function buildCemeteriesContainer() {
         </div>
     `;
 
-    console.log('✅ Cemeteries container built (v2.3.1)');
+    console.log('✅ Cemeteries container built (v2.3.0)');
 }
 
 // ===================================================================
 // אתחול UniversalSearch
 // ===================================================================
 function initUniversalSearch() {
-    console.log('🔍 Initializing UniversalSearch for cemeteries - v2.3.1...');
+    console.log('🔍 Initializing UniversalSearch for cemeteries - v2.3.0...');
 
     cemeteriesSearch = new UniversalSearch({
         dataSource: {
-            endpoint: 'api/universal-search-api.php', // ✅ תוקן: היה apiUrl, עכשיו endpoint
+            apiUrl: 'api/universal-search-api.php',
             table: 'cemeteries',
             primaryKey: 'cemetery_id',
             displayName: 'name'
@@ -119,7 +122,7 @@ function initUniversalSearch() {
             badge: (item) => item.block_count ? `${item.block_count} גושים` : null
         },
         results: {
-            containerId: 'cemeteries-results-container',
+            containerId: 'cemeteries-results-container', // ✅ תוקן - ID נכון
             renderCallback: renderCemeteriesRows
         },
         behavior: {
@@ -135,14 +138,14 @@ function initUniversalSearch() {
         }
     });
 
-    console.log('✅ UniversalSearch initialized for cemeteries (v2.3.1)');
+    console.log('✅ UniversalSearch initialized for cemeteries (v2.3.0)');
 }
 
 // ===================================================================
 // רינדור שורות בתי עלמין
 // ===================================================================
 function renderCemeteriesRows(results) {
-    console.log('🎨 renderCemeteriesRows called with', results.length, 'items (v2.3.1)');
+    console.log('🎨 renderCemeteriesRows called with', results.length, 'items (v2.3.0)');
 
     const resultsContainer = document.getElementById('cemeteries-results-container');
     if (!resultsContainer) {
@@ -159,7 +162,7 @@ function renderCemeteriesRows(results) {
         return;
     }
 
-    // יצירת הטבלה - כעת בזמן הנכון!
+    // ✅ יצירת הטבלה - כעת בזמן הנכון!
     const tableContainer = document.createElement('div');
     tableContainer.className = 'table-container';
     
@@ -183,7 +186,7 @@ function renderCemeteriesRows(results) {
 
     resultsContainer.appendChild(tableContainer);
 
-    // כעת הטבלה קיימת ב-DOM - אפשר להוסיף שורות
+    // ✅ כעת הטבלה קיימת ב-DOM - אפשר להוסיף שורות
     const tableBody = document.getElementById('cemeteries-table-body');
     if (!tableBody) {
         console.error('❌ Table body not found after creation!');
@@ -225,8 +228,8 @@ function renderCemeteriesRows(results) {
         tableBody.appendChild(row);
     });
 
-    // יצירת TableManager רק אחרי שהטבלה והשורות קיימות ב-DOM
-    console.log('✅ Creating TableManager with', results.length, 'items (v2.3.1)');
+    // ✅ יצירת TableManager רק אחרי שהטבלה והשורות קיימות ב-DOM
+    console.log('✅ Creating TableManager with', results.length, 'items (v2.3.0)');
     
     cemeteriesTable = new TableManager({
         tableId: 'cemeteries-table',
@@ -303,5 +306,5 @@ window.checkScrollStatus = function() {
 // ===================================================================
 // אתחול מודול
 // ===================================================================
-console.log('✅ Cemeteries Management Module Loaded - v2.3.1: Configuration Fix');
+console.log('✅ Cemeteries Management Module Loaded - v2.3.0: Table Loading Fix');
 console.log('💡 Commands: checkScrollStatus() - בדוק כמה רשומות נטענו');

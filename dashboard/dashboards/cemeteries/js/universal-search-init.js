@@ -43,14 +43,16 @@ window.initUniversalSearch = function(config) {
     }
     
     // בניית הקונפיגורציה המלאה ל-UniversalSearch
+
     const searchConfig = {
         dataSource: {
             type: 'api',
             endpoint: config.apiEndpoint,
             action: config.action || 'list',
             method: 'GET',
-            tables: [config.entityType + 's'], // customers, cemeteries, blocks...
-            joins: config.joins || []
+            tables: [config.entityType + 's'],
+            joins: config.joins || [],
+            params: config.apiParams || {}  // ⭐ הוסף את זה!
         },
         
         searchableFields: config.searchableFields,

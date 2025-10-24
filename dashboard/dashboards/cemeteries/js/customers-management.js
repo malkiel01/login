@@ -132,6 +132,11 @@ async function initCustomersSearch() {
         apiEndpoint: '/dashboard/dashboards/cemeteries/api/customers-api.php',
         action: 'list',
         
+        // ⭐ הוסף את השדה הזה!
+        apiParams: {
+            limit: 999999  // או 50000 - תלוי בשרת
+        },
+
         searchableFields: [
             {
                 name: 'firstName',

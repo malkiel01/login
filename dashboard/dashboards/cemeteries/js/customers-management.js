@@ -228,7 +228,17 @@ async function initCustomersSearch() {
             
             onResults: (data) => {
                 console.log('📦 Results:', data.pagination?.total || data.total || 0, 'customers found');
-                currentCustomers = data.data;
+                
+                const currentPage = data.pagination?.page || 1;
+                
+                if (currentPage === 1) {
+                    // דף ראשון - התחל מחדש
+                    currentCustomers = data.data;
+                } else {
+                    // דפים נוספים - הוסף לקיימים
+                    currentCustomers = [...currentCustomers, ...data.data];
+                    console.log(`📦 Added page ${currentPage}, total now: ${currentCustomers.length}`);
+                }
             },
             
             onError: (error) => {

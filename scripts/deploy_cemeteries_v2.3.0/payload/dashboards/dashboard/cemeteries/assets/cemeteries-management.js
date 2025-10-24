@@ -1,16 +1,16 @@
 /*
- * File: dashboard/dashboards/cemeteries/js/cemeteries-management.js
- * Version: 2.2.0
+ * File: dashboards/dashboard/cemeteries/assets/cemeteries-management.js
+ * Version: 2.3.0
  * Updated: 2025-10-24
  * Author: Malkiel
  * Change Summary:
- * - תיקון קריטי: שינוי שם הפונקציה מ-initUniversalSearch ל-initCemeteriesUniversalSearch
- * - מניעת התנגשות עם מודול הלקוחות
- * - כל מודול כעת עצמאי לחלוטין
+ * - תיקון בעיית "Table not found: null" בטעינת בתי עלמין
+ * - הוספת בדיקה ובנייה מחדש של טבלה #mainTable לפני אתחול TableManager
+ * - שיפור בטיפול ב-DOM כדי למנוע מצבים בהם הטבלה לא קיימת
  */
 
 /**
- * cemeteries-management.js - STEP B
+ * cemeteries-management.js - STEP B.1 - תיקון בעיית טעינה
  * ניהול בתי עלמין עם TableManager + UniversalSearch
  * מותאם למבנה החדש עם main-container - זהה ל-customers-management.js
  */
@@ -22,7 +22,7 @@ let editingCemeteryId = null;
 
 // טעינת בתי עלמין (הפונקציה הראשית)
 async function loadCemeteries() {
-    console.log('📋 Loading cemeteries - v2.2.0 (Fixed Universal Search)...');
+    console.log('📋 Loading cemeteries - v2.3.0 (Fixed TableManager init)...');
 
     setActiveMenuItem('cemeteryItem');
     
@@ -54,9 +54,9 @@ async function loadCemeteries() {
     // ⭐ בנה את המבנה החדש ב-main-container
     await buildCemeteriesContainer();
     
-    // ⭐ אתחל את UniversalSearch עם שם ייחודי
+    // אתחל את UniversalSearch
     if (!cemeterySearch) {
-        await initCemeteriesUniversalSearch();
+        await initUniversalSearch();
         cemeterySearch.search();
     } else {
         cemeterySearch.refresh();
@@ -118,8 +118,8 @@ async function buildCemeteriesContainer() {
     console.log('✅ Cemeteries container built');
 }
 
-// ⭐ אתחול UniversalSearch - שם ייחודי למניעת התנגשויות!
-async function initCemeteriesUniversalSearch() {
+// אתחול UniversalSearch
+async function initUniversalSearch() {
     cemeterySearch = new UniversalSearch({
         dataSource: {
             type: 'api',
@@ -245,6 +245,51 @@ async function initCemeteriesUniversalSearch() {
     return cemeterySearch;
 }
 
+/**
+ * ⭐ פונקציה חדשה - וידוא שהטבלה קיימת לפני אתחול TableManager
+ */
+function ensureMainTableExists() {
+    let mainTable = document.querySelector('#mainTable');
+    
+    if (!mainTable) {
+        console.log('⚠️ #mainTable not found, rebuilding...');
+        
+        // מצא את ה-container
+        let tableContainer = document.querySelector('.table-container');
+        
+        if (!tableContainer) {
+            console.error('❌ .table-container not found! Cannot rebuild table.');
+            return false;
+        }
+        
+        // בנה את הטבלה מחדש
+        tableContainer.innerHTML = `
+            <table id="mainTable" class="data-table">
+                <thead>
+                    <tr id="tableHeaders">
+                        <th style="text-align: center;">טוען...</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr>
+                        <td style="text-align: center; padding: 40px;">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">טוען...</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        `;
+        
+        console.log('✅ #mainTable rebuilt successfully');
+        return true;
+    }
+    
+    console.log('✅ #mainTable exists');
+    return true;
+}
+
 // אתחול TableManager
 function initCemeteriesTable(data) {
     // אם הטבלה כבר קיימת, רק עדכן נתונים
@@ -253,64 +298,90 @@ function initCemeteriesTable(data) {
         return cemeteriesTable;
     }
     
-    // בנה TableManager חדש
+    // ⭐ וודא שהטבלה קיימת לפני האתחול!
+    if (!ensureMainTableExists()) {
+        console.error('❌ Cannot initialize TableManager - mainTable does not exist');
+        return null;
+    }
+    
     cemeteriesTable = new TableManager({
-        container: document.querySelector('.table-container'),
+        tableSelector: '#mainTable',
+        
+        containerWidth: '100%',
+        fixedLayout: true,
+        
+        itemsPerPage: 50,
+        scrollThreshold: 200,
+        renderDelay: 0,
+        batchSize: 50,
+        
+        pagination: {
+            enabled: false
+        },
         
         columns: [
             {
                 field: 'cemeteryCode',
                 label: 'קוד',
                 width: '100px',
+                type: 'text',
                 sortable: true
             },
             {
                 field: 'cemeteryNameHe',
-                label: 'שם (עברית)',
+                label: 'שם בית עלמין',
                 width: '200px',
-                sortable: true
+                type: 'text',
+                sortable: true,
+                render: (cemetery) => cemetery.cemeteryNameHe || cemetery.name || '-'
             },
             {
                 field: 'cemeteryNameEn',
-                label: 'שם (אנגלית)',
+                label: 'שם באנגלית',
                 width: '180px',
+                type: 'text',
                 sortable: true
             },
             {
                 field: 'address',
                 label: 'כתובת',
                 width: '200px',
+                type: 'text',
                 sortable: true
             },
             {
                 field: 'city_name',
                 label: 'עיר',
                 width: '120px',
+                type: 'text',
                 sortable: true
             },
             {
                 field: 'contactName',
                 label: 'איש קשר',
                 width: '150px',
+                type: 'text',
                 sortable: true
             },
             {
                 field: 'contactPhoneName',
                 label: 'טלפון',
-                width: '130px',
+                width: '120px',
+                type: 'text',
                 sortable: true
             },
             {
                 field: 'createDate',
-                label: 'תאריך יצירה',
+                label: 'תאריך',
                 width: '120px',
+                type: 'date',
                 sortable: true,
                 render: (cemetery) => formatDate(cemetery.createDate)
             },
             {
                 field: 'actions',
                 label: 'פעולות',
-                width: '200px',
+                width: '150px',
                 sortable: false,
                 render: (cemetery) => `
                     <button class="btn btn-sm btn-primary" onclick="openCemetery('${cemetery.unicId || cemetery.id}', '${(cemetery.cemeteryNameHe || cemetery.name || '').replace(/'/g, "\\'")}')" title="כניסה">
@@ -553,6 +624,9 @@ window.openCemetery = openCemetery;
 window.refreshData = refreshData;
 window.cemeteriesTable = cemeteriesTable;
 window.checkScrollStatus = checkScrollStatus;
+window.ensureMainTableExists = ensureMainTableExists; // ⭐ הפוך לפונקציה גלובלית לניפוי באגים
 
-console.log('✅ Cemeteries Management Module Loaded - v2.2.0: Fixed UniversalSearch Name Collision');
-console.log('💡 Commands: checkScrollStatus() - בדוק כמה רשומות נטענו');
+console.log('✅ Cemeteries Management Module Loaded - v2.3.0: Fixed TableManager Init Issue');
+console.log('💡 Commands:');
+console.log('   checkScrollStatus() - בדוק כמה רשומות נטענו');
+console.log('   ensureMainTableExists() - בדוק אם הטבלה קיימת');

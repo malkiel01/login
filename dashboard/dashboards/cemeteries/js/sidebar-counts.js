@@ -115,7 +115,7 @@ fetch('/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=list&t
 async function updatePlotsCount() {
     try {
         const response = await 
-fetch('/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=list&type=plot&limit=1');
+fetch('/dashboard/dashboards/cemeteries/api/cemetery-api.php?action=list&type=plot&limit=1');
         const data = await response.json();
         
         if (data.success && data.pagination) {

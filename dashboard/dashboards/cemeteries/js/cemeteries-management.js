@@ -5,7 +5,7 @@
  * Author: Malkiel
  * Change Summary:
  * - שינוי מ-UniversalSearch ל-LiveSearch (כמו customers!)
- * - שימוש ב-cemetery-hierarchy.php API (קיים במערכת)
+ * - שימוש ב-cemetery-api.php API (קיים במערכת)
  * - התאמה מלאה לאדריכלות של customers-management.js
  */
 
@@ -14,7 +14,7 @@
 // ===================================================================
 let cemeteriesLiveSearch = null;
 let currentCemeteries = [];
-const CEMETERIES_API_ENDPOINT = '/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php';
+const CEMETERIES_API_ENDPOINT = '/dashboard/dashboards/cemeteries/api/cemetery-api.php';
 
 // ===================================================================
 // טעינת בתי עלמין - FINAL VERSION

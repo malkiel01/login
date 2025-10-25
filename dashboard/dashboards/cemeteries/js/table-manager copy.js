@@ -1,16 +1,7 @@
-/*
- * File: dashboards/dashboard/cemeteries/assets/js/table-manager.js
- * Version: 2.0.0
- * Updated: 2025-10-25
- * Author: Malkiel
- * Change Summary:
- * - v2.0.0: תמיכה ב-totalItems מה-API
- *   * הוספת totalItems לconfig (אם null, נשתמש ב-data.length)
- *   * loadMoreData משתמש ב-totalItems האמיתי
- *   * setData מקבל totalItems אופציונלי
- *   * תמיכה ב-Virtual Scroll עם טעינה הדרגתית מה-API
- * - תכונות: מיון, שינוי גודל, שינוי סדר, תפריט עמודה, סינון, Infinite Scroll
- * - תמיכה מלאה ב-RTL + תמיכה ברוחב דינמי
+/**
+ * TableManager - מערכת טבלאות מתקדמת
+ * תכונות: מיון, שינוי גודל, שינוי סדר, תפריט עמודה, סינון, Infinite Scroll
+ * תמיכה מלאה ב-RTL + תמיכה ברוחב דינמי
  */
 
 class TableManager {
@@ -950,20 +941,8 @@ class TableManager {
      * API ציבורי
      */
     
-    /**
-     * עדכון נתונים
-     * @param {Array} newData - נתונים חדשים
-     * @param {Number} totalItems - סכום כולל (אופציונלי)
-     */
-    setData(newData, totalItems = null) {
-        this.config.data = newData;
-        
-        // ⭐ אם קיבלנו totalItems חדש, עדכן אותו!
-        if (totalItems !== null) {
-            this.config.totalItems = totalItems;
-            console.log(`📊 Updated totalItems to: ${totalItems}`);
-        }
-        
+    setData(data) {
+        this.config.data = data;
         this.loadInitialData();
     }
     

@@ -815,12 +815,59 @@ class TableManager {
     /**
      * טעינת עוד נתונים
      */
-    async loadMoreData() {
+    async loadMoreData2() {
         const totalItems = this.state.filteredData.length;
         const loadedItems = this.state.displayedData.length;
         
         if (loadedItems >= totalItems) {
             console.log('📭 All items loaded');
+            return;
+        }
+        
+        this.state.isLoading = true;
+        console.log('📥 Loading more data...');
+        
+        // הוסף אינדיקטור טעינה
+        this.showLoadingIndicator();
+        
+        // סימולציה של טעינה
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        const nextBatch = this.state.filteredData.slice(
+            loadedItems,
+            loadedItems + this.config.itemsPerPage
+        );
+        
+        this.state.displayedData = [...this.state.displayedData, ...nextBatch];
+        this.state.currentPage++;
+        
+        this.renderRows(true); // append mode
+        
+        // הסר אינדיקטור טעינה
+        this.hideLoadingIndicator();
+        
+        this.state.isLoading = false;
+        console.log(`✅ Loaded ${nextBatch.length} more items (${this.state.displayedData.length}/${totalItems})`);
+    }
+    /**
+     * טעינת עוד נתונים
+     */
+    async loadMoreData() {
+        // ⭐ השתמש ב-totalItems האמיתי מה-config!
+        const totalItems = this.config.totalItems;
+        const loadedItems = this.state.displayedData.length;
+        
+        console.log(`📊 Load check: ${loadedItems}/${totalItems} items`);
+        
+        if (loadedItems >= totalItems) {
+            console.log('📭 All items loaded');
+            return;
+        }
+        
+        // ⭐ בדיקה נוספת: אם אין עוד נתונים ב-filteredData
+        if (loadedItems >= this.state.filteredData.length) {
+            console.log('⚠️ No more items in filteredData, need to fetch from API');
+            // כאן צריך לקרוא ל-callback שיביא עוד נתונים מה-API
             return;
         }
         

@@ -273,7 +273,7 @@ async function initCustomersSearch() {
 // ===================================================================
 // אתחול TableManager
 // ===================================================================
-function initCustomersTable(data) {
+function initCustomersTable2(data) {
     // אם הטבלה כבר קיימת, רק עדכן נתונים
     if (customersTable) {
         customersTable.setData(data);
@@ -435,6 +435,206 @@ function initCustomersTable(data) {
                 }
             }
         });
+    }
+    
+    // ⭐ עדכן את window.customersTable מיד!
+    window.customersTable = customersTable;
+    
+    console.log('📊 Total customers loaded:', data.length);
+    console.log('📄 Items per page:', customersTable.config.itemsPerPage);
+    console.log('📏 Scroll threshold:', customersTable.config.scrollThreshold + 'px');
+    
+    return customersTable;
+}
+
+/**
+ * initCustomersTable - אתחול TableManager ללקוחות
+ * @param {Array} data - מערך לקוחות להצגה
+ * @returns {TableManager} - מופע TableManager
+ */
+async function initCustomersTable(data) {
+    console.log(`📊 Initializing TableManager for customers with ${data.length} items...`);
+    
+    customersTable = new TableManager({
+        tableSelector: '#mainTable',
+        
+        columns: [
+            {
+                key: 'numId',
+                label: 'ת.ז',
+                width: '120px',
+                sortable: true,
+                render: (value) => value || '-'
+            },
+            {
+                key: 'firstName',
+                label: 'שם פרטי',
+                width: '150px',
+                sortable: true,
+                render: (value) => value || '-'
+            },
+            {
+                key: 'lastName',
+                label: 'שם משפחה',
+                width: '150px',
+                sortable: true,
+                render: (value) => value || '-'
+            },
+            {
+                key: 'phone',
+                label: 'טלפון',
+                width: '120px',
+                sortable: false,
+                render: (value) => value || '-'
+            },
+            {
+                key: 'phoneMobile',
+                label: 'נייד',
+                width: '120px',
+                sortable: false,
+                render: (value) => value || '-'
+            },
+            {
+                key: 'streetAddress',
+                label: 'כתובת',
+                width: '200px',
+                sortable: false,
+                render: (value) => value || '-'
+            },
+            {
+                key: 'city_name',
+                label: 'עיר',
+                width: '120px',
+                sortable: true,
+                render: (value) => value || '-'
+            },
+            {
+                key: 'statusCustomer',
+                label: 'סטטוס',
+                width: '100px',
+                sortable: true,
+                render: (value) => value == 1 ? 'פעיל' : 'לא פעיל'
+            },
+            {
+                key: 'statusResident',
+                label: 'תושבות',
+                width: '120px',
+                sortable: true,
+                render: (value) => {
+                    switch(parseInt(value)) {
+                        case 1: return 'תושב ישראל';
+                        case 2: return 'תושב הארץ';
+                        case 3: return 'תושב חו"ל';
+                        default: return '-';
+                    }
+                }
+            },
+            {
+                key: 'createDate',
+                label: 'תאריך יצירה',
+                width: '120px',
+                sortable: true,
+                render: (value) => value ? new Date(value).toLocaleDateString('he-IL') : '-'
+            },
+            {
+                key: 'actions',
+                label: 'פעולות',
+                width: '150px',
+                sortable: false,
+                render: (value, row) => {
+                    return `
+                        <div class="action-buttons">
+                            <button class="btn-icon" onclick="viewCustomer('${row.unicId}')" title="צפה">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn-icon" onclick="editCustomer('${row.unicId}')" title="ערוך">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-icon" onclick="deleteCustomer('${row.unicId}')" title="מחק">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                }
+            }
+        ],
+        
+        data: data,
+        
+        containerWidth: '80vw',
+        containerPadding: '16px',
+        
+        sortable: true,
+        resizable: true,
+        reorderable: false,
+        filterable: true,
+        
+        onSort: (field, order) => {
+            console.log(`📊 Sorted by ${field} ${order}`);
+            showToast(`ממוין לפי ${field} (${order === 'asc' ? 'עולה' : 'יורד'})`, 'info');
+        },
+        
+        onFilter: (filters) => {
+            console.log('🔍 Active filters:', filters);
+            const count = customersTable.getFilteredData().length;
+            showToast(`נמצאו ${count} תוצאות`, 'info');
+        }
+    });
+    
+    // ⭐⭐⭐ Scroll listener לטעינת דפים נוספים - זה החלק החשוב! ⭐⭐⭐
+    const bodyContainer = document.querySelector('.table-body-container');
+    if (bodyContainer && customerSearch) {
+        let isLoadingMore = false; // נעילה למניעת טעינות כפולות
+        
+        bodyContainer.addEventListener('scroll', async function() {
+            // אם כבר בתהליך טעינה - דלג
+            if (isLoadingMore) return;
+            
+            const scrollTop = this.scrollTop;
+            const scrollHeight = this.scrollHeight;
+            const clientHeight = this.clientHeight;
+            
+            // בדוק אם הגענו לתחתית (100px לפני הסוף)
+            const nearBottom = scrollHeight - scrollTop - clientHeight < 100;
+            
+            if (nearBottom) {
+                const state = customerSearch.state;
+                const currentPage = state.currentPage || 1;
+                const totalResults = state.totalResults || 0;
+                const itemsPerPage = 200; // מה שהגדרת ב-UniversalSearch
+                const totalPages = Math.ceil(totalResults / itemsPerPage);
+                
+                // בדוק אם יש עוד דפים לטעון
+                if (currentPage < totalPages) {
+                    console.log(`📥 Reached bottom! Loading page ${currentPage + 1}/${totalPages}...`);
+                    console.log(`📊 Current items: ${currentCustomers.length}, Total available: ${totalResults}`);
+                    
+                    // נעל את הטעינה
+                    isLoadingMore = true;
+                    
+                    try {
+                        // עדכן את מספר הדף
+                        state.currentPage = currentPage + 1;
+                        
+                        // טען את הדף הבא
+                        await customerSearch.search();
+                        
+                        console.log(`✅ Page ${currentPage + 1} loaded successfully!`);
+                    } catch (error) {
+                        console.error('❌ Error loading more data:', error);
+                        showToast('שגיאה בטעינת נתונים נוספים', 'error');
+                        
+                        // במקרה של שגיאה, החזר את הדף
+                        state.currentPage = currentPage;
+                    } finally {
+                        // שחרר את הנעילה
+                        isLoadingMore = false;
+                    }
+                }
+            }
+        });
+        
+        console.log('✅ Scroll listener added for infinite scroll pagination');
     }
     
     // ⭐ עדכן את window.customersTable מיד!

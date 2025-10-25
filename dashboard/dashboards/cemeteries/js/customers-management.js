@@ -676,7 +676,6 @@ async function initCustomersTable(data) {
                 width: '120px',
                 sortable: true,
                 render: (value, row) => {
-                    // ⭐ אם value הוא אובייקט (כל ה-row), קח את השדה הספציפי
                     const val = (typeof value === 'object' && value !== null) ? value.numId : value;
                     return val || '-';
                 }
@@ -782,7 +781,6 @@ async function initCustomersTable(data) {
                 width: '150px',
                 sortable: false,
                 render: (value, row) => {
-                    // ⭐ אם value הוא אובייקט - זה כל ה-row!
                     const rowData = (typeof value === 'object' && value !== null) ? value : row;
                     
                     if (!rowData) {
@@ -832,7 +830,7 @@ async function initCustomersTable(data) {
     
     console.log('✅ TableManager created');
     
-    // ⭐⭐⭐ Scroll listener לטעינת דפים נוספים ⭐⭐⭐
+    // ⭐⭐⭐ Scroll listener עם מניעת לולאה אינסופית ⭐⭐⭐
     setTimeout(() => {
         const bodyContainer = document.querySelector('.table-body-container');
         console.log('🔍 DEBUG: Looking for .table-body-container...');
@@ -842,18 +840,40 @@ async function initCustomersTable(data) {
             console.log('✅ Adding scroll listener for pagination');
             
             let isLoadingMore = false;
+            let lastScrollTop = 0;
+            let lastLoadedItemsCount = currentCustomers.length;
             
             bodyContainer.addEventListener('scroll', async function() {
-                if (isLoadingMore) return;
+                // ⭐ אם טוען - דלג
+                if (isLoadingMore) {
+                    console.log('⏳ Already loading, skipping...');
+                    return;
+                }
                 
                 const scrollTop = this.scrollTop;
                 const scrollHeight = this.scrollHeight;
                 const clientHeight = this.clientHeight;
                 const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
                 
-                if (distanceFromBottom < 100) {
-                    console.log('🎯 Near bottom!');
-                    
+                // ⭐ בדוק שהמשתמש גלל למטה (ולא רק נמצא בתחתית)
+                const isScrollingDown = scrollTop > lastScrollTop;
+                lastScrollTop = scrollTop;
+                
+                if (!isScrollingDown) {
+                    // גלילה למעלה - לא צריך לטעון
+                    return;
+                }
+                
+                // ⭐ בדוק שמספר הפריטים השתנה מאז הטעינה האחרונה
+                // אם לא - אנחנו עדיין בתהליך עדכון ה-DOM
+                if (currentCustomers.length === lastLoadedItemsCount) {
+                    // אותו מספר פריטים - אל תטען שוב
+                    return;
+                }
+                
+                console.log(`📏 Scroll: ${Math.round(scrollTop)}px, Distance from bottom: ${Math.round(distanceFromBottom)}px`);
+                
+                if (distanceFromBottom < 200) {
                     const state = customerSearch.state;
                     const currentPage = state.currentPage || 1;
                     const totalResults = state.totalResults || 0;
@@ -867,12 +887,32 @@ async function initCustomersTable(data) {
                         
                         isLoadingMore = true;
                         
+                        // ⭐ שמור את מיקום הגלילה הנוכחי
+                        const scrollBeforeLoad = this.scrollTop;
+                        
                         try {
                             state.currentPage = currentPage + 1;
+                            
+                            // ⭐ עדכן את מספר הפריטים לפני הטעינה
+                            lastLoadedItemsCount = currentCustomers.length;
+                            
                             await customerSearch.search();
-                            console.log(`✅ Page ${currentPage + 1} loaded!`);
+                            
+                            console.log(`✅ Page ${currentPage + 1} loaded! Total items: ${currentCustomers.length}`);
+                            
+                            // ⭐ המתן רגע ל-DOM להתעדכן, ואז גלול קצת למעלה
+                            setTimeout(() => {
+                                // גלול 100px למעלה כדי שהמשתמש לא יהיה בתחתית
+                                this.scrollTop = scrollBeforeLoad - 50;
+                                console.log('📍 Scrolled up slightly to prevent infinite loop');
+                                
+                                // עדכן את lastLoadedItemsCount אחרי העדכון
+                                lastLoadedItemsCount = currentCustomers.length;
+                            }, 100);
+                            
                         } catch (error) {
                             console.error('❌ Error:', error);
+                            showToast('שגיאה בטעינת נתונים נוספים', 'error');
                             state.currentPage = currentPage;
                         } finally {
                             isLoadingMore = false;
@@ -883,7 +923,7 @@ async function initCustomersTable(data) {
                 }
             });
             
-            console.log('✅ Scroll listener added');
+            console.log('✅ Scroll listener added with infinite loop protection');
         }
     }, 100);
     

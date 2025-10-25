@@ -1009,14 +1009,18 @@ async function renderCustomersRows(data) {
         // דף ראשון - התחל מחדש
         currentCustomers = data;
         console.log(`📦 Page 1: Starting fresh with ${data.length} items`);
+        console.log(`📋 First 3 IDs:`, data.slice(0, 3).map(c => c.unicId || c.id));
     } else {
         // דפים נוספים - הוסף לקיימים
         const oldLength = currentCustomers.length;
         currentCustomers = [...currentCustomers, ...data];
         console.log(`📦 Added page ${currentPage}: ${oldLength} + ${data.length} = ${currentCustomers.length} total`);
+        console.log(`📋 Last 3 OLD IDs:`, currentCustomers.slice(oldLength - 3, oldLength).map(c => c.unicId || c.id));
+        console.log(`📋 First 3 NEW IDs:`, data.slice(0, 3).map(c => c.unicId || c.id));
     }
     
-    console.log('🔍 DEBUG: currentCustomers.length =', currentCustomers.length);
+    console.log('🔢 DEBUG: currentCustomers.length =', currentCustomers.length);
+    console.log('📋 Total IDs in currentCustomers:', currentCustomers.map(c => c.unicId || c.id).join(', '));
     
     // בדיקה אם יש נתונים
     if (!currentCustomers || currentCustomers.length === 0) {
@@ -1035,13 +1039,46 @@ async function renderCustomersRows(data) {
         // אין TableManager - בנה מחדש!
         console.log('✅ Creating NEW TableManager with', currentCustomers.length, 'total items');
         await initCustomersTable(currentCustomers);
+        
+        // ⭐ אחרי יצירה - בדוק מה TableManager יודע
+        console.log('🔍 After init - TableManager state:', {
+            allDataLength: customersTable.state.allData.length,
+            displayedDataLength: customersTable.state.displayedData.length,
+            currentCustomersLength: currentCustomers.length
+        });
     } else {
         // TableManager קיים - רק עדכן נתונים!
-        console.log('🔄 UPDATING existing TableManager with', currentCustomers.length, 'total items');
+        console.log('🔄 UPDATING existing TableManager');
+        console.log('🔍 BEFORE setData:', {
+            allDataLength: customersTable.state.allData.length,
+            displayedDataLength: customersTable.state.displayedData.length,
+            currentCustomersLength: currentCustomers.length
+        });
+        
+        // ⭐ קריאה ל-setData עם כל ה-currentCustomers
         customersTable.setData(currentCustomers);
+        
+        console.log('🔍 AFTER setData:', {
+            allDataLength: customersTable.state.allData.length,
+            displayedDataLength: customersTable.state.displayedData.length,
+            currentCustomersLength: currentCustomers.length
+        });
+        
+        // ⭐ בדוק אם הם באמת שונים
+        if (customersTable.state.allData.length !== currentCustomers.length) {
+            console.error('❌ MISMATCH! TableManager has different data length!');
+            console.error('   Expected:', currentCustomers.length);
+            console.error('   Actual:', customersTable.state.allData.length);
+            
+            // נסה לאלץ עדכון
+            console.log('🔧 Force rebuilding TableManager...');
+            customersTable = null;
+            await initCustomersTable(currentCustomers);
+        }
     }
     
     console.log('✅ renderCustomersRows completed');
+    console.log('═══════════════════════════════════════');
 }
 
 // ===================================================================

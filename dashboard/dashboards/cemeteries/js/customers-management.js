@@ -217,7 +217,7 @@ async function initCustomersSearch() {
         
         renderFunction: renderCustomersRows,
         
-        callbacks: {
+        callbacks: {   
             onInit: () => {
                 console.log('✅ UniversalSearch initialized for customers');
             },
@@ -228,18 +228,30 @@ async function initCustomersSearch() {
             
             onResults: (data) => {
                 console.log('📦 Results:', data.pagination?.total || data.total || 0, 'customers found');
-                
-                const currentPage = data.pagination?.page || 1;
-                
-                if (currentPage === 1) {
-                    // דף ראשון - התחל מחדש
-                    currentCustomers = data.data;
-                } else {
-                    // דפים נוספים - הוסף לקיימים
-                    currentCustomers = [...currentCustomers, ...data.data];
-                    console.log(`📦 Added page ${currentPage}, total now: ${currentCustomers.length}`);
+                // ❌ הסר את כל הקוד שהיה כאן לגבי currentCustomers!
+                // renderCustomersRows עושה את זה עכשיו
+            },
+            onStats: (stats) => {
+                console.log('Customer stats:', stats);
+                if (stats.by_status) {
+                    updateCustomerStats(stats);
                 }
             },
+
+            // onResults: (data) => {
+                //     console.log('📦 Results:', data.pagination?.total || data.total || 0, 'customers found');
+                
+                //     const currentPage = data.pagination?.page || 1;
+                
+                //     if (currentPage === 1) {
+                    //         // דף ראשון - התחל מחדש
+            //         currentCustomers = data.data;
+            //     } else {
+            //         // דפים נוספים - הוסף לקיימים
+            //         currentCustomers = [...currentCustomers, ...data.data];
+            //         console.log(`📦 Added page ${currentPage}, total now: ${currentCustomers.length}`);
+            //     }
+            // },
             
             onError: (error) => {
                 console.error('❌ Search error:', error);
@@ -438,7 +450,7 @@ function initCustomersTable(data) {
 // ===================================================================
 // רינדור שורות לקוחות
 // ===================================================================
-function renderCustomersRows(data, container) {
+function renderCustomersRows2(data, container) {
     console.log('🎨 renderCustomersRows called with', data.length, 'items');
     
     if (data.length === 0) {
@@ -491,14 +503,56 @@ function renderCustomersRows(data, container) {
         
         customersTable.setData(data);
     }
+}
 
-    // if (!customersTable || !tableWrapperExists) {
-    //     console.log('✅ Creating new TableManager with', currentCustomers.length, 'total items');
-    //     initCustomersTable(currentCustomers);  // ✅ מעביר את כולם!
-    // } else {
-    //     console.log('🔄 Updating existing TableManager with', currentCustomers.length, 'total items');
-    //     customersTable.setData(currentCustomers);  // ✅ מעביר את כולם!
-    // }
+/*
+ * renderCustomersRows - מציג שורות לקוחות בטבלה
+ * @param {Array} data - מערך לקוחות להצגה
+ */
+async function renderCustomersRows(data) {
+    console.log('🎨 renderCustomersRows called with', data.length, 'items');
+    
+    // ⭐ עדכן את currentCustomers לפני השימוש בו!
+    const currentPage = customerSearch?.state?.currentPage || 1;
+    
+    if (currentPage === 1) {
+        // דף ראשון - התחל מחדש
+        currentCustomers = data;
+        console.log(`📦 Page 1: Starting fresh with ${data.length} items`);
+    } else {
+        // דפים נוספים - הוסף לקיימים
+        currentCustomers = [...currentCustomers, ...data];
+        console.log(`📦 Added page ${currentPage}, total now: ${currentCustomers.length}`);
+    }
+    
+    // בדיקה אם יש נתונים
+    if (!currentCustomers || currentCustomers.length === 0) {
+        const tbody = document.querySelector('#tableBody');
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="12" style="text-align: center; padding: 20px;">לא נמצאו לקוחות</td></tr>';
+        }
+        return;
+    }
+    
+    // בדוק אם TableManager קיים ולא נמחק
+    const tableWrapperExists = document.querySelector('.table-manager-wrapper') !== null;
+    
+    if (customersTable && !tableWrapperExists) {
+        // ה-DOM של TableManager נמחק (למשל ע"י clearDashboard)
+        console.log('🗑️ TableManager DOM was deleted, resetting customersTable variable');
+        customersTable = null;
+    }
+    
+    // עכשיו בדוק אם צריך לבנות מחדש
+    if (!customersTable || !tableWrapperExists) {
+        // אין TableManager או שה-DOM שלו נמחק - בנה מחדש!
+        console.log('✅ Creating new TableManager with', currentCustomers.length, 'total items');
+        initCustomersTable(currentCustomers);
+    } else {
+        // TableManager קיים וגם ה-DOM שלו - רק עדכן נתונים
+        console.log('🔄 Updating existing TableManager with', currentCustomers.length, 'total items');
+        customersTable.setData(currentCustomers);
+    }
 }
 
 // ===================================================================

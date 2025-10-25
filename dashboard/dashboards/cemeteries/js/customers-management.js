@@ -619,7 +619,7 @@ async function initCustomersTable(data) {
     
     console.log('✅ TableManager created with', data.length, 'items');
     
-    // ⭐⭐⭐ Scroll listener - גרסה פשוטה וברורה ⭐⭐⭐
+    // ⭐⭐⭐ Scroll listener עם מניעת לולאה אינסופית ⭐⭐⭐
     setTimeout(() => {
         const bodyContainer = document.querySelector('.table-body-container');
         
@@ -627,9 +627,15 @@ async function initCustomersTable(data) {
             console.log('✅ Adding scroll listener for pagination');
             
             let isLoadingMore = false;
+            let lastLoadTime = 0;
             
             bodyContainer.addEventListener('scroll', async function() {
-                console.log('📜 SCROLL EVENT!');
+                // ⭐ Debounce - אל תטען יותר מדי מהר
+                const now = Date.now();
+                if (now - lastLoadTime < 500) {
+                    console.log('⏸️ Too soon, waiting...');
+                    return;
+                }
                 
                 if (isLoadingMore) {
                     console.log('⏳ Already loading...');
@@ -643,6 +649,7 @@ async function initCustomersTable(data) {
                 
                 console.log(`📏 Distance from bottom: ${Math.round(distanceFromBottom)}px`);
                 
+                // ⭐ רק אם באמת קרוב לתחתית
                 if (distanceFromBottom < 200) {
                     const state = customerSearch.state;
                     const currentPage = state.currentPage || 1;
@@ -650,18 +657,33 @@ async function initCustomersTable(data) {
                     const itemsPerPage = 200;
                     const totalPages = Math.ceil(totalResults / itemsPerPage);
                     
-                    console.log(`📊 Page ${currentPage}/${totalPages}`);
-                    console.log(`📦 currentCustomers: ${currentCustomers.length} items`);
+                    console.log(`📊 Page ${currentPage}/${totalPages}, currentCustomers: ${currentCustomers.length}`);
                     
                     if (currentPage < totalPages) {
                         console.log(`🚀 LOADING PAGE ${currentPage + 1}...`);
                         
                         isLoadingMore = true;
+                        lastLoadTime = now;
+                        
+                        // ⭐ שמור את מיקום הגלילה
+                        const scrollBeforeLoad = this.scrollTop;
                         
                         try {
                             state.currentPage = currentPage + 1;
                             await customerSearch.search();
-                            console.log(`✅ Page ${currentPage + 1} loaded successfully!`);
+                            
+                            console.log(`✅ Page ${currentPage + 1} loaded!`);
+                            
+                            // ⭐ המתן רגע ל-DOM להתעדכן
+                            await new Promise(resolve => setTimeout(resolve, 100));
+                            
+                            // ⭐ גלול 300px למעלה כדי שהמשתמש לא יהיה בתחתית
+                            const newScrollTop = scrollBeforeLoad - 300;
+                            if (newScrollTop > 0) {
+                                this.scrollTop = newScrollTop;
+                                console.log(`📍 Scrolled up to ${newScrollTop}px to prevent loop`);
+                            }
+                            
                         } catch (error) {
                             console.error('❌ Error:', error);
                             state.currentPage = currentPage;
@@ -674,7 +696,7 @@ async function initCustomersTable(data) {
                 }
             });
             
-            console.log('✅ Scroll listener added');
+            console.log('✅ Scroll listener added with loop protection');
         } else {
             console.warn('⚠️ Cannot add scroll listener:', {
                 bodyContainer: !!bodyContainer,

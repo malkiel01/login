@@ -1,39 +1,42 @@
 /*
- * File: dashboards/dashboard/cemeteries/assets/js/customers-management.js
- * Version: 4.0.0
- * Updated: 2025-10-25
+ * File: dashboards/dashboard/cemeteries/assets/js/cemeteries-management.js
+ * Version: 5.1.0
+ * Updated: 2025-10-24
  * Author: Malkiel
  * Change Summary:
- * - v4.0.0: הסרה מלאה של UniversalSearch
- * - טעינה ישירה של כל הלקוחות מ-API
- * - שימוש ב-TableManager בלבד עם Virtual Scroll
- * - חיפוש מקומי פשוט (אופציונלי) - filter בצד לקוח
- * - קוד פשוט, נקי, ויציב
+ * - v5.0.0: שיטה זהה ללקוחות - UniversalSearch + TableManager
+ * - v5.1.0: תיקון קונפליקט שמות - initCemeteriesSearch (במקום initUniversalSearch)
  */
 
 // ===================================================================
 // משתנים גלובליים
 // ===================================================================
-
-let currentCustomers = [];      // כל הלקוחות שנטענו
-let customersTable = null;      // instance של TableManager
-let editingCustomerId = null;
-let simpleSearchTimeout = null; // timeout לחיפוש מקומי
+let currentCemeteries = [];
+let cemeterySearch = null;
+let cemeteriesTable = null;
+let editingCemeteryId = null;
 
 // ===================================================================
-// טעינת לקוחות - הפונקציה הראשית (גרסה פשוטה)
+// טעינת בתי עלמין (הפונקציה הראשית)
 // ===================================================================
-async function loadCustomers() {
-    console.log('📋 Loading customers - v4.0.0 (ללא UniversalSearch)...');
+async function loadCemeteries() {
+    console.log('📋 Loading cemeteries - v5.1.0 (תוקן קונפליקט שמות)...');
 
-    setActiveMenuItem('customersItem');
+    // עדכון פריט תפריט אקטיבי
+    if (typeof setActiveMenuItem === 'function') {
+        setActiveMenuItem('cemeteriesItem');
+    }
     
     // עדכן את הסוג הנוכחי
-    window.currentType = 'customer';
+    window.currentType = 'cemetery';
     window.currentParentId = null;
     
-    // נקה את הדשבורד
-    DashboardCleaner.clear({ targetLevel: 'customer' });
+    // ⭐ נקה - DashboardCleaner ימחק גם את TableManager!
+    if (typeof DashboardCleaner !== 'undefined') {
+        DashboardCleaner.clear({ targetLevel: 'cemetery' });
+    } else if (typeof clearDashboard === 'function') {
+        clearDashboard({ targetLevel: 'cemetery' });
+    }
     
     // נקה את כל הסידבר
     if (typeof clearAllSidebarSelections === 'function') {
@@ -47,29 +50,39 @@ async function loadCustomers() {
     
     // עדכן breadcrumb
     if (typeof updateBreadcrumb === 'function') {
-        updateBreadcrumb({ customer: { name: 'לקוחות' } });
+        updateBreadcrumb({ cemetery: { name: 'בתי עלמין' } });
     }
     
     // עדכון כותרת החלון
-    document.title = 'ניהול לקוחות - מערכת בתי עלמין';
+    document.title = 'ניהול בתי עלמין - מערכת בתי עלמין';
     
-    // בנה את המבנה
-    await buildCustomersContainer();
+    // ⭐ בנה את המבנה החדש ב-main-container
+    await buildCemeteriesContainer();
+    
+    // ⭐ תמיד השמד את החיפוש הקודם ובנה מחדש
+    if (cemeterySearch && typeof cemeterySearch.destroy === 'function') {
+        console.log('🗑️ Destroying previous cemeterySearch instance...');
+        cemeterySearch.destroy();
+        cemeterySearch = null;
+        window.cemeterySearch = null;
+    }
 
-    // טען את הלקוחות מה-API
-    await fetchAndDisplayCustomers();
+    // אתחל את UniversalSearch מחדש תמיד
+    console.log('🆕 Creating fresh cemeterySearch instance...');
+    await initCemeteriesSearch();
+    cemeterySearch.search();
     
     // טען סטטיסטיקות
-    await loadCustomerStats();
+    await loadCemeteryStats();
 }
 
 // ===================================================================
-// בניית המבנה HTML של לקוחות
+// ⭐ פונקציה חדשה - בניית המבנה של בתי עלמין ב-main-container
 // ===================================================================
-async function buildCustomersContainer() {
-    console.log('🏗️ Building customers container...');
+async function buildCemeteriesContainer() {
+    console.log('🏗️ Building cemeteries container...');
     
-    // מצא את main-container
+    // מצא את main-container (צריך להיות קיים אחרי clear)
     let mainContainer = document.querySelector('.main-container');
     
     if (!mainContainer) {
@@ -86,40 +99,24 @@ async function buildCustomersContainer() {
         }
     }
     
-    // בנה את התוכן
+    // ⭐ בנה את התוכן של בתי עלמין - זהה ללקוחות!
     mainContainer.innerHTML = `
-        <!-- סקשן חיפוש פשוט (אופציונלי) -->
-        <div class="simple-search-section" style="margin-bottom: 20px;">
-            <div style="max-width: 600px;">
-                <input 
-                    type="text" 
-                    id="simpleSearchInput" 
-                    class="form-control" 
-                    placeholder="🔍 חיפוש מהיר לפי שם, ת.ז, טלפון..."
-                    style="padding: 12px 16px; font-size: 15px; border-radius: 8px; border: 1px solid #e5e7eb;"
-                />
-                <small style="display: block; margin-top: 8px; color: #6b7280;">
-                    ניתן לחפש בכל השדות הגלויים בטבלה
-                </small>
-            </div>
-        </div>
+        <!-- סקשן חיפוש -->
+        <div id="cemeterySearchSection" class="search-section"></div>
         
         <!-- table-container עבור TableManager -->
         <div class="table-container">
             <table id="mainTable" class="data-table">
                 <thead>
                     <tr id="tableHeaders">
-                        <th style="text-align: center;">טוען לקוחות...</th>
+                        <th style="text-align: center;">טוען...</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody">
                     <tr>
-                        <td style="text-align: center; padding: 60px;">
+                        <td style="text-align: center; padding: 40px;">
                             <div class="spinner-border" role="status">
-                                <span class="visually-hidden">טוען לקוחות...</span>
-                            </div>
-                            <div style="margin-top: 16px; color: #6b7280;">
-                                טוען את רשימת הלקוחות...
+                                <span class="visually-hidden">טוען בתי עלמין...</span>
                             </div>
                         </td>
                     </tr>
@@ -128,280 +125,271 @@ async function buildCustomersContainer() {
         </div>
     `;
     
-    // חיבור אירוע חיפוש מקומי
-    const searchInput = document.getElementById('simpleSearchInput');
-    if (searchInput) {
-        searchInput.addEventListener('input', handleSimpleSearch);
-    }
-    
-    console.log('✅ Customers container built');
+    console.log('✅ Cemeteries container built');
 }
 
 // ===================================================================
-// טעינה ישירה של לקוחות מה-API
+// אתחול UniversalSearch - שימוש בפונקציה גלובלית!
 // ===================================================================
-async function fetchAndDisplayCustomers() {
-    console.log('📡 Fetching customers from API...');
-    
-    try {
-        // קריאה ישירה ל-API
-        const response = await fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=list');
+async function initCemeteriesSearch() {
+    cemeterySearch = window.initUniversalSearch({
+        entityType: 'cemetery',
+        apiEndpoint: '/dashboard/dashboards/cemeteries/api/cemeteries-api.php',
+        action: 'list',
         
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        searchableFields: [
+            {
+                name: 'cemeteryNameHe',
+                label: 'שם בית עלמין (עברית)',
+                table: 'cemeteries',
+                type: 'text',
+                matchType: ['exact', 'fuzzy', 'startsWith']
+            },
+            {
+                name: 'cemeteryNameEn',
+                label: 'שם בית עלמין (אנגלית)',
+                table: 'cemeteries',
+                type: 'text',
+                matchType: ['exact', 'fuzzy', 'startsWith']
+            },
+            {
+                name: 'cemeteryCode',
+                label: 'קוד בית עלמין',
+                table: 'cemeteries',
+                type: 'text',
+                matchType: ['exact', 'startsWith']
+            },
+            {
+                name: 'address',
+                label: 'כתובת',
+                table: 'cemeteries',
+                type: 'text',
+                matchType: ['exact', 'fuzzy']
+            },
+            {
+                name: 'contactName',
+                label: 'איש קשר',
+                table: 'cemeteries',
+                type: 'text',
+                matchType: ['exact', 'fuzzy']
+            },
+            {
+                name: 'contactPhoneName',
+                label: 'טלפון',
+                table: 'cemeteries',
+                type: 'text',
+                matchType: ['exact', 'fuzzy']
+            },
+            {
+                name: 'createDate',
+                label: 'תאריך יצירה',
+                table: 'cemeteries',
+                type: 'date',
+                matchType: ['exact', 'before', 'after', 'between', 'today', 'thisWeek', 'thisMonth']
+            }
+        ],
         
-        const result = await response.json();
-        console.log('📦 API Response:', result);
+        displayColumns: ['cemeteryNameHe', 'cemeteryCode', 'address', 'contactName', 'contactPhoneName', 'blocks_count', 'createDate'],
         
-        if (result.success && result.data) {
-            currentCustomers = result.data;
-            console.log(`✅ Loaded ${currentCustomers.length} customers`);
+        searchContainerSelector: '#cemeterySearchSection',
+        resultsContainerSelector: '#tableBody',
+        
+        placeholder: 'חיפוש בתי עלמין לפי שם, קוד, כתובת...',
+        itemsPerPage: 200,
+        
+        renderFunction: renderCemeteriesRows,
+        
+        callbacks: {
+            onInit: () => {
+                console.log('✅ UniversalSearch initialized for cemeteries');
+            },
             
-            // בנה את TableManager
-            initCustomersTable(currentCustomers);
-        } else {
-            throw new Error(result.error || 'Failed to load customers');
+            onSearch: (query, filters) => {
+                console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()) });
+            },
+            
+            onResults: (data) => {
+                console.log('📦 Results:', data.pagination?.total || data.total || 0, 'cemeteries found');
+                currentCemeteries = data.data;
+            },
+            
+            onError: (error) => {
+                console.error('❌ Search error:', error);
+                showToast('שגיאה בחיפוש: ' + error.message, 'error');
+            },
+            
+            onEmpty: () => {
+                console.log('📭 No results');
+            }
         }
-        
-    } catch (error) {
-        console.error('❌ Error loading customers:', error);
-        showToast('שגיאה בטעינת לקוחות: ' + error.message, 'error');
-        
-        // הצג הודעת שגיאה בטבלה
-        const tableBody = document.getElementById('tableBody');
-        if (tableBody) {
-            tableBody.innerHTML = `
-                <tr>
-                    <td style="text-align: center; padding: 60px;">
-                        <div style="color: #ef4444; font-size: 48px; margin-bottom: 16px;">⚠️</div>
-                        <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">שגיאה בטעינת לקוחות</div>
-                        <div style="color: #6b7280;">${error.message}</div>
-                        <button 
-                            onclick="loadCustomers()" 
-                            style="margin-top: 20px; padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer;"
-                        >
-                            נסה שוב
-                        </button>
-                    </td>
-                </tr>
-            `;
-        }
-    }
+    });
+    
+    // ⭐ עדכן את window.cemeterySearch מיד!
+    window.cemeterySearch = cemeterySearch;
+    
+    return cemeterySearch;
 }
 
 // ===================================================================
 // אתחול TableManager
 // ===================================================================
-function initCustomersTable(data) {
-    console.log(`🎨 Initializing TableManager with ${data.length} customers...`);
+async function initCemeteriesTable(data) {
+    console.log(`📊 Initializing TableManager for cemeteries with ${data.length} items (v5.1.0)...`);
     
-    // הגדרת עמודות
-    const columns = [
-        {
-            id: 'numId',
-            label: 'ת.ז',
-            sortable: true,
-            width: '120px',
-            align: 'center'
-        },
-        {
-            id: 'firstName',
-            label: 'שם פרטי',
-            sortable: true,
-            width: '150px'
-        },
-        {
-            id: 'lastName',
-            label: 'שם משפחה',
-            sortable: true,
-            width: '150px'
-        },
-        {
-            id: 'phone',
-            label: 'טלפון',
-            sortable: true,
-            width: '120px'
-        },
-        {
-            id: 'phoneMobile',
-            label: 'נייד',
-            sortable: true,
-            width: '120px'
-        },
-        {
-            id: 'streetAddress',
-            label: 'כתובת',
-            sortable: true,
-            width: '200px'
-        },
-        {
-            id: 'city_name',
-            label: 'עיר',
-            sortable: true,
-            width: '120px'
-        },
-        {
-            id: 'statusCustomer',
-            label: 'סטטוס',
-            sortable: true,
-            width: '100px',
-            align: 'center'
-        },
-        {
-            id: 'statusResident',
-            label: 'סוג תושבות',
-            sortable: true,
-            width: '120px',
-            align: 'center'
-        },
-        {
-            id: 'createDate',
-            label: 'תאריך יצירה',
-            sortable: true,
-            width: '120px',
-            align: 'center'
-        },
-        {
-            id: 'actions',
-            label: 'פעולות',
-            sortable: false,
-            width: '120px',
-            align: 'center'
-        }
-    ];
-    
-    // יצירת TableManager
-    customersTable = new TableManager({
-        tableSelector: '#mainTable',
-        columns: columns,
-        data: data,
-        totalItems: data.length,
+    cemeteriesTable = new TableManager({
+        tableSelector: '#mainTable',  // ⭐ זה הכי חשוב!
         
-        // הגדרות Virtual Scroll
-        infiniteScroll: true,
-        itemsPerPage: 100,  // 100 שורות בכל פעם
-        scrollThreshold: 200,
-        
-        // פונקציית רינדור מותאמת אישית
-        renderCell: (column, row) => {
-            switch (column.id) {
-                case 'statusCustomer':
-                    return formatCustomerStatus(row.statusCustomer);
-                
-                case 'statusResident':
-                    return formatCustomerType(row.statusResident);
-                
-                case 'createDate':
-                    return formatDate(row.createDate);
-                
-                case 'actions':
-                    return `
-                        <div style="display: flex; gap: 8px; justify-content: center;">
-                            <button 
-                                onclick="editCustomer(${row.id})"
-                                class="btn btn-sm btn-primary"
-                                title="ערוך לקוח"
-                                style="padding: 4px 8px; font-size: 12px;"
-                            >
-                                ✏️
-                            </button>
-                            <button 
-                                onclick="deleteCustomer(${row.id})"
-                                class="btn btn-sm btn-danger"
-                                title="מחק לקוח"
-                                style="padding: 4px 8px; font-size: 12px;"
-                            >
-                                🗑️
-                            </button>
-                        </div>
-                    `;
-                
-                default:
-                    return row[column.id] || '';
+        columns: [
+            {
+                field: 'cemeteryNameHe',
+                label: 'שם בית עלמין',
+                width: '200px',
+                sortable: true,
+                render: (cemetery) => {
+                    return `<a href="#" onclick="loadBlocks('${cemetery.unicId}', '${cemetery.cemeteryNameHe.replace(/'/g, "\\'")}'); return false;" 
+                               style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                        ${cemetery.cemeteryNameHe}
+                    </a>`;
+                }
+            },
+            {
+                field: 'cemeteryCode',
+                label: 'קוד',
+                width: '100px',
+                sortable: true
+            },
+            {
+                field: 'address',
+                label: 'כתובת',
+                width: '250px',
+                sortable: true
+            },
+            {
+                field: 'contactName',
+                label: 'איש קשר',
+                width: '150px',
+                sortable: true
+            },
+            {
+                field: 'contactPhoneName',
+                label: 'טלפון',
+                width: '120px',
+                sortable: true
+            },
+            {
+                field: 'blocks_count',
+                label: 'גושים',
+                width: '80px',
+                type: 'number',
+                sortable: true,
+                render: (cemetery) => {
+                    const count = cemetery.blocks_count || 0;
+                    return `<span style="background: #dbeafe; color: #1e40af; padding: 3px 10px; border-radius: 4px; font-size: 13px; font-weight: 600; display: inline-block;">${count}</span>`;
+                }
+            },
+            {
+                field: 'createDate',
+                label: 'תאריך',
+                width: '120px',
+                type: 'date',
+                sortable: true,
+                render: (cemetery) => formatDate(cemetery.createDate)
+            },
+            {
+                field: 'actions',
+                label: 'פעולות',
+                width: '120px',
+                sortable: false,
+                render: (cemetery) => `
+                    <button class="btn btn-sm btn-secondary" onclick="editCemetery('${cemetery.unicId}')" title="עריכה">
+                        <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteCemetery('${cemetery.unicId}')" title="מחיקה">
+                        <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
+                    </button>
+                `
             }
+        ],
+        
+        data: data,
+        
+        sortable: true,
+        resizable: true,
+        reorderable: false,
+        filterable: true,
+        
+        onSort: (field, order) => {
+            console.log(`📊 Sorted by ${field} ${order}`);
+            showToast(`ממוין לפי ${field} (${order === 'asc' ? 'עולה' : 'יורד'})`, 'info');
+        },
+        
+        onFilter: (filters) => {
+            console.log('🔍 Active filters:', filters);
+            const count = cemeteriesTable.getFilteredData().length;
+            showToast(`נמצאו ${count} תוצאות`, 'info');
         }
     });
     
-    // שמור global reference
-    window.customersTable = customersTable;
+    // ⭐ עדכן את window.cemeteriesTable מיד!
+    window.cemeteriesTable = cemeteriesTable;
     
-    console.log(`✅ TableManager initialized successfully with ${data.length} customers`);
+    console.log('📊 Total cemeteries loaded:', data.length);
+    console.log('📄 Items per page:', cemeteriesTable.config.itemsPerPage);
+    console.log('📏 Scroll threshold:', cemeteriesTable.config.scrollThreshold + 'px');
+    
+    return cemeteriesTable;
 }
 
 // ===================================================================
-// חיפוש מקומי פשוט (filter בצד לקוח)
+// רינדור שורות בתי עלמין - זהה ללקוחות!
 // ===================================================================
-function handleSimpleSearch(event) {
-    const searchTerm = event.target.value.trim().toLowerCase();
+function renderCemeteriesRows(data, container) {
+    console.log('🎨 renderCemeteriesRows called with', data.length, 'items');
     
-    // debounce - חכה 300ms אחרי הקלדה
-    clearTimeout(simpleSearchTimeout);
-    
-    simpleSearchTimeout = setTimeout(() => {
-        console.log('🔍 Simple search:', searchTerm);
-        
-        if (!customersTable) {
-            console.warn('⚠️ TableManager not initialized');
-            return;
+    if (data.length === 0) {
+        if (cemeteriesTable) {
+            cemeteriesTable.setData([]);
         }
         
-        if (!searchTerm) {
-            // אם אין חיפוש - הצג הכל
-            customersTable.setData(currentCustomers);
-            console.log(`✅ Showing all ${currentCustomers.length} customers`);
-            return;
-        }
-        
-        // סנן לקוחות לפי החיפוש
-        const filtered = currentCustomers.filter(customer => {
-            // חפש בכל השדות הרלוונטיים
-            const searchableFields = [
-                customer.firstName,
-                customer.lastName,
-                customer.numId,
-                customer.phone,
-                customer.phoneMobile,
-                customer.streetAddress,
-                customer.city_name
-            ];
-            
-            return searchableFields.some(field => 
-                field && field.toString().toLowerCase().includes(searchTerm)
-            );
-        });
-        
-        console.log(`✅ Found ${filtered.length} matching customers`);
-        customersTable.setData(filtered);
-        
-    }, 300); // 300ms debounce
+        container.innerHTML = `
+            <tr>
+                <td colspan="9" style="text-align: center; padding: 60px;">
+                    <div style="color: #9ca3af;">
+                        <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
+                        <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">לא נמצאו תוצאות</div>
+                        <div>נסה לשנות את מילות החיפוש או הפילטרים</div>
+                    </div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    // ⭐ בדוק אם ה-DOM של TableManager קיים
+    const tableWrapperExists = document.querySelector('.table-wrapper[data-fixed-width="true"]');
+    
+    // ⭐ אם המשתנה קיים אבל ה-DOM נמחק - אפס את המשתנה!
+    if (!tableWrapperExists && cemeteriesTable) {
+        console.log('🗑️ TableManager DOM was deleted, resetting cemeteriesTable variable');
+        cemeteriesTable = null;
+        window.cemeteriesTable = null;
+    }
+    
+    // עכשיו בדוק אם צריך לבנות מחדש
+    if (!cemeteriesTable || !tableWrapperExists) {
+        // אין TableManager או שה-DOM שלו נמחק - בנה מחדש!
+        console.log('✅ Creating new TableManager with', data.length, 'total items');
+        initCemeteriesTable(data);
+    } else {
+        // TableManager קיים וגם ה-DOM שלו - רק עדכן נתונים
+        console.log('🔄 Updating existing TableManager with', data.length, 'total items');
+        cemeteriesTable.setData(data);
+    }
 }
 
 // ===================================================================
-// פונקציות פורמט ועזר
-// ===================================================================
-
-// פורמט סוג תושבות
-function formatCustomerType(type) {
-    const types = {
-        1: 'תושב',
-        2: 'תושב חוץ',
-        3: 'אחר'
-    };
-    return types[type] || '-';
-}
-
-// פורמט סטטוס לקוח
-function formatCustomerStatus(status) {
-    const statuses = {
-        1: { text: 'פעיל', color: '#10b981' },
-        0: { text: 'לא פעיל', color: '#ef4444' }
-    };
-    const statusInfo = statuses[status] || statuses[1];
-    return `<span style="background: ${statusInfo.color}; color: white; padding: 3px 8px; border-radius: 4px; font-size: 12px; display: inline-block;">${statusInfo.text}</span>`;
-}
-
 // פורמט תאריך
+// ===================================================================
 function formatDate(dateString) {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -409,64 +397,101 @@ function formatDate(dateString) {
 }
 
 // ===================================================================
+// פונקציות עזר - טעינת גושים
+// ===================================================================
+function loadBlocks(cemeteryId, cemeteryName) {
+    console.log(`📦 Loading blocks for cemetery: ${cemeteryName} (ID: ${cemeteryId})`);
+    
+    // עדכון breadcrumb
+    if (typeof updateBreadcrumb === 'function') {
+        updateBreadcrumb({
+            cemetery: { id: cemeteryId, name: cemeteryName }
+        });
+    }
+
+    // טעינת גושים (מימוש קיים במערכת)
+    if (typeof loadBlocksData === 'function') {
+        loadBlocksData(cemeteryId, cemeteryName);
+    } else {
+        console.warn('⚠️ loadBlocksData function not found');
+    }
+}
+
+// ===================================================================
 // פונקציות CRUD
 // ===================================================================
+async function editCemetery(cemeteryId) {
+    console.log('✏️ Edit cemetery:', cemeteryId);
+    editingCemeteryId = cemeteryId;
+    
+    // פתיחת טופס עריכה
+    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
+        FormHandler.openForm('cemetery', null, cemeteryId);
+    } else {
+        showToast('עריכה בפיתוח...', 'info');
+    }
+}
 
-// מחיקת לקוח
-async function deleteCustomer(customerId) {
-    if (!confirm('האם אתה בטוח שברצונך למחוק לקוח זה?')) {
+async function deleteCemetery(cemeteryId) {
+    console.log('🗑️ Delete cemetery:', cemeteryId);
+    
+    if (!confirm('האם אתה בטוח שברצונך למחוק את בית העלמין?')) {
         return;
     }
-    
+
     try {
-        const response = await fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?action=delete&id=${customerId}`, {
+        const response = await fetch(`/dashboard/dashboards/cemeteries/api/cemeteries-api.php?action=delete&id=${cemeteryId}`, {
             method: 'DELETE'
         });
         
         const data = await response.json();
         
         if (data.success) {
-            showToast('הלקוח נמחק בהצלחה', 'success');
+            showToast('בית העלמין נמחק בהצלחה', 'success');
             
-            // טען מחדש את הלקוחות
-            await fetchAndDisplayCustomers();
+            if (cemeterySearch) {
+                cemeterySearch.refresh();
+            }
         } else {
-            showToast(data.error || 'שגיאה במחיקת לקוח', 'error');
+            showToast(data.error || 'שגיאה במחיקת בית עלמין', 'error');
         }
     } catch (error) {
-        console.error('Error deleting customer:', error);
-        showToast('שגיאה במחיקת לקוח', 'error');
+        console.error('Error deleting cemetery:', error);
+        showToast('שגיאה במחיקת בית עלמין', 'error');
     }
 }
 
-// עריכת לקוח
-async function editCustomer(customerId) {
-    console.log('Edit customer:', customerId);
-    editingCustomerId = customerId;
-    showToast('עריכה בפיתוח...', 'info');
+// ===================================================================
+// בחירת הכל
+// ===================================================================
+function toggleSelectAll() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.cemetery-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
 }
 
 // ===================================================================
 // טעינת סטטיסטיקות
 // ===================================================================
-async function loadCustomerStats() {
+async function loadCemeteryStats() {
     try {
-        const response = await fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=stats');
+        const response = await fetch('/dashboard/dashboards/cemeteries/api/cemeteries-api.php?action=stats');
         const data = await response.json();
         
         if (data.success) {
-            console.log('📊 Customer stats:', data.data);
+            console.log('Cemetery stats:', data.data);
         }
     } catch (error) {
-        console.error('Error loading customer stats:', error);
+        console.error('Error loading cemetery stats:', error);
     }
 }
 
 // ===================================================================
-// פונקציות עזר
-// ===================================================================
-
 // הצגת הודעת Toast
+// ===================================================================
 function showToast(message, type = 'info') {
     const toast = document.createElement('div');
     toast.style.cssText = `
@@ -499,21 +524,26 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-// רענון נתונים
+// ===================================================================
+// פונקציה לרענון נתונים
+// ===================================================================
 async function refreshData() {
-    console.log('🔄 Refreshing customers data...');
-    await fetchAndDisplayCustomers();
+    if (cemeterySearch) {
+        cemeterySearch.refresh();
+    }
 }
 
-// בדיקת סטטוס טעינה
+// ===================================================================
+// פונקציה לבדיקת סטטוס הטעינה
+// ===================================================================
 function checkScrollStatus() {
-    if (!customersTable) {
+    if (!cemeteriesTable) {
         console.log('❌ Table not initialized');
         return;
     }
     
-    const total = customersTable.getFilteredData().length;
-    const displayed = customersTable.getDisplayedData().length;
+    const total = cemeteriesTable.getFilteredData().length;
+    const displayed = cemeteriesTable.getDisplayedData().length;
     const remaining = total - displayed;
     
     console.log('📊 Scroll Status:');
@@ -523,24 +553,32 @@ function checkScrollStatus() {
     console.log(`   Progress: ${Math.round((displayed / total) * 100)}%`);
     
     if (remaining > 0) {
-        console.log(`   🔽 Scroll down to load ${Math.min(customersTable.config.itemsPerPage, remaining)} more items`);
+        console.log(`   🔽 Scroll down to load ${Math.min(cemeteriesTable.config.itemsPerPage, remaining)} more items`);
     } else {
         console.log('   ✅ All items loaded');
     }
 }
 
 // ===================================================================
-// חשיפת פונקציות גלובליות
+// Backward Compatibility - Aliases
 // ===================================================================
-window.loadCustomers = loadCustomers;
-window.deleteCustomer = deleteCustomer;
-window.editCustomer = editCustomer;
+window.loadAllCemeteries = loadCemeteries; // ✅ Alias לשם הישן
+
+// ===================================================================
+// הפוך את הפונקציות לגלובליות
+// ===================================================================
+window.loadCemeteries = loadCemeteries;
+window.deleteCemetery = deleteCemetery;
+window.editCemetery = editCemetery;
 window.refreshData = refreshData;
-window.customersTable = customersTable;
+window.cemeteriesTable = cemeteriesTable;
 window.checkScrollStatus = checkScrollStatus;
 
-console.log('✅ Customers Management Module Loaded v4.0.0');
-console.log('📋 Simple & Clean - No UniversalSearch');
-console.log('💡 Commands:');
-console.log('   - checkScrollStatus() - בדוק סטטוס טעינה');
-console.log('   - refreshData() - רענן נתונים');
+// ===================================================================
+// אתחול מודול
+// ===================================================================
+console.log('✅ Cemeteries Management Module Loaded - v5.1.0: זהה ללקוחות (תוקן קונפליקט שמות)');
+console.log('💡 UniversalSearch + TableManager');
+console.log('💡 DashboardCleaner + Toast messages');
+console.log('💡 Virtual Scroll (no pagination)');
+console.log('💡 Commands: checkScrollStatus() - בדוק סטטוס המערכת');

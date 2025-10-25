@@ -471,34 +471,34 @@ function renderCustomersRows(data, container) {
     }
 
     // עכשיו בדוק אם צריך לבנות מחדש
-    // if (!customersTable || !tableWrapperExists) {
-    //     // אין TableManager או שה-DOM שלו נמחק - בנה מחדש!
-    //     console.log('✅ Creating new TableManager with', data.length, 'total items');
-    //     initCustomersTable(data);
-    // } else {
-    //     // TableManager קיים וגם ה-DOM שלו - רק עדכן נתונים
-    //     console.log('🔄 Updating existing TableManager with', data.length, 'total items');
-        
-    //     // ⭐ אם יש עוד נתונים ב-UniversalSearch, הוסף אותם!
-    //     if (customerSearch && customerSearch.state) {
-    //         const allData = customerSearch.state.results || [];
-    //         if (allData.length > data.length) {
-    //             console.log(`📦 UniversalSearch has ${allData.length} items, updating TableManager...`);
-    //             customersTable.setData(allData);
-    //             return;
-    //         }
-    //     }
-        
-    //     customersTable.setData(data);
-    // }
-
     if (!customersTable || !tableWrapperExists) {
-        console.log('✅ Creating new TableManager with', currentCustomers.length, 'total items');
-        initCustomersTable(currentCustomers);  // ✅ מעביר את כולם!
+        // אין TableManager או שה-DOM שלו נמחק - בנה מחדש!
+        console.log('✅ Creating new TableManager with', data.length, 'total items');
+        initCustomersTable(data);
     } else {
-        console.log('🔄 Updating existing TableManager with', currentCustomers.length, 'total items');
-        customersTable.setData(currentCustomers);  // ✅ מעביר את כולם!
+        // TableManager קיים וגם ה-DOM שלו - רק עדכן נתונים
+        console.log('🔄 Updating existing TableManager with', data.length, 'total items');
+        
+        // ⭐ אם יש עוד נתונים ב-UniversalSearch, הוסף אותם!
+        if (customerSearch && customerSearch.state) {
+            const allData = customerSearch.state.results || [];
+            if (allData.length > data.length) {
+                console.log(`📦 UniversalSearch has ${allData.length} items, updating TableManager...`);
+                customersTable.setData(allData);
+                return;
+            }
+        }
+        
+        customersTable.setData(data);
     }
+
+    // if (!customersTable || !tableWrapperExists) {
+    //     console.log('✅ Creating new TableManager with', currentCustomers.length, 'total items');
+    //     initCustomersTable(currentCustomers);  // ✅ מעביר את כולם!
+    // } else {
+    //     console.log('🔄 Updating existing TableManager with', currentCustomers.length, 'total items');
+    //     customersTable.setData(currentCustomers);  // ✅ מעביר את כולם!
+    // }
 }
 
 // ===================================================================

@@ -217,7 +217,7 @@ async function initCustomersSearch() {
         
         renderFunction: renderCustomersRows,
         
-        callbacks: {   
+        callbacks: {
             onInit: () => {
                 console.log('✅ UniversalSearch initialized for customers');
             },
@@ -228,30 +228,18 @@ async function initCustomersSearch() {
             
             onResults: (data) => {
                 console.log('📦 Results:', data.pagination?.total || data.total || 0, 'customers found');
-                // ❌ הסר את כל הקוד שהיה כאן לגבי currentCustomers!
-                // renderCustomersRows עושה את זה עכשיו
-            },
-            onStats: (stats) => {
-                console.log('Customer stats:', stats);
-                if (stats.by_status) {
-                    updateCustomerStats(stats);
+                
+                const currentPage = data.pagination?.page || 1;
+                
+                if (currentPage === 1) {
+                    // דף ראשון - התחל מחדש
+                    currentCustomers = data.data;
+                } else {
+                    // דפים נוספים - הוסף לקיימים
+                    currentCustomers = [...currentCustomers, ...data.data];
+                    console.log(`📦 Added page ${currentPage}, total now: ${currentCustomers.length}`);
                 }
             },
-
-            // onResults: (data) => {
-                //     console.log('📦 Results:', data.pagination?.total || data.total || 0, 'customers found');
-                
-                //     const currentPage = data.pagination?.page || 1;
-                
-                //     if (currentPage === 1) {
-                    //         // דף ראשון - התחל מחדש
-            //         currentCustomers = data.data;
-            //     } else {
-            //         // דפים נוספים - הוסף לקיימים
-            //         currentCustomers = [...currentCustomers, ...data.data];
-            //         console.log(`📦 Added page ${currentPage}, total now: ${currentCustomers.length}`);
-            //     }
-            // },
             
             onError: (error) => {
                 console.error('❌ Search error:', error);
@@ -273,7 +261,7 @@ async function initCustomersSearch() {
 // ===================================================================
 // אתחול TableManager
 // ===================================================================
-function initCustomersTable2(data) {
+function initCustomersTable(data) {
     // אם הטבלה כבר קיימת, רק עדכן נתונים
     if (customersTable) {
         customersTable.setData(data);
@@ -447,275 +435,10 @@ function initCustomersTable2(data) {
     return customersTable;
 }
 
-/**
- * initCustomersTable - אתחול TableManager ללקוחות
- * @param {Array} data - מערך לקוחות להצגה
- * @returns {TableManager} - מופע TableManager
- */
-async function initCustomersTable(data) {
-    console.log(`📊 initCustomersTable called with ${data.length} items`);
-    
-    customersTable = new TableManager({
-        tableSelector: '#mainTable',
-        
-        columns: [
-            {
-                key: 'numId',
-                label: 'ת.ז',
-                width: '120px',
-                sortable: true,
-                render: (value, row) => {
-                    const val = (typeof value === 'object' && value !== null) ? value.numId : value;
-                    return val || '-';
-                }
-            },
-            {
-                key: 'firstName',
-                label: 'שם פרטי',
-                width: '150px',
-                sortable: true,
-                render: (value, row) => {
-                    const val = (typeof value === 'object' && value !== null) ? value.firstName : value;
-                    return val || '-';
-                }
-            },
-            {
-                key: 'lastName',
-                label: 'שם משפחה',
-                width: '150px',
-                sortable: true,
-                render: (value, row) => {
-                    const val = (typeof value === 'object' && value !== null) ? value.lastName : value;
-                    return val || '-';
-                }
-            },
-            {
-                key: 'phone',
-                label: 'טלפון',
-                width: '120px',
-                sortable: false,
-                render: (value, row) => {
-                    const val = (typeof value === 'object' && value !== null) ? value.phone : value;
-                    return val || '-';
-                }
-            },
-            {
-                key: 'phoneMobile',
-                label: 'נייד',
-                width: '120px',
-                sortable: false,
-                render: (value, row) => {
-                    const val = (typeof value === 'object' && value !== null) ? value.phoneMobile : value;
-                    return val || '-';
-                }
-            },
-            {
-                key: 'streetAddress',
-                label: 'כתובת',
-                width: '200px',
-                sortable: false,
-                render: (value, row) => {
-                    const val = (typeof value === 'object' && value !== null) ? value.streetAddress : value;
-                    return val || '-';
-                }
-            },
-            {
-                key: 'city_name',
-                label: 'עיר',
-                width: '120px',
-                sortable: true,
-                render: (value, row) => {
-                    const val = (typeof value === 'object' && value !== null) ? value.city_name : value;
-                    return val || '-';
-                }
-            },
-            {
-                key: 'statusCustomer',
-                label: 'סטטוס',
-                width: '100px',
-                sortable: true,
-                render: (value, row) => {
-                    const val = (typeof value === 'object' && value !== null) ? value.statusCustomer : value;
-                    return val == 1 ? 'פעיל' : 'לא פעיל';
-                }
-            },
-            {
-                key: 'statusResident',
-                label: 'תושבות',
-                width: '120px',
-                sortable: true,
-                render: (value, row) => {
-                    const val = (typeof value === 'object' && value !== null) ? value.statusResident : value;
-                    switch(parseInt(val)) {
-                        case 1: return 'תושב ישראל';
-                        case 2: return 'תושב הארץ';
-                        case 3: return 'תושב חו"ל';
-                        default: return '-';
-                    }
-                }
-            },
-            {
-                key: 'createDate',
-                label: 'תאריך יצירה',
-                width: '120px',
-                sortable: true,
-                render: (value, row) => {
-                    const val = (typeof value === 'object' && value !== null) ? value.createDate : value;
-                    return val ? new Date(val).toLocaleDateString('he-IL') : '-';
-                }
-            },
-            {
-                key: 'actions',
-                label: 'פעולות',
-                width: '150px',
-                sortable: false,
-                render: (value, row) => {
-                    const rowData = (typeof value === 'object' && value !== null) ? value : row;
-                    
-                    if (!rowData) {
-                        return '-';
-                    }
-                    
-                    const id = rowData.unicId || rowData.id || '';
-                    if (!id) {
-                        return '-';
-                    }
-                    
-                    return `
-                        <div class="action-buttons" style="display: flex; gap: 8px; justify-content: center;">
-                            <button class="btn-icon" onclick="editCustomer('${id}')" title="ערוך">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn-icon" onclick="deleteCustomer('${id}')" title="מחק">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    `;
-                }
-            }
-        ],
-        
-        data: data,
-        
-        containerWidth: '80vw',
-        containerPadding: '16px',
-        
-        sortable: true,
-        resizable: true,
-        reorderable: false,
-        filterable: true,
-        
-        onSort: (field, order) => {
-            console.log(`📊 Sorted by ${field} ${order}`);
-            showToast(`ממוין לפי ${field} (${order === 'asc' ? 'עולה' : 'יורד'})`, 'info');
-        },
-        
-        onFilter: (filters) => {
-            console.log('🔍 Active filters:', filters);
-            const count = customersTable.getFilteredData().length;
-            showToast(`נמצאו ${count} תוצאות`, 'info');
-        }
-    });
-    
-    console.log('✅ TableManager created with', data.length, 'items');
-    
-    // ⭐⭐⭐ Scroll listener עם מניעת לולאה אינסופית ⭐⭐⭐
-    setTimeout(() => {
-        const bodyContainer = document.querySelector('.table-body-container');
-        
-        if (bodyContainer && customerSearch) {
-            console.log('✅ Adding scroll listener for pagination');
-            
-            let isLoadingMore = false;
-            let lastLoadTime = 0;
-            
-            bodyContainer.addEventListener('scroll', async function() {
-                // ⭐ Debounce - אל תטען יותר מדי מהר
-                const now = Date.now();
-                if (now - lastLoadTime < 500) {
-                    console.log('⏸️ Too soon, waiting...');
-                    return;
-                }
-                
-                if (isLoadingMore) {
-                    console.log('⏳ Already loading...');
-                    return;
-                }
-                
-                const scrollTop = this.scrollTop;
-                const scrollHeight = this.scrollHeight;
-                const clientHeight = this.clientHeight;
-                const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
-                
-                console.log(`📏 Distance from bottom: ${Math.round(distanceFromBottom)}px`);
-                
-                // ⭐ רק אם באמת קרוב לתחתית
-                if (distanceFromBottom < 200) {
-                    const state = customerSearch.state;
-                    const currentPage = state.currentPage || 1;
-                    const totalResults = state.totalResults || 0;
-                    const itemsPerPage = 200;
-                    const totalPages = Math.ceil(totalResults / itemsPerPage);
-                    
-                    console.log(`📊 Page ${currentPage}/${totalPages}, currentCustomers: ${currentCustomers.length}`);
-                    
-                    if (currentPage < totalPages) {
-                        console.log(`🚀 LOADING PAGE ${currentPage + 1}...`);
-                        
-                        isLoadingMore = true;
-                        lastLoadTime = now;
-                        
-                        // ⭐ שמור את מיקום הגלילה
-                        const scrollBeforeLoad = this.scrollTop;
-                        
-                        try {
-                            state.currentPage = currentPage + 1;
-                            await customerSearch.search();
-                            
-                            console.log(`✅ Page ${currentPage + 1} loaded!`);
-                            
-                            // ⭐ המתן רגע ל-DOM להתעדכן
-                            await new Promise(resolve => setTimeout(resolve, 100));
-                            
-                            // ⭐ גלול 300px למעלה כדי שהמשתמש לא יהיה בתחתית
-                            const newScrollTop = scrollBeforeLoad - 300;
-                            if (newScrollTop > 0) {
-                                this.scrollTop = newScrollTop;
-                                console.log(`📍 Scrolled up to ${newScrollTop}px to prevent loop`);
-                            }
-                            
-                        } catch (error) {
-                            console.error('❌ Error:', error);
-                            state.currentPage = currentPage;
-                        } finally {
-                            isLoadingMore = false;
-                        }
-                    } else {
-                        console.log('✅ All pages loaded');
-                    }
-                }
-            });
-            
-            console.log('✅ Scroll listener added with loop protection');
-        } else {
-            console.warn('⚠️ Cannot add scroll listener:', {
-                bodyContainer: !!bodyContainer,
-                customerSearch: !!customerSearch
-            });
-        }
-    }, 200);
-    
-    window.customersTable = customersTable;
-    
-    console.log('✅ initCustomersTable completed');
-    
-    return customersTable;
-}
-
 // ===================================================================
 // רינדור שורות לקוחות
 // ===================================================================
-function renderCustomersRows2(data, container) {
+function renderCustomersRows(data, container) {
     console.log('🎨 renderCustomersRows called with', data.length, 'items');
     
     if (data.length === 0) {
@@ -768,58 +491,6 @@ function renderCustomersRows2(data, container) {
         
         customersTable.setData(data);
     }
-}
-
-/**
- * renderCustomersRows - מציג שורות לקוחות בטבלה
- * @param {Array} data - מערך לקוחות להצגה
- */
-async function renderCustomersRows(data) {
-    console.log('═══════════════════════════════════════');
-    console.log('🎨 renderCustomersRows called with', data.length, 'items');
-    
-    const currentPage = customerSearch?.state?.currentPage || 1;
-    console.log('📄 Current page:', currentPage);
-    
-    if (currentPage === 1) {
-        currentCustomers = data;
-        console.log('📦 Page 1: Starting fresh with', data.length, 'items');
-        console.log('📋 Sample IDs:', data.slice(0, 3).map(c => c.unicId || c.id));
-    } else {
-        const oldLength = currentCustomers.length;
-        currentCustomers = [...currentCustomers, ...data];
-        console.log('📦 Page', currentPage, ':', oldLength, '+', data.length, '=', currentCustomers.length, 'TOTAL');
-        console.log('📋 Old last 3:', currentCustomers.slice(oldLength - 3, oldLength).map(c => c.unicId || c.id));
-        console.log('📋 New first 3:', data.slice(0, 3).map(c => c.unicId || c.id));
-    }
-    
-    console.log('🔢 TOTAL currentCustomers.length:', currentCustomers.length);
-    
-    if (!currentCustomers || currentCustomers.length === 0) {
-        console.log('⚠️ No data to display');
-        const tbody = document.querySelector('#tableBody');
-        if (tbody) {
-            tbody.innerHTML = '<tr><td colspan="12" style="text-align: center; padding: 20px;">לא נמצאו לקוחות</td></tr>';
-        }
-        return;
-    }
-    
-    console.log('🔍 customersTable exists?', !!customersTable);
-    
-    if (!customersTable) {
-        console.log('✅ Creating NEW TableManager with', currentCustomers.length, 'items');
-        await initCustomersTable(currentCustomers);
-    } else {
-        console.log('🔄 UPDATING TableManager');
-        console.log('   Before: TableManager has', customersTable?.state?.allData?.length || '?', 'items');
-        
-        customersTable.setData(currentCustomers);
-        
-        console.log('   After: TableManager has', customersTable?.state?.allData?.length || '?', 'items');
-    }
-    
-    console.log('✅ renderCustomersRows completed');
-    console.log('═══════════════════════════════════════');
 }
 
 // ===================================================================

@@ -452,217 +452,6 @@ function initCustomersTable2(data) {
  * @param {Array} data - מערך לקוחות להצגה
  * @returns {TableManager} - מופע TableManager
  */
-async function initCustomersTable3(data) {
-    console.log(`📊 initCustomersTable called with ${data.length} items`);
-    
-    customersTable = new TableManager({
-        tableSelector: '#mainTable',
-        
-        columns: [
-            {
-                key: 'numId',
-                label: 'ת.ז',
-                width: '120px',
-                sortable: true,
-                render: (value) => value || '-'
-            },
-            {
-                key: 'firstName',
-                label: 'שם פרטי',
-                width: '150px',
-                sortable: true,
-                render: (value) => value || '-'
-            },
-            {
-                key: 'lastName',
-                label: 'שם משפחה',
-                width: '150px',
-                sortable: true,
-                render: (value) => value || '-'
-            },
-            {
-                key: 'phone',
-                label: 'טלפון',
-                width: '120px',
-                sortable: false,
-                render: (value) => value || '-'
-            },
-            {
-                key: 'phoneMobile',
-                label: 'נייד',
-                width: '120px',
-                sortable: false,
-                render: (value) => value || '-'
-            },
-            {
-                key: 'streetAddress',
-                label: 'כתובת',
-                width: '200px',
-                sortable: false,
-                render: (value) => value || '-'
-            },
-            {
-                key: 'city_name',
-                label: 'עיר',
-                width: '120px',
-                sortable: true,
-                render: (value) => value || '-'
-            },
-            {
-                key: 'statusCustomer',
-                label: 'סטטוס',
-                width: '100px',
-                sortable: true,
-                render: (value) => value == 1 ? 'פעיל' : 'לא פעיל'
-            },
-            {
-                key: 'statusResident',
-                label: 'תושבות',
-                width: '120px',
-                sortable: true,
-                render: (value) => {
-                    switch(parseInt(value)) {
-                        case 1: return 'תושב ישראל';
-                        case 2: return 'תושב הארץ';
-                        case 3: return 'תושב חו"ל';
-                        default: return '-';
-                    }
-                }
-            },
-            {
-                key: 'createDate',
-                label: 'תאריך יצירה',
-                width: '120px',
-                sortable: true,
-                render: (value) => value ? new Date(value).toLocaleDateString('he-IL') : '-'
-            },
-            {
-                key: 'actions',
-                label: 'פעולות',
-                width: '150px',
-                sortable: false,
-                render: (value, row) => {
-                    return `
-                        <div class="action-buttons">
-                            <button class="btn-icon" onclick="editCustomer('${row.unicId}')" title="ערוך">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn-icon" onclick="deleteCustomer('${row.unicId}')" title="מחק">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    `;
-                }
-            }
-        ],
-        
-        data: data,
-        
-        containerWidth: '80vw',
-        containerPadding: '16px',
-        
-        sortable: true,
-        resizable: true,
-        reorderable: false,
-        filterable: true,
-        
-        onSort: (field, order) => {
-            console.log(`📊 Sorted by ${field} ${order}`);
-            showToast(`ממוין לפי ${field} (${order === 'asc' ? 'עולה' : 'יורד'})`, 'info');
-        },
-        
-        onFilter: (filters) => {
-            console.log('🔍 Active filters:', filters);
-            const count = customersTable.getFilteredData().length;
-            showToast(`נמצאו ${count} תוצאות`, 'info');
-        }
-    });
-    
-    console.log('✅ TableManager created');
-    
-    // ⭐⭐⭐ Scroll listener לטעינת דפים נוספים ⭐⭐⭐
-    const bodyContainer = document.querySelector('.table-body-container');
-    console.log('🔍 DEBUG: Looking for .table-body-container...');
-    console.log('🔍 DEBUG: bodyContainer found?', !!bodyContainer);
-    console.log('🔍 DEBUG: customerSearch exists?', !!customerSearch);
-    
-    if (bodyContainer && customerSearch) {
-        console.log('✅ Adding scroll listener for pagination');
-        
-        let isLoadingMore = false;
-        
-        bodyContainer.addEventListener('scroll', async function() {
-            console.log('📜 Scroll event triggered');
-            
-            if (isLoadingMore) {
-                console.log('⏳ Already loading, skipping...');
-                return;
-            }
-            
-            const scrollTop = this.scrollTop;
-            const scrollHeight = this.scrollHeight;
-            const clientHeight = this.clientHeight;
-            const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
-            
-            console.log(`📏 Scroll position: ${scrollTop}, Height: ${scrollHeight}, Client: ${clientHeight}, Distance from bottom: ${distanceFromBottom}px`);
-            
-            if (distanceFromBottom < 100) {
-                console.log('🎯 Near bottom! Checking if we need to load more...');
-                
-                const state = customerSearch.state;
-                const currentPage = state.currentPage || 1;
-                const totalResults = state.totalResults || 0;
-                const itemsPerPage = 200;
-                const totalPages = Math.ceil(totalResults / itemsPerPage);
-                
-                console.log(`📊 Page ${currentPage}/${totalPages}, Total results: ${totalResults}`);
-                console.log(`📦 currentCustomers.length = ${currentCustomers.length}`);
-                
-                if (currentPage < totalPages) {
-                    console.log(`📥 Loading page ${currentPage + 1}...`);
-                    
-                    isLoadingMore = true;
-                    
-                    try {
-                        state.currentPage = currentPage + 1;
-                        console.log(`🔄 Set currentPage to ${state.currentPage}`);
-                        
-                        await customerSearch.search();
-                        
-                        console.log(`✅ Page ${currentPage + 1} loaded!`);
-                    } catch (error) {
-                        console.error('❌ Error loading more:', error);
-                        state.currentPage = currentPage;
-                    } finally {
-                        isLoadingMore = false;
-                    }
-                } else {
-                    console.log('✅ All pages loaded');
-                }
-            }
-        });
-        
-        console.log('✅ Scroll listener added successfully');
-    } else {
-        console.warn('⚠️ Could not add scroll listener:', {
-            bodyContainer: !!bodyContainer,
-            customerSearch: !!customerSearch
-        });
-    }
-    
-    window.customersTable = customersTable;
-    
-    console.log('📊 Total customers in TableManager:', data.length);
-    console.log('📄 Items per page:', customersTable.config.itemsPerPage);
-    
-    return customersTable;
-}
-
-/**
- * initCustomersTable - אתחול TableManager ללקוחות
- * @param {Array} data - מערך לקוחות להצגה
- * @returns {TableManager} - מופע TableManager
- */
 async function initCustomersTable(data) {
     console.log(`📊 initCustomersTable called with ${data.length} items`);
     
@@ -828,25 +617,22 @@ async function initCustomersTable(data) {
         }
     });
     
-    console.log('✅ TableManager created');
+    console.log('✅ TableManager created with', data.length, 'items');
     
-    // ⭐⭐⭐ Scroll listener עם מניעת לולאה אינסופית ⭐⭐⭐
+    // ⭐⭐⭐ Scroll listener - גרסה פשוטה וברורה ⭐⭐⭐
     setTimeout(() => {
         const bodyContainer = document.querySelector('.table-body-container');
-        console.log('🔍 DEBUG: Looking for .table-body-container...');
-        console.log('🔍 DEBUG: bodyContainer found?', !!bodyContainer);
         
         if (bodyContainer && customerSearch) {
             console.log('✅ Adding scroll listener for pagination');
             
             let isLoadingMore = false;
-            let lastScrollTop = 0;
-            let lastLoadedItemsCount = currentCustomers.length;
             
             bodyContainer.addEventListener('scroll', async function() {
-                // ⭐ אם טוען - דלג
+                console.log('📜 SCROLL EVENT!');
+                
                 if (isLoadingMore) {
-                    console.log('⏳ Already loading, skipping...');
+                    console.log('⏳ Already loading...');
                     return;
                 }
                 
@@ -855,23 +641,7 @@ async function initCustomersTable(data) {
                 const clientHeight = this.clientHeight;
                 const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
                 
-                // ⭐ בדוק שהמשתמש גלל למטה (ולא רק נמצא בתחתית)
-                const isScrollingDown = scrollTop > lastScrollTop;
-                lastScrollTop = scrollTop;
-                
-                if (!isScrollingDown) {
-                    // גלילה למעלה - לא צריך לטעון
-                    return;
-                }
-                
-                // ⭐ בדוק שמספר הפריטים השתנה מאז הטעינה האחרונה
-                // אם לא - אנחנו עדיין בתהליך עדכון ה-DOM
-                if (currentCustomers.length === lastLoadedItemsCount) {
-                    // אותו מספר פריטים - אל תטען שוב
-                    return;
-                }
-                
-                console.log(`📏 Scroll: ${Math.round(scrollTop)}px, Distance from bottom: ${Math.round(distanceFromBottom)}px`);
+                console.log(`📏 Distance from bottom: ${Math.round(distanceFromBottom)}px`);
                 
                 if (distanceFromBottom < 200) {
                     const state = customerSearch.state;
@@ -880,39 +650,20 @@ async function initCustomersTable(data) {
                     const itemsPerPage = 200;
                     const totalPages = Math.ceil(totalResults / itemsPerPage);
                     
-                    console.log(`📊 Page ${currentPage}/${totalPages}, currentCustomers: ${currentCustomers.length}`);
+                    console.log(`📊 Page ${currentPage}/${totalPages}`);
+                    console.log(`📦 currentCustomers: ${currentCustomers.length} items`);
                     
                     if (currentPage < totalPages) {
-                        console.log(`📥 🚀 LOADING PAGE ${currentPage + 1}...`);
+                        console.log(`🚀 LOADING PAGE ${currentPage + 1}...`);
                         
                         isLoadingMore = true;
                         
-                        // ⭐ שמור את מיקום הגלילה הנוכחי
-                        const scrollBeforeLoad = this.scrollTop;
-                        
                         try {
                             state.currentPage = currentPage + 1;
-                            
-                            // ⭐ עדכן את מספר הפריטים לפני הטעינה
-                            lastLoadedItemsCount = currentCustomers.length;
-                            
                             await customerSearch.search();
-                            
-                            console.log(`✅ Page ${currentPage + 1} loaded! Total items: ${currentCustomers.length}`);
-                            
-                            // ⭐ המתן רגע ל-DOM להתעדכן, ואז גלול קצת למעלה
-                            setTimeout(() => {
-                                // גלול 100px למעלה כדי שהמשתמש לא יהיה בתחתית
-                                this.scrollTop = scrollBeforeLoad - 50;
-                                console.log('📍 Scrolled up slightly to prevent infinite loop');
-                                
-                                // עדכן את lastLoadedItemsCount אחרי העדכון
-                                lastLoadedItemsCount = currentCustomers.length;
-                            }, 100);
-                            
+                            console.log(`✅ Page ${currentPage + 1} loaded successfully!`);
                         } catch (error) {
                             console.error('❌ Error:', error);
-                            showToast('שגיאה בטעינת נתונים נוספים', 'error');
                             state.currentPage = currentPage;
                         } finally {
                             isLoadingMore = false;
@@ -923,9 +674,14 @@ async function initCustomersTable(data) {
                 }
             });
             
-            console.log('✅ Scroll listener added with infinite loop protection');
+            console.log('✅ Scroll listener added');
+        } else {
+            console.warn('⚠️ Cannot add scroll listener:', {
+                bodyContainer: !!bodyContainer,
+                customerSearch: !!customerSearch
+            });
         }
-    }, 100);
+    }, 200);
     
     window.customersTable = customersTable;
     
@@ -997,32 +753,26 @@ function renderCustomersRows2(data, container) {
  * @param {Array} data - מערך לקוחות להצגה
  */
 async function renderCustomersRows(data) {
+    console.log('═══════════════════════════════════════');
     console.log('🎨 renderCustomersRows called with', data.length, 'items');
-    console.log('🔍 DEBUG: customerSearch exists?', !!customerSearch);
-    console.log('🔍 DEBUG: customerSearch.state:', customerSearch?.state);
     
-    // ⭐ עדכן את currentCustomers לפני השימוש בו!
     const currentPage = customerSearch?.state?.currentPage || 1;
-    console.log('🔍 DEBUG: currentPage =', currentPage);
+    console.log('📄 Current page:', currentPage);
     
     if (currentPage === 1) {
-        // דף ראשון - התחל מחדש
         currentCustomers = data;
-        console.log(`📦 Page 1: Starting fresh with ${data.length} items`);
-        console.log(`📋 First 3 IDs:`, data.slice(0, 3).map(c => c.unicId || c.id));
+        console.log('📦 Page 1: Starting fresh with', data.length, 'items');
+        console.log('📋 Sample IDs:', data.slice(0, 3).map(c => c.unicId || c.id));
     } else {
-        // דפים נוספים - הוסף לקיימים
         const oldLength = currentCustomers.length;
         currentCustomers = [...currentCustomers, ...data];
-        console.log(`📦 Added page ${currentPage}: ${oldLength} + ${data.length} = ${currentCustomers.length} total`);
-        console.log(`📋 Last 3 OLD IDs:`, currentCustomers.slice(oldLength - 3, oldLength).map(c => c.unicId || c.id));
-        console.log(`📋 First 3 NEW IDs:`, data.slice(0, 3).map(c => c.unicId || c.id));
+        console.log('📦 Page', currentPage, ':', oldLength, '+', data.length, '=', currentCustomers.length, 'TOTAL');
+        console.log('📋 Old last 3:', currentCustomers.slice(oldLength - 3, oldLength).map(c => c.unicId || c.id));
+        console.log('📋 New first 3:', data.slice(0, 3).map(c => c.unicId || c.id));
     }
     
-    console.log('🔢 DEBUG: currentCustomers.length =', currentCustomers.length);
-    console.log('📋 Total IDs in currentCustomers:', currentCustomers.map(c => c.unicId || c.id).join(', '));
+    console.log('🔢 TOTAL currentCustomers.length:', currentCustomers.length);
     
-    // בדיקה אם יש נתונים
     if (!currentCustomers || currentCustomers.length === 0) {
         console.log('⚠️ No data to display');
         const tbody = document.querySelector('#tableBody');
@@ -1032,49 +782,18 @@ async function renderCustomersRows(data) {
         return;
     }
     
-    // ⭐ בדוק רק אם customersTable קיים - אל תבדוק DOM!
-    console.log('🔍 DEBUG: customersTable exists?', !!customersTable);
+    console.log('🔍 customersTable exists?', !!customersTable);
     
     if (!customersTable) {
-        // אין TableManager - בנה מחדש!
-        console.log('✅ Creating NEW TableManager with', currentCustomers.length, 'total items');
+        console.log('✅ Creating NEW TableManager with', currentCustomers.length, 'items');
         await initCustomersTable(currentCustomers);
-        
-        // ⭐ אחרי יצירה - בדוק מה TableManager יודע
-        console.log('🔍 After init - TableManager state:', {
-            allDataLength: customersTable.state.allData.length,
-            displayedDataLength: customersTable.state.displayedData.length,
-            currentCustomersLength: currentCustomers.length
-        });
     } else {
-        // TableManager קיים - רק עדכן נתונים!
-        console.log('🔄 UPDATING existing TableManager');
-        console.log('🔍 BEFORE setData:', {
-            allDataLength: customersTable.state.allData.length,
-            displayedDataLength: customersTable.state.displayedData.length,
-            currentCustomersLength: currentCustomers.length
-        });
+        console.log('🔄 UPDATING TableManager');
+        console.log('   Before: TableManager has', customersTable?.state?.allData?.length || '?', 'items');
         
-        // ⭐ קריאה ל-setData עם כל ה-currentCustomers
         customersTable.setData(currentCustomers);
         
-        console.log('🔍 AFTER setData:', {
-            allDataLength: customersTable.state.allData.length,
-            displayedDataLength: customersTable.state.displayedData.length,
-            currentCustomersLength: currentCustomers.length
-        });
-        
-        // ⭐ בדוק אם הם באמת שונים
-        if (customersTable.state.allData.length !== currentCustomers.length) {
-            console.error('❌ MISMATCH! TableManager has different data length!');
-            console.error('   Expected:', currentCustomers.length);
-            console.error('   Actual:', customersTable.state.allData.length);
-            
-            // נסה לאלץ עדכון
-            console.log('🔧 Force rebuilding TableManager...');
-            customersTable = null;
-            await initCustomersTable(currentCustomers);
-        }
+        console.log('   After: TableManager has', customersTable?.state?.allData?.length || '?', 'items');
     }
     
     console.log('✅ renderCustomersRows completed');

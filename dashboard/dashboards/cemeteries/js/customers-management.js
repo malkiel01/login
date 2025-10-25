@@ -782,12 +782,10 @@ async function renderCustomersRows(data) {
     console.log('📄 Current page:', currentPage);
     
     if (currentPage === 1) {
-        // דף ראשון - התחל מחדש
         currentCustomers = data;
         console.log('📦 Page 1: Starting fresh with', data.length, 'items');
         console.log('📋 Sample IDs:', data.slice(0, 3).map(c => c.unicId || c.id));
     } else {
-        // דפים נוספים - הוסף לקיימים
         const oldLength = currentCustomers.length;
         currentCustomers = [...currentCustomers, ...data];
         console.log('📦 Page', currentPage, ':', oldLength, '+', data.length, '=', currentCustomers.length, 'TOTAL');
@@ -797,7 +795,6 @@ async function renderCustomersRows(data) {
     
     console.log('🔢 TOTAL currentCustomers.length:', currentCustomers.length);
     
-    // בדיקה אם יש נתונים
     if (!currentCustomers || currentCustomers.length === 0) {
         console.log('⚠️ No data to display');
         const tbody = document.querySelector('#tableBody');
@@ -807,15 +804,19 @@ async function renderCustomersRows(data) {
         return;
     }
     
-    // ⭐⭐⭐ תמיד בנה מחדש את TableManager עם כל הנתונים! ⭐⭐⭐
-    console.log('🔨 REBUILDING TableManager with', currentCustomers.length, 'items');
+    console.log('🔍 customersTable exists?', !!customersTable);
     
-    // אפס את המשתנה הישן
-    customersTable = null;
-    window.customersTable = null;
-    
-    // בנה מחדש עם כל הנתונים
-    await initCustomersTable(currentCustomers);
+    if (!customersTable) {
+        console.log('✅ Creating NEW TableManager with', currentCustomers.length, 'items');
+        await initCustomersTable(currentCustomers);
+    } else {
+        console.log('🔄 UPDATING TableManager');
+        console.log('   Before: TableManager has', customersTable?.state?.allData?.length || '?', 'items');
+        
+        customersTable.setData(currentCustomers);
+        
+        console.log('   After: TableManager has', customersTable?.state?.allData?.length || '?', 'items');
+    }
     
     console.log('✅ renderCustomersRows completed');
     console.log('═══════════════════════════════════════');

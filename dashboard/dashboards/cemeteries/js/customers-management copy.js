@@ -127,7 +127,7 @@ async function buildCustomersContainer() {
 // אתחול UniversalSearch - שימוש בפונקציה גלובלית!
 // ===================================================================
 async function initCustomersSearch() {
-    customerSearch = new UniversalSearch({
+    customerSearch = window.initUniversalSearch({
         entityType: 'customer',
         apiEndpoint: '/dashboard/dashboards/cemeteries/api/customers-api.php',
         action: 'list',

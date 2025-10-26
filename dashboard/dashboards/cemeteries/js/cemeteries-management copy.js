@@ -132,7 +132,7 @@ async function buildCemeteriesContainer() {
 // אתחול UniversalSearch - שימוש בפונקציה גלובלית!
 // ===================================================================
 async function initCemeteriesSearch() {
-    cemeterySearch = new UniversalSearch({
+    cemeterySearch = window.initUniversalSearch({
         entityType: 'cemetery',
         apiEndpoint: '/dashboard/dashboards/cemeteries/api/cemeteries-api.php',
         action: 'list',

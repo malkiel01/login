@@ -155,7 +155,7 @@ const DashboardCleaner = {
         }
         
         if (thead) {
-            if (window.currentType && window.currentType !== 'customer') {
+            if (window.currentType && window.currentType !== 'customer' && window.currentType && window.currentType !== 'cemetery' ) {
                 this.setDefaultHeaders(window.currentType);
             } else {
                 thead.innerHTML = '';

@@ -68,7 +68,7 @@ window.initUniversalSearch = function(config) {
         
         results: {
             containerSelector: config.resultsContainerSelector,
-            itemsPerPage: config.itemsPerPage || 222,
+            itemsPerPage: config.itemsPerPage || 200,
             showPagination: config.showPagination || false,
             showCounter: config.showCounter !== false, // ברירת מחדל: true
             columns: config.displayColumns,

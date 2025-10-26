@@ -243,17 +243,7 @@ class TableManager {
         // בדוק שה-CSS אכן הוחל
         setTimeout(() => {
             const wrapperStyles = window.getComputedStyle(wrapper);
-            const headerStyles = window.getComputedStyle(headerContainer);
-            const bodyStyles = window.getComputedStyle(bodyContainer);
             const parentStyles = window.getComputedStyle(parent);
-            
-            console.log('Parent overflow:', parentStyles.overflow, parentStyles.overflowY);
-            console.log('Wrapper display:', wrapperStyles.display);
-            console.log('Wrapper height:', wrapperStyles.height);
-            console.log('Wrapper overflow:', wrapperStyles.overflow);
-            console.log('Header overflow:', headerStyles.overflow, 'Y:', headerStyles.overflowY);
-            console.log('Body overflow:', bodyStyles.overflow, 'Y:', bodyStyles.overflowY);
-            console.log('Body flex:', bodyStyles.flex);
             
             if (parentStyles.overflow !== 'visible') {
                 console.warn('⚠️ Parent still has overflow! Trying to fix again...');
@@ -270,9 +260,7 @@ class TableManager {
         
         // סנכרן גלילה אופקית
         this.syncHorizontalScroll();
-        
-        console.log('🔄 Horizontal scroll synced');
-        
+            
         // רינדור כותרות
         this.renderHeaders();
         

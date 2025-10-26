@@ -195,7 +195,7 @@ async function initCemeteriesSearch() {
         resultsContainerSelector: '#tableBody',
         
         placeholder: 'חיפוש בתי עלמין לפי שם, קוד, כתובת...',
-        itemsPerPage: 200,
+        itemsPerPage: 350,
         
         renderFunction: renderCemeteriesRows,
         

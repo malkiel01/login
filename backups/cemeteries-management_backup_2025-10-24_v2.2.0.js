@@ -249,7 +249,7 @@ function initCemeteriesTable(data) {
         fixedLayout: true,
         
         itemsPerPage: 50,
-        scrollThreshold: 450,
+        scrollThreshold: 200,
         renderDelay: 0,
         batchSize: 50,
         

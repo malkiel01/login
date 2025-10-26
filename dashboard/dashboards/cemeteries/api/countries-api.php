@@ -28,7 +28,7 @@
          case 'list':
              $search = $_GET['search'] ?? '';
              $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 200;
+             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 300;
              $offset = ($page - 1) * $limit;
              
              // בניית השאילתה

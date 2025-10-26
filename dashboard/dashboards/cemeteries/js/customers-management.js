@@ -213,7 +213,7 @@ async function initCustomersSearch() {
         resultsContainerSelector: '#tableBody',
         
         placeholder: 'חיפוש לקוחות לפי שם, ת.ז, טלפון...',
-        itemsPerPage: 280,
+        itemsPerPage: 999999,
         
         renderFunction: renderCustomersRows,
         

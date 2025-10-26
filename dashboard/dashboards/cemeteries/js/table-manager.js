@@ -75,7 +75,7 @@ class TableManager {
             onColumnReorder: null,
             infiniteScroll: true,
             itemsPerPage: 100,
-            scrollThreshold: 200,
+            scrollThreshold: 301,
             ...config
         };
         

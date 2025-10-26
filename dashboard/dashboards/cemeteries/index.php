@@ -25,7 +25,6 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/dashboard.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/sidebar.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/header.css">
-    <!-- <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/tables.css"> -->
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/forms.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/cards.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/breadcrumb.css">
@@ -151,9 +150,6 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <!-- קודם: UniversalSearch (הבסיס) -->
     <script src="/dashboard/dashboards/cemeteries/js/universal-search.js"></script>
 
-    <!-- אחרי זה: Presets (משתמש ב-UniversalSearch) -->
-    <script src="/dashboard/dashboards/cemeteries/js/search-presets.js"></script>
-
     <script src="/dashboard/dashboards/cemeteries/js/breadcrumb.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/main.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/sidebar-counts.js"></script>
@@ -167,6 +163,8 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <script src="/dashboard/dashboards/cemeteries/js/cards.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/responsive.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/unified-table-renderer.js"></script>
+    
+    <script src="/dashboard/dashboards/cemeteries/js/cemeteries-management.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/customers-management.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/purchases-management.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/burials-management.js"></script>
@@ -178,7 +176,6 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <script src="/dashboard/dashboards/cemeteries/js/live-search.js"></script>
 
     <!-- הוסף את זה: -->
-    <script src="/dashboard/dashboards/cemeteries/js/cemeteries-management.js"></script>
 
     <script>
         // Initialize dashboard on load

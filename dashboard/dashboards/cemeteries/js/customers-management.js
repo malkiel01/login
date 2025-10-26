@@ -390,6 +390,10 @@ function initCustomersTable(data, totalItems = null) {
                 `
             }
         ],
+
+        onRowDoubleClick: (customer) => {                    // ⭐ שורה חדשה
+            handleCustomerDoubleClick(customer.unicId);
+        },
         
         data: data,
         
@@ -649,6 +653,31 @@ function checkScrollStatus() {
         console.log('   ✅ All items loaded');
     }
 }
+
+// ===================================================
+// פונקציה לטיפול בדאבל-קליק על לקוח
+// ===================================================
+async function handleCustomerDoubleClick(customerId) {
+    console.log('🖱️ Double-click on customer:', customerId);
+    
+    try {
+        // יצירת והצגת כרטיס
+        if (typeof createCustomerCard === 'function') {
+            const cardHtml = await createCustomerCard(customerId);
+            if (cardHtml && typeof displayHierarchyCard === 'function') {
+                displayHierarchyCard(cardHtml);
+            }
+        } else {
+            console.warn('⚠️ createCustomerCard not found - opening edit form');
+            editCustomer(customerId);
+        }
+    } catch (error) {
+        console.error('❌ Error in handleCustomerDoubleClick:', error);
+        showToast('שגיאה בטעינת פרטי לקוח', 'error');
+    }
+}
+
+window.handleCustomerDoubleClick = handleCustomerDoubleClick;
 
 // הפוך את הפונקציות לגלובליות
 window.loadCustomers = loadCustomers;

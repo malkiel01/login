@@ -883,7 +883,7 @@ window.loadAllCemeteries2 = async function() {
     await tableRenderer.loadAndDisplay('cemetery');
 };
  
-window.loadAllBlocks = async function() {
+window.loadAllBlocks2 = async function() {
     console.log('📍 Loading all blocks - STEP C');
     setActiveMenuItem('blockItem');
     window.currentType = 'block';

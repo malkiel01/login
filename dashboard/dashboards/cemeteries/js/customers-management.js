@@ -29,9 +29,13 @@ async function loadCustomers() {
     // עדכן את הסוג הנוכחי
     window.currentType = 'customer';
     window.currentParentId = null;
-    
+
     // ⭐ נקה - DashboardCleaner ימחק גם את TableManager!
-    DashboardCleaner.clear({ targetLevel: 'customer' });
+    if (typeof DashboardCleaner !== 'undefined') {
+        DashboardCleaner.clear({ targetLevel: 'customer' });
+    } else if (typeof clearDashboard === 'function') {
+        clearDashboard({ targetLevel: 'customer' });
+    }
     
     // נקה את כל הסידבר
     if (typeof clearAllSidebarSelections === 'function') {

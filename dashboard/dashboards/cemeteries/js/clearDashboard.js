@@ -172,11 +172,11 @@ const DashboardCleaner = {
         if (!thead) return;
         
         const headers = {
-            cemetery: `<th>מזהה</th><th>שם</th><th>קוד</th><th>סטטוס</th><th>נוצר בתאריך</th><th>פעולות</th>`,
-            block: `<th>מזהה</th><th>שם גוש</th><th>קוד</th><th>סטטוס</th><th>נוצר בתאריך</th><th>פעולות</th>`,
-            plot: `<th>מזהה</th><th>שם חלקה</th><th>קוד</th><th>סטטוס</th><th>נוצר בתאריך</th><th>פעולות</th>`,
-            areaGrave: `<th>מזהה</th><th>שם אחוזת קבר</th><th>סוג</th><th>סטטוס</th><th>נוצר בתאריך</th><th>פעולות</th>`,
-            grave: `<th>מזהה</th><th>שם הנפטר</th><th>תאריך פטירה</th><th>מיקום</th><th>סטטוס</th><th>פעולות</th>`
+            // cemetery: `<th>מזהה</th><th>שם</th><th>קוד</th><th>סטטוס</th><th>נוצר בתאריך</th><th>פעולות</th>`,
+            // block: `<th>מזהה</th><th>שם גוש</th><th>קוד</th><th>סטטוס</th><th>נוצר בתאריך</th><th>פעולות</th>`,
+            // plot: `<th>מזהה</th><th>שם חלקה</th><th>קוד</th><th>סטטוס</th><th>נוצר בתאריך</th><th>פעולות</th>`,
+            // areaGrave: `<th>מזהה</th><th>שם אחוזת קבר</th><th>סוג</th><th>סטטוס</th><th>נוצר בתאריך</th><th>פעולות</th>`,
+            // grave: `<th>מזהה</th><th>שם הנפטר</th><th>תאריך פטירה</th><th>מיקום</th><th>סטטוס</th><th>פעולות</th>`
         };
         
         if (headers[type]) {

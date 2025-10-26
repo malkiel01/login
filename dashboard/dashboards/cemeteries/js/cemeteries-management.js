@@ -594,12 +594,3 @@ window.editCemetery = editCemetery;
 window.refreshData = refreshData;
 window.cemeteriesTable = cemeteriesTable;
 window.checkScrollStatus = checkScrollStatus;
-
-// ===================================================================
-// אתחול מודול
-// ===================================================================
-console.log('✅ Cemeteries Management Module Loaded - v5.1.0: זהה ללקוחות (תוקן קונפליקט שמות)');
-console.log('💡 UniversalSearch + TableManager');
-console.log('💡 DashboardCleaner + Toast messages');
-console.log('💡 Virtual Scroll (no pagination)');
-console.log('💡 Commands: checkScrollStatus() - בדוק סטטוס המערכת');

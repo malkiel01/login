@@ -884,22 +884,22 @@ window.loadAllCemeteries2 = async function() {
 };
  
 window.loadAllBlocks = async function() {
-    // console.log('📍 Loading all blocks - STEP C');
-    // setActiveMenuItem('blockItem');
-    // window.currentType = 'block';
-    // window.currentParentId = null;
+    console.log('📍 Loading all blocks - STEP C');
+    setActiveMenuItem('blockItem');
+    window.currentType = 'block';
+    window.currentParentId = null;
 
-    // // שמור רק את בית העלמין אם קיים
-    // const temp = window.selectedItems?.cemetery;
-    // window.selectedItems = {};
-    // if (temp) window.selectedItems.cemetery = temp;
+    // שמור רק את בית העלמין אם קיים
+    const temp = window.selectedItems?.cemetery;
+    window.selectedItems = {};
+    if (temp) window.selectedItems.cemetery = temp;
     
-    // // ⭐ נקה ובנה מחדש
-    // DashboardCleaner.clear({ targetLevel: 'block' });
-    // buildHierarchyContainer();
+    // ⭐ נקה ובנה מחדש
+    DashboardCleaner.clear({ targetLevel: 'block' });
+    buildHierarchyContainer();
     
-    // BreadcrumbManager.update({}, 'block');
-    // await tableRenderer.loadAndDisplay('block');
+    BreadcrumbManager.update({}, 'block');
+    await tableRenderer.loadAndDisplay('block');
 };
 
 window.loadAllPlots = async function() {

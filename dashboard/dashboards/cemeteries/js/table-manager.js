@@ -5,53 +5,6 @@
  */
 
 class TableManager {
-    // constructor(config) {
-    //     this.config = {
-    //         tableSelector: null,
-    //         columns: [],
-    //         data: [],
-            
-    //         // ⭐ הגדרות רוחב חדשות
-    //         containerWidth: '100%',      // ברירת מחדל: תופס את כל הרוחב
-    //         containerPadding: '16px',    // ברירת מחדל: padding סביב
-            
-    //         sortable: true,
-    //         resizable: true,
-    //         reorderable: true,
-    //         filterable: true,
-    //         renderCell: null,
-    //         onSort: null,
-    //         onFilter: null,
-    //         onColumnReorder: null,
-    //         infiniteScroll: true,
-    //         itemsPerPage: 100,
-    //         scrollThreshold: 200, // פיקסלים מהתחתית לטעינה
-    //         ...config
-    //     };
-        
-    //     this.state = {
-    //         sortColumn: null,
-    //         sortOrder: 'asc',
-    //         columnWidths: {},
-    //         columnOrder: [],
-    //         filters: new Map(),
-    //         isResizing: false,
-    //         isDragging: false,
-    //         currentPage: 1,
-    //         isLoading: false,
-    //         filteredData: [],
-    //         displayedData: []
-    //     };
-        
-    //     this.elements = {
-    //         table: null,
-    //         thead: null,
-    //         tbody: null,
-    //         scrollContainer: null
-    //     };
-        
-    //     this.init();
-    // }
     constructor(config) {
         this.config = {
             tableSelector: null,

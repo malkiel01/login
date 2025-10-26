@@ -435,12 +435,7 @@ function initCustomersTable(data, totalItems = null) {
     
     // ⭐ עדכן את window.customersTable מיד!
     window.customersTable = customersTable;
-    
-    console.log(`📊 Total customers loaded: ${data.length}`);
-    console.log(`📄 Items per page: ${customersTable.config.scrolling?.itemsPerPage || 50}`);
-    console.log(`📏 Scroll threshold: ${customersTable.config.scrolling?.scrollThreshold || 300}px`);
-    console.log(`📦 Total items in database: ${actualTotalItems}`);
-    
+ 
     return customersTable;
 }
 
@@ -448,11 +443,9 @@ function initCustomersTable(data, totalItems = null) {
 // רינדור שורות לקוחות - עם תמיכה ב-totalItems מ-pagination
 // ===================================================================
 function renderCustomersRows(data, container, pagination = null) {
-    console.log('🎨 renderCustomersRows called with', data.length, 'items');
     
     // ⭐ חלץ את הסכום הכולל מ-pagination אם קיים
     const totalItems = pagination?.total || data.length;
-    console.log(`📊 Total items in database: ${totalItems}`);
     
     if (data.length === 0) {
         if (customersTable) {
@@ -486,12 +479,8 @@ function renderCustomersRows(data, container, pagination = null) {
     // עכשיו בדוק אם צריך לבנות מחדש
     if (!customersTable || !tableWrapperExists) {
         // אין TableManager או שה-DOM שלו נמחק - בנה מחדש!
-        console.log(`✅ Creating new TableManager with ${data.length} visible items, ${totalItems} total`);
         initCustomersTable(data, totalItems);  // ⭐ העברת totalItems!
-    } else {
-        // TableManager קיים וגם ה-DOM שלו - רק עדכן נתונים
-        console.log(`🔄 Updating existing TableManager with ${data.length} visible items, ${totalItems} total`);
-        
+    } else {    
         // ⭐ עדכן גם את totalItems ב-TableManager!
         if (customersTable.config) {
             customersTable.config.totalItems = totalItems;

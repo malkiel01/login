@@ -350,7 +350,7 @@ async function initCemeteriesTable(data, totalItems = null) {
 // ===================================================================
 // רינדור שורות בתי עלמין - עם תמיכה ב-totalItems מ-pagination
 // ===================================================================
-function renderCemeteriesRows(data, container) {
+function renderCemeteriesRows(data, container, pagination = null) {
     
     // ⭐ חלץ את הסכום הכולל מ-pagination אם קיים
     const totalItems = pagination?.total || data.length;

@@ -56,8 +56,8 @@ async function loadCemeteries() {
     // עדכון כותרת החלון
     document.title = 'ניהול בתי עלמין - מערכת בתי עלמין';
     
-    // ⭐ בנה את המבנה החדש ב-main-container
-    await buildCemeteriesContainer();
+    // // ⭐ בנה את המבנה החדש ב-main-container
+    // await buildCemeteriesContainer();
     
     // ⭐ תמיד השמד את החיפוש הקודם ובנה מחדש
     if (cemeterySearch && typeof cemeterySearch.destroy === 'function') {
@@ -79,54 +79,54 @@ async function loadCemeteries() {
 // ===================================================================
 // ⭐ פונקציה חדשה - בניית המבנה של בתי עלמין ב-main-container
 // ===================================================================
-async function buildCemeteriesContainer() {
-    console.log('🏗️ Building cemeteries container...');
+// async function buildCemeteriesContainer() {
+//     console.log('🏗️ Building cemeteries container...');
     
-    // מצא את main-container (צריך להיות קיים אחרי clear)
-    let mainContainer = document.querySelector('.main-container');
+//     // מצא את main-container (צריך להיות קיים אחרי clear)
+//     let mainContainer = document.querySelector('.main-container');
     
-    if (!mainContainer) {
-        console.log('⚠️ main-container not found, creating one...');
-        const mainContent = document.querySelector('.main-content');
-        mainContainer = document.createElement('div');
-        mainContainer.className = 'main-container';
+//     if (!mainContainer) {
+//         console.log('⚠️ main-container not found, creating one...');
+//         const mainContent = document.querySelector('.main-content');
+//         mainContainer = document.createElement('div');
+//         mainContainer.className = 'main-container';
         
-        const actionBar = mainContent.querySelector('.action-bar');
-        if (actionBar) {
-            actionBar.insertAdjacentElement('afterend', mainContainer);
-        } else {
-            mainContent.appendChild(mainContainer);
-        }
-    }
+//         const actionBar = mainContent.querySelector('.action-bar');
+//         if (actionBar) {
+//             actionBar.insertAdjacentElement('afterend', mainContainer);
+//         } else {
+//             mainContent.appendChild(mainContainer);
+//         }
+//     }
     
-    // ⭐ בנה את התוכן של בתי עלמין - זהה ללקוחות!
-    mainContainer.innerHTML = `
-        <!-- סקשן חיפוש -->
-        <div id="cemeterySearchSection" class="search-section"></div>
+//     // ⭐ בנה את התוכן של בתי עלמין - זהה ללקוחות!
+//     mainContainer.innerHTML = `
+//         <!-- סקשן חיפוש -->
+//         <div id="cemeterySearchSection" class="search-section"></div>
         
-        <!-- table-container עבור TableManager -->
-        <div class="table-container">
-            <table id="mainTable" class="data-table">
-                <thead>
-                    <tr id="tableHeaders">
-                        <th style="text-align: center;">טוען...</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody">
-                    <tr>
-                        <td style="text-align: center; padding: 40px;">
-                            <div class="spinner-border" role="status">
-                                <span class="visually-hidden">טוען בתי עלמין...</span>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    `;
+//         <!-- table-container עבור TableManager -->
+//         <div class="table-container">
+//             <table id="mainTable" class="data-table">
+//                 <thead>
+//                     <tr id="tableHeaders">
+//                         <th style="text-align: center;">טוען...</th>
+//                     </tr>
+//                 </thead>
+//                 <tbody id="tableBody">
+//                     <tr>
+//                         <td style="text-align: center; padding: 40px;">
+//                             <div class="spinner-border" role="status">
+//                                 <span class="visually-hidden">טוען בתי עלמין...</span>
+//                             </div>
+//                         </td>
+//                     </tr>
+//                 </tbody>
+//             </table>
+//         </div>
+//     `;
     
-    console.log('✅ Cemeteries container built');
-}
+//     console.log('✅ Cemeteries container built');
+// }
 
 // ===================================================================
 // אתחול UniversalSearch - שימוש בפונקציה גלובלית!

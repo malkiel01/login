@@ -321,6 +321,10 @@ async function initCemeteriesTable(data, totalItems = null) {
                 `
             }
         ],
+
+        onRowDoubleClick: (cemetery) => {                    // ⭐ שורה חדשה
+            handleCemeteryDoubleClick(cemetery.unicId, cemetery.cemeteryNameHe);
+        },
         
         data: data,
         
@@ -579,6 +583,33 @@ function checkScrollStatus() {
         console.log('   ✅ All items loaded');
     }
 }
+
+// ===================================================
+// פונקציה לטיפול בדאבל-קליק על בית עלמין
+// ===================================================
+async function handleCemeteryDoubleClick(cemeteryId, cemeteryName) {
+    console.log('🖱️ Double-click on cemetery:', cemeteryName, cemeteryId);
+    
+    try {
+        // יצירת והצגת כרטיס
+        if (typeof createCemeteryCard === 'function') {
+            const cardHtml = await createCemeteryCard(cemeteryId);
+            if (cardHtml && typeof displayHierarchyCard === 'function') {
+                displayHierarchyCard(cardHtml);
+            }
+        }
+        
+        // טעינת גושים
+        console.log('📦 Loading blocks for cemetery:', cemeteryName);
+        loadBlocks(cemeteryId, cemeteryName);
+        
+    } catch (error) {
+        console.error('❌ Error in handleCemeteryDoubleClick:', error);
+        showToast('שגיאה בטעינת פרטי בית העלמין', 'error');
+    }
+}
+
+window.handleCemeteryDoubleClick = handleCemeteryDoubleClick;
 
 // ===================================================================
 // Backward Compatibility - Aliases

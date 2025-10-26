@@ -195,7 +195,7 @@ async function initCemeteriesSearch() {
         resultsContainerSelector: '#tableBody',
         
         placeholder: 'חיפוש בתי עלמין לפי שם, קוד, כתובת...',
-        itemsPerPage: 350,
+        itemsPerPage: 999999,
         
         renderFunction: renderCemeteriesRows,
         
@@ -231,14 +231,25 @@ async function initCemeteriesSearch() {
 }
 
 // ===================================================================
-// אתחול TableManager
+// אתחול TableManager - עם תמיכה ב-totalItems
 // ===================================================================
-async function initCemeteriesTable(data) {
-    console.log(`📊 Initializing TableManager for cemeteries with ${data.length} items (v5.1.0)...`);
+async function initCemeteriesTable(data, totalItems = null) {
+    // ⭐ אם לא קיבלנו totalItems, השתמש ב-data.length
+    const actualTotalItems = totalItems !== null ? totalItems : data.length;
     
+    // אם הטבלה כבר קיימת, רק עדכן נתונים
+    if (cemeteriesTable) {
+        cemeteriesTable.config.totalItems = actualTotalItems;  // ⭐ עדכן totalItems!
+        cemeteriesTable.setData(data);
+        return cemeteriesTable;
+    }
+
     cemeteriesTable = new TableManager({
         tableSelector: '#mainTable',  // ⭐ זה הכי חשוב!
         
+        // ⭐ הוספת totalItems כפרמטר!
+        totalItems: actualTotalItems,
+
         columns: [
             {
                 field: 'cemeteryNameHe',
@@ -333,19 +344,17 @@ async function initCemeteriesTable(data) {
     // ⭐ עדכן את window.cemeteriesTable מיד!
     window.cemeteriesTable = cemeteriesTable;
     
-    console.log('📊 Total cemeteries loaded:', data.length);
-    console.log('📄 Items per page:', cemeteriesTable.config.itemsPerPage);
-    console.log('📏 Scroll threshold:', cemeteriesTable.config.scrollThreshold + 'px');
-    
     return cemeteriesTable;
 }
 
 // ===================================================================
-// רינדור שורות בתי עלמין - זהה ללקוחות!
+// רינדור שורות בתי עלמין - עם תמיכה ב-totalItems מ-pagination
 // ===================================================================
 function renderCemeteriesRows(data, container) {
-    console.log('🎨 renderCemeteriesRows called with', data.length, 'items');
     
+    // ⭐ חלץ את הסכום הכולל מ-pagination אם קיים
+    const totalItems = pagination?.total || data.length;
+
     if (data.length === 0) {
         if (cemeteriesTable) {
             cemeteriesTable.setData([]);
@@ -378,11 +387,23 @@ function renderCemeteriesRows(data, container) {
     // עכשיו בדוק אם צריך לבנות מחדש
     if (!cemeteriesTable || !tableWrapperExists) {
         // אין TableManager או שה-DOM שלו נמחק - בנה מחדש!
-        console.log('✅ Creating new TableManager with', data.length, 'total items');
-        initCemeteriesTable(data);
+        initCemeteriesTable(data, totalItems);  // ⭐ העברת totalItems!
     } else {
-        // TableManager קיים וגם ה-DOM שלו - רק עדכן נתונים
-        console.log('🔄 Updating existing TableManager with', data.length, 'total items');
+          // ⭐ עדכן גם את totalItems ב-TableManager!
+        if (cemeteriesTable.config) {
+            cemeteriesTable.config.totalItems = totalItems;
+        }
+        
+        // ⭐ אם יש עוד נתונים ב-UniversalSearch, הוסף אותם!
+        if (cemeterySearch && cemeterySearch.state) {
+            const allData = cemeterySearch.state.results || [];
+            if (allData.length > data.length) {
+                console.log(`📦 UniversalSearch has ${allData.length} items, updating TableManager...`);
+                cemeteriesTable.setData(allData);
+                return;
+            }
+        }
+
         cemeteriesTable.setData(data);
     }
 }

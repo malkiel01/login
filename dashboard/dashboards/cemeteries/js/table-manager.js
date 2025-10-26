@@ -215,9 +215,7 @@ class TableManager {
         const tbody = document.createElement('tbody');
         bodyTable.appendChild(tbody);
         bodyContainer.appendChild(bodyTable);
-        
-        console.log('📋 Created body table');
-        
+           
         // הרכבה
         wrapper.appendChild(headerContainer);
         wrapper.appendChild(bodyContainer);
@@ -225,9 +223,7 @@ class TableManager {
         // החלף את הטבלה המקורית
         parent.insertBefore(wrapper, this.elements.table);
         this.elements.table.style.display = 'none';
-        
-        console.log('✅ New structure inserted, original table hidden');
-        
+           
         // שמור references
         this.elements.wrapper = wrapper;
         this.elements.headerContainer = headerContainer;
@@ -236,26 +232,16 @@ class TableManager {
         this.elements.bodyTable = bodyTable;
         this.elements.thead = thead;
         this.elements.tbody = tbody;
-        
-        console.log('📌 References saved');
-        console.log('📊 Checking computed styles...');
-        
+            
         // בדוק שה-CSS אכן הוחל
         setTimeout(() => {
-            const wrapperStyles = window.getComputedStyle(wrapper);
             const parentStyles = window.getComputedStyle(parent);
             
             if (parentStyles.overflow !== 'visible') {
-                console.warn('⚠️ Parent still has overflow! Trying to fix again...');
                 parent.style.overflow = 'visible';
                 parent.style.maxHeight = 'none';
             }
-            
-            if (wrapperStyles.display !== 'flex') {
-                console.warn('⚠️ Wrapper is not flex! CSS might not be loaded.');
-            } else {
-                console.log('✅ CSS applied correctly!');
-            }
+    
         }, 100);
         
         // סנכרן גלילה אופקית
@@ -281,8 +267,6 @@ class TableManager {
         this.elements.bodyContainer.addEventListener('scroll', () => {
             this.elements.headerContainer.scrollLeft = this.elements.bodyContainer.scrollLeft;
         });
-        
-        console.log('🔗 Scroll sync listeners added');
     }
     
     /**
@@ -372,8 +356,6 @@ class TableManager {
         // סנכרן רוחבים עם טבלת התוכן
         this.syncColumnWidths();
         
-        // הדפס את רוחבי העמודות לקונסול
-        console.log('📏 Column Widths:', this.getColumnWidths());
     }
     
     /**
@@ -381,7 +363,6 @@ class TableManager {
      */
     syncColumnWidths() {
         // יישם את אותם רוחבים על שתי הטבלאות
-        const headerCells = this.elements.headerTable.querySelectorAll('th');
         const bodyCols = this.elements.bodyTable.querySelectorAll('colgroup col');
         
         // אם אין colgroup, צור אחד

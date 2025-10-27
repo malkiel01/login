@@ -478,45 +478,150 @@ async function initBlocksTable(data, totalItems = null) {
     return blocksTable;
 }
 
-// // ===================================================================
-// // רינדור שורות גושים - עובד עם TableManager
-// // ===================================================================
-// async function renderBlocksRows(data, containerSelector = '#tableBody') {
-//     console.log('📝 renderBlocksRows called with', data.length, 'items');
+// // // ===================================================================
+// // // רינדור שורות גושים - עובד עם TableManager
+// // // ===================================================================
+// // async function renderBlocksRows(data, containerSelector = '#tableBody') {
+// //     console.log('📝 renderBlocksRows called with', data.length, 'items');
     
-//     if (!blocksTable) {
-//         console.log('🏗️ TableManager not initialized, creating now...');
-//         await initBlocksTable(data);
-//     } else {
-//         console.log('♻️ Updating existing TableManager...');
+// //     if (!blocksTable) {
+// //         console.log('🏗️ TableManager not initialized, creating now...');
+// //         await initBlocksTable(data);
+// //     } else {
+// //         console.log('♻️ Updating existing TableManager...');
         
-//         // אם UniversalSearch החזיר יותר תוצאות, עדכן
-//         if (blockSearch && blockSearch.state) {
-//             const allData = blockSearch.state.results || [];
-//             if (allData.length > data.length) {
-//                 console.log(`📦 UniversalSearch has ${allData.length} items, updating TableManager...`);
+// //         // אם UniversalSearch החזיר יותר תוצאות, עדכן
+// //         if (blockSearch && blockSearch.state) {
+// //             const allData = blockSearch.state.results || [];
+// //             if (allData.length > data.length) {
+// //                 console.log(`📦 UniversalSearch has ${allData.length} items, updating TableManager...`);
                 
-//                 // ⭐ אם יש סינון פעיל, סנן גם כאן
-//                 let displayData = allData;
-//                 if (currentCemeteryId) {
-//                     displayData = allData.filter(block => {
-//                         return block.cemeteryId === currentCemeteryId || 
-//                                block.cemetery_id === currentCemeteryId ||
-//                                block.parentId === currentCemeteryId ||
-//                                block.parent_id === currentCemeteryId ||
-//                                String(block.cemeteryId) === String(currentCemeteryId) ||
-//                                String(block.cemetery_id) === String(currentCemeteryId);
-//                     });
-//                     console.log(`🎯 Filtered in render: ${allData.length} → ${displayData.length} blocks`);
-//                 }
+// //                 // ⭐ אם יש סינון פעיל, סנן גם כאן
+// //                 let displayData = allData;
+// //                 if (currentCemeteryId) {
+// //                     displayData = allData.filter(block => {
+// //                         return block.cemeteryId === currentCemeteryId || 
+// //                                block.cemetery_id === currentCemeteryId ||
+// //                                block.parentId === currentCemeteryId ||
+// //                                block.parent_id === currentCemeteryId ||
+// //                                String(block.cemeteryId) === String(currentCemeteryId) ||
+// //                                String(block.cemetery_id) === String(currentCemeteryId);
+// //                     });
+// //                     console.log(`🎯 Filtered in render: ${allData.length} → ${displayData.length} blocks`);
+// //                 }
                 
-//                 blocksTable.setData(displayData);
-//                 return;
-//             }
-//         }
+// //                 blocksTable.setData(displayData);
+// //                 return;
+// //             }
+// //         }
 
-//         blocksTable.setData(data);
+// //         blocksTable.setData(data);
+// //     }
+// // }
+
+// // ===================================================================
+// // רינדור שורות הגושים בטבלה
+// // ===================================================================
+// function renderBlocksRows(blocks) {
+//     console.log(`📝 renderBlocksRows called with ${blocks.length} items`);
+    
+//     // ⭐ שלב 1: בדוק אם blocksTable קיים ואם ה-DOM שלו עדיין קיים!
+//     const tableExists = window.blocksTable && 
+//                        window.blocksTable.elements && 
+//                        window.blocksTable.elements.wrapper &&
+//                        document.body.contains(window.blocksTable.elements.wrapper);
+    
+//     if (tableExists) {
+//         console.log('♻️ Updating existing TableManager...');
+//         window.blocksTable.setData(blocks);
+//         return;
 //     }
+    
+//     // ⭐ שלב 2: אם TableManager לא קיים או שה-DOM שלו נמחק, צור חדש
+//     console.log('🏗️ TableManager not initialized or DOM was deleted, creating new one...');
+    
+//     // ⭐ אפס את המשתנה אם הוא קיים אבל ה-DOM שלו נמחק
+//     if (window.blocksTable) {
+//         console.log('🗑️ Resetting blocksTable variable (DOM was deleted)');
+//         window.blocksTable = null;
+//     }
+    
+//     // סינון client-side כשכבת הגנה
+//     let filteredBlocks = blocks;
+//     if (currentCemeteryId) {
+//         filteredBlocks = blocks.filter(block => 
+//             block.cemeteryId === currentCemeteryId || 
+//             block.cemetery_id === currentCemeteryId
+//         );
+        
+//         console.log(`🎯 TableManager filtered: ${blocks.length} → ${filteredBlocks.length} blocks`);
+//     }
+    
+//     // אתחול TableManager עם נתונים מסוננים
+//     console.log(`🏗️ Initializing TableManager with ${filteredBlocks.length} items (total: ${blocks.length})`);
+    
+//     window.blocksTable = new TableManager({
+//         tableSelector: '#mainTable',
+        
+//         // ⭐ העבר totalItems: blocks.length כדי שהטוטל יהיה נכון!
+//         data: filteredBlocks,
+//         totalItems: filteredBlocks.length,  // זה יהיה הטוטל שמוצג!
+        
+//         containerWidth: '98%',
+//         containerPadding: '20px',
+        
+//         columns: [
+//             { field: 'blockNameHe', label: 'שם גוש', width: '250px', sortable: true },
+//             { field: 'blockCode', label: 'קוד', width: '120px', sortable: true },
+//             { field: 'cemeteryNameHe', label: 'בית עלמין', width: '200px', sortable: true },
+//             { field: 'plots_count', label: 'מספר חלקות', width: '130px', sortable: true },
+//             { field: 'statusBlock', label: 'סטטוס', width: '120px', sortable: true },
+//             { field: 'createDate', label: 'תאריך יצירה', width: '150px', sortable: true },
+//             { field: 'actions', label: 'פעולות', width: '200px', sortable: false }
+//         ],
+        
+//         renderCell: (value, field, row) => {
+//             if (field === 'statusBlock') {
+//                 return value == 1 
+//                     ? '<span class="status-badge status-active">פעיל</span>'
+//                     : '<span class="status-badge status-inactive">לא פעיל</span>';
+//             }
+            
+//             if (field === 'createDate') {
+//                 return formatDate(value);
+//             }
+            
+//             if (field === 'actions') {
+//                 return `
+//                     <div class="action-buttons">
+//                         <button class="btn-icon" onclick="editBlock('${row.unicId}')" title="ערוך">
+//                             <span>✏️</span>
+//                         </button>
+//                         <button class="btn-icon" onclick="deleteBlock('${row.unicId}')" title="מחק">
+//                             <span>🗑️</span>
+//                         </button>
+//                     </div>
+//                 `;
+//             }
+            
+//             return value || '-';
+//         },
+        
+//         onRowDoubleClick: (row) => {
+//             if (typeof handleBlockDoubleClick === 'function') {
+//                 handleBlockDoubleClick(row.unicId, row.blockNameHe);
+//             }
+//         },
+        
+//         sortable: true,
+//         resizable: true,
+//         reorderable: false,
+//         filterable: true,
+//         infiniteScroll: true,
+//         itemsPerPage: 100
+//     });
+    
+//     console.log('✅ TableManager initialized successfully');
 // }
 
 // ===================================================================
@@ -524,6 +629,12 @@ async function initBlocksTable(data, totalItems = null) {
 // ===================================================================
 function renderBlocksRows(blocks) {
     console.log(`📝 renderBlocksRows called with ${blocks.length} items`);
+    
+    // ⭐ DEBUG: הדפס רשומה ראשונה כדי לראות את המבנה
+    if (blocks.length > 0) {
+        console.log('🔍 First block structure:', blocks[0]);
+        console.log('🔑 Available keys:', Object.keys(blocks[0]));
+    }
     
     // ⭐ שלב 1: בדוק אם blocksTable קיים ואם ה-DOM שלו עדיין קיים!
     const tableExists = window.blocksTable && 
@@ -563,9 +674,8 @@ function renderBlocksRows(blocks) {
     window.blocksTable = new TableManager({
         tableSelector: '#mainTable',
         
-        // ⭐ העבר totalItems: blocks.length כדי שהטוטל יהיה נכון!
         data: filteredBlocks,
-        totalItems: filteredBlocks.length,  // זה יהיה הטוטל שמוצג!
+        totalItems: filteredBlocks.length,
         
         containerWidth: '98%',
         containerPadding: '20px',
@@ -581,35 +691,63 @@ function renderBlocksRows(blocks) {
         ],
         
         renderCell: (value, field, row) => {
+            // ⭐ DEBUG: לוג לכל תא
+            console.log(`🔍 renderCell called - field: ${field}, value:`, value, 'row:', row);
+            
+            // ⭐ אם value הוא אובייקט, נסה לקרוא ישירות מה-row
+            let actualValue = value;
+            
+            if (typeof value === 'object' && value !== null) {
+                console.warn(`⚠️ Value is object for field ${field}, trying to extract from row`);
+                actualValue = row[field];
+            }
+            
+            // טיפול בשדות מיוחדים
             if (field === 'statusBlock') {
-                return value == 1 
+                const status = actualValue || row.statusBlock || row.status;
+                return status == 1 
                     ? '<span class="status-badge status-active">פעיל</span>'
                     : '<span class="status-badge status-inactive">לא פעיל</span>';
             }
             
             if (field === 'createDate') {
-                return formatDate(value);
+                const date = actualValue || row.createDate || row.created_at;
+                return formatDate(date);
+            }
+            
+            if (field === 'plots_count') {
+                const count = actualValue || row.plots_count || row.plotsCount || 0;
+                return count.toString();
             }
             
             if (field === 'actions') {
+                const id = row.unicId || row.id || row.blockId;
                 return `
                     <div class="action-buttons">
-                        <button class="btn-icon" onclick="editBlock('${row.unicId}')" title="ערוך">
+                        <button class="btn-icon" onclick="editBlock('${id}')" title="ערוך">
                             <span>✏️</span>
                         </button>
-                        <button class="btn-icon" onclick="deleteBlock('${row.unicId}')" title="מחק">
+                        <button class="btn-icon" onclick="deleteBlock('${id}')" title="מחק">
                             <span>🗑️</span>
                         </button>
                     </div>
                 `;
             }
             
-            return value || '-';
+            // ⭐ אם actualValue עדיין אובייקט, החזר ערך ריק
+            if (typeof actualValue === 'object' && actualValue !== null) {
+                console.error(`❌ Still object for field ${field}:`, actualValue);
+                return '-';
+            }
+            
+            return actualValue || '-';
         },
         
         onRowDoubleClick: (row) => {
             if (typeof handleBlockDoubleClick === 'function') {
-                handleBlockDoubleClick(row.unicId, row.blockNameHe);
+                const id = row.unicId || row.id || row.blockId;
+                const name = row.blockNameHe || row.name;
+                handleBlockDoubleClick(id, name);
             }
         },
         

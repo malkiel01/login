@@ -1,9 +1,14 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/blocks-management.js
- * Version: 1.1.0
+ * Version: 1.1.1
  * Updated: 2025-10-27
  * Author: Malkiel
  * Change Summary:
+ * - v1.1.1: תיקון קריטי - שמירת סינון קיים כשקוראים ל-loadBlocks ללא פרמטרים
+ *   - הוספת פרמטר forceReset לאיפוס מפורש של הסינון
+ *   - שמירת currentCemeteryId/Name גם כשלא מועברים פרמטרים
+ *   - תיקון כפתור "הצג הכל" - קורא עם forceReset=true
+ *   - מונע איפוס סינון אקראי ע"י sidebar/breadcrumb
  * - v1.1.0: תיקון סינון גושים לפי בית עלמין נבחר
  *   - הוספת סינון client-side כשכבת הגנה נוספת
  *   - שמירת currentCemeteryId ב-window לשימוש חוזר
@@ -27,15 +32,31 @@ let currentCemeteryName = null;
 // ===================================================================
 // טעינת גושים (הפונקציה הראשית)
 // ===================================================================
-async function loadBlocks(cemeteryId = null, cemeteryName = null) {
-    console.log('📋 Loading blocks - v1.1.0 (תוקן סינון לפי בית עלמין)...');
-    console.log('🔍 Cemetery filter:', { cemeteryId, cemeteryName });
+async function loadBlocks(cemeteryId = null, cemeteryName = null, forceReset = false) {
+    console.log('📋 Loading blocks - v1.1.1 (תוקן שמירת סינון)...');
     
-    // ⭐ שמור את הקונטקסט הנוכחי
-    currentCemeteryId = cemeteryId;
-    currentCemeteryName = cemeteryName;
-    window.currentCemeteryId = cemeteryId;
-    window.currentCemeteryName = cemeteryName;
+    // ⭐ אם לא מועברים פרמטרים ולא forceReset, שמור על הסינון הקיים
+    if (cemeteryId === null && cemeteryName === null && !forceReset) {
+        // בדוק אם יש סינון קיים
+        if (currentCemeteryId !== null) {
+            console.log('💡 No params provided, keeping existing filter:', {
+                cemeteryId: currentCemeteryId, 
+                cemeteryName: currentCemeteryName
+            });
+            cemeteryId = currentCemeteryId;
+            cemeteryName = currentCemeteryName;
+        } else {
+            console.log('🔍 Cemetery filter: None (showing all blocks)');
+        }
+    } else {
+        console.log('🔍 Cemetery filter:', { cemeteryId, cemeteryName, forceReset });
+    }
+    
+    // ⭐ שמור את הקונטקסט הנוכחי (או אפס אם forceReset)
+    currentCemeteryId = forceReset ? null : cemeteryId;
+    currentCemeteryName = forceReset ? null : cemeteryName;
+    window.currentCemeteryId = currentCemeteryId;
+    window.currentCemeteryName = currentCemeteryName;
     
     // עדכון פריט תפריט אקטיבי
     if (typeof setActiveMenuItem === 'function') {
@@ -130,7 +151,7 @@ async function buildBlocksContainer(cemeteryId = null, cemeteryName = null) {
                     <div style="font-size: 16px; font-weight: 600;">${cemeteryName}</div>
                 </div>
             </div>
-            <button onclick="loadBlocks()" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+            <button onclick="loadBlocks(null, null, true)" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
                 ✕ הצג הכל
             </button>
         </div>

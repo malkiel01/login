@@ -125,7 +125,16 @@ async function loadPlots(blockId = null, blockName = null, forceReset = false) {
     // אתחל את UniversalSearch מחדש תמיד
     console.log('🆕 Creating fresh plotSearch instance...');
     await initPlotsSearch(blockId);
-    plotSearch.search();
+    
+    // ⭐ הפעל את החיפוש
+    console.log('🔍 Searching:', { query: '', filters: [], blockId: currentBlockId });
+    if (plotSearch && typeof plotSearch.search === 'function') {
+        await plotSearch.search();
+    }
+    
+    // קבל את התוצאות
+    const results = plotSearch?.tableManager?.getDisplayedData() || [];
+    console.log('📦 Results:', results.length, 'plots found');
     
     // טען סטטיסטיקות
     await loadPlotStats(blockId);
@@ -205,29 +214,28 @@ async function buildPlotsContainer(blockId = null, blockName = null) {
 // אתחול UniversalSearch - עם סינון משופר!
 // ===================================================================
 async function initPlotsSearch(blockId = null) {
+    console.log('🔍 Initializing plot search...', { blockId, currentBlockName });
+    
+    // ⭐ שלב 1: הכן את הפרמטרים הנוספים
+    const additionalParams = {};
+    if (blockId) {
+        console.log('🎯 Adding blockId filter to API request:', blockId);
+        additionalParams.blockId = blockId;
+    }
+    
     const config = {
         entityType: 'plot',
         apiEndpoint: '/dashboard/dashboards/cemeteries/api/plots-api.php',
         action: 'list',
         
         // ⭐ פרמטרים נוספים לסינון לפי גוש
-        additionalParams: blockId ? { blockId: blockId } : {},
+        additionalParams: additionalParams,
         
         searchFields: ['plotNameHe', 'plotNameEn', 'plotCode', 'plotLocation'],
         
         placeholder: blockId 
             ? `חיפוש חלקות ב-${currentBlockName || 'גוש זה'}...` 
             : 'חיפוש חלקות...',
-        
-        // ⭐ סינון client-side נוסף
-        clientSideFilter: (plot) => {
-            // אם יש blockId פעיל, הצג רק חלקות של הגוש הזה
-            if (currentBlockId && plot.blockId !== currentBlockId) {
-                console.log(`  🚫 Filtering out plot ${plot.plotNameHe} (blockId: ${plot.blockId} != ${currentBlockId})`);
-                return false;
-            }
-            return true;
-        },
         
         tableConfig: {
             columns: [
@@ -236,11 +244,11 @@ async function initPlotsSearch(blockId = null) {
                     label: 'שם החלקה',
                     sortable: true,
                     render: (value, row) => {
-                        const arabicName = row.plotNameEn ? `<div class="secondary-text">${row.plotNameEn}</div>` : '';
+                        const englishName = row.plotNameEn ? `<div class="secondary-text">${row.plotNameEn}</div>` : '';
                         return `
                             <div class="cell-with-secondary">
                                 <div class="primary-text">${value || 'לא צוין'}</div>
-                                ${arabicName}
+                                ${englishName}
                             </div>
                         `;
                     }
@@ -323,19 +331,46 @@ async function initPlotsSearch(blockId = null) {
             noDataMessage: blockId 
                 ? `לא נמצאו חלקות בגוש "${currentBlockName || 'זה'}"` 
                 : 'לא נמצאו חלקות במערכת'
+        },
+        
+        // ⭐ סינון client-side נוסף
+        onDataReceived: (data) => {
+            console.log('📦 Raw results from API:', data.length, 'plots');
+            
+            // אם יש blockId פעיל, סנן client-side
+            if (currentBlockId) {
+                const beforeCount = data.length;
+                const filtered = data.filter(plot => plot.blockId === currentBlockId);
+                
+                if (filtered.length !== beforeCount) {
+                    console.log(`⚠️ Client-side filter applied: ${beforeCount} → ${filtered.length} plots`);
+                    console.log('🔍 Filter reason: API returned unfiltered results');
+                }
+                
+                console.log('🎯 Client-side filtered:', beforeCount, '→', filtered.length, 'plots');
+                return filtered;
+            }
+            
+            return data;
         }
     };
     
-    // יצירת UniversalSearch instance
-    plotSearch = new UniversalSearch(config);
+    // ⭐ שלב 2: השתמש ב-initUniversalSearch
+    if (typeof initUniversalSearch === 'function') {
+        plotSearch = await initUniversalSearch(config);
+    } else {
+        // Fallback למקרה שאין את הפונקציה
+        console.warn('⚠️ initUniversalSearch not found, using direct initialization');
+        plotSearch = new UniversalSearch(config);
+        await plotSearch.init('plotSearchSection');
+    }
     
     // שמירה ב-window
     window.plotSearch = plotSearch;
+    plotsTable = plotSearch.tableManager;
+    window.plotsTable = plotsTable;
     
-    // אתחול
-    await plotSearch.init('plotSearchSection');
-    
-    console.log('✅ Plot search initialized', { blockId, blockName });
+    console.log('✅ UniversalSearch initialized for plots');
 }
 
 // ===================================================================

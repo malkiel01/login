@@ -383,25 +383,50 @@ async function initBlocksSearch(cemeteryId = null) {
                console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()), cemeteryId: currentCemeteryId });
            },
            
+           // onResults: (data) => {
+           //     console.log('📦 Raw results from API:', data.data.length, 'blocks');
+           //     currentBlocks = data.data;
+               
+           //     // ⭐ אם יש סינון - עדכן את pagination.total!
+           //     if (currentCemeteryId) {
+           //         const filteredCount = data.data.filter(block => 
+           //             block.cemeteryId === currentCemeteryId || 
+           //             block.cemetery_id === currentCemeteryId
+           //         ).length;
+                   
+           //         console.log('⚠️ Client-side filter:', data.data.length, '→', filteredCount, 'blocks');
+                   
+           //         // ⭐ עדכן את pagination.total כדי ש-UniversalSearch יציג את המספר הנכון!
+           //         if (data.pagination) {
+           //             data.pagination.total = filteredCount;
+           //         }
+           //     }
+               
+           //     console.log('📊 Final count:', data.pagination?.total || data.data.length);
+           // },
+
            onResults: (data) => {
                console.log('📦 Raw results from API:', data.data.length, 'blocks');
-               currentBlocks = data.data;
                
-               // ⭐ אם יש סינון - עדכן את pagination.total!
-               if (currentCemeteryId) {
-                   const filteredCount = data.data.filter(block => 
+               // ⭐ אם יש סינון - סנן את data.data לפני כל דבר אחר!
+               if (currentCemeteryId && data.data) {
+                   const filteredData = data.data.filter(block => 
                        block.cemeteryId === currentCemeteryId || 
                        block.cemetery_id === currentCemeteryId
-                   ).length;
+                   );
                    
-                   console.log('⚠️ Client-side filter:', data.data.length, '→', filteredCount, 'blocks');
+                   console.log('⚠️ Client-side filter:', data.data.length, '→', filteredData.length, 'blocks');
                    
-                   // ⭐ עדכן את pagination.total כדי ש-UniversalSearch יציג את המספר הנכון!
+                   // ⭐ עדכן את data.data עצמו!
+                   data.data = filteredData;
+                   
+                   // ⭐ עדכן את pagination.total
                    if (data.pagination) {
-                       data.pagination.total = filteredCount;
+                       data.pagination.total = filteredData.length;
                    }
                }
                
+               currentBlocks = data.data;
                console.log('📊 Final count:', data.pagination?.total || data.data.length);
            },
            

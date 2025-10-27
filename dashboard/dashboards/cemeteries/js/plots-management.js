@@ -231,7 +231,7 @@ async function initPlotsSearch(blockId = null) {
         // ⭐ פרמטרים נוספים לסינון לפי גוש
         additionalParams: additionalParams,
         
-        searchFields: ['plotNameHe', 'plotNameEn', 'plotCode', 'plotLocation'],
+        searchableFields: ['plotNameHe', 'plotNameEn', 'plotCode', 'plotLocation'],
         
         placeholder: blockId 
             ? `חיפוש חלקות ב-${currentBlockName || 'גוש זה'}...` 

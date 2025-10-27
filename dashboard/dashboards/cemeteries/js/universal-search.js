@@ -1,13 +1,7 @@
 /**
- * File: dashboards/dashboard/cemeteries/assets/js/universal-search.js
- * Version: 1.1.0
- * Updated: 2025-10-27
- * Author: Malkiel
- * Change Summary:
- * - v1.1.0: הוספת מתודה updateResultsInfo לעדכון ידני של מספר התוצאות
- *   - מאפשרת עדכון הטוטל מחוץ למחלקה
- *   - תומכת בסינון client-side
- *   - מעדכנת אוטומטית את המונה הויזואלי
+ * UniversalSearch - מערכת חיפוש אוניברסלית מתקדמת
+ * @version 1.0.0
+ * @author Your System
  */
 
 class UniversalSearch {
@@ -280,31 +274,27 @@ class UniversalSearch {
                             class="us-filter-input" 
                             data-field="${field.name}"
                         />
+                        <select class="us-match-type" data-field="${field.name}">
+                            ${(field.matchType || ['exact']).map(type => `
+                                <option value="${type}">${this.getMatchTypeLabel(type)}</option>
+                            `).join('')}
+                        </select>
                         <input 
                             type="date" 
                             id="${fieldId}-end" 
                             class="us-filter-input us-date-end" 
                             data-field="${field.name}"
                             style="display: none;"
+                            placeholder="עד תאריך"
                         />
-                        <select class="us-match-type" data-field="${field.name}">
-                            ${(field.matchType || ['exact']).map(type => `
-                                <option value="${type}">${this.getMatchTypeLabel(type)}</option>
-                            `).join('')}
-                        </select>
                     `;
                     break;
                     
                 case 'select':
-                    const options = field.options || [];
                     inputHTML = `
-                        <select 
-                            id="${fieldId}" 
-                            class="us-filter-input" 
-                            data-field="${field.name}"
-                        >
+                        <select id="${fieldId}" class="us-filter-input" data-field="${field.name}">
                             <option value="">הכל</option>
-                            ${options.map(opt => `
+                            ${(field.options || []).map(opt => `
                                 <option value="${opt.value}">${opt.label}</option>
                             `).join('')}
                         </select>
@@ -314,8 +304,8 @@ class UniversalSearch {
             
             return `
                 <div class="us-filter-group">
-                    <label for="${fieldId}">${field.label}</label>
-                    <div class="us-filter-inputs">
+                    <label class="us-filter-label">${field.label}</label>
+                    <div class="us-filter-controls">
                         ${inputHTML}
                     </div>
                 </div>
@@ -324,26 +314,26 @@ class UniversalSearch {
     }
     
     /**
-     * תרגום סוג התאמה
+     * תרגום סוג התאמה לעברית
      */
     getMatchTypeLabel(type) {
         const labels = {
-            exact: 'זהה בדיוק',
-            fuzzy: 'מכיל',
+            exact: 'מדויק',
+            fuzzy: 'משוער',
             startsWith: 'מתחיל ב',
             endsWith: 'מסתיים ב',
-            gt: 'גדול מ',
-            lt: 'קטן מ',
-            gte: 'גדול או שווה',
-            lte: 'קטן או שווה',
+            greaterThan: 'גדול מ',
+            lessThan: 'קטן מ',
             between: 'בין',
+            notBetween: 'מחוץ לטווח',
             before: 'לפני',
             after: 'אחרי',
             today: 'היום',
             thisWeek: 'השבוע',
             thisMonth: 'החודש',
-            notBetween: 'לא בין'
+            thisYear: 'השנה'
         };
+        
         return labels[type] || type;
     }
     
@@ -351,22 +341,11 @@ class UniversalSearch {
      * קישור אירועים
      */
     bindEvents() {
-        // חיפוש בזמן אמת
-        if (this.config.behavior.realTime && this.elements.searchInput) {
-            this.elements.searchInput.addEventListener('input', (e) => {
-                const value = e.target.value;
-                
-                this.toggleClearButton(value);
-                
-                if (value.length >= this.config.display.minSearchLength || value.length === 0) {
-                    clearTimeout(this.debounceTimer);
-                    this.debounceTimer = setTimeout(() => {
-                        this.state.currentQuery = value;
-                        this.search();
-                    }, this.config.display.debounceDelay);
-                }
-            });
-        }
+        // חיפוש ראשי
+        this.elements.searchInput.addEventListener('input', (e) => {
+            this.handleMainSearch(e.target.value);
+            this.toggleClearButton(e.target.value);
+        });
         
         // כפתור ניקוי
         if (this.elements.clearBtn) {
@@ -396,18 +375,18 @@ class UniversalSearch {
             });
         }
         
-        // שינוי match type עבור תאריכים
+        // שינוי סוג התאמה בתאריך - הצג/הסתר שדה שני
         if (this.elements.filtersContainer) {
             this.elements.filtersContainer.querySelectorAll('.us-match-type').forEach(select => {
                 select.addEventListener('change', (e) => {
                     const field = e.target.dataset.field;
-                    const value = e.target.value;
+                    const matchType = e.target.value;
                     const fieldConfig = this.config.searchableFields.find(f => f.name === field);
                     
                     if (fieldConfig && fieldConfig.type === 'date') {
-                        const endInput = this.elements.filtersContainer.querySelector(`#us-filter-${field}-end`);
-                        if (endInput) {
-                            endInput.style.display = ['between', 'notBetween'].includes(value) ? 'block' : 'none';
+                        const endDateInput = e.target.closest('.us-filter-controls').querySelector('.us-date-end');
+                        if (endDateInput) {
+                            endDateInput.style.display = ['between', 'notBetween'].includes(matchType) ? 'block' : 'none';
                         }
                     }
                 });
@@ -416,68 +395,121 @@ class UniversalSearch {
     }
     
     /**
+     * טיפול בחיפוש ראשי
+     */
+    handleMainSearch(query) {
+        this.state.currentQuery = query;
+        
+        if (query.length < this.config.display.minSearchLength && query.length > 0) {
+            return;
+        }
+        
+        if (this.config.behavior.realTime) {
+            this.debouncedSearch();
+        }
+    }
+    
+    /**
+     * חיפוש עם debounce
+     */
+    debouncedSearch() {
+        clearTimeout(this.debounceTimer);
+        
+        this.debounceTimer = setTimeout(() => {
+            this.search();
+        }, this.config.display.debounceDelay);
+    }
+    
+    /**
      * ביצוע חיפוש
      */
     async search() {
+        // callback לפני חיפוש
+        if (this.config.callbacks.onSearch) {
+            this.config.callbacks.onSearch(this.state.currentQuery, this.state.activeFilters);
+        }
+        
+        this.state.isSearching = true;
+        this.showLoading();
+        
         try {
-            this.state.isSearching = true;
-            this.showLoading();
-            
-            // Callback לפני חיפוש
-            if (this.config.callbacks.onSearch) {
-                this.config.callbacks.onSearch(this.state.currentQuery, this.state.activeFilters);
-            }
-            
             // בניית payload
-            const payload = this.buildPayload();
+            const payload = this.buildSearchPayload();
             
-            // שליחת בקשה
-            const response = await fetch(this.config.dataSource.endpoint, {
-                method: this.config.dataSource.method,
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            });
+            console.log('🔎 Searching with payload:', payload);
+            
+            let response;
+            
+            // בדוק אם זה GET או POST
+            if (this.config.dataSource.method === 'GET') {
+                // שליחת GET עם query parameters
+                const params = new URLSearchParams();
+                params.append('action', payload.action);
+                
+                if (payload.query) {
+                    params.append('search', payload.query);
+                }
+                
+                if (payload.page) {
+                    params.append('page', payload.page);
+                }
+                
+                if (payload.itemsPerPage) {
+                    params.append('limit', payload.itemsPerPage);
+                }
+                
+                // הוסף פילטרים
+                payload.filters.forEach((filter, index) => {
+                    params.append(`filter_${index}_field`, filter.field);
+                    params.append(`filter_${index}_value`, filter.value);
+                    params.append(`filter_${index}_type`, filter.matchType);
+                });
+                
+                const url = `${this.config.dataSource.endpoint}?${params.toString()}`;
+                response = await fetch(url);
+            } else {
+                // שליחת POST עם body (ברירת מחדל)
+                response = await fetch(this.config.dataSource.endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+            }
             
             const data = await response.json();
             
-            if (!data.success) {
-                throw new Error(data.error || 'שגיאה בחיפוש');
-            }
+            console.log('📦 Search results:', data);
             
-            // עדכון state
-            this.state.results = data.data || [];
-            this.state.totalResults = data.pagination?.total || data.data?.length || 0;
-            this.state.lastSearchTime = Date.now();
-            
-            // Callback עם תוצאות
-            if (this.config.callbacks.onResults) {
-                this.config.callbacks.onResults(data);
+            if (data.success) {
+                this.state.results = data.data || [];
+                this.state.totalResults = data.pagination?.total || data.total || data.data.length;
+                this.state.lastSearchTime = Date.now();
                 
-                // ⭐ עדכון מחדש של totalResults אחרי ה-callback
-                // (למקרה שה-callback שינה את data.pagination.total)
-                this.state.totalResults = data.pagination?.total || data.data?.length || 0;
-            }
-            
-            // רינדור תוצאות
-            this.renderResults(this.state.results);
-            
-            // עדכון מונה
-            this.updateCounter();
-            
-            // Callback אם ריק
-            if (this.state.results.length === 0 && this.config.callbacks.onEmpty) {
-                this.config.callbacks.onEmpty();
+                this.renderResults(data.data);
+                this.updateCounter();
+                
+                // callback
+                if (this.config.callbacks.onResults) {
+                    this.config.callbacks.onResults(data);
+                }
+                
+                if (data.data.length === 0 && this.config.callbacks.onEmpty) {
+                    this.config.callbacks.onEmpty();
+                }
+            } else {
+                throw new Error(data.error || 'Search failed');
             }
             
         } catch (error) {
-            console.error('Search error:', error);
-            this.showError(error.message);
+            console.error('❌ Search error:', error);
             
             if (this.config.callbacks.onError) {
                 this.config.callbacks.onError(error);
             }
+            
+            this.showError(error.message);
         } finally {
             this.state.isSearching = false;
             this.hideLoading();
@@ -487,17 +519,12 @@ class UniversalSearch {
     /**
      * בניית payload לשליחה
      */
-    buildPayload() {
+    buildSearchPayload() {
         const payload = {
             action: this.config.dataSource.action,
             query: this.state.currentQuery,
             tables: this.config.dataSource.tables,
             joins: this.config.dataSource.joins,
-            searchableFields: this.config.searchableFields.map(f => ({
-                name: f.name,
-                table: f.table,
-                type: f.type
-            })),
             filters: [],
             page: this.state.currentPage,
             itemsPerPage: this.config.results.itemsPerPage
@@ -645,17 +672,6 @@ class UniversalSearch {
         } else {
             this.elements.resultsCounter.style.display = 'none';
         }
-    }
-    
-    /**
-     * ⭐ עדכון ידני של מספר התוצאות
-     * פונקציה חדשה המאפשרת עדכון הטוטל מחוץ למחלקה
-     * @param {number} total - מספר התוצאות החדש
-     */
-    updateResultsInfo(total) {
-        this.state.totalResults = total;
-        this.updateCounter();
-        console.log('📊 Results count manually updated to:', total);
     }
     
     /**

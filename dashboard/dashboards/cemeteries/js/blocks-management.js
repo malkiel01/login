@@ -297,17 +297,8 @@ async function initBlocksSearch(cemeteryId = null) {
                         console.log(`✅ All ${afterFilter} blocks belong to cemetery ${cemeteryId}`);
                     }
                     
-                    // ⭐ CRITICAL FIX: עדכן גם את data.data וגם את pagination.total!
+                    // עדכן את data.data עם התוצאות המסוננות
                     data.data = filteredData;
-                    
-                    // עדכן את Total בממשק החיפוש
-                    if (data.pagination) {
-                        data.pagination.total = afterFilter;
-                        console.log('🔢 Updated pagination.total:', afterFilter);
-                    } else if (data.total !== undefined) {
-                        data.total = afterFilter;
-                        console.log('🔢 Updated data.total:', afterFilter);
-                    }
                 }
                 
                 console.log('📊 Final results:', filteredData.length, 'blocks found');

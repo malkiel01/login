@@ -33,25 +33,53 @@ let currentCemeteryName = null;
 // טעינת גושים (הפונקציה הראשית)
 // ===================================================================
 async function loadBlocks(cemeteryId = null, cemeteryName = null, forceReset = false) {
-    console.log('📋 Loading blocks - v1.1.2 (תוקן איפוס אוטומטי)...');
+    console.log('📋 Loading blocks - v1.2.0 (תוקן איפוס סינון)...');
     
-    // ⭐ אם מועבר cemeteryId או forceReset, אפס את הסינון הקודם
-    if (cemeteryId !== null || forceReset) {
-        console.log('🔄 Resetting filter:', { cemeteryId, forceReset });
-        currentCemeteryId = forceReset ? null : cemeteryId;
-        currentCemeteryName = forceReset ? null : cemeteryName;
-    } else if (currentCemeteryId === null) {
-        // אין סינון קיים ולא מועבר cemeteryId חדש
+    // ⭐ שינוי: אם קוראים ללא פרמטרים (מהתפריט) - אפס את הסינון!
+    if (cemeteryId === null && cemeteryName === null && !forceReset) {
+        // בדוק אם יש סינון קיים מהעבר
+        if (window.currentCemeteryId !== null || currentCemeteryId !== null) {
+            console.log('🔄 Resetting filter - called from menu without params');
+            currentCemeteryId = null;
+            currentCemeteryName = null;
+            window.currentCemeteryId = null;
+            window.currentCemeteryName = null;
+        }
         console.log('🔍 Cemetery filter: None (showing all blocks)');
+    } else if (forceReset) {
+        console.log('🔄 Force reset filter');
+        currentCemeteryId = null;
+        currentCemeteryName = null;
+        window.currentCemeteryId = null;
+        window.currentCemeteryName = null;
     } else {
-        // שמור על הסינון הקיים
-        console.log('💡 Keeping existing filter:', {
-            cemeteryId: currentCemeteryId, 
-            cemeteryName: currentCemeteryName
-        });
-        cemeteryId = currentCemeteryId;
-        cemeteryName = currentCemeteryName;
+        // יש cemeteryId - עדכן את הסינון
+        console.log('🔄 Setting filter:', { cemeteryId, cemeteryName });
+        currentCemeteryId = cemeteryId;
+        currentCemeteryName = cemeteryName;
+        window.currentCemeteryId = cemeteryId;
+        window.currentCemeteryName = cemeteryName;
     }
+    
+    console.log('🔍 Final filter:', { cemeteryId: currentCemeteryId, cemeteryName: currentCemeteryName });
+        
+    // // ⭐ אם מועבר cemeteryId או forceReset, אפס את הסינון הקודם
+    // if (cemeteryId !== null || forceReset) {
+    //     console.log('🔄 Resetting filter:', { cemeteryId, forceReset });
+    //     currentCemeteryId = forceReset ? null : cemeteryId;
+    //     currentCemeteryName = forceReset ? null : cemeteryName;
+    // } else if (currentCemeteryId === null) {
+    //     // אין סינון קיים ולא מועבר cemeteryId חדש
+    //     console.log('🔍 Cemetery filter: None (showing all blocks)');
+    // } else {
+    //     // שמור על הסינון הקיים
+    //     console.log('💡 Keeping existing filter:', {
+    //         cemeteryId: currentCemeteryId, 
+    //         cemeteryName: currentCemeteryName
+    //     });
+    //     cemeteryId = currentCemeteryId;
+    //     cemeteryName = currentCemeteryName;
+    // }
     
     window.currentCemeteryId = currentCemeteryId;
     window.currentCemeteryName = currentCemeteryName;

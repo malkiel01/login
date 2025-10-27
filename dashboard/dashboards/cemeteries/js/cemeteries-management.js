@@ -30,6 +30,10 @@ async function loadCemeteries() {
     // עדכן את הסוג הנוכחי
     window.currentType = 'cemetery';
     window.currentParentId = null;
+
+    // ⭐ חדש: אפס את הסינון של גושים!
+    window.currentCemeteryId = null;
+    window.currentCemeteryName = null;
     
     // ⭐ נקה - DashboardCleaner ימחק גם את TableManager!
     if (typeof DashboardCleaner !== 'undefined') {

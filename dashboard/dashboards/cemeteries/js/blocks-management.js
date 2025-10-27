@@ -33,28 +33,51 @@ let currentCemeteryName = null;
 // טעינת גושים (הפונקציה הראשית)
 // ===================================================================
 async function loadBlocks(cemeteryId = null, cemeteryName = null, forceReset = false) {
-    console.log('📋 Loading blocks - v1.1.1 (תוקן שמירת סינון)...');
+    console.log('📋 Loading blocks - v1.1.2 (תוקן איפוס אוטומטי)...');
     
-    // ⭐ אם לא מועברים פרמטרים ולא forceReset, שמור על הסינון הקיים
-    if (cemeteryId === null && cemeteryName === null && !forceReset) {
-        // בדוק אם יש סינון קיים
-        if (currentCemeteryId !== null) {
-            console.log('💡 No params provided, keeping existing filter:', {
-                cemeteryId: currentCemeteryId, 
-                cemeteryName: currentCemeteryName
-            });
-            cemeteryId = currentCemeteryId;
-            cemeteryName = currentCemeteryName;
-        } else {
-            console.log('🔍 Cemetery filter: None (showing all blocks)');
-        }
+    // ⭐ אם מועבר cemeteryId או forceReset, אפס את הסינון הקודם
+    if (cemeteryId !== null || forceReset) {
+        console.log('🔄 Resetting filter:', { cemeteryId, forceReset });
+        currentCemeteryId = forceReset ? null : cemeteryId;
+        currentCemeteryName = forceReset ? null : cemeteryName;
+    } else if (currentCemeteryId === null) {
+        // אין סינון קיים ולא מועבר cemeteryId חדש
+        console.log('🔍 Cemetery filter: None (showing all blocks)');
     } else {
-        console.log('🔍 Cemetery filter:', { cemeteryId, cemeteryName, forceReset });
+        // שמור על הסינון הקיים
+        console.log('💡 Keeping existing filter:', {
+            cemeteryId: currentCemeteryId, 
+            cemeteryName: currentCemeteryName
+        });
+        cemeteryId = currentCemeteryId;
+        cemeteryName = currentCemeteryName;
     }
     
-    // ⭐ שמור את הקונטקסט הנוכחי (או אפס אם forceReset)
-    currentCemeteryId = forceReset ? null : cemeteryId;
-    currentCemeteryName = forceReset ? null : cemeteryName;
+    window.currentCemeteryId = currentCemeteryId;
+    window.currentCemeteryName = currentCemeteryName;
+    
+    console.log('🔍 Final filter:', { cemeteryId: currentCemeteryId, cemeteryName: currentCemeteryName });
+  
+    // // ⭐ אם לא מועברים פרמטרים ולא forceReset, שמור על הסינון הקיים
+    // if (cemeteryId === null && cemeteryName === null && !forceReset) {
+    //     // בדוק אם יש סינון קיים
+    //     if (currentCemeteryId !== null) {
+    //         console.log('💡 No params provided, keeping existing filter:', {
+    //             cemeteryId: currentCemeteryId, 
+    //             cemeteryName: currentCemeteryName
+    //         });
+    //         cemeteryId = currentCemeteryId;
+    //         cemeteryName = currentCemeteryName;
+    //     } else {
+    //         console.log('🔍 Cemetery filter: None (showing all blocks)');
+    //     }
+    // } else {
+    //     console.log('🔍 Cemetery filter:', { cemeteryId, cemeteryName, forceReset });
+    // }
+    
+    // // ⭐ שמור את הקונטקסט הנוכחי (או אפס אם forceReset)
+    // currentCemeteryId = forceReset ? null : cemeteryId;
+    // currentCemeteryName = forceReset ? null : cemeteryName;
     window.currentCemeteryId = currentCemeteryId;
     window.currentCemeteryName = currentCemeteryName;
     
@@ -117,6 +140,7 @@ async function loadBlocks(cemeteryId = null, cemeteryName = null, forceReset = f
     // טען סטטיסטיקות
     await loadBlockStats(cemeteryId);
 }
+// ⭐ קטע קוד לשינוי בשורות 35-60 בקובץ blocks-management.js
 
 // ===================================================================
 // ⭐ פונקציה מעודכנת - בניית המבנה של גושים ב-main-container

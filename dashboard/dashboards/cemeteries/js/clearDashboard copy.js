@@ -1,14 +1,6 @@
-/*
- * File: dashboards/dashboard/cemeteries/assets/js/clearDashboard.js
- * Version: 1.5.0
- * Updated: 2025-10-27
- * Author: Malkiel
- * Change Summary:
- * - v1.5.0: תיקון קריטי - ניקוי מלא של כל האלמנטים
- *   - מחיקה מלאה של table-wrapper עם כל התוכן שלו
- *   - מחיקה של כל אלמנטים עם data-fixed-width="true"
- *   - ניקוי יסודי של main-container לפני בנייה מחדש
- *   - תיקון בעיית "ילדים לא מוצגים בפעם השנייה"
+/**
+ * DashboardCleaner - ניקוי חכם של הדשבורד
+ * שלב א: תמיכה בשתי שיטות - ישנה (table-container) וחדשה (main-container)
  */
 
 const DashboardCleaner = {
@@ -38,8 +30,12 @@ const DashboardCleaner = {
             this.clearCards();
         }
         
-        // ⭐ תמיד נקה את הטבלה/תוכן - גם אם TableManager פעיל!
-        this.clearTable();
+        // ניקוי טבלה/תוכן
+        if (!this.isTableManagerActive()) {
+            this.clearTable();
+        } else {
+            console.log('  ⚠️ TableManager is active - skipping table clear');
+        }
         
         if (!settings.keepSidebar && settings.targetLevel) {
             this.clearSidebarForLevel(settings.targetLevel);
@@ -54,7 +50,11 @@ const DashboardCleaner = {
         }
         
         this.clearMessages();
-        this.clearSearch();
+        
+        if (!this.isTableManagerActive()) {
+            this.clearSearch();
+        }
+        
         this.closeModals();
         
         console.log('✅ Dashboard cleaned successfully');
@@ -97,43 +97,52 @@ const DashboardCleaner = {
     },
     
     /**
-     * ⭐ ניקוי הטבלה/תוכן - תיקון קריטי!
+     * ⭐ ניקוי הטבלה/תוכן - תומך בשתי שיטות
      */
     clearTable() {
-        console.log('  🧹 Clearing table/content...');
-        
-        // ⭐ שלב 1: מחק את כל ה-wrappers של TableManager
-        const tableWrappers = document.querySelectorAll('.table-wrapper[data-fixed-width="true"]');
-        if (tableWrappers.length > 0) {
-            console.log(`  🗑️ Removing ${tableWrappers.length} table-wrapper(s)...`);
-            tableWrappers.forEach(wrapper => {
-                wrapper.remove();
-            });
-        }
-        
-        // ⭐ שלב 2: מחק את כל האינדיקטורים של סינון
-        const filterIndicators = document.querySelectorAll('.filter-indicator');
-        if (filterIndicators.length > 0) {
-            console.log(`  🗑️ Removing ${filterIndicators.length} filter-indicator(s)...`);
-            filterIndicators.forEach(indicator => {
-                indicator.remove();
-            });
-        }
-        
-        // ⭐ שלב 3: בדוק אם יש main-container
+        // ⭐ שיטה חדשה: בדוק אם יש main-container
         const mainContainer = document.querySelector('.main-container');
         
         if (mainContainer) {
-            console.log('  🆕 Found main-container, clearing it completely...');
+            console.log('  🆕 Using NEW method (main-container)');
             
-            // מחק את כל התוכן של main-container
-            mainContainer.innerHTML = '';
-            console.log('  ✓ Main container cleared completely');
+            // ⭐ מחק גם table-wrapper אם קיים (TableManager)
+            const tableWrapper = document.querySelector('.table-wrapper[data-fixed-width="true"]');
+            if (tableWrapper) {
+                tableWrapper.remove();
+                console.log('  🗑️ TableManager wrapper removed');
+            }
+            
+            // מחק את main-container
+            mainContainer.remove();
+            console.log('  ✓ Main container removed');
+            
+            // בנה main-container חדש ריק
+            const mainContent = document.querySelector('.main-content');
+            if (mainContent) {
+                const newContainer = document.createElement('div');
+                newContainer.className = 'main-container';
+                
+                // הוסף אחרי action-bar אם קיים
+                const actionBar = mainContent.querySelector('.action-bar');
+                if (actionBar) {
+                    actionBar.insertAdjacentElement('afterend', newContainer);
+                } else {
+                    mainContent.appendChild(newContainer);
+                }
+                console.log('  ✓ New main container created');
+            }
             return;
         }
         
-        // ⭐ שלב 4: שיטה ישנה - עבודה עם table-container
+        // ⭐ שיטה ישנה: עבודה עם table-container
         console.log('  📜 Using OLD method (table-container)');
+        
+        // אם TableManager פעיל, הסתר אותו
+        if (this.isTableManagerActive()) {
+            this.hideTableManager();
+            return;
+        }
         
         const tbody = document.getElementById('tableBody');
         const thead = document.getElementById('tableHeaders');
@@ -146,8 +155,32 @@ const DashboardCleaner = {
         }
         
         if (thead) {
-            thead.innerHTML = '';
+            if (window.currentType && window.currentType !== 'customer' && window.currentType && window.currentType !== 'cemetery' ) {
+                this.setDefaultHeaders(window.currentType);
+            } else {
+                thead.innerHTML = '';
+            }
             console.log('  ✓ Table headers reset');
+        }
+    },
+    
+    /**
+     * הגדרת כותרות ברירת מחדל (שיטה ישנה)
+     */
+    setDefaultHeaders(type) {
+        const thead = document.getElementById('tableHeaders');
+        if (!thead) return;
+        
+        const headers = {
+            // cemetery: `<th>מזהה</th><th>שם</th><th>קוד</th><th>סטטוס</th><th>נוצר בתאריך</th><th>פעולות</th>`,
+            // block: `<th>מזהה</th><th>שם גוש</th><th>קוד</th><th>סטטוס</th><th>נוצר בתאריך</th><th>פעולות</th>`,
+            // plot: `<th>מזהה</th><th>שם חלקה</th><th>קוד</th><th>סטטוס</th><th>נוצר בתאריך</th><th>פעולות</th>`,
+            // areaGrave: `<th>מזהה</th><th>שם אחוזת קבר</th><th>סוג</th><th>סטטוס</th><th>נוצר בתאריך</th><th>פעולות</th>`,
+            // grave: `<th>מזהה</th><th>שם הנפטר</th><th>תאריך פטירה</th><th>מיקום</th><th>סטטוס</th><th>פעולות</th>`
+        };
+        
+        if (headers[type]) {
+            thead.innerHTML = headers[type];
         }
     },
     
@@ -385,4 +418,4 @@ window.clearSidebarBelow = function(type) {
 
 window.DashboardCleaner = DashboardCleaner;
 
-console.log('✅ DashboardCleaner v1.5.0 loaded - Critical fix for complete cleanup');
+console.log('✅ DashboardCleaner loaded - STEP A: Supports both old and new methods');

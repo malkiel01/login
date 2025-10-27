@@ -58,26 +58,6 @@ async function loadBlocks(cemeteryId = null, cemeteryName = null, forceReset = f
     
     console.log('🔍 Final filter:', { cemeteryId: currentCemeteryId, cemeteryName: currentCemeteryName });
   
-    // // ⭐ אם לא מועברים פרמטרים ולא forceReset, שמור על הסינון הקיים
-    // if (cemeteryId === null && cemeteryName === null && !forceReset) {
-    //     // בדוק אם יש סינון קיים
-    //     if (currentCemeteryId !== null) {
-    //         console.log('💡 No params provided, keeping existing filter:', {
-    //             cemeteryId: currentCemeteryId, 
-    //             cemeteryName: currentCemeteryName
-    //         });
-    //         cemeteryId = currentCemeteryId;
-    //         cemeteryName = currentCemeteryName;
-    //     } else {
-    //         console.log('🔍 Cemetery filter: None (showing all blocks)');
-    //     }
-    // } else {
-    //     console.log('🔍 Cemetery filter:', { cemeteryId, cemeteryName, forceReset });
-    // }
-    
-    // // ⭐ שמור את הקונטקסט הנוכחי (או אפס אם forceReset)
-    // currentCemeteryId = forceReset ? null : cemeteryId;
-    // currentCemeteryName = forceReset ? null : cemeteryName;
     window.currentCemeteryId = currentCemeteryId;
     window.currentCemeteryName = currentCemeteryName;
     

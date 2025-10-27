@@ -1,13 +1,14 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/clearDashboard.js
- * Version: 1.6.0
+ * Version: 1.5.0
  * Updated: 2025-10-27
  * Author: Malkiel
  * Change Summary:
- * - v1.6.0: תיקון קריטי - איפוס משתנים גלובליים של TableManager
- *   - איפוס cemeteriesTable, blocksTable, plotsTable וכו'
- *   - מחיקה מלאה של כל instances של UniversalSearch
- *   - תיקון בעיית "♻️ Updating existing TableManager"
+ * - v1.5.0: תיקון קריטי - ניקוי מלא של כל האלמנטים
+ *   - מחיקה מלאה של table-wrapper עם כל התוכן שלו
+ *   - מחיקה של כל אלמנטים עם data-fixed-width="true"
+ *   - ניקוי יסודי של main-container לפני בנייה מחדש
+ *   - תיקון בעיית "ילדים לא מוצגים בפעם השנייה"
  */
 
 const DashboardCleaner = {
@@ -37,9 +38,8 @@ const DashboardCleaner = {
             this.clearCards();
         }
         
-        // ⭐ תמיד נקה את הטבלה/תוכן והמשתנים הגלובליים!
+        // ⭐ תמיד נקה את הטבלה/תוכן - גם אם TableManager פעיל!
         this.clearTable();
-        this.resetGlobalVariables();
         
         if (!settings.keepSidebar && settings.targetLevel) {
             this.clearSidebarForLevel(settings.targetLevel);
@@ -58,83 +58,6 @@ const DashboardCleaner = {
         this.closeModals();
         
         console.log('✅ Dashboard cleaned successfully');
-    },
-    
-    /**
-     * ⭐ איפוס משתנים גלובליים של TableManager ו-UniversalSearch
-     */
-    resetGlobalVariables() {
-        console.log('  🔄 Resetting global variables...');
-        
-        // איפוס TableManager instances
-        if (window.cemeteriesTable) {
-            console.log('  🗑️ Resetting cemeteriesTable');
-            window.cemeteriesTable = null;
-        }
-        
-        if (window.blocksTable) {
-            console.log('  🗑️ Resetting blocksTable');
-            window.blocksTable = null;
-        }
-        
-        if (window.plotsTable) {
-            console.log('  🗑️ Resetting plotsTable');
-            window.plotsTable = null;
-        }
-        
-        if (window.areaGravesTable) {
-            console.log('  🗑️ Resetting areaGravesTable');
-            window.areaGravesTable = null;
-        }
-        
-        if (window.gravesTable) {
-            console.log('  🗑️ Resetting gravesTable');
-            window.gravesTable = null;
-        }
-        
-        if (window.customersTable) {
-            console.log('  🗑️ Resetting customersTable');
-            window.customersTable = null;
-        }
-        
-        // איפוס UniversalSearch instances
-        if (window.cemeterySearch && typeof window.cemeterySearch.destroy === 'function') {
-            console.log('  🗑️ Destroying cemeterySearch');
-            window.cemeterySearch.destroy();
-            window.cemeterySearch = null;
-        }
-        
-        if (window.blockSearch && typeof window.blockSearch.destroy === 'function') {
-            console.log('  🗑️ Destroying blockSearch');
-            window.blockSearch.destroy();
-            window.blockSearch = null;
-        }
-        
-        if (window.plotSearch && typeof window.plotSearch.destroy === 'function') {
-            console.log('  🗑️ Destroying plotSearch');
-            window.plotSearch.destroy();
-            window.plotSearch = null;
-        }
-        
-        if (window.areaGraveSearch && typeof window.areaGraveSearch.destroy === 'function') {
-            console.log('  🗑️ Destroying areaGraveSearch');
-            window.areaGraveSearch.destroy();
-            window.areaGraveSearch = null;
-        }
-        
-        if (window.graveSearch && typeof window.graveSearch.destroy === 'function') {
-            console.log('  🗑️ Destroying graveSearch');
-            window.graveSearch.destroy();
-            window.graveSearch = null;
-        }
-        
-        if (window.customerSearch && typeof window.customerSearch.destroy === 'function') {
-            console.log('  🗑️ Destroying customerSearch');
-            window.customerSearch.destroy();
-            window.customerSearch = null;
-        }
-        
-        console.log('  ✅ Global variables reset complete');
     },
     
     /**
@@ -174,7 +97,7 @@ const DashboardCleaner = {
     },
     
     /**
-     * ⭐ ניקוי הטבלה/תוכן - תיקון מלא!
+     * ⭐ ניקוי הטבלה/תוכן - תיקון קריטי!
      */
     clearTable() {
         console.log('  🧹 Clearing table/content...');
@@ -184,7 +107,6 @@ const DashboardCleaner = {
         if (tableWrappers.length > 0) {
             console.log(`  🗑️ Removing ${tableWrappers.length} table-wrapper(s)...`);
             tableWrappers.forEach(wrapper => {
-                console.log(`  📍 Removing wrapper:`, wrapper);
                 wrapper.remove();
             });
         }
@@ -378,7 +300,6 @@ const DashboardCleaner = {
         
         this.clearCards();
         this.clearTable();
-        this.resetGlobalVariables();
         this.clearAllSidebar();
         this.resetBreadcrumb();
         this.clearMessages();
@@ -464,4 +385,4 @@ window.clearSidebarBelow = function(type) {
 
 window.DashboardCleaner = DashboardCleaner;
 
-console.log('✅ DashboardCleaner v1.6.0 loaded - Complete reset with global variables');
+console.log('✅ DashboardCleaner v1.5.0 loaded - Critical fix for complete cleanup');

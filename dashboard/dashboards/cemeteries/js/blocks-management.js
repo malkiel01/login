@@ -1,12 +1,11 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/blocks-management.js
- * Version: 1.0.0
+ * Version: 1.0.1
  * Updated: 2025-10-26
  * Author: Malkiel
  * Change Summary:
- * - v1.0.0: יצירה ראשונית - זהה למבנה cemeteries-management.js
- * - שימוש ב-UniversalSearch + TableManager
- * - תמיכה בסינון לפי בית עלמין
+ * - v1.0.1: תיקון שדות למבנה בסיס הנתונים (blockLocation, comments, documentsList)
+ * - תיקון בעיית TableManager initialization
  */
 
 // ===================================================================
@@ -21,7 +20,7 @@ let editingBlockId = null;
 // טעינת גושים (הפונקציה הראשית)
 // ===================================================================
 async function loadBlocks(cemeteryId = null, cemeteryName = null) {
-    console.log('📋 Loading blocks - v1.0.0...');
+    console.log('📋 Loading blocks - v1.0.1 (תוקן שדות + TableManager)...');
     
     // עדכון פריט תפריט אקטיבי
     if (typeof setActiveMenuItem === 'function') {
@@ -167,8 +166,8 @@ async function initBlocksSearch(cemeteryId = null) {
                 matchType: ['exact', 'startsWith']
             },
             {
-                name: 'blockNumber',
-                label: 'מספר גוש',
+                name: 'blockLocation',
+                label: 'מיקום גוש',
                 table: 'blocks',
                 type: 'text',
                 matchType: ['exact', 'startsWith']
@@ -181,8 +180,8 @@ async function initBlocksSearch(cemeteryId = null) {
                 matchType: ['exact', 'fuzzy']
             },
             {
-                name: 'description',
-                label: 'תיאור',
+                name: 'comments',
+                label: 'הערות',
                 table: 'blocks',
                 type: 'text',
                 matchType: ['exact', 'fuzzy']
@@ -196,12 +195,12 @@ async function initBlocksSearch(cemeteryId = null) {
             }
         ],
         
-        displayColumns: ['blockNameHe', 'blockCode', 'blockNumber', 'cemetery_name', 'description', 'plots_count', 'createDate'],
+        displayColumns: ['blockNameHe', 'blockCode', 'blockLocation', 'cemetery_name', 'comments', 'plots_count', 'createDate'],
         
         searchContainerSelector: '#blockSearchSection',
         resultsContainerSelector: '#tableBody',
         
-        placeholder: 'חיפוש גושים לפי שם, קוד, מספר...',
+        placeholder: 'חיפוש גושים לפי שם, קוד, מיקום...',
         itemsPerPage: 999999,
         
         renderFunction: renderBlocksRows,
@@ -253,11 +252,11 @@ function renderBlocksRows(blocks) {
         `;
     }
     
-    // אתחל את TableManager אם עוד לא קיים
+    // ⭐ תיקון: אתחל את TableManager עם mainTable הנכון!
     if (!blocksTable) {
         console.log('🔧 Initializing blocksTable (TableManager)...');
         blocksTable = new TableManager({
-            tableId: 'mainTable',
+            tableId: 'mainTable',  // ✅ הטבלה הנכונה
             itemsPerPage: 50,
             scrollThreshold: 200,
             enableVirtualScroll: true
@@ -269,9 +268,9 @@ function renderBlocksRows(blocks) {
     const columns = [
         { key: 'blockNameHe', label: 'שם גוש', width: '20%', sortable: true },
         { key: 'blockCode', label: 'קוד גוש', width: '10%', sortable: true },
-        { key: 'blockNumber', label: 'מספר', width: '8%', sortable: true },
+        { key: 'blockLocation', label: 'מיקום', width: '8%', sortable: true },
         { key: 'cemetery_name', label: 'בית עלמין', width: '18%', sortable: true },
-        { key: 'description', label: 'תיאור', width: '20%', sortable: false },
+        { key: 'comments', label: 'הערות', width: '20%', sortable: false },
         { key: 'plots_count', label: 'חלקות', width: '8%', sortable: true },
         { key: 'createDate', label: 'תאריך יצירה', width: '12%', sortable: true },
         { key: 'actions', label: 'פעולות', width: '4%', sortable: false }
@@ -282,9 +281,9 @@ function renderBlocksRows(blocks) {
         ...block,
         blockNameHe: block.blockNameHe || 'לא צוין',
         blockCode: block.blockCode || '-',
-        blockNumber: block.blockNumber || '-',
+        blockLocation: block.blockLocation || '-',
         cemetery_name: block.cemetery_name || 'לא צוין',
-        description: block.description ? (block.description.length > 50 ? block.description.substring(0, 50) + '...' : block.description) : '-',
+        comments: block.comments ? (block.comments.length > 50 ? block.comments.substring(0, 50) + '...' : block.comments) : '-',
         plots_count: `<span class="count-badge">${block.plots_count || 0}</span>`,
         createDate: block.createDate ? new Date(block.createDate).toLocaleDateString('he-IL') : '-',
         actions: `
@@ -349,7 +348,6 @@ async function editBlock(blockId) {
     editingBlockId = blockId;
     
     try {
-        // טען את נתוני הגוש
         const response = await fetch(`/dashboard/dashboards/cemeteries/api/blocks-api.php?action=get&id=${blockId}`);
         const result = await response.json();
         

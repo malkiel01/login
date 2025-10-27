@@ -1,13 +1,14 @@
 <?php
 /*
  * File: api/blocks-api.php
- * Version: 1.0.0
+ * Version: 1.0.1
  * Updated: 2025-10-26
  * Author: Malkiel
  * Change Summary:
- * - v1.0.0: יצירה ראשונית - זהה למבנה cemeteries-api.php
- * - תמיכה בפעולות: list, get, create, update, delete, stats, search
- * - הוספת plots_count בתגובת list
+ * - v1.0.1: תיקון התאמה לשדות בבסיס הנתונים
+ *   blockLocation (לא blockNumber)
+ *   comments (לא description)
+ *   documentsList (לא documents)
  */
 
 header('Content-Type: application/json; charset=utf-8');
@@ -30,7 +31,6 @@ $id = $_GET['id'] ?? null;
 
 try {
     switch ($action) {
-        // רשימת כל הגושים
         case 'list':
             $search = $_GET['search'] ?? '';
             $cemeteryId = $_GET['cemeteryId'] ?? '';
@@ -38,26 +38,23 @@ try {
             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
             $offset = ($page - 1) * $limit;
             
-            // בניית השאילתה הראשית
             $sql = "SELECT b.*, c.cemeteryNameHe as cemetery_name 
                     FROM blocks b
                     LEFT JOIN cemeteries c ON b.cemeteryId = c.unicId
                     WHERE b.isActive = 1";
             $params = [];
             
-            // סינון לפי בית עלמין
             if ($cemeteryId) {
                 $sql .= " AND b.cemeteryId = :cemeteryId";
                 $params['cemeteryId'] = $cemeteryId;
             }
             
-            // חיפוש - כל שדה מקבל פרמטר משלו
             if ($search) {
                 $sql .= " AND (
                     b.blockNameHe LIKE :search1 OR 
                     b.blockNameEn LIKE :search2 OR 
                     b.blockCode LIKE :search3 OR 
-                    b.blockNumber LIKE :search4 OR
+                    b.blockLocation LIKE :search4 OR
                     c.cemeteryNameHe LIKE :search5
                 )";
                 $searchTerm = "%$search%";
@@ -68,7 +65,6 @@ try {
                 $params['search5'] = $searchTerm;
             }
             
-            // ✅ ספירת תוצאות מסוננות
             $countSql = "SELECT COUNT(*) FROM blocks b 
                          LEFT JOIN cemeteries c ON b.cemeteryId = c.unicId
                          WHERE b.isActive = 1";
@@ -84,7 +80,7 @@ try {
                     b.blockNameHe LIKE :search1 OR 
                     b.blockNameEn LIKE :search2 OR 
                     b.blockCode LIKE :search3 OR 
-                    b.blockNumber LIKE :search4 OR
+                    b.blockLocation LIKE :search4 OR
                     c.cemeteryNameHe LIKE :search5
                 )";
                 $countParams['search1'] = $searchTerm;
@@ -98,7 +94,6 @@ try {
             $countStmt->execute($countParams);
             $total = $countStmt->fetchColumn();
             
-            // ✅ ספירת כל הגושים (ללא סינון חיפוש, אבל עם סינון בית עלמין אם קיים)
             $totalAllSql = "SELECT COUNT(*) FROM blocks WHERE isActive = 1";
             $totalAllParams = [];
             if ($cemeteryId) {
@@ -109,7 +104,6 @@ try {
             $totalAllStmt->execute($totalAllParams);
             $totalAll = $totalAllStmt->fetchColumn();
             
-            // הוספת מיון ועימוד
             $sql .= " ORDER BY b.createDate DESC LIMIT :limit OFFSET :offset";
             
             $stmt = $pdo->prepare($sql);
@@ -122,7 +116,6 @@ try {
             
             $blocks = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            // ✅ הוספת plots_count לכל גוש
             foreach ($blocks as &$block) {
                 $plotStmt = $pdo->prepare("SELECT COUNT(*) FROM plots WHERE blockId = :id AND isActive = 1");
                 $plotStmt->execute(['id' => $block['unicId']]);
@@ -142,7 +135,6 @@ try {
             ]);
             break;
             
-        // קבלת גוש בודד
         case 'get':
             if (!$id) {
                 throw new Exception('Block ID is required');
@@ -161,7 +153,6 @@ try {
                 throw new Exception('הגוש לא נמצא');
             }
             
-            // ספירת חלקות
             $stmt = $pdo->prepare("SELECT COUNT(*) FROM plots WHERE blockId = :id AND isActive = 1");
             $stmt->execute(['id' => $block['unicId']]);
             $block['plots_count'] = $stmt->fetchColumn();
@@ -172,7 +163,6 @@ try {
             ]);
             break;
             
-        // הוספת גוש חדש
         case 'create':
             $data = json_decode(file_get_contents('php://input'), true);
             
@@ -184,14 +174,12 @@ try {
                 throw new Exception('בית עלמין הוא שדה חובה');
             }
             
-            // בדיקת קיום בית העלמין
             $stmt = $pdo->prepare("SELECT unicId FROM cemeteries WHERE unicId = :id AND isActive = 1");
             $stmt->execute(['id' => $data['cemeteryId']]);
             if (!$stmt->fetch()) {
                 throw new Exception('בית העלמין לא נמצא');
             }
             
-            // בדיקת כפל קוד
             if (!empty($data['blockCode'])) {
                 $stmt = $pdo->prepare("SELECT unicId FROM blocks WHERE blockCode = :code AND cemeteryId = :cemId AND isActive = 1");
                 $stmt->execute(['code' => $data['blockCode'], 'cemId' => $data['cemeteryId']]);
@@ -205,9 +193,11 @@ try {
             $data['updateDate'] = date('Y-m-d H:i:s');
             $data['isActive'] = 1;
             
+            // ⭐ שדות מותאמים למבנה הטבלה האמיתי
             $fields = [
                 'unicId', 'cemeteryId', 'blockNameHe', 'blockNameEn', 'blockCode',
-                'blockNumber', 'description', 'coordinates', 'documents',
+                'blockLocation', 'nationalInsuranceCode', 'comments', 
+                'coordinates', 'documentsList',
                 'createDate', 'updateDate', 'isActive'
             ];
             
@@ -237,7 +227,6 @@ try {
             ]);
             break;
             
-        // עדכון גוש
         case 'update':
             if (!$id) {
                 throw new Exception('Block ID is required');
@@ -249,7 +238,6 @@ try {
                 throw new Exception('שם הגוש (עברית) הוא שדה חובה');
             }
             
-            // בדיקת כפל קוד - רק אם השתנה
             if (!empty($data['blockCode'])) {
                 $checkStmt = $pdo->prepare("SELECT blockCode, cemeteryId FROM blocks WHERE unicId = :id");
                 $checkStmt->execute(['id' => $id]);
@@ -266,9 +254,11 @@ try {
             
             $data['updateDate'] = date('Y-m-d H:i:s');
             
+            // ⭐ שדות מותאמים למבנה הטבלה האמיתי
             $fields = [
                 'blockNameHe', 'blockNameEn', 'blockCode',
-                'blockNumber', 'description', 'coordinates', 'documents', 'updateDate'
+                'blockLocation', 'nationalInsuranceCode', 'comments',
+                'coordinates', 'documentsList', 'updateDate'
             ];
             
             $updateFields = [];
@@ -295,13 +285,11 @@ try {
             ]);
             break;
             
-        // מחיקת גוש
         case 'delete':
             if (!$id) {
                 throw new Exception('Block ID is required');
             }
             
-            // בדיקה אם יש חלקות
             $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM plots WHERE blockId = :id AND isActive = 1");
             $stmt->execute(['id' => $id]);
             $plots = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
@@ -319,7 +307,6 @@ try {
             ]);
             break;
             
-        // סטטיסטיקות
         case 'stats':
             $cemeteryId = $_GET['cemeteryId'] ?? '';
             $stats = [];
@@ -356,7 +343,6 @@ try {
             echo json_encode(['success' => true, 'data' => $stats]);
             break;
             
-        // חיפוש מהיר
         case 'search':
             $query = $_GET['q'] ?? '';
             $cemeteryId = $_GET['cemeteryId'] ?? '';
@@ -366,7 +352,7 @@ try {
                 break;
             }
             
-            $sql = "SELECT b.unicId, b.blockNameHe, b.blockNameEn, b.blockCode, b.blockNumber,
+            $sql = "SELECT b.unicId, b.blockNameHe, b.blockNameEn, b.blockCode, b.blockLocation,
                            c.cemeteryNameHe as cemetery_name
                     FROM blocks b
                     LEFT JOIN cemeteries c ON b.cemeteryId = c.unicId
@@ -375,7 +361,7 @@ try {
                         b.blockNameHe LIKE :query1 OR 
                         b.blockNameEn LIKE :query2 OR 
                         b.blockCode LIKE :query3 OR
-                        b.blockNumber LIKE :query4
+                        b.blockLocation LIKE :query4
                     )";
             
             $params = [

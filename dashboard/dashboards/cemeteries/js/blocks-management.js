@@ -63,24 +63,6 @@ async function loadBlocks(cemeteryId = null, cemeteryName = null, forceReset = f
     
     console.log('🔍 Final filter:', { cemeteryId: currentCemeteryId, cemeteryName: currentCemeteryName });
         
-    // // ⭐ אם מועבר cemeteryId או forceReset, אפס את הסינון הקודם
-    // if (cemeteryId !== null || forceReset) {
-    //     console.log('🔄 Resetting filter:', { cemeteryId, forceReset });
-    //     currentCemeteryId = forceReset ? null : cemeteryId;
-    //     currentCemeteryName = forceReset ? null : cemeteryName;
-    // } else if (currentCemeteryId === null) {
-    //     // אין סינון קיים ולא מועבר cemeteryId חדש
-    //     console.log('🔍 Cemetery filter: None (showing all blocks)');
-    // } else {
-    //     // שמור על הסינון הקיים
-    //     console.log('💡 Keeping existing filter:', {
-    //         cemeteryId: currentCemeteryId, 
-    //         cemeteryName: currentCemeteryName
-    //     });
-    //     cemeteryId = currentCemeteryId;
-    //     cemeteryName = currentCemeteryName;
-    // }
-    
     window.currentCemeteryId = currentCemeteryId;
     window.currentCemeteryName = currentCemeteryName;
     
@@ -291,52 +273,98 @@ async function initBlocksSearch(cemeteryId = null) {
         
         renderFunction: renderBlocksRows,
         
+        // callbacks: {
+        //     onInit: () => {
+        //         console.log('✅ UniversalSearch initialized for blocks');
+        //     },
+            
+        //     onSearch: (query, filters) => {
+        //         console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()), cemeteryId });
+        //     },
+            
+        //     onResults: (data) => {
+        //         console.log('📦 Raw results from API:', data.pagination?.total || data.total || 0, 'blocks');
+                
+        //         // ⭐ שכבת סינון client-side נוספת
+        //         let filteredData = data.data;
+                
+        //         if (cemeteryId && filteredData) {
+        //             const beforeFilter = filteredData.length;
+                    
+        //             // סנן רק גושים השייכים לבית העלמין הנבחר
+        //             filteredData = filteredData.filter(block => {
+        //                 // בדוק שדות שונים שעשויים להכיל את מזהה בית העלמין
+        //                 return block.cemeteryId === cemeteryId || 
+        //                        block.cemetery_id === cemeteryId ||
+        //                        block.parentId === cemeteryId ||
+        //                        block.parent_id === cemeteryId ||
+        //                        String(block.cemeteryId) === String(cemeteryId) ||
+        //                        String(block.cemetery_id) === String(cemeteryId);
+        //             });
+                    
+        //             const afterFilter = filteredData.length;
+                    
+        //             if (beforeFilter !== afterFilter) {
+        //                 console.log(`⚠️ Client-side filter applied: ${beforeFilter} → ${afterFilter} blocks`);
+        //                 console.log('🔍 Filter reason: API returned unfiltered results');
+        //             } else {
+        //                 console.log(`✅ All ${afterFilter} blocks belong to cemetery ${cemeteryId}`);
+        //             }
+                    
+        //             // עדכן את data.data עם התוצאות המסוננות
+        //             data.data = filteredData;
+        //         }
+                
+        //         console.log('📊 Final results:', filteredData.length, 'blocks found');
+        //         currentBlocks = filteredData;
+        //     },
+            
+        //     onError: (error) => {
+        //         console.error('❌ Search error:', error);
+        //     },
+            
+        //     onEmpty: () => {
+        //         console.log('📭 No results');
+        //     }
+        // }
+
         callbacks: {
-            onInit: () => {
-                console.log('✅ UniversalSearch initialized for blocks');
-            },
-            
-            onSearch: (query, filters) => {
-                console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()), cemeteryId });
-            },
-            
-            onResults: (data) => {
-                console.log('📦 Raw results from API:', data.pagination?.total || data.total || 0, 'blocks');
-                
-                // ⭐ שכבת סינון client-side נוספת
-                let filteredData = data.data;
-                
-                if (cemeteryId && filteredData) {
-                    const beforeFilter = filteredData.length;
-                    
-                    // סנן רק גושים השייכים לבית העלמין הנבחר
-                    filteredData = filteredData.filter(block => {
-                        // בדוק שדות שונים שעשויים להכיל את מזהה בית העלמין
-                        return block.cemeteryId === cemeteryId || 
-                               block.cemetery_id === cemeteryId ||
-                               block.parentId === cemeteryId ||
-                               block.parent_id === cemeteryId ||
-                               String(block.cemeteryId) === String(cemeteryId) ||
-                               String(block.cemetery_id) === String(cemeteryId);
-                    });
-                    
-                    const afterFilter = filteredData.length;
-                    
-                    if (beforeFilter !== afterFilter) {
-                        console.log(`⚠️ Client-side filter applied: ${beforeFilter} → ${afterFilter} blocks`);
-                        console.log('🔍 Filter reason: API returned unfiltered results');
-                    } else {
-                        console.log(`✅ All ${afterFilter} blocks belong to cemetery ${cemeteryId}`);
-                    }
-                    
-                    // עדכן את data.data עם התוצאות המסוננות
-                    data.data = filteredData;
-                }
-                
-                console.log('📊 Final results:', filteredData.length, 'blocks found');
-                currentBlocks = filteredData;
-            },
-            
+           onInit: () => {
+               console.log('✅ UniversalSearch initialized for blocks');
+           },
+           
+           onSearch: (query, filters) => {
+               console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()), cemeteryId: currentCemeteryId });
+           },
+           
+           onResults: (data) => {
+               console.log('📦 Raw results from API:', data.data.length, 'blocks');
+               currentBlocks = data.data;
+               
+               // ⭐ חשב את המספר המסונן
+               let filteredCount = data.data.length;
+               if (currentCemeteryId) {
+                   filteredCount = data.data.filter(block => 
+                       block.cemeteryId === currentCemeteryId || 
+                       block.cemetery_id === currentCemeteryId
+                   ).length;
+                   
+                   console.log('⚠️ Client-side filter applied:', data.data.length, '→', filteredCount, 'blocks');
+                   console.log('🔍 Filter reason: API returned unfiltered results');
+               }
+               
+               console.log('📊 Final results:', filteredCount, 'blocks found');
+               
+               // ⭐ עדכן את התצוגה עם המספר הנכון
+               const searchSection = document.getElementById('blockSearchSection');
+               if (searchSection) {
+                   const resultsInfo = searchSection.querySelector('.results-info, .search-results-count');
+                   if (resultsInfo) {
+                       resultsInfo.textContent = `נמצאו ${filteredCount} גושים`;
+                   }
+               }
+           },
+           
             onError: (error) => {
                 console.error('❌ Search error:', error);
             },
@@ -344,7 +372,7 @@ async function initBlocksSearch(cemeteryId = null) {
             onEmpty: () => {
                 console.log('📭 No results');
             }
-        }
+       }
     };
     
     // ⭐ אם יש סינון לפי בית עלמין, הוסף פרמטר ל-API
@@ -766,7 +794,7 @@ async function initBlocksTable(data, totalItems = null) {
 // ===================================================================
 // רינדור שורות הגושים - בדיוק כמו בבתי עלמין
 // ===================================================================
-function renderBlocksRows(data, container, pagination = null) {
+function renderBlocksRows2(data, container, pagination = null) {
     
     // ⭐ חלץ את הסכום הכולל מ-pagination אם קיים
     const totalItems = pagination?.total || data.length;
@@ -840,8 +868,74 @@ function renderBlocksRows(data, container, pagination = null) {
         blocksTable.setData(filteredData);
     }
 }
-
 // --------
+function renderBlocksRows(data, container, pagination = null) {
+    console.log(`📝 renderBlocksRows called with ${data.length} items`);
+    
+    // ⭐ סינון client-side לפי cemeteryId
+    let filteredData = data;
+    if (currentCemeteryId) {
+        filteredData = data.filter(block => 
+            block.cemeteryId === currentCemeteryId || 
+            block.cemetery_id === currentCemeteryId
+        );
+        console.log(`🎯 Client-side filtered: ${data.length} → ${filteredData.length} blocks`);
+    }
+    
+    // ⭐ עדכן את totalItems להיות המספר המסונן!
+    const totalItems = filteredData.length;
+    
+    console.log(`📊 Total items to display: ${totalItems}`);
+
+    if (filteredData.length === 0) {
+        if (blocksTable) {
+            blocksTable.setData([]);
+        }
+        
+        container.innerHTML = `
+            <tr>
+                <td colspan="9" style="text-align: center; padding: 60px;">
+                    <div style="color: #9ca3af;">
+                        <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
+                        <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">לא נמצאו תוצאות</div>
+                        <div>נסה לשנות את מילות החיפוש או הפילטרים</div>
+                    </div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    // ⭐ בדוק אם ה-DOM של TableManager קיים
+    const tableWrapperExists = document.querySelector('.table-wrapper[data-fixed-width="true"]');
+    
+    // ⭐ אם המשתנה קיים אבל ה-DOM נמחק - אפס את המשתנה!
+    if (!tableWrapperExists && blocksTable) {
+        console.log('🗑️ TableManager DOM was deleted, resetting blocksTable variable');
+        blocksTable = null;
+        window.blocksTable = null;
+    }
+    
+    // עכשיו בדוק אם צריך לבנות מחדש
+    if (!blocksTable || !tableWrapperExists) {
+        // אין TableManager או שה-DOM שלו נמחק - בנה מחדש!
+        console.log(`🏗️ Creating new TableManager with ${totalItems} items`);
+        initBlocksTable(filteredData, totalItems);
+    } else {
+        // ⭐ עדכן גם את totalItems ב-TableManager!
+        console.log(`♻️ Updating TableManager with ${totalItems} items`);
+        if (blocksTable.config) {
+            blocksTable.config.totalItems = totalItems;
+        }
+        
+        blocksTable.setData(filteredData);
+    }
+    
+    // ⭐ עדכן את התצוגה של UniversalSearch
+    if (blockSearch && blockSearch.updateResultsInfo) {
+        blockSearch.updateResultsInfo(totalItems);
+    }
+}
 
 // ===================================================================
 // פורמט תאריך

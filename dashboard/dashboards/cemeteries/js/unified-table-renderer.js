@@ -902,7 +902,7 @@ window.loadAllBlocks2 = async function() {
     await tableRenderer.loadAndDisplay('block');
 };
 
-window.loadAllPlots = async function() {
+window.loadAllPlots2 = async function() {
     console.log('📍 Loading all plots - STEP C');
     setActiveMenuItem('plotItem');
     window.currentType = 'plot';

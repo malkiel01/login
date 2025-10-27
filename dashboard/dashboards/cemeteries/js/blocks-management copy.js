@@ -333,162 +333,197 @@ async function initBlocksSearch(cemeteryId = null) {
     return blockSearch;
 }
 
-// // ===================================================================
-// // אתחול TableManager - עם תמיכה ב-totalItems
-// // ===================================================================
-// async function initBlocksTable(data, totalItems = null) {
-//     // ⭐ אם לא קיבלנו totalItems, השתמש ב-data.length
-//     const actualTotal = totalItems !== null ? totalItems : data.length;
+// ===================================================================
+// אתחול TableManager - עם תמיכה ב-totalItems
+// ===================================================================
+async function initBlocksTable(data, totalItems = null) {
+    // ⭐ אם לא קיבלנו totalItems, השתמש ב-data.length
+    const actualTotal = totalItems !== null ? totalItems : data.length;
     
-//     console.log(`🏗️ Initializing TableManager with ${data.length} items (total: ${actualTotal})`);
+    console.log(`🏗️ Initializing TableManager with ${data.length} items (total: ${actualTotal})`);
     
-//     // ⭐ אם יש סינון פעיל, הצג רק את הגושים המסוננים
-//     let displayData = data;
-//     if (currentCemeteryId) {
-//         displayData = data.filter(block => {
-//             return block.cemeteryId === currentCemeteryId || 
-//                    block.cemetery_id === currentCemeteryId ||
-//                    block.parentId === currentCemeteryId ||
-//                    block.parent_id === currentCemeteryId ||
-//                    String(block.cemeteryId) === String(currentCemeteryId) ||
-//                    String(block.cemetery_id) === String(currentCemeteryId);
-//         });
-//         console.log(`🎯 TableManager filtered: ${data.length} → ${displayData.length} blocks`);
-//     }
+    // ⭐ אם יש סינון פעיל, הצג רק את הגושים המסוננים
+    let displayData = data;
+    if (currentCemeteryId) {
+        displayData = data.filter(block => {
+            return block.cemeteryId === currentCemeteryId || 
+                   block.cemetery_id === currentCemeteryId ||
+                   block.parentId === currentCemeteryId ||
+                   block.parent_id === currentCemeteryId ||
+                   String(block.cemeteryId) === String(currentCemeteryId) ||
+                   String(block.cemetery_id) === String(currentCemeteryId);
+        });
+        console.log(`🎯 TableManager filtered: ${data.length} → ${displayData.length} blocks`);
+    }
     
-//     blocksTable = new TableManager({
-//         tableSelector: '#mainTable',
+    blocksTable = new TableManager({
+        tableSelector: '#mainTable',
         
-//         columns: [
-//             {
-//                 field: 'blockNameHe',
-//                 label: 'שם הגוש',
-//                 width: '200px',
-//                 sortable: true,
-//                 render: (block) => {
-//                     const name = block.blockNameHe || block.name || 'ללא שם';
-//                     return `<strong style="color: #1e40af;">${name}</strong>`;
-//                 }
-//             },
-//             {
-//                 field: 'blockCode',
-//                 label: 'קוד',
-//                 width: '100px',
-//                 sortable: true,
-//                 render: (block) => {
-//                     const code = block.blockCode || block.code || '-';
-//                     return `<code style="background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 13px;">${code}</code>`;
-//                 }
-//             },
-//             {
-//                 field: 'blockLocation',
-//                 label: 'מיקום',
-//                 width: '150px',
-//                 sortable: true,
-//                 render: (block) => block.blockLocation || block.location || '-'
-//             },
-//             {
-//                 field: 'cemetery_name',
-//                 label: 'בית עלמין',
-//                 width: '200px',
-//                 sortable: true
-//             },
-//             {
-//                 field: 'comments',
-//                 label: 'הערות',
-//                 width: '250px',
-//                 sortable: true,
-//                 render: (block) => {
-//                     const comments = block.comments || '';
-//                     return comments.length > 50 ? comments.substring(0, 50) + '...' : comments;
-//                 }
-//             },
-//             {
-//                 field: 'plots_count',
-//                 label: 'חלקות',
-//                 width: '80px',
-//                 type: 'number',
-//                 sortable: true,
-//                 render: (block) => {
-//                     const count = block.plots_count || 0;
-//                     return `<span style="background: #dbeafe; color: #1e40af; padding: 3px 10px; border-radius: 4px; font-size: 13px; font-weight: 600; display: inline-block;">${count}</span>`;
-//                 }
-//             },
-//             {
-//                 field: 'createDate',
-//                 label: 'תאריך',
-//                 width: '120px',
-//                 type: 'date',
-//                 sortable: true,
-//                 render: (block) => formatDate(block.createDate)
-//             },
-//             {
-//                 field: 'actions',
-//                 label: 'פעולות',
-//                 width: '120px',
-//                 sortable: false,
-//                 render: (block) => `
-//                     <button class="btn btn-sm btn-secondary" onclick="editBlock('${block.unicId}')" title="עריכה">
-//                         <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
-//                     </button>
-//                     <button class="btn btn-sm btn-danger" onclick="deleteBlock('${block.unicId}')" title="מחיקה">
-//                         <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
-//                     </button>
-//                 `
-//             }
-//         ],
+        columns: [
+            {
+                field: 'blockNameHe',
+                label: 'שם הגוש',
+                width: '200px',
+                sortable: true,
+                render: (block) => {
+                    const name = block.blockNameHe || block.name || 'ללא שם';
+                    return `<strong style="color: #1e40af;">${name}</strong>`;
+                }
+            },
+            {
+                field: 'blockCode',
+                label: 'קוד',
+                width: '100px',
+                sortable: true,
+                render: (block) => {
+                    const code = block.blockCode || block.code || '-';
+                    return `<code style="background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 13px;">${code}</code>`;
+                }
+            },
+            {
+                field: 'blockLocation',
+                label: 'מיקום',
+                width: '150px',
+                sortable: true,
+                render: (block) => block.blockLocation || block.location || '-'
+            },
+            {
+                field: 'cemetery_name',
+                label: 'בית עלמין',
+                width: '200px',
+                sortable: true
+            },
+            {
+                field: 'comments',
+                label: 'הערות',
+                width: '250px',
+                sortable: true,
+                render: (block) => {
+                    const comments = block.comments || '';
+                    return comments.length > 50 ? comments.substring(0, 50) + '...' : comments;
+                }
+            },
+            {
+                field: 'plots_count',
+                label: 'חלקות',
+                width: '80px',
+                type: 'number',
+                sortable: true,
+                render: (block) => {
+                    const count = block.plots_count || 0;
+                    return `<span style="background: #dbeafe; color: #1e40af; padding: 3px 10px; border-radius: 4px; font-size: 13px; font-weight: 600; display: inline-block;">${count}</span>`;
+                }
+            },
+            {
+                field: 'createDate',
+                label: 'תאריך',
+                width: '120px',
+                type: 'date',
+                sortable: true,
+                render: (block) => formatDate(block.createDate)
+            },
+            {
+                field: 'actions',
+                label: 'פעולות',
+                width: '120px',
+                sortable: false,
+                render: (block) => `
+                    <button class="btn btn-sm btn-secondary" onclick="editBlock('${block.unicId}')" title="עריכה">
+                        <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteBlock('${block.unicId}')" title="מחיקה">
+                        <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
+                    </button>
+                `
+            }
+        ],
 
-//         onRowDoubleClick: (block) => {
-//             handleBlockDoubleClick(block.unicId, block.blockNameHe);
-//         },
+        onRowDoubleClick: (block) => {
+            handleBlockDoubleClick(block.unicId, block.blockNameHe);
+        },
         
-//         data: displayData,
+        data: displayData,
         
-//         sortable: true,
-//         resizable: true,
-//         reorderable: false,
-//         filterable: true,
+        sortable: true,
+        resizable: true,
+        reorderable: false,
+        filterable: true,
         
-//         onSort: (field, order) => {
-//             console.log(`📊 Sorted by ${field} ${order}`);
-//             showToast(`ממוין לפי ${field} (${order === 'asc' ? 'עולה' : 'יורד'})`, 'info');
-//         },
+        onSort: (field, order) => {
+            console.log(`📊 Sorted by ${field} ${order}`);
+            showToast(`ממוין לפי ${field} (${order === 'asc' ? 'עולה' : 'יורד'})`, 'info');
+        },
         
-//         onFilter: (filters) => {
-//             console.log('🔍 Active filters:', filters);
-//             const count = blocksTable.getFilteredData().length;
-//             if (count === 0) {
-//                 showToast('לא נמצאו תוצאות מתאימות', 'info');
-//             } else {
-//                 showToast(`נמצאו ${count} תוצאות`, 'success');
-//             }
-//         },
+        onFilter: (filters) => {
+            console.log('🔍 Active filters:', filters);
+            const count = blocksTable.getFilteredData().length;
+            if (count === 0) {
+                showToast('לא נמצאו תוצאות מתאימות', 'info');
+            } else {
+                showToast(`נמצאו ${count} תוצאות`, 'success');
+            }
+        },
         
-//         itemsPerPage: 50,
-//         showPagination: true,
-//         virtualScroll: true,
-//         rowHeight: 45
-//     });
+        itemsPerPage: 50,
+        showPagination: true,
+        virtualScroll: true,
+        rowHeight: 45
+    });
     
-//     console.log('✅ TableManager initialized successfully');
+    console.log('✅ TableManager initialized successfully');
     
-//     // שמור את ה-instance ב-window
-//     window.blocksTable = blocksTable;
+    // שמור את ה-instance ב-window
+    window.blocksTable = blocksTable;
     
-//     return blocksTable;
-// }
+    return blocksTable;
+}
+
+// // // ===================================================================
+// // // רינדור שורות גושים - עובד עם TableManager
+// // // ===================================================================
+// // async function renderBlocksRows(data, containerSelector = '#tableBody') {
+// //     console.log('📝 renderBlocksRows called with', data.length, 'items');
+    
+// //     if (!blocksTable) {
+// //         console.log('🏗️ TableManager not initialized, creating now...');
+// //         await initBlocksTable(data);
+// //     } else {
+// //         console.log('♻️ Updating existing TableManager...');
+        
+// //         // אם UniversalSearch החזיר יותר תוצאות, עדכן
+// //         if (blockSearch && blockSearch.state) {
+// //             const allData = blockSearch.state.results || [];
+// //             if (allData.length > data.length) {
+// //                 console.log(`📦 UniversalSearch has ${allData.length} items, updating TableManager...`);
+                
+// //                 // ⭐ אם יש סינון פעיל, סנן גם כאן
+// //                 let displayData = allData;
+// //                 if (currentCemeteryId) {
+// //                     displayData = allData.filter(block => {
+// //                         return block.cemeteryId === currentCemeteryId || 
+// //                                block.cemetery_id === currentCemeteryId ||
+// //                                block.parentId === currentCemeteryId ||
+// //                                block.parent_id === currentCemeteryId ||
+// //                                String(block.cemeteryId) === String(currentCemeteryId) ||
+// //                                String(block.cemetery_id) === String(currentCemeteryId);
+// //                     });
+// //                     console.log(`🎯 Filtered in render: ${allData.length} → ${displayData.length} blocks`);
+// //                 }
+                
+// //                 blocksTable.setData(displayData);
+// //                 return;
+// //             }
+// //         }
+
+// //         blocksTable.setData(data);
+// //     }
+// // }
 
 // // ===================================================================
 // // רינדור שורות הגושים בטבלה
 // // ===================================================================
 // function renderBlocksRows(blocks) {
 //     console.log(`📝 renderBlocksRows called with ${blocks.length} items`);
-    
-//     // ⭐ DEBUG: הדפס רשומה ראשונה כדי לראות את המבנה
-//     if (blocks.length > 0) {
-//         console.log('🔍 First block structure:', blocks[0]);
-//         console.log('🔑 Available keys:', Object.keys(blocks[0]));
-//     }
     
 //     // ⭐ שלב 1: בדוק אם blocksTable קיים ואם ה-DOM שלו עדיין קיים!
 //     const tableExists = window.blocksTable && 
@@ -528,8 +563,9 @@ async function initBlocksSearch(cemeteryId = null) {
 //     window.blocksTable = new TableManager({
 //         tableSelector: '#mainTable',
         
+//         // ⭐ העבר totalItems: blocks.length כדי שהטוטל יהיה נכון!
 //         data: filteredBlocks,
-//         totalItems: filteredBlocks.length,
+//         totalItems: filteredBlocks.length,  // זה יהיה הטוטל שמוצג!
         
 //         containerWidth: '98%',
 //         containerPadding: '20px',
@@ -545,63 +581,35 @@ async function initBlocksSearch(cemeteryId = null) {
 //         ],
         
 //         renderCell: (value, field, row) => {
-//             // ⭐ DEBUG: לוג לכל תא
-//             console.log(`🔍 renderCell called - field: ${field}, value:`, value, 'row:', row);
-            
-//             // ⭐ אם value הוא אובייקט, נסה לקרוא ישירות מה-row
-//             let actualValue = value;
-            
-//             if (typeof value === 'object' && value !== null) {
-//                 console.warn(`⚠️ Value is object for field ${field}, trying to extract from row`);
-//                 actualValue = row[field];
-//             }
-            
-//             // טיפול בשדות מיוחדים
 //             if (field === 'statusBlock') {
-//                 const status = actualValue || row.statusBlock || row.status;
-//                 return status == 1 
+//                 return value == 1 
 //                     ? '<span class="status-badge status-active">פעיל</span>'
 //                     : '<span class="status-badge status-inactive">לא פעיל</span>';
 //             }
             
 //             if (field === 'createDate') {
-//                 const date = actualValue || row.createDate || row.created_at;
-//                 return formatDate(date);
-//             }
-            
-//             if (field === 'plots_count') {
-//                 const count = actualValue || row.plots_count || row.plotsCount || 0;
-//                 return count.toString();
+//                 return formatDate(value);
 //             }
             
 //             if (field === 'actions') {
-//                 const id = row.unicId || row.id || row.blockId;
 //                 return `
 //                     <div class="action-buttons">
-//                         <button class="btn-icon" onclick="editBlock('${id}')" title="ערוך">
+//                         <button class="btn-icon" onclick="editBlock('${row.unicId}')" title="ערוך">
 //                             <span>✏️</span>
 //                         </button>
-//                         <button class="btn-icon" onclick="deleteBlock('${id}')" title="מחק">
+//                         <button class="btn-icon" onclick="deleteBlock('${row.unicId}')" title="מחק">
 //                             <span>🗑️</span>
 //                         </button>
 //                     </div>
 //                 `;
 //             }
             
-//             // ⭐ אם actualValue עדיין אובייקט, החזר ערך ריק
-//             if (typeof actualValue === 'object' && actualValue !== null) {
-//                 console.error(`❌ Still object for field ${field}:`, actualValue);
-//                 return '-';
-//             }
-            
-//             return actualValue || '-';
+//             return value || '-';
 //         },
         
 //         onRowDoubleClick: (row) => {
 //             if (typeof handleBlockDoubleClick === 'function') {
-//                 const id = row.unicId || row.id || row.blockId;
-//                 const name = row.blockNameHe || row.name;
-//                 handleBlockDoubleClick(id, name);
+//                 handleBlockDoubleClick(row.unicId, row.blockNameHe);
 //             }
 //         },
         
@@ -616,204 +624,143 @@ async function initBlocksSearch(cemeteryId = null) {
 //     console.log('✅ TableManager initialized successfully');
 // }
 
-// --------
-
 // ===================================================================
-// אתחול TableManager לגושים
+// רינדור שורות הגושים בטבלה
 // ===================================================================
-async function initBlocksTable(data, totalItems = null) {
-    const actualTotalItems = totalItems !== null ? totalItems : data.length;
+function renderBlocksRows(blocks) {
+    console.log(`📝 renderBlocksRows called with ${blocks.length} items`);
     
-    // אם הטבלה כבר קיימת, רק עדכן נתונים
-    if (blocksTable) {
-        blocksTable.config.totalItems = actualTotalItems;
-        blocksTable.setData(data);
-        return blocksTable;
+    // ⭐ DEBUG: הדפס רשומה ראשונה כדי לראות את המבנה
+    if (blocks.length > 0) {
+        console.log('🔍 First block structure:', blocks[0]);
+        console.log('🔑 Available keys:', Object.keys(blocks[0]));
     }
-
-    blocksTable = new TableManager({
+    
+    // ⭐ שלב 1: בדוק אם blocksTable קיים ואם ה-DOM שלו עדיין קיים!
+    const tableExists = window.blocksTable && 
+                       window.blocksTable.elements && 
+                       window.blocksTable.elements.wrapper &&
+                       document.body.contains(window.blocksTable.elements.wrapper);
+    
+    if (tableExists) {
+        console.log('♻️ Updating existing TableManager...');
+        window.blocksTable.setData(blocks);
+        return;
+    }
+    
+    // ⭐ שלב 2: אם TableManager לא קיים או שה-DOM שלו נמחק, צור חדש
+    console.log('🏗️ TableManager not initialized or DOM was deleted, creating new one...');
+    
+    // ⭐ אפס את המשתנה אם הוא קיים אבל ה-DOM שלו נמחק
+    if (window.blocksTable) {
+        console.log('🗑️ Resetting blocksTable variable (DOM was deleted)');
+        window.blocksTable = null;
+    }
+    
+    // סינון client-side כשכבת הגנה
+    let filteredBlocks = blocks;
+    if (currentCemeteryId) {
+        filteredBlocks = blocks.filter(block => 
+            block.cemeteryId === currentCemeteryId || 
+            block.cemetery_id === currentCemeteryId
+        );
+        
+        console.log(`🎯 TableManager filtered: ${blocks.length} → ${filteredBlocks.length} blocks`);
+    }
+    
+    // אתחול TableManager עם נתונים מסוננים
+    console.log(`🏗️ Initializing TableManager with ${filteredBlocks.length} items (total: ${blocks.length})`);
+    
+    window.blocksTable = new TableManager({
         tableSelector: '#mainTable',
         
-        totalItems: actualTotalItems,
-
+        data: filteredBlocks,
+        totalItems: filteredBlocks.length,
+        
+        containerWidth: '98%',
+        containerPadding: '20px',
+        
         columns: [
-            {
-                field: 'blockNameHe',
-                label: 'שם גוש',
-                width: '200px',
-                sortable: true,
-                render: (block) => {
-                    return `<a href="#" onclick="handleBlockDoubleClick('${block.unicId}', '${block.blockNameHe.replace(/'/g, "\\'")}'); return false;" 
-                               style="color: #2563eb; text-decoration: none; font-weight: 500;">
-                        ${block.blockNameHe}
-                    </a>`;
-                }
-            },
-            {
-                field: 'blockCode',
-                label: 'קוד',
-                width: '100px',
-                sortable: true
-            },
-            {
-                field: 'cemeteryNameHe',
-                label: 'בית עלמין',
-                width: '200px',
-                sortable: true
-            },
-            {
-                field: 'plots_count',
-                label: 'חלקות',
-                width: '80px',
-                type: 'number',
-                sortable: true,
-                render: (block) => {
-                    const count = block.plots_count || 0;
-                    return `<span style="background: #dbeafe; color: #1e40af; padding: 3px 10px; border-radius: 4px; font-size: 13px; font-weight: 600; display: inline-block;">${count}</span>`;
-                }
-            },
-            {
-                field: 'statusBlock',
-                label: 'סטטוס',
-                width: '100px',
-                sortable: true,
-                render: (block) => {
-                    return block.statusBlock == 1 
-                        ? '<span class="status-badge status-active">פעיל</span>'
-                        : '<span class="status-badge status-inactive">לא פעיל</span>';
-                }
-            },
-            {
-                field: 'createDate',
-                label: 'תאריך',
-                width: '120px',
-                type: 'date',
-                sortable: true,
-                render: (block) => formatDate(block.createDate)
-            },
-            {
-                field: 'actions',
-                label: 'פעולות',
-                width: '120px',
-                sortable: false,
-                render: (block) => `
-                    <button class="btn btn-sm btn-secondary" onclick="editBlock('${block.unicId}')" title="עריכה">
-                        <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteBlock('${block.unicId}')" title="מחיקה">
-                        <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
-                    </button>
-                `
-            }
+            { field: 'blockNameHe', label: 'שם גוש', width: '250px', sortable: true },
+            { field: 'blockCode', label: 'קוד', width: '120px', sortable: true },
+            { field: 'cemeteryNameHe', label: 'בית עלמין', width: '200px', sortable: true },
+            { field: 'plots_count', label: 'מספר חלקות', width: '130px', sortable: true },
+            { field: 'statusBlock', label: 'סטטוס', width: '120px', sortable: true },
+            { field: 'createDate', label: 'תאריך יצירה', width: '150px', sortable: true },
+            { field: 'actions', label: 'פעולות', width: '200px', sortable: false }
         ],
-
-        onRowDoubleClick: (block) => {
-            handleBlockDoubleClick(block.unicId, block.blockNameHe);
+        
+        renderCell: (value, field, row) => {
+            // ⭐ DEBUG: לוג לכל תא
+            console.log(`🔍 renderCell called - field: ${field}, value:`, value, 'row:', row);
+            
+            // ⭐ אם value הוא אובייקט, נסה לקרוא ישירות מה-row
+            let actualValue = value;
+            
+            if (typeof value === 'object' && value !== null) {
+                console.warn(`⚠️ Value is object for field ${field}, trying to extract from row`);
+                actualValue = row[field];
+            }
+            
+            // טיפול בשדות מיוחדים
+            if (field === 'statusBlock') {
+                const status = actualValue || row.statusBlock || row.status;
+                return status == 1 
+                    ? '<span class="status-badge status-active">פעיל</span>'
+                    : '<span class="status-badge status-inactive">לא פעיל</span>';
+            }
+            
+            if (field === 'createDate') {
+                const date = actualValue || row.createDate || row.created_at;
+                return formatDate(date);
+            }
+            
+            if (field === 'plots_count') {
+                const count = actualValue || row.plots_count || row.plotsCount || 0;
+                return count.toString();
+            }
+            
+            if (field === 'actions') {
+                const id = row.unicId || row.id || row.blockId;
+                return `
+                    <div class="action-buttons">
+                        <button class="btn-icon" onclick="editBlock('${id}')" title="ערוך">
+                            <span>✏️</span>
+                        </button>
+                        <button class="btn-icon" onclick="deleteBlock('${id}')" title="מחק">
+                            <span>🗑️</span>
+                        </button>
+                    </div>
+                `;
+            }
+            
+            // ⭐ אם actualValue עדיין אובייקט, החזר ערך ריק
+            if (typeof actualValue === 'object' && actualValue !== null) {
+                console.error(`❌ Still object for field ${field}:`, actualValue);
+                return '-';
+            }
+            
+            return actualValue || '-';
         },
         
-        data: data,
+        onRowDoubleClick: (row) => {
+            if (typeof handleBlockDoubleClick === 'function') {
+                const id = row.unicId || row.id || row.blockId;
+                const name = row.blockNameHe || row.name;
+                handleBlockDoubleClick(id, name);
+            }
+        },
         
         sortable: true,
         resizable: true,
         reorderable: false,
         filterable: true,
-        
-        onSort: (field, order) => {
-            console.log(`📊 Sorted by ${field} ${order}`);
-            showToast(`ממוין לפי ${field} (${order === 'asc' ? 'עולה' : 'יורד'})`, 'info');
-        },
-        
-        onFilter: (filters) => {
-            console.log('🔍 Active filters:', filters);
-            const count = blocksTable.getFilteredData().length;
-            showToast(`נמצאו ${count} תוצאות`, 'info');
-        }
+        infiniteScroll: true,
+        itemsPerPage: 100
     });
     
-    window.blocksTable = blocksTable;
-    
-    return blocksTable;
+    console.log('✅ TableManager initialized successfully');
 }
-
-// ===================================================================
-// רינדור שורות הגושים - בדיוק כמו בבתי עלמין
-// ===================================================================
-function renderBlocksRows(data, container, pagination = null) {
-    
-    // ⭐ חלץ את הסכום הכולל מ-pagination אם קיים
-    const totalItems = pagination?.total || data.length;
-
-    if (data.length === 0) {
-        if (blocksTable) {
-            blocksTable.setData([]);
-        }
-        
-        container.innerHTML = `
-            <tr>
-                <td colspan="9" style="text-align: center; padding: 60px;">
-                    <div style="color: #9ca3af;">
-                        <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
-                        <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">לא נמצאו תוצאות</div>
-                        <div>נסה לשנות את מילות החיפוש או הפילטרים</div>
-                    </div>
-                </td>
-            </tr>
-        `;
-        return;
-    }
-    
-    // ⭐ בדוק אם ה-DOM של TableManager קיים
-    const tableWrapperExists = document.querySelector('.table-wrapper[data-fixed-width="true"]');
-    
-    // ⭐ אם המשתנה קיים אבל ה-DOM נמחק - אפס את המשתנה!
-    if (!tableWrapperExists && blocksTable) {
-        console.log('🗑️ TableManager DOM was deleted, resetting blocksTable variable');
-        blocksTable = null;
-        window.blocksTable = null;
-    }
-    
-    // ⭐ סינון client-side לפי cemeteryId
-    let filteredData = data;
-    if (currentCemeteryId) {
-        filteredData = data.filter(block => 
-            block.cemeteryId === currentCemeteryId || 
-            block.cemetery_id === currentCemeteryId
-        );
-        console.log(`🎯 Client-side filtered: ${data.length} → ${filteredData.length} blocks`);
-    }
-    
-    // עכשיו בדוק אם צריך לבנות מחדש
-    if (!blocksTable || !tableWrapperExists) {
-        // אין TableManager או שה-DOM שלו נמחק - בנה מחדש!
-        initBlocksTable(filteredData, filteredData.length);
-    } else {
-        // ⭐ עדכן גם את totalItems ב-TableManager!
-        if (blocksTable.config) {
-            blocksTable.config.totalItems = filteredData.length;
-        }
-        
-        // ⭐ אם יש עוד נתונים ב-UniversalSearch, הוסף אותם!
-        if (blockSearch && blockSearch.state) {
-            const allData = blockSearch.state.results || [];
-            if (allData.length > filteredData.length) {
-                console.log(`📦 UniversalSearch has ${allData.length} items, updating TableManager...`);
-                
-                // סנן גם את allData
-                const allFiltered = currentCemeteryId 
-                    ? allData.filter(b => b.cemeteryId === currentCemeteryId || b.cemetery_id === currentCemeteryId)
-                    : allData;
-                
-                blocksTable.config.totalItems = allFiltered.length;
-                blocksTable.setData(allFiltered);
-                return;
-            }
-        }
-
-        blocksTable.setData(filteredData);
-    }
-}
-
-// --------
 
 // ===================================================================
 // פורמט תאריך

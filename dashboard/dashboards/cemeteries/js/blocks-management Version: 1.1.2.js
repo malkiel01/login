@@ -478,150 +478,45 @@ async function initBlocksTable(data, totalItems = null) {
     return blocksTable;
 }
 
-// // ===================================================================
-// // רינדור שורות גושים - עובד עם TableManager
-// // ===================================================================
-// async function renderBlocksRows(data, containerSelector = '#tableBody') {
-//     console.log('📝 renderBlocksRows called with', data.length, 'items');
-    
-//     if (!blocksTable) {
-//         console.log('🏗️ TableManager not initialized, creating now...');
-//         await initBlocksTable(data);
-//     } else {
-//         console.log('♻️ Updating existing TableManager...');
-        
-//         // אם UniversalSearch החזיר יותר תוצאות, עדכן
-//         if (blockSearch && blockSearch.state) {
-//             const allData = blockSearch.state.results || [];
-//             if (allData.length > data.length) {
-//                 console.log(`📦 UniversalSearch has ${allData.length} items, updating TableManager...`);
-                
-//                 // ⭐ אם יש סינון פעיל, סנן גם כאן
-//                 let displayData = allData;
-//                 if (currentCemeteryId) {
-//                     displayData = allData.filter(block => {
-//                         return block.cemeteryId === currentCemeteryId || 
-//                                block.cemetery_id === currentCemeteryId ||
-//                                block.parentId === currentCemeteryId ||
-//                                block.parent_id === currentCemeteryId ||
-//                                String(block.cemeteryId) === String(currentCemeteryId) ||
-//                                String(block.cemetery_id) === String(currentCemeteryId);
-//                     });
-//                     console.log(`🎯 Filtered in render: ${allData.length} → ${displayData.length} blocks`);
-//                 }
-                
-//                 blocksTable.setData(displayData);
-//                 return;
-//             }
-//         }
-
-//         blocksTable.setData(data);
-//     }
-// }
-
 // ===================================================================
-// רינדור שורות הגושים בטבלה
+// רינדור שורות גושים - עובד עם TableManager
 // ===================================================================
-function renderBlocksRows(blocks) {
-    console.log(`📝 renderBlocksRows called with ${blocks.length} items`);
+async function renderBlocksRows(data, containerSelector = '#tableBody') {
+    console.log('📝 renderBlocksRows called with', data.length, 'items');
     
-    // ⭐ שלב 1: בדוק אם blocksTable קיים ואם ה-DOM שלו עדיין קיים!
-    const tableExists = window.blocksTable && 
-                       window.blocksTable.elements && 
-                       window.blocksTable.elements.wrapper &&
-                       document.body.contains(window.blocksTable.elements.wrapper);
-    
-    if (tableExists) {
+    if (!blocksTable) {
+        console.log('🏗️ TableManager not initialized, creating now...');
+        await initBlocksTable(data);
+    } else {
         console.log('♻️ Updating existing TableManager...');
-        window.blocksTable.setData(blocks);
-        return;
+        
+        // אם UniversalSearch החזיר יותר תוצאות, עדכן
+        if (blockSearch && blockSearch.state) {
+            const allData = blockSearch.state.results || [];
+            if (allData.length > data.length) {
+                console.log(`📦 UniversalSearch has ${allData.length} items, updating TableManager...`);
+                
+                // ⭐ אם יש סינון פעיל, סנן גם כאן
+                let displayData = allData;
+                if (currentCemeteryId) {
+                    displayData = allData.filter(block => {
+                        return block.cemeteryId === currentCemeteryId || 
+                               block.cemetery_id === currentCemeteryId ||
+                               block.parentId === currentCemeteryId ||
+                               block.parent_id === currentCemeteryId ||
+                               String(block.cemeteryId) === String(currentCemeteryId) ||
+                               String(block.cemetery_id) === String(currentCemeteryId);
+                    });
+                    console.log(`🎯 Filtered in render: ${allData.length} → ${displayData.length} blocks`);
+                }
+                
+                blocksTable.setData(displayData);
+                return;
+            }
+        }
+
+        blocksTable.setData(data);
     }
-    
-    // ⭐ שלב 2: אם TableManager לא קיים או שה-DOM שלו נמחק, צור חדש
-    console.log('🏗️ TableManager not initialized or DOM was deleted, creating new one...');
-    
-    // ⭐ אפס את המשתנה אם הוא קיים אבל ה-DOM שלו נמחק
-    if (window.blocksTable) {
-        console.log('🗑️ Resetting blocksTable variable (DOM was deleted)');
-        window.blocksTable = null;
-    }
-    
-    // סינון client-side כשכבת הגנה
-    let filteredBlocks = blocks;
-    if (currentCemeteryId) {
-        filteredBlocks = blocks.filter(block => 
-            block.cemeteryId === currentCemeteryId || 
-            block.cemetery_id === currentCemeteryId
-        );
-        
-        console.log(`🎯 TableManager filtered: ${blocks.length} → ${filteredBlocks.length} blocks`);
-    }
-    
-    // אתחול TableManager עם נתונים מסוננים
-    console.log(`🏗️ Initializing TableManager with ${filteredBlocks.length} items (total: ${blocks.length})`);
-    
-    window.blocksTable = new TableManager({
-        tableSelector: '#mainTable',
-        
-        // ⭐ העבר totalItems: blocks.length כדי שהטוטל יהיה נכון!
-        data: filteredBlocks,
-        totalItems: filteredBlocks.length,  // זה יהיה הטוטל שמוצג!
-        
-        containerWidth: '98%',
-        containerPadding: '20px',
-        
-        columns: [
-            { field: 'blockNameHe', label: 'שם גוש', width: '250px', sortable: true },
-            { field: 'blockCode', label: 'קוד', width: '120px', sortable: true },
-            { field: 'cemeteryNameHe', label: 'בית עלמין', width: '200px', sortable: true },
-            { field: 'plots_count', label: 'מספר חלקות', width: '130px', sortable: true },
-            { field: 'statusBlock', label: 'סטטוס', width: '120px', sortable: true },
-            { field: 'createDate', label: 'תאריך יצירה', width: '150px', sortable: true },
-            { field: 'actions', label: 'פעולות', width: '200px', sortable: false }
-        ],
-        
-        renderCell: (value, field, row) => {
-            if (field === 'statusBlock') {
-                return value == 1 
-                    ? '<span class="status-badge status-active">פעיל</span>'
-                    : '<span class="status-badge status-inactive">לא פעיל</span>';
-            }
-            
-            if (field === 'createDate') {
-                return formatDate(value);
-            }
-            
-            if (field === 'actions') {
-                return `
-                    <div class="action-buttons">
-                        <button class="btn-icon" onclick="editBlock('${row.unicId}')" title="ערוך">
-                            <span>✏️</span>
-                        </button>
-                        <button class="btn-icon" onclick="deleteBlock('${row.unicId}')" title="מחק">
-                            <span>🗑️</span>
-                        </button>
-                    </div>
-                `;
-            }
-            
-            return value || '-';
-        },
-        
-        onRowDoubleClick: (row) => {
-            if (typeof handleBlockDoubleClick === 'function') {
-                handleBlockDoubleClick(row.unicId, row.blockNameHe);
-            }
-        },
-        
-        sortable: true,
-        resizable: true,
-        reorderable: false,
-        filterable: true,
-        infiniteScroll: true,
-        itemsPerPage: 100
-    });
-    
-    console.log('✅ TableManager initialized successfully');
 }
 
 // ===================================================================

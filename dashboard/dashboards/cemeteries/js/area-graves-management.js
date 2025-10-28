@@ -249,7 +249,7 @@ async function initAreaGravesSearch(plotId = null) {
         resultsContainerSelector: '#tableBody',
         
         placeholder: 'חיפוש אחוזות קבר לפי שם, קואורדינטות, סוג...',
-        itemsPerPage: 200,  // ⭐ שינוי! טעינה מדורגת
+        itemsPerPage: 999999,  // ⭐ שינוי! טעינה מדורגת
         
         renderFunction: renderAreaGravesRows,
         

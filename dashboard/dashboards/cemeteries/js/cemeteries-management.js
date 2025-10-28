@@ -717,7 +717,14 @@ async function handleCemeteryDoubleClick(cemeteryId, cemeteryName) {
         
         // טעינת גושים
         console.log('📦 Loading blocks for cemetery:', cemeteryName);
-        loadBlocks(cemeteryId, cemeteryName);
+        // loadBlocks(cemeteryId, cemeteryName);
+
+        // עדכון breadcrumb
+        if (typeof updateBreadcrumb === 'function') {
+            updateBreadcrumb({
+                cemetery: { id: cemeteryId, name: cemeteryName }
+            });
+        }
         
     } catch (error) {
         console.error('❌ Error in handleCemeteryDoubleClick:', error);

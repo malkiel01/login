@@ -941,6 +941,7 @@ function showToast(message, type = 'info') {
     toast.innerHTML = `
         <span>${type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ'}</span>
         <span>${message}</span>
+        <span>{{message}}</span>
     `;
     
     document.body.appendChild(toast);

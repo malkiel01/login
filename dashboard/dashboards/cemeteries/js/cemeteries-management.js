@@ -261,7 +261,7 @@ async function initCemeteriesTable(data, totalItems = null) {
                 width: '200px',
                 sortable: true,
                 render: (cemetery) => {
-                    return `<a href="#" onclick="loadBlocks('${cemetery.unicId}', '${cemetery.cemeteryNameHe.replace(/'/g, "\\'")}'); return false;" 
+                    return `<a href="#" onclick="loadBlocks2('${cemetery.unicId}', '${cemetery.cemeteryNameHe.replace(/'/g, "\\'")}'); return false;" 
                                style="color: #2563eb; text-decoration: none; font-weight: 500;">
                         ${cemetery.cemeteryNameHe}
                     </a>`;
@@ -326,9 +326,9 @@ async function initCemeteriesTable(data, totalItems = null) {
             }
         ],
 
-        onRowDoubleClick: (cemetery) => {                    // ⭐ שורה חדשה
-            // handleCemeteryDoubleClick(cemetery.unicId, cemetery.cemeteryNameHe);
-        },
+        // onRowDoubleClick: (cemetery) => {                    // ⭐ שורה חדשה
+        //     // handleCemeteryDoubleClick(cemetery.unicId, cemetery.cemeteryNameHe);
+        // },
         
         data: data,
         
@@ -428,7 +428,7 @@ function formatDate(dateString) {
 // ===================================================================
 // פונקציות עזר - טעינת גושים
 // ===================================================================
-function loadBlocks(cemeteryId, cemeteryName) {
+function loadBlocks2(cemeteryId, cemeteryName) {
     console.log(`📦 Loading blocks for cemetery: ${cemeteryName} (ID: ${cemeteryId})`);
     
     // עדכון breadcrumb

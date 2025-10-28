@@ -428,7 +428,7 @@ function formatDate(dateString) {
 // ===================================================================
 // פונקציות עזר - טעינת גושים
 // ===================================================================
-function loadBlocks2(cemeteryId, cemeteryName) {
+function loadBlocks(cemeteryId, cemeteryName) {
     console.log(`📦 Loading blocks for cemetery: ${cemeteryName} (ID: ${cemeteryId})`);
     
     // עדכון breadcrumb

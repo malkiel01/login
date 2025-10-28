@@ -420,9 +420,9 @@ async function initPlotsTable(data, totalItems = null) {
             }
         ],
 
-        onRowDoubleClick: (plot) => {
-            handlePlotDoubleClick(plot.unicId, plot.plotNameHe);
-        },
+        // onRowDoubleClick: (plot) => {
+        //     handlePlotDoubleClick(plot.unicId, plot.plotNameHe);
+        // },
         
         data: data,
         
@@ -702,6 +702,8 @@ async function handlePlotDoubleClick(plotId, plotName) {
     console.log('🖱️ Double-click on plot:', plotName, plotId);
     
     try {
+        // טעינת חלקות
+        console.log('📦 Loading plots for block:', blockName);
         // יצירת והצגת כרטיס
         if (typeof createPlotCard === 'function') {
             const cardHtml = await createPlotCard(plotId);

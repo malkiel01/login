@@ -261,7 +261,7 @@ async function initCemeteriesTable(data, totalItems = null) {
                 width: '200px',
                 sortable: true,
                 render: (cemetery) => {
-                    return `<a href="#" onclick="loadBlocks('${cemetery.unicId}', '${cemetery.cemeteryNameHe.replace(/'/g, "\\'")}'); return false;" 
+                    return `<a href="#" onclick="handleCemeteryDoubleClick('${cemetery.unicId}', '${cemetery.cemeteryNameHe.replace(/'/g, "\\'")}'); return false;" 
                                style="color: #2563eb; text-decoration: none; font-weight: 500;">
                         ${cemetery.cemeteryNameHe}
                     </a>`;
@@ -424,27 +424,6 @@ function formatDate(dateString) {
     const date = new Date(dateString);
     return date.toLocaleDateString('he-IL');
 }
-
-// // ===================================================================
-// // פונקציות עזר - טעינת גושים
-// // ===================================================================
-// function loadBlocks(cemeteryId, cemeteryName) {
-//     console.log(`📦 Loading blocks for cemetery: ${cemeteryName} (ID: ${cemeteryId})`);
-    
-//     // עדכון breadcrumb
-//     if (typeof updateBreadcrumb === 'function') {
-//         updateBreadcrumb({
-//             cemetery: { id: cemeteryId, name: cemeteryName }
-//         });
-//     }
-
-//     // // טעינת גושים (מימוש קיים במערכת)
-//     // if (typeof loadBlocksData === 'function') {
-//     //     loadBlocksData(cemeteryId, cemeteryName);
-//     // } else {
-//     //     console.warn('⚠️ loadBlocksData function not found');
-//     // }
-// }
 
 // ===================================================================
 // פונקציות CRUD
@@ -707,25 +686,13 @@ async function handleCemeteryDoubleClick(cemeteryId, cemeteryName) {
     console.log('🖱️ Double-click on cemetery:', cemeteryName, cemeteryId);
     
     try {
-        // // יצירת והצגת כרטיס
-        // if (typeof createCemeteryCard === 'function') {
-        //     const cardHtml = await createCemeteryCard(cemeteryId);
-        //     if (cardHtml && typeof displayHierarchyCard === 'function') {
-        //         displayHierarchyCard(cardHtml);
-        //     }
-        // }
-        
         // טעינת גושים
         console.log('📦 Loading blocks for cemetery:', cemeteryName);
-        // loadBlocks(cemeteryId, cemeteryName);
-
-        // עדכון breadcrumb
-        if (typeof updateBreadcrumb === 'function') {
-            updateBreadcrumb({
-                cemetery: { id: cemeteryId, name: cemeteryName }
-            });
+        if (typeof loadBlocks === 'function') {
+            loadBlocks(blockId, blockName);
+        } else {
+            console.warn('loadBlocks function not found');
         }
-        
     } catch (error) {
         console.error('❌ Error in handleCemeteryDoubleClick:', error);
         showToast('שגיאה בטעינת פרטי בית העלמין', 'error');

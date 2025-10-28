@@ -261,7 +261,7 @@ async function initCemeteriesTable(data, totalItems = null) {
                 width: '200px',
                 sortable: true,
                 render: (cemetery) => {
-                    return `<a href="#" onclick="loadBlocks2('${cemetery.unicId}', '${cemetery.cemeteryNameHe.replace(/'/g, "\\'")}'); return false;" 
+                    return `<a href="#" onclick="loadBlocks('${cemetery.unicId}', '${cemetery.cemeteryNameHe.replace(/'/g, "\\'")}'); return false;" 
                                style="color: #2563eb; text-decoration: none; font-weight: 500;">
                         ${cemetery.cemeteryNameHe}
                     </a>`;
@@ -425,26 +425,26 @@ function formatDate(dateString) {
     return date.toLocaleDateString('he-IL');
 }
 
-// ===================================================================
-// פונקציות עזר - טעינת גושים
-// ===================================================================
-function loadBlocks(cemeteryId, cemeteryName) {
-    console.log(`📦 Loading blocks for cemetery: ${cemeteryName} (ID: ${cemeteryId})`);
+// // ===================================================================
+// // פונקציות עזר - טעינת גושים
+// // ===================================================================
+// function loadBlocks(cemeteryId, cemeteryName) {
+//     console.log(`📦 Loading blocks for cemetery: ${cemeteryName} (ID: ${cemeteryId})`);
     
-    // עדכון breadcrumb
-    if (typeof updateBreadcrumb === 'function') {
-        updateBreadcrumb({
-            cemetery: { id: cemeteryId, name: cemeteryName }
-        });
-    }
+//     // עדכון breadcrumb
+//     if (typeof updateBreadcrumb === 'function') {
+//         updateBreadcrumb({
+//             cemetery: { id: cemeteryId, name: cemeteryName }
+//         });
+//     }
 
-    // // טעינת גושים (מימוש קיים במערכת)
-    // if (typeof loadBlocksData === 'function') {
-    //     loadBlocksData(cemeteryId, cemeteryName);
-    // } else {
-    //     console.warn('⚠️ loadBlocksData function not found');
-    // }
-}
+//     // // טעינת גושים (מימוש קיים במערכת)
+//     // if (typeof loadBlocksData === 'function') {
+//     //     loadBlocksData(cemeteryId, cemeteryName);
+//     // } else {
+//     //     console.warn('⚠️ loadBlocksData function not found');
+//     // }
+// }
 
 // ===================================================================
 // פונקציות CRUD

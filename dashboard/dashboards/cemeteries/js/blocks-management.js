@@ -32,7 +32,7 @@ let currentCemeteryName = null;
 // ===================================================================
 // טעינת גושים (הפונקציה הראשית)
 // ===================================================================
-async function loadBlocks2(cemeteryId = null, cemeteryName = null, forceReset = false) {
+async function loadBlocks(cemeteryId = null, cemeteryName = null, forceReset = false) {
     console.log('📋 Loading blocks - v1.2.0 (תוקן איפוס סינון)...');
     
     // ⭐ שינוי: אם קוראים ללא פרמטרים (מהתפריט) - אפס את הסינון!

@@ -438,12 +438,12 @@ function loadBlocks(cemeteryId, cemeteryName) {
         });
     }
 
-    // טעינת גושים (מימוש קיים במערכת)
-    if (typeof loadBlocksData === 'function') {
-        loadBlocksData(cemeteryId, cemeteryName);
-    } else {
-        console.warn('⚠️ loadBlocksData function not found');
-    }
+    // // טעינת גושים (מימוש קיים במערכת)
+    // if (typeof loadBlocksData === 'function') {
+    //     loadBlocksData(cemeteryId, cemeteryName);
+    // } else {
+    //     console.warn('⚠️ loadBlocksData function not found');
+    // }
 }
 
 // ===================================================================

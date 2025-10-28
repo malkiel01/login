@@ -923,7 +923,7 @@ window.loadAllPlots2 = async function() {
     await tableRenderer.loadAndDisplay('plot');
 };
 
-window.loadAllAreaGraves = async function() {
+window.loadAllAreaGraves2 = async function() {
     console.log('📍 Loading all area graves - STEP C');
     setActiveMenuItem('areaGraveItem');
     window.currentType = 'area_grave';

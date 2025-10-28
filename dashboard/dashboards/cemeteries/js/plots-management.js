@@ -698,7 +698,7 @@ function checkScrollStatus() {
 // ===================================================
 // פונקציה לטיפול בדאבל-קליק על חלקה
 // ===================================================
-async function handlePlotDoubleClick(plotId, plotName) {
+async function handlePlotDoubleClick2(plotId, plotName) {
     console.log('🖱️ Double-click on plot:', plotName, plotId);
     
     try {
@@ -725,6 +725,36 @@ async function handlePlotDoubleClick(plotId, plotName) {
         showToast('שגיאה בטעינת פרטי החלקה', 'error');
     }
 }
+
+// ===================================================
+// ⭐ פונקציה מתוקנת - טיפול בדאבל-קליק על חלקה
+// ===================================================
+async function handlePlotDoubleClick(plotId, plotName) {
+    console.log('🖱️ Double-click on plot:', plotName, plotId);
+    
+    try {
+        // 1. יצירת והצגת כרטיס ✅
+        if (typeof createPlotCard === 'function') {
+            const cardHtml = await createPlotCard(plotId);
+            if (cardHtml && typeof displayHierarchyCard === 'function') {
+                displayHierarchyCard(cardHtml);
+            }
+        }
+        
+        // 2. טעינת אחוזות קבר (נכדים דרך השורות) ✅ שינוי!
+        console.log('🏘️ Loading area graves for plot:', plotName);
+        if (typeof loadAreaGraves === 'function') {
+            loadAreaGraves(plotId, plotName);
+        } else {
+            console.warn('loadAreaGraves function not found');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error in handlePlotDoubleClick:', error);
+        showToast('שגיאה בטעינת פרטי החלקה', 'error');
+    }
+}
+
 
 window.handlePlotDoubleClick = handlePlotDoubleClick;
 

@@ -1,15 +1,14 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/area-graves-management.js
- * Version: 1.0.0
+ * Version: 1.0.1
  * Updated: 2025-10-28
  * Author: Malkiel
  * Change Summary:
- * - v1.0.0: יצירה ראשונית - ניהול אחוזות קבר
- *   - טעינת אחוזות קבר לפי חלקה נבחרת
- *   - אתחול UniversalSearch עם סינון משופר
- *   - אינדיקטור ויזואלי לסינון אקטיבי
- *   - תמיכה בדאבל-קליק לטעינת קברים
- *   - תמיכה בכרטיס מידע
+ * - v1.0.1: תיקון תאימות למבנה הטבלאות האמיתי
+ *   - שינוי שמות שדות: graveType, lineId, comments
+ *   - הסרת שדות לא קיימים: areaGraveCode, areaGraveNameEn
+ *   - התאמת renderFunction לשדות הנכונים
+ * - v1.0.0: יצירה ראשונית
  */
 
 // ===================================================================
@@ -28,7 +27,7 @@ let currentPlotName = null;
 // טעינת אחוזות קבר (הפונקציה הראשית)
 // ===================================================================
 async function loadAreaGraves(plotId = null, plotName = null, forceReset = false) {
-    console.log('📋 Loading area graves - v1.0.0 (יצירה ראשונית)...');
+    console.log('📋 Loading area graves - v1.0.1 (תוקן תאימות טבלאות)...');
     
     // ⭐ לוגיקת סינון: אם קוראים ללא פרמטרים - אפס את הסינון
     if (plotId === null && plotName === null && !forceReset) {
@@ -192,7 +191,7 @@ async function buildAreaGravesContainer(plotId = null, plotName = null) {
 }
 
 // ===================================================================
-// אתחול UniversalSearch - עם סינון משופר!
+// אתחול UniversalSearch - עם שמות שדות מתוקנים!
 // ===================================================================
 async function initAreaGravesSearch(plotId = null) {
     const config = {
@@ -209,29 +208,29 @@ async function initAreaGravesSearch(plotId = null) {
                 matchType: ['exact', 'fuzzy', 'startsWith']
             },
             {
-                name: 'areaGraveNameEn',
-                label: 'שם אחוזת קבר (אנגלית)',
+                name: 'coordinates',
+                label: 'קואורדינטות',
                 table: 'areaGraves',
                 type: 'text',
-                matchType: ['exact', 'fuzzy', 'startsWith']
+                matchType: ['exact', 'fuzzy']
             },
             {
-                name: 'areaGraveCode',
-                label: 'קוד אחוזת קבר',
+                name: 'gravesList',
+                label: 'רשימת קברים',
                 table: 'areaGraves',
                 type: 'text',
-                matchType: ['exact', 'startsWith']
+                matchType: ['exact', 'fuzzy']
             },
             {
-                name: 'grave_type',
+                name: 'graveType',
                 label: 'סוג קבר',
                 table: 'areaGraves',
                 type: 'select',
                 options: {
                     '': 'הכל',
-                    '1': 'רגיל',
-                    '2': 'כפול',
-                    '3': 'משפחתי'
+                    '1': 'שדה',
+                    '2': 'רוויה',
+                    '3': 'סנהדרין'
                 },
                 matchType: ['exact']
             },
@@ -251,12 +250,12 @@ async function initAreaGravesSearch(plotId = null) {
             }
         ],
         
-        displayColumns: ['areaGraveNameHe', 'areaGraveCode', 'grave_type', 'row_name', 'graves_count', 'createDate'],
+        displayColumns: ['areaGraveNameHe', 'coordinates', 'graveType', 'row_name', 'graves_count', 'createDate'],
         
         searchContainerSelector: '#areaGraveSearchSection',
         resultsContainerSelector: '#tableBody',
         
-        placeholder: 'חיפוש אחוזות קבר לפי שם, קוד, סוג קבר...',
+        placeholder: 'חיפוש אחוזות קבר לפי שם, קואורדינטות, סוג...',
         itemsPerPage: 999999,
         
         renderFunction: renderAreaGravesRows,
@@ -297,7 +296,7 @@ async function initAreaGravesSearch(plotId = null) {
 }
 
 // ===================================================================
-// רינדור שורות טבלה - זהה למבנה של blocks/plots
+// רינדור שורות טבלה - עם שמות שדות מתוקנים!
 // ===================================================================
 function renderAreaGravesRows(areaGraves) {
     console.log('🎨 Rendering area graves rows...', areaGraves.length);
@@ -326,12 +325,12 @@ function renderAreaGravesRows(areaGraves) {
     return filteredAreaGraves.map(areaGrave => {
         const rowId = areaGrave.id;
         const unicId = areaGrave.unicId;
-        const nameHe = areaGrave.areaGraveNameHe || areaGrave.name || 'ללא שם';
-        const code = areaGrave.areaGraveCode || '-';
-        const graveType = getGraveTypeName(areaGrave.grave_type);
+        const nameHe = areaGrave.areaGraveNameHe || 'ללא שם';
+        const coordinates = areaGrave.coordinates || '-';
+        const graveType = getGraveTypeName(areaGrave.graveType);
         const rowName = areaGrave.row_name || areaGrave.lineNameHe || '-';
         const gravesCount = areaGrave.graves_count || 0;
-        const createDate = formatDate(areaGrave.createDate || areaGrave.created_at);
+        const createDate = formatDate(areaGrave.createDate);
         
         return `
             <tr class="table-row" 
@@ -347,8 +346,8 @@ function renderAreaGravesRows(areaGraves) {
                 </td>
                 
                 <td style="text-align: center;">
-                    <span style="font-family: monospace; background: #f3f4f6; padding: 4px 8px; border-radius: 4px;">
-                        ${code}
+                    <span style="font-family: monospace; background: #f3f4f6; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
+                        ${coordinates}
                     </span>
                 </td>
                 
@@ -399,13 +398,13 @@ function formatDate(dateString) {
 }
 
 // ===================================================================
-// פונקציית עזר לשם סוג קבר
+// פונקציית עזר לשם סוג קבר - מתוקן לפי הערות בטבלה!
 // ===================================================================
 function getGraveTypeName(type) {
     const types = {
-        1: 'רגיל',
-        2: 'כפול',
-        3: 'משפחתי'
+        1: 'שדה',
+        2: 'רוויה',
+        3: 'סנהדרין'
     };
     return types[type] || 'לא מוגדר';
 }

@@ -193,7 +193,7 @@ async function buildAreaGravesContainer(plotId = null, plotName = null) {
 // ===================================================================
 // אתחול UniversalSearch - עם שמות שדות מתוקנים!
 // ===================================================================
-async function initAreaGravesSearch(plotId = null) {
+async function initAreaGravesSearch2(plotId = null) {
     const config = {
         entityType: 'area_grave',
         apiEndpoint: '/dashboard/dashboards/cemeteries/api/area-graves-api.php',
@@ -232,6 +232,111 @@ async function initAreaGravesSearch(plotId = null) {
                     '2': 'רוויה',
                     '3': 'סנהדרין'
                 },
+                matchType: ['exact']
+            },
+            {
+                name: 'lineId',
+                label: 'מזהה שורה',
+                table: 'areaGraves',
+                type: 'text',
+                matchType: ['exact']
+            },
+            {
+                name: 'createDate',
+                label: 'תאריך יצירה',
+                table: 'areaGraves',
+                type: 'date',
+                matchType: ['exact', 'before', 'after', 'between', 'today', 'thisWeek', 'thisMonth']
+            }
+        ],
+        
+        displayColumns: ['areaGraveNameHe', 'coordinates', 'graveType', 'row_name', 'graves_count', 'createDate'],
+        
+        searchContainerSelector: '#areaGraveSearchSection',
+        resultsContainerSelector: '#tableBody',
+        
+        placeholder: 'חיפוש אחוזות קבר לפי שם, קואורדינטות, סוג...',
+        itemsPerPage: 999999,
+        
+        renderFunction: renderAreaGravesRows,
+        
+        callbacks: {
+            onInit: () => {
+                console.log('✅ UniversalSearch initialized for area graves');
+            },
+            
+            onSearch: (query, filters) => {
+                console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()) });
+            },
+            
+            onResults: (data) => {
+                console.log('📦 Results:', data.pagination?.total || data.total || 0, 'area graves found');
+                currentAreaGraves = data.data;
+            },
+            
+            onError: (error) => {
+                console.error('❌ Search error:', error);
+            }
+        }
+    };
+    
+    // ⭐ הוסף פרמטר plotId אם קיים - לסינון server-side
+    if (plotId) {
+        config.additionalParams = {
+            plotId: plotId,
+            filter_by_plot: 'true'
+        };
+        console.log('🔍 Adding server-side filter for plotId:', plotId);
+    }
+    
+    areaGraveSearch = window.initUniversalSearch(config);
+    window.areaGraveSearch = areaGraveSearch;
+    
+    console.log('✅ Area graves search initialized', { plotId });
+}
+
+// ===================================================================
+// אתחול UniversalSearch - עם שמות שדות מתוקנים!
+// ===================================================================
+async function initAreaGravesSearch(plotId = null) {
+    const config = {
+        entityType: 'area_grave',
+        apiEndpoint: '/dashboard/dashboards/cemeteries/api/area-graves-api.php',
+        action: 'list',
+        
+        searchableFields: [
+            {
+                name: 'areaGraveNameHe',
+                label: 'שם אחוזת קבר (עברית)',
+                table: 'areaGraves',
+                type: 'text',
+                matchType: ['exact', 'fuzzy', 'startsWith']
+            },
+            {
+                name: 'coordinates',
+                label: 'קואורדינטות',
+                table: 'areaGraves',
+                type: 'text',
+                matchType: ['exact', 'fuzzy']
+            },
+            {
+                name: 'gravesList',
+                label: 'רשימת קברים',
+                table: 'areaGraves',
+                type: 'text',
+                matchType: ['exact', 'fuzzy']
+            },
+            {
+                name: 'graveType',
+                label: 'סוג קבר',
+                table: 'areaGraves',
+                type: 'select',
+                options: [                    // ✅ תוקן למערך!
+                    { value: '', label: 'הכל' },
+                    { value: '1', label: 'שדה' },
+                    { value: '2', label: 'רוויה' },
+                    { value: '3', label: 'סנהדרין' }
+                ],
                 matchType: ['exact']
             },
             {

@@ -327,7 +327,7 @@ async function initCemeteriesTable(data, totalItems = null) {
         ],
 
         onRowDoubleClick: (cemetery) => {                    // ⭐ שורה חדשה
-            handleCemeteryDoubleClick(cemetery.unicId, cemetery.cemeteryNameHe);
+            // handleCemeteryDoubleClick(cemetery.unicId, cemetery.cemeteryNameHe);
         },
         
         data: data,

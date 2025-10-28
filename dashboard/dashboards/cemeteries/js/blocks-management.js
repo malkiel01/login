@@ -994,13 +994,13 @@ async function handleBlockDoubleClick(blockId, blockName) {
     console.log('🖱️ Double-click on block:', blockName, blockId);
     
     try {
-        // יצירת והצגת כרטיס
-        if (typeof createBlockCard === 'function') {
-            const cardHtml = await createBlockCard(blockId);
-            if (cardHtml && typeof displayHierarchyCard === 'function') {
-                displayHierarchyCard(cardHtml);
-            }
-        }
+        // // יצירת והצגת כרטיס
+        // if (typeof createBlockCard === 'function') {
+        //     const cardHtml = await createBlockCard(blockId);
+        //     if (cardHtml && typeof displayHierarchyCard === 'function') {
+        //         displayHierarchyCard(cardHtml);
+        //     }
+        // }
         
         // טעינת חלקות
         console.log('📦 Loading plots for block:', blockName);

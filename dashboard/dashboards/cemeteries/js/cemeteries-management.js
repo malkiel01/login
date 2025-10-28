@@ -707,13 +707,13 @@ async function handleCemeteryDoubleClick(cemeteryId, cemeteryName) {
     console.log('🖱️ Double-click on cemetery:', cemeteryName, cemeteryId);
     
     try {
-        // יצירת והצגת כרטיס
-        if (typeof createCemeteryCard === 'function') {
-            const cardHtml = await createCemeteryCard(cemeteryId);
-            if (cardHtml && typeof displayHierarchyCard === 'function') {
-                displayHierarchyCard(cardHtml);
-            }
-        }
+        // // יצירת והצגת כרטיס
+        // if (typeof createCemeteryCard === 'function') {
+        //     const cardHtml = await createCemeteryCard(cemeteryId);
+        //     if (cardHtml && typeof displayHierarchyCard === 'function') {
+        //         displayHierarchyCard(cardHtml);
+        //     }
+        // }
         
         // טעינת גושים
         console.log('📦 Loading blocks for cemetery:', cemeteryName);

@@ -63,9 +63,9 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
         setActiveMenuItem('areaGravesItem');
     }
     
-    // // עדכן את הסוג הנוכחי
-    // window.currentType = 'area_grave';
-    // window.currentParentId = plotId;
+    // עדכן את הסוג הנוכחי
+    window.currentType = 'area_grave';
+    window.currentParentId = plotId;
     
     // // ⭐ נקה
     // if (typeof DashboardCleaner !== 'undefined') {

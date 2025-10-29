@@ -602,14 +602,26 @@ async function editBlock(blockId) {
         
         const block = result.data;
 
-        console.log('block: -> ',block);
+         
+        // 🔍 דיבוג מפורט - בדוק מה יש ב-block
+        console.log('📦 Block data received:', JSON.stringify(block, null, 2));
+        console.log('🔑 Available keys:', Object.keys(block));
         
-        console.log('test');
+        // ⭐ בדוק את כל האפשרויות לשדה ההורה
+        const parentId = block.cemeteryId || block.cemetery_id || block.parent_id || null;
         
+        console.log('🎯 Parent ID determined:', parentId);
+        console.log('   - block.cemeteryId:', block.cemeteryId);
+        console.log('   - block.cemetery_id:', block.cemetery_id);
+        console.log('   - block.parent_id:', block.parent_id);
+        
+        if (!parentId) {
+            console.warn('⚠️ No parent cemetery found for this block!');
+        }
         
         // פתח את הטופס במודל
         if (typeof FormHandler.openForm === 'function') {
-            FormHandler.openForm('block', block.cemeteryId, blockId); 
+            FormHandler.openForm('block', parentId, blockId); 
         } else {
             // console.log('📝 Block data:', block);
             alert('פונקציית openFormModal לא זמינה');

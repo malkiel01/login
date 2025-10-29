@@ -145,7 +145,7 @@ const FormHandler = {
                     this.handleBurialForm(itemId);
                     break;
 
-                case 'payment':  // הוסף את זה
+                case 'payment':
                     this.handlePaymentForm(itemId);
                     break;
                     
@@ -153,6 +153,10 @@ const FormHandler = {
                     if (itemId) {
                         this.loadFormData(type, itemId);
                     }
+                    // if (itemId) {
+                    //     // ⭐ העבר גם את parentId!
+                    //     this.loadFormData(type, itemId, parentId);
+                    // }
                     break;
             }
     },
@@ -2276,8 +2280,6 @@ const FormHandler = {
     },
     
     loadFormData: function(type, itemId) {
-
-
         this.waitForElement(`#${type}FormModal form`, (form) => {
 
             // ✅ מיפוי API לפי סוג הישות
@@ -2348,7 +2350,7 @@ const FormHandler = {
     },
 
     // פונקציה עזר למילוי שדות (DRY)
-    populateFormFields: function(form, data) {
+    populateFormFields2: function(form, data) {
         Object.keys(data).forEach(key => {
             const field = form.elements[key];
             if (field) {
@@ -2357,6 +2359,38 @@ const FormHandler = {
                 } else {
                     field.value = data[key] || '';
                 }
+            }
+        });
+        
+        // הוסף unicId אם חסר
+        if (data.unicId && !form.elements['unicId']) {
+            const hiddenField = document.createElement('input');
+            hiddenField.type = 'hidden';
+            hiddenField.name = 'unicId';
+            hiddenField.value = data.unicId;
+            form.appendChild(hiddenField);
+        }
+    },
+
+    // פונקציה עזר למילוי שדות (DRY) - גרסה מתוקנת
+    populateFormFields: function(form, data, parentId = null) {
+        console.log('📝 Populating form fields:', { data });
+        
+        Object.keys(data).forEach(key => {
+            const field = form.elements[key];
+            if (!field) return; // אין שדה כזה - דלג
+            
+            // ⭐ אם השדה כבר מלא ויש לו ערך - אל תדרוס!
+            if (field.value && field.value !== '') {
+                console.log(`⏭️ Skipping ${key} - already has value: ${field.value}`);
+                return;
+            }
+            
+            // מלא רק אם השדה ריק
+            if (field.type === 'checkbox') {
+                field.checked = data[key] == 1;
+            } else {
+                field.value = data[key] || '';
             }
         });
         

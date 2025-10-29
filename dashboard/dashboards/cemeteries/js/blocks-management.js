@@ -588,7 +588,7 @@ async function loadBlockStats(cemeteryId = null) {
 // ===================================================================
 // עריכת גוש
 // ===================================================================
-async function editBlock(blockId) {
+async function editBlock2(blockId) {
     console.log('✏️ Editing block:', blockId);
     editingBlockId = blockId;
     
@@ -629,6 +629,52 @@ async function editBlock(blockId) {
         
     } catch (error) {
         console.error('Error editing block:', error);
+        showToast('שגיאה בטעינת נתוני הגוש', 'error');
+    }
+}
+
+async function editBlock(blockId) {
+    console.log('✏️ Editing block:', blockId);
+    editingBlockId = blockId;
+    
+    try {
+        const response = await fetch(`/dashboard/dashboards/cemeteries/api/blocks-api.php?action=get&id=${blockId}`);
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error(result.error || 'שגיאה בטעינת נתוני הגוש');
+        }
+        
+        const block = result.data;
+        
+        // 🔍 דיבוג מפורט
+        console.log('📦 Block data:', block);
+        console.log('🔑 Keys:', Object.keys(block));
+        
+        // ⭐ חילוץ parent_id עם כל האפשרויות
+        const parentId = block.cemeteryId || 
+                        block.cemetery_id || 
+                        block.parent_id || 
+                        block.cemetery?.unicId || 
+                        null;
+        
+        console.log('✅ Parent ID found:', parentId);
+        
+        if (!parentId) {
+            console.error('❌ No parent cemetery found!');
+            // אבל בכל זאת נמשיך - אולי הטופס יודע להתמודד
+        }
+        
+        // פתח את הטופס
+        if (typeof FormHandler?.openForm === 'function') {
+            FormHandler.openForm('block', parentId, blockId);
+        } else {
+            console.error('❌ FormHandler.openForm not available');
+            alert('פונקציית openForm לא זמינה');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error editing block:', error);
         showToast('שגיאה בטעינת נתוני הגוש', 'error');
     }
 }

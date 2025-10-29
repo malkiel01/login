@@ -541,30 +541,30 @@ class UnifiedTableRenderer {
     }
 
     addItem() {
-    const type = window.currentType || this.currentType;
-    const parentId = window.currentParentId;
-    
-    console.log('addItem - type:', type, 'parentId:', parentId);
+        const type = window.currentType || this.currentType;
+        const parentId = window.currentParentId;
+        
+        console.log('addItem - type:', type, 'parentId:', parentId);
 
-    // לקוחות ורכישות לא צריכים הורה
-    const typesWithoutParent = ['cemetery', 'payment', 'customer', 'purchase', 'residency', 'burial'];
+        // לקוחות ורכישות לא צריכים הורה
+        const typesWithoutParent = ['cemetery', 'payment', 'customer', 'purchase', 'residency', 'burial'];
 
-    
-    if (typesWithoutParent.includes(type)) {
-        // פתח ישירות בלי הורה
-        FormHandler.openForm(type, null, null);
-        return;
+        
+        if (typesWithoutParent.includes(type)) {
+            // פתח ישירות בלי הורה
+            FormHandler.openForm(type, null, null);
+            return;
+        }
+        
+        // בדוק אם צריך לבחור הורה קודם
+        if (!parentId && !typesWithoutParent.includes(type)) {
+            this.openParentSelectionDialog(type);
+            return;
+        }
+        
+        console.log('Opening form directly...');
+        FormHandler.openForm(type, parentId, null);
     }
-    
-    // בדוק אם צריך לבחור הורה קודם
-    if (!parentId && !typesWithoutParent.includes(type)) {
-        this.openParentSelectionDialog(type);
-        return;
-    }
-    
-    console.log('Opening form directly...');
-    FormHandler.openForm(type, parentId, null);
-}
 
     async openParentSelectionDialog(type) {
         console.log('Opening parent selection dialog for type:', type);
@@ -772,15 +772,25 @@ class UnifiedTableRenderer {
         FormHandler.openForm(type, parentId, itemId);
     }
 
+    /**
+     * עריכת פריט - טוען נתונים מהשרת לפני פתיחת הטופס
+     */
     async editItem(itemId) {
         const type = this.currentType;
         
         console.log('📝 editItem - type:', type, 'itemId:', itemId);
         
         try {
-            // 1️⃣ טען את נתוני הפריט מהשרת
+            // 1️⃣ קבל את ה-API הנכון לפי הסוג
+            const apiFile = this.getApiFile(type);
+            
+            if (!apiFile) {
+                throw new Error(`לא נמצא API עבור סוג: ${type}`);
+            }
+            
+            // 2️⃣ טען את נתוני הפריט מהשרת
             const response = await fetch(
-                `${API_BASE}cemetery-hierarchy.php?action=get&type=${type}&id=${itemId}`
+                `${API_BASE}${apiFile}?action=get&id=${itemId}`
             );
             const data = await response.json();
             
@@ -790,18 +800,81 @@ class UnifiedTableRenderer {
             
             const item = data.data;
             
-            // 2️⃣ חלץ את ה-parent_id האמיתי של הפריט
+            // 3️⃣ חלץ את ה-parent_id האמיתי של הפריט
             const parentId = this.extractParentId(item, type);
             
             console.log('✅ Parent ID found:', parentId);
             
-            // 3️⃣ פתח את הטופס עם ההורה הנכון
+            // 4️⃣ פתח את הטופס עם ההורה הנכון
             FormHandler.openForm(type, parentId, itemId);
             
         } catch (error) {
             console.error('❌ Error loading item data:', error);
             showError('שגיאה בטעינת נתוני הפריט');
         }
+    }
+
+    /**
+     * קבלת שם קובץ API לפי סוג הפריט
+     */
+    getApiFile(type) {
+        const apiMap = {
+            'cemetery': 'cemeteries-api.php',
+            'block': 'blocks-api.php',
+            'plot': 'plots-api.php',
+            'row': 'rows-api.php',           // לעתיד
+            'area_grave': 'area-graves-api.php',
+            'grave': 'graves-api.php',
+            'customer': 'customers-api.php',
+            'purchase': 'purchases-api.php',
+            'burial': 'burials-api.php',
+            'residency': 'residencies-api.php',
+            'payment': 'payments-api.php'
+        };
+        
+        return apiMap[type] || null;
+    }
+
+    /**
+     * חילוץ parent_id מנתוני פריט לפי הסוג שלו
+     */
+    extractParentId(item, type) {
+        // מפת שדות parent לפי סוג
+        const parentFieldMap = {
+            'cemetery': null,                                    // בית עלמין אין לו הורה
+            'block': ['cemeteryId', 'cemetery_id'],             // גוש → בית עלמין
+            'plot': ['blockId', 'block_id'],                    // חלקה → גוש
+            'row': ['plotId', 'plot_id'],                       // שורה → חלקה
+            'area_grave': ['lineId', 'line_id', 'rowId', 'row_id'], // אחוזת קבר → שורה
+            'grave': ['areaGraveId', 'area_grave_id'],          // קבר → אחוזת קבר
+            'customer': null,                                    // לקוח אין לו הורה
+            'purchase': null,                                    // רכישה אין לה הורה
+            'burial': null,                                      // קבורה אין לה הורה
+            'residency': null,                                   // חוק תושבות אין לו הורה
+            'payment': null                                      // חוק תשלום אין לו הורה
+        };
+        
+        const fields = parentFieldMap[type];
+        
+        // אם אין הורה לסוג הזה
+        if (fields === null) {
+            return null;
+        }
+        
+        // אם לא הוגדרו שדות - נסה parent_id כברירת מחדל
+        if (!fields || fields.length === 0) {
+            return item.parent_id || null;
+        }
+        
+        // נסה למצוא את הערך הראשון שקיים
+        for (let field of fields) {
+            if (item[field]) {
+                return item[field];
+            }
+        }
+        
+        // אם לא מצאנו שום שדה - נסה parent_id כ-fallback
+        return item.parent_id || null;
     }
 
     extractParentId(item, type) {

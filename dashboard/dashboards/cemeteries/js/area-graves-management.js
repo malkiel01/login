@@ -29,91 +29,91 @@ let currentPlotName = null;
 async function loadAreaGraves(plotId = null, plotName = null, forceReset = false) {
     console.log('📋 Loading area graves - v1.2.2 (תוקן סינון client-side)...');
     
-    // ⭐ לוגיקת סינון
-    if (plotId === null && plotName === null && !forceReset) {
-        if (window.currentPlotId !== null || currentPlotId !== null) {
-            console.log('🔄 Resetting filter - called from menu without params');
-            currentPlotId = null;
-            currentPlotName = null;
-            window.currentPlotId = null;
-            window.currentPlotName = null;
-        }
-        console.log('🔍 Plot filter: None (showing all area graves)');
-    } else if (forceReset) {
-        console.log('🔄 Force reset filter');
-        currentPlotId = null;
-        currentPlotName = null;
-        window.currentPlotId = null;
-        window.currentPlotName = null;
-    } else {
-        console.log('🔄 Setting filter:', { plotId, plotName });
-        currentPlotId = plotId;
-        currentPlotName = plotName;
-        window.currentPlotId = plotId;
-        window.currentPlotName = plotName;
-    }
+    // // ⭐ לוגיקת סינון
+    // if (plotId === null && plotName === null && !forceReset) {
+    //     if (window.currentPlotId !== null || currentPlotId !== null) {
+    //         console.log('🔄 Resetting filter - called from menu without params');
+    //         currentPlotId = null;
+    //         currentPlotName = null;
+    //         window.currentPlotId = null;
+    //         window.currentPlotName = null;
+    //     }
+    //     console.log('🔍 Plot filter: None (showing all area graves)');
+    // } else if (forceReset) {
+    //     console.log('🔄 Force reset filter');
+    //     currentPlotId = null;
+    //     currentPlotName = null;
+    //     window.currentPlotId = null;
+    //     window.currentPlotName = null;
+    // } else {
+    //     console.log('🔄 Setting filter:', { plotId, plotName });
+    //     currentPlotId = plotId;
+    //     currentPlotName = plotName;
+    //     window.currentPlotId = plotId;
+    //     window.currentPlotName = plotName;
+    // }
     
-    console.log('🔍 Final filter:', { plotId: currentPlotId, plotName: currentPlotName });
+    // console.log('🔍 Final filter:', { plotId: currentPlotId, plotName: currentPlotName });
         
-    window.currentPlotId = currentPlotId;
-    window.currentPlotName = currentPlotName;
+    // window.currentPlotId = currentPlotId;
+    // window.currentPlotName = currentPlotName;
     
-    // עדכון פריט תפריט אקטיבי
-    if (typeof setActiveMenuItem === 'function') {
-        setActiveMenuItem('areaGravesItem');
-    }
+    // // עדכון פריט תפריט אקטיבי
+    // if (typeof setActiveMenuItem === 'function') {
+    //     setActiveMenuItem('areaGravesItem');
+    // }
     
-    // עדכן את הסוג הנוכחי
-    window.currentType = 'area_grave';
-    window.currentParentId = plotId;
+    // // עדכן את הסוג הנוכחי
+    // window.currentType = 'area_grave';
+    // window.currentParentId = plotId;
     
-    // ⭐ נקה
-    if (typeof DashboardCleaner !== 'undefined') {
-        DashboardCleaner.clear({ targetLevel: 'area_grave' });
-    } else if (typeof clearDashboard === 'function') {
-        clearDashboard({ targetLevel: 'area_grave' });
-    }
+    // // ⭐ נקה
+    // if (typeof DashboardCleaner !== 'undefined') {
+    //     DashboardCleaner.clear({ targetLevel: 'area_grave' });
+    // } else if (typeof clearDashboard === 'function') {
+    //     clearDashboard({ targetLevel: 'area_grave' });
+    // }
     
-    if (typeof clearAllSidebarSelections === 'function') {
-        clearAllSidebarSelections();
-    }
+    // if (typeof clearAllSidebarSelections === 'function') {
+    //     clearAllSidebarSelections();
+    // }
     
-    if (typeof updateAddButtonText === 'function') {
-        updateAddButtonText();
-    }
+    // if (typeof updateAddButtonText === 'function') {
+    //     updateAddButtonText();
+    // }
     
-    // עדכן breadcrumb
-    if (typeof updateBreadcrumb === 'function') {
-        const breadcrumbData = { 
-            area_grave: { name: plotName ? `אחוזות קבר של ${plotName}` : 'אחוזות קבר' }
-        };
-        if (plotId && plotName) {
-            breadcrumbData.plot = { id: plotId, name: plotName };
-        }
-        updateBreadcrumb(breadcrumbData);
-    }
+    // // עדכן breadcrumb
+    // if (typeof updateBreadcrumb === 'function') {
+    //     const breadcrumbData = { 
+    //         area_grave: { name: plotName ? `אחוזות קבר של ${plotName}` : 'אחוזות קבר' }
+    //     };
+    //     if (plotId && plotName) {
+    //         breadcrumbData.plot = { id: plotId, name: plotName };
+    //     }
+    //     updateBreadcrumb(breadcrumbData);
+    // }
     
-    // עדכון כותרת החלון
-    document.title = plotName ? `אחוזות קבר - ${plotName}` : 'ניהול אחוזות קבר - מערכת בתי עלמין';
+    // // עדכון כותרת החלון
+    // document.title = plotName ? `אחוזות קבר - ${plotName}` : 'ניהול אחוזות קבר - מערכת בתי עלמין';
     
-    // ⭐ בנה מבנה
+    // // ⭐ בנה מבנה
     // await buildAreaGravesContainer(plotId, plotName);
     
-    // ⭐ השמד חיפוש קודם
-    if (areaGraveSearch && typeof areaGraveSearch.destroy === 'function') {
-        console.log('🗑️ Destroying previous areaGraveSearch instance...');
-        areaGraveSearch.destroy();
-        areaGraveSearch = null;
-        window.areaGraveSearch = null;
-    }
+    // // ⭐ השמד חיפוש קודם
+    // if (areaGraveSearch && typeof areaGraveSearch.destroy === 'function') {
+    //     console.log('🗑️ Destroying previous areaGraveSearch instance...');
+    //     areaGraveSearch.destroy();
+    //     areaGraveSearch = null;
+    //     window.areaGraveSearch = null;
+    // }
     
-    // אתחל חיפוש חדש
-    console.log('🆕 Creating fresh areaGraveSearch instance...');
-    await initAreaGravesSearch(plotId);
-    areaGraveSearch.search();
+    // // אתחל חיפוש חדש
+    // console.log('🆕 Creating fresh areaGraveSearch instance...');
+    // await initAreaGravesSearch(plotId);
+    // areaGraveSearch.search();
     
-    // טען סטטיסטיקות
-    await loadAreaGraveStats(plotId);
+    // // טען סטטיסטיקות
+    // await loadAreaGraveStats(plotId);
 }
 
 // ===================================================================

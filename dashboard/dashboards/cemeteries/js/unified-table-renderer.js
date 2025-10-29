@@ -214,7 +214,7 @@ class UnifiedTableRenderer {
     /**
      * ציור כפתורי פעולות
      */
-    renderActions(item) {
+    renderActions2(item) {
         const itemId = item.unicId || item.id;
         const itemName = this.getItemName(item);
         const type = this.currentType;
@@ -253,6 +253,24 @@ class UnifiedTableRenderer {
         }
         
         return html;
+    }
+
+    renderActions(item) {
+        const itemId = item.unicId || item.id;
+        const itemName = this.getItemName(item);
+        const type = this.currentType;
+        
+        let html = '';
+        
+        // כפתור עריכה - עכשיו async!
+        if (this.config.permissions.can_edit) {
+            html += `
+                <button class="btn btn-sm btn-secondary" 
+                        onclick="event.stopPropagation(); tableRenderer.editItem('${itemId}')">
+                    <svg class="icon-sm"><use xlink:href="#icon-edit"></use></svg>
+                </button>
+            `;
+        }
     }
     
     /**
@@ -377,7 +395,6 @@ class UnifiedTableRenderer {
             return;
         }
 
-        
         // פתח את הטופס ישירות
         FormHandler.openForm(type, parentId, null);
     }
@@ -745,7 +762,7 @@ class UnifiedTableRenderer {
     /**
      * עריכת פריט
      */
-    editItem(itemId) {
+    editItem2(itemId) {
         const type = this.currentType;
         const parentId = window.currentParentId;
         
@@ -753,6 +770,76 @@ class UnifiedTableRenderer {
         
         // קריאה פשוטה עם פרמטרים
         FormHandler.openForm(type, parentId, itemId);
+    }
+
+    async editItem(itemId) {
+        const type = this.currentType;
+        
+        console.log('📝 editItem - type:', type, 'itemId:', itemId);
+        
+        try {
+            // 1️⃣ טען את נתוני הפריט מהשרת
+            const response = await fetch(
+                `${API_BASE}cemetery-hierarchy.php?action=get&type=${type}&id=${itemId}`
+            );
+            const data = await response.json();
+            
+            if (!data.success || !data.data) {
+                throw new Error('לא נמצאו נתוני הפריט');
+            }
+            
+            const item = data.data;
+            
+            // 2️⃣ חלץ את ה-parent_id האמיתי של הפריט
+            const parentId = this.extractParentId(item, type);
+            
+            console.log('✅ Parent ID found:', parentId);
+            
+            // 3️⃣ פתח את הטופס עם ההורה הנכון
+            FormHandler.openForm(type, parentId, itemId);
+            
+        } catch (error) {
+            console.error('❌ Error loading item data:', error);
+            showError('שגיאה בטעינת נתוני הפריט');
+        }
+    }
+
+    extractParentId(item, type) {
+        // מפת שדות parent לפי סוג
+        const parentFieldMap = {
+            'cemetery': null, // בית עלמין אין לו הורה
+            'block': ['cemeteryId', 'cemetery_id', 'parent_id'],
+            'plot': ['blockId', 'block_id', 'parent_id'],
+            'row': ['plotId', 'plot_id', 'parent_id'],
+            'area_grave': ['rowId', 'row_id', 'lineId', 'line_id', 'parent_id'],
+            'grave': ['areaGraveId', 'area_grave_id', 'parent_id'],
+            'customer': null, // לקוח אין לו הורה
+            'purchase': null, // רכישה אין לה הורה
+            'burial': null, // קבורה אין לה הורה
+            'residency': null, // חוק תושבות אין לו הורה
+            'payment': null // חוק תשלום אין לו הורה
+        };
+        
+        const fields = parentFieldMap[type];
+        
+        // אם אין הורה לסוג הזה
+        if (fields === null) {
+            return null;
+        }
+        
+        // אם לא הוגדרו שדות - נסה parent_id כברירת מחדל
+        if (!fields || fields.length === 0) {
+            return item.parent_id || null;
+        }
+        
+        // נסה למצוא את הערך הראשון שקיים
+        for (let field of fields) {
+            if (item[field]) {
+                return item[field];
+            }
+        }
+        
+        return null;
     }
     
     /**

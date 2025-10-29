@@ -2276,33 +2276,98 @@ const FormHandler = {
     },
     
     loadFormData: function(type, itemId) {
+
+
         this.waitForElement(`#${type}FormModal form`, (form) => {
-            fetch(`${API_BASE}cemetery-hierarchy.php?action=get&type=${type}&itemId=${itemId}`)
+
+            // ✅ מיפוי API לפי סוג הישות
+            const apiEndpoints = {
+                'cemetery': 'cemeteries-api.php',
+                'block': 'blocks-api.php',
+                'plot': 'plots-api.php',
+                'area_grave': 'area-graves-api.php',
+                'grave': 'graves-api.php',
+                'customer': 'customers-api.php',
+                'purchase': 'purchases-api.php',
+                'burial': 'burials-api.php',
+                'payment': 'payments-api.php'
+            };
+
+            // קבל את ה-endpoint הנכון או fallback ל-cemetery-hierarchy
+            const endpoint = apiEndpoints[type];
+            
+            if (!endpoint) {
+                console.warn(`⚠️ No specific API for type: ${type}, using cemetery-hierarchy`);
+                fetch(`${API_BASE}cemetery-hierarchy.php?action=get&type=${type}&id=${itemId}`)
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success && result.data) {
+                            this.populateFormFields(form, result.data);
+                        }
+                    })
+                    .catch(error => console.error('Error loading item data:', error));
+                return;
+            }
+
+            // ✅ קרא ל-API הייעודי
+            fetch(`${API_BASE}${endpoint}?action=get&id=${itemId}`)
                 .then(response => response.json())
                 .then(result => {
                     if (result.success && result.data) {
-                        Object.keys(result.data).forEach(key => {
-                            const field = form.elements[key];
-                            if (field) {
-                                if (field.type === 'checkbox') {
-                                    field.checked = result.data[key] == 1;
-                                } else {
-                                    field.value = result.data[key] || '';
-                                }
-                            }
-                        });
-                        
-                        if (result.data.unicId && !form.elements['unicId']) {
-                            const hiddenField = document.createElement('input');
-                            hiddenField.type = 'hidden';
-                            hiddenField.name = 'unicId';
-                            hiddenField.value = result.data.unicId;
-                            form.appendChild(hiddenField);
-                        }
+                        this.populateFormFields(form, result.data);
                     }
                 })
                 .catch(error => console.error('Error loading item data:', error));
+
+            // fetch(`${API_BASE}cemetery-hierarchy.php?action=get&type=${type}&itemId=${itemId}`)
+            //     .then(response => response.json())
+            //     .then(result => {
+            //         if (result.success && result.data) {
+            //             Object.keys(result.data).forEach(key => {
+            //                 const field = form.elements[key];
+            //                 if (field) {
+            //                     if (field.type === 'checkbox') {
+            //                         field.checked = result.data[key] == 1;
+            //                     } else {
+            //                         field.value = result.data[key] || '';
+            //                     }
+            //                 }
+            //             });
+                        
+            //             if (result.data.unicId && !form.elements['unicId']) {
+            //                 const hiddenField = document.createElement('input');
+            //                 hiddenField.type = 'hidden';
+            //                 hiddenField.name = 'unicId';
+            //                 hiddenField.value = result.data.unicId;
+            //                 form.appendChild(hiddenField);
+            //             }
+            //         }
+            //     })
+            //     .catch(error => console.error('Error loading item data:', error));
         });
+    },
+
+    // פונקציה עזר למילוי שדות (DRY)
+    populateFormFields: function(form, data) {
+        Object.keys(data).forEach(key => {
+            const field = form.elements[key];
+            if (field) {
+                if (field.type === 'checkbox') {
+                    field.checked = data[key] == 1;
+                } else {
+                    field.value = data[key] || '';
+                }
+            }
+        });
+        
+        // הוסף unicId אם חסר
+        if (data.unicId && !form.elements['unicId']) {
+            const hiddenField = document.createElement('input');
+            hiddenField.type = 'hidden';
+            hiddenField.name = 'unicId';
+            hiddenField.value = data.unicId;
+            form.appendChild(hiddenField);
+        }
     },
     
     closeForm: function(type) {

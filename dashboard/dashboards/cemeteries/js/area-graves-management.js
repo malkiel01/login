@@ -29,29 +29,29 @@ let currentPlotName = null;
 async function loadAreaGraves(plotId = null, plotName = null, forceReset = false) {
     console.log('📋 Loading area graves - v1.2.2 (תוקן סינון client-side)...');
     
-    // // ⭐ לוגיקת סינון
-    // if (plotId === null && plotName === null && !forceReset) {
-    //     if (window.currentPlotId !== null || currentPlotId !== null) {
-    //         console.log('🔄 Resetting filter - called from menu without params');
-    //         currentPlotId = null;
-    //         currentPlotName = null;
-    //         window.currentPlotId = null;
-    //         window.currentPlotName = null;
-    //     }
-    //     console.log('🔍 Plot filter: None (showing all area graves)');
-    // } else if (forceReset) {
-    //     console.log('🔄 Force reset filter');
-    //     currentPlotId = null;
-    //     currentPlotName = null;
-    //     window.currentPlotId = null;
-    //     window.currentPlotName = null;
-    // } else {
-    //     console.log('🔄 Setting filter:', { plotId, plotName });
-    //     currentPlotId = plotId;
-    //     currentPlotName = plotName;
-    //     window.currentPlotId = plotId;
-    //     window.currentPlotName = plotName;
-    // }
+    // ⭐ לוגיקת סינון
+    if (plotId === null && plotName === null && !forceReset) {
+        if (window.currentPlotId !== null || currentPlotId !== null) {
+            console.log('🔄 Resetting filter - called from menu without params');
+            currentPlotId = null;
+            currentPlotName = null;
+            window.currentPlotId = null;
+            window.currentPlotName = null;
+        }
+        console.log('🔍 Plot filter: None (showing all area graves)');
+    } else if (forceReset) {
+        console.log('🔄 Force reset filter');
+        currentPlotId = null;
+        currentPlotName = null;
+        window.currentPlotId = null;
+        window.currentPlotName = null;
+    } else {
+        console.log('🔄 Setting filter:', { plotId, plotName });
+        currentPlotId = plotId;
+        currentPlotName = plotName;
+        window.currentPlotId = plotId;
+        window.currentPlotName = plotName;
+    }
     
     // console.log('🔍 Final filter:', { plotId: currentPlotId, plotName: currentPlotName });
         

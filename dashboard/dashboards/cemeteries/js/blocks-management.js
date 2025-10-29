@@ -604,7 +604,8 @@ async function editBlock(blockId) {
         
         // פתח את הטופס במודל
         if (typeof openFormModal === 'function') {
-            openFormModal('block', block);
+            // openFormModal('block', block);
+            FormHandler.openForm('block', null, block.unicId); 
         } else {
             console.log('📝 Block data:', block);
             alert('פונקציית openFormModal לא זמינה');

@@ -607,7 +607,8 @@ async function editAreaGrave(areaGraveId) {
         const areaGrave = result.data;
         
         if (typeof openFormModal === 'function') {
-            openFormModal('area_grave', areaGrave);
+            // openFormModal('area_grave', areaGrave);
+            FormHandler.openForm('area_grave', null, areaGrave.unicId); 
         } else {
             console.log('📝 Area grave data:', areaGrave);
             alert('פונקציית openFormModal לא זמינה');

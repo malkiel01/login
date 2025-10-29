@@ -599,7 +599,8 @@ async function editPlot(plotId) {
         
         // פתח את הטופס במודל
         if (typeof openFormModal === 'function') {
-            openFormModal('plot', plot);
+            // openFormModal('plot', plot);
+            FormHandler.openForm('plot', null, plot.unicId); 
         } else {
             console.log('📝 Plot data:', plot);
             alert('פונקציית openFormModal לא זמינה');

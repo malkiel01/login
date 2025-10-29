@@ -134,7 +134,7 @@ async function loadPlots(blockId = null, blockName = null, forceReset = false) {
 // ===================================================================
 // ⭐ פונקציה מעודכנת - בניית המבנה של חלקות ב-main-container
 // ===================================================================
-async function buildPlotsContainer(blockId = null, blockName = null) {
+async function buildPlotsContainer2(blockId = null, blockName = null) {
     console.log('🏗️ Building plots container...');
     
     // מצא את main-container (צריך להיות קיים אחרי clear)
@@ -173,6 +173,91 @@ async function buildPlotsContainer(blockId = null, blockName = null) {
     // ⭐ בנה את התוכן של חלקות
     mainContainer.innerHTML = `
         ${filterIndicator}
+        
+        <!-- סקשן חיפוש -->
+        <div id="plotSearchSection" class="search-section"></div>
+        
+        <!-- table-container עבור TableManager -->
+        <div class="table-container">
+            <table id="mainTable" class="data-table">
+                <thead>
+                    <tr id="tableHeaders">
+                        <th style="text-align: center;">טוען...</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr>
+                        <td style="text-align: center; padding: 40px;">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">טוען חלקות...</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    `;
+    
+    console.log('✅ Plots container built');
+}
+async function buildPlotsContainer(blockId = null, blockName = null) {
+    console.log('🏗️ Building plots container...');
+    
+    let mainContainer = document.querySelector('.main-container');
+    
+    if (!mainContainer) {
+        console.log('⚠️ main-container not found, creating one...');
+        const mainContent = document.querySelector('.main-content');
+        mainContainer = document.createElement('div');
+        mainContainer.className = 'main-container';
+        
+        const actionBar = mainContent.querySelector('.action-bar');
+        if (actionBar) {
+            actionBar.insertAdjacentElement('afterend', mainContainer);
+        } else {
+            mainContent.appendChild(mainContainer);
+        }
+    }
+    
+    // ⭐⭐⭐ טעינת כרטיס מלא של הגוש במקום indicator פשוט!
+    let topSection = '';
+    if (blockId && blockName) {
+        console.log('🎴 Creating full block card...');
+        
+        // נסה ליצור את הכרטיס המלא
+        if (typeof createBlockCard === 'function') {
+            try {
+                topSection = await createBlockCard(blockId);
+                console.log('✅ Block card created successfully');
+            } catch (error) {
+                console.error('❌ Error creating block card:', error);
+            }
+        } else {
+            console.warn('⚠️ createBlockCard function not found');
+        }
+        
+        // אם לא הצלחנו ליצור כרטיס, נשתמש ב-fallback פשוט
+        if (!topSection) {
+            console.log('⚠️ Using simple filter indicator as fallback');
+            topSection = `
+                <div class="filter-indicator" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 20px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 20px;">📦</span>
+                        <div>
+                            <div style="font-size: 12px; opacity: 0.9;">מציג חלקות עבור</div>
+                            <div style="font-size: 16px; font-weight: 600;">${blockName}</div>
+                        </div>
+                    </div>
+                    <button onclick="loadPlots(null, null, true)" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                        ✕ הצג הכל
+                    </button>
+                </div>
+            `;
+        }
+    }
+    
+    mainContainer.innerHTML = `
+        ${topSection}
         
         <!-- סקשן חיפוש -->
         <div id="plotSearchSection" class="search-section"></div>

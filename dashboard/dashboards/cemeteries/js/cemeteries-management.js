@@ -689,7 +689,7 @@ async function handleCemeteryDoubleClick(cemeteryId, cemeteryName) {
         // טעינת גושים
         console.log('📦 Loading blocks for cemetery:', cemeteryName);
         if (typeof loadBlocks === 'function') {
-            loadBlocks(blockId, blockName);
+            loadBlocks(cemeteryId, cemeteryName);
         } else {
             console.warn('loadBlocks function not found');
         }

@@ -603,7 +603,7 @@ async function editBlock(blockId) {
         const block = result.data;
         
         // פתח את הטופס במודל
-        if (typeof openFormModal === 'function') {
+        if (typeof FormHandler.openForm === 'function') {
             // openFormModal('block', block);
             FormHandler.openForm('block', null, block.unicId); 
         } else {

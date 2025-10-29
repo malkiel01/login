@@ -618,7 +618,7 @@ async function editGrave(graveId) {
         
         const grave = result.data;
         
-        if (typeof openFormModal === 'function') {
+        if (typeof FormHandler.openForm === 'function') {
             // openFormModal('grave', grave);
             FormHandler.openForm('grave', null, grave.unicId); 
         } else {

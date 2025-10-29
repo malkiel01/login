@@ -598,7 +598,7 @@ async function editPlot(plotId) {
         const plot = result.data;
         
         // פתח את הטופס במודל
-        if (typeof openFormModal === 'function') {
+        if (typeof FormHandler.openForm === 'function') {
             // openFormModal('plot', plot);
             FormHandler.openForm('plot', null, plot.unicId); 
         } else {

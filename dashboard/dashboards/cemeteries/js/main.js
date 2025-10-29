@@ -248,32 +248,32 @@ window.openAddModal = function() {
     }
 };
 
-// פתיחת טופס עם בחירת parent
-async function openAddWithParentSelection() {
-    const parentSelectionMap = {
-        'block': { type: 'cemetery', label: 'בחר בית עלמין' },
-        'plot': { type: 'block', label: 'בחר גוש' },
-        'row': { type: 'plot', label: 'בחר חלקה' },
-        'area_grave': { type: 'row', label: 'בחר שורה' },
-        'grave': { type: 'area_grave', label: 'בחר אחוזת קבר' }
-    };
+// // פתיחת טופס עם בחירת parent
+// async function openAddWithParentSelection() {
+//     const parentSelectionMap = {
+//         'block': { type: 'cemetery', label: 'בחר בית עלמין' },
+//         'plot': { type: 'block', label: 'בחר גוש' },
+//         'row': { type: 'plot', label: 'בחר חלקה' },
+//         'area_grave': { type: 'row', label: 'בחר שורה' },
+//         'grave': { type: 'area_grave', label: 'בחר אחוזת קבר' }
+//     };
     
-    const parentInfo = parentSelectionMap[window.currentType];
-    if (!parentInfo) {
-        showError('לא ניתן להוסיף רשומה ללא בחירת רשומת אב');
-        return;
-    }
+//     const parentInfo = parentSelectionMap[window.currentType];
+//     if (!parentInfo) {
+//         showError('לא ניתן להוסיף רשומה ללא בחירת רשומת אב');
+//         return;
+//     }
     
-    // טען את רשימת ה-parents האפשריים
-    const parents = await loadParentsList(parentInfo.type);
-    if (!parents || parents.length === 0) {
-        showWarning(`אין ${parentInfo.label} במערכת`);
-        return;
-    }
+//     // טען את רשימת ה-parents האפשריים
+//     const parents = await loadParentsList(parentInfo.type);
+//     if (!parents || parents.length === 0) {
+//         showWarning(`אין ${parentInfo.label} במערכת`);
+//         return;
+//     }
     
-    // הצג מודל לבחירת parent
-    showParentSelectionModal(parents, parentInfo);
-}
+//     // הצג מודל לבחירת parent
+//     showParentSelectionModal(parents, parentInfo);
+// }
 
 // טעינת רשימת parents
 async function loadParentsList(type) {
@@ -381,44 +381,44 @@ function getTypeName(type) {
     return typeNames[type] || type;
 }
 
-// עדכון טקסט כפתור הוספה
-function updateAddButtonText() {
-    const buttonTexts = {
-        'cemetery': 'הוספת בית עלמין',
-        'block': 'הוספת גוש',
-        'plot': 'הוספת חלקה',
-        'row': 'הוספת שורה',
-        'area_grave': 'הוספת אחוזת קבר',
-        'grave': 'הוספת קבר',
-        'customer': 'הוספת לקוח',
-        'purchase': 'הוספת רכישה',
-        'burial': 'הוספת קבורה',
-        'residency': 'הוספת חוק תושבות',
-        'payment': 'הוספת חוק תשלום'
-    };
+// // עדכון טקסט כפתור הוספה
+// function updateAddButtonText() {
+//     const buttonTexts = {
+//         'cemetery': 'הוספת בית עלמין',
+//         'block': 'הוספת גוש',
+//         'plot': 'הוספת חלקה',
+//         'row': 'הוספת שורה',
+//         'area_grave': 'הוספת אחוזת קבר',
+//         'grave': 'הוספת קבר',
+//         'customer': 'הוספת לקוח',
+//         'purchase': 'הוספת רכישה',
+//         'burial': 'הוספת קבורה',
+//         'residency': 'הוספת חוק תושבות',
+//         'payment': 'הוספת חוק תשלום'
+//     };
     
-    // עדכן את הסלקטור לחפש את הפונקציה החדשה
-    const buttons = document.querySelectorAll('.btn-primary[onclick="tableRenderer.openAddModal()"]');
-    buttons.forEach(button => {
-        const buttonText = buttonTexts[window.currentType] || 'הו33סף';
+//     // עדכן את הסלקטור לחפש את הפונקציה החדשה
+//     const buttons = document.querySelectorAll('.btn-primary[onclick="tableRenderer.openAddModal()"]');
+//     buttons.forEach(button => {
+//         const buttonText = buttonTexts[window.currentType] || 'הו33סף';
         
-        // בדיקה האם להציג או להסתיר את הכפתור
-        if (shouldHideAddButton()) {
-            button.style.display = 'none';
-        } else if (shouldDisableAddButton()) {
-            button.disabled = true;
-            button.innerHTML = `<svg class="icon"><use xlink:href="#icon-plus"></use></svg> ${buttonText}`;
-            button.style.opacity = '0.5';
-            button.style.cursor = 'not-allowed';
-        } else {
-            button.style.display = '';
-            button.disabled = false;
-            button.innerHTML = `<svg class="icon"><use xlink:href="#icon-plus"></use></svg> ${buttonText}`;
-            button.style.opacity = '1';
-            button.style.cursor = 'pointer';
-        }
-    });
-}
+//         // בדיקה האם להציג או להסתיר את הכפתור
+//         if (shouldHideAddButton()) {
+//             button.style.display = 'none';
+//         } else if (shouldDisableAddButton()) {
+//             button.disabled = true;
+//             button.innerHTML = `<svg class="icon"><use xlink:href="#icon-plus"></use></svg> ${buttonText}`;
+//             button.style.opacity = '0.5';
+//             button.style.cursor = 'not-allowed';
+//         } else {
+//             button.style.display = '';
+//             button.disabled = false;
+//             button.innerHTML = `<svg class="icon"><use xlink:href="#icon-plus"></use></svg> ${buttonText}`;
+//             button.style.opacity = '1';
+//             button.style.cursor = 'pointer';
+//         }
+//     });
+// }
 
 // בדיקה האם להסתיר את כפתור ההוספה
 function shouldHideAddButton() {

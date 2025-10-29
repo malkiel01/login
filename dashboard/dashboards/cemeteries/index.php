@@ -117,7 +117,7 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
                         </button>
                         <button class="btn btn-primary" onclick="tableRenderer.openAddModal()">
                             <svg class="icon"><use xlink:href="#icon-plus"></use></svg>
-                            הוספה
+                            הוס66פה
                         </button>
                     </div>
                 </div>

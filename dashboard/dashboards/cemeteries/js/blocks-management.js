@@ -436,6 +436,24 @@ async function initBlocksTable(data, totalItems = null) {
                         <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
                     </button>
                 `
+            },
+            {
+                field: 'actions',
+                label: 'פעולות',
+                width: '120px',
+                sortable: false,
+                render: (block) => `
+                    <button class="btn btn-sm btn-secondary" 
+                            onclick="event.stopPropagation(); window.tableRenderer.editItem('${block.unicId}')" 
+                            title="עריכה">
+                        <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
+                    </button>
+                    <button class="btn btn-sm btn-danger" 
+                            onclick="event.stopPropagation(); deleteBlock('${block.unicId}')" 
+                            title="מחיקה">
+                        <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
+                    </button>
+                `
             }
         ],
 

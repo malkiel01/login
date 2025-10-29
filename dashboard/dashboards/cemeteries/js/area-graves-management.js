@@ -97,7 +97,7 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
     document.title = plotName ? `אחוזות קבר - ${plotName}` : 'ניהול אחוזות קבר - מערכת בתי עלמין';
     
     // ⭐ בנה מבנה
-    await buildAreaGravesContainer(plotId, plotName);
+    // await buildAreaGravesContainer(plotId, plotName);
     
     // ⭐ השמד חיפוש קודם
     if (areaGraveSearch && typeof areaGraveSearch.destroy === 'function') {

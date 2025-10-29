@@ -423,20 +423,20 @@ async function initBlocksTable(data, totalItems = null) {
                 sortable: true,
                 render: (block) => formatDate(block.createDate)
             },
-            {
-                field: 'actions',
-                label: 'פעולות',
-                width: '120px',
-                sortable: false,
-                render: (block) => `
-                    <button class="btn btn-sm btn-secondary" onclick="editBlock('${block.unicId}')" title="עריכה">
-                        <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteBlock('${block.unicId}')" title="מחיקה">
-                        <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
-                    </button>
-                `
-            },
+            // {
+            //     field: 'actions',
+            //     label: 'פעולות',
+            //     width: '120px',
+            //     sortable: false,
+            //     render: (block) => `
+            //         <button class="btn btn-sm btn-secondary" onclick="editBlock('${block.unicId}')" title="עריכה">
+            //             <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
+            //         </button>
+            //         <button class="btn btn-sm btn-danger" onclick="deleteBlock('${block.unicId}')" title="מחיקה">
+            //             <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
+            //         </button>
+            //     `
+            // },
             {
                 field: 'actions',
                 label: 'פעולות',
@@ -606,96 +606,96 @@ async function loadBlockStats(cemeteryId = null) {
 // ===================================================================
 // עריכת גוש
 // ===================================================================
-async function editBlock2(blockId) {
-    console.log('✏️ Editing block:', blockId);
-    editingBlockId = blockId;
+// async function editBlock2(blockId) {
+//     console.log('✏️ Editing block:', blockId);
+//     editingBlockId = blockId;
     
-    try {
-        const response = await fetch(`/dashboard/dashboards/cemeteries/api/blocks-api.php?action=get&id=${blockId}`);
-        const result = await response.json();
+//     try {
+//         const response = await fetch(`/dashboard/dashboards/cemeteries/api/blocks-api.php?action=get&id=${blockId}`);
+//         const result = await response.json();
         
-        if (!result.success) {
-            throw new Error(result.error || 'שגיאה בטעינת נתוני הגוש');
-        }
+//         if (!result.success) {
+//             throw new Error(result.error || 'שגיאה בטעינת נתוני הגוש');
+//         }
         
-        const block = result.data;
+//         const block = result.data;
 
          
-        // 🔍 דיבוג מפורט - בדוק מה יש ב-block
-        console.log('📦 Block data received:', JSON.stringify(block, null, 2));
-        console.log('🔑 Available keys:', Object.keys(block));
+//         // 🔍 דיבוג מפורט - בדוק מה יש ב-block
+//         console.log('📦 Block data received:', JSON.stringify(block, null, 2));
+//         console.log('🔑 Available keys:', Object.keys(block));
         
-        // ⭐ בדוק את כל האפשרויות לשדה ההורה
-        const parentId = block.cemeteryId || block.cemetery_id || block.parent_id || null;
+//         // ⭐ בדוק את כל האפשרויות לשדה ההורה
+//         const parentId = block.cemeteryId || block.cemetery_id || block.parent_id || null;
         
-        console.log('🎯 Parent ID determined:', parentId);
-        console.log('   - block.cemeteryId:', block.cemeteryId);
-        console.log('   - block.cemetery_id:', block.cemetery_id);
-        console.log('   - block.parent_id:', block.parent_id);
+//         console.log('🎯 Parent ID determined:', parentId);
+//         console.log('   - block.cemeteryId:', block.cemeteryId);
+//         console.log('   - block.cemetery_id:', block.cemetery_id);
+//         console.log('   - block.parent_id:', block.parent_id);
         
-        if (!parentId) {
-            console.warn('⚠️ No parent cemetery found for this block!');
-        }
+//         if (!parentId) {
+//             console.warn('⚠️ No parent cemetery found for this block!');
+//         }
         
-        // פתח את הטופס במודל
-        if (typeof FormHandler.openForm === 'function') {
-            FormHandler.openForm('block', parentId, blockId); 
-        } else {
-            // console.log('📝 Block data:', block);
-            alert('פונקציית openFormModal לא זמינה');
-        }
+//         // פתח את הטופס במודל
+//         if (typeof FormHandler.openForm === 'function') {
+//             FormHandler.openForm('block', parentId, blockId); 
+//         } else {
+//             // console.log('📝 Block data:', block);
+//             alert('פונקציית openFormModal לא זמינה');
+//         }
         
-    } catch (error) {
-        console.error('Error editing block:', error);
-        showToast('שגיאה בטעינת נתוני הגוש', 'error');
-    }
-}
+//     } catch (error) {
+//         console.error('Error editing block:', error);
+//         showToast('שגיאה בטעינת נתוני הגוש', 'error');
+//     }
+// }
 
-async function editBlock(blockId) {
-    console.log('✏️ Editing block:', blockId);
-    editingBlockId = blockId;
+// async function editBlock(blockId) {
+//     console.log('✏️ Editing block:', blockId);
+//     editingBlockId = blockId;
     
-    try {
-        const response = await fetch(`/dashboard/dashboards/cemeteries/api/blocks-api.php?action=get&id=${blockId}`);
-        const result = await response.json();
+//     try {
+//         const response = await fetch(`/dashboard/dashboards/cemeteries/api/blocks-api.php?action=get&id=${blockId}`);
+//         const result = await response.json();
         
-        if (!result.success) {
-            throw new Error(result.error || 'שגיאה בטעינת נתוני הגוש');
-        }
+//         if (!result.success) {
+//             throw new Error(result.error || 'שגיאה בטעינת נתוני הגוש');
+//         }
         
-        const block = result.data;
+//         const block = result.data;
         
-        // 🔍 דיבוג מפורט
-        console.log('📦 Block data:', block);
-        console.log('🔑 Keys:', Object.keys(block));
+//         // 🔍 דיבוג מפורט
+//         console.log('📦 Block data:', block);
+//         console.log('🔑 Keys:', Object.keys(block));
         
-        // ⭐ חילוץ parent_id עם כל האפשרויות
-        const parentId = block.cemeteryId || 
-                        block.cemetery_id || 
-                        block.parent_id || 
-                        block.cemetery?.unicId || 
-                        null;
+//         // ⭐ חילוץ parent_id עם כל האפשרויות
+//         const parentId = block.cemeteryId || 
+//                         block.cemetery_id || 
+//                         block.parent_id || 
+//                         block.cemetery?.unicId || 
+//                         null;
         
-        console.log('✅ Parent ID found:', parentId);
+//         console.log('✅ Parent ID found:', parentId);
         
-        if (!parentId) {
-            console.error('❌ No parent cemetery found!');
-            // אבל בכל זאת נמשיך - אולי הטופס יודע להתמודד
-        }
+//         if (!parentId) {
+//             console.error('❌ No parent cemetery found!');
+//             // אבל בכל זאת נמשיך - אולי הטופס יודע להתמודד
+//         }
         
-        // פתח את הטופס
-        if (typeof FormHandler?.openForm === 'function') {
-            FormHandler.openForm('block', parentId, blockId);
-        } else {
-            console.error('❌ FormHandler.openForm not available');
-            alert('פונקציית openForm לא זמינה');
-        }
+//         // פתח את הטופס
+//         if (typeof FormHandler?.openForm === 'function') {
+//             FormHandler.openForm('block', parentId, blockId);
+//         } else {
+//             console.error('❌ FormHandler.openForm not available');
+//             alert('פונקציית openForm לא זמינה');
+//         }
         
-    } catch (error) {
-        console.error('❌ Error editing block:', error);
-        showToast('שגיאה בטעינת נתוני הגוש', 'error');
-    }
-}
+//     } catch (error) {
+//         console.error('❌ Error editing block:', error);
+//         showToast('שגיאה בטעינת נתוני הגוש', 'error');
+//     }
+// }
 
 // ===================================================================
 // מחיקת גוש

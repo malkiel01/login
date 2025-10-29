@@ -129,11 +129,12 @@ try {
                 throw new Exception('Cemetery ID is required');
             }
             
+            // ⭐ חיפוש רק לפי unicId!
             $stmt = $pdo->prepare("
                 SELECT c.* FROM cemeteries c
-                WHERE (c.unicId = :id OR c.id = :id2) AND c.isActive = 1
+                WHERE c.unicId = :id AND c.isActive = 1
             ");
-            $stmt->execute(['id' => $id, 'id2' => $id]);
+            $stmt->execute(['id' => $id]);
             $cemetery = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if (!$cemetery) {

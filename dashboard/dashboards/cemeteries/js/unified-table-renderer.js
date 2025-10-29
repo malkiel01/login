@@ -915,11 +915,26 @@ class UnifiedTableRenderer {
                 name: item.cemeteryNameHe || item.blockNameHe || item.plotNameHe || 'N/A'
             });
             
-            // שלב 8: חילוץ parent_id
-            console.log('8️⃣ STEP 8: Extract parent ID');
-            const parentId = this.extractParentId(item, type);
-            console.log('   📌 Extracted parent ID:', parentId);
+            // // שלב 8: חילוץ parent_id
+            // console.log('8️⃣ STEP 8: Extract parent ID');
+            // const parentId = this.extractParentId(item, type);
+            // console.log('   📌 Extracted parent ID:', parentId);
             
+            // if (parentId === null) {
+            //     console.log('   ℹ️ No parent (root entity)');
+            // } else if (parentId === undefined) {
+            //     console.warn('   ⚠️ Parent ID is undefined - might be a problem');
+            // } else {
+            //     console.log('   ✅ Valid parent ID found');
+            // }
+
+            // שלב 8: חילוץ parent_id ושם ההורה
+            console.log('8️⃣ STEP 8: Extract parent ID and name');
+            const parentId = this.extractParentId(item, type);
+            const parentName = this.extractParentName(item, type);
+            console.log('   📌 Extracted parent ID:', parentId);
+            console.log('   📌 Extracted parent name:', parentName);
+
             if (parentId === null) {
                 console.log('   ℹ️ No parent (root entity)');
             } else if (parentId === undefined) {
@@ -943,7 +958,8 @@ class UnifiedTableRenderer {
                 return;
             }
             
-            FormHandler.openForm(type, parentId, itemId);
+            // FormHandler.openForm(type, parentId, itemId);
+            FormHandler.openForm(type, parentId, itemId, parentName);
             
             console.log('   ✅ FormHandler.openForm called successfully');
             console.log('═══════════════════════════════════════════════');
@@ -1003,7 +1019,7 @@ class UnifiedTableRenderer {
     /**
      * חילוץ parent_id מנתוני פריט לפי הסוג שלו
      */
-    extractParentId(item, type) {
+    extractParentId2(item, type) {
         // מפת שדות parent לפי סוג
         const parentFieldMap = {
             'cemetery': null,                                    // בית עלמין אין לו הורה
@@ -1068,6 +1084,47 @@ class UnifiedTableRenderer {
         // אם לא הוגדרו שדות - נסה parent_id כברירת מחדל
         if (!fields || fields.length === 0) {
             return item.parent_id || null;
+        }
+        
+        // נסה למצוא את הערך הראשון שקיים
+        for (let field of fields) {
+            if (item[field]) {
+                return item[field];
+            }
+        }
+        
+        return null;
+    }
+
+    /**
+     * חילוץ parent_name מנתוני פריט לפי הסוג שלו
+     */
+    extractParentName(item, type) {
+        // מפת שדות שם ההורה לפי סוג
+        const parentNameFieldMap = {
+            'cemetery': null,                                    // בית עלמין אין לו הורה
+            'block': ['cemetery_name', 'cemeteryNameHe'],       // גוש → שם בית עלמין
+            'plot': ['block_name', 'blockNameHe'],              // חלקה → שם גוש
+            'row': ['plot_name', 'plotNameHe'],                 // שורה → שם חלקה
+            'area_grave': ['row_name', 'lineNameHe'],           // אחוזת קבר → שם שורה
+            'grave': ['area_grave_name', 'areaGraveNameHe'],    // קבר → שם אחוזת קבר
+            'customer': null,
+            'purchase': null,
+            'burial': null,
+            'residency': null,
+            'payment': null
+        };
+        
+        const fields = parentNameFieldMap[type];
+        
+        // אם אין הורה לסוג הזה
+        if (fields === null) {
+            return null;
+        }
+        
+        // אם לא הוגדרו שדות
+        if (!fields || fields.length === 0) {
+            return null;
         }
         
         // נסה למצוא את הערך הראשון שקיים

@@ -67,20 +67,20 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
     window.currentType = 'area_grave';
     window.currentParentId = plotId;
     
-    // ⭐ נקה
-    if (typeof DashboardCleaner !== 'undefined') {
-        DashboardCleaner.clear({ targetLevel: 'area_grave' });
-    } else if (typeof clearDashboard === 'function') {
-        clearDashboard({ targetLevel: 'area_grave' });
-    }
+    // // ⭐ נקה
+    // if (typeof DashboardCleaner !== 'undefined') {
+    //     DashboardCleaner.clear({ targetLevel: 'area_grave' });
+    // } else if (typeof clearDashboard === 'function') {
+    //     clearDashboard({ targetLevel: 'area_grave' });
+    // }
     
-    if (typeof clearAllSidebarSelections === 'function') {
-        clearAllSidebarSelections();
-    }
+    // if (typeof clearAllSidebarSelections === 'function') {
+    //     clearAllSidebarSelections();
+    // }
     
-    if (typeof updateAddButtonText === 'function') {
-        updateAddButtonText();
-    }
+    // if (typeof updateAddButtonText === 'function') {
+    //     updateAddButtonText();
+    // }
     
     // עדכן breadcrumb
     if (typeof updateBreadcrumb === 'function') {
@@ -96,8 +96,8 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
     // עדכון כותרת החלון
     document.title = plotName ? `אחוזות קבר - ${plotName}` : 'ניהול אחוזות קבר - מערכת בתי עלמין';
     
-    // // ⭐ בנה מבנה
-    // await buildAreaGravesContainer(plotId, plotName);
+    // ⭐ בנה מבנה
+    await buildAreaGravesContainer(plotId, plotName);
     
     // ⭐ השמד חיפוש קודם
     if (areaGraveSearch && typeof areaGraveSearch.destroy === 'function') {
@@ -153,8 +153,32 @@ async function buildAreaGravesContainer(plotId = null, plotName = null) {
         </div>
     ` : '';
     
+    // mainContainer.innerHTML = `
+    //     ${filterIndicator}
+        
+    //     <div id="areaGraveSearchSection" class="search-section"></div>
+        
+    //     <div class="table-container">
+    //         <table id="mainTable" class="data-table">
+    //             <thead>
+    //                 <tr id="tableHeaders">
+    //                     <th style="text-align: center;">טוען...</th>
+    //                 </tr>
+    //             </thead>
+    //             <tbody id="tableBody">
+    //                 <tr>
+    //                     <td style="text-align: center; padding: 40px;">
+    //                         <div class="spinner-border" role="status">
+    //                             <span class="visually-hidden">טוען אחוזות קבר...</span>
+    //                         </div>
+    //                     </td>
+    //                 </tr>
+    //             </tbody>
+    //         </table>
+    //     </div>
+    // `;
+        
     mainContainer.innerHTML = `
-        ${filterIndicator}
         
         <div id="areaGraveSearchSection" class="search-section"></div>
         

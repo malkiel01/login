@@ -99,13 +99,13 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
     // ⭐ בנה מבנה
     await buildAreaGravesContainer(plotId, plotName);
     
-    // ⭐ השמד חיפוש קודם
-    if (areaGraveSearch && typeof areaGraveSearch.destroy === 'function') {
-        console.log('🗑️ Destroying previous areaGraveSearch instance...');
-        areaGraveSearch.destroy();
-        areaGraveSearch = null;
-        window.areaGraveSearch = null;
-    }
+    // // ⭐ השמד חיפוש קודם
+    // if (areaGraveSearch && typeof areaGraveSearch.destroy === 'function') {
+    //     console.log('🗑️ Destroying previous areaGraveSearch instance...');
+    //     areaGraveSearch.destroy();
+    //     areaGraveSearch = null;
+    //     window.areaGraveSearch = null;
+    // }
     
     // אתחל חיפוש חדש
     console.log('🆕 Creating fresh areaGraveSearch instance...');

@@ -965,7 +965,7 @@ class UnifiedTableRenderer {
     /**
      * קבלת שם קובץ API לפי סוג הפריט
      */
-    getApiFile(type) {
+    getApiFile2(type) {
         const apiMap = {
             'cemetery': 'cemeteries-api.php',
             'block': 'blocks-api.php',
@@ -982,6 +982,23 @@ class UnifiedTableRenderer {
         
         return apiMap[type] || null;
     }
+    getApiFile(type) {
+    const apiMap = {
+        'cemetery': '/dashboard/dashboards/cemeteries/api/cemeteries-api.php',
+        'block': '/dashboard/dashboards/cemeteries/api/blocks-api.php',
+        'plot': '/dashboard/dashboards/cemeteries/api/plots-api.php',
+        'row': '/dashboard/dashboards/cemeteries/api/rows-api.php',
+        'area_grave': '/dashboard/dashboards/cemeteries/api/area-graves-api.php',
+        'grave': '/dashboard/dashboards/cemeteries/api/graves-api.php',
+        'customer': '/dashboard/dashboards/cemeteries/api/customers-api.php',
+        'purchase': '/dashboard/dashboards/cemeteries/api/purchases-api.php',
+        'burial': '/dashboard/dashboards/cemeteries/api/burials-api.php',
+        'residency': '/dashboard/dashboards/cemeteries/api/residencies-api.php',
+        'payment': '/dashboard/dashboards/cemeteries/api/payments-api.php'
+    };
+    
+    return apiMap[type] || null;
+}
 
     /**
      * חילוץ parent_id מנתוני פריט לפי הסוג שלו

@@ -67,20 +67,20 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
     window.currentType = 'area_grave';
     window.currentParentId = plotId;
     
-    // // ⭐ נקה
-    // if (typeof DashboardCleaner !== 'undefined') {
-    //     DashboardCleaner.clear({ targetLevel: 'area_grave' });
-    // } else if (typeof clearDashboard === 'function') {
-    //     clearDashboard({ targetLevel: 'area_grave' });
-    // }
+    // ⭐ נקה
+    if (typeof DashboardCleaner !== 'undefined') {
+        DashboardCleaner.clear({ targetLevel: 'area_grave' });
+    } else if (typeof clearDashboard === 'function') {
+        clearDashboard({ targetLevel: 'area_grave' });
+    }
     
-    // if (typeof clearAllSidebarSelections === 'function') {
-    //     clearAllSidebarSelections();
-    // }
+    if (typeof clearAllSidebarSelections === 'function') {
+        clearAllSidebarSelections();
+    }
     
-    // if (typeof updateAddButtonText === 'function') {
-    //     updateAddButtonText();
-    // }
+    if (typeof updateAddButtonText === 'function') {
+        updateAddButtonText();
+    }
     
     // עדכן breadcrumb
     if (typeof updateBreadcrumb === 'function') {
@@ -119,7 +119,7 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
 // ===================================================================
 // בניית המבנה
 // ===================================================================
-async function buildAreaGravesContainer(plotId = null, plotName = null) {
+async function buildAreaGravesContainer2(plotId = null, plotName = null) {
     console.log('🏗️ Building area graves container...');
     
     let mainContainer = document.querySelector('.main-container');
@@ -153,32 +153,91 @@ async function buildAreaGravesContainer(plotId = null, plotName = null) {
         </div>
     ` : '';
     
-    // mainContainer.innerHTML = `
-    //     ${filterIndicator}
-        
-    //     <div id="areaGraveSearchSection" class="search-section"></div>
-        
-    //     <div class="table-container">
-    //         <table id="mainTable" class="data-table">
-    //             <thead>
-    //                 <tr id="tableHeaders">
-    //                     <th style="text-align: center;">טוען...</th>
-    //                 </tr>
-    //             </thead>
-    //             <tbody id="tableBody">
-    //                 <tr>
-    //                     <td style="text-align: center; padding: 40px;">
-    //                         <div class="spinner-border" role="status">
-    //                             <span class="visually-hidden">טוען אחוזות קבר...</span>
-    //                         </div>
-    //                     </td>
-    //                 </tr>
-    //             </tbody>
-    //         </table>
-    //     </div>
-    // `;
-        
     mainContainer.innerHTML = `
+        ${filterIndicator}
+        
+        <div id="areaGraveSearchSection" class="search-section"></div>
+        
+        <div class="table-container">
+            <table id="mainTable" class="data-table">
+                <thead>
+                    <tr id="tableHeaders">
+                        <th style="text-align: center;">טוען...</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr>
+                        <td style="text-align: center; padding: 40px;">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">טוען אחוזות קבר...</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    `;
+    
+    console.log('✅ Area graves container built');
+}
+async function buildAreaGravesContainer(plotId = null, plotName = null) {
+    console.log('🏗️ Building area graves container...');
+    
+    let mainContainer = document.querySelector('.main-container');
+    
+    if (!mainContainer) {
+        console.log('⚠️ main-container not found, creating one...');
+        const mainContent = document.querySelector('.main-content');
+        mainContainer = document.createElement('div');
+        mainContainer.className = 'main-container';
+        
+        const actionBar = mainContent.querySelector('.action-bar');
+        if (actionBar) {
+            actionBar.insertAdjacentElement('afterend', mainContainer);
+        } else {
+            mainContent.appendChild(mainContainer);
+        }
+    }
+    
+    // ⭐⭐⭐ טעינת כרטיס מלא במקום indicator פשוט!
+    let topSection = '';
+    if (plotId && plotName) {
+        console.log('🎴 Creating full plot card...');
+        
+        // נסה ליצור את הכרטיס המלא
+        if (typeof createPlotCard === 'function') {
+            try {
+                topSection = await createPlotCard(plotId);
+                console.log('✅ Plot card created successfully');
+            } catch (error) {
+                console.error('❌ Error creating plot card:', error);
+            }
+        } else {
+            console.warn('⚠️ createPlotCard function not found');
+        }
+        
+        // אם לא הצלחנו ליצור כרטיס, נשתמש ב-fallback פשוט
+        if (!topSection) {
+            console.log('⚠️ Using simple filter indicator as fallback');
+            topSection = `
+                <div class="filter-indicator" style="background: linear-gradient(135deg, #FC466B 0%, #3F5EFB 100%); color: white; padding: 12px 20px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 20px;">🏘️</span>
+                        <div>
+                            <div style="font-size: 12px; opacity: 0.9;">מציג אחוזות קבר עבור</div>
+                            <div style="font-size: 16px; font-weight: 600;">${plotName}</div>
+                        </div>
+                    </div>
+                    <button onclick="loadAreaGraves(null, null, true)" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                        ✕ הצג הכל
+                    </button>
+                </div>
+            `;
+        }
+    }
+    
+    mainContainer.innerHTML = `
+        ${topSection}
         
         <div id="areaGraveSearchSection" class="search-section"></div>
         

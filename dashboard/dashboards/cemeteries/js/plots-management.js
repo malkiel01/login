@@ -733,13 +733,13 @@ async function handlePlotDoubleClick(plotId, plotName) {
     console.log('🖱️ Double-click on plot:', plotName, plotId);
     
     try {
-        // 1. יצירת והצגת כרטיס ✅
-        if (typeof createPlotCard === 'function') {
-            const cardHtml = await createPlotCard(plotId);
-            if (cardHtml && typeof displayHierarchyCard === 'function') {
-                displayHierarchyCard(cardHtml);
-            }
-        }
+        // // 1. יצירת והצגת כרטיס ✅
+        // if (typeof createPlotCard === 'function') {
+        //     const cardHtml = await createPlotCard(plotId);
+        //     if (cardHtml && typeof displayHierarchyCard === 'function') {
+        //         displayHierarchyCard(cardHtml);
+        //     }
+        // }
         
         // 2. טעינת אחוזות קבר (נכדים דרך השורות) ✅ שינוי!
         console.log('🏘️ Loading area graves for plot:', plotName);

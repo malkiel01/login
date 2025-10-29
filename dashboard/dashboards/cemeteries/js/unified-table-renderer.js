@@ -775,7 +775,7 @@ class UnifiedTableRenderer {
     /**
      * עריכת פריט - טוען נתונים מהשרת לפני פתיחת הטופס
      */
-    async editItem(itemId) {
+    async editItem3(itemId) {
         const type = this.currentType;
         
         console.log('📝 editItem - type:', type, 'itemId:', itemId);
@@ -811,6 +811,154 @@ class UnifiedTableRenderer {
         } catch (error) {
             console.error('❌ Error loading item data:', error);
             showError('שגיאה בטעינת נתוני הפריט');
+        }
+    }
+
+    /**
+     * עריכת פריט - טוען נתונים מהשרת לפני פתיחת הטופס
+     * גרסת דיבוג מפורטת
+     */
+    async editItem(itemId) {
+        console.log('═══════════════════════════════════════════════');
+        console.log('🚀 START editItem');
+        console.log('═══════════════════════════════════════════════');
+        
+        // שלב 1: זיהוי הסוג
+        const type = this.currentType;
+        console.log('1️⃣ STEP 1: Identify type');
+        console.log('   📌 this.currentType:', this.currentType);
+        console.log('   📌 window.currentType:', window.currentType);
+        console.log('   📌 Final type:', type);
+        console.log('   📌 Item ID:', itemId);
+        
+        if (!type) {
+            console.error('❌ ERROR: No type defined!');
+            console.log('   this:', this);
+            console.log('   window.currentType:', window.currentType);
+            alert('שגיאה: לא ניתן לזהות את סוג הפריט');
+            return;
+        }
+        
+        try {
+            // שלב 2: קבלת קובץ ה-API
+            console.log('2️⃣ STEP 2: Get API file');
+            const apiFile = this.getApiFile(type);
+            console.log('   📌 API file:', apiFile);
+            
+            if (!apiFile) {
+                console.error('❌ ERROR: No API file found for type:', type);
+                throw new Error(`לא נמצא API עבור סוג: ${type}`);
+            }
+            
+            // שלב 3: בניית ה-URL
+            console.log('3️⃣ STEP 3: Build URL');
+            const url = `${apiFile}?action=get&id=${itemId}`;
+            console.log('   📌 Full URL:', url);
+            console.log('   📌 Absolute URL:', window.location.origin + url);
+            
+            // שלב 4: שליחת הבקשה
+            console.log('4️⃣ STEP 4: Send request');
+            console.log('   ⏳ Fetching...');
+            
+            const response = await fetch(url);
+            
+            console.log('   ✅ Response received');
+            console.log('   📌 Status:', response.status);
+            console.log('   📌 Status Text:', response.statusText);
+            console.log('   📌 OK:', response.ok);
+            console.log('   📌 Headers:', [...response.headers.entries()]);
+            
+            // שלב 5: בדיקת סטטוס
+            console.log('5️⃣ STEP 5: Check response status');
+            if (!response.ok) {
+                console.error('❌ ERROR: Response not OK');
+                const text = await response.text();
+                console.error('   📌 Response text:', text);
+                
+                try {
+                    const errorJson = JSON.parse(text);
+                    console.error('   📌 Error JSON:', errorJson);
+                    throw new Error(errorJson.error || `שגיאת שרת: ${response.status}`);
+                } catch (parseError) {
+                    console.error('   📌 Could not parse error as JSON');
+                    throw new Error(`שגיאת שרת: ${response.status} - ${text.substring(0, 100)}`);
+                }
+            }
+            
+            // שלב 6: פירוק ה-JSON
+            console.log('6️⃣ STEP 6: Parse JSON');
+            const data = await response.json();
+            console.log('   ✅ JSON parsed successfully');
+            console.log('   📌 Full response:', data);
+            console.log('   📌 Success:', data.success);
+            console.log('   📌 Has data:', !!data.data);
+            
+            // שלב 7: בדיקת תקינות הנתונים
+            console.log('7️⃣ STEP 7: Validate data');
+            if (!data.success) {
+                console.error('❌ ERROR: API returned success=false');
+                console.error('   📌 Error message:', data.error);
+                throw new Error(data.error || 'API returned success=false');
+            }
+            
+            if (!data.data) {
+                console.error('❌ ERROR: No data in response');
+                throw new Error('לא נמצאו נתוני הפריט');
+            }
+            
+            const item = data.data;
+            console.log('   ✅ Item data valid');
+            console.log('   📌 Item keys:', Object.keys(item));
+            console.log('   📌 Item sample:', {
+                unicId: item.unicId,
+                id: item.id,
+                name: item.cemeteryNameHe || item.blockNameHe || item.plotNameHe || 'N/A'
+            });
+            
+            // שלב 8: חילוץ parent_id
+            console.log('8️⃣ STEP 8: Extract parent ID');
+            const parentId = this.extractParentId(item, type);
+            console.log('   📌 Extracted parent ID:', parentId);
+            
+            if (parentId === null) {
+                console.log('   ℹ️ No parent (root entity)');
+            } else if (parentId === undefined) {
+                console.warn('   ⚠️ Parent ID is undefined - might be a problem');
+            } else {
+                console.log('   ✅ Valid parent ID found');
+            }
+            
+            // שלב 9: פתיחת הטופס
+            console.log('9️⃣ STEP 9: Open form');
+            console.log('   📌 FormHandler exists:', typeof FormHandler !== 'undefined');
+            console.log('   📌 FormHandler.openForm exists:', typeof FormHandler?.openForm === 'function');
+            console.log('   📌 Calling FormHandler.openForm with:');
+            console.log('      - type:', type);
+            console.log('      - parentId:', parentId);
+            console.log('      - itemId:', itemId);
+            
+            if (typeof FormHandler?.openForm !== 'function') {
+                console.error('❌ ERROR: FormHandler.openForm is not available');
+                alert('שגיאה: FormHandler לא זמין');
+                return;
+            }
+            
+            FormHandler.openForm(type, parentId, itemId);
+            
+            console.log('   ✅ FormHandler.openForm called successfully');
+            console.log('═══════════════════════════════════════════════');
+            console.log('✅ END editItem - SUCCESS');
+            console.log('═══════════════════════════════════════════════');
+            
+        } catch (error) {
+            console.log('═══════════════════════════════════════════════');
+            console.error('❌ END editItem - ERROR');
+            console.log('═══════════════════════════════════════════════');
+            console.error('💥 Error object:', error);
+            console.error('💥 Error message:', error.message);
+            console.error('💥 Error stack:', error.stack);
+            
+            showError('שגיאה בטעינת נתוני הפריט: ' + error.message);
         }
     }
 

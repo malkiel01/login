@@ -741,13 +741,13 @@ async function handlePlotDoubleClick(plotId, plotName) {
             }
         }
         
-        // 2. טעינת אחוזות קבר (נכדים דרך השורות) ✅ שינוי!
-        console.log('🏘️ Loading area graves for plot:', plotName);
-        if (typeof loadAreaGraves === 'function') {
-            loadAreaGraves(plotId, plotName);
-        } else {
-            console.warn('loadAreaGraves function not found');
-        }
+        // // 2. טעינת אחוזות קבר (נכדים דרך השורות) ✅ שינוי!
+        // console.log('🏘️ Loading area graves for plot:', plotName);
+        // if (typeof loadAreaGraves === 'function') {
+        //     loadAreaGraves(plotId, plotName);
+        // } else {
+        //     console.warn('loadAreaGraves function not found');
+        // }
         
     } catch (error) {
         console.error('❌ Error in handlePlotDoubleClick:', error);

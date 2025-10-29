@@ -601,11 +601,13 @@ async function editBlock(blockId) {
         }
         
         const block = result.data;
+
+        console.log('block: -> ',block);
+        
         
         // פתח את הטופס במודל
         if (typeof FormHandler.openForm === 'function') {
-            // openFormModal('block', block);
-            FormHandler.openForm('block', null, block.unicId); 
+            FormHandler.openForm('block', null, blockId); 
         } else {
             console.log('📝 Block data:', block);
             alert('פונקציית openFormModal לא זמינה');

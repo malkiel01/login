@@ -604,6 +604,8 @@ async function editBlock(blockId) {
 
         // console.log('block: -> ',block);
         
+        console.log('test');
+        
         
         // פתח את הטופס במודל
         if (typeof FormHandler.openForm === 'function') {

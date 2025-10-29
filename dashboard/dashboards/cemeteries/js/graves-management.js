@@ -281,7 +281,7 @@ async function initGravesSearch(areaGraveId = null) {
         resultsContainerSelector: '#tableBody',
         
         placeholder: 'חיפוש קברים לפי שם, סטטוס, סוג...',
-        itemsPerPage: 200,  // ⭐ 200 לכל דף!
+        itemsPerPage: 999999,  // ⭐ 200 לכל דף!
         
         renderFunction: renderGravesRows,
         

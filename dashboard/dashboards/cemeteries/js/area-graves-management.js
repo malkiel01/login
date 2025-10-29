@@ -67,20 +67,20 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
     window.currentType = 'area_grave';
     window.currentParentId = plotId;
     
-    // // ⭐ נקה
-    // if (typeof DashboardCleaner !== 'undefined') {
-    //     DashboardCleaner.clear({ targetLevel: 'area_grave' });
-    // } else if (typeof clearDashboard === 'function') {
-    //     clearDashboard({ targetLevel: 'area_grave' });
-    // }
+    // ⭐ נקה
+    if (typeof DashboardCleaner !== 'undefined') {
+        DashboardCleaner.clear({ targetLevel: 'area_grave' });
+    } else if (typeof clearDashboard === 'function') {
+        clearDashboard({ targetLevel: 'area_grave' });
+    }
     
-    // if (typeof clearAllSidebarSelections === 'function') {
-    //     clearAllSidebarSelections();
-    // }
+    if (typeof clearAllSidebarSelections === 'function') {
+        clearAllSidebarSelections();
+    }
     
-    // if (typeof updateAddButtonText === 'function') {
-    //     updateAddButtonText();
-    // }
+    if (typeof updateAddButtonText === 'function') {
+        updateAddButtonText();
+    }
     
     // עדכן breadcrumb
     if (typeof updateBreadcrumb === 'function') {

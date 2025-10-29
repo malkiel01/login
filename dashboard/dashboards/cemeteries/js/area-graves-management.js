@@ -119,67 +119,6 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
 // ===================================================================
 // בניית המבנה
 // ===================================================================
-async function buildAreaGravesContainer2(plotId = null, plotName = null) {
-    console.log('🏗️ Building area graves container...');
-    
-    let mainContainer = document.querySelector('.main-container');
-    
-    if (!mainContainer) {
-        console.log('⚠️ main-container not found, creating one...');
-        const mainContent = document.querySelector('.main-content');
-        mainContainer = document.createElement('div');
-        mainContainer.className = 'main-container';
-        
-        const actionBar = mainContent.querySelector('.action-bar');
-        if (actionBar) {
-            actionBar.insertAdjacentElement('afterend', mainContainer);
-        } else {
-            mainContent.appendChild(mainContainer);
-        }
-    }
-    
-    const filterIndicator = plotId && plotName ? `
-        <div class="filter-indicator" style="background: linear-gradient(135deg, #FC466B 0%, #3F5EFB 100%); color: white; padding: 12px 20px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <span style="font-size: 20px;">🏘️</span>
-                <div>
-                    <div style="font-size: 12px; opacity: 0.9;">מציג אחוזות קבר עבור</div>
-                    <div style="font-size: 16px; font-weight: 600;">${plotName}</div>
-                </div>
-            </div>
-            <button onclick="loadAreaGraves(null, null, true)" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
-                ✕ הצג הכל
-            </button>
-        </div>
-    ` : '';
-    
-    mainContainer.innerHTML = `
-        ${filterIndicator}
-        
-        <div id="areaGraveSearchSection" class="search-section"></div>
-        
-        <div class="table-container">
-            <table id="mainTable" class="data-table">
-                <thead>
-                    <tr id="tableHeaders">
-                        <th style="text-align: center;">טוען...</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody">
-                    <tr>
-                        <td style="text-align: center; padding: 40px;">
-                            <div class="spinner-border" role="status">
-                                <span class="visually-hidden">טוען אחוזות קבר...</span>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    `;
-    
-    console.log('✅ Area graves container built');
-}
 async function buildAreaGravesContainer(plotId = null, plotName = null) {
     console.log('🏗️ Building area graves container...');
     

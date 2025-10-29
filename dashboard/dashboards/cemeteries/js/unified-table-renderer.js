@@ -945,7 +945,7 @@ window.loadAllAreaGraves2 = async function() {
     await tableRenderer.loadAndDisplay('area_grave');
 };
 
-window.loadAllGraves = async function() {
+window.loadAllGraves2 = async function() {
     console.log('📍 Loading all graves - STEP C');
     setActiveMenuItem('graveItem');
     window.currentType = 'grave';

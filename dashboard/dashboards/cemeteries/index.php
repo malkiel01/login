@@ -168,6 +168,7 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <script src="/dashboard/dashboards/cemeteries/js/blocks-management.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/plots-management.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/area-graves-management.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/graves-management.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/customers-management.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/purchases-management.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/burials-management.js"></script>

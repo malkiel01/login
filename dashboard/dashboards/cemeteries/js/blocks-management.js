@@ -593,23 +593,23 @@ async function editBlock(blockId) {
     editingBlockId = blockId;
     
     try {
-        // const response = await fetch(`/dashboard/dashboards/cemeteries/api/blocks-api.php?action=get&id=${blockId}`);
-        // const result = await response.json();
+        const response = await fetch(`/dashboard/dashboards/cemeteries/api/blocks-api.php?action=get&id=${blockId}`);
+        const result = await response.json();
         
-        // if (!result.success) {
-        //     throw new Error(result.error || 'שגיאה בטעינת נתוני הגוש');
-        // }
+        if (!result.success) {
+            throw new Error(result.error || 'שגיאה בטעינת נתוני הגוש');
+        }
         
-        // const block = result.data;
+        const block = result.data;
 
-        // console.log('block: -> ',block);
+        console.log('block: -> ',block);
         
         console.log('test');
         
         
         // פתח את הטופס במודל
         if (typeof FormHandler.openForm === 'function') {
-            FormHandler.openForm('block', null, blockId); 
+            FormHandler.openForm('block', block.cemeteryId, blockId); 
         } else {
             // console.log('📝 Block data:', block);
             alert('פונקציית openFormModal לא זמינה');

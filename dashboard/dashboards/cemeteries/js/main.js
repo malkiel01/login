@@ -400,7 +400,7 @@ function updateAddButtonText() {
     // עדכן את הסלקטור לחפש את הפונקציה החדשה
     const buttons = document.querySelectorAll('.btn-primary[onclick="tableRenderer.openAddModal()"]');
     buttons.forEach(button => {
-        const buttonText = buttonTexts[window.currentType] || 'הוסף';
+        const buttonText = buttonTexts[window.currentType] || 'הו33סף';
         
         // בדיקה האם להציג או להסתיר את הכפתור
         if (shouldHideAddButton()) {

@@ -79,6 +79,11 @@ async function loadBlocks(cemeteryId = null, cemeteryName = null, forceReset = f
     // עדכן את הסוג הנוכחי
     window.currentType = 'block';
     window.currentParentId = cemeteryId;
+
+    // ⭐ עדכן גם את tableRenderer.currentType!
+    if (window.tableRenderer) {
+        window.tableRenderer.currentType = 'block';
+    }
     
     // ⭐ נקה - DashboardCleaner ימחק גם את TableManager!
     if (typeof DashboardCleaner !== 'undefined') {

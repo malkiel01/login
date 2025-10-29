@@ -53,10 +53,10 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
         window.currentPlotName = plotName;
     }
     
-    // console.log('🔍 Final filter:', { plotId: currentPlotId, plotName: currentPlotName });
+    console.log('🔍 Final filter:', { plotId: currentPlotId, plotName: currentPlotName });
         
-    // window.currentPlotId = currentPlotId;
-    // window.currentPlotName = currentPlotName;
+    window.currentPlotId = currentPlotId;
+    window.currentPlotName = currentPlotName;
     
     // // עדכון פריט תפריט אקטיבי
     // if (typeof setActiveMenuItem === 'function') {

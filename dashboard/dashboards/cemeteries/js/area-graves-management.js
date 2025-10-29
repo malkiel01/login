@@ -82,38 +82,38 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
     //     updateAddButtonText();
     // }
     
-    // // עדכן breadcrumb
-    // if (typeof updateBreadcrumb === 'function') {
-    //     const breadcrumbData = { 
-    //         area_grave: { name: plotName ? `אחוזות קבר של ${plotName}` : 'אחוזות קבר' }
-    //     };
-    //     if (plotId && plotName) {
-    //         breadcrumbData.plot = { id: plotId, name: plotName };
-    //     }
-    //     updateBreadcrumb(breadcrumbData);
-    // }
+    // עדכן breadcrumb
+    if (typeof updateBreadcrumb === 'function') {
+        const breadcrumbData = { 
+            area_grave: { name: plotName ? `אחוזות קבר של ${plotName}` : 'אחוזות קבר' }
+        };
+        if (plotId && plotName) {
+            breadcrumbData.plot = { id: plotId, name: plotName };
+        }
+        updateBreadcrumb(breadcrumbData);
+    }
     
-    // // עדכון כותרת החלון
-    // document.title = plotName ? `אחוזות קבר - ${plotName}` : 'ניהול אחוזות קבר - מערכת בתי עלמין';
+    // עדכון כותרת החלון
+    document.title = plotName ? `אחוזות קבר - ${plotName}` : 'ניהול אחוזות קבר - מערכת בתי עלמין';
     
-    // // ⭐ בנה מבנה
-    // await buildAreaGravesContainer(plotId, plotName);
+    // ⭐ בנה מבנה
+    await buildAreaGravesContainer(plotId, plotName);
     
-    // // ⭐ השמד חיפוש קודם
-    // if (areaGraveSearch && typeof areaGraveSearch.destroy === 'function') {
-    //     console.log('🗑️ Destroying previous areaGraveSearch instance...');
-    //     areaGraveSearch.destroy();
-    //     areaGraveSearch = null;
-    //     window.areaGraveSearch = null;
-    // }
+    // ⭐ השמד חיפוש קודם
+    if (areaGraveSearch && typeof areaGraveSearch.destroy === 'function') {
+        console.log('🗑️ Destroying previous areaGraveSearch instance...');
+        areaGraveSearch.destroy();
+        areaGraveSearch = null;
+        window.areaGraveSearch = null;
+    }
     
-    // // אתחל חיפוש חדש
-    // console.log('🆕 Creating fresh areaGraveSearch instance...');
-    // await initAreaGravesSearch(plotId);
-    // areaGraveSearch.search();
+    // אתחל חיפוש חדש
+    console.log('🆕 Creating fresh areaGraveSearch instance...');
+    await initAreaGravesSearch(plotId);
+    areaGraveSearch.search();
     
-    // // טען סטטיסטיקות
-    // await loadAreaGraveStats(plotId);
+    // טען סטטיסטיקות
+    await loadAreaGraveStats(plotId);
 }
 
 // ===================================================================

@@ -818,7 +818,7 @@ class UnifiedTableRenderer {
      * עריכת פריט - טוען נתונים מהשרת לפני פתיחת הטופס
      * גרסת דיבוג מפורטת
      */
-    async editItem(itemId) {
+    async editItem4(itemId) {
         // console.log('═══════════════════════════════════════════════');
         // console.log('🚀 START editItem');
         // console.log('═══════════════════════════════════════════════');
@@ -973,6 +973,71 @@ class UnifiedTableRenderer {
             console.error('💥 Error object:', error);
             console.error('💥 Error message:', error.message);
             console.error('💥 Error stack:', error.stack);
+            
+            showError('שגיאה בטעינת נתוני הפריט: ' + error.message);
+        }
+    }
+    async editItem(itemId) {
+        // שלב 1: זיהוי הסוג
+        const type = this.currentType;
+        if (!type) {
+            console.error('❌ ERROR: No type defined!');
+            alert('שגיאה: לא ניתן לזהות את סוג הפריט');
+            return;
+        }
+        
+        try {
+            const apiFile = this.getApiFile(type);
+
+            if (!apiFile) {
+                console.error('❌ ERROR: No API file found for type:', type);
+                throw new Error(`לא נמצא API עבור סוג: ${type}`);
+            }
+
+            const url = `${apiFile}?action=get&id=${itemId}`;
+            const response = await fetch(url);
+            
+            if (!response.ok) {
+                console.error('❌ ERROR: Response not OK');
+                const text = await response.text();
+                console.error('   📌 Response text:', text);
+                
+                try {
+                    const errorJson = JSON.parse(text);
+                    console.error('   📌 Error JSON:', errorJson);
+                    throw new Error(errorJson.error || `שגיאת שרת: ${response.status}`);
+                } catch (parseError) {
+                    console.error('   📌 Could not parse error as JSON');
+                    throw new Error(`שגיאת שרת: ${response.status} - ${text.substring(0, 100)}`);
+                }
+            }
+            
+            const data = await response.json();
+            
+            if (!data.success) {
+                console.error('❌ ERROR: API returned success=false');
+                console.error('   📌 Error message:', data.error);
+                throw new Error(data.error || 'API returned success=false');
+            }
+            
+            if (!data.data) {
+                console.error('❌ ERROR: No data in response');
+                throw new Error('לא נמצאו נתוני הפריט');
+            }
+            
+            const item = data.data;
+            const parentId = this.extractParentId(item, type);
+            const parentName = this.extractParentName(item, type);
+            
+            if (typeof FormHandler?.openForm !== 'function') {
+                console.error('❌ ERROR: FormHandler.openForm is not available');
+                alert('שגיאה: FormHandler לא זמין');
+                return;
+            }
+            
+            FormHandler.openForm(type, parentId, itemId, parentName);    
+        } catch (error) {
+            console.error('❌ END editItem - ERROR');
             
             showError('שגיאה בטעינת נתוני הפריט: ' + error.message);
         }

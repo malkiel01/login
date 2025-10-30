@@ -75,10 +75,10 @@ const FormHandler = {
             
             // בדוק מה יש ב-HTML
             if (html.includes('error') || html.includes('Error')) {
-                console.log('⚠️ Error found in HTML');
+                // console.log('⚠️ Error found in HTML');
                 const errorMatch = html.match(/error[^<]*/gi);
                 if (errorMatch) {
-                    console.log('Error text found:', errorMatch);
+                    // console.log('Error text found:', errorMatch);
                 }
             }
 
@@ -118,9 +118,9 @@ const FormHandler = {
                 console.error('❌ Modal not found in HTML');
    
                 const allModals = tempDiv.querySelectorAll('.modal');
-                console.log('Found modals:', allModals.length);
+                // console.log('Found modals:', allModals.length);
                 allModals.forEach(m => {
-                    console.log('Modal id:', m.id);
+                    // console.log('Modal id:', m.id);
                 });
             }
     
@@ -187,7 +187,7 @@ const FormHandler = {
     },
 
     handleCustomerForm: function(itemId) {
-        console.log('🔧 handleCustomerForm called with itemId:', itemId);
+        // // console.log('🔧 handleCustomerForm called with itemId:', itemId);
         
         // ============================================
         // חלק 1: אתחול SmartSelect ותלות מדינה-עיר
@@ -201,7 +201,7 @@ const FormHandler = {
             }
             
             const citiesData = JSON.parse(fieldset.dataset.cities);
-            console.log('📊 Cities data loaded:', citiesData.length, 'cities');
+            // console.log('📊 Cities data loaded:', citiesData.length, 'cities');
             
             // בדוק אם יש SmartSelect או select רגיל
             const countryInput = document.getElementById('countryId');
@@ -216,7 +216,7 @@ const FormHandler = {
                 return new Promise((resolve) => {
                     if (window.SmartSelectManager) {
                         SmartSelectManager.init();
-                        console.log('✅ SmartSelect initialized');
+                        // console.log('✅ SmartSelect initialized');
                         setTimeout(resolve, 150); // וודא שהכל מוכן
                     } else {
                         resolve(); // אין SmartSelect - המשך
@@ -226,11 +226,11 @@ const FormHandler = {
             
             // טיפול ב-SmartSelect (hidden input)
             if (countryInput.type === 'hidden') {
-                console.log('✅ Using SmartSelect mode');
+                // console.log('✅ Using SmartSelect mode');
                 
                 countryInput.addEventListener('change', function() {
                     const countryId = this.value;
-                    console.log('🌍 Country changed:', countryId);
+                    // console.log('🌍 Country changed:', countryId);
                     
                     const cityInstance = window.SmartSelectManager.instances['cityId'];
                     
@@ -248,7 +248,7 @@ const FormHandler = {
                     }
                     
                     const filteredCities = citiesData.filter(city => city.countryId == countryId);
-                    console.log('🏙️ Filtered cities:', filteredCities.length);
+                    // console.log('🏙️ Filtered cities:', filteredCities.length);
                     
                     cityInstance.optionsContainer.innerHTML = '';
                     cityInstance.allOptions = [];
@@ -283,7 +283,7 @@ const FormHandler = {
                 
             } else {
                 // טיפול ב-Select רגיל (fallback)
-                console.log('📋 Using regular select mode');
+                // console.log('📋 Using regular select mode');
                 
                 window.filterCities = function() {
                     const countrySelect = document.getElementById('countrySelect');
@@ -330,7 +330,7 @@ const FormHandler = {
         // חלק 2: חישוב תושבות - רק ללקוח חדש
         // ============================================
         if (!itemId) {
-            console.log('➕ New customer - setting up residency calculation');
+            // console.log('➕ New customer - setting up residency calculation');
             
             this.waitForElement('#customerFormModal form', (form) => {
                 const typeSelect = form.elements['typeId'];
@@ -343,7 +343,7 @@ const FormHandler = {
                     const countryId = countrySelect?.value;
                     const cityId = citySelect?.value;
                     
-                    console.log("🧮 Calculating residency:", {typeId, countryId, cityId});
+                    // console.log("🧮 Calculating residency:", {typeId, countryId, cityId});
                     
                     if (typeId == 2) {
                         updateResidencyField(3);
@@ -393,7 +393,7 @@ const FormHandler = {
         // פונקציה עזר לטעינת נתוני לקוח
         // ============================================
         function loadCustomerData(customerId, citiesData) {
-            console.log('✏️ Loading customer data for ID:', customerId);
+            // console.log('✏️ Loading customer data for ID:', customerId);
             
             const form = document.querySelector('#customerFormModal form');
             if (!form) {
@@ -410,7 +410,7 @@ const FormHandler = {
                         return;
                     }
                     
-                    console.log('✅ Customer data loaded:', result.data);
+                    // console.log('✅ Customer data loaded:', result.data);
                     
                     Object.keys(result.data).forEach(key => {
                         const field = form.elements[key];
@@ -478,23 +478,23 @@ const FormHandler = {
         window.tryCalculatePayments = async function() {
             // בדוק תנאים בסיסיים
             if (window.isEditMode) {
-                console.log('Edit mode - skipping auto calculation');
+                // console.log('Edit mode - skipping auto calculation');
                 return;
             }
             
             if (!window.formInitialized) {
-                console.log('Form not initialized yet - skipping');
+                // console.log('Form not initialized yet - skipping');
                 return;
             }
             
             // הכי חשוב - בדוק ששני השדות מלאים!
             if (!window.selectedGraveData || !window.selectedCustomerData) {
-                console.log('Missing grave or customer data - skipping calculation');
+                // console.log('Missing grave or customer data - skipping calculation');
                 return;
             }
             
             // אם הגענו לכאן - יש לנו את כל מה שצריך!
-            console.log('All conditions met - calculating payments...');
+            // console.log('All conditions met - calculating payments...');
             
             try {
                 const response = await fetch('/dashboard/dashboards/cemeteries/api/payments-api.php?action=getMatching', {
@@ -539,7 +539,7 @@ const FormHandler = {
                     document.getElementById('total_price').value = PaymentDisplayManager.calculateTotal();
                     document.getElementById('paymentsList').value = JSON.stringify(window.purchasePayments);
                     
-                    console.log('Payments calculated successfully');
+                    // console.log('Payments calculated successfully');
                 }
             } catch (error) {
                 console.error('Error calculating payments:', error);
@@ -702,7 +702,7 @@ const FormHandler = {
                 // השאר את הלוגיקה הקיימת אבל עם שינוי קטן
                 if (isEditMode) {
                     // מצב עריכה - פתח ישירות את מנהל התשלומים הקיימים
-                    console.log('Opening existing payments manager for editing');
+                    // console.log('Opening existing payments manager for editing');
                     ExistingPaymentsManager.open();
                     
                 } else {
@@ -726,7 +726,7 @@ const FormHandler = {
                             SmartPaymentsManager.open(data.payments || []);
                         } else if (data.success && !data.payments) {
                             // אין תשלומים אבל הבקשה הצליחה - פתח מודל ריק
-                            console.log('No payment definitions found, opening empty modal');
+                            // console.log('No payment definitions found, opening empty modal');
                             SmartPaymentsManager.open([]);
                         } else {
                             // רק אם יש שגיאה אמיתית
@@ -1018,7 +1018,7 @@ const FormHandler = {
                                 const cleanPrice = priceText.replace(/[₪,\s]/g, '');
                                 const price = parseFloat(cleanPrice);
                                 
-                                console.log('Mandatory payment found:', priceText, '→', price); // דיבוג
+                                // console.log('Mandatory payment found:', priceText, '→', price); // דיבוג
                                 
                                 if (!isNaN(price)) {
                                     total += price;
@@ -1032,7 +1032,7 @@ const FormHandler = {
                     optionalCheckboxes.forEach(cb => {
                         const price = parseFloat(cb.dataset.price);
                         
-                        console.log('Optional payment:', cb.dataset.name, '→', price); // דיבוג
+                        // console.log('Optional payment:', cb.dataset.name, '→', price); // דיבוג
                         
                         if (!isNaN(price)) {
                             total += price;
@@ -1040,7 +1040,7 @@ const FormHandler = {
                         }
                     });
                     
-                    console.log('Total calculated:', total); // דיבוג
+                    // console.log('Total calculated:', total); // דיבוג
                     
                     // עדכן התצוגה
                     const totalElement = document.getElementById('smartModalTotal');
@@ -1171,13 +1171,13 @@ const FormHandler = {
             const ExistingPaymentsManager = {
                 // פתיחת המודל
                 open: function() {
-                    console.log('🔍 DEBUG: Opening existing payments manager');
-                    console.log('Current payments:', window.purchasePayments);
+                    // console.log('🔍 DEBUG: Opening existing payments manager');
+                    // console.log('Current payments:', window.purchasePayments);
                     
                     // אם אין תשלומים - צור מערך ריק
                     if (!window.purchasePayments) {
                         window.purchasePayments = [];
-                        console.log('⚠️ No payments found, initialized empty array');
+                        // console.log('⚠️ No payments found, initialized empty array');
                     }
                     
                     // חלוקת תשלומים
@@ -1211,7 +1211,7 @@ const FormHandler = {
                         return sum + amount;
                     }, 0);
                     
-                    console.log('💰 Total amount:', currentTotal);
+                    // console.log('💰 Total amount:', currentTotal);
                     
                     // בניית HTML
                     modal.innerHTML = this.buildModalHTML(mandatoryPayments, editablePayments, currentTotal);
@@ -2378,7 +2378,7 @@ const FormHandler = {
 
     // פונקציה עזר למילוי שדות (DRY) - גרסה מתוקנת
     populateFormFields: function(form, data, parentId = null) {
-        console.log('📝 Populating form fields:', { data });
+        // console.log('📝 Populating form fields:', { data });
         
         Object.keys(data).forEach(key => {
             const field = form.elements[key];
@@ -2386,7 +2386,7 @@ const FormHandler = {
             
             // ⭐ אם השדה כבר מלא ויש לו ערך - אל תדרוס!
             if (field.value && field.value !== '') {
-                console.log(`⏭️ Skipping ${key} - already has value: ${field.value}`);
+                // console.log(`⏭️ Skipping ${key} - already has value: ${field.value}`);
                 return;
             }
             
@@ -2409,7 +2409,7 @@ const FormHandler = {
     },
     
     closeForm: function(type) {
-        console.log('Closing form:', type);
+        // console.log('Closing form:', type);
         
         const modal = document.getElementById(type + 'FormModal');
         if (modal) {
@@ -2427,7 +2427,7 @@ const FormHandler = {
             window.isEditMode = false;
             window.purchasePayments = [];
             window.selectedGraveData = null;
-            console.log('✨ Cleared purchase form globals');
+            // console.log('✨ Cleared purchase form globals');
         }
     },
     

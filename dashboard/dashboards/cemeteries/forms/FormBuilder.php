@@ -424,7 +424,8 @@ class FormBuilder {
         $html .= '<div class="modal-body">';
         
         // הצג מידע על ההורה אם קיים
-        if ($this->parentId && !$this->itemId) {
+        // if ($this->parentId && !$this->itemId) {
+        if ($this->parentId) {
             $parentInfo = $this->getParentInfo();
             if ($parentInfo) {
                 $html .= '<div class="parent-info">';

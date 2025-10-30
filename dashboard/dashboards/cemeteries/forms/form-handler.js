@@ -41,7 +41,11 @@ const FormHandler = {
         this.openForm(childType, selectedParentId, null);
     },
 
-    openForm: async function(type, parentId = null, itemId = null) {        
+    openForm: async function(type, parentId = null, itemId = null) {    
+        
+        console.log('step 1 - openForm ********');
+        
+        
         if (type === 'purchase' && !itemId) {
             window.isEditMode = false;
             window.purchasePayments = [];

@@ -43,7 +43,7 @@ const FormHandler = {
 
     openForm: async function(type, parentId = null, itemId = null) {    
         
-        console.log('step 1 - openForm ********');
+        console.log('step 1 - openForm :: type: ',type, 'parentId: ',parentId, 'itemId: ',itemId );
         
         
         if (type === 'purchase' && !itemId) {

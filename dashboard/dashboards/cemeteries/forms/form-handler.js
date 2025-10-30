@@ -105,24 +105,24 @@ const FormHandler = {
                 document.head.appendChild(styleTag);
             }
             
-            // // חפש את המודאל
-            // const modal = tempDiv.querySelector('#' + type + 'FormModal');
+            // חפש את המודאל
+            const modal = tempDiv.querySelector('#' + type + 'FormModal');
             
-            // if (modal) {
-            //     document.body.appendChild(modal);
-            //     document.body.style.overflow = 'hidden';
+            if (modal) {
+                document.body.appendChild(modal);
+                document.body.style.overflow = 'hidden';
                 
-            //     this.handleFormSpecificLogic(type, parentId, itemId);
+                this.handleFormSpecificLogic(type, parentId, itemId);
                 
-            // } else {
-            //     console.error('❌ Modal not found in HTML');
+            } else {
+                console.error('❌ Modal not found in HTML');
    
-            //     const allModals = tempDiv.querySelectorAll('.modal');
-            //     // console.log('Found modals:', allModals.length);
-            //     allModals.forEach(m => {
-            //         // console.log('Modal id:', m.id);
-            //     });
-            // }
+                const allModals = tempDiv.querySelectorAll('.modal');
+                // console.log('Found modals:', allModals.length);
+                allModals.forEach(m => {
+                    // console.log('Modal id:', m.id);
+                });
+            }
     
             
         } catch (error) {

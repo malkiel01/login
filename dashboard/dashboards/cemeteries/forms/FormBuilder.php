@@ -396,7 +396,6 @@ class FormBuilder {
             }
 
             /* Parent info styles */
-            /**
     #' . $this->formId . 'Modal .parent-info {
         display: flex;
         justify-content: space-between;
@@ -430,7 +429,6 @@ class FormBuilder {
         color: white;
         transform: translateY(-1px);
     }
-        **/
         </style>
         ';
     }

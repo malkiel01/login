@@ -2915,8 +2915,12 @@ const FormHandler = {
                 url = `/dashboard/dashboards/cemeteries/api/burials-api.php?action=${action}`;
             } else if (type === 'payment') {
                 url = `/dashboard/dashboards/cemeteries/api/payments-api.php?action=${action}`;
+            } else if (type === 'cemetery') {
+                url = `/dashboard/dashboards/cemeteries/api/cemeteries-api.php?action=${action}`;
             } else if (type === 'block') {
                 url = `/dashboard/dashboards/cemeteries/api/blocks-api.php?action=${action}`;
+            } else if (type === 'plot') {
+                url = `/dashboard/dashboards/cemeteries/api/plots-api.php?action=${action}`;
             } else {
                 url = `/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=${action}&type=${type}`;
             }

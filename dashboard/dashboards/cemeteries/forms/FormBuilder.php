@@ -396,6 +396,7 @@ class FormBuilder {
             }
 
             /* Parent info styles */
+            /**
     #' . $this->formId . 'Modal .parent-info {
         display: flex;
         justify-content: space-between;
@@ -472,32 +473,31 @@ class FormBuilder {
             }
         }
 
-        // הצג מידע על ההורה אם קיים - במצב עריכה
-if ($this->parentId && $this->itemId) {
-    $parentInfo = $this->getParentInfo();
-    if ($parentInfo) {
-        // שימוש בעיצוב הקיים של parent-info
-        $html .= '<div class="parent-info">';
-        $html .= '<span class="parent-info-icon">📍</span>';
-        $html .= '<span style="flex-grow: 1;">משויך ל: <strong id="currentParentName">' . htmlspecialchars($parentInfo['name']) . '</strong></span>';
-        
-        // כפתור שינוי - רק אם זה לא סוג שלא צריך הורה
-        $typesWithoutParent = ['cemetery', 'payment', 'customer', 'purchase', 'residency', 'burial'];
-        if (!in_array($this->type, $typesWithoutParent)) {
-            $html .= '<button type="button" style="background: transparent; border: 1px solid #667eea; color: #667eea; padding: 4px 12px; border-radius: 6px; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center;" ';
-            $html .= 'onmouseover="this.style.background=\'#667eea\'; this.style.color=\'white\';" ';
-            $html .= 'onmouseout="this.style.background=\'transparent\'; this.style.color=\'#667eea\';" ';
-            $html .= 'onclick="FormHandler.changeParent(\'' . $this->type . '\', \'' . $this->itemId . '\', \'' . $this->parentId . '\')">';
-            $html .= 'שינוי';
-            $html .= '</button>';
-        }
-        
-        $html .= '</div>';
-        
-        // שדה hidden לשמירת ה-parentId החדש
-        $html .= '<input type="hidden" id="newParentId" name="newParentId" value="">';
-    }
-}
+        // if ($this->parentId && $this->itemId) {
+        //     $parentInfo = $this->getParentInfo();
+        //     if ($parentInfo) {
+        //         // שימוש בעיצוב הקיים של parent-info
+        //         $html .= '<div class="parent-info">';
+        //         $html .= '<span class="parent-info-icon">📍</span>';
+        //         $html .= '<span style="flex-grow: 1;">משויך ל: <strong id="currentParentName">' . htmlspecialchars($parentInfo['name']) . '</strong></span>';
+                
+        //         // כפתור שינוי - רק אם זה לא סוג שלא צריך הורה
+        //         $typesWithoutParent = ['cemetery', 'payment', 'customer', 'purchase', 'residency', 'burial'];
+        //         if (!in_array($this->type, $typesWithoutParent)) {
+        //             $html .= '<button type="button" style="background: transparent; border: 1px solid #667eea; color: #667eea; padding: 4px 12px; border-radius: 6px; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center;" ';
+        //             $html .= 'onmouseover="this.style.background=\'#667eea\'; this.style.color=\'white\';" ';
+        //             $html .= 'onmouseout="this.style.background=\'transparent\'; this.style.color=\'#667eea\';" ';
+        //             $html .= 'onclick="FormHandler.changeParent(\'' . $this->type . '\', \'' . $this->itemId . '\', \'' . $this->parentId . '\')">';
+        //             $html .= 'שינוי';
+        //             $html .= '</button>';
+        //         }
+                
+        //         $html .= '</div>';
+                
+        //         // שדה hidden לשמירת ה-parentId החדש
+        //         $html .= '<input type="hidden" id="newParentId" name="newParentId" value="">';
+        //     }
+        // }
         
         // Hidden fields
         $html .= '<input type="hidden" name="formType" value="' . $this->type . '">';
@@ -775,71 +775,3 @@ if ($this->parentId && $this->itemId) {
     }
 }
 ?>
-    private function renderSmartSelect($field) {
-        $smartSelect = new SmartSelect(
-            $field["name"],
-            $field["label"],
-            $field["options"] ?? [],
-            [
-                "searchable" => $field["searchable"] ?? false,
-                "placeholder" => $field["placeholder"] ?? "בחר...",
-                "required" => $field["required"] ?? false,
-                "display_mode" => $field["display_mode"] ?? "simple"
-            ]
-        );
-        return $smartSelect->render();
-    }
-
-    /**
-     * Add field group
-     */
-    public function addFieldGroup($id, $title, $config = []) {
-        $html = '<fieldset class="field-group ' . ($config['collapsible'] ?? '') . '" id="' 
-. $id . '-group">';
-        $html .= '<legend>' . $title . '</legend>';
-        $html .= '<div class="form-fields ' . ($config['layout'] ?? '') . '">';
-        
-        if (isset($config['fields'])) {
-            foreach ($config['fields'] as $field) {
-                // Handle span
-                $wrapperClass = 'form-field';
-                if (isset($field['span'])) {
-                    $wrapperClass .= ' span-' . $field['span'];
-                }
-                
-                $html .= '<div class="' . $wrapperClass . '">';
-                
-                // Check if it's smart_select
-                if ($field['type'] === 'smart_select') {
-                    $smartSelect = new SmartSelect(
-                        $field['name'],
-                        $field['label'],
-                        $field['options'] ?? [],
-                        [
-                            'searchable' => $field['searchable'] ?? false,
-                            'placeholder' => $field['placeholder'] ?? 'בחר...',
-                            'required' => $field['required'] ?? false,
-                            'display_mode' => $field['display_mode'] ?? 'simple',
-                            'depends_on' => $field['depends_on'] ?? null,
-                            'ajax_url' => $field['ajax_url'] ?? null
-                        ]
-                    );
-                    $html .= $smartSelect->render();
-                } else {
-                    // Regular field
-                    $this->addField(
-                        $field['name'],
-                        $field['label'],
-                        $field['type'],
-                        $field
-                    );
-                }
-                
-                $html .= '</div>';
-            }
-        }
-        
-        $html .= '</div></fieldset>';
-        $this->customHTML[] = $html;
-        return $this;
-    }

@@ -473,31 +473,31 @@ class FormBuilder {
             }
         }
 
-        // if ($this->parentId && $this->itemId) {
-        //     $parentInfo = $this->getParentInfo();
-        //     if ($parentInfo) {
-        //         // שימוש בעיצוב הקיים של parent-info
-        //         $html .= '<div class="parent-info">';
-        //         $html .= '<span class="parent-info-icon">📍</span>';
-        //         $html .= '<span style="flex-grow: 1;">משויך ל: <strong id="currentParentName">' . htmlspecialchars($parentInfo['name']) . '</strong></span>';
+        if ($this->parentId && $this->itemId) {
+            $parentInfo = $this->getParentInfo();
+            if ($parentInfo) {
+                // שימוש בעיצוב הקיים של parent-info
+                $html .= '<div class="parent-info">';
+                $html .= '<span class="parent-info-icon">📍</span>';
+                $html .= '<span style="flex-grow: 1;">משויך ל: <strong id="currentParentName">' . htmlspecialchars($parentInfo['name']) . '</strong></span>';
                 
-        //         // כפתור שינוי - רק אם זה לא סוג שלא צריך הורה
-        //         $typesWithoutParent = ['cemetery', 'payment', 'customer', 'purchase', 'residency', 'burial'];
-        //         if (!in_array($this->type, $typesWithoutParent)) {
-        //             $html .= '<button type="button" style="background: transparent; border: 1px solid #667eea; color: #667eea; padding: 4px 12px; border-radius: 6px; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center;" ';
-        //             $html .= 'onmouseover="this.style.background=\'#667eea\'; this.style.color=\'white\';" ';
-        //             $html .= 'onmouseout="this.style.background=\'transparent\'; this.style.color=\'#667eea\';" ';
-        //             $html .= 'onclick="FormHandler.changeParent(\'' . $this->type . '\', \'' . $this->itemId . '\', \'' . $this->parentId . '\')">';
-        //             $html .= 'שינוי';
-        //             $html .= '</button>';
-        //         }
+                // כפתור שינוי - רק אם זה לא סוג שלא צריך הורה
+                $typesWithoutParent = ['cemetery', 'payment', 'customer', 'purchase', 'residency', 'burial'];
+                if (!in_array($this->type, $typesWithoutParent)) {
+                    $html .= '<button type="button" style="background: transparent; border: 1px solid #667eea; color: #667eea; padding: 4px 12px; border-radius: 6px; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center;" ';
+                    $html .= 'onmouseover="this.style.background=\'#667eea\'; this.style.color=\'white\';" ';
+                    $html .= 'onmouseout="this.style.background=\'transparent\'; this.style.color=\'#667eea\';" ';
+                    $html .= 'onclick="FormHandler.changeParent(\'' . $this->type . '\', \'' . $this->itemId . '\', \'' . $this->parentId . '\')">';
+                    $html .= 'שינוי';
+                    $html .= '</button>';
+                }
                 
-        //         $html .= '</div>';
+                $html .= '</div>';
                 
-        //         // שדה hidden לשמירת ה-parentId החדש
-        //         $html .= '<input type="hidden" id="newParentId" name="newParentId" value="">';
-        //     }
-        // }
+                // שדה hidden לשמירת ה-parentId החדש
+                $html .= '<input type="hidden" id="newParentId" name="newParentId" value="">';
+            }
+        }
         
         // Hidden fields
         $html .= '<input type="hidden" name="formType" value="' . $this->type . '">';

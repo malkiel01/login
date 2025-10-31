@@ -473,35 +473,31 @@ class FormBuilder {
         }
 
         // הצג מידע על ההורה אם קיים - במצב עריכה
-        if ($this->parentId && $this->itemId) {
-            $parentInfo = $this->getParentInfo();
-            if ($parentInfo) {
-                $html .= '<div class="parent-info" style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f8f9fa; border-radius: 8px; margin-bottom: 15px;">';
-                $html .= '<div>';
-                $html .= '<span class="parent-info-icon">📍</span>';
-                $html .= 'משויך ל: <strong id="currentParentName">' . htmlspecialchars($parentInfo['name']) . '</strong>';
-                $html .= '</div>';
-                
-                // כפתור שינוי - רק אם זה לא סוג שלא צריך הורה
-                $typesWithoutParent = ['cemetery', 'payment', 'customer', 'purchase', 'residency', 'burial'];
-                if (!in_array($this->type, $typesWithoutParent)) {
-                    $html .= '<button type="button" class="btn btn-sm btn-outline-primary" onclick="FormHandler.changeParent(\'' . $this->type . '\', \'' . $this->itemId . '\', \'' . $this->parentId . '\')">';
-                    $html .= '<svg style="width: 14px; height: 14px; margin-left: 4px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">';
-                    $html .= '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>';
-                    $html .= '</svg>';
-                    $html .= ' שינוי';
-                    $html .= '</button>';
-                }
-                
-                $html .= '</div>';
-                
-                // שדה hidden לשמירת ה-parentId החדש
-                $html .= '<input type="hidden" id="newParentId" name="newParentId" value="">';
-                
-                // הוסף דיבוג כהערה
-                $html .= '<!-- Parent field: ' . $parentInfo['field'] . ' = ' . $this->parentId . ' -->';
-            }
+if ($this->parentId && $this->itemId) {
+    $parentInfo = $this->getParentInfo();
+    if ($parentInfo) {
+        // שימוש בעיצוב הקיים של parent-info
+        $html .= '<div class="parent-info">';
+        $html .= '<span class="parent-info-icon">📍</span>';
+        $html .= '<span style="flex-grow: 1;">משויך ל: <strong id="currentParentName">' . htmlspecialchars($parentInfo['name']) . '</strong></span>';
+        
+        // כפתור שינוי - רק אם זה לא סוג שלא צריך הורה
+        $typesWithoutParent = ['cemetery', 'payment', 'customer', 'purchase', 'residency', 'burial'];
+        if (!in_array($this->type, $typesWithoutParent)) {
+            $html .= '<button type="button" style="background: transparent; border: 1px solid #667eea; color: #667eea; padding: 4px 12px; border-radius: 6px; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center;" ';
+            $html .= 'onmouseover="this.style.background=\'#667eea\'; this.style.color=\'white\';" ';
+            $html .= 'onmouseout="this.style.background=\'transparent\'; this.style.color=\'#667eea\';" ';
+            $html .= 'onclick="FormHandler.changeParent(\'' . $this->type . '\', \'' . $this->itemId . '\', \'' . $this->parentId . '\')">';
+            $html .= 'שינוי';
+            $html .= '</button>';
         }
+        
+        $html .= '</div>';
+        
+        // שדה hidden לשמירת ה-parentId החדש
+        $html .= '<input type="hidden" id="newParentId" name="newParentId" value="">';
+    }
+}
         
         // Hidden fields
         $html .= '<input type="hidden" name="formType" value="' . $this->type . '">';

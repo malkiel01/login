@@ -2904,18 +2904,6 @@ const FormHandler = {
                 }
             }
             
-            // if (data.parent_id) {
-            //     const parentColumn = this.getParentColumn(type);
-            //     if (parentColumn) {
-            //         if (type === 'area_grave' && data.lineId) {
-            //             delete data.parent_id;
-            //         } else {
-            //             data[parentColumn] = data.parent_id;
-            //             delete data.parent_id;
-            //         }
-            //     }
-            // }
-            
             if (type === 'areaGrave') type = 'area_grave';
             
             let url;
@@ -2927,6 +2915,8 @@ const FormHandler = {
                 url = `/dashboard/dashboards/cemeteries/api/burials-api.php?action=${action}`;
             } else if (type === 'payment') {
                 url = `/dashboard/dashboards/cemeteries/api/payments-api.php?action=${action}`;
+            } else if (type === 'block') {
+                url = `/dashboard/dashboards/cemeteries/api/blocks-api.php?action=${action}`;
             } else {
                 url = `/dashboard/dashboards/cemeteries/api/cemetery-hierarchy.php?action=${action}&type=${type}`;
             }

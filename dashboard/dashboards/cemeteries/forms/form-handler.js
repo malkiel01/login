@@ -2407,6 +2407,181 @@ const FormHandler = {
             form.appendChild(hiddenField);
         }
     },
+
+    // הוסף את הפונקציות האלה ל-FormHandler object:
+
+// --- START patch v1.7.0 (הוספת פונקציונליות שינוי הורה)
+
+// פונקציה לפתיחת dialog לשינוי הורה
+changeParent: function(type, itemId, currentParentId) {
+    console.log('changeParent called:', type, itemId, currentParentId);
+    
+    // שמור את המידע הנוכחי
+    window.changingParentFor = {
+        type: type,
+        itemId: itemId,
+        currentParentId: currentParentId
+    };
+    
+    // קבע מה סוג ההורה לפי סוג הפריט
+    const parentTypeMap = {
+        'block': 'cemetery',
+        'plot': 'block',
+        'row': 'plot',
+        'area_grave': 'row',
+        'grave': 'area_grave'
+    };
+    
+    const parentType = parentTypeMap[type];
+    if (!parentType) {
+        alert('לא ניתן לשנות הורה לסוג זה');
+        return;
+    }
+    
+    // פתח dialog לבחירת הורה חדש
+    this.openParentChangeDialog(parentType, currentParentId);
+},
+
+// פתיחת dialog לבחירת הורה חדש
+openParentChangeDialog: async function(parentType, currentParentId) {
+    try {
+        // צור modal לבחירת הורה
+        const modalHtml = `
+            <div class="modal show" id="changeParentModal" style="display: flex !important; align-items: center; justify-content: center;">
+                <div class="modal-overlay" onclick="FormHandler.closeParentChangeDialog()" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 9998;"></div>
+                <div class="modal-dialog" style="position: relative; z-index: 9999; max-width: 500px; margin: 30px;">
+                    <div class="modal-content" style="border-radius: 16px;">
+                        <div class="modal-header">
+                            <h5 class="modal-title">בחר ${this.getParentLabel(parentType)} חדש</h5>
+                            <button type="button" class="close" onclick="FormHandler.closeParentChangeDialog()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label>בחר ${this.getParentLabel(parentType)}:</label>
+                                <select id="newParentSelect" class="form-control">
+                                    <option value="">-- בחר --</option>
+                                </select>
+                            </div>
+                            <div id="parentChangeWarning" class="alert alert-info" style="display: none;">
+                                <small>שינוי ההורה יעביר את הפריט למיקום חדש במערכת.</small>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="FormHandler.closeParentChangeDialog()">ביטול</button>
+                            <button type="button" class="btn btn-primary" onclick="FormHandler.confirmParentChange()">אישור שינוי</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // הוסף את המודל לדף
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = modalHtml;
+        document.body.appendChild(tempDiv.firstElementChild);
+        
+        // טען את רשימת ההורים האפשריים
+        await this.loadParentOptions(parentType, currentParentId);
+        
+    } catch (error) {
+        console.error('Error opening parent change dialog:', error);
+        alert('שגיאה בפתיחת חלון בחירת הורה');
+    }
+},
+
+// טעינת אפשרויות הורים
+loadParentOptions: async function(parentType, currentParentId) {
+    try {
+        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=${parentType}`);
+        const data = await response.json();
+        
+        if (data.success && data.data) {
+            const select = document.getElementById('newParentSelect');
+            
+            data.data.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.unicId || item.id;
+                option.textContent = item.name || item.nameHe || `${parentType} ${item.id}`;
+                
+                // סמן את ההורה הנוכחי
+                if (option.value === currentParentId) {
+                    option.textContent += ' (נוכחי)';
+                    option.disabled = true;
+                }
+                
+                select.appendChild(option);
+            });
+            
+            // הצג אזהרה
+            document.getElementById('parentChangeWarning').style.display = 'block';
+        }
+    } catch (error) {
+        console.error('Error loading parent options:', error);
+        alert('שגיאה בטעינת רשימת ההורים');
+    }
+},
+
+// אישור שינוי הורה
+confirmParentChange: function() {
+    const select = document.getElementById('newParentSelect');
+    const newParentId = select.value;
+    
+    if (!newParentId) {
+        alert('יש לבחור הורה חדש');
+        return;
+    }
+    
+    // עדכן את השם בטופס הראשי
+    const selectedOption = select.options[select.selectedIndex];
+    const newParentName = selectedOption.textContent.replace(' (נוכחי)', '');
+    
+    // עדכן את התצוגה
+    const parentNameElement = document.getElementById('currentParentName');
+    if (parentNameElement) {
+        parentNameElement.textContent = newParentName;
+    }
+    
+    // עדכן את ה-hidden field
+    const newParentIdField = document.getElementById('newParentId');
+    if (newParentIdField) {
+        newParentIdField.value = newParentId;
+    }
+    
+    // עדכן את ה-parentId הרגיל
+    const parentIdField = document.querySelector('input[name="parentId"]');
+    if (parentIdField) {
+        parentIdField.value = newParentId;
+    }
+    
+    // סגור את החלון
+    this.closeParentChangeDialog();
+    
+    // הצג הודעה
+    this.showMessage('ההורה שונה בהצלחה. יש לשמור את הטופס כדי לעדכן את השינוי.', 'info');
+},
+
+// סגירת dialog שינוי הורה
+closeParentChangeDialog: function() {
+    const modal = document.getElementById('changeParentModal');
+    if (modal) {
+        modal.remove();
+    }
+    window.changingParentFor = null;
+},
+
+// פונקציית עזר לקבלת תווית ההורה
+getParentLabel: function(parentType) {
+    const labels = {
+        'cemetery': 'בית עלמין',
+        'block': 'גוש',
+        'plot': 'חלקה',
+        'row': 'שורה',
+        'area_grave': 'אחוזת קבר'
+    };
+    return labels[parentType] || parentType;
+},
+
+// --- END patch v1.7.0
     
     closeForm: function(type) {
         // console.log('Closing form:', type);

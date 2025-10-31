@@ -258,7 +258,7 @@ try {
             $fields = [
                 'blockNameHe', 'blockNameEn', 'blockCode',
                 'blockLocation', 'nationalInsuranceCode', 'comments',
-                'coordinates', 'documentsList', 'updateDate'
+                'coordinates', 'documentsList', 'cemeteryId','updateDate'
             ];
             
             $updateFields = [];

@@ -396,39 +396,41 @@ class FormBuilder {
             }
 
             /* Parent info styles */
-            #' . $this->formId . 'Modal .parent-info {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 12px;
-                background: #f8f9fa;
-                border-radius: 8px;
-                margin-bottom: 15px;
-                border: 1px solid #dee2e6;
-            }
+            /**
+    #' . $this->formId . 'Modal .parent-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        border: 1px solid #dee2e6;
+    }
 
-            #' . $this->formId . 'Modal .parent-info-icon {
-                margin-left: 6px;
-                font-size: 16px;
-            }
+    #' . $this->formId . 'Modal .parent-info-icon {
+        margin-left: 6px;
+        font-size: 16px;
+    }
 
-            #' . $this->formId . 'Modal .parent-info strong {
-                color: #495057;
-                margin-right: 4px;
-            }
+    #' . $this->formId . 'Modal .parent-info strong {
+        color: #495057;
+        margin-right: 4px;
+    }
 
-            #' . $this->formId . 'Modal .parent-info .btn-outline-primary {
-                padding: 4px 12px;
-                font-size: 14px;
-                border-radius: 6px;
-                transition: all 0.2s ease;
-            }
+    #' . $this->formId . 'Modal .parent-info .btn-outline-primary {
+        padding: 4px 12px;
+        font-size: 14px;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+    }
 
-            #' . $this->formId . 'Modal .parent-info .btn-outline-primary:hover {
-                background: #007bff;
-                color: white;
-                transform: translateY(-1px);
-            }
+    #' . $this->formId . 'Modal .parent-info .btn-outline-primary:hover {
+        background: #007bff;
+        color: white;
+        transform: translateY(-1px);
+    }
+        **/
         </style>
         ';
     }
@@ -476,32 +478,27 @@ class FormBuilder {
         if ($this->parentId && $this->itemId) {
             $parentInfo = $this->getParentInfo();
             if ($parentInfo) {
-                // $html .= '<div class="parent-info" style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f8f9fa; border-radius: 8px; margin-bottom: 15px;">';
-                // $html .= '<div>';
-                // $html .= '<span class="parent-info-icon">📍</span>';
-                // $html .= 'משויך ל: <strong id="currentParentName">' . htmlspecialchars($parentInfo['name']) . '</strong>';
-                // $html .= '</div>';
-                
-                // // כפתור שינוי - רק אם זה לא סוג שלא צריך הורה
-                // $typesWithoutParent = ['cemetery', 'payment', 'customer', 'purchase', 'residency', 'burial'];
-                // if (!in_array($this->type, $typesWithoutParent)) {
-                //     $html .= '<button type="button" class="btn btn-sm btn-outline-primary" onclick="FormHandler.changeParent(\'' . $this->type . '\', \'' . $this->itemId . '\', \'' . $this->parentId . '\')">';
-                //     $html .= '<svg style="width: 14px; height: 14px; margin-left: 4px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">';
-                //     $html .= '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>';
-                //     $html .= '</svg>';
-                //     $html .= ' שינוי';
-                //     $html .= '</button>';
-                // }
-                
-                // $html .= '</div>';
-                
-                // // שדה hidden לשמירת ה-parentId החדש
-                // $html .= '<input type="hidden" id="newParentId" name="newParentId" value="">';
-
-                $html .= '<div class="parent-info">';
+                $html .= '<div class="parent-info" style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #f8f9fa; border-radius: 8px; margin-bottom: 15px;">';
+                $html .= '<div>';
                 $html .= '<span class="parent-info-icon">📍</span>';
-                $html .= 'הוספה ל: <strong>' . htmlspecialchars($parentInfo['name']) . '</strong>';
+                $html .= 'משויך ל: <strong id="currentParentName">' . htmlspecialchars($parentInfo['name']) . '</strong>';
                 $html .= '</div>';
+                
+                // כפתור שינוי - רק אם זה לא סוג שלא צריך הורה
+                $typesWithoutParent = ['cemetery', 'payment', 'customer', 'purchase', 'residency', 'burial'];
+                if (!in_array($this->type, $typesWithoutParent)) {
+                    $html .= '<button type="button" class="btn btn-sm btn-outline-primary" onclick="FormHandler.changeParent(\'' . $this->type . '\', \'' . $this->itemId . '\', \'' . $this->parentId . '\')">';
+                    $html .= '<svg style="width: 14px; height: 14px; margin-left: 4px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">';
+                    $html .= '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>';
+                    $html .= '</svg>';
+                    $html .= ' שינוי';
+                    $html .= '</button>';
+                }
+                
+                $html .= '</div>';
+                
+                // שדה hidden לשמירת ה-parentId החדש
+                $html .= '<input type="hidden" id="newParentId" name="newParentId" value="">';
                 
                 // הוסף דיבוג כהערה
                 $html .= '<!-- Parent field: ' . $parentInfo['field'] . ' = ' . $this->parentId . ' -->';

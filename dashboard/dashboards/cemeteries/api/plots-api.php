@@ -38,12 +38,12 @@ try {
             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
             $offset = ($page - 1) * $limit;
             
-            // $sql = "SELECT p.*, b.blockNameHe as block_name 
-            //         FROM plots p
-            //         LEFT JOIN blocks b ON p.blockId = b.unicId
-            //         WHERE p.isActive = 1";
+            $sql = "SELECT p.*, b.blockNameHe as block_name 
+                    FROM plots p
+                    LEFT JOIN blocks b ON p.blockId = b.unicId
+                    WHERE p.isActive = 1";
 
-            $sql = "SELECT p.* FROM plots_view p WHERE p.isActive = 1";            
+            // $sql = "SELECT p.* FROM plots_view p WHERE isActive = 1";            
 
             $params = [];
             

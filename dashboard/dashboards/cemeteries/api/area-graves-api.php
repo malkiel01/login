@@ -44,15 +44,15 @@ try {
             $offset = ($page - 1) * $limit;
             
             // בניית השאילתה הראשית עם JOIN לשורות
-            // $sql = "SELECT 
-            //             ag.*,
-            //             r.lineNameHe as row_name,
-            //             r.plotId as plot_id
-            //         FROM areaGraves ag
-            //         LEFT JOIN rows r ON ag.lineId = r.unicId
-            //         WHERE ag.isActive = 1";
+            $sql = "SELECT 
+                        ag.*,
+                        r.lineNameHe as row_name,
+                        r.plotId as plot_id
+                    FROM areaGraves ag
+                    LEFT JOIN rows r ON ag.lineId = r.unicId
+                    WHERE ag.isActive = 1";
 
-            $sql = "SELECT ag.* FROM areaGraves_view ag WHERE ag.isActive = 1";
+            // $sql = "SELECT ag.* FROM areaGraves_view ag WHERE ag.isActive = 1";
 
             $params = [];
             

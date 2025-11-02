@@ -464,7 +464,7 @@ async function initBlocksTable(data, totalItems = null) {
 // ===================================================================
 // רינדור שורות הגושים - בדיוק כמו בבתי עלמין
 // ===================================================================
-function renderBlocksRows(data, container, pagination = null) {
+function renderBlocksRows2(data, container, pagination = null) {
     console.log(`📝 renderBlocksRows called with ${data.length} items`);
     
     // ⭐ סינון client-side לפי cemeteryId
@@ -530,6 +530,111 @@ function renderBlocksRows(data, container, pagination = null) {
     // if (blockSearch && blockSearch.updateResultsInfo) {
     //     blockSearch.updateResultsInfo(totalItems);
     // }
+
+    // ⭐ עדכן את התצוגה של UniversalSearch
+    if (blockSearch) {
+        blockSearch.state.totalResults = totalItems;
+        blockSearch.updateCounter();
+    }
+}
+function renderBlocksRows(data, container, pagination = null) {
+    console.log(`📝 renderBlocksRows called with ${data.length} items`);
+    
+    // ⭐ סינון client-side לפי cemeteryId
+    let filteredData = data;
+    if (currentCemeteryId) {
+        filteredData = data.filter(block => 
+            block.cemeteryId === currentCemeteryId || 
+            block.cemetery_id === currentCemeteryId
+        );
+        console.log(`🎯 Client-side filtered: ${data.length} → ${filteredData.length} blocks`);
+    }
+    
+    // ⭐ עדכן את totalItems להיות המספר המסונן!
+    const totalItems = filteredData.length;
+    
+    console.log(`📊 Total items to display: ${totalItems}`);
+
+    if (filteredData.length === 0) {
+        if (blocksTable) {
+            blocksTable.setData([]);
+        }
+        
+        // ⭐⭐⭐ הודעה מותאמת לבית עלמין ריק!
+        if (currentCemeteryId && currentCemeteryName) {
+            // נכנסנו לבית עלמין ספציפי ואין גושים
+            container.innerHTML = `
+                <tr>
+                    <td colspan="9" style="text-align: center; padding: 60px;">
+                        <div style="color: #6b7280;">
+                            <div style="font-size: 48px; margin-bottom: 16px;">📦</div>
+                            <div style="font-size: 20px; font-weight: 600; margin-bottom: 12px; color: #374151;">
+                                אין גושים בבית עלמין ${currentCemeteryName}
+                            </div>
+                            <div style="font-size: 14px; margin-bottom: 24px; color: #6b7280;">
+                                בית העלמין עדיין לא מכיל גושים. תוכל להוסיף גוש חדש
+                            </div>
+                            <button 
+                                onclick="if(typeof FormHandler !== 'undefined' && FormHandler.openForm) { FormHandler.openForm('block', '${currentCemeteryId}', null); } else { alert('FormHandler לא זמין'); }" 
+                                style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); 
+                                       color: white; 
+                                       border: none; 
+                                       padding: 12px 24px; 
+                                       border-radius: 8px; 
+                                       font-size: 15px; 
+                                       font-weight: 600; 
+                                       cursor: pointer; 
+                                       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                                       transition: all 0.2s;"
+                                onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.15)';"
+                                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)';">
+                                ➕ הוסף גוש ראשון
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        } else {
+            // חיפוש כללי שלא מצא תוצאות
+            container.innerHTML = `
+                <tr>
+                    <td colspan="9" style="text-align: center; padding: 60px;">
+                        <div style="color: #9ca3af;">
+                            <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
+                            <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">לא נמצאו תוצאות</div>
+                            <div>נסה לשנות את מילות החיפוש או הפילטרים</div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+        return;
+    }
+    
+    // ⭐ בדוק אם ה-DOM של TableManager קיים
+    const tableWrapperExists = document.querySelector('.table-wrapper[data-fixed-width="true"]');
+    
+    // ⭐ אם המשתנה קיים אבל ה-DOM נמחק - אפס את המשתנה!
+    if (!tableWrapperExists && blocksTable) {
+        console.log('🗑️ TableManager DOM was deleted, resetting blocksTable variable');
+        blocksTable = null;
+        window.blocksTable = null;
+    }
+    
+    // עכשיו בדוק אם צריך לבנות מחדש
+    if (!blocksTable || !tableWrapperExists) {
+        // אין TableManager או שה-DOM שלו נמחק - בנה מחדש!
+        console.log(`🏗️ Creating new TableManager with ${totalItems} items`);
+        initBlocksTable(filteredData, totalItems);
+    } else {
+        // ⭐ עדכן גם את totalItems ב-TableManager!
+        console.log(`♻️ Updating TableManager with ${totalItems} items`);
+        if (blocksTable.config) {
+            blocksTable.config.totalItems = totalItems;
+        }
+        
+        blocksTable.setData(filteredData);
+    }
 
     // ⭐ עדכן את התצוגה של UniversalSearch
     if (blockSearch) {

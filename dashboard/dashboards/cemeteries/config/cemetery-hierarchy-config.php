@@ -541,6 +541,13 @@ return [
                 'type' => 'text'
             ],
             [
+                'field' => 'cemetery_name',  // ⭐ זה כבר מגיע מה-API
+                'title' => 'בית עלמין',
+                'width' => '200px',
+                'sortable' => true,
+                'type' => 'text'
+            ],
+            [
                 'field' => 'block_name',  // ⭐ זה כבר מגיע מה-API
                 'title' => 'גוש',
                 'width' => '200px',

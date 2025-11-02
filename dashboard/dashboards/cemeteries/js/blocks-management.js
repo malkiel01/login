@@ -299,31 +299,16 @@ async function initBlocksSearch(cemeteryId = null) {
            onSearch: (query, filters) => {
                console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()), cemeteryId: currentCemeteryId });
            },
-           
+
            onResults: (data) => {
-               console.log('📦 Raw results from API:', data.data.length, 'blocks');
-               
-               // ⭐ אם יש סינון - סנן את data.data לפני כל דבר אחר!
-               if (currentCemeteryId && data.data) {
-                   const filteredData = data.data.filter(block => 
-                       block.cemeteryId === currentCemeteryId || 
-                       block.cemetery_id === currentCemeteryId
-                   );
-                   
-                   console.log('⚠️ Client-side filter:', data.data.length, '→', filteredData.length, 'blocks');
-                   
-                   // ⭐ עדכן את data.data עצמו!
-                   data.data = filteredData;
-                   
-                   // ⭐ עדכן את pagination.total
-                   if (data.pagination) {
-                       data.pagination.total = filteredData.length;
-                   }
-               }
-               
-               currentBlocks = data.data;
-               console.log('📊 Final count:', data.pagination?.total || data.data.length);
-           },
+                console.log('📦 API returned:', data.data.length, 'blocks');
+                
+                // ⭐ רק שמור את הנתונים - הסינון יקרה ב-renderBlocksRows!
+                currentBlocks = data.data;
+                
+                // ⭐ לא לעדכן pagination או totalResults כאן!
+                // renderBlocksRows יעשה את זה אחרי הסינון
+            },
            
            onError: (error) => {
                console.error('❌ Search error:', error);

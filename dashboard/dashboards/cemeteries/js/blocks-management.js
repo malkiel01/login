@@ -301,30 +301,34 @@ async function initBlocksSearch(cemeteryId = null) {
            },
 
             onResults: (data) => {
-                console.log('📦 API returned:', data.data.length, 'blocks');
+            // ⭐ סינון client-side ראשון - לפני כל דבר!
+            if (currentCemeteryId && data.data) {
+                const originalCount = data.data.length;
                 
-                // ⭐ סינון client-side כאן!
-                if (currentCemeteryId && data.data) {
-                    const filteredData = data.data.filter(block => 
-                        block.cemeteryId === currentCemeteryId || 
-                        block.cemetery_id === currentCemeteryId
-                    );
-                    
-                    console.log('🎯 Filtered:', data.data.length, '→', filteredData.length, 'blocks');
-                    
-                    // ⭐ עדכן את data.data
-                    data.data = filteredData;
-                    
-                    // ⭐⭐ עדכן את pagination.total - זה החשוב!
-                    if (data.pagination) {
-                        data.pagination.total = filteredData.length;
-                    }
+                const filteredData = data.data.filter(block => 
+                    block.cemeteryId === currentCemeteryId || 
+                    block.cemetery_id === currentCemeteryId
+                );
+                
+                // ⭐ עדכן את data.data
+                data.data = filteredData;
+                
+                // ⭐ עדכן את pagination.total
+                if (data.pagination) {
+                    data.pagination.total = filteredData.length;
                 }
                 
-                currentBlocks = data.data;
-                console.log('📊 Final count:', data.pagination?.total || data.data.length);
+                // ⭐ console.log אחרי הסינון!
+                console.log(`📦 API returned: ${originalCount} blocks → Filtered to: ${filteredData.length} blocks`);
+            } else {
+                // אין סינון - הצג את המספר המקורי
+                console.log('📦 API returned:', data.data.length, 'blocks (no filter)');
+            }
+
+            currentBlocks = data.data;
+            console.log('📊 Final count:', data.pagination?.total || data.data.length);
             },
-           
+
            onError: (error) => {
                console.error('❌ Search error:', error);
                showToast('שגיאה בחיפוש גושים', 'error');

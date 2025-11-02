@@ -797,6 +797,74 @@ return [
                 'label' => 'הערות',
                 'type' => 'textarea'
             ]
+        ],
+        
+        'table_columns' => [
+            [
+                'field' => 'areaGraveNameHe',
+                'title' => 'שם אחוזת קבר',
+                'width' => '200px',
+                'sortable' => true,
+                'type' => 'link'
+            ],
+            [
+                'field' => 'areaGraveCode',
+                'title' => 'קוד',
+                'width' => '100px',
+                'sortable' => true,
+                'type' => 'text'
+            ],
+            [
+                'field' => 'plot_name',
+                'title' => 'חלקה',
+                'width' => '150px',
+                'sortable' => true,
+                'type' => 'text'
+            ],
+            [
+                'field' => 'coordinates',
+                'title' => 'קואורדינטות',
+                'width' => '150px',
+                'sortable' => true,
+                'type' => 'coordinates'  // סוג מיוחד
+            ],
+            [
+                'field' => 'graveType',
+                'title' => 'סוג קבר',
+                'width' => '120px',
+                'sortable' => true,
+                'type' => 'graveType'  // סוג מיוחד
+            ],
+            [
+                'field' => 'row_name',
+                'title' => 'שורה',
+                'width' => '150px',
+                'sortable' => true,
+                'type' => 'row'  // סוג מיוחד
+            ],
+            [
+                'field' => 'graves_count',
+                'title' => 'קברים',
+                'width' => '80px',
+                'sortable' => true,
+                'type' => 'badge',
+                'badge_style' => 'success'
+            ],
+            [
+                'field' => 'createDate',
+                'title' => 'תאריך',
+                'width' => '120px',
+                'sortable' => true,
+                'type' => 'date'
+            ],
+            [
+                'field' => 'actions',
+                'title' => 'פעולות',
+                'width' => '120px',
+                'sortable' => false,
+                'type' => 'actions',
+                'actions' => ['edit', 'delete']
+            ]
         ]
     ],
     

@@ -363,20 +363,126 @@ async function initPlotsTable(data, totalItems = null) {
         return plotsTable;
     }
 
-    plotsTable = new TableManager({
-        tableSelector: '#mainTable',
-        
-        totalItems: actualTotalItems,
+    // ===================================================================
+    // טעינת הגדרות עמודות מהקונפיג
+    // ===================================================================
+    async function loadColumnsFromConfig(entityType = 'plot') {
+        try {
+            console.log(`📋 Loading columns config for: ${entityType}`);
+            
+            const response = await fetch(
+                `/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`
+            );
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            
+            if (!result.success || !result.data) {
+                throw new Error(result.error || 'Failed to load columns config');
+            }
+            
+            // המרת הקונפיג מ-PHP לפורמט של TableManager
+            const columns = result.data.map(col => {
+                const column = {
+                    field: col.field,
+                    label: col.title,
+                    width: col.width || 'auto',
+                    sortable: col.sortable !== false,
+                    type: col.type || 'text'
+                };
+                
+                // תיקון שמות שדות - התאמה בין הקונפיג ל-VIEW
+                if (col.field === 'cemetery_name') {
+                    column.field = 'cemeteryNameHe';  // ⭐ השם האמיתי מה-VIEW
+                }
+                if (col.field === 'block_name') {
+                    column.field = 'blockNameHe';     // ⭐ השם האמיתי מה-VIEW
+                }
+                
+                // טיפול בסוגי עמודות מיוחדות
+                switch(col.type) {
+                    case 'link':
+                        column.render = (plot) => {
+                            return `<a href="#" onclick="handlePlotDoubleClick('${plot.unicId}', '${plot.plotNameHe?.replace(/'/g, "\\'")}'); return false;" 
+                                    style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                                ${plot.plotNameHe || '-'}
+                            </a>`;
+                        };
+                        break;
+                        
+                    case 'badge':
+                        column.render = (plot) => {
+                            const count = plot[column.field] || 0;
+                            return `<span style="background: #dbeafe; color: #1e40af; padding: 3px 10px; border-radius: 4px; font-size: 13px; font-weight: 600; display: inline-block;">${count}</span>`;
+                        };
+                        break;
+                        
+                    case 'status':
+                        column.render = (plot) => {
+                            const status = plot.statusPlot || plot.isActive;
+                            return status == 1 
+                                ? '<span class="status-badge status-active">פעיל</span>'
+                                : '<span class="status-badge status-inactive">לא פעיל</span>';
+                        };
+                        break;
+                        
+                    case 'date':
+                        column.render = (plot) => formatDate(plot[column.field]);
+                        break;
+                        
+                    case 'actions':
+                        column.render = (plot) => `
+                            <button class="btn btn-sm btn-secondary" 
+                                    onclick="event.stopPropagation(); window.tableRenderer.editItem('${plot.unicId}')" 
+                                    title="עריכה">
+                                <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
+                            </button>
+                            <button class="btn btn-sm btn-danger" 
+                                    onclick="event.stopPropagation(); deletePlot('${plot.unicId}')" 
+                                    title="מחיקה">
+                                <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
+                            </button>
+                        `;
+                        break;
+                        
+                    default:
+                        // עמודת טקסט רגילה
+                        if (!column.render) {
+                            column.render = (plot) => plot[column.field] || '-';
+                        }
+                }
+                
+                return column;
+            });
+            
+            console.log(`✅ Loaded ${columns.length} columns for ${entityType}`);
+            return columns;
+            
+        } catch (error) {
+            console.error('Failed to load columns config:', error);
+            // החזר עמודות ברירת מחדל במקרה של שגיאה
+            return getDefaultPlotsColumns();
+        }
+    }
 
-        columns: [
+    // ===================================================================
+    // עמודות ברירת מחדל (במקרה שטעינת הקונפיג נכשלת)
+    // ===================================================================
+    function getDefaultPlotsColumns() {
+        console.warn('⚠️ Using default columns as fallback');
+        
+        return [
             {
                 field: 'plotNameHe',
                 label: 'שם חלקה',
                 width: '200px',
                 sortable: true,
                 render: (plot) => {
-                    return `<a href="#" onclick="handlePlotDoubleClick('${plot.unicId}', '${plot.plotNameHe.replace(/'/g, "\\'")}'); return false;" 
-                               style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                    return `<a href="#" onclick="handlePlotDoubleClick('${plot.unicId}', '${plot.plotNameHe?.replace(/'/g, "\\'")}'); return false;" 
+                            style="color: #2563eb; text-decoration: none; font-weight: 500;">
                         ${plot.plotNameHe}
                     </a>`;
                 }
@@ -388,7 +494,13 @@ async function initPlotsTable(data, totalItems = null) {
                 sortable: true
             },
             {
-                field: 'block_name',
+                field: 'cemeteryNameHe',
+                label: 'בית עלמין',
+                width: '200px',
+                sortable: true
+            },
+            {
+                field: 'blockNameHe',
                 label: 'גוש',
                 width: '200px',
                 sortable: true
@@ -405,17 +517,6 @@ async function initPlotsTable(data, totalItems = null) {
                 }
             },
             {
-                field: 'statusPlot',
-                label: 'סטטוס',
-                width: '100px',
-                sortable: true,
-                render: (plot) => {
-                    return plot.statusPlot == 1 || plot.isActive == 1
-                        ? '<span class="status-badge status-active">פעיל</span>'
-                        : '<span class="status-badge status-inactive">לא פעיל</span>';
-                }
-            },
-            {
                 field: 'createDate',
                 label: 'תאריך',
                 width: '120px',
@@ -429,19 +530,102 @@ async function initPlotsTable(data, totalItems = null) {
                 width: '120px',
                 sortable: false,
                 render: (plot) => `
-                     <button class="btn btn-sm btn-secondary" 
-                             onclick="event.stopPropagation(); window.tableRenderer.editItem('${plot.unicId}')" 
-                             title="עריכה">
-                         <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
-                     </button>
-                     <button class="btn btn-sm btn-danger" 
-                             onclick="event.stopPropagation(); deleteBlock('${plot.unicId}')" 
-                             title="מחיקה">
-                         <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
-                     </button>
+                    <button class="btn btn-sm btn-secondary" 
+                            onclick="event.stopPropagation(); window.tableRenderer.editItem('${plot.unicId}')" 
+                            title="עריכה">
+                        <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
+                    </button>
+                    <button class="btn btn-sm btn-danger" 
+                            onclick="event.stopPropagation(); deletePlot('${plot.unicId}')" 
+                            title="מחיקה">
+                        <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
+                    </button>
                 `
             }
-        ],
+        ];
+    }
+
+    plotsTable = new TableManager({
+        tableSelector: '#mainTable',
+        
+        totalItems: actualTotalItems,
+
+        columns: await loadColumnsFromConfig('plot'),
+
+        // columns: [
+        //     {
+        //         field: 'plotNameHe',
+        //         label: 'שם חלקה',
+        //         width: '200px',
+        //         sortable: true,
+        //         render: (plot) => {
+        //             return `<a href="#" onclick="handlePlotDoubleClick('${plot.unicId}', '${plot.plotNameHe.replace(/'/g, "\\'")}'); return false;" 
+        //                        style="color: #2563eb; text-decoration: none; font-weight: 500;">
+        //                 ${plot.plotNameHe}
+        //             </a>`;
+        //         }
+        //     },
+        //     {
+        //         field: 'plotCode',
+        //         label: 'קוד',
+        //         width: '100px',
+        //         sortable: true
+        //     },
+        //     {
+        //         field: 'block_name',
+        //         label: 'גוש',
+        //         width: '200px',
+        //         sortable: true
+        //     },
+        //     {
+        //         field: 'rows_count',
+        //         label: 'שורות',
+        //         width: '80px',
+        //         type: 'number',
+        //         sortable: true,
+        //         render: (plot) => {
+        //             const count = plot.rows_count || 0;
+        //             return `<span style="background: #dbeafe; color: #1e40af; padding: 3px 10px; border-radius: 4px; font-size: 13px; font-weight: 600; display: inline-block;">${count}</span>`;
+        //         }
+        //     },
+        //     {
+        //         field: 'statusPlot',
+        //         label: 'סטטוס',
+        //         width: '100px',
+        //         sortable: true,
+        //         render: (plot) => {
+        //             return plot.statusPlot == 1 || plot.isActive == 1
+        //                 ? '<span class="status-badge status-active">פעיל</span>'
+        //                 : '<span class="status-badge status-inactive">לא פעיל</span>';
+        //         }
+        //     },
+        //     {
+        //         field: 'createDate',
+        //         label: 'תאריך',
+        //         width: '120px',
+        //         type: 'date',
+        //         sortable: true,
+        //         render: (plot) => formatDate(plot.createDate)
+        //     },
+        //     {
+        //         field: 'actions',
+        //         label: 'פעולות',
+        //         width: '120px',
+        //         sortable: false,
+        //         render: (plot) => `
+        //              <button class="btn btn-sm btn-secondary" 
+        //                      onclick="event.stopPropagation(); window.tableRenderer.editItem('${plot.unicId}')" 
+        //                      title="עריכה">
+        //                  <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
+        //              </button>
+        //              <button class="btn btn-sm btn-danger" 
+        //                      onclick="event.stopPropagation(); deleteBlock('${plot.unicId}')" 
+        //                      title="מחיקה">
+        //                  <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
+        //              </button>
+        //         `
+        //     }
+        // ],
 
         // onRowDoubleClick: (plot) => {
         //     handlePlotDoubleClick(plot.unicId, plot.plotNameHe);

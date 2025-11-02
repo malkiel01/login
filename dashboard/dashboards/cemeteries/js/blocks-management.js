@@ -320,33 +320,35 @@ async function initBlocksSearch(cemeteryId = null) {
                currentBlocks = data.data;
            },
 
-            onResults: (data) => {
-                // ⭐ אם יש סינון - סנן את data.data לפני כל דבר אחר!
-                if (currentCemeteryId && data.data) {
-                    const filteredData = data.data.filter(block => 
-                        block.cemeteryId === currentCemeteryId || 
-                        block.cemetery_id === currentCemeteryId
-                    );
+onResults: (data) => {
+    // ⭐ אם יש סינון - סנן את data.data לפני כל דבר אחר!
+    if (currentCemeteryId && data.data) {
+        const filteredData = data.data.filter(block => 
+            block.cemeteryId === currentCemeteryId || 
+            block.cemetery_id === currentCemeteryId
+        );
 
-                    // ⭐ עדכן את data.data עצמו!
-                    data.data = filteredData;
-                    
-                    // ⭐ עדכן את pagination.total - אם ריק תשים 0!
-                    if (!data.pagination) {
-                        data.pagination = {};
-                    }
-                    data.pagination.total = filteredData.length === 0 ? 0 : filteredData.length;
-                } else if (!data.data || data.data.length === 0) {
-                    // ⭐ אין נתונים בכלל - תשים 0!
-                    if (!data.pagination) {
-                        data.pagination = {};
-                    }
-                    data.pagination.total = 0;
-                }
-                
-                currentBlocks = data.data || [];
-                console.log('📊 Final blocks:', data.pagination?.total || 0);
-            },
+        // ⭐ עדכן את data.data עצמו!
+        data.data = filteredData;
+        
+        // ⭐ עדכן את pagination.total
+        if (data.pagination) {
+            data.pagination.total = filteredData.length;
+        }
+    }
+    
+    currentBlocks = data.data;
+    
+    // ⭐⭐⭐ עדכן ישירות את blockSearch!
+    if (blockSearch && blockSearch.state) {
+        blockSearch.state.totalResults = data.data.length;
+        if (blockSearch.updateCounter) {
+            blockSearch.updateCounter();
+        }
+    }
+    
+    console.log('📊 Final blocks:', data.data.length);
+},
            
            onError: (error) => {
                console.error('❌ Search error:', error);

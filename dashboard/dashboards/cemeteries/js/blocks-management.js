@@ -62,12 +62,7 @@ async function loadBlocks(cemeteryId = null, cemeteryName = null, forceReset = f
     }
     
     console.log('🔍 Final filter:', { cemeteryId: currentCemeteryId, cemeteryName: currentCemeteryName });
-        
-    window.currentCemeteryId = currentCemeteryId;
-    window.currentCemeteryName = currentCemeteryName;
     
-    console.log('🔍 Final filter:', { cemeteryId: currentCemeteryId, cemeteryName: currentCemeteryName });
-  
     window.currentCemeteryId = currentCemeteryId;
     window.currentCemeteryName = currentCemeteryName;
     
@@ -440,82 +435,82 @@ async function initBlocksTable(data, totalItems = null) {
         
         totalItems: actualTotalItems,
 
-        // columns: await loadColumnsFromConfig(),
+        columns: await loadColumnsFromConfig(),
 
-        columns: [
-            {
-                field: 'blockNameHe',
-                label: 'שם גוש',
-                width: '200px',
-                sortable: true,
-                render: (block) => {
-                    return `<a href="#" onclick="handleBlockDoubleClick('${block.unicId}', '${block.blockNameHe.replace(/'/g, "\\'")}'); return false;" 
-                               style="color: #2563eb; text-decoration: none; font-weight: 500;">
-                        ${block.blockNameHe}
-                    </a>`;
-                }
-            },
-            {
-                field: 'blockCode',
-                label: 'קוד',
-                width: '100px',
-                sortable: true
-            },
-            {
-                field: 'cemeteryNameHe',
-                label: 'בית עלמין',
-                width: '200px',
-                sortable: true
-            },
-            {
-                field: 'plots_count',
-                label: 'חלקות',
-                width: '80px',
-                type: 'number',
-                sortable: true,
-                render: (block) => {
-                    const count = block.plots_count || 0;
-                    return `<span style="background: #dbeafe; color: #1e40af; padding: 3px 10px; border-radius: 4px; font-size: 13px; font-weight: 600; display: inline-block;">${count}</span>`;
-                }
-            },
-            {
-                field: 'statusBlock',
-                label: 'סטטוס',
-                width: '100px',
-                sortable: true,
-                render: (block) => {
-                    return block.statusBlock == 1 
-                        ? '<span class="status-badge status-active">פעיל</span>'
-                        : '<span class="status-badge status-inactive">לא פעיל</span>';
-                }
-            },
-            {
-                field: 'createDate',
-                label: 'תאריך',
-                width: '120px',
-                type: 'date',
-                sortable: true,
-                render: (block) => formatDate(block.createDate)
-            },
-            {
-                field: 'actions',
-                label: 'פעולות',
-                width: '120px',
-                sortable: false,
-                render: (block) => `
-                    <button class="btn btn-sm btn-secondary" 
-                            onclick="event.stopPropagation(); window.tableRenderer.editItem('${block.unicId}')" 
-                            title="עריכה">
-                        <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
-                    </button>
-                    <button class="btn btn-sm btn-danger" 
-                            onclick="event.stopPropagation(); deleteBlock('${block.unicId}')" 
-                            title="מחיקה">
-                        <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
-                    </button>
-                `
-            }
-        ],
+        // columns: [
+        //     {
+        //         field: 'blockNameHe',
+        //         label: 'שם גוש',
+        //         width: '200px',
+        //         sortable: true,
+        //         render: (block) => {
+        //             return `<a href="#" onclick="handleBlockDoubleClick('${block.unicId}', '${block.blockNameHe.replace(/'/g, "\\'")}'); return false;" 
+        //                        style="color: #2563eb; text-decoration: none; font-weight: 500;">
+        //                 ${block.blockNameHe}
+        //             </a>`;
+        //         }
+        //     },
+        //     {
+        //         field: 'blockCode',
+        //         label: 'קוד',
+        //         width: '100px',
+        //         sortable: true
+        //     },
+        //     {
+        //         field: 'cemeteryNameHe',
+        //         label: 'בית עלמין',
+        //         width: '200px',
+        //         sortable: true
+        //     },
+        //     {
+        //         field: 'plots_count',
+        //         label: 'חלקות',
+        //         width: '80px',
+        //         type: 'number',
+        //         sortable: true,
+        //         render: (block) => {
+        //             const count = block.plots_count || 0;
+        //             return `<span style="background: #dbeafe; color: #1e40af; padding: 3px 10px; border-radius: 4px; font-size: 13px; font-weight: 600; display: inline-block;">${count}</span>`;
+        //         }
+        //     },
+        //     {
+        //         field: 'statusBlock',
+        //         label: 'סטטוס',
+        //         width: '100px',
+        //         sortable: true,
+        //         render: (block) => {
+        //             return block.statusBlock == 1 
+        //                 ? '<span class="status-badge status-active">פעיל</span>'
+        //                 : '<span class="status-badge status-inactive">לא פעיל</span>';
+        //         }
+        //     },
+        //     {
+        //         field: 'createDate',
+        //         label: 'תאריך',
+        //         width: '120px',
+        //         type: 'date',
+        //         sortable: true,
+        //         render: (block) => formatDate(block.createDate)
+        //     },
+        //     {
+        //         field: 'actions',
+        //         label: 'פעולות',
+        //         width: '120px',
+        //         sortable: false,
+        //         render: (block) => `
+        //             <button class="btn btn-sm btn-secondary" 
+        //                     onclick="event.stopPropagation(); window.tableRenderer.editItem('${block.unicId}')" 
+        //                     title="עריכה">
+        //                 <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
+        //             </button>
+        //             <button class="btn btn-sm btn-danger" 
+        //                     onclick="event.stopPropagation(); deleteBlock('${block.unicId}')" 
+        //                     title="מחיקה">
+        //                 <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
+        //             </button>
+        //         `
+        //     }
+        // ],
 
         data: data,
         

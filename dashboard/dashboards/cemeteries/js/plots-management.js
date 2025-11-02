@@ -66,11 +66,6 @@ async function loadPlots(blockId = null, blockName = null, forceReset = false) {
     window.currentBlockId = currentBlockId;
     window.currentBlockName = currentBlockName;
     
-    console.log('🔍 Final filter:', { blockId: currentBlockId, blockName: currentBlockName });
-  
-    window.currentBlockId = currentBlockId;
-    window.currentBlockName = currentBlockName;
-    
     // עדכון פריט תפריט אקטיבי
     if (typeof setActiveMenuItem === 'function') {
         setActiveMenuItem('plotsItem');
@@ -79,6 +74,11 @@ async function loadPlots(blockId = null, blockName = null, forceReset = false) {
     // עדכן את הסוג הנוכחי
     window.currentType = 'plot';
     window.currentParentId = blockId;
+
+    // ⭐ עדכן גם את tableRenderer.currentType!
+    if (window.tableRenderer) {
+        window.tableRenderer.currentType = 'plot';
+    }
     
     // ⭐ נקה - DashboardCleaner ימחק גם את TableManager!
     if (typeof DashboardCleaner !== 'undefined') {
@@ -429,15 +429,16 @@ async function initPlotsTable(data, totalItems = null) {
                 width: '120px',
                 sortable: false,
                 render: (plot) => `
-                    <button class="btn btn-sm btn-secondary" onclick="editPlot('${plot.unicId}')" title="עריכה">
-
-                            onclick="event.stopPropagation(); window.tableRenderer.editItem('${block.unicId}')" 
-                            
-                        <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="deletePlot('${plot.unicId}')" title="מחיקה">
-                        <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
-                    </button>
+                     <button class="btn btn-sm btn-secondary" 
+                             onclick="event.stopPropagation(); window.tableRenderer.editItem('${plot.unicId}')" 
+                             title="עריכה">
+                         <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
+                     </button>
+                     <button class="btn btn-sm btn-danger" 
+                             onclick="event.stopPropagation(); deleteBlock('${plot.unicId}')" 
+                             title="מחיקה">
+                         <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
+                     </button>
                 `
             }
         ],

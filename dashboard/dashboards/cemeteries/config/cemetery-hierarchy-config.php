@@ -541,14 +541,14 @@ return [
                 'type' => 'text'
             ],
             [
-                'field' => 'cemetery_name',  // ⭐ זה כבר מגיע מה-API
+                'field' => 'cemeteryNameHe',  // ⭐ זה כבר מגיע מה-API
                 'title' => 'בית עלמין',
                 'width' => '200px',
                 'sortable' => true,
                 'type' => 'text'
             ],
             [
-                'field' => 'block_name',  // ⭐ זה כבר מגיע מה-API
+                'field' => 'blockNameHe',  // ⭐ זה כבר מגיע מה-API
                 'title' => 'גוש',
                 'width' => '200px',
                 'sortable' => true,
@@ -822,35 +822,35 @@ return [
                 'type' => 'text'
             ],
             [
-                'field' => 'row_name',  // ⭐ חדש
+                'field' => 'lineNameHe',  // ⭐ חדש
                 'title' => 'שורה',
                 'width' => '120px',
                 'sortable' => true,
                 'type' => 'text'
             ],
             [
-                'field' => 'plot_name',  // ⭐ חדש
+                'field' => 'plotNameHe',  // ⭐ חדש
                 'title' => 'חלקה',
                 'width' => '120px',
                 'sortable' => true,
                 'type' => 'text'
             ],
             [
-                'field' => 'block_name',  // ⭐ חדש
+                'field' => 'blockNameHe',  // ⭐ חדש
                 'title' => 'גוש',
                 'width' => '120px',
                 'sortable' => true,
                 'type' => 'text'
             ],
             [
-                'field' => 'cemetery_name',  // ⭐ חדש
+                'field' => 'cemeteryNameHe',  // ⭐ חדש
                 'title' => 'בית עלמין',
                 'width' => '150px',
                 'sortable' => true,
                 'type' => 'text'
             ],
             [
-                'field' => 'plot_name',
+                'field' => 'plotNameHe',
                 'title' => 'חלקה',
                 'width' => '150px',
                 'sortable' => true,
@@ -871,7 +871,7 @@ return [
                 'type' => 'graveType'  // סוג מיוחד
             ],
             [
-                'field' => 'row_name',
+                'field' => 'lineNameHe',
                 'title' => 'שורה',
                 'width' => '150px',
                 'sortable' => true,

@@ -266,9 +266,9 @@ try {
                 SELECT p.*, b.blockNameHe as block_name
                 FROM plots p
                 LEFT JOIN blocks b ON p.blockId = b.unicId
-                WHERE (p.unicId = :id OR p.id = :id2) AND p.isActive = 1
+                WHERE p.unicId = :id AND p.isActive = 1
             ");
-            $stmt->execute(['id' => $id, 'id2' => $id]);
+            $stmt->execute(['id' => $id]);
             $plot = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if (!$plot) {

@@ -182,20 +182,20 @@ return [
                 'sortable' => true,
                 'type' => 'text'
             ],
-            [
-                'field' => 'address',
-                'title' => 'כתובת',
-                'width' => '250px',
-                'sortable' => true,
-                'type' => 'text'
-            ],
-            [
-                'field' => 'contactName',
-                'title' => 'איש קשר',
-                'width' => '150px',
-                'sortable' => true,
-                'type' => 'text'
-            ],
+            // [
+            //     'field' => 'address',
+            //     'title' => 'כתובת',
+            //     'width' => '250px',
+            //     'sortable' => true,
+            //     'type' => 'text'
+            // ],
+            // [
+            //     'field' => 'contactName',
+            //     'title' => 'איש קשר',
+            //     'width' => '150px',
+            //     'sortable' => true,
+            //     'type' => 'text'
+            // ],
             [
                 'field' => 'contactPhoneName',
                 'title' => 'טלפון',

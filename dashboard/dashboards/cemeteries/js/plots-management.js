@@ -430,6 +430,9 @@ async function initPlotsTable(data, totalItems = null) {
                 sortable: false,
                 render: (plot) => `
                     <button class="btn btn-sm btn-secondary" onclick="editPlot('${plot.unicId}')" title="עריכה">
+
+                            onclick="event.stopPropagation(); window.tableRenderer.editItem('${block.unicId}')" 
+                            
                         <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
                     </button>
                     <button class="btn btn-sm btn-danger" onclick="deletePlot('${plot.unicId}')" title="מחיקה">

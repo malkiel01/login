@@ -22,10 +22,10 @@ return [
             'cemeteryNameEn',
             'cemeteryCode',
             'nationalInsuranceCode',
-            'address',
+            // 'address',
             'coordinates',
-            'contactName',
-            'contactPhoneName',
+            // 'contactName',
+            // 'contactPhoneName',
             'documents',
             'createDate',
             'updateDate',
@@ -37,9 +37,9 @@ return [
             'name' => 'cemeteryNameHe',
             'nameEn' => 'cemeteryNameEn',
             'code' => 'cemeteryCode',
-            'address' => 'address',
-            'contact' => 'contactName',
-            'phone' => 'contactPhoneName',
+            // 'address' => 'address',
+            // 'contact' => 'contactName',
+            // 'phone' => 'contactPhoneName',
             'created' => 'createDate',
             'status' => 'isActive'
         ],
@@ -70,20 +70,20 @@ return [
                 'sortable' => true,
                 'searchable' => true
             ],
-            [
-                'field' => 'address',
-                'title' => 'כתובת',
-                'type' => 'text',
-                'show_secondary' => 'coordinates',
-                'icon_secondary' => '📍'
-            ],
-            [
-                'field' => 'contactName',
-                'title' => 'איש קשר',
-                'type' => 'text',
-                'show_secondary' => 'contactPhoneName',
-                'icon_secondary' => '📞'
-            ],
+            // [
+            //     'field' => 'address',
+            //     'title' => 'כתובת',
+            //     'type' => 'text',
+            //     'show_secondary' => 'coordinates',
+            //     'icon_secondary' => '📍'
+            // ],
+            // [
+            //     'field' => 'contactName',
+            //     'title' => 'איש קשר',
+            //     'type' => 'text',
+            //     'show_secondary' => 'contactPhoneName',
+            //     'icon_secondary' => '📞'
+            // ],
             [
                 'field' => 'createDate',
                 'title' => 'נוצר',
@@ -95,7 +95,7 @@ return [
                 'field' => 'actions',
                 'title' => 'פעולות',
                 'type' => 'actions',
-                'width' => '150px',
+                'width' => '190px',
                 'actions' => ['edit', 'delete', 'enter']
             ]
         ],
@@ -134,14 +134,14 @@ return [
                 'required' => false,
                 'permissions' => ['admin', 'cemetery_manager']
             ],
-            [
-                'name' => 'address',
-                'label' => 'כתובת',
-                'type' => 'textarea',
-                'rows' => 2,
-                'placeholder' => 'הזן כתובת מלאה',
-                'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
-            ],
+            // [
+            //     'name' => 'address',
+            //     'label' => 'כתובת',
+            //     'type' => 'textarea',
+            //     'rows' => 2,
+            //     'placeholder' => 'הזן כתובת מלאה',
+            //     'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
+            // ],
             [
                 'name' => 'coordinates',
                 'label' => 'קואורדינטות',
@@ -149,19 +149,19 @@ return [
                 'placeholder' => 'lat,lng',
                 'permissions' => ['admin', 'cemetery_manager', 'manager']
             ],
-            [
-                'name' => 'contactName',
-                'label' => 'שם איש קשר',
-                'type' => 'text',
-                'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
-            ],
-            [
-                'name' => 'contactPhoneName',
-                'label' => 'טלפון איש קשר',
-                'type' => 'tel',
-                'placeholder' => '050-0000000',
-                'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
-            ],
+            // [
+            //     'name' => 'contactName',
+            //     'label' => 'שם איש קשר',
+            //     'type' => 'text',
+            //     'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
+            // ],
+            // [
+            //     'name' => 'contactPhoneName',
+            //     'label' => 'טלפון איש קשר',
+            //     'type' => 'tel',
+            //     'placeholder' => '050-0000000',
+            //     'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
+            // ],
         ]
     ],
     
@@ -242,7 +242,7 @@ return [
                 'field' => 'actions',
                 'title' => 'פעולות',
                 'type' => 'actions',
-                'width' => '150px',
+                'width' => '190px',
                 'actions' => ['edit', 'delete', 'enter']
             ]
         ],

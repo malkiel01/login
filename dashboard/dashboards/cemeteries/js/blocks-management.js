@@ -428,20 +428,6 @@ async function initBlocksTable(data, totalItems = null) {
                 sortable: true,
                 render: (block) => formatDate(block.createDate)
             },
-            // {
-            //     field: 'actions',
-            //     label: 'פעולות',
-            //     width: '120px',
-            //     sortable: false,
-            //     render: (block) => `
-            //         <button class="btn btn-sm btn-secondary" onclick="editBlock('${block.unicId}')" title="עריכה">
-            //             <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
-            //         </button>
-            //         <button class="btn btn-sm btn-danger" onclick="deleteBlock('${block.unicId}')" title="מחיקה">
-            //             <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
-            //         </button>
-            //     `
-            // },
             {
                 field: 'actions',
                 label: 'פעולות',
@@ -462,10 +448,6 @@ async function initBlocksTable(data, totalItems = null) {
             }
         ],
 
-        // onRowDoubleClick: (block) => {
-        //     handleBlockDoubleClick(block.unicId, block.blockNameHe);
-        // },
-        
         data: data,
         
         sortable: true,

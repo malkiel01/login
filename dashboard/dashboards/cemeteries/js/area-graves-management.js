@@ -282,7 +282,7 @@ async function initAreaGravesSearch(plotId = null) {
                 console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()) });
             },
             
-            onResults: (data) => {
+            onResults2: (data) => {
                 console.log('📦 Results:', data.pagination?.total || data.total || 0, 'area graves found');
                 
                 // ⭐ טיפול בדפים - מצטבר כמו ב-customers!
@@ -298,6 +298,32 @@ async function initAreaGravesSearch(plotId = null) {
                 }
                 
                 // ⭐⭐ הסרת סינון מכאן! הסינון עבר ל-renderAreaGravesRows!
+                console.log('📊 Final count:', data.pagination?.total || data.data.length);
+            },
+
+            onResults: (data) => {
+                console.log('📦 API returned:', data.pagination?.total || data.total || 0, 'area graves found');
+                
+                // ⭐ טיפול בדפים - מצטבר כמו ב-customers!
+                const currentPage = data.pagination?.page || 1;
+                
+                if (currentPage === 1) {
+                    // דף ראשון - התחל מחדש
+                    currentAreaGraves = data.data;
+                } else {
+                    // דפים נוספים - הוסף לקיימים
+                    currentAreaGraves = [...currentAreaGraves, ...data.data];
+                    console.log(`📦 Added page ${currentPage}, total now: ${currentAreaGraves.length}`);
+                }
+                
+                // ⭐⭐⭐ עדכן ישירות את areaGraveSearch!
+                if (areaGraveSearch && areaGraveSearch.state) {
+                    areaGraveSearch.state.totalResults = data.pagination?.total || data.data.length;
+                    if (areaGraveSearch.updateCounter) {
+                        areaGraveSearch.updateCounter();
+                    }
+                }
+                
                 console.log('📊 Final count:', data.pagination?.total || data.data.length);
             },
             

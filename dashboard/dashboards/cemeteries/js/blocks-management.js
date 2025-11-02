@@ -300,47 +300,14 @@ async function initBlocksSearch(cemeteryId = null) {
                console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()), cemeteryId: currentCemeteryId });
            },
 
-            onResults: (data) => {
+           onResults: (data) => {
                 console.log('📦 API returned:', data.data.length, 'blocks');
                 
-                // ⭐ סינון client-side כאן!
-                if (currentCemeteryId && data.data) {
-                    const filteredData = data.data.filter(block => 
-                        block.cemeteryId === currentCemeteryId || 
-                        block.cemetery_id === currentCemeteryId
-                    );
-                    
-                    console.log('🎯 Filtered:', data.data.length, '→', filteredData.length, 'blocks');
-                    
-                    // ⭐ עדכן את data.data
-                    data.data = filteredData;
-                    
-                    // ⭐⭐ עדכן את pagination.total - זה החשוב!
-                    if (data.pagination) {
-                        data.pagination.total = filteredData.length;
-                    }
-                }
-                
+                // ⭐ רק שמור את הנתונים - הסינון יקרה ב-renderBlocksRows!
                 currentBlocks = data.data;
-                console.log('📊 Final count:', data.pagination?.total || data.data.length);
-            },
-
-            onResults2: (data) => {
-                // ⭐ יש סינון? תסנן!
-                if (currentCemeteryId && data.data) {
-                    data.data = data.data.filter(block => 
-                        block.cemeteryId === currentCemeteryId || 
-                        block.cemetery_id === currentCemeteryId
-                    );
-                    
-                    // ⭐ עדכן total למספר שנשאר!
-                    if (data.pagination) {
-                        data.pagination.total = data.data.length;
-                    }
-                }
                 
-                currentBlocks = data.data;
-                console.log('📊 Results:', data.data.length, 'blocks');
+                // ⭐ לא לעדכן pagination או totalResults כאן!
+                // renderBlocksRows יעשה את זה אחרי הסינון
             },
            
            onError: (error) => {
@@ -482,7 +449,7 @@ async function initBlocksTable(data, totalItems = null) {
 // ===================================================================
 // רינדור שורות הגושים - בדיוק כמו בבתי עלמין
 // ===================================================================
-function renderBlocksRows2(data, container, pagination = null) {
+function renderBlocksRows(data, container, pagination = null) {
     console.log(`📝 renderBlocksRows called with ${data.length} items`);
     
     // ⭐ סינון client-side לפי cemeteryId
@@ -582,93 +549,6 @@ function renderBlocksRows2(data, container, pagination = null) {
     }
 
     // ⭐ עדכן את התצוגה של UniversalSearch
-    if (blockSearch) {
-        blockSearch.state.totalResults = totalItems;
-        blockSearch.updateCounter();
-    }
-}
-function renderBlocksRows(data, container, pagination = null) {
-    console.log(`📝 renderBlocksRows called with ${data.length} items`);
-    
-    // ⭐ הנתונים כבר מסוננים מ-onResults!
-    const filteredData = data;
-    const totalItems = filteredData.length;
-    
-    console.log(`📊 Total items to display: ${totalItems}`);
-
-    if (filteredData.length === 0) {
-        if (blocksTable) {
-            blocksTable.setData([]);
-        }
-        
-        // ⭐⭐⭐ הודעה מותאמת
-        if (currentCemeteryId && currentCemeteryName) {
-            container.innerHTML = `
-                <tr>
-                    <td colspan="9" style="text-align: center; padding: 60px;">
-                        <div style="color: #6b7280;">
-                            <div style="font-size: 48px; margin-bottom: 16px;">📦</div>
-                            <div style="font-size: 20px; font-weight: 600; margin-bottom: 12px; color: #374151;">
-                                אין גושים בבית עלמין ${currentCemeteryName}
-                            </div>
-                            <div style="font-size: 14px; margin-bottom: 24px; color: #6b7280;">
-                                בית העלמין עדיין לא מכיל גושים. תוכל להוסיף גוש חדש
-                            </div>
-                            <button 
-                                onclick="if(typeof FormHandler !== 'undefined' && FormHandler.openForm) { FormHandler.openForm('block', '${currentCemeteryId}', null); } else { alert('FormHandler לא זמין'); }" 
-                                style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); 
-                                       color: white; 
-                                       border: none; 
-                                       padding: 12px 24px; 
-                                       border-radius: 8px; 
-                                       font-size: 15px; 
-                                       font-weight: 600; 
-                                       cursor: pointer; 
-                                       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                                       transition: all 0.2s;"
-                                onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.15)';"
-                                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)';">
-                                ➕ הוסף גוש ראשון
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        } else {
-            container.innerHTML = `
-                <tr>
-                    <td colspan="9" style="text-align: center; padding: 60px;">
-                        <div style="color: #9ca3af;">
-                            <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
-                            <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">לא נמצאו תוצאות</div>
-                            <div>נסה לשנות את מילות החיפוש או הפילטרים</div>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        }
-        return;
-    }
-    
-    const tableWrapperExists = document.querySelector('.table-wrapper[data-fixed-width="true"]');
-    
-    if (!tableWrapperExists && blocksTable) {
-        console.log('🗑️ TableManager DOM was deleted, resetting blocksTable variable');
-        blocksTable = null;
-        window.blocksTable = null;
-    }
-    
-    if (!blocksTable || !tableWrapperExists) {
-        console.log(`🏗️ Creating new TableManager with ${totalItems} items`);
-        initBlocksTable(filteredData, totalItems);
-    } else {
-        console.log(`♻️ Updating TableManager with ${totalItems} items`);
-        if (blocksTable.config) {
-            blocksTable.config.totalItems = totalItems;
-        }
-        blocksTable.setData(filteredData);
-    }
-
     if (blockSearch) {
         blockSearch.state.totalResults = totalItems;
         blockSearch.updateCounter();

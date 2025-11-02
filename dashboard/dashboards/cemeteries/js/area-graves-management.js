@@ -64,14 +64,14 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
     }
     
     // עדכן את הסוג הנוכחי
-    window.currentType = 'area_grave';
+    window.currentType = 'areaGrave';
     window.currentParentId = plotId;
     
     // ⭐ נקה
     if (typeof DashboardCleaner !== 'undefined') {
-        DashboardCleaner.clear({ targetLevel: 'area_grave' });
+        DashboardCleaner.clear({ targetLevel: 'areaGrave' });
     } else if (typeof clearDashboard === 'function') {
-        clearDashboard({ targetLevel: 'area_grave' });
+        clearDashboard({ targetLevel: 'areaGrave' });
     }
     
     if (typeof clearAllSidebarSelections === 'function') {
@@ -85,7 +85,7 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
     // עדכן breadcrumb
     if (typeof updateBreadcrumb === 'function') {
         const breadcrumbData = { 
-            area_grave: { name: plotName ? `אחוזות קבר של ${plotName}` : 'אחוזות קבר' }
+            areaGrave: { name: plotName ? `אחוזות קבר של ${plotName}` : 'אחוזות קבר' }
         };
         if (plotId && plotName) {
             breadcrumbData.plot = { id: plotId, name: plotName };
@@ -208,7 +208,7 @@ async function buildAreaGravesContainer(plotId = null, plotName = null) {
 // ===================================================================
 async function initAreaGravesSearch(plotId = null) {
     const config = {
-        entityType: 'area_grave',
+        entityType: 'areaGrave',
         apiEndpoint: '/dashboard/dashboards/cemeteries/api/area-graves-api.php',
         action: 'list',
         
@@ -269,7 +269,7 @@ async function initAreaGravesSearch(plotId = null) {
         resultsContainerSelector: '#tableBody',
         
         placeholder: 'חיפוש אחוזות קבר לפי שם, קואורדינטות, סוג...',
-        itemsPerPage: 200,  // ⭐ שינוי! טעינה מדורגת
+        itemsPerPage: 999999,  // ⭐ שינוי! טעינה מדורגת
         
         renderFunction: renderAreaGravesRows,
         

@@ -382,7 +382,7 @@ try {
             $fields = [
                 'plotNameHe', 'plotNameEn', 'plotCode',
                 'plotLocation', 'nationalInsuranceCode', 'comments',
-                'coordinates', 'documentsList', 'updateDate'
+                'coordinates', 'documentsList', 'updateDate', 'blockId'
             ];
             
             $updateFields = [];

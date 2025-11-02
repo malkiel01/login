@@ -38,10 +38,13 @@ try {
             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
             $offset = ($page - 1) * $limit;
             
-            $sql = "SELECT b.*, c.cemeteryNameHe
-                    FROM blocks b
-                    LEFT JOIN cemeteries c ON b.cemeteryId = c.unicId
-                    WHERE b.isActive = 1";
+            // $sql = "SELECT b.*, c.cemeteryNameHe
+            //         FROM blocks b
+            //         LEFT JOIN cemeteries c ON b.cemeteryId = c.unicId
+            //         WHERE b.isActive = 1";
+
+            $sql = "SELECT b.* FROM blocks_view b WHERE b.isActive = 1";
+
             $params = [];
             
             if ($cemeteryId) {

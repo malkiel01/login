@@ -31,7 +31,7 @@ $id = $_GET['id'] ?? null;
 
 try {
     switch ($action) {
-        case 'list':
+        case 'list2':
             $search = $_GET['search'] ?? '';
             $blockId = $_GET['blockId'] ?? '';
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -141,7 +141,7 @@ try {
             ]);
             break;
             
-        case 'list2':
+        case 'list':
             $search = $_GET['search'] ?? '';
             $blockId = $_GET['blockId'] ?? '';
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;

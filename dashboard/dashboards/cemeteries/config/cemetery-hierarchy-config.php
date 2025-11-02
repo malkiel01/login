@@ -682,7 +682,7 @@ return [
     // ========================================
     // הגדרות לאחוזות קבר
     // ========================================
-    'area_grave' => [
+    'areaGrave' => [
         'table' => 'areaGraves',
         'title' => 'אחוזות קבר',
         'singular' => 'אחוזת קבר',
@@ -798,7 +798,7 @@ return [
                 'type' => 'textarea'
             ]
         ],
-        
+
         'table_columns' => [
             [
                 'field' => 'areaGraveNameHe',

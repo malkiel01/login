@@ -419,85 +419,85 @@ async function initAreaGravesTable(data, totalItems = null) {
         
         totalItems: actualTotalItems,
 
-        // columns: await loadColumnsFromConfig('areaGrave'),
+        columns: await loadColumnsFromConfig('areaGrave'),
 
-        columns: [
-            {
-                field: 'areaGraveNameHe',
-                label: 'שם אחוזת קבר',
-                width: '200px',
-                sortable: true,
-                render: (areaGrave) => {
-                    return `<a href="#" onclick="handleAreaGraveDoubleClick('${areaGrave.unicId}', '${(areaGrave.areaGraveNameHe || '').replace(/'/g, "\\'")}'); return false;" 
-                               style="color: #2563eb; text-decoration: none; font-weight: 500;">
-                        ${areaGrave.areaGraveNameHe || 'ללא שם'}
-                    </a>`;
-                }
-            },
-            {
-                field: 'coordinates',
-                label: 'קואורדינטות',
-                width: '150px',
-                sortable: true,
-                render: (areaGrave) => {
-                    const coords = areaGrave.coordinates || '-';
-                    return `<span style="font-family: monospace; font-size: 12px;">${coords}</span>`;
-                }
-            },
-            {
-                field: 'graveType',
-                label: 'סוג קבר',
-                width: '120px',
-                sortable: true,
-                render: (areaGrave) => {
-                    const typeName = getGraveTypeName(areaGrave.graveType);
-                    return `<span style="background: #e0e7ff; color: #4338ca; padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 500;">${typeName}</span>`;
-                }
-            },
-            {
-                field: 'row_name',
-                label: 'שורה',
-                width: '150px',
-                sortable: true,
-                render: (areaGrave) => {
-                    const rowName = areaGrave.row_name || areaGrave.lineNameHe || '-';
-                    return `<span style="color: #6b7280;">📏 ${rowName}</span>`;
-                }
-            },
-            {
-                field: 'graves_count',
-                label: 'קברים',
-                width: '80px',
-                type: 'number',
-                sortable: true,
-                render: (areaGrave) => {
-                    const count = areaGrave.graves_count || 0;
-                    return `<span style="background: #dcfce7; color: #15803d; padding: 3px 10px; border-radius: 4px; font-size: 13px; font-weight: 600;">${count}</span>`;
-                }
-            },
-            {
-                field: 'createDate',
-                label: 'תאריך',
-                width: '120px',
-                type: 'date',
-                sortable: true,
-                render: (areaGrave) => formatDate(areaGrave.createDate)
-            },
-            {
-                field: 'actions',
-                label: 'פעולות',
-                width: '120px',
-                sortable: false,
-                render: (areaGrave) => `
-                    <button class="btn btn-sm btn-secondary" onclick="editAreaGrave('${areaGrave.unicId}')" title="עריכה">
-                        <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteAreaGrave('${areaGrave.unicId}')" title="מחיקה">
-                        <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
-                    </button>
-                `
-            }
-        ],
+        // columns: [
+        //     {
+        //         field: 'areaGraveNameHe',
+        //         label: 'שם אחוזת קבר',
+        //         width: '200px',
+        //         sortable: true,
+        //         render: (areaGrave) => {
+        //             return `<a href="#" onclick="handleAreaGraveDoubleClick('${areaGrave.unicId}', '${(areaGrave.areaGraveNameHe || '').replace(/'/g, "\\'")}'); return false;" 
+        //                        style="color: #2563eb; text-decoration: none; font-weight: 500;">
+        //                 ${areaGrave.areaGraveNameHe || 'ללא שם'}
+        //             </a>`;
+        //         }
+        //     },
+        //     {
+        //         field: 'coordinates',
+        //         label: 'קואורדינטות',
+        //         width: '150px',
+        //         sortable: true,
+        //         render: (areaGrave) => {
+        //             const coords = areaGrave.coordinates || '-';
+        //             return `<span style="font-family: monospace; font-size: 12px;">${coords}</span>`;
+        //         }
+        //     },
+        //     {
+        //         field: 'graveType',
+        //         label: 'סוג קבר',
+        //         width: '120px',
+        //         sortable: true,
+        //         render: (areaGrave) => {
+        //             const typeName = getGraveTypeName(areaGrave.graveType);
+        //             return `<span style="background: #e0e7ff; color: #4338ca; padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 500;">${typeName}</span>`;
+        //         }
+        //     },
+        //     {
+        //         field: 'row_name',
+        //         label: 'שורה',
+        //         width: '150px',
+        //         sortable: true,
+        //         render: (areaGrave) => {
+        //             const rowName = areaGrave.row_name || areaGrave.lineNameHe || '-';
+        //             return `<span style="color: #6b7280;">📏 ${rowName}</span>`;
+        //         }
+        //     },
+        //     {
+        //         field: 'graves_count',
+        //         label: 'קברים',
+        //         width: '80px',
+        //         type: 'number',
+        //         sortable: true,
+        //         render: (areaGrave) => {
+        //             const count = areaGrave.graves_count || 0;
+        //             return `<span style="background: #dcfce7; color: #15803d; padding: 3px 10px; border-radius: 4px; font-size: 13px; font-weight: 600;">${count}</span>`;
+        //         }
+        //     },
+        //     {
+        //         field: 'createDate',
+        //         label: 'תאריך',
+        //         width: '120px',
+        //         type: 'date',
+        //         sortable: true,
+        //         render: (areaGrave) => formatDate(areaGrave.createDate)
+        //     },
+        //     {
+        //         field: 'actions',
+        //         label: 'פעולות',
+        //         width: '120px',
+        //         sortable: false,
+        //         render: (areaGrave) => `
+        //             <button class="btn btn-sm btn-secondary" onclick="editAreaGrave('${areaGrave.unicId}')" title="עריכה">
+        //                 <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
+        //             </button>
+        //             <button class="btn btn-sm btn-danger" onclick="deleteAreaGrave('${areaGrave.unicId}')" title="מחיקה">
+        //                 <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
+        //             </button>
+        //         `
+        //     }
+        // ],
         
         data: data,
         

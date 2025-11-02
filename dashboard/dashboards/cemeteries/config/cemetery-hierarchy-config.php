@@ -134,7 +134,7 @@ return [
                 'required' => false,
                 'permissions' => ['admin', 'cemetery_manager']
             ],
-            
+
             // [
             //     'name' => 'address',
             //     'label' => 'כתובת',
@@ -163,6 +163,69 @@ return [
             //     'placeholder' => '050-0000000',
             //     'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
             // ],
+        ],
+
+        // שדות לטבלה
+        'table_columns' => [
+            [
+                'field' => 'cemeteryNameHe',
+                'title' => 'שם בית עלמין',  // ⚠️ שים לב: title ולא label
+                'width' => '200px',
+                'sortable' => true,
+                'type' => 'link',  // ⭐ סוג מיוחד - יטופל ב-JS
+                'clickable' => true
+            ],
+            [
+                'field' => 'cemeteryCode',
+                'title' => 'קוד',
+                'width' => '100px',
+                'sortable' => true,
+                'type' => 'text'
+            ],
+            [
+                'field' => 'address',
+                'title' => 'כתובת',
+                'width' => '250px',
+                'sortable' => true,
+                'type' => 'text'
+            ],
+            [
+                'field' => 'contactName',
+                'title' => 'איש קשר',
+                'width' => '150px',
+                'sortable' => true,
+                'type' => 'text'
+            ],
+            [
+                'field' => 'contactPhoneName',
+                'title' => 'טלפון',
+                'width' => '120px',
+                'sortable' => true,
+                'type' => 'text'
+            ],
+            [
+                'field' => 'blocks_count',
+                'title' => 'גושים',
+                'width' => '80px',
+                'sortable' => true,
+                'type' => 'badge',  // ⭐ סוג מיוחד - יטופל ב-JS
+                'badge_style' => 'info'
+            ],
+            [
+                'field' => 'createDate',
+                'title' => 'תאריך',
+                'width' => '120px',
+                'sortable' => true,
+                'type' => 'date'  // ⭐ סוג מיוחד - יטופל ב-JS
+            ],
+            [
+                'field' => 'actions',
+                'title' => 'פעולות',
+                'width' => '120px',
+                'sortable' => false,
+                'type' => 'actions',  // ⭐ סוג מיוחד - יטופל ב-JS
+                'actions' => ['edit', 'delete']
+            ]
         ]
     ],
     

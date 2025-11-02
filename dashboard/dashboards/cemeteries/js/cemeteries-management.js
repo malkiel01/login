@@ -248,83 +248,139 @@ async function initCemeteriesTable(data, totalItems = null) {
         return cemeteriesTable;
     }
 
+    // טעינת העמודות מהשרת
+    async function loadColumnsFromConfig() {
+        const response = await fetch('/dashboard/dashboards/cemeteries/api/get-config.php?type=cemetery&section=table_columns');
+        const result = await response.json();
+
+        // המרה לפורמט של TableManager
+        const columns = result.data.map(col => {
+            const column = {
+                field: col.field,
+                label: col.title,  // המרה מ-title ל-label
+                width: col.width,
+                sortable: col.sortable
+            };
+            
+            // טיפול בסוגים מיוחדים
+            switch(col.type) {
+                case 'link':
+                    column.render = (cemetery) => {
+                        return `<a href="#" onclick="handleCemeteryDoubleClick('${cemetery.unicId}', '${cemetery.cemeteryNameHe?.replace(/'/g, "\\'")}'); return false;" 
+                                style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                            ${cemetery[col.field]}
+                        </a>`;
+                    };
+                    break;
+                    
+                case 'badge':
+                    column.render = (cemetery) => {
+                        const count = cemetery[col.field] || 0;
+                        return `<span style="background: #dbeafe; color: #1e40af; padding: 3px 10px; border-radius: 4px; font-size: 13px; font-weight: 600; display: inline-block;">${count}</span>`;
+                    };
+                    break;
+                    
+                case 'date':
+                    column.render = (cemetery) => formatDate(cemetery[col.field]);
+                    break;
+                    
+                case 'actions':
+                    column.render = (cemetery) => `
+                        <button class="btn btn-sm btn-secondary" onclick="editCemetery('${cemetery.unicId}')" title="עריכה">
+                            <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteCemetery('${cemetery.unicId}')" title="מחיקה">
+                            <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
+                        </button>
+                    `;
+                    break;
+            }
+            
+            return column;
+        });
+        
+        return columns;
+    }
+
     cemeteriesTable = new TableManager({
         tableSelector: '#mainTable',  // ⭐ זה הכי חשוב!
         
         // ⭐ הוספת totalItems כפרמטר!
         totalItems: actualTotalItems,
 
-        columns: [
-            {
-                field: 'cemeteryNameHe',
-                label: 'שם בית עלמין',
-                width: '200px',
-                sortable: true,
-                render: (cemetery) => {
-                    return `<a href="#" onclick="handleCemeteryDoubleClick('${cemetery.unicId}', '${cemetery.cemeteryNameHe.replace(/'/g, "\\'")}'); return false;" 
-                               style="color: #2563eb; text-decoration: none; font-weight: 500;">
-                        ${cemetery.cemeteryNameHe}
-                    </a>`;
-                }
-            },
-            {
-                field: 'cemeteryCode',
-                label: 'קוד',
-                width: '100px',
-                sortable: true
-            },
-            {
-                field: 'address',
-                label: 'כתובת',
-                width: '250px',
-                sortable: true
-            },
-            {
-                field: 'contactName',
-                label: 'איש קשר',
-                width: '150px',
-                sortable: true
-            },
-            {
-                field: 'contactPhoneName',
-                label: 'טלפון',
-                width: '120px',
-                sortable: true
-            },
-            {
-                field: 'blocks_count',
-                label: 'גושים',
-                width: '80px',
-                type: 'number',
-                sortable: true,
-                render: (cemetery) => {
-                    const count = cemetery.blocks_count || 0;
-                    return `<span style="background: #dbeafe; color: #1e40af; padding: 3px 10px; border-radius: 4px; font-size: 13px; font-weight: 600; display: inline-block;">${count}</span>`;
-                }
-            },
-            {
-                field: 'createDate',
-                label: 'תאריך',
-                width: '120px',
-                type: 'date',
-                sortable: true,
-                render: (cemetery) => formatDate(cemetery.createDate)
-            },
-            {
-                field: 'actions',
-                label: 'פעולות',
-                width: '120px',
-                sortable: false,
-                render: (cemetery) => `
-                    <button class="btn btn-sm btn-secondary" onclick="editCemetery('${cemetery.unicId}')" title="עריכה">
-                        <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteCemetery('${cemetery.unicId}')" title="מחיקה">
-                        <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
-                    </button>
-                `
-            }
-        ],
+        columns: await loadColumnsFromConfig(),
+
+        // columns: [
+        //     {
+        //         field: 'cemeteryNameHe',
+        //         label: 'שם בית עלמין',
+        //         width: '200px',
+        //         sortable: true,
+        //         render: (cemetery) => {
+        //             return `<a href="#" onclick="handleCemeteryDoubleClick('${cemetery.unicId}', '${cemetery.cemeteryNameHe.replace(/'/g, "\\'")}'); return false;" 
+        //                        style="color: #2563eb; text-decoration: none; font-weight: 500;">
+        //                 ${cemetery.cemeteryNameHe}
+        //             </a>`;
+        //         }
+        //     },
+        //     {
+        //         field: 'cemeteryCode',
+        //         label: 'קוד',
+        //         width: '100px',
+        //         sortable: true
+        //     },
+        //     {
+        //         field: 'address',
+        //         label: 'כתובת',
+        //         width: '250px',
+        //         sortable: true
+        //     },
+        //     {
+        //         field: 'contactName',
+        //         label: 'איש קשר',
+        //         width: '150px',
+        //         sortable: true
+        //     },
+        //     {
+        //         field: 'contactPhoneName',
+        //         label: 'טלפון',
+        //         width: '120px',
+        //         sortable: true
+        //     },
+        //     {
+        //         field: 'blocks_count',
+        //         label: 'גושים',
+        //         width: '80px',
+        //         type: 'number',
+        //         sortable: true,
+        //         render: (cemetery) => {
+        //             const count = cemetery.blocks_count || 0;
+        //             return `<span style="background: #dbeafe; color: #1e40af; padding: 3px 10px; border-radius: 4px; font-size: 13px; font-weight: 600; display: inline-block;">${count}</span>`;
+        //         }
+        //     },
+        //     {
+        //         field: 'createDate',
+        //         label: 'תאריך',
+        //         width: '120px',
+        //         type: 'date',
+        //         sortable: true,
+        //         render: (cemetery) => formatDate(cemetery.createDate)
+        //     },
+        //     {
+        //         field: 'actions',
+        //         label: 'פעולות',
+        //         width: '120px',
+        //         sortable: false,
+        //         render: (cemetery) => `
+        //             <button class="btn btn-sm btn-secondary" onclick="editCemetery('${cemetery.unicId}')" title="עריכה">
+        //                 <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
+        //             </button>
+        //             <button class="btn btn-sm btn-danger" onclick="deleteCemetery('${cemetery.unicId}')" title="מחיקה">
+        //                 <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
+        //             </button>
+        //         `
+        //     }
+        // ],
 
         // onRowDoubleClick: (cemetery) => {                    // ⭐ שורה חדשה
         //     // handleCemeteryDoubleClick(cemetery.unicId, cemetery.cemeteryNameHe);

@@ -40,7 +40,7 @@ try {
             
             // בניית השאילתה הראשית
             // $sql = "SELECT c.* FROM cemeteries c WHERE c.isActive = 1";
-            $sql = "SELECT c.* FROM cemeteries_view WHERE c.isActive = 1";
+            $sql = "SELECT c.* FROM cemeteries_view c WHERE c.isActive = 1";
 
             $params = [];
             

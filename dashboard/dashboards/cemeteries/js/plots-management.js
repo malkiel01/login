@@ -300,7 +300,7 @@ async function initPlotsSearch(blockId = null) {
                console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()), blockId: currentBlockId });
            },
            
-           onResults: (data) => {
+           onResults2: (data) => {
                console.log('📦 Raw results from API:', data.data.length, 'plots');
                
                // ⭐ אם יש סינון - סנן את data.data לפני כל דבר אחר!
@@ -324,6 +324,40 @@ async function initPlotsSearch(blockId = null) {
                currentPlots = data.data;
                console.log('📊 Final count:', data.pagination?.total || data.data.length);
            },
+
+           onResults: (data) => {
+                console.log('📦 Raw results from API:', data.data.length, 'plots');
+                
+                // ⭐ אם יש סינון - סנן את data.data לפני כל דבר אחר!
+                if (currentBlockId && data.data) {
+                    const filteredData = data.data.filter(plot => 
+                        plot.blockId === currentBlockId || 
+                        plot.block_id === currentBlockId
+                    );
+                    
+                    console.log('⚠️ Client-side filter:', data.data.length, '→', filteredData.length, 'plots');
+                    
+                    // ⭐ עדכן את data.data עצמו!
+                    data.data = filteredData;
+                    
+                    // ⭐ עדכן את pagination.total
+                    if (data.pagination) {
+                        data.pagination.total = filteredData.length;
+                    }
+                }
+                
+                currentPlots = data.data;
+                
+                // ⭐⭐⭐ עדכן ישירות את plotSearch!
+                if (plotSearch && plotSearch.state) {
+                    plotSearch.state.totalResults = data.data.length;
+                    if (plotSearch.updateCounter) {
+                        plotSearch.updateCounter();
+                    }
+                }
+                
+                console.log('📊 Final count:', data.data.length);
+            },
            
            onError: (error) => {
                console.error('❌ Search error:', error);
@@ -937,37 +971,6 @@ function checkScrollStatus() {
         console.log(`   🔽 Scroll down to load ${Math.min(plotsTable.config.itemsPerPage, remaining)} more items`);
     } else {
         console.log('   ✅ All items loaded');
-    }
-}
-
-// ===================================================
-// פונקציה לטיפול בדאבל-קליק על חלקה
-// ===================================================
-async function handlePlotDoubleClick2(plotId, plotName) {
-    console.log('🖱️ Double-click on plot:', plotName, plotId);
-    
-    try {
-        // טעינת חלקות
-        console.log('📦 Loading plots for block:', blockName);
-        // יצירת והצגת כרטיס
-        if (typeof createPlotCard === 'function') {
-            const cardHtml = await createPlotCard(plotId);
-            if (cardHtml && typeof displayHierarchyCard === 'function') {
-                displayHierarchyCard(cardHtml);
-            }
-        }
-        
-        // טעינת שורות (כשיהיה מוכן)
-        console.log('📦 Loading rows for plot:', plotName);
-        if (typeof loadRows === 'function') {
-            loadRows(plotId, plotName);
-        } else {
-            console.warn('loadRows function not found');
-        }
-        
-    } catch (error) {
-        console.error('❌ Error in handlePlotDoubleClick:', error);
-        showToast('שגיאה בטעינת פרטי החלקה', 'error');
     }
 }
 

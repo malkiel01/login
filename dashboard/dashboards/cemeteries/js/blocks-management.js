@@ -299,57 +299,37 @@ async function initBlocksSearch(cemeteryId = null) {
            onSearch: (query, filters) => {
                console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()), cemeteryId: currentCemeteryId });
            },
-           
-           onResults2: (data) => {
-               // ⭐ אם יש סינון - סנן את data.data לפני כל דבר אחר!
-               if (currentCemeteryId && data.data) {
-                   const filteredData = data.data.filter(block => 
-                       block.cemeteryId === currentCemeteryId || 
-                       block.cemetery_id === currentCemeteryId
-                   );
 
-                   // ⭐ עדכן את data.data עצמו!
-                   data.data = filteredData;
-                   
-                   // ⭐ עדכן את pagination.total
-                   if (data.pagination) {
-                       data.pagination.total = filteredData.length;
-                   }
-               }
-               
-               currentBlocks = data.data;
-           },
+            onResults: (data) => {
+                // ⭐ אם יש סינון - סנן את data.data לפני כל דבר אחר!
+                if (currentCemeteryId && data.data) {
+                    const filteredData = data.data.filter(block => 
+                        block.cemeteryId === currentCemeteryId || 
+                        block.cemetery_id === currentCemeteryId
+                    );
 
-onResults: (data) => {
-    // ⭐ אם יש סינון - סנן את data.data לפני כל דבר אחר!
-    if (currentCemeteryId && data.data) {
-        const filteredData = data.data.filter(block => 
-            block.cemeteryId === currentCemeteryId || 
-            block.cemetery_id === currentCemeteryId
-        );
-
-        // ⭐ עדכן את data.data עצמו!
-        data.data = filteredData;
-        
-        // ⭐ עדכן את pagination.total
-        if (data.pagination) {
-            data.pagination.total = filteredData.length;
-        }
-    }
-    
-    currentBlocks = data.data;
-    
-    // ⭐⭐⭐ עדכן ישירות את blockSearch!
-    if (blockSearch && blockSearch.state) {
-        blockSearch.state.totalResults = data.data.length;
-        if (blockSearch.updateCounter) {
-            blockSearch.updateCounter();
-        }
-    }
-    
-    console.log('📊 Final blocks:', data.data.length);
-},
-           
+                    // ⭐ עדכן את data.data עצמו!
+                    data.data = filteredData;
+                    
+                    // ⭐ עדכן את pagination.total
+                    if (data.pagination) {
+                        data.pagination.total = filteredData.length;
+                    }
+                }
+                
+                currentBlocks = data.data;
+                
+                // ⭐⭐⭐ עדכן ישירות את blockSearch!
+                if (blockSearch && blockSearch.state) {
+                    blockSearch.state.totalResults = data.data.length;
+                    if (blockSearch.updateCounter) {
+                        blockSearch.updateCounter();
+                    }
+                }
+                
+                console.log('📊 Final blocks:', data.data.length);
+            },
+                    
            onError: (error) => {
                console.error('❌ Search error:', error);
                showToast('שגיאה בחיפוש גושים', 'error');

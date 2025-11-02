@@ -523,6 +523,58 @@ return [
                 'type' => 'textarea',
                 'rows' => 3
             ]
+        ],
+
+        'table_columns' => [
+            [
+                'field' => 'plotNameHe',
+                'title' => 'שם חלקה',
+                'width' => '200px',
+                'sortable' => true,
+                'type' => 'link'
+            ],
+            [
+                'field' => 'plotCode',
+                'title' => 'קוד',
+                'width' => '100px',
+                'sortable' => true,
+                'type' => 'text'
+            ],
+            [
+                'field' => 'block_name',  // ⭐ זה כבר מגיע מה-API
+                'title' => 'גוש',
+                'width' => '200px',
+                'sortable' => true,
+                'type' => 'text'
+            ],
+            [
+                'field' => 'rows_count',
+                'title' => 'שורות',
+                'width' => '80px',
+                'sortable' => true,
+                'type' => 'badge'
+            ],
+            [
+                'field' => 'statusPlot',
+                'title' => 'סטטוס',
+                'width' => '100px',
+                'sortable' => true,
+                'type' => 'status'
+            ],
+            [
+                'field' => 'createDate',
+                'title' => 'תאריך',
+                'width' => '120px',
+                'sortable' => true,
+                'type' => 'date'
+            ],
+            [
+                'field' => 'actions',
+                'title' => 'פעולות',
+                'width' => '120px',
+                'sortable' => false,
+                'type' => 'actions'
+            ]
         ]
     ],
     

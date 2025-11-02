@@ -815,6 +815,34 @@ return [
                 'type' => 'text'
             ],
             [
+                'field' => 'row_name',  // ⭐ חדש
+                'title' => 'שורה',
+                'width' => '120px',
+                'sortable' => true,
+                'type' => 'text'
+            ],
+            [
+                'field' => 'plot_name',  // ⭐ חדש
+                'title' => 'חלקה',
+                'width' => '120px',
+                'sortable' => true,
+                'type' => 'text'
+            ],
+            [
+                'field' => 'block_name',  // ⭐ חדש
+                'title' => 'גוש',
+                'width' => '120px',
+                'sortable' => true,
+                'type' => 'text'
+            ],
+            [
+                'field' => 'cemetery_name',  // ⭐ חדש
+                'title' => 'בית עלמין',
+                'width' => '150px',
+                'sortable' => true,
+                'type' => 'text'
+            ],
+            [
                 'field' => 'plot_name',
                 'title' => 'חלקה',
                 'width' => '150px',

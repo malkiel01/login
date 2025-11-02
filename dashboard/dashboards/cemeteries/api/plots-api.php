@@ -41,9 +41,7 @@ try {
             $sql = "SELECT p.*, b.blockNameHe as block_name 
                     FROM plots p
                     LEFT JOIN blocks b ON p.blockId = b.unicId
-                    WHERE p.isActive = 1";
-
-            // $sql = "SELECT p.* FROM plots_view p WHERE isActive = 1";            
+                    WHERE p.isActive = 1";          
 
             $params = [];
             
@@ -91,6 +89,122 @@ try {
                 $countParams['search3'] = $searchTerm;
                 $countParams['search4'] = $searchTerm;
                 $countParams['search5'] = $searchTerm;
+            }
+            
+            $countStmt = $pdo->prepare($countSql);
+            $countStmt->execute($countParams);
+            $total = $countStmt->fetchColumn();
+            
+            $totalAllSql = "SELECT COUNT(*) FROM plots WHERE isActive = 1";
+            $totalAllParams = [];
+            if ($blockId) {
+                $totalAllSql .= " AND blockId = :blockId";
+                $totalAllParams['blockId'] = $blockId;
+            }
+            $totalAllStmt = $pdo->prepare($totalAllSql);
+            $totalAllStmt->execute($totalAllParams);
+            $totalAll = $totalAllStmt->fetchColumn();
+            
+            $sql .= " ORDER BY p.createDate DESC LIMIT :limit OFFSET :offset";
+            
+            $stmt = $pdo->prepare($sql);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue(":$key", $value);
+            }
+            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            $plots = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // ⭐ ספירת שורות לכל חלקה (כרגע תמיד 0 - מוכן לעתיד)
+            foreach ($plots as &$plot) {
+                // כאשר תיצור טבלת rows, הסר את ההערה מהשורה הבאה:
+                // $rowStmt = $pdo->prepare("SELECT COUNT(*) FROM rows WHERE plotId = :id AND isActive = 1");
+                // $rowStmt->execute(['id' => $plot['unicId']]);
+                // $plot['rows_count'] = $rowStmt->fetchColumn();
+                
+                // זמני - עד שתיצור טבלת rows:
+                $plot['rows_count'] = 0;
+            }
+            
+            echo json_encode([
+                'success' => true,
+                'data' => $plots,
+                'pagination' => [
+                    'page' => $page,
+                    'limit' => $limit,
+                    'total' => $total,
+                    'totalAll' => $totalAll,
+                    'pages' => ceil($total / $limit)
+                ]
+            ]);
+            break;
+            
+        case 'list2':
+            $search = $_GET['search'] ?? '';
+            $blockId = $_GET['blockId'] ?? '';
+            $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+            $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
+            $offset = ($page - 1) * $limit;
+            
+            // $sql = "SELECT p.*, b.blockNameHe as block_name 
+            //         FROM plots p
+            //         LEFT JOIN blocks b ON p.blockId = b.unicId
+            //         WHERE p.isActive = 1";
+
+            $sql = "SELECT p.* FROM plots_view p WHERE isActive = 1";            
+
+            $params = [];
+            
+            if ($blockId) {
+                $sql .= " AND p.blockId = :blockId";
+                $params['blockId'] = $blockId;
+            }
+            
+            if ($search) {
+                $sql .= " AND (
+                    p.plotNameHe LIKE :search1 OR 
+                    p.plotNameEn LIKE :search2 OR 
+                    p.plotCode LIKE :search3 OR 
+                    p.plotLocation LIKE :search4 OR
+                    p.blockNameHe LIKE :search5 OR
+                    p.cemeteryNameHe LIKE :search6
+                )";
+                $searchTerm = "%$search%";
+                $params['search1'] = $searchTerm;
+                $params['search2'] = $searchTerm;
+                $params['search3'] = $searchTerm;
+                $params['search4'] = $searchTerm;
+                $params['search5'] = $searchTerm;
+                $params['search6'] = $searchTerm;
+            }
+            
+            $countSql = "SELECT COUNT(*) FROM plots_view p 
+                        --  LEFT JOIN blocks b ON p.blockId = b.unicId
+                         WHERE p.isActive = 1";
+            $countParams = [];
+            
+            if ($blockId) {
+                $countSql .= " AND p.blockId = :blockId";
+                $countParams['blockId'] = $blockId;
+            }
+            
+            if ($search) {
+                $countSql .= " AND (
+                    p.plotNameHe LIKE :search1 OR 
+                    p.plotNameEn LIKE :search2 OR 
+                    p.plotCode LIKE :search3 OR 
+                    p.plotLocation LIKE :search4 OR
+                    p.blockNameHe LIKE :search5 OR
+                    p.cemeteryNameHe LIKE :search6
+                )";
+                $countParams['search1'] = $searchTerm;
+                $countParams['search2'] = $searchTerm;
+                $countParams['search3'] = $searchTerm;
+                $countParams['search4'] = $searchTerm;
+                $countParams['search5'] = $searchTerm;
+                $countParams['search6'] = $searchTerm;
             }
             
             $countStmt = $pdo->prepare($countSql);

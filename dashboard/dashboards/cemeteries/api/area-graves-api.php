@@ -36,7 +36,7 @@ try {
         // =====================================================
         // רשימת כל אחוזות הקבר
         // =====================================================
-        case 'list':
+        case 'list2':
             $search = $_GET['search'] ?? '';
             $plotId = $_GET['plotId'] ?? null; // ⭐ סינון לפי חלקה
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -151,7 +151,7 @@ try {
                 ]
             ]);
             break;
-        case 'list2':
+        case 'list':
             $search = $_GET['search'] ?? '';
             $plotId = $_GET['plotId'] ?? null; // ⭐ סינון לפי חלקה
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -173,7 +173,7 @@ try {
             
             // ⭐ סינון לפי חלקה (אם plotId נשלח)
             if ($plotId) {
-                $sql .= " AND ag.plotId = :plotId";
+                $sql .= " AND ag.plot_id = :plotId";  // ⭐ plot_id במקום plotId
                 $params['plotId'] = $plotId;
             }
             
@@ -203,12 +203,11 @@ try {
             // ✅ ספירת תוצאות מסוננות
             $countSql = "SELECT COUNT(*) 
                         FROM areaGraves_view ag
-                        -- LEFT JOIN rows r ON ag.lineId = r.unicId
                         WHERE ag.isActive = 1";
             $countParams = [];
             
             if ($plotId) {
-                $countSql .= " AND ag.plotId = :plotId";
+                $countSql .= " AND ag.plot_id = :plotId";
                 $countParams['plotId'] = $plotId;
             }
             

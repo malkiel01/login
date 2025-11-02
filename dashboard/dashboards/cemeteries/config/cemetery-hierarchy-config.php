@@ -196,13 +196,13 @@ return [
             //     'sortable' => true,
             //     'type' => 'text'
             // ],
-            [
-                'field' => 'contactPhoneName',
-                'title' => 'טלפון',
-                'width' => '120px',
-                'sortable' => true,
-                'type' => 'text'
-            ],
+            // [
+            //     'field' => 'contactPhoneName',
+            //     'title' => 'טלפון',
+            //     'width' => '120px',
+            //     'sortable' => true,
+            //     'type' => 'text'
+            // ],
             [
                 'field' => 'blocks_count',
                 'title' => 'גושים',
@@ -359,7 +359,60 @@ return [
                 'rows' => 3,
                 'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
             ]
+        ],
+
+        'table_columns' => [
+            [
+                'field' => 'blockNameHe',
+                'title' => 'שם גוש',
+                'width' => '200px',
+                'sortable' => true,
+                'type' => 'link'  // ⭐ סוג מיוחד
+            ],
+            [
+                'field' => 'blockCode',
+                'title' => 'קוד',
+                'width' => '100px',
+                'sortable' => true,
+                'type' => 'text'
+            ],
+            [
+                'field' => 'cemeteryNameHe',
+                'title' => 'בית עלמין',
+                'width' => '200px',
+                'sortable' => true,
+                'type' => 'text'
+            ],
+            [
+                'field' => 'plots_count',
+                'title' => 'חלקות',
+                'width' => '80px',
+                'sortable' => true,
+                'type' => 'badge'  // ⭐ סוג מיוחד
+            ],
+            [
+                'field' => 'statusBlock',
+                'title' => 'סטטוס',
+                'width' => '100px',
+                'sortable' => true,
+                'type' => 'status'  // ⭐ סוג מיוחד
+            ],
+            [
+                'field' => 'createDate',
+                'title' => 'תאריך',
+                'width' => '120px',
+                'sortable' => true,
+                'type' => 'date'  // ⭐ סוג מיוחד
+            ],
+            [
+                'field' => 'actions',
+                'title' => 'פעולות',
+                'width' => '120px',
+                'sortable' => false,
+                'type' => 'actions'  // ⭐ סוג מיוחד
+            ]
         ]
+
     ],
     
     // ========================================

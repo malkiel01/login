@@ -294,9 +294,9 @@ try {
                     r.plotId as plot_id
                 FROM areaGraves ag
                 LEFT JOIN rows r ON ag.lineId = r.unicId
-                WHERE (ag.unicId = :id OR ag.id = :id2) AND ag.isActive = 1
+                WHERE ag.unicId = :id AND ag.isActive = 1
             ");
-            $stmt->execute(['id' => $id, 'id2' => $id]);
+            $stmt->execute(['id' => $id]);
             $areaGrave = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if (!$areaGrave) {

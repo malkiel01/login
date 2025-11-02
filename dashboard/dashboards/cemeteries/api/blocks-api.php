@@ -147,9 +147,9 @@ try {
                 SELECT b.*, c.cemeteryNameHe as cemetery_name
                 FROM blocks b
                 LEFT JOIN cemeteries c ON b.cemeteryId = c.unicId
-                WHERE (b.unicId = :id OR b.id = :id2) AND b.isActive = 1
+                WHERE b.unicId = :id AND b.isActive = 1
             ");
-            $stmt->execute(['id' => $id, 'id2' => $id]);
+            $stmt->execute(['id' => $id]);
             $block = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if (!$block) {

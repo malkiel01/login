@@ -123,9 +123,9 @@ try {
                 ag.areaGraveNameHe as area_grave_name
                 FROM graves g
                 LEFT JOIN areaGraves ag ON g.areaGraveId = ag.unicId
-                WHERE (g.unicId = :id OR g.id = :id2) AND g.isActive = 1
+                WHERE g.unicId = :id AND g.isActive = 1
             ");
-            $stmt->execute(['id' => $id, 'id2' => $id]);
+            $stmt->execute(['id' => $id]);
             $grave = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if (!$grave) {
@@ -211,7 +211,7 @@ try {
             
             $fields = [
                 'graveNameHe', 'plotType', 'graveStatus', 'graveLocation',
-                'constructionCost', 'isSmallGrave', 'comments', 'documentsList', 'updateDate'
+                'constructionCost', 'isSmallGrave', 'comments', 'documentsList', 'areaGraveId', 'updateDate'
             ];
             
             $updateFields = [];

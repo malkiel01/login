@@ -302,9 +302,9 @@ async function initAreaGravesSearch(plotId = null) {
             },
 
             onResults: (data) => {
-                console.log('📦 API returned:', data.pagination?.total || data.total || 0, 'area graves found');
+                console.log('📦 API returned:', data.pagination?.total || data.data.length, 'area graves');
                 
-                // ⭐ טיפול בדפים - מצטבר כמו ב-customers!
+                // ⭐ טיפול בדפים - מצטבר!
                 const currentPage = data.pagination?.page || 1;
                 
                 if (currentPage === 1) {
@@ -316,15 +316,35 @@ async function initAreaGravesSearch(plotId = null) {
                     console.log(`📦 Added page ${currentPage}, total now: ${currentAreaGraves.length}`);
                 }
                 
+                // ⭐ אם יש סינון - סנן את currentAreaGraves!
+                let filteredCount = currentAreaGraves.length;
+                if (currentPlotId && currentAreaGraves.length > 0) {
+                    const filteredData = currentAreaGraves.filter(ag => {
+                        const agPlotId = ag.plotId || ag.plot_id || ag.PlotId;
+                        return String(agPlotId) === String(currentPlotId);
+                    });
+                    
+                    console.log('⚠️ Client-side filter:', currentAreaGraves.length, '→', filteredData.length, 'area graves');
+                    
+                    // ⭐ עדכן את currentAreaGraves
+                    currentAreaGraves = filteredData;
+                    filteredCount = filteredData.length;
+                    
+                    // ⭐ עדכן את pagination.total
+                    if (data.pagination) {
+                        data.pagination.total = filteredCount;
+                    }
+                }
+                
                 // ⭐⭐⭐ עדכן ישירות את areaGraveSearch!
                 if (areaGraveSearch && areaGraveSearch.state) {
-                    areaGraveSearch.state.totalResults = data.pagination?.total || data.data.length;
+                    areaGraveSearch.state.totalResults = filteredCount;
                     if (areaGraveSearch.updateCounter) {
                         areaGraveSearch.updateCounter();
                     }
                 }
                 
-                console.log('📊 Final count:', data.pagination?.total || data.data.length);
+                console.log('📊 Final count:', filteredCount);
             },
             
             onError: (error) => {

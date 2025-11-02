@@ -36,7 +36,7 @@ try {
         // =====================================================
         // רשימת כל אחוזות הקבר
         // =====================================================
-        case 'list2':
+        case 'list':
             $search = $_GET['search'] ?? '';
             $plotId = $_GET['plotId'] ?? null; // ⭐ סינון לפי חלקה
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -151,7 +151,7 @@ try {
                 ]
             ]);
             break;
-        case 'list':
+        case 'list2':
             $search = $_GET['search'] ?? '';
             $plotId = $_GET['plotId'] ?? null; // ⭐ סינון לפי חלקה
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;

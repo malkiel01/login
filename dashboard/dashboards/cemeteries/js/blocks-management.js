@@ -300,7 +300,7 @@ async function initBlocksSearch(cemeteryId = null) {
                console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()), cemeteryId: currentCemeteryId });
            },
 
-            onResults2: (data) => {
+            onResults: (data) => {
                 console.log('📦 API returned:', data.data.length, 'blocks');
                 
                 // ⭐ סינון client-side כאן!
@@ -325,7 +325,7 @@ async function initBlocksSearch(cemeteryId = null) {
                 console.log('📊 Final count:', data.pagination?.total || data.data.length);
             },
 
-            onResults: (data) => {
+            onResults2: (data) => {
                 // ⭐ יש סינון? תסנן!
                 if (currentCemeteryId && data.data) {
                     data.data = data.data.filter(block => 

@@ -141,22 +141,6 @@ try {
                 throw new Exception('בית העלמין לא נמצא');
             }
 
-        // case 'get':
-        //     if (!$id) {
-        //         throw new Exception('Cemetery ID is required');
-        //     }
-            
-        //     $stmt = $pdo->prepare("
-        //         SELECT c.* FROM cemeteries c
-        //         WHERE (c.unicId = :id OR c.id = :id2) AND c.isActive = 1
-        //     ");
-        //     $stmt->execute(['id' => $id, 'id2' => $id]);
-        //     $cemetery = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-        //     if (!$cemetery) {
-        //         throw new Exception('בית העלמין לא נמצא');
-        //     }
-            
             // ספירת גושים
             $stmt = $pdo->prepare("SELECT COUNT(*) FROM blocks WHERE cemeteryId = :id AND isActive = 1");
             $stmt->execute(['id' => $cemetery['unicId']]);

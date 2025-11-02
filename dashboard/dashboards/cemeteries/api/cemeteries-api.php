@@ -41,6 +41,7 @@ try {
             // בניית השאילתה הראשית
             $sql = "SELECT c.* FROM cemeteries c WHERE c.isActive = 1";
             // $sql = "SELECT * FROM cemeteries_view WHERE isActive = 1";
+            
             $params = [];
             
             // חיפוש - כל שדה מקבל פרמטר משלו

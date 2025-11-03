@@ -232,7 +232,7 @@ async function updateBurialsCount() {
         
         if (data.success && data.data.totals) {
             // סה"כ קבורות השנה
-            updateCount('burialsCount', data.data.this_year || 0);
+            updateCount('burialsCount', data.data.totals.total_burials || 0);
         }
     } catch (error) {
         console.warn('Failed to load burials count:', error);

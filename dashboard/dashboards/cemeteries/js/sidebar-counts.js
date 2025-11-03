@@ -221,11 +221,11 @@ async function updateBurialsCount() {
         const data = await response.json();
 
         console.log('==================================================');
-        console.log(data);
+        console.log(data.data.totals);
         console.log('==================================================');
         
         
-        if (data.success && data.data) {
+        if (data.success && data.data.totals) {
             // סה"כ קבורות השנה
             updateCount('burialsCount', data.data.this_year || 0);
         }

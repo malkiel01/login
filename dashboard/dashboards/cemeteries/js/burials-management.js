@@ -138,7 +138,7 @@ async function buildBurialsContainer() {
 // ===================================================================
 async function initBurialsSearch() {
     burialSearch = window.initUniversalSearch({
-        entityType: 'burial',
+        entityType: 'burials',
         apiEndpoint: '/dashboard/dashboards/cemeteries/api/burials-api.php',
         action: 'list',
 

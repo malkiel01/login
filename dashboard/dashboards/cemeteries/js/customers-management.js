@@ -1,19 +1,19 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/customers-management.js
- * Version: 3.1.0
+ * Version: 3.2.0
  * Updated: 2025-11-03
  * Author: Malkiel
  * Change Summary:
+ * - v3.2.0: אחידות מלאה עם cemeteries-management
+ *   - שימוש ב-window.tableRenderer.editItem() במקום editCustomer()
+ *   - הסרת פונקציית editCustomer() מיותרת
+ *   - הוספת window.loadCustomers export
+ *   - מבנה זהה לחלוטין ל-cemeteries (רמת שורש)
  * - v3.1.0: שיפורים והתאמה לארכיטקטורה המאוחדת
  *   - עדכון onResults עם state.totalResults ו-updateCounter()
  *   - הוספת window.customerSearch export
  *   - הוספת loadAllCustomers alias (backward compatibility)
- *   - אחידות מלאה עם מודולי בתי עלמין
  * - v3.0.0: שיטה זהה לבתי עלמין - UniversalSearch + TableManager
- * - תיקון Virtual Scroll - itemsPerPage: 999999
- * - תיקון קונפליקט שמות - initCustomersSearch
- * - הוספת Backward Compatibility
- * - שיפור הערות והפרדה ויזואלית
  */
 
 // ===================================================================
@@ -354,7 +354,7 @@ async function initCustomersTable(data, totalItems = null) {
                     case 'actions':
                         newColumn.render = (item) => `
                             <button class="btn btn-sm btn-secondary" 
-                                    onclick="event.stopPropagation(); editCustomer('${item.unicId}')" 
+                                    onclick="event.stopPropagation(); window.tableRenderer.editItem('${item.unicId}')" 
                                     title="עריכה">
                                 <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
                             </button>
@@ -674,12 +674,6 @@ async function deleteCustomer(customerId) {
 }
 
 // עריכת לקוח
-async function editCustomer(customerId) {
-    console.log('Edit customer:', customerId);
-    editingCustomerId = customerId;
-    showToast('עריכה בפיתוח...', 'info');
-}
-
 // ===================================================================
 // טעינת סטטיסטיקות
 // ===================================================================
@@ -775,7 +769,12 @@ async function handleCustomerDoubleClick(customerId) {
             }
         } else {
             console.warn('⚠️ createCustomerCard not found - opening edit form');
-            editCustomer(customerId);
+            if (typeof window.tableRenderer !== 'undefined' && window.tableRenderer.editItem) {
+                window.tableRenderer.editItem(customerId);
+            } else {
+                console.error('❌ tableRenderer.editItem not available');
+                showToast('שגיאה בפתיחת טופס עריכה', 'error');
+            }
         }
     } catch (error) {
         console.error('❌ Error in handleCustomerDoubleClick:', error);
@@ -785,9 +784,6 @@ async function handleCustomerDoubleClick(customerId) {
 
 window.handleCustomerDoubleClick = handleCustomerDoubleClick;
 
-// הפוך את הפונקציות לגלובליות
-window.loadCustomers = loadCustomers;
-
 // ===================================================================
 // Backward Compatibility
 // ===================================================================
@@ -796,8 +792,8 @@ window.loadAllCustomers = loadCustomers;  // ✅ Alias לשם הישן
 // ===================================================================
 // הפוך לגלובלי
 // ===================================================================
+window.loadCustomers = loadCustomers;
 window.deleteCustomer = deleteCustomer;
-window.editCustomer = editCustomer;
 window.refreshData = refreshData;
 window.customersTable = customersTable;
 window.checkScrollStatus = checkScrollStatus;

@@ -436,7 +436,7 @@ async function initGravesTable(data, totalItems = null) {
                                 <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
                             </button>
                             <button class="btn btn-sm btn-danger" 
-                                    onclick="event.stopPropagation(); deletePlot('${item.unicId}')" 
+                                    onclick="event.stopPropagation(); deleteGrave('${item.unicId}')" 
                                     title="מחיקה">
                                 <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
                             </button>
@@ -741,17 +741,18 @@ async function handleGraveDoubleClick(graveId, graveName) {
     console.log('🖱️ Double-click on grave:', graveName, graveId);
     
     try {
-        // טעינת קבר
-        console.log('📦 Loading plots for grave:', graveName);
-        if (typeof loadGraves === 'function') {
-            loadGraves(graveId, graveName);
+        // פתח עריכה - קבר הוא הרמה האחרונה
+        console.log('✏️ Opening edit form for grave:', graveName);
+        if (typeof window.tableRenderer !== 'undefined' && window.tableRenderer.editItem) {
+            window.tableRenderer.editItem(graveId);
         } else {
-            console.warn('loadGraves function not found');
+            console.warn('tableRenderer.editItem not available');
+            showToast('לא ניתן לפתוח טופס עריכה', 'error');
         }
         
     } catch (error) {
         console.error('❌ Error in handleGraveDoubleClick:', error);
-        showToast('שגיאה בטעינת פרטי הקבר', 'error');
+        showToast('שגיאה בפתיחת טופס עריכה', 'error');
     }
 }
 

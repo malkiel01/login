@@ -219,9 +219,38 @@ async function initCemeteriesSearch() {
                 console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()) });
             },
             
-            onResults: (data) => {
+            onResults2: (data) => {
                 console.log('📦 Results:', data.pagination?.total || data.total || 0, 'cemeteries found');
                 currentCemeteries = data.data;
+            },
+
+            onResults: (data) => {
+                console.log('📦 API returned:', data.pagination?.total || data.data.length, 'cemeteries');
+                
+                // ⭐ טיפול בדפים - מצטבר!
+                const currentPage = data.pagination?.page || 1;
+                
+                if (currentPage === 1) {
+                    // דף ראשון - התחל מחדש
+                    currentCemeteries = data.data;
+                } else {
+                    // דפים נוספים - הוסף לקיימים
+                    currentCemeteries = [...currentCemeteries, ...data.data];
+                    console.log(`📦 Added page ${currentPage}, total now: ${currentCemeteries.length}`);
+                }
+                
+                // ⭐ אין סינון client-side - זו רמת השורש!
+                let filteredCount = currentCemeteries.length;
+                
+                // ⭐⭐⭐ עדכן ישירות את cemeterySearch!
+                if (cemeterySearch && cemeterySearch.state) {
+                    cemeterySearch.state.totalResults = filteredCount;
+                    if (cemeterySearch.updateCounter) {
+                        cemeterySearch.updateCounter();
+                    }
+                }
+                
+                console.log('📊 Final count:', filteredCount);
             },
             
             onError: (error) => {
@@ -310,7 +339,7 @@ async function initCemeteriesTable(data, totalItems = null) {
                                 <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
                             </button>
                             <button class="btn btn-sm btn-danger" 
-                                    onclick="event.stopPropagation(); deletePlot('${item.unicId}')" 
+                                    onclick="event.stopPropagation(); deleteCemetery('${item.unicId}')" 
                                     title="מחיקה">
                                 <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
                             </button>
@@ -607,3 +636,4 @@ window.deleteCemetery = deleteCemetery;
 window.refreshData = refreshData;
 window.cemeteriesTable = cemeteriesTable;
 window.checkScrollStatus = checkScrollStatus;
+window.cemeterySearch = cemeterySearch;

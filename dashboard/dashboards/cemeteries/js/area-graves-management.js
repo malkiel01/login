@@ -440,7 +440,7 @@ async function initAreaGravesTable(data, totalItems = null) {
                                 <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
                             </button>
                             <button class="btn btn-sm btn-danger" 
-                                    onclick="event.stopPropagation(); deletePlot('${item.unicId}')" 
+                                    onclick="event.stopPropagation(); deleteAreaGrave('${item.unicId}')" 
                                     title="מחיקה">
                                 <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
                             </button>

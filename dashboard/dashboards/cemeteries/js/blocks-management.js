@@ -333,6 +333,52 @@ async function initBlocksSearch(cemeteryId = null) {
                 
                 console.log('📊 Final blocks:', data.data.length);
             },
+
+            onResults: (data) => {
+                console.log('📦 API returned:', data.pagination?.total || data.data.length, 'blocks');
+                
+                // ⭐ טיפול בדפים - מצטבר!
+                const currentPage = data.pagination?.page || 1;
+                
+                if (currentPage === 1) {
+                    // דף ראשון - התחל מחדש
+                    currentBlocks = data.data;
+                } else {
+                    // דפים נוספים - הוסף לקיימים
+                    currentBlocks = [...currentBlocks, ...data.data];
+                    console.log(`📦 Added page ${currentPage}, total now: ${currentBlocks.length}`);
+                }
+                
+                // ⭐ אם יש סינון - סנן את currentBlocks!
+                let filteredCount = currentBlocks.length;
+                if (currentCemeteryId && currentBlocks.length > 0) {
+                    const filteredData = currentBlocks.filter(block => {
+                        const blockCemeteryId = block.cemeteryId || block.cemetery_id || block.CemeteryId;
+                        return String(blockCemeteryId) === String(currentCemeteryId);
+                    });
+                    
+                    console.log('⚠️ Client-side filter:', currentBlocks.length, '→', filteredData.length, 'blocks');
+                    
+                    // ⭐ עדכן את currentBlocks
+                    currentBlocks = filteredData;
+                    filteredCount = filteredData.length;
+                    
+                    // ⭐ עדכן את pagination.total
+                    if (data.pagination) {
+                        data.pagination.total = filteredCount;
+                    }
+                }
+                
+                // ⭐⭐⭐ עדכן ישירות את blockSearch!
+                if (blockSearch && blockSearch.state) {
+                    blockSearch.state.totalResults = filteredCount;
+                    if (blockSearch.updateCounter) {
+                        blockSearch.updateCounter();
+                    }
+                }
+                
+                console.log('📊 Final count:', filteredCount);
+            },
                     
            onError: (error) => {
                console.error('❌ Search error:', error);
@@ -436,7 +482,7 @@ async function initBlocksTable(data, totalItems = null) {
                                 <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
                             </button>
                             <button class="btn btn-sm btn-danger" 
-                                    onclick="event.stopPropagation(); deletePlot('${item.unicId}')" 
+                                    onclick="event.stopPropagation(); deleteBlock('${item.unicId}')" 
                                     title="מחיקה">
                                 <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
                             </button>
@@ -784,3 +830,4 @@ window.blocksTable = blocksTable;
 window.checkScrollStatus = checkScrollStatus;
 window.currentCemeteryId = currentCemeteryId;
 window.currentCemeteryName = currentCemeteryName;
+window.blockSearch = blockSearch;

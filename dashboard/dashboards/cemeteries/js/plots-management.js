@@ -303,33 +303,8 @@ async function initPlotsSearch(blockId = null) {
            onSearch: (query, filters) => {
                console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()), blockId: currentBlockId });
            },
-           
-           onResults2: (data) => {
-               console.log('📦 Raw results from API:', data.data.length, 'plots');
-               
-               // ⭐ אם יש סינון - סנן את data.data לפני כל דבר אחר!
-               if (currentBlockId && data.data) {
-                   const filteredData = data.data.filter(plot => 
-                       plot.blockId === currentBlockId || 
-                       plot.block_id === currentBlockId
-                   );
-                   
-                   console.log('⚠️ Client-side filter:', data.data.length, '→', filteredData.length, 'plots');
-                   
-                   // ⭐ עדכן את data.data עצמו!
-                   data.data = filteredData;
-                   
-                   // ⭐ עדכן את pagination.total
-                   if (data.pagination) {
-                       data.pagination.total = filteredData.length;
-                   }
-               }
-               
-               currentPlots = data.data;
-               console.log('📊 Final count:', data.pagination?.total || data.data.length);
-           },
 
-           onResults: (data) => {
+           onResults2: (data) => {
                 console.log('📦 Raw results from API:', data.data.length, 'plots');
                 
                 // ⭐ אם יש סינון - סנן את data.data לפני כל דבר אחר!
@@ -361,6 +336,52 @@ async function initPlotsSearch(blockId = null) {
                 }
                 
                 console.log('📊 Final count:', data.data.length);
+            },
+
+            onResults: (data) => {
+                console.log('📦 API returned:', data.pagination?.total || data.data.length, 'plots');
+                
+                // ⭐ טיפול בדפים - מצטבר!
+                const currentPage = data.pagination?.page || 1;
+                
+                if (currentPage === 1) {
+                    // דף ראשון - התחל מחדש
+                    currentPlots = data.data;
+                } else {
+                    // דפים נוספים - הוסף לקיימים
+                    currentPlots = [...currentPlots, ...data.data];
+                    console.log(`📦 Added page ${currentPage}, total now: ${currentPlots.length}`);
+                }
+                
+                // ⭐ אם יש סינון - סנן את currentPlots!
+                let filteredCount = currentPlots.length;
+                if (currentBlockId && currentPlots.length > 0) {
+                    const filteredData = currentPlots.filter(plot => {
+                        const plotBlockId = plot.blockId || plot.block_id || plot.BlockId;
+                        return String(plotBlockId) === String(currentBlockId);
+                    });
+                    
+                    console.log('⚠️ Client-side filter:', currentPlots.length, '→', filteredData.length, 'plots');
+                    
+                    // ⭐ עדכן את currentPlots
+                    currentPlots = filteredData;
+                    filteredCount = filteredData.length;
+                    
+                    // ⭐ עדכן את pagination.total
+                    if (data.pagination) {
+                        data.pagination.total = filteredCount;
+                    }
+                }
+                
+                // ⭐⭐⭐ עדכן ישירות את plotSearch!
+                if (plotSearch && plotSearch.state) {
+                    plotSearch.state.totalResults = filteredCount;
+                    if (plotSearch.updateCounter) {
+                        plotSearch.updateCounter();
+                    }
+                }
+                
+                console.log('📊 Final count:', filteredCount);
             },
            
            onError: (error) => {
@@ -822,3 +843,4 @@ window.plotsTable = plotsTable;
 window.checkScrollStatus = checkScrollStatus;
 window.currentBlockId = currentBlockId;
 window.currentBlockName = currentBlockName;
+window.plotSearch = plotSearch;

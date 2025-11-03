@@ -230,7 +230,7 @@ async function initCustomersSearch() {
                 console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()) });
             },
             
-            onResults2: (data) => {
+            onResults: (data) => {
                 console.log('📦 Results:', data.pagination?.total || data.total || 0, 'customers found');
                 
                 const currentPage = data.pagination?.page || 1;
@@ -243,35 +243,6 @@ async function initCustomersSearch() {
                     currentCustomers = [...currentCustomers, ...data.data];
                     console.log(`📦 Added page ${currentPage}, total now: ${currentCustomers.length}`);
                 }
-            },
-
-            onResults: (data) => {
-                console.log('📦 API returned:', data.pagination?.total || data.data.length, 'customers');
-                
-                // ⭐ טיפול בדפים - מצטבר!
-                const currentPage = data.pagination?.page || 1;
-                
-                if (currentPage === 1) {
-                    // דף ראשון - התחל מחדש
-                    currentCustomers = data.data;
-                } else {
-                    // דפים נוספים - הוסף לקיימים
-                    currentCustomers = [...currentCustomers, ...data.data];
-                    console.log(`📦 Added page ${currentPage}, total now: ${currentCustomers.length}`);
-                }
-                
-                // ⭐ אין סינון client-side - זו רמת השורש!
-                let filteredCount = currentCustomers.length;
-                
-                // ⭐⭐⭐ עדכן ישירות את customerSearch!
-                if (customerSearch && customerSearch.state) {
-                    customerSearch.state.totalResults = filteredCount;
-                    if (customerSearch.updateCounter) {
-                        customerSearch.updateCounter();
-                    }
-                }
-                
-                console.log('📊 Final count:', filteredCount);
             },
             
             onError: (error) => {
@@ -295,10 +266,14 @@ async function initCustomersSearch() {
 // אתחול TableManager - עם תמיכה ב-totalItems
 // ===================================================================
 function initCustomersTable(data, totalItems = null) {
-     const actualTotalItems = totalItems !== null ? totalItems : data.length;
-   
+    // ⭐ אם לא קיבלנו totalItems, השתמש ב-data.length
+    const actualTotalItems = totalItems !== null ? totalItems : data.length;
+    
+    console.log(`📊 Initializing TableManager for customers with ${data.length} items (total: ${actualTotalItems})...`);
+    
+    // אם הטבלה כבר קיימת, רק עדכן נתונים
     if (customersTable) {
-        customersTable.config.totalItems = actualTotalItems;
+        customersTable.config.totalItems = actualTotalItems;  // ⭐ עדכן totalItems!
         customersTable.setData(data);
         return customersTable;
     }

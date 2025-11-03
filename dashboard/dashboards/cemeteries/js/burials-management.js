@@ -23,54 +23,35 @@ let editingBurialId = null;
 
 // טעינת קבורות (הפונקציה הראשית)
 async function loadBurials() {
-    console.log('📋 Loading burials - v1.0.0 (זהה לחלוטין ל-customers/purchases)...');
+    console.log('📋 Loading burials - v1.0.0...');
 
     setActiveMenuItem('burialsItem');
     
-    // עדכן את הסוג הנוכחי
     window.currentType = 'burial';
     window.currentParentId = null;
 
-    // ⭐ נקה - DashboardCleaner ימחק גם את TableManager!
     if (typeof DashboardCleaner !== 'undefined') {
         DashboardCleaner.clear({ targetLevel: 'burial' });
     } else if (typeof clearDashboard === 'function') {
         clearDashboard({ targetLevel: 'burial' });
     }
     
-    // נקה את כל הסידבר
     if (typeof clearAllSidebarSelections === 'function') {
         clearAllSidebarSelections();
-    } 
-
-    // ⭐ נקה את counters בסיידבר
-    if (typeof window.sidebarManager !== 'undefined' && window.sidebarManager.clearCounters) {
-        window.sidebarManager.clearCounters();
     }
-
-    // ⭐ או אפשרות 2: עדכן ישירות את ה-counter של קבורות
-    const burialsCounter = document.querySelector('#burialsItem .counter');
-    if (burialsCounter) {
-        burialsCounter.textContent = '';
-    }
-
-    // עדכן את כפתור ההוספה
+    
     if (typeof updateAddButtonText === 'function') {
         updateAddButtonText();
     }
     
-    // עדכן breadcrumb
     if (typeof updateBreadcrumb === 'function') {
         updateBreadcrumb({ burial: { name: 'קבורות' } });
     }
     
-    // עדכון כותרת החלון
     document.title = 'ניהול קבורות - מערכת בתי עלמין';
     
-    // ⭐ בנה את המבנה החדש ב-main-container
     await buildBurialsContainer();
 
-    // ⭐ תמיד השמד את החיפוש הקודם ובנה מחדש
     if (burialSearch && typeof burialSearch.destroy === 'function') {
         console.log('🗑️ Destroying previous burialSearch instance...');
         burialSearch.destroy();
@@ -78,12 +59,10 @@ async function loadBurials() {
         window.burialSearch = null;
     }
 
-    // אתחל את UniversalSearch מחדש תמיד
     console.log('🆕 Creating fresh burialSearch instance...');
     await initBurialsSearch();
     burialSearch.search();
     
-    // טען סטטיסטיקות
     await loadBurialStats();
 }
 

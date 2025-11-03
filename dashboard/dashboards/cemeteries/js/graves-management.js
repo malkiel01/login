@@ -296,7 +296,7 @@ async function initGravesSearch(areaGraveId = null) {
                 console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()) });
             },
             
-            onResults: (data) => {
+            onResults2: (data) => {
                 console.log('📦 Results:', data.pagination?.total || data.total || 0, 'graves found');
                 
                 // ⭐ טיפול בדפים - מצטבר
@@ -310,6 +310,52 @@ async function initGravesSearch(areaGraveId = null) {
                 }
                 
                 console.log('📊 Final count:', data.pagination?.total || data.data.length);
+            },
+
+            onResults: (data) => {
+                console.log('📦 API returned:', data.pagination?.total || data.data.length, 'graves');
+                
+                // ⭐ טיפול בדפים - מצטבר!
+                const currentPage = data.pagination?.page || 1;
+                
+                if (currentPage === 1) {
+                    // דף ראשון - התחל מחדש
+                    currentGraves = data.data;
+                } else {
+                    // דפים נוספים - הוסף לקיימים
+                    currentGraves = [...currentGraves, ...data.data];
+                    console.log(`📦 Added page ${currentPage}, total now: ${currentGraves.length}`);
+                }
+                
+                // ⭐ אם יש סינון - סנן את currentGraves!
+                let filteredCount = currentGraves.length;
+                if (currentAreaGraveId && currentGraves.length > 0) {
+                    const filteredData = currentGraves.filter(grave => {
+                        const graveAreaGraveId = grave.areaGraveId || grave.area_grave_id || grave.AreaGraveId;
+                        return String(graveAreaGraveId) === String(currentAreaGraveId);
+                    });
+                    
+                    console.log('⚠️ Client-side filter:', currentGraves.length, '→', filteredData.length, 'graves');
+                    
+                    // ⭐ עדכן את currentGraves
+                    currentGraves = filteredData;
+                    filteredCount = filteredData.length;
+                    
+                    // ⭐ עדכן את pagination.total
+                    if (data.pagination) {
+                        data.pagination.total = filteredCount;
+                    }
+                }
+                
+                // ⭐⭐⭐ עדכן ישירות את graveSearch!
+                if (graveSearch && graveSearch.state) {
+                    graveSearch.state.totalResults = filteredCount;
+                    if (graveSearch.updateCounter) {
+                        graveSearch.updateCounter();
+                    }
+                }
+                
+                console.log('📊 Final count:', filteredCount);
             },
             
             onError: (error) => {

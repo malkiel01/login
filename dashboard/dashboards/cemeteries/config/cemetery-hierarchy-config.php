@@ -1376,6 +1376,201 @@ return [
         ]
     ],
 
+
+    // ========================================
+    // הגדרות קבורות (Burials)
+    // ========================================
+    'burial' => [
+        'table' => 'burials',
+        'title' => 'קבורות',
+        'singular' => 'קבורה',
+        'icon' => '⚰️',
+        'primaryKey' => 'unicId',
+        'parentKey' => null,
+        
+        'queryFields' => [
+            'id',
+            'unicId',
+            'serialBurialId',
+            'customerId',
+            'customerFirstName',
+            'customerLastName',
+            'customerNumId',
+            'customerPhone',
+            'graveId',
+            'graveName',
+            'fullLocation',
+            'dateDeath',
+            'dateBurial',
+            'timeBurial',
+            'burialStatus',
+            'nationalInsuranceBurial',
+            'createDate',
+            'updateDate',
+            'isActive'
+        ],
+        
+        'displayFields' => [
+            'serialNumber' => 'serialBurialId',
+            'deceased' => 'customerLastName',
+            'idNumber' => 'customerNumId',
+            'deathDate' => 'dateDeath',
+            'burialDate' => 'dateBurial',
+            'burialTime' => 'timeBurial',
+            'location' => 'fullLocation',
+            'status' => 'burialStatus',
+            'created' => 'createDate'
+        ],
+        
+        'table_columns' => [
+            [
+                'field' => 'index',
+                'title' => 'מס׳',
+                'width' => '60px',
+                'type' => 'index',
+                'sortable' => false
+            ],
+            [
+                'field' => 'serialBurialId',
+                'title' => 'מס׳ תיק קבורה',
+                'width' => '140px',
+                'type' => 'text',
+                'sortable' => true,
+                'searchable' => true
+            ],
+            [
+                'field' => 'customerLastName',
+                'title' => 'נפטר/ת',
+                'width' => '180px',
+                'type' => 'text',
+                'sortable' => true,
+                'searchable' => true,
+                'show_secondary' => 'customerFirstName'
+            ],
+            [
+                'field' => 'customerNumId',
+                'title' => 'ת.ז.',
+                'width' => '120px',
+                'type' => 'text',
+                'sortable' => false,
+                'searchable' => true
+            ],
+            [
+                'field' => 'dateDeath',
+                'title' => 'תאריך פטירה',
+                'width' => '130px',
+                'type' => 'date',
+                'sortable' => true
+            ],
+            [
+                'field' => 'dateBurial',
+                'title' => 'תאריך קבורה',
+                'width' => '130px',
+                'type' => 'date',
+                'sortable' => true
+            ],
+            [
+                'field' => 'timeBurial',
+                'title' => 'שעת קבורה',
+                'width' => '100px',
+                'type' => 'time',
+                'sortable' => false
+            ],
+            [
+                'field' => 'fullLocation',
+                'title' => 'מיקום קבר',
+                'width' => '150px',
+                'type' => 'text',
+                'sortable' => false
+            ],
+            [
+                'field' => 'burialStatus',
+                'title' => 'סטטוס',
+                'width' => '110px',
+                'type' => 'status',
+                'sortable' => true,
+                'render' => 'formatBurialStatus'
+            ],
+            [
+                'field' => 'nationalInsuranceBurial',
+                'title' => 'ביטוח לאומי',
+                'width' => '120px',
+                'type' => 'boolean',
+                'sortable' => false
+            ],
+            [
+                'field' => 'actions',
+                'title' => 'פעולות',
+                'width' => '180px',
+                'type' => 'actions',
+                'sortable' => false,
+                'actions' => ['view', 'edit', 'delete']
+            ]
+        ],
+        
+        'form_fields' => [
+            [
+                'name' => 'serialBurialId',
+                'label' => 'מס׳ תיק קבורה',
+                'type' => 'text',
+                'required' => true
+            ],
+            [
+                'name' => 'customerId',
+                'label' => 'לקוח',
+                'type' => 'select',
+                'required' => true
+            ],
+            [
+                'name' => 'graveId',
+                'label' => 'קבר',
+                'type' => 'select',
+                'required' => true
+            ],
+            [
+                'name' => 'dateDeath',
+                'label' => 'תאריך פטירה',
+                'type' => 'date',
+                'required' => true
+            ],
+            [
+                'name' => 'dateBurial',
+                'label' => 'תאריך קבורה',
+                'type' => 'date',
+                'required' => true
+            ],
+            [
+                'name' => 'timeBurial',
+                'label' => 'שעת קבורה',
+                'type' => 'time',
+                'required' => false
+            ],
+            [
+                'name' => 'burialStatus',
+                'label' => 'סטטוס קבורה',
+                'type' => 'select',
+                'options' => [
+                    1 => 'ברישום',
+                    2 => 'אושרה',
+                    3 => 'בוצעה',
+                    4 => 'בוטלה'
+                ],
+                'default' => 1
+            ],
+            [
+                'name' => 'nationalInsuranceBurial',
+                'label' => 'ביטוח לאומי',
+                'type' => 'select',
+                'options' => [
+                    'כן' => 'כן',
+                    'לא' => 'לא'
+                ],
+                'default' => 'לא'
+            ]
+        ]
+    ],
+
+
     // ========================================
     // הגדרות תושבות
     // ========================================

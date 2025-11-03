@@ -328,9 +328,9 @@ async function initBurialsTable(data, totalItems = null) {
                         break;
                         
                     case 'status':
-                        if (column.render === 'formatBurialStatus') {
+                        // if (column.render === 'formatBurialStatus') {
                             column.render = (item) => formatBurialStatus(item[column.field]);
-                        }
+                        // }
                         break;
                         
                     case 'type':

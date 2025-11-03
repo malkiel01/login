@@ -1213,6 +1213,170 @@ return [
     ],
 
     // ========================================
+    // הגדרות רכישות (Purchases)
+    // ========================================
+    'purchase' => [
+        'table' => 'purchases',
+        'title' => 'רכישות',
+        'singular' => 'רכישה',
+        'icon' => '📋',
+        'primaryKey' => 'unicId',
+        'parentKey' => null,
+        
+        'queryFields' => [
+            'id',
+            'unicId',
+            'serialPurchaseId',
+            'clientId',
+            'graveId',
+            'purchaseAmount',
+            'purchaseDate',
+            'statusPurchase',
+            'buyer_status',
+            'paymentsList',
+            'documentsList',
+            'comments',
+            'createDate',
+            'updateDate',
+            'isActive'
+        ],
+        
+        'displayFields' => [
+            'serialNumber' => 'serialPurchaseId',
+            'customer' => 'clientId',
+            'grave' => 'graveId',
+            'amount' => 'purchaseAmount',
+            'date' => 'purchaseDate',
+            'status' => 'statusPurchase',
+            'created' => 'createDate'
+        ],
+        
+        'table_columns' => [
+            [
+                'field' => 'index',
+                'title' => '#',
+                'width' => '60px',
+                'type' => 'index',
+                'sortable' => false
+            ],
+            [
+                'field' => 'serialPurchaseId',
+                'title' => 'מספר רכישה',
+                'width' => '120px',
+                'type' => 'text',
+                'sortable' => true,
+                'searchable' => true
+            ],
+            [
+                'field' => 'customerName',
+                'title' => 'שם לקוח',
+                'width' => '180px',
+                'type' => 'text',
+                'sortable' => true,
+                'searchable' => true
+            ],
+            [
+                'field' => 'graveName',
+                'title' => 'קבר',
+                'width' => '150px',
+                'type' => 'text',
+                'sortable' => true
+            ],
+            [
+                'field' => 'purchaseAmount',
+                'title' => 'סכום',
+                'width' => '120px',
+                'type' => 'currency',
+                'sortable' => true
+            ],
+            [
+                'field' => 'purchaseDate',
+                'title' => 'תאריך רכישה',
+                'width' => '130px',
+                'type' => 'date',
+                'sortable' => true
+            ],
+            [
+                'field' => 'statusPurchase',
+                'title' => 'סטטוס',
+                'width' => '100px',
+                'type' => 'status',
+                'sortable' => true
+            ],
+            [
+                'field' => 'createDate',
+                'title' => 'נוצר בתאריך',
+                'width' => '130px',
+                'type' => 'date',
+                'sortable' => true
+            ],
+            [
+                'field' => 'actions',
+                'title' => 'פעולות',
+                'width' => '150px',
+                'type' => 'actions',
+                'sortable' => false
+            ]
+        ],
+        
+        'form_fields' => [
+            [
+                'name' => 'clientId',
+                'label' => 'לקוח',
+                'type' => 'select',
+                'required' => true
+            ],
+            [
+                'name' => 'buyer_status',
+                'label' => 'סטטוס רוכש',
+                'type' => 'select',
+                'options' => [
+                    1 => 'רוכש לעצמו',
+                    2 => 'רוכש לאחר'
+                ],
+                'default' => 1
+            ],
+            [
+                'name' => 'graveId',
+                'label' => 'קבר',
+                'type' => 'select',
+                'required' => true
+            ],
+            [
+                'name' => 'purchaseAmount',
+                'label' => 'סכום רכישה',
+                'type' => 'number',
+                'step' => '0.01',
+                'required' => true
+            ],
+            [
+                'name' => 'purchaseDate',
+                'label' => 'תאריך רכישה',
+                'type' => 'date',
+                'required' => true
+            ],
+            [
+                'name' => 'statusPurchase',
+                'label' => 'סטטוס רכישה',
+                'type' => 'select',
+                'options' => [
+                    1 => 'טיוטה',
+                    2 => 'אושר',
+                    3 => 'שולם',
+                    4 => 'בוטל'
+                ],
+                'default' => 1
+            ],
+            [
+                'name' => 'comments',
+                'label' => 'הערות',
+                'type' => 'textarea',
+                'rows' => 3
+            ]
+        ]
+    ],
+
+    // ========================================
     // הגדרות תושבות
     // ========================================
     'residency' => [

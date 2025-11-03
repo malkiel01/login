@@ -1,11 +1,19 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/cemeteries-management.js
- * Version: 1.0.0
- * Updated: 2025-10-28
+ * Version: 5.1.0
+ * Updated: 2025-11-03
  * Author: Malkiel
  * Change Summary:
- * - v5.0.0: שיטה זהה ללקוחות - UniversalSearch + TableManager
  * - v5.1.0: תיקון קונפליקט שמות - initCemeteriesSearch (במקום initUniversalSearch)
+ *   - שימוש ב-window.initUniversalSearch במקום new UniversalSearch()
+ *   - אתחול שונה משאר הקבצים
+ * - v5.0.0: שיטה זהה ללקוחות - UniversalSearch + TableManager
+ *   - מעבר מגרסה ישנה למבנה מודולרי חדש
+ *   - תמיכה ב-itemsPerPage: 999999
+ * - v1.0.0: גרסה ראשונית - ניהול בתי עלמין
+ *   - רמת שורש בהיררכיה (אין parent)
+ *   - דאבל-קליק ניווט לגושים (בלי כרטיס)
+ *   - ⚠️ קוד זר: createCustomerCard ו-printCustomerReport (דורש מחיקה)
  */
 
 // ===================================================================
@@ -283,7 +291,7 @@ async function initCemeteriesTable(data, totalItems = null) {
                 case 'date':
                     column.render = (cemetery) => formatDate(cemetery[col.field]);
                     break;
-                    
+
                 case 'actions':
                     column.render = (item) => `
                         <button class="btn btn-sm btn-secondary" 

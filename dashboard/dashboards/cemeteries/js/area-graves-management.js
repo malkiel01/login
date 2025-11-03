@@ -1,7 +1,7 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/area-graves-management.js
- * Version: 1.0.0
- * Updated: 2025-10-28
+ * Version: 1.2.2
+ * Updated: 2025-11-03
  * Author: Malkiel
  * Change Summary:
  * - v1.2.2: תיקון קריטי - שינוי מיקום סינון client-side
@@ -9,6 +9,11 @@
  *   - כעת renderAreaGravesRows מסנן לפי plot_id לפני הצגה
  * - v1.2.0: הוספת טעינה מדורגת כמו ב-customers
  * - v1.1.0: תיקון TableManager
+ * - v1.0.0: גרסה ראשונית - ניהול אחוזות קבר
+ *   - תמיכה בסינון לפי plot
+ *   - טעינת כרטיס מלא של createPlotCard
+ *   - אתחול UniversalSearch עם new UniversalSearch()
+ *   - דאבל-קליק טוען כרטיס + ניווט לקברים
  */
 
 // ===================================================================

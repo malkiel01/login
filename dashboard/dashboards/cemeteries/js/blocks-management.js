@@ -1,10 +1,10 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/blocks-management.js
- * Version: 1.0.0
- * Updated: 2025-10-28
+ * Version: 1.2.0
+ * Updated: 2025-11-03
  * Author: Malkiel
  * Change Summary:
- * - v1.1.1: תיקון קריטי - שמירת סינון קיים כשקוראים ל-loadBlocks ללא פרמטרים
+ * - v1.2.0: תיקון קריטי - שמירת סינון קיים כשקוראים ל-loadBlocks ללא פרמטרים
  *   - הוספת פרמטר forceReset לאיפוס מפורש של הסינון
  *   - שמירת currentCemeteryId/Name גם כשלא מועברים פרמטרים
  *   - תיקון כפתור "הצג הכל" - קורא עם forceReset=true
@@ -14,7 +14,12 @@
  *   - שמירת currentCemeteryId ב-window לשימוש חוזר
  *   - הוספת אינדיקטור ויזואלי לסינון אקטיבי
  *   - הוספת logging מפורט לזיהוי בעיות
- * - v1.0.2: תיקון מוחלט - זהה בדיוק ל-cemeteries-management.js
+ * - v1.0.0: גרסה ראשונית - ניהול גושים
+ *   - תמיכה בסינון לפי cemetery
+ *   - טעינת כרטיס מלא של createCemeteryCard
+ *   - אתחול UniversalSearch עם new UniversalSearch()
+ *   - דאבל-קליק ניווט לחלקות (בלי כרטיס)
+ *   - ⚠️ פונקציית editBlock מוערת (דורש תיקון)
  */
 
 // ===================================================================

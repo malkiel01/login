@@ -1,10 +1,10 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/plots-management.js
- * Version: 1.0.0
-* Updated: 2025-10-28
+ * Version: 1.2.0
+ * Updated: 2025-11-03
  * Author: Malkiel
  * Change Summary:
- * - v1.1.1: תיקון קריטי - שמירת סינון קיים כשקוראים ל-loadPlots ללא פרמטרים
+ * - v1.2.0: תיקון קריטי - שמירת סינון קיים כשקוראים ל-loadPlots ללא פרמטרים
  *   - הוספת פרמטר forceReset לאיפוס מפורש של הסינון
  *   - שמירת currentBlockId/Name גם כשלא מועברים פרמטרים
  *   - תיקון כפתור "הצג הכל" - קורא עם forceReset=true
@@ -14,7 +14,11 @@
  *   - שמירת currentBlockId ב-window לשימוש חוזר
  *   - הוספת אינדיקטור ויזואלי לסינון אקטיבי
  *   - הוספת logging מפורט לזיהוי בעיות
- * - v1.0.2: תיקון מוחלט - זהה בדיוק ל-blocks-management.js
+ * - v1.0.0: גרסה ראשונית - ניהול חלקות
+ *   - תמיכה בסינון לפי block
+ *   - טעינת כרטיס מלא של createBlockCard
+ *   - אתחול UniversalSearch עם new UniversalSearch()
+ *   - דאבל-קליק ניווט לאחוזות קבר (בלי כרטיס - מוערה)
  */
 
 // ===================================================================

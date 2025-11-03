@@ -1,7 +1,7 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/graves-management.js
  * Version: 1.0.0
- * Updated: 2025-10-29
+ * Updated: 2025-11-03
  * Author: Malkiel
  * Change Summary:
  * - v1.0.0: יצירת מודול ניהול קברים
@@ -9,6 +9,8 @@
  *   - סינון client-side לפי areaGraveId
  *   - טעינת כרטיס מלא של createAreaGraveCard
  *   - תמיכה במבנה הטבלה האמיתי
+ *   - אתחול UniversalSearch עם new UniversalSearch()
+ *   - דאבל-קליק פותח עריכה בלבד (ללא ניווט לילדים)
  */
 
 // ===================================================================

@@ -452,48 +452,48 @@ return [
             'status' => 'isActive'
         ],
         
-        'table_columns' => [
-            [
-                'field' => 'index',
-                'title' => 'מס׳',
-                'width' => '60px',
-                'type' => 'index'
-            ],
-            [
-                'field' => 'plotNameHe',
-                'title' => 'שם חלקה',
-                'type' => 'text',
-                'sortable' => true,
-                'searchable' => true,
-                'show_secondary' => 'plotNameEn',
-                'required' => true
-            ],
-            [
-                'field' => 'plotCode',
-                'title' => 'קוד',
-                'type' => 'text',
-                'width' => '100px',
-                'sortable' => true,
-                'searchable' => true
-            ],
-            [
-                'field' => 'plotLocation',
-                'title' => 'מיקום',
-                'type' => 'text'
-            ],
-            [
-                'field' => 'createDate',
-                'title' => 'נוצר',
-                'type' => 'date',
-                'width' => '120px'
-            ],
-            [
-                'field' => 'actions',
-                'title' => 'פעולות',
-                'type' => 'actions',
-                'width' => '150px'
-            ]
-        ],
+        // 'table_columns' => [
+        //     [
+        //         'field' => 'index',
+        //         'title' => 'מס׳',
+        //         'width' => '60px',
+        //         'type' => 'index'
+        //     ],
+        //     [
+        //         'field' => 'plotNameHe',
+        //         'title' => 'שם חלקה',
+        //         'type' => 'text',
+        //         'sortable' => true,
+        //         'searchable' => true,
+        //         'show_secondary' => 'plotNameEn',
+        //         'required' => true
+        //     ],
+        //     [
+        //         'field' => 'plotCode',
+        //         'title' => 'קוד',
+        //         'type' => 'text',
+        //         'width' => '100px',
+        //         'sortable' => true,
+        //         'searchable' => true
+        //     ],
+        //     [
+        //         'field' => 'plotLocation',
+        //         'title' => 'מיקום',
+        //         'type' => 'text'
+        //     ],
+        //     [
+        //         'field' => 'createDate',
+        //         'title' => 'נוצר',
+        //         'type' => 'date',
+        //         'width' => '120px'
+        //     ],
+        //     [
+        //         'field' => 'actions',
+        //         'title' => 'פעולות',
+        //         'type' => 'actions',
+        //         'width' => '150px'
+        //     ]
+        // ],
         
         'form_fields' => [
             [
@@ -525,64 +525,64 @@ return [
             ]
         ],
 
-        // 'table_columns' => [
-        //     [
-        //         'field' => 'plotNameHe',
-        //         'title' => 'שם חלקה',
-        //         'width' => '200px',
-        //         'sortable' => true,
-        //         'type' => 'link'
-        //     ],
-        //     [
-        //         'field' => 'plotCode',
-        //         'title' => 'קוד',
-        //         'width' => '100px',
-        //         'sortable' => true,
-        //         'type' => 'text'
-        //     ],
-        //     [
-        //         'field' => 'cemeteryNameHe',  // ⭐ זה כבר מגיע מה-API
-        //         'title' => 'בית עלמין',
-        //         'width' => '200px',
-        //         'sortable' => true,
-        //         'type' => 'text'
-        //     ],
-        //     [
-        //         'field' => 'blockNameHe',  // ⭐ זה כבר מגיע מה-API
-        //         'title' => 'גוש',
-        //         'width' => '200px',
-        //         'sortable' => true,
-        //         'type' => 'text'
-        //     ],
-        //     [
-        //         'field' => 'rows_count',
-        //         'title' => 'שורות',
-        //         'width' => '80px',
-        //         'sortable' => true,
-        //         'type' => 'badge'
-        //     ],
-        //     [
-        //         'field' => 'statusPlot',
-        //         'title' => 'סטטוס',
-        //         'width' => '100px',
-        //         'sortable' => true,
-        //         'type' => 'status'
-        //     ],
-        //     [
-        //         'field' => 'createDate',
-        //         'title' => 'תאריך',
-        //         'width' => '120px',
-        //         'sortable' => true,
-        //         'type' => 'date'
-        //     ],
-        //     [
-        //         'field' => 'actions',
-        //         'title' => 'פעולות',
-        //         'width' => '120px',
-        //         'sortable' => false,
-        //         'type' => 'actions'
-        //     ]
-        // ]
+        'table_columns' => [
+            [
+                'field' => 'plotNameHe',
+                'title' => 'שם חלקה',
+                'width' => '200px',
+                'sortable' => true,
+                'type' => 'link'
+            ],
+            [
+                'field' => 'plotCode',
+                'title' => 'קוד',
+                'width' => '100px',
+                'sortable' => true,
+                'type' => 'text'
+            ],
+            [
+                'field' => 'cemeteryNameHe',  // ⭐ זה כבר מגיע מה-API
+                'title' => 'בית עלמין',
+                'width' => '200px',
+                'sortable' => true,
+                'type' => 'text'
+            ],
+            [
+                'field' => 'blockNameHe',  // ⭐ זה כבר מגיע מה-API
+                'title' => 'גוש',
+                'width' => '200px',
+                'sortable' => true,
+                'type' => 'text'
+            ],
+            [
+                'field' => 'rows_count',
+                'title' => 'שורות',
+                'width' => '80px',
+                'sortable' => true,
+                'type' => 'badge'
+            ],
+            [
+                'field' => 'statusPlot',
+                'title' => 'סטטוס',
+                'width' => '100px',
+                'sortable' => true,
+                'type' => 'status'
+            ],
+            [
+                'field' => 'createDate',
+                'title' => 'תאריך',
+                'width' => '120px',
+                'sortable' => true,
+                'type' => 'date'
+            ],
+            [
+                'field' => 'actions',
+                'title' => 'פעולות',
+                'width' => '120px',
+                'sortable' => false,
+                'type' => 'actions'
+            ]
+        ]
     ],
     
     // ========================================

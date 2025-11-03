@@ -215,7 +215,7 @@ async function updatePurchasesCount() {
  * 8. קבורות
  * ✅ burials-api.php
  */
-async function updateBurialsCount() {
+async function updateBurialsCount() { 
     try {
         const response = await fetch('/dashboard/dashboards/cemeteries/api/burials-api.php?action=stats');
         const data = await response.json();

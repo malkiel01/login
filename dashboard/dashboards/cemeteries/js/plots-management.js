@@ -1,7 +1,7 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/plots-management.js
- * Version: 1.1.1
- * Updated: 2025-10-27
+ * Version: 1.0.0
+* Updated: 2025-10-28
  * Author: Malkiel
  * Change Summary:
  * - v1.1.1: תיקון קריטי - שמירת סינון קיים כשקוראים ל-loadPlots ללא פרמטרים
@@ -468,14 +468,14 @@ async function initPlotsTable(data, totalItems = null) {
                         break;
                         
                     case 'actions':
-                        column.render = (plot) => `
+                        column.render = (item) => `
                             <button class="btn btn-sm btn-secondary" 
-                                    onclick="event.stopPropagation(); window.tableRenderer.editItem('${plot.unicId}')" 
+                                    onclick="event.stopPropagation(); window.tableRenderer.editItem('${item.unicId}')" 
                                     title="עריכה">
                                 <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
                             </button>
                             <button class="btn btn-sm btn-danger" 
-                                    onclick="event.stopPropagation(); deletePlot('${plot.unicId}')" 
+                                    onclick="event.stopPropagation(); deletePlot('${item.unicId}')" 
                                     title="מחיקה">
                                 <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
                             </button>

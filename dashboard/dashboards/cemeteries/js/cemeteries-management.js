@@ -1,7 +1,7 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/cemeteries-management.js
- * Version: 5.1.0
- * Updated: 2025-10-24
+ * Version: 1.0.0
+ * Updated: 2025-10-28
  * Author: Malkiel
  * Change Summary:
  * - v5.0.0: שיטה זהה ללקוחות - UniversalSearch + TableManager
@@ -285,11 +285,15 @@ async function initCemeteriesTable(data, totalItems = null) {
                     break;
                     
                 case 'actions':
-                    column.render = (cemetery) => `
-                        <button class="btn btn-sm btn-secondary" onclick="editCemetery('${cemetery.unicId}')" title="עריכה">
+                    column.render = (item) => `
+                        <button class="btn btn-sm btn-secondary" 
+                                onclick="event.stopPropagation(); window.tableRenderer.editItem('${item.unicId}')" 
+                                title="עריכה">
                             <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
                         </button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteCemetery('${cemetery.unicId}')" title="מחיקה">
+                        <button class="btn btn-sm btn-danger" 
+                                onclick="event.stopPropagation(); deletePlot('${item.unicId}')" 
+                                title="מחיקה">
                             <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
                         </button>
                     `;

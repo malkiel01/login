@@ -1,6 +1,6 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/area-graves-management.js
- * Version: 1.2.2
+ * Version: 1.0.0
  * Updated: 2025-10-28
  * Author: Malkiel
  * Change Summary:
@@ -281,25 +281,6 @@ async function initAreaGravesSearch(plotId = null) {
             onSearch: (query, filters) => {
                 console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()) });
             },
-            
-            onResults2: (data) => {
-                console.log('📦 Results:', data.pagination?.total || data.total || 0, 'area graves found');
-                
-                // ⭐ טיפול בדפים - מצטבר כמו ב-customers!
-                const currentPage = data.pagination?.page || 1;
-                
-                if (currentPage === 1) {
-                    // דף ראשון - התחל מחדש
-                    currentAreaGraves = data.data;
-                } else {
-                    // דפים נוספים - הוסף לקיימים
-                    currentAreaGraves = [...currentAreaGraves, ...data.data];
-                    console.log(`📦 Added page ${currentPage}, total now: ${currentAreaGraves.length}`);
-                }
-                
-                // ⭐⭐ הסרת סינון מכאן! הסינון עבר ל-renderAreaGravesRows!
-                console.log('📊 Final count:', data.pagination?.total || data.data.length);
-            },
 
             onResults: (data) => {
                 console.log('📦 API returned:', data.pagination?.total || data.data.length, 'area graves');
@@ -439,14 +420,14 @@ async function initAreaGravesTable(data, totalItems = null) {
                     break;
                     
                 case 'actions':
-                    column.render = (areaGrave) => `
+                    column.render = (item) => `
                         <button class="btn btn-sm btn-secondary" 
-                                onclick="event.stopPropagation(); window.tableRenderer.editItem('${areaGrave.unicId}')" 
+                                onclick="event.stopPropagation(); window.tableRenderer.editItem('${item.unicId}')" 
                                 title="עריכה">
                             <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
                         </button>
                         <button class="btn btn-sm btn-danger" 
-                                onclick="event.stopPropagation(); deleteAreaGrave('${areaGrave.unicId}')" 
+                                onclick="event.stopPropagation(); deletePlot('${item.unicId}')" 
                                 title="מחיקה">
                             <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
                         </button>
@@ -467,84 +448,6 @@ async function initAreaGravesTable(data, totalItems = null) {
 
         columns: await loadColumnsFromConfig('areaGrave'),
 
-        // columns: [
-        //     {
-        //         field: 'areaGraveNameHe',
-        //         label: 'שם אחוזת קבר',
-        //         width: '200px',
-        //         sortable: true,
-        //         render: (areaGrave) => {
-        //             return `<a href="#" onclick="handleAreaGraveDoubleClick('${areaGrave.unicId}', '${(areaGrave.areaGraveNameHe || '').replace(/'/g, "\\'")}'); return false;" 
-        //                        style="color: #2563eb; text-decoration: none; font-weight: 500;">
-        //                 ${areaGrave.areaGraveNameHe || 'ללא שם'}
-        //             </a>`;
-        //         }
-        //     },
-        //     {
-        //         field: 'coordinates',
-        //         label: 'קואורדינטות',
-        //         width: '150px',
-        //         sortable: true,
-        //         render: (areaGrave) => {
-        //             const coords = areaGrave.coordinates || '-';
-        //             return `<span style="font-family: monospace; font-size: 12px;">${coords}</span>`;
-        //         }
-        //     },
-        //     {
-        //         field: 'graveType',
-        //         label: 'סוג קבר',
-        //         width: '120px',
-        //         sortable: true,
-        //         render: (areaGrave) => {
-        //             const typeName = getGraveTypeName(areaGrave.graveType);
-        //             return `<span style="background: #e0e7ff; color: #4338ca; padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 500;">${typeName}</span>`;
-        //         }
-        //     },
-        //     {
-        //         field: 'row_name',
-        //         label: 'שורה',
-        //         width: '150px',
-        //         sortable: true,
-        //         render: (areaGrave) => {
-        //             const rowName = areaGrave.row_name || areaGrave.lineNameHe || '-';
-        //             return `<span style="color: #6b7280;">📏 ${rowName}</span>`;
-        //         }
-        //     },
-        //     {
-        //         field: 'graves_count',
-        //         label: 'קברים',
-        //         width: '80px',
-        //         type: 'number',
-        //         sortable: true,
-        //         render: (areaGrave) => {
-        //             const count = areaGrave.graves_count || 0;
-        //             return `<span style="background: #dcfce7; color: #15803d; padding: 3px 10px; border-radius: 4px; font-size: 13px; font-weight: 600;">${count}</span>`;
-        //         }
-        //     },
-        //     {
-        //         field: 'createDate',
-        //         label: 'תאריך',
-        //         width: '120px',
-        //         type: 'date',
-        //         sortable: true,
-        //         render: (areaGrave) => formatDate(areaGrave.createDate)
-        //     },
-        //     {
-        //         field: 'actions',
-        //         label: 'פעולות',
-        //         width: '120px',
-        //         sortable: false,
-        //         render: (areaGrave) => `
-        //             <button class="btn btn-sm btn-secondary" onclick="editAreaGrave('${areaGrave.unicId}')" title="עריכה">
-        //                 <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
-        //             </button>
-        //             <button class="btn btn-sm btn-danger" onclick="deleteAreaGrave('${areaGrave.unicId}')" title="מחיקה">
-        //                 <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
-        //             </button>
-        //         `
-        //     }
-        // ],
-        
         data: data,
         
         sortable: true,
@@ -748,37 +651,6 @@ async function loadAreaGraveStats(plotId = null) {
 }
 
 // ===================================================================
-// עריכת אחוזת קבר
-// ===================================================================
-async function editAreaGrave(areaGraveId) {
-    console.log('✏️ Editing area grave:', areaGraveId);
-    editingAreaGraveId = areaGraveId;
-    
-    try {
-        const response = await fetch(`/dashboard/dashboards/cemeteries/api/area-graves-api.php?action=get&id=${areaGraveId}`);
-        const result = await response.json();
-        
-        if (!result.success) {
-            throw new Error(result.error || 'שגיאה בטעינת נתוני אחוזת הקבר');
-        }
-        
-        const areaGrave = result.data;
-        
-        if (typeof FormHandler.openForm === 'function') {
-            // openFormModal('area_grave', areaGrave);
-            FormHandler.openForm('area_grave', null, areaGrave.unicId); 
-        } else {
-            console.log('📝 Area grave data:', areaGrave);
-            alert('פונקציית openFormModal לא זמינה');
-        }
-        
-    } catch (error) {
-        console.error('Error editing area grave:', error);
-        showToast('שגיאה בטעינת נתוני אחוזת הקבר', 'error');
-    }
-}
-
-// ===================================================================
 // מחיקת אחוזת קבר
 // ===================================================================
 async function deleteAreaGrave(areaGraveId) {
@@ -919,7 +791,6 @@ window.loadAllAreaGraves = loadAreaGraves;
 // ===================================================================
 window.loadAreaGraves = loadAreaGraves;
 window.deleteAreaGrave = deleteAreaGrave;
-window.editAreaGrave = editAreaGrave;
 window.refreshData = refreshData;
 window.areaGravesTable = areaGravesTable;
 window.checkScrollStatus = checkScrollStatus;

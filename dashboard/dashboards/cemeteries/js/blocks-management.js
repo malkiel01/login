@@ -1,7 +1,7 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/blocks-management.js
- * Version: 1.1.1
- * Updated: 2025-10-27
+ * Version: 1.0.0
+ * Updated: 2025-10-28
  * Author: Malkiel
  * Change Summary:
  * - v1.1.1: תיקון קריטי - שמירת סינון קיים כשקוראים ל-loadBlocks ללא פרמטרים
@@ -414,14 +414,14 @@ async function initBlocksTable(data, totalItems = null) {
                     break;
                     
                 case 'actions':
-                    column.render = (block) => `
+                    column.render = (item) => `
                         <button class="btn btn-sm btn-secondary" 
-                                onclick="event.stopPropagation(); window.tableRenderer.editItem('${block.unicId}')" 
+                                onclick="event.stopPropagation(); window.tableRenderer.editItem('${item.unicId}')" 
                                 title="עריכה">
                             <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
                         </button>
                         <button class="btn btn-sm btn-danger" 
-                                onclick="event.stopPropagation(); deleteBlock('${block.unicId}')" 
+                                onclick="event.stopPropagation(); deletePlot('${item.unicId}')" 
                                 title="מחיקה">
                             <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
                         </button>
@@ -617,100 +617,6 @@ async function loadBlockStats(cemeteryId = null) {
 }
 
 // ===================================================================
-// עריכת גוש
-// ===================================================================
-// async function editBlock2(blockId) {
-//     console.log('✏️ Editing block:', blockId);
-//     editingBlockId = blockId;
-    
-//     try {
-//         const response = await fetch(`/dashboard/dashboards/cemeteries/api/blocks-api.php?action=get&id=${blockId}`);
-//         const result = await response.json();
-        
-//         if (!result.success) {
-//             throw new Error(result.error || 'שגיאה בטעינת נתוני הגוש');
-//         }
-        
-//         const block = result.data;
-
-         
-//         // 🔍 דיבוג מפורט - בדוק מה יש ב-block
-//         console.log('📦 Block data received:', JSON.stringify(block, null, 2));
-//         console.log('🔑 Available keys:', Object.keys(block));
-        
-//         // ⭐ בדוק את כל האפשרויות לשדה ההורה
-//         const parentId = block.cemeteryId || block.cemetery_id || block.parent_id || null;
-        
-//         console.log('🎯 Parent ID determined:', parentId);
-//         console.log('   - block.cemeteryId:', block.cemeteryId);
-//         console.log('   - block.cemetery_id:', block.cemetery_id);
-//         console.log('   - block.parent_id:', block.parent_id);
-        
-//         if (!parentId) {
-//             console.warn('⚠️ No parent cemetery found for this block!');
-//         }
-        
-//         // פתח את הטופס במודל
-//         if (typeof FormHandler.openForm === 'function') {
-//             FormHandler.openForm('block', parentId, blockId); 
-//         } else {
-//             // console.log('📝 Block data:', block);
-//             alert('פונקציית openFormModal לא זמינה');
-//         }
-        
-//     } catch (error) {
-//         console.error('Error editing block:', error);
-//         showToast('שגיאה בטעינת נתוני הגוש', 'error');
-//     }
-// }
-
-// async function editBlock(blockId) {
-//     console.log('✏️ Editing block:', blockId);
-//     editingBlockId = blockId;
-    
-//     try {
-//         const response = await fetch(`/dashboard/dashboards/cemeteries/api/blocks-api.php?action=get&id=${blockId}`);
-//         const result = await response.json();
-        
-//         if (!result.success) {
-//             throw new Error(result.error || 'שגיאה בטעינת נתוני הגוש');
-//         }
-        
-//         const block = result.data;
-        
-//         // 🔍 דיבוג מפורט
-//         console.log('📦 Block data:', block);
-//         console.log('🔑 Keys:', Object.keys(block));
-        
-//         // ⭐ חילוץ parent_id עם כל האפשרויות
-//         const parentId = block.cemeteryId || 
-//                         block.cemetery_id || 
-//                         block.parent_id || 
-//                         block.cemetery?.unicId || 
-//                         null;
-        
-//         console.log('✅ Parent ID found:', parentId);
-        
-//         if (!parentId) {
-//             console.error('❌ No parent cemetery found!');
-//             // אבל בכל זאת נמשיך - אולי הטופס יודע להתמודד
-//         }
-        
-//         // פתח את הטופס
-//         if (typeof FormHandler?.openForm === 'function') {
-//             FormHandler.openForm('block', parentId, blockId);
-//         } else {
-//             console.error('❌ FormHandler.openForm not available');
-//             alert('פונקציית openForm לא זמינה');
-//         }
-        
-//     } catch (error) {
-//         console.error('❌ Error editing block:', error);
-//         showToast('שגיאה בטעינת נתוני הגוש', 'error');
-//     }
-// }
-
-// ===================================================================
 // מחיקת גוש
 // ===================================================================
 async function deleteBlock(blockId) {
@@ -847,7 +753,6 @@ window.loadAllBlocks = loadBlocks; // ✅ Alias לשם הישן
 // ===================================================================
 window.loadBlocks = loadBlocks;
 window.deleteBlock = deleteBlock;
-window.editBlock = editBlock;
 window.refreshData = refreshData;
 window.blocksTable = blocksTable;
 window.checkScrollStatus = checkScrollStatus;

@@ -19,7 +19,6 @@
  *   - טעינת כרטיס מלא של createCemeteryCard
  *   - אתחול UniversalSearch עם new UniversalSearch()
  *   - דאבל-קליק ניווט לחלקות (בלי כרטיס)
- *   - ⚠️ פונקציית editBlock מוערת (דורש תיקון)
  */
 
 // ===================================================================
@@ -679,7 +678,6 @@ function showToast(message, type = 'info') {
     toast.innerHTML = `
         <span>${type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ'}</span>
         <span>${message}</span>
-        <span>{{message}}</span>
     `;
     
     document.body.appendChild(toast);

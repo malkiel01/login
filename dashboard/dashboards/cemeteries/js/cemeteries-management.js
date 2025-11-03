@@ -13,7 +13,6 @@
  * - v1.0.0: גרסה ראשונית - ניהול בתי עלמין
  *   - רמת שורש בהיררכיה (אין parent)
  *   - דאבל-קליק ניווט לגושים (בלי כרטיס)
- *   - ⚠️ קוד זר: createCustomerCard ו-printCustomerReport (דורש מחיקה)
  */
 
 // ===================================================================
@@ -561,118 +560,6 @@ function checkScrollStatus() {
     } else {
         console.log('   ✅ All items loaded');
     }
-}
-
-// ===================================================
-// יצירת כרטיס מידע ללקוח
-// ===================================================
-async function createCustomerCard(customerId) {
-    try {
-        const response = await fetch(`${API_BASE}customers-api.php?action=get&id=${customerId}`);
-        const data = await response.json();
-        
-        if (!data.success) {
-            console.warn('Failed to fetch customer data');
-            return '';
-        }
-        
-        const customer = data.data;
-        
-        // פורמט סוג תושבות
-        const typeLabels = {
-            1: 'תושב העיר',
-            2: 'תושב הארץ',
-            3: 'תושב חו"ל'
-        };
-        const residentType = typeLabels[customer.statusResident] || 'לא מוגדר';
-        
-        // פורמט סטטוס
-        const statusBadge = customer.statusCustomer == 1 
-            ? '<span class="status-badge-large status-active">פעיל</span>'
-            : '<span class="status-badge-large status-inactive">לא פעיל</span>';
-        
-        // ספירת רכישות
-        const purchasesCount = customer.purchases ? customer.purchases.length : 0;
-        
-        return `
-            <div class="info-card" id="customerCard">
-                <div class="info-card-header">
-                    <div class="info-card-title">
-                        <span class="info-card-icon">👤</span>
-                        <div>
-                            <div class="info-card-type">לקוח</div>
-                            <h2 class="info-card-name">${customer.firstName} ${customer.lastName}</h2>
-                            <div class="info-card-code">ת.ז: ${customer.numId}</div>
-                        </div>
-                    </div>
-                    <div class="info-card-actions">
-                        <button class="btn-secondary" onclick="editCustomer('${customer.unicId}')">
-                            <span>✏️</span> עריכה
-                        </button>
-                        <button class="btn-primary" onclick="printCustomerReport('${customer.unicId}')">
-                            <span>🖨️</span> הדפסה
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="info-card-content">
-                    <div class="info-row">
-                        <div class="info-group">
-                            <div class="info-label">טלפון</div>
-                            <div class="info-value">${customer.phone || '-'}</div>
-                        </div>
-                        <div class="info-group">
-                            <div class="info-label">נייד</div>
-                            <div class="info-value">${customer.mobile || '-'}</div>
-                        </div>
-                    </div>
-                    
-                    <div class="info-row">
-                        <div class="info-group full-width">
-                            <div class="info-label">אימייל</div>
-                            <div class="info-value">${customer.email || '-'}</div>
-                        </div>
-                    </div>
-                    
-                    <div class="info-row">
-                        <div class="info-group full-width">
-                            <div class="info-label">כתובת</div>
-                            <div class="info-value">${customer.address || '-'}</div>
-                        </div>
-                    </div>
-                    
-                    <div class="info-row">
-                        <div class="info-group">
-                            <div class="info-label">סוג תושבות</div>
-                            <div class="info-value">${residentType}</div>
-                        </div>
-                        <div class="info-group">
-                            <div class="info-label">סטטוס</div>
-                            <div class="info-value">${statusBadge}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            ${purchasesCount > 0 ? `
-            <div class="stats-row">
-                <div class="stat-card">
-                    <div class="stat-icon">📋</div>
-                    <div class="stat-value">${purchasesCount}</div>
-                    <div class="stat-label">רכישות</div>
-                </div>
-            </div>
-            ` : ''}
-        `;
-    } catch (error) {
-        console.error('Error creating customer card:', error);
-        return '';
-    }
-}
-
-function printCustomerReport(customerId) {
-    console.log('📄 Printing customer report:', customerId);
-    // TODO: implement print
 }
 
 // ===================================================

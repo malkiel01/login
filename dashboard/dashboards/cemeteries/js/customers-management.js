@@ -385,15 +385,15 @@ async function initCustomersTable(data, totalItems = null) {
     customersTable = new TableManager({
         tableSelector: '#mainTable',
         
-        containerWidth: '80vw',
-        fixedLayout: true,
+        // containerWidth: '80vw',
+        // fixedLayout: true,
         
-        scrolling: {
-            enabled: true,
-            headerHeight: '50px',
-            itemsPerPage: 50,
-            scrollThreshold: 300
-        },
+        // scrolling: {
+        //     enabled: true,
+        //     headerHeight: '50px',
+        //     itemsPerPage: 50,
+        //     scrollThreshold: 300
+        // },
         
         // ⭐ הוספת totalItems כפרמטר!
         totalItems: actualTotalItems,

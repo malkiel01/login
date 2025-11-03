@@ -219,6 +219,11 @@ async function updateBurialsCount() {
     try {
         const response = await fetch('/dashboard/dashboards/cemeteries/api/burials-api.php?action=stats');
         const data = await response.json();
+
+        console.log('==================================================');
+        console.log(data);
+        console.log('==================================================');
+        
         
         if (data.success && data.data) {
             // סה"כ קבורות השנה

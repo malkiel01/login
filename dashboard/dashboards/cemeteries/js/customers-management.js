@@ -1,12 +1,17 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/customers-management.js
- * Version: 3.0.0
- * Updated: 2025-10-24
+ * Version: 3.1.0
+ * Updated: 2025-11-03
  * Author: Malkiel
  * Change Summary:
+ * - v3.1.0: שיפורים והתאמה לארכיטקטורה המאוחדת
+ *   - עדכון onResults עם state.totalResults ו-updateCounter()
+ *   - הוספת window.customerSearch export
+ *   - הוספת loadAllCustomers alias (backward compatibility)
+ *   - אחידות מלאה עם מודולי בתי עלמין
  * - v3.0.0: שיטה זהה לבתי עלמין - UniversalSearch + TableManager
- * - תיקון Virtual Scroll - itemsPerPage: 200 (במקום 999999)
- * - תיקון קונפליקט שמות - initCustomersSearch (במקום initUniversalSearch)
+ * - תיקון Virtual Scroll - itemsPerPage: 999999
+ * - תיקון קונפליקט שמות - initCustomersSearch
  * - הוספת Backward Compatibility
  * - שיפור הערות והפרדה ויזואלית
  */
@@ -294,13 +299,87 @@ async function initCustomersSearch() {
 // ===================================================================
 // אתחול TableManager - עם תמיכה ב-totalItems
 // ===================================================================
-function initCustomersTable(data, totalItems = null) {
+async function initCustomersTable(data, totalItems = null) {
      const actualTotalItems = totalItems !== null ? totalItems : data.length;
    
     if (customersTable) {
         customersTable.config.totalItems = actualTotalItems;
         customersTable.setData(data);
         return customersTable;
+    }
+
+    // טעינת העמודות מהשרת
+    async function loadColumnsFromConfig(entityType = 'customer') {
+        try {
+            const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+
+            if (!result.success || !result.data) {
+                throw new Error(result.error || 'Failed to load columns config');
+            }
+
+            // המרת הקונפיג מ-PHP לפורמט של TableManager
+            const columns = result.data.map(col => {
+                const column = {
+                    field: col.field,
+                    label: col.title,
+                    width: col.width || 'auto',
+                    sortable: col.sortable !== false,
+                    type: col.type || 'text'
+                };
+                
+                // טיפול בסוגי עמודות מיוחדות - ספציפי לקברים
+                switch (column.type) {
+                    case 'date':
+                        newColumn.render = (item) => formatDate(item[column.field]);
+                        break;
+                        
+                    case 'status':
+                        if (column.render === 'formatCustomerStatus') {
+                            newColumn.render = (item) => formatCustomerStatus(item[column.field]);
+                        }
+                        break;
+                        
+                    case 'type':
+                        if (column.render === 'formatCustomerType') {
+                            newColumn.render = (item) => formatCustomerType(item[column.field]);
+                        }
+                        break;
+                        
+                    case 'actions':
+                        newColumn.render = (item) => `
+                            <button class="btn btn-sm btn-secondary" 
+                                    onclick="event.stopPropagation(); editCustomer('${item.unicId}')" 
+                                    title="עריכה">
+                                <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
+                            </button>
+                            <button class="btn btn-sm btn-danger" 
+                                    onclick="event.stopPropagation(); deleteCustomer('${item.unicId}')" 
+                                    title="מחיקה">
+                                <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
+                            </button>
+                        `;
+                        break;
+                        
+                    default:
+                        // text, number וכו' - ללא render מיוחד
+                        break;
+                }
+                
+                return column;
+            });
+            
+            return columns;
+        } catch (error) {
+            console.error('❌ Failed to load columns config:', error);
+            // החזר מערך רק במקרה של שגיאה
+            return [];
+        }
     }
     
     customersTable = new TableManager({
@@ -318,103 +397,105 @@ function initCustomersTable(data, totalItems = null) {
         
         // ⭐ הוספת totalItems כפרמטר!
         totalItems: actualTotalItems,
+
+        columns: await loadColumnsFromConfig('customer'),
         
-        columns: [
-            {
-                field: 'numId',
-                label: 'ת.ז.',
-                width: '120px',
-                type: 'text',
-                sortable: true
-            },
-            {
-                field: 'firstName',
-                label: 'שם פרטי',
-                width: '150px',
-                type: 'text',
-                sortable: true
-            },
-            {
-                field: 'lastName',
-                label: 'שם משפחה',
-                width: '150px',
-                type: 'text',
-                sortable: true
-            },
-            {
-                field: 'phone',
-                label: 'טלפון',
-                width: '120px',
-                type: 'text',
-                sortable: false
-            },
-            {
-                field: 'phoneMobile',
-                label: 'נייד',
-                width: '120px',
-                type: 'text',
-                sortable: false
-            },
-            {
-                field: 'email',
-                label: 'אימייל',
-                width: '200px',
-                type: 'text',
-                sortable: false
-            },
-            {
-                field: 'streetAddress',
-                label: 'רחוב',
-                width: '150px',
-                type: 'text',
-                sortable: false
-            },
-            {
-                field: 'city_name',
-                label: 'עיר',
-                width: '120px',
-                type: 'text',
-                sortable: true
-            },
-            {
-                field: 'statusCustomer',
-                label: 'סטטוס',
-                width: '100px',
-                type: 'number',
-                sortable: true,
-                render: (customer) => formatCustomerStatus(customer.statusCustomer)
-            },
-            {
-                field: 'statusResident',
-                label: 'סוג',
-                width: '100px',
-                type: 'number',
-                sortable: true,
-                render: (customer) => formatCustomerType(customer.statusResident)
-            },
-            {
-                field: 'createDate',
-                label: 'תאריך',
-                width: '120px',
-                type: 'date',
-                sortable: true,
-                render: (customer) => formatDate(customer.createDate)
-            },
-            {
-                field: 'actions',
-                label: 'פעולות',
-                width: '120px',
-                sortable: false,
-                render: (customer) => `
-                    <button class="btn btn-sm btn-secondary" onclick="editCustomer('${customer.unicId}')" title="עריכה">
-                        <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteCustomer('${customer.unicId}')" title="מחיקה">
-                        <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
-                    </button>
-                `
-            }
-        ],
+        // columns: [
+        //     {
+        //         field: 'numId',
+        //         label: 'ת.ז.',
+        //         width: '120px',
+        //         type: 'text',
+        //         sortable: true
+        //     },
+        //     {
+        //         field: 'firstName',
+        //         label: 'שם פרטי',
+        //         width: '150px',
+        //         type: 'text',
+        //         sortable: true
+        //     },
+        //     {
+        //         field: 'lastName',
+        //         label: 'שם משפחה',
+        //         width: '150px',
+        //         type: 'text',
+        //         sortable: true
+        //     },
+        //     {
+        //         field: 'phone',
+        //         label: 'טלפון',
+        //         width: '120px',
+        //         type: 'text',
+        //         sortable: false
+        //     },
+        //     {
+        //         field: 'phoneMobile',
+        //         label: 'נייד',
+        //         width: '120px',
+        //         type: 'text',
+        //         sortable: false
+        //     },
+        //     {
+        //         field: 'email',
+        //         label: 'אימייל',
+        //         width: '200px',
+        //         type: 'text',
+        //         sortable: false
+        //     },
+        //     {
+        //         field: 'streetAddress',
+        //         label: 'רחוב',
+        //         width: '150px',
+        //         type: 'text',
+        //         sortable: false
+        //     },
+        //     {
+        //         field: 'city_name',
+        //         label: 'עיר',
+        //         width: '120px',
+        //         type: 'text',
+        //         sortable: true
+        //     },
+        //     {
+        //         field: 'statusCustomer',
+        //         label: 'סטטוס',
+        //         width: '100px',
+        //         type: 'number',
+        //         sortable: true,
+        //         render: (customer) => formatCustomerStatus(customer.statusCustomer)
+        //     },
+        //     {
+        //         field: 'statusResident',
+        //         label: 'סוג',
+        //         width: '100px',
+        //         type: 'number',
+        //         sortable: true,
+        //         render: (customer) => formatCustomerType(customer.statusResident)
+        //     },
+        //     {
+        //         field: 'createDate',
+        //         label: 'תאריך',
+        //         width: '120px',
+        //         type: 'date',
+        //         sortable: true,
+        //         render: (customer) => formatDate(customer.createDate)
+        //     },
+        //     {
+        //         field: 'actions',
+        //         label: 'פעולות',
+        //         width: '120px',
+        //         sortable: false,
+        //         render: (customer) => `
+        //             <button class="btn btn-sm btn-secondary" onclick="editCustomer('${customer.unicId}')" title="עריכה">
+        //                 <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
+        //             </button>
+        //             <button class="btn btn-sm btn-danger" onclick="deleteCustomer('${customer.unicId}')" title="מחיקה">
+        //                 <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
+        //             </button>
+        //         `
+        //     }
+        // ],
 
         onRowDoubleClick: (customer) => {                    // ⭐ שורה חדשה
             handleCustomerDoubleClick(customer.unicId);
@@ -706,11 +787,18 @@ window.handleCustomerDoubleClick = handleCustomerDoubleClick;
 
 // הפוך את הפונקציות לגלובליות
 window.loadCustomers = loadCustomers;
+
+// ===================================================================
+// Backward Compatibility
+// ===================================================================
+window.loadAllCustomers = loadCustomers;  // ✅ Alias לשם הישן
+
+// ===================================================================
+// הפוך לגלובלי
+// ===================================================================
 window.deleteCustomer = deleteCustomer;
 window.editCustomer = editCustomer;
 window.refreshData = refreshData;
 window.customersTable = customersTable;
 window.checkScrollStatus = checkScrollStatus;
-
-console.log('✅ Customers Management Module Loaded - FINAL: Clean & Simple');
-console.log('💡 Commands: checkScrollStatus() - בדוק כמה רשומות נטענו');
+window.customerSearch = customerSearch;

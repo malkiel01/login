@@ -336,23 +336,23 @@ async function initCustomersTable(data, totalItems = null) {
                 // טיפול בסוגי עמודות מיוחדות - ספציפי לקברים
                 switch (column.type) {
                     case 'date':
-                        newColumn.render = (item) => formatDate(item[column.field]);
+                        column.render = (item) => formatDate(item[column.field]);
                         break;
                         
                     case 'status':
                         if (column.render === 'formatCustomerStatus') {
-                            newColumn.render = (item) => formatCustomerStatus(item[column.field]);
+                            column.render = (item) => formatCustomerStatus(item[column.field]);
                         }
                         break;
                         
                     case 'type':
                         if (column.render === 'formatCustomerType') {
-                            newColumn.render = (item) => formatCustomerType(item[column.field]);
+                            column.render = (item) => formatCustomerType(item[column.field]);
                         }
                         break;
                         
                     case 'actions':
-                        newColumn.render = (item) => `
+                        column.render = (item) => `
                             <button class="btn btn-sm btn-secondary" 
                                     onclick="event.stopPropagation(); window.tableRenderer.editItem('${item.unicId}')" 
                                     title="עריכה">

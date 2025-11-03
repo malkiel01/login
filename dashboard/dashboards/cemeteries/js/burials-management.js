@@ -42,7 +42,18 @@ async function loadBurials() {
     if (typeof clearAllSidebarSelections === 'function') {
         clearAllSidebarSelections();
     }
-    
+
+    // ⭐ נקה את counters בסיידבר
+    if (typeof window.sidebarManager !== 'undefined' && window.sidebarManager.clearCounters) {
+        window.sidebarManager.clearCounters();
+    }
+
+    // ⭐ או אפשרות 2: עדכן ישירות את ה-counter של קבורות
+    const burialsCounter = document.querySelector('#burialsItem .counter');
+    if (burialsCounter) {
+        burialsCounter.textContent = '';
+    }
+
     // עדכן את כפתור ההוספה
     if (typeof updateAddButtonText === 'function') {
         updateAddButtonText();

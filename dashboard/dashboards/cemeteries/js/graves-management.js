@@ -633,37 +633,6 @@ async function loadGraveStats(areaGraveId = null) {
 }
 
 // ===================================================================
-// עריכת קבר
-// ===================================================================
-async function editGrave(graveId) {
-    console.log('✏️ Editing grave:', graveId);
-    editingGraveId = graveId;
-    
-    try {
-        const response = await fetch(`/dashboard/dashboards/cemeteries/api/graves-api.php?action=get&id=${graveId}`);
-        const result = await response.json();
-        
-        if (!result.success) {
-            throw new Error(result.error || 'שגיאה בטעינת נתוני הקבר');
-        }
-        
-        const grave = result.data;
-        
-        if (typeof FormHandler.openForm === 'function') {
-            // openFormModal('grave', grave);
-            FormHandler.openForm('grave', null, grave.unicId); 
-        } else {
-            console.log('📝 Grave data:', grave);
-            alert('פונקציית openFormModal לא זמינה');
-        }
-        
-    } catch (error) {
-        console.error('Error editing grave:', error);
-        showToast('שגיאה בטעינת נתוני הקבר', 'error');
-    }
-}
-
-// ===================================================================
 // מחיקת קבר
 // ===================================================================
 async function deleteGrave(graveId) {
@@ -772,8 +741,13 @@ async function handleGraveDoubleClick(graveId, graveName) {
     console.log('🖱️ Double-click on grave:', graveName, graveId);
     
     try {
-        // פתח מודל עריכה
-        await editGrave(graveId);
+        // טעינת קבר
+        console.log('📦 Loading plots for grave:', graveName);
+        if (typeof loadGraves === 'function') {
+            loadGraves(graveId, graveName);
+        } else {
+            console.warn('loadGraves function not found');
+        }
         
     } catch (error) {
         console.error('❌ Error in handleGraveDoubleClick:', error);
@@ -793,7 +767,6 @@ window.loadAllGraves = loadGraves;
 // ===================================================================
 window.loadGraves = loadGraves;
 window.deleteGrave = deleteGrave;
-window.editGrave = editGrave;
 window.refreshData = refreshData;
 window.gravesTable = gravesTable;
 window.checkScrollStatus = checkScrollStatus;

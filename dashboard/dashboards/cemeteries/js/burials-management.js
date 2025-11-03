@@ -41,7 +41,7 @@ async function loadBurials() {
     // נקה את כל הסידבר
     if (typeof clearAllSidebarSelections === 'function') {
         clearAllSidebarSelections();
-    }
+    } 
 
     // ⭐ נקה את counters בסיידבר
     if (typeof window.sidebarManager !== 'undefined' && window.sidebarManager.clearCounters) {

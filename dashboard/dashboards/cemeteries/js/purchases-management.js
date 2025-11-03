@@ -335,9 +335,9 @@ async function initPurchasesTable(data, totalItems = null) {
                         break;
                         
                     case 'status':
-                        if (column.render === 'formatPurchaseStatus') {
+                        // if (column.render === 'formatPurchaseStatus') {
                             column.render = (item) => formatPurchaseStatus(item[column.field]);
-                        }
+                        // }
                         break;
                         
                     case 'type':

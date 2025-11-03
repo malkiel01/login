@@ -676,52 +676,6 @@ return [
             'status' => 'isActive'
         ],
         
-        // 'table_columns' => [
-        //     [
-        //         'field' => 'index',
-        //         'title' => 'מס׳',
-        //         'width' => '60px',
-        //         'type' => 'index'
-        //     ],
-        //     [
-        //         'field' => 'areaGraveNameHe',
-        //         'title' => 'שם אחוזת קבר',
-        //         'type' => 'text',
-        //         'sortable' => true,
-        //         'searchable' => true,
-        //         'required' => true
-        //     ],
-        //     [
-        //         'field' => 'graveType',
-        //         'title' => 'סוג',
-        //         'type' => 'select',
-        //         'width' => '120px',
-        //         'options' => [
-        //             1 => 'שדה',
-        //             2 => 'רוויה',
-        //             3 => 'סנהדרין'
-        //         ]
-        //     ],
-        //     [
-        //         'field' => 'gravesList',
-        //         'title' => 'מספר קברים',
-        //         'type' => 'text',
-        //         'width' => '100px'
-        //     ],
-        //     [
-        //         'field' => 'createDate',
-        //         'title' => 'נוצר',
-        //         'type' => 'date',
-        //         'width' => '120px'
-        //     ],
-        //     [
-        //         'field' => 'actions',
-        //         'title' => 'פעולות',
-        //         'type' => 'actions',
-        //         'width' => '150px'
-        //     ]
-        // ],
-        
         'form_fields' => [
             [
                 'name' => 'areaGraveNameHe',

@@ -817,7 +817,6 @@ window.loadAllPlots = loadPlots; // ✅ Alias לשם הישן
 // ===================================================================
 window.loadPlots = loadPlots;
 window.deletePlot = deletePlot;
-window.editPlot = editPlot;
 window.refreshData = refreshData;
 window.plotsTable = plotsTable;
 window.checkScrollStatus = checkScrollStatus;

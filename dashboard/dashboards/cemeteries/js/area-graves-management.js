@@ -821,6 +821,3 @@ window.checkScrollStatus = checkScrollStatus;
 window.currentPlotId = currentPlotId;
 window.currentPlotName = currentPlotName;
 window.areaGraveSearch = areaGraveSearch;
-
-console.log('✅ Area Graves Management Module Loaded - v1.2.2 (Client-Side Filter Fixed)');
-console.log('💡 Commands: checkScrollStatus() - בדוק כמה רשומות נטענו');

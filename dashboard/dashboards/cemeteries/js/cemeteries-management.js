@@ -604,7 +604,6 @@ window.loadAllCemeteries = loadCemeteries; // ✅ Alias לשם הישן
 // ===================================================================
 window.loadCemeteries = loadCemeteries;
 window.deleteCemetery = deleteCemetery;
-window.editCemetery = editCemetery;
 window.refreshData = refreshData;
 window.cemeteriesTable = cemeteriesTable;
 window.checkScrollStatus = checkScrollStatus;

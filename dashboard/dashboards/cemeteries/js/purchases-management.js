@@ -1,19 +1,18 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/purchases-management.js
- * Version: 3.2.0
+ * Version: 3.2.1
  * Updated: 2025-11-03
  * Author: Malkiel
  * Change Summary:
+ * - v3.2.1: ⭐ תיקון סופי - עכשיו זהה לחלוטין ל-customers-management
+ *   - הוספת if (column.render === 'formatPurchaseStatus') ב-case 'status'
+ *   - הוספת case 'type' עם if (column.render === 'formatPurchaseType')
+ *   - הוספת formatPurchaseType() function
+ *   - שמירה על case 'currency' (ייחודי לרכישות)
+ *   - המבנה עכשיו זהה ממש - רק שמות משתנים שונים
  * - v3.2.0: אחידות מלאה עם customers-management
- *   - שימוש ב-window.tableRenderer.editItem() במקום editPurchase()
- *   - הסרת פונקציית editPurchase() מיותרת
- *   - הוספת window.loadPurchases export
- *   - מבנה זהה לחלוטין ל-customers (רמת שורש)
  *   - טעינת עמודות דינמית מ-PHP דרך loadColumnsFromConfig('purchase')
  * - v3.1.0: שיפורים והתאמה לארכיטקטורה המאוחדת
- *   - עדכון onResults עם state.totalResults ו-updateCounter()
- *   - הוספת window.purchaseSearch export
- *   - הוספת loadAllPurchases alias (backward compatibility)
  * - v3.0.0: שיטה זהה לבתי עלמין - UniversalSearch + TableManager
  */
 
@@ -28,7 +27,7 @@ let editingPurchaseId = null;
 
 // טעינת רכישות (הפונקציה הראשית)
 async function loadPurchases() {
-    console.log('📋 Loading purchases - v3.2.0 (אחידות מלאה עם customers)...');
+    console.log('📋 Loading purchases - v3.2.1 (זהה לחלוטין ל-customers)...');
 
     setActiveMenuItem('purchasesItem');
     
@@ -336,7 +335,15 @@ async function initPurchasesTable(data, totalItems = null) {
                         break;
                         
                     case 'status':
-                        column.render = (item) => formatPurchaseStatus(item[column.field]);
+                        if (column.render === 'formatPurchaseStatus') {
+                            column.render = (item) => formatPurchaseStatus(item[column.field]);
+                        }
+                        break;
+                        
+                    case 'type':
+                        if (column.render === 'formatPurchaseType') {
+                            column.render = (item) => formatPurchaseType(item[column.field]);
+                        }
                         break;
                         
                     case 'currency':
@@ -590,6 +597,16 @@ function renderPurchasesRows(data, container, pagination = null) {
 // ===================================================================
 // פונקציות פורמט ועזר
 // ===================================================================
+function formatPurchaseType(type) {
+    const types = {
+        1: 'רגיל',
+        2: 'מיוחד',
+        3: 'אחר'
+    };
+    return types[type] || '-';
+}
+
+// פורמט סטטוס רכישה
 function formatPurchaseStatus(status) {
     const statuses = {
         1: { text: 'פעיל', color: '#10b981' },

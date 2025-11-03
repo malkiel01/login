@@ -38,7 +38,7 @@ try {
             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
             $offset = ($page - 1) * $limit;
             
-            $sql = "SELECT p.*, b.blockNameHe as block_name 
+            $sql = "SELECT p.*, b.blockNameHe
                     FROM plots p
                     LEFT JOIN blocks b ON p.blockId = b.unicId
                     WHERE p.isActive = 1";          
@@ -147,11 +147,6 @@ try {
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
             $offset = ($page - 1) * $limit;
-            
-            // $sql = "SELECT p.*, b.blockNameHe as block_name 
-            //         FROM plots p
-            //         LEFT JOIN blocks b ON p.blockId = b.unicId
-            //         WHERE p.isActive = 1";
 
             $sql = "SELECT p.* FROM plots_view p WHERE isActive = 1";            
 
@@ -263,7 +258,7 @@ try {
             }
             
             $stmt = $pdo->prepare("
-                SELECT p.*, b.blockNameHe as block_name
+                SELECT p.*, b.blockNameHe
                 FROM plots p
                 LEFT JOIN blocks b ON p.blockId = b.unicId
                 WHERE p.unicId = :id AND p.isActive = 1
@@ -479,7 +474,7 @@ try {
             }
             
             $sql = "SELECT p.unicId, p.plotNameHe, p.plotNameEn, p.plotCode, p.plotLocation,
-                           b.blockNameHe as block_name
+                           b.blockNameHe
                     FROM plots p
                     LEFT JOIN blocks b ON p.blockId = b.unicId
                     WHERE p.isActive = 1 

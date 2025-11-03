@@ -256,61 +256,83 @@ async function initCemeteriesTable(data, totalItems = null) {
     }
 
     // טעינת העמודות מהשרת
-    async function loadColumnsFromConfig() {
-        const response = await fetch('/dashboard/dashboards/cemeteries/api/get-config.php?type=cemetery&section=table_columns');
-        const result = await response.json();
-
-        // המרה לפורמט של TableManager
-        const columns = result.data.map(col => {
-            const column = {
-                field: col.field,
-                label: col.title,  // המרה מ-title ל-label
-                width: col.width,
-                sortable: col.sortable
-            };
+    async function loadColumnsFromConfig(entityType = 'cemetery') {
+        try {
+            const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`);
             
-            // טיפול בסוגים מיוחדים
-            switch(col.type) {
-                case 'link':
-                    column.render = (cemetery) => {
-                        return `<a href="#" onclick="handleCemeteryDoubleClick('${cemetery.unicId}', '${cemetery.cemeteryNameHe?.replace(/'/g, "\\'")}'); return false;" 
-                                style="color: #2563eb; text-decoration: none; font-weight: 500;">
-                            ${cemetery[col.field]}
-                        </a>`;
-                    };
-                    break;
-                    
-                case 'badge':
-                    column.render = (cemetery) => {
-                        const count = cemetery[col.field] || 0;
-                        return `<span style="background: #dbeafe; color: #1e40af; padding: 3px 10px; border-radius: 4px; font-size: 13px; font-weight: 600; display: inline-block;">${count}</span>`;
-                    };
-                    break;
-                    
-                case 'date':
-                    column.render = (cemetery) => formatDate(cemetery[col.field]);
-                    break;
-
-                case 'actions':
-                    column.render = (item) => `
-                        <button class="btn btn-sm btn-secondary" 
-                                onclick="event.stopPropagation(); window.tableRenderer.editItem('${item.unicId}')" 
-                                title="עריכה">
-                            <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
-                        </button>
-                        <button class="btn btn-sm btn-danger" 
-                                onclick="event.stopPropagation(); deletePlot('${item.unicId}')" 
-                                title="מחיקה">
-                            <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
-                        </button>
-                    `;
-                    break;
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
+
+            const result = await response.json();
+
+            if (!result.success || !result.data) {
+                throw new Error(result.error || 'Failed to load columns config');
+            }
+
+            // המרה לפורמט של TableManager
+            const columns = result.data.map(col => {
+                const column = {
+                    field: col.field,
+                    label: col.title,
+                    width: col.width || 'auto',
+                    sortable: col.sortable !== false,
+                    type: col.type || 'text'
+                };
+                
+                // טיפול בסוגים מיוחדים
+                switch(col.type) {
+                    case 'link':
+                        column.render = (cemetery) => {
+                            return `<a href="#" onclick="handleCemeteryDoubleClick('${cemetery.unicId}', '${cemetery.cemeteryNameHe?.replace(/'/g, "\\'")}'); return false;" 
+                                    style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                                ${cemetery[col.field]}
+                            </a>`;
+                        };
+                        break;
+                        
+                    case 'badge':
+                        column.render = (cemetery) => {
+                            const count = cemetery[col.field] || 0;
+                            return `<span style="background: #dbeafe; color: #1e40af; padding: 3px 10px; border-radius: 4px; font-size: 13px; font-weight: 600; display: inline-block;">${count}</span>`;
+                        };
+                        break;
+                        
+                    case 'date':
+                        column.render = (cemetery) => formatDate(cemetery[col.field]);
+                        break;
+
+                    case 'actions':
+                        column.render = (item) => `
+                            <button class="btn btn-sm btn-secondary" 
+                                    onclick="event.stopPropagation(); window.tableRenderer.editItem('${item.unicId}')" 
+                                    title="עריכה">
+                                <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
+                            </button>
+                            <button class="btn btn-sm btn-danger" 
+                                    onclick="event.stopPropagation(); deletePlot('${item.unicId}')" 
+                                    title="מחיקה">
+                                <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
+                            </button>
+                        `;
+                        break;
+
+                    default:
+                        // עמודת טקסט רגילה
+                        if (!column.render) {
+                            column.render = (plot) => plot[column.field] || '-';
+                        }
+                }
+                
+                return column;
+            });
             
-            return column;
-        });
-        
-        return columns;
+            return columns;
+        } catch (error) {
+            console.error('Failed to load columns config:', error);
+            // החזר עמודות ברירת מחדל במקרה של שגיאה
+            return []
+        }
     }
 
     cemeteriesTable = new TableManager({
@@ -423,18 +445,6 @@ function formatDate(dateString) {
 // ===================================================================
 // פונקציות CRUD
 // ===================================================================
-async function editCemetery(cemeteryId) {
-    console.log('✏️ Edit cemetery:', cemeteryId);
-    editingCemeteryId = cemeteryId;
-    
-    // פתיחת טופס עריכה
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('cemetery', null, cemeteryId);
-    } else {
-        showToast('עריכה בפיתוח...', 'info');
-    }
-}
-
 async function deleteCemetery(cemeteryId) {
     console.log('🗑️ Delete cemetery:', cemeteryId);
     

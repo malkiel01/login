@@ -285,7 +285,7 @@ async function initPlotsSearch(blockId = null) {
             }
         ],
         
-        displayColumns: ['plotNameHe', 'plotCode', 'plotLocation', 'block_name', 'comments', 'rows_count', 'createDate'],
+        displayColumns: ['plotNameHe', 'plotCode', 'plotLocation', 'blockNameHe', 'comments', 'rows_count', 'createDate'],
         
         searchContainerSelector: '#plotSearchSection',
         resultsContainerSelector: '#tableBody',
@@ -401,16 +401,10 @@ async function initPlotsTable(data, totalItems = null) {
         return plotsTable;
     }
 
-    // ===================================================================
-    // טעינת הגדרות עמודות מהקונפיג
-    // ===================================================================
+    // טעינת העמודות מהשרת
     async function loadColumnsFromConfig(entityType = 'plot') {
         try {
-            console.log(`📋 Loading columns config for: ${entityType}`);
-            
-            const response = await fetch(
-                `/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`
-            );
+            const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`);
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -431,14 +425,6 @@ async function initPlotsTable(data, totalItems = null) {
                     sortable: col.sortable !== false,
                     type: col.type || 'text'
                 };
-                
-                // תיקון שמות שדות - התאמה בין הקונפיג ל-VIEW
-                if (col.field === 'cemetery_name') {
-                    column.field = 'cemeteryNameHe';  // ⭐ השם האמיתי מה-VIEW
-                }
-                if (col.field === 'block_name') {
-                    column.field = 'blockNameHe';     // ⭐ השם האמיתי מה-VIEW
-                }
                 
                 // טיפול בסוגי עמודות מיוחדות
                 switch(col.type) {
@@ -496,91 +482,13 @@ async function initPlotsTable(data, totalItems = null) {
                 return column;
             });
             
-            console.log(`✅ Loaded ${columns.length} columns for ${entityType}`);
             return columns;
             
         } catch (error) {
             console.error('Failed to load columns config:', error);
             // החזר עמודות ברירת מחדל במקרה של שגיאה
-            return getDefaultPlotsColumns();
+            return []
         }
-    }
-
-    // ===================================================================
-    // עמודות ברירת מחדל (במקרה שטעינת הקונפיג נכשלת)
-    // ===================================================================
-    function getDefaultPlotsColumns() {
-        console.warn('⚠️ Using default columns as fallback');
-        
-        return [
-            {
-                field: 'plotNameHe',
-                label: 'שם חלקה',
-                width: '200px',
-                sortable: true,
-                render: (plot) => {
-                    return `<a href="#" onclick="handlePlotDoubleClick('${plot.unicId}', '${plot.plotNameHe?.replace(/'/g, "\\'")}'); return false;" 
-                            style="color: #2563eb; text-decoration: none; font-weight: 500;">
-                        ${plot.plotNameHe}
-                    </a>`;
-                }
-            },
-            {
-                field: 'plotCode',
-                label: 'קוד',
-                width: '100px',
-                sortable: true
-            },
-            {
-                field: 'cemeteryNameHe',
-                label: 'בית עלמין',
-                width: '200px',
-                sortable: true
-            },
-            {
-                field: 'blockNameHe',
-                label: 'גוש',
-                width: '200px',
-                sortable: true
-            },
-            {
-                field: 'rows_count',
-                label: 'שורות',
-                width: '80px',
-                type: 'number',
-                sortable: true,
-                render: (plot) => {
-                    const count = plot.rows_count || 0;
-                    return `<span style="background: #dbeafe; color: #1e40af; padding: 3px 10px; border-radius: 4px; font-size: 13px; font-weight: 600; display: inline-block;">${count}</span>`;
-                }
-            },
-            {
-                field: 'createDate',
-                label: 'תאריך',
-                width: '120px',
-                type: 'date',
-                sortable: true,
-                render: (plot) => formatDate(plot.createDate)
-            },
-            {
-                field: 'actions',
-                label: 'פעולות',
-                width: '120px',
-                sortable: false,
-                render: (plot) => `
-                    <button class="btn btn-sm btn-secondary" 
-                            onclick="event.stopPropagation(); window.tableRenderer.editItem('${plot.unicId}')" 
-                            title="עריכה">
-                        <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
-                    </button>
-                    <button class="btn btn-sm btn-danger" 
-                            onclick="event.stopPropagation(); deletePlot('${plot.unicId}')" 
-                            title="מחיקה">
-                        <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
-                    </button>
-                `
-            }
-        ];
     }
 
     plotsTable = new TableManager({
@@ -590,85 +498,6 @@ async function initPlotsTable(data, totalItems = null) {
 
         columns: await loadColumnsFromConfig('plot'),
 
-        // columns: [
-        //     {
-        //         field: 'plotNameHe',
-        //         label: 'שם חלקה',
-        //         width: '200px',
-        //         sortable: true,
-        //         render: (plot) => {
-        //             return `<a href="#" onclick="handlePlotDoubleClick('${plot.unicId}', '${plot.plotNameHe.replace(/'/g, "\\'")}'); return false;" 
-        //                        style="color: #2563eb; text-decoration: none; font-weight: 500;">
-        //                 ${plot.plotNameHe}
-        //             </a>`;
-        //         }
-        //     },
-        //     {
-        //         field: 'plotCode',
-        //         label: 'קוד',
-        //         width: '100px',
-        //         sortable: true
-        //     },
-        //     {
-        //         field: 'block_name',
-        //         label: 'גוש',
-        //         width: '200px',
-        //         sortable: true
-        //     },
-        //     {
-        //         field: 'rows_count',
-        //         label: 'שורות',
-        //         width: '80px',
-        //         type: 'number',
-        //         sortable: true,
-        //         render: (plot) => {
-        //             const count = plot.rows_count || 0;
-        //             return `<span style="background: #dbeafe; color: #1e40af; padding: 3px 10px; border-radius: 4px; font-size: 13px; font-weight: 600; display: inline-block;">${count}</span>`;
-        //         }
-        //     },
-        //     {
-        //         field: 'statusPlot',
-        //         label: 'סטטוס',
-        //         width: '100px',
-        //         sortable: true,
-        //         render: (plot) => {
-        //             return plot.statusPlot == 1 || plot.isActive == 1
-        //                 ? '<span class="status-badge status-active">פעיל</span>'
-        //                 : '<span class="status-badge status-inactive">לא פעיל</span>';
-        //         }
-        //     },
-        //     {
-        //         field: 'createDate',
-        //         label: 'תאריך',
-        //         width: '120px',
-        //         type: 'date',
-        //         sortable: true,
-        //         render: (plot) => formatDate(plot.createDate)
-        //     },
-        //     {
-        //         field: 'actions',
-        //         label: 'פעולות',
-        //         width: '120px',
-        //         sortable: false,
-        //         render: (plot) => `
-        //              <button class="btn btn-sm btn-secondary" 
-        //                      onclick="event.stopPropagation(); window.tableRenderer.editItem('${plot.unicId}')" 
-        //                      title="עריכה">
-        //                  <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
-        //              </button>
-        //              <button class="btn btn-sm btn-danger" 
-        //                      onclick="event.stopPropagation(); deleteBlock('${plot.unicId}')" 
-        //                      title="מחיקה">
-        //                  <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
-        //              </button>
-        //         `
-        //     }
-        // ],
-
-        // onRowDoubleClick: (plot) => {
-        //     handlePlotDoubleClick(plot.unicId, plot.plotNameHe);
-        // },
-        
         data: data,
         
         sortable: true,
@@ -840,38 +669,6 @@ async function loadPlotStats(blockId = null) {
         }
     } catch (error) {
         console.error('Error loading plot stats:', error);
-    }
-}
-
-// ===================================================================
-// עריכת חלקה
-// ===================================================================
-async function editPlot(plotId) {
-    console.log('✏️ Editing plot:', plotId);
-    editingPlotId = plotId;
-    
-    try {
-        const response = await fetch(`/dashboard/dashboards/cemeteries/api/plots-api.php?action=get&id=${plotId}`);
-        const result = await response.json();
-        
-        if (!result.success) {
-            throw new Error(result.error || 'שגיאה בטעינת נתוני החלקה');
-        }
-        
-        const plot = result.data;
-        
-        // פתח את הטופס במודל
-        if (typeof FormHandler.openForm === 'function') {
-            // openFormModal('plot', plot);
-            FormHandler.openForm('plot', null, plot.unicId); 
-        } else {
-            console.log('📝 Plot data:', plot);
-            alert('פונקציית openFormModal לא זמינה');
-        }
-        
-    } catch (error) {
-        console.error('Error editing plot:', error);
-        showToast('שגיאה בטעינת נתוני החלקה', 'error');
     }
 }
 

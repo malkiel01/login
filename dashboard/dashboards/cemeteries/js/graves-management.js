@@ -340,12 +340,123 @@ async function initGravesSearch(areaGraveId = null) {
 async function initGravesTable(data, totalItems = null) {
     const actualTotalItems = totalItems !== null ? totalItems : data.length;
     
-    console.log(`📊 Initializing TableManager for graves with ${data.length} items (total: ${actualTotalItems})...`);
-    
     if (gravesTable) {
         gravesTable.config.totalItems = actualTotalItems;
         gravesTable.setData(data);
         return gravesTable;
+    }
+        
+    // טעינת העמודות מהשרת
+    async function loadColumnsFromConfig(entityType = 'grave') {
+        try {
+            const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            
+            if (!result.success || !result.data) {
+                throw new Error(result.error || 'Failed to load columns config');
+            }
+            
+            // המרת הקונפיג מ-PHP לפורמט של TableManager
+            const columns = result.data.map(col => {
+                const column = {
+                    field: col.field,
+                    label: col.title,
+                    width: col.width || 'auto',
+                    sortable: col.sortable !== false,
+                    type: col.type || 'text'
+                };
+                
+                // טיפול בסוגי עמודות מיוחדות - ספציפי לקברים
+                switch(col.type) {
+                    case 'link':
+                        // קישור לדאבל-קליק - לעריכת קבר
+                        column.render = (grave) => {
+                            return `<a href="#" onclick="handleGraveDoubleClick('${grave.unicId}', '${(grave.graveNameHe || '').replace(/'/g, "\\'")}'); return false;" 
+                                    style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                                ${grave.graveNameHe || 'ללא שם'}
+                            </a>`;
+                        };
+                        break;
+                        
+                    case 'graveStatus':
+                        // סטטוס קבר עם צבעים דינמיים
+                        column.render = (grave) => {
+                            const status = getGraveStatusInfo(grave.graveStatus);
+                            return `<span style="background: ${status.color}; color: white; padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 500;">${status.label}</span>`;
+                        };
+                        break;
+                        
+                    case 'plotType':
+                        // סוג חלקה עם badge סגול
+                        column.render = (grave) => {
+                            const type = getPlotTypeName(grave.plotType);
+                            return `<span style="background: #e0e7ff; color: #4338ca; padding: 3px 10px; border-radius: 4px; font-size: 12px;">${type}</span>`;
+                        };
+                        break;
+                        
+                    case 'area_grave_name':
+                        // שם אחוזת קבר עם אייקון
+                        column.render = (grave) => {
+                            return `<span style="color: #6b7280;">🏘️ ${grave.area_grave_name || '-'}</span>`;
+                        };
+                        break;
+                        
+                    case 'isSmallGrave':
+                        // גודל קבר עם אייקונים
+                        column.render = (grave) => {
+                            return grave.isSmallGrave ? 
+                                `<span style="font-size: 12px;">📏 קטן</span>` : 
+                                `<span style="font-size: 12px;">📐 רגיל</span>`;
+                        };
+                        break;
+                        
+                    case 'constructionCost':
+                        // עלות בנייה עם סימן מטבע
+                        column.render = (grave) => {
+                            const cost = grave.constructionCost || '0';
+                            return `<span style="font-family: monospace; font-size: 12px;">₪${cost}</span>`;
+                        };
+                        break;
+                        
+                    case 'date':
+                        // תאריך - פורמט עברי
+                        column.render = (grave) => formatDate(grave[column.field]);
+                        break;
+                        
+                    case 'actions':
+                        // כפתורי פעולות - עריכה ומחיקה
+                        column.render = (grave) => `
+                            <button class="btn btn-sm btn-secondary" onclick="editGrave('${grave.unicId}')" title="עריכה">
+                                <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteGrave('${grave.unicId}')" title="מחיקה">
+                                <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
+                            </button>
+                        `;
+                        break;
+                        
+                    default:
+                        // עמודת טקסט רגילה
+                        if (!column.render) {
+                            column.render = (grave) => grave[column.field] || '-';
+                        }
+                }
+                
+                return column;
+            });
+            
+            return columns;
+            
+        } catch (error) {
+            console.error('❌ Failed to load columns config:', error);
+            // החזר מערך רק במקרה של שגיאה
+            return [];
+        }
     }
 
     gravesTable = new TableManager({
@@ -353,92 +464,93 @@ async function initGravesTable(data, totalItems = null) {
         
         totalItems: actualTotalItems,
 
-        columns: [
-            {
-                field: 'graveNameHe',
-                label: 'שם קבר',
-                width: '150px',
-                sortable: true,
-                render: (grave) => {
-                    return `<a href="#" onclick="handleGraveDoubleClick('${grave.unicId}', '${(grave.graveNameHe || '').replace(/'/g, "\\'")}'); return false;" 
-                               style="color: #2563eb; text-decoration: none; font-weight: 500;">
-                        ${grave.graveNameHe || 'ללא שם'}
-                    </a>`;
-                }
-            },
-            {
-                field: 'graveStatus',
-                label: 'סטטוס',
-                width: '100px',
-                sortable: true,
-                render: (grave) => {
-                    const status = getGraveStatusInfo(grave.graveStatus);
-                    return `<span style="background: ${status.color}; color: white; padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 500;">${status.label}</span>`;
-                }
-            },
-            {
-                field: 'plotType',
-                label: 'סוג חלקה',
-                width: '100px',
-                sortable: true,
-                render: (grave) => {
-                    const type = getPlotTypeName(grave.plotType);
-                    return `<span style="background: #e0e7ff; color: #4338ca; padding: 3px 10px; border-radius: 4px; font-size: 12px;">${type}</span>`;
-                }
-            },
-            {
-                field: 'area_grave_name',
-                label: 'אחוזת קבר',
-                width: '150px',
-                sortable: true,
-                render: (grave) => {
-                    return `<span style="color: #6b7280;">🏘️ ${grave.area_grave_name || '-'}</span>`;
-                }
-            },
-            {
-                field: 'isSmallGrave',
-                label: 'גודל',
-                width: '80px',
-                sortable: true,
-                render: (grave) => {
-                    return grave.isSmallGrave ? 
-                        `<span style="font-size: 12px;">📏 קטן</span>` : 
-                        `<span style="font-size: 12px;">📐 רגיל</span>`;
-                }
-            },
-            {
-                field: 'constructionCost',
-                label: 'עלות',
-                width: '100px',
-                sortable: true,
-                render: (grave) => {
-                    const cost = grave.constructionCost || '0';
-                    return `<span style="font-family: monospace; font-size: 12px;">₪${cost}</span>`;
-                }
-            },
-            {
-                field: 'createDate',
-                label: 'תאריך',
-                width: '100px',
-                type: 'date',
-                sortable: true,
-                render: (grave) => formatDate(grave.createDate)
-            },
-            {
-                field: 'actions',
-                label: 'פעולות',
-                width: '120px',
-                sortable: false,
-                render: (grave) => `
-                    <button class="btn btn-sm btn-secondary" onclick="editGrave('${grave.unicId}')" title="עריכה">
-                        <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteGrave('${grave.unicId}')" title="מחיקה">
-                        <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
-                    </button>
-                `
-            }
-        ],
+        columns: await loadColumnsFromConfig('grave'),
+        // columns: [
+        //     {
+        //         field: 'graveNameHe',
+        //         label: 'שם קבר',
+        //         width: '150px',
+        //         sortable: true,
+        //         render: (grave) => {
+        //             return `<a href="#" onclick="handleGraveDoubleClick('${grave.unicId}', '${(grave.graveNameHe || '').replace(/'/g, "\\'")}'); return false;" 
+        //                        style="color: #2563eb; text-decoration: none; font-weight: 500;">
+        //                 ${grave.graveNameHe || 'ללא שם'}
+        //             </a>`;
+        //         }
+        //     },
+        //     {
+        //         field: 'graveStatus',
+        //         label: 'סטטוס',
+        //         width: '100px',
+        //         sortable: true,
+        //         render: (grave) => {
+        //             const status = getGraveStatusInfo(grave.graveStatus);
+        //             return `<span style="background: ${status.color}; color: white; padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 500;">${status.label}</span>`;
+        //         }
+        //     },
+        //     {
+        //         field: 'plotType',
+        //         label: 'סוג חלקה',
+        //         width: '100px',
+        //         sortable: true,
+        //         render: (grave) => {
+        //             const type = getPlotTypeName(grave.plotType);
+        //             return `<span style="background: #e0e7ff; color: #4338ca; padding: 3px 10px; border-radius: 4px; font-size: 12px;">${type}</span>`;
+        //         }
+        //     },
+        //     {
+        //         field: 'area_grave_name',
+        //         label: 'אחוזת קבר',
+        //         width: '150px',
+        //         sortable: true,
+        //         render: (grave) => {
+        //             return `<span style="color: #6b7280;">🏘️ ${grave.area_grave_name || '-'}</span>`;
+        //         }
+        //     },
+        //     {
+        //         field: 'isSmallGrave',
+        //         label: 'גודל',
+        //         width: '80px',
+        //         sortable: true,
+        //         render: (grave) => {
+        //             return grave.isSmallGrave ? 
+        //                 `<span style="font-size: 12px;">📏 קטן</span>` : 
+        //                 `<span style="font-size: 12px;">📐 רגיל</span>`;
+        //         }
+        //     },
+        //     {
+        //         field: 'constructionCost',
+        //         label: 'עלות',
+        //         width: '100px',
+        //         sortable: true,
+        //         render: (grave) => {
+        //             const cost = grave.constructionCost || '0';
+        //             return `<span style="font-family: monospace; font-size: 12px;">₪${cost}</span>`;
+        //         }
+        //     },
+        //     {
+        //         field: 'createDate',
+        //         label: 'תאריך',
+        //         width: '100px',
+        //         type: 'date',
+        //         sortable: true,
+        //         render: (grave) => formatDate(grave.createDate)
+        //     },
+        //     {
+        //         field: 'actions',
+        //         label: 'פעולות',
+        //         width: '120px',
+        //         sortable: false,
+        //         render: (grave) => `
+        //             <button class="btn btn-sm btn-secondary" onclick="editGrave('${grave.unicId}')" title="עריכה">
+        //                 <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
+        //             </button>
+        //             <button class="btn btn-sm btn-danger" onclick="deleteGrave('${grave.unicId}')" title="מחיקה">
+        //                 <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
+        //             </button>
+        //         `
+        //     }
+        // ],
         
         data: data,
         

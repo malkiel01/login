@@ -525,64 +525,64 @@ return [
             ]
         ],
 
-        'table_columns' => [
-            [
-                'field' => 'plotNameHe',
-                'title' => 'שם חלקה',
-                'width' => '200px',
-                'sortable' => true,
-                'type' => 'link'
-            ],
-            [
-                'field' => 'plotCode',
-                'title' => 'קוד',
-                'width' => '100px',
-                'sortable' => true,
-                'type' => 'text'
-            ],
-            [
-                'field' => 'cemeteryNameHe',  // ⭐ זה כבר מגיע מה-API
-                'title' => 'בית עלמין',
-                'width' => '200px',
-                'sortable' => true,
-                'type' => 'text'
-            ],
-            [
-                'field' => 'blockNameHe',  // ⭐ זה כבר מגיע מה-API
-                'title' => 'גוש',
-                'width' => '200px',
-                'sortable' => true,
-                'type' => 'text'
-            ],
-            [
-                'field' => 'rows_count',
-                'title' => 'שורות',
-                'width' => '80px',
-                'sortable' => true,
-                'type' => 'badge'
-            ],
-            [
-                'field' => 'statusPlot',
-                'title' => 'סטטוס',
-                'width' => '100px',
-                'sortable' => true,
-                'type' => 'status'
-            ],
-            [
-                'field' => 'createDate',
-                'title' => 'תאריך',
-                'width' => '120px',
-                'sortable' => true,
-                'type' => 'date'
-            ],
-            [
-                'field' => 'actions',
-                'title' => 'פעולות',
-                'width' => '120px',
-                'sortable' => false,
-                'type' => 'actions'
-            ]
-        ]
+        // 'table_columns' => [
+        //     [
+        //         'field' => 'plotNameHe',
+        //         'title' => 'שם חלקה',
+        //         'width' => '200px',
+        //         'sortable' => true,
+        //         'type' => 'link'
+        //     ],
+        //     [
+        //         'field' => 'plotCode',
+        //         'title' => 'קוד',
+        //         'width' => '100px',
+        //         'sortable' => true,
+        //         'type' => 'text'
+        //     ],
+        //     [
+        //         'field' => 'cemeteryNameHe',  // ⭐ זה כבר מגיע מה-API
+        //         'title' => 'בית עלמין',
+        //         'width' => '200px',
+        //         'sortable' => true,
+        //         'type' => 'text'
+        //     ],
+        //     [
+        //         'field' => 'blockNameHe',  // ⭐ זה כבר מגיע מה-API
+        //         'title' => 'גוש',
+        //         'width' => '200px',
+        //         'sortable' => true,
+        //         'type' => 'text'
+        //     ],
+        //     [
+        //         'field' => 'rows_count',
+        //         'title' => 'שורות',
+        //         'width' => '80px',
+        //         'sortable' => true,
+        //         'type' => 'badge'
+        //     ],
+        //     [
+        //         'field' => 'statusPlot',
+        //         'title' => 'סטטוס',
+        //         'width' => '100px',
+        //         'sortable' => true,
+        //         'type' => 'status'
+        //     ],
+        //     [
+        //         'field' => 'createDate',
+        //         'title' => 'תאריך',
+        //         'width' => '120px',
+        //         'sortable' => true,
+        //         'type' => 'date'
+        //     ],
+        //     [
+        //         'field' => 'actions',
+        //         'title' => 'פעולות',
+        //         'width' => '120px',
+        //         'sortable' => false,
+        //         'type' => 'actions'
+        //     ]
+        // ]
     ],
     
     // ========================================
@@ -806,101 +806,101 @@ return [
             ]
         ],
 
-        'table_columns' => [
-            [
-                'field' => 'areaGraveNameHe',
-                'title' => 'שם אחוזת קבר',
-                'width' => '200px',
-                'sortable' => true,
-                'type' => 'link'
-            ],
-            [
-                'field' => 'areaGraveCode',
-                'title' => 'קוד',
-                'width' => '100px',
-                'sortable' => true,
-                'type' => 'text'
-            ],
-            [
-                'field' => 'lineNameHe',  // ⭐ חדש
-                'title' => 'שורה',
-                'width' => '120px',
-                'sortable' => true,
-                'type' => 'text'
-            ],
-            [
-                'field' => 'plotNameHe',  // ⭐ חדש
-                'title' => 'חלקה',
-                'width' => '120px',
-                'sortable' => true,
-                'type' => 'text'
-            ],
-            [
-                'field' => 'blockNameHe',  // ⭐ חדש
-                'title' => 'גוש',
-                'width' => '120px',
-                'sortable' => true,
-                'type' => 'text'
-            ],
-            [
-                'field' => 'cemeteryNameHe',  // ⭐ חדש
-                'title' => 'בית עלמין',
-                'width' => '150px',
-                'sortable' => true,
-                'type' => 'text'
-            ],
-            [
-                'field' => 'plotNameHe',
-                'title' => 'חלקה',
-                'width' => '150px',
-                'sortable' => true,
-                'type' => 'text'
-            ],
-            [
-                'field' => 'coordinates',
-                'title' => 'קואורדינטות',
-                'width' => '150px',
-                'sortable' => true,
-                'type' => 'coordinates'  // סוג מיוחד
-            ],
-            [
-                'field' => 'graveType',
-                'title' => 'סוג קבר',
-                'width' => '120px',
-                'sortable' => true,
-                'type' => 'graveType'  // סוג מיוחד
-            ],
-            [
-                'field' => 'lineNameHe',
-                'title' => 'שורה',
-                'width' => '150px',
-                'sortable' => true,
-                'type' => 'row'  // סוג מיוחד
-            ],
-            [
-                'field' => 'graves_count',
-                'title' => 'קברים',
-                'width' => '80px',
-                'sortable' => true,
-                'type' => 'badge',
-                'badge_style' => 'success'
-            ],
-            [
-                'field' => 'createDate',
-                'title' => 'תאריך',
-                'width' => '120px',
-                'sortable' => true,
-                'type' => 'date'
-            ],
-            [
-                'field' => 'actions',
-                'title' => 'פעולות',
-                'width' => '120px',
-                'sortable' => false,
-                'type' => 'actions',
-                'actions' => ['edit', 'delete']
-            ]
-        ]
+        // 'table_columns' => [
+        //     [
+        //         'field' => 'areaGraveNameHe',
+        //         'title' => 'שם אחוזת קבר',
+        //         'width' => '200px',
+        //         'sortable' => true,
+        //         'type' => 'link'
+        //     ],
+        //     [
+        //         'field' => 'areaGraveCode',
+        //         'title' => 'קוד',
+        //         'width' => '100px',
+        //         'sortable' => true,
+        //         'type' => 'text'
+        //     ],
+        //     [
+        //         'field' => 'lineNameHe',  // ⭐ חדש
+        //         'title' => 'שורה',
+        //         'width' => '120px',
+        //         'sortable' => true,
+        //         'type' => 'text'
+        //     ],
+        //     [
+        //         'field' => 'plotNameHe',  // ⭐ חדש
+        //         'title' => 'חלקה',
+        //         'width' => '120px',
+        //         'sortable' => true,
+        //         'type' => 'text'
+        //     ],
+        //     [
+        //         'field' => 'blockNameHe',  // ⭐ חדש
+        //         'title' => 'גוש',
+        //         'width' => '120px',
+        //         'sortable' => true,
+        //         'type' => 'text'
+        //     ],
+        //     [
+        //         'field' => 'cemeteryNameHe',  // ⭐ חדש
+        //         'title' => 'בית עלמין',
+        //         'width' => '150px',
+        //         'sortable' => true,
+        //         'type' => 'text'
+        //     ],
+        //     [
+        //         'field' => 'plotNameHe',
+        //         'title' => 'חלקה',
+        //         'width' => '150px',
+        //         'sortable' => true,
+        //         'type' => 'text'
+        //     ],
+        //     [
+        //         'field' => 'coordinates',
+        //         'title' => 'קואורדינטות',
+        //         'width' => '150px',
+        //         'sortable' => true,
+        //         'type' => 'coordinates'  // סוג מיוחד
+        //     ],
+        //     [
+        //         'field' => 'graveType',
+        //         'title' => 'סוג קבר',
+        //         'width' => '120px',
+        //         'sortable' => true,
+        //         'type' => 'graveType'  // סוג מיוחד
+        //     ],
+        //     [
+        //         'field' => 'lineNameHe',
+        //         'title' => 'שורה',
+        //         'width' => '150px',
+        //         'sortable' => true,
+        //         'type' => 'row'  // סוג מיוחד
+        //     ],
+        //     [
+        //         'field' => 'graves_count',
+        //         'title' => 'קברים',
+        //         'width' => '80px',
+        //         'sortable' => true,
+        //         'type' => 'badge',
+        //         'badge_style' => 'success'
+        //     ],
+        //     [
+        //         'field' => 'createDate',
+        //         'title' => 'תאריך',
+        //         'width' => '120px',
+        //         'sortable' => true,
+        //         'type' => 'date'
+        //     ],
+        //     [
+        //         'field' => 'actions',
+        //         'title' => 'פעולות',
+        //         'width' => '120px',
+        //         'sortable' => false,
+        //         'type' => 'actions',
+        //         'actions' => ['edit', 'delete']
+        //     ]
+        // ]
     ],
     
     // ========================================

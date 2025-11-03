@@ -144,7 +144,7 @@ try {
             }
             
             $stmt = $pdo->prepare("
-                SELECT b.*, c.cemeteryNameHe as cemetery_name
+                SELECT b.*, c.cemeteryNameHe
                 FROM blocks b
                 LEFT JOIN cemeteries c ON b.cemeteryId = c.unicId
                 WHERE b.unicId = :id AND b.isActive = 1
@@ -356,7 +356,7 @@ try {
             }
             
             $sql = "SELECT b.unicId, b.blockNameHe, b.blockNameEn, b.blockCode, b.blockLocation,
-                           c.cemeteryNameHe as cemetery_name
+                           c.cemeteryNameHe
                     FROM blocks b
                     LEFT JOIN cemeteries c ON b.cemeteryId = c.unicId
                     WHERE b.isActive = 1 

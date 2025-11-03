@@ -576,9 +576,9 @@ try {
             $sql = "
                 SELECT 
                     c.unicId as cemetery_id,
-                    c.{$cemeteryConfig['displayFields']['name']} as cemetery_name,
+                    c.{$cemeteryConfig['displayFields']['name']} as cemeteryNameHe,
                     b.unicId as block_id,
-                    b.{$blockConfig['displayFields']['name']} as block_name,
+                    b.{$blockConfig['displayFields']['name']} as blockNameHe,
                     p.unicId as plot_id,
                     p.{$plotConfig['displayFields']['name']} as plot_name,
                     r.unicId as row_id,
@@ -606,7 +606,7 @@ try {
                 $params['cemetery_id_alt'] = $_GET['cemetery_id'];
             }
             
-            $sql .= " ORDER BY cemetery_name, block_name, plot_name, r.serialNumber, 
+            $sql .= " ORDER BY cemeteryNameHe, blockNameHe, plot_name, r.serialNumber, 
                       row_name, area_grave_name, grave_number";
             
             $stmt = $pdo->prepare($sql);
@@ -627,7 +627,7 @@ try {
                 if (!isset($hierarchy[$cemId])) {
                     $hierarchy[$cemId] = [
                         'id' => $cemId,
-                        'name' => $row['cemetery_name'],
+                        'name' => $row['cemeteryNameHe'],
                         'blocks' => []
                     ];
                 }
@@ -637,7 +637,7 @@ try {
                     if (!isset($hierarchy[$cemId]['blocks'][$blockId])) {
                         $hierarchy[$cemId]['blocks'][$blockId] = [
                             'id' => $blockId,
-                            'name' => $row['block_name'],
+                            'name' => $row['blockNameHe'],
                             'plots' => []
                         ];
                     }

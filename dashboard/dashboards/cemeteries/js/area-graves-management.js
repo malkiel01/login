@@ -361,8 +361,6 @@ async function initAreaGravesSearch(plotId = null) {
 async function initAreaGravesTable(data, totalItems = null) {
     const actualTotalItems = totalItems !== null ? totalItems : data.length;
     
-    console.log(`📊 Initializing TableManager for area graves with ${data.length} items (total: ${actualTotalItems})...`);
-    
     if (areaGravesTable) {
         areaGravesTable.config.totalItems = actualTotalItems;
         areaGravesTable.setData(data);
@@ -370,80 +368,101 @@ async function initAreaGravesTable(data, totalItems = null) {
     }
 
     async function loadColumnsFromConfig(entityType = 'areaGrave') {
-        const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`);
-        const result = await response.json();
-        
-        const columns = result.data.map(col => {
-            const column = {
-                field: col.field,
-                label: col.title,
-                width: col.width,
-                sortable: col.sortable !== false
-            };
+        try {
+            const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`);
             
-            // טיפול בסוגים מיוחדים
-            switch(col.type) {
-                case 'link':
-                    column.render = (areaGrave) => {
-                        return `<a href="#" onclick="handleAreaGraveDoubleClick('${areaGrave.unicId}', '${areaGrave.areaGraveNameHe?.replace(/'/g, "\\'")}'); return false;" 
-                                style="color: #2563eb; text-decoration: none; font-weight: 500;">
-                            ${areaGrave.areaGraveNameHe}
-                        </a>`;
-                    };
-                    break;
-                    
-                case 'coordinates':
-                    column.render = (areaGrave) => {
-                        const coords = areaGrave.coordinates || '-';
-                        return `<span style="font-family: monospace; font-size: 12px;">${coords}</span>`;
-                    };
-                    break;
-                    
-                case 'graveType':
-                    column.render = (areaGrave) => {
-                        const typeName = getGraveTypeName(areaGrave.graveType);
-                        return `<span style="background: #e0e7ff; color: #4338ca; padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 500;">${typeName}</span>`;
-                    };
-                    break;
-                    
-                case 'row':
-                    column.render = (areaGrave) => {
-                        const rowName = areaGrave.row_name || areaGrave.lineNameHe || '-';
-                        return `<span style="color: #6b7280;">📏 ${rowName}</span>`;
-                    };
-                    break;
-                    
-                case 'badge':
-                    column.render = (areaGrave) => {
-                        const count = areaGrave[col.field] || 0;
-                        return `<span style="background: #dcfce7; color: #15803d; padding: 3px 10px; border-radius: 4px; font-size: 13px; font-weight: 600;">${count}</span>`;
-                    };
-                    break;
-                    
-                case 'date':
-                    column.render = (areaGrave) => formatDate(areaGrave[col.field]);
-                    break;
-                    
-                case 'actions':
-                    column.render = (item) => `
-                        <button class="btn btn-sm btn-secondary" 
-                                onclick="event.stopPropagation(); window.tableRenderer.editItem('${item.unicId}')" 
-                                title="עריכה">
-                            <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
-                        </button>
-                        <button class="btn btn-sm btn-danger" 
-                                onclick="event.stopPropagation(); deletePlot('${item.unicId}')" 
-                                title="מחיקה">
-                            <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
-                        </button>
-                    `;
-                    break;
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
+
+            const result = await response.json();
             
-            return column;
-        });
-        
-        return columns;
+            if (!result.success || !result.data) {
+                throw new Error(result.error || 'Failed to load columns config');
+            }
+
+            const columns = result.data.map(col => {
+                const column = {
+                    field: col.field,
+                    label: col.title,
+                    width: col.width,
+                    sortable: col.sortable !== false
+                };
+                
+                // טיפול בסוגים מיוחדים
+                switch(col.type) {
+                    case 'link':
+                        column.render = (areaGrave) => {
+                            return `<a href="#" onclick="handleAreaGraveDoubleClick('${areaGrave.unicId}', '${areaGrave.areaGraveNameHe?.replace(/'/g, "\\'")}'); return false;" 
+                                    style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                                ${areaGrave.areaGraveNameHe}
+                            </a>`;
+                        };
+                        break;
+                        
+                    case 'coordinates':
+                        column.render = (areaGrave) => {
+                            const coords = areaGrave.coordinates || '-';
+                            return `<span style="font-family: monospace; font-size: 12px;">${coords}</span>`;
+                        };
+                        break;
+                        
+                    case 'graveType':
+                        column.render = (areaGrave) => {
+                            const typeName = getGraveTypeName(areaGrave.graveType);
+                            return `<span style="background: #e0e7ff; color: #4338ca; padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 500;">${typeName}</span>`;
+                        };
+                        break;
+                        
+                    case 'row':
+                        column.render = (areaGrave) => {
+                            const rowName = areaGrave.row_name || areaGrave.lineNameHe || '-';
+                            return `<span style="color: #6b7280;">📏 ${rowName}</span>`;
+                        };
+                        break;
+                        
+                    case 'badge':
+                        column.render = (areaGrave) => {
+                            const count = areaGrave[col.field] || 0;
+                            return `<span style="background: #dcfce7; color: #15803d; padding: 3px 10px; border-radius: 4px; font-size: 13px; font-weight: 600;">${count}</span>`;
+                        };
+                        break;
+                        
+                    case 'date':
+                        column.render = (areaGrave) => formatDate(areaGrave[col.field]);
+                        break;
+                        
+                    case 'actions':
+                        column.render = (item) => `
+                            <button class="btn btn-sm btn-secondary" 
+                                    onclick="event.stopPropagation(); window.tableRenderer.editItem('${item.unicId}')" 
+                                    title="עריכה">
+                                <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
+                            </button>
+                            <button class="btn btn-sm btn-danger" 
+                                    onclick="event.stopPropagation(); deletePlot('${item.unicId}')" 
+                                    title="מחיקה">
+                                <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
+                            </button>
+                        `;
+                        break;
+
+                    default:
+                        // עמודת טקסט רגילה
+                        if (!column.render) {
+                            column.render = (plot) => plot[column.field] || '-';
+                        }
+                }
+                
+                return column;
+            });
+            
+            return columns;
+        } catch (error) {
+            console.error('Failed to load columns config:', error);
+            // החזר עמודות ברירת מחדל במקרה של שגיאה
+            return []
+        }
     }
 
     areaGravesTable = new TableManager({

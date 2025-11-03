@@ -1167,9 +1167,9 @@ class UnifiedTableRenderer {
     extractParentName(item, type) {
         // מפת שדות שם ההורה לפי סוג
         const parentNameFieldMap = {
-            'cemetery': null,                                    // בית עלמין אין לו הורה
-            'block': ['cemetery_name', 'cemeteryNameHe'],       // גוש → שם בית עלמין
-            'plot': ['block_name', 'blockNameHe'],              // חלקה → שם גוש
+            'cemetery': null,                                   // בית עלמין אין לו הורה
+            'block': ['cemeteryNameHe'],                        // גוש → שם בית עלמין
+            'plot': ['blockNameHe'],              // חלקה → שם גוש
             'row': ['plot_name', 'plotNameHe'],                 // שורה → שם חלקה
             'area_grave': ['row_name', 'lineNameHe'],           // אחוזת קבר → שם שורה
             'grave': ['area_grave_name', 'areaGraveNameHe'],    // קבר → שם אחוזת קבר

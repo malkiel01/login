@@ -285,7 +285,7 @@ async function initBlocksSearch(cemeteryId = null) {
             }
         ],
         
-        displayColumns: ['blockNameHe', 'blockCode', 'blockLocation', 'cemetery_name', 'comments', 'plots_count', 'createDate'],
+        displayColumns: ['blockNameHe', 'blockCode', 'blockLocation', 'cemeteryNameHe', 'comments', 'plots_count', 'createDate'],
         
         searchContainerSelector: '#blockSearchSection',
         resultsContainerSelector: '#tableBody',
@@ -373,70 +373,93 @@ async function initBlocksTable(data, totalItems = null) {
     }
 
     async function loadColumnsFromConfig(entityType = 'block') {
-        const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`);
-        const result = await response.json();
-        
-        // המרה לפורמט של TableManager
-        const columns = result.data.map(col => {
-            const column = {
-                field: col.field,
-                label: col.title,
-                width: col.width,
-                sortable: col.sortable !== false
-            };
+        try {
+            const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`);
             
-            // טיפול בסוגים מיוחדים - לגושים!
-            switch(col.type) {
-                case 'link':
-                    if (col.field === 'blockNameHe') {
-                        column.render = (block) => {
-                            return `<a href="#" onclick="handleBlockDoubleClick('${block.unicId}', '${block.blockNameHe?.replace(/'/g, "\\'")}'); return false;" 
-                                    style="color: #2563eb; text-decoration: none; font-weight: 500;">
-                                ${block.blockNameHe}
-                            </a>`;
-                        };
-                    }
-                    break;
-                    
-                case 'badge':
-                    column.render = (block) => {
-                        const count = block[col.field] || 0;
-                        return `<span style="background: #dbeafe; color: #1e40af; padding: 3px 10px; border-radius: 4px; font-size: 13px; font-weight: 600; display: inline-block;">${count}</span>`;
-                    };
-                    break;
-                    
-                case 'status':
-                    column.render = (block) => {
-                        return block[col.field] == 1 
-                            ? '<span class="status-badge status-active">פעיל</span>'
-                            : '<span class="status-badge status-inactive">לא פעיל</span>';
-                    };
-                    break;
-                    
-                case 'date':
-                    column.render = (block) => formatDate(block[col.field]);
-                    break;
-                    
-                case 'actions':
-                    column.render = (item) => `
-                        <button class="btn btn-sm btn-secondary" 
-                                onclick="event.stopPropagation(); window.tableRenderer.editItem('${item.unicId}')" 
-                                title="עריכה">
-                            <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
-                        </button>
-                        <button class="btn btn-sm btn-danger" 
-                                onclick="event.stopPropagation(); deletePlot('${item.unicId}')" 
-                                title="מחיקה">
-                            <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
-                        </button>
-                    `;
-                    break;
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
+
+            const result = await response.json();
             
-            return column;
-        });
-        
-        return columns;
+            if (!result.success || !result.data) {
+                throw new Error(result.error || 'Failed to load columns config');
+            }
+
+            // המרה לפורמט של TableManager
+            const columns = result.data.map(col => {
+                const column = {
+                    field: col.field,
+                    label: col.title,
+                    width: col.width || 'auto',
+                    sortable: col.sortable !== false,
+                    type: col.type || 'text'
+                };
+                
+                // טיפול בסוגים מיוחדים - לגושים!
+                switch(col.type) {
+                    case 'link':
+                        if (col.field === 'blockNameHe') {
+                            column.render = (block) => {
+                                return `<a href="#" onclick="handleBlockDoubleClick('${block.unicId}', '${block.blockNameHe?.replace(/'/g, "\\'")}'); return false;" 
+                                        style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                                    ${block.blockNameHe}
+                                </a>`;
+                            };
+                        }
+                        break;
+                        
+                    case 'badge':
+                        column.render = (block) => {
+                            const count = block[col.field] || 0;
+                            return `<span style="background: #dbeafe; color: #1e40af; padding: 3px 10px; border-radius: 4px; font-size: 13px; font-weight: 600; display: inline-block;">${count}</span>`;
+                        };
+                        break;
+                        
+                    case 'status':
+                        column.render = (block) => {
+                            return block[col.field] == 1 
+                                ? '<span class="status-badge status-active">פעיל</span>'
+                                : '<span class="status-badge status-inactive">לא פעיל</span>';
+                        };
+                        break;
+                        
+                    case 'date':
+                        column.render = (block) => formatDate(block[col.field]);
+                        break;
+                        
+                    case 'actions':
+                        column.render = (item) => `
+                            <button class="btn btn-sm btn-secondary" 
+                                    onclick="event.stopPropagation(); window.tableRenderer.editItem('${item.unicId}')" 
+                                    title="עריכה">
+                                <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
+                            </button>
+                            <button class="btn btn-sm btn-danger" 
+                                    onclick="event.stopPropagation(); deletePlot('${item.unicId}')" 
+                                    title="מחיקה">
+                                <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
+                            </button>
+                        `;
+                        break;
+
+                    default:
+                        // עמודת טקסט רגילה
+                        if (!column.render) {
+                            column.render = (plot) => plot[column.field] || '-';
+                        }
+                }
+                
+                return column;
+            });
+            
+            return columns;
+
+        } catch (error) {
+            console.error('Failed to load columns config:', error);
+            // החזר עמודות ברירת מחדל במקרה של שגיאה
+            return []
+        }
     }
 
     blocksTable = new TableManager({

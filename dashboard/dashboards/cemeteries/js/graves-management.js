@@ -1,16 +1,17 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/graves-management.js
- * Version: 1.0.0
+ * Version: 1.1.0
  * Updated: 2025-11-03
  * Author: Malkiel
  * Change Summary:
+ * - v1.1.0: שיפורים בטעינה מדורגת והתנהגות
+ *   - pagination מצטברת מלאה עם scroll loading
+ *   - סינון client-side מתקדם לפי areaGraveId
+ *   - עדכון אוטומטי של state.totalResults
+ *   - תיקון handleGraveDoubleClick - פותח עריכה במקום ניווט
+ *   - תיקון כפתורי Delete לקרוא ל-deleteGrave()
+ *   - תמיכה מלאה ב-30,000+ רשומות
  * - v1.0.0: יצירת מודול ניהול קברים
- *   - תמיכה ב-30,000+ רשומות עם pagination (200 לדף)
- *   - סינון client-side לפי areaGraveId
- *   - טעינת כרטיס מלא של createAreaGraveCard
- *   - תמיכה במבנה הטבלה האמיתי
- *   - אתחול UniversalSearch עם new UniversalSearch()
- *   - דאבל-קליק פותח עריכה בלבד (ללא ניווט לילדים)
  */
 
 // ===================================================================
@@ -294,22 +295,6 @@ async function initGravesSearch(areaGraveId = null) {
             
             onSearch: (query, filters) => {
                 console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()) });
-            },
-            
-            onResults2: (data) => {
-                console.log('📦 Results:', data.pagination?.total || data.total || 0, 'graves found');
-                
-                // ⭐ טיפול בדפים - מצטבר
-                const currentPage = data.pagination?.page || 1;
-                
-                if (currentPage === 1) {
-                    currentGraves = data.data;
-                } else {
-                    currentGraves = [...currentGraves, ...data.data];
-                    console.log(`📦 Added page ${currentPage}, total now: ${currentGraves.length}`);
-                }
-                
-                console.log('📊 Final count:', data.pagination?.total || data.data.length);
             },
 
             onResults: (data) => {

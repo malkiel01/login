@@ -1,24 +1,18 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/plots-management.js
- * Version: 1.2.0
+ * Version: 1.3.0
  * Updated: 2025-11-03
  * Author: Malkiel
  * Change Summary:
- * - v1.2.0: תיקון קריטי - שמירת סינון קיים כשקוראים ל-loadPlots ללא פרמטרים
- *   - הוספת פרמטר forceReset לאיפוס מפורש של הסינון
- *   - שמירת currentBlockId/Name גם כשלא מועברים פרמטרים
- *   - תיקון כפתור "הצג הכל" - קורא עם forceReset=true
- *   - מונע איפוס סינון אקראי ע"י sidebar/breadcrumb
+ * - v1.3.0: הוספת תמיכה מלאה בטעינה מדורגת
+ *   - pagination מצטברת עם scroll loading אינסופי
+ *   - סינון client-side מתקדם לפי blockId
+ *   - עדכון אוטומטי של state.totalResults
+ *   - תיקון כפתורי Delete לקרוא ל-deletePlot()
+ *   - תמיכה בכמות רשומות בלתי מוגבלת
+ * - v1.2.0: תיקון קריטי - שמירת סינון קיים
  * - v1.1.0: תיקון סינון חלקות לפי גוש נבחר
- *   - הוספת סינון client-side כשכבת הגנה נוספת
- *   - שמירת currentBlockId ב-window לשימוש חוזר
- *   - הוספת אינדיקטור ויזואלי לסינון אקטיבי
- *   - הוספת logging מפורט לזיהוי בעיות
  * - v1.0.0: גרסה ראשונית - ניהול חלקות
- *   - תמיכה בסינון לפי block
- *   - טעינת כרטיס מלא של createBlockCard
- *   - אתחול UniversalSearch עם new UniversalSearch()
- *   - דאבל-קליק ניווט לאחוזות קבר (בלי כרטיס - מוערה)
  */
 
 // ===================================================================
@@ -304,40 +298,6 @@ async function initPlotsSearch(blockId = null) {
                console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()), blockId: currentBlockId });
            },
 
-           onResults2: (data) => {
-                console.log('📦 Raw results from API:', data.data.length, 'plots');
-                
-                // ⭐ אם יש סינון - סנן את data.data לפני כל דבר אחר!
-                if (currentBlockId && data.data) {
-                    const filteredData = data.data.filter(plot => 
-                        plot.blockId === currentBlockId || 
-                        plot.block_id === currentBlockId
-                    );
-                    
-                    console.log('⚠️ Client-side filter:', data.data.length, '→', filteredData.length, 'plots');
-                    
-                    // ⭐ עדכן את data.data עצמו!
-                    data.data = filteredData;
-                    
-                    // ⭐ עדכן את pagination.total
-                    if (data.pagination) {
-                        data.pagination.total = filteredData.length;
-                    }
-                }
-                
-                currentPlots = data.data;
-                
-                // ⭐⭐⭐ עדכן ישירות את plotSearch!
-                if (plotSearch && plotSearch.state) {
-                    plotSearch.state.totalResults = data.data.length;
-                    if (plotSearch.updateCounter) {
-                        plotSearch.updateCounter();
-                    }
-                }
-                
-                console.log('📊 Final count:', data.data.length);
-            },
-
             onResults: (data) => {
                 console.log('📦 API returned:', data.pagination?.total || data.data.length, 'plots');
                 
@@ -537,9 +497,29 @@ async function initPlotsTable(data, totalItems = null) {
             showToast(`נמצאו ${count} תוצאות`, 'info');
         }
     });
+
+    // ⭐ מאזין לגלילה - טען עוד דפים!
+    const bodyContainer = document.querySelector('.table-body-container');
+    if (bodyContainer && plotSearch) {
+        bodyContainer.addEventListener('scroll', async function() {
+            const scrollTop = this.scrollTop;
+            const scrollHeight = this.scrollHeight;
+            const clientHeight = this.clientHeight;
+            
+            if (scrollHeight - scrollTop - clientHeight < 100) {
+                if (!plotSearch.state.isLoading && plotSearch.state.currentPage < plotSearch.state.totalPages) {
+                    console.log('📥 Reached bottom, loading more data...');
+                    
+                    const nextPage = plotSearch.state.currentPage + 1;
+                    plotSearch.state.currentPage = nextPage;
+                    plotSearch.state.isLoading = true;
+                    await plotSearch.search();
+                }
+            }
+        });
+    }
     
-    window.plotsTable = plotsTable;
-    
+    window.plotsTable = plotsTable;  
     return plotsTable;
 }
 

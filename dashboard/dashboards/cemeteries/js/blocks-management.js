@@ -1,24 +1,18 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/blocks-management.js
- * Version: 1.2.0
+ * Version: 1.3.0
  * Updated: 2025-11-03
  * Author: Malkiel
  * Change Summary:
- * - v1.2.0: תיקון קריטי - שמירת סינון קיים כשקוראים ל-loadBlocks ללא פרמטרים
- *   - הוספת פרמטר forceReset לאיפוס מפורש של הסינון
- *   - שמירת currentCemeteryId/Name גם כשלא מועברים פרמטרים
- *   - תיקון כפתור "הצג הכל" - קורא עם forceReset=true
- *   - מונע איפוס סינון אקראי ע"י sidebar/breadcrumb
- * - v1.1.0: תיקון סינון גושים לפי בית עלמין נבחר
- *   - הוספת סינון client-side כשכבת הגנה נוספת
- *   - שמירת currentCemeteryId ב-window לשימוש חוזר
- *   - הוספת אינדיקטור ויזואלי לסינון אקטיבי
- *   - הוספת logging מפורט לזיהוי בעיות
+ * - v1.3.0: הוספת תמיכה מלאה בטעינה מדורגת
+ *   - pagination מצטברת עם scroll loading אינסופי
+ *   - סינון client-side מתקדם לפי cemeteryId
+ *   - עדכון אוטומטי של state.totalResults
+ *   - תיקון כפתורי Delete לקרוא ל-deleteBlock()
+ *   - תמיכה בכמות רשומות בלתי מוגבלת
+ * - v1.2.0: תיקון קריטי - שמירת סינון קיים
+ * - v1.1.0: תיקון סינון גושים לפי בית עלמין
  * - v1.0.0: גרסה ראשונית - ניהול גושים
- *   - תמיכה בסינון לפי cemetery
- *   - טעינת כרטיס מלא של createCemeteryCard
- *   - אתחול UniversalSearch עם new UniversalSearch()
- *   - דאבל-קליק ניווט לחלקות (בלי כרטיס)
  */
 
 // ===================================================================
@@ -305,36 +299,6 @@ async function initBlocksSearch(cemeteryId = null) {
            },
 
             onResults: (data) => {
-                // ⭐ אם יש סינון - סנן את data.data לפני כל דבר אחר!
-                if (currentCemeteryId && data.data) {
-                    const filteredData = data.data.filter(block => 
-                        block.cemeteryId === currentCemeteryId || 
-                        block.cemetery_id === currentCemeteryId
-                    );
-
-                    // ⭐ עדכן את data.data עצמו!
-                    data.data = filteredData;
-                    
-                    // ⭐ עדכן את pagination.total
-                    if (data.pagination) {
-                        data.pagination.total = filteredData.length;
-                    }
-                }
-                
-                currentBlocks = data.data;
-                
-                // ⭐⭐⭐ עדכן ישירות את blockSearch!
-                if (blockSearch && blockSearch.state) {
-                    blockSearch.state.totalResults = data.data.length;
-                    if (blockSearch.updateCounter) {
-                        blockSearch.updateCounter();
-                    }
-                }
-                
-                console.log('📊 Final blocks:', data.data.length);
-            },
-
-            onResults: (data) => {
                 console.log('📦 API returned:', data.pagination?.total || data.data.length, 'blocks');
                 
                 // ⭐ טיפול בדפים - מצטבר!
@@ -533,9 +497,29 @@ async function initBlocksTable(data, totalItems = null) {
             showToast(`נמצאו ${count} תוצאות`, 'info');
         }
     });
+
+    // ⭐ מאזין לגלילה - טען עוד דפים!
+    const bodyContainer = document.querySelector('.table-body-container');
+    if (bodyContainer && blockSearch) {
+        bodyContainer.addEventListener('scroll', async function() {
+            const scrollTop = this.scrollTop;
+            const scrollHeight = this.scrollHeight;
+            const clientHeight = this.clientHeight;
+            
+            if (scrollHeight - scrollTop - clientHeight < 100) {
+                if (!blockSearch.state.isLoading && blockSearch.state.currentPage < blockSearch.state.totalPages) {
+                    console.log('📥 Reached bottom, loading more data...');
+                    
+                    const nextPage = blockSearch.state.currentPage + 1;
+                    blockSearch.state.currentPage = nextPage;
+                    blockSearch.state.isLoading = true;
+                    await blockSearch.search();
+                }
+            }
+        });
+    }
     
     window.blocksTable = blocksTable;
-    
     return blocksTable;
 }
 

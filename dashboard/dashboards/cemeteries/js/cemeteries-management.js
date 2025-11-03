@@ -1,18 +1,18 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/cemeteries-management.js
- * Version: 5.1.0
+ * Version: 5.2.0
  * Updated: 2025-11-03
  * Author: Malkiel
  * Change Summary:
- * - v5.1.0: תיקון קונפליקט שמות - initCemeteriesSearch (במקום initUniversalSearch)
- *   - שימוש ב-window.initUniversalSearch במקום new UniversalSearch()
- *   - אתחול שונה משאר הקבצים
+ * - v5.2.0: הוספת תמיכה מלאה בטעינה מדורגת
+ *   - pagination מצטברת עם scroll loading אינסופי
+ *   - עדכון אוטומטי של state.totalResults
+ *   - תיקון כפתורי Delete לקרוא ל-deleteCemetery()
+ *   - תמיכה בכמות רשומות בלתי מוגבלת
+ *   - רמת שורש (ללא סינון client-side)
+ * - v5.1.0: תיקון קונפליקט שמות - initCemeteriesSearch
  * - v5.0.0: שיטה זהה ללקוחות - UniversalSearch + TableManager
- *   - מעבר מגרסה ישנה למבנה מודולרי חדש
- *   - תמיכה ב-itemsPerPage: 999999
  * - v1.0.0: גרסה ראשונית - ניהול בתי עלמין
- *   - רמת שורש בהיררכיה (אין parent)
- *   - דאבל-קליק ניווט לגושים (בלי כרטיס)
  */
 
 // ===================================================================
@@ -218,11 +218,6 @@ async function initCemeteriesSearch() {
             onSearch: (query, filters) => {
                 console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()) });
             },
-            
-            onResults2: (data) => {
-                console.log('📦 Results:', data.pagination?.total || data.total || 0, 'cemeteries found');
-                currentCemeteries = data.data;
-            },
 
             onResults: (data) => {
                 console.log('📦 API returned:', data.pagination?.total || data.data.length, 'cemeteries');
@@ -395,9 +390,28 @@ async function initCemeteriesTable(data, totalItems = null) {
         }
     });
     
-    // ⭐ עדכן את window.cemeteriesTable מיד!
+    // ⭐ מאזין לגלילה - טען עוד דפים!
+    const bodyContainer = document.querySelector('.table-body-container');
+    if (bodyContainer && cemeterySearch) {
+        bodyContainer.addEventListener('scroll', async function() {
+            const scrollTop = this.scrollTop;
+            const scrollHeight = this.scrollHeight;
+            const clientHeight = this.clientHeight;
+            
+            if (scrollHeight - scrollTop - clientHeight < 100) {
+                if (!cemeterySearch.state.isLoading && cemeterySearch.state.currentPage < cemeterySearch.state.totalPages) {
+                    console.log('📥 Reached bottom, loading more data...');
+                    
+                    const nextPage = cemeterySearch.state.currentPage + 1;
+                    cemeterySearch.state.currentPage = nextPage;
+                    cemeterySearch.state.isLoading = true;
+                    await cemeterySearch.search();
+                }
+            }
+        });
+    }
+
     window.cemeteriesTable = cemeteriesTable;
-    
     return cemeteriesTable;
 }
 

@@ -367,8 +367,10 @@ async function initCustomersTable(data, totalItems = null) {
                         break;
                         
                     default:
-                        // text, number וכו' - ללא render מיוחד
-                        break;
+                        // עמודת טקסט רגילה
+                        if (!column.render) {
+                            column.render = (item) => item[column.field] || '-';
+                        }
                 }
                 
                 return column;

@@ -456,7 +456,7 @@ async function initPlotsTable(data, totalItems = null) {
                     default:
                         // עמודת טקסט רגילה
                         if (!column.render) {
-                            column.render = (plot) => plot[column.field] || '-';
+                            column.render = (item) => item[column.field] || '-';
                         }
                 }
                 

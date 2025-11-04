@@ -286,7 +286,7 @@ $formType = basename(__FILE__, '.php'); // מזהה אוטומטי של סוג �
             </div>
             <div class="form-group">
                 <label>אחוזת קבר</label>
-                <select id="areaGraveSelect" class="form-control" onchange="filterHierarchy(\'area_grave\')" disabled>
+                <select id="areaGraveSelect" class="form-control" onchange="filterHierarchy(\'areaGrave\')" disabled>
                     <option value="">-- בחר שורה תחילה --</option>
                 </select>
             </div>

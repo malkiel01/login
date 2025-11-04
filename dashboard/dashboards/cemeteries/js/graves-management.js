@@ -91,7 +91,7 @@ async function loadGraves(areaGraveId = null, areaGraveName = null, forceReset =
             grave: { name: areaGraveName ? `קברים של ${areaGraveName}` : 'קברים' }
         };
         if (areaGraveId && areaGraveName) {
-            breadcrumbData.area_grave = { id: areaGraveId, name: areaGraveName };
+            breadcrumbData.areaGrave = { id: areaGraveId, name: areaGraveName };
         }
         updateBreadcrumb(breadcrumbData);
     }

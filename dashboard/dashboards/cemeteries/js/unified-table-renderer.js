@@ -51,7 +51,7 @@ class UnifiedTableRenderer {
             let url = `${API_BASE}cemetery-hierarchy.php?action=list&type=${type}`;
             if (parentId) {
                 // עבור אחוזות קבר, שלח plot_id במקום parent_id
-                if (type === 'area_grave') {
+                if (type === 'areaGrave') {
                     url += `&plot_id=${parentId}`;
                 } else {
                     url += `&parent_id=${parentId}`;
@@ -339,7 +339,7 @@ class UnifiedTableRenderer {
             'block': window.selectedItems.cemetery?.name,
             'plot': window.selectedItems.block?.name,
             'row': window.selectedItems.plot?.name,
-            'area_grave': window.selectedItems.row?.name,
+            'areaGrave': window.selectedItems.row?.name,
             'grave': window.selectedItems.areaGrave?.name
         };
         
@@ -408,8 +408,8 @@ class UnifiedTableRenderer {
         const hierarchy = {
             'cemetery': 'block',
             'block': 'plot',
-            'plot': 'area_grave',
-            'area_grave': 'grave',
+            'plot': 'areaGrave',
+            'areaGrave': 'grave',
             'grave': null
         };
         
@@ -435,7 +435,7 @@ class UnifiedTableRenderer {
             'cemetery': 'currentCemeteryId',
             'block': 'currentBlockId',
             'plot': 'currentPlotId',
-            'area_grave': 'currentAreaGraveId'
+            'areaGrave': 'currentAreaGraveId'
         };
         
         if (idMapping[this.currentType]) {
@@ -471,7 +471,7 @@ class UnifiedTableRenderer {
             case 'plot':
                 cardPromise = createPlotCard(itemId); // שלח רק ID
                 break;
-            case 'area_grave':
+            case 'areaGrave':
                 cardPromise = createAreaGraveCard(itemId); // שלח רק ID
                 break;
         }
@@ -495,8 +495,8 @@ class UnifiedTableRenderer {
         const hierarchy = {
             'cemetery': 'block',
             'block': 'plot',
-            'plot': 'area_grave',
-            'area_grave': 'grave',
+            'plot': 'areaGrave',
+            'areaGrave': 'grave',
             'grave': null
         };
         
@@ -509,8 +509,8 @@ class UnifiedTableRenderer {
             'block': 'cemetery',
             'plot': 'block',
             'row': 'plot',
-            'area_grave': 'row',
-            'grave': 'area_grave'
+            'areaGrave': 'row',
+            'grave': 'areaGrave'
         };
         return hierarchy[type];
     }
@@ -522,7 +522,7 @@ class UnifiedTableRenderer {
             'block': 'גוש',
             'plot': 'חלקה',
             'row': 'שורה',
-            'area_grave': 'אחוזת קבר'
+            'areaGrave': 'אחוזת קבר'
         };
         return names[parentType] || 'פריט הורה';
     }
@@ -582,7 +582,7 @@ class UnifiedTableRenderer {
                 'block': 'blockNameHe',
                 'plot': 'plotNameHe',
                 'row': 'lineNameHe',
-                'area_grave': 'areaGraveNameHe'
+                'areaGrave': 'areaGraveNameHe'
             };
             
             const nameField = nameFields[parentType] || 'name';
@@ -1052,7 +1052,7 @@ class UnifiedTableRenderer {
             'block': 'blocks-api.php',
             'plot': 'plots-api.php',
             'row': 'rows-api.php',           // לעתיד
-            'area_grave': 'area-graves-api.php',
+            'areaGrave': 'area-graves-api.php',
             'grave': 'graves-api.php',
             'customer': 'customers-api.php',
             'purchase': 'purchases-api.php',
@@ -1069,7 +1069,7 @@ class UnifiedTableRenderer {
         'block': '/dashboard/dashboards/cemeteries/api/blocks-api.php',
         'plot': '/dashboard/dashboards/cemeteries/api/plots-api.php',
         'row': '/dashboard/dashboards/cemeteries/api/rows-api.php',
-        'area_grave': '/dashboard/dashboards/cemeteries/api/area-graves-api.php',
+        'areaGrave': '/dashboard/dashboards/cemeteries/api/area-graves-api.php',
         'grave': '/dashboard/dashboards/cemeteries/api/graves-api.php',
         'customer': '/dashboard/dashboards/cemeteries/api/customers-api.php',
         'purchase': '/dashboard/dashboards/cemeteries/api/purchases-api.php',
@@ -1091,7 +1091,7 @@ class UnifiedTableRenderer {
             'block': ['cemeteryId', 'cemetery_id'],             // גוש → בית עלמין
             'plot': ['blockId', 'block_id'],                    // חלקה → גוש
             'row': ['plotId', 'plot_id'],                       // שורה → חלקה
-            'area_grave': ['lineId', 'line_id', 'rowId', 'row_id'], // אחוזת קבר → שורה
+            'areaGrave': ['lineId', 'line_id', 'rowId', 'row_id'], // אחוזת קבר → שורה
             'grave': ['areaGraveId', 'area_grave_id'],          // קבר → אחוזת קבר
             'customer': null,                                    // לקוח אין לו הורה
             'purchase': null,                                    // רכישה אין לה הורה
@@ -1130,7 +1130,7 @@ class UnifiedTableRenderer {
             'block': ['cemeteryId', 'cemetery_id', 'parent_id'],
             'plot': ['blockId', 'block_id', 'parent_id'],
             'row': ['plotId', 'plot_id', 'parent_id'],
-            'area_grave': ['rowId', 'row_id', 'lineId', 'line_id', 'parent_id'],
+            'areaGrave': ['rowId', 'row_id', 'lineId', 'line_id', 'parent_id'],
             'grave': ['areaGraveId', 'area_grave_id', 'parent_id'],
             'customer': null, // לקוח אין לו הורה
             'purchase': null, // רכישה אין לה הורה
@@ -1171,7 +1171,7 @@ class UnifiedTableRenderer {
             'block': ['cemeteryNameHe'],                        // גוש → שם בית עלמין
             'plot': ['blockNameHe'],              // חלקה → שם גוש
             'row': ['plot_name', 'plotNameHe'],                 // שורה → שם חלקה
-            'area_grave': ['row_name', 'lineNameHe'],           // אחוזת קבר → שם שורה
+            'areaGrave': ['row_name', 'lineNameHe'],           // אחוזת קבר → שם שורה
             'grave': ['area_grave_name', 'areaGraveNameHe'],    // קבר → שם אחוזת קבר
             'customer': null,
             'purchase': null,
@@ -1343,7 +1343,7 @@ window.openPlot = function(plotId, plotName) {
     console.log('📋 Opening plot:', plotId, plotName);
     
     window.selectedItems.plot = { id: plotId, name: plotName };
-    window.currentType = 'area_grave';
+    window.currentType = 'areaGrave';
     window.currentParentId = plotId;
     window.currentPlotId = plotId;
     
@@ -1351,7 +1351,7 @@ window.openPlot = function(plotId, plotName) {
     BreadcrumbManager.update(window.selectedItems);
     
     // טען אחוזות קבר
-    window.tableRenderer.loadAndDisplay('area_grave', plotId);
+    window.tableRenderer.loadAndDisplay('areaGrave', plotId);
 };
 
 window.openAreaGrave = function(areaGraveId, areaGraveName) {
@@ -1410,7 +1410,7 @@ window.loadPlotsForBlock = async function(blockId) {
 window.loadAreaGravesForPlot = async function(plotId) {
     console.log('🏘️ Loading area graves for plot:', plotId);
     window.currentPlotId = plotId;
-    window.currentType = 'area_grave';
+    window.currentType = 'areaGrave';
     window.currentParentId = plotId;
     
     // עדכן Breadcrumb אם צריך
@@ -1418,7 +1418,7 @@ window.loadAreaGravesForPlot = async function(plotId) {
         BreadcrumbManager.update(window.selectedItems);
     }
     
-    await tableRenderer.loadAndDisplay('area_grave', plotId);
+    await tableRenderer.loadAndDisplay('areaGrave', plotId);
 };
 
 window.loadGravesForAreaGrave = async function(areaGraveId) {

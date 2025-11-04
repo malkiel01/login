@@ -109,7 +109,7 @@ function getHierarchyLevel($type) {
         'block' => 'גוש',
         'plot' => 'חלקה',
         'row' => 'שורה',
-        'area_grave' => 'אחוזת קבר',
+        'areaGrave' => 'אחוזת קבר',
         'grave' => 'קבר'
     ];
     return $levels[$type] ?? $type;

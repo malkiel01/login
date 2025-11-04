@@ -168,10 +168,10 @@ function buildGraveFullLocation($graveId) {
                 b.name as block,
                 p.name as plot,
                 r.name as row,
-                ag.name as area_grave,
+                ag.name as areaGrave,
                 g.grave_number
             FROM graves g
-            LEFT JOIN area_graves ag ON g.area_grave_id = ag.id
+            LEFT JOIN areaGraves ag ON g.area_grave_id = ag.id
             LEFT JOIN rows r ON ag.row_id = r.id
             LEFT JOIN plots p ON r.plot_id = p.id
             LEFT JOIN blocks b ON p.block_id = b.id
@@ -188,7 +188,7 @@ function buildGraveFullLocation($graveId) {
                 $data['block'],
                 $data['plot'],
                 $data['row'],
-                $data['area_grave'],
+                $data['areaGrave'],
                 $data['grave_number']
             ]);
             return implode(' ← ', $parts);

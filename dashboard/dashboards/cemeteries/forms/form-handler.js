@@ -133,7 +133,7 @@ const FormHandler = {
 
     handleFormSpecificLogic: function(type, parentId, itemId) {
             switch(type) {
-                case 'area_grave':
+                case 'areaGrave':
                     this.handleAreaGraveForm(parentId);
                     break;
                     
@@ -1947,7 +1947,7 @@ const FormHandler = {
                             
                             setTimeout(() => {
                                 document.getElementById('areaGraveSelect').value = areaGrave.unicId;
-                                window.filterHierarchy('area_grave');
+                                window.filterHierarchy('areaGrave');
                                 
                                 setTimeout(() => {
                                     document.getElementById('graveSelect').value = grave.unicId;
@@ -2291,7 +2291,7 @@ const FormHandler = {
                 'cemetery': 'cemeteries-api.php',
                 'block': 'blocks-api.php',
                 'plot': 'plots-api.php',
-                'area_grave': 'area-graves-api.php',
+                'areaGrave': 'area-graves-api.php',
                 'grave': 'graves-api.php',
                 'customer': 'customers-api.php',
                 'purchase': 'purchases-api.php',
@@ -2429,8 +2429,8 @@ const FormHandler = {
             'block': 'cemetery',
             'plot': 'block',
             'row': 'plot',
-            'area_grave': 'row',
-            'grave': 'area_grave'
+            'areaGrave': 'row',
+            'grave': 'areaGrave'
         };
         
         const parentType = parentTypeMap[type];
@@ -2778,7 +2778,7 @@ const FormHandler = {
             'block': 'גוש',
             'plot': 'חלקה',
             'row': 'שורה',
-            'area_grave': 'אחוזת קבר'
+            'areaGrave': 'אחוזת קבר'
         };
         return labels[parentType] || parentType;
     },
@@ -2904,7 +2904,7 @@ const FormHandler = {
                 }
             }
             
-            if (type === 'areaGrave') type = 'area_grave';
+            if (type === 'areaGrave') type = 'areaGrave';
             
             let url;
             if (type === 'customer') {
@@ -3075,7 +3075,7 @@ const GraveHierarchyManager = {
                 case 'cemetery':
                     populateBlocks(cemetery);
                     populatePlots(cemetery, null);
-                    clearSelectors(['row', 'area_grave', 'grave']);
+                    clearSelectors(['row', 'areaGrave', 'grave']);
                     // נקה גם את נתוני הלקוח והקבר
                     clearCustomerAndGraveData();
                     break;
@@ -3090,7 +3090,7 @@ const GraveHierarchyManager = {
                         }
                     }
                     populatePlots(null, block);
-                    clearSelectors(['row', 'area_grave', 'grave']);
+                    clearSelectors(['row', 'areaGrave', 'grave']);
                     // נקה גם את נתוני הלקוח והקבר
                     clearCustomerAndGraveData();
                     break;
@@ -3117,7 +3117,7 @@ const GraveHierarchyManager = {
                         populateRows(plot);
                         document.getElementById('rowSelect').disabled = false;
                     } else {
-                        clearSelectors(['row', 'area_grave', 'grave']);
+                        clearSelectors(['row', 'areaGrave', 'grave']);
                         document.getElementById('rowSelect').disabled = true;
                     }
                     // נקה גם את נתוני הלקוח והקבר
@@ -3131,14 +3131,14 @@ const GraveHierarchyManager = {
                         // נקה רק אחרי שמילאנו את האחוזות החדשות
                         setTimeout(() => clearCustomerAndGraveData(), 50);
                     } else {
-                        clearSelectors(['area_grave', 'grave']);
+                        clearSelectors(['areaGrave', 'grave']);
                         document.getElementById('areaGraveSelect').disabled = true;
                         // נקה מיד כי אין שורה
                         clearCustomerAndGraveData();
                     }
                     break;
                     
-                case 'area_grave':
+                case 'areaGrave':
                     if (areaGrave) {
                         populateGraves(areaGrave);
                         document.getElementById('graveSelect').disabled = false;
@@ -3369,7 +3369,7 @@ const GraveHierarchyManager = {
         window.clearSelectors = function(levels) {
             const configs = {
                 'row': { id: 'rowSelect', default: '-- בחר חלקה תחילה --', disabled: true },
-                'area_grave': { id: 'areaGraveSelect', default: '-- בחר שורה תחילה --', disabled: true },
+                'areaGrave': { id: 'areaGraveSelect', default: '-- בחר שורה תחילה --', disabled: true },
                 'grave': { id: 'graveSelect', default: '-- בחר אחוזת קבר תחילה --', disabled: true }
             };
             

@@ -704,8 +704,8 @@ async function checkForChildren(type, itemId) {
         'cemetery': 'block',
         'block': 'plot',
         'plot': 'row',
-        'row': 'area_grave',
-        'area_grave': 'grave'
+        'row': 'areaGrave',
+        'areaGrave': 'grave'
     };
     
     const childType = childTypes[type];
@@ -786,7 +786,7 @@ function getHierarchyLevel(type) {
         'block': 'גוש',
         'plot': 'חלקה',
         'row': 'שורה',
-        'area_grave': 'אחוזת קבר',
+        'areaGrave': 'אחוזת קבר',
         'grave': 'קבר',
         'purchase': 'רכישה'
     };
@@ -798,7 +798,7 @@ function getParentColumn(type) {
         'block': 'cemetery_id',
         'plot': 'block_id',
         'row': 'plot_id',
-        'area_grave': 'row_id',
+        'areaGrave': 'row_id',
         'grave': 'area_grave_id'
     };
     return parents[type] || null;

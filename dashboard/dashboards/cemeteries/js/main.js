@@ -122,7 +122,7 @@ function updateSidebarCounts(stats) {
         updateSidebarCount('cemeteriesCount', stats.counts.cemeteries?.count || 0);
         updateSidebarCount('blocksCount', stats.counts.blocks?.count || 0);
         updateSidebarCount('plotsCount', stats.counts.plots?.count || 0);
-        updateSidebarCount('areaGravesCount', stats.counts.area_graves?.count || 0);
+        updateSidebarCount('areaGravesCount', stats.counts.areaGraves?.count || 0);
         updateSidebarCount('gravesCount', stats.counts.graves?.count || 0);
     }
 }
@@ -238,43 +238,6 @@ async function performQuickSearch(query) {
     // TODO: implement search
 }
 
-// // פתיחת מודל הוספה - עם בדיקת הקשר
-// window.openAddModal = function() {
-//     alert('test 1')
-//     if (window.tableRenderer) {
-//         window.tableRenderer.openAddModal();
-//     } else {
-//         console.error('TableRenderer not initialized');
-//     }
-// };
-
-// // פתיחת טופס עם בחירת parent
-// async function openAddWithParentSelection() {
-//     const parentSelectionMap = {
-//         'block': { type: 'cemetery', label: 'בחר בית עלמין' },
-//         'plot': { type: 'block', label: 'בחר גוש' },
-//         'row': { type: 'plot', label: 'בחר חלקה' },
-//         'area_grave': { type: 'row', label: 'בחר שורה' },
-//         'grave': { type: 'area_grave', label: 'בחר אחוזת קבר' }
-//     };
-    
-//     const parentInfo = parentSelectionMap[window.currentType];
-//     if (!parentInfo) {
-//         showError('לא ניתן להוסיף רשומה ללא בחירת רשומת אב');
-//         return;
-//     }
-    
-//     // טען את רשימת ה-parents האפשריים
-//     const parents = await loadParentsList(parentInfo.type);
-//     if (!parents || parents.length === 0) {
-//         showWarning(`אין ${parentInfo.label} במערכת`);
-//         return;
-//     }
-    
-//     // הצג מודל לבחירת parent
-//     showParentSelectionModal(parents, parentInfo);
-// }
-
 // טעינת רשימת parents
 async function loadParentsList(type) {
     try {
@@ -375,7 +338,7 @@ function getTypeName(type) {
         'block': 'גוש',
         'plot': 'חלקה',
         'row': 'שורה',
-        'area_grave': 'אחוזת קבר',
+        'areaGrave': 'אחוזת קבר',
         'grave': 'קבר'
     };
     return typeNames[type] || type;
@@ -388,7 +351,7 @@ function updateAddButtonText() {
         'block': 'הוספת גוש',
         'plot': 'הוספת חלקה',
         'row': 'הוספת שורה',
-        'area_grave': 'הוספת אחוזת קבר',
+        'areaGrave': 'הוספת אחוזת קבר',
         'grave': 'הוספת קבר',
         'customer': 'הוספת לקוח',
         'purchase': 'הוספת רכישה',
@@ -432,7 +395,7 @@ function shouldHideAddButton() {
 // בדיקה האם לבטל את כפתור ההוספה
 function shouldDisableAddButton() {
     // אם אנחנו בחלקה ספציפית ורוצים להוסיף אחוזת קבר
-    if (window.currentType === 'area_grave' && window.selectedItems.plot && !window.currentParentId) {
+    if (window.currentType === 'areaGrave' && window.selectedItems.plot && !window.currentParentId) {
         // רק אם אנחנו בתצוגה כללית של החלקה (לא בחרנו שורה ספציפית)
         return !window.hasRowsInCurrentPlot;
     }
@@ -446,7 +409,7 @@ function getHierarchyLevel(type) {
         'block': 'גוש',
         'plot': 'חלקה',
         'row': 'שורה',
-        'area_grave': 'אחוזת קבר',
+        'areaGrave': 'אחוזת קבר',
         'grave': 'קבר'
     };
     return levels[type] || type;
@@ -457,7 +420,7 @@ function getParentColumn(type) {
         'block': 'cemetery_id',
         'plot': 'block_id',
         'row': 'plot_id',
-        'area_grave': 'row_id',
+        'areaGrave': 'row_id',
         'grave': 'area_grave_id'
     };
     return parents[type] || null;
@@ -468,7 +431,7 @@ function getParentName(type) {
         'block': 'בית עלמין',
         'plot': 'גוש',
         'row': 'חלקה',
-        'area_grave': 'שורה',
+        'areaGrave': 'שורה',
         'grave': 'אחוזת קבר'
     };
     return parents[type] || '';
@@ -691,7 +654,7 @@ function refreshData() {
                 loadPlots();
             }
             break;
-        case 'area_grave':
+        case 'areaGrave':
             if (window.selectedItems.plot) {
                 loadAreaGravesForPlot(window.selectedItems.plot.id);
             } else {

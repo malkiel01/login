@@ -558,7 +558,7 @@ function renderAreaGravesRows(data, container, pagination = null) {
                                 החלקה עדיין לא מכילה אחוזות קבר. תוכל להוסיף אחוזת קבר חדשה
                             </div>
                             <button 
-                                onclick="if(typeof FormHandler !== 'undefined' && FormHandler.openForm) { FormHandler.openForm('area_grave', '${currentPlotId}', null); } else { alert('FormHandler לא זמין'); }" 
+                                onclick="if(typeof FormHandler !== 'undefined' && FormHandler.openForm) { FormHandler.openForm('areaGrave', '${currentPlotId}', null); } else { alert('FormHandler לא זמין'); }" 
                                 style="background: linear-gradient(135deg, #FC466B 0%, #3F5EFB 100%); 
                                        color: white; 
                                        border: none; 

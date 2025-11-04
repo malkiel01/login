@@ -411,7 +411,7 @@ async function createPlotCard(plotId) {
 // יצירת כרטיס מידע לאחוזת קבר
 async function createAreaGraveCard(areaGraveId) {
     try {
-        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=get&type=area_grave&id=${areaGraveId}`);
+        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=get&type=areaGrave&id=${areaGraveId}`);
         const data = await response.json();
         
         if (!data.success) return '';
@@ -648,7 +648,7 @@ async function getPlotStats(plotId) {
 
 async function getAreaGraveStats(areaGraveId) {
     try {
-        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=item_stats&item_type=area_grave&itemId=${areaGraveId}`);
+        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=item_stats&item_type=areaGrave&itemId=${areaGraveId}`);
         const data = await response.json();
         return data.success ? data.stats : {};
     } catch (error) {

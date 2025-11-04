@@ -42,7 +42,7 @@ try {
             $offset = ($page - 1) * $limit;
             
             // טיפול מיוחד באחוזות קבר עם חלקות
-            if ($type === 'area_grave' && isset($_GET['plot_id'])) {
+            if ($type === 'areaGrave' && isset($_GET['plot_id'])) {
                 // קודם מצא את כל השורות של החלקה
                 $rows_query = "SELECT unicId FROM rows WHERE plotId = :plot_id AND isActive = 1";
                 $stmt = $pdo->prepare($rows_query);
@@ -171,8 +171,8 @@ try {
                 'cemetery' => 'block',
                 'block' => 'plot',
                 'plot' => 'row',
-                'row' => 'area_grave',
-                'area_grave' => 'grave'
+                'row' => 'areaGrave',
+                'areaGrave' => 'grave'
             ];
             
             if (isset($childTypes[$type])) {
@@ -368,8 +368,8 @@ try {
                 'cemetery' => 'block',
                 'block' => 'plot',
                 'plot' => 'row',
-                'row' => 'area_grave',
-                'area_grave' => 'grave'
+                'row' => 'areaGrave',
+                'areaGrave' => 'grave'
             ];
             
             if (isset($childTypes[$type])) {
@@ -543,7 +543,7 @@ try {
                     $stats['available'] = $result['available'];
                     break;
                     
-                case 'area_grave':
+                case 'areaGrave':
                     $stmt = $pdo->prepare("
                         SELECT 
                             COUNT(*) as total,
@@ -570,7 +570,7 @@ try {
             $blockConfig = $manager->getConfig('block');
             $plotConfig = $manager->getConfig('plot');
             $rowConfig = $manager->getConfig('row');
-            $areaGraveConfig = $manager->getConfig('area_grave');
+            $areaGraveConfig = $manager->getConfig('areaGrave');
             $graveConfig = $manager->getConfig('grave');
             
             $sql = "
@@ -666,7 +666,7 @@ try {
             $stats = [];
             
             // ספירת פריטים בכל רמה
-            $types = ['cemetery', 'block', 'plot', 'row', 'area_grave', 'grave'];
+            $types = ['cemetery', 'block', 'plot', 'row', 'areaGrave', 'grave'];
             
             foreach ($types as $statType) {
                 $statConfig = $manager->getConfig($statType);

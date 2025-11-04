@@ -40,7 +40,7 @@ try {
         'block' => 'cemeteryId',
         'plot' => 'blockId', 
         'row' => 'plotId',
-        'area_grave' => 'lineId',
+        'areaGrave' => 'lineId',
         'grave' => 'areaGraveId'
     ];
 
@@ -193,7 +193,7 @@ function generateUnicId($formType) {
         'block' => 'BLK',
         'plot' => 'PLT',
         'row' => 'ROW',
-        'area_grave' => 'ARG',
+        'areaGrave' => 'ARG',
         'grave' => 'GRV'
     ];
     

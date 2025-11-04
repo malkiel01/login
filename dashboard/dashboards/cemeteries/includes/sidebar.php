@@ -199,7 +199,7 @@
 
     <!-- פעולות מהירות -->
     <div class="sidebar-footer">
-        <button class="btn btn-primary btn-block" onclick="openAddModal()">
+        <button class="btn btn-primary btn-block" onclick="tableRenderer.openAddModal()">
             <svg class="icon-sm"><use xlink:href="#icon-plus"></use></svg>
             הוספה חדשה
         </button>

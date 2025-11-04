@@ -373,6 +373,28 @@ try {
             ]);
             break;
             
+        case 'delete2':
+            if (!$id) {
+                throw new Exception('Plot ID is required');
+            }
+            
+            // ⭐ בדיקה אם יש שורות בחלקה (כשתהיה טבלת rows)
+            // $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM rows WHERE plotId = :id AND isActive = 1");
+            // $stmt->execute(['id' => $id]);
+            // $rows = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
+            // if ($rows > 0) {
+            //     throw new Exception('לא ניתן למחוק חלקה עם שורות פעילות');
+            // }
+            
+            $stmt = $pdo->prepare("UPDATE plots SET isActive = 0, inactiveDate = :date WHERE unicId = :id");
+            $stmt->execute(['id' => $id, 'date' => date('Y-m-d H:i:s')]);
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'החלקה נמחקה בהצלחה'
+            ]);
+            break;
+        
         case 'delete':
             if (!$id) {
                 throw new Exception('Plot ID is required');
@@ -395,6 +417,45 @@ try {
             ]);
             break;
             
+        case 'stats':
+            $blockId = $_GET['blockId'] ?? '';
+            $stats = [];
+            
+            $sql = "SELECT COUNT(*) FROM plots WHERE isActive = 1";
+            $params = [];
+            if ($blockId) {
+                $sql .= " AND blockId = :blockId";
+                $params['blockId'] = $blockId;
+            }
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            $stats['total_plots'] = $stmt->fetchColumn();
+            
+            // ⭐ ספירת שורות (כרגע 0 - מוכן לעתיד)
+            // $sql = "SELECT COUNT(*) FROM rows WHERE isActive = 1";
+            // if ($blockId) {
+            //     $sql .= " AND plotId IN (SELECT unicId FROM plots WHERE blockId = :blockId AND isActive = 1)";
+            // }
+            // $stmt = $pdo->prepare($sql);
+            // $stmt->execute($params);
+            // $stats['total_rows'] = $stmt->fetchColumn();
+            $stats['total_rows'] = 0;
+            
+            $sql = "SELECT COUNT(*) as count 
+                    FROM plots 
+                    WHERE isActive = 1 
+                    AND createDate >= DATE_SUB(NOW(), INTERVAL 1 MONTH)";
+            if ($blockId) {
+                $sql .= " AND blockId = :blockId";
+            }
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            $stats['new_this_month'] = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
+            
+            echo json_encode(['success' => true, 'data' => $stats]);
+            break;
+  
+
         case 'stats':
             $blockId = $_GET['blockId'] ?? '';
             $stats = [];

@@ -238,15 +238,15 @@ async function performQuickSearch(query) {
     // TODO: implement search
 }
 
-// פתיחת מודל הוספה - עם בדיקת הקשר
-window.openAddModal = function() {
-    alert('test 1')
-    if (window.tableRenderer) {
-        window.tableRenderer.openAddModal();
-    } else {
-        console.error('TableRenderer not initialized');
-    }
-};
+// // פתיחת מודל הוספה - עם בדיקת הקשר
+// window.openAddModal = function() {
+//     alert('test 1')
+//     if (window.tableRenderer) {
+//         window.tableRenderer.openAddModal();
+//     } else {
+//         console.error('TableRenderer not initialized');
+//     }
+// };
 
 // // פתיחת טופס עם בחירת parent
 // async function openAddWithParentSelection() {

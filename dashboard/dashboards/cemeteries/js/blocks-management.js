@@ -87,7 +87,7 @@ async function loadBlocks(cemeteryId = null, cemeteryName = null, forceReset = f
 
         // עדכון פריט תפריט אקטיבי
     if (typeof setActiveMenuItem === 'function') {
-        setActiveMenuItem('blockItem');
+        setActiveMenuItem('blocksItem');
     }
     
     // עדכן את כפתור ההוספה

@@ -64,20 +64,10 @@ async function loadBlocks(cemeteryId = null, cemeteryName = null, forceReset = f
     window.currentCemeteryId = currentCemeteryId;
     window.currentCemeteryName = currentCemeteryName;
     
-    // // עדכון פריט תפריט אקטיבי
-    // if (typeof setActiveMenuItem === 'function') {
-    //     setActiveMenuItem('blocksItem');
-    // }
-
-        // סמן את הכפתור הנוכחי בסיידבר כפעיל
-    document.querySelectorAll('.hierarchy-header').forEach(header => {
-        header.classList.remove('active');
-    });
-    const residencyItem = document.getElementById('blocksItem');
-    if (residencyItem) {
-        residencyItem.classList.add('active');
+    // עדכון פריט תפריט אקטיבי
+    if (typeof setActiveMenuItem === 'function') {
+        setActiveMenuItem('blockItem');
     }
-    
     
     // עדכן את הסוג הנוכחי
     window.currentType = 'block';

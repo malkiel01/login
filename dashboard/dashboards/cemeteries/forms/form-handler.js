@@ -168,7 +168,7 @@ const FormHandler = {
     handleAreaGraveForm: function(parentId) {
         if (!parentId) return;
         
-        this.waitForElement('#area_graveFormModal select[name="lineId"]', (lineSelect) => {
+        this.waitForElement('#areaGraveFormModal select[name="lineId"]', (lineSelect) => {
             fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=row&parent_id=${parentId}`)
                 .then(response => response.json())
                 .then(data => {
@@ -2351,29 +2351,6 @@ const FormHandler = {
             //     })
             //     .catch(error => console.error('Error loading item data:', error));
         });
-    },
-
-    // פונקציה עזר למילוי שדות (DRY)
-    populateFormFields2: function(form, data) {
-        Object.keys(data).forEach(key => {
-            const field = form.elements[key];
-            if (field) {
-                if (field.type === 'checkbox') {
-                    field.checked = data[key] == 1;
-                } else {
-                    field.value = data[key] || '';
-                }
-            }
-        });
-        
-        // הוסף unicId אם חסר
-        if (data.unicId && !form.elements['unicId']) {
-            const hiddenField = document.createElement('input');
-            hiddenField.type = 'hidden';
-            hiddenField.name = 'unicId';
-            hiddenField.value = data.unicId;
-            form.appendChild(hiddenField);
-        }
     },
 
     // פונקציה עזר למילוי שדות (DRY) - גרסה מתוקנת

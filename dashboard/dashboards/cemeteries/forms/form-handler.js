@@ -165,7 +165,11 @@ const FormHandler = {
             }
     },
 
-    handleAreaGraveForm2: function(parentId) {
+    handleAreaGraveForm: function(parentId) {
+        console.log('🏘️🏘️🏘️ handleAreaGraveForm CALLED!');
+        console.log('📊 parentId:', parentId);
+        console.log('🌍 API_BASE:', typeof API_BASE !== 'undefined' ? API_BASE : 'UNDEFINED!!!');
+        
         if (!parentId) return;
         
         this.waitForElement('#areaGraveFormModal select[name="lineId"]', (lineSelect) => {
@@ -186,7 +190,7 @@ const FormHandler = {
         });
     },
 
-    handleAreaGraveForm: function(parentId) {
+    handleAreaGraveForm2: function(parentId) {
         console.log('🏘️🏘️🏘️ handleAreaGraveForm CALLED!');
         console.log('📊 parentId:', parentId);
         console.log('🌍 API_BASE:', typeof API_BASE !== 'undefined' ? API_BASE : 'UNDEFINED!!!');

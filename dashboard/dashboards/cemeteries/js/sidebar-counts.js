@@ -202,11 +202,6 @@ async function updatePurchasesCount() {
         const response = await fetch('/dashboard/dashboards/cemeteries/api/purchases-api.php?action=stats');
         const data = await response.json();
 
-
-        console.log('==================================================');
-        console.log(data.data.totals);
-        console.log('==================================================');
-        
         if (data.success && data.data.totals) {
             updateCount('purchasesCount', data.data.totals.total_purchases || 0);
         }
@@ -224,11 +219,6 @@ async function updateBurialsCount() {
     try {
         const response = await fetch('/dashboard/dashboards/cemeteries/api/burials-api.php?action=stats');
         const data = await response.json();
-
-        console.log('==================================================');
-        console.log(data.data.totals);
-        console.log('==================================================');
-        
         
         if (data.success && data.data.totals) {
             // סה"כ קבורות השנה

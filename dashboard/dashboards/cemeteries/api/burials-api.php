@@ -409,20 +409,8 @@ try {
                 WHERE isActive = 1
             ");
             $stats['by_type'] = $stmt->fetch(PDO::FETCH_ASSOC);
-            
 
-            // // סה"כ רכישות פעילות
-            // $stmt = $pdo->query("
-            //     SELECT 
-            //         COUNT(*) as total_burials,
-            //         COUNT(DISTINCT clientId) as total_customers,
-            //         COUNT(DISTINCT graveId) as total_graves,
-            //     FROM burials 
-            //     WHERE isActive = 1
-            // ");
-            // $stats['totals'] = $stmt->fetch(PDO::FETCH_ASSOC);
-
-                        // סה"כ קבורות פעילות (בדומה ל-purchases-api.php)
+            // סה"כ קבורות פעילות (בדומה ל-purchases-api.php)
             $stmt = $pdo->query("
                 SELECT 
                     COUNT(*) as total_burials

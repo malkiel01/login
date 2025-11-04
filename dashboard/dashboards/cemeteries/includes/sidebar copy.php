@@ -1,17 +1,6 @@
 <?php
-/*
- * File: dashboards/dashboard/cemeteries/includes/sidebar.php
- * Version: 2.0.0
- * Updated: 2025-11-04
- * Author: Malkiel
- * Change Summary:
- * - הוספת מנגנון Active State אחיד לכל פריטי הסיידבר
- * - שיפור חווית משתמש עם סימון ויזואלי של הפריט הנבחר
- * - שמירת מצב הבחירה ב-localStorage
- * - תמיכה בכל סוגי הפריטים: היררכיה, ניהול ומערכת
- */
+// dashboard/dashboards/cemeteries/includes/sidebar.php
 ?>
-
 <aside class="dashboard-sidebar" id="dashboardSidebar">
     <div class="sidebar-header">
         <h3 class="sidebar-title">ניווט</h3>
@@ -29,11 +18,11 @@
                onkeyup="performQuickSearch(this.value)">
     </div>
     
-    <!-- רמות ההירארכיה -->
+    <!-- רמות ההיררכיה -->
     <div class="hierarchy-levels">
         <!-- בתי עלמין -->
         <div class="hierarchy-level">
-            <div class="hierarchy-header" id="cemeteryItem" onclick="handleSidebarClick('cemeteryItem', loadAllCemeteries)">
+            <div class="hierarchy-header" id="cemeteryItem" onclick="loadAllCemeteries()">
                 <span class="hierarchy-icon">🏛️</span>
                 <span class="hierarchy-title">בתי עלמין</span>
                 <span class="hierarchy-count" id="cemeteriesCount">0</span>
@@ -43,7 +32,7 @@
         
         <!-- גושים -->
         <div class="hierarchy-level">
-            <div class="hierarchy-header" id="blockItem" onclick="handleSidebarClick('blockItem', loadAllBlocks)">
+            <div class="hierarchy-header" id="blockItem" onclick="loadAllBlocks()">
                 <span class="hierarchy-icon">📦</span>
                 <span class="hierarchy-title">גושים</span>
                 <span class="hierarchy-count" id="blocksCount">0</span>
@@ -53,7 +42,8 @@
         
         <!-- חלקות -->
         <div class="hierarchy-level">
-            <div class="hierarchy-header" id="plotItem" onclick="handleSidebarClick('plotItem', function() { if(typeof loadAllPlots === 'function') loadAllPlots(); })">
+            <div class="hierarchy-header" id="plotItem" onclick="if(typeof loadAllPlots === 'function') 
+loadAllPlots()">
                 <span class="hierarchy-icon">📋</span>
                 <span class="hierarchy-title">חלקות</span>
                 <span class="hierarchy-count" id="plotsCount">0</span>
@@ -63,7 +53,8 @@
         
         <!-- אחוזות קבר -->
         <div class="hierarchy-level">
-            <div class="hierarchy-header" id="areaGraveItem" onclick="handleSidebarClick('areaGraveItem', function() { if(typeof loadAllAreaGraves === 'function') loadAllAreaGraves(); })">
+            <div class="hierarchy-header" id="areaGraveItem" onclick="if(typeof loadAllAreaGraves === 
+'function') loadAllAreaGraves()">
                 <span class="hierarchy-icon">🏘️</span>
                 <span class="hierarchy-title">אחוזות קבר</span>
                 <span class="hierarchy-count" id="areaGravesCount">0</span>
@@ -73,7 +64,8 @@
         
         <!-- קברים -->
         <div class="hierarchy-level">
-            <div class="hierarchy-header" id="graveItem" onclick="handleSidebarClick('graveItem', function() { if(typeof loadAllGraves === 'function') loadAllGraves(); })">
+            <div class="hierarchy-header" id="graveItem" onclick="if(typeof loadAllGraves === 'function') 
+loadAllGraves()">
                 <span class="hierarchy-icon">🪦</span>
                 <span class="hierarchy-title">קברים</span>
                 <span class="hierarchy-count" id="gravesCount">0</span>
@@ -87,11 +79,12 @@
     
     <!-- ניהול נוסף -->
     <div class="management-section" style="padding: 0 15px;">
-        <h4 style="font-size: 14px; color: #718096; margin-bottom: 10px; font-weight: 600;">ניהול</h4>
+        <h4 style="font-size: 14px; color: #718096; margin-bottom: 10px; font-weight: 
+600;">ניהול</h4>
         
         <!-- לקוחות -->
         <div class="management-item" style="margin-bottom: 10px;">
-            <div class="hierarchy-header" id="customersItem" onclick="handleSidebarClick('customersItem', loadCustomers)">
+            <div class="hierarchy-header" id="customersItem" onclick="loadCustomers()">
                 <span class="hierarchy-icon">👥</span>
                 <span class="hierarchy-title">לקוחות</span>
                 <span class="hierarchy-count" id="customersCount">0</span>
@@ -100,7 +93,7 @@
         
         <!-- רכישות -->
         <div class="management-item" style="margin-bottom: 10px;">
-            <div class="hierarchy-header" id="purchasesItem" onclick="handleSidebarClick('purchasesItem', loadAllPurchases)">
+            <div class="hierarchy-header" id="purchasesItem" onclick="loadAllPurchases()">
                 <span class="hierarchy-icon">💰</span>
                 <span class="hierarchy-title">רכישות</span>
                 <span class="hierarchy-count" id="purchasesCount">0</span>
@@ -109,7 +102,7 @@
         
         <!-- קבורות -->
         <div class="management-item" style="margin-bottom: 10px;">
-            <div class="hierarchy-header" id="burialsItem" onclick="handleSidebarClick('burialsItem', loadAllBurials)">
+            <div class="hierarchy-header" id="burialsItem" onclick="loadAllBurials()">
                 <span class="hierarchy-icon">⚱️</span>
                 <span class="hierarchy-title">קבורות</span>
                 <span class="hierarchy-count" id="burialsCount">0</span>
@@ -129,7 +122,7 @@
         
         <!-- תשלומים -->
         <div class="management-item" style="margin-bottom: 10px;">
-            <div class="hierarchy-header" id="paymentsItem" onclick="handleSidebarClick('paymentsItem', loadPayments)">
+            <div class="hierarchy-header" id="paymentsItem" onclick="loadPayments()">
                 <span class="hierarchy-icon">💳</span>
                 <span class="hierarchy-title">ניהול תשלומים</span>
                 <span class="hierarchy-count" id="paymentsCount">0</span>
@@ -138,7 +131,7 @@
 
         <!-- תושבויות -->
         <div class="management-item" style="margin-bottom: 10px;">
-            <div class="hierarchy-header" id="residencyItem" onclick="handleSidebarClick('residencyItem', loadResidencies)">
+            <div class="hierarchy-header" id="residencyItem" onclick="loadResidencies()">
                 <span class="hierarchy-icon">🏠</span>
                 <span class="hierarchy-title">הגדרות תושבות</span>
                 <span class="hierarchy-count" id="residencyCount">0</span>
@@ -147,7 +140,7 @@
 
         <!-- מדינות -->
         <div class="management-item" style="margin-bottom: 10px;">
-            <div class="hierarchy-header" id="countryItem" onclick="handleSidebarClick('countryItem', loadCountries)">
+            <div class="hierarchy-header" id="countryItem" onclick="loadCountries()">
                 <span class="hierarchy-icon">🌍</span>
                 <span class="hierarchy-title">ניהול מדינות</span>
                 <span class="hierarchy-count" id="countryCount">0</span>
@@ -156,7 +149,7 @@
 
         <!-- ערים -->
         <div class="management-item" style="margin-bottom: 10px;">
-            <div class="hierarchy-header" id="cityItem" onclick="handleSidebarClick('cityItem', loadCities)">
+            <div class="hierarchy-header" id="cityItem" onclick="loadCities()">
                 <span class="hierarchy-icon">🏙️</span>
                 <span class="hierarchy-title">ניהול ערים</span>
                 <span class="hierarchy-count" id="cityCount">0</span>
@@ -168,7 +161,8 @@
             <div class="hierarchy-header disabled">
                 <span class="hierarchy-icon">🗺️</span>
                 <span class="hierarchy-title">טריטוריית בית עלמין</span>
-                <span class="badge" style="background: #fbbf24; color: #78350f; font-size: 10px; padding: 2px 6px; border-radius: 4px;">בקרוב</span>
+                <span class="badge" style="background: #fbbf24; color: #78350f; font-size: 10px; padding: 
+2px 6px; border-radius: 4px;">בקרוב</span>
             </div>
         </div>
         
@@ -176,7 +170,8 @@
             <div class="hierarchy-header disabled">
                 <span class="hierarchy-icon">🗺️</span>
                 <span class="hierarchy-title">ניהול מפות</span>
-                <span class="badge" style="background: #fbbf24; color: #78350f; font-size: 10px; padding: 2px 6px; border-radius: 4px;">בקרוב</span>
+                <span class="badge" style="background: #fbbf24; color: #78350f; font-size: 10px; padding: 
+2px 6px; border-radius: 4px;">בקרוב</span>
             </div>
         </div>
         
@@ -184,7 +179,8 @@
             <div class="hierarchy-header disabled">
                 <span class="hierarchy-icon">🔐</span>
                 <span class="hierarchy-title">ניהול הרשאות</span>
-                <span class="badge" style="background: #fbbf24; color: #78350f; font-size: 10px; padding: 2px 6px; border-radius: 4px;">בקרוב</span>
+                <span class="badge" style="background: #fbbf24; color: #78350f; font-size: 10px; padding: 
+2px 6px; border-radius: 4px;">בקרוב</span>
             </div>
         </div>
         
@@ -192,7 +188,8 @@
             <div class="hierarchy-header disabled">
                 <span class="hierarchy-icon">📊</span>
                 <span class="hierarchy-title">ניהול דוחות</span>
-                <span class="badge" style="background: #fbbf24; color: #78350f; font-size: 10px; padding: 2px 6px; border-radius: 4px;">בקרוב</span>
+                <span class="badge" style="background: #fbbf24; color: #78350f; font-size: 10px; padding: 
+2px 6px; border-radius: 4px;">בקרוב</span>
             </div>
         </div>
     </div>
@@ -205,7 +202,7 @@
         </button>
         <button class="btn btn-secondary btn-block mt-2" onclick="exportData()">
             <svg class="icon-sm"><use xlink:href="#icon-download"></use></svg>
-            יייצוא נתונים
+            ייצוא נתונים
         </button>
     </div>
 </aside>
@@ -215,24 +212,23 @@
     <symbol id="icon-menu" viewBox="0 0 24 24">
         <path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"/>
     </symbol>
-    <symbol id="icon-plus" viewBox="0 0 24 24">
-        <path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 5v14m-7-7h14"/>
-    </symbol>
     <symbol id="icon-download" viewBox="0 0 24 24">
-        <path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4m4-5l5 5l5-5m-5 5V3"/>
+        <path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M21 15v4a2 2 0 0 1-2 2H5a2 
+2 0 0 1-2-2v-4m4-5l5 5l5-5m-5 5V3"/>
     </symbol>
     <symbol id="icon-fullscreen" viewBox="0 0 24 24">
-        <path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+        <path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M8 3H5a2 2 0 0 0-2 2v3m18 
+0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
     </symbol>
     <symbol id="icon-enter" viewBox="0 0 24 24">
-        <path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M9 10l5-5m0 0h-4m4 0v4m1 7H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"/>
+        <path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M9 10l5-5m0 0h-4m4 0v4m1 
+7H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"/>
     </symbol>
 </svg>
 
 <style>
 /* ============================================
    SIDEBAR UNIFIED DESIGN - עיצוב אחיד מלא
-   Version: 2.0.0
    ============================================ */
 
 /* Base State - מצב רגיל */
@@ -248,7 +244,6 @@
     transition: all 0.3s ease;
     color: #475569;
     font-weight: 500;
-    position: relative;
 }
 
 /* Hover State - ריחוף */
@@ -376,139 +371,4 @@
         padding: 0.2rem 0.6rem;
     }
 }
-
-/* Selected Item Container */
-.selected-item-container {
-    margin-top: 0.5rem;
-    padding: 0.5rem;
-    background: #f8fafc;
-    border-radius: 0.375rem;
-    display: none;
-}
-
-.selected-item-container.active {
-    display: block;
-}
 </style>
-
-<script>
-/*
- * ============================================
- * SIDEBAR ACTIVE STATE MANAGER
- * Version: 2.0.0
- * Updated: 2025-11-04
- * Author: Malkiel
- * Description: מנגנון אחיד לניהול מצב אקטיבי בסיידבר
- * ============================================
- */
-
-/**
- * פונקציה מרכזית לטיפול בלחיצה על פריט בסיידבר
- * @param {string} itemId - מזהה הפריט שנלחץ (למשל: 'customersItem')
- * @param {Function} callbackFunction - הפונקציה המקורית שטוענת את התוכן
- */
-function handleSidebarClick(itemId, callbackFunction) {
-    // קריאה לפונקציה שמעדכנת את המצב הויזואלי
-    setActiveSidebarItem(itemId);
-    
-    // קריאה לפונקציה המקורית
-    if (typeof callbackFunction === 'function') {
-        callbackFunction();
-    }
-}
-
-/**
- * מעדכן את מצב ה-active של פריט בסיידבר
- * @param {string} itemId - ה-ID של הפריט שנבחר
- */
-function setActiveSidebarItem(itemId) {
-    try {
-        // הסרת active מכל הפריטים
-        const allHeaders = document.querySelectorAll('.hierarchy-header');
-        allHeaders.forEach(header => {
-            header.classList.remove('active');
-        });
-        
-        // הוספת active לפריט הנוכחי
-        const selectedItem = document.getElementById(itemId);
-        if (selectedItem && !selectedItem.classList.contains('disabled')) {
-            selectedItem.classList.add('active');
-            
-            // שמירה ב-localStorage
-            localStorage.setItem('activeSidebarItem', itemId);
-            
-            // לוג לצורכי דיבוג
-            console.log('✅ פריט אקטיבי עודכן:', itemId);
-        }
-    } catch (error) {
-        console.error('❌ שגיאה בעדכון מצב אקטיבי:', error);
-    }
-}
-
-/**
- * משחזר את מצב ה-active בעת טעינת הדף
- */
-function restoreActiveSidebarItem() {
-    try {
-        const savedItem = localStorage.getItem('activeSidebarItem');
-        if (savedItem) {
-            const element = document.getElementById(savedItem);
-            if (element && !element.classList.contains('disabled')) {
-                element.classList.add('active');
-                console.log('🔄 שוחזר פריט אקטיבי:', savedItem);
-            }
-        }
-    } catch (error) {
-        console.error('❌ שגיאה בשחזור מצב אקטיבי:', error);
-    }
-}
-
-/**
- * ניקוי מצב אקטיבי (שימושי לריסט או logout)
- */
-function clearActiveSidebarItem() {
-    try {
-        localStorage.removeItem('activeSidebarItem');
-        const allHeaders = document.querySelectorAll('.hierarchy-header');
-        allHeaders.forEach(header => {
-            header.classList.remove('active');
-        });
-        console.log('🧹 מצב אקטיבי נוקה');
-    } catch (error) {
-        console.error('❌ שגיאה בניקוי מצב אקטיבי:', error);
-    }
-}
-
-// ====================================
-// אתחול אוטומטי בטעינת הדף
-// ====================================
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', restoreActiveSidebarItem);
-} else {
-    // אם המסמך כבר נטען
-    restoreActiveSidebarItem();
-}
-
-// ====================================
-// Compatibility Layer - תאימות לאחור
-// ====================================
-// אם קיימות פונקציות ישנות שלא עודכנו, נוסיף להן את המנגנון אוטומטית
-
-/**
- * עוטף פונקציה קיימת עם מנגנון ה-active state
- * @param {Function} originalFunc - הפונקציה המקורית
- * @param {string} itemId - מזהה הפריט
- * @returns {Function} הפונקציה העטופה
- */
-function wrapWithActiveState(originalFunc, itemId) {
-    return function() {
-        setActiveSidebarItem(itemId);
-        return originalFunc.apply(this, arguments);
-    };
-}
-
-// דוגמה לשימוש (אם צריך):
-// window.loadCustomers = wrapWithActiveState(window.loadCustomers, 'customersItem');
-
-console.log('✨ מנגנון Sidebar Active State אותחל בהצלחה - גרסה 2.0.0');
-</script>

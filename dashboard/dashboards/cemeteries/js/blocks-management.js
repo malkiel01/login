@@ -64,13 +64,6 @@ async function loadBlocks(cemeteryId = null, cemeteryName = null, forceReset = f
     window.currentCemeteryId = currentCemeteryId;
     window.currentCemeteryName = currentCemeteryName;
     
-setActiveMenuItem('blockItem');
-
-    // עדכון פריט תפריט אקטיבי
-    if (typeof setActiveMenuItem === 'function') {
-        setActiveMenuItem('blockItem');
-    }
-    
     // עדכן את הסוג הנוכחי
     window.currentType = 'block';
     window.currentParentId = cemeteryId;
@@ -90,6 +83,11 @@ setActiveMenuItem('blockItem');
     // נקה את כל הסידבר
     if (typeof clearAllSidebarSelections === 'function') {
         clearAllSidebarSelections();
+    }
+
+        // עדכון פריט תפריט אקטיבי
+    if (typeof setActiveMenuItem === 'function') {
+        setActiveMenuItem('blockItem');
     }
     
     // עדכן את כפתור ההוספה

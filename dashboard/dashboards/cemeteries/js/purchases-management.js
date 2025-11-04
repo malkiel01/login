@@ -28,8 +28,6 @@ let editingPurchaseId = null;
 // טעינת רכישות (הפונקציה הראשית)
 async function loadPurchases() {
     console.log('📋 Loading purchases - v3.2.1 (זהה לחלוטין ל-customers)...');
-
-    setActiveMenuItem('purchasesItem');
     
     // עדכן את הסוג הנוכחי
     window.currentType = 'purchase';
@@ -45,6 +43,11 @@ async function loadPurchases() {
     // נקה את כל הסידבר
     if (typeof clearAllSidebarSelections === 'function') {
         clearAllSidebarSelections();
+    }
+                
+    // עדכון פריט תפריט אקטיבי
+    if (typeof setActiveMenuItem === 'function') {
+        setActiveMenuItem('purchaseItem');
     }
     
     // עדכן את כפתור ההוספה

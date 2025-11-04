@@ -30,8 +30,6 @@ let editingBurialId = null;
 async function loadBurials() {
     console.log('📋 Loading burials - v1.0.1 (זהה לחלוטין ל-customers)...');
 
-    setActiveMenuItem('burialsItem');
-    
     // עדכן את הסוג הנוכחי
     window.currentType = 'burial';
     window.currentParentId = null;
@@ -46,6 +44,11 @@ async function loadBurials() {
     // נקה את כל הסידבר
     if (typeof clearAllSidebarSelections === 'function') {
         clearAllSidebarSelections();
+    }
+            
+    // עדכון פריט תפריט אקטיבי
+    if (typeof setActiveMenuItem === 'function') {
+        setActiveMenuItem('burialItem');
     }
     
     // עדכן את כפתור ההוספה

@@ -28,8 +28,6 @@ let editingCustomerId = null;
 // טעינת לקוחות (הפונקציה הראשית)
 async function loadCustomers() {
     console.log('📋 Loading customers - v3.0.0 (תוקן Virtual Scroll וקונפליקט שמות)...');
-
-    setActiveMenuItem('customersItem');
     
     // עדכן את הסוג הנוכחי
     window.currentType = 'customer';
@@ -45,6 +43,11 @@ async function loadCustomers() {
     // נקה את כל הסידבר
     if (typeof clearAllSidebarSelections === 'function') {
         clearAllSidebarSelections();
+    }
+            
+    // עדכון פריט תפריט אקטיבי
+    if (typeof setActiveMenuItem === 'function') {
+        setActiveMenuItem('customeryItem');
     }
     
     // עדכן את כפתור ההוספה

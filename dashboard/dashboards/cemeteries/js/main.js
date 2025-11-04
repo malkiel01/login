@@ -352,7 +352,6 @@ function updateAddButtonText() {
         'plot': 'הוספת חלקה',
         'row': 'הוספת שורה',
         'areaGrave': 'הוספת אחוזת קבר',
-        'area_grave': 'הוספת אחוזת קבר',
         'grave': 'הוספת קבר',
         'customer': 'הוספת לקוח',
         'purchase': 'הוספת רכישה',

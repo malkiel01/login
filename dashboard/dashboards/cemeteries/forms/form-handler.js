@@ -2980,7 +2980,7 @@ const FormHandler = {
             'block': 'cemeteryId',
             'plot': 'blockId',
             'row': 'plotId',
-            'area_grave': 'lineId',
+            'areaGrave': 'lineId',
             'grave': 'areaGraveId',
             'purchase': 'customerId',
             'burial': 'graveId'

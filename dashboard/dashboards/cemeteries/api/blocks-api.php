@@ -190,6 +190,13 @@ try {
                     throw new Exception('קוד גוש זה כבר קיים בבית עלמין זה');
                 }
             }
+
+            // הוספה אחרי בדיקת blockCode:
+            $stmt = $pdo->prepare("SELECT unicId FROM blocks WHERE blockNameHe = :name AND cemeteryId = :cemId AND isActive = 1");
+            $stmt->execute(['name' => $data['blockNameHe'], 'cemId' => $data['cemeteryId']]);
+            if ($stmt->fetch()) {
+                throw new Exception('גוש בשם זה כבר קיים בבית עלמין זה');
+            }
             
             $data['unicId'] = uniqid('blk_', true);
             $data['createDate'] = date('Y-m-d H:i:s');
@@ -240,6 +247,7 @@ try {
             if (empty($data['blockNameHe'])) {
                 throw new Exception('שם הגוש (עברית) הוא שדה חובה');
             }
+
             
             if (!empty($data['blockCode'])) {
                 $checkStmt = $pdo->prepare("SELECT blockCode, cemeteryId FROM blocks WHERE unicId = :id");
@@ -252,6 +260,24 @@ try {
                     if ($stmt->fetch()) {
                         throw new Exception('קוד גוש זה כבר קיים בבית עלמין זה');
                     }
+                }
+            }
+
+            // טען את הגוש הנוכחי
+            $checkStmt = $pdo->prepare("SELECT blockNameHe, cemeteryId FROM blocks WHERE unicId = :id");
+            $checkStmt->execute(['id' => $id]);
+            $current = $checkStmt->fetch(PDO::FETCH_ASSOC);
+
+            // בדוק רק אם השם השתנה
+            if ($current && $current['blockNameHe'] != $data['blockNameHe']) {
+                $stmt = $pdo->prepare("SELECT unicId FROM blocks WHERE blockNameHe = :name AND cemeteryId = :cemId AND isActive = 1 AND unicId != :currentId");
+                $stmt->execute([
+                    'name' => $data['blockNameHe'], 
+                    'cemId' => $current['cemeteryId'],
+                    'currentId' => $id
+                ]);
+                if ($stmt->fetch()) {
+                    throw new Exception('גוש בשם זה כבר קיים בבית עלמין זה');
                 }
             }
             

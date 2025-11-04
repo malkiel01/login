@@ -28,11 +28,6 @@ let editingCemeteryId = null;
 // ===================================================================
 async function loadCemeteries() {
     console.log('📋 Loading cemeteries - v5.1.0 (תוקן קונפליקט שמות)...');
-
-    // עדכון פריט תפריט אקטיבי
-    if (typeof setActiveMenuItem === 'function') {
-        setActiveMenuItem('cemeteriesItem');
-    }
     
     // עדכן את הסוג הנוכחי
     window.currentType = 'cemetery';
@@ -52,6 +47,11 @@ async function loadCemeteries() {
     // נקה את כל הסידבר
     if (typeof clearAllSidebarSelections === 'function') {
         clearAllSidebarSelections();
+    }
+
+    // עדכון פריט תפריט אקטיבי
+    if (typeof setActiveMenuItem === 'function') {
+        setActiveMenuItem('cemeteryItem');
     }
     
     // עדכן את כפתור ההוספה

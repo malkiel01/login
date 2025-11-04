@@ -85,7 +85,7 @@ async function loadBlocks(cemeteryId = null, cemeteryName = null, forceReset = f
         clearAllSidebarSelections();
     }
 
-        // עדכון פריט תפריט אקטיבי
+    // עדכון פריט תפריט אקטיבי
     if (typeof setActiveMenuItem === 'function') {
         setActiveMenuItem('blockItem');
     }

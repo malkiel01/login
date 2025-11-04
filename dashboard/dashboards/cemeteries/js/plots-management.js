@@ -64,11 +64,6 @@ async function loadPlots(blockId = null, blockName = null, forceReset = false) {
     window.currentBlockId = currentBlockId;
     window.currentBlockName = currentBlockName;
     
-    // עדכון פריט תפריט אקטיבי
-    if (typeof setActiveMenuItem === 'function') {
-        setActiveMenuItem('plotsItem');
-    }
-    
     // עדכן את הסוג הנוכחי
     window.currentType = 'plot';
     window.currentParentId = blockId;
@@ -88,6 +83,11 @@ async function loadPlots(blockId = null, blockName = null, forceReset = false) {
     // נקה את כל הסידבר
     if (typeof clearAllSidebarSelections === 'function') {
         clearAllSidebarSelections();
+    }
+        
+    // עדכון פריט תפריט אקטיבי
+    if (typeof setActiveMenuItem === 'function') {
+        setActiveMenuItem('plotItem');
     }
     
     // עדכן את כפתור ההוספה

@@ -62,11 +62,6 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
     window.currentPlotId = currentPlotId;
     window.currentPlotName = currentPlotName;
     
-    // עדכון פריט תפריט אקטיבי
-    if (typeof setActiveMenuItem === 'function') {
-        setActiveMenuItem('areaGravesItem');
-    }
-    
     // עדכן את הסוג הנוכחי
     window.currentType = 'areaGrave';
     window.currentParentId = plotId;
@@ -80,6 +75,11 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
     
     if (typeof clearAllSidebarSelections === 'function') {
         clearAllSidebarSelections();
+    }
+
+    // עדכון פריט תפריט אקטיבי
+    if (typeof setActiveMenuItem === 'function') {
+        setActiveMenuItem('areaGraveItem');
     }
     
     if (typeof updateAddButtonText === 'function') {

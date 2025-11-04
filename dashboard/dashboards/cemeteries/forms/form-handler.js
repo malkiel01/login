@@ -2843,63 +2843,11 @@ const FormHandler = {
             window.isEditMode = false;
             window.purchasePayments = [];
             window.selectedGraveData = null;
-            // console.log('✨ Cleared purchase form globals');
         }
     },
-
-    // --- START patch v1.9.0 (תיקון שליחת parentId מעודכן)
-// החלף את שורות 2813-2841 בפונקציית saveForm:
-
-// saveForm: async function(formData, type) {
-//     try {
-//         const isEdit = formData.has('id') || formData.has('itemId');
-//         const action = isEdit ? 'update' : 'create';
-        
-        // const data = {};
-        // let newParentId = null;
-        
-        // for (let [key, value] of formData.entries()) {
-        //     // דלג על שדות מטא - אבל אל תדלג על parentId!
-        //     if (key === 'formType' || key === 'itemId') {
-        //         continue;
-        //     }
-            
-        //     // תפוס את ה-parentId החדש אם יש
-        //     if (key === 'newParentId' && value) {
-        //         newParentId = value;
-        //         continue; // אל תשלח את newParentId עצמו
-        //     }
-            
-        //     if (key === 'is_small_grave' || key === 'isSmallGrave') {
-        //         data[key] = value === 'on' ? 1 : 0;
-        //     } else if (value !== '') {
-        //         data[key] = value;
-        //     }
-        // }
-        
-        // אם יש parentId חדש (מכפתור השינוי) - השתמש בו
-        // if (newParentId) {
-        //     data['parentId'] = newParentId;
-        // }
-        
-        // // טיפול ב-parent_id לפי סוג
-        // if (data.parentId || data.parent_id) {
-        //     const parentValue = data.parentId || data.parent_id;
-        //     const parentColumn = this.getParentColumn(type);
-            
-        //     if (parentColumn) {
-        //         data[parentColumn] = parentValue;
-        //         delete data.parentId;
-        //         delete data.parent_id;
-        //     }
-        // }
-        
-        // המשך הקוד כרגיל...
-// --- END patch v1.9.0
     
     saveForm: async function(formData, type) {
         try {
-            // const isEdit = formData.has('id');
             const isEdit = formData.has('id') || formData.has('itemId');
             const action = isEdit ? 'update' : 'create';
             
@@ -2934,14 +2882,24 @@ const FormHandler = {
                 const parentValue = data.parentId || data.parent_id;
                 const parentColumn = this.getParentColumn(type);
                 
+                // if (parentColumn) {
+                //     data[parentColumn] = parentValue;
+                //     delete data.parentId;
+                //     delete data.parent_id;
+                // }
                 if (parentColumn) {
-                    data[parentColumn] = parentValue;
+                    // ⭐ תיקון: אל תדרוס אם השדה כבר קיים!
+                    if (!data[parentColumn] || data[parentColumn] === parentValue) {
+                        data[parentColumn] = parentValue;
+                        console.log(`✅ Set ${parentColumn} = ${parentValue}`);
+                    } else {
+                        console.log(`⚠️ Skipping - ${parentColumn} already has value: ${data[parentColumn]}`);
+                    }
                     delete data.parentId;
                     delete data.parent_id;
                 }
             }
-            
-            if (type === 'areaGrave') type = 'areaGrave';
+
             
             let url;
             if (type === 'customer') {
@@ -3067,11 +3025,6 @@ const GraveHierarchyManager = {
     
     // אתחול המנהל
     init: function(options = {}) {
-        // options = {
-        //     allowedStatuses: [1, 2], // אילו סטטוסים מותרים
-        //     excludeGraveId: 'abc123', // קבר להתעלם ממנו (בעריכה)
-        //     onGraveSelected: function(graveId) { ... } // מה לעשות כשנבחר קבר
-        // }
         
         this.allowedStatuses = options.allowedStatuses || [1];
         this.excludeGraveId = options.excludeGraveId || null;

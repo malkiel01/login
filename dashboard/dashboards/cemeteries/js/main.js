@@ -716,7 +716,6 @@ window.toggleSidebar = toggleSidebar;
 window.toggleFullscreen = toggleFullscreen;
 window.toggleHierarchyLevel = toggleHierarchyLevel;
 window.performQuickSearch = performQuickSearch;
-window.openAddModal = openAddModal;
 window.openQuickAdd = openQuickAdd;
 window.exportData = exportData;
 window.editItem = editItem;

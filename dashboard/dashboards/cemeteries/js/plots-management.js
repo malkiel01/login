@@ -809,11 +809,6 @@ async function handlePlotDoubleClick(plotId, plotName) {
 window.handlePlotDoubleClick = handlePlotDoubleClick;
 
 // ===================================================================
-// Backward Compatibility - Aliases
-// ===================================================================
-window.loadAllPlots = loadPlots; // ✅ Alias לשם הישן
-
-// ===================================================================
 // הפוך את הפונקציות לגלובליות
 // ===================================================================
 window.loadPlots = loadPlots;

@@ -33,7 +33,7 @@
     <div class="hierarchy-levels">
         <!-- בתי עלמין -->
         <div class="hierarchy-level">
-            <div class="hierarchy-header" id="cemeteriesItem" onclick="handleSidebarClick('cemeteriesItem', loadAllCemeteries)">
+            <div class="hierarchy-header" id="cemeteriesItem" onclick="handleSidebarClick('cemeteriesItem', loadCemeteries)">
                 <span class="hierarchy-icon">🏛️</span>
                 <span class="hierarchy-title">בתי עלמין</span>
                 <span class="hierarchy-count" id="cemeteriesCount">0</span>
@@ -43,7 +43,7 @@
         
         <!-- גושים -->
         <div class="hierarchy-level">
-            <div class="hierarchy-header" id="blocksItem" onclick="handleSidebarClick('blocksItem', loadAllBlocks)">
+            <div class="hierarchy-header" id="blocksItem" onclick="handleSidebarClick('blocksItem', loadBlocks)">
                 <span class="hierarchy-icon">📦</span>
                 <span class="hierarchy-title">גושים</span>
                 <span class="hierarchy-count" id="blocksCount">0</span>
@@ -53,7 +53,7 @@
         
         <!-- חלקות -->
         <div class="hierarchy-level">
-            <div class="hierarchy-header" id="plotsItem" onclick="handleSidebarClick('plotsItem', function() { if(typeof loadAllPlots === 'function') loadAllPlots(); })">
+            <div class="hierarchy-header" id="plotsItem" onclick="handleSidebarClick('plotsItem', function() { if(typeof loadPlots === 'function') loadPlots(); })">
                 <span class="hierarchy-icon">📋</span>
                 <span class="hierarchy-title">חלקות</span>
                 <span class="hierarchy-count" id="plotsCount">0</span>
@@ -63,7 +63,7 @@
         
         <!-- אחוזות קבר -->
         <div class="hierarchy-level">
-            <div class="hierarchy-header" id="areaGravesItem" onclick="handleSidebarClick('areaGravesItem', function() { if(typeof loadAllAreaGraves === 'function') loadAllAreaGraves(); })">
+            <div class="hierarchy-header" id="areaGravesItem" onclick="handleSidebarClick('areaGravesItem', function() { if(typeof loadAreaGraves === 'function') loadAreaGraves(); })">
                 <span class="hierarchy-icon">🏘️</span>
                 <span class="hierarchy-title">אחוזות קבר</span>
                 <span class="hierarchy-count" id="areaGravesCount">0</span>
@@ -73,7 +73,7 @@
         
         <!-- קברים -->
         <div class="hierarchy-level">
-            <div class="hierarchy-header" id="gravesItem" onclick="handleSidebarClick('gravesItem', function() { if(typeof loadAllGraves === 'function') loadAllGraves(); })">
+            <div class="hierarchy-header" id="gravesItem" onclick="handleSidebarClick('gravesItem', function() { if(typeof loadGraves === 'function') loadGraves(); })">
                 <span class="hierarchy-icon">🪦</span>
                 <span class="hierarchy-title">קברים</span>
                 <span class="hierarchy-count" id="gravesCount">0</span>
@@ -100,7 +100,7 @@
         
         <!-- רכישות -->
         <div class="management-item" style="margin-bottom: 10px;">
-            <div class="hierarchy-header" id="purchasesItem" onclick="handleSidebarClick('purchasesItem', loadAllPurchases)">
+            <div class="hierarchy-header" id="purchasesItem" onclick="handleSidebarClick('purchasesItem', loadPurchases)">
                 <span class="hierarchy-icon">💰</span>
                 <span class="hierarchy-title">רכישות</span>
                 <span class="hierarchy-count" id="purchasesCount">0</span>
@@ -109,7 +109,7 @@
         
         <!-- קבורות -->
         <div class="management-item" style="margin-bottom: 10px;">
-            <div class="hierarchy-header" id="burialsItem" onclick="handleSidebarClick('burialsItem', loadAllBurials)">
+            <div class="hierarchy-header" id="burialsItem" onclick="handleSidebarClick('burialsItem', loadBurials)">
                 <span class="hierarchy-icon">⚱️</span>
                 <span class="hierarchy-title">קבורות</span>
                 <span class="hierarchy-count" id="burialsCount">0</span>

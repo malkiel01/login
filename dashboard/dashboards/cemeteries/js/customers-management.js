@@ -12,7 +12,6 @@
  * - v3.1.0: שיפורים והתאמה לארכיטקטורה המאוחדת
  *   - עדכון onResults עם state.totalResults ו-updateCounter()
  *   - הוספת window.customerSearch export
- *   - הוספת loadAllCustomers alias (backward compatibility)
  * - v3.0.0: שיטה זהה לבתי עלמין - UniversalSearch + TableManager
  */
 
@@ -788,11 +787,6 @@ async function handleCustomerDoubleClick(customerId) {
 }
 
 window.handleCustomerDoubleClick = handleCustomerDoubleClick;
-
-// ===================================================================
-// Backward Compatibility
-// ===================================================================
-window.loadAllCustomers = loadCustomers;  // ✅ Alias לשם הישן
 
 // ===================================================================
 // הפוך לגלובלי

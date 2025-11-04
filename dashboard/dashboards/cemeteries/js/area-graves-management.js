@@ -805,11 +805,6 @@ async function handleAreaGraveDoubleClick(areaGraveId, areaGraveName) {
 window.handleAreaGraveDoubleClick = handleAreaGraveDoubleClick;
 
 // ===================================================================
-// Backward Compatibility
-// ===================================================================
-window.loadAllAreaGraves = loadAreaGraves;
-
-// ===================================================================
 // הפוך לגלובלי
 // ===================================================================
 window.loadAreaGraves = loadAreaGraves;

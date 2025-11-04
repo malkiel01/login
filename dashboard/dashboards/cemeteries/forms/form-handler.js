@@ -2956,8 +2956,8 @@ const FormHandler = {
                     refreshData();
                 } else if (typeof tableRenderer !== 'undefined' && tableRenderer.loadAndDisplay) {
                     tableRenderer.loadAndDisplay(window.currentType, window.currentParentId);
-                } else if (typeof loadAllData === 'function') {
-                    loadAllData();
+                } else if (typeof loadData === 'function') {
+                    loadData();
                 } else {
                     location.reload();
                 }

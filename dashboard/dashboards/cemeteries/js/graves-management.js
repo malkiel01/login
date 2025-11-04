@@ -790,11 +790,6 @@ async function handleGraveDoubleClick(graveId, graveName) {
 window.handleGraveDoubleClick = handleGraveDoubleClick;
 
 // ===================================================================
-// Backward Compatibility
-// ===================================================================
-window.loadAllGraves = loadGraves;
-
-// ===================================================================
 // הפוך לגלובלי
 // ===================================================================
 window.loadGraves = loadGraves;

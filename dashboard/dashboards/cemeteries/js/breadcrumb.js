@@ -308,11 +308,11 @@ const BreadcrumbManager = {
         
         // קרא לפונקציה המתאימה
         const functions = {
-            cemetery: 'loadAllCemeteries',
-            block: 'loadAllBlocks',
-            plot: 'loadAllPlots',
-            areaGrave: 'loadAllAreaGraves',
-            grave: 'loadAllGraves'
+            cemetery: 'loadCemeteries',
+            block: 'loadBlocks',
+            plot: 'loadPlots',
+            areaGrave: 'loadAreaGraves',
+            grave: 'loadGraves'
         };
         
         const funcName = functions[levelType];

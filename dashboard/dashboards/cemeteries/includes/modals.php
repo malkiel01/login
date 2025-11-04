@@ -610,8 +610,8 @@ async function saveItem(event) {
             closeModal();
             
             // רענן את הנתונים המתאימים
-            if (type === 'purchase' && typeof loadAllPurchases === 'function') {
-                loadAllPurchases();
+            if (type === 'purchase' && typeof loadPurchases === 'function') {
+                loadPurchases();
             } else if (typeof refreshAllData === 'function') {
                 refreshAllData();
             }

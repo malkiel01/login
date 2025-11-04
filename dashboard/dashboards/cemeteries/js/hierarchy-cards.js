@@ -18,8 +18,8 @@ function closeHierarchyCard(level) {
     // חזרה לרמה הקודמת בהיררכיה
     switch(level) {
         case 'cemetery':
-            if (typeof loadAllCemeteries === 'function') {
-                loadAllCemeteries();
+            if (typeof loadCemeteries === 'function') {
+                loadCemeteries();
             }
             break;
             
@@ -27,8 +27,8 @@ function closeHierarchyCard(level) {
             if (window.currentCemeteryId && typeof loadBlocksForCemetery === 'function') {
                 // טען שוב את הגושים של בית העלמין הנוכחי
                 loadBlocksForCemetery(window.currentCemeteryId, window.currentCemeteryName);
-            } else if (typeof loadAllBlocks === 'function') {
-                loadAllBlocks();
+            } else if (typeof loadBlocks === 'function') {
+                loadBlocks();
             }
             break;
             
@@ -36,8 +36,8 @@ function closeHierarchyCard(level) {
             if (window.currentBlockId && typeof loadPlotsForBlock === 'function') {
                 // טען שוב את החלקות של הגוש הנוכחי
                 loadPlotsForBlock(window.currentBlockId, window.currentBlockName);
-            } else if (typeof loadAllPlots === 'function') {
-                loadAllPlots();
+            } else if (typeof loadPlots === 'function') {
+                loadPlots();
             }
             break;
             
@@ -45,8 +45,8 @@ function closeHierarchyCard(level) {
             if (window.currentPlotId && typeof loadAreaGravesForPlot === 'function') {
                 // טען שוב את אחוזות הקבר של החלקה הנוכחית
                 loadAreaGravesForPlot(window.currentPlotId, window.currentPlotName);
-            } else if (typeof loadAllAreaGraves === 'function') {
-                loadAllAreaGraves();
+            } else if (typeof loadAreaGraves === 'function') {
+                loadAreaGraves();
             }
             break;
     }

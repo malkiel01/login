@@ -810,11 +810,6 @@ async function handleBurialDoubleClick(burialId) {
 window.handleBurialDoubleClick = handleBurialDoubleClick;
 
 // ===================================================================
-// Backward Compatibility
-// ===================================================================
-window.loadAllBurials = loadBurials;  // ✅ Alias לשם הישן
-
-// ===================================================================
 // הפוך לגלובלי
 // ===================================================================
 window.loadBurials = loadBurials;

@@ -608,7 +608,7 @@ function openResidencyFormModal(data = null) {
     if (data && data.countryId) {
         loadCitiesByCountry(data.countryId, data.cityId);
     } else {
-        loadAllCities();
+        loadCities();
     }
 }
 
@@ -651,7 +651,7 @@ async function loadCitiesByCountry(countryId, selectedCityId = null) {
     if (!citySelect) return;
     
     if (!countryId) {
-        loadAllCities();
+        loadCities();
         return;
     }
     
@@ -680,7 +680,7 @@ async function loadCitiesByCountry(countryId, selectedCityId = null) {
 }
 
 // טעינת כל הערים
-async function loadAllCities() {
+async function loadCities() {
     try {
         const response = await fetch('/dashboard/dashboards/cemeteries/api/cities-api.php?action=select');
         const result = await response.json();

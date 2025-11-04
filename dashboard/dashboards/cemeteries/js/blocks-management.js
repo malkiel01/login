@@ -800,11 +800,6 @@ async function handleBlockDoubleClick(blockId, blockName) {
 window.handleBlockDoubleClick = handleBlockDoubleClick;
 
 // ===================================================================
-// Backward Compatibility - Aliases
-// ===================================================================
-window.loadAllBlocks = loadBlocks; // ✅ Alias לשם הישן
-
-// ===================================================================
 // הפוך את הפונקציות לגלובליות
 // ===================================================================
 window.loadBlocks = loadBlocks;

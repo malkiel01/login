@@ -638,11 +638,6 @@ async function handleCemeteryDoubleClick(cemeteryId, cemeteryName) {
 window.handleCemeteryDoubleClick = handleCemeteryDoubleClick;
 
 // ===================================================================
-// Backward Compatibility - Aliases
-// ===================================================================
-window.loadAllCemeteries = loadCemeteries; // ✅ Alias לשם הישן
-
-// ===================================================================
 // הפוך את הפונקציות לגלובליות
 // ===================================================================
 window.loadCemeteries = loadCemeteries;

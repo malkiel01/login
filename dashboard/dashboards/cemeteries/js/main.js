@@ -31,8 +31,8 @@ function initDashboard() {
     loadStats();
     
     // טען נתונים ראשוניים
-    if (typeof loadAllCemeteries === 'function') {
-        loadAllCemeteries();
+    if (typeof loadCemeteries === 'function') {
+        loadCemeteries();
     }
 }
 
@@ -222,8 +222,8 @@ async function refreshAllData() {
     await loadStats();
     
     // רענן לפי מה שקיים
-    if (typeof loadAllCemeteries === 'function') {
-        loadAllCemeteries();
+    if (typeof loadCemeteries === 'function') {
+        loadCemeteries();
     }
     
     isLoading = false;
@@ -673,36 +673,36 @@ function refreshData() {
     // רענן לפי הסוג הנוכחי
     switch(window.currentType) {
         case 'cemetery':
-            if (typeof loadAllCemeteries === 'function') {
-                loadAllCemeteries();
+            if (typeof loadCemeteries === 'function') {
+                loadCemeteries();
             }
             break;
         case 'block':
             if (window.selectedItems.cemetery) {
                 loadBlocksForCemetery(window.selectedItems.cemetery.id);
             } else {
-                loadAllBlocks();
+                loadBlocks();
             }
             break;
         case 'plot':
             if (window.selectedItems.block) {
                 loadPlotsForBlock(window.selectedItems.block.id);
             } else {
-                loadAllPlots();
+                loadPlots();
             }
             break;
         case 'area_grave':
             if (window.selectedItems.plot) {
                 loadAreaGravesForPlot(window.selectedItems.plot.id);
             } else {
-                loadAllAreaGraves();
+                loadAreaGraves();
             }
             break;
         case 'grave':
             if (window.selectedItems.areaGrave) {
                 loadGravesForAreaGrave(window.selectedItems.areaGrave.id);
             } else {
-                loadAllGraves();
+                loadGraves();
             }
             break;
     }

@@ -767,11 +767,6 @@ async function handlePurchaseDoubleClick(purchaseId) {
 window.handlePurchaseDoubleClick = handlePurchaseDoubleClick;
 
 // ===================================================================
-// Backward Compatibility
-// ===================================================================
-window.loadAllPurchases = loadPurchases;  // ✅ Alias לשם הישן
-
-// ===================================================================
 // הפוך לגלובלי
 // ===================================================================
 window.loadPurchases = loadPurchases;

@@ -1700,7 +1700,7 @@ const FormHandler = {
                                                     // בחר אחוזת קבר
                                                     setTimeout(() => {
                                                         document.getElementById('areaGraveSelect').value = areaGrave.unicId;
-                                                        window.filterHierarchy('area_grave');
+                                                        window.filterHierarchy('areaGrave');
 
                                                         // בחר קבר
                                                         setTimeout(() => {

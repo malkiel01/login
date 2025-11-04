@@ -214,7 +214,7 @@ try {
         // =====================================================
         // הוספת אחוזת קבר חדשה
         // =====================================================
-        case 'create':
+        case 'create2':
             $data = json_decode(file_get_contents('php://input'), true);
             
             // ולידציה - שדות חובה
@@ -272,6 +272,89 @@ try {
             ]);
             break;
             
+        // ממש אחרי שורה 219 (case 'create':)
+        case 'create':
+            $data = json_decode(file_get_contents('php://input'), true);
+            
+            // ⭐ הוסף debug
+            error_log('=== CREATE AREA GRAVE DEBUG ===');
+            error_log('Raw input: ' . file_get_contents('php://input'));
+            error_log('Parsed data: ' . print_r($data, true));
+            error_log('lineId value: ' . var_export($data['lineId'] ?? 'NOT SET', true));
+            error_log('lineId type: ' . gettype($data['lineId'] ?? null));
+            
+            // ולידציה - שדות חובה
+            if (empty($data['areaGraveNameHe'])) {
+                throw new Exception('שם אחוזת הקבר (עברית) הוא שדה חובה');
+            }
+            
+            if (empty($data['lineId'])) {
+                error_log('ERROR: lineId is empty!');
+                throw new Exception('יש לבחור שורה לאחוזת הקבר');
+            }
+            
+            // בדיקה שהשורה קיימת
+            error_log('Checking if lineId exists in DB: ' . $data['lineId']);
+            $stmt = $pdo->prepare("SELECT unicId FROM rows WHERE unicId = :lineId AND isActive = 1");
+            $stmt->execute(['lineId' => $data['lineId']]);
+            $row = $stmt->fetch();
+            error_log('Row found: ' . ($row ? 'YES' : 'NO'));
+            
+            if (!$row) {
+                error_log('ERROR: Row not found in DB!');
+                
+                // בדיקה נוספת - אולי השורה קיימת אבל לא פעילה?
+                $stmt2 = $pdo->prepare("SELECT unicId, isActive FROM rows WHERE unicId = :lineId");
+                $stmt2->execute(['lineId' => $data['lineId']]);
+                $checkRow = $stmt2->fetch();
+                error_log('Row check (including inactive): ' . print_r($checkRow, true));
+                
+                throw new Exception('השורה שנבחרה אינה קיימת במערכת או לא פעילה');
+            }
+
+            if (!$stmt->fetch()) {
+                throw new Exception('השורה שנבחרה אינה קיימת במערכת');
+            }
+            
+            // יצירת unicId ייחודי
+            $data['unicId'] = uniqid('ag_', true);
+            $data['createDate'] = date('Y-m-d H:i:s');
+            $data['updateDate'] = date('Y-m-d H:i:s');
+            $data['isActive'] = 1;
+            
+            // רשימת שדות אפשריים
+            $fields = [
+                'unicId', 'areaGraveNameHe', 'coordinates', 'gravesList',
+                'graveType', 'lineId', 'comments', 'documentsList',
+                'createDate', 'updateDate', 'isActive'
+            ];
+            
+            $insertFields = [];
+            $insertValues = [];
+            $params = [];
+            
+            foreach ($fields as $field) {
+                if (isset($data[$field])) {
+                    $insertFields[] = $field;
+                    $insertValues[] = ":$field";
+                    $params[$field] = $data[$field];
+                }
+            }
+            
+            $sql = "INSERT INTO areaGraves (" . implode(', ', $insertFields) . ")
+                    VALUES (" . implode(', ', $insertValues) . ")";
+            
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'אחוזת הקבר נוספה בהצלחה',
+                'id' => $pdo->lastInsertId(),
+                'unicId' => $data['unicId']
+            ]);
+            break;
+    
         // =====================================================
         // עדכון אחוזת קבר
         // =====================================================

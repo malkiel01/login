@@ -64,6 +64,8 @@ async function loadBlocks(cemeteryId = null, cemeteryName = null, forceReset = f
     window.currentCemeteryId = currentCemeteryId;
     window.currentCemeteryName = currentCemeteryName;
     
+setActiveMenuItem('blockItem');
+
     // עדכון פריט תפריט אקטיבי
     if (typeof setActiveMenuItem === 'function') {
         setActiveMenuItem('blockItem');

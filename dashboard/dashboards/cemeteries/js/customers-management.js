@@ -47,7 +47,7 @@ async function loadCustomers() {
             
     // עדכון פריט תפריט אקטיבי
     if (typeof setActiveMenuItem === 'function') {
-        setActiveMenuItem('customeryItem');
+        setActiveMenuItem('customersItem');
     }
     
     // עדכן את כפתור ההוספה

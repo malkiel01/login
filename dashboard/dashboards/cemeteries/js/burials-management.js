@@ -48,7 +48,7 @@ async function loadBurials() {
             
     // עדכון פריט תפריט אקטיבי
     if (typeof setActiveMenuItem === 'function') {
-        setActiveMenuItem('burialItem');
+        setActiveMenuItem('burialsItem');
     }
     
     // עדכן את כפתור ההוספה

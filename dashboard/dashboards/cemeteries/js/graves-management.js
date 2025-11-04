@@ -78,7 +78,7 @@ async function loadGraves(areaGraveId = null, areaGraveName = null, forceReset =
         
     // עדכון פריט תפריט אקטיבי
     if (typeof setActiveMenuItem === 'function') {
-        setActiveMenuItem('graveItem');
+        setActiveMenuItem('gravesItem');
     }
     
     if (typeof updateAddButtonText === 'function') {

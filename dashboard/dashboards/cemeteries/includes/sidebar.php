@@ -33,7 +33,7 @@
     <div class="hierarchy-levels">
         <!-- בתי עלמין -->
         <div class="hierarchy-level">
-            <div class="hierarchy-header" id="cemeteryItem" onclick="handleSidebarClick('cemeteryItem', loadAllCemeteries)">
+            <div class="hierarchy-header" id="cemeteryItem" onclick="handleSidebarClick('cemeteriesItem', loadAllCemeteries)">
                 <span class="hierarchy-icon">🏛️</span>
                 <span class="hierarchy-title">בתי עלמין</span>
                 <span class="hierarchy-count" id="cemeteriesCount">0</span>
@@ -43,7 +43,7 @@
         
         <!-- גושים -->
         <div class="hierarchy-level">
-            <div class="hierarchy-header" id="blockItem" onclick="handleSidebarClick('blockItem', loadAllBlocks)">
+            <div class="hierarchy-header" id="blockItem" onclick="handleSidebarClick('blocksItem', loadAllBlocks)">
                 <span class="hierarchy-icon">📦</span>
                 <span class="hierarchy-title">גושים</span>
                 <span class="hierarchy-count" id="blocksCount">0</span>
@@ -53,7 +53,7 @@
         
         <!-- חלקות -->
         <div class="hierarchy-level">
-            <div class="hierarchy-header" id="plotItem" onclick="handleSidebarClick('plotItem', function() { if(typeof loadAllPlots === 'function') loadAllPlots(); })">
+            <div class="hierarchy-header" id="plotItem" onclick="handleSidebarClick('plotsItem', function() { if(typeof loadAllPlots === 'function') loadAllPlots(); })">
                 <span class="hierarchy-icon">📋</span>
                 <span class="hierarchy-title">חלקות</span>
                 <span class="hierarchy-count" id="plotsCount">0</span>
@@ -63,7 +63,7 @@
         
         <!-- אחוזות קבר -->
         <div class="hierarchy-level">
-            <div class="hierarchy-header" id="areaGraveItem" onclick="handleSidebarClick('areaGraveItem', function() { if(typeof loadAllAreaGraves === 'function') loadAllAreaGraves(); })">
+            <div class="hierarchy-header" id="areaGraveItem" onclick="handleSidebarClick('areaGravesItem', function() { if(typeof loadAllAreaGraves === 'function') loadAllAreaGraves(); })">
                 <span class="hierarchy-icon">🏘️</span>
                 <span class="hierarchy-title">אחוזות קבר</span>
                 <span class="hierarchy-count" id="areaGravesCount">0</span>
@@ -73,7 +73,7 @@
         
         <!-- קברים -->
         <div class="hierarchy-level">
-            <div class="hierarchy-header" id="graveItem" onclick="handleSidebarClick('graveItem', function() { if(typeof loadAllGraves === 'function') loadAllGraves(); })">
+            <div class="hierarchy-header" id="graveItem" onclick="handleSidebarClick('gravesItem', function() { if(typeof loadAllGraves === 'function') loadAllGraves(); })">
                 <span class="hierarchy-icon">🪦</span>
                 <span class="hierarchy-title">קברים</span>
                 <span class="hierarchy-count" id="gravesCount">0</span>
@@ -147,7 +147,7 @@
 
         <!-- מדינות -->
         <div class="management-item" style="margin-bottom: 10px;">
-            <div class="hierarchy-header" id="countryItem" onclick="handleSidebarClick('countryItem', loadCountries)">
+            <div class="hierarchy-header" id="countryItem" onclick="handleSidebarClick('countriesItem', loadCountries)">
                 <span class="hierarchy-icon">🌍</span>
                 <span class="hierarchy-title">ניהול מדינות</span>
                 <span class="hierarchy-count" id="countryCount">0</span>
@@ -156,7 +156,7 @@
 
         <!-- ערים -->
         <div class="management-item" style="margin-bottom: 10px;">
-            <div class="hierarchy-header" id="cityItem" onclick="handleSidebarClick('cityItem', loadCities)">
+            <div class="hierarchy-header" id="cityItem" onclick="handleSidebarClick('citiesItem', loadCities)">
                 <span class="hierarchy-icon">🏙️</span>
                 <span class="hierarchy-title">ניהול ערים</span>
                 <span class="hierarchy-count" id="cityCount">0</span>

@@ -51,7 +51,7 @@ async function loadCemeteries() {
 
     // עדכון פריט תפריט אקטיבי
     if (typeof setActiveMenuItem === 'function') {
-        setActiveMenuItem('cemeteryItem');
+        setActiveMenuItem('cemeteriesItem');
     }
     
     // עדכן את כפתור ההוספה

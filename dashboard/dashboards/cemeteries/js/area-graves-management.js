@@ -79,7 +79,7 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
 
     // עדכון פריט תפריט אקטיבי
     if (typeof setActiveMenuItem === 'function') {
-        setActiveMenuItem('areaGraveItem');
+        setActiveMenuItem('areaGravesItem');
     }
     
     if (typeof updateAddButtonText === 'function') {

@@ -47,7 +47,7 @@ async function loadPurchases() {
                 
     // עדכון פריט תפריט אקטיבי
     if (typeof setActiveMenuItem === 'function') {
-        setActiveMenuItem('purchaseItem');
+        setActiveMenuItem('purchasesItem');
     }
     
     // עדכן את כפתור ההוספה

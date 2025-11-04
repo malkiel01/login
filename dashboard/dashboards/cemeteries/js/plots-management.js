@@ -87,7 +87,7 @@ async function loadPlots(blockId = null, blockName = null, forceReset = false) {
         
     // עדכון פריט תפריט אקטיבי
     if (typeof setActiveMenuItem === 'function') {
-        setActiveMenuItem('plotItem');
+        setActiveMenuItem('plotsItem');
     }
     
     // עדכן את כפתור ההוספה

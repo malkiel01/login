@@ -79,7 +79,7 @@ $formBuilder->addField('lineId', 'שורה', 'select', [
     'required' => true,
     'options' => array_merge(['' => '-- בחר שורה --'], $rows),
     'value' => $areaGrave['lineId'] ?? '',
-    'hideInEdit' => true  // ← זה החדש! מסתיר בעריכה
+    // 'hideInEdit' => true  // ← זה החדש! מסתיר בעריכה
 ]);
 
 $formBuilder->addField('areaGraveNameHe', 'שם אחוזת קבר', 'text', [

@@ -475,9 +475,9 @@
             // Render fields
             foreach ($this->fields as $field) {
                 // דלג על שדות שמוסתרים בעריכה
-                if (isset($field['hideInEdit']) && $field['hideInEdit'] && $this->itemId) {
-                    continue;
-                }
+                // if (isset($field['hideInEdit']) && $field['hideInEdit'] && $this->itemId) {
+                //     continue;
+                // }
                 $html .= $this->renderField($field);
             }
             

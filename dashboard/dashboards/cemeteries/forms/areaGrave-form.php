@@ -41,18 +41,47 @@ try {
     }
     
     // טען שורות
+    // $rows = [];
+    // if ($parentId) {
+    //     $stmt = $conn->prepare("SELECT r.unicId, r.lineNameHe, r.serialNumber FROM rows r WHERE r.plotId = ? AND r.isActive = 1 ORDER BY r.serialNumber, r.lineNameHe");
+    //     $stmt->execute([$parentId]);
+    // } else {
+    //     $stmt = $conn->query("SELECT r.unicId, r.lineNameHe, r.serialNumber FROM rows r WHERE r.isActive = 1 ORDER BY r.serialNumber, r.lineNameHe");
+    // }
+    
+    // while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    //     $label = $row['lineNameHe'] ?: "שורה {$row['serialNumber']}";
+    //     $rows[$row['unicId']] = $label;
+    // }
+
+    // טען שורות
     $rows = [];
-    if ($parentId) {
+    $actualPlotId = $parentId; // ברירת מחדל
+
+    // 🔥 במצב עריכה - שלוף את ה-plotId האמיתי דרך השורה
+    if ($itemId && $areaGrave && $areaGrave['lineId']) {
+        $stmt = $conn->prepare("SELECT plotId FROM rows WHERE unicId = ? AND isActive = 1");
+        $stmt->execute([$areaGrave['lineId']]);
+        $plotIdResult = $stmt->fetchColumn();
+        if ($plotIdResult) {
+            $actualPlotId = $plotIdResult;
+        }
+    }
+
+    // טען שורות לפי החלקה
+    if ($actualPlotId) {
         $stmt = $conn->prepare("SELECT r.unicId, r.lineNameHe, r.serialNumber FROM rows r WHERE r.plotId = ? AND r.isActive = 1 ORDER BY r.serialNumber, r.lineNameHe");
-        $stmt->execute([$parentId]);
+        $stmt->execute([$actualPlotId]);
     } else {
         $stmt = $conn->query("SELECT r.unicId, r.lineNameHe, r.serialNumber FROM rows r WHERE r.isActive = 1 ORDER BY r.serialNumber, r.lineNameHe");
     }
-    
+
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $label = $row['lineNameHe'] ?: "שורה {$row['serialNumber']}";
         $rows[$row['unicId']] = $label;
     }
+
+
     
 } catch (Exception $e) {
     FormUtils::handleError($e);

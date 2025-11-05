@@ -214,30 +214,6 @@ const FormHandler = {
         }
     },
 
-
-    handleAreaGraveForm2: function(parentId) {
-        if (!parentId) return;
-        
-        setTimeout(() => {
-            this.waitForElement('#areaGraveFormModal select[name="lineId"]', (lineSelect) => {
-                fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=row&parent_id=${parentId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success && data.data.length > 0) {
-                            lineSelect.innerHTML = '<option value="">-- בחר שורה --</option>';
-                            data.data.forEach(row => {
-                                const option = document.createElement('option');
-                                option.value = row.unicId;
-                                option.textContent = row.lineNameHe || `שורה ${row.serialNumber}`;
-                                lineSelect.appendChild(option);
-                            });
-                        }
-                    })
-                    .catch(error => console.error('Error loading rows:', error));
-            });
-        }, 0);
-    },
-
     // ============================================
     // קובץ: form-handler.js - תוספת handleAreaGraveForm
     // מיקום: להוסיף לתוך אובייקט FormHandler
@@ -2920,32 +2896,6 @@ const FormHandler = {
                     }
                 })
                 .catch(error => console.error('Error loading item data:', error));
-
-            // fetch(`${API_BASE}cemetery-hierarchy.php?action=get&type=${type}&itemId=${itemId}`)
-            //     .then(response => response.json())
-            //     .then(result => {
-            //         if (result.success && result.data) {
-            //             Object.keys(result.data).forEach(key => {
-            //                 const field = form.elements[key];
-            //                 if (field) {
-            //                     if (field.type === 'checkbox') {
-            //                         field.checked = result.data[key] == 1;
-            //                     } else {
-            //                         field.value = result.data[key] || '';
-            //                     }
-            //                 }
-            //             });
-                        
-            //             if (result.data.unicId && !form.elements['unicId']) {
-            //                 const hiddenField = document.createElement('input');
-            //                 hiddenField.type = 'hidden';
-            //                 hiddenField.name = 'unicId';
-            //                 hiddenField.value = result.data.unicId;
-            //                 form.appendChild(hiddenField);
-            //             }
-            //         }
-            //     })
-            //     .catch(error => console.error('Error loading item data:', error));
         });
     },
 
@@ -3241,7 +3191,10 @@ const FormHandler = {
             document.body.style.overflow = 'hidden';
             
             // טען את רשימת ההורים האפשריים
-            await this.loadParentOptions(parentType, currentParentId);
+            // await this.loadParentOptions(parentType, currentParentId);
+
+            const filterByParentId = window.changingParentFor?.filterByParentId || null;
+            await this.loadParentOptions(parentType, currentParentId, filterByParentId);
             
         } catch (error) {
             console.error('Error opening parent change dialog:', error);
@@ -3249,7 +3202,7 @@ const FormHandler = {
         }
     },
 
-    loadParentOptions: async function(parentType, currentParentId) {
+    loadParentOptions2: async function(parentType, currentParentId) {
         try {
             const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=list&type=${parentType}`);
             const data = await response.json();
@@ -3268,6 +3221,102 @@ const FormHandler = {
                     const option = document.createElement('option');
                     option.value = item.unicId || item.id;
                     option.textContent = item.name || item.nameHe || item.cemeteryNameHe || `${parentType} ${item.id}`;
+                    
+                    // סמן את ההורה הנוכחי
+                    if (option.value === currentParentId) {
+                        option.textContent += ' (נוכחי)';
+                        option.disabled = true;
+                    }
+                    
+                    select.appendChild(option);
+                });
+                
+                // הצג אזהרה
+                document.getElementById('parentChangeWarning').style.display = 'block';
+            } else {
+                select.innerHTML = '<option value="">אין נתונים זמינים</option>';
+            }
+        } catch (error) {
+            console.error('Error loading parent options:', error);
+            const select = document.getElementById('newParentSelect');
+            if (select) {
+                select.innerHTML = '<option value="">שגיאה בטעינת הנתונים</option>';
+            }
+        }
+    },
+
+    loadParentOptions: async function(parentType, currentParentId, filterByParentId = null) {
+        try {
+            // 🆕 מיפוי מ-type ל-API המתאים
+            const apiMap = {
+                'cemetery': 'cemeteries-api.php',
+                'block': 'blocks-api.php',
+                'plot': 'plots-api.php',
+                'row': 'rows-api.php',  // ⚠️ בדוק שזה שם הקובץ הנכון!
+                'areaGrave': 'areaGraves-api.php',
+                'grave': 'graves-api.php'
+            };
+            
+            const apiFile = apiMap[parentType];
+            if (!apiFile) {
+                throw new Error(`לא נמצא API עבור סוג: ${parentType}`);
+            }
+            
+            // 🆕 בניית URL עם סינון אופציונלי
+            let url = `${API_BASE}${apiFile}?action=list&limit=1000`;
+            
+            // 🔥 עבור שורות - סנן לפי החלקה!
+            if (parentType === 'row' && filterByParentId) {
+                url += `&plotId=${filterByParentId}`;
+            }
+            
+            console.log('🔍 Loading parent options from:', url);
+            
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            const select = document.getElementById('newParentSelect');
+            if (!select) {
+                console.error('Select element not found');
+                return;
+            }
+            
+            // נקה את הסלקט
+            select.innerHTML = '<option value="">-- בחר --</option>';
+            
+            if (data.success && data.data) {
+                console.log(`✅ Loaded ${data.data.length} ${parentType} options`);
+                
+                data.data.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.unicId || item.id;
+                    
+                    // 🆕 זיהוי שם הפריט לפי סוג
+                    let displayName = '';
+                    switch(parentType) {
+                        case 'cemetery':
+                            displayName = item.cemeteryNameHe || item.name;
+                            break;
+                        case 'block':
+                            displayName = item.blockNameHe || item.name;
+                            break;
+                        case 'plot':
+                            displayName = item.plotNameHe || item.name;
+                            break;
+                        case 'row':
+                            displayName = item.lineNameHe || `שורה ${item.serialNumber}` || item.name;
+                            break;
+                        case 'areaGrave':
+                            displayName = item.areaGraveNameHe || item.name;
+                            break;
+                        case 'grave':
+                            displayName = item.graveNameHe || item.name;
+                            break;
+                        default:
+                            displayName = item.name || item.nameHe || `${parentType} ${item.id}`;
+                    }
+                    
+                    option.textContent = displayName;
                     
                     // סמן את ההורה הנוכחי
                     if (option.value === currentParentId) {

@@ -2966,7 +2966,7 @@ const FormHandler = {
         this.openParentChangeDialog(parentType, currentParentId);
     },
 
-    openParentChangeDialog: async function(parentType, currentParentId) {
+    openParentChangeDialog: async function(parentType, currentParentId, filterByParentId = null) {
         try {
             // הסר מודל קיים אם יש
             const existingModal = document.getElementById('changeParentModal');
@@ -3193,7 +3193,7 @@ const FormHandler = {
             // טען את רשימת ההורים האפשריים
             // await this.loadParentOptions(parentType, currentParentId);
 
-            const filterByParentId = window.changingParentFor?.filterByParentId || null;
+            // const filterByParentId = window.changingParentFor?.filterByParentId || null;
             await this.loadParentOptions(parentType, currentParentId, filterByParentId);
             
         } catch (error) {

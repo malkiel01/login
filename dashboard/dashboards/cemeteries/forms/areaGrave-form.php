@@ -217,17 +217,12 @@ $gravesHTML = '
 
 $formBuilder->addCustomHTML($gravesHTML);
 
-// הוסף unicId אם עריכה
-if ($areaGrave && $areaGrave['unicId']) {
-    $formBuilder->addField('unicId', '', 'hidden', ['value' => $areaGrave['unicId']]);
-}
 
-
-$formBuilder->addField('lineId', 'שורה', 'text', [
-    'required' => true,
-    'value' => $areaGrave['unicId'],
+// $formBuilder->addField('lineId', 'שורה', 'text', [
+    // 'required' => true,
+    // 'value' => $areaGrave['unicId'],
     // 'hideInEdit' => true  // ← זה החדש! מסתיר בעריכה
-]);
+// ]);
 
 // הצג את הטופס
 echo $formBuilder->renderModal();

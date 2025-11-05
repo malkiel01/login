@@ -2888,7 +2888,11 @@ const FormHandler = {
 
             
             let url;
-            if (type === 'customer') {
+            if (type === 'areaGrave') {
+                url = `/dashboard/dashboards/cemeteries/api/area-graves-api.php?action=${action}`;
+            } else if (type === 'grave') {
+                url = `/dashboard/dashboards/cemeteries/api/graves-api.php?action=${action}`;
+            } else if (type === 'customer') {
                 url = `/dashboard/dashboards/cemeteries/api/customers-api.php?action=${action}`;
             } else if (type === 'purchase') {
                 url = `/dashboard/dashboards/cemeteries/api/purchases-api.php?action=${action}`;
@@ -2914,6 +2918,9 @@ const FormHandler = {
                 }
                 url += `&id=${unicId}`;
             }
+
+            console.log('📤 Sending data:', data);
+            console.log('🌐 URL:', url);
             
             const response = await fetch(url, {
                 method: isEdit ? 'PUT' : 'POST',

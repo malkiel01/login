@@ -193,23 +193,23 @@
                         $stmt->execute(['areaGraveId' => $this->itemId]);
                         $row = $stmt->fetch(PDO::FETCH_ASSOC);
                         
-                        // if ($row) {
-                        //     $lineName = $row['lineNameHe'] ?: "שורה {$row['serialNumber']}";
-                        //     return [
-                        //         'name' => $lineName,
-                        //         'type' => 'row',
-                        //         'field' => 'lineId'
-                        //     ];
-                        // }
-
                         if ($row) {
-                            // 🧪 בדיקה - מחזיר טקסט ברור שנראה שהקוד רץ
+                            $lineName = $row['lineNameHe'] ?: "שורה {$row['serialNumber']}";
                             return [
-                                'name' => '🔴 בדיקה - הקוד רץ!',
+                                'name' => $lineName,
                                 'type' => 'row',
                                 'field' => 'lineId'
                             ];
                         }
+
+                        // if ($row) {
+                        //     // 🧪 בדיקה - מחזיר טקסט ברור שנראה שהקוד רץ
+                        //     return [
+                        //         'name' => '🔴 בדיקה - הקוד רץ!',
+                        //         'type' => 'row',
+                        //         'field' => 'lineId'
+                        //     ];
+                        // }
                     } catch (Exception $e) {
                         error_log('Error getting line info for area grave: ' . $e->getMessage());
                     }

@@ -217,6 +217,14 @@ $gravesHTML = '
 
 $formBuilder->addCustomHTML($gravesHTML);
 
+// הוסף unicId אם עריכה
+if ($areaGrave && $areaGrave['unicId']) {
+    $formBuilder->addField('unicId', '', 'hidden', [
+        'value' => $areaGrave['unicId'],
+        'hideInEdit' => true 
+    ]);
+}
+
 
 // $formBuilder->addField('lineId', 'שורה', 'text', [
     // 'required' => true,

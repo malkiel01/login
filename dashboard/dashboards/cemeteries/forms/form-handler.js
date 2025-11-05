@@ -2993,10 +2993,10 @@ const FormHandler = {
                 // שלוף את פרטי אחוזת הקבר כולל ה-lineId וה-plotId
                 const response = await fetch(`${API_BASE}areaGraves-api.php?action=get&id=${itemId}`);
                 const data = await response.json();
-                
+
                 if (data.success && data.data) {
                     actualParentId = data.data.lineId;  // ה-lineId הנוכחי
-                    filterByParentId = data.data.plotId || currentParentId;  // ה-plotId לסינון
+                    filterByParentId = data.data.plot_id || data.data.plotId || currentParentId;  // ⭐ קודם כל נבדוק plot_id
                     console.log('🔍 Area grave details:', { lineId: actualParentId, plotId: filterByParentId });
                 }
             } catch (error) {

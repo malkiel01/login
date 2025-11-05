@@ -209,10 +209,10 @@ $gravesHTML = '
 
 $formBuilder->addCustomHTML($gravesHTML);
 
-// הוסף unicId אם עריכה
-if ($areaGrave && $areaGrave['unicId']) {
-    $formBuilder->addField('unicId', '', 'hidden', ['value' => $areaGrave['unicId']]);
-}
+// // הוסף unicId אם עריכה
+// if ($areaGrave && $areaGrave['unicId']) {
+//     $formBuilder->addField('unicId', '', 'hidden', ['value' => $areaGrave['unicId']]);
+// }
 
 // הצג את הטופס
 echo $formBuilder->renderModal();

@@ -1,6 +1,6 @@
 <?php
 /*
- * File: api/area-graves-api.php
+ * File: api/areaGraves-api.php
  * Version: 2.0.0
  * Updated: 2025-11-05
  * Author: Malkiel

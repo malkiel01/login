@@ -295,7 +295,7 @@ async function createPlotCard(plotId) {
             try {
                 // קריאה ל-API לספירת אחוזות קבר
                 const areaGravesResponse = await fetch(
-                    `${API_BASE}area-graves-api.php?action=count&lineId=${row.unicId}`
+                    `${API_BASE}areaGraves-api.php?action=count&lineId=${row.unicId}`
                 );
                 const areaGravesData = await areaGravesResponse.json();
                 

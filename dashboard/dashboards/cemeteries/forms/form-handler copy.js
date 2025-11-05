@@ -2351,7 +2351,7 @@ const FormHandler = {
                 'cemetery': 'cemeteries-api.php',
                 'block': 'blocks-api.php',
                 'plot': 'plots-api.php',
-                'areaGrave': 'area-graves-api.php',
+                'areaGrave': 'areaGraves-api.php',
                 'grave': 'graves-api.php',
                 'customer': 'customers-api.php',
                 'purchase': 'purchases-api.php',

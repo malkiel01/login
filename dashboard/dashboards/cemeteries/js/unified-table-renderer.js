@@ -1052,7 +1052,7 @@ class UnifiedTableRenderer {
             'block': 'blocks-api.php',
             'plot': 'plots-api.php',
             'row': 'rows-api.php',           // לעתיד
-            'areaGrave': 'area-graves-api.php',
+            'areaGrave': 'areaGraves-api.php',
             'grave': 'graves-api.php',
             'customer': 'customers-api.php',
             'purchase': 'purchases-api.php',
@@ -1069,7 +1069,7 @@ class UnifiedTableRenderer {
         'block': '/dashboard/dashboards/cemeteries/api/blocks-api.php',
         'plot': '/dashboard/dashboards/cemeteries/api/plots-api.php',
         'row': '/dashboard/dashboards/cemeteries/api/rows-api.php',
-        'areaGrave': '/dashboard/dashboards/cemeteries/api/area-graves-api.php',
+        'areaGrave': '/dashboard/dashboards/cemeteries/api/areaGraves-api.php',
         'grave': '/dashboard/dashboards/cemeteries/api/graves-api.php',
         'customer': '/dashboard/dashboards/cemeteries/api/customers-api.php',
         'purchase': '/dashboard/dashboards/cemeteries/api/purchases-api.php',

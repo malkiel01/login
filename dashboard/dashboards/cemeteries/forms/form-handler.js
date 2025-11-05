@@ -2887,7 +2887,7 @@ const FormHandler = {
                 'cemetery': 'cemeteries-api.php',
                 'block': 'blocks-api.php',
                 'plot': 'plots-api.php',
-                'areaGrave': 'area-graves-api.php',
+                'areaGrave': 'areaGraves-api.php',
                 'grave': 'graves-api.php',
                 'customer': 'customers-api.php',
                 'purchase': 'purchases-api.php',
@@ -3492,7 +3492,7 @@ const FormHandler = {
             
             let url;
             if (type === 'areaGrave') {
-                url = `/dashboard/dashboards/cemeteries/api/area-graves-api.php?action=${action}`;
+                url = `/dashboard/dashboards/cemeteries/api/areaGraves-api.php?action=${action}`;
             } else if (type === 'grave') {
                 url = `/dashboard/dashboards/cemeteries/api/graves-api.php?action=${action}`;
             } else if (type === 'customer') {

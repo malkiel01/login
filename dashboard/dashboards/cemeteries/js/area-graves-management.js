@@ -213,7 +213,7 @@ async function buildAreaGravesContainer(plotId = null, plotName = null) {
 async function initAreaGravesSearch(plotId = null) {
     const config = {
         entityType: 'areaGrave',
-        apiEndpoint: '/dashboard/dashboards/cemeteries/api/area-graves-api.php',
+        apiEndpoint: '/dashboard/dashboards/cemeteries/api/areaGraves-api.php',
         action: 'list',
         
         searchableFields: [
@@ -647,7 +647,7 @@ function getGraveTypeName(type) {
 // ===================================================================
 async function loadAreaGraveStats(plotId = null) {
     try {
-        let url = '/dashboard/dashboards/cemeteries/api/area-graves-api.php?action=stats';
+        let url = '/dashboard/dashboards/cemeteries/api/areaGraves-api.php?action=stats';
         if (plotId) {
             url += `&plotId=${plotId}`;
         }
@@ -682,7 +682,7 @@ async function deleteAreaGrave(areaGraveId) {
     }
     
     try {
-        const response = await fetch(`/dashboard/dashboards/cemeteries/api/area-graves-api.php?action=delete&id=${areaGraveId}`, {
+        const response = await fetch(`/dashboard/dashboards/cemeteries/api/areaGraves-api.php?action=delete&id=${areaGraveId}`, {
             method: 'DELETE'
         });
         

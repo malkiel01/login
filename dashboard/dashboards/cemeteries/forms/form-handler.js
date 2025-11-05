@@ -2937,7 +2937,7 @@ const FormHandler = {
 
     // הוסף את הפונקציות האלה בתוך const FormHandler = { ... }
     // למשל אחרי הפונקציה closeForm או בסוף ה-object לפני הסגירה שלו
-    changeParent: function(type, itemId, currentParentId) {
+    changeParent2: function(type, itemId, currentParentId) {
         console.log('changeParent called:', type, itemId, currentParentId);
         
         // שמור את המידע הנוכחי
@@ -2964,6 +2964,56 @@ const FormHandler = {
         
         // פתח dialog לבחירת הורה חדש
         this.openParentChangeDialog(parentType, currentParentId);
+    },
+
+    changeParent: async function(type, itemId, currentParentId) {
+        console.log('changeParent called:', type, itemId, currentParentId);
+        
+        // קבע מה סוג ההורה לפי סוג הפריט
+        const parentTypeMap = {
+            'block': 'cemetery',
+            'plot': 'block',
+            'row': 'plot',
+            'areaGrave': 'row',
+            'grave': 'areaGrave'
+        };
+        
+        const parentType = parentTypeMap[type];
+        if (!parentType) {
+            alert('לא ניתן לשנות הורה לסוג זה');
+            return;
+        }
+        
+        // 🆕 טיפול מיוחד באחוזת קבר - שלוף את ה-lineId הנוכחי וה-plotId
+        let actualParentId = currentParentId;
+        let filterByParentId = null;
+        
+        if (type === 'areaGrave') {
+            try {
+                // שלוף את פרטי אחוזת הקבר כולל ה-lineId וה-plotId
+                const response = await fetch(`${API_BASE}areaGraves-api.php?action=get&id=${itemId}`);
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    actualParentId = data.data.lineId;  // ה-lineId הנוכחי
+                    filterByParentId = data.data.plotId || currentParentId;  // ה-plotId לסינון
+                    console.log('🔍 Area grave details:', { lineId: actualParentId, plotId: filterByParentId });
+                }
+            } catch (error) {
+                console.error('Error fetching area grave details:', error);
+            }
+        }
+        
+        // שמור את המידע הנוכחי
+        window.changingParentFor = {
+            type: type,
+            itemId: itemId,
+            currentParentId: actualParentId,
+            filterByParentId: filterByParentId
+        };
+        
+        // פתח dialog לבחירת הורה חדש
+        this.openParentChangeDialog(parentType, actualParentId, filterByParentId);
     },
 
     openParentChangeDialog: async function(parentType, currentParentId, filterByParentId = null) {

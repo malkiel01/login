@@ -130,7 +130,8 @@
                 'min' => $options['min'] ?? null,
                 'max' => $options['max'] ?? null,
                 'step' => $options['step'] ?? null,
-                'rows' => $options['rows'] ?? 3
+                'rows' => $options['rows'] ?? 3,
+                'hideInEdit' => $options['hideInEdit'] ?? false
             ];
         }
         
@@ -475,9 +476,9 @@
             // Render fields
             foreach ($this->fields as $field) {
                 // דלג על שדות שמוסתרים בעריכה
-                // if (isset($field['hideInEdit']) && $field['hideInEdit'] && $this->itemId) {
-                //     continue;
-                // }
+                if (isset($field['hideInEdit']) && $field['hideInEdit'] && $this->itemId) {
+                    continue;
+                }
                 $html .= $this->renderField($field);
             }
             

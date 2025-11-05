@@ -79,7 +79,7 @@ $formBuilder->addField('lineId', 'שורה', 'select', [
     'required' => true,
     'options' => array_merge(['' => '-- בחר שורה --'], $rows),
     'value' => $areaGrave['lineId'] ?? '',
-    // 'hideInEdit' => true  // ← זה החדש! מסתיר בעריכה
+    'hideInEdit' => true  // ← זה החדש! מסתיר בעריכה
 ]);
 
 $formBuilder->addField('areaGraveNameHe', 'שם אחוזת קבר', 'text', [
@@ -109,110 +109,110 @@ $formBuilder->addField('comments', 'הערות', 'textarea', [
 // ========================================
 
 $gravesHTML = '
-<fieldset class="graves-section" 
-    id="graves-fieldset"
-    data-graves-config=\'' . htmlspecialchars($gravesConfigJson, ENT_QUOTES, 'UTF-8') . '\'
-    style="border: 2px solid #667eea; border-radius: 12px; padding: 20px; margin: 20px 0; background: #f8f9ff;">
-    <legend style="padding: 0 10px; font-weight: bold; color: #667eea; font-size: 1.1em;">🪦 קברים באחוזה (חובה לפחות 1, מקסימום 5)</legend>
-    
-    <div style="display: flex; gap: 15px; margin-bottom: 15px; align-items: center;">
-        <button type="button" id="btnAddGrave" style="background: #10b981; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
-            ➕ הוסף קבר
-        </button>
-        <span id="graveCount" style="color: #666; font-weight: 500;"></span>
-    </div>
-    
-    <div style="overflow-x: auto;">
-        <table class="graves-table" style="width: 100%; border-collapse: collapse; background: white; min-width: 800px;">
-            <thead style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
-                <tr>
-                    <th style="padding: 10px; width: 50px; text-align: center;">#</th>
-                    <th style="padding: 10px; text-align: right;">שם קבר <span style="color: #ffd700;">*</span></th>
-                    <th style="padding: 10px; width: 150px; text-align: right;">סוג חלקה <span style="color: #ffd700;">*</span></th>
-                    ' . ($isEditMode ? '<th style="padding: 10px; width: 100px; text-align: center;">סטטוס</th>' : '') . '
-                    <th style="padding: 10px; width: 100px; text-align: center;">קבר קטן</th>
-                    <th style="padding: 10px; width: 130px; text-align: right;">עלות בנייה</th>
-                    <th style="padding: 10px; width: 80px; text-align: center;">פעולות</th>
-                </tr>
-            </thead>
-            <tbody id="gravesBody"></tbody>
-        </table>
-    </div>
-    
-    <input type="hidden" name="gravesData" id="gravesData">
-</fieldset>
+    <fieldset class="graves-section" 
+        id="graves-fieldset"
+        data-graves-config=\'' . htmlspecialchars($gravesConfigJson, ENT_QUOTES, 'UTF-8') . '\'
+        style="border: 2px solid #667eea; border-radius: 12px; padding: 20px; margin: 20px 0; background: #f8f9ff;">
+        <legend style="padding: 0 10px; font-weight: bold; color: #667eea; font-size: 1.1em;">🪦 קברים באחוזה (חובה לפחות 1, מקסימום 5)</legend>
+        
+        <div style="display: flex; gap: 15px; margin-bottom: 15px; align-items: center;">
+            <button type="button" id="btnAddGrave" style="background: #10b981; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                ➕ הוסף קבר
+            </button>
+            <span id="graveCount" style="color: #666; font-weight: 500;"></span>
+        </div>
+        
+        <div style="overflow-x: auto;">
+            <table class="graves-table" style="width: 100%; border-collapse: collapse; background: white; min-width: 800px;">
+                <thead style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
+                    <tr>
+                        <th style="padding: 10px; width: 50px; text-align: center;">#</th>
+                        <th style="padding: 10px; text-align: right;">שם קבר <span style="color: #ffd700;">*</span></th>
+                        <th style="padding: 10px; width: 150px; text-align: right;">סוג חלקה <span style="color: #ffd700;">*</span></th>
+                        ' . ($isEditMode ? '<th style="padding: 10px; width: 100px; text-align: center;">סטטוס</th>' : '') . '
+                        <th style="padding: 10px; width: 100px; text-align: center;">קבר קטן</th>
+                        <th style="padding: 10px; width: 130px; text-align: right;">עלות בנייה</th>
+                        <th style="padding: 10px; width: 80px; text-align: center;">פעולות</th>
+                    </tr>
+                </thead>
+                <tbody id="gravesBody"></tbody>
+            </table>
+        </div>
+        
+        <input type="hidden" name="gravesData" id="gravesData">
+    </fieldset>
 
-<style>
-#areaGraveFormModal .modal-dialog {
-    max-width: 95% !important;
-    width: 1200px !important;
-}
+    <style>
+        #areaGraveFormModal .modal-dialog {
+            max-width: 95% !important;
+            width: 1200px !important;
+        }
 
-#areaGraveFormModal .modal-body {
-    max-height: 80vh !important;
-}
+        #areaGraveFormModal .modal-body {
+            max-height: 80vh !important;
+        }
 
-.graves-table td {
-    padding: 10px;
-    border: 1px solid #e2e8f0;
-}
+        .graves-table td {
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+        }
 
-.graves-table input,
-.graves-table select {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #cbd5e0;
-    border-radius: 6px;
-    box-sizing: border-box;
-}
+        .graves-table input,
+        .graves-table select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
 
-.graves-table input:focus,
-.graves-table select:focus {
-    outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
+        .graves-table input:focus,
+        .graves-table select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
 
-.status-badge {
-    padding: 4px 10px;
-    border-radius: 10px;
-    font-size: 12px;
-    font-weight: 600;
-    white-space: nowrap;
-}
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
 
-.status-available { background: #dcfce7; color: #166534; }
-.status-purchased { background: #dbeafe; color: #1e40af; }
-.status-buried { background: #f3f4f6; color: #374151; }
+        .status-available { background: #dcfce7; color: #166534; }
+        .status-purchased { background: #dbeafe; color: #1e40af; }
+        .status-buried { background: #f3f4f6; color: #374151; }
 
-.btn-delete {
-    background: #ef4444;
-    color: white;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-}
+        .btn-delete {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
 
-.btn-delete:hover:not(:disabled) {
-    background: #dc2626;
-}
+        .btn-delete:hover:not(:disabled) {
+            background: #dc2626;
+        }
 
-.btn-delete:disabled {
-    background: #d1d5db;
-    cursor: not-allowed;
-    opacity: 0.6;
-}
-</style>
+        .btn-delete:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+    </style>
 ';
 
 $formBuilder->addCustomHTML($gravesHTML);
 
-// // הוסף unicId אם עריכה
-// if ($areaGrave && $areaGrave['unicId']) {
-//     $formBuilder->addField('unicId', '', 'hidden', ['value' => $areaGrave['unicId']]);
-// }
+// הוסף unicId אם עריכה
+if ($areaGrave && $areaGrave['unicId']) {
+    $formBuilder->addField('unicId', '', 'hidden', ['value' => $areaGrave['unicId']]);
+}
 
 // הצג את הטופס
 echo $formBuilder->renderModal();

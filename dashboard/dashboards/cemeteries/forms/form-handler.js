@@ -3245,7 +3245,7 @@ const FormHandler = {
         }
     },
 
-    loadParentOptions: async function(parentType, currentParentId, filterByParentId = null) {
+    loadParentOptions3: async function(parentType, currentParentId, filterByParentId = null) {
         try {
             // 🆕 מיפוי מ-type ל-API המתאים
             const apiMap = {
@@ -3314,6 +3314,114 @@ const FormHandler = {
                             break;
                         default:
                             displayName = item.name || item.nameHe || `${parentType} ${item.id}`;
+                    }
+                    
+                    option.textContent = displayName;
+                    
+                    // סמן את ההורה הנוכחי
+                    if (option.value === currentParentId) {
+                        option.textContent += ' (נוכחי)';
+                        option.disabled = true;
+                    }
+                    
+                    select.appendChild(option);
+                });
+                
+                // הצג אזהרה
+                document.getElementById('parentChangeWarning').style.display = 'block';
+            } else {
+                select.innerHTML = '<option value="">אין נתונים זמינים</option>';
+            }
+        } catch (error) {
+            console.error('Error loading parent options:', error);
+            const select = document.getElementById('newParentSelect');
+            if (select) {
+                select.innerHTML = '<option value="">שגיאה בטעינת הנתונים</option>';
+            }
+        }
+    },
+
+    loadParentOptions: async function(parentType, currentParentId, filterByParentId = null) {
+        try {
+            let url = '';
+            
+            // 🔥 טיפול מיוחד בשורות - נשתמש ב-plots-api
+            if (parentType === 'row') {
+                if (!filterByParentId) {
+                    throw new Error('לא ניתן לטעון שורות ללא מזהה חלקה');
+                }
+                url = `${API_BASE}plots-api.php?action=list_rows&plotId=${filterByParentId}`;
+            } else {
+                // שאר הסוגים - משתמשים ב-API הרגיל שלהם
+                const apiMap = {
+                    'cemetery': 'cemeteries-api.php',
+                    'block': 'blocks-api.php',
+                    'plot': 'plots-api.php',
+                    'areaGrave': 'areaGraves-api.php',
+                    'grave': 'graves-api.php'
+                };
+                
+                const apiFile = apiMap[parentType];
+                if (!apiFile) {
+                    throw new Error(`לא נמצא API עבור סוג: ${parentType}`);
+                }
+                
+                url = `${API_BASE}${apiFile}?action=list&limit=1000`;
+                
+                // הוספת סינון אופציונלי
+                if (parentType === 'plot' && filterByParentId) {
+                    url += `&blockId=${filterByParentId}`;
+                } else if (parentType === 'block' && filterByParentId) {
+                    url += `&cemeteryId=${filterByParentId}`;
+                }
+            }
+            
+            console.log('🔍 Loading parent options from:', url);
+            
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            const select = document.getElementById('newParentSelect');
+            if (!select) {
+                console.error('Select element not found');
+                return;
+            }
+            
+            // נקה את הסלקט
+            select.innerHTML = '<option value="">-- בחר --</option>';
+            
+            if (data.success && data.data) {
+                console.log(`✅ Loaded ${data.data.length} ${parentType} options`);
+                
+                data.data.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item.unicId || item.id;
+                    
+                    // זיהוי שם הפריט
+                    let displayName = item.name || item.nameHe || '';
+                    if (!displayName) {
+                        switch(parentType) {
+                            case 'cemetery':
+                                displayName = item.cemeteryNameHe;
+                                break;
+                            case 'block':
+                                displayName = item.blockNameHe;
+                                break;
+                            case 'plot':
+                                displayName = item.plotNameHe;
+                                break;
+                            case 'row':
+                                displayName = item.lineNameHe || `שורה ${item.serialNumber}`;
+                                break;
+                            case 'areaGrave':
+                                displayName = item.areaGraveNameHe;
+                                break;
+                            case 'grave':
+                                displayName = item.graveNameHe;
+                                break;
+                            default:
+                                displayName = `${parentType} ${item.id}`;
+                        }
                     }
                     
                     option.textContent = displayName;

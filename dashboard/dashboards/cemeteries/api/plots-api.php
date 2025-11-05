@@ -168,6 +168,35 @@ try {
             ]);
             break;
             
+        // רשימת שורות של חלקה
+        case 'list_rows':
+            $plotId = $_GET['plotId'] ?? null;
+            
+            if (!$plotId) {
+                throw new Exception('Plot ID is required');
+            }
+            
+            $sql = "SELECT r.unicId, r.lineNameHe, r.serialNumber, r.plotId 
+                    FROM rows r 
+                    WHERE r.plotId = :plotId AND r.isActive = 1
+                    ORDER BY r.serialNumber, r.lineNameHe";
+            
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute(['plotId' => $plotId]);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // הוסף שם מלא לכל שורה
+            foreach ($rows as &$row) {
+                $row['name'] = $row['lineNameHe'] ?: "שורה {$row['serialNumber']}";
+            }
+            
+            echo json_encode([
+                'success' => true,
+                'data' => $rows,
+                'total' => count($rows)
+            ]);
+            break;
+
         case 'create':
             $data = json_decode(file_get_contents('php://input'), true);
             
@@ -240,64 +269,6 @@ try {
             ]);
             break;
             
-        case 'update2':
-            if (!$id) {
-                throw new Exception('Plot ID is required');
-            }
-            
-            $data = json_decode(file_get_contents('php://input'), true);
-            
-            if (empty($data['plotNameHe'])) {
-                throw new Exception('שם החלקה (עברית) הוא שדה חובה');
-            }
-            
-            if (!empty($data['plotCode'])) {
-                $checkStmt = $pdo->prepare("SELECT plotCode, blockId FROM plots WHERE unicId = :id");
-                $checkStmt->execute(['id' => $id]);
-                $current = $checkStmt->fetch(PDO::FETCH_ASSOC);
-                
-                if ($current && $current['plotCode'] != $data['plotCode']) {
-                    $stmt = $pdo->prepare("SELECT unicId FROM plots WHERE plotCode = :code AND blockId = :blkId AND isActive = 1");
-                    $stmt->execute(['code' => $data['plotCode'], 'blkId' => $current['blockId']]);
-                    if ($stmt->fetch()) {
-                        throw new Exception('קוד חלקה זה כבר קיים בגוש זה');
-                    }
-                }
-            }
-            
-            $data['updateDate'] = date('Y-m-d H:i:s');
-            
-            // ⭐ שדות מותאמים למבנה הטבלה האמיתי
-            $fields = [
-                'plotNameHe', 'plotNameEn', 'plotCode',
-                'plotLocation', 'nationalInsuranceCode', 'comments',
-                'coordinates', 'documentsList', 'updateDate', 'blockId'
-            ];
-            
-            $updateFields = [];
-            $params = ['id' => $id];
-            
-            foreach ($fields as $field) {
-                if (isset($data[$field])) {
-                    $updateFields[] = "$field = :$field";
-                    $params[$field] = $data[$field];
-                }
-            }
-            
-            if (empty($updateFields)) {
-                throw new Exception('No fields to update');
-            }
-            
-            $sql = "UPDATE plots SET " . implode(', ', $updateFields) . " WHERE unicId = :id";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($params);
-            
-            echo json_encode([
-                'success' => true,
-                'message' => 'החלקה עודכנה בהצלחה'
-            ]);
-            break;
-
         case 'update':
             if (!$id) {
                 throw new Exception('Plot ID is required');
@@ -373,28 +344,6 @@ try {
             ]);
             break;
             
-        case 'delete2':
-            if (!$id) {
-                throw new Exception('Plot ID is required');
-            }
-            
-            // ⭐ בדיקה אם יש שורות בחלקה (כשתהיה טבלת rows)
-            // $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM rows WHERE plotId = :id AND isActive = 1");
-            // $stmt->execute(['id' => $id]);
-            // $rows = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
-            // if ($rows > 0) {
-            //     throw new Exception('לא ניתן למחוק חלקה עם שורות פעילות');
-            // }
-            
-            $stmt = $pdo->prepare("UPDATE plots SET isActive = 0, inactiveDate = :date WHERE unicId = :id");
-            $stmt->execute(['id' => $id, 'date' => date('Y-m-d H:i:s')]);
-            
-            echo json_encode([
-                'success' => true,
-                'message' => 'החלקה נמחקה בהצלחה'
-            ]);
-            break;
-        
         case 'delete':
             if (!$id) {
                 throw new Exception('Plot ID is required');

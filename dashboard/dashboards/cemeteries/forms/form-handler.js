@@ -572,7 +572,7 @@ const FormHandler = {
             // =========================================
             // פונקציה גלובלית: ולידציה לפני שמירה
             // =========================================
-            window.validateGravesData = function() {
+            window.validateGravesData2 = function() {
                 console.log('🔍 Validating graves data...');
                 
                 // בדיקה 1: חייב להיות לפחות קבר אחד
@@ -619,6 +619,138 @@ const FormHandler = {
                 }
                 
                 console.log('✅ Validation passed');
+                return true;
+            };
+
+            // =========================================
+            // פונקציה: validateGravesData - גרסה מתוקנת
+            // תיקון: קריאת ערכים ישירות מה-DOM לפני ולידציה
+            // מיקום: בתוך handleAreaGraveForm, במקום הפונקציה הקיימת
+            // =========================================
+
+            window.validateGravesData = function() {
+                console.log('🔍 Validating graves data...');
+                
+                // ========================================
+                // ⭐ תיקון חשוב: קרא ערכים מה-DOM תחילה!
+                // ========================================
+                console.log('📥 Reading values from DOM inputs...');
+                
+                const tbody = document.getElementById('gravesBody');
+                if (!tbody) {
+                    console.error('❌ gravesBody not found!');
+                    return false;
+                }
+                
+                const rows = tbody.querySelectorAll('tr');
+                
+                // עדכן את כל הערכים מה-DOM
+                rows.forEach(function(row, index) {
+                    if (index >= window.GRAVES_CONFIG.current.length) {
+                        console.warn('⚠️ Row index', index, 'out of bounds');
+                        return;
+                    }
+                    
+                    // קרא שם קבר
+                    const nameInput = row.querySelector('input[type="text"]');
+                    if (nameInput) {
+                        window.GRAVES_CONFIG.current[index].graveNameHe = nameInput.value;
+                        console.log('📝 Row', index, 'name:', nameInput.value);
+                    }
+                    
+                    // קרא סוג חלקה
+                    const plotTypeSelect = row.querySelector('select');
+                    if (plotTypeSelect) {
+                        window.GRAVES_CONFIG.current[index].plotType = parseInt(plotTypeSelect.value);
+                        console.log('📝 Row', index, 'plotType:', plotTypeSelect.value);
+                    }
+                    
+                    // קרא קבר קטן
+                    const smallCheckbox = row.querySelector('input[type="checkbox"]');
+                    if (smallCheckbox) {
+                        window.GRAVES_CONFIG.current[index].isSmallGrave = smallCheckbox.checked;
+                        console.log('📝 Row', index, 'isSmallGrave:', smallCheckbox.checked);
+                    }
+                    
+                    // קרא עלות
+                    const costInput = row.querySelector('input[type="number"]');
+                    if (costInput) {
+                        window.GRAVES_CONFIG.current[index].constructionCost = costInput.value;
+                        console.log('📝 Row', index, 'cost:', costInput.value);
+                    }
+                });
+                
+                console.log('✅ All values read from DOM');
+                console.log('📊 Current data:', window.GRAVES_CONFIG.current);
+                
+                // ========================================
+                // בדיקה 1: לפחות קבר אחד
+                // ========================================
+                if (window.GRAVES_CONFIG.current.length === 0) {
+                    alert('חובה לפחות קבר אחד באחוזה');
+                    console.error('❌ Validation failed: No graves');
+                    return false;
+                }
+                
+                // ========================================
+                // בדיקה 2: כל הקברים חייבים להיות עם שם
+                // ========================================
+                for (let i = 0; i < window.GRAVES_CONFIG.current.length; i++) {
+                    const grave = window.GRAVES_CONFIG.current[i];
+                    
+                    if (!grave.graveNameHe || !grave.graveNameHe.trim()) {
+                        alert('שם קבר ' + (i + 1) + ' הוא חובה');
+                        console.error('❌ Validation failed: Grave', i, 'has no name');
+                        
+                        // הדגש את השדה הבעייתי
+                        const tbody = document.getElementById('gravesBody');
+                        const row = tbody.querySelectorAll('tr')[i];
+                        if (row) {
+                            const input = row.querySelector('input[type="text"]');
+                            if (input) {
+                                input.focus();
+                                input.style.border = '2px solid red';
+                                setTimeout(function() {
+                                    input.style.border = '';
+                                }, 2000);
+                            }
+                        }
+                        
+                        return false;
+                    }
+                }
+                
+                // ========================================
+                // בדיקה 3: שמות קברים חייבים להיות ייחודיים
+                // ========================================
+                const names = window.GRAVES_CONFIG.current.map(function(g) {
+                    return g.graveNameHe.trim().toLowerCase();
+                });
+                
+                const uniqueNames = names.filter(function(value, index, self) {
+                    return self.indexOf(value) === index;
+                });
+                
+                if (names.length !== uniqueNames.length) {
+                    alert('שמות קברים חייבים להיות ייחודיים באחוזה');
+                    console.error('❌ Validation failed: Duplicate grave names');
+                    console.error('Names:', names);
+                    return false;
+                }
+                
+                // ========================================
+                // הכנס את הנתונים ל-hidden input
+                // ========================================
+                const hiddenInput = document.getElementById('gravesData');
+                if (hiddenInput) {
+                    hiddenInput.value = JSON.stringify(window.GRAVES_CONFIG.current);
+                    console.log('✅ Graves data serialized:', hiddenInput.value);
+                } else {
+                    console.error('❌ Hidden input #gravesData not found!');
+                    return false;
+                }
+                
+                console.log('✅ Validation passed successfully');
                 return true;
             };
             
@@ -3238,19 +3370,6 @@ const FormHandler = {
             
             const data = {};
             let newParentId = null;
-
-            // if (type === 'areaGrave') {
-            //     console.log('🏘️ Processing area grave form...');
-                
-            //     // הרץ ולידציה על נתוני הקברים
-            //     if (typeof window.validateGravesData === 'function') {
-            //         if (!window.validateGravesData()) {
-            //             console.error('❌ Graves validation failed');
-            //             return false;
-            //         }
-            //         console.log('✅ Graves validation passed');
-            //     }
-            // }
 
             // =========================================
             // ⭐ הוספה חדשה - ולידציה לאחוזת קבר

@@ -33,43 +33,58 @@ $id = $_GET['id'] ?? null;
 
 try {
     switch ($action) {
+        case 'count':
+            $lineId = $_GET['lineId'] ?? null;
+            
+            if (!$lineId) {
+                echo json_encode(['success' => false, 'error' => 'lineId required']);
+                exit;
+            }
+            
+            $stmt = $pdo->prepare("
+                SELECT COUNT(*) 
+                FROM areaGraves 
+                WHERE lineId = :lineId AND isActive = 1
+            ");
+            $stmt->execute(['lineId' => $lineId]);
+            $count = $stmt->fetchColumn();
+            
+            echo json_encode([
+                'success' => true,
+                'count' => (int)$count
+            ]);
+            break;
         // =====================================================
         // רשימת כל אחוזות הקבר
         // =====================================================
         case 'list':
             $search = $_GET['search'] ?? '';
-            $plotId = $_GET['plotId'] ?? null; // ⭐ סינון לפי חלקה
+            $plotId = $_GET['plotId'] ?? null;
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
             $offset = ($page - 1) * $limit;
             
-            // בניית השאילתה הראשית עם JOIN לשורות
-            // $sql = "SELECT 
-            //             ag.*,
-            //             r.lineNameHe as row_name,
-            //             r.plotId as plot_id
-            //         FROM areaGraves ag
-            //         LEFT JOIN rows r ON ag.lineId = r.unicId
-            //         WHERE ag.isActive = 1";
-
+            // בניית השאילתה הראשית מה-VIEW
             $sql = "SELECT ag.* FROM areaGraves_view ag WHERE ag.isActive = 1";
-
             $params = [];
             
-            // ⭐ סינון לפי חלקה (אם plotId נשלח)
+            // סינון לפי חלקה - ⭐ שונה ל-plotId!
             if ($plotId) {
-                $sql .= " AND r.plotId = :plotId";
+                $sql .= " AND ag.plotId = :plotId";  // ⭐ plotId במקום plot_id
                 $params['plotId'] = $plotId;
             }
             
-            // חיפוש - כל שדה מקבל פרמטר משלו
+            // חיפוש טקסט
             if ($search) {
                 $sql .= " AND (
                     ag.areaGraveNameHe LIKE :search1 OR 
                     ag.coordinates LIKE :search2 OR 
                     ag.gravesList LIKE :search3 OR 
                     ag.comments LIKE :search4 OR
-                    r.lineNameHe LIKE :search5
+                    ag.lineNameHe LIKE :search5 OR
+                    ag.plotNameHe LIKE :search6 OR
+                    ag.blockNameHe LIKE :search7 OR
+                    ag.cemeteryNameHe LIKE :search8
                 )";
                 $searchTerm = "%$search%";
                 $params['search1'] = $searchTerm;
@@ -77,17 +92,18 @@ try {
                 $params['search3'] = $searchTerm;
                 $params['search4'] = $searchTerm;
                 $params['search5'] = $searchTerm;
+                $params['search6'] = $searchTerm;
+                $params['search7'] = $searchTerm;
+                $params['search8'] = $searchTerm;
             }
             
-            // ✅ ספירת תוצאות מסוננות
-            $countSql = "SELECT COUNT(*) 
-                        FROM areaGraves ag
-                        LEFT JOIN rows r ON ag.lineId = r.unicId
-                        WHERE ag.isActive = 1";
+            // ספירת תוצאות מסוננות
+            $countSql = "SELECT COUNT(*) FROM areaGraves_view ag WHERE ag.isActive = 1";
             $countParams = [];
             
+            // ⭐ שונה גם כאן ל-plotId!
             if ($plotId) {
-                $countSql .= " AND r.plotId = :plotId";
+                $countSql .= " AND ag.plotId = :plotId";  // ⭐ plotId במקום plot_id
                 $countParams['plotId'] = $plotId;
             }
             
@@ -97,21 +113,27 @@ try {
                     ag.coordinates LIKE :search2 OR 
                     ag.gravesList LIKE :search3 OR 
                     ag.comments LIKE :search4 OR
-                    r.lineNameHe LIKE :search5
+                    ag.lineNameHe LIKE :search5 OR
+                    ag.plotNameHe LIKE :search6 OR
+                    ag.blockNameHe LIKE :search7 OR
+                    ag.cemeteryNameHe LIKE :search8
                 )";
                 $countParams['search1'] = $searchTerm;
                 $countParams['search2'] = $searchTerm;
                 $countParams['search3'] = $searchTerm;
                 $countParams['search4'] = $searchTerm;
                 $countParams['search5'] = $searchTerm;
+                $countParams['search6'] = $searchTerm;
+                $countParams['search7'] = $searchTerm;
+                $countParams['search8'] = $searchTerm;
             }
             
             $countStmt = $pdo->prepare($countSql);
             $countStmt->execute($countParams);
             $total = $countStmt->fetchColumn();
             
-            // ✅ ספירת כל אחוזות הקבר (ללא סינון)
-            $totalAllSql = "SELECT COUNT(*) FROM areaGraves WHERE isActive = 1";
+            // ספירת כל אחוזות הקבר (ללא סינון)
+            $totalAllSql = "SELECT COUNT(*) FROM areaGraves_view WHERE isActive = 1";
             $totalAll = $pdo->query($totalAllSql)->fetchColumn();
             
             // הוספת מיון ועימוד
@@ -127,9 +149,8 @@ try {
             
             $areaGraves = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            // ✅ הוספת graves_count לכל אחוזת קבר
+            // הוספת graves_count לכל אחוזת קבר
             foreach ($areaGraves as &$areaGrave) {
-                // ספירת קברים באחוזה (בהנחה שיש טבלת graves עם שדה areaGraveId)
                 $graveStmt = $pdo->prepare("
                     SELECT COUNT(*) 
                     FROM graves 
@@ -151,7 +172,6 @@ try {
                 ]
             ]);
             break;
-            
         // =====================================================
         // קבלת אחוזת קבר בודדת
         // =====================================================
@@ -167,9 +187,9 @@ try {
                     r.plotId as plot_id
                 FROM areaGraves ag
                 LEFT JOIN rows r ON ag.lineId = r.unicId
-                WHERE (ag.unicId = :id OR ag.id = :id2) AND ag.isActive = 1
+                WHERE ag.unicId = :id AND ag.isActive = 1
             ");
-            $stmt->execute(['id' => $id, 'id2' => $id]);
+            $stmt->execute(['id' => $id]);
             $areaGrave = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if (!$areaGrave) {
@@ -194,7 +214,7 @@ try {
         // =====================================================
         // הוספת אחוזת קבר חדשה
         // =====================================================
-        case 'create':
+        case 'create2':
             $data = json_decode(file_get_contents('php://input'), true);
             
             // ולידציה - שדות חובה
@@ -252,6 +272,89 @@ try {
             ]);
             break;
             
+        // ממש אחרי שורה 219 (case 'create':)
+        case 'create':
+            $data = json_decode(file_get_contents('php://input'), true);
+            
+            // ⭐ הוסף debug
+            error_log('=== CREATE AREA GRAVE DEBUG ===');
+            error_log('Raw input: ' . file_get_contents('php://input'));
+            error_log('Parsed data: ' . print_r($data, true));
+            error_log('lineId value: ' . var_export($data['lineId'] ?? 'NOT SET', true));
+            error_log('lineId type: ' . gettype($data['lineId'] ?? null));
+            
+            // ולידציה - שדות חובה
+            if (empty($data['areaGraveNameHe'])) {
+                throw new Exception('שם אחוזת הקבר (עברית) הוא שדה חובה');
+            }
+            
+            if (empty($data['lineId'])) {
+                error_log('ERROR: lineId is empty!');
+                throw new Exception('יש לבחור שורה לאחוזת הקבר');
+            }
+            
+            // בדיקה שהשורה קיימת
+            error_log('Checking if lineId exists in DB: ' . $data['lineId']);
+            $stmt = $pdo->prepare("SELECT unicId FROM rows WHERE unicId = :lineId AND isActive = 1");
+            $stmt->execute(['lineId' => $data['lineId']]);
+            $row = $stmt->fetch();
+            error_log('Row found: ' . ($row ? 'YES' : 'NO'));
+            
+            if (!$row) {
+                error_log('ERROR: Row not found in DB!');
+                
+                // בדיקה נוספת - אולי השורה קיימת אבל לא פעילה?
+                $stmt2 = $pdo->prepare("SELECT unicId, isActive FROM rows WHERE unicId = :lineId");
+                $stmt2->execute(['lineId' => $data['lineId']]);
+                $checkRow = $stmt2->fetch();
+                error_log('Row check (including inactive): ' . print_r($checkRow, true));
+                
+                throw new Exception('השורה שנבחרה אינה קיימת במערכת או לא פעילה');
+            }
+
+            if (!$stmt->fetch()) {
+                throw new Exception('השורה שנבחרה אינה קיימת במערכת');
+            }
+            
+            // יצירת unicId ייחודי
+            $data['unicId'] = uniqid('ag_', true);
+            $data['createDate'] = date('Y-m-d H:i:s');
+            $data['updateDate'] = date('Y-m-d H:i:s');
+            $data['isActive'] = 1;
+            
+            // רשימת שדות אפשריים
+            $fields = [
+                'unicId', 'areaGraveNameHe', 'coordinates', 'gravesList',
+                'graveType', 'lineId', 'comments', 'documentsList',
+                'createDate', 'updateDate', 'isActive'
+            ];
+            
+            $insertFields = [];
+            $insertValues = [];
+            $params = [];
+            
+            foreach ($fields as $field) {
+                if (isset($data[$field])) {
+                    $insertFields[] = $field;
+                    $insertValues[] = ":$field";
+                    $params[$field] = $data[$field];
+                }
+            }
+            
+            $sql = "INSERT INTO areaGraves (" . implode(', ', $insertFields) . ")
+                    VALUES (" . implode(', ', $insertValues) . ")";
+            
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            
+            echo json_encode([
+                'success' => true,
+                'message' => 'אחוזת הקבר נוספה בהצלחה',
+                'id' => $pdo->lastInsertId(),
+                'unicId' => $data['unicId']
+            ]);
+            break;
+    
         // =====================================================
         // עדכון אחוזת קבר
         // =====================================================

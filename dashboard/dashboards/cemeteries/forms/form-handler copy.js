@@ -133,19 +133,8 @@ const FormHandler = {
 
     handleFormSpecificLogic: function(type, parentId, itemId) {
             switch(type) {
-                case 'areaGrave2':
-                    this.handleAreaGraveForm(parentId);
-                    break;
-                
                 case 'areaGrave':
-                    // טען שורות אם יש parentId
-                    if (parentId) {
-                        this.handleAreaGraveForm(parentId);
-                    }
-                    // אם זה עריכה, טען את נתוני הקברים
-                    if (itemId) {
-                        this.loadAreaGraveWithGraves(itemId);
-                    }
+                    this.handleAreaGraveForm(parentId);
                     break;
                     
                 case 'customer':
@@ -176,26 +165,6 @@ const FormHandler = {
             }
     },
 
-    loadAreaGraveWithGraves: async function(areaGraveId) {
-        console.log('📦 Loading area grave with graves:', areaGraveId);
-        
-        try {
-            // הקברים כבר נטענו בטופס עצמו (area-grave-form.php)
-            // כאן רק נוודא שהכל תקין
-            
-            // אם יש פונקציית ולידציה בטופס, נוודא שהיא קיימת
-            if (typeof window.validateGravesData === 'function') {
-                console.log('✅ Graves validation function found');
-            } else {
-                console.warn('⚠️ Graves validation function not found');
-            }
-            
-        } catch (error) {
-            console.error('❌ Error loading area grave data:', error);
-        }
-    },
-
-
     handleAreaGraveForm: function(parentId) {
         if (!parentId) return;
         
@@ -217,6 +186,64 @@ const FormHandler = {
                     .catch(error => console.error('Error loading rows:', error));
             });
         }, 0);
+    },
+
+    handleAreaGraveForm2: function(parentId) {
+        console.log('🏘️🏘️🏘️ handleAreaGraveForm CALLED!');
+        console.log('📊 parentId:', parentId);
+        console.log('🌍 API_BASE:', typeof API_BASE !== 'undefined' ? API_BASE : 'UNDEFINED!!!');
+        
+        if (!parentId) {
+            console.error('❌ NO PARENT ID!');
+            return;
+        }
+        
+        console.log('🔍 Looking for: #areaGraveFormModal select[name="lineId"]');
+        
+        // בדוק אם המודאל קיים בכלל
+        const modal = document.querySelector('#areaGraveFormModal');
+        console.log('📦 Modal exists?', modal ? 'YES' : 'NO');
+        
+        if (modal) {
+            const select = modal.querySelector('select[name="lineId"]');
+            console.log('📋 Select exists?', select ? 'YES' : 'NO');
+        }
+        setTimeout(() => {
+            this.waitForElement('#areaGraveFormModal select[name="lineId"]', (lineSelect) => {
+                console.log('✅✅✅ SELECT FOUND!');
+                console.log('📋 Select element:', lineSelect);
+                
+                const apiUrl = `${API_BASE}cemetery-hierarchy.php?action=list&type=row&parent_id=${parentId}`;
+                console.log('📡 API URL:', apiUrl);
+                
+                fetch(apiUrl)
+                    .then(response => {
+                        console.log('📥 Response status:', response.status);
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('📊 API Response:', data);
+                        
+                        if (data.success && data.data && data.data.length > 0) {
+                            console.log(`✅ Found ${data.data.length} rows`);
+                            lineSelect.innerHTML = '<option value="">-- בחר שורה --</option>';
+                            data.data.forEach(row => {
+                                const option = document.createElement('option');
+                                option.value = row.unicId;
+                                option.textContent = row.lineNameHe || `שורה ${row.serialNumber}`;
+                                lineSelect.appendChild(option);
+                                console.log(`   Added: ${option.textContent}`);
+                            });
+                        } else {
+                            console.warn('⚠️ No rows found');
+                            lineSelect.innerHTML = '<option value="">-- אין שורות --</option>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('❌ Fetch error:', error);
+                    });
+            });
+        }, 0);  // ← המפתח לפתרון!
     },
 
     handleCustomerForm: function(itemId) {
@@ -2826,19 +2853,6 @@ const FormHandler = {
             
             const data = {};
             let newParentId = null;
-
-            if (type === 'areaGrave') {
-                console.log('🏘️ Processing area grave form...');
-                
-                // הרץ ולידציה על נתוני הקברים
-                if (typeof window.validateGravesData === 'function') {
-                    if (!window.validateGravesData()) {
-                        console.error('❌ Graves validation failed');
-                        return false;
-                    }
-                    console.log('✅ Graves validation passed');
-                }
-            }
 
             for (let [key, value] of formData.entries()) {
                 if (key === 'formType' || key === 'itemId') {

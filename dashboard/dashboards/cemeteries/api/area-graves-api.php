@@ -1,16 +1,16 @@
 <?php
 /*
  * File: api/area-graves-api.php
- * Version: 1.0.0
- * Updated: 2025-10-28
+ * Version: 2.0.0
+ * Updated: 2025-11-05
  * Author: Malkiel
  * Change Summary:
- * - v1.0.0: יצירה ראשונית - API מלא לניהול אחוזות קבר
- *   - תמיכה בכל פעולות CRUD
- *   - סינון לפי plotId (דרך lineId → rows.plotId)
- *   - הוספת graves_count לכל אחוזה
- *   - הוספת row_name (שם השורה)
- *   - תמיכה בשדות האמיתיים: graveType, lineId, comments
+ * - v2.0.0: תמיכה מלאה בניהול קברים יחד עם אחוזת קבר
+ *   - יצירת עד 5 קברים בו-זמנית עם אחוזת הקבר
+ *   - עדכון קברים קיימים בעריכה
+ *   - ולידציה על שמות ייחודיים
+ *   - מניעת מחיקת קברים לא פנויים
+ * - v1.0.0: גרסה ראשונית - API בסיסי
  */
 
 header('Content-Type: application/json; charset=utf-8');
@@ -18,7 +18,6 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
 header('Access-Control-Allow-Headers: Content-Type');
 
-// חיבור לבסיס נתונים
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
 
 try {
@@ -27,7 +26,6 @@ try {
     die(json_encode(['success' => false, 'error' => 'Connection failed: ' . $e->getMessage()]));
 }
 
-// קבלת הפעולה
 $action = $_GET['action'] ?? '';
 $id = $_GET['id'] ?? null;
 
@@ -54,6 +52,7 @@ try {
                 'count' => (int)$count
             ]);
             break;
+            
         // =====================================================
         // רשימת כל אחוזות הקבר
         // =====================================================
@@ -64,17 +63,14 @@ try {
             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
             $offset = ($page - 1) * $limit;
             
-            // בניית השאילתה הראשית מה-VIEW
             $sql = "SELECT ag.* FROM areaGraves_view ag WHERE ag.isActive = 1";
             $params = [];
             
-            // סינון לפי חלקה - ⭐ שונה ל-plotId!
             if ($plotId) {
-                $sql .= " AND ag.plotId = :plotId";  // ⭐ plotId במקום plot_id
+                $sql .= " AND ag.plotId = :plotId";
                 $params['plotId'] = $plotId;
             }
             
-            // חיפוש טקסט
             if ($search) {
                 $sql .= " AND (
                     ag.areaGraveNameHe LIKE :search1 OR 
@@ -97,13 +93,11 @@ try {
                 $params['search8'] = $searchTerm;
             }
             
-            // ספירת תוצאות מסוננות
             $countSql = "SELECT COUNT(*) FROM areaGraves_view ag WHERE ag.isActive = 1";
             $countParams = [];
             
-            // ⭐ שונה גם כאן ל-plotId!
             if ($plotId) {
-                $countSql .= " AND ag.plotId = :plotId";  // ⭐ plotId במקום plot_id
+                $countSql .= " AND ag.plotId = :plotId";
                 $countParams['plotId'] = $plotId;
             }
             
@@ -132,11 +126,9 @@ try {
             $countStmt->execute($countParams);
             $total = $countStmt->fetchColumn();
             
-            // ספירת כל אחוזות הקבר (ללא סינון)
             $totalAllSql = "SELECT COUNT(*) FROM areaGraves_view WHERE isActive = 1";
             $totalAll = $pdo->query($totalAllSql)->fetchColumn();
             
-            // הוספת מיון ועימוד
             $sql .= " ORDER BY ag.createDate DESC LIMIT :limit OFFSET :offset";
             
             $stmt = $pdo->prepare($sql);
@@ -149,7 +141,6 @@ try {
             
             $areaGraves = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
-            // הוספת graves_count לכל אחוזת קבר
             foreach ($areaGraves as &$areaGrave) {
                 $graveStmt = $pdo->prepare("
                     SELECT COUNT(*) 
@@ -172,6 +163,7 @@ try {
                 ]
             ]);
             break;
+            
         // =====================================================
         // קבלת אחוזת קבר בודדת
         // =====================================================
@@ -196,7 +188,6 @@ try {
                 throw new Exception('אחוזת הקבר לא נמצאה');
             }
             
-            // ספירת קברים באחוזה
             $stmt = $pdo->prepare("
                 SELECT COUNT(*) 
                 FROM graves 
@@ -212,151 +203,155 @@ try {
             break;
             
         // =====================================================
-        // הוספת אחוזת קבר חדשה
+        // יצירת אחוזת קבר + קברים
         // =====================================================
-        case 'create2':
-            $data = json_decode(file_get_contents('php://input'), true);
-            
-            // ולידציה - שדות חובה
-            if (empty($data['areaGraveNameHe'])) {
-                throw new Exception('שם אחוזת הקבר (עברית) הוא שדה חובה');
-            }
-            
-            if (empty($data['lineId'])) {
-                throw new Exception('יש לבחור שורה לאחוזת הקבר');
-            }
-            
-            // בדיקה שהשורה קיימת
-            $stmt = $pdo->prepare("SELECT unicId FROM rows WHERE unicId = :lineId AND isActive = 1");
-            $stmt->execute(['lineId' => $data['lineId']]);
-            if (!$stmt->fetch()) {
-                throw new Exception('השורה שנבחרה אינה קיימת במערכת');
-            }
-            
-            // יצירת unicId ייחודי
-            $data['unicId'] = uniqid('ag_', true);
-            $data['createDate'] = date('Y-m-d H:i:s');
-            $data['updateDate'] = date('Y-m-d H:i:s');
-            $data['isActive'] = 1;
-            
-            // רשימת שדות אפשריים
-            $fields = [
-                'unicId', 'areaGraveNameHe', 'coordinates', 'gravesList',
-                'graveType', 'lineId', 'comments', 'documentsList',
-                'createDate', 'updateDate', 'isActive'
-            ];
-            
-            $insertFields = [];
-            $insertValues = [];
-            $params = [];
-            
-            foreach ($fields as $field) {
-                if (isset($data[$field])) {
-                    $insertFields[] = $field;
-                    $insertValues[] = ":$field";
-                    $params[$field] = $data[$field];
-                }
-            }
-            
-            $sql = "INSERT INTO areaGraves (" . implode(', ', $insertFields) . ")
-                    VALUES (" . implode(', ', $insertValues) . ")";
-            
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($params);
-            
-            echo json_encode([
-                'success' => true,
-                'message' => 'אחוזת הקבר נוספה בהצלחה',
-                'id' => $pdo->lastInsertId(),
-                'unicId' => $data['unicId']
-            ]);
-            break;
-            
-        // ממש אחרי שורה 219 (case 'create':)
         case 'create':
             $data = json_decode(file_get_contents('php://input'), true);
             
-            // ⭐ הוסף debug
-            error_log('=== CREATE AREA GRAVE DEBUG ===');
-            error_log('Raw input: ' . file_get_contents('php://input'));
-            error_log('Parsed data: ' . print_r($data, true));
-            error_log('lineId value: ' . var_export($data['lineId'] ?? 'NOT SET', true));
-            error_log('lineId type: ' . gettype($data['lineId'] ?? null));
-            
             // ולידציה - שדות חובה
             if (empty($data['areaGraveNameHe'])) {
                 throw new Exception('שם אחוזת הקבר (עברית) הוא שדה חובה');
             }
             
             if (empty($data['lineId'])) {
-                error_log('ERROR: lineId is empty!');
-                throw new Exception('יש לבחור שורה לאחוזת הקבר');
+                throw new Exception('בחירת שורה היא חובה');
             }
             
-            // בדיקה שהשורה קיימת
-            error_log('Checking if lineId exists in DB: ' . $data['lineId']);
-            $stmt = $pdo->prepare("SELECT unicId FROM rows WHERE unicId = :lineId AND isActive = 1");
-            $stmt->execute(['lineId' => $data['lineId']]);
-            $row = $stmt->fetch();
-            error_log('Row found: ' . ($row ? 'YES' : 'NO'));
-            
-            if (!$row) {
-                error_log('ERROR: Row not found in DB!');
-                
-                // בדיקה נוספת - אולי השורה קיימת אבל לא פעילה?
-                $stmt2 = $pdo->prepare("SELECT unicId, isActive FROM rows WHERE unicId = :lineId");
-                $stmt2->execute(['lineId' => $data['lineId']]);
-                $checkRow = $stmt2->fetch();
-                error_log('Row check (including inactive): ' . print_r($checkRow, true));
-                
-                throw new Exception('השורה שנבחרה אינה קיימת במערכת או לא פעילה');
-            }
-
-            if (!$stmt->fetch()) {
-                throw new Exception('השורה שנבחרה אינה קיימת במערכת');
+            if (empty($data['graveType'])) {
+                throw new Exception('סוג אחוזת קבר הוא שדה חובה');
             }
             
-            // יצירת unicId ייחודי
-            $data['unicId'] = uniqid('ag_', true);
-            $data['createDate'] = date('Y-m-d H:i:s');
-            $data['updateDate'] = date('Y-m-d H:i:s');
-            $data['isActive'] = 1;
-            
-            // רשימת שדות אפשריים
-            $fields = [
-                'unicId', 'areaGraveNameHe', 'coordinates', 'gravesList',
-                'graveType', 'lineId', 'comments', 'documentsList',
-                'createDate', 'updateDate', 'isActive'
-            ];
-            
-            $insertFields = [];
-            $insertValues = [];
-            $params = [];
-            
-            foreach ($fields as $field) {
-                if (isset($data[$field])) {
-                    $insertFields[] = $field;
-                    $insertValues[] = ":$field";
-                    $params[$field] = $data[$field];
+            // קבל נתוני קברים
+            $gravesData = [];
+            if (isset($data['gravesData'])) {
+                if (is_string($data['gravesData'])) {
+                    $gravesData = json_decode($data['gravesData'], true);
+                } else {
+                    $gravesData = $data['gravesData'];
                 }
             }
             
-            $sql = "INSERT INTO areaGraves (" . implode(', ', $insertFields) . ")
-                    VALUES (" . implode(', ', $insertValues) . ")";
+            // ולידציית קברים
+            if (empty($gravesData) || count($gravesData) === 0) {
+                throw new Exception('חובה להוסיף לפחות קבר אחד');
+            }
             
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($params);
+            if (count($gravesData) > 5) {
+                throw new Exception('ניתן להוסיף עד 5 קברים בלבד');
+            }
             
-            echo json_encode([
-                'success' => true,
-                'message' => 'אחוזת הקבר נוספה בהצלחה',
-                'id' => $pdo->lastInsertId(),
-                'unicId' => $data['unicId']
-            ]);
+            // בדוק שמות ייחודיים בקברים
+            $graveNames = array_map(function($g) {
+                return trim($g['graveNameHe']);
+            }, $gravesData);
+            
+            if (count($graveNames) !== count(array_unique($graveNames))) {
+                throw new Exception('שמות קברים חייבים להיות ייחודיים באחוזה');
+            }
+            
+            // בדוק שכל הקברים קיבלו שם
+            foreach ($gravesData as $idx => $grave) {
+                if (empty($grave['graveNameHe'])) {
+                    throw new Exception("שם קבר מספר " . ($idx + 1) . " הוא חובה");
+                }
+            }
+            
+            // התחל טרנזקציה
+            $pdo->beginTransaction();
+            
+            try {
+                // צור אחוזת קבר
+                $data['unicId'] = uniqid('areaGrave_', true);
+                $data['createDate'] = date('Y-m-d H:i:s');
+                $data['updateDate'] = date('Y-m-d H:i:s');
+                $data['isActive'] = 1;
+                $data['gravesList'] = ''; // ישאר ריק כפי שהתבקש
+                
+                $fields = [
+                    'unicId', 'areaGraveNameHe', 'coordinates', 'gravesList',
+                    'graveType', 'lineId', 'comments', 'documentsList',
+                    'createDate', 'updateDate', 'isActive'
+                ];
+                
+                $insertFields = [];
+                $insertValues = [];
+                $params = [];
+                
+                foreach ($fields as $field) {
+                    if (isset($data[$field])) {
+                        $insertFields[] = $field;
+                        $insertValues[] = ":$field";
+                        $params[$field] = $data[$field];
+                    }
+                }
+                
+                $sql = "INSERT INTO areaGraves (" . implode(', ', $insertFields) . ")
+                        VALUES (" . implode(', ', $insertValues) . ")";
+                
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($params);
+                
+                $areaGraveUnicId = $data['unicId'];
+                
+                // צור קברים
+                $createdGraves = [];
+                foreach ($gravesData as $index => $grave) {
+                    $graveUnicId = uniqid('grave_', true);
+                    
+                    $graveStmt = $pdo->prepare("
+                        INSERT INTO graves (
+                            unicId, areaGraveId, graveNameHe, plotType, 
+                            graveStatus, graveLocation, constructionCost, 
+                            isSmallGrave, comments, documentsList,
+                            createDate, updateDate, isActive
+                        ) VALUES (
+                            :unicId, :areaGraveId, :graveNameHe, :plotType,
+                            :graveStatus, :graveLocation, :constructionCost,
+                            :isSmallGrave, :comments, :documentsList,
+                            :createDate, :updateDate, :isActive
+                        )
+                    ");
+                    
+                    $graveStmt->execute([
+                        'unicId' => $graveUnicId,
+                        'areaGraveId' => $areaGraveUnicId,
+                        'graveNameHe' => trim($grave['graveNameHe']),
+                        'plotType' => $grave['plotType'] ?? 1,
+                        'graveStatus' => 1, // תמיד פנוי ביצירה
+                        'graveLocation' => 0, // לא בשימוש כרגע
+                        'constructionCost' => $grave['constructionCost'] ?? 0,
+                        'isSmallGrave' => isset($grave['isSmallGrave']) && $grave['isSmallGrave'] ? 1 : 0,
+                        'comments' => '',
+                        'documentsList' => '',
+                        'createDate' => date('Y-m-d H:i:s'),
+                        'updateDate' => date('Y-m-d H:i:s'),
+                        'isActive' => 1
+                    ]);
+                    
+                    $createdGraves[] = [
+                        'unicId' => $graveUnicId,
+                        'graveNameHe' => $grave['graveNameHe']
+                    ];
+                }
+                
+                $pdo->commit();
+                
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'אחוזת הקבר נוספה בהצלחה עם ' . count($createdGraves) . ' קברים',
+                    'id' => $pdo->lastInsertId(),
+                    'unicId' => $areaGraveUnicId,
+                    'graves' => $createdGraves
+                ]);
+                
+            } catch (Exception $e) {
+                $pdo->rollBack();
+                throw $e;
+            }
             break;
     
         // =====================================================
-        // עדכון אחוזת קבר
+        // עדכון אחוזת קבר + קברים
         // =====================================================
         case 'update':
             if (!$id) {
@@ -370,45 +365,177 @@ try {
                 throw new Exception('שם אחוזת הקבר (עברית) הוא שדה חובה');
             }
             
-            // אם מעדכנים את lineId - בדוק שהשורה קיימת
-            if (isset($data['lineId'])) {
-                $stmt = $pdo->prepare("SELECT unicId FROM rows WHERE unicId = :lineId AND isActive = 1");
-                $stmt->execute(['lineId' => $data['lineId']]);
-                if (!$stmt->fetch()) {
-                    throw new Exception('השורה שנבחרה אינה קיימת במערכת');
+            // קבל נתוני קברים
+            $gravesData = [];
+            if (isset($data['gravesData'])) {
+                if (is_string($data['gravesData'])) {
+                    $gravesData = json_decode($data['gravesData'], true);
+                } else {
+                    $gravesData = $data['gravesData'];
                 }
             }
             
-            $data['updateDate'] = date('Y-m-d H:i:s');
+            // ולידציית קברים
+            if (empty($gravesData) || count($gravesData) === 0) {
+                throw new Exception('חובה להיות לפחות קבר אחד');
+            }
             
-            // רשימת שדות שניתן לעדכן
-            $fields = [
-                'areaGraveNameHe', 'coordinates', 'gravesList',
-                'graveType', 'lineId', 'comments', 'documentsList', 'updateDate'
-            ];
+            if (count($gravesData) > 5) {
+                throw new Exception('ניתן להוסיף עד 5 קברים בלבד');
+            }
             
-            $updateFields = [];
-            $params = ['id' => $id];
+            // בדוק שמות ייחודיים
+            $graveNames = array_map(function($g) {
+                return trim($g['graveNameHe']);
+            }, $gravesData);
             
-            foreach ($fields as $field) {
-                if (isset($data[$field])) {
-                    $updateFields[] = "$field = :$field";
-                    $params[$field] = $data[$field];
+            if (count($graveNames) !== count(array_unique($graveNames))) {
+                throw new Exception('שמות קברים חייבים להיות ייחודיים באחוזה');
+            }
+            
+            // בדוק שכל הקברים קיבלו שם
+            foreach ($gravesData as $idx => $grave) {
+                if (empty($grave['graveNameHe'])) {
+                    throw new Exception("שם קבר מספר " . ($idx + 1) . " הוא חובה");
                 }
             }
             
-            if (empty($updateFields)) {
-                throw new Exception('No fields to update');
+            // התחל טרנזקציה
+            $pdo->beginTransaction();
+            
+            try {
+                // עדכן אחוזת קבר
+                $data['updateDate'] = date('Y-m-d H:i:s');
+                
+                $fields = [
+                    'areaGraveNameHe', 'coordinates', 'graveType', 
+                    'lineId', 'comments', 'documentsList', 'updateDate'
+                ];
+                
+                $updateFields = [];
+                $params = ['id' => $id];
+                
+                foreach ($fields as $field) {
+                    if (isset($data[$field])) {
+                        $updateFields[] = "$field = :$field";
+                        $params[$field] = $data[$field];
+                    }
+                }
+                
+                if (!empty($updateFields)) {
+                    $sql = "UPDATE areaGraves SET " . implode(', ', $updateFields) . " WHERE unicId = :id";
+                    $stmt = $pdo->prepare($sql);
+                    $stmt->execute($params);
+                }
+                
+                // טען קברים קיימים
+                $stmt = $pdo->prepare("
+                    SELECT unicId, graveNameHe, graveStatus 
+                    FROM graves 
+                    WHERE areaGraveId = :id AND isActive = 1
+                ");
+                $stmt->execute(['id' => $id]);
+                $existingGraves = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                $existingIds = array_column($existingGraves, 'unicId');
+                $newGravesIds = array_filter(array_column($gravesData, 'id'));
+                
+                // מחק קברים שהוסרו (רק פנויים)
+                $gravesToDelete = array_diff($existingIds, $newGravesIds);
+                foreach ($gravesToDelete as $graveIdToDelete) {
+                    // בדוק סטטוס לפני מחיקה
+                    $statusStmt = $pdo->prepare("
+                        SELECT graveStatus FROM graves WHERE unicId = :id
+                    ");
+                    $statusStmt->execute(['id' => $graveIdToDelete]);
+                    $status = $statusStmt->fetchColumn();
+                    
+                    if ($status != 1) {
+                        throw new Exception('לא ניתן למחוק קבר שאינו פנוי');
+                    }
+                    
+                    // מחיקה לוגית
+                    $deleteStmt = $pdo->prepare("
+                        UPDATE graves 
+                        SET isActive = 0, inactiveDate = :date 
+                        WHERE unicId = :id
+                    ");
+                    $deleteStmt->execute([
+                        'id' => $graveIdToDelete,
+                        'date' => date('Y-m-d H:i:s')
+                    ]);
+                }
+                
+                // עדכן או צור קברים
+                foreach ($gravesData as $grave) {
+                    if (!empty($grave['id']) && in_array($grave['id'], $existingIds)) {
+                        // עדכן קבר קיים
+                        $updateGraveStmt = $pdo->prepare("
+                            UPDATE graves SET
+                                graveNameHe = :graveNameHe,
+                                plotType = :plotType,
+                                constructionCost = :constructionCost,
+                                isSmallGrave = :isSmallGrave,
+                                updateDate = :updateDate
+                            WHERE unicId = :id
+                        ");
+                        
+                        $updateGraveStmt->execute([
+                            'id' => $grave['id'],
+                            'graveNameHe' => trim($grave['graveNameHe']),
+                            'plotType' => $grave['plotType'] ?? 1,
+                            'constructionCost' => $grave['constructionCost'] ?? 0,
+                            'isSmallGrave' => isset($grave['isSmallGrave']) && $grave['isSmallGrave'] ? 1 : 0,
+                            'updateDate' => date('Y-m-d H:i:s')
+                        ]);
+                        
+                    } else {
+                        // צור קבר חדש
+                        $graveUnicId = uniqid('grave_', true);
+                        
+                        $insertGraveStmt = $pdo->prepare("
+                            INSERT INTO graves (
+                                unicId, areaGraveId, graveNameHe, plotType, 
+                                graveStatus, graveLocation, constructionCost, 
+                                isSmallGrave, comments, documentsList,
+                                createDate, updateDate, isActive
+                            ) VALUES (
+                                :unicId, :areaGraveId, :graveNameHe, :plotType,
+                                :graveStatus, :graveLocation, :constructionCost,
+                                :isSmallGrave, :comments, :documentsList,
+                                :createDate, :updateDate, :isActive
+                            )
+                        ");
+                        
+                        $insertGraveStmt->execute([
+                            'unicId' => $graveUnicId,
+                            'areaGraveId' => $id,
+                            'graveNameHe' => trim($grave['graveNameHe']),
+                            'plotType' => $grave['plotType'] ?? 1,
+                            'graveStatus' => 1, // תמיד פנוי ביצירה
+                            'graveLocation' => 0,
+                            'constructionCost' => $grave['constructionCost'] ?? 0,
+                            'isSmallGrave' => isset($grave['isSmallGrave']) && $grave['isSmallGrave'] ? 1 : 0,
+                            'comments' => '',
+                            'documentsList' => '',
+                            'createDate' => date('Y-m-d H:i:s'),
+                            'updateDate' => date('Y-m-d H:i:s'),
+                            'isActive' => 1
+                        ]);
+                    }
+                }
+                
+                $pdo->commit();
+                
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'אחוזת הקבר עודכנה בהצלחה'
+                ]);
+                
+            } catch (Exception $e) {
+                $pdo->rollBack();
+                throw $e;
             }
-            
-            $sql = "UPDATE areaGraves SET " . implode(', ', $updateFields) . " WHERE unicId = :id";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($params);
-            
-            echo json_encode([
-                'success' => true,
-                'message' => 'אחוזת הקבר עודכנה בהצלחה'
-            ]);
             break;
             
         // =====================================================
@@ -432,7 +559,6 @@ try {
                 throw new Exception('לא ניתן למחוק אחוזת קבר עם קברים פעילים');
             }
             
-            // מחיקה לוגית
             $stmt = $pdo->prepare("
                 UPDATE areaGraves 
                 SET isActive = 0, inactiveDate = :date 
@@ -453,9 +579,7 @@ try {
             $plotId = $_GET['plotId'] ?? null;
             $stats = [];
             
-            // ✅ סטטיסטיקות כלליות או מסוננות לפי plotId
             if ($plotId) {
-                // סטטיסטיקות לחלקה ספציפית
                 $stmt = $pdo->prepare("
                     SELECT COUNT(*) 
                     FROM areaGraves ag
@@ -465,7 +589,6 @@ try {
                 $stmt->execute(['plotId' => $plotId]);
                 $stats['total_area_graves'] = $stmt->fetchColumn();
                 
-                // ספירת קברים בכל אחוזות הקבר של החלקה
                 $stmt = $pdo->prepare("
                     SELECT COUNT(*) 
                     FROM graves g
@@ -476,7 +599,6 @@ try {
                 $stmt->execute(['plotId' => $plotId]);
                 $stats['total_graves'] = $stmt->fetchColumn();
                 
-                // חדשות החודש
                 $stmt = $pdo->prepare("
                     SELECT COUNT(*) 
                     FROM areaGraves ag
@@ -489,7 +611,6 @@ try {
                 $stats['new_this_month'] = $stmt->fetchColumn();
                 
             } else {
-                // סטטיסטיקות כלליות
                 $stmt = $pdo->query("SELECT COUNT(*) FROM areaGraves WHERE isActive = 1");
                 $stats['total_area_graves'] = $stmt->fetchColumn();
                 

@@ -3393,7 +3393,7 @@ const FormHandler = {
             // =========================================
             // ⭐ הוספה חדשה - ולידציה לאחוזת קבר
             // =========================================
-            if (type === 'areaGrave') {
+            if (type === 'areaGrave2') {
                 // קרא לפונקציית הולידציה הגלובלית
                 if (typeof window.validateGravesData === 'function') {
                     console.log('🔍 Running graves validation...');
@@ -3408,6 +3408,38 @@ const FormHandler = {
                     console.error('❌ validateGravesData function not found!');
                     this.showMessage('שגיאה: פונקציית ולידציה לא נמצאה', 'error');
                     return;
+                }
+            }
+            // שורות 3396-3427 (עם התיקון)
+            if (type === 'areaGrave') {
+                if (typeof window.validateGravesData === 'function') {
+                    console.log('🔍 Running graves validation...');
+                    
+                    if (!window.validateGravesData()) {
+                        console.error('❌ Graves validation failed');
+                        return;
+                    }
+                    
+                    console.log('✅ Graves validation passed');
+                    
+                    // ⭐⭐⭐ זה החלק שחסר! ⭐⭐⭐
+                    const gravesDataInput = document.getElementById('gravesData');
+                    if (gravesDataInput && gravesDataInput.value) {
+                        console.log('📥 Reading gravesData from hidden input after validation');
+                        console.log('📊 gravesData length:', gravesDataInput.value.length, 'chars');
+                        
+                        formData.set('gravesData', gravesDataInput.value);
+                        
+                        console.log('✅ gravesData added to formData');
+                    } else {
+                        console.error('❌ gravesData input not found or empty!');
+                        this.showMessage('שגיאה: נתוני הקברים לא נמצאו', 'error');
+                        return false;
+                    }
+                } else {
+                    console.error('❌ validateGravesData function not found!');
+                    this.showMessage('שגיאה: פונקציית ולידציה לא נמצאה', 'error');
+                    return false;
                 }
             }
 

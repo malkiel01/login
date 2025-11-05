@@ -179,41 +179,41 @@
                 
                 $result = $stmt->fetch(PDO::FETCH_ASSOC);
                 
-                // טיפול מיוחד באחוזת קבר - להציג את השורה במקום את החלקה
-                if ($this->type === 'areaGrave' && $this->itemId) {
-                    try {
-                        // שלוף את פרטי השורה של אחוזת הקבר
-                        $sql = "SELECT r.unicId, r.lineNameHe, r.serialNumber 
-                                FROM areaGraves ag
-                                JOIN rows r ON ag.lineId = r.unicId
-                                WHERE ag.unicId = :areaGraveId AND ag.isActive = 1
-                                LIMIT 1";
+                // // טיפול מיוחד באחוזת קבר - להציג את השורה במקום את החלקה
+                // if ($this->type === 'areaGrave' && $this->itemId) {
+                //     try {
+                //         // שלוף את פרטי השורה של אחוזת הקבר
+                //         $sql = "SELECT r.unicId, r.lineNameHe, r.serialNumber 
+                //                 FROM areaGraves ag
+                //                 JOIN rows r ON ag.lineId = r.unicId
+                //                 WHERE ag.unicId = :areaGraveId AND ag.isActive = 1
+                //                 LIMIT 1";
                         
-                        $stmt = $pdo->prepare($sql);
-                        $stmt->execute(['areaGraveId' => $this->itemId]);
-                        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+                //         $stmt = $pdo->prepare($sql);
+                //         $stmt->execute(['areaGraveId' => $this->itemId]);
+                //         $row = $stmt->fetch(PDO::FETCH_ASSOC);
                         
-                        // if ($row) {
-                        //     $lineName = $row['lineNameHe'] ?: "שורה {$row['serialNumber']}";
-                        //     return [
-                        //         'name' => $lineName,
-                        //         'type' => 'row',
-                        //         'field' => 'lineId'
-                        //     ];
-                        // }
+                //         // if ($row) {
+                //         //     $lineName = $row['lineNameHe'] ?: "שורה {$row['serialNumber']}";
+                //         //     return [
+                //         //         'name' => $lineName,
+                //         //         'type' => 'row',
+                //         //         'field' => 'lineId'
+                //         //     ];
+                //         // }
 
-                        if ($row) {
-                            // 🧪 בדיקה - מחזיר טקסט ברור שנראה שהקוד רץ
-                            return [
-                                'name' => '🔴 בדיקה - הקוד רץ!',
-                                'type' => 'row',
-                                'field' => 'lineId'
-                            ];
-                        }
-                    } catch (Exception $e) {
-                        error_log('Error getting line info for area grave: ' . $e->getMessage());
-                    }
-                }
+                //         if ($row) {
+                //             // 🧪 בדיקה - מחזיר טקסט ברור שנראה שהקוד רץ
+                //             return [
+                //                 'name' => '🔴 בדיקה - הקוד רץ!',
+                //                 'type' => 'row',
+                //                 'field' => 'lineId'
+                //             ];
+                //         }
+                //     } catch (Exception $e) {
+                //         error_log('Error getting line info for area grave: ' . $e->getMessage());
+                //     }
+                // }
 
                 return $result ? [
                     'name' => $result['name'],
@@ -242,7 +242,7 @@
                 'max' => $options['max'] ?? null,
                 'step' => $options['step'] ?? null,
                 'rows' => $options['rows'] ?? 3,
-                'hideInEdit' => $options['hideInEdit'] ?? false
+                // 'hideInEdit' => $options['hideInEdit'] ?? false
             ];
         }
         
@@ -587,9 +587,9 @@
             // Render fields
             foreach ($this->fields as $field) {
                 // דלג על שדות שמוסתרים בעריכה
-                if (isset($field['hideInEdit']) && $field['hideInEdit'] && $this->itemId) {
-                    continue;
-                }
+                // if (isset($field['hideInEdit']) && $field['hideInEdit'] && $this->itemId) {
+                //     continue;
+                // }
                 $html .= $this->renderField($field);
             }
             

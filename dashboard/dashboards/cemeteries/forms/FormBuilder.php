@@ -40,6 +40,81 @@
         /**
          * קבלת שם ההורה מהקונפיג
          */
+        private function getParentInfo2() {
+            if (!$this->parentId || !isset($this->config[$this->type])) {
+                return null;
+            }
+            
+            $typeConfig = $this->config[$this->type];
+            $parentKey = $typeConfig['parentKey'] ?? null;
+            
+            if (!$parentKey) {
+                return null;
+            }
+            
+            // מצא את סוג ההורה
+            $parentType = null;
+            foreach ($this->config as $key => $conf) {
+                if (isset($conf['table'])) {
+                    // בדוק אם ה-parentKey מתאים לטבלה
+                    $tableName = $conf['table'];
+                    // המר את שם השדה לשם טבלה (לדוגמה: cemeteryId -> cemeteries)
+                    if (strpos($parentKey, 'Id') !== false) {
+                        $expectedTable = str_replace('Id', '', $parentKey);
+                        // בדוק התאמות אפשריות
+                        if ($expectedTable === 'cemetery' && $tableName === 'cemeteries') {
+                            $parentType = $key;
+                            break;
+                        } elseif ($expectedTable === 'block' && $tableName === 'blocks') {
+                            $parentType = $key;
+                            break;
+                        } elseif ($expectedTable === 'plot' && $tableName === 'plots') {
+                            $parentType = $key;
+                            break;
+                        } elseif ($expectedTable === 'line' && $tableName === 'rows') {
+                            $parentType = $key;
+                            break;
+                        } elseif ($expectedTable === 'areaGrave' && $tableName === 'areaGraves') {
+                            $parentType = $key;
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            if (!$parentType) {
+                return null;
+            }
+            
+            try {
+                $parentConfig = $this->config[$parentType];
+                $parentTable = $parentConfig['table'];
+                $parentPrimaryKey = $parentConfig['primaryKey'] ?? 'id';
+                $parentDisplayField = $parentConfig['displayFields']['name'] ?? 'name';
+                
+                // חבר למסד נתונים
+                require_once dirname(__DIR__) . '/config.php';
+                $pdo = getDBConnection();
+                
+                $sql = "SELECT $parentDisplayField as name FROM $parentTable 
+                        WHERE $parentPrimaryKey = :id LIMIT 1";
+                
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute(['id' => $this->parentId]);
+                
+                $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                
+                return $result ? [
+                    'name' => $result['name'],
+                    'type' => $parentType,
+                    'field' => $parentKey
+                ] : null;
+                
+            } catch (Exception $e) {
+                error_log('Error getting parent info: ' . $e->getMessage());
+                return null;
+            }
+        }
         private function getParentInfo() {
             if (!$this->parentId || !isset($this->config[$this->type])) {
                 return null;
@@ -104,6 +179,33 @@
                 
                 $result = $stmt->fetch(PDO::FETCH_ASSOC);
                 
+                // טיפול מיוחד באחוזת קבר - להציג את השורה במקום את החלקה
+                if ($this->type === 'areaGrave' && $this->itemId) {
+                    try {
+                        // שלוף את פרטי השורה של אחוזת הקבר
+                        $sql = "SELECT r.unicId, r.lineNameHe, r.serialNumber 
+                                FROM areaGraves ag
+                                JOIN rows r ON ag.lineId = r.unicId
+                                WHERE ag.unicId = :areaGraveId AND ag.isActive = 1
+                                LIMIT 1";
+                        
+                        $stmt = $pdo->prepare($sql);
+                        $stmt->execute(['areaGraveId' => $this->itemId]);
+                        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+                        
+                        if ($row) {
+                            $lineName = $row['lineNameHe'] ?: "שורה {$row['serialNumber']}";
+                            return [
+                                'name' => $lineName,
+                                'type' => 'row',
+                                'field' => 'lineId'
+                            ];
+                        }
+                    } catch (Exception $e) {
+                        error_log('Error getting line info for area grave: ' . $e->getMessage());
+                    }
+                }
+
                 return $result ? [
                     'name' => $result['name'],
                     'type' => $parentType,

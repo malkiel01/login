@@ -293,8 +293,6 @@ async function createPlotCard(plotId) {
         // ⭐⭐ ספירת אחוזות קבר לכל שורה!
         const rowsWithCounts = await Promise.all(rows.map(async (row) => {
             try {
-                console.log(`${API_BASE}areaGraves-api.php?action=count&lineId=${row.unicId}`);
-                
                 // קריאה ל-API לספירת אחוזות קבר
                 const areaGravesResponse = await fetch(
                     `${API_BASE}areaGraves-api.php?action=count&lineId=${row.unicId}`

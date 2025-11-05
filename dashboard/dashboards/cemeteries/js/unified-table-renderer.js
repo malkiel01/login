@@ -912,6 +912,7 @@ class UnifiedTableRenderer {
     return apiMap[type] || null;
 }
 
+
     /**
      * חילוץ parent_id מנתוני פריט לפי הסוג שלו
      */

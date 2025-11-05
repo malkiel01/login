@@ -1,333 +1,485 @@
 <?php
-    /*
-    * File: dashboards/dashboard/cemeteries/forms/area-grave-form.php
-    * Version: 1.0.0
-    * Updated: 2025-11-05
-    * Author: Malkiel
-    * Change Summary:
-    * - v1.0.0: יצירה ראשונית - טופס אחוזת קבר עם טבלת קברים מוטמעת
-    *   - תמיכה ביצירת עד 5 קברים בו-זמנית
-    *   - עריכה inline של קברים קיימים
-    *   - ולידציה על שמות ייחודיים
-    *   - מניעת מחיקת קברים לא פנויים
-    */
+/*
+ * File: dashboards/dashboard/cemeteries/forms/areaGrave-form.php
+ * Version: 1.0.1
+ * Updated: 2025-11-05
+ * Author: Malkiel
+ * Change Summary:
+ * - v1.0.1: תיקון בעיות רספונסיביות ו-JavaScript
+ *   - תיקון אתחול קבר ראשון
+ *   - תיקון כפתור הוספת קבר
+ *   - שיפור רספונסיביות
+ * - v1.0.0: יצירה ראשונית
+ */
 
-    error_reporting(E_ALL);
-    ini_set('display_errors', 1);
-    header('Content-Type: text/html; charset=utf-8');
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+header('Content-Type: text/html; charset=utf-8');
 
-    require_once __DIR__ . '/FormBuilder.php';
-    require_once __DIR__ . '/FormUtils.php';
-    require_once dirname(__DIR__) . '/config.php';
+require_once __DIR__ . '/FormBuilder.php';
+require_once __DIR__ . '/FormUtils.php';
+require_once dirname(__DIR__) . '/config.php';
 
-    try {
-        $conn = getDBConnection();
+try {
+    $conn = getDBConnection();
+    
+    // קבלת פרמטרים
+    $itemId = $_GET['itemId'] ?? $_GET['id'] ?? null;
+    $parentId = $_GET['parentId'] ?? $_GET['parent_id'] ?? null;
+    
+    // טען אחוזת קבר אם קיימת
+    $areaGrave = null;
+    $graves = [];
+    
+    if ($itemId) {
+        // טען אחוזת קבר
+        $stmt = $conn->prepare("
+            SELECT * FROM areaGraves 
+            WHERE unicId = ? AND isActive = 1
+        ");
+        $stmt->execute([$itemId]);
+        $areaGrave = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        // קבלת פרמטרים
-        $itemId = $_GET['itemId'] ?? $_GET['id'] ?? null;
-        $parentId = $_GET['parentId'] ?? $_GET['parent_id'] ?? null;
-        
-        // טען אחוזת קבר אם קיימת
-        $areaGrave = null;
-        $graves = [];
-        
-        if ($itemId) {
-            // טען אחוזת קבר
+        if ($areaGrave) {
+            // טען קברים קיימים
             $stmt = $conn->prepare("
-                SELECT * FROM areaGraves 
-                WHERE unicId = ? AND isActive = 1
+                SELECT * FROM graves 
+                WHERE areaGraveId = ? AND isActive = 1
+                ORDER BY id ASC
             ");
-            $stmt->execute([$itemId]);
-            $areaGrave = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            if ($areaGrave) {
-                // טען קברים קיימים
-                $stmt = $conn->prepare("
-                    SELECT * FROM graves 
-                    WHERE areaGraveId = ? AND isActive = 1
-                    ORDER BY id ASC
-                ");
-                $stmt->execute([$areaGrave['unicId']]);
-                $graves = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            }
+            $stmt->execute([$areaGrave['unicId']]);
+            $graves = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
-        
-        // טען שורות לבחירה
-        $rows = [];
-        if ($parentId) {
-            // אם יש parentId (plotId) - טען רק שורות מהחלקה הזו
-            $stmt = $conn->prepare("
-                SELECT r.unicId, r.lineNameHe, r.serialNumber 
-                FROM rows r 
-                WHERE r.plotId = ? AND r.isActive = 1
-                ORDER BY r.serialNumber, r.lineNameHe
-            ");
-            $stmt->execute([$parentId]);
-        } else {
-            // אחרת טען את כל השורות
-            $stmt = $conn->query("
-                SELECT r.unicId, r.lineNameHe, r.serialNumber 
-                FROM rows r 
-                WHERE r.isActive = 1
-                ORDER BY r.serialNumber, r.lineNameHe
-            ");
-        }
-        
-        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $label = $row['lineNameHe'] ?: "שורה {$row['serialNumber']}";
-            $rows[$row['unicId']] = $label;
-        }
-        
-    } catch (Exception $e) {
-        FormUtils::handleError($e);
     }
-
-    // יצירת FormBuilder
-    $formBuilder = new FormBuilder('areaGrave', $itemId, $parentId);
-
-    // שדה שורה (lineId)
-    $formBuilder->addField('lineId', 'שורה', 'select', [
-        'required' => true,
-        'options' => array_merge(
-            ['' => '-- בחר שורה --'],
-            $rows
-        ),
-        'value' => $areaGrave['lineId'] ?? ($parentId ? $parentId : '')
-    ]);
-
-    // שם אחוזת קבר
-    $formBuilder->addField('areaGraveNameHe', 'שם אחוזת קבר', 'text', [
-        'required' => true,
-        'placeholder' => 'הזן שם אחוזת קבר',
-        'value' => $areaGrave['areaGraveNameHe'] ?? ''
-    ]);
-
-    // סוג אחוזת קבר
-    $formBuilder->addField('graveType', 'סוג אחוזת קבר', 'select', [
-        'required' => true,
-        'options' => [
-            '' => '-- בחר סוג --',
-            1 => 'שדה',
-            2 => 'רוויה',
-            3 => 'סנהדרין'
-        ],
-        'value' => $areaGrave['graveType'] ?? ''
-    ]);
-
-    // קואורדינטות
-    $formBuilder->addField('coordinates', 'קואורדינטות', 'text', [
-        'placeholder' => 'הזן קואורדינטות',
-        'value' => $areaGrave['coordinates'] ?? ''
-    ]);
-
-    // הערות
-    $formBuilder->addField('comments', 'הערות', 'textarea', [
-        'rows' => 3,
-        'value' => $areaGrave['comments'] ?? ''
-    ]);
-
-    // ================================
-    // טבלת קברים דינמית
-    // ================================
-
-    $isEditMode = !empty($itemId);
-    $gravesJson = json_encode($graves, JSON_UNESCAPED_UNICODE);
-
-    $gravesTableHTML = <<<HTML
-    <fieldset class="form-section" id="graves-section" style="border: 2px solid #667eea; border-radius: 12px; padding: 20px; margin: 20px 0; background: #f8f9ff;">
-        <legend style="padding: 0 10px; font-weight: bold; color: #667eea; font-size: 1.1em;">🪦 קברים באחוזה (חובה לפחות 1, מקסימום 5)</legend>
-        
-        <div style="margin-bottom: 15px;">
-            <button type="button" id="addGraveBtn" class="btn btn-success" style="background: #10b981; padding: 8px 16px; border: none; border-radius: 6px; color: white; cursor: pointer; font-weight: 600;">
-                ➕ הוסף קבר
-            </button>
-            <span id="graveCounter" style="margin-right: 15px; color: #666; font-weight: 500;"></span>
-        </div>
-        
-        <div style="overflow-x: auto;">
-            <table class="graves-table" style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                <thead style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                    <tr>
-                        <th style="padding: 12px; text-align: center; width: 50px;">#</th>
-                        <th style="padding: 12px; text-align: right; min-width: 150px;">שם קבר <span style="color: #ffd700;">*</span></th>
-                        <th style="padding: 12px; text-align: right; min-width: 130px;">סוג חלקה <span style="color: #ffd700;">*</span></th>
-    HTML;
-
-    // הוסף עמודת סטטוס רק במצב עריכה
-    if ($isEditMode) {
-        $gravesTableHTML .= <<<HTML
-                        <th style="padding: 12px; text-align: center; width: 100px;">סטטוס</th>
-    HTML;
+    
+    // טען שורות לבחירה
+    $rows = [];
+    if ($parentId) {
+        $stmt = $conn->prepare("
+            SELECT r.unicId, r.lineNameHe, r.serialNumber 
+            FROM rows r 
+            WHERE r.plotId = ? AND r.isActive = 1
+            ORDER BY r.serialNumber, r.lineNameHe
+        ");
+        $stmt->execute([$parentId]);
+    } else {
+        $stmt = $conn->query("
+            SELECT r.unicId, r.lineNameHe, r.serialNumber 
+            FROM rows r 
+            WHERE r.isActive = 1
+            ORDER BY r.serialNumber, r.lineNameHe
+        ");
     }
-
-    $gravesTableHTML .= <<<HTML
-                        <th style="padding: 12px; text-align: center; width: 90px;">קבר קטן</th>
-                        <th style="padding: 12px; text-align: right; min-width: 120px;">עלות בנייה</th>
-                        <th style="padding: 12px; text-align: center; width: 80px;">פעולות</th>
-                    </tr>
-                </thead>
-                <tbody id="gravesTableBody">
-                    <!-- השורות יתווספו דינמית ב-JS -->
-                </tbody>
-            </table>
-        </div>
-        
-        <input type="hidden" name="gravesData" id="gravesData" value="">
-    </fieldset>
-
-    <style>
-    .graves-table tbody tr {
-        border-bottom: 1px solid #e2e8f0;
-        transition: background 0.2s;
+    
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $label = $row['lineNameHe'] ?: "שורה {$row['serialNumber']}";
+        $rows[$row['unicId']] = $label;
     }
+    
+} catch (Exception $e) {
+    FormUtils::handleError($e);
+}
 
-    .graves-table tbody tr:hover {
-        background: #f8fafc;
+// יצירת FormBuilder
+$formBuilder = new FormBuilder('areaGrave', $itemId, $parentId);
+
+// שדה שורה (lineId)
+$formBuilder->addField('lineId', 'שורה', 'select', [
+    'required' => true,
+    'options' => array_merge(
+        ['' => '-- בחר שורה --'],
+        $rows
+    ),
+    'value' => $areaGrave['lineId'] ?? ''
+]);
+
+// שם אחוזת קבר
+$formBuilder->addField('areaGraveNameHe', 'שם אחוזת קבר', 'text', [
+    'required' => true,
+    'placeholder' => 'הזן שם אחוזת קבר',
+    'value' => $areaGrave['areaGraveNameHe'] ?? ''
+]);
+
+// סוג אחוזת קבר
+$formBuilder->addField('graveType', 'סוג אחוזת קבר', 'select', [
+    'required' => true,
+    'options' => [
+        '' => '-- בחר סוג --',
+        1 => 'שדה',
+        2 => 'רוויה',
+        3 => 'סנהדרין'
+    ],
+    'value' => $areaGrave['graveType'] ?? ''
+]);
+
+// קואורדינטות
+$formBuilder->addField('coordinates', 'קואורדינטות', 'text', [
+    'placeholder' => 'הזן קואורדינטות',
+    'value' => $areaGrave['coordinates'] ?? ''
+]);
+
+// הערות
+$formBuilder->addField('comments', 'הערות', 'textarea', [
+    'rows' => 3,
+    'value' => $areaGrave['comments'] ?? ''
+]);
+
+// ================================
+// טבלת קברים דינמית
+// ================================
+
+$isEditMode = !empty($itemId);
+$gravesJson = json_encode($graves, JSON_UNESCAPED_UNICODE);
+
+$gravesTableHTML = <<<HTML
+<fieldset class="form-section graves-fieldset" id="graves-section">
+    <legend>🪦 קברים באחוזה (חובה לפחות 1, מקסימום 5)</legend>
+    
+    <div class="graves-controls">
+        <button type="button" id="addGraveBtn" class="btn btn-success">
+            ➕ הוסף קבר
+        </button>
+        <span id="graveCounter" class="grave-counter"></span>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="graves-table">
+            <thead>
+                <tr>
+                    <th class="col-num">#</th>
+                    <th class="col-name">שם קבר <span class="required">*</span></th>
+                    <th class="col-type">סוג חלקה <span class="required">*</span></th>
+HTML;
+
+if ($isEditMode) {
+    $gravesTableHTML .= '<th class="col-status">סטטוס</th>';
+}
+
+$gravesTableHTML .= <<<HTML
+                    <th class="col-small">קבר קטן</th>
+                    <th class="col-cost">עלות בנייה</th>
+                    <th class="col-actions">פעולות</th>
+                </tr>
+            </thead>
+            <tbody id="gravesTableBody">
+                <!-- השורות יתווספו דינמית -->
+            </tbody>
+        </table>
+    </div>
+    
+    <input type="hidden" name="gravesData" id="gravesData" value="">
+</fieldset>
+
+<style>
+/* סגנונות למערכת הקברים */
+.graves-fieldset {
+    border: 2px solid #667eea;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px 0;
+    background: #f8f9ff;
+}
+
+.graves-fieldset legend {
+    padding: 0 10px;
+    font-weight: bold;
+    color: #667eea;
+    font-size: 1.1em;
+}
+
+.graves-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.btn-success {
+    background: #10b981;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+    font-size: 14px;
+}
+
+.btn-success:hover:not(:disabled) {
+    background: #059669;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-success:disabled {
+    background: #d1d5db;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.grave-counter {
+    color: #666;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.table-responsive {
+    overflow-x: auto;
+    margin-top: 15px;
+}
+
+.graves-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    min-width: 700px;
+}
+
+.graves-table thead {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.graves-table th {
+    padding: 12px 8px;
+    text-align: right;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.graves-table th.col-num { width: 50px; text-align: center; }
+.graves-table th.col-name { min-width: 150px; }
+.graves-table th.col-type { min-width: 130px; }
+.graves-table th.col-status { width: 100px; text-align: center; }
+.graves-table th.col-small { width: 90px; text-align: center; }
+.graves-table th.col-cost { min-width: 120px; }
+.graves-table th.col-actions { width: 80px; text-align: center; }
+
+.graves-table .required {
+    color: #ffd700;
+}
+
+.graves-table tbody tr {
+    border-bottom: 1px solid #e2e8f0;
+    transition: background 0.2s;
+}
+
+.graves-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.graves-table td {
+    padding: 10px 8px;
+}
+
+.graves-table input[type="text"],
+.graves-table input[type="number"],
+.graves-table select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border 0.3s;
+    box-sizing: border-box;
+}
+
+.graves-table input[type="text"]:focus,
+.graves-table input[type="number"]:focus,
+.graves-table select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.graves-table input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.delete-grave-btn {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+    font-size: 16px;
+}
+
+.delete-grave-btn:hover:not(:disabled) {
+    background: #dc2626;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+}
+
+.delete-grave-btn:disabled {
+    background: #d1d5db;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.status-available { background: #dcfce7; color: #166534; }
+.status-purchased { background: #dbeafe; color: #1e40af; }
+.status-buried { background: #f3f4f6; color: #374151; }
+
+/* רספונסיביות */
+@media (max-width: 768px) {
+    .graves-fieldset {
+        padding: 15px;
     }
-
+    
+    .graves-controls {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .table-responsive {
+        margin: 0 -15px;
+        padding: 0 15px;
+    }
+    
+    .graves-table {
+        font-size: 12px;
+        min-width: 650px;
+    }
+    
+    .graves-table th,
+    .graves-table td {
+        padding: 8px 5px;
+    }
+    
     .graves-table input[type="text"],
     .graves-table input[type="number"],
     .graves-table select {
-        width: 100%;
-        padding: 8px;
-        border: 1px solid #cbd5e0;
-        border-radius: 6px;
-        font-size: 14px;
-        transition: border 0.3s;
-    }
-
-    .graves-table input[type="text"]:focus,
-    .graves-table input[type="number"]:focus,
-    .graves-table select:focus {
-        outline: none;
-        border-color: #667eea;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-    }
-
-    .graves-table input[type="checkbox"] {
-        width: 20px;
-        height: 20px;
-        cursor: pointer;
-    }
-
-    .delete-grave-btn {
-        background: #ef4444;
-        color: white;
-        border: none;
-        padding: 6px 12px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-weight: 600;
-        transition: all 0.3s;
-    }
-
-    .delete-grave-btn:hover:not(:disabled) {
-        background: #dc2626;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
-    }
-
-    .delete-grave-btn:disabled {
-        background: #d1d5db;
-        cursor: not-allowed;
-        opacity: 0.6;
-    }
-
-    .status-badge {
-        padding: 4px 12px;
-        border-radius: 12px;
+        padding: 6px;
         font-size: 12px;
-        font-weight: 600;
-        display: inline-block;
     }
+}
+</style>
 
-    .status-available { background: #dcfce7; color: #166534; }
-    .status-purchased { background: #dbeafe; color: #1e40af; }
-    .status-buried { background: #f3f4f6; color: #374151; }
-
-    .btn-success {
-        transition: all 0.3s;
-    }
-
-    .btn-success:hover {
-        background: #059669 !important;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-    }
-    </style>
-
-    <script>
-    // נתוני קברים קיימים (במצב עריכה)
-    const existingGraves = $gravesJson;
-    const isEditMode = $isEditMode;
+<script>
+(function() {
+    'use strict';
+    
+    console.log('🎬 Graves table script loading...');
+    
+    // נתונים מהשרת
+    const existingGraves = $gravesJson || [];
+    const isEditMode = !!($isEditMode);
     const MAX_GRAVES = 5;
-
+    
+    console.log('📊 Existing graves:', existingGraves.length);
+    console.log('📝 Edit mode:', isEditMode);
+    
     // מערך קברים נוכחי
     let currentGraves = [];
-
-    // אתחול הטבלה
-    document.addEventListener('DOMContentLoaded', function() {
+    
+    // אתחול כאשר ה-DOM מוכן
+    function initWhenReady() {
+        const tbody = document.getElementById('gravesTableBody');
+        const addBtn = document.getElementById('addGraveBtn');
+        
+        if (!tbody || !addBtn) {
+            console.log('⏳ Waiting for elements...');
+            setTimeout(initWhenReady, 100);
+            return;
+        }
+        
+        console.log('✅ Elements found, initializing...');
         initGravesTable();
-        updateGraveCounter();
-        updateAddButton();
-    });
-
+        setupEventListeners();
+    }
+    
     // אתחול טבלת קברים
     function initGravesTable() {
+        console.log('🔧 Initializing graves table...');
+        
         if (isEditMode && existingGraves.length > 0) {
-            // טען קברים קיימים
-            existingGraves.forEach((grave, index) => {
+            console.log('📥 Loading existing graves...');
+            existingGraves.forEach((grave) => {
                 currentGraves.push({
                     id: grave.unicId,
-                    graveNameHe: grave.graveNameHe,
-                    plotType: grave.plotType,
-                    graveStatus: grave.graveStatus,
+                    graveNameHe: grave.graveNameHe || '',
+                    plotType: parseInt(grave.plotType) || 1,
+                    graveStatus: parseInt(grave.graveStatus) || 1,
                     isSmallGrave: grave.isSmallGrave == 1,
                     constructionCost: grave.constructionCost || '',
                     isExisting: true
                 });
             });
         } else {
-            // צור קבר ראשון (חובה)
-            addNewGrave();
+            console.log('➕ Creating first grave...');
+            addNewGraveToArray();
         }
         
         renderGravesTable();
+        updateGraveCounter();
+        updateAddButton();
+        
+        console.log('✅ Table initialized with', currentGraves.length, 'graves');
     }
-
-    // הוספת קבר חדש
-    document.addEventListener('click', function(e) {
-        if (e.target && e.target.id === 'addGraveBtn') {
-            addNewGrave();
+    
+    // הגדרת event listeners
+    function setupEventListeners() {
+        const addBtn = document.getElementById('addGraveBtn');
+        if (addBtn) {
+            addBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('➕ Add button clicked');
+                addNewGrave();
+            });
         }
-    });
-
+    }
+    
+    // הוספת קבר למערך
+    function addNewGraveToArray() {
+        currentGraves.push({
+            id: null,
+            graveNameHe: '',
+            plotType: 1,
+            graveStatus: 1,
+            isSmallGrave: false,
+            constructionCost: '',
+            isExisting: false
+        });
+    }
+    
+    // הוספת קבר חדש (עם ולידציה)
     function addNewGrave() {
         if (currentGraves.length >= MAX_GRAVES) {
             alert('ניתן להוסיף עד 5 קברים בלבד');
             return;
         }
         
-        currentGraves.push({
-            id: null, // יווצר בשרת
-            graveNameHe: '',
-            plotType: 1, // ברירת מחדל: פטורה
-            graveStatus: 1, // פנוי
-            isSmallGrave: false,
-            constructionCost: '',
-            isExisting: false
-        });
-        
+        console.log('➕ Adding new grave...');
+        addNewGraveToArray();
         renderGravesTable();
         updateGraveCounter();
         updateAddButton();
     }
-
+    
     // מחיקת קבר
-    function deleteGrave(index) {
+    window.deleteGrave = function(index) {
         const grave = currentGraves[index];
         
-        // בדיקות
         if (index === 0) {
             alert('לא ניתן למחוק את הקבר הראשון');
             return;
@@ -335,23 +487,26 @@
         
         if (isEditMode && grave.isExisting && grave.graveStatus !== 1) {
             const statusNames = { 2: 'נרכש', 3: 'קבור' };
-            alert(`לא ניתן למחוק קבר עם סטטוס "\${statusNames[grave.graveStatus]}"`);
-            // alert(\`לא ניתן למחוק קבר עם סטטוס "\${statusNames[grave.graveStatus]}"\`);
+            alert('לא ניתן למחוק קבר עם סטטוס "' + statusNames[grave.graveStatus] + '"');
             return;
         }
         
         if (confirm('האם אתה בטוח שברצונך למחוק קבר זה?')) {
+            console.log('🗑️ Deleting grave', index);
             currentGraves.splice(index, 1);
             renderGravesTable();
             updateGraveCounter();
             updateAddButton();
         }
-    }
-
+    };
+    
     // רינדור הטבלה
     function renderGravesTable() {
         const tbody = document.getElementById('gravesTableBody');
-        if (!tbody) return;
+        if (!tbody) {
+            console.error('❌ tbody not found');
+            return;
+        }
         
         tbody.innerHTML = '';
         
@@ -360,7 +515,9 @@
             
             // מספור
             const numCell = document.createElement('td');
-            numCell.style.cssText = 'text-align: center; font-weight: bold; color: #667eea;';
+            numCell.style.textAlign = 'center';
+            numCell.style.fontWeight = 'bold';
+            numCell.style.color = '#667eea';
             numCell.textContent = index + 1;
             row.appendChild(numCell);
             
@@ -381,16 +538,10 @@
             const typeCell = document.createElement('td');
             const typeSelect = document.createElement('select');
             typeSelect.required = true;
-            // typeSelect.innerHTML = \`
-            //     <option value="1" \${grave.plotType == 1 ? 'selected' : ''}>פטורה</option>
-            //     <option value="2" \${grave.plotType == 2 ? 'selected' : ''}>חריגה</option>
-            //     <option value="3" \${grave.plotType == 3 ? 'selected' : ''}>סגורה</option>
-            // \`;
-            typeSelect.innerHTML = `
-                <option value="1" \${grave.plotType == 1 ? 'selected' : ''}>פטורה</option>
-                <option value="2" \${grave.plotType == 2 ? 'selected' : ''}>חריגה</option>
-                <option value="3" \${grave.plotType == 3 ? 'selected' : ''}>סגורה</option>
-            `;
+            typeSelect.innerHTML = 
+                '<option value="1"' + (grave.plotType == 1 ? ' selected' : '') + '>פטורה</option>' +
+                '<option value="2"' + (grave.plotType == 2 ? ' selected' : '') + '>חריגה</option>' +
+                '<option value="3"' + (grave.plotType == 3 ? ' selected' : '') + '>סגורה</option>';
             typeSelect.addEventListener('change', function() {
                 currentGraves[index].plotType = parseInt(this.value);
             });
@@ -400,15 +551,14 @@
             // סטטוס (רק בעריכה)
             if (isEditMode) {
                 const statusCell = document.createElement('td');
-                statusCell.style.cssText = 'text-align: center;';
+                statusCell.style.textAlign = 'center';
                 
                 const statusNames = { 1: 'פנוי', 2: 'נרכש', 3: 'קבור' };
                 const statusClasses = { 1: 'available', 2: 'purchased', 3: 'buried' };
                 const status = grave.graveStatus || 1;
                 
                 const badge = document.createElement('span');
-                // badge.className = \`status-badge status-\${statusClasses[status]}\`;
-                badge.className = `status-badge status-\${statusClasses[status]}`;
+                badge.className = 'status-badge status-' + statusClasses[status];
                 badge.textContent = statusNames[status];
                 
                 statusCell.appendChild(badge);
@@ -417,7 +567,7 @@
             
             // קבר קטן
             const smallCell = document.createElement('td');
-            smallCell.style.cssText = 'text-align: center;';
+            smallCell.style.textAlign = 'center';
             const smallCheckbox = document.createElement('input');
             smallCheckbox.type = 'checkbox';
             smallCheckbox.checked = grave.isSmallGrave;
@@ -443,15 +593,14 @@
             
             // פעולות
             const actionsCell = document.createElement('td');
-            actionsCell.style.cssText = 'text-align: center;';
+            actionsCell.style.textAlign = 'center';
             
             const deleteBtn = document.createElement('button');
             deleteBtn.type = 'button';
             deleteBtn.className = 'delete-grave-btn';
-            deleteBtn.textContent = '🗑️';
+            deleteBtn.innerHTML = '🗑️';
             deleteBtn.title = 'מחק קבר';
             
-            // בדיקות זמינות מחיקה
             const canDelete = index > 0 && (!isEditMode || !grave.isExisting || grave.graveStatus === 1);
             deleteBtn.disabled = !canDelete;
             
@@ -463,9 +612,7 @@
                 }
             }
             
-            deleteBtn.addEventListener('click', function() {
-                deleteGrave(index);
-            });
+            deleteBtn.setAttribute('onclick', 'deleteGrave(' + index + ')');
             
             actionsCell.appendChild(deleteBtn);
             row.appendChild(actionsCell);
@@ -473,49 +620,39 @@
             tbody.appendChild(row);
         });
     }
-
+    
     // עדכון מונה
     function updateGraveCounter() {
         const counter = document.getElementById('graveCounter');
         if (counter) {
-            // counter.textContent = \`(\${currentGraves.length}/\${MAX_GRAVES} קברים)\`;
-            counter.textContent = `(\${currentGraves.length}/\${MAX_GRAVES} קברים)`;
+            counter.textContent = '(' + currentGraves.length + '/' + MAX_GRAVES + ' קברים)';
         }
     }
-
+    
     // עדכון כפתור הוספה
     function updateAddButton() {
         const btn = document.getElementById('addGraveBtn');
         if (btn) {
             btn.disabled = currentGraves.length >= MAX_GRAVES;
-            if (currentGraves.length >= MAX_GRAVES) {
-                btn.style.opacity = '0.5';
-                btn.style.cursor = 'not-allowed';
-            } else {
-                btn.style.opacity = '1';
-                btn.style.cursor = 'pointer';
-            }
         }
     }
-
+    
     // ולידציה לפני שליחה
     window.validateGravesData = function() {
-        // בדיקה שיש לפחות קבר אחד
+        console.log('🔍 Validating graves data...');
+        
         if (currentGraves.length === 0) {
             alert('חובה להוסיף לפחות קבר אחד');
             return false;
         }
         
-        // בדיקת שמות ריקים
         for (let i = 0; i < currentGraves.length; i++) {
             if (!currentGraves[i].graveNameHe || currentGraves[i].graveNameHe.trim() === '') {
-                // alert(\`שם קבר מספר \${i + 1} הוא חובה\`);
-                alert(`שם קבר מספר \${i + 1} הוא חובה`);
+                alert('שם קבר מספר ' + (i + 1) + ' הוא חובה');
                 return false;
             }
         }
         
-        // בדיקת שמות כפולים
         const names = currentGraves.map(g => g.graveNameHe.trim().toLowerCase());
         const uniqueNames = new Set(names);
         if (names.length !== uniqueNames.size) {
@@ -523,35 +660,32 @@
             return false;
         }
         
-        // שמירת הנתונים ב-hidden field
         document.getElementById('gravesData').value = JSON.stringify(currentGraves);
-        
+        console.log('✅ Validation passed');
         return true;
     };
-
-    // הוספת ולידציה לטופס
-    const form = document.querySelector('form[id$="Form"]');
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            if (!validateGravesData()) {
-                e.preventDefault();
-                return false;
-            }
-        });
+    
+    // התחלה
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initWhenReady);
+    } else {
+        initWhenReady();
     }
-    </script>
-    HTML;
+    
+})();
+</script>
+HTML;
 
-    // הוסף את הטבלה המותאמת
-    $formBuilder->addCustomHTML($gravesTableHTML);
+// הוסף את הטבלה
+$formBuilder->addCustomHTML($gravesTableHTML);
 
-    // אם זה עריכה, הוסף unicId מוסתר
-    if ($areaGrave && $areaGrave['unicId']) {
-        $formBuilder->addField('unicId', '', 'hidden', [
-            'value' => $areaGrave['unicId']
-        ]);
-    }
+// אם זה עריכה, הוסף unicId
+if ($areaGrave && $areaGrave['unicId']) {
+    $formBuilder->addField('unicId', '', 'hidden', [
+        'value' => $areaGrave['unicId']
+    ]);
+}
 
-    // הצג את הטופס
-    echo $formBuilder->renderModal();
+// הצג את הטופס
+echo $formBuilder->renderModal();
 ?>

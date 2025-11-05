@@ -39,20 +39,6 @@ try {
             $graves = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
     }
-    
-    // טען שורות
-    // $rows = [];
-    // if ($parentId) {
-    //     $stmt = $conn->prepare("SELECT r.unicId, r.lineNameHe, r.serialNumber FROM rows r WHERE r.plotId = ? AND r.isActive = 1 ORDER BY r.serialNumber, r.lineNameHe");
-    //     $stmt->execute([$parentId]);
-    // } else {
-    //     $stmt = $conn->query("SELECT r.unicId, r.lineNameHe, r.serialNumber FROM rows r WHERE r.isActive = 1 ORDER BY r.serialNumber, r.lineNameHe");
-    // }
-    
-    // while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-    //     $label = $row['lineNameHe'] ?: "שורה {$row['serialNumber']}";
-    //     $rows[$row['unicId']] = $label;
-    // }
 
     // טען שורות
     $rows = [];
@@ -103,13 +89,6 @@ $gravesConfigJson = json_encode($gravesConfig, JSON_UNESCAPED_UNICODE);
 // בניית הטופס
 // =========================================
 $formBuilder = new FormBuilder('areaGrave', $itemId, $parentId);
-
-$formBuilder->addField('lineId', 'שורה', 'select', [
-    'required' => true,
-    'options' => array_merge(['' => '-- בחר שורה --'], $rows),
-    'value' => $areaGrave['lineId'] ?? '',
-    // 'hideInEdit' => true  // ← זה החדש! מסתיר בעריכה
-]);
 
 $formBuilder->addField('areaGraveNameHe', 'שם אחוזת קבר', 'text', [
     'required' => true,
@@ -242,6 +221,13 @@ $formBuilder->addCustomHTML($gravesHTML);
 if ($areaGrave && $areaGrave['unicId']) {
     $formBuilder->addField('unicId', '', 'hidden', ['value' => $areaGrave['unicId']]);
 }
+
+
+$formBuilder->addField('lineId', 'שורה', 'text', [
+    'required' => true,
+    'value' => $areaGrave['unicId'],
+    // 'hideInEdit' => true  // ← זה החדש! מסתיר בעריכה
+]);
 
 // הצג את הטופס
 echo $formBuilder->renderModal();

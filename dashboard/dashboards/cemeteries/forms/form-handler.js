@@ -180,16 +180,35 @@ const FormHandler = {
         console.log('📦 Loading area grave with graves:', areaGraveId);
         
         try {
-            // הקברים כבר נטענו בטופס עצמו (area-grave-form.php)
-            // כאן רק נוודא שהכל תקין
-            
-            // אם יש פונקציית ולידציה בטופס, נוודא שהיא קיימת
             if (typeof window.validateGravesData === 'function') {
-                console.log('✅ Graves validation function found');
+                    console.log('🔍 Running graves validation...');
+                    
+                    if (!window.validateGravesData()) {
+                        console.error('❌ Graves validation failed');
+                        return false;
+                    }
+                    
+                    console.log('✅ Graves validation passed');
+                    
+                    // ⭐ תיקון: קרא gravesData אחרי ולידציה
+                    const gravesDataInput = document.getElementById('gravesData');
+                    if (gravesDataInput && gravesDataInput.value) {
+                        console.log('📥 Reading gravesData from hidden input after validation');
+                        console.log('📊 gravesData length:', gravesDataInput.value.length, 'chars');
+                        
+                        formData.set('gravesData', gravesDataInput.value);
+                        
+                        console.log('✅ gravesData added to formData');
+                    } else {
+                        console.error('❌ gravesData input not found or empty!');
+                        this.showMessage('שגיאה: נתוני הקברים לא נמצאו', 'error');
+                        return false;
+                    }
             } else {
-                console.warn('⚠️ Graves validation function not found');
-            }
-            
+                console.error('❌ validateGravesData function not found!');
+                this.showMessage('שגיאה: פונקציית ולידציה לא נמצאה', 'error');
+                return false;
+            }         
         } catch (error) {
             console.error('❌ Error loading area grave data:', error);
         }

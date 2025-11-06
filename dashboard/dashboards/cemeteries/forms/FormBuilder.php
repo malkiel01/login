@@ -167,7 +167,8 @@
                 'max' => $options['max'] ?? null,
                 'step' => $options['step'] ?? null,
                 'rows' => $options['rows'] ?? 3,
-                // 'hideInEdit' => $options['hideInEdit'] ?? false
+                'hideInEdit' => $options['hideInEdit'] ?? false,
+                'validations' => $options['validations'] ?? []
             ];
         }
         
@@ -542,7 +543,7 @@
             return $html;
         }
         
-        private function renderField($field) {
+        private function renderField2($field) {
             // For checkbox, handle differently
             if ($field['type'] === 'checkbox') {
                 return $this->renderCheckbox($field);
@@ -588,12 +589,71 @@
             $html .= '</div>';
             return $html;
         }
+
+        // FormBuilder.php → renderField()
+        private function renderField($field) {
+            // For checkbox, handle differently
+            if ($field['type'] === 'checkbox') {
+                return $this->renderCheckbox($field);
+            }
+
+            $html = '<div class="form-group ' . $field['class'] . '">';
+            
+            if ($field['type'] !== 'hidden' && $field['type'] !== 'checkbox') {
+                $html .= '<label for="' . $field['name'] . '">';
+                $html .= $field['label'];
+                if ($field['required']) {
+                    $html .= ' <span class="text-danger">*</span>';
+                }
+                $html .= '</label>';
+            }
+            
+            // 🆕 הוסף data-validations אם יש
+            $validationsAttr = '';
+            if (!empty($field['validations'])) {
+                $validationsAttr = ' data-validations=\'' . 
+                    htmlspecialchars(json_encode($field['validations']), ENT_QUOTES) . '\'';
+            }
+            
+            switch ($field['type']) {
+                case 'select':
+                    $html .= $this->renderSelect($field);
+                    break;
+                case 'textarea':
+                    $html .= $this->renderTextarea($field);
+                    break;
+                case 'number':
+                    $html .= $this->renderNumber($field);
+                    break;
+                case 'date':
+                    $html .= $this->renderDate($field);
+                    break;
+                case 'email':
+                    $html .= $this->renderEmail($field);
+                    break;
+                case 'tel':
+                    $html .= $this->renderTel($field);
+                    break;
+                case 'time':
+                    $html .= $this->renderTime($field);
+                    break;
+                case 'custom_html':
+                    $html .= $field['html'];
+                    break;
+                default:
+                    $html .= $this->renderText($field);
+            }
+            
+            $html .= '</div>';
+            return $html;
+        }
         
         private function renderText($field) {
             $html = '<input type="text" class="form-control" ';
             $html .= 'id="' . $field['name'] . '" ';
             $html .= 'name="' . $field['name'] . '" ';
             $html .= 'value="' . htmlspecialchars($field['value']) . '" ';
+            $html .= $validationsAttr;
             if ($field['placeholder']) {
                 $html .= 'placeholder="' . htmlspecialchars($field['placeholder']) . '" ';
             }

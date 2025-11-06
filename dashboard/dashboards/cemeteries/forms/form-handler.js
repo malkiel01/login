@@ -133,12 +133,36 @@ const FormHandler = {
             // חפש את המודאל
             const modal = tempDiv.querySelector('#' + type + 'FormModal');
             
+            // if (modal) {
+            //     document.body.appendChild(modal);
+            //     document.body.style.overflow = 'hidden';
+                
+            //     this.handleFormSpecificLogic(type, parentId, itemId);
+                
+            // } else {
+            //     console.error('❌ Modal not found in HTML');
+   
+            //     const allModals = tempDiv.querySelectorAll('.modal');
+            //     // console.log('Found modals:', allModals.length);
+            //     allModals.forEach(m => {
+            //         // console.log('Modal id:', m.id);
+            //     });
+            // }
+
             if (modal) {
                 document.body.appendChild(modal);
                 document.body.style.overflow = 'hidden';
                 
-                this.handleFormSpecificLogic(type, parentId, itemId);
+                // 🆕 אתחל FormValidations
+                const form = modal.querySelector('form');
+                if (form && window.FormValidations) {
+                    FormValidations.init(form);
+                    console.log('✅ FormValidations initialized for', type);
+                } else {
+                    console.warn('⚠️ FormValidations not found');
+                }
                 
+                this.handleFormSpecificLogic(type, parentId, itemId);
             } else {
                 console.error('❌ Modal not found in HTML');
    

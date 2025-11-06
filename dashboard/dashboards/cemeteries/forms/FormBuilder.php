@@ -627,7 +627,7 @@
             if (!empty($field['validations'])) {
                 $validationsAttr = ' data-validations=\'' . 
                     htmlspecialchars(json_encode($field['validations']), ENT_QUOTES) . '\'';
-            }
+            } 
             
             switch ($field['type']) {
                 case 'select':

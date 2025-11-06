@@ -118,110 +118,107 @@ $formType = basename(__FILE__, '.php'); // מזהה אוטומטי של סוג �
             ");
             $cemeteriesStmt->execute();
         }
-        // $cemeteries = $cemeteriesStmt->fetchAll(PDO::FETCH_ASSOC);  
+        $cemeteries = $cemeteriesStmt->fetchAll(PDO::FETCH_ASSOC);        
         
-        // 🆕 כבר לא טוענים היררכיה מה-PHP!
-        // JavaScript יטען את זה דינמית מה-APIs
-        
-        // // טען בתי עלמין
-        // // הכן את כל הנתונים להיררכיה
-        // $hierarchyData = [];
-        // $cemeteries = [];
-        // $cemeteriesStmt = $conn->prepare("
-        //     SELECT c.unicId, c.cemeteryNameHe as name,
-        //     EXISTS (
-        //         SELECT 1 FROM graves g
-        //         INNER JOIN areaGraves ag ON g.areaGraveId = ag.unicId
-        //         INNER JOIN rows r ON ag.lineId = r.unicId
-        //         INNER JOIN plots p ON r.plotId = p.unicId
-        //         INNER JOIN blocks b ON p.blockId = b.unicId
-        //         WHERE b.cemeteryId = c.unicId
-        //         AND g.graveStatus = 1 
-        //         AND g.isActive = 1
-        //     ) as has_available_graves
-        //     FROM cemeteries c
-        //     WHERE c.isActive = 1
-        //     ORDER BY c.cemeteryNameHe
-        // ");
+        // טען בתי עלמין
+        // הכן את כל הנתונים להיררכיה
+        $hierarchyData = [];
+        $cemeteries = [];
+        $cemeteriesStmt = $conn->prepare("
+            SELECT c.unicId, c.cemeteryNameHe as name,
+            EXISTS (
+                SELECT 1 FROM graves g
+                INNER JOIN areaGraves ag ON g.areaGraveId = ag.unicId
+                INNER JOIN rows r ON ag.lineId = r.unicId
+                INNER JOIN plots p ON r.plotId = p.unicId
+                INNER JOIN blocks b ON p.blockId = b.unicId
+                WHERE b.cemeteryId = c.unicId
+                AND g.graveStatus = 1 
+                AND g.isActive = 1
+            ) as has_available_graves
+            FROM cemeteries c
+            WHERE c.isActive = 1
+            ORDER BY c.cemeteryNameHe
+        ");
 
-        // $cemeteriesStmt->execute();
-        // $cemeteries = $cemeteriesStmt->fetchAll(PDO::FETCH_ASSOC);
+        $cemeteriesStmt->execute();
+        $cemeteries = $cemeteriesStmt->fetchAll(PDO::FETCH_ASSOC);
         
 
-        // // טען את כל הגושים
-        // $blocksStmt = $conn->prepare("
-        //     SELECT b.*, c.id as cemetery_id 
-        //     FROM blocks b 
-        //     INNER JOIN cemeteries c ON b.cemeteryId = c.unicId 
-        //     WHERE b.isActive = 1
-        //     ORDER BY b.blockNameHe
-        // ");
-        // $blocksStmt->execute();
-        // $hierarchyData['blocks'] = $blocksStmt->fetchAll(PDO::FETCH_ASSOC);
+        // טען את כל הגושים
+        $blocksStmt = $conn->prepare("
+            SELECT b.*, c.id as cemetery_id 
+            FROM blocks b 
+            INNER JOIN cemeteries c ON b.cemeteryId = c.unicId 
+            WHERE b.isActive = 1
+            ORDER BY b.blockNameHe
+        ");
+        $blocksStmt->execute();
+        $hierarchyData['blocks'] = $blocksStmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // // טען את כל החלקות
-        // $plotsStmt = $conn->prepare("
-        //     SELECT p.*, b.cemeteryId as cemetery_id, p.plotNameHe as name 
-        //     FROM plots p 
-        //     INNER JOIN blocks b ON p.blockId = b.unicId 
-        //     WHERE p.isActive = 1
-        //     ORDER BY p.plotNameHe
-        // ");
-        // $plotsStmt->execute();
-        // $hierarchyData['plots'] = $plotsStmt->fetchAll(PDO::FETCH_ASSOC);
+        // טען את כל החלקות
+        $plotsStmt = $conn->prepare("
+            SELECT p.*, b.cemeteryId as cemetery_id, p.plotNameHe as name 
+            FROM plots p 
+            INNER JOIN blocks b ON p.blockId = b.unicId 
+            WHERE p.isActive = 1
+            ORDER BY p.plotNameHe
+        ");
+        $plotsStmt->execute();
+        $hierarchyData['plots'] = $plotsStmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // // טען את כל השורות
-        // $rowsStmt = $conn->prepare("
-        //     SELECT r.*, r.plotId as plot_id, r.lineNameHe as name
-        //     FROM rows r 
-        //     WHERE r.isActive = 1
-        //     ORDER BY r.lineNameHe
-        // ");
-        // $rowsStmt->execute();
-        // $hierarchyData['rows'] = $rowsStmt->fetchAll(PDO::FETCH_ASSOC);
+        // טען את כל השורות
+        $rowsStmt = $conn->prepare("
+            SELECT r.*, r.plotId as plot_id, r.lineNameHe as name
+            FROM rows r 
+            WHERE r.isActive = 1
+            ORDER BY r.lineNameHe
+        ");
+        $rowsStmt->execute();
+        $hierarchyData['rows'] = $rowsStmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // // טען את כל אחוזות הקבר
-        // $areaGravesStmt = $conn->prepare("
-        //     SELECT ag.*, ag.lineId as row_id, ag.areaGraveNameHe as name
-        //     FROM areaGraves ag 
-        //     WHERE ag.isActive = 1
-        //     ORDER BY ag.areaGraveNameHe
-        // ");
-        // $areaGravesStmt->execute();
-        // $hierarchyData['areaGraves'] = $areaGravesStmt->fetchAll(PDO::FETCH_ASSOC);
+        // טען את כל אחוזות הקבר
+        $areaGravesStmt = $conn->prepare("
+            SELECT ag.*, ag.lineId as row_id, ag.areaGraveNameHe as name
+            FROM areaGraves ag 
+            WHERE ag.isActive = 1
+            ORDER BY ag.areaGraveNameHe
+        ");
+        $areaGravesStmt->execute();
+        $hierarchyData['areaGraves'] = $areaGravesStmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // // קברים - כלול את הקבר הנוכחי
-        // if ($purchase && $purchase['graveId']) {
-        //     $gravesStmt = $conn->prepare("
-        //         SELECT g.*, g.areaGraveId as area_grave_id, g.graveNameHe as name,
-        //             CASE WHEN g.unicId = :currentGrave THEN 1 ELSE 0 END as is_current
-        //         FROM graves g 
-        //         WHERE (g.graveStatus = 1 OR g.unicId = :currentGrave2)
-        //         AND g.isActive = 1
-        //         ORDER BY g.graveNameHe
-        //     ");
-        //     $gravesStmt->execute([
-        //         'currentGrave' => $purchase['graveId'],
-        //         'currentGrave2' => $purchase['graveId']
-        //     ]);
-        // } else {
-        //     $gravesStmt = $conn->prepare("
-        //         SELECT g.*, g.areaGraveId as area_grave_id, g.graveNameHe as name
-        //         FROM graves g 
-        //         WHERE g.graveStatus = 1 
-        //         AND g.isActive = 1
-        //         ORDER BY g.graveNameHe
-        //     ");
-        //     $gravesStmt->execute();
-        // }
-        // $hierarchyData['graves'] = $gravesStmt->fetchAll(PDO::FETCH_ASSOC);
+        // קברים - כלול את הקבר הנוכחי
+        if ($purchase && $purchase['graveId']) {
+            $gravesStmt = $conn->prepare("
+                SELECT g.*, g.areaGraveId as area_grave_id, g.graveNameHe as name,
+                    CASE WHEN g.unicId = :currentGrave THEN 1 ELSE 0 END as is_current
+                FROM graves g 
+                WHERE (g.graveStatus = 1 OR g.unicId = :currentGrave2)
+                AND g.isActive = 1
+                ORDER BY g.graveNameHe
+            ");
+            $gravesStmt->execute([
+                'currentGrave' => $purchase['graveId'],
+                'currentGrave2' => $purchase['graveId']
+            ]);
+        } else {
+            $gravesStmt = $conn->prepare("
+                SELECT g.*, g.areaGraveId as area_grave_id, g.graveNameHe as name
+                FROM graves g 
+                WHERE g.graveStatus = 1 
+                AND g.isActive = 1
+                ORDER BY g.graveNameHe
+            ");
+            $gravesStmt->execute();
+        }
+        $hierarchyData['graves'] = $gravesStmt->fetchAll(PDO::FETCH_ASSOC);
         
     } catch (Exception $e) {
         FormUtils::handleError($e);
     }
 
-    // // הכן את ה-JSON של ההיררכיה
-    // $hierarchyJson = json_encode($hierarchyData);
+    // הכן את ה-JSON של ההיררכיה
+    $hierarchyJson = json_encode($hierarchyData);
 
     // יצירת FormBuilder
     $formBuilder = new FormBuilder('purchase', $itemId, $parentId);
@@ -246,39 +243,25 @@ $formType = basename(__FILE__, '.php'); // מזהה אוטומטי של סוג �
     ]);
 
     // HTML מותאם אישית לבחירת קבר
-    // $graveSelectorHTML = '
-    // <fieldset class="form-section" 
-    //     id="grave-selector-fieldset"
-    //     data-hierarchy=\'' . htmlspecialchars($hierarchyJson, ENT_QUOTES, 'UTF-8') . '\'
-    //     style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
-    //     <legend style="padding: 0 10px; font-weight: bold;">בחירת  קבר</legend>
-    //     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
-    //         <div class="form-group">
-    //             <label>בית עלמין</label>
-    //             <select id="cemeterySelect" class="form-control" onchange="filterHierarchy(\'cemetery\')">
-    //                 <option value="">-- כל בתי העלמין --</option>';
-    //     foreach ($cemeteries as $cemetery) {
-    //     $disabled = !$cemetery['has_available_graves'] ? 'disabled style="color: #999;"' : '';
-    //     $graveSelectorHTML .= '<option value="' . $cemetery['unicId'] . '" ' . $disabled . '>' . 
-    //                         htmlspecialchars($cemetery['name']) .
-    //                         (!$cemetery['has_available_graves'] ? ' (אין קברים פנויים)' : '') . 
-    //                         '</option>';
-    //     }
-
-    
     $graveSelectorHTML = '
     <fieldset class="form-section" 
         id="grave-selector-fieldset"
-        data-load-from-api="true"
-        data-purchase-grave-id="' . htmlspecialchars($purchase['graveId'] ?? '', ENT_QUOTES) . '"
+        data-hierarchy=\'' . htmlspecialchars($hierarchyJson, ENT_QUOTES, 'UTF-8') . '\'
         style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
         <legend style="padding: 0 10px; font-weight: bold;">בחירת  קבר</legend>
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
             <div class="form-group">
                 <label>בית עלמין</label>
                 <select id="cemeterySelect" class="form-control" onchange="filterHierarchy(\'cemetery\')">
-                    <option value="">טוען בתי עלמין...</option>
-                ';
+                    <option value="">-- כל בתי העלמין --</option>';
+
+    foreach ($cemeteries as $cemetery) {
+        $disabled = !$cemetery['has_available_graves'] ? 'disabled style="color: #999;"' : '';
+        $graveSelectorHTML .= '<option value="' . $cemetery['unicId'] . '" ' . $disabled . '>' . 
+                            htmlspecialchars($cemetery['name']) .
+                            (!$cemetery['has_available_graves'] ? ' (אין קברים פנויים)' : '') . 
+                            '</option>';
+    }
 
     $graveSelectorHTML .= '
                 </select>

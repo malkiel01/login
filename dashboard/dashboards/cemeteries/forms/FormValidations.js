@@ -227,35 +227,6 @@ const FormValidations = {
     /**
      * אתחול - הוסף listeners לכל השדות עם ולידציות
      */
-    // init: function(formElement) {
-    //     const fields = formElement.querySelectorAll('[data-validations]');
-        
-    //     fields.forEach(field => {
-    //         const validations = JSON.parse(field.dataset.validations);
-            
-    //         // בדיקה כשעוזבים את השדה
-    //         field.addEventListener('blur', async () => {
-    //             const result = await this.runValidations(field, validations);
-                
-    //             if (!result.valid) {
-    //                 this.showError(field, result.message);
-    //             } else {
-    //                 this.clearError(field);
-    //             }
-    //         });
-            
-    //         // נקה שגיאה כשמתחילים להקליד
-    //         field.addEventListener('input', () => {
-    //             if (field.classList.contains('validation-error')) {
-    //                 this.clearError(field);
-    //             }
-    //         });
-    //     });
-    // }
-
-    /**
-     * אתחול - הוסף listeners לכל השדות עם ולידציות
-     */
     init: function(formElement) {
         // ✅ בדוק אם כבר אותחל - מנע אתחול כפול
         if (formElement.dataset.validationsInitialized === 'true') {

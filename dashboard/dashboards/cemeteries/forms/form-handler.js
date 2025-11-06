@@ -2664,6 +2664,7 @@ const FormHandler = {
                     fetch('/dashboard/dashboards/cemeteries/api/blocks-api.php?action=list'),
                     fetch('/dashboard/dashboards/cemeteries/api/plots-api.php?action=list'),
                     fetch('/dashboard/dashboards/cemeteries/api/rows-api.php?action=list'),
+                    
                     fetch('/dashboard/dashboards/cemeteries/api/areaGraves-api.php?action=list'),
                     fetch('/dashboard/dashboards/cemeteries/api/graves-api.php?action=list')
                 ]);

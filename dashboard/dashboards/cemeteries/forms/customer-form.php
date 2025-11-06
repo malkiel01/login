@@ -18,31 +18,49 @@ $parentId = $_GET['parentId'] ?? $_GET['parent_id'] ?? null;
 $formType = basename(__FILE__, '.php'); // מזהה אוטומטי של סוג הטופס
 
 
+// try {
+//     $conn = getDBConnection();
+    
+//     // טען מדינות
+//     $countriesStmt = $conn->prepare("
+//         SELECT unicId, countryNameHe, countryNameEn 
+//         FROM countries 
+//         WHERE isActive = 1 
+//         ORDER BY countryNameHe
+//     ");
+//     $countriesStmt->execute();
+//     $countries = [];
+//     while ($row = $countriesStmt->fetch(PDO::FETCH_ASSOC)) {
+//         $countries[$row['unicId']] = $row['countryNameHe'];
+//     }
+    
+//     // טען את כל הערים
+//     $citiesStmt = $conn->prepare("
+//         SELECT unicId, countryId, cityNameHe, cityNameEn 
+//         FROM cities 
+//         WHERE isActive = 1 
+//         ORDER BY cityNameHe
+//     ");
+//     $citiesStmt->execute();
+//     $allCities = $citiesStmt->fetchAll(PDO::FETCH_ASSOC);
+    
+//     // טען לקוח אם בעריכה
+//     $customer = null;
+//     if ($itemId) {
+//         $stmt = $conn->prepare("SELECT * FROM customers WHERE id = ? AND isActive = 1");
+//         $stmt->execute([$itemId]);
+//         $customer = $stmt->fetch(PDO::FETCH_ASSOC);
+//     }
+    
+// } catch (Exception $e) {
+//     FormUtils::handleError($e);
+// }
+
 try {
     $conn = getDBConnection();
     
-    // טען מדינות
-    $countriesStmt = $conn->prepare("
-        SELECT unicId, countryNameHe, countryNameEn 
-        FROM countries 
-        WHERE isActive = 1 
-        ORDER BY countryNameHe
-    ");
-    $countriesStmt->execute();
-    $countries = [];
-    while ($row = $countriesStmt->fetch(PDO::FETCH_ASSOC)) {
-        $countries[$row['unicId']] = $row['countryNameHe'];
-    }
-    
-    // טען את כל הערים
-    $citiesStmt = $conn->prepare("
-        SELECT unicId, countryId, cityNameHe, cityNameEn 
-        FROM cities 
-        WHERE isActive = 1 
-        ORDER BY cityNameHe
-    ");
-    $citiesStmt->execute();
-    $allCities = $citiesStmt->fetchAll(PDO::FETCH_ASSOC);
+    // 🆕 כבר לא טוענים מדינות וערים מה-PHP!
+    // JavaScript יטען אותם דינמית מה-API
     
     // טען לקוח אם בעריכה
     $customer = null;
@@ -128,21 +146,41 @@ $formBuilder->addField('maritalStatus', 'מצב משפחתי', 'select', [
 
 // === כתובת עם SmartSelect - בדיוק כמו שהיה! ===
 
-$citiesJson = json_encode($allCities, JSON_UNESCAPED_UNICODE);
+// $citiesJson = json_encode($allCities, JSON_UNESCAPED_UNICODE);
+
+// $addressHTML = '
+// <fieldset class="form-section" 
+//         id="address-fieldset"
+//         style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;"
+//         data-cities=\'' . htmlspecialchars($citiesJson, ENT_QUOTES) . '\'>
+//     <legend style="padding: 0 10px; font-weight: bold;">כתובת</legend>
+//     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+// ';
+
+// // מדינה - SmartSelect
+// $smartCountry = new SmartSelect('countryId', 'מדינה', $countries, [
+//     'searchable' => true,
+//     'placeholder' => 'בחר מדינה...',
+//     'search_placeholder' => 'חפש מדינה...',
+//     'required' => true,
+//     'value' => $customer['countryId'] ?? ''
+// ]);
 
 $addressHTML = '
 <fieldset class="form-section" 
         id="address-fieldset"
         style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;"
-        data-cities=\'' . htmlspecialchars($citiesJson, ENT_QUOTES) . '\'>
+        data-load-from-api="true"
+        data-customer-country-id="' . htmlspecialchars($customer['countryId'] ?? '') . '"
+        data-customer-city-id="' . htmlspecialchars($customer['cityId'] ?? '') . '">
     <legend style="padding: 0 10px; font-weight: bold;">כתובת</legend>
     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
 ';
 
-// מדינה - SmartSelect
-$smartCountry = new SmartSelect('countryId', 'מדינה', $countries, [
+// מדינה - SmartSelect ריק (יתמלא ב-JavaScript)
+$smartCountry = new SmartSelect('countryId', 'מדינה', [], [
     'searchable' => true,
-    'placeholder' => 'בחר מדינה...',
+    'placeholder' => 'טוען מדינות...',
     'search_placeholder' => 'חפש מדינה...',
     'required' => true,
     'value' => $customer['countryId'] ?? ''
@@ -150,21 +188,30 @@ $smartCountry = new SmartSelect('countryId', 'מדינה', $countries, [
 
 $addressHTML .= '<div style="margin-bottom: 0;">' . $smartCountry->render() . '</div>';
 
-// עיר - SmartSelect
-$citiesForSelect = [];
-if ($customer && $customer['countryId']) {
-    foreach ($allCities as $city) {
-        if ($city['countryId'] == $customer['countryId']) {
-            $citiesForSelect[$city['unicId']] = $city['cityNameHe'];
-        }
-    }
-}
+// // עיר - SmartSelect
+// $citiesForSelect = [];
+// if ($customer && $customer['countryId']) {
+//     foreach ($allCities as $city) {
+//         if ($city['countryId'] == $customer['countryId']) {
+//             $citiesForSelect[$city['unicId']] = $city['cityNameHe'];
+//         }
+//     }
+// }
 
-$smartCity = new SmartSelect('cityId', 'עיר', $citiesForSelect, [
+// $smartCity = new SmartSelect('cityId', 'עיר', $citiesForSelect, [
+//     'searchable' => true,
+//     'placeholder' => 'בחר עיר...',
+//     'search_placeholder' => 'חפש עיר...',
+//     'disabled' => empty($customer['countryId']),
+//     'value' => $customer['cityId'] ?? ''
+// ]);
+
+// עיר - SmartSelect ריק
+$smartCity = new SmartSelect('cityId', 'עיר', [], [
     'searchable' => true,
-    'placeholder' => 'בחר עיר...',
+    'placeholder' => 'בחר קודם מדינה...',
     'search_placeholder' => 'חפש עיר...',
-    'disabled' => empty($customer['countryId']),
+    'disabled' => true,
     'value' => $customer['cityId'] ?? ''
 ]);
 

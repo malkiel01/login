@@ -1312,10 +1312,1394 @@ const FormHandler = {
         console.log('✅ Country-City dependency set up');
     },
     
+    handlePurchaseForm2: function(itemId) {
+        // הוסף את 2 השורות האלה
+        window.formInitialized = false;
+
+
+        // פונקציה מרכזית לחישוב תשלומים - תקרא משני המקומות
+        window.tryCalculatePayments = async function() {
+            // בדוק תנאים בסיסיים
+            if (window.isEditMode) {
+                // console.log('Edit mode - skipping auto calculation');
+                return;
+            }
+            
+            if (!window.formInitialized) {
+                // console.log('Form not initialized yet - skipping');
+                return;
+            }
+            
+            // הכי חשוב - בדוק ששני השדות מלאים!
+            if (!window.selectedGraveData || !window.selectedCustomerData) {
+                // console.log('Missing grave or customer data - skipping calculation');
+                return;
+            }
+            
+            // אם הגענו לכאן - יש לנו את כל מה שצריך!
+            // console.log('All conditions met - calculating payments...');
+            
+            try {
+                const response = await fetch('/dashboard/dashboards/cemeteries/api/payments-api.php?action=getMatching', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        plotType: window.selectedGraveData.plotType,
+                        graveType: window.selectedGraveData.graveType,
+                        resident: window.selectedCustomerData?.resident || 3,
+                        buyerStatus: document.querySelector('[name="buyer_status"]')?.value || null
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.payments) {
+                    // נקה תשלומים קיימים
+                    window.purchasePayments = [];
+                    
+                    // הוסף רק תשלומי חובה
+                    const mandatoryPayments = data.payments.filter(p => p.mandatory);
+                    
+                    mandatoryPayments.forEach(payment => {
+                        window.purchasePayments.push({
+                            locked: false,
+                            required: true,
+                            paymentDate: "",
+                            paymentType: payment.priceDefinition || 1,
+                            paymentAmount: parseFloat(payment.price) || 0,
+                            receiptDocuments: [],
+                            customPaymentType: payment.name,
+                            isPaymentComplete: false,
+                            mandatory: true
+                        });
+                    });
+                    
+                    // עדכן תצוגה
+                    if (window.displayPaymentsSummary) {
+                        document.getElementById('paymentsDisplay').innerHTML = 
+                            PaymentDisplayManager.render(window.purchasePayments, 'summary');
+                    }
+                    document.getElementById('total_price').value = PaymentDisplayManager.calculateTotal();
+                    document.getElementById('paymentsList').value = JSON.stringify(window.purchasePayments);
+                    
+                    // console.log('Payments calculated successfully');
+                }
+            } catch (error) {
+                console.error('Error calculating payments:', error);
+            }
+        };
+
+        
+        this.waitForElement('#grave-selector-fieldset', (fieldset) => {
+            // פונקציה לסינון ההיררכיה         
+            if (fieldset.dataset.hierarchy) {
+                window.hierarchyData = JSON.parse(fieldset.dataset.hierarchy);
+            } else {
+                return;
+            }
+
+            // אתחל את מנהל ההיררכיה - רק קברים פנויים (סטטוס 1)
+            GraveHierarchyManager.init({
+                allowedStatuses: [1], // רק פנויים לרכישות
+                excludeGraveId: null,
+                onGraveSelected: async function(graveId) {
+                    if (graveId) {
+                        // מצא את פרטי הקבר
+                        const grave = window.hierarchyData.graves.find(g => g.unicId == graveId);
+                        const areaGrave = window.hierarchyData.areaGraves.find(
+                            ag => ag.unicId == grave.areaGraveId
+                        );
+
+                        if (grave) {
+                            // עדכן את הפרמטרים לתשלומים החכמים
+                            window.selectedGraveData = {
+                                graveId: graveId,
+                                plotType: grave.plotType || -1,
+                                graveType: areaGrave.graveType || -1
+                            };
+
+                            // עדכן תצוגת פרמטרים
+                            if (window.selectedCustomerData && window.updatePaymentParameters) {
+                                window.updatePaymentParameters();
+                            }
+
+                            // נסה לחשב תשלומים (יקרה רק אם יש גם לקוח)
+                            await window.tryCalculatePayments();
+                        }
+                    } else {
+                        // אם ביטלו בחירת קבר - נקה הכל
+                        window.selectedGraveData = null;
+                        
+                        if (!window.isEditMode) {
+                            window.purchasePayments = [];
+                            document.getElementById('total_price').value = '0.00';
+                            document.getElementById('paymentsDisplay').innerHTML = '<p style="color: #999;">לא הוגדרו תשלומים</p>';
+                            document.getElementById('paymentsList').value = '[]';
+                        }
+                        
+                        const paramsElement = document.getElementById('selectedParameters');
+                        if (paramsElement) {
+                            paramsElement.style.display = 'none';
+                        }
+                    }
+                }
+            });
+
+            // אחרי שה-fieldset נטען
+            const customerSelect = document.querySelector('[name="clientId"]');
+            if (customerSelect) {
+                customerSelect.addEventListener('change', async function() {
+                    const customerId = this.value;
+                    if (customerId) {
+                        try {
+                            const response = await fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?action=get&id=${customerId}`);
+                            const data = await response.json();
+                            if (data.success && data.data) {
+                                window.selectedCustomerData = {
+                                    id: customerId,
+                                    resident: data.data.resident || 3,
+                                    name: data.data.firstName + ' ' + data.data.lastName
+                                };
+                                
+                                // עדכן תצוגת פרמטרים אם יש קבר נבחר
+                                if (window.selectedGraveData && window.updatePaymentParameters) {
+                                    window.updatePaymentParameters();
+                                }
+                                
+                                // נסה לחשב תשלומים (יקרה רק אם יש גם קבר)
+                                await window.tryCalculatePayments();
+                            }
+                        } catch (error) {
+                            console.error('Error loading customer data:', error);
+                        }
+                    } else {
+                        window.selectedCustomerData = null;
+                        
+                        // אם אין לקוח, נקה תשלומים גם אם יש קבר
+                        if (!window.isEditMode) {
+                            window.purchasePayments = [];
+                            document.getElementById('total_price').value = '0.00';
+                            document.getElementById('paymentsDisplay').innerHTML = '<p style="color: #999;">לא הוגדרו תשלומים</p>';
+                            document.getElementById('paymentsList').value = '[]';
+                        }
+                    }
+                });
+            }
+
+            // משתנים גלובליים לתשלומים
+            window.purchasePayments = [];
+            window.selectedGraveData = null;
+            window.selectedCustomerData = null;
+
+            window.updatePaymentParameters = function() {
+                if (window.selectedGraveData) {
+                    const plotTypes = {1: 'פטורה', 2: 'חריגה', 3: 'סגורה'};
+                    const graveTypes = {1: 'שדה', 2: 'רוויה', 3: 'סנהדרין'};
+                    const residentTypes = {1: 'ירושלים', 2: 'ישראל', 3: 'חו"ל'};
+
+                    // קבע תושבות - מהלקוח או ברירת מחדל
+                    const residentValue = window.selectedCustomerData?.resident || 3;
+                    const residentText = residentTypes[residentValue] || 'לא ידוע';
+                    
+                    const displayElement = document.getElementById('parametersDisplay');
+                    if (displayElement) {
+                        displayElement.innerHTML = `
+                            <span style="margin-right: 10px;">📍 חלקה: ${plotTypes[window.selectedGraveData.plotType] || 'לא ידוע'}</span>
+                            <span style="margin-right: 10px;">⚰️ סוג קבר: ${graveTypes[window.selectedGraveData.graveType] || 'לא ידוע'}</span>
+                            <span>👤 תושב: ${residentText}</span>
+                        `;
+                    }
+                    
+                    const paramsElement = document.getElementById('selectedParameters');
+                    if (paramsElement) {
+                        paramsElement.style.display = 'block';
+                    }
+                    
+                    const buttonText = document.getElementById('paymentsButtonText');
+                    if (buttonText) {
+                        buttonText.textContent = 'חשב מחדש תשלומים';
+                    }
+                }
+            }
+
+            // פתיחת מנהל תשלומים חכם
+            window.openSmartPaymentsManager = async function() {
+
+                // בדיקות ראשוניות
+                const graveSelect = document.getElementById('graveSelect');
+                const graveId = graveSelect ? graveSelect.value : null;
+                
+                if (!graveId || !window.selectedGraveData) {
+                    alert('יש לבחור קבר תחילה');
+                    return;
+                }
+                                
+                if (!window.selectedCustomerData?.resident) {
+                    alert('יש לבחור לקוח תחילה');
+                    return;
+                }
+
+                // בדוק מצב עריכה
+                const isEditMode = window.isEditMode === true;
+
+                // השאר את הלוגיקה הקיימת אבל עם שינוי קטן
+                if (isEditMode) {
+                    // מצב עריכה - פתח ישירות את מנהל התשלומים הקיימים
+                    // console.log('Opening existing payments manager for editing');
+                    ExistingPaymentsManager.open();
+                    
+                } else {
+                    // מצב רכישה חדשה - טען תשלומים מה-API
+                    try {
+                        const response = await fetch('/dashboard/dashboards/cemeteries/api/payments-api.php?action=getMatching', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({
+                                plotType: window.selectedGraveData?.plotType,
+                                graveType: window.selectedGraveData?.graveType,
+                                resident: window.selectedCustomerData?.resident,
+                                buyerStatus: document.querySelector('[name="buyer_status"]').value || null
+                            })
+                        });
+                        
+                        const data = await response.json();
+
+                        if (data.success && data.payments) {
+                            // תמיד פתח את המודל, גם אם אין תשלומים
+                            SmartPaymentsManager.open(data.payments || []);
+                        } else if (data.success && !data.payments) {
+                            // אין תשלומים אבל הבקשה הצליחה - פתח מודל ריק
+                            // console.log('No payment definitions found, opening empty modal');
+                            SmartPaymentsManager.open([]);
+                        } else {
+                            // רק אם יש שגיאה אמיתית
+                            alert('שגיאה בטעינת הגדרות תשלום');
+                            console.error('Error loading payments:', data);
+                        }
+                        
+                    } catch (error) {
+                        console.error('Error loading payments:', error);
+                        alert('שגיאה בטעינת התשלומים');
+                    }
+                }
+            }
+
+            // מנהל תשלומים חכם לרכישה חדשה
+            const SmartPaymentsManager = {
+                // פתיחת המודל
+                open: function(availablePayments) {
+                    // חלק את התשלומים לחובה ואופציונלי
+                    const mandatoryPayments = availablePayments.filter(p => p.mandatory);
+                    const optionalPayments = availablePayments.filter(p => !p.mandatory);
+                    
+                    // יצירת המודל
+                    const modal = document.createElement('div');
+                    modal.id = 'smartPaymentsModal';
+                    modal.className = 'modal-overlay';
+                    modal.style.cssText = this.getModalStyle();
+                    
+                    // חשב סכום התחלתי
+                    const currentTotal = this.calculateInitialTotal(mandatoryPayments);
+                    
+                    // בנה HTML
+                    modal.innerHTML = this.buildModalHTML(mandatoryPayments, optionalPayments, currentTotal);
+                    
+                    // הוסף ל-DOM
+                    document.body.appendChild(modal);
+                },
+                
+                // סטיילים
+                getModalStyle: function() {
+                    return `
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        bottom: 0;
+                        background: rgba(0,0,0,0.5);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        z-index: 10001;
+                    `;
+                },
+                
+                // חישוב סכום התחלתי
+                calculateInitialTotal: function(mandatoryPayments) {
+                    return mandatoryPayments.reduce((sum, p) => sum + parseFloat(p.price || 0), 0);
+                },
+                
+                // בניית HTML
+                buildModalHTML: function(mandatoryPayments, optionalPayments, currentTotal) {
+                    return `
+                        <div class="modal-content" style="${this.getContentStyle()}">
+                            ${this.buildHeader()}
+                            ${this.buildParametersSection()}
+                            ${mandatoryPayments.length > 0 ? this.buildMandatorySection(mandatoryPayments) : ''}
+                            ${this.buildOptionalSection(optionalPayments)}
+                            ${this.buildSummarySection(currentTotal, mandatoryPayments.length)}
+                            ${this.buildButtonsSection(mandatoryPayments)}
+                        </div>
+                    `;
+                },
+                
+                // סטייל תוכן
+                getContentStyle: function() {
+                    return `
+                        background: white;
+                        padding: 30px;
+                        border-radius: 8px;
+                        width: 700px;
+                        max-height: 90vh;
+                        overflow-y: auto;
+                        margin: 20px;
+                    `;
+                },
+                
+                // כותרת
+                buildHeader: function() {
+                    return `
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h3 style="margin: 0;">חישוב תשלומים אוטומטי</h3>
+                            <button onclick="SmartPaymentsManager.close()" style="
+                                background: none;
+                                border: none;
+                                font-size: 24px;
+                                cursor: pointer;
+                            ">×</button>
+                        </div>
+                    `;
+                },
+                
+                // סקציית פרמטרים
+                buildParametersSection: function() {
+                    const plotTypes = {1: 'פטורה', 2: 'חריגה', 3: 'סגורה'};
+                    const graveTypes = {1: 'שדה', 2: 'רוויה', 3: 'סנהדרין'};
+                    const residentTypes = {1: 'ירושלים', 2: 'ישראל', 3: 'חו"ל'};
+
+                    // קבע תושבות - מהלקוח או ברירת מחדל
+                    const residentValue = window.selectedCustomerData?.resident || 3;
+                    const residentText = residentTypes[residentValue] || 'לא ידוע';
+                    
+                    return `
+                        <div style="background: #e3f2fd; padding: 10px; border-radius: 5px; margin-bottom: 20px;">
+                            <strong>פרמטרים נבחרים:</strong><br>
+                            סוג חלקה: ${plotTypes[window.selectedGraveData.plotType] || 'לא ידוע'} | 
+                            סוג קבר: ${graveTypes[window.selectedGraveData.graveType] || 'לא ידוע'} | 
+                            תושבות: ${residentText}
+                        </div>
+                    `;
+                },
+                
+                // תשלומי חובה
+                buildMandatorySection: function(payments) {
+                    return `
+                        <div style="margin-bottom: 20px;">
+                            <h4 style="color: #dc3545; margin-bottom: 10px;">
+                                <span style="background: #ffc107; padding: 2px 8px; border-radius: 3px;">חובה</span>
+                                תשלומים הכרחיים
+                            </h4>
+                            <div style="border: 2px solid #ffc107; background: #fffbf0; padding: 15px; border-radius: 5px;">
+                                ${payments.map(payment => this.buildMandatoryRow(payment)).join('')}
+                            </div>
+                        </div>
+                    `;
+                },
+                
+                // שורת תשלום חובה
+                buildMandatoryRow: function(payment) {
+                    return `
+                        <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ffe5b4;">
+                            <label style="display: flex; align-items: center;">
+                                <input type="checkbox" checked disabled style="margin-left: 10px;">
+                                <span style="font-weight: bold; margin-right: 10px;">${payment.name}</span>
+                            </label>
+                            <span style="font-weight: bold; color: #dc3545;">₪${parseFloat(payment.price).toLocaleString()}</span>
+                        </div>
+                    `;
+                },
+                
+                // תשלומים אופציונליים
+                buildOptionalSection: function(payments) {
+                    return `
+                        <div style="margin-bottom: 20px;">
+                            <h4 style="color: #28a745; margin-bottom: 10px;">
+                                <span style="background: #d4edda; padding: 2px 8px; border-radius: 3px;">אופציונלי</span>
+                                תשלומים נוספים
+                            </h4>
+                            <div style="border: 1px solid #28a745; background: #f0fff4; padding: 15px; border-radius: 5px;">
+                                <div id="optionalPaymentsList">
+                                    ${payments.map(payment => this.buildOptionalRow(payment)).join('')}
+                                </div>
+                                ${this.buildCustomPaymentSection()}
+                            </div>
+                        </div>
+                    `;
+                },
+                
+                // שורת תשלום אופציונלי
+                buildOptionalRow: function(payment) {
+                    return `
+                        <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #c3e6cb;">
+                            <label style="display: flex; align-items: center; cursor: pointer;">
+                                <input type="checkbox" 
+                                    data-price="${payment.price}"
+                                    data-name="${payment.name}"
+                                    data-definition="${payment.priceDefinition}"
+                                    onchange="SmartPaymentsManager.updateTotal()"
+                                    style="margin-left: 10px;">
+                                <span style="margin-right: 10px;">${payment.name}</span>
+                            </label>
+                            <span>₪${parseFloat(payment.price).toLocaleString()}</span>
+                        </div>
+                    `;
+                },
+                
+                // הוספת תשלום מותאם
+                buildCustomPaymentSection: function() {
+                    return `
+                        <div style="border-top: 2px solid #28a745; margin-top: 15px; padding-top: 15px;">
+                            <h5 style="margin-bottom: 10px;">הוסף תשלום מותאם:</h5>
+                            <div style="display: grid; grid-template-columns: 2fr 1fr auto; gap: 10px; align-items: end;">
+                                <div>
+                                    <label style="display: block; margin-bottom: 5px; font-size: 12px;">סיבת תשלום</label>
+                                    <input type="text" id="customPaymentName" 
+                                        list="paymentReasons"
+                                        placeholder="בחר או הקלד סיבה" 
+                                        style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <datalist id="paymentReasons">
+                                        <option value="דמי רישום">
+                                        <option value="עלויות ניהול">
+                                        <option value="תחזוקה שנתית">
+                                        <option value="שירותים נוספים">
+                                        <option value="הובלה">
+                                        <option value="טקס מיוחד">
+                                    </datalist>
+                                </div>
+                                <div>
+                                    <label style="display: block; margin-bottom: 5px; font-size: 12px;">סכום</label>
+                                    <input type="number" id="customPaymentAmount" 
+                                        step="0.01" min="0"
+                                        placeholder="0.00" 
+                                        style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                </div>
+                                <button onclick="SmartPaymentsManager.addCustomPayment()" style="
+                                    padding: 8px 15px;
+                                    background: #17a2b8;
+                                    color: white;
+                                    border: none;
+                                    border-radius: 4px;
+                                    cursor: pointer;
+                                    white-space: nowrap;
+                                ">+ הוסף</button>
+                            </div>
+                        </div>
+                    `;
+                },
+                
+                // סיכום
+                buildSummarySection: function(currentTotal, mandatoryCount) {
+                    return `
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0; text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold;">
+                                סה"כ לתשלום: ₪<span id="smartModalTotal">${currentTotal.toLocaleString()}</span>
+                            </div>
+                            <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                                כולל ${mandatoryCount} תשלומי חובה
+                                <span id="optionalCount"></span>
+                            </div>
+                        </div>
+                    `;
+                },
+                
+                // כפתורים
+                buildButtonsSection: function(mandatoryPayments) {
+                    return `
+                        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                            <button onclick="SmartPaymentsManager.close()" style="
+                                padding: 10px 30px;
+                                background: #6c757d;
+                                color: white;
+                                border: none;
+                                border-radius: 4px;
+                                cursor: pointer;
+                            ">ביטול</button>
+                            <button onclick="SmartPaymentsManager.apply('${JSON.stringify(mandatoryPayments).replace(/'/g, "\\'").replace(/"/g, '&quot;')}')" style="
+                                padding: 10px 30px;
+                                background: #28a745;
+                                color: white;
+                                border: none;
+                                border-radius: 4px;
+                                cursor: pointer;
+                                font-weight: bold;
+                            ">אישור ושמירה</button>
+                        </div>
+                    `;
+                },
+                
+                // עדכון סכום
+                updateTotal: function() {
+                    let total = 0;
+                    let optionalCount = 0;
+                    
+                    const modal = document.getElementById('smartPaymentsModal');
+                    if (!modal) return;
+                    
+                    // סכום תשלומי חובה
+                    const mandatoryCheckboxes = modal.querySelectorAll('input[type="checkbox"]:disabled:checked');
+                    mandatoryCheckboxes.forEach(cb => {
+                        // חפש את המחיר בתוך אותו div של הצ'קבוקס
+                        const parentDiv = cb.closest('div[style*="padding"]');
+                        if (parentDiv) {
+                            // חפש את כל ה-spans בתוך ה-div
+                            const spans = parentDiv.querySelectorAll('span');
+                            // המחיר נמצא בדרך כלל ב-span האחרון
+                            const priceSpan = spans[spans.length - 1];
+                            if (priceSpan) {
+                                const priceText = priceSpan.textContent;
+                                // הסר סמל מטבע, פסיקים ורווחים
+                                const cleanPrice = priceText.replace(/[₪,\s]/g, '');
+                                const price = parseFloat(cleanPrice);
+                                
+                                // console.log('Mandatory payment found:', priceText, '→', price); // דיבוג
+                                
+                                if (!isNaN(price)) {
+                                    total += price;
+                                }
+                            }
+                        }
+                    });
+                    
+                    // סכום תשלומים אופציונליים שנבחרו
+                    const optionalCheckboxes = modal.querySelectorAll('input[type="checkbox"]:not(:disabled):checked');
+                    optionalCheckboxes.forEach(cb => {
+                        const price = parseFloat(cb.dataset.price);
+                        
+                        // console.log('Optional payment:', cb.dataset.name, '→', price); // דיבוג
+                        
+                        if (!isNaN(price)) {
+                            total += price;
+                            optionalCount++;
+                        }
+                    });
+                    
+                    // console.log('Total calculated:', total); // דיבוג
+                    
+                    // עדכן התצוגה
+                    const totalElement = document.getElementById('smartModalTotal');
+                    if (totalElement) {
+                        totalElement.textContent = total.toLocaleString();
+                    }
+                    
+                    const optionalCountElement = document.getElementById('optionalCount');
+                    if (optionalCountElement) {
+                        const optionalText = optionalCount > 0 ? ` + ${optionalCount} תשלומים נוספים` : '';
+                        optionalCountElement.textContent = optionalText;
+                    }
+                },
+                
+                // הוספת תשלום מותאם
+                addCustomPayment: function() {
+                    const name = document.getElementById('customPaymentName').value.trim();
+                    const amount = parseFloat(document.getElementById('customPaymentAmount').value);
+                    
+                    if (!name || !amount || amount <= 0) {
+                        alert('יש למלא שם וסכום תקין');
+                        return;
+                    }
+                    
+                    // הוסף לרשימה
+                    const optionalList = document.getElementById('optionalPaymentsList');
+                    
+                    const newPaymentHTML = `
+                        <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #c3e6cb; background: #ffffcc;">
+                            <label style="display: flex; align-items: center; cursor: pointer;">
+                                <input type="checkbox" 
+                                    checked
+                                    data-price="${amount}"
+                                    data-name="${name}"
+                                    data-definition="custom"
+                                    data-custom="true"
+                                    onchange="SmartPaymentsManager.updateTotal()"
+                                    style="margin-left: 10px;">
+                                <span style="margin-right: 10px;">${name} (מותאם)</span>
+                            </label>
+                            <span>₪${amount.toLocaleString()}</span>
+                        </div>
+                    `;
+                    
+                    optionalList.insertAdjacentHTML('beforeend', newPaymentHTML);
+                    
+                    // נקה את השדות
+                    document.getElementById('customPaymentName').value = '';
+                    document.getElementById('customPaymentAmount').value = '';
+                    
+                    // עדכן סכום
+                    this.updateTotal();
+                },
+     
+                apply: function(mandatoryPaymentsJSON) {
+                    // פענח את ה-JSON
+                    let mandatoryPayments;
+                    if (typeof mandatoryPaymentsJSON === 'string') {
+                        try {
+                            mandatoryPayments = JSON.parse(mandatoryPaymentsJSON.replace(/&quot;/g, '"'));
+                        } catch (e) {
+                            console.error('Error parsing mandatory payments:', e);
+                            mandatoryPayments = [];
+                        }
+                    } else {
+                        mandatoryPayments = mandatoryPaymentsJSON || [];
+                    }
+                    
+                    // נקה תשלומים קיימים
+                    window.purchasePayments = [];
+                    
+                    // הוסף תשלומי חובה - תקן את השדות!
+                    mandatoryPayments.forEach(payment => {
+                        window.purchasePayments.push({
+                            locked: false,
+                            required: true,
+                            paymentDate: new Date().toISOString(),
+                            paymentType: payment.priceDefinition || 1,
+                            paymentAmount: parseFloat(payment.price),  // ⚠️ paymentAmount, לא amount
+                            receiptDocuments: [],
+                            customPaymentType: payment.name,
+                            isPaymentComplete: false,
+                            mandatory: true
+                        });
+                    });
+                    
+                    // הוסף תשלומים אופציונליים שנבחרו
+                    const modal = document.getElementById('smartPaymentsModal');
+                    if (modal) {
+                        const selectedOptional = modal.querySelectorAll('input[type="checkbox"]:not(:disabled):checked');
+                        selectedOptional.forEach(cb => {
+                            window.purchasePayments.push({
+                                locked: false,
+                                required: false,
+                                paymentDate: new Date().toISOString(),
+                                paymentType: cb.dataset.custom ? 5 : cb.dataset.definition,
+                                paymentAmount: parseFloat(cb.dataset.price),  // ⚠️ paymentAmount, לא amount
+                                receiptDocuments: [],
+                                customPaymentType: cb.dataset.name,
+                                isPaymentComplete: false,
+                                mandatory: false,
+                                custom: cb.dataset.custom === 'true'
+                            });
+                        });
+                    }
+                    
+                    // עדכן תצוגה בטופס הראשי
+                    document.getElementById('total_price').value = PaymentDisplayManager.calculateTotal();
+                    document.getElementById('paymentsDisplay').innerHTML = 
+                        PaymentDisplayManager.render(window.purchasePayments, 'summary');
+                    document.getElementById('paymentsList').value = JSON.stringify(window.purchasePayments);
+                    
+                    // סגור מודל
+                    this.close();
+                },
+                
+                // סגירת המודל
+                close: function() {
+                    const modal = document.getElementById('smartPaymentsModal');
+                    if (modal) modal.remove();
+                }
+            };
+
+            // הגדרה גלובלית
+            window.SmartPaymentsManager = SmartPaymentsManager;
+
+            // מודול מלא לניהול תשלומים במצב עריכה
+            const ExistingPaymentsManager = {
+                // פתיחת המודל
+                open: function() {
+                    // console.log('🔍 DEBUG: Opening existing payments manager');
+                    // console.log('Current payments:', window.purchasePayments);
+                    
+                    // אם אין תשלומים - צור מערך ריק
+                    if (!window.purchasePayments) {
+                        window.purchasePayments = [];
+                        // console.log('⚠️ No payments found, initialized empty array');
+                    }
+                    
+                    // חלוקת תשלומים
+                    const mandatoryPayments = window.purchasePayments.filter(p => 
+                        p.mandatory === true || p.required === true
+                    );
+                    const editablePayments = window.purchasePayments.filter(p => 
+                        p.mandatory !== true && p.required !== true
+                    );
+                    
+                    // יצירת המודל
+                    const modal = document.createElement('div');
+                    modal.id = 'existingPaymentsModal';
+                    modal.className = 'modal-overlay';
+                    modal.style.cssText = `
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        bottom: 0;
+                        background: rgba(0,0,0,0.5);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        z-index: 10001;
+                    `;
+                    
+                    // חישוב סכום
+                    let currentTotal = window.purchasePayments.reduce((sum, p) => {
+                        const amount = Number(p.paymentAmount) || 0;
+                        return sum + amount;
+                    }, 0);
+                    
+                    // console.log('💰 Total amount:', currentTotal);
+                    
+                    // בניית HTML
+                    modal.innerHTML = this.buildModalHTML(mandatoryPayments, editablePayments, currentTotal);
+                    
+                    // הוספה ל-DOM
+                    document.body.appendChild(modal);
+                },
+                
+                // בניית HTML של המודל
+                buildModalHTML: function(mandatoryPayments, editablePayments, currentTotal) {
+                    return `
+                        <div class="modal-content" style="
+                            background: white;
+                            padding: 30px;
+                            border-radius: 8px;
+                            width: 700px;
+                            max-height: 90vh;
+                            overflow-y: auto;
+                            margin: 20px;
+                            position: relative;
+                        ">                            
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <h3 style="margin: 0;">ניהול תשלומים קיימים</h3>
+                                <button onclick="ExistingPaymentsManager.close()" style="
+                                    background: none;
+                                    border: none;
+                                    font-size: 24px;
+                                    cursor: pointer;
+                                ">×</button>
+                            </div>
+                            
+                            <!-- פרמטרים -->
+                            <div style="background: #e3f2fd; padding: 10px; border-radius: 5px; margin-bottom: 20px;">
+                                <strong>פרטי הרכישה:</strong><br>
+                                ${this.getParametersDisplay()}
+                            </div>
+                            
+                            ${mandatoryPayments.length > 0 ? this.buildMandatorySection(mandatoryPayments) : ''}
+                            
+                            ${this.buildEditableSection(editablePayments)}
+                            
+                            <!-- סיכום -->
+                            <div style="background: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0; text-align: center;">
+                                <div style="font-size: 24px; font-weight: bold;">
+                                    סה"כ: ₪<span id="existingModalTotal">${currentTotal.toLocaleString()}</span>
+                                </div>
+                                <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                                    ${mandatoryPayments.length} תשלומי חובה + 
+                                    <span id="editableCount">${editablePayments.length}</span> תשלומים נוספים
+                                </div>
+                            </div>
+                            
+                            <!-- כפתורים -->
+                            ${this.buildButtonsSection()}
+                        </div>
+                    `;
+                },
+                
+                // הצגת פרמטרים
+                getParametersDisplay: function() {
+                    const plotTypes = {1: 'פטורה', 2: 'חריגה', 3: 'סגורה', '-1': 'לא מוגדר'};
+                    const graveTypes = {1: 'שדה', 2: 'רוויה', 3: 'סנהדרין', '-1': 'לא מוגדר'};
+                    const residentTypes = {1: 'ירושלים', 2: 'ישראל', 3: 'חו"ל'};
+
+                    // קבע תושבות - מהלקוח או ברירת מחדל
+                    const residentValue = window.selectedCustomerData?.resident || 3;
+                    const residentText = residentTypes[residentValue] || 'לא ידוע';
+                    
+                    const plotType = window.selectedGraveData?.plotType || -1;
+                    const graveType = window.selectedGraveData?.graveType || -1;
+                    
+                    return `סוג חלקה: ${plotTypes[plotType]} | סוג קבר: ${graveTypes[graveType]} | תושבות: ${residentText}`;
+                },
+
+                buildMandatorySection: function(payments) {
+                    // השתמש בקונפיג הגלובלי
+                    const paymentTypes = window.PAYMENT_TYPES_CONFIG || {};
+                    
+                    return `
+                        <div style="margin-bottom: 20px;">
+                            <h4 style="color: #dc3545; margin-bottom: 10px;">
+                                <span style="background: #ffc107; padding: 2px 8px; border-radius: 3px;">נעול</span>
+                                תשלומי חובה מקוריים
+                            </h4>
+                            <div style="border: 2px solid #ffc107; background: #fffbf0; padding: 15px; border-radius: 5px;">
+                                ${payments.map(payment => {
+                                    const displayName = payment.customPaymentType || 
+                                                    (paymentTypes[payment.paymentType] && paymentTypes[payment.paymentType].name) || 
+                                                    `תשלום מסוג ${payment.paymentType}`;
+                                    return `
+                                        <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ffe5b4;">
+                                            <span style="font-weight: bold;">${displayName}</span>
+                                            <div>
+                                                <span style="font-weight: bold; color: #dc3545;">₪${Number(payment.paymentAmount).toLocaleString()}</span>
+                                                <span style="margin-left: 10px; background: #ff9800; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px;">🔒</span>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                },
+                
+                // בניית סקציית תשלומים לעריכה
+                buildEditableSection: function(payments) {
+                    return `
+                        <div style="margin-bottom: 20px;">
+                            <h4 style="color: #28a745; margin-bottom: 10px;">
+                                <span style="background: #d4edda; padding: 2px 8px; border-radius: 3px;">ניתן לעריכה</span>
+                                תשלומים נוספים
+                            </h4>
+                            <div style="border: 1px solid #28a745; background: #f0fff4; padding: 15px; border-radius: 5px;">
+                                <div id="editablePaymentsList">
+                                    ${payments.length > 0 ? 
+                                        payments.map((payment, index) => this.buildEditablePaymentRow(payment, index)).join('') :
+                                        '<p style="text-align: center; color: #999; margin: 20px 0;">אין תשלומים נוספים - הוסף תשלום חדש למטה</p>'
+                                    }
+                                </div>
+                                
+                                <!-- הוספת תשלום חדש -->
+                                <div style="border-top: 2px solid #28a745; margin-top: 15px; padding-top: 15px;">
+                                    <h5 style="margin-bottom: 10px;">הוסף תשלום חדש:</h5>
+                                    <div style="display: grid; grid-template-columns: 2fr 1fr auto; gap: 10px; align-items: end;">
+                                        <div>
+                                            <input type="text" id="newPaymentName" 
+                                                list="paymentReasons"
+                                                placeholder="סיבת תשלום" 
+                                                style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                            <datalist id="paymentReasons">
+                                                <option value="דמי רישום">
+                                                <option value="עלויות ניהול">
+                                                <option value="תחזוקה שנתית">
+                                                <option value="שירותים נוספים">
+                                            </datalist>
+                                        </div>
+                                        <div>
+                                            <input type="number" id="newPaymentAmount" 
+                                                step="0.01" min="0"
+                                                placeholder="סכום" 
+                                                style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                        </div>
+                                        <button onclick="ExistingPaymentsManager.addPayment()" style="
+                                            padding: 8px 15px;
+                                            background: #17a2b8;
+                                            color: white;
+                                            border: none;
+                                            border-radius: 4px;
+                                            cursor: pointer;
+                                        ">+ הוסף</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                },
+
+                buildEditablePaymentRow: function(payment, index) {
+                    // השתמש בקונפיג הגלובלי
+                    const paymentTypes = window.PAYMENT_TYPES_CONFIG || {};
+                    
+                    // חפש את השם בכל המקומות האפשריים
+                    const displayName = payment.customPaymentType || 
+                                    payment.type_name ||
+                                    (paymentTypes[payment.paymentType] && paymentTypes[payment.paymentType].name) || 
+                                    `תשלום מסוג ${payment.paymentType}`;
+                    
+                    return `
+                        <div style="padding: 8px 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #c3e6cb;">
+                            <input type="text" 
+                                value="${displayName}"
+                                onchange="ExistingPaymentsManager.updateName(${index}, this.value)"
+                                style="flex: 1; padding: 6px; border: 1px solid #ddd; border-radius: 4px; margin-left: 10px;">
+                            <input type="number" 
+                                value="${payment.paymentAmount}"
+                                step="0.01"
+                                onchange="ExistingPaymentsManager.updateAmount(${index}, this.value)"
+                                style="width: 120px; padding: 6px; border: 1px solid #ddd; border-radius: 4px; margin-left: 10px;">
+                            <button onclick="ExistingPaymentsManager.removePayment(${index})" style="
+                                padding: 6px 12px;
+                                background: #dc3545;
+                                color: white;
+                                border: none;
+                                border-radius: 4px;
+                                cursor: pointer;
+                                margin-right: 10px;
+                            ">הסר</button>
+                        </div>
+                    `;
+                },
+                
+                // כפתורים
+                buildButtonsSection: function() {
+                    return `
+                        <div style="display: flex; gap: 10px; justify-content: space-between;">
+                            <button onclick="ExistingPaymentsManager.recalculate()" style="
+                                padding: 10px 20px;
+                                background: #ff9800;
+                                color: white;
+                                border: none;
+                                border-radius: 4px;
+                                cursor: pointer;
+                            ">🔄 חשב מחדש</button>
+                            <div style="display: flex; gap: 10px;">
+                                <button onclick="ExistingPaymentsManager.close()" style="
+                                    padding: 10px 30px;
+                                    background: #6c757d;
+                                    color: white;
+                                    border: none;
+                                    border-radius: 4px;
+                                    cursor: pointer;
+                                ">ביטול</button>
+                                <button onclick="ExistingPaymentsManager.save()" style="
+                                    padding: 10px 30px;
+                                    background: #28a745;
+                                    color: white;
+                                    border: none;
+                                    border-radius: 4px;
+                                    cursor: pointer;
+                                    font-weight: bold;
+                                ">שמור</button>
+                            </div>
+                        </div>
+                    `;
+                },
+
+                updateName: function(index, value) {
+                    const editablePayments = window.purchasePayments.filter(p => 
+                        p.mandatory !== true && p.required !== true
+                    );
+                    if (editablePayments[index]) {
+                        const paymentIndex = window.purchasePayments.indexOf(editablePayments[index]);
+                        window.purchasePayments[paymentIndex].customPaymentType = value;
+                    }
+                },
+
+                updateAmount: function(index, value) {
+                    const editablePayments = window.purchasePayments.filter(p => 
+                        p.mandatory !== true && p.required !== true
+                    );
+                    if (editablePayments[index]) {
+                        const paymentIndex = window.purchasePayments.indexOf(editablePayments[index]);
+                        window.purchasePayments[paymentIndex].paymentAmount = Number(value) || 0;
+                        this.updateTotal();
+                    }
+                },
+
+                updateTotal: function() {
+                    const total = window.purchasePayments.reduce((sum, p) => sum + (Number(p.paymentAmount) || 0), 0);
+                    const element = document.getElementById('existingModalTotal');
+                    if (element) element.textContent = total.toLocaleString();
+                },
+
+                removePayment: function(index) {
+                    // תקן את הפילטור
+                    const editablePayments = window.purchasePayments.filter(p => 
+                        p.mandatory !== true && p.required !== true
+                    );
+                    if (editablePayments[index]) {
+                        const paymentIndex = window.purchasePayments.indexOf(editablePayments[index]);
+                        window.purchasePayments.splice(paymentIndex, 1);
+                        this.close();
+                        this.open(); // רענן
+                    }
+                },
+                
+                addPayment: function() {
+                    const name = document.getElementById('newPaymentName').value.trim();
+                    const amount = Number(document.getElementById('newPaymentAmount').value);
+                    
+                    if (!name || amount <= 0) {
+                        alert('יש למלא שם וסכום תקין');
+                        return;
+                    }
+                    
+                    window.purchasePayments.push({
+                        locked: false,
+                        required: false,
+                        paymentDate: new Date().toISOString(),
+                        paymentType: 5, // אחר
+                        paymentAmount: amount,
+                        receiptDocuments: [],
+                        customPaymentType: name,
+                        isPaymentComplete: false
+                    });
+                    
+                    this.close();
+                    this.open(); // רענן
+                },
+                
+                recalculate: function() {
+                    if (confirm('האם למחוק הכל ולחשב מחדש?')) {
+                        window.purchasePayments = [];
+                        window.isEditMode = false;
+                        this.close();
+                        window.openSmartPaymentsManager();
+                    }
+                },
+                
+                save: function() {
+                    document.getElementById('total_price').value = PaymentDisplayManager.calculateTotal();
+                    document.getElementById('paymentsDisplay').innerHTML = 
+                        PaymentDisplayManager.render(window.purchasePayments, 'summary');
+                    document.getElementById('paymentsList').value = JSON.stringify(window.purchasePayments);
+                    this.close();
+                },
+                
+                close: function() {
+                    const modal = document.getElementById('existingPaymentsModal');
+                    if (modal) modal.remove();
+                },
+            };
+
+            // הגדרה גלובלית
+            window.ExistingPaymentsManager = ExistingPaymentsManager;
+
+            // סמן שהטופס מוכן אחרי חצי שנייה
+            setTimeout(() => {
+                window.formInitialized = true;
+            }, 500);
+            // אתחל
+            window.populateBlocks();
+            window.populatePlots();
+         });
+
+        // טען נתונים אם זה עריכה
+        if (itemId) {
+            // סמן שזו עריכה - אסור לחשב מחדש!
+            window.isEditMode = true;
+
+            const loadPurchaseData = () => {
+                const form = document.querySelector('#purchaseFormModal form');
+                
+                if (form && form.elements && form.elements.length > 5) {
+                    fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=get&id=${itemId}`)
+                        .then(response => response.json())
+                        .then(result => {
+                            if (result.success && result.data) {
+                                const data = result.data;
+                               
+                                // מלא שדות רגילים
+                                Object.keys(data).forEach(key => {
+                                    const field = form.elements[key];
+                                    if (field && data[key] !== null) {
+                                        field.value = data[key];
+                                    }
+                                });
+
+                                // *** הוסף כאן - אחרי מילוי השדות ***
+                                // טען גם נתוני לקוח
+                                if (data.clientId) {
+                                    fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?action=get&id=${data.clientId}`)
+                                        .then(response => response.json())
+                                        .then(customerResult => {
+                                            if (customerResult.success && customerResult.data) {
+                                                window.selectedCustomerData = {
+                                                    id: data.clientId,
+                                                    resident: customerResult.data.resident || 3,
+                                                    name: customerResult.data.firstName + ' ' + customerResult.data.lastName
+                                                };
+                                                
+                                                // עדכן תצוגת פרמטרים
+                                                if (window.updatePaymentParameters) {
+                                                    window.updatePaymentParameters();
+                                                }
+                                            }
+                                        })
+                                        .catch(error => console.error('Error loading customer data:', error));
+                                }
+
+                                // טען תשלומים קיימים
+                                if (data.paymentsList) {
+                                    try {
+                                        window.purchasePayments = JSON.parse(data.paymentsList);
+                                        
+                                        // הוסף את השדה mandatory מהקונפיג לכל תשלום
+                                        window.purchasePayments.forEach(payment => {
+
+                                            if (payment.paymentType && window.PAYMENT_TYPES_CONFIG) {
+                                                const config = window.PAYMENT_TYPES_CONFIG[payment.paymentType];
+                                                if (config) {
+                                                    // הוסף את השדה mandatory מהקונפיג
+                                                    payment.mandatory = config.mandatory || false;
+                                                    // הוסף גם required לתאימות אחורה
+                                                    payment.required = config.mandatory || false;
+                                                }
+                                            }
+                                        });
+                                        
+                                        // עדכן תצוגה
+                                        if (window.displayPaymentsSummary) {
+                                            document.getElementById('paymentsDisplay').innerHTML = 
+                                                PaymentDisplayManager.render(window.purchasePayments, 'summary');
+                                        }
+                                        
+                                        // עדכן סכום
+                                        document.getElementById('total_price').value = data.price || PaymentDisplayManager.calculateTotal();
+                                        
+                                        // שנה טקסט כפתור
+                                        const btn = document.getElementById('paymentsButtonText');
+                                        if (btn) {
+                                            btn.textContent = 'ערוך תשלומים';
+                                        }
+                                    } catch(e) {
+                                        console.error('Error parsing payments data:', e);
+                                    }
+                                }
+                                
+                                // אם יש קבר, מצא את ההיררכיה שלו
+                                if (data.graveId && window.hierarchyData) {
+                                    GraveHierarchyManager.init({
+                                        allowedStatuses: [1], // רק פנויים
+                                        excludeGraveId: data.graveId, // ← התעלם מהקבר הנוכחי!
+                                        onGraveSelected: async function(graveId) {
+                                            // אותה לוגיקה של onGraveSelected כמו למעלה
+                                            if (graveId) {
+                                                const grave = window.hierarchyData.graves.find(g => g.unicId == graveId);
+                                                const areaGrave = window.hierarchyData.areaGraves.find(
+                                                    ag => ag.unicId == grave.areaGraveId
+                                                );
+                                                
+                                                if (grave) {
+                                                    window.selectedGraveData = {
+                                                        graveId: graveId,
+                                                        plotType: grave.plotType || -1,
+                                                        graveType: areaGrave.graveType || -1
+                                                    };
+                                                    
+                                                    if (window.updatePaymentParameters) {
+                                                        window.updatePaymentParameters();
+                                                    }
+                                                    
+                                                    // במצב עריכה לא מחשבים מחדש תשלומים אוטומטית
+                                                }
+                                            } else {
+                                                window.selectedGraveData = null;
+                                                const paramsElement = document.getElementById('selectedParameters');
+                                                if (paramsElement) {
+                                                    paramsElement.style.display = 'none';
+                                                }
+                                            }
+                                        }
+                                    });
+
+                                    // 1. מצא את הקבר
+                                    const grave = window.hierarchyData.graves.find(g => g.unicId === data.graveId);
+                                    if (!grave) return;
+                                    // 2. מצא את אחוזת הקבר
+                                    const areaGrave = window.hierarchyData.areaGraves.find(ag => ag.unicId === grave.area_grave_id);
+                                    if (!areaGrave) return;
+                                    // 3. מצא את השורה
+                                    const row = window.hierarchyData.rows.find(r => r.unicId === areaGrave.row_id);
+                                    if (!row) return;
+                                    // 4. מצא את החלקה
+                                    const plot = window.hierarchyData.plots.find(p => p.unicId === row.plot_id);
+                                    if (!plot) return;
+                                    // 5. מצא את הגוש
+                                    const block = window.hierarchyData.blocks.find(b => b.unicId === plot.blockId);
+                                    if (!block) return;
+                                    
+
+                                    // עכשיו תבחר את הערכים בסלקטים
+                                    setTimeout(() => {
+                                        
+                                        // בחר בית עלמין
+                                        if (block.cemetery_id) {
+                                            document.getElementById('cemeterySelect').value = block.cemetery_id;
+                                            window.filterHierarchy('cemetery');
+                                        }
+                                        
+                                        // בחר גוש
+                                        setTimeout(() => {
+                                            document.getElementById('blockSelect').value = block.unicId;
+                                            window.filterHierarchy('block');
+                                            
+                                            // בחר חלקה
+                                            setTimeout(() => {
+                                                document.getElementById('plotSelect').value = plot.unicId;
+                                                window.filterHierarchy('plot');
+                                                
+                                                // בחר שורה
+                                                setTimeout(() => {
+                                                    document.getElementById('rowSelect').value = row.unicId;
+                                                    window.filterHierarchy('row');
+                                                    
+                                                    // בחר אחוזת קבר
+                                                    setTimeout(() => {
+                                                        document.getElementById('areaGraveSelect').value = areaGrave.unicId;
+                                                        window.filterHierarchy('areaGrave');
+
+                                                        // בחר קבר
+                                                        setTimeout(() => {
+                                                            document.getElementById('graveSelect').value = grave.unicId;
+                                                            window.currentGraveId = data.graveId;
+        
+                                                            // הוסף את זה - הגדר את הנתונים לתשלומים
+                                                            window.selectedGraveData = {
+                                                                graveId: grave.unicId,
+                                                                plotType: grave.plotType || -1,
+                                                                graveType: areaGrave.graveType || -1
+                                                            };
+                                                            
+                                                            // עדכן תצוגת פרמטרים
+                                                            if (window.updatePaymentParameters) {
+                                                                window.updatePaymentParameters();
+                                                            }
+                                                        }, 50);
+                                                    }, 50);
+                                                }, 50);
+                                            }, 50);
+                                        }, 50);
+                                    }, 250);
+                                }
+                            }
+                        })
+                        .catch(error => {
+                            console.error('ERROR loading purchase:', error.message);
+                        });
+                    
+                    return true;
+                }
+                return false;
+            };
+            
+            // נסה לטעון מיד
+            if (!loadPurchaseData()) {
+                // אם לא הצליח, השתמש ב-MutationObserver
+                const observer = new MutationObserver((mutations, obs) => {
+                    if (loadPurchaseData()) {
+                        obs.disconnect(); // הפסק לצפות
+                    }
+                });
+                
+                // התחל לצפות בשינויים
+                const modal = document.getElementById('purchaseFormModal');
+                if (modal) {
+                    observer.observe(modal, {
+                        childList: true,
+                        subtree: true
+                    });
+                }
+                
+                // הגבלת זמן של 10 שניות
+                setTimeout(() => observer.disconnect(), 10000);
+            }
+        }
+    },
+        
     handlePurchaseForm: function(itemId) {
         // הוסף את 2 השורות האלה
         window.formInitialized = false;
 
+        // 🆕 טעינת היררכיה מ-APIs
+        const loadHierarchyFromAPIs = async function() {
+            const fieldset = document.getElementById('grave-selector-fieldset');
+            
+            if (!fieldset || fieldset.dataset.loadFromApi !== 'true') {
+                console.log('ℹ️ Using embedded hierarchy (old method)');
+                return;
+            }
+            
+            console.log('🌐 Loading hierarchy from APIs...');
+            
+            try {
+                // טען רק את בתי העלמין בשלב זה
+                const cemResponse = await fetch('/dashboard/dashboards/cemeteries/api/cemeteries-api.php?action=list&limit=1000');
+                const cemResult = await cemResponse.json();
+                
+                if (!cemResult.success) {
+                    throw new Error('Failed to load cemeteries');
+                }
+                
+                const cemeteries = cemResult.data;
+                console.log('✅ Loaded', cemeteries.length, 'cemeteries');
+                
+                // מלא בתי עלמין בבורר
+                const cemeterySelect = document.getElementById('cemeterySelect');
+                if (cemeterySelect) {
+                    cemeterySelect.innerHTML = '<option value="">-- בחר בית עלמין --</option>';
+                    
+                    cemeteries.forEach(cem => {
+                        const option = document.createElement('option');
+                        option.value = cem.unicId;
+                        option.textContent = cem.cemeteryNameHe;
+                        cemeterySelect.appendChild(option);
+                    });
+                    
+                    console.log('✅ Populated cemeteries');
+                }
+                
+                // טען את כל שאר ההיררכיה (גושים, חלקות, שורות, אחוזות, קברים)
+                await loadFullHierarchy();
+                
+            } catch (error) {
+                console.error('❌ Error loading hierarchy:', error);
+                alert('שגיאה בטעינת נתוני בתי העלמין');
+            }
+        };
+
+        // פונקציה לטעינת כל ההיררכיה
+        const loadFullHierarchy = async function() {
+            try {
+                console.log('🔄 Loading full hierarchy...');
+                
+                // טען הכל במקביל
+                const [blocksRes, plotsRes, rowsRes, areaGravesRes, gravesRes] = await Promise.all([
+                    fetch('/dashboard/dashboards/cemeteries/api/blocks-api.php?action=list&limit=1000'),
+                    fetch('/dashboard/dashboards/cemeteries/api/plots-api.php?action=list&limit=1000'),
+                    fetch('/dashboard/dashboards/cemeteries/api/rows-api.php?action=list&limit=1000'),
+                    fetch('/dashboard/dashboards/cemeteries/api/areaGraves-api.php?action=list&limit=1000'),
+                    fetch('/dashboard/dashboards/cemeteries/api/graves-api.php?action=list&limit=1000')
+                ]);
+                
+                const [blocksData, plotsData, rowsData, areaGravesData, gravesData] = await Promise.all([
+                    blocksRes.json(),
+                    plotsRes.json(),
+                    rowsRes.json(),
+                    areaGravesRes.json(),
+                    gravesRes.json()
+                ]);
+                
+                // בנה את window.hierarchyData (בדיוק כמו שהיה)
+                window.hierarchyData = {
+                    blocks: blocksData.data || [],
+                    plots: plotsData.data || [],
+                    rows: rowsData.data || [],
+                    areaGraves: areaGravesData.data || [],
+                    graves: gravesData.data || []
+                };
+                
+                console.log('✅ Full hierarchy loaded:', {
+                    blocks: window.hierarchyData.blocks.length,
+                    plots: window.hierarchyData.plots.length,
+                    rows: window.hierarchyData.rows.length,
+                    areaGraves: window.hierarchyData.areaGraves.length,
+                    graves: window.hierarchyData.graves.length
+                });
+                
+            } catch (error) {
+                console.error('❌ Error loading full hierarchy:', error);
+            }
+        };
+
+        // הרץ טעינה מיד
+        loadHierarchyFromAPIs();
 
         // פונקציה מרכזית לחישוב תשלומים - תקרא משני המקומות
         window.tryCalculatePayments = async function() {

@@ -6083,6 +6083,42 @@ const FormHandler = {
         window.selectedCustomerData = null;
         window.isEditMode = !!itemId;
 
+        // ✅ הוסף את זה כאן - מיד בהתחלה!
+        // ===========================================================
+        // פונקציות להיררכית בתי עלמין
+        // ===========================================================
+        
+        // פונקציות placeholder להיררכיה (בינתיים ריקות)
+        window.filterHierarchy = function(level) {
+            console.log(`📍 filterHierarchy called with level: ${level} (placeholder)`);
+            // בינתיים לא עושה כלום - נוסיף לוגיקה אחר כך
+        };
+        
+        window.populateBlocks = function() {
+            console.log('📦 populateBlocks called (placeholder)');
+        };
+        
+        window.populatePlots = function() {
+            console.log('📦 populatePlots called (placeholder)');
+        };
+        
+        window.populateRows = function() {
+            console.log('📦 populateRows called (placeholder)');
+        };
+        
+        window.populateAreaGraves = function() {
+            console.log('📦 populateAreaGraves called (placeholder)');
+        };
+        
+        window.populateGraves = function() {
+            console.log('📦 populateGraves called (placeholder)');
+        };
+
+        
+        // ===========================================================
+        // סוף פונקציות להיררכית בתי עלמין
+        // ===========================================================
+
         // פונקציה לחישוב תשלומים
         window.tryCalculatePayments = async function() {
             if (window.isEditMode) return;
@@ -6696,7 +6732,10 @@ const FormHandler = {
         setupCustomerListener();
         window.formInitialized = true;
 
-        // ✅ ===== הוסף את זה כאן - לפני מצב העריכה! =====
+        
+        // ===========================================================
+        // פונקציות להיררכית בתי עלמין
+        // ===========================================================
 
         // 🌐 טעינת בתי עלמין ברקע (async - לא מחכים!)
         (async function loadCemeteries() {
@@ -6740,7 +6779,9 @@ const FormHandler = {
             }
         })(); // ← קריאה מיידית, ללא המתנה!
         
-        // ✅ ===== סוף הקוד החדש =====
+        // ===========================================================
+        // סוף פונקציות להיררכית בתי עלמין
+        // ===========================================================
 
         // טיפול בעריכה
         if (itemId) {

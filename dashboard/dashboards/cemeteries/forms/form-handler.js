@@ -6696,6 +6696,52 @@ const FormHandler = {
         setupCustomerListener();
         window.formInitialized = true;
 
+        // ✅ ===== הוסף את זה כאן - לפני מצב העריכה! =====
+
+        // 🌐 טעינת בתי עלמין ברקע (async - לא מחכים!)
+        (async function loadCemeteries() {
+            try {
+                console.log('🌐 Starting to load cemeteries from API...');
+                
+                const response = await fetch('/dashboard/dashboards/cemeteries/api/cemeteries-api.php?action=list');
+                const result = await response.json();
+                
+                if (!result.success) {
+                    console.error('❌ Failed to load cemeteries:', result.message);
+                    return;
+                }
+                
+                const cemeteries = result.data || [];
+                console.log(`✅ Loaded ${cemeteries.length} cemeteries`);
+                
+                // מצא את ה-select
+                const cemeterySelect = document.getElementById('cemeterySelect');
+                if (!cemeterySelect) {
+                    console.warn('⚠️ Cemetery select not found yet, will retry...');
+                    // נסה שוב אחרי 500ms
+                    setTimeout(loadCemeteries, 500);
+                    return;
+                }
+                
+                // נקה ומלא
+                cemeterySelect.innerHTML = '<option value="">-- בחר בית עלמין --</option>';
+                
+                cemeteries.forEach(cemetery => {
+                    const option = document.createElement('option');
+                    option.value = cemetery.unicId;
+                    option.textContent = cemetery.cemeteryNameHe;
+                    cemeterySelect.appendChild(option);
+                });
+                
+                console.log('✅ Cemetery select populated successfully');
+                
+            } catch (error) {
+                console.error('❌ Error loading cemeteries:', error);
+            }
+        })(); // ← קריאה מיידית, ללא המתנה!
+        
+        // ✅ ===== סוף הקוד החדש =====
+
         // טיפול בעריכה
         if (itemId) {
             const loadPurchaseData = () => {

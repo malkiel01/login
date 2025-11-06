@@ -6082,6 +6082,14 @@ const FormHandler = {
         window.selectedGraveData = null;
         window.selectedCustomerData = null;
         window.isEditMode = !!itemId;
+        window.hierarchyData = {
+            cemeteries: [],
+            blocks: [],
+            plots: [],
+            rows: [],
+            areaGraves: [],
+            graves: []
+        };
 
         // ✅ הוסף את זה כאן - מיד בהתחלה!
         // ===========================================================
@@ -6815,7 +6823,7 @@ const FormHandler = {
         // פונקציות להיררכית בתי עלמין
         // ===========================================================
 
-        // // 🌐 טעינת בתי עלמין ברקע (async - לא מחכים!)
+        // 🌐 טעינת בתי עלמין ברקע (async - לא מחכים!)
         // (async function loadCemeteries() {
         //     try {
         //         console.log('🌐 Starting to load cemeteries from API...');

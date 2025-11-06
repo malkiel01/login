@@ -76,7 +76,8 @@ $formBuilder->addField('typeId', 'סוג זיהוי', 'select', [
 // פרטים אישיים
 $formBuilder->addField('numId', 'מספר זיהוי', 'text', [
     'required' => true,
-    'value' => $customer['numId'] ?? ''
+    'value' => $customer['numId'] ?? '',
+    'validations' => ['validateIsraeliId']
 ]);
 
 $formBuilder->addField('firstName', 'שם פרטי', 'text', [

@@ -153,14 +153,25 @@ const FormHandler = {
                 document.body.appendChild(modal);
                 document.body.style.overflow = 'hidden';
                 
-                // 🆕 אתחל FormValidations
-                const form = modal.querySelector('form');
-                if (form && window.FormValidations) {
-                    FormValidations.init(form);
-                    console.log('✅ FormValidations initialized for', type);
-                } else {
-                    console.warn('⚠️ FormValidations not found');
-                }
+                // // 🆕 אתחל FormValidations
+                // const form = modal.querySelector('form');
+                // if (form && window.FormValidations) {
+                //     FormValidations.init(form);
+                //     console.log('✅ FormValidations initialized for', type);
+                // } else {
+                //     console.warn('⚠️ FormValidations not found');
+                // }
+
+                // 🆕 אתחל FormValidations אחרי רנדור מלא
+                setTimeout(() => {
+                    const form = modal.querySelector('form');
+                    if (form && window.FormValidations) {
+                        FormValidations.init(form);
+                        console.log('✅ FormValidations initialized for', type);
+                    } else {
+                        console.warn('⚠️ FormValidations not found or form not ready');
+                    }
+                }, 100); // 100ms מספיק
                 
                 this.handleFormSpecificLogic(type, parentId, itemId);
             } else {

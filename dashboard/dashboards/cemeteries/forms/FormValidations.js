@@ -227,32 +227,118 @@ const FormValidations = {
     /**
      * אתחול - הוסף listeners לכל השדות עם ולידציות
      */
+    // init: function(formElement) {
+    //     const fields = formElement.querySelectorAll('[data-validations]');
+        
+    //     fields.forEach(field => {
+    //         const validations = JSON.parse(field.dataset.validations);
+            
+    //         // בדיקה כשעוזבים את השדה
+    //         field.addEventListener('blur', async () => {
+    //             const result = await this.runValidations(field, validations);
+                
+    //             if (!result.valid) {
+    //                 this.showError(field, result.message);
+    //             } else {
+    //                 this.clearError(field);
+    //             }
+    //         });
+            
+    //         // נקה שגיאה כשמתחילים להקליד
+    //         field.addEventListener('input', () => {
+    //             if (field.classList.contains('validation-error')) {
+    //                 this.clearError(field);
+    //             }
+    //         });
+    //     });
+    // }
+
+    /**
+     * אתחול - הוסף listeners לכל השדות עם ולידציות
+     */
     init: function(formElement) {
+        // ✅ בדוק אם כבר אותחל - מנע אתחול כפול
+        if (formElement.dataset.validationsInitialized === 'true') {
+            console.log('⚠️ FormValidations already initialized for', formElement.id);
+            return;
+        }
+        
         const fields = formElement.querySelectorAll('[data-validations]');
         
+        if (fields.length === 0) {
+            console.warn('⚠️ No fields with data-validations found in', formElement.id);
+            return;
+        }
+        
         fields.forEach(field => {
-            const validations = JSON.parse(field.dataset.validations);
-            
-            // בדיקה כשעוזבים את השדה
-            field.addEventListener('blur', async () => {
-                const result = await this.runValidations(field, validations);
+            try {
+                const validations = JSON.parse(field.dataset.validations);
                 
-                if (!result.valid) {
-                    this.showError(field, result.message);
-                } else {
-                    this.clearError(field);
-                }
-            });
-            
-            // נקה שגיאה כשמתחילים להקליד
-            field.addEventListener('input', () => {
-                if (field.classList.contains('validation-error')) {
-                    this.clearError(field);
-                }
-            });
+                // בדיקה כשעוזבים את השדה
+                field.addEventListener('blur', async () => {
+                    const result = await this.runValidations(field, validations);
+                    
+                    if (!result.valid) {
+                        this.showError(field, result.message);
+                    } else {
+                        this.clearError(field);
+                    }
+                });
+                
+                // נקה שגיאה כשמתחילים להקליד
+                field.addEventListener('input', () => {
+                    if (field.classList.contains('validation-error')) {
+                        this.clearError(field);
+                    }
+                });
+            } catch (e) {
+                console.error('Error parsing validations for field:', field.name, e);
+            }
         });
+        
+        // סמן שהאתחול הושלם
+        formElement.dataset.validationsInitialized = 'true';
+        console.log(`✅ FormValidations initialized: ${fields.length} fields with validations`);
     }
 };
 
 // הפוך גלובלי
 window.FormValidations = FormValidations;
+
+// 🆕 גיבוי: האזן ל-custom event 'formReady'
+document.addEventListener('formReady', function(e) {
+    const form = e.detail.form;
+    if (form && !form.dataset.validationsInitialized) {
+        FormValidations.init(form);
+        form.dataset.validationsInitialized = 'true'; // מנע אתחול כפול
+        console.log('✅ FormValidations initialized via event for', e.detail.type);
+    }
+});
+
+// 🆕 גיבוי נוסף: MutationObserver - אם בכל זאת משהו השתבש
+(function() {
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            mutation.addedNodes.forEach(function(node) {
+                // בדוק אם זה modal עם טופס
+                if (node.nodeType === 1 && node.classList && node.classList.contains('modal')) {
+                    const form = node.querySelector('form');
+                    if (form && !form.dataset.validationsInitialized) {
+                        // מצאנו טופס שטרם אותחל - אתחל אותו!
+                        requestAnimationFrame(() => {
+                            FormValidations.init(form);
+                            form.dataset.validationsInitialized = 'true';
+                            console.log('✅ FormValidations initialized via MutationObserver for', form.id);
+                        });
+                    }
+                }
+            });
+        });
+    });
+    
+    // התחל להאזין לשינויים ב-body
+    observer.observe(document.body, {
+        childList: true,
+        subtree: false // רק ילדים ישירים של body
+    });
+})();

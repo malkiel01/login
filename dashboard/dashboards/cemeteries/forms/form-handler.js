@@ -149,36 +149,71 @@ const FormHandler = {
             //     });
             // }
 
+            // if (modal) {
+            //     document.body.appendChild(modal);
+            //     document.body.style.overflow = 'hidden';
+                
+            //     // // 🆕 אתחל FormValidations
+            //     // const form = modal.querySelector('form');
+            //     // if (form && window.FormValidations) {
+            //     //     FormValidations.init(form);
+            //     //     console.log('✅ FormValidations initialized for', type);
+            //     // } else {
+            //     //     console.warn('⚠️ FormValidations not found');
+            //     // }
+
+            //     // 🆕 אתחל FormValidations אחרי רנדור מלא
+            //     setTimeout(() => {
+            //         const form = modal.querySelector('form');
+            //         if (form && window.FormValidations) {
+            //             FormValidations.init(form);
+            //             console.log('✅ FormValidations initialized for', type);
+            //         } else {
+            //             console.warn('⚠️ FormValidations not found or form not ready');
+            //         }
+            //     }, 100); // 100ms מספיק
+                
+            //     this.handleFormSpecificLogic(type, parentId, itemId);
+            // } else {
+            //     console.error('❌ Modal not found in HTML');
+   
+            //     const allModals = tempDiv.querySelectorAll('.modal');
+            //     // console.log('Found modals:', allModals.length);
+            //     allModals.forEach(m => {
+            //         // console.log('Modal id:', m.id);
+            //     });
+            // }
+
             if (modal) {
                 document.body.appendChild(modal);
                 document.body.style.overflow = 'hidden';
                 
-                // // 🆕 אתחל FormValidations
-                // const form = modal.querySelector('form');
-                // if (form && window.FormValidations) {
-                //     FormValidations.init(form);
-                //     console.log('✅ FormValidations initialized for', type);
-                // } else {
-                //     console.warn('⚠️ FormValidations not found');
-                // }
-
-                // 🆕 אתחל FormValidations אחרי רנדור מלא
-                setTimeout(() => {
+                // 🚀 פתרון יציב: requestAnimationFrame מבטיח שהדפדפן סיים לרנדר
+                requestAnimationFrame(() => {
                     const form = modal.querySelector('form');
+                    
                     if (form && window.FormValidations) {
+                        // ✅ הטופס מוכן - אתחל וולידציות
                         FormValidations.init(form);
                         console.log('✅ FormValidations initialized for', type);
+                        
+                        // שלח custom event שהטופס מוכן (למי שרוצה להאזין)
+                        const event = new CustomEvent('formReady', { 
+                            detail: { type, form, formId: form.id } 
+                        });
+                        document.dispatchEvent(event);
+                        
                     } else {
-                        console.warn('⚠️ FormValidations not found or form not ready');
+                        if (!form) console.error('❌ Form element not found in modal');
+                        if (!window.FormValidations) console.error('❌ FormValidations not loaded');
                     }
-                }, 100); // 100ms מספיק
+                });
                 
                 this.handleFormSpecificLogic(type, parentId, itemId);
+                
             } else {
                 console.error('❌ Modal not found in HTML');
-   
                 const allModals = tempDiv.querySelectorAll('.modal');
-                // console.log('Found modals:', allModals.length);
                 allModals.forEach(m => {
                     // console.log('Modal id:', m.id);
                 });

@@ -6774,6 +6774,17 @@ const FormHandler = {
                 
                 console.log('✅ Cemetery select populated successfully');
                 
+                // ✅ ✅ ✅ הוסף את זה - חיבור ה-event listener!
+                cemeterySelect.addEventListener('change', function() {
+                    const selectedValue = this.value;
+                    console.log('🏛️ Cemetery selected:', selectedValue);
+                    
+                    if (selectedValue && window.filterHierarchy) {
+                        window.filterHierarchy('cemetery');
+                    }
+                });
+                console.log('✅ Cemetery change event listener attached');
+                
             } catch (error) {
                 console.error('❌ Error loading cemeteries:', error);
             }

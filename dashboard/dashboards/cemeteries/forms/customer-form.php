@@ -157,15 +157,6 @@ $formBuilder->addField('maritalStatus', 'מצב משפחתי', 'select', [
 //     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
 // ';
 
-// // מדינה - SmartSelect
-// $smartCountry = new SmartSelect('countryId', 'מדינה', $countries, [
-//     'searchable' => true,
-//     'placeholder' => 'בחר מדינה...',
-//     'search_placeholder' => 'חפש מדינה...',
-//     'required' => true,
-//     'value' => $customer['countryId'] ?? ''
-// ]);
-
 $addressHTML = '
 <fieldset class="form-section" 
         id="address-fieldset"
@@ -176,6 +167,16 @@ $addressHTML = '
     <legend style="padding: 0 10px; font-weight: bold;">כתובת</legend>
     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
 ';
+
+// // מדינה - SmartSelect
+// $smartCountry = new SmartSelect('countryId', 'מדינה', $countries, [
+//     'searchable' => true,
+//     'placeholder' => 'בחר מדינה...',
+//     'search_placeholder' => 'חפש מדינה...',
+//     'required' => true,
+//     'value' => $customer['countryId'] ?? ''
+// ]);
+
 
 // מדינה - SmartSelect ריק (יתמלא ב-JavaScript)
 $smartCountry = new SmartSelect('countryId', 'מדינה', [], [

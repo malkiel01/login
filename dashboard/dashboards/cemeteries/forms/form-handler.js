@@ -854,6 +854,41 @@ const FormHandler = {
     },
 
     handleCustomerForm: function(itemId) {
+
+    // 🆕 טעינת מדינות וערים מה-API
+    const fieldset = document.getElementById('address-fieldset');
+    
+    if (fieldset && fieldset.dataset.loadFromApi === 'true') {
+        console.log('🌐 Loading locations from API...');
+        
+        // טען מדינות
+        fetch('/dashboard/dashboards/cemeteries/api/locations-api.php?action=getCountries')
+            .then(response => response.json())
+            .then(result => {
+                if (!result.success) {
+                    throw new Error('Failed to load countries');
+                }
+                
+                const countries = result.data;
+                console.log('✅ Loaded', countries.length, 'countries');
+                
+                // אתחל SmartSelect תחילה
+                if (window.SmartSelectManager) {
+                    SmartSelectManager.init();
+                }
+                
+                // מלא מדינות
+                this.populateCountriesFromAPI(countries, fieldset.dataset.customerCountryId);
+                
+                // הגדר את האירוע לשינוי מדינה
+                this.setupCountryCityFromAPI(fieldset.dataset.customerCountryId, fieldset.dataset.customerCityId);
+            })
+            .catch(error => {
+                console.error('❌ Error loading countries:', error);
+                alert('שגיאה בטעינת רשימת המדינות');
+            });
+        }
+
         // // console.log('🔧 handleCustomerForm called with itemId:', itemId);
         
         // ============================================

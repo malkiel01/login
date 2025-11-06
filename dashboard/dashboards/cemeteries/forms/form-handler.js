@@ -6135,6 +6135,8 @@ const FormHandler = {
                     break;
             }
         };
+        // 🌐 טעינת היררכיה מלאה ברקע (async - לא מחכים!)
+
 
         window.populateBlocks = function() {
             console.log('📦 populateBlocks called');
@@ -6207,7 +6209,70 @@ const FormHandler = {
         };
         
         window.populatePlots = function() {
-            console.log('📦 populatePlots called (placeholder)');
+            console.log('📊 populatePlots called');
+            
+            // בדיקה שיש נתונים
+            if (!window.hierarchyData || !window.hierarchyData.plots) {
+                console.warn('⚠️ Plots data not loaded yet');
+                return;
+            }
+            
+            const blockId = document.getElementById('blockSelect')?.value;
+            const plotSelect = document.getElementById('plotSelect');
+            
+            if (!plotSelect || !blockId) {
+                console.warn('⚠️ Plot select or block not found');
+                return;
+            }
+            
+            // ✅ דיבוג
+            console.log('🔍 Looking for block:', blockId);
+            console.log('🔍 Sample plot structure:', window.hierarchyData.plots[0]);
+            console.log('🔍 Total plots:', window.hierarchyData.plots.length);
+            
+            // נקה
+            plotSelect.innerHTML = '<option value="">-- בחר חלקה --</option>';
+            
+            // ✅ סנן חלקות לפי הגוש - נסה כל האפשרויות
+            const relevantPlots = window.hierarchyData.plots.filter(plot => {
+                const matches = 
+                    plot.blockId == blockId ||
+                    plot.block_id == blockId ||
+                    plot.unicBlockId == blockId;
+                
+                if (matches) {
+                    console.log('✅ Found matching plot:', plot);
+                }
+                
+                return matches;
+            });
+            
+            console.log(`📊 Found ${relevantPlots.length} plots for block ${blockId}`);
+            
+            if (relevantPlots.length === 0) {
+                console.warn('⚠️ No plots found! Check the field name.');
+                console.log('🔍 Available fields in first plot:', Object.keys(window.hierarchyData.plots[0]));
+            }
+            
+            // מלא
+            relevantPlots.forEach(plot => {
+                const option = document.createElement('option');
+                option.value = plot.unicId;
+                option.textContent = plot.plotNameHe;
+                plotSelect.appendChild(option);
+            });
+            
+            // ✅ הוסף event listener
+            plotSelect.addEventListener('change', function() {
+                const selectedValue = this.value;
+                console.log('📊 Plot selected:', selectedValue);
+                
+                if (selectedValue && window.filterHierarchy) {
+                    window.filterHierarchy('plot');
+                }
+            });
+            
+            console.log('✅ Plots populated successfully');
         };
         
         window.populateRows = function() {
@@ -6845,44 +6910,53 @@ const FormHandler = {
         // פונקציות להיררכית בתי עלמין
         // ===========================================================
 
-        // 🌐 טעינת בתי עלמין ברקע (async - לא מחכים!)
-        // (async function loadCemeteries() {
+        // (async function loadHierarchy() {
         //     try {
-        //         console.log('🌐 Starting to load cemeteries from API...');
+        //         console.log('🌐 Starting to load hierarchy from APIs...');
                 
-        //         const response = await fetch('/dashboard/dashboards/cemeteries/api/cemeteries-api.php?action=list');
-        //         const result = await response.json();
+        //         // טען בתי עלמין וגושים במקביל
+        //         const [cemResponse, blocksResponse] = await Promise.all([
+        //             fetch('/dashboard/dashboards/cemeteries/api/cemeteries-api.php?action=list'),
+        //             fetch('/dashboard/dashboards/cemeteries/api/blocks-api.php?action=list')
+        //         ]);
                 
-        //         if (!result.success) {
-        //             console.error('❌ Failed to load cemeteries:', result.message);
+        //         const [cemResult, blocksResult] = await Promise.all([
+        //             cemResponse.json(),
+        //             blocksResponse.json()
+        //         ]);
+                
+        //         if (!cemResult.success || !blocksResult.success) {
+        //             console.error('❌ Failed to load hierarchy data');
         //             return;
         //         }
                 
-        //         const cemeteries = result.data || [];
-        //         console.log(`✅ Loaded ${cemeteries.length} cemeteries`);
+        //         // שמור נתונים
+        //         window.hierarchyData.cemeteries = cemResult.data || [];
+        //         window.hierarchyData.blocks = blocksResult.data || [];
                 
-        //         // מצא את ה-select
+        //         console.log(`✅ Loaded ${window.hierarchyData.cemeteries.length} cemeteries`);
+        //         console.log(`✅ Loaded ${window.hierarchyData.blocks.length} blocks`);
+                
+        //         // מצא את ה-selects
         //         const cemeterySelect = document.getElementById('cemeterySelect');
+        //         const blockSelect = document.getElementById('blockSelect');
+                
         //         if (!cemeterySelect) {
         //             console.warn('⚠️ Cemetery select not found yet, will retry...');
-        //             // נסה שוב אחרי 500ms
-        //             setTimeout(loadCemeteries, 500);
+        //             setTimeout(loadHierarchy, 500);
         //             return;
         //         }
                 
-        //         // נקה ומלא
+        //         // מלא בתי עלמין
         //         cemeterySelect.innerHTML = '<option value="">-- בחר בית עלמין --</option>';
-                
-        //         cemeteries.forEach(cemetery => {
+        //         window.hierarchyData.cemeteries.forEach(cemetery => {
         //             const option = document.createElement('option');
         //             option.value = cemetery.unicId;
         //             option.textContent = cemetery.cemeteryNameHe;
         //             cemeterySelect.appendChild(option);
         //         });
                 
-        //         console.log('✅ Cemetery select populated successfully');
-                
-        //         // ✅ ✅ ✅ הוסף את זה - חיבור ה-event listener!
+        //         // חבר event listener
         //         cemeterySelect.addEventListener('change', function() {
         //             const selectedValue = this.value;
         //             console.log('🏛️ Cemetery selected:', selectedValue);
@@ -6891,29 +6965,31 @@ const FormHandler = {
         //                 window.filterHierarchy('cemetery');
         //             }
         //         });
-        //         console.log('✅ Cemetery change event listener attached');
-
+                
+        //         console.log('✅ Hierarchy loaded and event listeners attached');
+                
         //     } catch (error) {
-        //         console.error('❌ Error loading cemeteries:', error);
+        //         console.error('❌ Error loading hierarchy:', error);
         //     }
-        // })(); // ← קריאה מיידית, ללא המתנה!
-
+        // })();
         (async function loadHierarchy() {
             try {
                 console.log('🌐 Starting to load hierarchy from APIs...');
                 
-                // טען בתי עלמין וגושים במקביל
-                const [cemResponse, blocksResponse] = await Promise.all([
+                // טען בתי עלמין, גושים וחלקות במקביל
+                const [cemResponse, blocksResponse, plotsResponse] = await Promise.all([
                     fetch('/dashboard/dashboards/cemeteries/api/cemeteries-api.php?action=list'),
-                    fetch('/dashboard/dashboards/cemeteries/api/blocks-api.php?action=list')
+                    fetch('/dashboard/dashboards/cemeteries/api/blocks-api.php?action=list'),
+                    fetch('/dashboard/dashboards/cemeteries/api/plots-api.php?action=list')
                 ]);
                 
-                const [cemResult, blocksResult] = await Promise.all([
+                const [cemResult, blocksResult, plotsResult] = await Promise.all([
                     cemResponse.json(),
-                    blocksResponse.json()
+                    blocksResponse.json(),
+                    plotsResponse.json()
                 ]);
                 
-                if (!cemResult.success || !blocksResult.success) {
+                if (!cemResult.success || !blocksResult.success || !plotsResult.success) {
                     console.error('❌ Failed to load hierarchy data');
                     return;
                 }
@@ -6921,13 +6997,14 @@ const FormHandler = {
                 // שמור נתונים
                 window.hierarchyData.cemeteries = cemResult.data || [];
                 window.hierarchyData.blocks = blocksResult.data || [];
+                window.hierarchyData.plots = plotsResult.data || [];
                 
                 console.log(`✅ Loaded ${window.hierarchyData.cemeteries.length} cemeteries`);
                 console.log(`✅ Loaded ${window.hierarchyData.blocks.length} blocks`);
+                console.log(`✅ Loaded ${window.hierarchyData.plots.length} plots`);
                 
                 // מצא את ה-selects
                 const cemeterySelect = document.getElementById('cemeterySelect');
-                const blockSelect = document.getElementById('blockSelect');
                 
                 if (!cemeterySelect) {
                     console.warn('⚠️ Cemetery select not found yet, will retry...');

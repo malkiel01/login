@@ -4496,7 +4496,7 @@ const FormHandler = {
             window.isEditMode = true;
             // ... (אל תשנה כלום פה!)
         }
-    },
+    }, 
 
     handleBurialForm: function(itemId) {
         this.waitForElement('#grave-selector-fieldset', (fieldset) => {

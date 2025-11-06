@@ -6153,15 +6153,37 @@ const FormHandler = {
                 return;
             }
             
+            // ✅ הוסף דיבוג - בדוק את המבנה!
+            console.log('🔍 Looking for cemetery:', cemeteryId);
+            console.log('🔍 Sample block structure:', window.hierarchyData.blocks[0]);
+            console.log('🔍 Total blocks:', window.hierarchyData.blocks.length);
+            
             // נקה
             blockSelect.innerHTML = '<option value="">-- בחר גוש --</option>';
             
-            // סנן גושים של בית העלמין הנבחר
-            const relevantBlocks = window.hierarchyData.blocks.filter(block => 
-                block.cemetery_id == cemeteryId
-            );
+            // ✅ נסה כל האפשרויות האפשריות לשם השדה
+            const relevantBlocks = window.hierarchyData.blocks.filter(block => {
+                // נסה את כל האפשרויות
+                const matches = 
+                    block.cemetery_id == cemeteryId ||
+                    block.cemeteryId == cemeteryId ||
+                    block.cemId == cemeteryId ||
+                    block.cemetery == cemeteryId;
+                
+                // דיבוג - הדפס את הבלוק הראשון שנמצא
+                if (matches) {
+                    console.log('✅ Found matching block:', block);
+                }
+                
+                return matches;
+            });
             
             console.log(`📦 Found ${relevantBlocks.length} blocks for cemetery ${cemeteryId}`);
+            
+            if (relevantBlocks.length === 0) {
+                console.warn('⚠️ No blocks found! Check the field name.');
+                console.log('🔍 Available fields in first block:', Object.keys(window.hierarchyData.blocks[0]));
+            }
             
             // מלא
             relevantBlocks.forEach(block => {

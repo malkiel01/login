@@ -2661,11 +2661,11 @@ const FormHandler = {
                 
                 // טען הכל במקביל
                 const [blocksRes, plotsRes, rowsRes, areaGravesRes, gravesRes] = await Promise.all([
-                    fetch('/dashboard/dashboards/cemeteries/api/blocks-api.php?action=list&limit=1000'),
-                    fetch('/dashboard/dashboards/cemeteries/api/plots-api.php?action=list&limit=1000'),
-                    fetch('/dashboard/dashboards/cemeteries/api/rows-api.php?action=list&limit=1000'),
-                    fetch('/dashboard/dashboards/cemeteries/api/areaGraves-api.php?action=list&limit=1000'),
-                    fetch('/dashboard/dashboards/cemeteries/api/graves-api.php?action=list&limit=1000')
+                    fetch('/dashboard/dashboards/cemeteries/api/blocks-api.php?action=list'),
+                    fetch('/dashboard/dashboards/cemeteries/api/plots-api.php?action=list'),
+                    fetch('/dashboard/dashboards/cemeteries/api/rows-api.php?action=list'),
+                    fetch('/dashboard/dashboards/cemeteries/api/areaGraves-api.php?action=list'),
+                    fetch('/dashboard/dashboards/cemeteries/api/graves-api.php?action=list')
                 ]);
                 
                 const [blocksData, plotsData, rowsData, areaGravesData, gravesData] = await Promise.all([

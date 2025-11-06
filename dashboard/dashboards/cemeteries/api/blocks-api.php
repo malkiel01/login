@@ -35,7 +35,7 @@ try {
             $search = $_GET['search'] ?? '';
             $cemeteryId = $_GET['cemeteryId'] ?? '';
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-            $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
+            $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 999999;
             $offset = ($page - 1) * $limit;
             
             $sql = "SELECT b.*, c.cemeteryNameHe

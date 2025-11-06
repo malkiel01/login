@@ -35,7 +35,7 @@ try {
             $search = $_GET['search'] ?? '';
             $blockId = $_GET['blockId'] ?? '';
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-            $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 50;
+            $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 999999;
             $offset = ($page - 1) * $limit;
 
             $sql = "SELECT p.* FROM plots_view p WHERE isActive = 1";            

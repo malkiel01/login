@@ -4542,7 +4542,161 @@ const FormHandler = {
             }
         };
 
+        // window.populateBlocks = function() {
+        //     const cemeteryId = document.getElementById('cemeterySelect')?.value;
+        //     const blockSelect = document.getElementById('blockSelect');
+            
+        //     if (!blockSelect || !cemeteryId) return;
+            
+        //     blockSelect.innerHTML = '<option value="">-- בחר גוש --</option>';
+            
+        //     const hasAvailableGravesInBlock = (blockId) => {
+        //         return window.hierarchyData.plots.some(plot => {
+        //             if (plot.blockId != blockId) return false;
+        //             return window.hierarchyData.rows.some(row => {
+        //                 if (row.plotId != plot.unicId) return false;
+        //                 return window.hierarchyData.areaGraves.some(ag => {
+        //                     if (ag.lineId != row.unicId) return false;
+        //                     return window.hierarchyData.graves.some(grave => {
+        //                         return grave.areaGraveId == ag.unicId && grave.status == 1;
+        //                     });
+        //                 });
+        //             });
+        //         });
+        //     };
+            
+        //     const availableBlocks = window.hierarchyData.blocks.filter(block => {
+        //         if (block.cemetery_id != cemeteryId) return false;
+        //         return hasAvailableGravesInBlock(block.unicId);
+        //     });
+            
+        //     availableBlocks.forEach(block => {
+        //         const option = document.createElement('option');
+        //         option.value = block.unicId;
+        //         option.textContent = block.blockNameHe;
+        //         blockSelect.appendChild(option);
+        //     });
+        // };
+
+        // window.populatePlots = function() {
+        //     const blockId = document.getElementById('blockSelect')?.value;
+        //     const plotSelect = document.getElementById('plotSelect');
+            
+        //     if (!plotSelect || !blockId) return;
+            
+        //     plotSelect.innerHTML = '<option value="">-- בחר חלקה --</option>';
+            
+        //     const hasAvailableGravesInPlot = (plotId) => {
+        //         return window.hierarchyData.rows.some(row => {
+        //             if (row.plotId != plotId) return false;
+        //             return window.hierarchyData.areaGraves.some(ag => {
+        //                 if (ag.lineId != row.unicId) return false;
+        //                 return window.hierarchyData.graves.some(grave => {
+        //                     return grave.areaGraveId == ag.unicId && grave.status == 1;
+        //                 });
+        //             });
+        //         });
+        //     };
+            
+        //     const availablePlots = window.hierarchyData.plots.filter(plot => {
+        //         if (plot.blockId != blockId) return false;
+        //         return hasAvailableGravesInPlot(plot.unicId);
+        //     });
+            
+        //     availablePlots.forEach(plot => {
+        //         const option = document.createElement('option');
+        //         option.value = plot.unicId;
+        //         option.textContent = plot.plotNameHe;
+        //         plotSelect.appendChild(option);
+        //     });
+        // };
+
+        // window.populateRows = function() {
+        //     const plotId = document.getElementById('plotSelect')?.value;
+        //     const rowSelect = document.getElementById('rowSelect');
+            
+        //     if (!rowSelect || !plotId) return;
+            
+        //     rowSelect.innerHTML = '<option value="">-- בחר שורה --</option>';
+            
+        //     const hasAvailableGravesInRow = (rowId) => {
+        //         return window.hierarchyData.areaGraves.some(ag => {
+        //             if (ag.lineId != rowId) return false;
+        //             return window.hierarchyData.graves.some(grave => {
+        //                 return grave.areaGraveId == ag.unicId && grave.status == 1;
+        //             });
+        //         });
+        //     };
+            
+        //     const availableRows = window.hierarchyData.rows.filter(row => {
+        //         if (row.plotId != plotId) return false;
+        //         return hasAvailableGravesInRow(row.unicId);
+        //     });
+            
+        //     availableRows.forEach(row => {
+        //         const option = document.createElement('option');
+        //         option.value = row.unicId;
+        //         option.textContent = row.displayName || row.lineNameHe || `שורה ${row.serialNumber}`;
+        //         rowSelect.appendChild(option);
+        //     });
+        // };
+
+        // window.populateAreaGraves = function() {
+        //     const rowId = document.getElementById('rowSelect')?.value;
+        //     const areaGraveSelect = document.getElementById('areaGraveSelect');
+            
+        //     if (!areaGraveSelect || !rowId) return;
+            
+        //     areaGraveSelect.innerHTML = '<option value="">-- בחר אחוזת קבר --</option>';
+            
+        //     const hasAvailableGravesInAreaGrave = (areaGraveId) => {
+        //         return window.hierarchyData.graves.some(grave => {
+        //             return grave.areaGraveId == areaGraveId && grave.status == 1;
+        //         });
+        //     };
+            
+        //     const availableAreaGraves = window.hierarchyData.areaGraves.filter(ag => {
+        //         if (ag.lineId != rowId) return false;
+        //         return hasAvailableGravesInAreaGrave(ag.unicId);
+        //     });
+            
+        //     availableAreaGraves.forEach(ag => {
+        //         const option = document.createElement('option');
+        //         option.value = ag.unicId;
+        //         option.textContent = ag.areaGraveNameHe || `אחוזה ${ag.serialNumber}`;
+        //         areaGraveSelect.appendChild(option);
+        //     });
+        // };
+
+        // window.populateGraves = function() {
+        //     const areaGraveId = document.getElementById('areaGraveSelect')?.value;
+        //     const graveSelect = document.getElementById('graveSelect');
+            
+        //     if (!graveSelect || !areaGraveId) return;
+            
+        //     graveSelect.innerHTML = '<option value="">-- בחר קבר --</option>';
+            
+        //     const availableGraves = window.hierarchyData.graves.filter(grave => {
+        //         return grave.areaGraveId == areaGraveId && grave.status == 1;
+        //     });
+            
+        //     availableGraves.forEach(grave => {
+        //         const option = document.createElement('option');
+        //         option.value = grave.unicId;
+        //         option.textContent = `קבר ${grave.graveNumber || grave.serialNumber}`;
+        //         graveSelect.appendChild(option);
+        //     });
+        // };
+
+        // ✅ שלב 2: טעינת היררכיה מ-APIs
+        
         window.populateBlocks = function() {
+            // ✅ בדיקה קריטית - אם אין נתונים, אל תעשה כלום
+            if (!window.hierarchyData || !window.hierarchyData.blocks) {
+                console.log('⏳ Hierarchy data not loaded yet, skipping populateBlocks');
+                return;
+            }
+            
             const cemeteryId = document.getElementById('cemeterySelect')?.value;
             const blockSelect = document.getElementById('blockSelect');
             
@@ -4579,6 +4733,12 @@ const FormHandler = {
         };
 
         window.populatePlots = function() {
+            // ✅ בדיקה קריטית
+            if (!window.hierarchyData || !window.hierarchyData.plots) {
+                console.log('⏳ Hierarchy data not loaded yet, skipping populatePlots');
+                return;
+            }
+            
             const blockId = document.getElementById('blockSelect')?.value;
             const plotSelect = document.getElementById('plotSelect');
             
@@ -4612,6 +4772,12 @@ const FormHandler = {
         };
 
         window.populateRows = function() {
+            // ✅ בדיקה קריטית
+            if (!window.hierarchyData || !window.hierarchyData.rows) {
+                console.log('⏳ Hierarchy data not loaded yet, skipping populateRows');
+                return;
+            }
+            
             const plotId = document.getElementById('plotSelect')?.value;
             const rowSelect = document.getElementById('rowSelect');
             
@@ -4642,6 +4808,12 @@ const FormHandler = {
         };
 
         window.populateAreaGraves = function() {
+            // ✅ בדיקה קריטית
+            if (!window.hierarchyData || !window.hierarchyData.areaGraves) {
+                console.log('⏳ Hierarchy data not loaded yet, skipping populateAreaGraves');
+                return;
+            }
+            
             const rowId = document.getElementById('rowSelect')?.value;
             const areaGraveSelect = document.getElementById('areaGraveSelect');
             
@@ -4669,6 +4841,12 @@ const FormHandler = {
         };
 
         window.populateGraves = function() {
+            // ✅ בדיקה קריטית
+            if (!window.hierarchyData || !window.hierarchyData.graves) {
+                console.log('⏳ Hierarchy data not loaded yet, skipping populateGraves');
+                return;
+            }
+            
             const areaGraveId = document.getElementById('areaGraveSelect')?.value;
             const graveSelect = document.getElementById('graveSelect');
             
@@ -4687,8 +4865,7 @@ const FormHandler = {
                 graveSelect.appendChild(option);
             });
         };
-
-        // ✅ שלב 2: טעינת היררכיה מ-APIs
+        
         const loadHierarchyFromAPIs = async function() {
             const fieldset = document.getElementById('grave-selector-fieldset');
             

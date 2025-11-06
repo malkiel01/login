@@ -539,6 +539,17 @@
             $html .= '</div>';
             $html .= '</div>';
             $html .= '</div>';
+
+
+            // 🆕 הוסף בסוף לפני return
+            $html .= '<script>';
+            $html .= 'document.addEventListener("DOMContentLoaded", function() {';
+            $html .= '  const form = document.getElementById("' . $this->formId . '");';
+            $html .= '  if (form && window.FormValidations) {';
+            $html .= '    FormValidations.init(form);';
+            $html .= '  }';
+            $html .= '});';
+            $html .= '</script>';
             
             return $html;
         }

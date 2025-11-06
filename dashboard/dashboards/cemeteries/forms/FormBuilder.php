@@ -540,15 +540,18 @@
             $html .= '</div>';
             $html .= '</div>';
 
-
-            // 🆕 הוסף בסוף לפני return
+            // שורות 545-555 - מתוקן
             $html .= '<script>';
-            $html .= 'document.addEventListener("DOMContentLoaded", function() {';
+            $html .= '(function() {';
             $html .= '  const form = document.getElementById("' . $this->formId . '");';
+            $html .= '    console.log("✅ FormValidations initialized");';
             $html .= '  if (form && window.FormValidations) {';
             $html .= '    FormValidations.init(form);';
+            $html .= '    console.log("✅ FormValidations initialized for ' . $this->formId . '");';
+            $html .= '  } else {';
+            $html .= '    console.warn("⚠️ FormValidations not found or form missing");';
             $html .= '  }';
-            $html .= '});';
+            $html .= '})();';
             $html .= '</script>';
             
             return $html;

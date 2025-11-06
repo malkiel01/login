@@ -603,21 +603,24 @@
 
         // FormBuilder.php → renderField()
         private function renderField($field) {
-            // For checkbox, handle differently
+        // טיפול ב-hidden
+            if ($field['type'] === 'hidden') {
+                return '<input type="hidden" id="' . $field['name'] . '" name="' . $field['name'] . '" value="' . htmlspecialchars($field['value']) . '">';
+            }
+            
+            // טיפול ב-checkbox
             if ($field['type'] === 'checkbox') {
                 return $this->renderCheckbox($field);
             }
 
+
             $html = '<div class="form-group ' . $field['class'] . '">';
-            
-            if ($field['type'] !== 'hidden' && $field['type'] !== 'checkbox') {
-                $html .= '<label for="' . $field['name'] . '">';
-                $html .= $field['label'];
-                if ($field['required']) {
-                    $html .= ' <span class="text-danger">*</span>';
-                }
-                $html .= '</label>';
+            $html .= '<label for="' . $field['name'] . '">';
+            $html .= $field['label'];
+            if ($field['required']) {
+                $html .= ' <span class="text-danger">*</span>';
             }
+            $html .= '</label>';
             
             // 🆕 הוסף data-validations אם יש
             $validationsAttr = '';
@@ -628,38 +631,38 @@
             
             switch ($field['type']) {
                 case 'select':
-                    $html .= $this->renderSelect($field);
+                    $html .= $this->renderSelect($field , $validationsAttr);
                     break;
                 case 'textarea':
-                    $html .= $this->renderTextarea($field);
+                    $html .= $this->renderTextarea($field , $validationsAttr);
                     break;
                 case 'number':
-                    $html .= $this->renderNumber($field);
+                    $html .= $this->renderNumber($field , $validationsAttr);
                     break;
                 case 'date':
-                    $html .= $this->renderDate($field);
+                    $html .= $this->renderDate($field , $validationsAttr);
                     break;
                 case 'email':
-                    $html .= $this->renderEmail($field);
+                    $html .= $this->renderEmail($field , $validationsAttr);
                     break;
                 case 'tel':
-                    $html .= $this->renderTel($field);
+                    $html .= $this->renderTel($field , $validationsAttr);
                     break;
                 case 'time':
-                    $html .= $this->renderTime($field);
+                    $html .= $this->renderTime($field , $validationsAttr);
                     break;
                 case 'custom_html':
                     $html .= $field['html'];
                     break;
                 default:
-                    $html .= $this->renderText($field);
+                    $html .= $this->renderText($field , $validationsAttr);
             }
             
             $html .= '</div>';
             return $html;
         }
         
-        private function renderText($field) {
+        private function renderText($field , $validationsAttr) {
             $html = '<input type="text" class="form-control" ';
             $html .= 'id="' . $field['name'] . '" ';
             $html .= 'name="' . $field['name'] . '" ';
@@ -678,11 +681,12 @@
             return $html;
         }
         
-        private function renderNumber($field) {
+        private function renderNumber($field , $validationsAttr) {
             $html = '<input type="number" class="form-control" ';
             $html .= 'id="' . $field['name'] . '" ';
             $html .= 'name="' . $field['name'] . '" ';
             $html .= 'value="' . htmlspecialchars($field['value']) . '" ';
+            $html .= $validationsAttr;
             if ($field['min'] !== null) {
                 $html .= 'min="' . $field['min'] . '" ';
             }
@@ -705,11 +709,12 @@
             return $html;
         }
         
-        private function renderEmail($field) {
+        private function renderEmail($field , $validationsAttr) {
             $html = '<input type="email" class="form-control" ';
             $html .= 'id="' . $field['name'] . '" ';
             $html .= 'name="' . $field['name'] . '" ';
             $html .= 'value="' . htmlspecialchars($field['value']) . '" ';
+            $html .= $validationsAttr;
             if ($field['placeholder']) {
                 $html .= 'placeholder="' . htmlspecialchars($field['placeholder']) . '" ';
             }
@@ -723,11 +728,12 @@
             return $html;
         }
         
-        private function renderTel($field) {
+        private function renderTel($field , $validationsAttr) {
             $html = '<input type="tel" class="form-control" ';
             $html .= 'id="' . $field['name'] . '" ';
             $html .= 'name="' . $field['name'] . '" ';
             $html .= 'value="' . htmlspecialchars($field['value']) . '" ';
+            $html .= $validationsAttr;
             if ($field['placeholder']) {
                 $html .= 'placeholder="' . htmlspecialchars($field['placeholder']) . '" ';
             }
@@ -741,11 +747,12 @@
             return $html;
         }
         
-        private function renderDate($field) {
+        private function renderDate($field , $validationsAttr) {
             $html = '<input type="date" class="form-control" ';
             $html .= 'id="' . $field['name'] . '" ';
             $html .= 'name="' . $field['name'] . '" ';
             $html .= 'value="' . htmlspecialchars($field['value']) . '" ';
+            $html .= $validationsAttr;
             if ($field['required']) {
                 $html .= 'required ';
             }
@@ -756,11 +763,12 @@
             return $html;
         }
         
-        private function renderTime($field) {
+        private function renderTime($field , $validationsAttr) {
             $html = '<input type="time" class="form-control" ';
             $html .= 'id="' . $field['name'] . '" ';
             $html .= 'name="' . $field['name'] . '" ';
             $html .= 'value="' . htmlspecialchars($field['value']) . '" ';
+            $html .= $validationsAttr;
             if ($field['required']) {
                 $html .= 'required ';
             }
@@ -771,10 +779,11 @@
             return $html;
         }
         
-        private function renderSelect($field) {
+        private function renderSelect($field , $validationsAttr) {
             $html = '<select class="form-control" ';
             $html .= 'id="' . $field['name'] . '" ';
             $html .= 'name="' . $field['name'] . '" ';
+                        $html .= $validationsAttr;
             if ($field['required']) {
                 $html .= 'required ';
             }
@@ -798,11 +807,12 @@
             return $html;
         }
         
-        private function renderTextarea($field) {
+        private function renderTextarea($field , $validationsAttr) {
             $html = '<textarea class="form-control" ';
             $html .= 'id="' . $field['name'] . '" ';
             $html .= 'name="' . $field['name'] . '" ';
             $html .= 'rows="' . $field['rows'] . '" ';
+            $html .= $validationsAttr;
             if ($field['placeholder']) {
                 $html .= 'placeholder="' . htmlspecialchars($field['placeholder']) . '" ';
             }
@@ -818,13 +828,14 @@
             return $html;
         }
         
-        private function renderCheckbox($field) {
+        private function renderCheckbox($field , $validationsAttr) {
             $html = '<div class="form-group ' . $field['class'] . '">';
             $html .= '<div class="form-check">';
             $html .= '<input type="checkbox" class="form-check-input" ';
             $html .= 'id="' . $field['name'] . '" ';
             $html .= 'name="' . $field['name'] . '" ';
             $html .= 'value="1" ';
+            $html .= $validationsAttr;
             if ($field['value']) {
                 $html .= 'checked ';
             }

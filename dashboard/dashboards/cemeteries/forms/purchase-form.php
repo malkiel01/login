@@ -28,45 +28,6 @@ $formType = basename(__FILE__, '.php'); // מזהה אוטומטי של סוג �
             $purchase = $stmt->fetch(PDO::FETCH_ASSOC);
         }
 
-        // // טען לקוחות
-        // $customers = [];
-        // if ($purchase && $purchase['clientId']) {
-        //     // אם זה עריכה, כלול גם את הלקוח הנוכחי
-        //     $customersStmt = $conn->prepare("
-        //         SELECT unicId, CONCAT(lastName, ' ', firstName) as full_name, numId,
-        //             CASE WHEN unicId = :currentClient THEN 1 ELSE 0 END as is_current
-        //         FROM customers 
-        //         WHERE (statusCustomer = 1 OR unicId = :currentClient2)
-        //         AND isActive = 1 
-        //         ORDER BY is_current DESC, lastName, firstName
-        //     ");
-        //     $customersStmt->execute([
-        //         'currentClient' => $purchase['clientId'],
-        //         'currentClient2' => $purchase['clientId']
-        //     ]);
-        // } else {
-        //     // רכישה חדשה - רק לקוחות פנויים
-        //     $customersStmt = $conn->prepare("
-        //         SELECT unicId, CONCAT(lastName, ' ', firstName) as full_name, numId 
-        //         FROM customers 
-        //         WHERE statusCustomer = 1 
-        //         AND isActive = 1 
-        //         ORDER BY lastName, firstName
-        //     ");
-        //     $customersStmt->execute();
-        // }
-
-        // while ($row = $customersStmt->fetch(PDO::FETCH_ASSOC)) {
-        //     $label = $row['full_name'];
-        //     if ($row['numId']) {
-        //         $label .= ' (' . $row['numId'] . ')';
-        //     }
-        //     // סמן את הלקוח הנוכחי
-        //     if ($purchase && $row['unicId'] === $purchase['clientId']) {
-        //     }
-        //     $customers[$row['unicId']] = $label;
-        // }
-
         // עכשיו טען את ההיררכיה
         $hierarchyData = [];
         $cemeteries = [];
@@ -126,21 +87,36 @@ $formType = basename(__FILE__, '.php'); // מזהה אוטומטי של סוג �
     // יצירת FormBuilder
     $formBuilder = new FormBuilder('purchase', $itemId, $parentId);
 
-    // // הוספת שדה לקוח
-    // $formBuilder->addField('clientId', 'לקוח', 'select', [
-    //     'required' => true,
-    //     'options' => array_merge(
-    //         ['' => '-- בחר לקוח --'],  // הוסף אופציה ריקה בהתחלה
-    //         $customers
-    //     ),
-    //     'value' => $purchase['clientId'] ?? ''
-    // ]);
+    // $customersSelectorHTML = '
+    // <div class="form-group">
+    //     <label>לקוח <span class="text-danger">*</span></label>
+    //     <select name="clientId" id="clientId" class="form-control" required>
+    //         <option value="">טוען לקוחות...</option>
+    //     </select>
+    // </div>';
 
     $customersSelectorHTML = '
+    <style>
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    .loading-spinner {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #3498db;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-left: 8px;
+        vertical-align: middle;
+    }
+    </style>
     <div class="form-group">
         <label>לקוח <span class="text-danger">*</span></label>
-        <select name="clientId" id="clientId" class="form-control" required>
-            <option value="">טוען לקוחות...</option>
+        <select name="clientId" id="clientId" class="form-control" required disabled style="opacity: 0.7;">
+            <option value=""><span class="loading-spinner"></span> טוען לקוחות...</option>
         </select>
     </div>';
 

@@ -21,19 +21,19 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <title><?php echo DASHBOARD_NAME; ?></title>
     
     <!-- CSS Files - כל הקבצים כולל החדשים -->
-    <!-- <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/main.css"> -->
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/main.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/dashboard.css">
-    <!-- <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/sidebar.css"> -->
-    <!-- <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/header.css"> -->
-    <!-- <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/forms.css"> -->
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/sidebar.css">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/header.css">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/forms.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/cards.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/breadcrumb.css">
 
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/smart-select.css">
 
-    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/search.css">
-    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/universal-search.css">
-    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/table-manager.css">
+    <!-- <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/search.css"> -->
+    <!-- <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/universal-search.css"> -->
+    <!-- <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/table-manager.css"> -->
 
 </head>
 <body>

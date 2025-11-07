@@ -245,7 +245,7 @@ a:hover {
     color: var(--text-secondary);
 }
 
-/* .form-control {
+.form-control {
     width: 100%;
     padding: 0.625rem 0.875rem;
     border: 1px solid var(--border-color);
@@ -253,7 +253,7 @@ a:hover {
     font-size: 0.875rem;
     transition: var(--transition);
     background: var(--bg-primary);
-} */
+}
 
 .form-control:focus {
     outline: none;

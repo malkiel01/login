@@ -6513,7 +6513,7 @@ window.populatePlots = function() {
     window.toggleSelectState('plotSelect', true);
 };
         
-        window.populateRows = function() {
+        window.populateRows2 = function() {
             console.log('📏 populateRows called');
             
             if (!window.hierarchyData || !window.hierarchyData.rows) {
@@ -6573,71 +6573,71 @@ window.populatePlots = function() {
             console.log('✅ Rows populated successfully');
         };
 
-        window.populateRows3 = function() {
-            console.log('📏 populateRows called');
-            
-            if (!window.hierarchyData || !window.hierarchyData.rows) {
-                console.warn('⚠️ Rows data not loaded yet');
-                return;
-            }
-            
-            const plotId = document.getElementById('plotSelect')?.value;
-            const rowSelect = document.getElementById('rowSelect');
-            
-            if (!rowSelect || !plotId) {
-                console.warn('⚠️ Row select or plot not found');
-                return;
-            }
-            
-            console.log('🔍 Looking for plot:', plotId);
-            
-            rowSelect.innerHTML = '<option value="">-- בחר שורה --</option>';
-            
-            const relevantRows = window.hierarchyData.rows.filter(row => {
-                return row.plotId == plotId ||
-                    row.plot_id == plotId ||
-                    row.unicPlotId == plotId;
-            });
-            
-            console.log(`📏 Found ${relevantRows.length} rows for plot ${plotId}`);
-            
-            let availableCount = 0;
-            let unavailableCount = 0;
-            
-            relevantRows.forEach(row => {
-                const option = document.createElement('option');
-                option.value = row.unicId;
-                
-                // ✅ בדוק אם יש אחוזות פעילות
-                const hasAreaGraves = window.hasAvailableAreaGraves(row.unicId);
-                
-                if (hasAreaGraves) {
-                    option.textContent = row.lineNameHe || row.rowNameHe || `שורה ${row.serialNumber}`;
-                    availableCount++;
-                } else {
-                    option.textContent = `${row.lineNameHe || row.rowNameHe || `שורה ${row.serialNumber}`} (אין קברים פנויים)`;
-                    option.disabled = true;
-                    option.style.color = '#999';
-                    option.style.backgroundColor = '#f5f5f5';
-                    unavailableCount++;
-                }
-                
-                rowSelect.appendChild(option);
-            });
-            
-            console.log(`✅ ${availableCount} available rows, ${unavailableCount} unavailable`);
-            
-            rowSelect.addEventListener('change', function() {
-                const selectedValue = this.value;
-                console.log('📏 Row selected:', selectedValue);
-                
-                if (selectedValue && window.filterHierarchy) {
-                    window.filterHierarchy('row');
-                }
-            });
-            
-            console.log('✅ Rows populated successfully');
-        };
+window.populateRows = function() {
+    console.log('📏 populateRows called');
+    
+    if (!window.hierarchyData || !window.hierarchyData.rows) {
+        console.warn('⚠️ Rows data not loaded yet');
+        return;
+    }
+    
+    const plotId = document.getElementById('plotSelect')?.value;
+    const rowSelect = document.getElementById('rowSelect');
+    
+    if (!rowSelect || !plotId) {
+        console.warn('⚠️ Row select or plot not found');
+        return;
+    }
+    
+    console.log('🔍 Looking for plot:', plotId);
+    
+    rowSelect.innerHTML = '<option value="">-- בחר שורה --</option>';
+    
+    const relevantRows = window.hierarchyData.rows.filter(row => {
+        return row.plotId == plotId ||
+               row.plot_id == plotId ||
+               row.unicPlotId == plotId;
+    });
+    
+    console.log(`📏 Found ${relevantRows.length} rows for plot ${plotId}`);
+    
+    let availableCount = 0;
+    let unavailableCount = 0;
+    
+    relevantRows.forEach(row => {
+        const option = document.createElement('option');
+        option.value = row.unicId;
+        
+        // ✅ בדוק אם יש אחוזות פעילות
+        const hasAreaGraves = window.hasAvailableAreaGraves(row.unicId);
+        
+        if (hasAreaGraves) {
+            option.textContent = row.lineNameHe || row.rowNameHe || `שורה ${row.serialNumber}`;
+            availableCount++;
+        } else {
+            option.textContent = `${row.lineNameHe || row.rowNameHe || `שורה ${row.serialNumber}`} (אין קברים פנויים)`;
+            option.disabled = true;
+            option.style.color = '#999';
+            option.style.backgroundColor = '#f5f5f5';
+            unavailableCount++;
+        }
+        
+        rowSelect.appendChild(option);
+    });
+    
+    console.log(`✅ ${availableCount} available rows, ${unavailableCount} unavailable`);
+    
+    rowSelect.addEventListener('change', function() {
+        const selectedValue = this.value;
+        console.log('📏 Row selected:', selectedValue);
+        
+        if (selectedValue && window.filterHierarchy) {
+            window.filterHierarchy('row');
+        }
+    });
+    
+    console.log('✅ Rows populated successfully');
+};
                 
         window.populateAreaGraves = function() {
             console.log('🏘️ populateAreaGraves called');

@@ -6097,44 +6097,6 @@ const FormHandler = {
         // ===========================================================
         
         // פונקציות placeholder להיררכיה
-        // window.filterHierarchy = function(level) {
-        //     console.log(`📍 filterHierarchy called with level: ${level}`);
-            
-        //     const clearSelect = (selectId) => {
-        //         const select = document.getElementById(selectId);
-        //         if (select) {
-        //             select.innerHTML = '<option value="">-- בחר --</option>';
-        //         }
-        //     };
-            
-        //     switch(level) {
-        //         case 'cemetery':
-        //             window.populateBlocks();
-        //             clearSelect('plotSelect');
-        //             clearSelect('rowSelect');
-        //             clearSelect('areaGraveSelect');
-        //             clearSelect('graveSelect');
-        //             break;
-        //         case 'block':
-        //             window.populatePlots();
-        //             clearSelect('rowSelect');
-        //             clearSelect('areaGraveSelect');
-        //             clearSelect('graveSelect');
-        //             break;
-        //         case 'plot':
-        //             window.populateRows();
-        //             clearSelect('areaGraveSelect');
-        //             clearSelect('graveSelect');
-        //             break;
-        //         case 'row':
-        //             window.populateAreaGraves();
-        //             clearSelect('graveSelect');
-        //             break;
-        //         case 'areaGrave':
-        //             window.populateGraves();
-        //             break;
-        //     }
-        // };
         window.filterHierarchy = function(level) {
             console.log(`📍 filterHierarchy called with level: ${level}`);
             
@@ -6194,6 +6156,66 @@ const FormHandler = {
                     break;
             }
         };
+
+        // ✅ פונקציות עזר לבדיקת זמינות בהיררכיה
+        window.hasAvailableGraves = function(areaGraveId) {
+            if (!window.hierarchyData?.graves) return false;
+            return window.hierarchyData.graves.some(grave => {
+                const matchesArea = 
+                    grave.areaGraveId == areaGraveId ||
+                    grave.area_grave_id == areaGraveId ||
+                    grave.unicAreaGraveId == areaGraveId;
+                const isFree = grave.status == 1 || grave.graveStatus == 1;
+                return matchesArea && isFree;
+            });
+        };
+
+        window.hasAvailableAreaGraves = function(rowId) {
+            if (!window.hierarchyData?.areaGraves) return false;
+            return window.hierarchyData.areaGraves.some(ag => {
+                const matchesRow = 
+                    ag.lineId == rowId ||
+                    ag.line_id == rowId ||
+                    ag.rowId == rowId ||
+                    ag.row_id == rowId ||
+                    ag.unicLineId == rowId;
+                return matchesRow && window.hasAvailableGraves(ag.unicId);
+            });
+        };
+
+        window.hasAvailableRows = function(plotId) {
+            if (!window.hierarchyData?.rows) return false;
+            return window.hierarchyData.rows.some(row => {
+                const matchesPlot = 
+                    row.plotId == plotId ||
+                    row.plot_id == plotId ||
+                    row.unicPlotId == plotId;
+                return matchesPlot && window.hasAvailableAreaGraves(row.unicId);
+            });
+        };
+
+        window.hasAvailablePlots = function(blockId) {
+            if (!window.hierarchyData?.plots) return false;
+            return window.hierarchyData.plots.some(plot => {
+                const matchesBlock = 
+                    plot.blockId == blockId ||
+                    plot.block_id == blockId ||
+                    plot.unicBlockId == blockId;
+                return matchesBlock && window.hasAvailableRows(plot.unicId);
+            });
+        };
+
+        window.hasAvailableBlocks = function(cemeteryId) {
+            if (!window.hierarchyData?.blocks) return false;
+            return window.hierarchyData.blocks.some(block => {
+                const matchesCemetery = 
+                    block.cemetery_id == cemeteryId ||
+                    block.cemeteryId == cemeteryId ||
+                    block.cemId == cemeteryId ||
+                    block.cemetery == cemeteryId;
+                return matchesCemetery && window.hasAvailablePlots(block.unicId);
+            });
+        };
         
         // ✅ פונקציית עזר להפעלה/כיבוי של select
         window.toggleSelectState = function(selectId, enabled) {
@@ -6210,7 +6232,7 @@ const FormHandler = {
             }
         };
 
-        window.populateBlocks = function() {
+        window.populateBlocks2 = function() {
             console.log('📦 populateBlocks called');
             
             // בדיקה שיש נתונים
@@ -6279,8 +6301,76 @@ const FormHandler = {
             
             console.log('✅ Blocks populated successfully');
         };
+
+window.populateBlocks = function() {
+    console.log('📦 populateBlocks called');
+    
+    if (!window.hierarchyData || !window.hierarchyData.blocks) {
+        console.warn('⚠️ Hierarchy data not loaded yet');
+        return;
+    }
+    
+    const cemeteryId = document.getElementById('cemeterySelect')?.value;
+    const blockSelect = document.getElementById('blockSelect');
+    
+    if (!blockSelect || !cemeteryId) {
+        console.warn('⚠️ Block select or cemetery not found');
+        return;
+    }
+    
+    console.log('🔍 Looking for cemetery:', cemeteryId);
+    
+    blockSelect.innerHTML = '<option value="">-- בחר גוש --</option>';
+    
+    const relevantBlocks = window.hierarchyData.blocks.filter(block => {
+        return block.cemetery_id == cemeteryId ||
+               block.cemeteryId == cemeteryId ||
+               block.cemId == cemeteryId ||
+               block.cemetery == cemeteryId;
+    });
+    
+    console.log(`📦 Found ${relevantBlocks.length} blocks for cemetery ${cemeteryId}`);
+    
+    let availableCount = 0;
+    let unavailableCount = 0;
+    
+    relevantBlocks.forEach(block => {
+        const option = document.createElement('option');
+        option.value = block.unicId;
         
-        window.populatePlots = function() {
+        // ✅ בדוק אם יש חלקות פעילות
+        const hasPlots = window.hasAvailablePlots(block.unicId);
+        
+        if (hasPlots) {
+            option.textContent = block.blockNameHe;
+            availableCount++;
+        } else {
+            option.textContent = `${block.blockNameHe} (אין קברים פנויים)`;
+            option.disabled = true;
+            option.style.color = '#999';
+            option.style.backgroundColor = '#f5f5f5';
+            unavailableCount++;
+        }
+        
+        blockSelect.appendChild(option);
+    });
+    
+    console.log(`✅ ${availableCount} available blocks, ${unavailableCount} unavailable`);
+    
+    blockSelect.addEventListener('change', function() {
+        const selectedValue = this.value;
+        console.log('📦 Block selected:', selectedValue);
+        
+        if (selectedValue && window.filterHierarchy) {
+            window.filterHierarchy('block');
+        }
+    });
+    
+    console.log('✅ Blocks populated successfully');
+    window.toggleSelectState('blockSelect', true);
+};
+        
+        window.populatePlots2 = function() {
             console.log('📊 populatePlots called');
             
             // בדיקה שיש נתונים
@@ -6351,8 +6441,79 @@ const FormHandler = {
             
             console.log('✅ Plots populated successfully');
         };
+
+        window.populatePlots = function() {
+            console.log('📊 populatePlots called');
+            
+            if (!window.hierarchyData || !window.hierarchyData.plots) {
+                console.warn('⚠️ Plots data not loaded yet');
+                return;
+            }
+            
+            const blockId = document.getElementById('blockSelect')?.value;
+            const plotSelect = document.getElementById('plotSelect');
+            
+            if (!plotSelect || !blockId) {
+                console.warn('⚠️ Plot select or block not found');
+                return;
+            }
+            
+            console.log('🔍 Looking for block:', blockId);
+            
+            plotSelect.innerHTML = '<option value="">-- בחר חלקה --</option>';
+            
+            const relevantPlots = window.hierarchyData.plots.filter(plot => {
+                return plot.blockId == blockId ||
+                    plot.block_id == blockId ||
+                    plot.unicBlockId == blockId;
+            });
+            
+            console.log(`📊 Found ${relevantPlots.length} plots for block ${blockId}`);
+            
+            let availableCount = 0;
+            let unavailableCount = 0;
+            
+            relevantPlots.forEach(plot => {
+                const option = document.createElement('option');
+                option.value = plot.unicId;
+                
+                // ✅ בדוק אם יש שורות פעילות
+                const hasRows = window.hasAvailableRows(plot.unicId);
+                
+                if (hasRows) {
+                    option.textContent = plot.plotNameHe;
+                    availableCount++;
+                } else {
+                    option.textContent = `${plot.plotNameHe} (אין קברים פנויים)`;
+                    option.disabled = true;
+                    option.style.color = '#999';
+                    option.style.backgroundColor = '#f5f5f5';
+                    unavailableCount++;
+                }
+                
+                plotSelect.appendChild(option);
+            });
+            
+            console.log(`✅ ${availableCount} available plots, ${unavailableCount} unavailable`);
+            
+            plotSelect.addEventListener('change', function() {
+                const selectedValue = this.value;
+                console.log('📊 Plot selected:', selectedValue);
+                
+                if (selectedValue && window.filterHierarchy) {
+                    window.filterHierarchy('plot');
+                } else {
+                    window.toggleSelectState('rowSelect', false);
+                    window.toggleSelectState('areaGraveSelect', false);
+                    window.toggleSelectState('graveSelect', false);
+                }
+            });
+            
+            console.log('✅ Plots populated successfully');
+            window.toggleSelectState('plotSelect', true);
+        };
         
-        window.populateRows = function() {
+        window.populateRows2 = function() {
             console.log('📏 populateRows called');
             
             if (!window.hierarchyData || !window.hierarchyData.rows) {
@@ -6411,69 +6572,74 @@ const FormHandler = {
             
             console.log('✅ Rows populated successfully');
         };
-                
-        window.populateAreaGraves2 = function() {
-            console.log('🏘️ populateAreaGraves called');
+
+        window.populateRows = function() {
+            console.log('📏 populateRows called');
             
-            if (!window.hierarchyData || !window.hierarchyData.areaGraves) {
-                console.warn('⚠️ AreaGraves data not loaded yet');
+            if (!window.hierarchyData || !window.hierarchyData.rows) {
+                console.warn('⚠️ Rows data not loaded yet');
                 return;
             }
             
-            const rowId = document.getElementById('rowSelect')?.value;
-            const areaGraveSelect = document.getElementById('areaGraveSelect');
+            const plotId = document.getElementById('plotSelect')?.value;
+            const rowSelect = document.getElementById('rowSelect');
             
-            if (!areaGraveSelect || !rowId) {
-                console.warn('⚠️ AreaGrave select or row not found');
+            if (!rowSelect || !plotId) {
+                console.warn('⚠️ Row select or plot not found');
                 return;
             }
             
-            console.log('🔍 Looking for row:', rowId);
-            console.log('🔍 Sample areaGrave structure:', window.hierarchyData.areaGraves[0]);
+            console.log('🔍 Looking for plot:', plotId);
             
-            areaGraveSelect.innerHTML = '<option value="">-- בחר אחוזת קבר --</option>';
+            rowSelect.innerHTML = '<option value="">-- בחר שורה --</option>';
             
-            const relevantAreaGraves = window.hierarchyData.areaGraves.filter(ag => {
-                const matches = 
-                    ag.lineId == rowId ||
-                    ag.line_id == rowId ||
-                    ag.rowId == rowId ||
-                    ag.row_id == rowId ||
-                    ag.unicLineId == rowId;
+            const relevantRows = window.hierarchyData.rows.filter(row => {
+                return row.plotId == plotId ||
+                    row.plot_id == plotId ||
+                    row.unicPlotId == plotId;
+            });
+            
+            console.log(`📏 Found ${relevantRows.length} rows for plot ${plotId}`);
+            
+            let availableCount = 0;
+            let unavailableCount = 0;
+            
+            relevantRows.forEach(row => {
+                const option = document.createElement('option');
+                option.value = row.unicId;
                 
-                if (matches) {
-                    console.log('✅ Found matching areaGrave:', ag);
+                // ✅ בדוק אם יש אחוזות פעילות
+                const hasAreaGraves = window.hasAvailableAreaGraves(row.unicId);
+                
+                if (hasAreaGraves) {
+                    option.textContent = row.lineNameHe || row.rowNameHe || `שורה ${row.serialNumber}`;
+                    availableCount++;
+                } else {
+                    option.textContent = `${row.lineNameHe || row.rowNameHe || `שורה ${row.serialNumber}`} (אין קברים פנויים)`;
+                    option.disabled = true;
+                    option.style.color = '#999';
+                    option.style.backgroundColor = '#f5f5f5';
+                    unavailableCount++;
                 }
                 
-                return matches;
+                rowSelect.appendChild(option);
             });
             
-            console.log(`🏘️ Found ${relevantAreaGraves.length} areaGraves for row ${rowId}`);
+            console.log(`✅ ${availableCount} available rows, ${unavailableCount} unavailable`);
             
-            if (relevantAreaGraves.length === 0) {
-                console.warn('⚠️ No areaGraves found! Check the field name.');
-                console.log('🔍 Available fields in first areaGrave:', Object.keys(window.hierarchyData.areaGraves[0]));
-            }
-            
-            relevantAreaGraves.forEach(ag => {
-                const option = document.createElement('option');
-                option.value = ag.unicId;
-                option.textContent = ag.areaGraveNameHe || `אחוזה ${ag.serialNumber}`;
-                areaGraveSelect.appendChild(option);
-            });
-            
-            areaGraveSelect.addEventListener('change', function() {
+            rowSelect.addEventListener('change', function() {
                 const selectedValue = this.value;
-                console.log('🏘️ AreaGrave selected:', selectedValue);
+                console.log('📏 Row selected:', selectedValue);
                 
                 if (selectedValue && window.filterHierarchy) {
-                    window.filterHierarchy('areaGrave');
+                    window.filterHierarchy('row');
                 }
             });
             
-            console.log('✅ AreaGraves populated successfully');
+            console.log('✅ Rows populated successfully');
         };
-        window.populateAreaGraves = function() {
+                
+        window.populateAreaGraves2 = function() {
             console.log('🏘️ populateAreaGraves called');
             
             if (!window.hierarchyData || !window.hierarchyData.areaGraves) {
@@ -6550,6 +6716,74 @@ const FormHandler = {
                     option.style.color = '#999';
                     option.style.backgroundColor = '#f5f5f5';
                     option.style.cursor = 'not-allowed';
+                    unavailableCount++;
+                }
+                
+                areaGraveSelect.appendChild(option);
+            });
+            
+            console.log(`✅ ${availableCount} available areaGraves, ${unavailableCount} unavailable`);
+            
+            areaGraveSelect.addEventListener('change', function() {
+                const selectedValue = this.value;
+                console.log('🏘️ AreaGrave selected:', selectedValue);
+                
+                if (selectedValue && window.filterHierarchy) {
+                    window.filterHierarchy('areaGrave');
+                }
+            });
+            
+            console.log('✅ AreaGraves populated successfully');
+        };
+
+        window.populateAreaGraves = function() {
+            console.log('🏘️ populateAreaGraves called');
+            
+            if (!window.hierarchyData || !window.hierarchyData.areaGraves) {
+                console.warn('⚠️ AreaGraves data not loaded yet');
+                return;
+            }
+            
+            const rowId = document.getElementById('rowSelect')?.value;
+            const areaGraveSelect = document.getElementById('areaGraveSelect');
+            
+            if (!areaGraveSelect || !rowId) {
+                console.warn('⚠️ AreaGrave select or row not found');
+                return;
+            }
+            
+            console.log('🔍 Looking for row:', rowId);
+            
+            areaGraveSelect.innerHTML = '<option value="">-- בחר אחוזת קבר --</option>';
+            
+            const relevantAreaGraves = window.hierarchyData.areaGraves.filter(ag => {
+                return ag.lineId == rowId ||
+                    ag.line_id == rowId ||
+                    ag.rowId == rowId ||
+                    ag.row_id == rowId ||
+                    ag.unicLineId == rowId;
+            });
+            
+            console.log(`🏘️ Found ${relevantAreaGraves.length} areaGraves for row ${rowId}`);
+            
+            let availableCount = 0;
+            let unavailableCount = 0;
+            
+            relevantAreaGraves.forEach(ag => {
+                const option = document.createElement('option');
+                option.value = ag.unicId;
+                
+                // ✅ בדוק אם יש קברים פנויים
+                const hasGraves = window.hasAvailableGraves(ag.unicId);
+                
+                if (hasGraves) {
+                    option.textContent = ag.areaGraveNameHe || `אחוזה ${ag.serialNumber}`;
+                    availableCount++;
+                } else {
+                    option.textContent = `${ag.areaGraveNameHe || `אחוזה ${ag.serialNumber}`} (אין קברים פנויים)`;
+                    option.disabled = true;
+                    option.style.color = '#999';
+                    option.style.backgroundColor = '#f5f5f5';
                     unavailableCount++;
                 }
                 
@@ -7398,12 +7632,37 @@ const FormHandler = {
                 
                 // מלא בתי עלמין
                 cemeterySelect.innerHTML = '<option value="">-- בחר בית עלמין --</option>';
+
+                let availableCemeteries = 0;
+                let unavailableCemeteries = 0;
+
                 window.hierarchyData.cemeteries.forEach(cemetery => {
                     const option = document.createElement('option');
                     option.value = cemetery.unicId;
-                    option.textContent = cemetery.cemeteryNameHe;
+                    
+                    // ✅ בדוק אם יש גושים פעילים
+                    const hasBlocks = window.hasAvailableBlocks(cemetery.unicId);
+                    
+                    if (hasBlocks) {
+                        option.textContent = cemetery.cemeteryNameHe;
+                        availableCemeteries++;
+                    } else {
+                        option.textContent = `${cemetery.cemeteryNameHe} (אין קברים פנויים)`;
+                        option.disabled = true;
+                        option.style.color = '#999';
+                        option.style.backgroundColor = '#f5f5f5';
+                        unavailableCemeteries++;
+                    }
+                    
                     cemeterySelect.appendChild(option);
                 });
+
+                // window.hierarchyData.cemeteries.forEach(cemetery => {
+                //     const option = document.createElement('option');
+                //     option.value = cemetery.unicId;
+                //     option.textContent = cemetery.cemeteryNameHe;
+                //     cemeterySelect.appendChild(option);
+                // });
                 
                 // חבר event listener
                 cemeterySelect.addEventListener('change', function() {

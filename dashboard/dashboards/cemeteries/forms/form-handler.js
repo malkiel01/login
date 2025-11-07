@@ -2669,6 +2669,12 @@ const FormHandler = {
                 });
                 
                 console.log('✅ לקוחות נטענו בהצלחה');
+
+                // ✅ הסר את הספינר
+                const spinner = document.getElementById('customerLoadingSpinner');
+                if (spinner) {
+                    spinner.remove();
+                }
                 
                 // ✅ הפעל את ה-select
                 customerSelect.disabled = false;

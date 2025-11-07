@@ -2621,6 +2621,77 @@ const FormHandler = {
         // טעינת לקוחות פנויים - זהה להיררכיה
         // ===========================================================
 
+        // (async function loadAvailableCustomers() {
+        //     try {
+        //         console.log('👥 מתחיל לטעון לקוחות פנויים מה-API...');
+                
+        //         // ✅ קריאה ל-API
+        //         const response = await fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=available');
+        //         const result = await response.json();
+                
+        //         if (!result.success) {
+        //             console.error('❌ שגיאה בטעינת לקוחות:', result.error);
+        //             return;
+        //         }
+                
+        //         console.log(`✅ נטענו ${result.data.length} לקוחות פנויים`);
+                
+        //         // ✅ מצא את ה-select של לקוחות
+        //         const customerSelect = document.querySelector('[name="clientId"]');
+                
+        //         if (!customerSelect) {
+        //             console.warn('⚠️ Customer select לא נמצא עדיין, ננסה שוב...');
+        //             setTimeout(loadAvailableCustomers, 500);
+        //             return;
+        //         }
+                
+        //         // ✅ ריקון ה-select
+        //         customerSelect.innerHTML = '<option value="">-- בחר לקוח --</option>';
+                
+        //         // ✅ מילוי אופציות
+        //         result.data.forEach(customer => {
+        //             const option = document.createElement('option');
+        //             option.value = customer.unicId;
+                    
+        //             // ✅ פורמט תצוגה: "משה כהן - 050-1234567"
+        //             let displayText = `${customer.firstName} ${customer.lastName}`;
+                    
+        //             if (customer.phone || customer.phoneMobile) {
+        //                 displayText += ` - ${customer.phone || customer.phoneMobile}`;
+        //             }
+                    
+        //             option.textContent = displayText;
+                    
+        //             // ✅ שמירת נתוני resident ב-data attribute
+        //             option.dataset.resident = customer.resident || 3;
+                    
+        //             customerSelect.appendChild(option);
+        //         });
+                
+        //         console.log('✅ לקוחות נטענו בהצלחה');
+
+        //         // ✅ הסר את הספינר
+        //         const spinner = document.getElementById('customerLoadingSpinner');
+        //         if (spinner) {
+        //             spinner.remove();
+        //         }
+                
+        //         // ✅ הפעל את ה-select
+        //         customerSelect.disabled = false;
+        //         customerSelect.style.opacity = '1';
+                
+        //     } catch (error) {
+        //         console.error('❌ שגיאה בטעינת לקוחות:', error);
+                
+        //         // ✅ הצג הודעת שגיאה למשתמש
+        //         const customerSelect = document.querySelector('[name="clientId"]');
+        //         if (customerSelect) {
+        //             customerSelect.innerHTML = '<option value="">שגיאה בטעינת לקוחות</option>';
+        //             customerSelect.style.borderColor = 'red';
+        //         }
+        //     }
+        // })();
+
         (async function loadAvailableCustomers() {
             try {
                 console.log('👥 מתחיל לטעון לקוחות פנויים מה-API...');
@@ -2669,7 +2740,7 @@ const FormHandler = {
                 });
                 
                 console.log('✅ לקוחות נטענו בהצלחה');
-
+                
                 // ✅ הסר את הספינר
                 const spinner = document.getElementById('customerLoadingSpinner');
                 if (spinner) {
@@ -2683,11 +2754,18 @@ const FormHandler = {
             } catch (error) {
                 console.error('❌ שגיאה בטעינת לקוחות:', error);
                 
+                // ✅ הסר את הספינר גם במקרה של שגיאה
+                const spinner = document.getElementById('customerLoadingSpinner');
+                if (spinner) {
+                    spinner.remove();
+                }
+                
                 // ✅ הצג הודעת שגיאה למשתמש
                 const customerSelect = document.querySelector('[name="clientId"]');
                 if (customerSelect) {
-                    customerSelect.innerHTML = '<option value="">שגיאה בטעינת לקוחות</option>';
+                    customerSelect.innerHTML = '<option value="">❌ שגיאה בטעינת לקוחות</option>';
                     customerSelect.style.borderColor = 'red';
+                    customerSelect.disabled = false;
                 }
             }
         })();

@@ -113,115 +113,6 @@
     try {
         switch ($action) {
             // רשימת כל הלקוחות
-            case 'list2':
-                $search = $_GET['search'] ?? '';
-                $status = $_GET['status'] ?? '';
-                $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-                $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 999999;
-                $offset = ($page - 1) * $limit;
-                
-                // בניית השאילתה הראשית
-                $sql = "
-                    SELECT 
-                        c.*,
-                        co.countryNameHe as country_name,
-                        ci.cityNameHe as city_name
-                    FROM customers c
-                    LEFT JOIN countries co ON c.countryId = co.unicId
-                    LEFT JOIN cities ci ON c.cityId = ci.unicId
-                    WHERE c.isActive = 1
-                ";
-                $params = [];
-                
-                // חיפוש - כל שדה מקבל פרמטר משלו
-                if ($search) {
-                    $sql .= " AND (
-                        c.firstName LIKE :search1 OR 
-                        c.lastName LIKE :search2 OR 
-                        c.numId LIKE :search3 OR 
-                        c.phone LIKE :search4 OR 
-                        c.phoneMobile LIKE :search5 OR
-                        c.fullNameHe LIKE :search6
-                    )";
-                    $searchTerm = "%$search%";
-                    $params['search1'] = $searchTerm;
-                    $params['search2'] = $searchTerm;
-                    $params['search3'] = $searchTerm;
-                    $params['search4'] = $searchTerm;
-                    $params['search5'] = $searchTerm;
-                    $params['search6'] = $searchTerm;
-                }
-                
-                // סינון לפי סטטוס
-                if ($status !== '') {
-                    $sql .= " AND c.statusCustomer = :status";
-                    $params['status'] = $status;
-                }
-                
-                // ✅ ספירת תוצאות מסוננות
-                $countSql = "
-                    SELECT COUNT(*) 
-                    FROM customers c 
-                    WHERE c.isActive = 1
-                ";
-                
-                $countParams = [];
-                
-                if ($search) {
-                    $countSql .= " AND (
-                        c.firstName LIKE :search1 OR 
-                        c.lastName LIKE :search2 OR 
-                        c.numId LIKE :search3 OR 
-                        c.phone LIKE :search4 OR 
-                        c.phoneMobile LIKE :search5 OR
-                        c.fullNameHe LIKE :search6
-                    )";
-                    $countParams['search1'] = $searchTerm;
-                    $countParams['search2'] = $searchTerm;
-                    $countParams['search3'] = $searchTerm;
-                    $countParams['search4'] = $searchTerm;
-                    $countParams['search5'] = $searchTerm;
-                    $countParams['search6'] = $searchTerm;
-                }
-                
-                if ($status !== '') {
-                    $countSql .= " AND c.statusCustomer = :status";
-                    $countParams['status'] = $status;
-                }
-                
-                $countStmt = $pdo->prepare($countSql);
-                $countStmt->execute($countParams);
-                $total = $countStmt->fetchColumn();
-                
-                // ✅ ספירת כל הלקוחות (ללא סינון)
-                $totalAllSql = "SELECT COUNT(*) FROM customers WHERE isActive = 1";
-                $totalAll = $pdo->query($totalAllSql)->fetchColumn();
-                
-                // הוספת מיון ועימוד
-                $sql .= " ORDER BY c.createDate DESC LIMIT :limit OFFSET :offset";
-                
-                $stmt = $pdo->prepare($sql);
-                foreach ($params as $key => $value) {
-                    $stmt->bindValue(":$key", $value);
-                }
-                $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-                $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-                $stmt->execute();
-                
-                $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                
-                echo json_encode([
-                    'success' => true,
-                    'data' => $customers,
-                    'pagination' => [
-                        'total' => $total,
-                        'totalAll' => $totalAll,
-                        'page' => $page,
-                        'limit' => $limit,
-                        'pages' => ceil($total / $limit)
-                    ]
-                ]);
-                break;
             case 'list':
                 $search = $_GET['search'] ?? '';
                 $status = $_GET['status'] ?? '';
@@ -774,7 +665,7 @@
                 
                 echo json_encode(['success' => true, 'data' => $results]);
                 break;
-                
+            // חישוב תושבות בזמן אמת עבור הטופס   
             case 'calculate_residency':
                 // חישוב תושבות בזמן אמת עבור הטופס
                 $data = json_decode(file_get_contents('php://input'), true);
@@ -796,6 +687,77 @@
                 ]);
                 break;
                 
+            // רשימת לקוחות פנויים בלבד (ללא רכישות/קבורות)
+            case 'available':
+                // 🔍 שאילתא שמחזירה רק לקוחות שעומדים בתנאים:
+                // 1. לא קבורים (אין burial פעיל)
+                // 2. אין רכישה פעילה (או statusCustomer = 1)
+                
+                $sql = "
+                    SELECT 
+                        c.unicId,
+                        c.firstName,
+                        c.lastName,
+                        c.numId,
+                        c.phone,
+                        c.phoneMobile,
+                        c.resident,
+                        c.statusCustomer,
+                        co.countryNameHe as country_name,
+                        ci.cityNameHe as city_name,
+                        
+                        -- ✅ בדיקות סטטוס
+                        (CASE 
+                            WHEN b.unicId IS NOT NULL THEN 'buried'
+                            WHEN p.unicId IS NOT NULL THEN 'purchased'
+                            ELSE 'available'
+                        END) as availability_status
+                        
+                    FROM customers c
+                    
+                    -- ✅ חיבורים לטבלאות קשורות
+                    LEFT JOIN countries co ON c.countryId = co.unicId
+                    LEFT JOIN cities ci ON c.cityId = ci.unicId
+                    
+                    -- ✅ בדיקה אם יש קבורה פעילה
+                    LEFT JOIN burials b ON c.unicId = b.customerId AND b.isActive = 1
+                    
+                    -- ✅ בדיקה אם יש רכישה פעילה
+                    LEFT JOIN purchases p ON c.unicId = p.clientId AND p.isActive = 1
+                    
+                    WHERE c.isActive = 1
+                    
+                    -- ✅ סינון: רק לקוחות פנויים
+                    AND b.unicId IS NULL      -- לא קבור
+                    AND p.unicId IS NULL      -- אין רכישה
+                    
+                    ORDER BY c.firstName, c.lastName
+                ";
+                
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute();
+                
+                $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                // ✅ חישוב תושבות דינמי לכל לקוח
+                foreach ($customers as &$customer) {
+                    if (!isset($customer['resident']) || $customer['resident'] === null) {
+                        $customer['resident'] = calculateResidency(
+                            $pdo, 
+                            $customer['typeId'] ?? 3,
+                            $customer['countryId'] ?? null,
+                            $customer['cityId'] ?? null
+                        );
+                    }
+                }
+                
+                echo json_encode([
+                    'success' => true,
+                    'data' => $customers,
+                    'total' => count($customers),
+                    'message' => 'נטענו ' . count($customers) . ' לקוחות פנויים'
+                ]);
+                break;
             default:
                 throw new Exception('Invalid action');
         }

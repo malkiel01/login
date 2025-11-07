@@ -6097,6 +6097,44 @@ const FormHandler = {
         // ===========================================================
         
         // פונקציות placeholder להיררכיה
+        // window.filterHierarchy = function(level) {
+        //     console.log(`📍 filterHierarchy called with level: ${level}`);
+            
+        //     const clearSelect = (selectId) => {
+        //         const select = document.getElementById(selectId);
+        //         if (select) {
+        //             select.innerHTML = '<option value="">-- בחר --</option>';
+        //         }
+        //     };
+            
+        //     switch(level) {
+        //         case 'cemetery':
+        //             window.populateBlocks();
+        //             clearSelect('plotSelect');
+        //             clearSelect('rowSelect');
+        //             clearSelect('areaGraveSelect');
+        //             clearSelect('graveSelect');
+        //             break;
+        //         case 'block':
+        //             window.populatePlots();
+        //             clearSelect('rowSelect');
+        //             clearSelect('areaGraveSelect');
+        //             clearSelect('graveSelect');
+        //             break;
+        //         case 'plot':
+        //             window.populateRows();
+        //             clearSelect('areaGraveSelect');
+        //             clearSelect('graveSelect');
+        //             break;
+        //         case 'row':
+        //             window.populateAreaGraves();
+        //             clearSelect('graveSelect');
+        //             break;
+        //         case 'areaGrave':
+        //             window.populateGraves();
+        //             break;
+        //     }
+        // };
         window.filterHierarchy = function(level) {
             console.log(`📍 filterHierarchy called with level: ${level}`);
             
@@ -6114,29 +6152,63 @@ const FormHandler = {
                     clearSelect('rowSelect');
                     clearSelect('areaGraveSelect');
                     clearSelect('graveSelect');
+                    // ✅ כבה את כל השדות למטה
+                    window.toggleSelectState('rowSelect', false);
+                    window.toggleSelectState('areaGraveSelect', false);
+                    window.toggleSelectState('graveSelect', false);
                     break;
+                    
                 case 'block':
                     window.populatePlots();
                     clearSelect('rowSelect');
                     clearSelect('areaGraveSelect');
                     clearSelect('graveSelect');
+                    // ✅ כבה את כל השדות למטה
+                    window.toggleSelectState('rowSelect', false);
+                    window.toggleSelectState('areaGraveSelect', false);
+                    window.toggleSelectState('graveSelect', false);
                     break;
+                    
                 case 'plot':
                     window.populateRows();
                     clearSelect('areaGraveSelect');
                     clearSelect('graveSelect');
+                    // ✅ הפעל שורות, כבה את השאר
+                    window.toggleSelectState('rowSelect', true);
+                    window.toggleSelectState('areaGraveSelect', false);
+                    window.toggleSelectState('graveSelect', false);
                     break;
+                    
                 case 'row':
                     window.populateAreaGraves();
                     clearSelect('graveSelect');
+                    // ✅ הפעל אחוזות, כבה קברים
+                    window.toggleSelectState('areaGraveSelect', true);
+                    window.toggleSelectState('graveSelect', false);
                     break;
+                    
                 case 'areaGrave':
                     window.populateGraves();
+                    // ✅ הפעל קברים
+                    window.toggleSelectState('graveSelect', true);
                     break;
             }
         };
-        // 🌐 טעינת היררכיה מלאה ברקע (async - לא מחכים!)
-
+        
+        // ✅ פונקציית עזר להפעלה/כיבוי של select
+        window.toggleSelectState = function(selectId, enabled) {
+            const select = document.getElementById(selectId);
+            if (select) {
+                select.disabled = !enabled;
+                if (!enabled) {
+                    select.style.opacity = '0.5';
+                    select.style.cursor = 'not-allowed';
+                } else {
+                    select.style.opacity = '1';
+                    select.style.cursor = 'pointer';
+                }
+            }
+        };
 
         window.populateBlocks = function() {
             console.log('📦 populateBlocks called');
@@ -6269,6 +6341,11 @@ const FormHandler = {
                 
                 if (selectedValue && window.filterHierarchy) {
                     window.filterHierarchy('plot');
+                } else {
+                    // אם ביטלו בחירה - כבה שורות
+                    window.toggleSelectState('rowSelect', false);
+                    window.toggleSelectState('areaGraveSelect', false);
+                    window.toggleSelectState('graveSelect', false);
                 }
             });
             

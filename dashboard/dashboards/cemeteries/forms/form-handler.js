@@ -6442,78 +6442,78 @@ window.populateBlocks = function() {
             console.log('✅ Plots populated successfully');
         };
 
-        window.populatePlots = function() {
-            console.log('📊 populatePlots called');
-            
-            if (!window.hierarchyData || !window.hierarchyData.plots) {
-                console.warn('⚠️ Plots data not loaded yet');
-                return;
-            }
-            
-            const blockId = document.getElementById('blockSelect')?.value;
-            const plotSelect = document.getElementById('plotSelect');
-            
-            if (!plotSelect || !blockId) {
-                console.warn('⚠️ Plot select or block not found');
-                return;
-            }
-            
-            console.log('🔍 Looking for block:', blockId);
-            
-            plotSelect.innerHTML = '<option value="">-- בחר חלקה --</option>';
-            
-            const relevantPlots = window.hierarchyData.plots.filter(plot => {
-                return plot.blockId == blockId ||
-                    plot.block_id == blockId ||
-                    plot.unicBlockId == blockId;
-            });
-            
-            console.log(`📊 Found ${relevantPlots.length} plots for block ${blockId}`);
-            
-            let availableCount = 0;
-            let unavailableCount = 0;
-            
-            relevantPlots.forEach(plot => {
-                const option = document.createElement('option');
-                option.value = plot.unicId;
-                
-                // ✅ בדוק אם יש שורות פעילות
-                const hasRows = window.hasAvailableRows(plot.unicId);
-                
-                if (hasRows) {
-                    option.textContent = plot.plotNameHe;
-                    availableCount++;
-                } else {
-                    option.textContent = `${plot.plotNameHe} (אין קברים פנויים)`;
-                    option.disabled = true;
-                    option.style.color = '#999';
-                    option.style.backgroundColor = '#f5f5f5';
-                    unavailableCount++;
-                }
-                
-                plotSelect.appendChild(option);
-            });
-            
-            console.log(`✅ ${availableCount} available plots, ${unavailableCount} unavailable`);
-            
-            plotSelect.addEventListener('change', function() {
-                const selectedValue = this.value;
-                console.log('📊 Plot selected:', selectedValue);
-                
-                if (selectedValue && window.filterHierarchy) {
-                    window.filterHierarchy('plot');
-                } else {
-                    window.toggleSelectState('rowSelect', false);
-                    window.toggleSelectState('areaGraveSelect', false);
-                    window.toggleSelectState('graveSelect', false);
-                }
-            });
-            
-            console.log('✅ Plots populated successfully');
-            window.toggleSelectState('plotSelect', true);
-        };
+window.populatePlots = function() {
+    console.log('📊 populatePlots called');
+    
+    if (!window.hierarchyData || !window.hierarchyData.plots) {
+        console.warn('⚠️ Plots data not loaded yet');
+        return;
+    }
+    
+    const blockId = document.getElementById('blockSelect')?.value;
+    const plotSelect = document.getElementById('plotSelect');
+    
+    if (!plotSelect || !blockId) {
+        console.warn('⚠️ Plot select or block not found');
+        return;
+    }
+    
+    console.log('🔍 Looking for block:', blockId);
+    
+    plotSelect.innerHTML = '<option value="">-- בחר חלקה --</option>';
+    
+    const relevantPlots = window.hierarchyData.plots.filter(plot => {
+        return plot.blockId == blockId ||
+               plot.block_id == blockId ||
+               plot.unicBlockId == blockId;
+    });
+    
+    console.log(`📊 Found ${relevantPlots.length} plots for block ${blockId}`);
+    
+    let availableCount = 0;
+    let unavailableCount = 0;
+    
+    relevantPlots.forEach(plot => {
+        const option = document.createElement('option');
+        option.value = plot.unicId;
         
-        window.populateRows2 = function() {
+        // ✅ בדוק אם יש שורות פעילות
+        const hasRows = window.hasAvailableRows(plot.unicId);
+        
+        if (hasRows) {
+            option.textContent = plot.plotNameHe;
+            availableCount++;
+        } else {
+            option.textContent = `${plot.plotNameHe} (אין קברים פנויים)`;
+            option.disabled = true;
+            option.style.color = '#999';
+            option.style.backgroundColor = '#f5f5f5';
+            unavailableCount++;
+        }
+        
+        plotSelect.appendChild(option);
+    });
+    
+    console.log(`✅ ${availableCount} available plots, ${unavailableCount} unavailable`);
+    
+    plotSelect.addEventListener('change', function() {
+        const selectedValue = this.value;
+        console.log('📊 Plot selected:', selectedValue);
+        
+        if (selectedValue && window.filterHierarchy) {
+            window.filterHierarchy('plot');
+        } else {
+            window.toggleSelectState('rowSelect', false);
+            window.toggleSelectState('areaGraveSelect', false);
+            window.toggleSelectState('graveSelect', false);
+        }
+    });
+    
+    console.log('✅ Plots populated successfully');
+    window.toggleSelectState('plotSelect', true);
+};
+        
+        window.populateRows = function() {
             console.log('📏 populateRows called');
             
             if (!window.hierarchyData || !window.hierarchyData.rows) {
@@ -6573,7 +6573,7 @@ window.populateBlocks = function() {
             console.log('✅ Rows populated successfully');
         };
 
-        window.populateRows = function() {
+        window.populateRows3 = function() {
             console.log('📏 populateRows called');
             
             if (!window.hierarchyData || !window.hierarchyData.rows) {
@@ -6639,7 +6639,7 @@ window.populateBlocks = function() {
             console.log('✅ Rows populated successfully');
         };
                 
-        window.populateAreaGraves2 = function() {
+        window.populateAreaGraves = function() {
             console.log('🏘️ populateAreaGraves called');
             
             if (!window.hierarchyData || !window.hierarchyData.areaGraves) {
@@ -6736,7 +6736,7 @@ window.populateBlocks = function() {
             console.log('✅ AreaGraves populated successfully');
         };
 
-        window.populateAreaGraves = function() {
+        window.populateAreaGraves3 = function() {
             console.log('🏘️ populateAreaGraves called');
             
             if (!window.hierarchyData || !window.hierarchyData.areaGraves) {

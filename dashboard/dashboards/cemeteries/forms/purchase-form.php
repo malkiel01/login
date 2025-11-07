@@ -113,14 +113,11 @@ $formType = basename(__FILE__, '.php'); // מזהה אוטומטי של סוג �
         vertical-align: middle;
     }
     </style>
-    <div class="form-group" style="position: relative;">
-        <label>לקוח <span class="text-danger">*</span></label>
-        <div style="position: relative;">
-            <select name="clientId" id="clientId" class="form-control" required disabled style="opacity: 0.7;">
-                <option value="">טוען לקוחות...</option>
-            </select>
-            <span class="loading-spinner" id="customerLoadingSpinner" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%);"></span>
-        </div>
+    <div style="position: relative;">
+        <select name="clientId" id="clientId" class="form-control" required disabled>
+            <option value="">טוען לקוחות...</option>
+        </select>
+        <span class="loading-spinner" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%);"></span>
     </div>';
 
     $formBuilder->addCustomHTML($customersSelectorHTML);

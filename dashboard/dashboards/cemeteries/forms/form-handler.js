@@ -6412,7 +6412,7 @@ const FormHandler = {
             console.log('✅ Rows populated successfully');
         };
                 
-        window.populateAreaGraves = function() {
+        window.populateAreaGraves2 = function() {
             console.log('🏘️ populateAreaGraves called');
             
             if (!window.hierarchyData || !window.hierarchyData.areaGraves) {
@@ -6461,6 +6461,102 @@ const FormHandler = {
                 option.textContent = ag.areaGraveNameHe || `אחוזה ${ag.serialNumber}`;
                 areaGraveSelect.appendChild(option);
             });
+            
+            areaGraveSelect.addEventListener('change', function() {
+                const selectedValue = this.value;
+                console.log('🏘️ AreaGrave selected:', selectedValue);
+                
+                if (selectedValue && window.filterHierarchy) {
+                    window.filterHierarchy('areaGrave');
+                }
+            });
+            
+            console.log('✅ AreaGraves populated successfully');
+        };
+        window.populateAreaGraves = function() {
+            console.log('🏘️ populateAreaGraves called');
+            
+            if (!window.hierarchyData || !window.hierarchyData.areaGraves) {
+                console.warn('⚠️ AreaGraves data not loaded yet');
+                return;
+            }
+            
+            const rowId = document.getElementById('rowSelect')?.value;
+            const areaGraveSelect = document.getElementById('areaGraveSelect');
+            
+            if (!areaGraveSelect || !rowId) {
+                console.warn('⚠️ AreaGrave select or row not found');
+                return;
+            }
+            
+            console.log('🔍 Looking for row:', rowId);
+            console.log('🔍 Sample areaGrave structure:', window.hierarchyData.areaGraves[0]);
+            
+            areaGraveSelect.innerHTML = '<option value="">-- בחר אחוזת קבר --</option>';
+            
+            const relevantAreaGraves = window.hierarchyData.areaGraves.filter(ag => {
+                const matches = 
+                    ag.lineId == rowId ||
+                    ag.line_id == rowId ||
+                    ag.rowId == rowId ||
+                    ag.row_id == rowId ||
+                    ag.unicLineId == rowId;
+                
+                if (matches) {
+                    console.log('✅ Found matching areaGrave:', ag);
+                }
+                
+                return matches;
+            });
+            
+            console.log(`🏘️ Found ${relevantAreaGraves.length} areaGraves for row ${rowId}`);
+            
+            if (relevantAreaGraves.length === 0) {
+                console.warn('⚠️ No areaGraves found! Check the field name.');
+                console.log('🔍 Available fields in first areaGrave:', Object.keys(window.hierarchyData.areaGraves[0]));
+            }
+            
+            // ✅ פונקציית עזר - בדוק אם יש קברים פנויים באחוזה
+            const hasAvailableGraves = (areaGraveId) => {
+                return window.hierarchyData.graves.some(grave => {
+                    const matchesArea = 
+                        grave.areaGraveId == areaGraveId ||
+                        grave.area_grave_id == areaGraveId ||
+                        grave.unicAreaGraveId == areaGraveId;
+                    
+                    const isFree = grave.status == 1 || grave.graveStatus == 1;
+                    
+                    return matchesArea && isFree;
+                });
+            };
+            
+            let availableCount = 0;
+            let unavailableCount = 0;
+            
+            relevantAreaGraves.forEach(ag => {
+                const option = document.createElement('option');
+                option.value = ag.unicId;
+                
+                const hasGraves = hasAvailableGraves(ag.unicId);
+                
+                if (hasGraves) {
+                    // ✅ יש קברים פנויים - אופציה רגילה
+                    option.textContent = ag.areaGraveNameHe || `אחוזה ${ag.serialNumber}`;
+                    availableCount++;
+                } else {
+                    // ❌ אין קברים פנויים - אופציה מושבתת
+                    option.textContent = `${ag.areaGraveNameHe || `אחוזה ${ag.serialNumber}`} (אין קברים פנויים)`;
+                    option.disabled = true;
+                    option.style.color = '#999';
+                    option.style.backgroundColor = '#f5f5f5';
+                    option.style.cursor = 'not-allowed';
+                    unavailableCount++;
+                }
+                
+                areaGraveSelect.appendChild(option);
+            });
+            
+            console.log(`✅ ${availableCount} available areaGraves, ${unavailableCount} unavailable`);
             
             areaGraveSelect.addEventListener('change', function() {
                 const selectedValue = this.value;

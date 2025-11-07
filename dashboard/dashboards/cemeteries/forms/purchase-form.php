@@ -96,23 +96,6 @@ $formType = basename(__FILE__, '.php'); // מזהה אוטומטי של סוג �
     // </div>';
 
     $customersSelectorHTML = '
-    <style>
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-    .loading-spinner {
-        display: inline-block;
-        width: 14px;
-        height: 14px;
-        border: 2px solid #f3f3f3;
-        border-top: 2px solid #3498db;
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
-        margin-left: 8px;
-        vertical-align: middle;
-    }
-    </style>
     <div style="position: relative;">
         <select name="clientId" id="clientId" class="form-control" required disabled>
             <option value="">טוען לקוחות...</option>

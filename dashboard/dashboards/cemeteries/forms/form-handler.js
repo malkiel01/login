@@ -2599,13 +2599,6 @@ const FormHandler = {
                     
                     cemeterySelect.appendChild(option);
                 });
-
-                // window.hierarchyData.cemeteries.forEach(cemetery => {
-                //     const option = document.createElement('option');
-                //     option.value = cemetery.unicId;
-                //     option.textContent = cemetery.cemeteryNameHe;
-                //     cemeterySelect.appendChild(option);
-                // });
                 
                 // חבר event listener
                 cemeterySelect.addEventListener('change', function() {

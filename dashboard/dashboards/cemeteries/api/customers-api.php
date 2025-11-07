@@ -720,7 +720,7 @@
                     LEFT JOIN cities ci ON c.cityId = ci.unicId
                     
                     -- ✅ בדיקה אם יש קבורה פעילה
-                    LEFT JOIN burials b ON c.unicId = b.customerId AND b.isActive = 1
+                    LEFT JOIN burials b ON c.unicId = b.clientId AND b.isActive = 1
                     
                     -- ✅ בדיקה אם יש רכישה פעילה
                     LEFT JOIN purchases p ON c.unicId = p.clientId AND p.isActive = 1

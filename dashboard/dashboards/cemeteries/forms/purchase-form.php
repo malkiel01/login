@@ -103,21 +103,24 @@ $formType = basename(__FILE__, '.php'); // מזהה אוטומטי של סוג �
     }
     .loading-spinner {
         display: inline-block;
-        width: 12px;
-        height: 12px;
+        width: 14px;
+        height: 14px;
         border: 2px solid #f3f3f3;
         border-top: 2px solid #3498db;
         border-radius: 50%;
-        animation: spin 1s linear infinite;
+        animation: spin 0.8s linear infinite;
         margin-left: 8px;
         vertical-align: middle;
     }
     </style>
-    <div class="form-group">
+    <div class="form-group" style="position: relative;">
         <label>לקוח <span class="text-danger">*</span></label>
-        <select name="clientId" id="clientId" class="form-control" required disabled style="opacity: 0.7;">
-            <option value=""><span class="loading-spinner"></span> טוען לקוחות...</option>
-        </select>
+        <div style="position: relative;">
+            <select name="clientId" id="clientId" class="form-control" required disabled style="opacity: 0.7;">
+                <option value="">טוען לקוחות...</option>
+            </select>
+            <span class="loading-spinner" id="customerLoadingSpinner" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%);"></span>
+        </div>
     </div>';
 
     $formBuilder->addCustomHTML($customersSelectorHTML);

@@ -117,7 +117,7 @@ $formType = basename(__FILE__, '.php'); // מזהה אוטומטי של סוג �
         <select name="clientId" id="clientId" class="form-control" required disabled>
             <option value="">טוען לקוחות...</option>
         </select>
-        <span class="loading-spinner" style="position: absolute; left: 10px; top: 45%; transform: translateY(-50%);"></span>
+        <span class="loading-spinner" style="position: absolute; left: 10px; top: 35%; transform: translateY(-50%);"></span>
     </div>';
 
     $formBuilder->addCustomHTML($customersSelectorHTML);

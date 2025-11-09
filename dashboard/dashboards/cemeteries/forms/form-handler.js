@@ -860,13 +860,39 @@ const FormHandler = {
         // אתחול משתנים גלובליים
         // ======================================
         window.locationsData = {
-            countries: []
+            countries: [],
+            cities: []
         };
+   
+        // איפוס SmartSelect instances
+        if (window.SmartSelectManager && window.SmartSelectManager.instances) {
+            delete window.SmartSelectManager.instances['countryId'];
+            delete window.SmartSelectManager.instances['cityId'];
+            console.log('🗑️ SmartSelect instances cleared');
+        }
+        
+        console.log('✅ handleCustomerForm initialized with clean state');
+    
+        // ⭐ הסר event listeners ישנים מהשדות
+        const oldCountryInput = document.getElementById('countryId');
+        const oldCityInput = document.getElementById('cityId');
+        
+        if (oldCountryInput) {
+            const newCountryInput = oldCountryInput.cloneNode(true);
+            oldCountryInput.parentNode.replaceChild(newCountryInput, oldCountryInput);
+        }
+        
+        if (oldCityInput) {
+            const newCityInput = oldCityInput.cloneNode(true);
+            oldCityInput.parentNode.replaceChild(newCityInput, oldCityInput);
+        }
+        
+        console.log('✅ Form initialized - all previous state cleared');
         
         // ======================================
         // פונקציות עזר לטיפול במדינות וערים
         // ======================================
-        
+
         window.populateCountries = function() {
             console.log('🌍 populateCountries called');
             
@@ -901,12 +927,53 @@ const FormHandler = {
                 countryInstance.allOptions.push(option);
             });
             
-            // ⭐ תקן: עדכן טקסט ל-"בחר מדינה..."
+            // עדכן טקסט ל-"בחר מדינה..."
             countryInstance.valueSpan.textContent = 'בחר מדינה...';
             countryInstance.hiddenInput.value = '';
             
             console.log(`✅ Populated ${window.locationsData.countries.length} countries`);
         };
+        
+        // window.populateCountries = function() {
+        //     console.log('🌍 populateCountries called');
+            
+        //     if (!window.locationsData?.countries) {
+        //         console.warn('⚠️ Countries data not loaded yet');
+        //         return;
+        //     }
+            
+        //     const countryInstance = window.SmartSelectManager?.instances['countryId'];
+            
+        //     if (!countryInstance) {
+        //         console.warn('⚠️ Country SmartSelect instance not found');
+        //         return;
+        //     }
+            
+        //     // נקה אופציות
+        //     countryInstance.optionsContainer.innerHTML = '';
+        //     countryInstance.allOptions = [];
+            
+        //     // מלא מדינות
+        //     window.locationsData.countries.forEach(country => {
+        //         const option = document.createElement('div');
+        //         option.className = 'smart-select-option';
+        //         option.dataset.value = country.unicId;
+        //         option.textContent = country.countryNameHe;
+                
+        //         option.addEventListener('click', function() {
+        //             window.SmartSelectManager.select('countryId', country.unicId);
+        //         });
+                
+        //         countryInstance.optionsContainer.appendChild(option);
+        //         countryInstance.allOptions.push(option);
+        //     });
+            
+        //     // ⭐ תקן: עדכן טקסט ל-"בחר מדינה..."
+        //     countryInstance.valueSpan.textContent = 'בחר מדינה...';
+        //     countryInstance.hiddenInput.value = '';
+            
+        //     console.log(`✅ Populated ${window.locationsData.countries.length} countries`);
+        // };
         
         window.loadCitiesForCountry = async function(countryId) {
             console.log('🏙️ Loading cities for country:', countryId);
@@ -4242,7 +4309,7 @@ const FormHandler = {
             // =========================================
             // ⭐ הוספה חדשה - ולידציה לאחוזת קבר
             // =========================================
-            
+
             // שורות 3396-3427 (עם התיקון)
             if (type === 'areaGrave') {
                 if (typeof window.validateGravesData === 'function') {

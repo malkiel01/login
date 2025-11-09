@@ -2937,6 +2937,18 @@ const FormHandler = {
                     select.innerHTML = '<option value="">-- בחר --</option>';
                 }
             };
+
+            // ✅ פונקציה לאיפוס לקוח (רק אם לא במצב עריכה)
+            const clearCustomer = () => {
+                if (!window.isEditMode) {
+                    const customerSelect = document.querySelector('[name="clientId"]');
+                    if (customerSelect) {
+                        customerSelect.value = '';
+                        console.log('🧹 לקוח אופס בגלל שינוי בהיררכיה');
+                    }
+                    window.selectedCustomerData = null;
+                }
+            };
             
             switch(level) {
                 case 'cemetery':
@@ -2945,6 +2957,7 @@ const FormHandler = {
                     clearSelect('rowSelect');
                     clearSelect('areaGraveSelect');
                     clearSelect('graveSelect');
+                    clearCustomer();
                     window.toggleSelectState('rowSelect', false);
                     window.toggleSelectState('areaGraveSelect', false);
                     window.toggleSelectState('graveSelect', false);
@@ -2955,6 +2968,7 @@ const FormHandler = {
                     clearSelect('rowSelect');
                     clearSelect('areaGraveSelect');
                     clearSelect('graveSelect');
+                    clearCustomer();
                     window.toggleSelectState('rowSelect', false);
                     window.toggleSelectState('areaGraveSelect', false);
                     window.toggleSelectState('graveSelect', false);
@@ -2964,6 +2978,7 @@ const FormHandler = {
                     window.populateRows();
                     clearSelect('areaGraveSelect');
                     clearSelect('graveSelect');
+                    clearCustomer();
                     window.toggleSelectState('rowSelect', true);
                     window.toggleSelectState('areaGraveSelect', false);
                     window.toggleSelectState('graveSelect', false);
@@ -2972,12 +2987,14 @@ const FormHandler = {
                 case 'row':
                     window.populateAreaGraves();
                     clearSelect('graveSelect');
+                    clearCustomer();
                     window.toggleSelectState('areaGraveSelect', true);
                     window.toggleSelectState('graveSelect', false);
                     break;
                     
                 case 'areaGrave':
                     window.populateGraves();
+                    clearCustomer();
                     window.toggleSelectState('graveSelect', true);
                     break;
             }
@@ -3277,78 +3294,6 @@ const FormHandler = {
             }
         };
 
-        // ✅ הוסף מאזין לבחירת קבר (מתוקן)
-        const setupGraveListener2 = function() {
-            const graveSelect = document.getElementById('graveSelect');
-            if (graveSelect) {
-                graveSelect.addEventListener('change', async function() {
-                    const graveId = this.value;
-                    
-                    if (!graveId) {
-                        // נוקה לקוח רק אם לא במצב עריכה
-                        if (!window.isEditMode) {
-                            const customerSelect = document.querySelector('[name="clientId"]');
-                            if (customerSelect) customerSelect.value = '';
-                            window.selectedCustomerData = null;
-                        }
-                        window.selectedGraveData = null;
-                        return;
-                    }
-                    
-                    // מצא את הקבר
-                    const grave = window.hierarchyData.graves.find(g => g.unicId == graveId);
-                    if (!grave) return;
-                    
-                    window.selectedGraveData = {
-                        graveId: graveId,
-                        graveStatus: grave.graveStatus
-                    };
-                    
-                    console.log('⚰️ קבר נבחר:', window.selectedGraveData);
-                    
-                    // ✅ בדוק אם לקבר יש רכישה פעילה
-                    try {
-                        const response = await fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=getByGrave&graveId=${graveId}`);
-                        const data = await response.json();
-                        
-                        if (data.success && data.data) {
-                            const purchase = data.data;
-                            
-                            // ✅ יש רכישה - מלא את הלקוח
-                            const customerSelect = document.querySelector('[name="clientId"]');
-                            if (customerSelect && purchase.clientId) {
-                                customerSelect.value = purchase.clientId;
-                                
-                                window.selectedCustomerData = {
-                                    id: purchase.clientId,
-                                    name: purchase.customer_name || ''
-                                };
-                                
-                                console.log('✅ לקוח מולא אוטומטית מרכישה:', window.selectedCustomerData);
-                                
-                                showNotification('info', `הלקוח "${purchase.customer_name}" מולא אוטומטית על פי הרכישה`);
-                            }
-                        } else {
-                            // ✅ אין רכישה - אפס את הלקוח (רק אם לא במצב עריכה)
-                            if (!window.isEditMode) {
-                                console.log('ℹ️ לקבר אין רכישה - מאפס לקוח');
-                                const customerSelect = document.querySelector('[name="clientId"]');
-                                if (customerSelect) customerSelect.value = '';
-                                window.selectedCustomerData = null;
-                            }
-                        }
-                    } catch (error) {
-                        console.error('❌ שגיאה בטעינת רכישה:', error);
-                        // במקרה של שגיאה - אפס (רק אם לא במצב עריכה)
-                        if (!window.isEditMode) {
-                            const customerSelect = document.querySelector('[name="clientId"]');
-                            if (customerSelect) customerSelect.value = '';
-                            window.selectedCustomerData = null;
-                        }
-                    }
-                });
-            }
-        };
         // ✅ הוסף מאזין לבחירת קבר (מתוקן עם המתנה)
         const setupGraveListener = function() {
             const graveSelect = document.getElementById('graveSelect');

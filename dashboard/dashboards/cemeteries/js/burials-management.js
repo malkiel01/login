@@ -37,7 +37,7 @@ let editingBurialId = null;
 // -------------
 
 // טעינת קבורות (הפונקציה הראשית)
-async function loadBurials() {
+async function loadBurials2() {
     console.log('📋 Loading burials - v1.0.2-debug...');
     
     // 🔍 דיבאג - לפני עדכון
@@ -127,7 +127,7 @@ async function loadBurials() {
 // -------------
 
 // טעינת קבורות (הפונקציה הראשית)
-async function loadBurials2() {
+async function loadBurials() {
     console.log('📋 Loading burials - v1.0.1 (זהה לחלוטין ל-customers)...');
 
     // עדכן את הסוג הנוכחי
@@ -419,7 +419,7 @@ async function initBurialsTable(data, totalItems = null) {
     }
 
     // טעינת העמודות מהשרת
-    async function loadColumnsFromConfig2(entityType = 'burial') {
+    async function loadColumnsFromConfig(entityType = 'burial') {
         try {
             const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`);
             
@@ -517,7 +517,7 @@ async function initBurialsTable(data, totalItems = null) {
     }
 
     // בפונקציה שמייצרת את כפתור העריכה - הוסף דיבאג:
-    async function loadColumnsFromConfig(entityType = 'burial') {
+    async function loadColumnsFromConfig2(entityType = 'burial') {
         try {
             const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?entity=${entityType}&section=table_columns`);          
             

@@ -567,7 +567,7 @@ async function initPurchasesTable(data, totalItems = null) {
             console.error('❌ Failed to load columns config:', error);
             return [];
         }
-    }
+    } 
     
     purchasesTable = new TableManager({
         tableSelector: '#mainTable',

@@ -450,7 +450,19 @@
                     animation: spin 0.8s linear infinite;
                     vertical-align: middle;
                 }
+
+                #' . $this->formId . 'Modal .loading-spinner-overlay {
+                    position: absolute;
+                    left: 10px;
+                    top: 0;
+                    bottom: 0;
+                    display: flex;
+                    align-items: center; /* ← מרכז אנכית */
+                    z-index: 10;
+                    pointer-events: none; /* ← לא חוסם קליקים */
+                }
                 
+                /**
                 #' . $this->formId . 'Modal .loading-spinner-overlay {
                     position: absolute;
                     left: 10px;

@@ -2691,15 +2691,6 @@ const FormHandler = {
                 // ✅ הסר ספינר והפעל רק את בתי עלמין
                 hideSelectSpinner('cemeterySelect');
 
-                // // ✅ הפעל גם גושים וחלקות
-                // document.getElementById('blockSelect').disabled = false;
-                // document.getElementById('blockSelect').style.opacity = '1';
-
-                // document.getElementById('plotSelect').disabled = false;
-                // document.getElementById('plotSelect').style.opacity = '1';
-
-                // console.log('✅ Blocks and Plots enabled');
-                
             } catch (error) {
                 console.error('❌ Error loading hierarchy:', error);
                 

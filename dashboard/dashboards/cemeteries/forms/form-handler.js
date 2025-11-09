@@ -3317,13 +3317,6 @@ const FormHandler = {
                 window.hierarchyData.areaGraves = areaGravesResult.data || [];
                 window.hierarchyData.graves = gravesResult.data || [];
                 
-                console.log(`✅ Loaded ${window.hierarchyData.cemeteries.length} available cemeteries`);
-                console.log(`✅ Loaded ${window.hierarchyData.blocks.length} available blocks`);
-                console.log(`✅ Loaded ${window.hierarchyData.plots.length} available plots`);
-                console.log(`✅ Loaded ${window.hierarchyData.rows.length} available rows`);
-                console.log(`✅ Loaded ${window.hierarchyData.areaGraves.length} available areaGraves`);
-                console.log(`✅ Loaded ${window.hierarchyData.graves.length} available graves`);
-                
                 const cemeterySelect = document.getElementById('cemeterySelect');
                 
                 if (!cemeterySelect) {
@@ -3353,7 +3346,6 @@ const FormHandler = {
                     }
                 });
                 
-                console.log('✅ Full hierarchy loaded');
                 hideSelectSpinner('cemeterySelect');
 
                 // ✅ אם יש קבר נוכחי, טען את ההיררכיה
@@ -3388,7 +3380,6 @@ const FormHandler = {
                 }
 
             } catch (error) {
-                console.error('❌ Error loading hierarchy:', error);
                 hideSelectSpinner('cemeterySelect');
             }
         })();
@@ -4896,86 +4887,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
-
-// ===========================================================
-// 🔄 פונקציות גנריות לניהול ספינרים
-// ===========================================================
-
-// /**
-//  * הוסף ספינר לשדה select
-//  * @param {string} selectId - ID או name של ה-select
-//  */
-// window.showSelectSpinner = function(selectId) {
-//     const select = document.getElementById(selectId) || 
-//                    document.querySelector(`[name="${selectId}"]`);
-    
-//     if (!select) {
-//         console.warn(`⚠️ Select ${selectId} not found`);
-//         return;
-//     }
-    
-//     let wrapper = select.parentElement;
-    
-//     // אם אין wrapper - צור אחד
-//     if (!wrapper || wrapper.tagName === 'FORM' || wrapper.classList.contains('form-group')) {
-//         const newWrapper = document.createElement('div');
-//         newWrapper.style.position = 'relative';
-//         newWrapper.style.display = 'block';
-//         select.parentNode.insertBefore(newWrapper, select);
-//         newWrapper.appendChild(select);
-//         wrapper = newWrapper;
-//     }
-    
-//     // בדוק אם כבר יש ספינר
-//     if (wrapper.querySelector('.loading-spinner')) {
-//         console.log('⚠️ Spinner already exists');
-//         return;
-//     }
-    
-//     // יצירת ספינר
-//     const spinner = document.createElement('span');
-//     spinner.className = 'loading-spinner loading-spinner-overlay';
-//     spinner.id = `${selectId}-spinner`;
-    
-//     wrapper.style.position = 'relative';
-//     wrapper.appendChild(spinner);
-    
-//     // כיבוי השדה
-//     select.disabled = true;
-//     select.style.opacity = '0.7';
-    
-//     console.log(`🔄 Spinner added to ${selectId}`);
-// };
-
-// /**
-//  * הסר ספינר משדה select
-//  * @param {string} selectId - ID או name של ה-select
-//  */
-// window.hideSelectSpinner = function(selectId) {
-//     const select = document.getElementById(selectId) || 
-//                    document.querySelector(`[name="${selectId}"]`);
-    
-//     if (!select) {
-//         console.warn(`⚠️ Select ${selectId} not found`);
-//         return;
-//     }
-    
-//     const wrapper = select.parentElement;
-//     if (!wrapper) return;
-    
-//     // מצא והסר את הספינר
-//     const spinner = wrapper.querySelector('.loading-spinner') || 
-//                     document.getElementById(`${selectId}-spinner`);
-    
-//     if (spinner) {
-//         spinner.remove();
-//         console.log(`✅ Spinner removed from ${selectId}`);
-//     }
-    
-//     // הפעל את השדה
-//     select.disabled = false;
-//     select.style.opacity = '1';
-// };
 
 // ===========================================================
 // 🔄 פונקציות גנריות לניהול ספינרים

@@ -111,104 +111,6 @@ async function loadPurchases() {
     }
 }
 
-async function loadColumnsFromConfig3(entityType = 'purchase') {
-    try {
-        const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-
-        if (!result.success || !result.data) {
-            throw new Error(result.error || 'Failed to load columns config');
-        }
-
-        // המרת הקונפיג מ-PHP לפורמט של TableManager
-        const columns = result.data.map(col => {
-            const column = {
-                field: col.field,
-                label: col.title,
-                width: col.width || 'auto',
-                sortable: col.sortable !== false,
-                type: col.type || 'text'
-            };
-            
-            // טיפול בסוגי עמודות מיוחדות
-            switch (column.type) {
-                case 'date':
-                    column.render = (item) => formatDate(item[column.field]);
-                    break;
-                    
-                case 'status':
-                    column.render = (item) => formatPurchaseStatus(item[column.field]);
-                    break;
-                    
-                case 'type':
-                    if (column.render === 'formatPurchaseType') {
-                        column.render = (item) => formatPurchaseType(item[column.field]);
-                    }
-                    break;
-                    
-                case 'currency':
-                    column.render = (item) => {
-                        const value = item[column.field];
-                        return value ? `₪${parseFloat(value).toLocaleString('he-IL')}` : '-';
-                    };
-                    break;
-                    
-                case 'actions2':
-                    // ⭐ רק כאן הוספנו דיבאג!
-                    column.render = (item) => `
-                        <button class="btn btn-sm btn-secondary" 
-                                onclick="event.stopPropagation(); 
-                                         console.log('🔍 [EDIT CLICK PURCHASE] purchaseId:', '${item.unicId}'); 
-                                         console.log('🔍 [EDIT CLICK PURCHASE] window.currentType:', window.currentType); 
-                                         console.log('🔍 [EDIT CLICK PURCHASE] tableRenderer.currentType:', window.tableRenderer?.currentType);
-                                         window.tableRenderer.editItem('${item.unicId}')" 
-                                title="עריכה">
-                            <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
-                        </button>
-                        <button class="btn btn-sm btn-danger" 
-                                onclick="event.stopPropagation(); deletePurchase('${item.unicId}')" 
-                                title="מחיקה">
-                            <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
-                        </button>
-                    `;
-                    break;
-                    
-                case 'actions':
-                    column.render = (item) => `
-                        <button class="btn btn-sm btn-secondary" 
-                                onclick="event.stopPropagation(); window.tableRenderer.editItem('${item.unicId}')" 
-                                title="עריכה">
-                            <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
-                        </button>
-                        <button class="btn btn-sm btn-danger" 
-                                onclick="event.stopPropagation(); deletePurchase('${item.unicId}')" 
-                                title="מחיקה">
-                            <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
-                        </button>
-                    `;
-                
-                default:
-                    if (!column.render) {
-                        column.render = (item) => item[column.field] || '-';
-                    }
-            }
-            
-            return column;
-        });
-        
-        return columns;
-    } catch (error) {
-        console.error('❌ Failed to load columns config:', error);
-        return [];
-    }
-}
-
-
 
 // --------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------
@@ -650,20 +552,6 @@ async function initPurchasesTable(data, totalItems = null) {
                             </button>
                         `;
                         break;
-                        
-                    case 'actions2':
-                        column.render = (item) => `
-                            <button class="btn btn-sm btn-secondary" 
-                                    onclick="event.stopPropagation(); window.tableRenderer.editItem('${item.unicId}')" 
-                                    title="עריכה">
-                                <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
-                            </button>
-                            <button class="btn btn-sm btn-danger" 
-                                    onclick="event.stopPropagation(); deletePurchase('${item.unicId}')" 
-                                    title="מחיקה">
-                                <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
-                            </button>
-                        `;
                     
                     default:
                         if (!column.render) {

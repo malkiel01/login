@@ -116,60 +116,6 @@ async function loadBurials() {
     }
 }
 
-// בפונקציה שמייצרת את כפתור העריכה - הוסף דיבאג:
-async function loadColumnsFromConfig(entityType) {
-    try {
-        const response = await fetch(`/dashboard/dashboards/cemeteries/api/table-columns-api.php?entity=${entityType}`);
-        const data = await response.json();
-        
-        if (!data.success || !data.columns) {
-            throw new Error('Failed to load columns configuration');
-        }
-        
-        const columns = data.columns.map(column => {
-            switch (column.type) {
-                // ... כל ה-cases האחרים ...
-                
-                case 'actions':
-                    column.render = (item) => `
-                        <button class="btn btn-sm btn-info" 
-                                onclick="event.stopPropagation(); console.log('🔍 [VIEW] Clicked burial:', '${item.unicId}'); viewBurial('${item.unicId}')" 
-                                title="צפייה">
-                            <svg class="icon"><use xlink:href="#icon-view"></use></svg>
-                        </button>
-                        <button class="btn btn-sm btn-secondary" 
-                                onclick="event.stopPropagation(); 
-                                         console.log('🔍 [EDIT CLICK] burialId:', '${item.unicId}'); 
-                                         console.log('🔍 [EDIT CLICK] window.currentType:', window.currentType); 
-                                         console.log('🔍 [EDIT CLICK] tableRenderer.currentType:', window.tableRenderer?.currentType);
-                                         window.tableRenderer.editItem('${item.unicId}')" 
-                                title="עריכה">
-                            <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
-                        </button>
-                        <button class="btn btn-sm btn-danger" 
-                                onclick="event.stopPropagation(); console.log('🔍 [DELETE] Clicked burial:', '${item.unicId}'); deleteBurial('${item.unicId}')" 
-                                title="מחיקה">
-                            <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
-                        </button>
-                    `;
-                    break;
-                    
-                default:
-                    if (!column.render) {
-                        column.render = (item) => item[column.field] || '-';
-                    }
-            }
-            
-            return column;
-        });
-        
-        return columns;
-    } catch (error) {
-        console.error('❌ Failed to load columns config:', error);
-        return [];
-    }
-}
-
 // -------------
 // -------------
 // -------------
@@ -566,6 +512,60 @@ async function initBurialsTable(data, totalItems = null) {
         } catch (error) {
             console.error('❌ Failed to load columns config:', error);
             // החזר מערך ריק במקרה של שגיאה
+            return [];
+        }
+    }
+
+    // בפונקציה שמייצרת את כפתור העריכה - הוסף דיבאג:
+    async function loadColumnsFromConfig(entityType) {
+        try {
+            const response = await fetch(`/dashboard/dashboards/cemeteries/api/table-columns-api.php?entity=${entityType}`);
+            const data = await response.json();
+            
+            if (!data.success || !data.columns) {
+                throw new Error('Failed to load columns configuration');
+            }
+            
+            const columns = data.columns.map(column => {
+                switch (column.type) {
+                    // ... כל ה-cases האחרים ...
+                    
+                    case 'actions':
+                        column.render = (item) => `
+                            <button class="btn btn-sm btn-info" 
+                                    onclick="event.stopPropagation(); console.log('🔍 [VIEW] Clicked burial:', '${item.unicId}'); viewBurial('${item.unicId}')" 
+                                    title="צפייה">
+                                <svg class="icon"><use xlink:href="#icon-view"></use></svg>
+                            </button>
+                            <button class="btn btn-sm btn-secondary" 
+                                    onclick="event.stopPropagation(); 
+                                            console.log('🔍 [EDIT CLICK] burialId:', '${item.unicId}'); 
+                                            console.log('🔍 [EDIT CLICK] window.currentType:', window.currentType); 
+                                            console.log('🔍 [EDIT CLICK] tableRenderer.currentType:', window.tableRenderer?.currentType);
+                                            window.tableRenderer.editItem('${item.unicId}')" 
+                                    title="עריכה">
+                                <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
+                            </button>
+                            <button class="btn btn-sm btn-danger" 
+                                    onclick="event.stopPropagation(); console.log('🔍 [DELETE] Clicked burial:', '${item.unicId}'); deleteBurial('${item.unicId}')" 
+                                    title="מחיקה">
+                                <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
+                            </button>
+                        `;
+                        break;
+                        
+                    default:
+                        if (!column.render) {
+                            column.render = (item) => item[column.field] || '-';
+                        }
+                }
+                
+                return column;
+            });
+            
+            return columns;
+        } catch (error) {
+            console.error('❌ Failed to load columns config:', error);
             return [];
         }
     }

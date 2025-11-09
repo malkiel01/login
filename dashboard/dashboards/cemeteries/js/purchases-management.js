@@ -111,32 +111,67 @@ async function loadPurchases() {
     }
 }
 
-async function loadColumnsFromConfig2(entityType) {
+async function loadColumnsFromConfig(entityType = 'purchase') {
     try {
-        const response = await fetch(`/dashboard/dashboards/cemeteries/api/table-columns-api.php?entity=${entityType}`);
-        const data = await response.json();
+        const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`);
         
-        if (!data.success || !data.columns) {
-            throw new Error('Failed to load columns configuration');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
-        const columns = data.columns.map(column => {
+
+        const result = await response.json();
+
+        if (!result.success || !result.data) {
+            throw new Error(result.error || 'Failed to load columns config');
+        }
+
+        // המרת הקונפיג מ-PHP לפורמט של TableManager
+        const columns = result.data.map(col => {
+            const column = {
+                field: col.field,
+                label: col.title,
+                width: col.width || 'auto',
+                sortable: col.sortable !== false,
+                type: col.type || 'text'
+            };
+            
+            // טיפול בסוגי עמודות מיוחדות
             switch (column.type) {
-                // ... כל ה-cases האחרים ...
-                
+                case 'date':
+                    column.render = (item) => formatDate(item[column.field]);
+                    break;
+                    
+                case 'status':
+                    column.render = (item) => formatPurchaseStatus(item[column.field]);
+                    break;
+                    
+                case 'type':
+                    if (column.render === 'formatPurchaseType') {
+                        column.render = (item) => formatPurchaseType(item[column.field]);
+                    }
+                    break;
+                    
+                case 'currency':
+                    column.render = (item) => {
+                        const value = item[column.field];
+                        return value ? `₪${parseFloat(value).toLocaleString('he-IL')}` : '-';
+                    };
+                    break;
+                    
                 case 'actions':
+                    // ⭐ רק כאן הוספנו דיבאג!
                     column.render = (item) => `
                         <button class="btn btn-sm btn-secondary" 
                                 onclick="event.stopPropagation(); 
-                                         console.log('🔍 [EDIT CLICK] purchaseId:', '${item.unicId}'); 
-                                         console.log('🔍 [EDIT CLICK] window.currentType:', window.currentType); 
-                                         console.log('🔍 [EDIT CLICK] tableRenderer.currentType:', window.tableRenderer?.currentType);
+                                         console.log('🔍 [EDIT CLICK PURCHASE] purchaseId:', '${item.unicId}'); 
+                                         console.log('🔍 [EDIT CLICK PURCHASE] window.currentType:', window.currentType); 
+                                         console.log('🔍 [EDIT CLICK PURCHASE] tableRenderer.currentType:', window.tableRenderer?.currentType);
                                          window.tableRenderer.editItem('${item.unicId}')" 
                                 title="עריכה">
                             <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
                         </button>
                         <button class="btn btn-sm btn-danger" 
-                                onclick="event.stopPropagation(); console.log('🔍 [DELETE] Clicked purchase:', '${item.unicId}'); deletePurchase('${item.unicId}')" 
+                                onclick="event.stopPropagation(); deletePurchase('${item.unicId}')" 
                                 title="מחיקה">
                             <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
                         </button>
@@ -451,7 +486,7 @@ async function initPurchasesTable(data, totalItems = null) {
     }
 
     // טעינת העמודות מהשרת
-    async function loadColumnsFromConfig(entityType = 'purchase') {
+    async function loadColumnsFromConfig2(entityType = 'purchase') {
         try {
             const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`);
             

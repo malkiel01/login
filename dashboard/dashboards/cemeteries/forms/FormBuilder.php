@@ -454,6 +454,17 @@
                 #' . $this->formId . 'Modal .loading-spinner-overlay {
                     position: absolute;
                     left: 10px;
+                    top: 50%;
+                    transform: translate(0, -50%); /* ← יותר מדויק */
+                    z-index: 10;
+                    margin-top: 0; /* ← מאפס כל margin */
+                    line-height: 0; /* ← מאפס line-height */
+                }
+
+                /**
+                #' . $this->formId . 'Modal .loading-spinner-overlay {
+                    position: absolute;
+                    left: 10px;
                     top: 0;
                     bottom: 0;
                     display: flex;

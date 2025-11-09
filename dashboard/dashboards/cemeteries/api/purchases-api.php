@@ -521,7 +521,6 @@ try {
             break;
             
         // הוסף לאחר case 'search': וליפני default:
-
         // ============================
         case 'getByGrave':
             $graveId = $_GET['graveId'] ?? null;
@@ -577,8 +576,7 @@ try {
 
 
         // ============================
-    
-    default:
+        default:
             throw new Exception('Invalid action');
     }
     

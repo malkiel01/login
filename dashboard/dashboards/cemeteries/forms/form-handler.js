@@ -2065,20 +2065,88 @@ const FormHandler = {
             }
         };
         
-        // ⭐ פונקציה חדשה: בחירת מדינה
+        // // ⭐ פונקציה חדשה: בחירת מדינה
+        // window.selectCountry = function(countryId) {
+        //     console.log('🎯 Selecting country:', countryId);
+            
+        //     const countryInput = document.getElementById('countryId');
+        //     const countryInstance = window.SmartSelectManager?.instances['countryId'];
+            
+        //     if (!countryInput || !countryInstance) {
+        //         console.warn('⚠️ Country input or instance not found');
+        //         return;
+        //     }
+            
+        //     // קבע ערך
+        //     countryInput.value = countryId;
+            
+        //     // מצא את המדינה
+        //     const selectedCountry = window.locationsData.countries.find(
+        //         c => c.unicId == countryId
+        //     );
+            
+        //     if (!selectedCountry) {
+        //         console.warn('⚠️ Country not found in data:', countryId);
+        //         return;
+        //     }
+            
+        //     // עדכן תצוגה
+        //     countryInstance.valueSpan.textContent = selectedCountry.countryNameHe;
+        //     countryInstance.hiddenInput.value = countryId;
+            
+        //     // ⭐ סמן את האופציה כנבחרת ב-DOM
+        //     countryInstance.optionsContainer.querySelectorAll('.smart-select-option').forEach(opt => {
+        //         if (opt.dataset.value == countryId) {
+        //             opt.classList.add('selected');
+        //         } else {
+        //             opt.classList.remove('selected');
+        //         }
+        //     });
+            
+        //     console.log('✅ Country selected:', selectedCountry.countryNameHe);
+        // };
+        
+        // // ⭐ פונקציה חדשה: בחירת עיר
+        // window.selectCity = function(cityId, cityName) {
+        //     console.log('🎯 Selecting city:', cityId, cityName);
+            
+        //     const cityInput = document.getElementById('cityId');
+        //     const cityInstance = window.SmartSelectManager?.instances['cityId'];
+            
+        //     if (!cityInput || !cityInstance) {
+        //         console.warn('⚠️ City input or instance not found');
+        //         return;
+        //     }
+            
+        //     // קבע ערך
+        //     cityInput.value = cityId;
+            
+        //     // עדכן תצוגה
+        //     cityInstance.valueSpan.textContent = cityName;
+        //     cityInstance.hiddenInput.value = cityId;
+            
+        //     // ⭐ סמן את האופציה כנבחרת ב-DOM
+        //     cityInstance.optionsContainer.querySelectorAll('.smart-select-option').forEach(opt => {
+        //         if (opt.dataset.value == cityId) {
+        //             opt.classList.add('selected');
+        //         } else {
+        //             opt.classList.remove('selected');
+        //         }
+        //     });
+            
+        //     console.log('✅ City selected:', cityName);
+        // };
+
+        // ⭐ פונקציה מתוקנת: בחירת מדינה
         window.selectCountry = function(countryId) {
             console.log('🎯 Selecting country:', countryId);
             
             const countryInput = document.getElementById('countryId');
-            const countryInstance = window.SmartSelectManager?.instances['countryId'];
             
-            if (!countryInput || !countryInstance) {
-                console.warn('⚠️ Country input or instance not found');
+            if (!countryInput) {
+                console.warn('⚠️ Country input not found');
                 return;
             }
-            
-            // קבע ערך
-            countryInput.value = countryId;
             
             // מצא את המדינה
             const selectedCountry = window.locationsData.countries.find(
@@ -2090,51 +2158,52 @@ const FormHandler = {
                 return;
             }
             
-            // עדכן תצוגה
-            countryInstance.valueSpan.textContent = selectedCountry.countryNameHe;
-            countryInstance.hiddenInput.value = countryId;
-            
-            // ⭐ סמן את האופציה כנבחרת ב-DOM
-            countryInstance.optionsContainer.querySelectorAll('.smart-select-option').forEach(opt => {
-                if (opt.dataset.value == countryId) {
-                    opt.classList.add('selected');
-                } else {
-                    opt.classList.remove('selected');
+            // ⭐ השתמש ב-SmartSelectManager.select() הרשמי!
+            if (window.SmartSelectManager && window.SmartSelectManager.select) {
+                window.SmartSelectManager.select('countryId', countryId);
+                console.log('✅ Country selected via SmartSelectManager:', selectedCountry.countryNameHe);
+            } else {
+                // fallback ידני
+                countryInput.value = countryId;
+                const countryInstance = window.SmartSelectManager?.instances['countryId'];
+                if (countryInstance) {
+                    countryInstance.valueSpan.textContent = selectedCountry.countryNameHe;
+                    countryInstance.hiddenInput.value = countryId;
                 }
-            });
-            
-            console.log('✅ Country selected:', selectedCountry.countryNameHe);
+                console.log('✅ Country selected manually:', selectedCountry.countryNameHe);
+            }
         };
-        
-        // ⭐ פונקציה חדשה: בחירת עיר
-        window.selectCity = function(cityId, cityName) {
-            console.log('🎯 Selecting city:', cityId, cityName);
+
+        // ⭐ פונקציה מתוקנת: בחירת עיר
+        window.selectCity = function(cityId) {
+            console.log('🎯 Selecting city:', cityId);
             
             const cityInput = document.getElementById('cityId');
-            const cityInstance = window.SmartSelectManager?.instances['cityId'];
             
-            if (!cityInput || !cityInstance) {
-                console.warn('⚠️ City input or instance not found');
+            if (!cityInput) {
+                console.warn('⚠️ City input not found');
                 return;
             }
             
-            // קבע ערך
-            cityInput.value = cityId;
-            
-            // עדכן תצוגה
-            cityInstance.valueSpan.textContent = cityName;
-            cityInstance.hiddenInput.value = cityId;
-            
-            // ⭐ סמן את האופציה כנבחרת ב-DOM
-            cityInstance.optionsContainer.querySelectorAll('.smart-select-option').forEach(opt => {
-                if (opt.dataset.value == cityId) {
-                    opt.classList.add('selected');
-                } else {
-                    opt.classList.remove('selected');
+            // ⭐ השתמש ב-SmartSelectManager.select() הרשמי!
+            if (window.SmartSelectManager && window.SmartSelectManager.select) {
+                window.SmartSelectManager.select('cityId', cityId);
+                console.log('✅ City selected via SmartSelectManager');
+            } else {
+                // fallback ידני - מצא את שם העיר
+                const cityInstance = window.SmartSelectManager?.instances['cityId'];
+                if (cityInstance) {
+                    const selectedCityOption = Array.from(cityInstance.optionsContainer.children)
+                        .find(opt => opt.dataset.value == cityId);
+                    
+                    if (selectedCityOption) {
+                        cityInput.value = cityId;
+                        cityInstance.valueSpan.textContent = selectedCityOption.textContent;
+                        cityInstance.hiddenInput.value = cityId;
+                        console.log('✅ City selected manually:', selectedCityOption.textContent);
+                    }
                 }
-            });
-            
-            console.log('✅ City selected:', cityName);
+            }
         };
         
         // ======================================
@@ -2308,32 +2377,48 @@ const FormHandler = {
                         }
                     });
                     
+                    // // ⭐ טען מדינה ועיר בצורה נכונה
+                    // if (customer.countryId) {
+                    //     // ⭐ בחר מדינה
+                    //     window.selectCountry(customer.countryId);
+                        
+                    //     // ⭐ טען ערים למדינה זו
+                    //     await window.loadCitiesForCountry(customer.countryId);
+                        
+                    //     // ⭐ המתן רגע ואז בחר עיר
+                    //     if (customer.cityId) {
+                    //         setTimeout(() => {
+                    //             // מצא את שם העיר
+                    //             const cityInstance = window.SmartSelectManager?.instances['cityId'];
+                    //             if (cityInstance) {
+                    //                 const selectedCityOption = Array.from(cityInstance.optionsContainer.children)
+                    //                     .find(opt => opt.dataset.value == customer.cityId);
+                                    
+                    //                 if (selectedCityOption) {
+                    //                     const cityName = selectedCityOption.textContent;
+                    //                     window.selectCity(customer.cityId, cityName);
+                    //                     console.log('✅ City selected:', cityName);
+                    //                 } else {
+                    //                     console.warn('⚠️ City option not found in DOM:', customer.cityId);
+                    //                 }
+                    //             }
+                    //         }, 400);
+                    //     }
+                    // }
+
                     // ⭐ טען מדינה ועיר בצורה נכונה
                     if (customer.countryId) {
-                        // ⭐ בחר מדינה
+                        // בחר מדינה
                         window.selectCountry(customer.countryId);
                         
-                        // ⭐ טען ערים למדינה זו
+                        // טען ערים למדינה זו
                         await window.loadCitiesForCountry(customer.countryId);
                         
-                        // ⭐ המתן רגע ואז בחר עיר
+                        // המתן רגע ואז בחר עיר
                         if (customer.cityId) {
                             setTimeout(() => {
-                                // מצא את שם העיר
-                                const cityInstance = window.SmartSelectManager?.instances['cityId'];
-                                if (cityInstance) {
-                                    const selectedCityOption = Array.from(cityInstance.optionsContainer.children)
-                                        .find(opt => opt.dataset.value == customer.cityId);
-                                    
-                                    if (selectedCityOption) {
-                                        const cityName = selectedCityOption.textContent;
-                                        window.selectCity(customer.cityId, cityName);
-                                        console.log('✅ City selected:', cityName);
-                                    } else {
-                                        console.warn('⚠️ City option not found in DOM:', customer.cityId);
-                                    }
-                                }
-                            }, 400);
+                                window.selectCity(customer.cityId);  // ⭐ פשוט יותר!
+                            }, 500);  // ⭐ תן יותר זמן (500ms)
                         }
                     }
                     
@@ -2354,7 +2439,7 @@ const FormHandler = {
 
 
 
-    
+
 
 
 

@@ -3278,7 +3278,7 @@ const FormHandler = {
         };
 
         // ✅ הוסף מאזין לבחירת קבר (מתוקן)
-        const setupGraveListener = function() {
+        const setupGraveListener2 = function() {
             const graveSelect = document.getElementById('graveSelect');
             if (graveSelect) {
                 graveSelect.addEventListener('change', async function() {
@@ -3340,6 +3340,113 @@ const FormHandler = {
                     } catch (error) {
                         console.error('❌ שגיאה בטעינת רכישה:', error);
                         // במקרה של שגיאה - אפס (רק אם לא במצב עריכה)
+                        if (!window.isEditMode) {
+                            const customerSelect = document.querySelector('[name="clientId"]');
+                            if (customerSelect) customerSelect.value = '';
+                            window.selectedCustomerData = null;
+                        }
+                    }
+                });
+            }
+        };
+        // ✅ הוסף מאזין לבחירת קבר (מתוקן עם המתנה)
+        const setupGraveListener = function() {
+            const graveSelect = document.getElementById('graveSelect');
+            if (graveSelect) {
+                graveSelect.addEventListener('change', async function() {
+                    const graveId = this.value;
+                    
+                    if (!graveId) {
+                        if (!window.isEditMode) {
+                            const customerSelect = document.querySelector('[name="clientId"]');
+                            if (customerSelect) customerSelect.value = '';
+                            window.selectedCustomerData = null;
+                        }
+                        window.selectedGraveData = null;
+                        return;
+                    }
+                    
+                    const grave = window.hierarchyData.graves.find(g => g.unicId == graveId);
+                    if (!grave) return;
+                    
+                    window.selectedGraveData = {
+                        graveId: graveId,
+                        graveStatus: grave.graveStatus
+                    };
+                    
+                    console.log('⚰️ קבר נבחר:', window.selectedGraveData);
+                    
+                    // ✅ בדוק אם לקבר יש רכישה פעילה
+                    try {
+                        const response = await fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=getByGrave&graveId=${graveId}`);
+                        const data = await response.json();
+                        
+                        if (data.success && data.data) {
+                            const purchase = data.data;
+                            
+                            // ✅ יש רכישה - מלא את הלקוח
+                            const customerSelect = document.querySelector('[name="clientId"]');
+                            if (customerSelect && purchase.clientId) {
+                                
+                                // ✅ המתן עד שהלקוחות ייטענו
+                                let attempts = 0;
+                                const waitForCustomers = setInterval(() => {
+                                    attempts++;
+                                    
+                                    // בדוק אם הלקוח קיים ברשימה
+                                    const customerOption = Array.from(customerSelect.options).find(
+                                        opt => opt.value === purchase.clientId
+                                    );
+                                    
+                                    if (customerOption) {
+                                        // ✅ הלקוח קיים - בחר אותו
+                                        clearInterval(waitForCustomers);
+                                        customerSelect.value = purchase.clientId;
+                                        
+                                        window.selectedCustomerData = {
+                                            id: purchase.clientId,
+                                            name: purchase.customer_name || ''
+                                        };
+                                        
+                                        console.log('✅ לקוח מולא אוטומטית מרכישה:', window.selectedCustomerData);
+                                        showNotification('info', `הלקוח "${purchase.customer_name}" מולא אוטומטית על פי הרכישה`);
+                                        
+                                    } else if (attempts > 20) {
+                                        // ✅ אחרי 20 ניסיונות - הוסף את הלקוח לרשימה ידנית
+                                        clearInterval(waitForCustomers);
+                                        console.log('⚠️ הלקוח לא נמצא ברשימה, מוסיף ידנית...');
+                                        
+                                        // הוסף את הלקוח לרשימה
+                                        const newOption = document.createElement('option');
+                                        newOption.value = purchase.clientId;
+                                        newOption.textContent = purchase.customer_name;
+                                        customerSelect.appendChild(newOption);
+                                        
+                                        // בחר אותו
+                                        customerSelect.value = purchase.clientId;
+                                        
+                                        window.selectedCustomerData = {
+                                            id: purchase.clientId,
+                                            name: purchase.customer_name || ''
+                                        };
+                                        
+                                        console.log('✅ לקוח נוסף ונבחר:', window.selectedCustomerData);
+                                        showNotification('info', `הלקוח "${purchase.customer_name}" מולא אוטומטית על פי הרכישה`);
+                                    }
+                                }, 100); // בדוק כל 100ms
+                                
+                            }
+                        } else {
+                            // אין רכישה
+                            if (!window.isEditMode) {
+                                console.log('ℹ️ לקבר אין רכישה - מאפס לקוח');
+                                const customerSelect = document.querySelector('[name="clientId"]');
+                                if (customerSelect) customerSelect.value = '';
+                                window.selectedCustomerData = null;
+                            }
+                        }
+                    } catch (error) {
+                        console.error('❌ שגיאה בטעינת רכישה:', error);
                         if (!window.isEditMode) {
                             const customerSelect = document.querySelector('[name="clientId"]');
                             if (customerSelect) customerSelect.value = '';

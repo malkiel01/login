@@ -87,12 +87,21 @@ $formType = basename(__FILE__, '.php'); // מזהה אוטומטי של סוג �
     // יצירת FormBuilder
     $formBuilder = new FormBuilder('purchase', $itemId, $parentId);
 
+    // $customersSelectorHTML = '
+    // <div style="position: relative;">
+    //     <select name="clientId" id="clientId" class="form-control" required disabled>
+    //         <option value="">טוען לקוחות...</option>
+    //     </select>
+    //     <span id="customerLoadingSpinner" class="loading-spinner" style="position: absolute; left: 10px; top: 35%; transform: translateY(-50%);"></span>
+    // </div>';
+
+    // ✅ פשוט - בלי ספינר ידני
     $customersSelectorHTML = '
-    <div style="position: relative;">
-        <select name="clientId" id="clientId" class="form-control" required disabled>
+    <div class="form-group">
+        <label>לקוח <span class="text-danger">*</span></label>
+        <select name="clientId" id="clientId" class="form-control" required>
             <option value="">טוען לקוחות...</option>
         </select>
-        <span id="customerLoadingSpinner" class="loading-spinner" style="position: absolute; left: 10px; top: 35%; transform: translateY(-50%);"></span>
     </div>';
 
     $formBuilder->addCustomHTML($customersSelectorHTML);
@@ -122,7 +131,6 @@ $formType = basename(__FILE__, '.php'); // מזהה אוטומטי של סוג �
 
     $graveSelectorHTML .= '
                 </select>
-                <span id="customerLoadingSpinner" class="loading-spinner" style="position: absolute; left: 10px; top: 35%; transform: translateY(-50%);"></span>
             </div>
             <div class="form-group">
                 <label>גוש</label>

@@ -1985,44 +1985,6 @@ const FormHandler = {
         };
 
         // אירוע לבחירת לקוח
-        const setupCustomerListener2 = function() {
-            const customerSelect = document.querySelector('[name="clientId"]');
-            if (customerSelect) {
-                customerSelect.addEventListener('change', async function() {
-                    const customerId = this.value;
-                    if (customerId) {
-                        try {
-                            const response = await fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?action=get&id=${customerId}`);
-                            const data = await response.json();
-                            if (data.success && data.data) {
-                                window.selectedCustomerData = {
-                                    id: customerId,
-                                    resident: data.data.resident || 3,
-                                    name: data.data.firstName + ' ' + data.data.lastName
-                                };
-                                
-                                if (window.selectedGraveData && window.updatePaymentParameters) {
-                                    window.updatePaymentParameters();
-                                }
-                                
-                                await window.tryCalculatePayments();
-                            }
-                        } catch (error) {
-                            console.error('Error loading customer data:', error);
-                        }
-                    } else {
-                        window.selectedCustomerData = null;
-                        
-                        if (!window.isEditMode) {
-                            window.purchasePayments = [];
-                            document.getElementById('total_price').value = '0.00';
-                            document.getElementById('paymentsDisplay').innerHTML = '<p style="color: #999;">לא הוגדרו תשלומים</p>';
-                            document.getElementById('paymentsList').value = '[]';
-                        }
-                    }
-                });
-            }
-        };
         const setupCustomerListener = function() {
             const customerSelect = document.querySelector('[name="clientId"]');
             if (customerSelect) {
@@ -2621,9 +2583,90 @@ const FormHandler = {
         // טעינת לקוחות פנויים - זהה להיררכיה
         // ===========================================================
 
+        // (async function loadAvailableCustomers() {
+        //     try {
+        //         console.log('👥 מתחיל לטעון לקוחות פנויים מה-API...');
+                
+        //         // ✅ קריאה ל-API
+        //         const response = await fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=available');
+        //         const result = await response.json();
+                
+        //         if (!result.success) {
+        //             console.error('❌ שגיאה בטעינת לקוחות:', result.error);
+        //             return;
+        //         }
+                
+        //         console.log(`✅ נטענו ${result.data.length} לקוחות פנויים`);
+                
+        //         // ✅ מצא את ה-select של לקוחות
+        //         const customerSelect = document.querySelector('[name="clientId"]');
+                
+        //         if (!customerSelect) {
+        //             console.warn('⚠️ Customer select לא נמצא עדיין, ננסה שוב...');
+        //             setTimeout(loadAvailableCustomers, 500);
+        //             return;
+        //         }
+                
+        //         // ✅ ריקון ה-select
+        //         customerSelect.innerHTML = '<option value="">-- בחר לקוח --</option>';
+                
+        //         // ✅ מילוי אופציות
+        //         result.data.forEach(customer => {
+        //             const option = document.createElement('option');
+        //             option.value = customer.unicId;
+                    
+        //             // ✅ פורמט תצוגה: "משה כהן - 050-1234567"
+        //             let displayText = `${customer.firstName} ${customer.lastName}`;
+                    
+        //             if (customer.phone || customer.phoneMobile) {
+        //                 displayText += ` - ${customer.phone || customer.phoneMobile}`;
+        //             }
+                    
+        //             option.textContent = displayText;
+                    
+        //             // ✅ שמירת נתוני resident ב-data attribute
+        //             option.dataset.resident = customer.resident || 3;
+                    
+        //             customerSelect.appendChild(option);
+        //         });
+                
+        //         console.log('✅ לקוחות נטענו בהצלחה');
+                
+        //         // ✅ הסר את הספינר
+        //         const spinner = document.getElementById('customerLoadingSpinner');
+        //         if (spinner) {
+        //             spinner.remove();
+        //         }
+                
+        //         // ✅ הפעל את ה-select
+        //         customerSelect.disabled = false;
+        //         customerSelect.style.opacity = '1';
+                
+        //     } catch (error) {
+        //         console.error('❌ שגיאה בטעינת לקוחות:', error);
+                
+        //         // ✅ הסר את הספינר גם במקרה של שגיאה
+        //         const spinner = document.getElementById('customerLoadingSpinner');
+        //         if (spinner) {
+        //             spinner.remove();
+        //         }
+                
+        //         // ✅ הצג הודעת שגיאה למשתמש
+        //         const customerSelect = document.querySelector('[name="clientId"]');
+        //         if (customerSelect) {
+        //             customerSelect.innerHTML = '<option value="">❌ שגיאה בטעינת לקוחות</option>';
+        //             customerSelect.style.borderColor = 'red';
+        //             customerSelect.disabled = false;
+        //         }
+        //     }
+        // })();
+
         (async function loadAvailableCustomers() {
             try {
                 console.log('👥 מתחיל לטעון לקוחות פנויים מה-API...');
+                
+                // ✅ הוסף ספינר
+                showSelectSpinner('clientId');
                 
                 // ✅ קריאה ל-API
                 const response = await fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=available');
@@ -2631,12 +2674,20 @@ const FormHandler = {
                 
                 if (!result.success) {
                     console.error('❌ שגיאה בטעינת לקוחות:', result.error);
+                    
+                    // ✅ הסר ספינר
+                    hideSelectSpinner('clientId');
+                    
+                    const customerSelect = document.querySelector('[name="clientId"]');
+                    if (customerSelect) {
+                        customerSelect.innerHTML = '<option value="">❌ שגיאה בטעינת לקוחות</option>';
+                        customerSelect.style.borderColor = 'red';
+                    }
                     return;
                 }
                 
                 console.log(`✅ נטענו ${result.data.length} לקוחות פנויים`);
                 
-                // ✅ מצא את ה-select של לקוחות
                 const customerSelect = document.querySelector('[name="clientId"]');
                 
                 if (!customerSelect) {
@@ -2653,7 +2704,6 @@ const FormHandler = {
                     const option = document.createElement('option');
                     option.value = customer.unicId;
                     
-                    // ✅ פורמט תצוגה: "משה כהן - 050-1234567"
                     let displayText = `${customer.firstName} ${customer.lastName}`;
                     
                     if (customer.phone || customer.phoneMobile) {
@@ -2661,8 +2711,6 @@ const FormHandler = {
                     }
                     
                     option.textContent = displayText;
-                    
-                    // ✅ שמירת נתוני resident ב-data attribute
                     option.dataset.resident = customer.resident || 3;
                     
                     customerSelect.appendChild(option);
@@ -2670,31 +2718,19 @@ const FormHandler = {
                 
                 console.log('✅ לקוחות נטענו בהצלחה');
                 
-                // ✅ הסר את הספינר
-                const spinner = document.getElementById('customerLoadingSpinner');
-                if (spinner) {
-                    spinner.remove();
-                }
-                
-                // ✅ הפעל את ה-select
-                customerSelect.disabled = false;
-                customerSelect.style.opacity = '1';
+                // ✅ הסר ספינר
+                hideSelectSpinner('clientId');
                 
             } catch (error) {
                 console.error('❌ שגיאה בטעינת לקוחות:', error);
                 
-                // ✅ הסר את הספינר גם במקרה של שגיאה
-                const spinner = document.getElementById('customerLoadingSpinner');
-                if (spinner) {
-                    spinner.remove();
-                }
+                // ✅ הסר ספינר
+                hideSelectSpinner('clientId');
                 
-                // ✅ הצג הודעת שגיאה למשתמש
                 const customerSelect = document.querySelector('[name="clientId"]');
                 if (customerSelect) {
                     customerSelect.innerHTML = '<option value="">❌ שגיאה בטעינת לקוחות</option>';
                     customerSelect.style.borderColor = 'red';
-                    customerSelect.disabled = false;
                 }
             }
         })();
@@ -4543,3 +4579,83 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+// ===========================================================
+// 🔄 פונקציות גנריות לניהול ספינרים
+// ===========================================================
+
+/**
+ * הוסף ספינר לשדה select
+ * @param {string} selectId - ID או name של ה-select
+ */
+window.showSelectSpinner = function(selectId) {
+    const select = document.getElementById(selectId) || 
+                   document.querySelector(`[name="${selectId}"]`);
+    
+    if (!select) {
+        console.warn(`⚠️ Select ${selectId} not found`);
+        return;
+    }
+    
+    let wrapper = select.parentElement;
+    
+    // אם אין wrapper - צור אחד
+    if (!wrapper || wrapper.tagName === 'FORM' || wrapper.classList.contains('form-group')) {
+        const newWrapper = document.createElement('div');
+        newWrapper.style.position = 'relative';
+        newWrapper.style.display = 'block';
+        select.parentNode.insertBefore(newWrapper, select);
+        newWrapper.appendChild(select);
+        wrapper = newWrapper;
+    }
+    
+    // בדוק אם כבר יש ספינר
+    if (wrapper.querySelector('.loading-spinner')) {
+        console.log('⚠️ Spinner already exists');
+        return;
+    }
+    
+    // יצירת ספינר
+    const spinner = document.createElement('span');
+    spinner.className = 'loading-spinner loading-spinner-overlay';
+    spinner.id = `${selectId}-spinner`;
+    
+    wrapper.style.position = 'relative';
+    wrapper.appendChild(spinner);
+    
+    // כיבוי השדה
+    select.disabled = true;
+    select.style.opacity = '0.7';
+    
+    console.log(`🔄 Spinner added to ${selectId}`);
+};
+
+/**
+ * הסר ספינר משדה select
+ * @param {string} selectId - ID או name של ה-select
+ */
+window.hideSelectSpinner = function(selectId) {
+    const select = document.getElementById(selectId) || 
+                   document.querySelector(`[name="${selectId}"]`);
+    
+    if (!select) {
+        console.warn(`⚠️ Select ${selectId} not found`);
+        return;
+    }
+    
+    const wrapper = select.parentElement;
+    if (!wrapper) return;
+    
+    // מצא והסר את הספינר
+    const spinner = wrapper.querySelector('.loading-spinner') || 
+                    document.getElementById(`${selectId}-spinner`);
+    
+    if (spinner) {
+        spinner.remove();
+        console.log(`✅ Spinner removed from ${selectId}`);
+    }
+    
+    // הפעל את השדה
+    select.disabled = false;
+    select.style.opacity = '1';
+};

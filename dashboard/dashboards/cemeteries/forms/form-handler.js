@@ -2351,6 +2351,40 @@ const FormHandler = {
                 console.log('✅ Full hierarchy loaded');
                 hideSelectSpinner('cemeterySelect');
                 
+                // // ✅ אם יש קבר נוכחי, טען את ההיררכיה
+                // if (currentGraveId) {
+                //     const currentGrave = window.hierarchyData.graves.find(g => g.unicId == currentGraveId);
+                //     if (currentGrave) {
+                //         // מצא את כל הערכים
+                //         const areaGrave = window.hierarchyData.areaGraves.find(ag => ag.unicId == currentGrave.areaGraveId);
+                //         const row = window.hierarchyData.rows.find(r => r.unicId == areaGrave?.lineId);
+                //         const plot = window.hierarchyData.plots.find(p => p.unicId == row?.plotId);
+                //         const block = window.hierarchyData.blocks.find(b => b.unicId == plot?.blockId);
+                        
+                //         // טען גושים
+                //         window.populateBlocks();
+                //         document.getElementById('blockSelect').value = block?.unicId;
+                        
+                //         // טען חלקות
+                //         window.populatePlots();
+                //         document.getElementById('plotSelect').value = plot?.unicId;
+                        
+                //         // טען שורות
+                //         window.populateRows();
+                //         document.getElementById('rowSelect').value = row?.unicId;
+                        
+                //         // טען אחוזות
+                //         window.populateAreaGraves();
+                //         document.getElementById('areaGraveSelect').value = areaGrave?.unicId;
+                        
+                //         // טען קברים
+                //         window.populateGraves();
+                //         document.getElementById('graveSelect').value = currentGrave.unicId;
+                        
+                //         console.log('✅ Current hierarchy selections loaded');
+                //     }
+                // }
+
                 // ✅ אם יש קבר נוכחי, טען את ההיררכיה
                 if (currentGraveId) {
                     const currentGrave = window.hierarchyData.graves.find(g => g.unicId == currentGraveId);
@@ -2372,14 +2406,17 @@ const FormHandler = {
                         // טען שורות
                         window.populateRows();
                         document.getElementById('rowSelect').value = row?.unicId;
+                        window.toggleSelectState('rowSelect', true); // ← הוסף את זה!
                         
                         // טען אחוזות
                         window.populateAreaGraves();
                         document.getElementById('areaGraveSelect').value = areaGrave?.unicId;
+                        window.toggleSelectState('areaGraveSelect', true); // ← הוסף את זה!
                         
                         // טען קברים
                         window.populateGraves();
                         document.getElementById('graveSelect').value = currentGrave.unicId;
+                        window.toggleSelectState('graveSelect', true); // ← הוסף את זה!
                         
                         console.log('✅ Current hierarchy selections loaded');
                     }

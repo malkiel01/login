@@ -2486,6 +2486,9 @@ const FormHandler = {
             try {
                 console.log('🌐 Starting to load full hierarchy from APIs...');
                 
+                // ✅ הוסף ספינר
+                showSelectSpinner('cemeterySelect');
+                
                 // טען את כל ההיררכיה במקביל
                 const [cemResponse, blocksResponse, plotsResponse, rowsResponse, areaGravesResponse, gravesResponse] = await Promise.all([
                     fetch('/dashboard/dashboards/cemeteries/api/cemeteries-api.php?action=list'),
@@ -2574,6 +2577,9 @@ const FormHandler = {
                 
                 console.log('✅ Full hierarchy loaded and event listeners attached');
                 
+                // ✅ הסר ספינר
+                hideSelectSpinner('cemeterySelect');
+
             } catch (error) {
                 console.error('❌ Error loading hierarchy:', error);
             }
@@ -2719,7 +2725,7 @@ const FormHandler = {
                 console.log('✅ לקוחות נטענו בהצלחה');
                 
                 // ✅ הסר ספינר
-                // hideSelectSpinner('clientId');
+                hideSelectSpinner('clientId');
                 
             } catch (error) {
                 console.error('❌ שגיאה בטעינת לקוחות:', error);

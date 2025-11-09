@@ -615,9 +615,7 @@ async function initPurchasesTable(data, totalItems = null) {
                         break;
                         
                     case 'status':
-                        // if (column.render === 'formatPurchaseStatus') {
-                            column.render = (item) => formatPurchaseStatus(item[column.field]);
-                        // }
+                        column.render = (item) => formatPurchaseStatus(item[column.field]);
                         break;
                         
                     case 'type':
@@ -634,6 +632,26 @@ async function initPurchasesTable(data, totalItems = null) {
                         break;
                         
                     case 'actions':
+                        // ⭐ רק כאן הוספנו דיבאג!
+                        column.render = (item) => `
+                            <button class="btn btn-sm btn-secondary" 
+                                    onclick="event.stopPropagation(); 
+                                            console.log('🔍 [EDIT CLICK PURCHASE] purchaseId:', '${item.unicId}'); 
+                                            console.log('🔍 [EDIT CLICK PURCHASE] window.currentType:', window.currentType); 
+                                            console.log('🔍 [EDIT CLICK PURCHASE] tableRenderer.currentType:', window.tableRenderer?.currentType);
+                                            window.tableRenderer.editItem('${item.unicId}')" 
+                                    title="עריכה">
+                                <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
+                            </button>
+                            <button class="btn btn-sm btn-danger" 
+                                    onclick="event.stopPropagation(); deletePurchase('${item.unicId}')" 
+                                    title="מחיקה">
+                                <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
+                            </button>
+                        `;
+                        break;
+                        
+                    case 'actions2':
                         column.render = (item) => `
                             <button class="btn btn-sm btn-secondary" 
                                     onclick="event.stopPropagation(); window.tableRenderer.editItem('${item.unicId}')" 
@@ -646,10 +664,8 @@ async function initPurchasesTable(data, totalItems = null) {
                                 <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
                             </button>
                         `;
-                        break;
-                        
+                    
                     default:
-                        // עמודת טקסט רגילה
                         if (!column.render) {
                             column.render = (item) => item[column.field] || '-';
                         }
@@ -661,7 +677,6 @@ async function initPurchasesTable(data, totalItems = null) {
             return columns;
         } catch (error) {
             console.error('❌ Failed to load columns config:', error);
-            // החזר מערך ריק במקרה של שגיאה
             return [];
         }
     }

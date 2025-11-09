@@ -720,7 +720,14 @@ class UnifiedTableRenderer {
 
     async editItem(itemId) {
         // שלב 1: זיהוי הסוג - תחילה ננסה לפי ה-ID, ואז לפי currentType
-        let type = this.detectTypeFromId(itemId) || this.currentType;
+        let type = this.detectTypeFromId(itemId) || window.currentType || this.currentType;
+
+        console.log('===============================================');
+        console.log('===============================================');
+        console.log('Type: ', type);
+        console.log('===============================================');
+        console.log('===============================================');
+        
         
         if (!type) {
             console.error('❌ ERROR: No type defined!');

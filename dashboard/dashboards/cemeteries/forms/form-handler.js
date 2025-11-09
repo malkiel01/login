@@ -1094,7 +1094,7 @@ const FormHandler = {
         // ============================================
         // פונקציה עזר לטעינת נתוני לקוח
         // ============================================
-        function loadCustomerData(customerId, citiesData) {
+        function loadCustomerData2(customerId, citiesData) {
             // console.log('✏️ Loading customer data for ID:', customerId);
             
             const form = document.querySelector('#customerFormModal form');
@@ -1163,6 +1163,57 @@ const FormHandler = {
                             field.value = result.data[key] || '';
                         }
                     });
+                })
+                .catch(error => {
+                    console.error('❌ Error loading customer data:', error);
+                    alert('שגיאה בטעינת נתוני הלקוח');
+                });
+        }
+
+        function loadCustomerData(customerId, citiesData) {
+            console.log('🔍🔍🔍 [loadCustomerData] קיבלתי customerId:', customerId);
+            
+            const form = document.querySelector('#customerFormModal form');
+            if (!form) {
+                console.error('❌ Form not found');
+                return;
+            }
+            
+            // 👀 בדוק מה כבר יש בטופס לפני שטוענים
+            console.log('📋 [BEFORE] firstName בטופס:', form.elements['firstName']?.value);
+            console.log('📋 [BEFORE] lastName בטופס:', form.elements['lastName']?.value);
+            
+            fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?action=get&id=${customerId}`)
+                .then(response => response.json())
+                .then(result => {
+                    if (!result.success || !result.data) {
+                        console.error('❌ Failed to load customer data:', result);
+                        alert('שגיאה בטעינת נתוני הלקוח');
+                        return;
+                    }
+                    
+                    console.log('✅ [API החזיר] firstName:', result.data.firstName);
+                    console.log('✅ [API החזיר] lastName:', result.data.lastName);
+                    console.log('✅ [API החזיר] unicId:', result.data.unicId);
+                    
+                    // ... כל שאר הקוד נשאר אותו דבר ...
+                    Object.keys(result.data).forEach(key => {
+                        const field = form.elements[key];
+                        if (!field) return;
+                        
+                        if (field.type === 'checkbox') {
+                            field.checked = result.data[key] == 1;
+                        } else if (field.type === 'select-one') {
+                            field.value = result.data[key] || '';
+                            // ... שאר הקוד
+                        } else {
+                            field.value = result.data[key] || '';
+                        }
+                    });
+                    
+                    // 👀 בדוק מה יש בטופס אחרי שטענו
+                    console.log('📋 [AFTER] firstName בטופס:', form.elements['firstName']?.value);
+                    console.log('📋 [AFTER] lastName בטופס:', form.elements['lastName']?.value);
                 })
                 .catch(error => {
                     console.error('❌ Error loading customer data:', error);

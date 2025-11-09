@@ -688,7 +688,7 @@
                 break;
                 
             // רשימת לקוחות פנויים בלבד (ללא רכישות/קבורות)
-            case 'available':
+            case 'available2':
                 // ✅ קבל את הלקוח הנוכחי אם קיים
                 $currentClientId = $_GET['currentClientId'] ?? null;
                 
@@ -728,6 +728,128 @@
                         AND isActive = 1 
                         ORDER BY lastName, firstName
                     ";
+                    $stmt = $pdo->prepare($sql);
+                    $stmt->execute();
+                }
+                
+                $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                echo json_encode(['success' => true, 'data' => $customers]);
+                break;
+
+            case 'available':
+                $currentClientId = $_GET['currentClientId'] ?? null;
+                $formType = $_GET['type'] ?? 'purchase';
+                
+                if ($currentClientId) {
+                    // ✅ במצב עריכה
+                    if ($formType === 'burial') {
+                        // קבורה: לקוחות שאין להם קבורה + הלקוח הנוכחי
+                        $sql = "
+                            SELECT 
+                                unicId, 
+                                firstName, 
+                                lastName, 
+                                phone, 
+                                phoneMobile, 
+                                resident,
+                                CASE WHEN unicId = :currentClient THEN 1 ELSE 0 END as is_current
+                            FROM customers 
+                            WHERE (
+                                NOT EXISTS (
+                                    SELECT 1 FROM burials b 
+                                    WHERE b.clientId = customers.unicId 
+                                    AND b.isActive = 1
+                                )
+                                OR unicId = :currentClient2
+                            )
+                            AND isActive = 1 
+                            ORDER BY is_current DESC, lastName, firstName
+                        ";
+                    } else {
+                        // רכישה: לקוחות שאין להם רכישה ואין להם קבורה + הלקוח הנוכחי
+                        $sql = "
+                            SELECT 
+                                unicId, 
+                                firstName, 
+                                lastName, 
+                                phone, 
+                                phoneMobile, 
+                                resident,
+                                CASE WHEN unicId = :currentClient THEN 1 ELSE 0 END as is_current
+                            FROM customers 
+                            WHERE (
+                                (
+                                    NOT EXISTS (
+                                        SELECT 1 FROM purchases p 
+                                        WHERE p.clientId = customers.unicId 
+                                        AND p.isActive = 1
+                                    )
+                                    AND NOT EXISTS (
+                                        SELECT 1 FROM burials b 
+                                        WHERE b.clientId = customers.unicId 
+                                        AND b.isActive = 1
+                                    )
+                                )
+                                OR unicId = :currentClient2
+                            )
+                            AND isActive = 1 
+                            ORDER BY is_current DESC, lastName, firstName
+                        ";
+                    }
+                    
+                    $stmt = $pdo->prepare($sql);
+                    $stmt->execute([
+                        'currentClient' => $currentClientId,
+                        'currentClient2' => $currentClientId
+                    ]);
+                    
+                } else {
+                    // ✅ במצב הוספה
+                    if ($formType === 'burial') {
+                        // קבורה: לקוחות שאין להם קבורה
+                        $sql = "
+                            SELECT 
+                                unicId, 
+                                firstName, 
+                                lastName, 
+                                phone, 
+                                phoneMobile, 
+                                resident
+                            FROM customers 
+                            WHERE NOT EXISTS (
+                                SELECT 1 FROM burials b 
+                                WHERE b.clientId = customers.unicId 
+                                AND b.isActive = 1
+                            )
+                            AND isActive = 1 
+                            ORDER BY lastName, firstName
+                        ";
+                    } else {
+                        // רכישה: לקוחות שאין להם רכישה ואין להם קבורה
+                        $sql = "
+                            SELECT 
+                                unicId, 
+                                firstName, 
+                                lastName, 
+                                phone, 
+                                phoneMobile, 
+                                resident
+                            FROM customers 
+                            WHERE NOT EXISTS (
+                                SELECT 1 FROM purchases p 
+                                WHERE p.clientId = customers.unicId 
+                                AND p.isActive = 1
+                            )
+                            AND NOT EXISTS (
+                                SELECT 1 FROM burials b 
+                                WHERE b.clientId = customers.unicId 
+                                AND b.isActive = 1
+                            )
+                            AND isActive = 1 
+                            ORDER BY lastName, firstName
+                        ";
+                    }
+                    
                     $stmt = $pdo->prepare($sql);
                     $stmt->execute();
                 }

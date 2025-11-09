@@ -2727,13 +2727,22 @@ const FormHandler = {
                         displayText += ` - ${customer.phone || customer.phoneMobile}`;
                     }
                     
-                    // ✅ סמן את הלקוח הנוכחי
-                    if (customer.is_current) {
-                        displayText += ' (נוכחי)';
-                    }
-                    
                     option.textContent = displayText;
                     option.dataset.resident = customer.resident || 3;
+                    
+                    // ✅ אם זה לקוח נוכחי - סמן אותו כנבחר
+                    if (customer.is_current) {
+                        option.selected = true;
+                        
+                        // ✅ שמור את הנתונים שלו ב-window
+                        window.selectedCustomerData = {
+                            id: customer.unicId,
+                            resident: customer.resident || 3,
+                            name: `${customer.firstName} ${customer.lastName}`
+                        };
+                        
+                        console.log('👤 לקוח נוכחי נבחר:', window.selectedCustomerData);
+                    }
                     
                     customerSelect.appendChild(option);
                 });

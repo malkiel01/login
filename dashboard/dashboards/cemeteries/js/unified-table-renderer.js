@@ -718,13 +718,14 @@ class UnifiedTableRenderer {
         }
     }
 
-    async editItem(itemId) {
+    async editItem2(itemId) {
         // שלב 1: זיהוי הסוג - תחילה ננסה לפי ה-ID, ואז לפי currentType
         let type = this.detectTypeFromId(itemId) || window.currentType || this.currentType;
 
         console.log('===============================================');
         console.log('===============================================');
         console.log('Type: ', type);
+        console.log('Unic: ', itemId);
         console.log('===============================================');
         console.log('===============================================');
         
@@ -790,6 +791,102 @@ class UnifiedTableRenderer {
             FormHandler.openForm(type, parentId, itemId, parentName);    
         } catch (error) {
             console.error('❌ END editItem - ERROR');
+            
+            showError('שגיאה בטעינת נתוני הפריט: ' + error.message);
+        }
+    }
+
+    async editItem(itemId) {
+        // שלב 1: זיהוי הסוג - תחילה ננסה לפי ה-ID, ואז לפי currentType
+        let type = this.detectTypeFromId(itemId) || window.currentType || this.currentType;
+
+        console.log('===============================================');
+        console.log('🔍 [editItem] START');
+        console.log('   Type detected:', type);
+        console.log('   Item ID:', itemId);
+        console.log('===============================================');
+        
+        if (!type) {
+            console.error('❌ ERROR: No type defined!');
+            alert('שגיאה: לא ניתן לזהות את סוג הפריט');
+            return;
+        }
+        
+        console.log(`🔍 Detected type: ${type} for ID: ${itemId}`);
+        
+        try {
+            const apiFile = this.getApiFile(type);
+
+            if (!apiFile) {
+                console.error('❌ ERROR: No API file found for type:', type);
+                throw new Error(`לא נמצא API עבור סוג: ${type}`);
+            }
+
+            const url = `${apiFile}?action=get&id=${itemId}`;
+            console.log(`📡 [editItem] Fetching from: ${url}`);
+            const response = await fetch(url);
+            
+            if (!response.ok) {
+                console.error('❌ ERROR: Response not OK');
+                const text = await response.text();
+                console.error('   📌 Response text:', text);
+                
+                try {
+                    const errorJson = JSON.parse(text);
+                    console.error('   📌 Error JSON:', errorJson);
+                    throw new Error(errorJson.error || `שגיאת שרת: ${response.status}`);
+                } catch (parseError) {
+                    console.error('   📌 Could not parse error as JSON');
+                    throw new Error(`שגיאת שרת: ${response.status} - ${text.substring(0, 100)}`);
+                }
+            }
+            
+            const data = await response.json();
+            
+            console.log('===============================================');
+            console.log('📦 [editItem] API Response:');
+            console.log('   Success:', data.success);
+            if (data.data) {
+                console.log('   Returned unicId:', data.data.unicId);
+                console.log('   Returned customerName:', data.data.customerName);
+                console.log('   Full data:', data.data);
+            }
+            console.log('===============================================');
+            
+            if (!data.success) {
+                console.error('❌ ERROR: API returned success=false');
+                console.error('   📌 Error message:', data.error);
+                throw new Error(data.error || 'API returned success=false');
+            }
+            
+            if (!data.data) {
+                console.error('❌ ERROR: No data in response');
+                throw new Error('לא נמצאו נתוני הפריט');
+            }
+            
+            const item = data.data;
+            const parentId = this.extractParentId(item, type);
+            const parentName = this.extractParentName(item, type);
+            
+            console.log('===============================================');
+            console.log('📋 [editItem] Opening Form:');
+            console.log('   Type:', type);
+            console.log('   ParentId:', parentId);
+            console.log('   ItemId:', itemId);
+            console.log('   ParentName:', parentName);
+            console.log('   Item unicId:', item.unicId);
+            console.log('===============================================');
+            
+            if (typeof FormHandler?.openForm !== 'function') {
+                console.error('❌ ERROR: FormHandler.openForm is not available');
+                alert('שגיאה: FormHandler לא זמין');
+                return;
+            }
+            
+            FormHandler.openForm(type, parentId, itemId, parentName);    
+        } catch (error) {
+            console.error('❌ END editItem - ERROR');
+            console.error('   Error:', error);
             
             showError('שגיאה בטעינת נתוני הפריט: ' + error.message);
         }

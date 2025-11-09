@@ -461,29 +461,33 @@
                     line-height: 0; /* ← מאפס line-height */
                 }
 
-                /**
-                #' . $this->formId . 'Modal .loading-spinner-overlay {
-                    position: absolute;
-                    left: 10px;
-                    top: 0;
-                    bottom: 0;
-                    display: flex;
-                    align-items: center; /* ← מרכז אנכית */
-                    z-index: 10;
-                    pointer-events: none; /* ← לא חוסם קליקים */
-                }
-                
-                /**
-                #' . $this->formId . 'Modal .loading-spinner-overlay {
-                    position: absolute;
-                    left: 10px;
-                    top: 50%;
-                    transform: translateY(-50%);
-                    z-index: 10;
-                }
+
             </style>
             ';
         }
+
+
+                // /**
+                // #' . $this->formId . 'Modal .loading-spinner-overlay {
+                //     position: absolute;
+                //     left: 10px;
+                //     top: 0;
+                //     bottom: 0;
+                //     display: flex;
+                //     align-items: center; /* ← מרכז אנכית */
+                //     z-index: 10;
+                //     pointer-events: none; /* ← לא חוסם קליקים */
+                // }
+                
+                // /**
+                // #' . $this->formId . 'Modal .loading-spinner-overlay {
+                //     position: absolute;
+                //     left: 10px;
+                //     top: 50%;
+                //     transform: translateY(-50%);
+                //     z-index: 10;
+                // }
+
 
         // ב-FormBuilder.php, הוסף פונקציה חדשה:
         public function setCustomButtons($buttons) {

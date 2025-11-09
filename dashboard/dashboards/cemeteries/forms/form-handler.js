@@ -982,7 +982,7 @@ const FormHandler = {
                 cityInstance.valueSpan.textContent = 'בחר עיר...';
 
                 // ⭐ הסר ספינר
-                hideSelectSpinner('cityId');
+                // hideSelectSpinner('cityId');
                 
                 console.log('✅ Cities populated successfully');
                 

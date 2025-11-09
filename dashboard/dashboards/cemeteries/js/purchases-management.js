@@ -25,6 +25,150 @@ let purchaseSearch = null;
 let purchasesTable = null;
 let editingPurchaseId = null;
 
+// --------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------
+
+async function loadPurchases() {
+    console.log('📋 Loading purchases - v3.2.2-debug...');
+    
+    // 🔍 דיבאג - לפני עדכון
+    console.log('🔍 DEBUG [loadPurchases] - BEFORE UPDATE:');
+    console.log('   window.currentType:', window.currentType);
+    console.log('   tableRenderer exists:', typeof window.tableRenderer !== 'undefined');
+    if (window.tableRenderer) {
+        console.log('   tableRenderer.currentType:', window.tableRenderer.currentType);
+    }
+    
+    // עדכן את הסוג הנוכחי
+    window.currentType = 'purchase';
+    window.currentParentId = null;
+    
+    // 🔍 דיבאג - אחרי עדכון
+    console.log('🔍 DEBUG [loadPurchases] - AFTER UPDATE:');
+    console.log('   window.currentType:', window.currentType);
+    if (window.tableRenderer) {
+        console.log('   tableRenderer.currentType:', window.tableRenderer.currentType);
+    }
+
+    // ⭐ נקה - DashboardCleaner ימחק גם את TableManager!
+    if (typeof DashboardCleaner !== 'undefined') {
+        DashboardCleaner.clear({ targetLevel: 'purchase' });
+    } else if (typeof clearDashboard === 'function') {
+        clearDashboard({ targetLevel: 'purchase' });
+    }
+    
+    // נקה את כל הסידבר
+    if (typeof clearAllSidebarSelections === 'function') {
+        clearAllSidebarSelections();
+    }
+                
+    // עדכון פריט תפריט אקטיבי
+    if (typeof setActiveMenuItem === 'function') {
+        setActiveMenuItem('purchasesItem');
+    }
+    
+    // עדכן את כפתור ההוספה
+    if (typeof updateAddButtonText === 'function') {
+        updateAddButtonText();
+    }
+    
+    // עדכן breadcrumb
+    if (typeof updateBreadcrumb === 'function') {
+        updateBreadcrumb({ purchase: { name: 'רכישות' } });
+    }
+    
+    // עדכון כותרת החלון
+    document.title = 'ניהול רכישות - מערכת בתי עלמין';
+    
+    // ⭐ בנה את המבנה החדש ב-main-container
+    await buildPurchasesContainer();
+
+    // ⭐ תמיד השמד את החיפוש הקודם ובנה מחדש
+    if (purchaseSearch && typeof purchaseSearch.destroy === 'function') {
+        console.log('🗑️ Destroying previous purchaseSearch instance...');
+        purchaseSearch.destroy();
+        purchaseSearch = null;
+        window.purchaseSearch = null;
+    }
+
+    // אתחל את UniversalSearch מחדש תמיד
+    console.log('🆕 Creating fresh purchaseSearch instance...');
+    await initPurchasesSearch();
+    purchaseSearch.search();
+    
+    // טען סטטיסטיקות
+    await loadPurchaseStats();
+    
+    // 🔍 דיבאג סופי - אחרי שהכל נטען
+    console.log('🔍 DEBUG [loadPurchases] - FINAL STATE:');
+    console.log('   window.currentType:', window.currentType);
+    if (window.tableRenderer) {
+        console.log('   tableRenderer.currentType:', window.tableRenderer.currentType);
+    }
+}
+
+async function loadColumnsFromConfig(entityType) {
+    try {
+        const response = await fetch(`/dashboard/dashboards/cemeteries/api/table-columns-api.php?entity=${entityType}`);
+        const data = await response.json();
+        
+        if (!data.success || !data.columns) {
+            throw new Error('Failed to load columns configuration');
+        }
+        
+        const columns = data.columns.map(column => {
+            switch (column.type) {
+                // ... כל ה-cases האחרים ...
+                
+                case 'actions':
+                    column.render = (item) => `
+                        <button class="btn btn-sm btn-secondary" 
+                                onclick="event.stopPropagation(); 
+                                         console.log('🔍 [EDIT CLICK] purchaseId:', '${item.unicId}'); 
+                                         console.log('🔍 [EDIT CLICK] window.currentType:', window.currentType); 
+                                         console.log('🔍 [EDIT CLICK] tableRenderer.currentType:', window.tableRenderer?.currentType);
+                                         window.tableRenderer.editItem('${item.unicId}')" 
+                                title="עריכה">
+                            <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
+                        </button>
+                        <button class="btn btn-sm btn-danger" 
+                                onclick="event.stopPropagation(); console.log('🔍 [DELETE] Clicked purchase:', '${item.unicId}'); deletePurchase('${item.unicId}')" 
+                                title="מחיקה">
+                            <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
+                        </button>
+                    `;
+                    break;
+                    
+                default:
+                    if (!column.render) {
+                        column.render = (item) => item[column.field] || '-';
+                    }
+            }
+            
+            return column;
+        });
+        
+        return columns;
+    } catch (error) {
+        console.error('❌ Failed to load columns config:', error);
+        return [];
+    }
+}
+
+// --------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------
+
+
+
 // טעינת רכישות (הפונקציה הראשית)
 async function loadPurchases() {
     console.log('📋 Loading purchases - v3.2.1 (זהה לחלוטין ל-customers)...');
@@ -307,7 +451,7 @@ async function initPurchasesTable(data, totalItems = null) {
     }
 
     // טעינת העמודות מהשרת
-    async function loadColumnsFromConfig(entityType = 'purchase') {
+    async function loadColumnsFromConfig2(entityType = 'purchase') {
         try {
             const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`);
             
@@ -406,79 +550,6 @@ async function initPurchasesTable(data, totalItems = null) {
         totalItems: actualTotalItems,
 
         columns: await loadColumnsFromConfig('purchase'),
-        
-        // columns: [
-        //     {
-        //         field: 'serialPurchaseId',
-        //         label: 'מספר רכישה',
-        //         width: '130px',
-        //         type: 'text',
-        //         sortable: true
-        //     },
-        //     {
-        //         field: 'customerName',
-        //         label: 'שם לקוח',
-        //         width: '180px',
-        //         type: 'text',
-        //         sortable: true
-        //     },
-        //     {
-        //         field: 'graveName',
-        //         label: 'שם קבר',
-        //         width: '150px',
-        //         type: 'text',
-        //         sortable: true
-        //     },
-        //     {
-        //         field: 'purchaseAmount',
-        //         label: 'סכום',
-        //         width: '120px',
-        //         type: 'currency',
-        //         sortable: true,
-        //         render: (purchase) => {
-        //             const value = purchase.purchaseAmount;
-        //             return value ? `₪${parseFloat(value).toLocaleString('he-IL')}` : '-';
-        //         }
-        //     },
-        //     {
-        //         field: 'purchaseDate',
-        //         label: 'תאריך רכישה',
-        //         width: '130px',
-        //         type: 'date',
-        //         sortable: true,
-        //         render: (purchase) => formatDate(purchase.purchaseDate)
-        //     },
-        //     {
-        //         field: 'statusPurchase',
-        //         label: 'סטטוס',
-        //         width: '100px',
-        //         type: 'number',
-        //         sortable: true,
-        //         render: (purchase) => formatPurchaseStatus(purchase.statusPurchase)
-        //     },
-        //     {
-        //         field: 'createDate',
-        //         label: 'תאריך יצירה',
-        //         width: '130px',
-        //         type: 'date',
-        //         sortable: true,
-        //         render: (purchase) => formatDate(purchase.createDate)
-        //     },
-        //     {
-        //         field: 'actions',
-        //         label: 'פעולות',
-        //         width: '120px',
-        //         sortable: false,
-        //         render: (purchase) => `
-        //             <button class="btn btn-sm btn-secondary" onclick="editPurchase('${purchase.unicId}')" title="עריכה">
-        //                 <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
-        //             </button>
-        //             <button class="btn btn-sm btn-danger" onclick="deletePurchase('${purchase.unicId}')" title="מחיקה">
-        //                 <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
-        //             </button>
-        //         `
-        //     }
-        // ],
 
         onRowDoubleClick: (purchase) => {
             handlePurchaseDoubleClick(purchase.unicId);

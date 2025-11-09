@@ -339,6 +339,56 @@ try {
             echo json_encode(['success' => true, 'data' => $results]);
             break;
             
+        case 'available':
+            $currentGraveId = $_GET['currentGraveId'] ?? null;
+            
+            $sql = "
+                SELECT DISTINCT c.*,
+                CASE WHEN EXISTS(
+                    SELECT 1 FROM graves g 
+                    INNER JOIN areaGraves ag ON g.areaGraveId = ag.unicId
+                    INNER JOIN rows r ON ag.lineId = r.unicId
+                    INNER JOIN plots p ON r.plotId = p.unicId
+                    INNER JOIN blocks b ON p.blockId = b.unicId
+                    WHERE b.cemeteryId = c.unicId AND g.unicId = :currentGrave
+                ) THEN 1 ELSE 0 END as has_current_grave
+                FROM cemeteries c
+                WHERE c.isActive = 1
+                AND EXISTS(
+                    SELECT 1 FROM blocks b
+                    WHERE b.cemeteryId = c.unicId AND b.isActive = 1
+                    AND EXISTS(
+                        SELECT 1 FROM plots p
+                        WHERE p.blockId = b.unicId AND p.isActive = 1
+                        AND EXISTS(
+                            SELECT 1 FROM rows r
+                            WHERE r.plotId = p.unicId AND r.isActive = 1
+                            AND EXISTS(
+                                SELECT 1 FROM areaGraves ag
+                                WHERE ag.lineId = r.unicId AND ag.isActive = 1
+                                AND EXISTS(
+                                    SELECT 1 FROM graves g 
+                                    WHERE g.areaGraveId = ag.unicId 
+                                    AND (g.graveStatus = 1 OR g.unicId = :currentGrave2)
+                                    AND g.isActive = 1
+                                )
+                            )
+                        )
+                    )
+                )
+            ";
+            
+            $params = [
+                'currentGrave' => $currentGraveId,
+                'currentGrave2' => $currentGraveId
+            ];
+            
+            $sql .= " ORDER BY has_current_grave DESC, c.cemeteryNameHe";
+            
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            echo json_encode(['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+            break;
         default:
             throw new Exception('Invalid action');
     }

@@ -51,7 +51,7 @@
         'placeholder' => 'טוען לקוחות...',
         'search_placeholder' => 'חפש לקוח...',
         'required' => true,
-        'value' => $purchase['clientId'] ?? ''
+        'value' => $burial['clientId'] ?? ''
     ]);
 
     $formBuilder->addCustomHTML('<div style="margin-bottom: 15px;">' . $smartCustomer->render() . '</div>');

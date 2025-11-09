@@ -3032,7 +3032,67 @@ const FormHandler = {
             console.log('✅ Graves populated successfully');
         };
 
-        // ⭐ פונקציה למילוי לקוחות ב-SmartSelect
+        // // ⭐ פונקציה למילוי לקוחות ב-SmartSelect
+        // window.populateCustomers = function(customers) {
+        //     console.log('👥 populateCustomers called with', customers.length, 'customers');
+            
+        //     const customerInstance = window.SmartSelectManager?.instances['clientId'];
+            
+        //     if (!customerInstance) {
+        //         console.warn('⚠️ Customer SmartSelect instance not found');
+        //         return;
+        //     }
+            
+        //     // נקה אופציות
+        //     customerInstance.optionsContainer.innerHTML = '';
+        //     customerInstance.allOptions = [];
+            
+        //     // מלא לקוחות
+        //     customers.forEach(customer => {
+        //         const option = document.createElement('div');
+        //         option.className = 'smart-select-option';
+        //         option.dataset.value = customer.unicId;
+                
+        //         let displayText = `${customer.firstName} ${customer.lastName}`;
+        //         if (customer.phone || customer.phoneMobile) {
+        //             displayText += ` - ${customer.phone || customer.phoneMobile}`;
+        //         }
+                
+        //         option.textContent = displayText;
+                
+        //         // ⭐ סמן אם זה לקוח נוכחי
+        //         if (customer.is_current) {
+        //             option.classList.add('selected');
+        //         }
+                
+        //         option.addEventListener('click', function() {
+        //             window.SmartSelectManager.select('clientId', customer.unicId);
+                    
+        //             // ⭐ שמור את נתוני הלקוח (ללא resident - לא רלוונטי לקבורות)
+        //             window.selectedCustomerData = {
+        //                 id: customer.unicId,
+        //                 name: `${customer.firstName} ${customer.lastName}`
+        //             };
+                    
+        //             console.log('👤 נפטר/ת נבחר/ה:', window.selectedCustomerData);
+                    
+        //             // ⚠️ בקבורות אין תשלומים - אז לא קוראים ל-tryCalculatePayments
+        //         });
+                
+        //         customerInstance.optionsContainer.appendChild(option);
+        //         customerInstance.allOptions.push(option);
+        //     });
+            
+        //     // עדכן טקסט ל-"בחר נפטר/ת..."
+        //     if (!customers.some(c => c.is_current)) {
+        //         customerInstance.valueSpan.textContent = 'בחר נפטר/ת...';
+        //         customerInstance.hiddenInput.value = '';
+        //     }
+            
+        //     console.log(`✅ Populated ${customers.length} customers (burial)`);
+        // };
+
+        // ⭐ פונקציה למילוי לקוחות ב-SmartSelect (מתוקנת!)
         window.populateCustomers = function(customers) {
             console.log('👥 populateCustomers called with', customers.length, 'customers');
             
@@ -3065,18 +3125,52 @@ const FormHandler = {
                     option.classList.add('selected');
                 }
                 
-                option.addEventListener('click', function() {
+                // ⭐⭐⭐ הוסף את הלוגיקה של setupCustomerListener כאן!
+                option.addEventListener('click', async function() {
                     window.SmartSelectManager.select('clientId', customer.unicId);
                     
-                    // ⭐ שמור את נתוני הלקוח (ללא resident - לא רלוונטי לקבורות)
+                    const customerId = customer.unicId;
+                    
+                    // ⭐ שמור את נתוני הלקוח
                     window.selectedCustomerData = {
-                        id: customer.unicId,
+                        id: customerId,
                         name: `${customer.firstName} ${customer.lastName}`
                     };
                     
                     console.log('👤 נפטר/ת נבחר/ה:', window.selectedCustomerData);
                     
-                    // ⚠️ בקבורות אין תשלומים - אז לא קוראים ל-tryCalculatePayments
+                    // ⭐ בדוק אם ללקוח יש רכישה פעילה
+                    try {
+                        const response = await fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=getByCustomer&customerId=${customerId}`);
+                        const data = await response.json();
+                        
+                        if (data.success && data.data) {
+                            const purchase = data.data;
+                            
+                            // ✅ יש רכישה - מלא את הקבר
+                            if (purchase.graveId) {
+                                const grave = window.hierarchyData.graves.find(g => g.unicId == purchase.graveId);
+                                
+                                if (grave) {
+                                    await fillGraveHierarchy(purchase.graveId);
+                                    console.log('✅ קבר מולא אוטומטית מרכישה:', purchase.graveId);
+                                    showNotification('info', `קבר "${purchase.grave_name || ''}" מולא אוטומטית על פי הרכישה`);
+                                }
+                            }
+                        } else {
+                            // ✅ אין רכישה - אפס את ההיררכיה (רק אם לא במצב עריכה)
+                            if (!window.isEditMode) {
+                                console.log('ℹ️ ללקוח אין רכישה - מאפס היררכיה');
+                                clearGraveHierarchy();
+                            }
+                        }
+                    } catch (error) {
+                        console.error('❌ שגיאה בטעינת רכישת לקוח:', error);
+                        // במקרה של שגיאה - אפס (רק אם לא במצב עריכה)
+                        if (!window.isEditMode) {
+                            clearGraveHierarchy();
+                        }
+                    }
                 });
                 
                 customerInstance.optionsContainer.appendChild(option);

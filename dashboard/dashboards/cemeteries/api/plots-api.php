@@ -483,7 +483,7 @@ try {
             echo json_encode(['success' => true, 'data' => $results]);
             break;
             
-        case 'available':
+        case 'available2':
             $currentGraveId = $_GET['currentGraveId'] ?? null;
             $blockId = $_GET['blockId'] ?? null;
             
@@ -507,6 +507,56 @@ try {
                             SELECT 1 FROM graves g 
                             WHERE g.areaGraveId = ag.unicId 
                             AND (g.graveStatus = 1 OR g.unicId = :currentGrave2)
+                            AND g.isActive = 1
+                        )
+                    )
+                )
+            ";
+            
+            $params = [
+                'currentGrave' => $currentGraveId,
+                'currentGrave2' => $currentGraveId
+            ];
+            
+            if ($blockId) {
+                $sql .= " AND p.blockId = :blockId";
+                $params['blockId'] = $blockId;
+            }
+            
+            $sql .= " ORDER BY has_current_grave DESC, p.plotNameHe";
+            
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            echo json_encode(['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+            break;
+        case 'available':
+            $currentGraveId = $_GET['currentGraveId'] ?? null;
+            $blockId = $_GET['blockId'] ?? null;
+            
+            // ✅ קבל את סוג הטופס
+            $formType = $_GET['type'] ?? 'purchase';
+            $allowedStatuses = ($formType === 'burial') ? '(1, 2)' : '(1)';
+            
+            $sql = "
+                SELECT DISTINCT p.*,
+                CASE WHEN EXISTS(
+                    SELECT 1 FROM graves g 
+                    INNER JOIN areaGraves ag ON g.areaGraveId = ag.unicId
+                    INNER JOIN rows r ON ag.lineId = r.unicId
+                    WHERE r.plotId = p.unicId AND g.unicId = :currentGrave
+                ) THEN 1 ELSE 0 END as has_current_grave
+                FROM plots p
+                WHERE p.isActive = 1
+                AND EXISTS(
+                    SELECT 1 FROM rows r
+                    WHERE r.plotId = p.unicId AND r.isActive = 1
+                    AND EXISTS(
+                        SELECT 1 FROM areaGraves ag
+                        WHERE ag.lineId = r.unicId AND ag.isActive = 1
+                        AND EXISTS(
+                            SELECT 1 FROM graves g 
+                            WHERE g.areaGraveId = ag.unicId 
+                            AND (g.graveStatus IN $allowedStatuses OR g.unicId = :currentGrave2)
                             AND g.isActive = 1
                         )
                     )

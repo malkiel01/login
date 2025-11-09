@@ -422,6 +422,96 @@ try {
             echo json_encode(['success' => true, 'data' => $stats]);
             break;
             
+        case 'available':
+            // ✅ קבל את הלקוח הנוכחי אם קיים
+            $currentClientId = $_GET['currentClientId'] ?? null;
+            
+            // ✅ קבל את סוג הטופס (purchase/burial)
+            $formType = $_GET['type'] ?? 'purchase';
+            
+            if ($currentClientId) {
+                // ✅ במצב עריכה - כלול גם את הלקוח הנוכחי
+                if ($formType === 'burial') {
+                    // לקבורה: לקוחות שלא נפטרו (statusCustomer != 3) + הלקוח הנוכחי
+                    $sql = "
+                        SELECT 
+                            unicId, 
+                            firstName, 
+                            lastName, 
+                            phone, 
+                            phoneMobile, 
+                            resident,
+                            CASE WHEN unicId = :currentClient THEN 1 ELSE 0 END as is_current
+                        FROM customers 
+                        WHERE (statusCustomer != 3 OR unicId = :currentClient2)
+                        AND isActive = 1 
+                        ORDER BY is_current DESC, lastName, firstName
+                    ";
+                } else {
+                    // לרכישה: לקוחות פנויים (statusCustomer = 1) + הלקוח הנוכחי
+                    $sql = "
+                        SELECT 
+                            unicId, 
+                            firstName, 
+                            lastName, 
+                            phone, 
+                            phoneMobile, 
+                            resident,
+                            CASE WHEN unicId = :currentClient THEN 1 ELSE 0 END as is_current
+                        FROM customers 
+                        WHERE (statusCustomer = 1 OR unicId = :currentClient2)
+                        AND isActive = 1 
+                        ORDER BY is_current DESC, lastName, firstName
+                    ";
+                }
+                
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute([
+                    'currentClient' => $currentClientId,
+                    'currentClient2' => $currentClientId
+                ]);
+                
+            } else {
+                // ✅ במצב הוספה - בלי לקוח נוכחי
+                if ($formType === 'burial') {
+                    // לקבורה: רק לקוחות שלא נפטרו
+                    $sql = "
+                        SELECT 
+                            unicId, 
+                            firstName, 
+                            lastName, 
+                            phone, 
+                            phoneMobile, 
+                            resident
+                        FROM customers 
+                        WHERE statusCustomer != 3
+                        AND isActive = 1 
+                        ORDER BY lastName, firstName
+                    ";
+                } else {
+                    // לרכישה: רק לקוחות פנויים
+                    $sql = "
+                        SELECT 
+                            unicId, 
+                            firstName, 
+                            lastName, 
+                            phone, 
+                            phoneMobile, 
+                            resident
+                        FROM customers 
+                        WHERE statusCustomer = 1
+                        AND isActive = 1 
+                        ORDER BY lastName, firstName
+                    ";
+                }
+                
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute();
+            }
+            
+            $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            echo json_encode(['success' => true, 'data' => $customers]);
+            break;
         default:
             throw new Exception('Invalid action');
 

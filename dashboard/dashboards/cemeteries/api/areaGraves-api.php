@@ -663,7 +663,7 @@ try {
             echo json_encode(['success' => true, 'data' => $results]);
             break;
             
-        case 'available':
+        case 'available2':
             $currentGraveId = $_GET['currentGraveId'] ?? null;
             $rowId = $_GET['rowId'] ?? null;
             
@@ -680,6 +680,47 @@ try {
                     SELECT 1 FROM graves g 
                     WHERE g.areaGraveId = ag.unicId 
                     AND (g.graveStatus = 1 OR g.unicId = :currentGrave2)
+                    AND g.isActive = 1
+                )
+            ";
+            
+            $params = [
+                'currentGrave' => $currentGraveId,
+                'currentGrave2' => $currentGraveId
+            ];
+            
+            if ($rowId) {
+                $sql .= " AND ag.lineId = :rowId";
+                $params['rowId'] = $rowId;
+            }
+            
+            $sql .= " ORDER BY has_current_grave DESC, ag.areaGraveNameHe";
+            
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            echo json_encode(['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+            break;
+        case 'available':
+            $currentGraveId = $_GET['currentGraveId'] ?? null;
+            $rowId = $_GET['rowId'] ?? null;
+            
+            // ✅ קבל את סוג הטופס
+            $formType = $_GET['type'] ?? 'purchase';
+            $allowedStatuses = ($formType === 'burial') ? '(1, 2)' : '(1)';
+            
+            $sql = "
+                SELECT DISTINCT ag.*,
+                CASE WHEN EXISTS(
+                    SELECT 1 FROM graves g 
+                    WHERE g.areaGraveId = ag.unicId 
+                    AND g.unicId = :currentGrave
+                ) THEN 1 ELSE 0 END as has_current_grave
+                FROM areaGraves ag
+                WHERE ag.isActive = 1
+                AND EXISTS(
+                    SELECT 1 FROM graves g 
+                    WHERE g.areaGraveId = ag.unicId 
+                    AND (g.graveStatus IN $allowedStatuses OR g.unicId = :currentGrave2)
                     AND g.isActive = 1
                 )
             ";

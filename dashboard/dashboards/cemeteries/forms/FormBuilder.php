@@ -127,14 +127,6 @@
                             ];
                         }
 
-                        // if ($row) {
-                        //     // 🧪 בדיקה - מחזיר טקסט ברור שנראה שהקוד רץ
-                        //     return [
-                        //         'name' => '🔴 בדיקה - הקוד רץ!',
-                        //         'type' => 'row',
-                        //         'field' => 'lineId'
-                        //     ];
-                        // }
                     } catch (Exception $e) {
                         error_log('Error getting line info for area grave: ' . $e->getMessage());
                     }

@@ -87,16 +87,27 @@ $formType = basename(__FILE__, '.php'); // מזהה אוטומטי של סוג �
     // יצירת FormBuilder
     $formBuilder = new FormBuilder('purchase', $itemId, $parentId);
 
-    // ✅ פשוט - בלי ספינר ידני
-    $customersSelectorHTML = '
-    <div class="form-group">
-        <label>לקוח <span class="text-danger">*</span></label>
-        <select name="clientId" id="clientId" class="form-control" required>
-            <option value="">טוען לקוחות...</option>
-        </select>
-    </div>';
+    // // ✅ פשוט - בלי ספינר ידני
+    // $customersSelectorHTML = '
+    // <div class="form-group">
+    //     <label>לקוח <span class="text-danger">*</span></label>
+    //     <select name="clientId" id="clientId" class="form-control" required>
+    //         <option value="">טוען לקוחות...</option>
+    //     </select>
+    // </div>';
 
-    $formBuilder->addCustomHTML($customersSelectorHTML);
+    // $formBuilder->addCustomHTML($customersSelectorHTML);
+
+    // ✅ SmartSelect ללקוחות - ריק (יתמלא ב-JavaScript)
+    $smartCustomer = new SmartSelect('clientId', 'לקוח', [], [
+        'searchable' => true,
+        'placeholder' => 'טוען לקוחות...',
+        'search_placeholder' => 'חפש לקוח...',
+        'required' => true,
+        'value' => $purchase['clientId'] ?? ''
+    ]);
+
+    $formBuilder->addCustomHTML('<div style="margin-bottom: 15px;">' . $smartCustomer->render() . '</div>');
 
     // הוספת שדה סטטוס רוכש
     $formBuilder->addField('buyer_status', 'סטטוס רוכש', 'select', [

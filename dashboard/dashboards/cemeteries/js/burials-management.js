@@ -27,7 +27,7 @@ let burialsTable = null;
 let editingBurialId = null;
 
 // טעינת קבורות (הפונקציה הראשית)
-async function loadBurials() {
+async function loadBurials2() {
     console.log('📋 Loading burials - v1.0.1 (זהה לחלוטין ל-customers)...');
 
     // עדכן את הסוג הנוכחי
@@ -87,6 +87,85 @@ async function loadBurials() {
     
     // טען סטטיסטיקות
     await loadBurialStats();
+}
+
+async function loadBurials() {
+    console.log('📋 Loading burials - v1.0.2-debug...');
+    
+    // 🔍 דיבאג - לפני עדכון
+    console.log('🔍 DEBUG [loadBurials] - BEFORE UPDATE:');
+    console.log('   window.currentType:', window.currentType);
+    console.log('   tableRenderer exists:', typeof window.tableRenderer !== 'undefined');
+    if (window.tableRenderer) {
+        console.log('   tableRenderer.currentType:', window.tableRenderer.currentType);
+    }
+
+    // עדכן את הסוג הנוכחי
+    window.currentType = 'burial';
+    window.currentParentId = null;
+    
+    // 🔍 דיבאג - אחרי עדכון
+    console.log('🔍 DEBUG [loadBurials] - AFTER UPDATE:');
+    console.log('   window.currentType:', window.currentType);
+    if (window.tableRenderer) {
+        console.log('   tableRenderer.currentType:', window.tableRenderer.currentType);
+    }
+
+    // ⭐ נקה - DashboardCleaner ימחק גם את TableManager!
+    if (typeof DashboardCleaner !== 'undefined') {
+        DashboardCleaner.clear({ targetLevel: 'burial' });
+    } else if (typeof clearDashboard === 'function') {
+        clearDashboard({ targetLevel: 'burial' });
+    }
+    
+    // נקה את כל הסידבר
+    if (typeof clearAllSidebarSelections === 'function') {
+        clearAllSidebarSelections();
+    }
+            
+    // עדכון פריט תפריט אקטיבי
+    if (typeof setActiveMenuItem === 'function') {
+        setActiveMenuItem('burialsItem');
+    }
+    
+    // עדכן את כפתור ההוספה
+    if (typeof updateAddButtonText === 'function') {
+        updateAddButtonText();
+    }
+    
+    // עדכן breadcrumb
+    if (typeof updateBreadcrumb === 'function') {
+        updateBreadcrumb({ burial: { name: 'קבורות' } });
+    }
+    
+    // עדכון כותרת החלון
+    document.title = 'ניהול קבורות - מערכת בתי עלמין';
+    
+    // ⭐ בנה את המבנה החדש ב-main-container
+    await buildBurialsContainer();
+
+    // ⭐ תמיד השמד את החיפוש הקודם ובנה מחדש
+    if (burialSearch && typeof burialSearch.destroy === 'function') {
+        console.log('🗑️ Destroying previous burialSearch instance...');
+        burialSearch.destroy();
+        burialSearch = null;
+        window.burialSearch = null;
+    }
+
+    // אתחל את UniversalSearch מחדש תמיד
+    console.log('🆕 Creating fresh burialSearch instance...');
+    await initBurialsSearch();
+    burialSearch.search();
+    
+    // טען סטטיסטיקות
+    await loadBurialStats();
+    
+    // 🔍 דיבאג סופי - אחרי שהכל נטען
+    console.log('🔍 DEBUG [loadBurials] - FINAL STATE:');
+    console.log('   window.currentType:', window.currentType);
+    if (window.tableRenderer) {
+        console.log('   tableRenderer.currentType:', window.tableRenderer.currentType);
+    }
 }
 
 // ===================================================================
@@ -412,6 +491,59 @@ async function initBurialsTable(data, totalItems = null) {
         } catch (error) {
             console.error('❌ Failed to load columns config:', error);
             // החזר מערך ריק במקרה של שגיאה
+            return [];
+        }
+    }
+
+    async function loadColumnsFromConfig3(entityType) {
+        try {
+            const response = await fetch(`/dashboard/dashboards/cemeteries/api/table-columns-api.php?entity=${entityType}`);
+            const data = await response.json();
+            
+            if (!data.success || !data.columns) {
+                throw new Error('Failed to load columns configuration');
+            }
+            
+            const columns = data.columns.map(column => {
+                switch (column.type) {
+                    // ... כל ה-cases האחרים ...
+                    
+                    case 'actions':
+                        column.render = (item) => `
+                            <button class="btn btn-sm btn-info" 
+                                    onclick="event.stopPropagation(); console.log('🔍 [VIEW] Clicked burial:', '${item.unicId}'); viewBurial('${item.unicId}')" 
+                                    title="צפייה">
+                                <svg class="icon"><use xlink:href="#icon-view"></use></svg>
+                            </button>
+                            <button class="btn btn-sm btn-secondary" 
+                                    onclick="event.stopPropagation(); 
+                                            console.log('🔍 [EDIT CLICK] burialId:', '${item.unicId}'); 
+                                            console.log('🔍 [EDIT CLICK] window.currentType:', window.currentType); 
+                                            console.log('🔍 [EDIT CLICK] tableRenderer.currentType:', window.tableRenderer?.currentType);
+                                            window.tableRenderer.editItem('${item.unicId}')" 
+                                    title="עריכה">
+                                <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
+                            </button>
+                            <button class="btn btn-sm btn-danger" 
+                                    onclick="event.stopPropagation(); console.log('🔍 [DELETE] Clicked burial:', '${item.unicId}'); deleteBurial('${item.unicId}')" 
+                                    title="מחיקה">
+                                <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
+                            </button>
+                        `;
+                        break;
+                        
+                    default:
+                        if (!column.render) {
+                            column.render = (item) => item[column.field] || '-';
+                        }
+                }
+                
+                return column;
+            });
+            
+            return columns;
+        } catch (error) {
+            console.error('❌ Failed to load columns config:', error);
             return [];
         }
     }

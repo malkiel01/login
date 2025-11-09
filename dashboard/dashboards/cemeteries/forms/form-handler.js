@@ -2482,12 +2482,125 @@ const FormHandler = {
         // פונקציות להיררכית בתי עלמין
         // ===========================================================
         
+        // (async function loadHierarchy() {
+        //     try {
+        //         console.log('🌐 Starting to load full hierarchy from APIs...');
+                
+        //         // ✅ הוסף ספינר
+        //         showSelectSpinner('cemeterySelect');
+                
+        //         // טען את כל ההיררכיה במקביל
+        //         const [cemResponse, blocksResponse, plotsResponse, rowsResponse, areaGravesResponse, gravesResponse] = await Promise.all([
+        //             fetch('/dashboard/dashboards/cemeteries/api/cemeteries-api.php?action=list'),
+        //             fetch('/dashboard/dashboards/cemeteries/api/blocks-api.php?action=list'),
+        //             fetch('/dashboard/dashboards/cemeteries/api/plots-api.php?action=list'),
+        //             fetch('/dashboard/dashboards/cemeteries/api/rows-api.php?action=list'),
+        //             fetch('/dashboard/dashboards/cemeteries/api/areaGraves-api.php?action=list'),
+        //             fetch('/dashboard/dashboards/cemeteries/api/graves-api.php?action=list')
+        //         ]);
+                
+        //         const [cemResult, blocksResult, plotsResult, rowsResult, areaGravesResult, gravesResult] = await Promise.all([
+        //             cemResponse.json(),
+        //             blocksResponse.json(),
+        //             plotsResponse.json(),
+        //             rowsResponse.json(),
+        //             areaGravesResponse.json(),
+        //             gravesResponse.json()
+        //         ]);
+                
+        //         if (!cemResult.success || !blocksResult.success || !plotsResult.success || 
+        //             !rowsResult.success || !areaGravesResult.success || !gravesResult.success) {
+        //             console.error('❌ Failed to load hierarchy data');
+        //             return;
+        //         }
+                
+        //         // שמור נתונים
+        //         window.hierarchyData.cemeteries = cemResult.data || [];
+        //         window.hierarchyData.blocks = blocksResult.data || [];
+        //         window.hierarchyData.plots = plotsResult.data || [];
+        //         window.hierarchyData.rows = rowsResult.data || [];
+        //         window.hierarchyData.areaGraves = areaGravesResult.data || [];
+        //         window.hierarchyData.graves = gravesResult.data || [];
+                
+        //         console.log(`✅ Loaded ${window.hierarchyData.cemeteries.length} cemeteries`);
+        //         console.log(`✅ Loaded ${window.hierarchyData.blocks.length} blocks`);
+        //         console.log(`✅ Loaded ${window.hierarchyData.plots.length} plots`);
+        //         console.log(`✅ Loaded ${window.hierarchyData.rows.length} rows`);
+        //         console.log(`✅ Loaded ${window.hierarchyData.areaGraves.length} areaGraves`);
+        //         console.log(`✅ Loaded ${window.hierarchyData.graves.length} graves`);
+                
+        //         // מצא את ה-selects
+        //         const cemeterySelect = document.getElementById('cemeterySelect');
+                
+        //         if (!cemeterySelect) {
+        //             console.warn('⚠️ Cemetery select not found yet, will retry...');
+        //             setTimeout(loadHierarchy, 500);
+        //             return;
+        //         }
+                
+        //         // מלא בתי עלמין
+        //         cemeterySelect.innerHTML = '<option value="">-- בחר בית עלמין --</option>';
+
+        //         let availableCemeteries = 0;
+        //         let unavailableCemeteries = 0;
+
+        //         window.hierarchyData.cemeteries.forEach(cemetery => {
+        //             const option = document.createElement('option');
+        //             option.value = cemetery.unicId;
+                    
+        //             // ✅ בדוק אם יש גושים פעילים
+        //             const hasBlocks = window.hasAvailableBlocks(cemetery.unicId);
+                    
+        //             if (hasBlocks) {
+        //                 option.textContent = cemetery.cemeteryNameHe;
+        //                 availableCemeteries++;
+        //             } else {
+        //                 option.textContent = `${cemetery.cemeteryNameHe} (אין קברים פנויים)`;
+        //                 option.disabled = true;
+        //                 option.style.color = '#999';
+        //                 option.style.backgroundColor = '#f5f5f5';
+        //                 unavailableCemeteries++;
+        //             }
+                    
+        //             cemeterySelect.appendChild(option);
+        //         });
+                
+        //         // חבר event listener
+        //         cemeterySelect.addEventListener('change', function() {
+        //             const selectedValue = this.value;
+        //             console.log('🏛️ Cemetery selected:', selectedValue);
+                    
+        //             if (selectedValue && window.filterHierarchy) {
+        //                 window.filterHierarchy('cemetery');
+        //             }
+        //         });
+                
+        //         console.log('✅ Full hierarchy loaded and event listeners attached');
+                
+        //         // ✅ הסר ספינר
+        //         hideSelectSpinner('cemeterySelect');
+
+        //     } catch (error) {
+        //         console.error('❌ Error loading hierarchy:', error);
+        //     }
+        // })();
+
         (async function loadHierarchy() {
             try {
                 console.log('🌐 Starting to load full hierarchy from APIs...');
                 
                 // ✅ הוסף ספינר
                 showSelectSpinner('cemeterySelect');
+                
+                // ✅ וודא שכל השדות מושבתים
+                const hierarchySelects = ['blockSelect', 'plotSelect', 'rowSelect', 'areaGraveSelect', 'graveSelect'];
+                hierarchySelects.forEach(id => {
+                    const select = document.getElementById(id);
+                    if (select) {
+                        select.disabled = true;
+                        select.style.opacity = '0.5';
+                    }
+                });
                 
                 // טען את כל ההיררכיה במקביל
                 const [cemResponse, blocksResponse, plotsResponse, rowsResponse, areaGravesResponse, gravesResponse] = await Promise.all([
@@ -2511,6 +2624,9 @@ const FormHandler = {
                 if (!cemResult.success || !blocksResult.success || !plotsResult.success || 
                     !rowsResult.success || !areaGravesResult.success || !gravesResult.success) {
                     console.error('❌ Failed to load hierarchy data');
+                    
+                    // ✅ הסר ספינר גם במקרה של שגיאה
+                    hideSelectSpinner('cemeterySelect');
                     return;
                 }
                 
@@ -2541,9 +2657,6 @@ const FormHandler = {
                 // מלא בתי עלמין
                 cemeterySelect.innerHTML = '<option value="">-- בחר בית עלמין --</option>';
 
-                let availableCemeteries = 0;
-                let unavailableCemeteries = 0;
-
                 window.hierarchyData.cemeteries.forEach(cemetery => {
                     const option = document.createElement('option');
                     option.value = cemetery.unicId;
@@ -2553,13 +2666,11 @@ const FormHandler = {
                     
                     if (hasBlocks) {
                         option.textContent = cemetery.cemeteryNameHe;
-                        availableCemeteries++;
                     } else {
                         option.textContent = `${cemetery.cemeteryNameHe} (אין קברים פנויים)`;
                         option.disabled = true;
                         option.style.color = '#999';
                         option.style.backgroundColor = '#f5f5f5';
-                        unavailableCemeteries++;
                     }
                     
                     cemeterySelect.appendChild(option);
@@ -2577,95 +2688,20 @@ const FormHandler = {
                 
                 console.log('✅ Full hierarchy loaded and event listeners attached');
                 
-                // ✅ הסר ספינר
+                // ✅ הסר ספינר והפעל רק את בתי עלמין
                 hideSelectSpinner('cemeterySelect');
-
+                
             } catch (error) {
                 console.error('❌ Error loading hierarchy:', error);
+                
+                // ✅ הסר ספינר גם במקרה של שגיאה
+                hideSelectSpinner('cemeterySelect');
             }
         })();
 
         // ===========================================================
         // טעינת לקוחות פנויים - זהה להיררכיה
         // ===========================================================
-
-        // (async function loadAvailableCustomers() {
-        //     try {
-        //         console.log('👥 מתחיל לטעון לקוחות פנויים מה-API...');
-                
-        //         // ✅ קריאה ל-API
-        //         const response = await fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=available');
-        //         const result = await response.json();
-                
-        //         if (!result.success) {
-        //             console.error('❌ שגיאה בטעינת לקוחות:', result.error);
-        //             return;
-        //         }
-                
-        //         console.log(`✅ נטענו ${result.data.length} לקוחות פנויים`);
-                
-        //         // ✅ מצא את ה-select של לקוחות
-        //         const customerSelect = document.querySelector('[name="clientId"]');
-                
-        //         if (!customerSelect) {
-        //             console.warn('⚠️ Customer select לא נמצא עדיין, ננסה שוב...');
-        //             setTimeout(loadAvailableCustomers, 500);
-        //             return;
-        //         }
-                
-        //         // ✅ ריקון ה-select
-        //         customerSelect.innerHTML = '<option value="">-- בחר לקוח --</option>';
-                
-        //         // ✅ מילוי אופציות
-        //         result.data.forEach(customer => {
-        //             const option = document.createElement('option');
-        //             option.value = customer.unicId;
-                    
-        //             // ✅ פורמט תצוגה: "משה כהן - 050-1234567"
-        //             let displayText = `${customer.firstName} ${customer.lastName}`;
-                    
-        //             if (customer.phone || customer.phoneMobile) {
-        //                 displayText += ` - ${customer.phone || customer.phoneMobile}`;
-        //             }
-                    
-        //             option.textContent = displayText;
-                    
-        //             // ✅ שמירת נתוני resident ב-data attribute
-        //             option.dataset.resident = customer.resident || 3;
-                    
-        //             customerSelect.appendChild(option);
-        //         });
-                
-        //         console.log('✅ לקוחות נטענו בהצלחה');
-                
-        //         // ✅ הסר את הספינר
-        //         const spinner = document.getElementById('customerLoadingSpinner');
-        //         if (spinner) {
-        //             spinner.remove();
-        //         }
-                
-        //         // ✅ הפעל את ה-select
-        //         customerSelect.disabled = false;
-        //         customerSelect.style.opacity = '1';
-                
-        //     } catch (error) {
-        //         console.error('❌ שגיאה בטעינת לקוחות:', error);
-                
-        //         // ✅ הסר את הספינר גם במקרה של שגיאה
-        //         const spinner = document.getElementById('customerLoadingSpinner');
-        //         if (spinner) {
-        //             spinner.remove();
-        //         }
-                
-        //         // ✅ הצג הודעת שגיאה למשתמש
-        //         const customerSelect = document.querySelector('[name="clientId"]');
-        //         if (customerSelect) {
-        //             customerSelect.innerHTML = '<option value="">❌ שגיאה בטעינת לקוחות</option>';
-        //             customerSelect.style.borderColor = 'red';
-        //             customerSelect.disabled = false;
-        //         }
-        //     }
-        // })();
 
         (async function loadAvailableCustomers() {
             try {

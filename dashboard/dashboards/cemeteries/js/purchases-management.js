@@ -170,7 +170,7 @@ async function loadColumnsFromConfig(entityType) {
 
 
 // טעינת רכישות (הפונקציה הראשית)
-async function loadPurchases() {
+async function loadPurchases2() {
     console.log('📋 Loading purchases - v3.2.1 (זהה לחלוטין ל-customers)...');
     
     // עדכן את הסוג הנוכחי

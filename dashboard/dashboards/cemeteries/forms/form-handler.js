@@ -3356,6 +3356,8 @@ const FormHandler = {
                 graveSelect.addEventListener('change', async function() {
                     const graveId = this.value;
                     
+                    console.log('🔵 GRAVE CHANGED:', graveId);
+                    
                     if (!graveId) {
                         if (!window.isEditMode) {
                             const customerSelect = document.querySelector('[name="clientId"]');
@@ -3367,6 +3369,8 @@ const FormHandler = {
                     }
                     
                     const grave = window.hierarchyData.graves.find(g => g.unicId == graveId);
+                    console.log('🔵 FOUND GRAVE:', grave);
+                    
                     if (!grave) return;
                     
                     window.selectedGraveData = {
@@ -3374,84 +3378,71 @@ const FormHandler = {
                         graveStatus: grave.graveStatus
                     };
                     
-                    console.log('⚰️ קבר נבחר:', window.selectedGraveData);
+                    console.log('🔵 GRAVE STATUS:', grave.graveStatus);
                     
-                    // ✅ בדוק אם לקבר יש רכישה פעילה
+                    // ✅ בדוק אם לקבר יש רכישה
                     try {
-                        const response = await fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=getByGrave&graveId=${graveId}`);
+                        const url = `/dashboard/dashboards/cemeteries/api/purchases-api.php?action=getByGrave&graveId=${graveId}`;
+                        console.log('🔵 FETCHING:', url);
+                        
+                        const response = await fetch(url);
                         const data = await response.json();
+                        
+                        console.log('🔵 API RESPONSE:', data);
                         
                         if (data.success && data.data) {
                             const purchase = data.data;
+                            console.log('🔵 PURCHASE FOUND:', purchase);
+                            console.log('🔵 CLIENT ID:', purchase.clientId);
                             
-                            // ✅ יש רכישה - מלא את הלקוח
                             const customerSelect = document.querySelector('[name="clientId"]');
+                            console.log('🔵 CUSTOMER SELECT:', customerSelect);
+                            
                             if (customerSelect && purchase.clientId) {
+                                console.log('🔵 CURRENT OPTIONS:', Array.from(customerSelect.options).map(o => ({value: o.value, text: o.textContent})));
                                 
-                                // ✅ המתן עד שהלקוחות ייטענו
-                                let attempts = 0;
-                                const waitForCustomers = setInterval(() => {
-                                    attempts++;
-                                    
-                                    // בדוק אם הלקוח קיים ברשימה
-                                    const customerOption = Array.from(customerSelect.options).find(
-                                        opt => opt.value === purchase.clientId
-                                    );
-                                    
-                                    if (customerOption) {
-                                        // ✅ הלקוח קיים - בחר אותו
-                                        clearInterval(waitForCustomers);
-                                        customerSelect.value = purchase.clientId;
-                                        
-                                        window.selectedCustomerData = {
-                                            id: purchase.clientId,
-                                            name: purchase.customer_name || ''
-                                        };
-                                        
-                                        console.log('✅ לקוח מולא אוטומטית מרכישה:', window.selectedCustomerData);
-                                        showNotification('info', `הלקוח "${purchase.customer_name}" מולא אוטומטית על פי הרכישה`);
-                                        
-                                    } else if (attempts > 20) {
-                                        // ✅ אחרי 20 ניסיונות - הוסף את הלקוח לרשימה ידנית
-                                        clearInterval(waitForCustomers);
-                                        console.log('⚠️ הלקוח לא נמצא ברשימה, מוסיף ידנית...');
-                                        
-                                        // הוסף את הלקוח לרשימה
-                                        const newOption = document.createElement('option');
-                                        newOption.value = purchase.clientId;
-                                        newOption.textContent = purchase.customer_name;
-                                        customerSelect.appendChild(newOption);
-                                        
-                                        // בחר אותו
-                                        customerSelect.value = purchase.clientId;
-                                        
-                                        window.selectedCustomerData = {
-                                            id: purchase.clientId,
-                                            name: purchase.customer_name || ''
-                                        };
-                                        
-                                        console.log('✅ לקוח נוסף ונבחר:', window.selectedCustomerData);
-                                        showNotification('info', `הלקוח "${purchase.customer_name}" מולא אוטומטית על פי הרכישה`);
-                                    }
-                                }, 100); // בדוק כל 100ms
+                                // בדוק אם הלקוח כבר ברשימה
+                                const existingOption = Array.from(customerSelect.options).find(
+                                    opt => opt.value === purchase.clientId
+                                );
                                 
+                                console.log('🔵 EXISTING OPTION:', existingOption);
+                                
+                                if (existingOption) {
+                                    // הלקוח קיים
+                                    customerSelect.value = purchase.clientId;
+                                    console.log('✅ CUSTOMER SELECTED FROM LIST:', purchase.clientId);
+                                } else {
+                                    // הלקוח לא קיים - הוסף אותו
+                                    console.log('⚠️ CUSTOMER NOT IN LIST, ADDING...');
+                                    
+                                    const newOption = document.createElement('option');
+                                    newOption.value = purchase.clientId;
+                                    newOption.textContent = purchase.customer_name;
+                                    customerSelect.appendChild(newOption);
+                                    
+                                    customerSelect.value = purchase.clientId;
+                                    console.log('✅ CUSTOMER ADDED AND SELECTED:', purchase.clientId);
+                                }
+                                
+                                window.selectedCustomerData = {
+                                    id: purchase.clientId,
+                                    name: purchase.customer_name || ''
+                                };
+                                
+                                console.log('✅ selectedCustomerData:', window.selectedCustomerData);
+                                showNotification('info', `הלקוח "${purchase.customer_name}" מולא אוטומטית`);
                             }
                         } else {
-                            // אין רכישה
+                            console.log('ℹ️ NO PURCHASE FOR THIS GRAVE');
                             if (!window.isEditMode) {
-                                console.log('ℹ️ לקבר אין רכישה - מאפס לקוח');
                                 const customerSelect = document.querySelector('[name="clientId"]');
                                 if (customerSelect) customerSelect.value = '';
                                 window.selectedCustomerData = null;
                             }
                         }
                     } catch (error) {
-                        console.error('❌ שגיאה בטעינת רכישה:', error);
-                        if (!window.isEditMode) {
-                            const customerSelect = document.querySelector('[name="clientId"]');
-                            if (customerSelect) customerSelect.value = '';
-                            window.selectedCustomerData = null;
-                        }
+                        console.error('❌ ERROR:', error);
                     }
                 });
             }

@@ -398,7 +398,7 @@ async function initBurialsTable(data, totalItems = null) {
     }
 
     // טעינת העמודות מהשרת
-    async function loadColumnsFromConfig2(entityType = 'burial') {
+    async function loadColumnsFromConfig(entityType = 'burial') {
         try {
             const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`);
             
@@ -495,7 +495,7 @@ async function initBurialsTable(data, totalItems = null) {
         }
     }
 
-    async function loadColumnsFromConfig(entityType = 'burial') {
+    async function loadColumnsFromConfig3(entityType = 'burial') {
         try {
             const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`);
             
@@ -509,7 +509,7 @@ async function initBurialsTable(data, totalItems = null) {
                 throw new Error(result.error || 'Failed to load columns config');
             }
             
-            const columns = result.data.map(column => {
+            const columns = result.data.map(col => {
                 const column = {
                     field: col.field,
                     label: col.title,

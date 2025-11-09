@@ -31,9 +31,9 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
 
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/smart-select.css">
 
-    <!-- <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/search.css"> -->
-    <!-- <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/universal-search.css"> -->
-    <!-- <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/table-manager.css"> -->
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/search.css">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/universal-search.css">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/table-manager.css">
 
 </head>
 <body>

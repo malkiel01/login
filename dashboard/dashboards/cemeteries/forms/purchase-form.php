@@ -88,23 +88,12 @@ $formType = basename(__FILE__, '.php'); // מזהה אוטומטי של סוג �
     $formBuilder = new FormBuilder('purchase', $itemId, $parentId);
 
     $customersSelectorHTML = '
-    <div class="form-group" style="position: relative;">
-        <label>לקוח <span class="text-danger">*</span></label>
-        <div style="position: relative;">
-            <select name="clientId" id="clientId" class="form-control" required disabled>
-                <option value="">טוען לקוחות...</option>
-            </select>
-            <span id="customerLoadingSpinner" class="loading-spinner loading-spinner-overlay"></span>
-        </div>
+    <div style="position: relative;">
+        <select name="clientId" id="clientId" class="form-control" required disabled>
+            <option value="">טוען לקוחות...</option>
+        </select>
+        <span id="customerLoadingSpinner" class="loading-spinner" style="position: absolute; left: 10px; top: 35%; transform: translateY(-50%);"></span>
     </div>';
-
-    // $customersSelectorHTML = '
-    // <div style="position: relative;">
-    //     <select name="clientId" id="clientId" class="form-control" required disabled>
-    //         <option value="">טוען לקוחות...</option>
-    //     </select>
-    //     <span id="customerLoadingSpinner" class="loading-spinner" style="position: absolute; left: 10px; top: 35%; transform: translateY(-50%);"></span>
-    // </div>';
 
     $formBuilder->addCustomHTML($customersSelectorHTML);
 

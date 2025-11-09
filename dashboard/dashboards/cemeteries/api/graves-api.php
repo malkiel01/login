@@ -292,6 +292,56 @@ try {
             echo json_encode(['success' => true, 'data' => $stats]);
             break;
             
+        case 'available':
+            // ✅ קבל את הקבר הנוכחי אם קיים
+            $currentGraveId = $_GET['currentGraveId'] ?? null;
+            $areaGraveId = $_GET['areaGraveId'] ?? null;
+            
+            if ($currentGraveId) {
+                // ✅ במצב עריכה - כלול גם את הקבר הנוכחי
+                $sql = "
+                    SELECT 
+                        g.*,
+                        ag.areaGraveNameHe as area_grave_name,
+                        CASE WHEN g.unicId = :currentGrave THEN 1 ELSE 0 END as is_current
+                    FROM graves g
+                    LEFT JOIN areaGraves ag ON g.areaGraveId = ag.unicId
+                    WHERE (g.graveStatus = 1 OR g.unicId = :currentGrave2)
+                    AND g.isActive = 1
+                ";
+                $params = [
+                    'currentGrave' => $currentGraveId,
+                    'currentGrave2' => $currentGraveId
+                ];
+            } else {
+                // ✅ במצב הוספה - רק קברים פנויים
+                $sql = "
+                    SELECT 
+                        g.*,
+                        ag.areaGraveNameHe as area_grave_name
+                    FROM graves g
+                    LEFT JOIN areaGraves ag ON g.areaGraveId = ag.unicId
+                    WHERE g.graveStatus = 1 
+                    AND g.isActive = 1
+                ";
+                $params = [];
+            }
+            
+            // סינון לפי אחוזת קבר אם צוין
+            if ($areaGraveId) {
+                $sql .= " AND g.areaGraveId = :areaGraveId";
+                $params['areaGraveId'] = $areaGraveId;
+            }
+            
+            $sql .= " ORDER BY " . ($currentGraveId ? "is_current DESC, " : "") . "g.graveNameHe";
+            
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            
+            $graves = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            echo json_encode(['success' => true, 'data' => $graves]);
+            break;
+            
         default:
             throw new Exception('Invalid action');
     }

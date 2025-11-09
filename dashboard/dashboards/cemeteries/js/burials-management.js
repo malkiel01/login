@@ -517,19 +517,63 @@ async function initBurialsTable(data, totalItems = null) {
     }
 
     // בפונקציה שמייצרת את כפתור העריכה - הוסף דיבאג:
-    async function loadColumnsFromConfig(entityType) {
+    async function loadColumnsFromConfig(entityType = 'burial') {
         try {
-            const response = await fetch(`/dashboard/dashboards/cemeteries/api/table-columns-api.php?entity=${entityType}`);
-            const data = await response.json();
+            const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?entity=${entityType}&section=table_columns`);          
             
             if (!data.success || !data.columns) {
                 throw new Error('Failed to load columns configuration');
             }
+
+            const result = await response.json();
+
+            if (!result.success || !result.data) {
+                throw new Error(result.error || 'Failed to load columns config');
+            }
             
-            const columns = data.columns.map(column => {
+            const columns = result.columns.map(column => {
+                const column = {
+                    field: col.field,
+                    label: col.title,
+                    width: col.width || 'auto',
+                    sortable: col.sortable !== false,
+                    type: col.type || 'text'
+                };
+
                 switch (column.type) {
-                    // ... כל ה-cases האחרים ...
-                    
+                    case 'date':
+                        column.render = (item) => formatDate(item[column.field]);
+                        break;
+                        
+                    case 'status':
+                        // if (column.render === 'formatBurialStatus') {
+                            column.render = (item) => formatBurialStatus(item[column.field]);
+                        // }
+                        break;
+                        
+                    case 'type':
+                        if (column.render === 'formatBurialType') {
+                            column.render = (item) => formatBurialType(item[column.field]);
+                        }
+                        break;
+                        
+                    case 'time':
+                        column.render = (item) => {
+                            const value = item[column.field];
+                            return value ? value.substring(0, 5) : '-';
+                        };
+                        break;
+                        
+                    case 'boolean':
+                        column.render = (item) => {
+                            const value = item[column.field];
+                            if (value === 'כן' || value === 1 || value === true) {
+                                return '<span style="color: green;">✓</span>';
+                            }
+                            return '<span style="color: #ccc;">✗</span>';
+                        };
+                        break;
+                        
                     case 'actions':
                         column.render = (item) => `
                             <button class="btn btn-sm btn-info" 

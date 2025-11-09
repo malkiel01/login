@@ -2661,79 +2661,79 @@ const FormHandler = {
         //     }
         // })();
 
-        (async function loadAvailableCustomers() {
-            try {
-                console.log('👥 מתחיל לטעון לקוחות פנויים מה-API...');
+        // (async function loadAvailableCustomers() {
+        //     try {
+        //         console.log('👥 מתחיל לטעון לקוחות פנויים מה-API...');
                 
-                // ✅ הוסף ספינר
-                showSelectSpinner('clientId');
+        //         // ✅ הוסף ספינר
+        //         showSelectSpinner('clientId');
                 
-                // ✅ קריאה ל-API
-                const response = await fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=available');
-                const result = await response.json();
+        //         // ✅ קריאה ל-API
+        //         const response = await fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=available');
+        //         const result = await response.json();
                 
-                if (!result.success) {
-                    console.error('❌ שגיאה בטעינת לקוחות:', result.error);
+        //         if (!result.success) {
+        //             console.error('❌ שגיאה בטעינת לקוחות:', result.error);
                     
-                    // ✅ הסר ספינר
-                    hideSelectSpinner('clientId');
+        //             // ✅ הסר ספינר
+        //             hideSelectSpinner('clientId');
                     
-                    const customerSelect = document.querySelector('[name="clientId"]');
-                    if (customerSelect) {
-                        customerSelect.innerHTML = '<option value="">❌ שגיאה בטעינת לקוחות</option>';
-                        customerSelect.style.borderColor = 'red';
-                    }
-                    return;
-                }
+        //             const customerSelect = document.querySelector('[name="clientId"]');
+        //             if (customerSelect) {
+        //                 customerSelect.innerHTML = '<option value="">❌ שגיאה בטעינת לקוחות</option>';
+        //                 customerSelect.style.borderColor = 'red';
+        //             }
+        //             return;
+        //         }
                 
-                console.log(`✅ נטענו ${result.data.length} לקוחות פנויים`);
+        //         console.log(`✅ נטענו ${result.data.length} לקוחות פנויים`);
                 
-                const customerSelect = document.querySelector('[name="clientId"]');
+        //         const customerSelect = document.querySelector('[name="clientId"]');
                 
-                if (!customerSelect) {
-                    console.warn('⚠️ Customer select לא נמצא עדיין, ננסה שוב...');
-                    setTimeout(loadAvailableCustomers, 500);
-                    return;
-                }
+        //         if (!customerSelect) {
+        //             console.warn('⚠️ Customer select לא נמצא עדיין, ננסה שוב...');
+        //             setTimeout(loadAvailableCustomers, 500);
+        //             return;
+        //         }
                 
-                // ✅ ריקון ה-select
-                customerSelect.innerHTML = '<option value="">-- בחר לקוח --</option>';
+        //         // ✅ ריקון ה-select
+        //         customerSelect.innerHTML = '<option value="">-- בחר לקוח --</option>';
                 
-                // ✅ מילוי אופציות
-                result.data.forEach(customer => {
-                    const option = document.createElement('option');
-                    option.value = customer.unicId;
+        //         // ✅ מילוי אופציות
+        //         result.data.forEach(customer => {
+        //             const option = document.createElement('option');
+        //             option.value = customer.unicId;
                     
-                    let displayText = `${customer.firstName} ${customer.lastName}`;
+        //             let displayText = `${customer.firstName} ${customer.lastName}`;
                     
-                    if (customer.phone || customer.phoneMobile) {
-                        displayText += ` - ${customer.phone || customer.phoneMobile}`;
-                    }
+        //             if (customer.phone || customer.phoneMobile) {
+        //                 displayText += ` - ${customer.phone || customer.phoneMobile}`;
+        //             }
                     
-                    option.textContent = displayText;
-                    option.dataset.resident = customer.resident || 3;
+        //             option.textContent = displayText;
+        //             option.dataset.resident = customer.resident || 3;
                     
-                    customerSelect.appendChild(option);
-                });
+        //             customerSelect.appendChild(option);
+        //         });
                 
-                console.log('✅ לקוחות נטענו בהצלחה');
+        //         console.log('✅ לקוחות נטענו בהצלחה');
                 
-                // ✅ הסר ספינר
-                hideSelectSpinner('clientId');
+        //         // ✅ הסר ספינר
+        //         hideSelectSpinner('clientId');
                 
-            } catch (error) {
-                console.error('❌ שגיאה בטעינת לקוחות:', error);
+        //     } catch (error) {
+        //         console.error('❌ שגיאה בטעינת לקוחות:', error);
                 
-                // ✅ הסר ספינר
-                hideSelectSpinner('clientId');
+        //         // ✅ הסר ספינר
+        //         hideSelectSpinner('clientId');
                 
-                const customerSelect = document.querySelector('[name="clientId"]');
-                if (customerSelect) {
-                    customerSelect.innerHTML = '<option value="">❌ שגיאה בטעינת לקוחות</option>';
-                    customerSelect.style.borderColor = 'red';
-                }
-            }
-        })();
+        //         const customerSelect = document.querySelector('[name="clientId"]');
+        //         if (customerSelect) {
+        //             customerSelect.innerHTML = '<option value="">❌ שגיאה בטעינת לקוחות</option>';
+        //             customerSelect.style.borderColor = 'red';
+        //         }
+        //     }
+        // })();
 
         // טיפול בעריכה
         if (itemId) {

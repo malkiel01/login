@@ -2600,6 +2600,80 @@ const FormHandler = {
         // טעינת לקוחות פנויים - זהה להיררכיה
         // ===========================================================
 
+        // (async function loadAvailableCustomers() {
+        //     try {
+        //         console.log('👥 מתחיל לטעון לקוחות פנויים מה-API...');
+                
+        //         // ✅ הוסף ספינר
+        //         showSelectSpinner('clientId');
+                
+        //         // ✅ קריאה ל-API
+        //         const response = await fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=available');
+        //         const result = await response.json();
+                
+        //         if (!result.success) {
+        //             console.error('❌ שגיאה בטעינת לקוחות:', result.error);
+                    
+        //             // ✅ הסר ספינר
+        //             hideSelectSpinner('clientId');
+                    
+        //             const customerSelect = document.querySelector('[name="clientId"]');
+        //             if (customerSelect) {
+        //                 customerSelect.innerHTML = '<option value="">❌ שגיאה בטעינת לקוחות</option>';
+        //                 customerSelect.style.borderColor = 'red';
+        //             }
+        //             return;
+        //         }
+                
+        //         console.log(`✅ נטענו ${result.data.length} לקוחות פנויים`);
+                
+        //         const customerSelect = document.querySelector('[name="clientId"]');
+                
+        //         if (!customerSelect) {
+        //             console.warn('⚠️ Customer select לא נמצא עדיין, ננסה שוב...');
+        //             setTimeout(loadAvailableCustomers, 500);
+        //             return;
+        //         }
+                
+        //         // ✅ ריקון ה-select
+        //         customerSelect.innerHTML = '<option value="">-- בחר לקוח --</option>';
+                
+        //         // ✅ מילוי אופציות
+        //         result.data.forEach(customer => {
+        //             const option = document.createElement('option');
+        //             option.value = customer.unicId;
+                    
+        //             let displayText = `${customer.firstName} ${customer.lastName}`;
+                    
+        //             if (customer.phone || customer.phoneMobile) {
+        //                 displayText += ` - ${customer.phone || customer.phoneMobile}`;
+        //             }
+                    
+        //             option.textContent = displayText;
+        //             option.dataset.resident = customer.resident || 3;
+                    
+        //             customerSelect.appendChild(option);
+        //         });
+                
+        //         console.log('✅ לקוחות נטענו בהצלחה');
+                
+        //         // ✅ הסר ספינר
+        //         hideSelectSpinner('clientId');
+                
+        //     } catch (error) {
+        //         console.error('❌ שגיאה בטעינת לקוחות:', error);
+                
+        //         // ✅ הסר ספינר
+        //         hideSelectSpinner('clientId');
+                
+        //         const customerSelect = document.querySelector('[name="clientId"]');
+        //         if (customerSelect) {
+        //             customerSelect.innerHTML = '<option value="">❌ שגיאה בטעינת לקוחות</option>';
+        //             customerSelect.style.borderColor = 'red';
+        //         }
+        //     }
+        // })();
+
         (async function loadAvailableCustomers() {
             try {
                 console.log('👥 מתחיל לטעון לקוחות פנויים מה-API...');
@@ -2607,25 +2681,29 @@ const FormHandler = {
                 // ✅ הוסף ספינר
                 showSelectSpinner('clientId');
                 
+                // ✅ בנה URL עם הלקוח הנוכחי אם במצב עריכה
+                let apiUrl = '/dashboard/dashboards/cemeteries/api/customers-api.php?action=available';
+                if (window.isEditMode && itemId) {
+                    // ✅ צריך לקבל את clientId מהרכישה
+                    const purchaseResponse = await fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=get&id=${itemId}`);
+                    const purchaseData = await purchaseResponse.json();
+                    
+                    if (purchaseData.success && purchaseData.data?.clientId) {
+                        apiUrl += `&currentClientId=${purchaseData.data.clientId}`;
+                    }
+                }
+                
                 // ✅ קריאה ל-API
-                const response = await fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=available');
+                const response = await fetch(apiUrl);
                 const result = await response.json();
                 
                 if (!result.success) {
                     console.error('❌ שגיאה בטעינת לקוחות:', result.error);
-                    
-                    // ✅ הסר ספינר
                     hideSelectSpinner('clientId');
-                    
-                    const customerSelect = document.querySelector('[name="clientId"]');
-                    if (customerSelect) {
-                        customerSelect.innerHTML = '<option value="">❌ שגיאה בטעינת לקוחות</option>';
-                        customerSelect.style.borderColor = 'red';
-                    }
                     return;
                 }
                 
-                console.log(`✅ נטענו ${result.data.length} לקוחות פנויים`);
+                console.log(`✅ נטענו ${result.data.length} לקוחות`);
                 
                 const customerSelect = document.querySelector('[name="clientId"]');
                 
@@ -2649,6 +2727,11 @@ const FormHandler = {
                         displayText += ` - ${customer.phone || customer.phoneMobile}`;
                     }
                     
+                    // ✅ סמן את הלקוח הנוכחי
+                    if (customer.is_current) {
+                        displayText += ' (נוכחי)';
+                    }
+                    
                     option.textContent = displayText;
                     option.dataset.resident = customer.resident || 3;
                     
@@ -2662,15 +2745,7 @@ const FormHandler = {
                 
             } catch (error) {
                 console.error('❌ שגיאה בטעינת לקוחות:', error);
-                
-                // ✅ הסר ספינר
                 hideSelectSpinner('clientId');
-                
-                const customerSelect = document.querySelector('[name="clientId"]');
-                if (customerSelect) {
-                    customerSelect.innerHTML = '<option value="">❌ שגיאה בטעינת לקוחות</option>';
-                    customerSelect.style.borderColor = 'red';
-                }
             }
         })();
 

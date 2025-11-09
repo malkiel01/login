@@ -158,7 +158,7 @@ async function loadColumnsFromConfig(entityType = 'purchase') {
                     };
                     break;
                     
-                case 'actions':
+                case 'actions2':
                     // ⭐ רק כאן הוספנו דיבאג!
                     column.render = (item) => `
                         <button class="btn btn-sm btn-secondary" 
@@ -178,6 +178,20 @@ async function loadColumnsFromConfig(entityType = 'purchase') {
                     `;
                     break;
                     
+                case 'actions':
+                    column.render = (item) => `
+                        <button class="btn btn-sm btn-secondary" 
+                                onclick="event.stopPropagation(); window.tableRenderer.editItem('${item.unicId}')" 
+                                title="עריכה">
+                            <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
+                        </button>
+                        <button class="btn btn-sm btn-danger" 
+                                onclick="event.stopPropagation(); deletePurchase('${item.unicId}')" 
+                                title="מחיקה">
+                            <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
+                        </button>
+                    `;
+                
                 default:
                     if (!column.render) {
                         column.render = (item) => item[column.field] || '-';

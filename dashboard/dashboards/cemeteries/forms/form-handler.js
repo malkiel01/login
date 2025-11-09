@@ -1172,8 +1172,8 @@ const FormHandler = {
                 // אכלס מדינות
                 window.populateCountries();
 
-                // ⭐ הסר ספינר
-                hideSelectSpinner('countryId');
+                // // ⭐ הסר ספינר
+                // hideSelectSpinner('countryId');
                 
                 // הגדר listener לשינוי מדינה
                 countryInput.addEventListener('change', async function() {

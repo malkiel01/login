@@ -111,7 +111,7 @@ async function loadPurchases() {
     }
 }
 
-async function loadColumnsFromConfig(entityType) {
+async function loadColumnsFromConfig2(entityType) {
     try {
         const response = await fetch(`/dashboard/dashboards/cemeteries/api/table-columns-api.php?entity=${entityType}`);
         const data = await response.json();
@@ -451,7 +451,7 @@ async function initPurchasesTable(data, totalItems = null) {
     }
 
     // טעינת העמודות מהשרת
-    async function loadColumnsFromConfig2(entityType = 'purchase') {
+    async function loadColumnsFromConfig(entityType = 'purchase') {
         try {
             const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`);
             

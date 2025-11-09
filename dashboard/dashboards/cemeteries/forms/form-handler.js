@@ -853,7 +853,7 @@ const FormHandler = {
         });
     },
 
-    handleCustomerForm: function(itemId) {
+    handleCustomerForm2: function(itemId) {
 
         // 🆕 טעינת מדינות וערים מה-API
         const fieldset = document.getElementById('address-fieldset');
@@ -888,8 +888,6 @@ const FormHandler = {
                     alert('שגיאה בטעינת רשימת המדינות');
                 });
         }
-        
-        // // console.log('🔧 handleCustomerForm called with itemId:', itemId);
         
         // ============================================
         // חלק 1: אתחול SmartSelect ותלות מדינה-עיר
@@ -1094,7 +1092,7 @@ const FormHandler = {
         // ============================================
         // פונקציה עזר לטעינת נתוני לקוח
         // ============================================
-        function loadCustomerData2(customerId, citiesData) {
+        function loadCustomerData(customerId, citiesData) {
             // console.log('✏️ Loading customer data for ID:', customerId);
             
             const form = document.querySelector('#customerFormModal form');
@@ -1169,58 +1167,431 @@ const FormHandler = {
                     alert('שגיאה בטעינת נתוני הלקוח');
                 });
         }
+    },
 
-        function loadCustomerData(customerId, citiesData) {
-            console.log('🔍🔍🔍 [loadCustomerData] קיבלתי customerId:', customerId);
+    handleCustomerForm: function(itemId) {
+        console.log('👤 handleCustomerForm called with itemId:', itemId);
+        
+        // ======================================
+        // ⭐ מבנה נתונים גלובלי
+        // ======================================
+        window.locationsData = {
+            countries: [],
+            cities: []
+        };
+        
+        // ======================================
+        // ⭐ טעינה אסינכרונית של כל המיקומים
+        // ======================================
+        (async function loadLocations() {
+            try {
+                console.log('🌐 Starting to load countries and cities from API...');
+                
+                // ⭐ טען מדינות וערים בבת אחת
+                const [countriesResponse, citiesResponse] = await Promise.all([
+                    fetch('/dashboard/dashboards/cemeteries/api/locations-api.php?action=getCountries'),
+                    fetch('/dashboard/dashboards/cemeteries/api/locations-api.php?action=getAllCities')
+                ]);
+                
+                const [countriesResult, citiesResult] = await Promise.all([
+                    countriesResponse.json(),
+                    citiesResponse.json()
+                ]);
+                
+                if (!countriesResult.success || !citiesResult.success) {
+                    console.error('❌ Failed to load locations data');
+                    return;
+                }
+                
+                // ⭐ שמור במבנה גלובלי
+                window.locationsData.countries = countriesResult.data || [];
+                window.locationsData.cities = citiesResult.data || [];
+                
+                console.log(`✅ Loaded ${window.locationsData.countries.length} countries`);
+                console.log(`✅ Loaded ${window.locationsData.cities.length} cities`);
+                
+                // ⭐ המתן לטופס להיטען
+                const countryInput = await FormHandler.waitForElementPromise('#countryId', 5000);
+                
+                if (!countryInput) {
+                    console.error('❌ Country input not found');
+                    return;
+                }
+                
+                // ⭐ אתחל SmartSelect
+                if (window.SmartSelectManager) {
+                    SmartSelectManager.init();
+                    console.log('✅ SmartSelect initialized');
+                }
+                
+                // ⭐ אכלס מדינות
+                FormHandler.populateCountries();
+                
+                // ⭐ הגדר תלות מדינה→עיר
+                FormHandler.setupCountryCityDependency();
+                
+                // ⭐ אם זה עריכה - טען נתוני לקוח
+                if (itemId) {
+                    await FormHandler.loadCustomerData(itemId);
+                }
+                
+                console.log('✅ Locations loaded and form initialized successfully');
+                
+            } catch (error) {
+                console.error('❌ Error loading locations:', error);
+                alert('שגיאה בטעינת רשימת המדינות והערים');
+            }
+        })();
+        
+        // ======================================
+        // ⭐ חישוב תושבות - רק ללקוח חדש
+        // ======================================
+        if (!itemId) {
+            FormHandler.setupResidencyCalculation();
+        }
+    },
+
+    // ======================================
+    // פונקציות עזר חדשות
+    // ======================================
+
+    /**
+     * המתנה לאלמנט עם Promise
+     */
+    waitForElementPromise: function(selector, timeout = 5000) {
+        return new Promise((resolve) => {
+            const element = document.querySelector(selector);
+            if (element) {
+                resolve(element);
+                return;
+            }
             
+            const observer = new MutationObserver((mutations, obs) => {
+                const element = document.querySelector(selector);
+                if (element) {
+                    obs.disconnect();
+                    resolve(element);
+                }
+            });
+            
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+            
+            setTimeout(() => {
+                observer.disconnect();
+                resolve(null);
+            }, timeout);
+        });
+    },
+
+    /**
+     * אכלוס מדינות ב-SmartSelect
+     */
+    populateCountries: function() {
+        const countryInstance = window.SmartSelectManager?.instances['countryId'];
+        
+        if (!countryInstance) {
+            console.warn('⚠️ Country SmartSelect instance not found');
+            return;
+        }
+        
+        if (!window.locationsData.countries || window.locationsData.countries.length === 0) {
+            console.warn('⚠️ No countries data available');
+            return;
+        }
+        
+        // נקה אופציות קיימות
+        countryInstance.optionsContainer.innerHTML = '';
+        countryInstance.allOptions = [];
+        
+        // מלא מדינות
+        window.locationsData.countries.forEach(country => {
+            const option = document.createElement('div');
+            option.className = 'smart-select-option';
+            option.dataset.value = country.unicId;
+            option.textContent = country.countryNameHe;
+            
+            option.addEventListener('click', function() {
+                window.SmartSelectManager.select('countryId', country.unicId);
+            });
+            
+            countryInstance.optionsContainer.appendChild(option);
+            countryInstance.allOptions.push(option);
+        });
+        
+        console.log(`✅ Populated ${window.locationsData.countries.length} countries`);
+    },
+
+    /**
+     * הגדרת תלות מדינה→עיר
+     */
+    setupCountryCityDependency: function() {
+        const countryInput = document.getElementById('countryId');
+        const cityInstance = window.SmartSelectManager?.instances['cityId'];
+        
+        if (!countryInput) {
+            console.warn('⚠️ Country input not found');
+            return;
+        }
+        
+        if (!cityInstance) {
+            console.warn('⚠️ City SmartSelect instance not found');
+            return;
+        }
+        
+        // הוסף listener לשינוי מדינה
+        countryInput.addEventListener('change', function() {
+            const countryId = this.value;
+            
+            console.log('🌍 Country changed:', countryId);
+            
+            // אם אין מדינה - נקה ערים
+            if (!countryId) {
+                cityInstance.wrapper.classList.add('disabled');
+                cityInstance.hiddenInput.disabled = true;
+                cityInstance.hiddenInput.value = '';
+                cityInstance.valueSpan.textContent = 'בחר קודם מדינה...';
+                cityInstance.optionsContainer.innerHTML = '';
+                return;
+            }
+            
+            // סנן ערים לפי מדינה
+            const filteredCities = window.locationsData.cities.filter(
+                city => city.countryId == countryId
+            );
+            
+            console.log(`🏙️ Found ${filteredCities.length} cities for country ${countryId}`);
+            
+            // נקה ומלא ערים
+            cityInstance.optionsContainer.innerHTML = '';
+            cityInstance.allOptions = [];
+            
+            filteredCities.forEach(city => {
+                const option = document.createElement('div');
+                option.className = 'smart-select-option';
+                option.dataset.value = city.unicId;
+                option.textContent = city.cityNameHe;
+                
+                option.addEventListener('click', function() {
+                    window.SmartSelectManager.select('cityId', city.unicId);
+                });
+                
+                cityInstance.optionsContainer.appendChild(option);
+                cityInstance.allOptions.push(option);
+            });
+            
+            // הפעל את בחירת העיר
+            cityInstance.wrapper.classList.remove('disabled');
+            cityInstance.hiddenInput.disabled = false;
+            cityInstance.hiddenInput.value = '';
+            cityInstance.valueSpan.textContent = 'בחר עיר...';
+        });
+        
+        console.log('✅ Country-City dependency set up');
+    },
+
+    /**
+     * טעינת נתוני לקוח - במצב עריכה
+     */
+    loadCustomerData: async function(customerId) {
+        console.log('🔍 Loading customer data for ID:', customerId);
+        
+        try {
             const form = document.querySelector('#customerFormModal form');
             if (!form) {
                 console.error('❌ Form not found');
                 return;
             }
             
-            // 👀 בדוק מה כבר יש בטופס לפני שטוענים
-            console.log('📋 [BEFORE] firstName בטופס:', form.elements['firstName']?.value);
-            console.log('📋 [BEFORE] lastName בטופס:', form.elements['lastName']?.value);
+            // 👀 לוג מה יש בטופס לפני
+            console.log('📋 [BEFORE] firstName:', form.elements['firstName']?.value);
+            console.log('📋 [BEFORE] lastName:', form.elements['lastName']?.value);
             
-            fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?action=get&id=${customerId}`)
-                .then(response => response.json())
-                .then(result => {
-                    if (!result.success || !result.data) {
-                        console.error('❌ Failed to load customer data:', result);
-                        alert('שגיאה בטעינת נתוני הלקוח');
-                        return;
+            const response = await fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?action=get&id=${customerId}`);
+            const result = await response.json();
+            
+            if (!result.success || !result.data) {
+                console.error('❌ Failed to load customer data:', result);
+                alert('שגיאה בטעינת נתוני הלקוח');
+                return;
+            }
+            
+            const customer = result.data;
+            
+            console.log('✅ [API returned] unicId:', customer.unicId);
+            console.log('✅ [API returned] firstName:', customer.firstName);
+            console.log('✅ [API returned] lastName:', customer.lastName);
+            console.log('✅ [API returned] countryId:', customer.countryId);
+            console.log('✅ [API returned] cityId:', customer.cityId);
+            
+            // מלא את כל השדות
+            Object.keys(customer).forEach(key => {
+                const field = form.elements[key];
+                if (!field) return;
+                
+                if (field.type === 'checkbox') {
+                    field.checked = customer[key] == 1;
+                } else if (field.type === 'select-one') {
+                    field.value = customer[key] || '';
+                    
+                    // טיפול מיוחד בתושבות
+                    if (key === 'resident' && field.disabled) {
+                        field.value = customer[key] || 3;
+                        const colors = {
+                            '1': '#e8f5e9',
+                            '2': '#e3f2fd',
+                            '3': '#fff3e0'
+                        };
+                        field.style.backgroundColor = colors[customer[key]] || '#f5f5f5';
+                        
+                        const hiddenField = form.elements['resident_hidden'];
+                        if (hiddenField) {
+                            hiddenField.value = customer[key] || 3;
+                        }
+                    }
+                } else {
+                    field.value = customer[key] || '';
+                }
+            });
+            
+            // טען מדינה ועיר
+            if (customer.countryId) {
+                const countryInput = document.getElementById('countryId');
+                if (countryInput) {
+                    // קבע מדינה
+                    countryInput.value = customer.countryId;
+                    
+                    // עדכן תצוגה ב-SmartSelect
+                    const countryInstance = window.SmartSelectManager?.instances['countryId'];
+                    if (countryInstance) {
+                        const selectedCountry = window.locationsData.countries.find(
+                            c => c.unicId == customer.countryId
+                        );
+                        if (selectedCountry) {
+                            countryInstance.valueSpan.textContent = selectedCountry.countryNameHe;
+                            countryInstance.hiddenInput.value = customer.countryId;
+                        }
                     }
                     
-                    console.log('✅ [API החזיר] firstName:', result.data.firstName);
-                    console.log('✅ [API החזיר] lastName:', result.data.lastName);
-                    console.log('✅ [API החזיר] unicId:', result.data.unicId);
+                    // טריגר שינוי כדי לטעון ערים
+                    countryInput.dispatchEvent(new Event('change', { bubbles: true }));
                     
-                    // ... כל שאר הקוד נשאר אותו דבר ...
-                    Object.keys(result.data).forEach(key => {
-                        const field = form.elements[key];
-                        if (!field) return;
-                        
-                        if (field.type === 'checkbox') {
-                            field.checked = result.data[key] == 1;
-                        } else if (field.type === 'select-one') {
-                            field.value = result.data[key] || '';
-                            // ... שאר הקוד
-                        } else {
-                            field.value = result.data[key] || '';
+                    // המתן רגע ואז טען עיר
+                    setTimeout(() => {
+                        if (customer.cityId) {
+                            const cityInput = document.getElementById('cityId');
+                            if (cityInput) {
+                                cityInput.value = customer.cityId;
+                                
+                                // עדכן תצוגה ב-SmartSelect
+                                const cityInstance = window.SmartSelectManager?.instances['cityId'];
+                                if (cityInstance) {
+                                    const selectedCity = window.locationsData.cities.find(
+                                        c => c.unicId == customer.cityId
+                                    );
+                                    if (selectedCity) {
+                                        cityInstance.valueSpan.textContent = selectedCity.cityNameHe;
+                                        cityInstance.hiddenInput.value = customer.cityId;
+                                    }
+                                }
+                                
+                                cityInput.dispatchEvent(new Event('change', { bubbles: true }));
+                            }
                         }
-                    });
-                    
-                    // 👀 בדוק מה יש בטופס אחרי שטענו
-                    console.log('📋 [AFTER] firstName בטופס:', form.elements['firstName']?.value);
-                    console.log('📋 [AFTER] lastName בטופס:', form.elements['lastName']?.value);
-                })
-                .catch(error => {
-                    console.error('❌ Error loading customer data:', error);
-                    alert('שגיאה בטעינת נתוני הלקוח');
-                });
+                    }, 300);
+                }
+            }
+            
+            // 👀 לוג מה יש בטופס אחרי
+            console.log('📋 [AFTER] firstName:', form.elements['firstName']?.value);
+            console.log('📋 [AFTER] lastName:', form.elements['lastName']?.value);
+            
+            console.log('✅ Customer data loaded successfully');
+            
+        } catch (error) {
+            console.error('❌ Error loading customer data:', error);
+            alert('שגיאה בטעינת נתוני הלקוח');
         }
     },
+
+    /**
+     * הגדרת חישוב תושבות - ללקוח חדש
+     */
+    setupResidencyCalculation: function() {
+        console.log('➕ Setting up residency calculation for new customer');
+        
+        this.waitForElement('#customerFormModal form', (form) => {
+            const typeSelect = form.elements['typeId'];
+            const countrySelect = form.elements['countryId'];
+            const citySelect = form.elements['cityId'];
+            const residentField = form.elements['resident'];
+            
+            // פונקציה לחישוב תושבות
+            const calculateResidency = () => {
+                const typeId = typeSelect?.value;
+                const countryId = countrySelect?.value;
+                const cityId = citySelect?.value;
+                
+                console.log('🧮 Calculating residency:', { typeId, countryId, cityId });
+                
+                // דרכון = חו"ל
+                if (typeId == 2) {
+                    updateResidencyField(3);
+                    return;
+                }
+                
+                // אין מדינה = חו"ל
+                if (!countryId) {
+                    updateResidencyField(3);
+                    return;
+                }
+                
+                // שאל את השרת
+                fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=calculate_residency', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ typeId, countryId, cityId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.residency) {
+                        updateResidencyField(data.residency);
+                    }
+                })
+                .catch(error => console.error('Error calculating residency:', error));
+            };
+            
+            // פונקציה לעדכון שדה התושבות
+            const updateResidencyField = (value) => {
+                if (residentField) {
+                    residentField.value = value;
+                    const colors = {
+                        1: '#e8f5e9',  // תושב העיר
+                        2: '#e3f2fd',  // תושב הארץ
+                        3: '#fff3e0'   // תושב חו"ל
+                    };
+                    residentField.style.backgroundColor = colors[value] || '#f5f5f5';
+                    
+                    console.log('✅ Residency updated:', value);
+                }
+            };
+            
+            // חבר listeners
+            if (typeSelect) typeSelect.addEventListener('change', calculateResidency);
+            if (countrySelect) countrySelect.addEventListener('change', calculateResidency);
+            if (citySelect) citySelect.addEventListener('change', calculateResidency);
+            
+            // חשב בפעם הראשונה
+            calculateResidency();
+        });
+    },
+
+
+
+
+    
 
     /**
      * מילוי מדינות מה-API
@@ -2587,374 +2958,6 @@ const FormHandler = {
                 });
                 const modal = document.getElementById('purchaseFormModal');
                 if (modal) observer.observe(modal, { childList: true, subtree: true });
-                setTimeout(() => observer.disconnect(), 10000);
-            }
-        }
-    },
-
-    handleBurialForm2: function(itemId) {
-        this.waitForElement('#grave-selector-fieldset', (fieldset) => {
-            // טען את נתוני ההיררכיה
-            if (fieldset.dataset.hierarchy) {
-                window.hierarchyData = JSON.parse(fieldset.dataset.hierarchy);
-            } else {
-                return;
-            }
-
-            // אתחל את מנהל ההיררכיה - קברים פנויים ונרכשים (סטטוס 1, 2)
-            GraveHierarchyManager.init({
-                allowedStatuses: [1, 2], // פנויים ונרכשים
-                onGraveSelected: async function(graveId) {
-                    await handleGraveSelection(graveId);
-                }
-            });
-
-            // מאזין לשינויים בבחירת לקוח
-            const customerSelect = document.querySelector('[name="clientId"]');
-            if (customerSelect) {
-                customerSelect.addEventListener('change', async function() {
-                    await handleCustomerSelection(this.value);
-                });
-            }
-
-            // אתחל
-            window.populateBlocks();
-            window.populatePlots();
-        });
-        
-        // טען נתונים אם זו עריכה
-        if (itemId) {
-            window.isEditMode = true;
-            loadBurialData(itemId);
-        }
-        
-        // === פונקציות עזר לסינכרון דו-כיווני ===
-        
-        // טיפול בבחירת לקוח
-        async function handleCustomerSelection(customerId) {
-            if (!customerId) {
-                clearGraveSelection();
-                return;
-            }
-            
-            try {
-                // בדוק אם ללקוח יש רכישה פעילה
-                const response = await fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=getByCustomer&customerId=${customerId}`);
-                const data = await response.json();
-                
-                if (data.success && data.purchase) {
-                    const purchase = data.purchase;
-                    
-                    // הצג הודעה למשתמש
-                    showSyncNotification('info', 'נתוני הקבר התמלאו אוטומטית לפי הרכישה של הלקוח');
-                    
-                    // מלא אוטומטית את היררכיית הקבר
-                    await fillGraveHierarchy(purchase.graveId);
-                    
-                    // עדכן את שדה הרכישה הקשורה אם קיים
-                    const purchaseSelect = document.querySelector('[name="purchaseId"]');
-                    if (purchaseSelect) {
-                        purchaseSelect.value = purchase.unicId;
-                    }
-                } else {
-                    // לקוח ללא רכישה - נקה בחירת קבר רק אם לא במצב עריכה
-                    if (!window.isEditMode) {
-                        clearGraveSelection();
-                    }
-                }
-                
-                // טען נתוני לקוח עבור שדות נוספים
-                const customerResponse = await fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?action=get&id=${customerId}`);
-                const customerData = await customerResponse.json();
-                if (customerData.success && customerData.data) {
-                    window.selectedCustomerData = {
-                        id: customerId,
-                        name: customerData.data.firstName + ' ' + customerData.data.lastName,
-                        statusCustomer: customerData.data.statusCustomer
-                    };
-                }
-            } catch (error) {
-                console.error('Error loading customer purchase data:', error);
-            }
-        }
-        
-        // טיפול בבחירת קבר
-        async function handleGraveSelection(graveId) {
-            if (!graveId) {
-                window.selectedGraveData = null;
-                hideGraveStatusNotification();
-                return;
-            }
-            
-            try {
-                // מצא את פרטי הקבר
-                const grave = window.hierarchyData.graves.find(g => g.unicId == graveId);
-                if (grave) {
-                    window.selectedGraveData = {
-                        graveId: graveId,
-                        graveStatus: grave.graveStatus
-                    };
-                    
-                    // הצג סטטוס הקבר
-                    if (grave.graveStatus == 2) {
-                        showGraveStatusNotification('warning', 'שים לב: קבר זה נמצא בסטטוס נרכש');
-                    } else if (grave.graveStatus == 1) {
-                        showGraveStatusNotification('success', 'קבר פנוי');
-                    }
-                    
-                    // בדוק אם לקבר יש רכישה פעילה
-                    const response = await fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=getByGrave&graveId=${graveId}`);
-                    const data = await response.json();
-                    
-                    if (data.success && data.purchase) {
-                        const purchase = data.purchase;
-                        
-                        // הצג הודעה למשתמש
-                        showSyncNotification('info', 'נתוני הלקוח התמלאו אוטומטית לפי הרכישה של הקבר');
-                        
-                        // מלא אוטומטית את נתוני הלקוח
-                        const customerSelect = document.querySelector('[name="clientId"]');
-                        if (customerSelect) {
-                            customerSelect.value = purchase.clientId;
-                            
-                            // עדכן נתוני הלקוח הנבחר
-                            window.selectedCustomerData = {
-                                id: purchase.clientId,
-                                name: purchase.customerName
-                            };
-                        }
-                        
-                        // עדכן את שדה הרכישה הקשורה אם קיים
-                        const purchaseSelect = document.querySelector('[name="purchaseId"]');
-                        if (purchaseSelect) {
-                            purchaseSelect.value = purchase.unicId;
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading grave purchase data:', error);
-            }
-        }
-        
-        // מילוי היררכיית הקבר לפי graveId
-        async function fillGraveHierarchy(graveId) {
-            if (!window.hierarchyData || !graveId) return;
-            
-            // מצא את הקבר
-            const grave = window.hierarchyData.graves.find(g => g.unicId === graveId);
-            if (!grave) return;
-            
-            // מצא את אחוזת הקבר
-            const areaGrave = window.hierarchyData.areaGraves.find(ag => ag.unicId === grave.area_grave_id);
-            if (!areaGrave) return;
-            
-            // מצא את השורה
-            const row = window.hierarchyData.rows.find(r => r.unicId === areaGrave.row_id);
-            if (!row) return;
-            
-            // מצא את החלקה
-            const plot = window.hierarchyData.plots.find(p => p.unicId === row.plot_id);
-            if (!plot) return;
-            
-            // מצא את הגוש
-            const block = window.hierarchyData.blocks.find(b => b.unicId === plot.blockId);
-            if (!block) return;
-            
-            // מלא את הסלקטים בסדר היררכי עם השהיות
-            setTimeout(() => {
-                document.getElementById('cemeterySelect').value = block.cemetery_id;
-                window.filterHierarchy('cemetery');
-                
-                setTimeout(() => {
-                    document.getElementById('blockSelect').value = block.unicId;
-                    window.filterHierarchy('block');
-                    
-                    setTimeout(() => {
-                        document.getElementById('plotSelect').value = plot.unicId;
-                        window.filterHierarchy('plot');
-                        
-                        setTimeout(() => {
-                            document.getElementById('rowSelect').value = row.unicId;
-                            window.filterHierarchy('row');
-                            
-                            setTimeout(() => {
-                                document.getElementById('areaGraveSelect').value = areaGrave.unicId;
-                                window.filterHierarchy('areaGrave');
-                                
-                                setTimeout(() => {
-                                    document.getElementById('graveSelect').value = grave.unicId;
-                                }, 50);
-                            }, 50);
-                        }, 50);
-                    }, 50);
-                }, 50);
-            }, 100);
-        }
-        
-        // ניקוי בחירת קבר
-        function clearGraveSelection() {
-            document.getElementById('cemeterySelect').value = '';
-            document.getElementById('blockSelect').value = '';
-            document.getElementById('plotSelect').value = '';
-            document.getElementById('rowSelect').value = '';
-            document.getElementById('areaGraveSelect').value = '';
-            document.getElementById('graveSelect').value = '';
-            
-            // נקה את מצב הבחירה
-            window.selectedGraveData = null;
-            hideGraveStatusNotification();
-        }
-        
-        // הצגת הודעות סינכרון
-        function showSyncNotification(type, message) {
-            const notificationId = 'syncNotification';
-            let notification = document.getElementById(notificationId);
-            
-            if (!notification) {
-                notification = document.createElement('div');
-                notification.id = notificationId;
-                notification.style.cssText = `
-                    position: fixed;
-                    top: 20px;
-                    right: 20px;
-                    z-index: 9999;
-                    max-width: 300px;
-                    padding: 12px 16px;
-                    border-radius: 6px;
-                    color: white;
-                    font-size: 14px;
-                    font-weight: 500;
-                    transition: all 0.3s ease;
-                `;
-                document.body.appendChild(notification);
-            }
-            
-            // עיצוב לפי סוג
-            const colors = {
-                'info': '#3b82f6',
-                'success': '#10b981',
-                'warning': '#f59e0b',
-                'error': '#ef4444'
-            };
-            
-            notification.style.backgroundColor = colors[type] || colors['info'];
-            notification.textContent = message;
-            notification.style.display = 'block';
-            notification.style.opacity = '1';
-            
-            // הסתר אחרי 4 שניות
-            setTimeout(() => {
-                notification.style.opacity = '0';
-                setTimeout(() => {
-                    notification.style.display = 'none';
-                }, 300);
-            }, 4000);
-        }
-        
-        // הצגת סטטוס קבר
-        function showGraveStatusNotification(type, message) {
-            let statusDiv = document.getElementById('graveStatusNotification');
-            
-            if (!statusDiv) {
-                statusDiv = document.createElement('div');
-                statusDiv.id = 'graveStatusNotification';
-                statusDiv.style.cssText = 'margin-top: 10px; border-radius: 5px; padding: 10px;';
-                
-                const graveFieldset = document.getElementById('grave-selector-fieldset');
-                if (graveFieldset) {
-                    graveFieldset.appendChild(statusDiv);
-                }
-            }
-            
-            const colors = {
-                'success': '#d1fae5',
-                'warning': '#fef3c7',
-                'error': '#fecaca'
-            };
-            
-            const textColors = {
-                'success': '#065f46',
-                'warning': '#92400e',
-                'error': '#991b1b'
-            };
-            
-            statusDiv.style.backgroundColor = colors[type] || colors['info'];
-            statusDiv.style.color = textColors[type] || textColors['info'];
-            statusDiv.innerHTML = `<strong>${type === 'success' ? '✅' : type === 'warning' ? '⚠️' : '❌'}</strong> ${message}`;
-            statusDiv.style.display = 'block';
-        }
-        
-        // הסתרת סטטוס קבר
-        function hideGraveStatusNotification() {
-            const statusDiv = document.getElementById('graveStatusNotification');
-            if (statusDiv) {
-                statusDiv.style.display = 'none';
-            }
-        }
-        
-        // טעינת נתוני קבורה לעריכה
-        function loadBurialData(itemId) {
-            const loadData = () => {
-                const form = document.querySelector('#burialFormModal form');
-                
-                if (form && form.elements && form.elements.length > 5) {
-                    fetch(`/dashboard/dashboards/cemeteries/api/burials-api.php?action=get&id=${itemId}`)
-                        .then(response => response.json())
-                        .then(result => {
-                            if (result.success && result.data) {
-                                const data = result.data;
-                            
-                                // מלא שדות רגילים
-                                Object.keys(data).forEach(key => {
-                                    const field = form.elements[key];
-                                    if (field && data[key] !== null) {
-                                        field.value = data[key];
-                                    }
-                                });
-
-                                // טען נתוני לקוח
-                                if (data.clientId) {
-                                    handleCustomerSelection(data.clientId);
-                                }
-                                
-                                // אם יש קבר, מצא את ההיררכיה שלו
-                                if (data.graveId && window.hierarchyData) {
-                                    setTimeout(() => {
-                                        fillGraveHierarchy(data.graveId).then(() => {
-                                            // עדכן נתוני הקבר הנבחר
-                                            const grave = window.hierarchyData.graves.find(g => g.unicId === data.graveId);
-                                            if (grave) {
-                                                window.selectedGraveData = {
-                                                    graveId: data.graveId,
-                                                    graveStatus: grave.graveStatus
-                                                };
-                                            }
-                                        });
-                                    }, 500);
-                                }
-                            }
-                        })
-                        .catch(error => console.error('Error loading burial data:', error));
-                    return true;
-                }
-                return false;
-            };
-            
-            if (!loadData()) {
-                const observer = new MutationObserver((mutations, obs) => {
-                    if (loadData()) {
-                        obs.disconnect();
-                    }
-                });
-                
-                const modal = document.getElementById('burialFormModal');
-                if (modal) {
-                    observer.observe(modal, {
-                        childList: true,
-                        subtree: true
-                    });
-                }
-                
                 setTimeout(() => observer.disconnect(), 10000);
             }
         }

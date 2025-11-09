@@ -2142,9 +2142,10 @@ const FormHandler = {
             console.log('🎯 Selecting country:', countryId);
             
             const countryInput = document.getElementById('countryId');
+            const countryInstance = window.SmartSelectManager?.instances['countryId'];
             
-            if (!countryInput) {
-                console.warn('⚠️ Country input not found');
+            if (!countryInput || !countryInstance) {
+                console.warn('⚠️ Country input or instance not found');
                 return;
             }
             
@@ -2158,20 +2159,21 @@ const FormHandler = {
                 return;
             }
             
-            // ⭐ השתמש ב-SmartSelectManager.select() הרשמי!
-            if (window.SmartSelectManager && window.SmartSelectManager.select) {
-                window.SmartSelectManager.select('countryId', countryId);
-                console.log('✅ Country selected via SmartSelectManager:', selectedCountry.countryNameHe);
-            } else {
-                // fallback ידני
-                countryInput.value = countryId;
-                const countryInstance = window.SmartSelectManager?.instances['countryId'];
-                if (countryInstance) {
-                    countryInstance.valueSpan.textContent = selectedCountry.countryNameHe;
-                    countryInstance.hiddenInput.value = countryId;
+            // ⭐ עדכן ידנית - ללא change event!
+            countryInput.value = countryId;
+            countryInstance.valueSpan.textContent = selectedCountry.countryNameHe;
+            countryInstance.hiddenInput.value = countryId;
+            
+            // ⭐ סמן את האופציה הנכונה
+            countryInstance.optionsContainer.querySelectorAll('.smart-select-option').forEach(opt => {
+                if (opt.dataset.value == countryId) {
+                    opt.classList.add('selected');
+                } else {
+                    opt.classList.remove('selected');
                 }
-                console.log('✅ Country selected manually:', selectedCountry.countryNameHe);
-            }
+            });
+            
+            console.log('✅ Country selected manually:', selectedCountry.countryNameHe);
         };
 
         // ⭐ פונקציה מתוקנת: בחירת עיר
@@ -2179,31 +2181,37 @@ const FormHandler = {
             console.log('🎯 Selecting city:', cityId);
             
             const cityInput = document.getElementById('cityId');
+            const cityInstance = window.SmartSelectManager?.instances['cityId'];
             
-            if (!cityInput) {
-                console.warn('⚠️ City input not found');
+            if (!cityInput || !cityInstance) {
+                console.warn('⚠️ City input or instance not found');
                 return;
             }
             
-            // ⭐ השתמש ב-SmartSelectManager.select() הרשמי!
-            if (window.SmartSelectManager && window.SmartSelectManager.select) {
-                window.SmartSelectManager.select('cityId', cityId);
-                console.log('✅ City selected via SmartSelectManager');
-            } else {
-                // fallback ידני - מצא את שם העיר
-                const cityInstance = window.SmartSelectManager?.instances['cityId'];
-                if (cityInstance) {
-                    const selectedCityOption = Array.from(cityInstance.optionsContainer.children)
-                        .find(opt => opt.dataset.value == cityId);
-                    
-                    if (selectedCityOption) {
-                        cityInput.value = cityId;
-                        cityInstance.valueSpan.textContent = selectedCityOption.textContent;
-                        cityInstance.hiddenInput.value = cityId;
-                        console.log('✅ City selected manually:', selectedCityOption.textContent);
-                    }
-                }
+            // מצא את שם העיר
+            const selectedCityOption = Array.from(cityInstance.optionsContainer.children)
+                .find(opt => opt.dataset.value == cityId);
+            
+            if (!selectedCityOption) {
+                console.warn('⚠️ City option not found:', cityId);
+                return;
             }
+            
+            // ⭐ עדכן ידנית - ללא change event!
+            cityInput.value = cityId;
+            cityInstance.valueSpan.textContent = selectedCityOption.textContent;
+            cityInstance.hiddenInput.value = cityId;
+            
+            // ⭐ סמן את האופציה הנכונה
+            cityInstance.optionsContainer.querySelectorAll('.smart-select-option').forEach(opt => {
+                if (opt.dataset.value == cityId) {
+                    opt.classList.add('selected');
+                } else {
+                    opt.classList.remove('selected');
+                }
+            });
+            
+            console.log('✅ City selected manually:', selectedCityOption.textContent);
         };
         
         // ======================================

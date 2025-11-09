@@ -25,110 +25,17 @@ let purchaseSearch = null;
 let purchasesTable = null;
 let editingPurchaseId = null;
 
-// --------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------
-
 async function loadPurchases() {
     console.log('📋 Loading purchases - v3.2.2-debug...');
     
-    // 🔍 דיבאג - לפני עדכון
-    console.log('🔍 DEBUG [loadPurchases] - BEFORE UPDATE:');
-    console.log('   window.currentType:', window.currentType);
-    console.log('   tableRenderer exists:', typeof window.tableRenderer !== 'undefined');
-    if (window.tableRenderer) {
-        console.log('   tableRenderer.currentType:', window.tableRenderer.currentType);
-    }
-    
     // עדכן את הסוג הנוכחי
     window.currentType = 'purchase';
     window.currentParentId = null;
-    
-    // 🔍 דיבאג - אחרי עדכון
-    console.log('🔍 DEBUG [loadPurchases] - AFTER UPDATE:');
-    console.log('   window.currentType:', window.currentType);
+
+    // ⭐ עדכן גם את tableRenderer.currentType!
     if (window.tableRenderer) {
-        console.log('   tableRenderer.currentType:', window.tableRenderer.currentType);
+        window.tableRenderer.currentType = 'purchase';
     }
-
-    // ⭐ נקה - DashboardCleaner ימחק גם את TableManager!
-    if (typeof DashboardCleaner !== 'undefined') {
-        DashboardCleaner.clear({ targetLevel: 'purchase' });
-    } else if (typeof clearDashboard === 'function') {
-        clearDashboard({ targetLevel: 'purchase' });
-    }
-    
-    // נקה את כל הסידבר
-    if (typeof clearAllSidebarSelections === 'function') {
-        clearAllSidebarSelections();
-    }
-                
-    // עדכון פריט תפריט אקטיבי
-    if (typeof setActiveMenuItem === 'function') {
-        setActiveMenuItem('purchasesItem');
-    }
-    
-    // עדכן את כפתור ההוספה
-    if (typeof updateAddButtonText === 'function') {
-        updateAddButtonText();
-    }
-    
-    // עדכן breadcrumb
-    if (typeof updateBreadcrumb === 'function') {
-        updateBreadcrumb({ purchase: { name: 'רכישות' } });
-    }
-    
-    // עדכון כותרת החלון
-    document.title = 'ניהול רכישות - מערכת בתי עלמין';
-    
-    // ⭐ בנה את המבנה החדש ב-main-container
-    await buildPurchasesContainer();
-
-    // ⭐ תמיד השמד את החיפוש הקודם ובנה מחדש
-    if (purchaseSearch && typeof purchaseSearch.destroy === 'function') {
-        console.log('🗑️ Destroying previous purchaseSearch instance...');
-        purchaseSearch.destroy();
-        purchaseSearch = null;
-        window.purchaseSearch = null;
-    }
-
-    // אתחל את UniversalSearch מחדש תמיד
-    console.log('🆕 Creating fresh purchaseSearch instance...');
-    await initPurchasesSearch();
-    purchaseSearch.search();
-    
-    // טען סטטיסטיקות
-    await loadPurchaseStats();
-    
-    // 🔍 דיבאג סופי - אחרי שהכל נטען
-    console.log('🔍 DEBUG [loadPurchases] - FINAL STATE:');
-    console.log('   window.currentType:', window.currentType);
-    if (window.tableRenderer) {
-        console.log('   tableRenderer.currentType:', window.tableRenderer.currentType);
-    }
-}
-
-
-// --------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------
-
-
-
-// טעינת רכישות (הפונקציה הראשית)
-async function loadPurchases2() {
-    console.log('📋 Loading purchases - v3.2.1 (זהה לחלוטין ל-customers)...');
-    
-    // עדכן את הסוג הנוכחי
-    window.currentType = 'purchase';
-    window.currentParentId = null;
 
     // ⭐ נקה - DashboardCleaner ימחק גם את TableManager!
     if (typeof DashboardCleaner !== 'undefined') {

@@ -36,6 +36,11 @@ async function loadCemeteries() {
     // ⭐ חדש: אפס את הסינון של גושים!
     window.currentCemeteryId = null;
     window.currentCemeteryName = null;
+
+    // ⭐ עדכן גם את tableRenderer.currentType!
+    if (window.tableRenderer) {
+        window.tableRenderer.currentType = 'cemetery';
+    }
     
     // ⭐ נקה - DashboardCleaner ימחק גם את TableManager!
     if (typeof DashboardCleaner !== 'undefined') {

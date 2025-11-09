@@ -65,6 +65,11 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
     // עדכן את הסוג הנוכחי
     window.currentType = 'areaGrave';
     window.currentParentId = plotId;
+
+    // ⭐ עדכן גם את tableRenderer.currentType!
+    if (window.tableRenderer) {
+        window.tableRenderer.currentType = 'areaGrave';
+    }
     
     // ⭐ נקה
     if (typeof DashboardCleaner !== 'undefined') {

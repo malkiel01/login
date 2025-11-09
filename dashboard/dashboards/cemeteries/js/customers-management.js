@@ -32,6 +32,11 @@ async function loadCustomers() {
     window.currentType = 'customer';
     window.currentParentId = null;
 
+    // ⭐ עדכן גם את tableRenderer.currentType!
+    if (window.tableRenderer) {
+        window.tableRenderer.currentType = 'customer';
+    }
+
     // ⭐ נקה - DashboardCleaner ימחק גם את TableManager!
     if (typeof DashboardCleaner !== 'undefined') {
         DashboardCleaner.clear({ targetLevel: 'customer' });

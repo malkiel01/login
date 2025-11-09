@@ -309,16 +309,6 @@ const FormHandler = {
         }
     },
 
-    // ============================================
-    // קובץ: form-handler.js - תוספת handleAreaGraveForm
-    // מיקום: להוסיף לתוך אובייקט FormHandler
-    // גרסה: 3.0.0
-    // תאריך: 2025-11-05
-    // ============================================
-
-    // הוסף פונקציה זו בתוך האובייקט FormHandler, במקום המתאים
-    // (אחרי handleCustomerForm למשל)
-
     /**
      * טיפול בטופס אחוזת קבר
      * מאתחל את כל הפונקציונליות של ניהול קברים באחוזה
@@ -934,50 +924,9 @@ const FormHandler = {
             console.log(`✅ Populated ${window.locationsData.countries.length} countries`);
         };
         
-        // window.populateCountries = function() {
-        //     console.log('🌍 populateCountries called');
-            
-        //     if (!window.locationsData?.countries) {
-        //         console.warn('⚠️ Countries data not loaded yet');
-        //         return;
-        //     }
-            
-        //     const countryInstance = window.SmartSelectManager?.instances['countryId'];
-            
-        //     if (!countryInstance) {
-        //         console.warn('⚠️ Country SmartSelect instance not found');
-        //         return;
-        //     }
-            
-        //     // נקה אופציות
-        //     countryInstance.optionsContainer.innerHTML = '';
-        //     countryInstance.allOptions = [];
-            
-        //     // מלא מדינות
-        //     window.locationsData.countries.forEach(country => {
-        //         const option = document.createElement('div');
-        //         option.className = 'smart-select-option';
-        //         option.dataset.value = country.unicId;
-        //         option.textContent = country.countryNameHe;
-                
-        //         option.addEventListener('click', function() {
-        //             window.SmartSelectManager.select('countryId', country.unicId);
-        //         });
-                
-        //         countryInstance.optionsContainer.appendChild(option);
-        //         countryInstance.allOptions.push(option);
-        //     });
-            
-        //     // ⭐ תקן: עדכן טקסט ל-"בחר מדינה..."
-        //     countryInstance.valueSpan.textContent = 'בחר מדינה...';
-        //     countryInstance.hiddenInput.value = '';
-            
-        //     console.log(`✅ Populated ${window.locationsData.countries.length} countries`);
-        // };
-        
         window.loadCitiesForCountry = async function(countryId) {
             console.log('🏙️ Loading cities for country:', countryId);
-            
+    
             const cityInstance = window.SmartSelectManager?.instances['cityId'];
             
             if (!cityInstance) {
@@ -1031,6 +980,9 @@ const FormHandler = {
                 // ⭐ תקן: עדכן טקסט ל-"בחר עיר..."
                 cityInstance.hiddenInput.value = '';
                 cityInstance.valueSpan.textContent = 'בחר עיר...';
+
+                // ⭐ הסר ספינר
+                hideSelectSpinner('cityId');
                 
                 console.log('✅ Cities populated successfully');
                 
@@ -1186,6 +1138,12 @@ const FormHandler = {
         (async function loadLocations() {
             try {
                 console.log('🌐 Starting to load countries from API...');
+
+                // ⭐ הוסף ספינר למדינות
+                const countryInput = document.getElementById('countryId');
+                if (countryInput) {
+                    showSelectSpinner('countryId');
+                }
                 
                 const countriesResponse = await fetch('/dashboard/dashboards/cemeteries/api/countries-api.php?action=select');
                 const countriesResult = await countriesResponse.json();
@@ -1198,9 +1156,6 @@ const FormHandler = {
                 window.locationsData.countries = countriesResult.data || [];
                 
                 console.log(`✅ Loaded ${window.locationsData.countries.length} countries`);
-                
-                // המתן לטופס
-                const countryInput = document.getElementById('countryId');
                 
                 if (!countryInput) {
                     console.warn('⚠️ Country input not found yet, will retry...');
@@ -1216,6 +1171,9 @@ const FormHandler = {
                 
                 // אכלס מדינות
                 window.populateCountries();
+
+                // ⭐ הסר ספינר
+                hideSelectSpinner('countryId');
                 
                 // הגדר listener לשינוי מדינה
                 countryInput.addEventListener('change', async function() {
@@ -1286,35 +1244,6 @@ const FormHandler = {
                             field.value = customer[key] || '';
                         }
                     });
-                    
-                    // // ⭐ טען מדינה ועיר בצורה נכונה
-                    // if (customer.countryId) {
-                    //     // ⭐ בחר מדינה
-                    //     window.selectCountry(customer.countryId);
-                        
-                    //     // ⭐ טען ערים למדינה זו
-                    //     await window.loadCitiesForCountry(customer.countryId);
-                        
-                    //     // ⭐ המתן רגע ואז בחר עיר
-                    //     if (customer.cityId) {
-                    //         setTimeout(() => {
-                    //             // מצא את שם העיר
-                    //             const cityInstance = window.SmartSelectManager?.instances['cityId'];
-                    //             if (cityInstance) {
-                    //                 const selectedCityOption = Array.from(cityInstance.optionsContainer.children)
-                    //                     .find(opt => opt.dataset.value == customer.cityId);
-                                    
-                    //                 if (selectedCityOption) {
-                    //                     const cityName = selectedCityOption.textContent;
-                    //                     window.selectCity(customer.cityId, cityName);
-                    //                     console.log('✅ City selected:', cityName);
-                    //                 } else {
-                    //                     console.warn('⚠️ City option not found in DOM:', customer.cityId);
-                    //                 }
-                    //             }
-                    //         }, 400);
-                    //     }
-                    // }
 
                     // ⭐ טען מדינה ועיר בצורה נכונה
                     if (customer.countryId) {
@@ -1331,14 +1260,7 @@ const FormHandler = {
                             }, 500);  // ⭐ תן יותר זמן (500ms)
                         }
                     }
-                    
-                    console.log('📋 [AFTER] firstName:', form.elements['firstName']?.value);
-                    console.log('📋 [AFTER] lastName:', form.elements['lastName']?.value);
-                    
-                    console.log('✅ Customer data loaded successfully');
                 }
-                
-                console.log('✅ Locations loaded and form initialized successfully');
                 
             } catch (error) {
                 console.error('❌ Error loading locations:', error);
@@ -4979,78 +4901,236 @@ document.addEventListener('DOMContentLoaded', function() {
 // 🔄 פונקציות גנריות לניהול ספינרים
 // ===========================================================
 
+// /**
+//  * הוסף ספינר לשדה select
+//  * @param {string} selectId - ID או name של ה-select
+//  */
+// window.showSelectSpinner = function(selectId) {
+//     const select = document.getElementById(selectId) || 
+//                    document.querySelector(`[name="${selectId}"]`);
+    
+//     if (!select) {
+//         console.warn(`⚠️ Select ${selectId} not found`);
+//         return;
+//     }
+    
+//     let wrapper = select.parentElement;
+    
+//     // אם אין wrapper - צור אחד
+//     if (!wrapper || wrapper.tagName === 'FORM' || wrapper.classList.contains('form-group')) {
+//         const newWrapper = document.createElement('div');
+//         newWrapper.style.position = 'relative';
+//         newWrapper.style.display = 'block';
+//         select.parentNode.insertBefore(newWrapper, select);
+//         newWrapper.appendChild(select);
+//         wrapper = newWrapper;
+//     }
+    
+//     // בדוק אם כבר יש ספינר
+//     if (wrapper.querySelector('.loading-spinner')) {
+//         console.log('⚠️ Spinner already exists');
+//         return;
+//     }
+    
+//     // יצירת ספינר
+//     const spinner = document.createElement('span');
+//     spinner.className = 'loading-spinner loading-spinner-overlay';
+//     spinner.id = `${selectId}-spinner`;
+    
+//     wrapper.style.position = 'relative';
+//     wrapper.appendChild(spinner);
+    
+//     // כיבוי השדה
+//     select.disabled = true;
+//     select.style.opacity = '0.7';
+    
+//     console.log(`🔄 Spinner added to ${selectId}`);
+// };
+
+// /**
+//  * הסר ספינר משדה select
+//  * @param {string} selectId - ID או name של ה-select
+//  */
+// window.hideSelectSpinner = function(selectId) {
+//     const select = document.getElementById(selectId) || 
+//                    document.querySelector(`[name="${selectId}"]`);
+    
+//     if (!select) {
+//         console.warn(`⚠️ Select ${selectId} not found`);
+//         return;
+//     }
+    
+//     const wrapper = select.parentElement;
+//     if (!wrapper) return;
+    
+//     // מצא והסר את הספינר
+//     const spinner = wrapper.querySelector('.loading-spinner') || 
+//                     document.getElementById(`${selectId}-spinner`);
+    
+//     if (spinner) {
+//         spinner.remove();
+//         console.log(`✅ Spinner removed from ${selectId}`);
+//     }
+    
+//     // הפעל את השדה
+//     select.disabled = false;
+//     select.style.opacity = '1';
+// };
+
+// ===========================================================
+// 🔄 פונקציות גנריות לניהול ספינרים
+// ===========================================================
+
 /**
- * הוסף ספינר לשדה select
+ * הוסף ספינר לשדה select (רגיל או SmartSelect)
  * @param {string} selectId - ID או name של ה-select
  */
 window.showSelectSpinner = function(selectId) {
-    const select = document.getElementById(selectId) || 
-                   document.querySelector(`[name="${selectId}"]`);
+    const input = document.getElementById(selectId) || 
+                  document.querySelector(`[name="${selectId}"]`);
     
-    if (!select) {
+    if (!input) {
         console.warn(`⚠️ Select ${selectId} not found`);
         return;
     }
     
-    let wrapper = select.parentElement;
+    // ⭐ זיהוי SmartSelect
+    const smartWrapper = input.closest('.smart-select-wrapper');
     
-    // אם אין wrapper - צור אחד
-    if (!wrapper || wrapper.tagName === 'FORM' || wrapper.classList.contains('form-group')) {
-        const newWrapper = document.createElement('div');
-        newWrapper.style.position = 'relative';
-        newWrapper.style.display = 'block';
-        select.parentNode.insertBefore(newWrapper, select);
-        newWrapper.appendChild(select);
-        wrapper = newWrapper;
+    if (smartWrapper) {
+        // ⭐ זה SmartSelect - הוסף ספינר ל-display
+        const display = smartWrapper.querySelector('.smart-select-display');
+        const valueSpan = smartWrapper.querySelector('.smart-select-value');
+        
+        if (!display) {
+            console.warn(`⚠️ SmartSelect display not found for ${selectId}`);
+            return;
+        }
+        
+        // בדוק אם כבר יש ספינר
+        if (display.querySelector('.loading-spinner')) {
+            console.log(`⚠️ Spinner already exists for ${selectId}`);
+            return;
+        }
+        
+        // שמור את הטקסט המקורי
+        if (valueSpan) {
+            valueSpan.dataset.originalText = valueSpan.textContent;
+        }
+        
+        // יצירת ספינר
+        const spinner = document.createElement('span');
+        spinner.className = 'loading-spinner';
+        spinner.id = `${selectId}-spinner`;
+        spinner.style.cssText = `
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-left: 8px;
+            vertical-align: middle;
+        `;
+        
+        // הוסף לתצוגה
+        display.appendChild(spinner);
+        
+        // כיבוי
+        smartWrapper.classList.add('disabled');
+        input.disabled = true;
+        display.style.opacity = '0.7';
+        display.style.cursor = 'not-allowed';
+        
+        console.log(`🔄 SmartSelect spinner added to ${selectId}`);
+        
+    } else {
+        // ⭐ זה select רגיל - הקוד המקורי
+        let wrapper = input.parentElement;
+        
+        if (!wrapper || wrapper.tagName === 'FORM' || wrapper.classList.contains('form-group')) {
+            const newWrapper = document.createElement('div');
+            newWrapper.style.position = 'relative';
+            newWrapper.style.display = 'block';
+            input.parentNode.insertBefore(newWrapper, input);
+            newWrapper.appendChild(input);
+            wrapper = newWrapper;
+        }
+        
+        if (wrapper.querySelector('.loading-spinner')) {
+            console.log(`⚠️ Spinner already exists for ${selectId}`);
+            return;
+        }
+        
+        const spinner = document.createElement('span');
+        spinner.className = 'loading-spinner loading-spinner-overlay';
+        spinner.id = `${selectId}-spinner`;
+        
+        wrapper.style.position = 'relative';
+        wrapper.appendChild(spinner);
+        
+        input.disabled = true;
+        input.style.opacity = '0.7';
+        
+        console.log(`🔄 Regular select spinner added to ${selectId}`);
     }
-    
-    // בדוק אם כבר יש ספינר
-    if (wrapper.querySelector('.loading-spinner')) {
-        console.log('⚠️ Spinner already exists');
-        return;
-    }
-    
-    // יצירת ספינר
-    const spinner = document.createElement('span');
-    spinner.className = 'loading-spinner loading-spinner-overlay';
-    spinner.id = `${selectId}-spinner`;
-    
-    wrapper.style.position = 'relative';
-    wrapper.appendChild(spinner);
-    
-    // כיבוי השדה
-    select.disabled = true;
-    select.style.opacity = '0.7';
-    
-    console.log(`🔄 Spinner added to ${selectId}`);
 };
 
 /**
- * הסר ספינר משדה select
+ * הסר ספינר משדה select (רגיל או SmartSelect)
  * @param {string} selectId - ID או name של ה-select
  */
 window.hideSelectSpinner = function(selectId) {
-    const select = document.getElementById(selectId) || 
-                   document.querySelector(`[name="${selectId}"]`);
+    const input = document.getElementById(selectId) || 
+                  document.querySelector(`[name="${selectId}"]`);
     
-    if (!select) {
+    if (!input) {
         console.warn(`⚠️ Select ${selectId} not found`);
         return;
     }
     
-    const wrapper = select.parentElement;
-    if (!wrapper) return;
+    // ⭐ זיהוי SmartSelect
+    const smartWrapper = input.closest('.smart-select-wrapper');
     
-    // מצא והסר את הספינר
-    const spinner = wrapper.querySelector('.loading-spinner') || 
-                    document.getElementById(`${selectId}-spinner`);
-    
-    if (spinner) {
-        spinner.remove();
-        console.log(`✅ Spinner removed from ${selectId}`);
+    if (smartWrapper) {
+        // ⭐ זה SmartSelect
+        const display = smartWrapper.querySelector('.smart-select-display');
+        const spinner = display?.querySelector('.loading-spinner') || 
+                       document.getElementById(`${selectId}-spinner`);
+        
+        if (spinner) {
+            spinner.remove();
+            console.log(`✅ SmartSelect spinner removed from ${selectId}`);
+        }
+        
+        // שחזר טקסט מקורי
+        const valueSpan = smartWrapper.querySelector('.smart-select-value');
+        if (valueSpan && valueSpan.dataset.originalText) {
+            // אל תשחזר את הטקסט - נניח שהוא עודכן
+            delete valueSpan.dataset.originalText;
+        }
+        
+        // הפעל
+        smartWrapper.classList.remove('disabled');
+        input.disabled = false;
+        display.style.opacity = '1';
+        display.style.cursor = 'pointer';
+        
+    } else {
+        // ⭐ זה select רגיל - הקוד המקורי
+        const wrapper = input.parentElement;
+        if (!wrapper) return;
+        
+        const spinner = wrapper.querySelector('.loading-spinner') || 
+                       document.getElementById(`${selectId}-spinner`);
+        
+        if (spinner) {
+            spinner.remove();
+            console.log(`✅ Regular select spinner removed from ${selectId}`);
+        }
+        
+        input.disabled = false;
+        input.style.opacity = '1';
     }
-    
-    // הפעל את השדה
-    select.disabled = false;
-    select.style.opacity = '1';
 };

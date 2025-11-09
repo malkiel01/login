@@ -122,6 +122,7 @@ $formType = basename(__FILE__, '.php'); // מזהה אוטומטי של סוג �
 
     $graveSelectorHTML .= '
                 </select>
+                <span id="customerLoadingSpinner" class="loading-spinner" style="position: absolute; left: 10px; top: 35%; transform: translateY(-50%);"></span>
             </div>
             <div class="form-group">
                 <label>גוש</label>

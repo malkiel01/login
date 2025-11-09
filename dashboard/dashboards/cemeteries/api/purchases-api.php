@@ -522,110 +522,62 @@ try {
             
         // הוסף לאחר case 'search': וליפני default:
 
-    case 'getByCustomer2':
-        $customerId = $_GET['customerId'] ?? '';
-        if (!$customerId) {
-            throw new Exception('Customer ID is required');
-        }
-        
-        $stmt = $pdo->prepare("
-            SELECT p.*, g.graveNameHe, g.graveStatus,
-                ag.areaGraveNameHe, r.lineNameHe, pl.plotNameHe, 
-                b.blockNameHe, ce.cemeteryNameHe
-            FROM purchases p
-            LEFT JOIN graves g ON p.graveId = g.unicId
-            LEFT JOIN areaGraves ag ON g.areaGraveId = ag.unicId
-            LEFT JOIN rows r ON ag.lineId = r.unicId
-            LEFT JOIN plots pl ON r.plotId = pl.unicId
-            LEFT JOIN blocks b ON pl.blockId = b.unicId
-            LEFT JOIN cemeteries ce ON b.cemeteryId = ce.unicId
-            WHERE p.clientId = :customerId AND p.isActive = 1
-            ORDER BY p.createDate DESC
-            LIMIT 1
-        ");
-        $stmt->execute(['customerId' => $customerId]);
-        $purchase = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        echo json_encode([
-            'success' => true,
-            'purchase' => $purchase
-        ]);
-        break;
+        // ============================
+        case 'getByGrave':
+            $graveId = $_GET['graveId'] ?? null;
+            if (!$graveId) {
+                throw new Exception('Grave ID is required');
+            }
+            
+            $stmt = $pdo->prepare("
+                SELECT p.*, 
+                    CONCAT(c.firstName, ' ', c.lastName) as customer_name,
+                    g.graveNameHe as grave_name
+                FROM purchases p
+                INNER JOIN customers c ON p.clientId = c.unicId
+                INNER JOIN graves g ON p.graveId = g.unicId
+                WHERE p.graveId = :graveId 
+                AND p.isActive = 1
+                LIMIT 1
+            ");
+            $stmt->execute(['graveId' => $graveId]);
+            $purchase = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            echo json_encode([
+                'success' => true,
+                'data' => $purchase  // ← שינוי מ-'purchase' ל-'data'
+            ]);
+            break;
 
-    case 'getByGrave':
-        $graveId = $_GET['graveId'] ?? '';
-        if (!$graveId) {
-            throw new Exception('Grave ID is required');
-        }
-        
-        $stmt = $pdo->prepare("
-            SELECT p.*, CONCAT(c.firstName, ' ', c.lastName) as customerName,
-                c.numId as customerIdNumber
-            FROM purchases p
-            LEFT JOIN customers c ON p.clientId = c.unicId
-            WHERE p.graveId = :graveId AND p.isActive = 1
-            ORDER BY p.createDate DESC
-            LIMIT 1
-        ");
-        $stmt->execute(['graveId' => $graveId]);
-        $purchase = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        echo json_encode([
-            'success' => true,
-            'purchase' => $purchase
-        ]);
-        break;
-    case 'getByGrave2':
-        $graveId = $_GET['graveId'] ?? null;
-        if (!$graveId) {
-            throw new Exception('Grave ID is required');
-        }
-        
-        $stmt = $pdo->prepare("
-            SELECT p.*, 
-                CONCAT(c.firstName, ' ', c.lastName) as customer_name,
-                g.graveNameHe as grave_name
-            FROM purchases p
-            INNER JOIN customers c ON p.clientId = c.unicId
-            INNER JOIN graves g ON p.graveId = g.unicId
-            WHERE p.graveId = :graveId 
-            AND p.isActive = 1
-            LIMIT 1
-        ");
-        $stmt->execute(['graveId' => $graveId]);
-        $purchase = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        echo json_encode([
-            'success' => true,
-            'data' => $purchase
-        ]);
-        break;
+        case 'getByCustomer':
+            $customerId = $_GET['customerId'] ?? null;
+            if (!$customerId) {
+                throw new Exception('Customer ID is required');
+            }
+            
+            $stmt = $pdo->prepare("
+                SELECT p.*, 
+                    CONCAT(c.firstName, ' ', c.lastName) as customer_name,
+                    g.graveNameHe as grave_name
+                FROM purchases p
+                INNER JOIN customers c ON p.clientId = c.unicId
+                INNER JOIN graves g ON p.graveId = g.unicId
+                WHERE p.clientId = :customerId 
+                AND p.isActive = 1
+                LIMIT 1
+            ");
+            $stmt->execute(['customerId' => $customerId]);
+            $purchase = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            echo json_encode([
+                'success' => true,
+                'data' => $purchase  // ← שינוי מ-'purchase' ל-'data'
+            ]);
+            break;
 
-    case 'getByCustomer':
-        $customerId = $_GET['customerId'] ?? null;
-        if (!$customerId) {
-            throw new Exception('Customer ID is required');
-        }
-        
-        $stmt = $pdo->prepare("
-            SELECT p.*, 
-                CONCAT(c.firstName, ' ', c.lastName) as customer_name,
-                g.graveNameHe as grave_name
-            FROM purchases p
-            INNER JOIN customers c ON p.clientId = c.unicId
-            INNER JOIN graves g ON p.graveId = g.unicId
-            WHERE p.clientId = :customerId 
-            AND p.isActive = 1
-            LIMIT 1
-        ");
-        $stmt->execute(['customerId' => $customerId]);
-        $purchase = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        echo json_encode([
-            'success' => true,
-            'data' => $purchase
-        ]);
-        break;
+
+        // ============================
+    
     default:
             throw new Exception('Invalid action');
     }

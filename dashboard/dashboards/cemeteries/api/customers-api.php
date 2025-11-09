@@ -688,7 +688,7 @@
                 break;
                 
             // רשימת לקוחות פנויים בלבד (ללא רכישות/קבורות)
-            case 'available':
+            case 'available2':
                 // 🔍 שאילתא שמחזירה רק לקוחות שעומדים בתנאים:
                 // 1. לא קבורים (אין burial פעיל)
                 // 2. אין רכישה פעילה (או statusCustomer = 1)
@@ -757,6 +757,54 @@
                     'total' => count($customers),
                     'message' => 'נטענו ' . count($customers) . ' לקוחות פנויים'
                 ]);
+                break;
+            // רשימת לקוחות פנויים בלבד (ללא רכישות/קבורות)
+            case 'available':
+                // ✅ קבל את הלקוח הנוכחי אם קיים
+                $currentClientId = $_GET['currentClientId'] ?? null;
+                
+                if ($currentClientId) {
+                    // ✅ במצב עריכה - כלול גם את הלקוח הנוכחי
+                    $sql = "
+                        SELECT 
+                            unicId, 
+                            firstName, 
+                            lastName, 
+                            phone, 
+                            phoneMobile, 
+                            resident,
+                            CASE WHEN unicId = :currentClient THEN 1 ELSE 0 END as is_current
+                        FROM customers 
+                        WHERE (statusCustomer = 1 OR unicId = :currentClient2)
+                        AND isActive = 1 
+                        ORDER BY is_current DESC, lastName, firstName
+                    ";
+                    $stmt = $pdo->prepare($sql);
+                    $stmt->execute([
+                        'currentClient' => $currentClientId,
+                        'currentClient2' => $currentClientId
+                    ]);
+                } else {
+                    // ✅ במצב הוספה - רק לקוחות פנויים
+                    $sql = "
+                        SELECT 
+                            unicId, 
+                            firstName, 
+                            lastName, 
+                            phone, 
+                            phoneMobile, 
+                            resident
+                        FROM customers 
+                        WHERE statusCustomer = 1 
+                        AND isActive = 1 
+                        ORDER BY lastName, firstName
+                    ";
+                    $stmt = $pdo->prepare($sql);
+                    $stmt->execute();
+                }
+                
+                $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                echo json_encode(['success' => true, 'data' => $customers]);
                 break;
             default:
                 throw new Exception('Invalid action');

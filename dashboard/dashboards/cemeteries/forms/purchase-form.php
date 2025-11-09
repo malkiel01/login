@@ -107,53 +107,6 @@ $formType = basename(__FILE__, '.php'); // מזהה אוטומטי של סוג �
         'value' => $purchase['buyer_status'] ?? 1
     ]);
 
-    // $graveSelectorHTML = '
-    // <fieldset class="form-section" 
-    //     id="grave-selector-fieldset"
-    //     data-load-from-api="true"
-    //     data-purchase-grave-id="' . htmlspecialchars($purchase['graveId'] ?? '', ENT_QUOTES) . '"
-    //     style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
-    //     <legend style="padding: 0 10px; font-weight: bold;">בחירת  קבר</legend>
-    //     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
-    //         <div class="form-group">
-    //             <label>בית עלמין</label>
-    //             <select id="cemeterySelect" class="form-control" onchange="filterHierarchy(\'cemetery\')">
-    //                 <option value="">טוען בתי עלמין...</option>
-    //             </select>
-    //         </div>
-    //         <div class="form-group">
-    //             <label>גוש</label>
-    //             <select id="blockSelect" class="form-control" onchange="filterHierarchy(\'block\')">
-    //                 <option value="">-- כל הגושים --</option>
-    //             </select>
-    //         </div>
-    //         <div class="form-group">
-    //             <label>חלקה</label>
-    //             <select id="plotSelect" class="form-control" onchange="filterHierarchy(\'plot\')">
-    //                 <option value="">-- כל החלקות --</option>
-    //             </select>
-    //         </div>
-    //         <div class="form-group">
-    //             <label>שורה</label>
-    //             <select id="rowSelect" class="form-control" onchange="filterHierarchy(\'row\')" disabled>
-    //                 <option value="">-- בחר חלקה תחילה --</option>
-    //             </select>
-    //         </div>
-    //         <div class="form-group">
-    //             <label>אחוזת קבר</label>
-    //             <select id="areaGraveSelect" class="form-control" onchange="filterHierarchy(\'areaGrave\')" disabled>
-    //                 <option value="">-- בחר שורה תחילה --</option>
-    //             </select>
-    //         </div>
-    //         <div class="form-group">
-    //             <label>קבר <span class="text-danger">*</span></label>
-    //             <select name="graveId" id="graveSelect" class="form-control" required disabled onchange="onGraveSelected(this.value)">
-    //                 <option value="">-- בחר אחוזת קבר תחילה --</option>
-    //             </select>
-    //         </div>
-    //     </div>
-    // </fieldset>';
-
     $graveSelectorHTML = '
     <fieldset class="form-section" 
         id="grave-selector-fieldset"

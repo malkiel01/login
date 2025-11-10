@@ -310,11 +310,8 @@ async function initCemeteriesTable(data, totalItems = null, signal) {
     // טעינת העמודות מהשרת
     async function loadColumnsFromConfig(entityType = 'cemetery', signal) {
         try {
-            // const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`);
-            
-            // העבר את ה-signal ל-fetch
             const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`, {
-                signal: signal  // ⭐ זה!
+                signal: signal
             });
 
 

@@ -404,7 +404,7 @@ async function initBlocksSearch(signal, cemeteryId = null) {
 // ===================================================================
 // אתחול TableManager לגושים
 // ===================================================================
-async function initBlocksTable(data, totalItems = null) {
+async function initBlocksTable(data, totalItems = null, signal) {
     const actualTotalItems = totalItems !== null ? totalItems : data.length;
     
     // אם הטבלה כבר קיימת, רק עדכן נתונים
@@ -414,9 +414,11 @@ async function initBlocksTable(data, totalItems = null) {
         return blocksTable;
     }
 
-    async function loadColumnsFromConfig(entityType = 'block') {
+    async function loadColumnsFromConfig(entityType = 'block', signal) {
         try {
-            const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`);
+            const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`, {
+                signal: signal
+            });
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -511,12 +513,19 @@ async function initBlocksTable(data, totalItems = null) {
         }
     }
 
+    // קודם טען את העמודות
+    const columns = await loadColumnsFromConfig('block', signal);
+
+    // בדוק אם בוטל
+    if (signal && signal.aborted) {
+        console.log('⚠️ Block table initialization aborted');
+        return null;
+    }
+
     blocksTable = new TableManager({
         tableSelector: '#mainTable',
-        
         totalItems: actualTotalItems,
-
-        columns: await loadColumnsFromConfig(),
+        columns: columns,
 
         data: data,
         
@@ -565,7 +574,7 @@ async function initBlocksTable(data, totalItems = null) {
 // ===================================================================
 // רינדור שורות הגושים - בדיוק כמו בבתי עלמין
 // ===================================================================
-function renderBlocksRows(data, container, pagination = null) {
+function renderBlocksRows(data, container, pagination = null, signal = null) {
     console.log(`📝 renderBlocksRows called with ${data.length} items`);
     
     // ⭐ סינון client-side לפי cemeteryId
@@ -653,7 +662,7 @@ function renderBlocksRows(data, container, pagination = null) {
     if (!blocksTable || !tableWrapperExists) {
         // אין TableManager או שה-DOM שלו נמחק - בנה מחדש!
         console.log(`🏗️ Creating new TableManager with ${totalItems} items`);
-        initBlocksTable(filteredData, totalItems);
+        initBlocksTable(filteredData, totalItems, signal);
     } else {
         // ⭐ עדכן גם את totalItems ב-TableManager!
         console.log(`♻️ Updating TableManager with ${totalItems} items`);

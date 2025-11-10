@@ -244,24 +244,16 @@ async function initBurialsSearch() {
                 console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()) });
             },
 
-            onResults2: (data) => {
-                console.log('📦 Results:', data.pagination?.total || data.total || 0, 'burials found');
-                
-                const currentPage = data.pagination?.page || 1;
-                
-                if (currentPage === 1) {
-                    // דף ראשון - התחל מחדש
-                    currentBurials = data.data;
-                } else {
-                    // דפים נוספים - הוסף לקיימים
-                    currentBurials = [...currentBurials, ...data.data];
-                    console.log(`📦 Added page ${currentPage}, total now: ${currentBurials.length}`);
-                }
-            },
-
             onResults: (data) => {
                 console.log('📦 API returned:', data.pagination?.total || data.data.length, 'burials');
                 
+                // ⭐⭐⭐ בדיקה קריטית - אם עברנו לרשומה אחרת, לא להמשיך!
+                if (window.currentType !== 'burial') {
+                    console.log('⚠️ Type changed during search - aborting burial results');
+                    console.log(`   Current type is now: ${window.currentType}`);
+                    return; // ❌ עצור כאן!
+                }
+
                 // ⭐ טיפול בדפים - מצטבר!
                 const currentPage = data.pagination?.page || 1;
                 

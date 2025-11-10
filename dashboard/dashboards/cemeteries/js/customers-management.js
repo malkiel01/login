@@ -241,25 +241,17 @@ async function initCustomersSearch() {
             onSearch: (query, filters) => {
                 console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()) });
             },
-            
-            onResults2: (data) => {
-                console.log('📦 Results:', data.pagination?.total || data.total || 0, 'customers found');
-                
-                const currentPage = data.pagination?.page || 1;
-                
-                if (currentPage === 1) {
-                    // דף ראשון - התחל מחדש
-                    currentCustomers = data.data;
-                } else {
-                    // דפים נוספים - הוסף לקיימים
-                    currentCustomers = [...currentCustomers, ...data.data];
-                    console.log(`📦 Added page ${currentPage}, total now: ${currentCustomers.length}`);
-                }
-            },
 
             onResults: (data) => {
                 console.log('📦 API returned:', data.pagination?.total || data.data.length, 'customers');
                 
+                // ⭐⭐⭐ בדיקה קריטית - אם עברנו לרשומה אחרת, לא להמשיך!
+                if (window.currentType !== 'customer') {
+                    console.log('⚠️ Type changed during search - aborting customer results');
+                    console.log(`   Current type is now: ${window.currentType}`);
+                    return; // ❌ עצור כאן!
+                }
+
                 // ⭐ טיפול בדפים - מצטבר!
                 const currentPage = data.pagination?.page || 1;
                 
@@ -394,118 +386,11 @@ async function initCustomersTable(data, totalItems = null) {
     customersTable = new TableManager({
         tableSelector: '#mainTable',
         
-        // containerWidth: '80vw',
-        // fixedLayout: true,
-        
-        // scrolling: {
-        //     enabled: true,
-        //     headerHeight: '50px',
-        //     itemsPerPage: 50,
-        //     scrollThreshold: 300
-        // },
-        
         // ⭐ הוספת totalItems כפרמטר!
         totalItems: actualTotalItems,
 
         columns: await loadColumnsFromConfig('customer'),
-        
-        // columns: [
-        //     {
-        //         field: 'numId',
-        //         label: 'ת.ז.',
-        //         width: '120px',
-        //         type: 'text',
-        //         sortable: true
-        //     },
-        //     {
-        //         field: 'firstName',
-        //         label: 'שם פרטי',
-        //         width: '150px',
-        //         type: 'text',
-        //         sortable: true
-        //     },
-        //     {
-        //         field: 'lastName',
-        //         label: 'שם משפחה',
-        //         width: '150px',
-        //         type: 'text',
-        //         sortable: true
-        //     },
-        //     {
-        //         field: 'phone',
-        //         label: 'טלפון',
-        //         width: '120px',
-        //         type: 'text',
-        //         sortable: false
-        //     },
-        //     {
-        //         field: 'phoneMobile',
-        //         label: 'נייד',
-        //         width: '120px',
-        //         type: 'text',
-        //         sortable: false
-        //     },
-        //     {
-        //         field: 'email',
-        //         label: 'אימייל',
-        //         width: '200px',
-        //         type: 'text',
-        //         sortable: false
-        //     },
-        //     {
-        //         field: 'streetAddress',
-        //         label: 'רחוב',
-        //         width: '150px',
-        //         type: 'text',
-        //         sortable: false
-        //     },
-        //     {
-        //         field: 'city_name',
-        //         label: 'עיר',
-        //         width: '120px',
-        //         type: 'text',
-        //         sortable: true
-        //     },
-        //     {
-        //         field: 'statusCustomer',
-        //         label: 'סטטוס',
-        //         width: '100px',
-        //         type: 'number',
-        //         sortable: true,
-        //         render: (customer) => formatCustomerStatus(customer.statusCustomer)
-        //     },
-        //     {
-        //         field: 'statusResident',
-        //         label: 'סוג',
-        //         width: '100px',
-        //         type: 'number',
-        //         sortable: true,
-        //         render: (customer) => formatCustomerType(customer.statusResident)
-        //     },
-        //     {
-        //         field: 'createDate',
-        //         label: 'תאריך',
-        //         width: '120px',
-        //         type: 'date',
-        //         sortable: true,
-        //         render: (customer) => formatDate(customer.createDate)
-        //     },
-        //     {
-        //         field: 'actions',
-        //         label: 'פעולות',
-        //         width: '120px',
-        //         sortable: false,
-        //         render: (customer) => `
-        //             <button class="btn btn-sm btn-secondary" onclick="editCustomer('${customer.unicId}')" title="עריכה">
-        //                 <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
-        //             </button>
-        //             <button class="btn btn-sm btn-danger" onclick="deleteCustomer('${customer.unicId}')" title="מחיקה">
-        //                 <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
-        //             </button>
-        //         `
-        //     }
-        // ],
-
+  
         onRowDoubleClick: (customer) => {                    // ⭐ שורה חדשה
             handleCustomerDoubleClick(customer.unicId);
         },

@@ -237,24 +237,16 @@ async function initPurchasesSearch() {
                 console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()) });
             },
 
-            onResults2: (data) => {
-                console.log('📦 Results:', data.pagination?.total || data.total || 0, 'purchases found');
-                
-                const currentPage = data.pagination?.page || 1;
-                
-                if (currentPage === 1) {
-                    // דף ראשון - התחל מחדש
-                    currentPurchases = data.data;
-                } else {
-                    // דפים נוספים - הוסף לקיימים
-                    currentPurchases = [...currentPurchases, ...data.data];
-                    console.log(`📦 Added page ${currentPage}, total now: ${currentPurchases.length}`);
-                }
-            },
-
             onResults: (data) => {
                 console.log('📦 API returned:', data.pagination?.total || data.data.length, 'purchases');
                 
+                // ⭐⭐⭐ בדיקה קריטית - אם עברנו לרשומה אחרת, לא להמשיך!
+                if (window.currentType !== 'purchase') {
+                    console.log('⚠️ Type changed during search - aborting purchase results');
+                    console.log(`   Current type is now: ${window.currentType}`);
+                    return; // ❌ עצור כאן!
+                }
+
                 // ⭐ טיפול בדפים - מצטבר!
                 const currentPage = data.pagination?.page || 1;
                 

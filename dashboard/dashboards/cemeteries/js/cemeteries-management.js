@@ -226,6 +226,13 @@ async function initCemeteriesSearch() {
 
             onResults: (data) => {
                 console.log('📦 API returned:', data.pagination?.total || data.data.length, 'cemeteries');
+          
+                // ⭐⭐⭐ בדיקה קריטית - אם עברנו לרשומה אחרת, לא להמשיך!
+                if (window.currentType !== 'cemetery') {
+                    console.log('⚠️ Type changed during search - aborting cemetery results');
+                    console.log(`   Current type is now: ${window.currentType}`);
+                    return; // ❌ עצור כאן!
+                }
                 
                 // ⭐ טיפול בדפים - מצטבר!
                 const currentPage = data.pagination?.page || 1;

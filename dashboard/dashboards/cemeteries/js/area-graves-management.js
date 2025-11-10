@@ -294,6 +294,13 @@ async function initAreaGravesSearch(plotId = null) {
             onResults: (data) => {
                 console.log('📦 API returned:', data.pagination?.total || data.data.length, 'area graves');
                 
+                // ⭐⭐⭐ בדיקה קריטית - אם עברנו לרשומה אחרת, לא להמשיך!
+                if (window.currentType !== 'areaGrave') {
+                    console.log('⚠️ Type changed during search - aborting areaGrave results');
+                    console.log(`   Current type is now: ${window.currentType}`);
+                    return; // ❌ עצור כאן!
+                }
+
                 // ⭐ טיפול בדפים - מצטבר!
                 const currentPage = data.pagination?.page || 1;
                 

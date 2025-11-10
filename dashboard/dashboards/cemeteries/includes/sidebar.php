@@ -60,20 +60,10 @@
             </div>
             <div id="plotSelectedItem" class="selected-item-container"></div>
         </div>
-        
-        <!-- חלקות -->
-        <div class="hierarchy-level">
-            <div class="hierarchy-header" id="plotsItem" onclick="handleSidebarClick('plotsItem', function() { if(typeof loadPlots === 'function') loadPlots(); })">
-                <span class="hierarchy-icon">📋</span>
-                <span class="hierarchy-title">חלקות</span>
-                <span class="hierarchy-count" id="plotsCount">0</span>
-            </div>
-            <div id="plotSelectedItem" class="selected-item-container"></div>
-        </div>
-        
+
         <!-- אחוזות קבר -->
         <div class="hierarchy-level">
-            <div class="hierarchy-header" id="areaGravesItem" onclick="handleSidebarClick('areaGravesItem', function() { if(typeof loadAreaGraves === 'function') loadAreaGraves(); })">
+            <div class="hierarchy-header" id="areaGravesItem" onclick="handleSidebarClick('areaGravesItem', loadAreaGraves)">
                 <span class="hierarchy-icon">🏘️</span>
                 <span class="hierarchy-title">אחוזות קבר</span>
                 <span class="hierarchy-count" id="areaGravesCount">0</span>
@@ -83,7 +73,7 @@
         
         <!-- קברים -->
         <div class="hierarchy-level">
-            <div class="hierarchy-header" id="gravesItem" onclick="handleSidebarClick('gravesItem', function() { if(typeof loadGraves === 'function') loadGraves(); })">
+            <div class="hierarchy-header" id="gravesItem" onclick="handleSidebarClick('gravesItem', loadGraves)">
                 <span class="hierarchy-icon">🪦</span>
                 <span class="hierarchy-title">קברים</span>
                 <span class="hierarchy-count" id="gravesCount">0</span>

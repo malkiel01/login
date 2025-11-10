@@ -64,6 +64,11 @@ async function loadGraves(areaGraveId = null, areaGraveName = null, forceReset =
     // עדכן את הסוג הנוכחי
     window.currentType = 'grave';
     window.currentParentId = areaGraveId;
+
+    // ⭐ עדכן גם את tableRenderer.currentType!
+    if (window.tableRenderer) {
+        window.tableRenderer.currentType = 'grave';
+    }
     
     // ⭐ נקה
     if (typeof DashboardCleaner !== 'undefined') {

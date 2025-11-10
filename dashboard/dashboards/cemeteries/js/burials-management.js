@@ -26,15 +26,14 @@ let burialSearch = null;
 let burialsTable = null;
 let editingBurialId = null;
 
-// טעינת קבורות (הפונקציה הראשית)
-async function loadBurials2() {
-    console.log('📋 Loading burials - v1.0.1 (זהה לחלוטין ל-customers)...');
+async function loadBurials() {
+    console.log('📋 Loading burials - v1.0.2-debug...');
 
     // עדכן את הסוג הנוכחי
     window.currentType = 'burial';
     window.currentParentId = null;
 
-    // ⭐ עדכן גם את tableRenderer!
+    // ⭐ עדכן גם את tableRenderer.currentType!
     if (window.tableRenderer) {
         window.tableRenderer.currentType = 'burial';
     }
@@ -87,85 +86,6 @@ async function loadBurials2() {
     
     // טען סטטיסטיקות
     await loadBurialStats();
-}
-
-async function loadBurials() {
-    console.log('📋 Loading burials - v1.0.2-debug...');
-    
-    // 🔍 דיבאג - לפני עדכון
-    console.log('🔍 DEBUG [loadBurials] - BEFORE UPDATE:');
-    console.log('   window.currentType:', window.currentType);
-    console.log('   tableRenderer exists:', typeof window.tableRenderer !== 'undefined');
-    if (window.tableRenderer) {
-        console.log('   tableRenderer.currentType:', window.tableRenderer.currentType);
-    }
-
-    // עדכן את הסוג הנוכחי
-    window.currentType = 'burial';
-    window.currentParentId = null;
-    
-    // 🔍 דיבאג - אחרי עדכון
-    console.log('🔍 DEBUG [loadBurials] - AFTER UPDATE:');
-    console.log('   window.currentType:', window.currentType);
-    if (window.tableRenderer) {
-        console.log('   tableRenderer.currentType:', window.tableRenderer.currentType);
-    }
-
-    // ⭐ נקה - DashboardCleaner ימחק גם את TableManager!
-    if (typeof DashboardCleaner !== 'undefined') {
-        DashboardCleaner.clear({ targetLevel: 'burial' });
-    } else if (typeof clearDashboard === 'function') {
-        clearDashboard({ targetLevel: 'burial' });
-    }
-    
-    // נקה את כל הסידבר
-    if (typeof clearAllSidebarSelections === 'function') {
-        clearAllSidebarSelections();
-    }
-            
-    // עדכון פריט תפריט אקטיבי
-    if (typeof setActiveMenuItem === 'function') {
-        setActiveMenuItem('burialsItem');
-    }
-    
-    // עדכן את כפתור ההוספה
-    if (typeof updateAddButtonText === 'function') {
-        updateAddButtonText();
-    }
-    
-    // עדכן breadcrumb
-    if (typeof updateBreadcrumb === 'function') {
-        updateBreadcrumb({ burial: { name: 'קבורות' } });
-    }
-    
-    // עדכון כותרת החלון
-    document.title = 'ניהול קבורות - מערכת בתי עלמין';
-    
-    // ⭐ בנה את המבנה החדש ב-main-container
-    await buildBurialsContainer();
-
-    // ⭐ תמיד השמד את החיפוש הקודם ובנה מחדש
-    if (burialSearch && typeof burialSearch.destroy === 'function') {
-        console.log('🗑️ Destroying previous burialSearch instance...');
-        burialSearch.destroy();
-        burialSearch = null;
-        window.burialSearch = null;
-    }
-
-    // אתחל את UniversalSearch מחדש תמיד
-    console.log('🆕 Creating fresh burialSearch instance...');
-    await initBurialsSearch();
-    burialSearch.search();
-    
-    // טען סטטיסטיקות
-    await loadBurialStats();
-    
-    // 🔍 דיבאג סופי - אחרי שהכל נטען
-    console.log('🔍 DEBUG [loadBurials] - FINAL STATE:');
-    console.log('   window.currentType:', window.currentType);
-    if (window.tableRenderer) {
-        console.log('   tableRenderer.currentType:', window.tableRenderer.currentType);
-    }
 }
 
 // ===================================================================

@@ -3032,66 +3032,6 @@ const FormHandler = {
             console.log('✅ Graves populated successfully');
         };
 
-        // // ⭐ פונקציה למילוי לקוחות ב-SmartSelect
-        // window.populateCustomers = function(customers) {
-        //     console.log('👥 populateCustomers called with', customers.length, 'customers');
-            
-        //     const customerInstance = window.SmartSelectManager?.instances['clientId'];
-            
-        //     if (!customerInstance) {
-        //         console.warn('⚠️ Customer SmartSelect instance not found');
-        //         return;
-        //     }
-            
-        //     // נקה אופציות
-        //     customerInstance.optionsContainer.innerHTML = '';
-        //     customerInstance.allOptions = [];
-            
-        //     // מלא לקוחות
-        //     customers.forEach(customer => {
-        //         const option = document.createElement('div');
-        //         option.className = 'smart-select-option';
-        //         option.dataset.value = customer.unicId;
-                
-        //         let displayText = `${customer.firstName} ${customer.lastName}`;
-        //         if (customer.phone || customer.phoneMobile) {
-        //             displayText += ` - ${customer.phone || customer.phoneMobile}`;
-        //         }
-                
-        //         option.textContent = displayText;
-                
-        //         // ⭐ סמן אם זה לקוח נוכחי
-        //         if (customer.is_current) {
-        //             option.classList.add('selected');
-        //         }
-                
-        //         option.addEventListener('click', function() {
-        //             window.SmartSelectManager.select('clientId', customer.unicId);
-                    
-        //             // ⭐ שמור את נתוני הלקוח (ללא resident - לא רלוונטי לקבורות)
-        //             window.selectedCustomerData = {
-        //                 id: customer.unicId,
-        //                 name: `${customer.firstName} ${customer.lastName}`
-        //             };
-                    
-        //             console.log('👤 נפטר/ת נבחר/ה:', window.selectedCustomerData);
-                    
-        //             // ⚠️ בקבורות אין תשלומים - אז לא קוראים ל-tryCalculatePayments
-        //         });
-                
-        //         customerInstance.optionsContainer.appendChild(option);
-        //         customerInstance.allOptions.push(option);
-        //     });
-            
-        //     // עדכן טקסט ל-"בחר נפטר/ת..."
-        //     if (!customers.some(c => c.is_current)) {
-        //         customerInstance.valueSpan.textContent = 'בחר נפטר/ת...';
-        //         customerInstance.hiddenInput.value = '';
-        //     }
-            
-        //     console.log(`✅ Populated ${customers.length} customers (burial)`);
-        // };
-
         // ⭐ פונקציה למילוי לקוחות ב-SmartSelect (מתוקנת!)
         window.populateCustomers = function(customers) {
             console.log('👥 populateCustomers called with', customers.length, 'customers');

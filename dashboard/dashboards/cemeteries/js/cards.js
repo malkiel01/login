@@ -24,7 +24,7 @@ async function createCemeteryCard(cemeteryId) {
                         </div>
                     </div>
                     <div class="info-card-actions">
-                        <button class="info-card-btn" window.tableRenderer.editItem('${cemetery.unicId}')">
+                        <button class="info-card-btn" onclick="if(window.tableRenderer) window.tableRenderer.editItem('${cemetery.unicId}')">
                             <svg class="icon-sm"><use xlink:href="#icon-edit"></use></svg>
                             עריכה
                         </button>
@@ -109,7 +109,7 @@ async function createBlockCard(blockId) {
                         </div>
                     </div>
                     <div class="info-card-actions">
-                        <button class="info-card-btn" window.tableRenderer.editItem('${block.unicId}')">
+                        <button class="info-card-btn" onclick="if(window.tableRenderer) window.tableRenderer.editItem('${block.unicId}')">
                             <svg class="icon-sm"><use xlink:href="#icon-edit"></use></svg>
                             עריכה
                         </button>
@@ -217,7 +217,7 @@ async function createPlotCard(plotId) {
                         </div>
                     </div>
                     <div class="info-card-actions">
-                        <button class="info-card-btn" window.tableRenderer.editItem('${plot.unicId}')">
+                        <button class="info-card-btn" onclick="if(window.tableRenderer) window.tableRenderer.editItem('${plot.unicId}')">
                             <svg class="icon-sm"><use xlink:href="#icon-edit"></use></svg>
                             עריכה
                         </button>
@@ -324,7 +324,7 @@ async function createAreaGraveCard(areaGraveId) {
                         </div>
                     </div>
                     <div class="info-card-actions">
-                        <button class="info-card-btn" window.tableRenderer.editItem('${areaGrave.unicId}')">
+                        <button class="info-card-btn" onclick="if(window.tableRenderer) window.tableRenderer.editItem('${areaGrave.unicId}')">
                             <svg class="icon-sm"><use xlink:href="#icon-edit"></use></svg>
                             עריכה
                         </button>
@@ -436,7 +436,7 @@ async function createCustomerCard(customerId) {
                         </div>
                     </div>
                     <div class="info-card-actions">
-                        <button class="btn-secondary" onclick="editCustomer('${customer.unicId}')">
+                        <button class="btn-secondary" onclick="if(window.tableRenderer) window.tableRenderer.editItem('${customer.unicId}')">
                             <span>✏️</span> עריכה
                         </button>
                         <button class="btn-primary" onclick="printCustomerReport('${customer.unicId}')">

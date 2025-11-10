@@ -296,7 +296,7 @@ async function initCemeteriesSearch(signal) {
 // ===================================================================
 // אתחול TableManager - עם תמיכה ב-totalItems
 // ===================================================================
-async function initCemeteriesTable(data, totalItems = null, signal = null) {
+async function initCemeteriesTable(data, totalItems = null, signal) {
     // ⭐ אם לא קיבלנו totalItems, השתמש ב-data.length
     const actualTotalItems = totalItems !== null ? totalItems : data.length;
     
@@ -387,19 +387,29 @@ async function initCemeteriesTable(data, totalItems = null, signal = null) {
             
             return columns;
         } catch (error) {
+            // בדיקה: אם זה ביטול מכוון - זה לא שגיאה
+            if (error.name === 'AbortError') {
+                console.log('⚠️ Columns loading aborted');
+                return [];
+            }
             console.error('Failed to load columns config:', error);
-            // החזר עמודות ברירת מחדל במקרה של שגיאה
-            return []
+            return [];
         }
+    }
+
+    // קודם טען את העמודות
+    const columns = await loadColumnsFromConfig('cemetery', signal);
+
+    // בדוק אם בוטל
+    if (signal && signal.aborted) {
+        console.log('⚠️ Cemetery table initialization aborted');
+        return null;
     }
 
     cemeteriesTable = new TableManager({
         tableSelector: '#mainTable',  // ⭐ זה הכי חשוב!
-        
-        // ⭐ הוספת totalItems כפרמטר!
         totalItems: actualTotalItems,
-
-        columns: await loadColumnsFromConfig('cemetery', signal),
+        columns: columns,
 
         // onRowDoubleClick: (cemetery) => {                    // ⭐ שורה חדשה
         //     // handleCemeteryDoubleClick(cemetery.unicId, cemetery.cemeteryNameHe);

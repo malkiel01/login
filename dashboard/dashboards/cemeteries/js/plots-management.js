@@ -63,7 +63,7 @@ async function loadPlots(blockId = null, blockName = null, forceReset = false) {
         
     window.currentBlockId = currentBlockId;
     window.currentBlockName = currentBlockName;
-    
+  
     // עדכן את הסוג הנוכחי
     window.currentType = 'plot';
     window.currentParentId = blockId;

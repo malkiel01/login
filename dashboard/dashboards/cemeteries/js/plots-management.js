@@ -33,7 +33,7 @@ let currentBlockName = null;
 async function loadPlots(blockId = null, blockName = null, forceReset = false) {
     console.log('📋 Loading plots - v1.2.0 (תוקן איפוס סינון)...');
 
-    const signal = OperationManager.start('block');
+    const signal = OperationManager.start('plot');
 
     // ⭐ שינוי: אם קוראים ללא פרמטרים (מהתפריט) - אפס את הסינון!
     if (blockId === null && blockName === null && !forceReset) {
@@ -175,6 +175,11 @@ async function buildPlotsContainer(signal, blockId = null, blockName = null) {
                 topSection = await createBlockCard(blockId, signal);
                 console.log('✅ Block card created successfully');
             } catch (error) {
+                // בדיקה: אם זה ביטול מכוון - זה לא שגיאה
+                if (error.name === 'AbortError') {
+                    console.log('⚠️ Block card loading aborted');
+                    return;
+                }
                 console.error('❌ Error creating block card:', error);
             }
         } else {
@@ -696,6 +701,11 @@ async function loadPlotStats(signal, blockId = null) {
             }
         }
     } catch (error) {
+        // בדיקה: אם זה ביטול מכוון - זה לא שגיאה
+        if (error.name === 'AbortError') {
+            console.log('⚠️ Plot stats loading aborted - this is expected');
+            return;
+        }
         console.error('Error loading plot stats:', error);
     }
 }

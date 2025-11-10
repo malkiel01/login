@@ -2,15 +2,18 @@
 // ניהול כרטיסי מידע
 
 // יצירת כרטיס מידע לבית עלמין
-async function createCemeteryCard(cemeteryId) {
+async function createCemeteryCard(cemeteryId, signal) {
     try {
-        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=get&type=cemetery&id=${cemeteryId}`);
+        const response = await fetch(
+            `${API_BASE}cemetery-hierarchy.php?action=get&type=cemetery&id=${cemeteryId}`,
+            { signal: signal }
+            );
         const data = await response.json();
         
         if (!data.success) return '';
         
         const cemetery = data.data;
-        const stats = await getCemeteryStats(cemeteryId);
+        const stats = await getCemeteryStats(cemeteryId, signal);
         
         return `
             <div class="info-card" id="cemeteryCard">
@@ -81,6 +84,12 @@ async function createCemeteryCard(cemeteryId) {
             </div>
         `;
     } catch (error) {
+        // ⭐ טפל ב-AbortError!
+        if (error.name === 'AbortError') {
+            console.log('⚠️ Cemetery card loading aborted');
+            return ''; // החזר string ריק
+        }
+        
         console.error('Error creating cemetery card:', error);
         return '';
     }
@@ -506,9 +515,12 @@ function printCustomerReport(customerId) {
 }
 
 // פונקציות עזר לקבלת סטטיסטיקות - גרסה מלאה
-async function getCemeteryStats(cemeteryId) {
+async function getCemeteryStats(cemeteryId, signal) {
     try {
-        const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=item_stats&item_type=cemetery&itemId=${cemeteryId}`);
+        const response = await fetch(
+            `${API_BASE}cemetery-hierarchy.php?action=item_stats&item_type=cemetery&itemId=${cemeteryId}`,
+            { signal: signal }
+            );
         const data = await response.json();
         return data.success ? data.stats : {};
     } catch (error) {

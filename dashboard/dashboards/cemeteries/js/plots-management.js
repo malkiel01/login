@@ -32,7 +32,9 @@ let currentBlockName = null;
 // ===================================================================
 async function loadPlots(blockId = null, blockName = null, forceReset = false) {
     console.log('📋 Loading plots - v1.2.0 (תוקן איפוס סינון)...');
-    
+
+    const signal = OperationManager.start('block');
+
     // ⭐ שינוי: אם קוראים ללא פרמטרים (מהתפריט) - אפס את הסינון!
     if (blockId === null && blockName === null && !forceReset) {
         // בדוק אם יש סינון קיים מהעבר
@@ -110,8 +112,13 @@ async function loadPlots(blockId = null, blockName = null, forceReset = false) {
     document.title = blockName ? `חלקות - ${blockName}` : 'ניהול חלקות - מערכת בתי עלמין';
     
     // ⭐ בנה את המבנה החדש ב-main-container
-    await buildPlotsContainer(blockId, blockName);
+    await buildPlotsContainer(signal, blockId, blockName);
     
+    if (OperationManager.shouldAbort('plot')) {
+        console.log('⚠️ Plot operation aborted');
+        return;
+    }
+
     // ⭐ תמיד השמד את החיפוש הקודם ובנה מחדש
     if (plotSearch && typeof plotSearch.destroy === 'function') {
         console.log('🗑️ Destroying previous plotSearch instance...');
@@ -122,17 +129,23 @@ async function loadPlots(blockId = null, blockName = null, forceReset = false) {
     
     // אתחל את UniversalSearch מחדש תמיד
     console.log('🆕 Creating fresh plotSearch instance...');
-    await initPlotsSearch(blockId);
+    await initPlotsSearch(signal, blockId);
+        
+    if (OperationManager.shouldAbort('plot')) {
+        console.log('⚠️ Plot operation aborted');
+        return;
+    }
+
     plotSearch.search();
     
     // טען סטטיסטיקות
-    await loadPlotStats(blockId);
+    await loadPlotStats(signal, blockId);
 }
 
 // ===================================================================
 // ⭐ פונקציה מעודכנת - בניית המבנה של חלקות ב-main-container
 // ===================================================================
-async function buildPlotsContainer(blockId = null, blockName = null) {
+async function buildPlotsContainer(signal, blockId = null, blockName = null) {
     console.log('🏗️ Building plots container...');
     
     let mainContainer = document.querySelector('.main-container');
@@ -159,7 +172,7 @@ async function buildPlotsContainer(blockId = null, blockName = null) {
         // נסה ליצור את הכרטיס המלא
         if (typeof createBlockCard === 'function') {
             try {
-                topSection = await createBlockCard(blockId);
+                topSection = await createBlockCard(blockId, signal);
                 console.log('✅ Block card created successfully');
             } catch (error) {
                 console.error('❌ Error creating block card:', error);
@@ -186,6 +199,12 @@ async function buildPlotsContainer(blockId = null, blockName = null) {
                 </div>
             `;
         }
+    }
+
+    // ⭐ בדיקה - אם הפעולה בוטלה, אל תמשיך!
+    if (signal && signal.aborted) {
+        console.log('⚠️ Build plots container aborted before innerHTML');
+        return;
     }
     
     mainContainer.innerHTML = `
@@ -221,9 +240,10 @@ async function buildPlotsContainer(blockId = null, blockName = null) {
 // ===================================================================
 // אתחול UniversalSearch - עם סינון משופר!
 // ===================================================================
-async function initPlotsSearch(blockId = null) {
+async function initPlotsSearch(signal, blockId = null) {
     const config = {
         entityType: 'plot',
+        signal: signal,
         apiEndpoint: '/dashboard/dashboards/cemeteries/api/plots-api.php',
         action: 'list',
         
@@ -651,14 +671,14 @@ function formatDate(dateString) {
 // ===================================================================
 // טעינת סטטיסטיקות חלקות
 // ===================================================================
-async function loadPlotStats(blockId = null) {
+async function loadPlotStats(signal, blockId = null) {
     try {
         let url = '/dashboard/dashboards/cemeteries/api/plots-api.php?action=stats';
         if (blockId) {
             url += `&blockId=${blockId}`;
         }
         
-        const response = await fetch(url);
+        const response = await fetch(url, { signal: signal });
         const result = await response.json();
         
         if (result.success && result.data) {

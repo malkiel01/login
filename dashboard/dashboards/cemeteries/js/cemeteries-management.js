@@ -76,7 +76,7 @@ async function loadCemeteries() {
     document.title = 'ניהול בתי עלמין - מערכת בתי עלמין';
     
     // ⭐ בנה את המבנה החדש ב-main-container
-    await buildCemeteriesContainer();
+    buildCemeteriesContainer();
 
     // ⭐ בדיקה - אם השתנה currentType, עצור!
     if (OperationManager.shouldAbort('cemetery')) {
@@ -111,7 +111,7 @@ async function loadCemeteries() {
 // ===================================================================
 // ⭐ פונקציה חדשה - בניית המבנה של בתי עלמין ב-main-container
 // ===================================================================
-async function buildCemeteriesContainer() {
+function buildCemeteriesContainer() {
     console.log('🏗️ Building cemeteries container...');
     
     // מצא את main-container (צריך להיות קיים אחרי clear)

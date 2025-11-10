@@ -32,6 +32,8 @@ let currentCemeteryName = null;
 // ===================================================================
 async function loadBlocks(cemeteryId = null, cemeteryName = null, forceReset = false) {
     console.log('📋 Loading blocks - v1.2.0 (תוקן איפוס סינון)...');
+
+    const signal = OperationManager.start('block');
     
     // ⭐ שינוי: אם קוראים ללא פרמטרים (מהתפריט) - אפס את הסינון!
     if (cemeteryId === null && cemeteryName === null && !forceReset) {
@@ -110,8 +112,13 @@ async function loadBlocks(cemeteryId = null, cemeteryName = null, forceReset = f
     document.title = cemeteryName ? `גושים - ${cemeteryName}` : 'ניהול גושים - מערכת בתי עלמין';
     
     // ⭐ בנה את המבנה החדש ב-main-container
-    await buildBlocksContainer(cemeteryId, cemeteryName);
-    
+    await buildBlocksContainer(signal, cemeteryId, cemeteryName);
+
+    if (OperationManager.shouldAbort('block')) {
+        console.log('⚠️ Block operation aborted');
+        return;
+    }
+
     // ⭐ תמיד השמד את החיפוש הקודם ובנה מחדש
     if (blockSearch && typeof blockSearch.destroy === 'function') {
         console.log('🗑️ Destroying previous blockSearch instance...');
@@ -122,17 +129,23 @@ async function loadBlocks(cemeteryId = null, cemeteryName = null, forceReset = f
     
     // אתחל את UniversalSearch מחדש תמיד
     console.log('🆕 Creating fresh blockSearch instance...');
-    await initBlocksSearch(cemeteryId);
+    await initBlocksSearch(signal, cemeteryId);
+
+    if (OperationManager.shouldAbort('block')) {
+        console.log('⚠️ Block operation aborted');
+        return;
+    }
+
     blockSearch.search();
     
     // טען סטטיסטיקות
-    await loadBlockStats(cemeteryId);
+    await loadBlockStats(signal, cemeteryId);
 }
 
 // ===================================================================
 // ⭐ פונקציה מעודכנת - בניית המבנה של גושים ב-main-container
 // ===================================================================
-async function buildBlocksContainer(cemeteryId = null, cemeteryName = null) {
+async function buildBlocksContainer(signal, cemeteryId = null, cemeteryName = null) {
     console.log('🏗️ Building blocks container...');
     
     let mainContainer = document.querySelector('.main-container');
@@ -159,9 +172,14 @@ async function buildBlocksContainer(cemeteryId = null, cemeteryName = null) {
         // נסה ליצור את הכרטיס המלא
         if (typeof createCemeteryCard === 'function') {
             try {
-                topSection = await createCemeteryCard(cemeteryId);
+                topSection = await createCemeteryCard(cemeteryId, signal);
                 console.log('✅ Cemetery card created successfully');
             } catch (error) {
+                // ⭐ טפל ב-AbortError!
+                if (error.name === 'AbortError') {
+                    console.log('⚠️ Cemetery card loading aborted');
+                    return; // עצור את הפונקציה
+                }
                 console.error('❌ Error creating cemetery card:', error);
             }
         } else {
@@ -188,6 +206,12 @@ async function buildBlocksContainer(cemeteryId = null, cemeteryName = null) {
         }
     }
     
+    // ⭐ בדיקה - אם הפעולה בוטלה, אל תמשיך!
+    if (signal && signal.aborted) {
+        console.log('⚠️ Build blocks container aborted before innerHTML');
+        return;
+    }
+
     mainContainer.innerHTML = `
         ${topSection}
         
@@ -221,9 +245,10 @@ async function buildBlocksContainer(cemeteryId = null, cemeteryName = null) {
 // ===================================================================
 // אתחול UniversalSearch - עם סינון משופר!
 // ===================================================================
-async function initBlocksSearch(cemeteryId = null) {
+async function initBlocksSearch(signal, cemeteryId = null) {
     const config = {
         entityType: 'block',
+        signal: signal,
         apiEndpoint: '/dashboard/dashboards/cemeteries/api/blocks-api.php',
         action: 'list',
         
@@ -658,14 +683,14 @@ function formatDate(dateString) {
 // ===================================================================
 // טעינת סטטיסטיקות גושים
 // ===================================================================
-async function loadBlockStats(cemeteryId = null) {
+async function loadBlockStats(signal, cemeteryId = null) {
     try {
         let url = '/dashboard/dashboards/cemeteries/api/blocks-api.php?action=stats';
         if (cemeteryId) {
             url += `&cemeteryId=${cemeteryId}`;
         }
         
-        const response = await fetch(url);
+        const response = await fetch(url, { signal: signal });
         const result = await response.json();
         
         if (result.success && result.data) {
@@ -683,6 +708,13 @@ async function loadBlockStats(cemeteryId = null) {
             }
         }
     } catch (error) {
+        // ⭐ בדיקה: אם זה ביטול מכוון - זה לא שגיאה
+        if (error.name === 'AbortError') {
+            console.log('⚠️ Block stats loading aborted - this is expected');
+            return;
+        }
+        
+        // רק שגיאות אמיתיות נדפסות כשגיאה
         console.error('Error loading block stats:', error);
     }
 }

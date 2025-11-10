@@ -301,12 +301,12 @@ async function initBlocksSearch(cemeteryId = null) {
             onResults: (data) => {
                 console.log('📦 API returned:', data.pagination?.total || data.data.length, 'blocks');
 
-                // // ⭐⭐⭐ בדיקה קריטית - אם עברנו לרשומה אחרת, לא להמשיך!
-                // if (window.currentType !== 'block') {
-                //     console.log('⚠️ Type changed during search - aborting block results');
-                //     console.log(`   Current type is now: ${window.currentType}`);
-                //     return; // ❌ עצור כאן!
-                // }
+                // ⭐⭐⭐ בדיקה קריטית - אם עברנו לרשומה אחרת, לא להמשיך!
+                if (window.currentType !== 'block') {
+                    console.log('⚠️ Type changed during search - aborting block results');
+                    console.log(`   Current type is now: ${window.currentType}`);
+                    return; // ❌ עצור כאן!
+                }
                 
                 // ⭐ טיפול בדפים - מצטבר!
                 const currentPage = data.pagination?.page || 1;
@@ -395,6 +395,13 @@ async function initBlocksTable(data, totalItems = null) {
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            // ⭐⭐⭐ בדיקה קריטית - אם עברנו לרשומה אחרת, לא להמשיך!
+            if (window.currentType !== 'block') {
+                console.log('⚠️ Type changed during search - aborting block results');
+                console.log(`   Current type is now: ${window.currentType}`);
+                return; // ❌ עצור כאן!
             }
 
             const result = await response.json();

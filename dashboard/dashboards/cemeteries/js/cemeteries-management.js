@@ -300,6 +300,13 @@ async function initCemeteriesTable(data, totalItems = null) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
+            // ⭐⭐⭐ בדיקה קריטית - אם עברנו לרשומה אחרת, לא להמשיך!
+            if (window.currentType !== 'cemetery') {
+                console.log('⚠️ Type changed during search - aborting cemetery results');
+                console.log(`   Current type is now: ${window.currentType}`);
+                return; // ❌ עצור כאן!
+            }
+
             const result = await response.json();
 
             if (!result.success || !result.data) {

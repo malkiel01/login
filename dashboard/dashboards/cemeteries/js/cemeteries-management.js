@@ -296,7 +296,7 @@ async function initCemeteriesSearch(signal) {
 // ===================================================================
 // אתחול TableManager - עם תמיכה ב-totalItems
 // ===================================================================
-async function initCemeteriesTable(data, totalItems = null) {
+async function initCemeteriesTable(data, totalItems = null, signal = null) {
     // ⭐ אם לא קיבלנו totalItems, השתמש ב-data.length
     const actualTotalItems = totalItems !== null ? totalItems : data.length;
     
@@ -452,7 +452,7 @@ async function initCemeteriesTable(data, totalItems = null) {
 // ===================================================================
 // רינדור שורות בתי עלמין - עם תמיכה ב-totalItems מ-pagination
 // ===================================================================
-function renderCemeteriesRows(data, container, pagination = null) {
+function renderCemeteriesRows(data, container, pagination = null, signal = null) {
     
     // ⭐ חלץ את הסכום הכולל מ-pagination אם קיים
     const totalItems = pagination?.total || data.length;
@@ -489,7 +489,7 @@ function renderCemeteriesRows(data, container, pagination = null) {
     // עכשיו בדוק אם צריך לבנות מחדש
     if (!cemeteriesTable || !tableWrapperExists) {
         // אין TableManager או שה-DOM שלו נמחק - בנה מחדש!
-        initCemeteriesTable(data, totalItems);  // ⭐ העברת totalItems!
+        initCemeteriesTable(data, totalItems, signal = null);  // ⭐ העברת totalItems!
     } else {
           // ⭐ עדכן גם את totalItems ב-TableManager!
         if (cemeteriesTable.config) {

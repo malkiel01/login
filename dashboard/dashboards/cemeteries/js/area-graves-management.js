@@ -123,16 +123,16 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
         window.areaGraveSearch = null;
     }
     
-    // אתחל חיפוש חדש
-    console.log('🆕 Creating fresh areaGraveSearch instance...');
-    await initAreaGravesSearch(signal, plotId);
+    // // אתחל חיפוש חדש
+    // console.log('🆕 Creating fresh areaGraveSearch instance...');
+    // await initAreaGravesSearch(signal, plotId);
 
-    if (OperationManager.shouldAbort('areaGrave')) {
-        console.log('⚠️ AreaGrave operation aborted');
-        return;
-    }
+    // if (OperationManager.shouldAbort('areaGrave')) {
+    //     console.log('⚠️ AreaGrave operation aborted');
+    //     return;
+    // }
 
-    areaGraveSearch.search();
+    // areaGraveSearch.search();
     
     // טען סטטיסטיקות
     await loadAreaGraveStats(signal, plotId);

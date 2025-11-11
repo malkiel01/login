@@ -518,22 +518,28 @@ async function initAreaGravesTable(data, totalItems = null, signal) {
 
     areaGravesTable = new TableManager({
         tableSelector: '#mainTable',   
-        totalItems: actualTotalItems,
         columns: columns,
         data: data,      
         sortable: true,
         resizable: true,
         reorderable: false,
         filterable: true,
-
+        
         // ============================================
         // ⭐ 3 פרמטרים חדשים - הוסף כאן!
         // ============================================
         totalItems: actualTotalItems,        // ✅ כבר יש לך - מעולה!
-        scrollLoadBatch: 100,                // ⭐ חדש - טען 100 בכל גלילה
-        itemsPerPage: 999999,                // ⭐ חדש - עמוד אחד (infinite scroll)
-        scrollThreshold: 100,                // ⭐ חדש - התחל טעינה 100px לפני התחתית
+        // scrollLoadBatch: 100,                // ⭐ חדש - טען 100 בכל גלילה
+        // itemsPerPage: 999999,                // ⭐ חדש - עמוד אחד (infinite scroll)
+        // scrollThreshold: 100,                // ⭐ חדש - התחל טעינה 100px לפני התחתית
+
         
+        scrollLoadBatch: 0,                  // ⭐ 0 = ללא infinite scroll
+        itemsPerPage: 100,                   // ⭐ 100 רשומות לעמוד
+        showPagination: true,                // ⭐ הצג footer pagination
+        paginationOptions: [25, 50, 100, 200], // ⭐ אפשרויות בסלקט
+
+
         // ============================================
         // הגדרות קיימות
         // ============================================

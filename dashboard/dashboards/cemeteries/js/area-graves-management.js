@@ -132,7 +132,7 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
         return;
     }
 
-    areaGraveSearch.search();
+    // areaGraveSearch.search();
     
     // טען סטטיסטיקות
     await loadAreaGraveStats(signal, plotId);

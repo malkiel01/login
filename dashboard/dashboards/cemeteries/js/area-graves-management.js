@@ -124,13 +124,13 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
     }
     
     // אתחל חיפוש חדש
-    // console.log('🆕 Creating fresh areaGraveSearch instance...');
-    // await initAreaGravesSearch(signal, plotId);
+    console.log('🆕 Creating fresh areaGraveSearch instance...');
+    await initAreaGravesSearch(signal, plotId);
 
-    // if (OperationManager.shouldAbort('areaGrave')) {
-    //     console.log('⚠️ AreaGrave operation aborted');
-    //     return;
-    // }
+    if (OperationManager.shouldAbort('areaGrave')) {
+        console.log('⚠️ AreaGrave operation aborted');
+        return;
+    }
 
     areaGraveSearch.search();
     
@@ -303,7 +303,7 @@ async function initAreaGravesSearch(signal, plotId = null) {
         resultsContainerSelector: '#tableBody',
         
         placeholder: 'חיפוש אחוזות קבר לפי שם, קואורדינטות, סוג...',
-        itemsPerPage: 999999,  // ⭐ שינוי! טעינה מדורגת
+        itemsPerPage: 100,  // ⭐ שינוי! טעינה מדורגת
         
         renderFunction: renderAreaGravesRows,
         

@@ -303,7 +303,7 @@ async function initAreaGravesSearch(signal, plotId = null) {
         resultsContainerSelector: '#tableBody',
         
         placeholder: 'חיפוש אחוזות קבר לפי שם, קואורדינטות, סוג...',
-        itemsPerPage: 35,  // ⭐ שינוי! טעינה מדורגת
+        itemsPerPage: 999999,  // ⭐ שינוי! טעינה מדורגת
         
         renderFunction: renderAreaGravesRows,
         
@@ -525,6 +525,18 @@ async function initAreaGravesTable(data, totalItems = null, signal) {
         resizable: true,
         reorderable: false,
         filterable: true,
+
+        // ============================================
+        // ⭐ 3 פרמטרים חדשים - הוסף כאן!
+        // ============================================
+        totalItems: actualTotalItems,        // ✅ כבר יש לך - מעולה!
+        scrollLoadBatch: 100,                // ⭐ חדש - טען 100 בכל גלילה
+        itemsPerPage: 999999,                // ⭐ חדש - עמוד אחד (infinite scroll)
+        scrollThreshold: 100,                // ⭐ חדש - התחל טעינה 100px לפני התחתית
+        
+        // ============================================
+        // הגדרות קיימות
+        // ============================================
         
         onSort: (field, order) => {
             console.log(`📊 Sorted by ${field} ${order}`);

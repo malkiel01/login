@@ -123,7 +123,7 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
         window.areaGraveSearch = null;
     }
     
-    // // אתחל חיפוש חדש
+    // אתחל חיפוש חדש
     // console.log('🆕 Creating fresh areaGraveSearch instance...');
     // await initAreaGravesSearch(signal, plotId);
 
@@ -132,7 +132,7 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
     //     return;
     // }
 
-    // areaGraveSearch.search();
+    areaGraveSearch.search();
     
     // טען סטטיסטיקות
     await loadAreaGraveStats(signal, plotId);

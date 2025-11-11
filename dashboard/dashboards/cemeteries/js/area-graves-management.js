@@ -208,6 +208,31 @@ async function buildAreaGravesContainer(signal, plotId = null, plotName = null) 
         return;
     }
     
+    // mainContainer.innerHTML = `
+    //     ${topSection}
+        
+    //     <div id="areaGraveSearchSection" class="search-section"></div>
+        
+    //     <div class="table-container">
+    //         <table id="mainTable" class="data-table">
+    //             <thead>
+    //                 <tr id="tableHeaders">
+    //                     <th style="text-align: center;">טוען...</th>
+    //                 </tr>
+    //             </thead>
+    //             <tbody id="tableBody">
+    //                 <tr>
+    //                     <td style="text-align: center; padding: 40px;">
+    //                         <div class="spinner-border" role="status">
+    //                             <span class="visually-hidden">טוען אחוזות קבר...</span>
+    //                         </div>
+    //                     </td>
+    //                 </tr>
+    //             </tbody>
+    //         </table>
+    //     </div>
+    // `;
+
     mainContainer.innerHTML = `
         ${topSection}
         
@@ -217,20 +242,52 @@ async function buildAreaGravesContainer(signal, plotId = null, plotName = null) 
             <table id="mainTable" class="data-table">
                 <thead>
                     <tr id="tableHeaders">
-                        <th style="text-align: center;">טוען...</th>
+                        <th style="width: 200px;">שם אחוזת קבר</th>
+                        <th style="width: 150px;">קואורדינטות</th>
+                        <th style="width: 120px;">סוג קבר</th>
+                        <th style="width: 150px;">שורה</th>
+                        <th style="width: 100px;">מס' קברים</th>
+                        <th style="width: 130px;">תאריך יצירה</th>
+                        <th style="width: 140px;">פעולות</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody">
                     <tr>
-                        <td style="text-align: center; padding: 40px;">
-                            <div class="spinner-border" role="status">
-                                <span class="visually-hidden">טוען אחוזות קבר...</span>
+                        <td colspan="7" style="text-align: center; padding: 60px;">
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 20px;">
+                                <!-- אנימציית טעינה -->
+                                <div class="loading-spinner" style="
+                                    width: 50px; 
+                                    height: 50px; 
+                                    border: 4px solid #e5e7eb; 
+                                    border-top-color: #3b82f6; 
+                                    border-radius: 50%; 
+                                    animation: spin 1s linear infinite;
+                                "></div>
+                                
+                                <!-- טקסט טעינה -->
+                                <div style="color: #6b7280; font-size: 16px; font-weight: 500;">
+                                    טוען אחוזות קבר...
+                                </div>
+                                
+                                <!-- מונה (אופציונלי) -->
+                                <div id="loadingCounter" style="color: #9ca3af; font-size: 14px;">
+                                    <!-- יעודכן דינמית -->
+                                </div>
                             </div>
                         </td>
                     </tr>
                 </tbody>
             </table>
         </div>
+        
+        <!-- CSS לאנימציה -->
+        <style>
+            @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+        </style>
     `;
     
     console.log('✅ Area graves container built');
@@ -303,7 +360,7 @@ async function initAreaGravesSearch(signal, plotId = null) {
         resultsContainerSelector: '#tableBody',
         
         placeholder: 'חיפוש אחוזות קבר לפי שם, קואורדינטות, סוג...',
-        itemsPerPage: 100,  // ⭐ שינוי! טעינה מדורגת
+        itemsPerPage: 999999,  // ⭐ שינוי! טעינה מדורגת
         
         renderFunction: renderAreaGravesRows,
         
@@ -378,6 +435,7 @@ async function initAreaGravesSearch(signal, plotId = null) {
                 console.log('📭 No results');
             }
         }
+
     };
     
     if (plotId) {

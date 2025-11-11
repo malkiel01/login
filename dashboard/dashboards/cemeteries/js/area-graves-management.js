@@ -32,7 +32,9 @@ let currentPlotName = null;
 // ===================================================================
 async function loadAreaGraves(plotId = null, plotName = null, forceReset = false) {
     console.log('📋 Loading area graves - v1.2.2 (תוקן סינון client-side)...');
-    
+ 
+    const signal = OperationManager.start('areaGrave');
+
     // ⭐ לוגיקת סינון
     if (plotId === null && plotName === null && !forceReset) {
         if (window.currentPlotId !== null || currentPlotId !== null) {
@@ -106,8 +108,13 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
     document.title = plotName ? `אחוזות קבר - ${plotName}` : 'ניהול אחוזות קבר - מערכת בתי עלמין';
     
     // ⭐ בנה מבנה
-    await buildAreaGravesContainer(plotId, plotName);
+    await buildAreaGravesContainer(signal, plotId, plotName);
     
+    if (OperationManager.shouldAbort('areaGrave')) {
+        console.log('⚠️ AreaGrave operation aborted after container build');
+        return;
+    }
+
     // ⭐ השמד חיפוש קודם
     if (areaGraveSearch && typeof areaGraveSearch.destroy === 'function') {
         console.log('🗑️ Destroying previous areaGraveSearch instance...');
@@ -118,17 +125,23 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
     
     // אתחל חיפוש חדש
     console.log('🆕 Creating fresh areaGraveSearch instance...');
-    await initAreaGravesSearch(plotId);
+    await initAreaGravesSearch(signal, plotId);
+
+    if (OperationManager.shouldAbort('areaGrave')) {
+        console.log('⚠️ AreaGrave operation aborted');
+        return;
+    }
+
     areaGraveSearch.search();
     
     // טען סטטיסטיקות
-    await loadAreaGraveStats(plotId);
+    await loadAreaGraveStats(signal, plotId);
 }
 
 // ===================================================================
 // בניית המבנה
 // ===================================================================
-async function buildAreaGravesContainer(plotId = null, plotName = null) {
+async function buildAreaGravesContainer(signal, plotId = null, plotName = null) {
     console.log('🏗️ Building area graves container...');
     
     let mainContainer = document.querySelector('.main-container');
@@ -155,10 +168,15 @@ async function buildAreaGravesContainer(plotId = null, plotName = null) {
         // נסה ליצור את הכרטיס המלא
         if (typeof createPlotCard === 'function') {
             try {
-                topSection = await createPlotCard(plotId);
+                topSection = await createPlotCard(plotId, signal);
                 console.log('✅ Plot card created successfully');
             } catch (error) {
-                console.error('❌ Error creating plot card:', error);
+                // בדיקה: אם זה ביטול מכוון - זה לא שגיאה
+                if (error.name === 'AbortError') {
+                    console.log('⚠️ Plot card loading aborted');
+                    return;
+                }
+                console.error('❌ Error creating block card:', error);
             }
         } else {
             console.warn('⚠️ createPlotCard function not found');
@@ -182,6 +200,12 @@ async function buildAreaGravesContainer(plotId = null, plotName = null) {
                 </div>
             `;
         }
+    }
+
+    // ⭐ בדיקה - אם הפעולה בוטלה, אל תמשיך!
+    if (signal && signal.aborted) {
+        console.log('⚠️ Build areaGraves container aborted before innerHTML');
+        return;
     }
     
     mainContainer.innerHTML = `
@@ -215,9 +239,10 @@ async function buildAreaGravesContainer(plotId = null, plotName = null) {
 // ===================================================================
 // אתחול UniversalSearch - עם Pagination!
 // ===================================================================
-async function initAreaGravesSearch(plotId = null) {
+async function initAreaGravesSearch(signal, plotId = null) {
     const config = {
         entityType: 'areaGrave',
+        signal: signal,
         apiEndpoint: '/dashboard/dashboards/cemeteries/api/areaGraves-api.php',
         action: 'list',
         
@@ -278,7 +303,7 @@ async function initAreaGravesSearch(plotId = null) {
         resultsContainerSelector: '#tableBody',
         
         placeholder: 'חיפוש אחוזות קבר לפי שם, קואורדינטות, סוג...',
-        itemsPerPage: 999999,  // ⭐ שינוי! טעינה מדורגת
+        itemsPerPage: 35,  // ⭐ שינוי! טעינה מדורגת
         
         renderFunction: renderAreaGravesRows,
         
@@ -369,7 +394,7 @@ async function initAreaGravesSearch(plotId = null) {
 // ===================================================================
 // אתחול TableManager - עם Scroll Loading!
 // ===================================================================
-async function initAreaGravesTable(data, totalItems = null) {
+async function initAreaGravesTable(data, totalItems = null, signal) {
     const actualTotalItems = totalItems !== null ? totalItems : data.length;
     
     if (areaGravesTable) {
@@ -378,9 +403,11 @@ async function initAreaGravesTable(data, totalItems = null) {
         return areaGravesTable;
     }
 
-    async function loadColumnsFromConfig(entityType = 'areaGrave') {
+    async function loadColumnsFromConfig(entityType = 'areaGrave', signal) {
         try {
-            const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`);
+            const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`, {
+                signal: signal
+            });
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -470,21 +497,30 @@ async function initAreaGravesTable(data, totalItems = null) {
             
             return columns;
         } catch (error) {
+            // בדיקה: אם זה ביטול מכוון - זה לא שגיאה
+            if (error.name === 'AbortError') {
+                console.log('⚠️ Columns loading aborted');
+                return [];
+            }
             console.error('Failed to load columns config:', error);
-            // החזר עמודות ברירת מחדל במקרה של שגיאה
-            return []
+            return [];
         }
     }
 
+    // קודם טען את העמודות
+    const columns = await loadColumnsFromConfig('areaGrave', signal);
+
+    // בדוק אם בוטל
+    if (signal && signal.aborted) {
+        console.log('⚠️ AreaGrave table initialization aborted');
+        return null;
+    }
+
     areaGravesTable = new TableManager({
-        tableSelector: '#mainTable',
-        
+        tableSelector: '#mainTable',   
         totalItems: actualTotalItems,
-
-        columns: await loadColumnsFromConfig('areaGrave'),
-
-        data: data,
-        
+        columns: columns,
+        data: data,      
         sortable: true,
         resizable: true,
         reorderable: false,
@@ -534,7 +570,7 @@ async function initAreaGravesTable(data, totalItems = null) {
 // ===================================================================
 // רינדור שורות - עם סינון client-side! (⭐⭐ כמו ב-blocks!)
 // ===================================================================
-function renderAreaGravesRows(data, container, pagination = null) {
+function renderAreaGravesRows(data, container, pagination = null, signal = null) {
     // ⭐⭐ סינון client-side לפי plotId
     let filteredData = data;
     if (currentPlotId) {
@@ -617,7 +653,7 @@ function renderAreaGravesRows(data, container, pagination = null) {
     
     // עכשיו בדוק אם צריך לבנות מחדש
     if (!areaGravesTable || !tableWrapperExists) {
-        initAreaGravesTable(filteredData, totalItems);
+        initAreaGravesTable(filteredData, totalItems, signal);
     } else {
         if (areaGravesTable.config) {
             areaGravesTable.config.totalItems = totalItems;
@@ -657,14 +693,14 @@ function getGraveTypeName(type) {
 // ===================================================================
 // טעינת סטטיסטיקות
 // ===================================================================
-async function loadAreaGraveStats(plotId = null) {
+async function loadAreaGraveStats(signal, plotId = null) {
     try {
         let url = '/dashboard/dashboards/cemeteries/api/areaGraves-api.php?action=stats';
         if (plotId) {
             url += `&plotId=${plotId}`;
         }
         
-        const response = await fetch(url);
+        const response = await fetch(url, { signal: signal });
         const result = await response.json();
         
         if (result.success && result.data) {
@@ -681,6 +717,11 @@ async function loadAreaGraveStats(plotId = null) {
             }
         }
     } catch (error) {
+        // בדיקה: אם זה ביטול מכוון - זה לא שגיאה
+        if (error.name === 'AbortError') {
+            console.log('⚠️ AreaGrave stats loading aborted - this is expected');
+            return;
+        }
         console.error('Error loading area grave stats:', error);
     }
 }

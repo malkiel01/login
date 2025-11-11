@@ -496,7 +496,7 @@ function renderCemeteriesRows(data, container, pagination = null, signal = null)
     // עכשיו בדוק אם צריך לבנות מחדש
     if (!cemeteriesTable || !tableWrapperExists) {
         // אין TableManager או שה-DOM שלו נמחק - בנה מחדש!
-        initCemeteriesTable(data, totalItems, signal = null);  // ⭐ העברת totalItems!
+        initCemeteriesTable(data, totalItems, signal);  // ⭐ העברת totalItems!
     } else {
           // ⭐ עדכן גם את totalItems ב-TableManager!
         if (cemeteriesTable.config) {

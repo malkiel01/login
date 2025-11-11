@@ -404,7 +404,7 @@ async function initPlotsSearch(signal, blockId = null) {
 // ===================================================================
 // אתחול TableManager לחלקות
 // ===================================================================
-async function initPlotsTable(data, totalItems = null) {
+async function initPlotsTable(data, totalItems = null, signal) {
     const actualTotalItems = totalItems !== null ? totalItems : data.length;
     
     // אם הטבלה כבר קיימת, רק עדכן נתונים
@@ -415,9 +415,11 @@ async function initPlotsTable(data, totalItems = null) {
     }
 
     // טעינת העמודות מהשרת
-    async function loadColumnsFromConfig(entityType = 'plot') {
+    async function loadColumnsFromConfig(entityType = 'plot', signal) {
         try {
-            const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`);
+            const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`, {
+                signal: signal
+            });
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -498,21 +500,31 @@ async function initPlotsTable(data, totalItems = null) {
             return columns;
             
         } catch (error) {
+            // בדיקה: אם זה ביטול מכוון - זה לא שגיאה
+            if (error.name === 'AbortError') {
+                console.log('⚠️ Columns loading aborted');
+                return [];
+            }
             console.error('Failed to load columns config:', error);
-            // החזר עמודות ברירת מחדל במקרה של שגיאה
-            return []
+            return [];
         }
     }
+      
+    // קודם טען את העמודות
+    const columns = await loadColumnsFromConfig('plot', signal);
+
+    // בדוק אם בוטל
+    if (signal && signal.aborted) {
+        console.log('⚠️ Block table initialization aborted');
+        return null;
+    }
+
 
     plotsTable = new TableManager({
-        tableSelector: '#mainTable',
-        
+        tableSelector: '#mainTable',        
         totalItems: actualTotalItems,
-
-        columns: await loadColumnsFromConfig('plot'),
-
-        data: data,
-        
+        columns: columns,
+        data: data,      
         sortable: true,
         resizable: true,
         reorderable: false,
@@ -558,7 +570,7 @@ async function initPlotsTable(data, totalItems = null) {
 // ===================================================================
 // רינדור שורות החלקות - עם הודעה מותאמת לגוש ריק
 // ===================================================================
-function renderPlotsRows(data, container, pagination = null) {
+function renderPlotsRows(data, container, pagination = null, signal = null) {
     console.log(`📝 renderPlotsRows called with ${data.length} items`);
     
     // ⭐ סינון client-side לפי blockId
@@ -646,7 +658,7 @@ function renderPlotsRows(data, container, pagination = null) {
     if (!plotsTable || !tableWrapperExists) {
         // אין TableManager או שה-DOM שלו נמחק - בנה מחדש!
         console.log(`🏗️ Creating new TableManager with ${totalItems} items`);
-        initPlotsTable(filteredData, totalItems);
+        initPlotsTable(filteredData, totalItems, signal);
     } else {
         // ⭐ עדכן גם את totalItems ב-TableManager!
         console.log(`♻️ Updating TableManager with ${totalItems} items`);

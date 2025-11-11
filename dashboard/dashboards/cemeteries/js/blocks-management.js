@@ -507,9 +507,13 @@ async function initBlocksTable(data, totalItems = null, signal) {
             return columns;
 
         } catch (error) {
+            // בדיקה: אם זה ביטול מכוון - זה לא שגיאה
+            if (error.name === 'AbortError') {
+                console.log('⚠️ Columns loading aborted');
+                return [];
+            }
             console.error('Failed to load columns config:', error);
-            // החזר עמודות ברירת מחדל במקרה של שגיאה
-            return []
+            return [];
         }
     }
 
@@ -526,9 +530,7 @@ async function initBlocksTable(data, totalItems = null, signal) {
         tableSelector: '#mainTable',
         totalItems: actualTotalItems,
         columns: columns,
-
-        data: data,
-        
+        data: data,     
         sortable: true,
         resizable: true,
         reorderable: false,

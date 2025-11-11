@@ -1,24 +1,9 @@
-/*
- * File: dashboards/dashboard/cemeteries/assets/js/table-manager.js
- * Version: 2.0.0
- * Updated: 2025-11-11
- * Author: Malkiel
- * Change Summary:
- * - v2.0.0: הפרדה מלאה בין totalItems, scrollLoadBatch, itemsPerPage
- *   - totalItems: כמות כוללת (מה-API)
- *   - scrollLoadBatch: כמות טעינה בגלילה (infinite scroll)
- *   - itemsPerPage: כמות לעמוד (pagination רגיל)
- *   - תמיכה במצב hybrid: scroll + pagination
- *   - footer אוטומטי עם כפתורי ניווט
- *   - סלקט לבחירת כמות רשומות לעמוד
- *   - תצוגת סטטוס "מציג X-Y מתוך Z"
- */
-
 /**
  * TableManager - מערכת טבלאות מתקדמת
- * תכונות: מיון, שינוי גודל, שינוי סדר, תפריט עמודה, סינון
- * תמיכה ב-Infinite Scroll + Pagination מלא
+ * תכונות: מיון, שינוי גודל, שינוי סדר, תפריט עמודה, סינון, Infinite Scroll
+ * תמיכה מלאה ב-RTL + תמיכה ברוחב דינמי
  */
+
 class TableManager {
     constructor(config) {
         this.config = {
@@ -26,25 +11,10 @@ class TableManager {
             columns: [],
             data: [],
             
-            // ============================================
-            // ⭐ 3 פרמטרים נפרדים - ארכיטקטורה חדשה
-            // ============================================
+            // ⭐ הוספת totalItems - הסכום האמיתי מה-API
+            totalItems: null,  // אם null, נשתמש ב-data.length
             
-            // 1️⃣ סה"כ רשומות (מה-API או מחושב)
-            totalItems: null,           // אם null → data.length
-            
-            // 2️⃣ כמות טעינה בגלילה (infinite scroll)
-            scrollLoadBatch: 100,       // 0 = ללא infinite scroll
-            scrollThreshold: 100,       // מרחק מתחתית להתחלת טעינה (px)
-            
-            // 3️⃣ כמות רשומות לעמוד (pagination)
-            itemsPerPage: 999999,       // 999999 = עמוד אחד, אחרת מחולק לעמודים
-            showPagination: false,      // true = הצג footer pagination
-            paginationOptions: [25, 50, 100, 200],  // אפשרויות בסלקט
-            
-            // ============================================
-            // הגדרות כלליות
-            // ============================================
+            // הגדרות רוחב
             containerWidth: '100%',
             containerPadding: '16px',
             
@@ -54,23 +24,18 @@ class TableManager {
             filterable: true,
             renderCell: null,
             onSort: null,
-            onRowDoubleClick: null,
+            onRowDoubleClick: null,        // ⭐ שורה חדשה זו!
             onFilter: null,
             onColumnReorder: null,
-            onLoadMore: null,           // ⭐ callback לטעינת עוד נתונים מ-API
-            onPageChange: null,         // ⭐ callback לשינוי עמוד
-            
+            infiniteScroll: true,
+            itemsPerPage: 100,
+            scrollThreshold: 301,
             ...config
         };
         
         // ⭐ אם לא קיבלנו totalItems, השתמש ב-data.length
         if (this.config.totalItems === null) {
             this.config.totalItems = this.config.data.length;
-        }
-        
-        // ⭐ אם itemsPerPage < 999999, הפעל pagination אוטומטית
-        if (this.config.itemsPerPage < 999999) {
-            this.config.showPagination = true;
         }
         
         this.state = {
@@ -81,15 +46,8 @@ class TableManager {
             filters: new Map(),
             isResizing: false,
             isDragging: false,
-            
-            // ⭐ מצב pagination
             currentPage: 1,
-            totalPages: 1,
-            
-            // ⭐ מצב scroll loading
             isLoading: false,
-            hasMoreData: true,
-            
             filteredData: [],
             displayedData: []
         };
@@ -98,10 +56,7 @@ class TableManager {
             table: null,
             thead: null,
             tbody: null,
-            wrapper: null,
-            headerContainer: null,
-            bodyContainer: null,
-            paginationFooter: null
+            scrollContainer: null
         };
         
         this.init();
@@ -114,7 +69,7 @@ class TableManager {
         this.elements.table = document.querySelector(this.config.tableSelector);
         
         if (!this.elements.table) {
-            console.error('❌ Table not found:', this.config.tableSelector);
+            console.error('Table not found:', this.config.tableSelector);
             return;
         }
         
@@ -126,56 +81,39 @@ class TableManager {
             this.state.columnWidths[index] = col.width || 'auto';
         });
         
-        // חישוב עמודים
-        this.calculateTotalPages();
-        
         // בניית הטבלה
         this.buildTable();
         
         // קישור אירועים
         this.bindEvents();
         
-        // אתחול Infinite Scroll (אם מופעל)
-        if (this.config.scrollLoadBatch > 0) {
+        // אתחול Infinite Scroll
+        if (this.config.infiniteScroll) {
             this.initInfiniteScroll();
         }
         
-        console.log('✅ TableManager v2.0.0 initialized');
-        console.log('📊 Config:', {
-            totalItems: this.config.totalItems,
-            scrollLoadBatch: this.config.scrollLoadBatch,
-            itemsPerPage: this.config.itemsPerPage,
-            showPagination: this.config.showPagination
-        });
-    }
-    
-    /**
-     * חישוב מספר עמודים
-     */
-    calculateTotalPages() {
-        if (this.config.itemsPerPage >= 999999) {
-            this.state.totalPages = 1;
-        } else {
-            this.state.totalPages = Math.ceil(this.config.totalItems / this.config.itemsPerPage);
-        }
-        console.log(`📄 Total pages: ${this.state.totalPages}`);
+        console.log('✅ TableManager initialized with fixed header');
+        console.log('📐 Container width:', this.config.containerWidth);
+        console.log('📦 Container padding:', this.config.containerPadding);
     }
     
     /**
      * בניית מבנה הטבלה
      */
     buildTable() {
-        console.log('🏗️ Building table structure...');
+        console.log('🏗️ Building new table structure...');
         
+        // מצא את ההורה של הטבלה המקורית
         let parent = this.elements.table.parentNode;
         
-        // תיקון overflow של הורים
+        // תקן את כל ההורים עד שמוצאים אחד ללא overflow
         let currentParent = parent;
         let fixed = [];
         
         while (currentParent && currentParent !== document.body) {
             const styles = window.getComputedStyle(currentParent);
             
+            // ⭐ אם זה table-container, תן לו את הרוחב והפדינג מה-config
             if (currentParent.classList.contains('table-container')) {
                 console.log('🎯 Setting .table-container with custom dimensions');
                 currentParent.setAttribute('style', `
@@ -191,6 +129,7 @@ class TableManager {
                 `.replace(/\s+/g, ' ').trim());
                 fixed.push('table-container');
             }
+            // אם יש overflow אחר, תקן אותו
             else if (styles.overflow !== 'visible' || styles.overflowY !== 'visible' || styles.maxHeight !== 'none') {
                 console.log(`🔧 Fixing parent: ${currentParent.className || currentParent.tagName}`);
                 currentParent.style.cssText += `
@@ -208,23 +147,15 @@ class TableManager {
             console.log('✅ Fixed overflow on:', fixed.join(', '));
         }
         
-        // צור wrapper
+        // צור את המבנה החדש: wrapper > header-container + body-container
         const wrapper = document.createElement('div');
         wrapper.className = 'table-wrapper';
-        wrapper.setAttribute('data-table-manager', 'v2.0.0');
-        wrapper.setAttribute('style', `
-            display: flex !important; 
-            flex-direction: column !important; 
-            width: 100% !important; 
-            height: calc(100vh - 250px) !important; 
-            min-height: 500px !important; 
-            border: 1px solid #e5e7eb !important; 
-            border-radius: 8px !important; 
-            overflow: hidden !important; 
-            background: white !important; 
-            position: relative !important; 
-            box-sizing: border-box !important;
-        `.replace(/\s+/g, ' ').trim());
+        wrapper.setAttribute('data-fixed-width', 'true');
+        
+        // הוסף CSS inline - wrapper יהיה 100% כדי להתאים לפנים ה-container
+        wrapper.setAttribute('style', 'display: flex !important; flex-direction: column !important; width: 100% !important; height: calc(100vh - 250px) !important; min-height: 500px !important; border: 1px solid #e5e7eb !important; border-radius: 8px !important; overflow: hidden !important; background: white !important; position: relative !important; box-sizing: border-box !important;');
+        
+        console.log('📦 Created wrapper');
         
         // קונטיינר כותרת
         const headerContainer = document.createElement('div');
@@ -250,6 +181,8 @@ class TableManager {
             height: 100% !important;
         `;
         
+        console.log('📦 Created header and body containers');
+        
         // טבלת כותרת
         const headerTable = document.createElement('table');
         headerTable.className = 'tm-table tm-header-table';
@@ -266,6 +199,8 @@ class TableManager {
         headerTable.appendChild(thead);
         headerContainer.appendChild(headerTable);
         
+        console.log('📋 Created header table');
+        
         // טבלת תוכן
         const bodyTable = document.createElement('table');
         bodyTable.className = 'tm-table tm-body-table';
@@ -281,22 +216,15 @@ class TableManager {
         const tbody = document.createElement('tbody');
         bodyTable.appendChild(tbody);
         bodyContainer.appendChild(bodyTable);
-        
+           
         // הרכבה
         wrapper.appendChild(headerContainer);
         wrapper.appendChild(bodyContainer);
         
-        // ⭐ הוסף pagination footer אם מופעל
-        if (this.config.showPagination) {
-            const paginationFooter = this.buildPaginationFooter();
-            wrapper.appendChild(paginationFooter);
-            this.elements.paginationFooter = paginationFooter;
-        }
-        
         // החלף את הטבלה המקורית
         parent.insertBefore(wrapper, this.elements.table);
         this.elements.table.style.display = 'none';
-        
+           
         // שמור references
         this.elements.wrapper = wrapper;
         this.elements.headerContainer = headerContainer;
@@ -305,10 +233,21 @@ class TableManager {
         this.elements.bodyTable = bodyTable;
         this.elements.thead = thead;
         this.elements.tbody = tbody;
+            
+        // בדוק שה-CSS אכן הוחל
+        setTimeout(() => {
+            const parentStyles = window.getComputedStyle(parent);
+            
+            if (parentStyles.overflow !== 'visible') {
+                parent.style.overflow = 'visible';
+                parent.style.maxHeight = 'none';
+            }
+    
+        }, 100);
         
         // סנכרן גלילה אופקית
         this.syncHorizontalScroll();
-        
+            
         // רינדור כותרות
         this.renderHeaders();
         
@@ -319,216 +258,7 @@ class TableManager {
     }
     
     /**
-     * בניית Pagination Footer
-     */
-    buildPaginationFooter() {
-        const footer = document.createElement('div');
-        footer.className = 'table-pagination-footer';
-        footer.style.cssText = `
-            flex-shrink: 0 !important;
-            display: flex !important;
-            justify-content: space-between !important;
-            align-items: center !important;
-            padding: 12px 20px !important;
-            background: #f9fafb !important;
-            border-top: 1px solid #e5e7eb !important;
-            direction: rtl !important;
-        `;
-        
-        // ימין: מידע על רשומות
-        const infoDiv = document.createElement('div');
-        infoDiv.className = 'pagination-info';
-        infoDiv.style.cssText = `
-            font-size: 14px !important;
-            color: #6b7280 !important;
-        `;
-        infoDiv.innerHTML = this.getPaginationInfoText();
-        
-        // שמאל: כפתורי ניווט
-        const controlsDiv = document.createElement('div');
-        controlsDiv.className = 'pagination-controls';
-        controlsDiv.style.cssText = `
-            display: flex !important;
-            align-items: center !important;
-            gap: 8px !important;
-        `;
-        
-        // כפתור עמוד ראשון
-        const btnFirst = this.createPaginationButton('⏮', 'עמוד ראשון', () => this.goToPage(1));
-        
-        // כפתור עמוד קודם
-        const btnPrev = this.createPaginationButton('◀', 'עמוד קודם', () => this.goToPage(this.state.currentPage - 1));
-        
-        // סלקט בחירת עמוד
-        const pageSelect = document.createElement('select');
-        pageSelect.className = 'page-selector';
-        pageSelect.style.cssText = `
-            padding: 6px 12px !important;
-            border: 1px solid #d1d5db !important;
-            border-radius: 6px !important;
-            background: white !important;
-            cursor: pointer !important;
-            font-size: 14px !important;
-        `;
-        for (let i = 1; i <= this.state.totalPages; i++) {
-            const option = document.createElement('option');
-            option.value = i;
-            option.textContent = `עמוד ${i}`;
-            if (i === this.state.currentPage) option.selected = true;
-            pageSelect.appendChild(option);
-        }
-        pageSelect.onchange = (e) => this.goToPage(parseInt(e.target.value));
-        
-        // כפתור עמוד הבא
-        const btnNext = this.createPaginationButton('▶', 'עמוד הבא', () => this.goToPage(this.state.currentPage + 1));
-        
-        // כפתור עמוד אחרון
-        const btnLast = this.createPaginationButton('⏭', 'עמוד אחרון', () => this.goToPage(this.state.totalPages));
-        
-        // סלקט כמות רשומות לעמוד
-        const perPageSelect = document.createElement('select');
-        perPageSelect.className = 'per-page-selector';
-        perPageSelect.style.cssText = `
-            padding: 6px 12px !important;
-            border: 1px solid #d1d5db !important;
-            border-radius: 6px !important;
-            background: white !important;
-            cursor: pointer !important;
-            font-size: 14px !important;
-            margin-right: 12px !important;
-        `;
-        this.config.paginationOptions.forEach(num => {
-            const option = document.createElement('option');
-            option.value = num;
-            option.textContent = `${num} רשומות`;
-            if (num === this.config.itemsPerPage) option.selected = true;
-            perPageSelect.appendChild(option);
-        });
-        perPageSelect.onchange = (e) => this.changeItemsPerPage(parseInt(e.target.value));
-        
-        // הרכבה
-        controlsDiv.appendChild(btnFirst);
-        controlsDiv.appendChild(btnPrev);
-        controlsDiv.appendChild(pageSelect);
-        controlsDiv.appendChild(btnNext);
-        controlsDiv.appendChild(btnLast);
-        controlsDiv.appendChild(perPageSelect);
-        
-        footer.appendChild(infoDiv);
-        footer.appendChild(controlsDiv);
-        
-        return footer;
-    }
-    
-    /**
-     * יצירת כפתור pagination
-     */
-    createPaginationButton(text, title, onClick) {
-        const btn = document.createElement('button');
-        btn.className = 'pagination-btn';
-        btn.textContent = text;
-        btn.title = title;
-        btn.style.cssText = `
-            padding: 6px 12px !important;
-            border: 1px solid #d1d5db !important;
-            border-radius: 6px !important;
-            background: white !important;
-            cursor: pointer !important;
-            font-size: 14px !important;
-            transition: all 0.2s !important;
-        `;
-        btn.onmouseover = () => btn.style.background = '#f3f4f6';
-        btn.onmouseout = () => btn.style.background = 'white';
-        btn.onclick = onClick;
-        return btn;
-    }
-    
-    /**
-     * טקסט מידע על רשומות
-     */
-    getPaginationInfoText() {
-        const start = ((this.state.currentPage - 1) * this.config.itemsPerPage) + 1;
-        const end = Math.min(this.state.currentPage * this.config.itemsPerPage, this.config.totalItems);
-        return `מציג <strong>${start}-${end}</strong> מתוך <strong>${this.config.totalItems}</strong>`;
-    }
-    
-    /**
-     * עדכון footer
-     */
-    updatePaginationFooter() {
-        if (!this.elements.paginationFooter) return;
-        
-        const infoDiv = this.elements.paginationFooter.querySelector('.pagination-info');
-        if (infoDiv) {
-            infoDiv.innerHTML = this.getPaginationInfoText();
-        }
-        
-        const pageSelect = this.elements.paginationFooter.querySelector('.page-selector');
-        if (pageSelect) {
-            pageSelect.value = this.state.currentPage;
-        }
-        
-        // עדכן מצב כפתורים
-        const btnFirst = this.elements.paginationFooter.querySelectorAll('.pagination-btn')[0];
-        const btnPrev = this.elements.paginationFooter.querySelectorAll('.pagination-btn')[1];
-        const btnNext = this.elements.paginationFooter.querySelectorAll('.pagination-btn')[2];
-        const btnLast = this.elements.paginationFooter.querySelectorAll('.pagination-btn')[3];
-        
-        if (btnFirst) btnFirst.disabled = this.state.currentPage === 1;
-        if (btnPrev) btnPrev.disabled = this.state.currentPage === 1;
-        if (btnNext) btnNext.disabled = this.state.currentPage === this.state.totalPages;
-        if (btnLast) btnLast.disabled = this.state.currentPage === this.state.totalPages;
-    }
-    
-    /**
-     * מעבר לעמוד
-     */
-    goToPage(pageNum) {
-        if (pageNum < 1 || pageNum > this.state.totalPages) return;
-        
-        this.state.currentPage = pageNum;
-        console.log(`📄 Moving to page ${pageNum}/${this.state.totalPages}`);
-        
-        // callback
-        if (this.config.onPageChange) {
-            this.config.onPageChange(pageNum);
-        }
-        
-        this.loadCurrentPageData();
-        this.updatePaginationFooter();
-    }
-    
-    /**
-     * שינוי כמות רשומות לעמוד
-     */
-    changeItemsPerPage(newAmount) {
-        console.log(`📊 Changing items per page to: ${newAmount}`);
-        
-        this.config.itemsPerPage = newAmount;
-        this.state.currentPage = 1;
-        
-        // חשב מחדש עמודים
-        this.calculateTotalPages();
-        
-        // בנה מחדש את הסלקט של העמודים
-        const pageSelect = this.elements.paginationFooter.querySelector('.page-selector');
-        if (pageSelect) {
-            pageSelect.innerHTML = '';
-            for (let i = 1; i <= this.state.totalPages; i++) {
-                const option = document.createElement('option');
-                option.value = i;
-                option.textContent = `עמוד ${i}`;
-                if (i === 1) option.selected = true;
-                pageSelect.appendChild(option);
-            }
-        }
-        
-        this.loadCurrentPageData();
-        this.updatePaginationFooter();
-    }
-    
-    /**
-     * סנכרון גלילה אופקית
+     * סנכרון גלילה אופקית בין כותרת לתוכן
      */
     syncHorizontalScroll() {
         this.elements.headerContainer.addEventListener('scroll', () => {
@@ -552,23 +282,9 @@ class TableManager {
             this.state.filteredData = this.sortData(this.state.filteredData);
         }
         
-        // טען עמוד נוכחי
-        this.loadCurrentPageData();
-    }
-    
-    /**
-     * טעינת נתונים של העמוד הנוכחי
-     */
-    loadCurrentPageData() {
-        if (this.config.itemsPerPage >= 999999) {
-            // מצב infinite scroll - טען לפי scrollLoadBatch
-            this.state.displayedData = this.state.filteredData.slice(0, this.config.scrollLoadBatch);
-        } else {
-            // מצב pagination - טען עמוד מלא
-            const start = (this.state.currentPage - 1) * this.config.itemsPerPage;
-            const end = start + this.config.itemsPerPage;
-            this.state.displayedData = this.state.filteredData.slice(start, end);
-        }
+        // טען עמוד ראשון
+        this.state.currentPage = 1;
+        this.state.displayedData = this.state.filteredData.slice(0, this.config.itemsPerPage);
         
         // רינדור
         this.renderRows();
@@ -587,18 +303,22 @@ class TableManager {
             th.className = 'tm-header-cell';
             th.dataset.columnIndex = colIndex;
             
+            // קבע רוחב מינימלי אם לא הוגדר
             const width = this.state.columnWidths[colIndex];
             th.style.width = width;
             th.style.minWidth = width;
             
+            // wrapper פנימי
             const wrapper = document.createElement('div');
             wrapper.className = 'tm-header-wrapper';
             
+            // תווית
             const label = document.createElement('span');
             label.className = 'tm-header-label';
             label.textContent = column.label;
             wrapper.appendChild(label);
             
+            // אייקון מיון
             if (this.config.sortable && column.sortable !== false) {
                 const sortIcon = document.createElement('span');
                 sortIcon.className = 'tm-sort-icon';
@@ -606,6 +326,7 @@ class TableManager {
                 wrapper.appendChild(sortIcon);
             }
             
+            // כפתור תפריט
             if (this.config.filterable) {
                 const menuBtn = document.createElement('button');
                 menuBtn.className = 'tm-menu-btn';
@@ -619,6 +340,7 @@ class TableManager {
             
             th.appendChild(wrapper);
             
+            // תפיסה לשינוי גודל
             if (this.config.resizable) {
                 const resizeHandle = document.createElement('div');
                 resizeHandle.className = 'tm-resize-handle';
@@ -632,15 +354,19 @@ class TableManager {
         this.elements.thead.innerHTML = '';
         this.elements.thead.appendChild(headerRow);
         
+        // סנכרן רוחבים עם טבלת התוכן
         this.syncColumnWidths();
+        
     }
     
     /**
-     * סנכרן רוחבי עמודות
+     * סנכרן רוחבי עמודות בין הכותרת לתוכן
      */
     syncColumnWidths() {
+        // יישם את אותם רוחבים על שתי הטבלאות
         const bodyCols = this.elements.bodyTable.querySelectorAll('colgroup col');
         
+        // אם אין colgroup, צור אחד
         if (bodyCols.length === 0) {
             const colgroup = document.createElement('colgroup');
             this.state.columnOrder.forEach(colIndex => {
@@ -652,6 +378,7 @@ class TableManager {
             });
             this.elements.bodyTable.insertBefore(colgroup, this.elements.tbody);
         } else {
+            // עדכן קיימים
             bodyCols.forEach((col, index) => {
                 const width = this.state.columnWidths[index];
                 col.style.width = width;
@@ -670,25 +397,28 @@ class TableManager {
         }
         
         const dataToRender = append 
-            ? this.state.displayedData.slice((this.state.currentPage - 1) * this.config.scrollLoadBatch)
+            ? this.state.displayedData.slice((this.state.currentPage - 1) * this.config.itemsPerPage)
             : this.state.displayedData;
         
+        // בניית שורות
         const rows = dataToRender.map(rowData => {
             const tr = document.createElement('tr');
             tr.className = 'tm-row';
             
+            // ⭐ הוספה חדשה - התחלה
             if (this.config.onRowDoubleClick) {
                 tr.style.cursor = 'pointer';
                 tr.ondblclick = () => {
                     this.config.onRowDoubleClick(rowData);
                 };
             }
-            
+            // ⭐ הוספה חדשה - סוף
             this.state.columnOrder.forEach(colIndex => {
                 const column = this.config.columns[colIndex];
                 const td = document.createElement('td');
                 td.className = 'tm-cell';
                 
+                // רינדור התא
                 if (this.config.renderCell) {
                     td.innerHTML = this.config.renderCell(rowData, column, colIndex);
                 } else if (column.render) {
@@ -712,7 +442,7 @@ class TableManager {
     }
     
     /**
-     * מיון נתונים
+     * מיון נתונים - FIX: עכשיו עובד נכון
      */
     sortData(data) {
         const column = this.config.columns[this.state.sortColumn];
@@ -722,19 +452,23 @@ class TableManager {
             let valA = a[field];
             let valB = b[field];
             
+            // טיפול בערכים ריקים
             if (valA == null) valA = '';
             if (valB == null) valB = '';
             
+            // המרה למספרים אם צריך
             if (column.type === 'number') {
                 valA = parseFloat(valA) || 0;
                 valB = parseFloat(valB) || 0;
             }
             
+            // המרה לתאריכים אם צריך
             if (column.type === 'date') {
                 valA = new Date(valA).getTime() || 0;
                 valB = new Date(valB).getTime() || 0;
             }
             
+            // השוואה
             let comparison = 0;
             if (typeof valA === 'string' && typeof valB === 'string') {
                 comparison = valA.localeCompare(valB, 'he');
@@ -748,7 +482,7 @@ class TableManager {
     }
     
     /**
-     * סינון נתונים
+     * סינון נתונים - על כל הדאטה, לא רק מה שמוצג
      */
     filterData(data) {
         if (this.state.filters.size === 0) {
@@ -786,6 +520,7 @@ class TableManager {
      * קישור אירועים
      */
     bindEvents() {
+        // מיון בלחיצה על כותרת
         if (this.config.sortable) {
             this.elements.thead.addEventListener('click', (e) => {
                 const th = e.target.closest('.tm-header-cell');
@@ -796,6 +531,7 @@ class TableManager {
             });
         }
         
+        // שינוי גודל עמודות
         if (this.config.resizable) {
             this.bindResizeEvents();
         }
@@ -806,18 +542,24 @@ class TableManager {
      */
     handleSort(colIndex) {
         if (this.state.sortColumn === colIndex) {
+            // שינוי כיוון המיון
             this.state.sortOrder = this.state.sortOrder === 'asc' ? 'desc' : 'asc';
         } else {
+            // עמודה חדשה
             this.state.sortColumn = colIndex;
             this.state.sortOrder = 'asc';
         }
         
+        // callback
         if (this.config.onSort) {
             const column = this.config.columns[colIndex];
             this.config.onSort(column.field, this.state.sortOrder);
         }
         
+        // טען מחדש עם המיון החדש
         this.loadInitialData();
+        
+        // עדכן כותרות
         this.renderHeaders();
     }
     
@@ -825,6 +567,7 @@ class TableManager {
      * הצגת תפריט עמודה
      */
     showColumnMenu(colIndex, button) {
+        // הסר תפריטים קיימים
         document.querySelectorAll('.tm-column-menu').forEach(m => m.remove());
         
         const column = this.config.columns[colIndex];
@@ -847,10 +590,12 @@ class TableManager {
             </div>
         `;
         
+        // מיקום התפריט
         const rect = button.getBoundingClientRect();
         menu.style.top = `${rect.bottom + 5}px`;
         menu.style.right = `${window.innerWidth - rect.right}px`;
         
+        // אירועים
         menu.addEventListener('click', (e) => {
             const item = e.target.closest('.tm-menu-item');
             if (!item) return;
@@ -887,6 +632,7 @@ class TableManager {
         
         document.body.appendChild(menu);
         
+        // סגירה בלחיצה מחוץ
         setTimeout(() => {
             document.addEventListener('click', function closeMenu(e) {
                 if (!menu.contains(e.target)) {
@@ -917,12 +663,13 @@ class TableManager {
                 this.config.onFilter(Array.from(this.state.filters.entries()));
             }
             
+            // טען מחדש עם הסינון
             this.loadInitialData();
         }
     }
     
     /**
-     * קישור אירועי שינוי גודל
+     * קישור אירועי שינוי גודל - RTL FIX
      */
     bindResizeEvents() {
         let startX, startWidth, colIndex;
@@ -945,16 +692,19 @@ class TableManager {
         const onMouseMove = (e) => {
             if (!this.state.isResizing) return;
             
+            // RTL FIX
             const diff = e.pageX - startX;
             const newWidth = Math.max(50, startWidth - diff);
             this.state.columnWidths[colIndex] = `${newWidth}px`;
             
+            // עדכן כותרת
             const th = this.elements.headerTable.querySelector(`th[data-column-index="${colIndex}"]`);
             if (th) {
                 th.style.width = `${newWidth}px`;
                 th.style.minWidth = `${newWidth}px`;
             }
             
+            // עדכן colgroup
             const col = this.elements.bodyTable.querySelector(`colgroup col:nth-child(${colIndex + 1})`);
             if (col) {
                 col.style.width = `${newWidth}px`;
@@ -967,6 +717,7 @@ class TableManager {
             document.removeEventListener('mousemove', onMouseMove);
             document.removeEventListener('mouseup', onMouseUp);
             
+            // הדפס את המידות החדשות
             console.log('📏 Updated Column Widths:', this.getColumnWidths());
         };
         
@@ -977,9 +728,9 @@ class TableManager {
      * אתחול Infinite Scroll
      */
     initInfiniteScroll() {
+        // גלילה על ה-body container
         this.elements.bodyContainer.addEventListener('scroll', () => {
             if (this.state.isLoading) return;
-            if (!this.state.hasMoreData) return;
             
             const { scrollTop, scrollHeight, clientHeight } = this.elements.bodyContainer;
             const distanceFromBottom = scrollHeight - (scrollTop + clientHeight);
@@ -989,68 +740,55 @@ class TableManager {
             }
         });
         
-        console.log('📜 Infinite scroll initialized (batch size: ' + this.config.scrollLoadBatch + ')');
+        console.log('📜 Infinite scroll initialized on body container');
     }
-    
+
     /**
-     * ⭐ טעינת עוד נתונים - infinite scroll
+     * טעינת עוד נתונים
      */
     async loadMoreData() {
+        // ⭐ השתמש ב-totalItems האמיתי מה-config!
+        const totalItems = this.config.totalItems;
         const loadedItems = this.state.displayedData.length;
-        const totalAvailable = this.state.filteredData.length;
         
-        console.log(`📊 Scroll load check: ${loadedItems}/${this.config.totalItems} (available: ${totalAvailable})`);
+        console.log(`📊 Load check: ${loadedItems}/${totalItems} items`);
         
-        // בדיקה 1: האם הגענו לסוף הנתונים הכולל?
-        if (loadedItems >= this.config.totalItems) {
-            console.log('📭 All items loaded from server');
-            this.state.hasMoreData = false;
+        if (loadedItems >= totalItems) {
+            console.log('📭 All items loaded');
             return;
         }
         
-        // בדיקה 2: האם צריך לקרוא עוד נתונים מה-API?
-        if (loadedItems >= totalAvailable) {
-            console.log('⚠️ Need to fetch more data from API');
-            
-            if (this.config.onLoadMore) {
-                this.state.isLoading = true;
-                this.showLoadingIndicator();
-                
-                try {
-                    await this.config.onLoadMore();
-                    // לאחר הטעינה, הנתונים יתעדכנו דרך setData()
-                } catch (error) {
-                    console.error('❌ Error loading more data:', error);
-                }
-                
-                this.hideLoadingIndicator();
-                this.state.isLoading = false;
-            }
-            
+        // ⭐ בדיקה נוספת: אם אין עוד נתונים ב-filteredData
+        if (loadedItems >= this.state.filteredData.length) {
+            console.log('⚠️ No more items in filteredData, need to fetch from API');
+            // כאן צריך לקרוא ל-callback שיביא עוד נתונים מה-API
             return;
         }
         
-        // בדיקה 3: יש עוד נתונים ב-filteredData - טען אותם
         this.state.isLoading = true;
-        console.log('📥 Loading more data from memory...');
+        console.log('📥 Loading more data...');
         
+        // הוסף אינדיקטור טעינה
         this.showLoadingIndicator();
         
-        await new Promise(resolve => setTimeout(resolve, 200));
+        // סימולציה של טעינה
+        await new Promise(resolve => setTimeout(resolve, 300));
         
         const nextBatch = this.state.filteredData.slice(
             loadedItems,
-            loadedItems + this.config.scrollLoadBatch
+            loadedItems + this.config.itemsPerPage
         );
         
         this.state.displayedData = [...this.state.displayedData, ...nextBatch];
+        this.state.currentPage++;
         
-        this.renderRows(true);
+        this.renderRows(true); // append mode
         
+        // הסר אינדיקטור טעינה
         this.hideLoadingIndicator();
         
         this.state.isLoading = false;
-        console.log(`✅ Loaded ${nextBatch.length} more items (${this.state.displayedData.length}/${this.config.totalItems})`);
+        console.log(`✅ Loaded ${nextBatch.length} more items (${this.state.displayedData.length}/${totalItems})`);
     }
     
     /**
@@ -1083,7 +821,7 @@ class TableManager {
     }
     
     /**
-     * קבל רוחבי עמודות
+     * קבל רוחבי עמודות נוכחיים
      */
     getColumnWidths() {
         const widths = {};
@@ -1093,9 +831,9 @@ class TableManager {
         return widths;
     }
     
-    // ============================================
-    // API ציבורי
-    // ============================================
+    /**
+     * API ציבורי
+     */
     
     setData(data) {
         this.config.data = data;
@@ -1126,6 +864,7 @@ class TableManager {
     }
     
     setColumnWidths(widths) {
+        // widths הוא אובייקט עם field: width
         Object.keys(widths).forEach(field => {
             const colIndex = this.config.columns.findIndex(col => 
                 (col.field || col.label) === field
@@ -1144,20 +883,6 @@ class TableManager {
         });
         this.renderHeaders();
         this.renderRows();
-    }
-    
-    /**
-     * ⭐ עדכון totalItems (כשמקבלים נתונים חדשים מה-API)
-     */
-    updateTotalItems(newTotal) {
-        this.config.totalItems = newTotal;
-        this.calculateTotalPages();
-        
-        if (this.config.showPagination) {
-            this.updatePaginationFooter();
-        }
-        
-        console.log(`📊 Total items updated to: ${newTotal}`);
     }
 }
 

@@ -528,22 +528,69 @@ async function initAreaGravesTable(data, totalItems = null, signal) {
         // ============================================
         // ⭐ 3 פרמטרים חדשים - הוסף כאן!
         // ============================================
-        totalItems: actualTotalItems,        // ✅ כבר יש לך - מעולה!
-        // scrollLoadBatch: 100,                // ⭐ חדש - טען 100 בכל גלילה
-        // itemsPerPage: 999999,                // ⭐ חדש - עמוד אחד (infinite scroll)
-        // scrollThreshold: 100,                // ⭐ חדש - התחל טעינה 100px לפני התחתית
+        // totalItems: actualTotalItems,        // ✅ כבר יש לך - נתוני הדאטה!
+        totalItems: 9999999,                 // ✅ לא ידועים כמות הנתונים
+        scrollLoadBatch: 100,                // ⭐ חדש - טען 100 בכל גלילה
+        itemsPerPage: 100,                   // ⭐ חדש - עמוד אחד (infinite scroll)
+        scrollThreshold: 200,                // ⭐ חדש - התחל טעינה 100px לפני התחתית
 
-        
-        scrollLoadBatch: 0,                  // ⭐ 0 = ללא infinite scroll
-        itemsPerPage: 100,                   // ⭐ 100 רשומות לעמוד
-        showPagination: true,                // ⭐ הצג footer pagination
-        paginationOptions: [25, 50, 100, 200], // ⭐ אפשרויות בסלקט
 
+ 
+        // scrollLoadBatch: 0,                  // ⭐ 0 = ללא infinite scroll
+        // itemsPerPage: 100,                   // ⭐ 100 רשומות לעמוד
+        // showPagination: true,                // ⭐ הצג footer pagination
+        // paginationOptions: [25, 50, 100, 200], // ⭐ אפשרויות בסלקט
 
         // ============================================
         // הגדרות קיימות
         // ============================================
         
+    // ============================================
+    // ⭐⭐⭐ Callback לטעינת עוד נתונים
+    // ============================================
+        onLoadMore: async () => {
+            console.log('📥 TableManager detected scroll - loading more area graves...');
+            
+            try {
+                // בדוק אם areaGraveSearch זמין
+                if (!areaGraveSearch) {
+                    console.log('❌ areaGraveSearch not available');
+                    areaGravesTable.state.hasMoreData = false;
+                    return;
+                }
+                
+                // בדוק אם כבר בתהליך טעינה
+                if (areaGraveSearch.state.isLoading) {
+                    console.log('⏳ Already loading...');
+                    return;
+                }
+                
+                // בדוק אם יש עוד עמודים
+                if (areaGraveSearch.state.currentPage >= areaGraveSearch.state.totalPages) {
+                    console.log('✅ All pages loaded');
+                    areaGravesTable.state.hasMoreData = false;
+                    return;
+                }
+                
+                // טען עמוד הבא
+                const nextPage = areaGraveSearch.state.currentPage + 1;
+                console.log(`📄 Loading page ${nextPage} of ${areaGraveSearch.state.totalPages}...`);
+                
+                areaGraveSearch.state.currentPage = nextPage;
+                areaGraveSearch.state.isLoading = true;
+                
+                await areaGraveSearch.search();
+                
+                console.log(`✅ Page ${nextPage} loaded successfully`);
+                
+            } catch (error) {
+                console.error('❌ Error in onLoadMore:', error);
+                areaGravesTable.state.hasMoreData = false;
+                showToast('שגיאה בטעינת נתונים נוספים', 'error');
+            }
+        },
+    
+
         onSort: (field, order) => {
             console.log(`📊 Sorted by ${field} ${order}`);
             showToast(`ממוין לפי ${field} (${order === 'asc' ? 'עולה' : 'יורד'})`, 'info');
@@ -555,30 +602,6 @@ async function initAreaGravesTable(data, totalItems = null, signal) {
             showToast(`נמצאו ${count} תוצאות`, 'info');
         }
     });
-
-    // ⭐ מאזין לגלילה - טען עוד דפים! (כמו ב-customers)
-    const bodyContainer = document.querySelector('.table-body-container');
-    if (bodyContainer && areaGraveSearch) {
-        bodyContainer.addEventListener('scroll', async function() {
-            const scrollTop = this.scrollTop;
-            const scrollHeight = this.scrollHeight;
-            const clientHeight = this.clientHeight;
-            
-            // אם הגענו לתחתית והטעינה עוד לא בתהליך
-            if (scrollHeight - scrollTop - clientHeight < 100) {
-                if (!areaGraveSearch.state.isLoading && areaGraveSearch.state.currentPage < areaGraveSearch.state.totalPages) {
-                    console.log('📥 Reached bottom, loading more data...');
-                    
-                    const nextPage = areaGraveSearch.state.currentPage + 1;
-                    
-                    areaGraveSearch.state.currentPage = nextPage;
-                    areaGraveSearch.state.isLoading = true;
-                    
-                    await areaGraveSearch.search();
-                }
-            }
-        });
-    }
     
     window.areaGravesTable = areaGravesTable;
     

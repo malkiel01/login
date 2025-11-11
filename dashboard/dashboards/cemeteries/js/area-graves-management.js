@@ -589,7 +589,7 @@ async function initAreaGravesTable(data, totalItems = null, signal) {
         // totalItems: actualTotalItems,        // ✅ כבר יש לך - נתוני הדאטה!
         totalItems: 9999999,                 // ✅ לא ידועים כמות הנתונים
         scrollLoadBatch: 100,                // ⭐ חדש - טען 100 בכל גלילה
-        itemsPerPage: 100,                   // ⭐ חדש - עמוד אחד (infinite scroll)
+        itemsPerPage: 0,                   // ⭐ חדש - עמוד אחד (infinite scroll)
         scrollThreshold: 200,                // ⭐ חדש - התחל טעינה 100px לפני התחתית
 
 

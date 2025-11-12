@@ -689,7 +689,7 @@ async function initAreaGravesTable(data, totalItems = null, signal) {
         // itemsPerPage: 999999,                   // ⭐ חדש - עמוד אחד (infinite scroll)
         itemsPerPage: 100,                   // ⭐ חדש - עמוד אחד (infinite scroll)
         scrollThreshold: 200,                // ⭐ חדש - התחל טעינה 100px לפני התחתית
-
+        showPagination: false,
 
  
         // scrollLoadBatch: 0,                  // ⭐ 0 = ללא infinite scroll

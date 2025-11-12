@@ -115,24 +115,24 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
         return;
     }
 
-    // // ⭐ השמד חיפוש קודם
-    // if (areaGraveSearch && typeof areaGraveSearch.destroy === 'function') {
-    //     console.log('🗑️ Destroying previous areaGraveSearch instance...');
-    //     areaGraveSearch.destroy();
-    //     areaGraveSearch = null;
-    //     window.areaGraveSearch = null;
-    // }
+    // ⭐ השמד חיפוש קודם
+    if (areaGraveSearch && typeof areaGraveSearch.destroy === 'function') {
+        console.log('🗑️ Destroying previous areaGraveSearch instance...');
+        areaGraveSearch.destroy();
+        areaGraveSearch = null;
+        window.areaGraveSearch = null;
+    }
     
-    // // אתחל חיפוש חדש
-    // console.log('🆕 Creating fresh areaGraveSearch instance...');
-    // await initAreaGravesSearch(signal, plotId);
+    // אתחל חיפוש חדש
+    console.log('🆕 Creating fresh areaGraveSearch instance...');
+    await initAreaGravesSearch(signal, plotId);
 
-    // if (OperationManager.shouldAbort('areaGrave')) {
-    //     console.log('⚠️ AreaGrave operation aborted');
-    //     return;
-    // }
+    if (OperationManager.shouldAbort('areaGrave')) {
+        console.log('⚠️ AreaGrave operation aborted');
+        return;
+    }
 
-    // areaGraveSearch.search();
+    areaGraveSearch.search();
     
     // טען סטטיסטיקות
     await loadAreaGraveStats(signal, plotId);

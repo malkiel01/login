@@ -1,13 +1,9 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/area-graves-management.js
- * Version: 1.4.2
+ * Version: 1.4.1
  * Updated: 2025-11-12
  * Author: Malkiel
  * Change Summary:
- * - v1.4.2: 📊 הוספת הדפסות debug מפורטות
- *   - console.table עם נתוני pagination
- *   - מספר רשומות מדויק
- *   - מבנה מסודר עם קווים מפרידים
  * - v1.4.1: ⚡ PERFORMANCE TEST - השבתה זמנית של UniversalSearch
  *   - טעינה ישירה מה-API ללא שכבת החיפוש
  *   - בדיקת מהירות טעינה ללא UI של החיפוש
@@ -179,18 +175,6 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
         const result = await response.json();
         
         console.log('📦 API Response:', result);
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        console.log('📊 מספר רשומות שהתקבלו:', result.data ? result.data.length : 0);
-        console.log('📋 pagination:', result.pagination);
-        console.log('🔍 האובייקט המלא מהשרת:');
-        console.table({
-            'סה"כ רשומות': result.pagination?.totalAll || 0,
-            'רשומות בתשובה': result.data?.length || 0,
-            'עמוד נוכחי': result.pagination?.page || 1,
-            'limit': result.pagination?.limit || 0,
-            'סה"כ עמודים': result.pagination?.pages || 0
-        });
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         
         if (result.success && result.data) {
             console.log(`✅ Loaded ${result.data.length} area graves directly`);

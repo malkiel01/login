@@ -493,9 +493,9 @@ async function initAreaGravesSearch(signal, plotId) {
             { key: 'graveType', label: 'סוג' },
             { key: 'graves_count', label: 'כמות קברים' }
         ],
-        
-        searchContainerSelector: '#areaGraveSearchContainer',
-        resultsContainerSelector: '#areaGravesTableBody',
+
+        searchContainerSelector: '#areaGraveSearchSection',
+        resultsContainerSelector: '#tableBody',  
         
         itemsPerPage: 100,  // ⭐ טוען 100 בכל פעם
         showPagination: true,

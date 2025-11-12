@@ -29,32 +29,6 @@ try {
 $action = $_GET['action'] ?? '';
 $id = $_GET['id'] ?? null;
 
-
-// -------------------------------------------------------------
-
-// ⭐ פרמטרי מיון אופציונליים (חדש!)
-$orderBy = $_GET['orderBy'] ?? 'id'; // ברירת מחדל: לפי איידי
-$sortDirection = strtoupper($_GET['sortDirection'] ?? 'ASC'); // ברירת מחדל: א-ת
-
-// ולידציה של כיוון המיון
-if (!in_array($sortDirection, ['ASC', 'DESC'])) {
-    $sortDirection = 'ASC';
-}
-
-// שדות מותרים למיון (אבטחה)
-$allowedOrderFields = [
-    'areaGraveName',
-    'unicId',
-    'createdDate',
-    'areaGraveNumber',
-    'isActive'
-];
-
-// ולידציה של שדה המיון
-if (!in_array($orderBy, $allowedOrderFields)) {
-    $orderBy = 'areaGraveName';
-}
-
 try {
     switch ($action) {
         case 'count':
@@ -82,7 +56,7 @@ try {
         // =====================================================
         // רשימת כל אחוזות הקבר
         // =====================================================
-        case 'list2':
+        case 'list':
             $search = $_GET['search'] ?? '';
             $plotId = $_GET['plotId'] ?? null;
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -189,162 +163,7 @@ try {
                 ]
             ]);
             break;
-        
-        case 'list':
-            // פרמטרים קיימים
-            $cemeteryId = $_GET['cemeteryId'] ?? null;
-            $blockId = $_GET['blockId'] ?? null;
-            $plotId = $_GET['plotId'] ?? null;
-            $rowId = $_GET['rowId'] ?? null;
-            $search = $_GET['search'] ?? '';
-            $page = max(1, intval($_GET['page'] ?? 1));
-            $limit = max(1, min(100, intval($_GET['limit'] ?? 20)));
-            $offset = ($page - 1) * $limit;
-
-            // בניית תנאי WHERE
-            $where = ['ag.isActive = 1'];
-            $params = [];
-            $types = '';
-
-            if ($rowId) {
-                $where[] = 'ag.rowId = ?';
-                $params[] = $rowId;
-                $types .= 's';
-            } elseif ($plotId) {
-                $where[] = 'r.plotId = ?';
-                $params[] = $plotId;
-                $types .= 's';
-            } elseif ($blockId) {
-                $where[] = 'p.blockId = ?';
-                $params[] = $blockId;
-                $types .= 's';
-            } elseif ($cemeteryId) {
-                $where[] = 'b.cemeteryId = ?';
-                $params[] = $cemeteryId;
-                $types .= 's';
-            }
-
-            if (!empty($search)) {
-                $where[] = '(ag.areaGraveName LIKE ? OR ag.areaGraveNumber LIKE ?)';
-                $searchTerm = "%{$search}%";
-                $params[] = $searchTerm;
-                $params[] = $searchTerm;
-                $types .= 'ss';
-            }
-
-            $whereClause = implode(' AND ', $where);
-
-            // ספירת סך הכל רשומות
-            $countQuery = "
-                SELECT COUNT(*) as total
-                FROM areaGraves ag
-                LEFT JOIN rows r ON ag.rowId = r.unicId
-                LEFT JOIN plots p ON r.plotId = p.unicId
-                LEFT JOIN blocks b ON p.blockId = b.unicId
-                WHERE {$whereClause}
-            ";
-
-            $countStmt = $conn->prepare($countQuery);
-            if (!empty($params)) {
-                $countStmt->bind_param($types, ...$params);
-            }
-            $countStmt->execute();
-            $totalRecords = $countStmt->get_result()->fetch_assoc()['total'];
-            $countStmt->close();
-
-            // ⭐ שליפת הנתונים עם מיון דינמי
-            $dataQuery = "
-                SELECT 
-                    ag.*,
-                    r.rowName,
-                    r.unicId as rowUnicId,
-                    p.plotName,
-                    p.unicId as plotUnicId,
-                    b.blockName,
-                    b.unicId as blockUnicId,
-                    c.cemeteryName,
-                    c.unicId as cemeteryUnicId
-                FROM areaGraves ag
-                LEFT JOIN rows r ON ag.rowId = r.unicId
-                LEFT JOIN plots p ON r.plotId = p.unicId
-                LEFT JOIN blocks b ON p.blockId = b.unicId
-                LEFT JOIN cemeteries c ON b.cemeteryId = c.unicId
-                WHERE {$whereClause}
-                ORDER BY ag.{$orderBy} {$sortDirection}
-                LIMIT ? OFFSET ?
-            ";
-
-            $dataStmt = $conn->prepare($dataQuery);
-            $params[] = $limit;
-            $params[] = $offset;
-            $types .= 'ii';
-            $dataStmt->bind_param($types, ...$params);
-            $dataStmt->execute();
-            $result = $dataStmt->get_result();
-
-            $items = [];
-            while ($row = $result->fetch_assoc()) {
-                $items[] = $row;
-            }
-            $dataStmt->close();
-
-            // ⭐ מידע דיבוג מפורט
-            $debugInfo = [
-                'query_params' => [
-                    'cemeteryId' => $cemeteryId,
-                    'blockId' => $blockId,
-                    'plotId' => $plotId,
-                    'rowId' => $rowId,
-                    'search' => $search,
-                    'page' => $page,
-                    'limit' => $limit,
-                    'offset' => $offset,
-                    'orderBy' => $orderBy,
-                    'sortDirection' => $sortDirection
-                ],
-                'sql_info' => [
-                    'order_field' => $orderBy,
-                    'sort_direction' => $sortDirection,
-                    'where_conditions' => count($where),
-                    'bind_params_count' => count($params),
-                    'full_query_sample' => "ORDER BY ag.{$orderBy} {$sortDirection} LIMIT {$limit} OFFSET {$offset}"
-                ],
-                'results_info' => [
-                    'total_in_db' => $totalRecords,
-                    'returned_count' => count($items),
-                    'from_index' => $offset + 1,
-                    'to_index' => min($offset + $limit, $totalRecords),
-                    'current_page' => $page,
-                    'total_pages' => ceil($totalRecords / $limit)
-                ],
-                'first_item' => !empty($items) ? [
-                    'unicId' => $items[0]['unicId'] ?? null,
-                    'name' => $items[0]['areaGraveName'] ?? null,
-                    'number' => $items[0]['areaGraveNumber'] ?? null,
-                    'createdDate' => $items[0]['createdDate'] ?? null
-                ] : null,
-                'last_item' => !empty($items) ? [
-                    'unicId' => $items[count($items)-1]['unicId'] ?? null,
-                    'name' => $items[count($items)-1]['areaGraveName'] ?? null,
-                    'number' => $items[count($items)-1]['areaGraveNumber'] ?? null,
-                    'createdDate' => $items[count($items)-1]['createdDate'] ?? null
-                ] : null,
-                'timestamp' => date('Y-m-d H:i:s')
-            ];
-
-            echo json_encode([
-                'success' => true,
-                'data' => $items,
-                'pagination' => [
-                    'total' => $totalRecords,
-                    'page' => $page,
-                    'limit' => $limit,
-                    'totalPages' => ceil($totalRecords / $limit)
-                ],
-                'debug' => $debugInfo
-            ], JSON_UNESCAPED_UNICODE);
-            break;
-        
+            
         // =====================================================
         // קבלת אחוזת קבר בודדת
         // =====================================================
@@ -844,6 +663,43 @@ try {
             echo json_encode(['success' => true, 'data' => $results]);
             break;
             
+        case 'available2':
+            $currentGraveId = $_GET['currentGraveId'] ?? null;
+            $rowId = $_GET['rowId'] ?? null;
+            
+            $sql = "
+                SELECT DISTINCT ag.*,
+                CASE WHEN EXISTS(
+                    SELECT 1 FROM graves g 
+                    WHERE g.areaGraveId = ag.unicId 
+                    AND g.unicId = :currentGrave
+                ) THEN 1 ELSE 0 END as has_current_grave
+                FROM areaGraves ag
+                WHERE ag.isActive = 1
+                AND EXISTS(
+                    SELECT 1 FROM graves g 
+                    WHERE g.areaGraveId = ag.unicId 
+                    AND (g.graveStatus = 1 OR g.unicId = :currentGrave2)
+                    AND g.isActive = 1
+                )
+            ";
+            
+            $params = [
+                'currentGrave' => $currentGraveId,
+                'currentGrave2' => $currentGraveId
+            ];
+            
+            if ($rowId) {
+                $sql .= " AND ag.lineId = :rowId";
+                $params['rowId'] = $rowId;
+            }
+            
+            $sql .= " ORDER BY has_current_grave DESC, ag.areaGraveNameHe";
+            
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            echo json_encode(['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+            break;
         case 'available':
             $currentGraveId = $_GET['currentGraveId'] ?? null;
             $rowId = $_GET['rowId'] ?? null;

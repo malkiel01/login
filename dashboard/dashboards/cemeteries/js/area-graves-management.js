@@ -385,7 +385,7 @@ async function initAreaGravesSearch(signal, plotId = null) {
         resultsContainerSelector: '#tableBody',
         
         placeholder: 'חיפוש אחוזות קבר לפי שם, קואורדינטות, סוג...',
-        itemsPerPage: 999999,  // ⭐ שינוי! טעינה מדורגת
+        itemsPerPage: 100,  // ⭐ שינוי! טעינה מדורגת
         
         renderFunction: renderAreaGravesRows,
         
@@ -614,6 +614,7 @@ async function initAreaGravesTable(data, totalItems = null, signal) {
         // totalItems: actualTotalItems,        // ✅ כבר יש לך - נתוני הדאטה!
         totalItems: 9999999,                 // ✅ לא ידועים כמות הנתונים
         scrollLoadBatch: 100,                // ⭐ חדש - טען 100 בכל גלילה
+        itemsPerPage: 999999,                   // ⭐ חדש - עמוד אחד (infinite scroll)
         // itemsPerPage: 100,                   // ⭐ חדש - עמוד אחד (infinite scroll)
         scrollThreshold: 200,                // ⭐ חדש - התחל טעינה 100px לפני התחתית
 

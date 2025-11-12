@@ -1,9 +1,18 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/area-graves-management.js
- * Version: 1.3.2
+ * Version: 1.4.0
  * Updated: 2025-11-12
  * Author: Malkiel
  * Change Summary:
+ * - v1.4.0: תיקון קריטי - Infinite Scroll אמיתי עם טעינה מדורגת
+ *   - שינוי itemsPerPage → apiLimit (200 רשומות מהשרת בכל פעם)
+ *   - TableManager מציג 100 רשומות בכל גלילה (scrollLoadBatch)
+ *   - טעינה חכמה: כשמגיעים לסוף 200 → טוען עוד 200 מהשרת
+ *   - תיקון: הסרת קריאה כפולה ל-search()
+ * - v1.3.3: תיקון critical - Infinite Scroll אמיתי ללא footer
+ *   - UniversalSearch: itemsPerPage=999999, showPagination=false (טוען הכל)
+ *   - TableManager: scrollLoadBatch=100, itemsPerPage=999999 (מציג בהדרגה)
+ *   - גלילה אינסופית חלקה ללא footer pagination
  * - v1.3.2: תיקון קריטי - שחזור renderAreaGravesRows המלאה
  *   - שוחזרה הפונקציה המקורית עם כל הלוגיקה המורכבת
  *   - תוקן renderFunction ב-initAreaGravesSearch להעביר כל הפרמטרים
@@ -34,7 +43,7 @@ let currentPlotName = null;
 // טעינת אחוזות קבר (הפונקציה הראשית)
 // ===================================================================
 async function loadAreaGraves(plotId = null, plotName = null, forceReset = false) {
-    console.log('📋 Loading area graves - v1.3.2 (שוחזרה renderFunction המלאה)...');
+    console.log('📋 Loading area graves - v1.3.3 (Infinite Scroll ללא footer)...');
 
  
     const signal = OperationManager.start('areaGrave');
@@ -129,14 +138,13 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
     
     // אתחל חיפוש חדש
     console.log('🆕 Creating fresh areaGraveSearch instance...');
-    await initAreaGravesSearch(signal, plotId);
 
+    areaGraveSearch = await initAreaGravesSearch(signal, plotId);    
+    
     if (OperationManager.shouldAbort('areaGrave')) {
         console.log('⚠️ AreaGrave operation aborted');
         return;
     }
-
-    areaGraveSearch.search();
 
 
     //    // ⭐⭐⭐ טעינה זמנית של נתונים לבדיקת ביצועים
@@ -477,6 +485,7 @@ async function initAreaGravesSearch_old1(signal, plotId = null) {
     
     return areaGraveSearch;
 }
+
 async function initAreaGravesSearch(signal, plotId) {
     console.log('🔍 אתחול חיפוש שורות קבר...');
     
@@ -501,8 +510,9 @@ async function initAreaGravesSearch(signal, plotId) {
         searchContainerSelector: '#areaGraveSearchSection',
         resultsContainerSelector: '#tableBody',  
         
-        itemsPerPage: 100,  // ⭐ טוען 100 בכל פעם
-        showPagination: false,
+        // ⭐ Infinite Scroll אמיתי - טעינה מדורגת
+        apiLimit: 200,  // ⭐ טוען 200 רשומות מהשרת בכל בקשה
+        showPagination: false,  // ⭐ ללא footer - infinite scroll!
         
         apiParams: {
             level: 'area-grave',
@@ -684,11 +694,10 @@ async function initAreaGravesTable(data, totalItems = null, signal) {
         // ============================================
         // totalItems: actualTotalItems,        // ✅ כבר יש לך - נתוני הדאטה!
         totalItems: 0,                       // ⭐ יתעדכן מה-API
-        // totalItems: 9999999,                 // ✅ לא ידועים כמות הנתונים
-        scrollLoadBatch: 100,                // ⭐ חדש - טען 100 בכל גלילה
-        // itemsPerPage: 999999,                   // ⭐ חדש - עמוד אחד (infinite scroll)
-        itemsPerPage: 100,                   // ⭐ חדש - עמוד אחד (infinite scroll)
-        scrollThreshold: 200,                // ⭐ חדש - התחל טעינה 100px לפני התחתית
+        scrollLoadBatch: 100,                // ⭐ טען 100 שורות בכל גלילה (client-side)
+        itemsPerPage: 999999,                // ⭐ עמוד אחד גדול = כל הנתונים
+        scrollThreshold: 200,                // ⭐ התחל טעינה 200px לפני התחתית
+        showPagination: false,               // ⭐ ללא footer pagination
 
  
         // scrollLoadBatch: 0,                  // ⭐ 0 = ללא infinite scroll
@@ -703,31 +712,28 @@ async function initAreaGravesTable(data, totalItems = null, signal) {
     // ============================================
     // ⭐⭐⭐ Callback לטעינת עוד נתונים
     // ============================================
+
         onLoadMore: async () => {
             console.log('📥 TableManager detected scroll - loading more area graves...');
             
             try {
-                // בדוק אם areaGraveSearch זמין
                 if (!areaGraveSearch) {
                     console.log('❌ areaGraveSearch not available');
                     areaGravesTable.state.hasMoreData = false;
                     return;
                 }
                 
-                // בדוק אם כבר בתהליך טעינה
                 if (areaGraveSearch.state.isLoading) {
                     console.log('⏳ Already loading...');
                     return;
                 }
                 
-                // בדוק אם יש עוד עמודים
                 if (areaGraveSearch.state.currentPage >= areaGraveSearch.state.totalPages) {
                     console.log('✅ All pages loaded');
                     areaGravesTable.state.hasMoreData = false;
                     return;
                 }
                 
-                // טען עמוד הבא
                 const nextPage = areaGraveSearch.state.currentPage + 1;
                 console.log(`📄 Loading page ${nextPage} of ${areaGraveSearch.state.totalPages}...`);
                 
@@ -744,13 +750,57 @@ async function initAreaGravesTable(data, totalItems = null, signal) {
                 showToast('שגיאה בטעינת נתונים נוספים', 'error');
             }
         },
+    
+        // onLoadMore: async () => {
+        //     console.log('📥 TableManager detected scroll - loading more area graves...');
+            
+        //     try {
+        //         // בדוק אם areaGraveSearch זמין
+        //         if (!areaGraveSearch) {
+        //             console.log('❌ areaGraveSearch not available');
+        //             areaGravesTable.state.hasMoreData = false;
+        //             return;
+        //         }
+                
+        //         // בדוק אם כבר בתהליך טעינה
+        //         if (areaGraveSearch.state.isLoading) {
+        //             console.log('⏳ Already loading...');
+        //             return;
+        //         }
+                
+        //         // בדוק אם יש עוד עמודים
+        //         if (areaGraveSearch.state.currentPage >= areaGraveSearch.state.totalPages) {
+        //             console.log('✅ All pages loaded');
+        //             areaGravesTable.state.hasMoreData = false;
+        //             return;
+        //         }
+                
+        //         // טען עמוד הבא
+        //         const nextPage = areaGraveSearch.state.currentPage + 1;
+        //         console.log(`📄 Loading page ${nextPage} of ${areaGraveSearch.state.totalPages}...`);
+                
+        //         areaGraveSearch.state.currentPage = nextPage;
+        //         areaGraveSearch.state.isLoading = true;
+                
+        //         await areaGraveSearch.search();
+                
+        //         console.log(`✅ Page ${nextPage} loaded successfully`);
+                
+        //     } catch (error) {
+        //         console.error('❌ Error in onLoadMore:', error);
+        //         areaGravesTable.state.hasMoreData = false;
+        //         showToast('שגיאה בטעינת נתונים נוספים', 'error');
+        //     }
+        // },
 
-        // ⭐ פונקציה שנקראת כשמחליפים עמוד
-        onPageChange: (newPage) => {
-            if (window.areaGraveSearch) {
-                window.areaGraveSearch.goToPage(newPage);
-            }
-        },
+        // ============================================
+        // onPageChange - לא רלוונטי ל-infinite scroll
+        // ============================================
+        // onPageChange: (newPage) => {
+        //     if (window.areaGraveSearch) {
+        //         window.areaGraveSearch.goToPage(newPage);
+        //     }
+        // },
         
         renderFunction: (pageData) => {
             // ⭐ זה לא ישמש - UniversalSearch ירנדר ישירות
@@ -778,139 +828,6 @@ async function initAreaGravesTable(data, totalItems = null, signal) {
 // ===================================================================
 // רינדור שורות - עם סינון client-side! (⭐⭐ כמו ב-blocks!)
 // ===================================================================
-function renderAreaGravesRows_old1(data, container, pagination = null, signal = null) {
-    // ⭐⭐ סינון client-side לפי plotId
-    let filteredData = data;
-    if (currentPlotId) {
-        filteredData = data.filter(ag => {
-            // ⭐ תמיכה בכל האפשרויות
-            const agPlotId = ag.plotId || ag.plot_id || ag.PlotId;
-            
-            // ⭐ המרה למחרוזת להשוואה אמינה
-            return String(agPlotId) === String(currentPlotId);
-        });
-    }
-    
-    // ⭐ עדכן את totalItems להיות המספר המסונן!
-    const totalItems = filteredData.length;
-
-    if (filteredData.length === 0) {
-        if (areaGravesTable) {
-            areaGravesTable.setData([]);
-        }
-        
-        // ⭐⭐⭐ הודעה מותאמת לחלקה ריקה!
-        if (currentPlotId && currentPlotName) {
-            // נכנסנו לחלקה ספציפית ואין אחוזות קבר
-            container.innerHTML = `
-                <tr>
-                    <td colspan="7" style="text-align: center; padding: 60px;">
-                        <div style="color: #6b7280;">
-                            <div style="font-size: 48px; margin-bottom: 16px;">🏘️</div>
-                            <div style="font-size: 20px; font-weight: 600; margin-bottom: 12px; color: #374151;">
-                                אין אחוזות קבר בחלקה ${currentPlotName}
-                            </div>
-                            <div style="font-size: 14px; margin-bottom: 24px; color: #6b7280;">
-                                החלקה עדיין לא מכילה אחוזות קבר. תוכל להוסיף אחוזת קבר חדשה
-                            </div>
-                            <button 
-                                onclick="if(typeof FormHandler !== 'undefined' && FormHandler.openForm) { FormHandler.openForm('areaGrave', '${currentPlotId}', null); } else { alert('FormHandler לא זמין'); }" 
-                                style="background: linear-gradient(135deg, #FC466B 0%, #3F5EFB 100%); 
-                                       color: white; 
-                                       border: none; 
-                                       padding: 12px 24px; 
-                                       border-radius: 8px; 
-                                       font-size: 15px; 
-                                       font-weight: 600; 
-                                       cursor: pointer; 
-                                       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                                       transition: all 0.2s;"
-                                onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.15)';"
-                                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)';">
-                                ➕ הוסף אחוזת קבר ראשונה
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        } else {
-            // חיפוש כללי שלא מצא תוצאות
-            container.innerHTML = `
-                <tr>
-                    <td colspan="7" style="text-align: center; padding: 60px;">
-                        <div style="color: #9ca3af;">
-                            <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
-                            <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">לא נמצאו תוצאות</div>
-                            <div>נסה לשנות את מילות החיפוש או הפילטרים</div>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        }
-        return;
-    }
-    
-    // ⭐ בדוק אם ה-DOM של TableManager קיים
-    const tableWrapperExists = document.querySelector('.table-wrapper[data-fixed-width="true"]');
-    
-    // ⭐ אם המשתנה קיים אבל ה-DOM נמחק - אפס את המשתנה!
-    if (!tableWrapperExists && areaGravesTable) {
-        areaGravesTable = null;
-        window.areaGravesTable = null;
-    }
-    
-    // עכשיו בדוק אם צריך לבנות מחדש
-    if (!areaGravesTable || !tableWrapperExists) {
-        initAreaGravesTable(filteredData, totalItems, signal);
-    } else {
-        if (areaGravesTable.config) {
-            areaGravesTable.config.totalItems = totalItems;
-        }
-        
-        areaGravesTable.setData(filteredData);
-    }
-    
-    // ⭐ עדכן את התצוגה של UniversalSearch
-    if (areaGraveSearch) {
-        areaGraveSearch.state.totalResults = totalItems;
-        areaGraveSearch.updateCounter();
-    }
-}
-/**
- * רינדור שורות טבלה - רק <tr>, לא <table>!
- * @param {Array} data - מערך של area graves
- * @returns {string} HTML של שורות בלבד
- */
-function renderAreaGravesRows_old2(data) {
-    if (!Array.isArray(data) || data.length === 0) {
-        return `
-            <tr>
-                <td colspan="10" style="text-align:center; padding:40px;">
-                    <div style="font-size:48px;">📭</div>
-                    <div>לא נמצאו שורות קבר</div>
-                </td>
-            </tr>
-        `;
-    }
-
-    return data.map(areaGrave => `
-        <tr data-area-grave-id="${areaGrave.unicId || ''}">
-            <td>
-                <a href="#" onclick="handleAreaGraveDoubleClick('${areaGrave.unicId}', '${areaGrave.areaGraveNameHe}')">
-                    ${areaGrave.areaGraveNameHe || '-'}
-                </a>
-            </td>
-            <td>${areaGrave.coordinates || '-'}</td>
-            <td>${getGraveTypeName(areaGrave.graveType)}</td>
-            <td>${areaGrave.graves_count || 0}</td>
-            <td>
-                <button class="btn-edit" onclick="editAreaGrave('${areaGrave.unicId}')">
-                    ערוך
-                </button>
-            </td>
-        </tr>
-    `).join('');
-}
 /**
  * רינדור שורות טבלה - פונקציה מלאה עם כל הלוגיקה!
  * v1.3.2 - שוחזרה הפונקציה המקורית המלאה

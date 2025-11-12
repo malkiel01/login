@@ -1,9 +1,15 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/area-graves-management.js
- * Version: 1.4.2
+ * Version: 1.5.0
  * Updated: 2025-11-12
  * Author: Malkiel
  * Change Summary:
+ * - v1.5.0: 🚀 Infinite Scroll אמיתי מהשרת!
+ *   - טעינה ראשונית: 200 רשומות בלבד (page=1, limit=200)
+ *   - גלילה מטה: טוען עוד 200 מהשרת (page=2, page=3...)
+ *   - פונקציה חדשה: appendMoreAreaGraves() - מוסיפה לטבלה הקיימת
+ *   - onLoadMore מחובר לטעינה מהשרת במקום מהזיכרון
+ *   - חיסכון עצום בזיכרון ובזמן טעינה ראשוני!
  * - v1.4.2: 📊 הוספת הדפסות debug מפורטות
  *   - console.table עם נתוני pagination
  *   - מספר רשומות מדויק
@@ -47,11 +53,16 @@ let editingAreaGraveId = null;
 let currentPlotId = null;
 let currentPlotName = null;
 
+// ⭐ Infinite Scroll - מעקב אחרי עמוד נוכחי
+let currentPage = 1;
+let totalPages = 1;
+let isLoadingMore = false;
+
 // ===================================================================
 // טעינת אחוזות קבר (הפונקציה הראשית)
 // ===================================================================
 async function loadAreaGraves(plotId = null, plotName = null, forceReset = false) {
-    console.log('📋 Loading area graves - v1.3.3 (Infinite Scroll ללא footer)...');
+    console.log('📋 Loading area graves - v1.5.0 (Infinite Scroll אמיתי מהשרת - 200 בכל פעם)...');
 
  
     const signal = OperationManager.start('areaGrave');
@@ -156,13 +167,17 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
     // }
 
 
-       // ⭐⭐⭐ טעינה ישירה של נתונים לבדיקת ביצועים
-    // במקום UniversalSearch, טוען ישירות מה-API
-    console.log('📥 Loading data directly from API (without UniversalSearch)...');
+       // ⭐⭐⭐ טעינה ישירה של נתונים - Infinite Scroll אמיתי!
+    // טוען רק 200 רשומות בכל פעם מהשרת
+    console.log('📥 Loading first 200 area graves from API...');
     
     try {
-        // בנה את ה-URL
-        let apiUrl = '/dashboard/dashboards/cemeteries/api/areaGraves-api.php?action=list&limit=999999';
+        // ⭐ איפוס מצב לפני טעינה חדשה
+        currentPage = 1;
+        currentAreaGraves = [];
+        
+        // בנה את ה-URL - רק 200 ראשונים!
+        let apiUrl = '/dashboard/dashboards/cemeteries/api/areaGraves-api.php?action=list&limit=200&page=1';
         if (plotId) {
             apiUrl += `&plotId=${plotId}`;
         }
@@ -184,7 +199,7 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
         console.log('📋 pagination:', result.pagination);
         console.log('🔍 האובייקט המלא מהשרת:');
         console.table({
-            'סה"כ רשומות': result.pagination?.totalAll || 0,
+            'סה"כ רשומות במערכת': result.pagination?.totalAll || 0,
             'רשומות בתשובה': result.data?.length || 0,
             'עמוד נוכחי': result.pagination?.page || 1,
             'limit': result.pagination?.limit || 0,
@@ -192,8 +207,15 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
         });
         console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         
+        // ⭐ עדכון מצב Infinite Scroll
+        if (result.pagination) {
+            totalPages = result.pagination.pages;
+            currentPage = result.pagination.page;
+            console.log(`📄 Loaded page ${currentPage}/${totalPages}`);
+        }
+        
         if (result.success && result.data) {
-            console.log(`✅ Loaded ${result.data.length} area graves directly`);
+            console.log(`✅ Loaded ${result.data.length} area graves (page ${currentPage})`);
             currentAreaGraves = result.data;
             
             // קרא לרינדור ישירות
@@ -251,6 +273,84 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
     
     // טען סטטיסטיקות
     await loadAreaGraveStats(signal, plotId);
+}
+
+// ===================================================================
+// 📥 טעינת עוד אחוזות קבר (Infinite Scroll)
+// ===================================================================
+async function appendMoreAreaGraves() {
+    // בדיקות בסיסיות
+    if (isLoadingMore) {
+        console.log('⏳ Already loading more data...');
+        return false;
+    }
+    
+    if (currentPage >= totalPages) {
+        console.log('📭 No more pages to load');
+        return false;
+    }
+    
+    isLoadingMore = true;
+    const nextPage = currentPage + 1;
+    
+    console.log(`📥 Loading page ${nextPage}/${totalPages}...`);
+    
+    try {
+        // בנה URL לעמוד הבא
+        let apiUrl = `/dashboard/dashboards/cemeteries/api/areaGraves-api.php?action=list&limit=200&page=${nextPage}`;
+        if (currentPlotId) {
+            apiUrl += `&plotId=${currentPlotId}`;
+        }
+        
+        console.log('🌐 Fetching:', apiUrl);
+        
+        // שלח בקשה
+        const response = await fetch(apiUrl);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        console.log(`📦 Received ${result.data?.length || 0} more area graves`);
+        
+        if (result.success && result.data && result.data.length > 0) {
+            // ⭐ הוסף לנתונים הקיימים (לא להחליף!)
+            currentAreaGraves = [...currentAreaGraves, ...result.data];
+            currentPage = nextPage;
+            
+            console.log(`✅ Total loaded so far: ${currentAreaGraves.length}`);
+            
+            // ⭐ הוסף לטבלה הקיימת
+            if (areaGravesTable) {
+                // עדכן את הנתונים המלאים ב-TableManager
+                areaGravesTable.config.data = currentAreaGraves;
+                areaGravesTable.state.filteredData = currentAreaGraves;
+                
+                // הוסף את השורות החדשות
+                const newRows = result.data;
+                areaGravesTable.state.displayedData = [...areaGravesTable.state.displayedData, ...newRows];
+                
+                // רנדר את השורות החדשות בלבד
+                areaGravesTable.renderRows(true); // true = append mode
+                
+                console.log(`📊 Table updated: ${areaGravesTable.state.displayedData.length} rows displayed`);
+            }
+            
+            return true;
+        } else {
+            console.log('📭 No more data available');
+            return false;
+        }
+        
+    } catch (error) {
+        console.error('❌ Error loading more data:', error);
+        showToast('שגיאה בטעינת נתונים נוספים: ' + error.message, 'error');
+        return false;
+    } finally {
+        isLoadingMore = false;
+    }
 }
 
 // ===================================================================
@@ -731,44 +831,17 @@ async function initAreaGravesTable(data, totalItems = null, signal) {
         // ============================================
         
     // ============================================
-    // ⭐⭐⭐ Callback לטעינת עוד נתונים
+    // ⭐⭐⭐ Callback לטעינת עוד נתונים מהשרת
     // ============================================
 
         onLoadMore: async () => {
-            console.log('📥 TableManager detected scroll - loading more area graves...');
+            console.log('📥 TableManager detected scroll - loading more from server...');
             
-            try {
-                if (!areaGraveSearch) {
-                    console.log('❌ areaGraveSearch not available');
-                    areaGravesTable.state.hasMoreData = false;
-                    return;
-                }
-                
-                if (areaGraveSearch.state.isLoading) {
-                    console.log('⏳ Already loading...');
-                    return;
-                }
-                
-                if (areaGraveSearch.state.currentPage >= areaGraveSearch.state.totalPages) {
-                    console.log('✅ All pages loaded');
-                    areaGravesTable.state.hasMoreData = false;
-                    return;
-                }
-                
-                const nextPage = areaGraveSearch.state.currentPage + 1;
-                console.log(`📄 Loading page ${nextPage} of ${areaGraveSearch.state.totalPages}...`);
-                
-                areaGraveSearch.state.currentPage = nextPage;
-                areaGraveSearch.state.isLoading = true;
-                
-                await areaGraveSearch.search();
-                
-                console.log(`✅ Page ${nextPage} loaded successfully`);
-                
-            } catch (error) {
-                console.error('❌ Error in onLoadMore:', error);
+            const success = await appendMoreAreaGraves();
+            
+            if (!success) {
                 areaGravesTable.state.hasMoreData = false;
-                showToast('שגיאה בטעינת נתונים נוספים', 'error');
+                console.log('📭 No more data to load');
             }
         },
     
@@ -866,8 +939,8 @@ function renderAreaGravesRows(data, container, pagination = null, signal = null)
         });
     }
     
-    // ⭐ עדכן את totalItems להיות המספר המסונן!
-    const totalItems = filteredData.length;
+    // ⭐ עדכן את totalItems מה-pagination (סה"כ במערכת, לא רק מה שנטען!)
+    const totalItems = pagination?.totalAll || pagination?.total || filteredData.length;
 
     if (filteredData.length === 0) {
         if (areaGravesTable) {
@@ -1143,6 +1216,7 @@ window.handleAreaGraveDoubleClick = handleAreaGraveDoubleClick;
 // הפוך לגלובלי
 // ===================================================================
 window.loadAreaGraves = loadAreaGraves;
+window.appendMoreAreaGraves = appendMoreAreaGraves;
 window.deleteAreaGrave = deleteAreaGrave;
 window.refreshData = refreshData;
 window.areaGravesTable = areaGravesTable;

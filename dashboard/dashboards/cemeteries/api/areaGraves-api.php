@@ -33,26 +33,30 @@ $id = $_GET['id'] ?? null;
 // -------------------------------------------------------------
 
 // ⭐ פרמטרי מיון אופציונליים (חדש!)
-$orderBy = $_GET['orderBy'] ?? 'id'; // ברירת מחדל: לפי איידי
-$sortDirection = strtoupper($_GET['sortDirection'] ?? 'ASC'); // ברירת מחדל: א-ת
+$orderBy = $_GET['orderBy'] ?? 'createDate'; // ✅ ברירת מחדל כמו בקוד המקורי
+$sortDirection = strtoupper($_GET['sortDirection'] ?? 'DESC'); // ✅ DESC כמו בקוד המקורי
 
 // ולידציה של כיוון המיון
 if (!in_array($sortDirection, ['ASC', 'DESC'])) {
-    $sortDirection = 'ASC';
+    $sortDirection = 'DESC';
 }
 
-// שדות מותרים למיון (אבטחה)
+// ⭐ שדות מותרים למיון - מותאמים ל-VIEW!
 $allowedOrderFields = [
-    'areaGraveName',
+    'areaGraveNameHe',      // ✅ שם נכון מה-view
     'unicId',
-    'createdDate',
-    'areaGraveNumber',
-    'isActive'
+    'createDate',           // ✅ שם נכון מה-view (לא createdDate!)
+    'coordinates',
+    'graveType',
+    'lineNameHe',
+    'plotNameHe',
+    'blockNameHe',
+    'cemeteryNameHe'
 ];
 
 // ולידציה של שדה המיון
 if (!in_array($orderBy, $allowedOrderFields)) {
-    $orderBy = 'areaGraveName';
+    $orderBy = 'createDate'; // ✅ fallback נכון
 }
 
 try {

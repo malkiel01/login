@@ -1,49 +1,26 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/area-graves-management.js
- * Version: 1.5.0
+ * Version: 1.5.1
  * Updated: 2025-11-12
  * Author: Malkiel
  * Change Summary:
+ * - v1.5.1: 🐛 DEBUG VERSION - הוספת לוגים לזיהוי בעיה
+ *   - console.log בכל נקודת מפתח
+ *   - תיקון appendMoreAreaGraves - setData במקום renderRows
  * - v1.5.0: 🚀 Infinite Scroll אמיתי מהשרת!
  *   - טעינה ראשונית: 200 רשומות בלבד (page=1, limit=200)
  *   - גלילה מטה: טוען עוד 200 מהשרת (page=2, page=3...)
  *   - פונקציה חדשה: appendMoreAreaGraves() - מוסיפה לטבלה הקיימת
  *   - onLoadMore מחובר לטעינה מהשרת במקום מהזיכרון
  *   - חיסכון עצום בזיכרון ובזמן טעינה ראשוני!
- * - v1.4.2: 📊 הוספת הדפסות debug מפורטות
- *   - console.table עם נתוני pagination
- *   - מספר רשומות מדויק
- *   - מבנה מסודר עם קווים מפרידים
- * - v1.4.1: ⚡ PERFORMANCE TEST - השבתה זמנית של UniversalSearch
- *   - טעינה ישירה מה-API ללא שכבת החיפוש
- *   - בדיקת מהירות טעינה ללא UI של החיפוש
- *   - הסתרת #areaGraveSearchSection
- * - v1.4.0: תיקון קריטי - Infinite Scroll אמיתי עם טעינה מדורגת
- *   - שינוי itemsPerPage → apiLimit (200 רשומות מהשרת בכל פעם)
- *   - TableManager מציג 100 רשומות בכל גלילה (scrollLoadBatch)
- *   - טעינה חכמה: כשמגיעים לסוף 200 → טוען עוד 200 מהשרת
- *   - תיקון: הסרת קריאה כפולה ל-search()
- * - v1.3.3: תיקון critical - Infinite Scroll אמיתי ללא footer
- *   - UniversalSearch: itemsPerPage=999999, showPagination=false (טוען הכל)
- *   - TableManager: scrollLoadBatch=100, itemsPerPage=999999 (מציג בהדרגה)
- *   - גלילה אינסופית חלקה ללא footer pagination
- * - v1.3.2: תיקון קריטי - שחזור renderAreaGravesRows המלאה
- *   - שוחזרה הפונקציה המקורית עם כל הלוגיקה המורכבת
- *   - תוקן renderFunction ב-initAreaGravesSearch להעביר כל הפרמטרים
- *   - שמירה על כל הפיצ'רים: סינון, initTableManager, הודעות מעוצבות
- * - v1.3.1: תיקון קריטי - התאמת selectors ל-DOM
- *   - תוקן searchContainerSelector: '#areaGraveSearchContainer' → '#areaGraveSearchSection'
- *   - תוקן resultsContainerSelector: '#areaGravesTableBody' → '#tableBody'
- * - v1.3.0: שיפורים בטעינה מדורגת ופריסת קוד
- * - v1.2.2: תיקון קריטי - שינוי מיקום סינון client-side
- * - v1.2.0: הוספת טעינה מדורגת כמו ב-customers
- * - v1.1.0: תיקון TableManager
- * - v1.0.0: גרסה ראשונית - ניהול אחוזות קבר
  */
+
+console.log('🟢 [DEBUG] area-graves-management.js - START LOADING v1.5.1');
 
 // ===================================================================
 // משתנים גלובליים
 // ===================================================================
+console.log('🟢 [DEBUG] Declaring global variables...');
 let currentAreaGraves = [];
 let areaGraveSearch = null;
 let areaGravesTable = null;
@@ -58,10 +35,14 @@ let currentPage = 1;
 let totalPages = 1;
 let isLoadingMore = false;
 
+console.log('✅ [DEBUG] Global variables declared successfully');
+
 // ===================================================================
 // טעינת אחוזות קבר (הפונקציה הראשית)
 // ===================================================================
-async function loadAreaGraves2(plotId = null, plotName = null, forceReset = false) {
+console.log('🟢 [DEBUG] Defining loadAreaGraves function...');
+
+async function loadAreaGraves(plotId = null, plotName = null, forceReset = false) {
     console.log('📋 Loading area graves - v1.5.0 (Infinite Scroll אמיתי מהשרת - 200 בכל פעם)...');
 
  
@@ -274,14 +255,14 @@ async function loadAreaGraves2(plotId = null, plotName = null, forceReset = fals
     // טען סטטיסטיקות
     await loadAreaGraveStats(signal, plotId);
 }
-async function loadAreaGraves(plotId = null, plotName = null, forceReset = false) {
-    console.log('📋 Loading area graves - v1.5.0 (Infinite Scroll אמיתי מהשרת - 200 בכל פעם)...');
 
-}
+console.log('✅ [DEBUG] loadAreaGraves function defined');
 
 // ===================================================================
 // 📥 טעינת עוד אחוזות קבר (Infinite Scroll)
 // ===================================================================
+console.log('🟢 [DEBUG] Defining appendMoreAreaGraves function...');
+
 async function appendMoreAreaGraves() {
     // בדיקות בסיסיות
     if (isLoadingMore) {
@@ -328,18 +309,14 @@ async function appendMoreAreaGraves() {
             
             // ⭐ הוסף לטבלה הקיימת
             if (areaGravesTable) {
-                // עדכן את הנתונים המלאים ב-TableManager
-                areaGravesTable.config.data = currentAreaGraves;
-                areaGravesTable.state.filteredData = currentAreaGraves;
+                console.log('🔄 [DEBUG] Updating table with new data...');
                 
-                // הוסף את השורות החדשות
-                const newRows = result.data;
-                areaGravesTable.state.displayedData = [...areaGravesTable.state.displayedData, ...newRows];
+                // ⭐ פשוט עדכן את כל הנתונים - TableManager ידע מה לעשות
+                areaGravesTable.setData(currentAreaGraves);
                 
-                // רנדר את השורות החדשות בלבד
-                areaGravesTable.renderRows(true); // true = append mode
-                
-                console.log(`📊 Table updated: ${areaGravesTable.state.displayedData.length} rows displayed`);
+                console.log(`📊 Table updated: ${currentAreaGraves.length} total rows`);
+            } else {
+                console.warn('⚠️ [DEBUG] areaGravesTable not available!');
             }
             
             return true;
@@ -357,9 +334,13 @@ async function appendMoreAreaGraves() {
     }
 }
 
+console.log('✅ [DEBUG] appendMoreAreaGraves function defined');
+
 // ===================================================================
 // בניית המבנה
 // ===================================================================
+console.log('🟢 [DEBUG] Defining buildAreaGravesContainer function...');
+
 async function buildAreaGravesContainer(signal, plotId = null, plotName = null) {
     console.log('🏗️ Building area graves container...');
     
@@ -455,9 +436,13 @@ async function buildAreaGravesContainer(signal, plotId = null, plotName = null) 
     console.log('✅ Area graves container built');
 }
 
+console.log('✅ [DEBUG] buildAreaGravesContainer function defined');
+
 // ===================================================================
 // אתחול UniversalSearch - עם Pagination!
 // ===================================================================
+console.log('🟢 [DEBUG] Defining initAreaGravesSearch functions...');
+
 async function initAreaGravesSearch_old1(signal, plotId = null) {
     const config = {
         entityType: 'areaGrave',
@@ -923,9 +908,13 @@ async function initAreaGravesTable(data, totalItems = null, signal) {
     return areaGravesTable;
 }
 
+console.log('✅ [DEBUG] initAreaGravesTable function defined');
+
 // ===================================================================
 // רינדור שורות - עם סינון client-side! (⭐⭐ כמו ב-blocks!)
 // ===================================================================
+console.log('🟢 [DEBUG] Defining renderAreaGravesRows function...');
+
 /**
  * רינדור שורות טבלה - פונקציה מלאה עם כל הלוגיקה!
  * v1.3.2 - שוחזרה הפונקציה המקורית המלאה
@@ -1029,9 +1018,13 @@ function renderAreaGravesRows(data, container, pagination = null, signal = null)
     }
 }
 
+console.log('✅ [DEBUG] renderAreaGravesRows function defined');
+
 // ===================================================================
 // פורמט תאריך
 // ===================================================================
+console.log('🟢 [DEBUG] Defining helper functions (formatDate, getGraveTypeName)...');
+
 function formatDate(dateString) {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -1117,9 +1110,13 @@ async function deleteAreaGrave(areaGraveId) {
     }
 }
 
+console.log('✅ [DEBUG] deleteAreaGrave function defined');
+
 // ===================================================================
 // הצגת הודעות Toast
 // ===================================================================
+console.log('🟢 [DEBUG] Defining showToast function...');
+
 function showToast(message, type = 'info') {
     const toast = document.createElement('div');
     toast.className = 'toast-message';
@@ -1153,17 +1150,25 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
+console.log('✅ [DEBUG] showToast function defined');
+
 // ===================================================================
 // רענון נתונים
 // ===================================================================
+console.log('🟢 [DEBUG] Defining refreshData function...');
+
 async function refreshData() {
     // טעינה מחדש ישירה מה-API (כי UniversalSearch מושבת)
     await loadAreaGraves(currentPlotId, currentPlotName, false);
 }
 
+console.log('✅ [DEBUG] refreshData function defined');
+
 // ===================================================================
 // בדיקת סטטוס טעינה
 // ===================================================================
+console.log('🟢 [DEBUG] Defining checkScrollStatus function...');
+
 function checkScrollStatus() {
     if (!areaGravesTable) {
         console.log('❌ Table not initialized');
@@ -1187,9 +1192,13 @@ function checkScrollStatus() {
     }
 }
 
+console.log('✅ [DEBUG] checkScrollStatus function defined');
+
 // ===================================================================
 // דאבל-קליק על אחוזת קבר
 // ===================================================================
+console.log('🟢 [DEBUG] Defining handleAreaGraveDoubleClick function...');
+
 async function handleAreaGraveDoubleClick(areaGraveId, areaGraveName) {
     console.log('🖱️ Double-click on area grave:', areaGraveName, areaGraveId);
     
@@ -1214,17 +1223,49 @@ async function handleAreaGraveDoubleClick(areaGraveId, areaGraveName) {
     }
 }
 
+console.log('✅ [DEBUG] handleAreaGraveDoubleClick function defined');
+
 window.handleAreaGraveDoubleClick = handleAreaGraveDoubleClick;
+
+console.log('🟢 [DEBUG] All functions defined, starting global exports...');
 
 // ===================================================================
 // הפוך לגלובלי
 // ===================================================================
-window.loadAreaGraves = loadAreaGraves; 
+console.log('🟢 [DEBUG] Exporting loadAreaGraves...');
+window.loadAreaGraves = loadAreaGraves;
+console.log('✅ [DEBUG] loadAreaGraves exported');
+
+console.log('🟢 [DEBUG] Exporting appendMoreAreaGraves...');
 window.appendMoreAreaGraves = appendMoreAreaGraves;
+console.log('✅ [DEBUG] appendMoreAreaGraves exported');
+
+console.log('🟢 [DEBUG] Exporting deleteAreaGrave...');
 window.deleteAreaGrave = deleteAreaGrave;
+console.log('✅ [DEBUG] deleteAreaGrave exported');
+
+console.log('🟢 [DEBUG] Exporting refreshData...');
 window.refreshData = refreshData;
+console.log('✅ [DEBUG] refreshData exported');
+
+console.log('🟢 [DEBUG] Exporting areaGravesTable...');
 window.areaGravesTable = areaGravesTable;
+console.log('✅ [DEBUG] areaGravesTable exported');
+
+console.log('🟢 [DEBUG] Exporting checkScrollStatus...');
 window.checkScrollStatus = checkScrollStatus;
+console.log('✅ [DEBUG] checkScrollStatus exported');
+
+console.log('🟢 [DEBUG] Exporting currentPlotId...');
 window.currentPlotId = currentPlotId;
+console.log('✅ [DEBUG] currentPlotId exported');
+
+console.log('🟢 [DEBUG] Exporting currentPlotName...');
 window.currentPlotName = currentPlotName;
+console.log('✅ [DEBUG] currentPlotName exported');
+
+console.log('🟢 [DEBUG] Exporting areaGraveSearch...');
 window.areaGraveSearch = areaGraveSearch;
+console.log('✅ [DEBUG] areaGraveSearch exported');
+
+console.log('🎉 [DEBUG] area-graves-management.js - LOADED SUCCESSFULLY v1.5.1');

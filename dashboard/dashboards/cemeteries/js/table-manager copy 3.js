@@ -1,14 +1,9 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/table-manager.js
- * Version: 2.1.0
+ * Version: 2.0.1
  * Updated: 2025-11-12
  * Author: Malkiel
  * Change Summary:
- * - v2.1.0: הבהרת פרמטרים - הפרדה ברורה בין תפקידים
- *   - totalItems: סה"כ רשומות במערכת (מה-API)
- *   - scrollLoadBatch: כמה שורות להוסיף בכל גלילה (client-side)
- *   - itemsPerPage: כמה שורות בעמוד (pagination) - לא קשור ל-API!
- *   - הערה: UniversalSearch משתמש ב-apiLimit לקביעת כמות מהשרת
  * - v2.0.1: תיקון קריטי - חישוב אוטומטי של totalItems
  *   - אם totalItems=null/0 → מחושב מ-data.length
  *   - תיקון: "100/0" → "100/20483" (תצוגה נכונה)
@@ -37,26 +32,17 @@ class TableManager {
             // ⭐ 3 פרמטרים נפרדים - ארכיטקטורה חדשה
             // ============================================
             
-            // 1️⃣ סה"כ רשומות במערכת (מה-API)
+            // 1️⃣ סה"כ רשומות (מה-API או מחושב)
             totalItems: null,           // אם null → data.length
             
-            // 2️⃣ כמות שורות להוסיף בגלילה (client-side rendering)
-            //    זה קובע כמה שורות TableManager יוסיף לטבלה בכל גלילה
-            //    לדוגמה: יש 1000 רשומות בזיכרון, scrollLoadBatch=100 → יציג 100 בכל גלילה
+            // 2️⃣ כמות טעינה בגלילה (infinite scroll)
             scrollLoadBatch: 100,       // 0 = ללא infinite scroll
             scrollThreshold: 100,       // מרחק מתחתית להתחלת טעינה (px)
             
-            // 3️⃣ כמות רשומות לעמוד (pagination UI)
-            //    זה קובע כמה שורות בעמוד אם יש pagination
-            //    ⚠️ לא קשור ל-API! זה רק לתצוגה
+            // 3️⃣ כמות רשומות לעמוד (pagination)
             itemsPerPage: 999999,       // 999999 = עמוד אחד, אחרת מחולק לעמודים
             showPagination: false,      // ⭐ ברירת מחדל: Infinite Scroll (false)
             paginationOptions: [25, 50, 100, 200, 500, 'all'],  // ⭐ אפשרויות בסלקט + "הכל"
-            
-            // 📝 הערה חשובה:
-            //    UniversalSearch משתמש ב-apiLimit לקביעת כמות רשומות לטעון מהשרת
-            //    TableManager משתמש ב-scrollLoadBatch לקביעת כמות שורות להציג בכל גלילה
-            //    אלה 2 דברים שונים לחלוטין!
             
             // ============================================
             // הגדרות כלליות

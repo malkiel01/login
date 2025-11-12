@@ -1,14 +1,9 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/area-graves-management.js
- * Version: 1.4.0
+ * Version: 1.3.3
  * Updated: 2025-11-12
  * Author: Malkiel
  * Change Summary:
- * - v1.4.0: תיקון קריטי - Infinite Scroll אמיתי עם טעינה מדורגת
- *   - שינוי itemsPerPage → apiLimit (200 רשומות מהשרת בכל פעם)
- *   - TableManager מציג 100 רשומות בכל גלילה (scrollLoadBatch)
- *   - טעינה חכמה: כשמגיעים לסוף 200 → טוען עוד 200 מהשרת
- *   - תיקון: הסרת קריאה כפולה ל-search()
  * - v1.3.3: תיקון critical - Infinite Scroll אמיתי ללא footer
  *   - UniversalSearch: itemsPerPage=999999, showPagination=false (טוען הכל)
  *   - TableManager: scrollLoadBatch=100, itemsPerPage=999999 (מציג בהדרגה)
@@ -510,8 +505,9 @@ async function initAreaGravesSearch(signal, plotId) {
         searchContainerSelector: '#areaGraveSearchSection',
         resultsContainerSelector: '#tableBody',  
         
-        // ⭐ Infinite Scroll אמיתי - טעינה מדורגת
-        apiLimit: 200,  // ⭐ טוען 200 רשומות מהשרת בכל בקשה
+        // ⭐ גישה: טען הכל פעם אחת מהשרת, הצג בהדרגה בclient
+        // itemsPerPage: 999999,  // ⭐ טוען הכל בפעם אחת מהשרת
+        itemsPerPage: 200,  // ⭐ טוען 200 בכל פעם מהשרת
         showPagination: false,  // ⭐ ללא footer - infinite scroll!
         
         apiParams: {

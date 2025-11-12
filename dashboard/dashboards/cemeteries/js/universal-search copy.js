@@ -1,13 +1,7 @@
 /**
  * UniversalSearch - מערכת חיפוש אוניברסלית מתקדמת
- * @version 1.1.0
- * @updated 2025-11-12
- * @author Malkiel
- * 
- * שינויים ב-v1.1.0:
- * - שינוי itemsPerPage ל-apiLimit (ברור יותר)
- * - apiLimit: כמה רשומות לטעון מהשרת בכל בקשה
- * - תמיכה מלאה ב-Infinite Scroll עם טעינה מדורגת
+ * @version 1.0.0
+ * @author Your System
  */
 
 class UniversalSearch {
@@ -41,7 +35,7 @@ class UniversalSearch {
             // תוצאות
             results: {
                 containerSelector: null,
-                apiLimit: 200,              // ⭐ כמה רשומות לטעון מהשרת בכל בקשה
+                itemsPerPage: 50,
                 showPagination: true,
                 renderFunction: null,
                 columns: [],
@@ -460,8 +454,8 @@ class UniversalSearch {
                     params.append('page', payload.page);
                 }
                 
-                if (payload.apiLimit) {
-                    params.append('limit', payload.apiLimit);
+                if (payload.itemsPerPage) {
+                    params.append('limit', payload.itemsPerPage);
                 }
                 
                 // הוסף פילטרים
@@ -533,7 +527,7 @@ class UniversalSearch {
             joins: this.config.dataSource.joins,
             filters: [],
             page: this.state.currentPage,
-            apiLimit: this.config.results.apiLimit  // ⭐ שונה מ-itemsPerPage
+            itemsPerPage: this.config.results.itemsPerPage
         };
         
         // הוספת פילטרים

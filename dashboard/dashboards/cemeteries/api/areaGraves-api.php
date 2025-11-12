@@ -36,10 +36,10 @@ $id = $_GET['id'] ?? null;
 $orderBy = $_GET['orderBy'] ?? 'id'; // ברירת מחדל: לפי איידי
 $sortDirection = strtoupper($_GET['sortDirection'] ?? 'ASC'); // ברירת מחדל: א-ת
 
-// // ולידציה של כיוון המיון
-// if (!in_array($sortDirection, ['ASC', 'DESC'])) {
-//     $sortDirection = 'ASC';
-// }
+// ולידציה של כיוון המיון
+if (!in_array($sortDirection, ['ASC', 'DESC'])) {
+    $sortDirection = 'ASC';
+}
 
 // // שדות מותרים למיון (אבטחה)
 // $allowedOrderFields = [

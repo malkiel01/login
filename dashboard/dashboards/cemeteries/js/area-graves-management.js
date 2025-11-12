@@ -115,106 +115,106 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
         return;
     }
 
-    // // ⭐ השמד חיפוש קודם
-    // if (areaGraveSearch && typeof areaGraveSearch.destroy === 'function') {
-    //     console.log('🗑️ Destroying previous areaGraveSearch instance...');
-    //     areaGraveSearch.destroy();
-    //     areaGraveSearch = null;
-    //     window.areaGraveSearch = null;
-    // }
-    
-    // // אתחל חיפוש חדש
-    // console.log('🆕 Creating fresh areaGraveSearch instance...');
-    // await initAreaGravesSearch(signal, plotId);
-
-    // if (OperationManager.shouldAbort('areaGrave')) {
-    //     console.log('⚠️ AreaGrave operation aborted');
-    //     return;
-    // }
-
-    // areaGraveSearch.search();
-
-
-       // ⭐⭐⭐ טעינה זמנית של נתונים לבדיקת ביצועים
-    // במקום UniversalSearch, טוען ישירות מה-API
-    console.log('📥 Loading data directly from API (without UniversalSearch)...');
-    
-    try {
-        // בנה את ה-URL
-        let apiUrl = '/dashboard/dashboards/cemeteries/api/areaGraves-api.php?action=list&limit=999999';
-        if (plotId) {
-            apiUrl += `&plotId=${plotId}`;
-        }
-        
-        console.log('🌐 Fetching from:', apiUrl);
-        
-        // שלח בקשה לשרת
-        const response = await fetch(apiUrl, { signal: signal });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const result = await response.json();
-        
-        console.log('📦 API Response:', result);
-        
-        if (result.success && result.data) {
-            console.log(`✅ Loaded ${result.data.length} area graves directly`);
-            currentAreaGraves = result.data;
-            
-            // קרא לרינדור ישירות
-            const tableBody = document.getElementById('tableBody');
-            if (tableBody) {
-                console.log('🎨 Rendering table...');
-                renderAreaGravesRows(result.data, tableBody, result.pagination, signal);
-            } else {
-                console.error('❌ tableBody element not found!');
-            }
-        } else {
-            console.error('❌ Failed to load data:', result.error || 'Unknown error');
-            showToast('שגיאה בטעינת נתונים: ' + (result.error || 'שגיאה לא ידועה'), 'error');
-            
-            // הצג הודעת שגיאה בטבלה
-            const tableBody = document.getElementById('tableBody');
-            if (tableBody) {
-                tableBody.innerHTML = `
-                    <tr>
-                        <td colspan="7" style="text-align: center; padding: 60px;">
-                            <div style="color: #ef4444;">
-                                <div style="font-size: 48px; margin-bottom: 16px;">❌</div>
-                                <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">שגיאה בטעינת נתונים</div>
-                                <div>${result.error || 'שגיאה לא ידועה'}</div>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }
-        }
-    } catch (error) {
-        if (error.name === 'AbortError') {
-            console.log('⚠️ Data loading aborted');
-            return;
-        }
-        console.error('❌ Error loading data:', error);
-        showToast('שגיאה בטעינת נתונים: ' + error.message, 'error');
-        
-        // הצג הודעת שגיאה בטבלה
-        const tableBody = document.getElementById('tableBody');
-        if (tableBody) {
-            tableBody.innerHTML = `
-                <tr>
-                    <td colspan="7" style="text-align: center; padding: 60px;">
-                        <div style="color: #ef4444;">
-                            <div style="font-size: 48px; margin-bottom: 16px;">❌</div>
-                            <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">שגיאה בטעינת נתונים</div>
-                            <div>${error.message}</div>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        }
+    // ⭐ השמד חיפוש קודם
+    if (areaGraveSearch && typeof areaGraveSearch.destroy === 'function') {
+        console.log('🗑️ Destroying previous areaGraveSearch instance...');
+        areaGraveSearch.destroy();
+        areaGraveSearch = null;
+        window.areaGraveSearch = null;
     }
+    
+    // אתחל חיפוש חדש
+    console.log('🆕 Creating fresh areaGraveSearch instance...');
+    await initAreaGravesSearch(signal, plotId);
+
+    if (OperationManager.shouldAbort('areaGrave')) {
+        console.log('⚠️ AreaGrave operation aborted');
+        return;
+    }
+
+    areaGraveSearch.search();
+
+
+    //    // ⭐⭐⭐ טעינה זמנית של נתונים לבדיקת ביצועים
+    // // במקום UniversalSearch, טוען ישירות מה-API
+    // console.log('📥 Loading data directly from API (without UniversalSearch)...');
+    
+    // try {
+    //     // בנה את ה-URL
+    //     let apiUrl = '/dashboard/dashboards/cemeteries/api/areaGraves-api.php?action=list&limit=999999';
+    //     if (plotId) {
+    //         apiUrl += `&plotId=${plotId}`;
+    //     }
+        
+    //     console.log('🌐 Fetching from:', apiUrl);
+        
+    //     // שלח בקשה לשרת
+    //     const response = await fetch(apiUrl, { signal: signal });
+        
+    //     if (!response.ok) {
+    //         throw new Error(`HTTP error! status: ${response.status}`);
+    //     }
+        
+    //     const result = await response.json();
+        
+    //     console.log('📦 API Response:', result);
+        
+    //     if (result.success && result.data) {
+    //         console.log(`✅ Loaded ${result.data.length} area graves directly`);
+    //         currentAreaGraves = result.data;
+            
+    //         // קרא לרינדור ישירות
+    //         const tableBody = document.getElementById('tableBody');
+    //         if (tableBody) {
+    //             console.log('🎨 Rendering table...');
+    //             renderAreaGravesRows(result.data, tableBody, result.pagination, signal);
+    //         } else {
+    //             console.error('❌ tableBody element not found!');
+    //         }
+    //     } else {
+    //         console.error('❌ Failed to load data:', result.error || 'Unknown error');
+    //         showToast('שגיאה בטעינת נתונים: ' + (result.error || 'שגיאה לא ידועה'), 'error');
+            
+    //         // הצג הודעת שגיאה בטבלה
+    //         const tableBody = document.getElementById('tableBody');
+    //         if (tableBody) {
+    //             tableBody.innerHTML = `
+    //                 <tr>
+    //                     <td colspan="7" style="text-align: center; padding: 60px;">
+    //                         <div style="color: #ef4444;">
+    //                             <div style="font-size: 48px; margin-bottom: 16px;">❌</div>
+    //                             <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">שגיאה בטעינת נתונים</div>
+    //                             <div>${result.error || 'שגיאה לא ידועה'}</div>
+    //                         </div>
+    //                     </td>
+    //                 </tr>
+    //             `;
+    //         }
+    //     }
+    // } catch (error) {
+    //     if (error.name === 'AbortError') {
+    //         console.log('⚠️ Data loading aborted');
+    //         return;
+    //     }
+    //     console.error('❌ Error loading data:', error);
+    //     showToast('שגיאה בטעינת נתונים: ' + error.message, 'error');
+        
+    //     // הצג הודעת שגיאה בטבלה
+    //     const tableBody = document.getElementById('tableBody');
+    //     if (tableBody) {
+    //         tableBody.innerHTML = `
+    //             <tr>
+    //                 <td colspan="7" style="text-align: center; padding: 60px;">
+    //                     <div style="color: #ef4444;">
+    //                         <div style="font-size: 48px; margin-bottom: 16px;">❌</div>
+    //                         <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">שגיאה בטעינת נתונים</div>
+    //                         <div>${error.message}</div>
+    //                     </div>
+    //                 </td>
+    //             </tr>
+    //         `;
+    //     }
+    // }
     
     // טען סטטיסטיקות
     await loadAreaGraveStats(signal, plotId);

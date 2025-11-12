@@ -502,7 +502,7 @@ async function initAreaGravesSearch(signal, plotId) {
         resultsContainerSelector: '#tableBody',  
         
         itemsPerPage: 100,  // ⭐ טוען 100 בכל פעם
-        showPagination: true,
+        showPagination: false,
         
         apiParams: {
             level: 'area-grave',
@@ -689,7 +689,6 @@ async function initAreaGravesTable(data, totalItems = null, signal) {
         // itemsPerPage: 999999,                   // ⭐ חדש - עמוד אחד (infinite scroll)
         itemsPerPage: 100,                   // ⭐ חדש - עמוד אחד (infinite scroll)
         scrollThreshold: 200,                // ⭐ חדש - התחל טעינה 100px לפני התחתית
-        showPagination: false,
 
  
         // scrollLoadBatch: 0,                  // ⭐ 0 = ללא infinite scroll
@@ -704,47 +703,47 @@ async function initAreaGravesTable(data, totalItems = null, signal) {
     // ============================================
     // ⭐⭐⭐ Callback לטעינת עוד נתונים
     // ============================================
-        // onLoadMore: async () => {
-        //     console.log('📥 TableManager detected scroll - loading more area graves...');
+        onLoadMore: async () => {
+            console.log('📥 TableManager detected scroll - loading more area graves...');
             
-        //     try {
-        //         // בדוק אם areaGraveSearch זמין
-        //         if (!areaGraveSearch) {
-        //             console.log('❌ areaGraveSearch not available');
-        //             areaGravesTable.state.hasMoreData = false;
-        //             return;
-        //         }
+            try {
+                // בדוק אם areaGraveSearch זמין
+                if (!areaGraveSearch) {
+                    console.log('❌ areaGraveSearch not available');
+                    areaGravesTable.state.hasMoreData = false;
+                    return;
+                }
                 
-        //         // בדוק אם כבר בתהליך טעינה
-        //         if (areaGraveSearch.state.isLoading) {
-        //             console.log('⏳ Already loading...');
-        //             return;
-        //         }
+                // בדוק אם כבר בתהליך טעינה
+                if (areaGraveSearch.state.isLoading) {
+                    console.log('⏳ Already loading...');
+                    return;
+                }
                 
-        //         // בדוק אם יש עוד עמודים
-        //         if (areaGraveSearch.state.currentPage >= areaGraveSearch.state.totalPages) {
-        //             console.log('✅ All pages loaded');
-        //             areaGravesTable.state.hasMoreData = false;
-        //             return;
-        //         }
+                // בדוק אם יש עוד עמודים
+                if (areaGraveSearch.state.currentPage >= areaGraveSearch.state.totalPages) {
+                    console.log('✅ All pages loaded');
+                    areaGravesTable.state.hasMoreData = false;
+                    return;
+                }
                 
-        //         // טען עמוד הבא
-        //         const nextPage = areaGraveSearch.state.currentPage + 1;
-        //         console.log(`📄 Loading page ${nextPage} of ${areaGraveSearch.state.totalPages}...`);
+                // טען עמוד הבא
+                const nextPage = areaGraveSearch.state.currentPage + 1;
+                console.log(`📄 Loading page ${nextPage} of ${areaGraveSearch.state.totalPages}...`);
                 
-        //         areaGraveSearch.state.currentPage = nextPage;
-        //         areaGraveSearch.state.isLoading = true;
+                areaGraveSearch.state.currentPage = nextPage;
+                areaGraveSearch.state.isLoading = true;
                 
-        //         await areaGraveSearch.search();
+                await areaGraveSearch.search();
                 
-        //         console.log(`✅ Page ${nextPage} loaded successfully`);
+                console.log(`✅ Page ${nextPage} loaded successfully`);
                 
-        //     } catch (error) {
-        //         console.error('❌ Error in onLoadMore:', error);
-        //         areaGravesTable.state.hasMoreData = false;
-        //         showToast('שגיאה בטעינת נתונים נוספים', 'error');
-        //     }
-        // },
+            } catch (error) {
+                console.error('❌ Error in onLoadMore:', error);
+                areaGravesTable.state.hasMoreData = false;
+                showToast('שגיאה בטעינת נתונים נוספים', 'error');
+            }
+        },
 
         // ⭐ פונקציה שנקראת כשמחליפים עמוד
         onPageChange: (newPage) => {

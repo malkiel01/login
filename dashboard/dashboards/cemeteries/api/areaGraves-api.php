@@ -50,10 +50,10 @@ $allowedOrderFields = [
     'isActive'
 ];
 
-// // ולידציה של שדה המיון
-// if (!in_array($orderBy, $allowedOrderFields)) {
-//     $orderBy = 'areaGraveName';
-// }
+// ולידציה של שדה המיון
+if (!in_array($orderBy, $allowedOrderFields)) {
+    $orderBy = 'areaGraveName';
+}
 
 try {
     switch ($action) {

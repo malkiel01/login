@@ -1215,7 +1215,7 @@ window.handleAreaGraveDoubleClick = handleAreaGraveDoubleClick;
 // ===================================================================
 // הפוך לגלובלי
 // ===================================================================
-window.loadAreaGraves = loadAreaGraves;
+window.loadAreaGraves = loadAreaGraves; 
 window.appendMoreAreaGraves = appendMoreAreaGraves;
 window.deleteAreaGrave = deleteAreaGrave;
 window.refreshData = refreshData;

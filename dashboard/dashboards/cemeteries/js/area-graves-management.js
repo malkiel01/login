@@ -133,14 +133,19 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
     
     // אתחל חיפוש חדש
     console.log('🆕 Creating fresh areaGraveSearch instance...');
-    await initAreaGravesSearch(signal, plotId);
 
+    areaGraveSearch = await initAreaGravesSearch(signal, plotId);    
+    
     if (OperationManager.shouldAbort('areaGrave')) {
         console.log('⚠️ AreaGrave operation aborted');
         return;
     }
-
-    areaGraveSearch.search();
+    
+    if (areaGraveSearch) {
+        areaGraveSearch.search();
+    } else {
+        console.error('❌ Failed to initialize search');
+    }
 
 
     //    // ⭐⭐⭐ טעינה זמנית של נתונים לבדיקת ביצועים
@@ -481,6 +486,7 @@ async function initAreaGravesSearch_old1(signal, plotId = null) {
     
     return areaGraveSearch;
 }
+
 async function initAreaGravesSearch(signal, plotId) {
     console.log('🔍 אתחול חיפוש שורות קבר...');
     
@@ -506,7 +512,8 @@ async function initAreaGravesSearch(signal, plotId) {
         resultsContainerSelector: '#tableBody',  
         
         // ⭐ גישה: טען הכל פעם אחת מהשרת, הצג בהדרגה בclient
-        itemsPerPage: 999999,  // ⭐ טוען הכל בפעם אחת מהשרת
+        // itemsPerPage: 999999,  // ⭐ טוען הכל בפעם אחת מהשרת
+        itemsPerPage: 200,  // ⭐ טוען 200 בכל פעם מהשרת
         showPagination: false,  // ⭐ ללא footer - infinite scroll!
         
         apiParams: {
@@ -707,6 +714,45 @@ async function initAreaGravesTable(data, totalItems = null, signal) {
     // ============================================
     // ⭐⭐⭐ Callback לטעינת עוד נתונים
     // ============================================
+
+        onLoadMore: async () => {
+            console.log('📥 TableManager detected scroll - loading more area graves...');
+            
+            try {
+                if (!areaGraveSearch) {
+                    console.log('❌ areaGraveSearch not available');
+                    areaGravesTable.state.hasMoreData = false;
+                    return;
+                }
+                
+                if (areaGraveSearch.state.isLoading) {
+                    console.log('⏳ Already loading...');
+                    return;
+                }
+                
+                if (areaGraveSearch.state.currentPage >= areaGraveSearch.state.totalPages) {
+                    console.log('✅ All pages loaded');
+                    areaGravesTable.state.hasMoreData = false;
+                    return;
+                }
+                
+                const nextPage = areaGraveSearch.state.currentPage + 1;
+                console.log(`📄 Loading page ${nextPage} of ${areaGraveSearch.state.totalPages}...`);
+                
+                areaGraveSearch.state.currentPage = nextPage;
+                areaGraveSearch.state.isLoading = true;
+                
+                await areaGraveSearch.search();
+                
+                console.log(`✅ Page ${nextPage} loaded successfully`);
+                
+            } catch (error) {
+                console.error('❌ Error in onLoadMore:', error);
+                areaGravesTable.state.hasMoreData = false;
+                showToast('שגיאה בטעינת נתונים נוספים', 'error');
+            }
+        },
+    
         // onLoadMore: async () => {
         //     console.log('📥 TableManager detected scroll - loading more area graves...');
             

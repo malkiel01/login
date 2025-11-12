@@ -32,28 +32,28 @@ $id = $_GET['id'] ?? null;
 
 // -------------------------------------------------------------
 
-// ⭐ פרמטרי מיון אופציונליים (חדש!)
-$orderBy = $_GET['orderBy'] ?? 'id'; // ברירת מחדל: לפי איידי
-$sortDirection = strtoupper($_GET['sortDirection'] ?? 'ASC'); // ברירת מחדל: א-ת
+// // ⭐ פרמטרי מיון אופציונליים (חדש!)
+// $orderBy = $_GET['orderBy'] ?? 'id'; // ברירת מחדל: לפי איידי
+// $sortDirection = strtoupper($_GET['sortDirection'] ?? 'ASC'); // ברירת מחדל: א-ת
 
-// ולידציה של כיוון המיון
-if (!in_array($sortDirection, ['ASC', 'DESC'])) {
-    $sortDirection = 'ASC';
-}
+// // ולידציה של כיוון המיון
+// if (!in_array($sortDirection, ['ASC', 'DESC'])) {
+//     $sortDirection = 'ASC';
+// }
 
-// שדות מותרים למיון (אבטחה)
-$allowedOrderFields = [
-    'areaGraveName',
-    'unicId',
-    'createdDate',
-    'areaGraveNumber',
-    'isActive'
-];
+// // שדות מותרים למיון (אבטחה)
+// $allowedOrderFields = [
+//     'areaGraveName',
+//     'unicId',
+//     'createdDate',
+//     'areaGraveNumber',
+//     'isActive'
+// ];
 
-// ולידציה של שדה המיון
-if (!in_array($orderBy, $allowedOrderFields)) {
-    $orderBy = 'areaGraveName';
-}
+// // ולידציה של שדה המיון
+// if (!in_array($orderBy, $allowedOrderFields)) {
+//     $orderBy = 'areaGraveName';
+// }
 
 try {
     switch ($action) {

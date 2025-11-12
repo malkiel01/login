@@ -82,7 +82,7 @@ try {
         // =====================================================
         // רשימת כל אחוזות הקבר
         // =====================================================
-        case 'list2':
+        case 'list_old':
             $search = $_GET['search'] ?? '';
             $plotId = $_GET['plotId'] ?? null;
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -191,108 +191,118 @@ try {
             break;
         
         case 'list':
-            // פרמטרים קיימים
-            $cemeteryId = $_GET['cemeteryId'] ?? null;
-            $blockId = $_GET['blockId'] ?? null;
+            $search = $_GET['search'] ?? '';
             $plotId = $_GET['plotId'] ?? null;
             $rowId = $_GET['rowId'] ?? null;
-            $search = $_GET['search'] ?? '';
-            $page = max(1, intval($_GET['page'] ?? 1));
-            $limit = max(1, min(100, intval($_GET['limit'] ?? 20)));
+            $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+            $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 200;
             $offset = ($page - 1) * $limit;
-
-            // בניית תנאי WHERE
-            $where = ['ag.isActive = 1'];
+            
+            // ⭐ בניית SQL עם מיון דינמי
+            $sql = "SELECT ag.* FROM areaGraves_view ag WHERE ag.isActive = 1";
             $params = [];
-            $types = '';
-
+            
+            if ($plotId) {
+                $sql .= " AND ag.plotId = :plotId";
+                $params['plotId'] = $plotId;
+            }
+            
             if ($rowId) {
-                $where[] = 'ag.rowId = ?';
-                $params[] = $rowId;
-                $types .= 's';
-            } elseif ($plotId) {
-                $where[] = 'r.plotId = ?';
-                $params[] = $plotId;
-                $types .= 's';
-            } elseif ($blockId) {
-                $where[] = 'p.blockId = ?';
-                $params[] = $blockId;
-                $types .= 's';
-            } elseif ($cemeteryId) {
-                $where[] = 'b.cemeteryId = ?';
-                $params[] = $cemeteryId;
-                $types .= 's';
+                $sql .= " AND ag.lineId = :rowId";
+                $params['rowId'] = $rowId;
             }
-
-            if (!empty($search)) {
-                $where[] = '(ag.areaGraveName LIKE ? OR ag.areaGraveNumber LIKE ?)';
-                $searchTerm = "%{$search}%";
-                $params[] = $searchTerm;
-                $params[] = $searchTerm;
-                $types .= 'ss';
+            
+            if ($search) {
+                $sql .= " AND (
+                    ag.areaGraveNameHe LIKE :search1 OR 
+                    ag.coordinates LIKE :search2 OR 
+                    ag.gravesList LIKE :search3 OR 
+                    ag.comments LIKE :search4 OR
+                    ag.lineNameHe LIKE :search5 OR
+                    ag.plotNameHe LIKE :search6 OR
+                    ag.blockNameHe LIKE :search7 OR
+                    ag.cemeteryNameHe LIKE :search8
+                )";
+                $searchTerm = "%$search%";
+                $params['search1'] = $searchTerm;
+                $params['search2'] = $searchTerm;
+                $params['search3'] = $searchTerm;
+                $params['search4'] = $searchTerm;
+                $params['search5'] = $searchTerm;
+                $params['search6'] = $searchTerm;
+                $params['search7'] = $searchTerm;
+                $params['search8'] = $searchTerm;
             }
-
-            $whereClause = implode(' AND ', $where);
-
-            // ספירת סך הכל רשומות
-            $countQuery = "
-                SELECT COUNT(*) as total
-                FROM areaGraves ag
-                LEFT JOIN rows r ON ag.rowId = r.unicId
-                LEFT JOIN plots p ON r.plotId = p.unicId
-                LEFT JOIN blocks b ON p.blockId = b.unicId
-                WHERE {$whereClause}
-            ";
-
-            $countStmt = $conn->prepare($countQuery);
-            if (!empty($params)) {
-                $countStmt->bind_param($types, ...$params);
+            
+            // ספירה עם אותם תנאים
+            $countSql = "SELECT COUNT(*) FROM areaGraves_view ag WHERE ag.isActive = 1";
+            $countParams = [];
+            
+            if ($plotId) {
+                $countSql .= " AND ag.plotId = :plotId";
+                $countParams['plotId'] = $plotId;
             }
-            $countStmt->execute();
-            $totalRecords = $countStmt->get_result()->fetch_assoc()['total'];
-            $countStmt->close();
-
-            // ⭐ שליפת הנתונים עם מיון דינמי
-            $dataQuery = "
-                SELECT 
-                    ag.*,
-                    r.rowName,
-                    r.unicId as rowUnicId,
-                    p.plotName,
-                    p.unicId as plotUnicId,
-                    b.blockName,
-                    b.unicId as blockUnicId,
-                    c.cemeteryName,
-                    c.unicId as cemeteryUnicId
-                FROM areaGraves ag
-                LEFT JOIN rows r ON ag.rowId = r.unicId
-                LEFT JOIN plots p ON r.plotId = p.unicId
-                LEFT JOIN blocks b ON p.blockId = b.unicId
-                LEFT JOIN cemeteries c ON b.cemeteryId = c.unicId
-                WHERE {$whereClause}
-                ORDER BY ag.{$orderBy} {$sortDirection}
-                LIMIT ? OFFSET ?
-            ";
-
-            $dataStmt = $conn->prepare($dataQuery);
-            $params[] = $limit;
-            $params[] = $offset;
-            $types .= 'ii';
-            $dataStmt->bind_param($types, ...$params);
-            $dataStmt->execute();
-            $result = $dataStmt->get_result();
-
-            $items = [];
-            while ($row = $result->fetch_assoc()) {
-                $items[] = $row;
+            
+            if ($rowId) {
+                $countSql .= " AND ag.lineId = :rowId";
+                $countParams['rowId'] = $rowId;
             }
-            $dataStmt->close();
-
+            
+            if ($search) {
+                $countSql .= " AND (
+                    ag.areaGraveNameHe LIKE :search1 OR 
+                    ag.coordinates LIKE :search2 OR 
+                    ag.gravesList LIKE :search3 OR 
+                    ag.comments LIKE :search4 OR
+                    ag.lineNameHe LIKE :search5 OR
+                    ag.plotNameHe LIKE :search6 OR
+                    ag.blockNameHe LIKE :search7 OR
+                    ag.cemeteryNameHe LIKE :search8
+                )";
+                $countParams['search1'] = $searchTerm;
+                $countParams['search2'] = $searchTerm;
+                $countParams['search3'] = $searchTerm;
+                $countParams['search4'] = $searchTerm;
+                $countParams['search5'] = $searchTerm;
+                $countParams['search6'] = $searchTerm;
+                $countParams['search7'] = $searchTerm;
+                $countParams['search8'] = $searchTerm;
+            }
+            
+            $countStmt = $pdo->prepare($countSql);
+            $countStmt->execute($countParams);
+            $total = $countStmt->fetchColumn();
+            
+            $totalAllSql = "SELECT COUNT(*) FROM areaGraves_view WHERE isActive = 1";
+            $totalAll = $pdo->query($totalAllSql)->fetchColumn();
+            
+            // ⭐ הוסף מיון דינמי
+            $sql .= " ORDER BY ag.{$orderBy} {$sortDirection} LIMIT :limit OFFSET :offset";
+            
+            $stmt = $pdo->prepare($sql);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue(":$key", $value);
+            }
+            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            $areaGraves = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // ספירת קברים לכל אחוזה
+            foreach ($areaGraves as &$areaGrave) {
+                $graveStmt = $pdo->prepare("
+                    SELECT COUNT(*) 
+                    FROM graves 
+                    WHERE areaGraveId = :id AND isActive = 1
+                ");
+                $graveStmt->execute(['id' => $areaGrave['unicId']]);
+                $areaGrave['graves_count'] = $graveStmt->fetchColumn();
+            }
+            
             // ⭐ מידע דיבוג מפורט
             $debugInfo = [
                 'query_params' => [
-                    'cemeteryId' => $cemeteryId,
-                    'blockId' => $blockId,
                     'plotId' => $plotId,
                     'rowId' => $rowId,
                     'search' => $search,
@@ -305,46 +315,49 @@ try {
                 'sql_info' => [
                     'order_field' => $orderBy,
                     'sort_direction' => $sortDirection,
-                    'where_conditions' => count($where),
-                    'bind_params_count' => count($params),
+                    'has_plot_filter' => !empty($plotId),
+                    'has_row_filter' => !empty($rowId),
+                    'has_search' => !empty($search),
                     'full_query_sample' => "ORDER BY ag.{$orderBy} {$sortDirection} LIMIT {$limit} OFFSET {$offset}"
                 ],
                 'results_info' => [
-                    'total_in_db' => $totalRecords,
-                    'returned_count' => count($items),
+                    'total_in_db' => $totalAll,
+                    'total_filtered' => $total,
+                    'returned_count' => count($areaGraves),
                     'from_index' => $offset + 1,
-                    'to_index' => min($offset + $limit, $totalRecords),
+                    'to_index' => min($offset + $limit, $total),
                     'current_page' => $page,
-                    'total_pages' => ceil($totalRecords / $limit)
+                    'total_pages' => ceil($total / $limit)
                 ],
-                'first_item' => !empty($items) ? [
-                    'unicId' => $items[0]['unicId'] ?? null,
-                    'name' => $items[0]['areaGraveName'] ?? null,
-                    'number' => $items[0]['areaGraveNumber'] ?? null,
-                    'createdDate' => $items[0]['createdDate'] ?? null
+                'first_item' => !empty($areaGraves) ? [
+                    'unicId' => $areaGraves[0]['unicId'] ?? null,
+                    'name' => $areaGraves[0]['areaGraveNameHe'] ?? null,
+                    'coordinates' => $areaGraves[0]['coordinates'] ?? null,
+                    'createDate' => $areaGraves[0]['createDate'] ?? null
                 ] : null,
-                'last_item' => !empty($items) ? [
-                    'unicId' => $items[count($items)-1]['unicId'] ?? null,
-                    'name' => $items[count($items)-1]['areaGraveName'] ?? null,
-                    'number' => $items[count($items)-1]['areaGraveNumber'] ?? null,
-                    'createdDate' => $items[count($items)-1]['createdDate'] ?? null
+                'last_item' => !empty($areaGraves) ? [
+                    'unicId' => $areaGraves[count($areaGraves)-1]['unicId'] ?? null,
+                    'name' => $areaGraves[count($areaGraves)-1]['areaGraveNameHe'] ?? null,
+                    'coordinates' => $areaGraves[count($areaGraves)-1]['coordinates'] ?? null,
+                    'createDate' => $areaGraves[count($areaGraves)-1]['createDate'] ?? null
                 ] : null,
                 'timestamp' => date('Y-m-d H:i:s')
             ];
-
+            
             echo json_encode([
                 'success' => true,
-                'data' => $items,
+                'data' => $areaGraves,
                 'pagination' => [
-                    'total' => $totalRecords,
                     'page' => $page,
                     'limit' => $limit,
-                    'totalPages' => ceil($totalRecords / $limit)
+                    'total' => $total,
+                    'totalAll' => $totalAll,
+                    'pages' => ceil($total / $limit)
                 ],
                 'debug' => $debugInfo
-            ], JSON_UNESCAPED_UNICODE);
+            ]);
             break;
-        
+
         // =====================================================
         // קבלת אחוזת קבר בודדת
         // =====================================================

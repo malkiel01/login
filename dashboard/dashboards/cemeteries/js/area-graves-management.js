@@ -1,24 +1,24 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/area-graves-management.js
- * Version: 1.5.2
+ * Version: 1.5.3
  * Updated: 2025-11-12
  * Author: Malkiel
  * Change Summary:
+ * - v1.5.3: 🐛 תיקון totalItems - עכשיו מקבל את הערך הנכון!
+ *   - תיקון: totalItems: actualTotalItems במקום totalItems: 0
+ *   - עכשיו TableManager יודע שיש 20,483 רשומות (לא 200)
+ *   - הוספת לוגים לזיהוי בעיית הערכים
  * - v1.5.2: 🐛 תיקון קריטי - קונפליקט שמות משתנים!
  *   - שינוי currentPage → areaGravesCurrentPage
  *   - שינוי totalPages → areaGravesTotalPages
  *   - שינוי isLoadingMore → areaGravesIsLoadingMore
  *   - תיקון: SyntaxError שמנע טעינת הקובץ
- * - v1.5.1: 🐛 DEBUG VERSION - הוספת לוגים לזיהוי בעיה
  * - v1.5.0: 🚀 Infinite Scroll אמיתי מהשרת!
  *   - טעינה ראשונית: 200 רשומות בלבד (page=1, limit=200)
  *   - גלילה מטה: טוען עוד 200 מהשרת (page=2, page=3...)
- *   - פונקציה חדשה: appendMoreAreaGraves() - מוסיפה לטבלה הקיימת
- *   - onLoadMore מחובר לטעינה מהשרת במקום מהזיכרון
- *   - חיסכון עצום בזיכרון ובזמן טעינה ראשוני!
  */
 
-console.log('🚀 area-graves-management.js v1.5.2 - Loading...');
+console.log('🚀 area-graves-management.js v1.5.3 - Loading...');
 
 // ===================================================================
 // משתנים גלובליים
@@ -795,8 +795,7 @@ async function initAreaGravesTable(data, totalItems = null, signal) {
         // ============================================
         // ⭐ 3 פרמטרים חדשים - הוסף כאן!
         // ============================================
-        // totalItems: actualTotalItems,        // ✅ כבר יש לך - נתוני הדאטה!
-        totalItems: 0,                       // ⭐ יתעדכן מה-API
+        totalItems: actualTotalItems,        // ⭐ סה"כ רשומות במערכת (מה-pagination)
         scrollLoadBatch: 100,                // ⭐ טען 100 שורות בכל גלילה (client-side)
         itemsPerPage: 999999,                // ⭐ עמוד אחד גדול = כל הנתונים
         scrollThreshold: 200,                // ⭐ התחל טעינה 200px לפני התחתית
@@ -925,6 +924,11 @@ function renderAreaGravesRows(data, container, pagination = null, signal = null)
     
     // ⭐ עדכן את totalItems מה-pagination (סה"כ במערכת, לא רק מה שנטען!)
     const totalItems = pagination?.totalAll || pagination?.total || filteredData.length;
+    
+    console.log('🔍 [DEBUG renderAreaGravesRows]');
+    console.log('  pagination:', pagination);
+    console.log('  totalItems calculated:', totalItems);
+    console.log('  filteredData.length:', filteredData.length);
 
     if (filteredData.length === 0) {
         if (areaGravesTable) {
@@ -1229,4 +1233,4 @@ window.currentPlotName = currentPlotName;
 
 window.areaGraveSearch = areaGraveSearch;
 
-console.log('✅ area-graves-management.js v1.5.2 - Loaded successfully!');
+console.log('✅ area-graves-management.js v1.5.3 - Loaded successfully!');

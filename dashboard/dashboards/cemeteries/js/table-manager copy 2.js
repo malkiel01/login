@@ -1,19 +1,17 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/table-manager.js
- * Version: 2.0.1
- * Updated: 2025-11-12
+ * Version: 2.0.0
+ * Updated: 2025-11-11
  * Author: Malkiel
  * Change Summary:
- * - v2.0.1: תיקון קריטי - חישוב אוטומטי של totalItems
- *   - אם totalItems=null/0 → מחושב מ-data.length
- *   - תיקון: "100/0" → "100/20483" (תצוגה נכונה)
- *   - ברירת מחדל: Infinite Scroll (showPagination: false)
- *   - אם showPagination: true → itemsPerPage ברירת מחדל 200
- *   - סלקט pagination: [25, 50, 100, 200, 500, "הכל"]
- *   - הפרדה מלאה בין showPagination ל-itemsPerPage
  * - v2.0.0: הפרדה מלאה בין totalItems, scrollLoadBatch, itemsPerPage
+ *   - totalItems: כמות כוללת (מה-API)
+ *   - scrollLoadBatch: כמות טעינה בגלילה (infinite scroll)
+ *   - itemsPerPage: כמות לעמוד (pagination רגיל)
  *   - תמיכה במצב hybrid: scroll + pagination
  *   - footer אוטומטי עם כפתורי ניווט
+ *   - סלקט לבחירת כמות רשומות לעמוד
+ *   - תצוגת סטטוס "מציג X-Y מתוך Z"
  */
 
 /**
@@ -41,8 +39,8 @@ class TableManager {
             
             // 3️⃣ כמות רשומות לעמוד (pagination)
             itemsPerPage: 999999,       // 999999 = עמוד אחד, אחרת מחולק לעמודים
-            showPagination: false,      // ⭐ ברירת מחדל: Infinite Scroll (false)
-            paginationOptions: [25, 50, 100, 200, 500, 'all'],  // ⭐ אפשרויות בסלקט + "הכל"
+            showPagination: false,      // true = הצג footer pagination
+            paginationOptions: [25, 50, 100, 200],  // אפשרויות בסלקט
             
             // ============================================
             // הגדרות כלליות
@@ -120,12 +118,6 @@ class TableManager {
             return;
         }
         
-        // ⭐ תיקון v2.0.1: חישוב אוטומטי של totalItems
-        if (this.config.totalItems === null || this.config.totalItems === undefined || this.config.totalItems === 0) {
-            this.config.totalItems = this.config.data.length;
-            console.log(`📊 totalItems auto-calculated: ${this.config.totalItems}`);
-        }
-        
         // אתחול סדר עמודות
         this.state.columnOrder = this.config.columns.map((col, index) => index);
         
@@ -148,7 +140,7 @@ class TableManager {
             this.initInfiniteScroll();
         }
         
-        console.log('✅ TableManager v2.0.1 initialized');
+        console.log('✅ TableManager v2.0.0 initialized');
         console.log('📊 Config:', {
             totalItems: this.config.totalItems,
             scrollLoadBatch: this.config.scrollLoadBatch,
@@ -407,11 +399,9 @@ class TableManager {
         `;
         this.config.paginationOptions.forEach(num => {
             const option = document.createElement('option');
-            option.value = num === 'all' ? 999999 : num;
-            option.textContent = num === 'all' ? 'הכל' : `${num} רשומות`;
-            if ((num === 'all' && this.config.itemsPerPage >= 999999) || num === this.config.itemsPerPage) {
-                option.selected = true;
-            }
+            option.value = num;
+            option.textContent = `${num} רשומות`;
+            if (num === this.config.itemsPerPage) option.selected = true;
             perPageSelect.appendChild(option);
         });
         perPageSelect.onchange = (e) => this.changeItemsPerPage(parseInt(e.target.value));

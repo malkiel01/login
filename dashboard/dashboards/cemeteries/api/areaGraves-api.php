@@ -82,7 +82,7 @@ try {
         // =====================================================
         // רשימת כל אחוזות הקבר
         // =====================================================
-        case 'list':
+        case 'list2':
             $search = $_GET['search'] ?? '';
             $plotId = $_GET['plotId'] ?? null;
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -190,7 +190,7 @@ try {
             ]);
             break;
         
-        case 'list3':
+        case 'list':
             // פרמטרים קיימים
             $cemeteryId = $_GET['cemeteryId'] ?? null;
             $blockId = $_GET['blockId'] ?? null;

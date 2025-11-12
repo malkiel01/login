@@ -41,14 +41,14 @@ if (!in_array($sortDirection, ['ASC', 'DESC'])) {
     $sortDirection = 'ASC';
 }
 
-// // שדות מותרים למיון (אבטחה)
-// $allowedOrderFields = [
-//     'areaGraveName',
-//     'unicId',
-//     'createdDate',
-//     'areaGraveNumber',
-//     'isActive'
-// ];
+// שדות מותרים למיון (אבטחה)
+$allowedOrderFields = [
+    'areaGraveName',
+    'unicId',
+    'createdDate',
+    'areaGraveNumber',
+    'isActive'
+];
 
 // // ולידציה של שדה המיון
 // if (!in_array($orderBy, $allowedOrderFields)) {

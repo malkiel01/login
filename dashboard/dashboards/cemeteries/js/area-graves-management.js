@@ -988,7 +988,7 @@ async function initAreaGravesTable(data, totalItems = null, signal) {
         reorderable: false,
         filterable: false,
 
-        tableHeight: 'calc(100vh - 250px)',  // גובה דינמי לפי מסך
+        tableHeight: 'calc(100vh - 350px)',  // גובה דינמי לפי מסך
         tableMinHeight: '500px',
         
         // ============================================

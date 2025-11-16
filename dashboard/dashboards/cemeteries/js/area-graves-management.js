@@ -796,12 +796,29 @@ async function initAreaGravesSearch_old(signal, plotId) {
 async function initAreaGravesSearch(signal, plotId) {
     console.log('🔍 אתחול חיפוש שורות קבר...');
     
+    // ⭐ טוען searchableFields מהשרת
+    let searchableFields = [];
+
+    try {
+        const fieldsResponse = await fetch(
+            `/dashboard/dashboards/cemeteries/api/get-config.php?type=areaGrave&section=searchableFields`,
+            { signal: signal }
+        );
+        const fieldsResult = await fieldsResponse.json();
+        
+        if (fieldsResult.success && fieldsResult.data) {
+            searchableFields = fieldsResult.data;
+        }
+    } catch (error) {
+        console.error('❌ Error loading searchableFields:', error);
+    }
+
     // קונפיגורציה
     const config = {
         entityType: 'area-grave',
         apiEndpoint: '/dashboard/dashboards/cemeteries/api/areaGraves-api.php',
         
-        searchableFields: fieldsResult.data || [],
+        searchableFields: searchableFields || [],
         
         displayColumns: [
             { key: 'areaGraveNameHe', label: 'שם' },

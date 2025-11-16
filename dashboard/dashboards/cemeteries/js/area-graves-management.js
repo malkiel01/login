@@ -1295,57 +1295,7 @@ function renderAreaGravesRows_old(data, container, pagination = null, signal = n
         areaGraveSearch.updateCounter();
     }
 }
-// ✅ הוספת async
-async function renderAreaGravesRows_new(data, container, pagination = null, signal = null) {
-    // ⭐⭐ סינון client-side לפי plotId
-    let filteredData = data;
 
-    if (!isSearchMode && currentPlotId) {
-        filteredData = data.filter(ag => {
-            const agPlotId = ag.plotId || ag.plot_id || ag.PlotId;
-            return String(agPlotId) === String(currentPlotId);
-        });
-    }
-    
-    // ⭐ עדכן את totalItems מה-pagination (סה"כ במערכת, לא רק מה שנטען!)
-    const totalItems = pagination?.totalAll || pagination?.total || filteredData.length;
-    
-    console.log('🔍 [DEBUG renderAreaGravesRows]');
-    console.log('  pagination:', pagination);
-    console.log('  totalItems calculated:', totalItems);
-    console.log('  filteredData.length:', filteredData.length);
-
-    if (filteredData.length === 0) {
-        // ... קוד הודעת "אין תוצאות" נשאר אותו דבר ...
-        return;
-    }
-    
-    // ⭐ בדוק אם ה-DOM של TableManager קיים
-    const tableWrapperExists = document.querySelector('.table-wrapper[data-fixed-width="true"]');
-    
-    // ⭐ אם המשתנה קיים אבל ה-DOM נמחק - אפס את המשתנה!
-    if (!tableWrapperExists && areaGravesTable) {
-        areaGravesTable = null;
-        window.areaGravesTable = null;
-    }
-    
-    // ✅ הוספת await!
-    if (!areaGravesTable || !tableWrapperExists) {
-        await initAreaGravesTable(filteredData, totalItems, signal);
-    } else {
-        if (areaGravesTable.config) {
-            areaGravesTable.config.totalItems = totalItems;
-        }
-        
-        areaGravesTable.setData(filteredData);
-    }
-    
-    // ⭐ עדכן את התצוגה של UniversalSearch
-    if (areaGraveSearch) {
-        areaGraveSearch.state.totalResults = totalItems;
-        areaGraveSearch.updateCounter();
-    }
-}
 function renderAreaGravesRows(data, container, pagination = null, signal = null) {
     // ⭐⭐ סינון client-side לפי plotId
     let filteredData = data;
@@ -1430,9 +1380,9 @@ function renderAreaGravesRows(data, container, pagination = null, signal = null)
         window.areaGravesTable = null;
     }
     
-    // עכשיו בדוק אם צריך לבנות מחדש
+    // ✅ הוספת await!
     if (!areaGravesTable || !tableWrapperExists) {
-        initAreaGravesTable(filteredData, totalItems, signal);
+        await initAreaGravesTable(filteredData, totalItems, signal);
     } else {
         if (areaGravesTable.config) {
             areaGravesTable.config.totalItems = totalItems;

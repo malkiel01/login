@@ -577,6 +577,26 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
     }
     window.areaGravesLoadCounter++;
     
+    // ⭐ השבתה זמנית של UniversalSearch לבדיקת ביצועים
+    // השמד חיפוש קודם
+    if (areaGraveSearch && typeof areaGraveSearch.destroy === 'function') {
+        console.log('🗑️ Destroying previous areaGraveSearch instance...');
+        areaGraveSearch.destroy();
+        areaGraveSearch = null;
+        window.areaGraveSearch = null;
+    }
+    
+    // אתחל חיפוש חדש
+    console.log('🆕 Creating fresh areaGraveSearch instance...');
+    
+    areaGraveSearch = await initAreaGravesSearch(signal, plotId);    
+    
+    if (OperationManager.shouldAbort('areaGrave')) {
+        console.log('⚠️ AreaGrave operation aborted');
+        return;
+    }
+
+
     try {
         // ⭐ איפוס מצב לפני טעינה חדשה
         areaGravesCurrentPage = 1;

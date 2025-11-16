@@ -1192,7 +1192,7 @@ async function initAreaGravesTable(data, totalItems = null, signal) {
  * רינדור שורות טבלה - פונקציה מלאה עם כל הלוגיקה!
  * v1.3.2 - שוחזרה הפונקציה המקורית המלאה
  */
-function renderAreaGravesRows(data, container, pagination = null, signal = null) {
+function renderAreaGravesRows_old(data, container, pagination = null, signal = null) {
     // ⭐⭐ סינון client-side לפי plotId
     let filteredData = data;
     if (currentPlotId) {
@@ -1295,7 +1295,7 @@ function renderAreaGravesRows(data, container, pagination = null, signal = null)
         areaGraveSearch.updateCounter();
     }
 }
-function renderAreaGravesRows_new(data, container, pagination = null, signal = null) {
+function renderAreaGravesRows(data, container, pagination = null, signal = null) {
     // ⭐⭐ סינון client-side לפי plotId
     let filteredData = data;
 

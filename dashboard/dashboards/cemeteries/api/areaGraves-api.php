@@ -18,6 +18,29 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
 header('Access-Control-Allow-Headers: Content-Type');
 
+// אחרי header('Content-Type: application/json...')
+
+// ⭐ קבלת נתוני POST (עבור UniversalSearch)
+$postData = json_decode(file_get_contents('php://input'), true);
+
+// אם יש POST data - זה חיפוש מ-UniversalSearch
+if ($postData && isset($postData['action'])) {
+    $action = $postData['action'];
+    $query = $postData['query'] ?? '';
+    $filters = $postData['filters'] ?? [];
+    $page = $postData['page'] ?? 1;
+    $limit = $postData['limit'] ?? 200;
+} else {
+    // אחרת - GET רגיל
+    $action = $_GET['action'] ?? '';
+    $query = $_GET['search'] ?? '';
+    $filters = [];
+    $page = $_GET['page'] ?? 1;
+    $limit = $_GET['limit'] ?? 200;
+}
+
+
+
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
 
 try {
@@ -87,114 +110,6 @@ try {
         // רשימת כל אחוזות הקבר
         // =====================================================
         case 'list_old':
-            $search = $_GET['search'] ?? '';
-            $plotId = $_GET['plotId'] ?? null;
-            $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-            $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 999999;
-            $offset = ($page - 1) * $limit;
-            
-            $sql = "SELECT ag.* FROM areaGraves_view ag WHERE ag.isActive = 1";
-            $params = [];
-            
-            if ($plotId) {
-                $sql .= " AND ag.plotId = :plotId";
-                $params['plotId'] = $plotId;
-            }
-            
-            if ($search) {
-                $sql .= " AND (
-                    ag.areaGraveNameHe LIKE :search1 OR 
-                    ag.coordinates LIKE :search2 OR 
-                    ag.gravesList LIKE :search3 OR 
-                    ag.comments LIKE :search4 OR
-                    ag.lineNameHe LIKE :search5 OR
-                    ag.plotNameHe LIKE :search6 OR
-                    ag.blockNameHe LIKE :search7 OR
-                    ag.cemeteryNameHe LIKE :search8
-                )";
-                $searchTerm = "%$search%";
-                $params['search1'] = $searchTerm;
-                $params['search2'] = $searchTerm;
-                $params['search3'] = $searchTerm;
-                $params['search4'] = $searchTerm;
-                $params['search5'] = $searchTerm;
-                $params['search6'] = $searchTerm;
-                $params['search7'] = $searchTerm;
-                $params['search8'] = $searchTerm;
-            }
-            
-            $countSql = "SELECT COUNT(*) FROM areaGraves_view ag WHERE ag.isActive = 1";
-            $countParams = [];
-            
-            if ($plotId) {
-                $countSql .= " AND ag.plotId = :plotId";
-                $countParams['plotId'] = $plotId;
-            }
-            
-            if ($search) {
-                $countSql .= " AND (
-                    ag.areaGraveNameHe LIKE :search1 OR 
-                    ag.coordinates LIKE :search2 OR 
-                    ag.gravesList LIKE :search3 OR 
-                    ag.comments LIKE :search4 OR
-                    ag.lineNameHe LIKE :search5 OR
-                    ag.plotNameHe LIKE :search6 OR
-                    ag.blockNameHe LIKE :search7 OR
-                    ag.cemeteryNameHe LIKE :search8
-                )";
-                $countParams['search1'] = $searchTerm;
-                $countParams['search2'] = $searchTerm;
-                $countParams['search3'] = $searchTerm;
-                $countParams['search4'] = $searchTerm;
-                $countParams['search5'] = $searchTerm;
-                $countParams['search6'] = $searchTerm;
-                $countParams['search7'] = $searchTerm;
-                $countParams['search8'] = $searchTerm;
-            }
-            
-            $countStmt = $pdo->prepare($countSql);
-            $countStmt->execute($countParams);
-            $total = $countStmt->fetchColumn();
-            
-            $totalAllSql = "SELECT COUNT(*) FROM areaGraves_view WHERE isActive = 1";
-            $totalAll = $pdo->query($totalAllSql)->fetchColumn();
-            
-            $sql .= " ORDER BY ag.createDate DESC LIMIT :limit OFFSET :offset";
-            
-            $stmt = $pdo->prepare($sql);
-            foreach ($params as $key => $value) {
-                $stmt->bindValue(":$key", $value);
-            }
-            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-            $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-            $stmt->execute();
-            
-            $areaGraves = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            foreach ($areaGraves as &$areaGrave) {
-                $graveStmt = $pdo->prepare("
-                    SELECT COUNT(*) 
-                    FROM graves 
-                    WHERE areaGraveId = :id AND isActive = 1
-                ");
-                $graveStmt->execute(['id' => $areaGrave['unicId']]);
-                $areaGrave['graves_count'] = $graveStmt->fetchColumn();
-            }
-            
-            echo json_encode([
-                'success' => true,
-                'data' => $areaGraves,
-                'pagination' => [
-                    'page' => $page,
-                    'limit' => $limit,
-                    'total' => $total,
-                    'totalAll' => $totalAll,
-                    'pages' => ceil($total / $limit)
-                ]
-            ]);
-            break;
-        
-        case 'list':
             $search = $_GET['search'] ?? '';
             $plotId = $_GET['plotId'] ?? null;
             $rowId = $_GET['rowId'] ?? null;
@@ -362,6 +277,129 @@ try {
             ]);
             break;
 
+        case 'list':
+            $plotId = $postData['plotId'] ?? $_GET['plotId'] ?? null;
+            $rowId = $postData['rowId'] ?? $_GET['rowId'] ?? null;
+            $offset = ($page - 1) * $limit;
+            
+            $sql = "SELECT ag.* FROM areaGraves_view ag WHERE ag.isActive = 1";
+            $params = [];
+            
+            // סינון לפי plotId
+            if ($plotId) {
+                $sql .= " AND ag.plotId = :plotId";
+                $params['plotId'] = $plotId;
+            }
+            
+            // סינון לפי rowId
+            if ($rowId) {
+                $sql .= " AND ag.lineId = :rowId";
+                $params['rowId'] = $rowId;
+            }
+            
+            // ⭐ חיפוש כללי (query)
+            if (!empty($query)) {
+                $sql .= " AND (
+                    ag.areaGraveNameHe LIKE :query1 OR 
+                    ag.coordinates LIKE :query2 OR 
+                    ag.lineNameHe LIKE :query3 OR
+                    ag.plotNameHe LIKE :query4 OR
+                    ag.blockNameHe LIKE :query5 OR
+                    ag.cemeteryNameHe LIKE :query6
+                )";
+                $searchTerm = "%{$query}%";
+                $params['query1'] = $searchTerm;
+                $params['query2'] = $searchTerm;
+                $params['query3'] = $searchTerm;
+                $params['query4'] = $searchTerm;
+                $params['query5'] = $searchTerm;
+                $params['query6'] = $searchTerm;
+            }
+            
+            // ⭐ פילטרים מתקדמים
+            foreach ($filters as $index => $filter) {
+                $field = $filter['field'];
+                $value = $filter['value'];
+                $matchType = $filter['matchType'] ?? 'exact';
+                
+                switch ($matchType) {
+                    case 'exact':
+                        $sql .= " AND ag.{$field} = :filter{$index}";
+                        $params["filter{$index}"] = $value;
+                        break;
+                        
+                    case 'fuzzy':
+                        $sql .= " AND ag.{$field} LIKE :filter{$index}";
+                        $params["filter{$index}"] = "%{$value}%";
+                        break;
+                        
+                    case 'startsWith':
+                        $sql .= " AND ag.{$field} LIKE :filter{$index}";
+                        $params["filter{$index}"] = "{$value}%";
+                        break;
+                        
+                    case 'before':
+                        $sql .= " AND ag.{$field} < :filter{$index}";
+                        $params["filter{$index}"] = $value;
+                        break;
+                        
+                    case 'after':
+                        $sql .= " AND ag.{$field} > :filter{$index}";
+                        $params["filter{$index}"] = $value;
+                        break;
+                        
+                    case 'between':
+                        if (isset($filter['valueEnd'])) {
+                            $sql .= " AND ag.{$field} BETWEEN :filter{$index}_start AND :filter{$index}_end";
+                            $params["filter{$index}_start"] = $value;
+                            $params["filter{$index}_end"] = $filter['valueEnd'];
+                        }
+                        break;
+                }
+            }
+            
+            // ספירה
+            $countSql = str_replace('SELECT ag.*', 'SELECT COUNT(*)', $sql);
+            $countStmt = $pdo->prepare($countSql);
+            $countStmt->execute($params);
+            $total = $countStmt->fetchColumn();
+            
+            // מיון והגבלה
+            $sql .= " ORDER BY ag.{$orderBy} {$sortDirection} LIMIT :limit OFFSET :offset";
+            
+            $stmt = $pdo->prepare($sql);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue(":{$key}", $value);
+            }
+            $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            $areaGraves = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // הוסף ספירת קברים
+            foreach ($areaGraves as &$areaGrave) {
+                $graveStmt = $pdo->prepare("
+                    SELECT COUNT(*) 
+                    FROM graves 
+                    WHERE areaGraveId = :id AND isActive = 1
+                ");
+                $graveStmt->execute(['id' => $areaGrave['unicId']]);
+                $areaGrave['graves_count'] = $graveStmt->fetchColumn();
+            }
+            
+            echo json_encode([
+                'success' => true,
+                'data' => $areaGraves,
+                'pagination' => [
+                    'page' => (int)$page,
+                    'limit' => (int)$limit,
+                    'total' => (int)$total,
+                    'pages' => ceil($total / $limit)
+                ]
+            ]);
+            break;
+        
         // =====================================================
         // קבלת אחוזת קבר בודדת
         // =====================================================

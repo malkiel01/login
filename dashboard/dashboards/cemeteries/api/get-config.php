@@ -1,22 +1,4 @@
 <?php
-    // // קובץ: api/get-config.php
-    // header('Content-Type: application/json; charset=utf-8');
-
-    // // טען את הקונפיג
-    // $config = require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config/cemetery-hierarchy-config.php';
-
-
-    // $type = $_GET['type'] ?? '';  // cemetery / block / plot...
-    // $section = $_GET['section'] ?? '';  // table_columns / form_fields...
-
-    // // החזר את החלק המבוקש
-    // echo json_encode([
-    //     'success' => true,
-    //     'data' => $config[$type][$section] ?? []
-    // ]);
-?>
-
-<?php
     /*
     * File: api/get-config.php
     * Version: 2.0.0
@@ -63,27 +45,34 @@
             sendError('חסר פרמטר section', 400, 'אפשרויות: table_columns, form_fields, queryFields');
         }
         
-        // // 3️⃣ רשימת types מותרים (למניעת injection)
-        // $allowedTypes = [
-        //     'cemetery',
-        //     'block', 
-        //     'plot',
-        //     'areaGrave',
-        //     'grave',
-        //     'customer',
-        //     'purchase',
-        //     'burial'
-        // ];
-        
-        // if (!in_array($type, $allowedTypes)) {
-        //     sendError(
-        //         "Type לא חוקי: {$type}", 
-        //         400, 
-        //         'Types מותרים: ' . implode(', ', $allowedTypes)
-        //     );
-        // }
-        
         // 4️⃣ טעינת הקונפיג
+
+        // ⭐ אם מבקשים searchableFields - טען מקונפיג החיפוש!
+        if ($section === 'searchableFields') {
+            $searchConfigPath = $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config/search-config.php';
+            
+            if (!file_exists($searchConfigPath)) {
+                sendError('קובץ search-config.php לא נמצא', 500);
+            }
+            
+            $searchConfig = require $searchConfigPath;
+            
+            if (!isset($searchConfig[$type])) {
+                sendError("Type '{$type}' לא קיים ב-search-config", 404);
+            }
+            
+            if (!isset($searchConfig[$type]['searchableFields'])) {
+                sendError("searchableFields לא מוגדר עבור '{$type}'", 404);
+            }
+            
+            echo json_encode([
+                'success' => true,
+                'data' => $searchConfig[$type]['searchableFields']
+            ]);
+            exit;
+        }
+
+        // אחרת - המשך עם cemetery-hierarchy-config
         $configPath = $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config/cemetery-hierarchy-config.php';
         
         if (!file_exists($configPath)) {

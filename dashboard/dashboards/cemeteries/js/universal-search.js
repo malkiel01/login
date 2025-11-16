@@ -429,10 +429,107 @@ class UniversalSearch {
     /**
      * ביצוע חיפוש
      */
+    async search_old() {
+        // callback לפני חיפוש
+        if (this.config.callbacks.onSearch) {
+            this.config.callbacks.onSearch(this.state.currentQuery, this.state.activeFilters);
+        }
+        
+        this.state.isSearching = true;
+        this.showLoading();
+        
+        try {
+            // בניית payload
+            const payload = this.buildSearchPayload();
+            
+            console.log('🔎 Searching with payload:', payload);
+            
+            let response;
+            
+            // בדוק אם זה GET או POST
+            if (this.config.dataSource.method === 'GET') {
+                // שליחת GET עם query parameters
+                const params = new URLSearchParams();
+                params.append('action', payload.action);
+                
+                if (payload.query) {
+                    params.append('search', payload.query);
+                }
+                
+                if (payload.page) {
+                    params.append('page', payload.page);
+                }
+                
+                if (payload.apiLimit) {
+                    params.append('limit', payload.apiLimit);
+                }
+                
+                // הוסף פילטרים
+                payload.filters.forEach((filter, index) => {
+                    params.append(`filter_${index}_field`, filter.field);
+                    params.append(`filter_${index}_value`, filter.value);
+                    params.append(`filter_${index}_type`, filter.matchType);
+                });
+                
+                const url = `${this.config.dataSource.endpoint}?${params.toString()}`;
+                response = await fetch(url);
+            } else {
+                // שליחת POST עם body (ברירת מחדל)
+                response = await fetch(this.config.dataSource.endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+            }
+            
+            const data = await response.json();
+            
+            console.log('📦 Search results:', data);
+            
+            if (data.success) {
+                this.state.results = data.data || [];
+                this.state.totalResults = data.pagination?.total || data.total || data.data.length;
+                this.state.lastSearchTime = Date.now();
+                
+                this.renderResults(data.data);
+                this.updateCounter();
+                
+                // callback
+                if (this.config.callbacks.onResults) {
+                    this.config.callbacks.onResults(data);
+                }
+                
+                if (data.data.length === 0 && this.config.callbacks.onEmpty) {
+                    this.config.callbacks.onEmpty();
+                }
+            } else {
+                throw new Error(data.error || 'Search failed');
+            }
+            
+        } catch (error) {
+            console.error('❌ Search error:', error);
+            
+            if (this.config.callbacks.onError) {
+                this.config.callbacks.onError(error);
+            }
+            
+            this.showError(error.message);
+        } finally {
+            this.state.isSearching = false;
+            this.hideLoading();
+        }
+    }
     async search() {
         // callback לפני חיפוש
         if (this.config.callbacks.onSearch) {
             this.config.callbacks.onSearch(this.state.currentQuery, this.state.activeFilters);
+        }
+
+        if (response.pagination) {
+            this.state.totalPages = response.pagination.pages;
+            this.state.totalResults = response.pagination.total;
         }
         
         this.state.isSearching = true;
@@ -783,6 +880,16 @@ class UniversalSearch {
         this.search();
     }
 }
+
+UniversalSearch.prototype.loadNextPage = async function() {
+    if (this.state.currentPage >= this.state.totalPages) {
+        return false;
+    }
+    
+    this.state.currentPage++;
+    await this.search();
+    return true;
+};
 
 // הפוך לגלובלי
 window.UniversalSearch = UniversalSearch;

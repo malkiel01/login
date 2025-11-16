@@ -1,16 +1,24 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/area-graves-management.js
- * Version: 1.5.4
- * Updated: 2025-11-16
+ * Version: 1.5.3
+ * Updated: 2025-11-12
  * Author: Malkiel
  * Change Summary:
- * - v1.5.4: 🐛 תיקון שתי בעיות קריטיות:
- *   - תיקון: שדה חיפוש מוסתר - הסרת style="display: none;"
- *   - תיקון: שכפול טבלה - הוספת await ל-initAreaGravesTable
- *   - הפיכת renderAreaGravesRows ל-async function
+ * - v1.5.3: 🐛 תיקון totalItems - עכשיו מקבל את הערך הנכון!
+ *   - תיקון: totalItems: actualTotalItems במקום totalItems: 0
+ *   - עכשיו TableManager יודע שיש 20,483 רשומות (לא 200)
+ *   - הוספת לוגים לזיהוי בעיית הערכים
+ * - v1.5.2: 🐛 תיקון קריטי - קונפליקט שמות משתנים!
+ *   - שינוי currentPage → areaGravesCurrentPage
+ *   - שינוי totalPages → areaGravesTotalPages
+ *   - שינוי isLoadingMore → areaGravesIsLoadingMore
+ *   - תיקון: SyntaxError שמנע טעינת הקובץ
+ * - v1.5.0: 🚀 Infinite Scroll אמיתי מהשרת!
+ *   - טעינה ראשונית: 200 רשומות בלבד (page=1, limit=200)
+ *   - גלילה מטה: טוען עוד 200 מהשרת (page=2, page=3...)
  */
 
-console.log('🚀 area-graves-management.js v1.5.4 - Loading...');
+console.log('🚀 area-graves-management.js v1.5.3 - Loading...');
 
 // ===================================================================
 // משתנים גלובליים
@@ -620,7 +628,7 @@ async function appendMoreAreaGraves() {
 // ===================================================================
 // בניית המבנה
 // ===================================================================
-async function buildAreaGravesContainer_old(signal, plotId = null, plotName = null) {
+async function buildAreaGravesContainer(signal, plotId = null, plotName = null) {
     console.log('🏗️ Building area graves container...');
     
     let mainContainer = document.querySelector('.main-container');
@@ -691,100 +699,6 @@ async function buildAreaGravesContainer_old(signal, plotId = null, plotName = nu
         ${topSection}
         
         <div id="areaGraveSearchSection" class="search-section" style="display: none;"></div>
-        
-        <div class="table-container">
-            <table id="mainTable" class="data-table">
-                <thead>
-                    <tr id="tableHeaders">
-                        <th style="text-align: center;">טוען...</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody">
-                    <tr>
-                        <td style="text-align: center; padding: 40px;">
-                            <div class="spinner-border" role="status">
-                                <span class="visually-hidden">טוען אחוזות קבר...</span>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    `;
-  
-    console.log('✅ Area graves container built');
-}
-async function buildAreaGravesContainer(signal, plotId = null, plotName = null) {
-    console.log('🏗️ Building area graves container...');
-    
-    let mainContainer = document.querySelector('.main-container');
-    
-    if (!mainContainer) {
-        console.log('⚠️ main-container not found, creating one...');
-        const mainContent = document.querySelector('.main-content');
-        mainContainer = document.createElement('div');
-        mainContainer.className = 'main-container';
-        
-        const actionBar = mainContent.querySelector('.action-bar');
-        if (actionBar) {
-            actionBar.insertAdjacentElement('afterend', mainContainer);
-        } else {
-            mainContent.appendChild(mainContainer);
-        }
-    }
-
-    // ⭐⭐⭐ טעינת כרטיס מלא במקום indicator פשוט!
-    let topSection = '';
-    if (plotId && plotName) {
-        console.log('🎴 Creating full plot card...');
-        
-        // נסה ליצור את הכרטיס המלא
-        if (typeof createPlotCard === 'function') {
-            try {
-                topSection = await createPlotCard(plotId, signal);
-                console.log('✅ Plot card created successfully');
-            } catch (error) {
-                // בדיקה: אם זה ביטול מכוון - זה לא שגיאה
-                if (error.name === 'AbortError') {
-                    console.log('⚠️ Plot card loading aborted');
-                    return;
-                }
-                console.error('❌ Error creating block card:', error);
-            }
-        } else {
-            console.warn('⚠️ createPlotCard function not found');
-        }
-        
-        // אם לא הצלחנו ליצור כרטיס, נשתמש ב-fallback פשוט
-        if (!topSection) {
-            console.log('⚠️ Using simple filter indicator as fallback');
-            topSection = `
-                <div class="filter-indicator" style="background: linear-gradient(135deg, #FC466B 0%, #3F5EFB 100%); color: white; padding: 12px 20px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span style="font-size: 20px;">🏘️</span>
-                        <div>
-                            <div style="font-size: 12px; opacity: 0.9;">מציג אחוזות קבר עבור</div>
-                            <div style="font-size: 16px; font-weight: 600;">${plotName}</div>
-                        </div>
-                    </div>
-                    <button onclick="loadAreaGraves(null, null, true)" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
-                        ✕ הצג הכל
-                    </button>
-                </div>
-            `;
-        }
-    }
-
-    // ⭐ בדיקה - אם הפעולה בוטלה, אל תמשיך!
-    if (signal && signal.aborted) {
-        console.log('⚠️ Build areaGraves container aborted before innerHTML');
-        return;
-    }
-    
-    mainContainer.innerHTML = `
-        ${topSection}
-        
-        <div id="areaGraveSearchSection" class="search-section"></div>
         
         <div class="table-container">
             <table id="mainTable" class="data-table">
@@ -1281,57 +1195,6 @@ function renderAreaGravesRows_old(data, container, pagination = null, signal = n
     // עכשיו בדוק אם צריך לבנות מחדש
     if (!areaGravesTable || !tableWrapperExists) {
         initAreaGravesTable(filteredData, totalItems, signal);
-    } else {
-        if (areaGravesTable.config) {
-            areaGravesTable.config.totalItems = totalItems;
-        }
-        
-        areaGravesTable.setData(filteredData);
-    }
-    
-    // ⭐ עדכן את התצוגה של UniversalSearch
-    if (areaGraveSearch) {
-        areaGraveSearch.state.totalResults = totalItems;
-        areaGraveSearch.updateCounter();
-    }
-}
-// ✅ הוספת async
-async function renderAreaGravesRows_new(data, container, pagination = null, signal = null) {
-    // ⭐⭐ סינון client-side לפי plotId
-    let filteredData = data;
-
-    if (!isSearchMode && currentPlotId) {
-        filteredData = data.filter(ag => {
-            const agPlotId = ag.plotId || ag.plot_id || ag.PlotId;
-            return String(agPlotId) === String(currentPlotId);
-        });
-    }
-    
-    // ⭐ עדכן את totalItems מה-pagination (סה"כ במערכת, לא רק מה שנטען!)
-    const totalItems = pagination?.totalAll || pagination?.total || filteredData.length;
-    
-    console.log('🔍 [DEBUG renderAreaGravesRows]');
-    console.log('  pagination:', pagination);
-    console.log('  totalItems calculated:', totalItems);
-    console.log('  filteredData.length:', filteredData.length);
-
-    if (filteredData.length === 0) {
-        // ... קוד הודעת "אין תוצאות" נשאר אותו דבר ...
-        return;
-    }
-    
-    // ⭐ בדוק אם ה-DOM של TableManager קיים
-    const tableWrapperExists = document.querySelector('.table-wrapper[data-fixed-width="true"]');
-    
-    // ⭐ אם המשתנה קיים אבל ה-DOM נמחק - אפס את המשתנה!
-    if (!tableWrapperExists && areaGravesTable) {
-        areaGravesTable = null;
-        window.areaGravesTable = null;
-    }
-    
-    // ✅ הוספת await!
-    if (!areaGravesTable || !tableWrapperExists) {
-        await initAreaGravesTable(filteredData, totalItems, signal);
     } else {
         if (areaGravesTable.config) {
             areaGravesTable.config.totalItems = totalItems;

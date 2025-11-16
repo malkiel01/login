@@ -371,7 +371,6 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
     }
     window.areaGravesLoadCounter++;
     
-    // ⭐ השבתה זמנית של UniversalSearch לבדיקת ביצועים
     // השמד חיפוש קודם
     if (areaGraveSearch && typeof areaGraveSearch.destroy === 'function') {
         console.log('🗑️ Destroying previous areaGraveSearch instance...');
@@ -380,140 +379,22 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
         window.areaGraveSearch = null;
     }
     
-    // אתחל חיפוש חדש
+    // ⭐ אתחול UniversalSearch - פעם אחת!
     console.log('🆕 Creating fresh areaGraveSearch instance...');
-    
-    areaGraveSearch = await initAreaGravesSearch(signal, plotId);    
+    areaGraveSearch = await initAreaGravesSearch(signal, plotId);
     
     if (OperationManager.shouldAbort('areaGrave')) {
         console.log('⚠️ AreaGrave operation aborted');
         return;
     }
 
-
-    try {
-        // ⭐ איפוס מצב לפני טעינה חדשה
-        areaGravesCurrentPage = 1;
-        currentAreaGraves = [];
-        
-        // בנה את ה-URL
-        let apiUrl = '/dashboard/dashboards/cemeteries/api/areaGraves-api.php?action=list&limit=200&page=1';
-        apiUrl += '&orderBy=createDate&sortDirection=DESC';
-        
-        if (plotId) {
-            apiUrl += `&plotId=${plotId}`;
-        }
-        
-        // שלח בקשה לשרת
-        const response = await fetch(apiUrl, { signal: signal });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const result = await response.json();
-        
-        // ⭐ עדכון מצב Infinite Scroll
-        if (result.pagination) {
-            areaGravesTotalPages = result.pagination.pages;
-            areaGravesCurrentPage = result.pagination.page;
-        }
-        
-        if (result.success && result.data) {
-            currentAreaGraves = result.data;
-            
-            // ⭐⭐⭐ לוג פשוט ומסודר
-            console.log(`
-╔════════════════════════════════════════════════════════════════════
-║ טעינה: ${window.areaGravesLoadCounter}
-╠════════════════════════════════════════════════════════════════════
-║ כמות ערכים בטעינה: ${result.data.length}
-║ מספר ערך תחילת טעינה נוכחית: ${result.debug?.results_info?.from_index || 1}
-║ מספר ערך סוף טעינה נוכחית: ${result.debug?.results_info?.to_index || result.data.length}
-║ סך כל הערכים שנטענו עד כה: ${currentAreaGraves.length}
-║ שדה למיון: ${result.debug?.sql_info?.order_field || 'createDate'}
-║ סוג מיון: ${result.debug?.sql_info?.sort_direction || 'DESC'}
-╠════════════════════════════════════════════════════════════════════
-║ הערכים שנטענו כעת:
-╚════════════════════════════════════════════════════════════════════
-            `);
-            console.table(result.data.map((item, idx) => ({
-                '#': idx + 1,
-                'unicId': item.unicId,
-                'שם': item.areaGraveNameHe,
-                'קואורדינטות': item.coordinates || '-',
-                'תאריך יצירה': item.createDate
-            })));
-            
-            console.log(`
-╔════════════════════════════════════════════════════════════════════
-║ הערכים שנטענו עד כה (סה"כ):
-╚════════════════════════════════════════════════════════════════════
-            `);
-            console.table(currentAreaGraves.map((item, idx) => ({
-                '#': idx + 1,
-                'unicId': item.unicId,
-                'שם': item.areaGraveNameHe
-            })));
-            
-            // קרא לרינדור ישירות
-            const tableBody = document.getElementById('tableBody');
-            if (tableBody) {
-                renderAreaGravesRows(result.data, tableBody, result.pagination, signal);
-            } else {
-                console.error('❌ tableBody element not found!');
-            }
-        } else {
-            console.error('❌ טעינה נכשלה:', result.error || 'Unknown error');
-            showToast('שגיאה בטעינת נתונים: ' + (result.error || 'שגיאה לא ידועה'), 'error');
-            
-            const tableBody = document.getElementById('tableBody');
-            if (tableBody) {
-                tableBody.innerHTML = `
-                    <tr>
-                        <td colspan="7" style="text-align: center; padding: 60px;">
-                            <div style="color: #ef4444;">
-                                <div style="font-size: 48px; margin-bottom: 16px;">❌</div>
-                                <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">שגיאה בטעינת נתונים</div>
-                                <div>${result.error || 'שגיאה לא ידועה'}</div>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }
-        }
-    } catch (error) {
-        if (error.name === 'AbortError') {
-            return;
-        }
-        console.error('❌ שגיאה קריטית:', error.message);
-        showToast('שגיאה בטעינת נתונים: ' + error.message, 'error');
-        
-        const tableBody = document.getElementById('tableBody');
-        if (tableBody) {
-            tableBody.innerHTML = `
-                <tr>
-                    <td colspan="7" style="text-align: center; padding: 60px;">
-                        <div style="color: #ef4444;">
-                            <div style="font-size: 48px; margin-bottom: 16px;">❌</div>
-                            <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">שגיאה בטעינת נתונים</div>
-                            <div>${error.message}</div>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        }
-    }
-
-    // ⭐ אתחול UniversalSearch - אבל ללא search() ראשוני!
-    areaGraveSearch = await initAreaGravesSearch(signal, plotId);
-    
-    // ⭐ טעינה ישירה (Browse Mode)
+    // ⭐ טעינה ישירה (Browse Mode) - פעם אחת!
     await loadBrowseData(plotId, signal);
     
     // טען סטטיסטיקות
     await loadAreaGraveStats(signal, plotId);
 }
+
 
 // ===================================================================
 // 📥 טעינת עוד אחוזות קבר (Infinite Scroll)

@@ -18,9 +18,10 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
 header('Access-Control-Allow-Headers: Content-Type');
 
-// אחרי header('Content-Type: application/json...')
 
-// ⭐ קבלת נתוני POST (עבור UniversalSearch)
+// =====================================
+// 1️⃣ קבלת נתוני POST/GET
+// =====================================
 $postData = json_decode(file_get_contents('php://input'), true);
 
 // אם יש POST data - זה חיפוש מ-UniversalSearch
@@ -30,6 +31,8 @@ if ($postData && isset($postData['action'])) {
     $filters = $postData['filters'] ?? [];
     $page = $postData['page'] ?? 1;
     $limit = $postData['limit'] ?? 200;
+    $orderBy = $postData['orderBy'] ?? 'createDate';
+    $sortDirection = strtoupper($postData['sortDirection'] ?? 'DESC');
 } else {
     // אחרת - GET רגיל
     $action = $_GET['action'] ?? '';
@@ -37,10 +40,16 @@ if ($postData && isset($postData['action'])) {
     $filters = [];
     $page = $_GET['page'] ?? 1;
     $limit = $_GET['limit'] ?? 200;
+    $orderBy = $_GET['orderBy'] ?? 'createDate';
+    $sortDirection = strtoupper($_GET['sortDirection'] ?? 'DESC');
 }
 
+// ⭐ $id תמיד מגיע רק מ-GET (גם בעריכה וגם במחיקה)
+$id = $_GET['id'] ?? null;
 
-
+// =====================================
+// 2️⃣ חיבור למסד נתונים
+// =====================================
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
 
 try {

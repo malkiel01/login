@@ -42,7 +42,7 @@ let areaGravesIsLoadingMore = false;
 // טעינת אחוזות קבר (הפונקציה הראשית)
 // ===================================================================
 
-async function loadAreaGraves2(plotId = null, plotName = null, forceReset = false) {
+async function loadAreaGraves(plotId = null, plotName = null, forceReset = false) {
     console.log('📋 Loading area graves - v1.5.0 (Infinite Scroll אמיתי מהשרת - 200 בכל פעם)...');
 
  
@@ -495,7 +495,7 @@ async function loadAreaGraves3(plotId = null, plotName = null, forceReset = fals
     // טען סטטיסטיקות
     await loadAreaGraveStats(signal, plotId);
 }
-async function loadAreaGraves(plotId = null, plotName = null, forceReset = false) {
+async function loadAreaGraves4(plotId = null, plotName = null, forceReset = false) {
     const signal = OperationManager.start('areaGrave');
 
     // ⭐ לוגיקת סינון

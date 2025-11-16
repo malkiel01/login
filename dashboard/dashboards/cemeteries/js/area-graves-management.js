@@ -582,7 +582,7 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
     if (areaGraveSearch && typeof areaGraveSearch.destroy === 'function') {
         console.log('🗑️ Destroying previous areaGraveSearch instance...');
         areaGraveSearch.destroy();
-        areaGraveSearch = null;
+        areaGraveSearch = null; 
         window.areaGraveSearch = null;
     }
     

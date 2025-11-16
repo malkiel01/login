@@ -784,7 +784,7 @@ async function appendMoreAreaGraves() {
     
     // ⭐ עדכון מונה טעינות
     if (!window.areaGravesLoadCounter) {
-        window.areaGravesLoadCounter = 0;
+        window.areaGravesLoadCounter = 0; 
     }
     window.areaGravesLoadCounter++;
     

@@ -688,7 +688,7 @@ class UniversalSearch {
                 this.state.totalResults = data.pagination?.total || data.total || data.data.length;
                 this.state.lastSearchTime = Date.now();
                 
-                this.renderResults(data.data);
+                this.renderResults(data.data, data.pagination);
                 this.updateCounter();
                 
                 // callback
@@ -805,7 +805,7 @@ class UniversalSearch {
     /**
      * רינדור תוצאות
      */
-    renderResults(data) {
+    renderResults_old(data) {
         if (!this.elements.resultsContainer) return;
         
         if (this.config.results.renderFunction) {
@@ -813,6 +813,21 @@ class UniversalSearch {
             this.config.results.renderFunction(data, this.elements.resultsContainer);
         } else {
             // רינדור ברירת מחדל
+            this.defaultRender(data);
+        }
+    }
+    renderResults(data, pagination = null) {
+        if (!this.elements.resultsContainer) return;
+        
+        if (this.config.results.renderFunction) {
+            // ✅ העבר pagination!
+            this.config.results.renderFunction(
+                data, 
+                this.elements.resultsContainer,
+                pagination,
+                null  // signal
+            );
+        } else {
             this.defaultRender(data);
         }
     }

@@ -68,7 +68,7 @@ class UniversalSearch {
             
             ...config
         };
-        
+
         // State
         this.state = {
             currentQuery: '',
@@ -76,6 +76,7 @@ class UniversalSearch {
             results: [],
             totalResults: 0,
             currentPage: 1,
+            totalPages: 1,  // ⭐ הוסף
             isSearching: false,
             lastSearchTime: null
         };
@@ -85,6 +86,9 @@ class UniversalSearch {
         
         // Debounce timer
         this.debounceTimer = null;
+
+        // ⭐ AbortController לביטול בקשות
+        this.abortController = null;
         
         // Initialize
         this.init();
@@ -418,8 +422,23 @@ class UniversalSearch {
     /**
      * חיפוש עם debounce
      */
+    debouncedSearch_old() {
+        clearTimeout(this.debounceTimer);
+        
+        this.debounceTimer = setTimeout(() => {
+            this.search();
+        }, this.config.display.debounceDelay);
+    }
+
     debouncedSearch() {
         clearTimeout(this.debounceTimer);
+        
+        // ⭐ בטל בקשה קודמת אם קיימת
+        if (this.abortController) {
+            console.log('🛑 ביטול בקשת חיפוש קודמת');
+            this.abortController.abort();
+            this.abortController = null;
+        }
         
         this.debounceTimer = setTimeout(() => {
             this.search();
@@ -618,7 +637,7 @@ class UniversalSearch {
             this.hideLoading();
         }
     }
-    async search() {
+    async search3() {
         // callback לפני חיפוש
         if (this.config.callbacks.onSearch) {
             this.config.callbacks.onSearch(this.state.currentQuery, this.state.activeFilters);
@@ -715,6 +734,146 @@ class UniversalSearch {
         } finally {
             this.state.isSearching = false;
             this.hideLoading();
+        }
+    }
+    async search() {
+        // ⭐ אם כבר מחפשים, דלג
+        if (this.state.isSearching) {
+            console.log('⚠️ חיפוש כבר רץ, מדלג...');
+            return;
+        }
+        
+        // ⭐ בטל בקשה קודמת אם קיימת
+        if (this.abortController) {
+            console.log('🛑 ביטול בקשת חיפוש קודמת');
+            this.abortController.abort();
+        }
+        
+        // ⭐ צור AbortController חדש
+        this.abortController = new AbortController();
+        const signal = this.abortController.signal;
+        
+        // callback לפני חיפוש
+        if (this.config.callbacks.onSearch) {
+            this.config.callbacks.onSearch(this.state.currentQuery, this.state.activeFilters);
+        }
+        
+        this.state.isSearching = true;
+        this.showLoading();
+        
+        try {
+            // בניית payload
+            const payload = this.buildSearchPayload();
+            
+            console.log('🔎 Searching with payload:', payload);
+            
+            let response;
+            
+            // בדוק אם זה GET או POST
+            if (this.config.dataSource.method === 'GET') {
+                // שליחת GET עם query parameters
+                const params = new URLSearchParams();
+                params.append('action', payload.action);
+                
+                if (payload.query) {
+                    params.append('search', payload.query);
+                }
+                
+                if (payload.page) {
+                    params.append('page', payload.page);
+                }
+                
+                if (payload.limit) {
+                    params.append('limit', payload.limit);
+                }
+                
+                // ⭐ הוסף plotId אם קיים
+                if (payload.plotId) {
+                    params.append('plotId', payload.plotId);
+                }
+                
+                // הוסף פילטרים
+                payload.filters.forEach((filter, index) => {
+                    params.append(`filter_${index}_field`, filter.field);
+                    params.append(`filter_${index}_value`, filter.value);
+                    params.append(`filter_${index}_type`, filter.matchType);
+                });
+                
+                const url = `${this.config.dataSource.endpoint}?${params.toString()}`;
+                
+                // ⭐ הוסף signal ל-fetch!
+                response = await fetch(url, { signal });
+                
+            } else {
+                // שליחת POST עם body
+                response = await fetch(this.config.dataSource.endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload),
+                    signal  // ⭐ הוסף signal!
+                });
+            }
+            
+            const data = await response.json();
+            
+            console.log('📦 Search results:', data);
+            
+            // ⭐ עדכן pagination state - כאן! אחרי fetch!
+            if (data.pagination) {
+                this.state.totalPages = data.pagination.pages || 1;
+                this.state.currentPage = data.pagination.page || 1;
+            }
+            
+            if (data.success) {
+                this.state.results = data.data || [];
+                this.state.totalResults = data.pagination?.total || data.total || data.data.length;
+                this.state.lastSearchTime = Date.now();
+                
+                // ⭐ העבר גם pagination!
+                this.renderResults(data.data, data.pagination);
+                this.updateCounter();
+                
+                // callbacks
+                if (this.config.callbacks.onResults) {
+                    this.config.callbacks.onResults(data);
+                }
+                
+                if (this.config.callbacks.onDataLoaded) {
+                    this.config.callbacks.onDataLoaded(data);
+                }
+                
+                if (data.data.length === 0 && this.config.callbacks.onEmpty) {
+                    this.config.callbacks.onEmpty();
+                }
+            } else {
+                throw new Error(data.error || 'Search failed');
+            }
+            
+        } catch (error) {
+            // ⭐ אם זה AbortError, זה לא באמת שגיאה!
+            if (error.name === 'AbortError') {
+                console.log('⚠️ חיפוש בוטל');
+                return;
+            }
+            
+            console.error('❌ Search error:', error);
+            
+            if (this.config.callbacks.onError) {
+                this.config.callbacks.onError(error);
+            }
+            
+            this.showError(error.message);
+            
+        } finally {
+            this.state.isSearching = false;
+            this.hideLoading();
+            
+            // ⭐ נקה את ה-AbortController
+            if (this.abortController) {
+                this.abortController = null;
+            }
         }
     }
     

@@ -521,7 +521,7 @@ class UniversalSearch {
             this.hideLoading();
         }
     }
-    async search() {
+    async search1() {
         // callback לפני חיפוש
         if (this.config.callbacks.onSearch) {
             this.config.callbacks.onSearch(this.state.currentQuery, this.state.activeFilters);
@@ -584,6 +584,87 @@ class UniversalSearch {
             const data = await response.json();
             
             console.log('📦 Search results:', data);
+            
+            if (data.success) {
+                this.state.results = data.data || [];
+                this.state.totalResults = data.pagination?.total || data.total || data.data.length;
+                this.state.lastSearchTime = Date.now();
+                
+                this.renderResults(data.data);
+                this.updateCounter();
+                
+                // callback
+                if (this.config.callbacks.onResults) {
+                    this.config.callbacks.onResults(data);
+                }
+                
+                if (data.data.length === 0 && this.config.callbacks.onEmpty) {
+                    this.config.callbacks.onEmpty();
+                }
+            } else {
+                throw new Error(data.error || 'Search failed');
+            }
+            
+        } catch (error) {
+            console.error('❌ Search error:', error);
+            
+            if (this.config.callbacks.onError) {
+                this.config.callbacks.onError(error);
+            }
+            
+            this.showError(error.message);
+        } finally {
+            this.state.isSearching = false;
+            this.hideLoading();
+        }
+    }
+    async search() {
+        // callback לפני חיפוש
+        if (this.config.callbacks.onSearch) {
+            this.config.callbacks.onSearch(this.state.currentQuery, this.state.activeFilters);
+        }
+        
+        // ⭐ הזז את השורות האלה למטה - אחרי fetch!
+        // ❌ מחק את השורות האלה מכאן:
+        // if (response.pagination) {
+        //     this.state.totalPages = response.pagination.pages;
+        //     this.state.totalResults = response.pagination.total;
+        // }
+        
+        this.state.isSearching = true;
+        this.showLoading();
+        
+        try {
+            // בניית payload
+            const payload = this.buildSearchPayload();
+            
+            console.log('🔎 Searching with payload:', payload);
+            
+            let response;
+            
+            // בדוק אם זה GET או POST
+            if (this.config.dataSource.method === 'GET') {
+                // ... קוד GET
+            } else {
+                // שליחת POST עם body (ברירת מחדל)
+                response = await fetch(this.config.dataSource.endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+            }
+            
+            const data = await response.json();
+            
+            console.log('📦 Search results:', data);
+            
+            // ✅ הוסף את השורות האלה כאן - אחרי fetch!
+            if (data.pagination) {
+                this.state.totalPages = data.pagination.pages || 1;
+                this.state.currentPage = data.pagination.page || 1;
+            }
             
             if (data.success) {
                 this.state.results = data.data || [];

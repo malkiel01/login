@@ -781,7 +781,7 @@ async function initAreaGravesSearch(signal, plotId) {
     }
 
     // קונפיגורציה
-    const config = {
+    const config2 = {
         entityType: 'area-grave',
         apiEndpoint: '/dashboard/dashboards/cemeteries/api/areaGraves-api.php',
         
@@ -843,6 +843,98 @@ async function initAreaGravesSearch(signal, plotId) {
             }
         }
     };
+
+    const config = {
+        // ⭐ מקור נתונים - פורמט נכון!
+        dataSource: {
+            type: 'api',
+            endpoint: '/dashboard/dashboards/cemeteries/api/areaGraves-api.php',
+            action: 'list',
+            method: 'GET',
+            tables: ['areaGraves'],
+            joins: []
+        },
+        
+        // ⭐ שדות חיפוש
+        searchableFields: searchableFields || [],
+        
+        // ⭐ הצגה - פורמט נכון!
+        display: {
+            containerSelector: '#areaGraveSearchSection',
+            showFilters: true,
+            showAdvanced: false,
+            layout: 'horizontal',
+            placeholder: 'חיפוש אחוזות קבר...',
+            minSearchLength: 1,
+            debounceDelay: 300
+        },
+        
+        // ⭐ תוצאות - פורמט נכון!
+        results: {
+            containerSelector: '#tableBody',
+            apiLimit: 200,
+            showPagination: false,
+            renderFunction: (data, container, pagination, signal) => {
+                // ⭐ עדכן מצב חיפוש
+                isSearchMode = true;
+                
+                // שמור תוצאות
+                if (pagination && pagination.page === 1) {
+                    searchResults = data;
+                } else {
+                    searchResults = [...searchResults, ...data];
+                }
+
+                // קריאה לפונקציה המקורית עם כל הפרמטרים
+                renderAreaGravesRows(data, container, pagination, signal);
+            },
+            columns: [],
+            showCounter: true
+        },
+        
+        // ⭐ התנהגות
+        behavior: {
+            realTime: true,
+            autoSubmit: true,
+            saveHistory: false,
+            exportable: false,
+            highlightResults: false
+        },
+        
+        // ⭐ callbacks
+        callbacks: {
+            onSearch: null,
+            onResults: null,
+            onError: null,
+            onEmpty: null,
+            onInit: null,
+            
+            // ⭐ כשנתונים נטענו
+            onDataLoaded: (response) => {
+                console.log('✅ נתונים נטענו:', response.data.length);
+                
+                // עדכון מונה כולל ב-TableManager
+                if (window.areaGravesTable && response.pagination) {
+                    window.areaGravesTable.updateTotalItems(response.pagination.total);
+                }
+            },
+            
+            // ⭐ כשמנקים חיפוש
+            onClear: () => {
+                isSearchMode = false;
+                currentQuery = '';
+                searchResults = [];
+                
+                // חזרה ל-Browse
+                loadBrowseData(currentPlotId);
+            }
+        }
+    };
+
+    // ⭐ הוסף פילטר plotId אם קיים
+    if (plotId) {
+        config.dataSource.plotId = plotId;
+    }
     
     // יצירת instance
     const searchInstance = window.initUniversalSearch(config);

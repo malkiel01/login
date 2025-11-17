@@ -624,13 +624,6 @@ class UniversalSearch {
             this.config.callbacks.onSearch(this.state.currentQuery, this.state.activeFilters);
         }
         
-        // ⭐ הזז את השורות האלה למטה - אחרי fetch!
-        // ❌ מחק את השורות האלה מכאן:
-        // if (response.pagination) {
-        //     this.state.totalPages = response.pagination.pages;
-        //     this.state.totalResults = response.pagination.total;
-        // }
-        
         this.state.isSearching = true;
         this.showLoading();
         
@@ -644,7 +637,31 @@ class UniversalSearch {
             
             // בדוק אם זה GET או POST
             if (this.config.dataSource.method === 'GET') {
-                // ... קוד GET
+                // שליחת GET עם query parameters
+                const params = new URLSearchParams();
+                params.append('action', payload.action);
+                
+                if (payload.query) {
+                    params.append('search', payload.query);
+                }
+                
+                if (payload.page) {
+                    params.append('page', payload.page);
+                }
+                
+                if (payload.limit) {
+                    params.append('limit', payload.limit);
+                }
+                
+                // הוסף פילטרים
+                payload.filters.forEach((filter, index) => {
+                    params.append(`filter_${index}_field`, filter.field);
+                    params.append(`filter_${index}_value`, filter.value);
+                    params.append(`filter_${index}_type`, filter.matchType);
+                });
+                
+                const url = `${this.config.dataSource.endpoint}?${params.toString()}`;
+                response = await fetch(url);
             } else {
                 // שליחת POST עם body (ברירת מחדל)
                 response = await fetch(this.config.dataSource.endpoint, {
@@ -660,7 +677,7 @@ class UniversalSearch {
             
             console.log('📦 Search results:', data);
             
-            // ✅ הוסף את השורות האלה כאן - אחרי fetch!
+            // ✅ עדכן pagination state
             if (data.pagination) {
                 this.state.totalPages = data.pagination.pages || 1;
                 this.state.currentPage = data.pagination.page || 1;

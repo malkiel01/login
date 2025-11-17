@@ -847,10 +847,22 @@ async function initAreaGravesSearch(signal, plotId) {
     // יצירת instance
     const searchInstance = window.initUniversalSearch(config);
     
+    // // שמירה גלובלית
+    // window.areaGraveSearch = searchInstance;
+    
+    // return searchInstance;
+
+
     // שמירה גלובלית
     window.areaGraveSearch = searchInstance;
     
+    // ⭐ אתחל את ממשק החיפוש בלי לשלוח בקשה לשרת
+    if (searchInstance && typeof searchInstance.init === 'function') {
+        searchInstance.init(); // רק בונה UI
+    }
+    
     return searchInstance;
+
 }
 
 // ===================================================================
@@ -990,6 +1002,7 @@ async function initAreaGravesTable(data, totalItems = null, signal) {
 
         tableHeight: 'calc(100vh - 650px)',  // גובה דינמי לפי מסך
         tableMinHeight: '500px',
+
         
         // ============================================
         // ⭐ 3 פרמטרים חדשים - הוסף כאן!

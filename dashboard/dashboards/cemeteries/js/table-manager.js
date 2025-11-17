@@ -236,24 +236,6 @@ class TableManager {
             console.log('✅ Fixed overflow on:', fixed.join(', '));
         }
         
-        // צור wrapper_old
-        // const wrapper = document.createElement('div');
-        // wrapper.className = 'table-wrapper';
-        // wrapper.setAttribute('data-table-manager', 'v2.0.0');
-        // wrapper.setAttribute('style', `
-        //     display: flex !important; 
-        //     flex-direction: column !important; 
-        //     width: 100% !important; 
-        //     height: calc(100vh - 250px) !important; 
-        //     min-height: 500px !important; 
-        //     border: 1px solid #e5e7eb !important; 
-        //     border-radius: 8px !important; 
-        //     overflow: hidden !important; 
-        //     background: white !important; 
-        //     position: relative !important; 
-        //     box-sizing: border-box !important;
-        // `.replace(/\s+/g, ' ').trim());
-
         // צור wrapper
         const wrapper = document.createElement('div');
         wrapper.className = 'table-wrapper';

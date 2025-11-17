@@ -521,7 +521,7 @@ class UniversalSearch {
             this.hideLoading();
         }
     }
-    async search() {
+    async search2() {
         // callback לפני חיפוש
         if (this.config.callbacks.onSearch) {
             this.config.callbacks.onSearch(this.state.currentQuery, this.state.activeFilters);
@@ -618,7 +618,7 @@ class UniversalSearch {
             this.hideLoading();
         }
     }
-    async search2() {
+    async search() {
         // callback לפני חיפוש
         if (this.config.callbacks.onSearch) {
             this.config.callbacks.onSearch(this.state.currentQuery, this.state.activeFilters);

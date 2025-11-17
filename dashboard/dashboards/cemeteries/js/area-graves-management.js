@@ -781,7 +781,7 @@ async function initAreaGravesSearch(signal, plotId) {
     }
 
     // קונפיגורציה
-    const config2 = {
+    const config = {
         entityType: 'area-grave',
         apiEndpoint: '/dashboard/dashboards/cemeteries/api/areaGraves-api.php',
         
@@ -844,7 +844,7 @@ async function initAreaGravesSearch(signal, plotId) {
         }
     };
 
-    const config = {
+    const config2 = {
         // ⭐ מקור נתונים - פורמט נכון!
         dataSource: {
             type: 'api',

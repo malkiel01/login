@@ -1353,7 +1353,7 @@ function renderAreaGravesRows(data, container, pagination = null, signal = null)
     }
     
     // ⭐ בדוק אם ה-DOM של TableManager קיים
-    const tableWrapperExists = document.querySelector('.table-wrapper[data-fixed-width="true"]');
+    const tableWrapperExists = document.querySelector('.table-wrapper[data-table-manager]');
     
     // ⭐ אם המשתנה קיים אבל ה-DOM נמחק - אפס את המשתנה!
     if (!tableWrapperExists && areaGravesTable) {

@@ -918,53 +918,7 @@ async function initAreaGravesSearch(signal, plotId) {
             renderAreaGravesRows(data, container, pagination, signal);
         },
         
-        callbacks: {
-            // ⭐ כשנתונים נטענו
-            onDataLoaded: (response) => {
-                console.log('✅ נתונים נטענו:', response.data.length);
-                
-                // עדכון מונה כולל ב-TableManager
-                if (window.areaGravesTable && response.pagination) {
-                    window.areaGravesTable.updateTotalItems(response.pagination.total);
-                }
-            },
-            
-            // ⭐ כשמנקים חיפוש
-            onClear: () => {
-                isSearchMode = false;
-                currentQuery = '';
-                searchResults = [];
-                
-                // חזרה ל-Browse
-                loadBrowseData(currentPlotId);
-            }
-        }
-
         // callbacks: {
-        //     // ⭐ לפני חיפוש - נקה טבלה והצג spinner
-        //     onSearch: (query, filters) => {
-        //         console.log('🔍 מתחיל חיפוש:', query);
-                
-        //         const tableBody = document.getElementById('tableBody');
-        //         if (tableBody) {
-        //             tableBody.innerHTML = `
-        //                 <tr>
-        //                     <td colspan="7" style="text-align: center; padding: 40px;">
-        //                         <div class="spinner-border" role="status">
-        //                             <span class="visually-hidden">מחפש...</span>
-        //                         </div>
-        //                     </td>
-        //                 </tr>
-        //             `;
-        //         }
-                
-        //         // נקה גם את areaGravesTable
-        //         if (areaGravesTable) {
-        //             areaGravesTable = null;
-        //             window.areaGravesTable = null;
-        //         }
-        //     },
-            
         //     // ⭐ כשנתונים נטענו
         //     onDataLoaded: (response) => {
         //         console.log('✅ נתונים נטענו:', response.data.length);
@@ -985,6 +939,82 @@ async function initAreaGravesSearch(signal, plotId) {
         //         loadBrowseData(currentPlotId);
         //     }
         // }
+
+        callbacks: {
+            // ⭐ לפני חיפוש - נקה הכל והצג spinner
+            onSearch: (query, filters) => {
+                console.log('🔍 מתחיל חיפוש:', query);
+                
+                // ⭐ מחק את TableManager הישן
+                const existingWrapper = document.querySelector('.table-wrapper[data-table-manager]');
+                if (existingWrapper) {
+                    console.log('🗑️ מוחק table-wrapper קיים');
+                    existingWrapper.remove();
+                }
+                
+                // ⭐ אפס את המשתנה
+                if (areaGravesTable) {
+                    areaGravesTable = null;
+                    window.areaGravesTable = null;
+                }
+                
+                // ⭐ הצג spinner בטבלה המקורית
+                const originalTableBody = document.getElementById('tableBody');
+                if (originalTableBody) {
+                    // ⭐ הצג את הטבלה המקורית
+                    const mainTable = document.getElementById('mainTable');
+                    if (mainTable) {
+                        mainTable.style.display = 'table';
+                    }
+                    
+                    originalTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="10" style="text-align: center; padding: 60px;">
+                                <div style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
+                                    <div class="spinner-border" role="status" style="width: 3rem; height: 3rem; border-width: 0.3em;">
+                                        <span class="visually-hidden">מחפש...</span>
+                                    </div>
+                                    <div style="font-size: 16px; color: #6b7280;">מחפש "${query}"...</div>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }
+            },
+            
+            // ⭐ כשנתונים נטענו
+            onDataLoaded: (response) => {
+                console.log('✅ נתונים נטענו:', response.data.length);
+                
+                // עדכון מונה כולל ב-TableManager
+                if (window.areaGravesTable && response.pagination) {
+                    window.areaGravesTable.updateTotalItems(response.pagination.total);
+                }
+            },
+            
+            // ⭐ כשמנקים חיפוש
+            onClear: () => {
+                console.log('🧹 מנקה חיפוש...');
+                
+                isSearchMode = false;
+                currentQuery = '';
+                searchResults = [];
+                
+                // ⭐ מחק את TableManager
+                const existingWrapper = document.querySelector('.table-wrapper[data-table-manager]');
+                if (existingWrapper) {
+                    existingWrapper.remove();
+                }
+                
+                if (areaGravesTable) {
+                    areaGravesTable = null;
+                    window.areaGravesTable = null;
+                }
+                
+                // חזרה ל-Browse
+                loadBrowseData(currentPlotId);
+            }
+        }
     };
     
     // יצירת instance
@@ -1403,20 +1433,41 @@ function renderAreaGravesRows(data, container, pagination = null, signal = null)
     
     // ⭐ אם המשתנה קיים אבל ה-DOM נמחק - אפס את המשתנה!
     if (!tableWrapperExists && areaGravesTable) {
+        console.log('⚠️ TableManager DOM missing, resetting variable');
         areaGravesTable = null;
         window.areaGravesTable = null;
     }
     
     // עכשיו בדוק אם צריך לבנות מחדש
     if (!areaGravesTable || !tableWrapperExists) {
+        console.log('🆕 Creating new TableManager');
         initAreaGravesTable(filteredData, totalItems, signal);
     } else {
+        console.log('♻️ Updating existing TableManager');
         if (areaGravesTable.config) {
             areaGravesTable.config.totalItems = totalItems;
         }
         
         areaGravesTable.setData(filteredData);
     }
+
+
+    // // ⭐ אם המשתנה קיים אבל ה-DOM נמחק - אפס את המשתנה!
+    // if (!tableWrapperExists && areaGravesTable) {
+    //     areaGravesTable = null;
+    //     window.areaGravesTable = null;
+    // }
+    
+    // // עכשיו בדוק אם צריך לבנות מחדש
+    // if (!areaGravesTable || !tableWrapperExists) {
+    //     initAreaGravesTable(filteredData, totalItems, signal);
+    // } else {
+    //     if (areaGravesTable.config) {
+    //         areaGravesTable.config.totalItems = totalItems;
+    //     }
+        
+    //     areaGravesTable.setData(filteredData);
+    // }
     
     // ⭐ עדכן את התצוגה של UniversalSearch
     if (areaGraveSearch) {

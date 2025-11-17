@@ -682,10 +682,11 @@ class UniversalSearch {
                 this.state.totalPages = data.pagination.pages || 1;
                 this.state.currentPage = data.pagination.page || 1;
             }
-            
+                
             if (data.success) {
                 this.state.results = data.data || [];
-                this.state.totalResults = data.pagination?.total || data.total || data.data.length;
+                // this.state.totalResults = data.pagination?.total || data.total || data.data.length;
+                this.state.totalResults = data.pagination?.total || data.pagination?.totalAll || data.total || data.data.length;
                 this.state.lastSearchTime = Date.now();
                 
                 this.renderResults(data.data, data.pagination);
@@ -879,6 +880,16 @@ class UniversalSearch {
     /**
      * עדכון מונה
      */
+    updateCounter_old() {
+        if (!this.elements.resultsCounter) return;
+        
+        if (this.state.totalResults > 0) {
+            this.elements.counterText.textContent = `נמצאו ${this.state.totalResults} תוצאות`;
+            this.elements.resultsCounter.style.display = 'block';
+        } else {
+            this.elements.resultsCounter.style.display = 'none';
+        }
+    }
     updateCounter() {
         if (!this.elements.resultsCounter) return;
         

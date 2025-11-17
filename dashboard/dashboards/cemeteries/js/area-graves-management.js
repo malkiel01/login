@@ -918,7 +918,53 @@ async function initAreaGravesSearch(signal, plotId) {
             renderAreaGravesRows(data, container, pagination, signal);
         },
         
+        // callbacks_old: {
+        //     // ⭐ כשנתונים נטענו
+        //     onDataLoaded: (response) => {
+        //         console.log('✅ נתונים נטענו:', response.data.length);
+                
+        //         // עדכון מונה כולל ב-TableManager
+        //         if (window.areaGravesTable && response.pagination) {
+        //             window.areaGravesTable.updateTotalItems(response.pagination.total);
+        //         }
+        //     },
+            
+        //     // ⭐ כשמנקים חיפוש
+        //     onClear: () => {
+        //         isSearchMode = false;
+        //         currentQuery = '';
+        //         searchResults = [];
+                
+        //         // חזרה ל-Browse
+        //         loadBrowseData(currentPlotId);
+        //     }
+        // }
+
         callbacks: {
+            // ⭐ לפני חיפוש - נקה טבלה והצג spinner
+            onSearch: (query, filters) => {
+                console.log('🔍 מתחיל חיפוש:', query);
+                
+                const tableBody = document.getElementById('tableBody');
+                if (tableBody) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 40px;">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">מחפש...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }
+                
+                // נקה גם את areaGravesTable
+                if (areaGravesTable) {
+                    areaGravesTable = null;
+                    window.areaGravesTable = null;
+                }
+            },
+            
             // ⭐ כשנתונים נטענו
             onDataLoaded: (response) => {
                 console.log('✅ נתונים נטענו:', response.data.length);

@@ -1067,9 +1067,3 @@ window.currentPlotName = currentPlotName;
 window.areaGraveSearch = areaGraveSearch;
 
 console.log('✅ area-graves-management.js v1.5.3 - Loaded successfully!');
-
-
-// loadGraves -> loadBrowseData -> renderGravesRows
-// loadGraves -> initGravesSearch -> loadBrowseData -> renderGravesRows
-// loadGraves -> initGravesSearch -> renderGravesRows
-// loadGraves -> initGravesSearch -> initGravesTable -> renderGravesRows

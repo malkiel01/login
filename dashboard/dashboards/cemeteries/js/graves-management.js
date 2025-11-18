@@ -16,10 +16,10 @@ console.log('🚀 graves-management.js v1.6.0 - Loading...');
 // // ===================================================================
 // // משתנים גלובליים
 // // ===================================================================
-// let currentGraves = [];
-// let graveSearch = null;
-// let gravesTable = null;
-// let editingGraveId = null;
+let currentGraves = [];
+let graveSearch = null;
+let gravesTable = null;
+let editingGraveId = null;
 
 // let gravesIsSearchMode = false;      // האם אנחנו במצב חיפוש?
 // let gravesCurrentQuery = '';         // מה החיפוש הנוכחי?

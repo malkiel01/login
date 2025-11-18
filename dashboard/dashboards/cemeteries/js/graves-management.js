@@ -1063,16 +1063,16 @@ window.loadGraves = loadGraves;
 
 // window.deleteGrave = deleteGrave;
 
-window.refreshGravesData = refreshGravesData;
+// window.refreshGravesData = refreshGravesData;
 
-window.gravesTable = gravesTable;
+// window.gravesTable = gravesTable;
 
-window.checkGravesScrollStatus = checkGravesScrollStatus;
+// window.checkGravesScrollStatus = checkGravesScrollStatus;
 
-window.currentAreaGraveId = currentAreaGraveId;
+// window.currentAreaGraveId = currentAreaGraveId;
 
-window.currentAreaGraveName = currentAreaGraveName;
+// window.currentAreaGraveName = currentAreaGraveName;
 
-window.graveSearch = graveSearch;
+// window.graveSearch = graveSearch;
 
 console.log('✅ graves-management.js v1.6.0 - Loaded successfully! (No conflicts with area-graves)');

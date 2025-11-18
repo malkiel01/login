@@ -21,9 +21,9 @@ let graveSearch = null;
 let gravesTable = null;
 let editingGraveId = null;
 
-let isSearchMode = false;      // האם אנחנו במצב חיפוש?
-let currentQuery = '';         // מה החיפוש הנוכחי?
-let searchResults = [];        // תוצאות החיפוש
+let gravesIsSearchMode = false;      // האם אנחנו במצב חיפוש?
+let gravesCurrentQuery = '';         // מה החיפוש הנוכחי?
+let gravesSearchResults = [];        // תוצאות החיפוש
 
 // ⭐ שמירת ה-areaGrave context הנוכחי
 let currentAreaGraveId = null;
@@ -70,9 +70,9 @@ async function loadGraves(areaGraveId = null, areaGraveName = null, forceReset =
     const signal = OperationManager.start('grave');
 
     // ⭐ איפוס מצב חיפוש
-    isSearchMode = false;
-    currentQuery = '';
-    searchResults = [];
+    areaGravesIsSearchMode = false;
+    areaGravesCurrentQuery = '';
+    areaGravesSearchResults = [];
 
     // ⭐ לוגיקת סינון
     if (areaGraveId === null && areaGraveName === null && !forceReset) {
@@ -429,13 +429,13 @@ async function initGravesSearch1(signal, areaGraveId) {
         
         renderFunction: (data, container, pagination, signal) => {
             // ⭐ עדכן מצב חיפוש
-            isSearchMode = true;
+            areaGravesIsSearchMode = true;
             
             // שמור תוצאות
             if (pagination && pagination.page === 1) {
-                searchResults = data;
+                areaGravesSearchResults = data;
             } else {
-                searchResults = [...searchResults, ...data];
+                areaGravesSearchResults = [...areaGravesSearchResults, ...data];
             }
 
             // קריאה לפונקציה המקורית עם כל הפרמטרים
@@ -455,9 +455,9 @@ async function initGravesSearch1(signal, areaGraveId) {
             
             // ⭐ כשמנקים חיפוש
             onClear: () => {
-                isSearchMode = false;
-                currentQuery = '';
-                searchResults = [];
+                areaGravesIsSearchMode = false;
+                areaGravesCurrentQuery = '';
+                areaGravesSearchResults = [];
                 
                 // חזרה ל-Browse
                 loadBrowseData(currentAreaGraveId);
@@ -526,40 +526,18 @@ async function initGravesSearch(signal, areaGraveId) {
         
         renderFunction: (data, container, pagination, signal) => {
             // ⭐ עדכן מצב חיפוש
-            isSearchMode = true;
+            areaGravesIsSearchMode = true;
             
             // שמור תוצאות
             if (pagination && pagination.page === 1) {
-                searchResults = data;
+                areaGravesSearchResults = data;
             } else {
-                searchResults = [...searchResults, ...data];
+                areaGravesSearchResults = [...areaGravesSearchResults, ...data];
             }
 
             // קריאה לפונקציה המקורית עם כל הפרמטרים
             renderGravesRows(data, container, pagination, signal);
         },
-        
-        // callbacks: {
-        //     // ⭐ כשנתונים נטענו
-        //     onDataLoaded: (response) => {
-        //         console.log('✅ נתונים נטענו:', response.data.length);
-                
-        //         // עדכון מונה כולל ב-TableManager
-        //         if (window.gravesTable && response.pagination) {
-        //             window.gravesTable.updateTotalItems(response.pagination.total);
-        //         }
-        //     },
-            
-        //     // ⭐ כשמנקים חיפוש
-        //     onClear: () => {
-        //         isSearchMode = false;
-        //         currentQuery = '';
-        //         searchResults = [];
-                
-        //         // חזרה ל-Browse
-        //         loadBrowseData(currentAreaGraveId);
-        //     }
-        // }
 
         callbacks: {
             // ⭐ לפני חיפוש - נקה הכל והצג spinner
@@ -617,9 +595,9 @@ async function initGravesSearch(signal, areaGraveId) {
             onClear: () => {
                 console.log('🧹 מנקה חיפוש...');
                 
-                isSearchMode = false;
-                currentQuery = '';
-                searchResults = [];
+                areaGravesIsSearchMode = false;
+                areaGravesCurrentQuery = '';
+                areaGravesSearchResults = [];
                 
                 // ⭐ מחק את TableManager
                 const existingWrapper = document.querySelector('.table-wrapper[data-table-manager]');
@@ -810,7 +788,7 @@ async function initGravesTable(data, totalItems = null, signal) {
         // ============================================
 
         onLoadMore: async () => {
-            if (isSearchMode) {
+            if (areaGravesIsSearchMode) {
                 // ⭐ חיפוש - טען דרך UniversalSearch
                 if (graveSearch && typeof graveSearch.loadNextPage === 'function') {
                     if (graveSearch.state.currentPage >= graveSearch.state.totalPages) {
@@ -864,7 +842,7 @@ function renderGravesRows(data, container, pagination = null, signal = null) {
     // ⭐⭐ סינון client-side לפי areaGraveId
     let filteredData = data;
 
-    if (!isSearchMode && currentAreaGraveId) {
+    if (!areaGravesIsSearchMode && currentAreaGraveId) {
         filteredData = data.filter(grave => {
             const graveAreaGraveId = grave.areaGraveId || grave.area_grave_id || grave.AreaGraveId;
             return String(graveAreaGraveId) === String(currentAreaGraveId);

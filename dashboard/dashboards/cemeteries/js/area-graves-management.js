@@ -21,9 +21,9 @@ let areaGraveSearch = null;
 let areaGravesTable = null;
 let editingAreaGraveId = null;
 
-let isSearchMode = false;      // האם אנחנו במצב חיפוש?
-let currentQuery = '';         // מה החיפוש הנוכחי?
-let searchResults = [];        // תוצאות החיפוש
+let areaGravesIsSearchMode = false;      // האם אנחנו במצב חיפוש?
+let areaGravesCurrentQuery = '';         // מה החיפוש הנוכחי?
+let areaGravesSearchResults = [];        // תוצאות החיפוש
 
 // ⭐ שמירת ה-plot context הנוכחי
 let currentPlotId = null;
@@ -70,9 +70,9 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
     const signal = OperationManager.start('areaGrave');
 
     // ⭐ איפוס מצב חיפוש
-    isSearchMode = false;
-    currentQuery = '';
-    searchResults = [];
+    areaGravesIsSearchMode = false;
+    areaGravesCurrentQuery = '';
+    areaGravesSearchResults = [];
 
     // ⭐ לוגיקת סינון
     if (plotId === null && plotName === null && !forceReset) {
@@ -429,41 +429,19 @@ async function initAreaGravesSearch(signal, plotId) {
         
         renderFunction: (data, container, pagination, signal) => {
             // ⭐ עדכן מצב חיפוש
-            isSearchMode = true;
+            areaGravesIsSearchMode = true;
             
             // שמור תוצאות
             if (pagination && pagination.page === 1) {
-                searchResults = data;
+                areaGravesSearchResults = data;
             } else {
-                searchResults = [...searchResults, ...data];
+                areaGravesSearchResults = [...areaGravesSearchResults, ...data];
             }
 
             // קריאה לפונקציה המקורית עם כל הפרמטרים
             renderAreaGravesRows(data, container, pagination, signal);
         },
         
-        // callbacks: {
-        //     // ⭐ כשנתונים נטענו
-        //     onDataLoaded: (response) => {
-        //         console.log('✅ נתונים נטענו:', response.data.length);
-                
-        //         // עדכון מונה כולל ב-TableManager
-        //         if (window.areaGravesTable && response.pagination) {
-        //             window.areaGravesTable.updateTotalItems(response.pagination.total);
-        //         }
-        //     },
-            
-        //     // ⭐ כשמנקים חיפוש
-        //     onClear: () => {
-        //         isSearchMode = false;
-        //         currentQuery = '';
-        //         searchResults = [];
-                
-        //         // חזרה ל-Browse
-        //         loadBrowseData(currentPlotId);
-        //     }
-        // }
-
         callbacks: {
             // ⭐ לפני חיפוש - נקה הכל והצג spinner
             onSearch: (query, filters) => {
@@ -520,9 +498,9 @@ async function initAreaGravesSearch(signal, plotId) {
             onClear: () => {
                 console.log('🧹 מנקה חיפוש...');
                 
-                isSearchMode = false;
-                currentQuery = '';
-                searchResults = [];
+                areaGravesIsSearchMode = false;
+                areaGravesCurrentQuery = '';
+                areaGravesSearchResults = [];
                 
                 // ⭐ מחק את TableManager
                 const existingWrapper = document.querySelector('.table-wrapper[data-table-manager]');
@@ -713,7 +691,7 @@ async function initAreaGravesTable(data, totalItems = null, signal) {
         // ============================================
 
         onLoadMore: async () => {
-            if (isSearchMode) {
+            if (areaGravesIsSearchMode) {
                 // ⭐ חיפוש - טען דרך UniversalSearch
                 if (areaGraveSearch && typeof areaGraveSearch.loadNextPage === 'function') {
                     if (areaGraveSearch.state.currentPage >= areaGraveSearch.state.totalPages) {
@@ -767,7 +745,7 @@ function renderAreaGravesRows(data, container, pagination = null, signal = null)
     // ⭐⭐ סינון client-side לפי plotId
     let filteredData = data;
 
-    if (!isSearchMode && currentPlotId) {
+    if (!areaGravesIsSearchMode && currentPlotId) {
         filteredData = data.filter(ag => {
             const agPlotId = ag.plotId || ag.plot_id || ag.PlotId;
             return String(agPlotId) === String(currentPlotId);

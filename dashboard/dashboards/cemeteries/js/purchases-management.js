@@ -1,32 +1,77 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/purchases-management.js
- * Version: 3.2.1
- * Updated: 2025-11-03
+ * Version: 4.0.0
+ * Updated: 2025-11-18
  * Author: Malkiel
  * Change Summary:
- * - v3.2.1: ⭐ תיקון סופי - עכשיו זהה לחלוטין ל-customers-management
- *   - הוספת if (column.render === 'formatPurchaseStatus') ב-case 'status'
- *   - הוספת case 'type' עם if (column.render === 'formatPurchaseType')
- *   - הוספת formatPurchaseType() function
- *   - שמירה על case 'currency' (ייחודי לרכישות)
- *   - המבנה עכשיו זהה ממש - רק שמות משתנים שונים
- * - v3.2.0: אחידות מלאה עם customers-management
- *   - טעינת עמודות דינמית מ-PHP דרך loadColumnsFromConfig('purchase')
- * - v3.1.0: שיפורים והתאמה לארכיטקטורה המאוחדת
+ * - v4.0.0: 🔥 שיטה זהה 100% ל-customers, area-graves ו-graves
+ *   ✅ הוספת משתני חיפוש ו-pagination:
+ *   - purchasesIsSearchMode, purchasesCurrentQuery, purchasesSearchResults
+ *   - purchasesCurrentPage, purchasesTotalPages, purchasesIsLoadingMore
+ *   ✅ הוספת פונקציות חסרות:
+ *   - loadPurchasesBrowseData() - טעינה ישירה מ-API
+ *   - appendMorePurchases() - Infinite Scroll
+ *   ✅ התאמת כל הפונקציות לשיטה המאוחדת
+ *   ✅ שמות ייחודיים: purchasesRefreshData, purchasesCheckScrollStatus
+ * - v3.2.1: אחידות חלקית עם customers-management
  * - v3.0.0: שיטה זהה לבתי עלמין - UniversalSearch + TableManager
  */
+
+console.log('🚀 purchases-management.js v4.0.0 - Loading...');
 
 // ===================================================================
 // משתנים גלובליים
 // ===================================================================
-
 let currentPurchases = [];
 let purchaseSearch = null;
 let purchasesTable = null;
 let editingPurchaseId = null;
 
+let purchasesIsSearchMode = false;      // האם אנחנו במצב חיפוש?
+let purchasesCurrentQuery = '';         // מה החיפוש הנוכחי?
+let purchasesSearchResults = [];        // תוצאות החיפוש
+
+// ⭐ Infinite Scroll - מעקב אחרי עמוד נוכחי (שמות ייחודיים!)
+let purchasesCurrentPage = 1;
+let purchasesTotalPages = 1;
+let purchasesIsLoadingMore = false;
+
+
+// ===================================================================
+// טעינת רכישות (הפונקציה הראשית)
+// ===================================================================
+async function loadPurchasesBrowseData(signal = null) {
+    purchasesCurrentPage = 1;
+    currentPurchases = [];
+    
+    let apiUrl = '/dashboard/dashboards/cemeteries/api/purchases-api.php?action=list&limit=200&page=1';
+    apiUrl += '&orderBy=createDate&sortDirection=DESC';
+    
+    const response = await fetch(apiUrl, { signal });
+    const result = await response.json();
+    
+    if (result.success && result.data) {
+        currentPurchases = result.data;
+        
+        if (result.pagination) {
+            purchasesTotalPages = result.pagination.pages;
+            purchasesCurrentPage = result.pagination.page;
+        }
+        
+        const tableBody = document.getElementById('tableBody');
+        if (tableBody) {
+            renderPurchasesRows(result.data, tableBody, result.pagination, signal);
+        }
+    }
+}
+
 async function loadPurchases() {
-    console.log('📋 Loading purchases - v3.2.2-debug...');
+    const signal = OperationManager.start('purchase');
+
+    // ⭐ איפוס מצב חיפוש
+    purchasesIsSearchMode = false;
+    purchasesCurrentQuery = '';
+    purchasesSearchResults = [];
     
     // עדכן את הסוג הנוכחי
     window.currentType = 'purchase';
@@ -37,24 +82,22 @@ async function loadPurchases() {
         window.tableRenderer.currentType = 'purchase';
     }
 
-    // ⭐ נקה - DashboardCleaner ימחק גם את TableManager!
+    // ⭐ נקה
     if (typeof DashboardCleaner !== 'undefined') {
         DashboardCleaner.clear({ targetLevel: 'purchase' });
     } else if (typeof clearDashboard === 'function') {
         clearDashboard({ targetLevel: 'purchase' });
     }
     
-    // נקה את כל הסידבר
     if (typeof clearAllSidebarSelections === 'function') {
         clearAllSidebarSelections();
     }
-                
+
     // עדכון פריט תפריט אקטיבי
     if (typeof setActiveMenuItem === 'function') {
         setActiveMenuItem('purchasesItem');
     }
     
-    // עדכן את כפתור ההוספה
     if (typeof updateAddButtonText === 'function') {
         updateAddButtonText();
     }
@@ -67,33 +110,131 @@ async function loadPurchases() {
     // עדכון כותרת החלון
     document.title = 'ניהול רכישות - מערכת בתי עלמין';
     
-    // ⭐ בנה את המבנה החדש ב-main-container
-    await buildPurchasesContainer();
+    // ⭐ בנה מבנה
+    await buildPurchasesContainer(signal);
+    
+    if (OperationManager.shouldAbort('purchase')) {
+        return;
+    }
 
-    // ⭐ תמיד השמד את החיפוש הקודם ובנה מחדש
+    // ⭐ ספירת טעינות גלובלית
+    if (!window.purchasesLoadCounter) {
+        window.purchasesLoadCounter = 0;
+    }
+    window.purchasesLoadCounter++;
+    
+    // השמד חיפוש קודם
     if (purchaseSearch && typeof purchaseSearch.destroy === 'function') {
         console.log('🗑️ Destroying previous purchaseSearch instance...');
         purchaseSearch.destroy();
-        purchaseSearch = null;
+        purchaseSearch = null; 
         window.purchaseSearch = null;
     }
-
-    // אתחל את UniversalSearch מחדש תמיד
+    
+    // ⭐ אתחול UniversalSearch - פעם אחת!
     console.log('🆕 Creating fresh purchaseSearch instance...');
-    await initPurchasesSearch();
-    purchaseSearch.search();
+    purchaseSearch = await initPurchasesSearch(signal);
+    
+    if (OperationManager.shouldAbort('purchase')) {
+        console.log('⚠️ Purchase operation aborted');
+        return;
+    }
+
+    // ⭐ טעינה ישירה (Browse Mode) - פעם אחת!
+    await loadPurchasesBrowseData(signal);
     
     // טען סטטיסטיקות
-    await loadPurchaseStats();
+    await loadPurchaseStats(signal);
 }
 
+
 // ===================================================================
-// ⭐ פונקציה חדשה - בניית המבנה של רכישות ב-main-container
+// 📥 טעינת עוד רכישות (Infinite Scroll)
 // ===================================================================
-async function buildPurchasesContainer() {
+async function appendMorePurchases() {
+    // בדיקות בסיסיות
+    if (purchasesIsLoadingMore) {
+        return false;
+    }
+    
+    if (purchasesCurrentPage >= purchasesTotalPages) {
+        return false;
+    }
+    
+    purchasesIsLoadingMore = true;
+    const nextPage = purchasesCurrentPage + 1;
+    
+    // ⭐ עדכון מונה טעינות
+    if (!window.purchasesLoadCounter) {
+        window.purchasesLoadCounter = 0; 
+    }
+    window.purchasesLoadCounter++;
+    
+    try {
+        // בנה URL לעמוד הבא
+        let apiUrl = `/dashboard/dashboards/cemeteries/api/purchases-api.php?action=list&limit=200&page=${nextPage}`;
+        apiUrl += '&orderBy=createDate&sortDirection=DESC';
+        
+        // שלח בקשה
+        const response = await fetch(apiUrl);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success && result.data && result.data.length > 0) {
+            // ⭐ שמור את הגודל הקודם לפני ההוספה
+            const previousTotal = currentPurchases.length;
+            
+            // ⭐ הוסף לנתונים הקיימים
+            currentPurchases = [...currentPurchases, ...result.data];
+            purchasesCurrentPage = nextPage;
+            
+            // ⭐⭐⭐ לוג פשוט ומסודר
+            console.log(`
+╔════════════════════════════════════════════════════════════════════
+║ טעינה: ${window.purchasesLoadCounter}
+╠════════════════════════════════════════════════════════════════════
+║ כמות ערכים בטעינה: ${result.data.length}
+║ מספר ערך תחילת טעינה נוכחית: ${result.debug?.results_info?.from_index || (previousTotal + 1)}
+║ מספר ערך סוף טעינה נוכחית: ${result.debug?.results_info?.to_index || currentPurchases.length}
+║ סך כל הערכים שנטענו עד כה: ${currentPurchases.length}
+║ שדה למיון: ${result.debug?.sql_info?.order_field || 'createDate'}
+║ סוג מיון: ${result.debug?.sql_info?.sort_direction || 'DESC'}
+╠════════════════════════════════════════════════════════════════════
+║ עמוד: ${purchasesCurrentPage} / ${purchasesTotalPages}
+║ נותרו עוד: ${purchasesTotalPages - purchasesCurrentPage} עמודים
+╚════════════════════════════════════════════════════════════════════
+`);
+            
+            // ⭐ עדכן את הטבלה
+            if (purchasesTable) {
+                purchasesTable.setData(currentPurchases);
+            }
+            
+            purchasesIsLoadingMore = false;
+            return true;
+        } else {
+            console.log('📭 No more data to load');
+            purchasesIsLoadingMore = false;
+            return false;
+        }
+    } catch (error) {
+        console.error('❌ Error loading more purchases:', error);
+        purchasesIsLoadingMore = false;
+        return false;
+    }
+}
+
+
+// ===================================================================
+// בניית המבנה
+// ===================================================================
+async function buildPurchasesContainer(signal) {
     console.log('🏗️ Building purchases container...');
     
-    // מצא את main-container (צריך להיות קיים אחרי clear)
     let mainContainer = document.querySelector('.main-container');
     
     if (!mainContainer) {
@@ -110,12 +251,9 @@ async function buildPurchasesContainer() {
         }
     }
     
-    // ⭐ בנה את התוכן של רכישות
     mainContainer.innerHTML = `
-        <!-- סקשן חיפוש -->
         <div id="purchaseSearchSection" class="search-section"></div>
         
-        <!-- table-container עבור TableManager -->
         <div class="table-container">
             <table id="mainTable" class="data-table">
                 <thead>
@@ -139,18 +277,19 @@ async function buildPurchasesContainer() {
     console.log('✅ Purchases container built');
 }
 
+
 // ===================================================================
-// אתחול UniversalSearch - שימוש בפונקציה גלובלית!
+// אתחול UniversalSearch
 // ===================================================================
-async function initPurchasesSearch() {
-    purchaseSearch = window.initUniversalSearch({
+async function initPurchasesSearch(signal) {
+    const config = {
         entityType: 'purchase',
         apiEndpoint: '/dashboard/dashboards/cemeteries/api/purchases-api.php',
         action: 'list',
-
+        
         searchableFields: [
             {
-                name: 'serialPurchaseId',
+                name: 'purchaseNumber',
                 label: 'מספר רכישה',
                 table: 'purchases',
                 type: 'text',
@@ -164,50 +303,43 @@ async function initPurchasesSearch() {
                 matchType: ['exact', 'fuzzy', 'startsWith']
             },
             {
-                name: 'customerId',
-                label: 'מזהה לקוח',
-                table: 'purchases',
-                type: 'text',
-                matchType: ['exact']
-            },
-            {
-                name: 'graveName',
-                label: 'שם קבר',
+                name: 'graveLocation',
+                label: 'מיקום קבר',
                 table: 'purchases',
                 type: 'text',
                 matchType: ['exact', 'fuzzy']
             },
             {
-                name: 'graveId',
-                label: 'מזהה קבר',
-                table: 'purchases',
-                type: 'text',
-                matchType: ['exact']
-            },
-            {
-                name: 'purchaseAmount',
-                label: 'סכום רכישה',
+                name: 'totalAmount',
+                label: 'סכום כולל',
                 table: 'purchases',
                 type: 'number',
                 matchType: ['exact', 'greater', 'less', 'between']
             },
             {
-                name: 'statusPurchase',
-                label: 'סטטוס רכישה',
+                name: 'status',
+                label: 'סטטוס',
                 table: 'purchases',
                 type: 'select',
                 matchType: ['exact'],
                 options: [
-                    { value: '1', label: 'פעיל' },
-                    { value: '0', label: 'לא פעיל' }
+                    { value: 'pending', label: 'ממתין' },
+                    { value: 'approved', label: 'מאושר' },
+                    { value: 'completed', label: 'הושלם' },
+                    { value: 'cancelled', label: 'בוטל' }
                 ]
             },
             {
-                name: 'purchaseDate',
-                label: 'תאריך רכישה',
+                name: 'type',
+                label: 'סוג רכישה',
                 table: 'purchases',
-                type: 'date',
-                matchType: ['exact', 'before', 'after', 'between', 'today', 'thisWeek', 'thisMonth']
+                type: 'select',
+                matchType: ['exact'],
+                options: [
+                    { value: 'new', label: 'רכישה חדשה' },
+                    { value: 'transfer', label: 'העברת בעלות' },
+                    { value: 'renewal', label: 'חידוש' }
+                ]
             },
             {
                 name: 'createDate',
@@ -218,7 +350,7 @@ async function initPurchasesSearch() {
             }
         ],
         
-        displayColumns: ['serialPurchaseId', 'customerName', 'graveName', 'purchaseAmount', 'purchaseDate', 'statusPurchase', 'createDate'],
+        displayColumns: ['purchaseNumber', 'customerName', 'graveLocation', 'totalAmount', 'status', 'type', 'createDate'],
         
         searchContainerSelector: '#purchaseSearchSection',
         resultsContainerSelector: '#tableBody',
@@ -235,88 +367,93 @@ async function initPurchasesSearch() {
             
             onSearch: (query, filters) => {
                 console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()) });
+                
+                // ⭐ כאשר מתבצע חיפוש - הפעל מצב חיפוש
+                purchasesIsSearchMode = true;
+                purchasesCurrentQuery = query;
             },
 
-            onResults: (data) => {
+            onResults: async (data, signal) => {
                 console.log('📦 API returned:', data.pagination?.total || data.data.length, 'purchases');
+                
+                // ⭐ אם נכנסנו למצב חיפוש - הצג רק תוצאות חיפוש
+                if (purchasesIsSearchMode && purchasesCurrentQuery) {
+                    console.log('🔍 Search mode active - showing search results only');
+                    purchasesSearchResults = data.data;
+                    
+                    const tableBody = document.getElementById('tableBody');
+                    if (tableBody) {
+                        await renderPurchasesRows(purchasesSearchResults, tableBody, data.pagination, signal);
+                    }
+                    return;
+                }
                 
                 // ⭐⭐⭐ בדיקה קריטית - אם עברנו לרשומה אחרת, לא להמשיך!
                 if (window.currentType !== 'purchase') {
                     console.log('⚠️ Type changed during search - aborting purchase results');
                     console.log(`   Current type is now: ${window.currentType}`);
-                    return; // ❌ עצור כאן!
+                    return;
                 }
-
-                // ⭐ טיפול בדפים - מצטבר!
-                const currentPage = data.pagination?.page || 1;
-                
-                if (currentPage === 1) {
-                    // דף ראשון - התחל מחדש
-                    currentPurchases = data.data;
-                } else {
-                    // דפים נוספים - הוסף לקיימים
-                    currentPurchases = [...currentPurchases, ...data.data];
-                    console.log(`📦 Added page ${currentPage}, total now: ${currentPurchases.length}`);
-                }
-                
-                // ⭐ אין סינון client-side - זו רמת השורש!
-                let filteredCount = currentPurchases.length;
-                
-                // ⭐⭐⭐ עדכן ישירות את purchaseSearch!
-                if (purchaseSearch && purchaseSearch.state) {
-                    purchaseSearch.state.totalResults = filteredCount;
-                    if (purchaseSearch.updateCounter) {
-                        purchaseSearch.updateCounter();
-                    }
-                }
-                
-                console.log('📊 Final count:', filteredCount);
             },
             
             onError: (error) => {
                 console.error('❌ Search error:', error);
-                showToast('שגיאה בחיפוש: ' + error.message, 'error');
+                showToast('שגיאה בחיפוש רכישות', 'error');
             },
-            
+
             onEmpty: () => {
                 console.log('📭 No results');
+            },
+            
+            onClear: async () => {
+                console.log('🧹 Search cleared - returning to browse mode');
+                
+                // ⭐ איפוס מצב חיפוש
+                purchasesIsSearchMode = false;
+                purchasesCurrentQuery = '';
+                purchasesSearchResults = [];
+                
+                // ⭐ חזרה למצב Browse
+                await loadPurchasesBrowseData(signal);
             }
         }
-    });
+    };
     
-    // ⭐ עדכן את window.purchaseSearch מיד!
-    window.purchaseSearch = purchaseSearch;
+    const searchInstance = window.initUniversalSearch(config);
     
-    return purchaseSearch;
+    return searchInstance;
 }
 
+
 // ===================================================================
-// אתחול TableManager - עם תמיכה ב-totalItems
+// אתחול TableManager
 // ===================================================================
-async function initPurchasesTable(data, totalItems = null) {
-     const actualTotalItems = totalItems !== null ? totalItems : data.length;
-   
+async function initPurchasesTable(data, totalItems = null, signal = null) {
+    const actualTotalItems = totalItems !== null ? totalItems : data.length;
+    
     if (purchasesTable) {
         purchasesTable.config.totalItems = actualTotalItems;
         purchasesTable.setData(data);
         return purchasesTable;
     }
-
+        
     // טעינת העמודות מהשרת
-    async function loadColumnsFromConfig2(entityType = 'purchase') {
+    async function loadColumnsFromConfig(entityType = 'purchase') {
         try {
-            const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`);
+            const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`, {
+                signal: signal
+            });
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-
+            
             const result = await response.json();
-
+            
             if (!result.success || !result.data) {
                 throw new Error(result.error || 'Failed to load columns config');
             }
-
+            
             // המרת הקונפיג מ-PHP לפורמט של TableManager
             const columns = result.data.map(col => {
                 const column = {
@@ -328,28 +465,25 @@ async function initPurchasesTable(data, totalItems = null) {
                 };
                 
                 // טיפול בסוגי עמודות מיוחדות
-                switch (column.type) {
+                switch(col.type) {
                     case 'date':
-                        column.render = (item) => formatDate(item[column.field]);
+                        column.render = (purchase) => formatDate(purchase[column.field]);
                         break;
                         
                     case 'status':
-                        // if (column.render === 'formatPurchaseStatus') {
-                            column.render = (item) => formatPurchaseStatus(item[column.field]);
-                        // }
+                        if (col.render === 'formatPurchaseStatus') {
+                            column.render = (purchase) => formatPurchaseStatus(purchase[column.field]);
+                        }
                         break;
                         
                     case 'type':
-                        if (column.render === 'formatPurchaseType') {
-                            column.render = (item) => formatPurchaseType(item[column.field]);
+                        if (col.render === 'formatPurchaseType') {
+                            column.render = (purchase) => formatPurchaseType(purchase[column.field]);
                         }
                         break;
                         
                     case 'currency':
-                        column.render = (item) => {
-                            const value = item[column.field];
-                            return value ? `₪${parseFloat(value).toLocaleString('he-IL')}` : '-';
-                        };
+                        column.render = (purchase) => formatCurrency(purchase[column.field]);
                         break;
                         
                     case 'actions':
@@ -368,9 +502,8 @@ async function initPurchasesTable(data, totalItems = null) {
                         break;
                         
                     default:
-                        // עמודת טקסט רגילה
                         if (!column.render) {
-                            column.render = (item) => item[column.field] || '-';
+                            column.render = (purchase) => purchase[column.field] || '-';
                         }
                 }
                 
@@ -378,124 +511,38 @@ async function initPurchasesTable(data, totalItems = null) {
             });
             
             return columns;
+            
         } catch (error) {
+            if (error.name === 'AbortError') {
+                console.log('⚠️ Column config loading aborted - this is expected');
+                return [];
+            }
+            
             console.error('❌ Failed to load columns config:', error);
-            // החזר מערך ריק במקרה של שגיאה
             return [];
         }
     }
 
-    async function loadColumnsFromConfig(entityType = 'purchase') {
-        try {
-            const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const result = await response.json();
-
-            if (!result.success || !result.data) {
-                throw new Error(result.error || 'Failed to load columns config');
-            }
-
-            // המרת הקונפיג מ-PHP לפורמט של TableManager
-            const columns = result.data.map(col => {
-                const column = {
-                    field: col.field,
-                    label: col.title,
-                    width: col.width || 'auto',
-                    sortable: col.sortable !== false,
-                    type: col.type || 'text'
-                };
-                
-                // טיפול בסוגי עמודות מיוחדות
-                switch (column.type) {
-                    case 'date':
-                        column.render = (item) => formatDate(item[column.field]);
-                        break;
-                        
-                    case 'status':
-                        column.render = (item) => formatPurchaseStatus(item[column.field]);
-                        break;
-                        
-                    case 'type':
-                        if (column.render === 'formatPurchaseType') {
-                            column.render = (item) => formatPurchaseType(item[column.field]);
-                        }
-                        break;
-                        
-                    case 'currency':
-                        column.render = (item) => {
-                            const value = item[column.field];
-                            return value ? `₪${parseFloat(value).toLocaleString('he-IL')}` : '-';
-                        };
-                        break;
-                        
-                    case 'actions':
-                        // ⭐ רק כאן הוספנו דיבאג!
-                        column.render = (item) => `
-                            <button class="btn btn-sm btn-secondary" 
-                                    onclick="event.stopPropagation(); 
-                                            console.log('🔍 [EDIT CLICK PURCHASE] purchaseId:', '${item.unicId}'); 
-                                            console.log('🔍 [EDIT CLICK PURCHASE] window.currentType:', window.currentType); 
-                                            console.log('🔍 [EDIT CLICK PURCHASE] tableRenderer.currentType:', window.tableRenderer?.currentType);
-                                            window.tableRenderer.editItem('${item.unicId}')" 
-                                    title="עריכה">
-                                <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
-                            </button>
-                            <button class="btn btn-sm btn-danger" 
-                                    onclick="event.stopPropagation(); deletePurchase('${item.unicId}')" 
-                                    title="מחיקה">
-                                <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
-                            </button>
-                        `;
-                        break;
-                    
-                    default:
-                        if (!column.render) {
-                            column.render = (item) => item[column.field] || '-';
-                        }
-                }
-                
-                return column;
-            });
-            
-            return columns;
-        } catch (error) {
-            console.error('❌ Failed to load columns config:', error);
-            return [];
-        }
-    } 
-    
     purchasesTable = new TableManager({
         tableSelector: '#mainTable',
         
-        // containerWidth: '80vw',
-        // fixedLayout: true,
-        
-        // scrolling: {
-        //     enabled: true,
-        //     headerHeight: '50px',
-        //     itemsPerPage: 50,
-        //     scrollThreshold: 300
-        // },
-        
-        // ⭐ הוספת totalItems כפרמטר!
         totalItems: actualTotalItems,
 
         columns: await loadColumnsFromConfig('purchase'),
 
-        onRowDoubleClick: (purchase) => {
-            handlePurchaseDoubleClick(purchase.unicId);
-        },
-        
         data: data,
         
         sortable: true,
         resizable: true,
         reorderable: false,
         filterable: true,
+        
+        infiniteScroll: true,
+        scrollThreshold: 200,
+        onScrollEnd: async () => {
+            console.log('📜 Reached scroll end, loading more...');
+            await appendMorePurchases();
+        },
         
         onSort: (field, order) => {
             console.log(`📊 Sorted by ${field} ${order}`);
@@ -508,48 +555,46 @@ async function initPurchasesTable(data, totalItems = null) {
             showToast(`נמצאו ${count} תוצאות`, 'info');
         }
     });
-
-    // מאזין לאירוע גלילה לסוף - טען עוד נתונים
-    const bodyContainer = document.querySelector('.table-body-container');
-    if (bodyContainer && purchaseSearch) {
-        bodyContainer.addEventListener('scroll', async function() {
-            const scrollTop = this.scrollTop;
-            const scrollHeight = this.scrollHeight;
-            const clientHeight = this.clientHeight;
-            
-            // אם הגענו לתחתית והטעינה עוד לא בתהליך
-            if (scrollHeight - scrollTop - clientHeight < 100) {
-                if (!purchaseSearch.state.isLoading && purchaseSearch.state.currentPage < purchaseSearch.state.totalPages) {
-                    console.log('📥 Reached bottom, loading more data...');
-                    
-                    // בקש עמוד הבא מ-UniversalSearch
-                    const nextPage = purchaseSearch.state.currentPage + 1;
-                    
-                    // עדכן את הדף הנוכחי
-                    purchaseSearch.state.currentPage = nextPage;
-                    purchaseSearch.state.isLoading = true;
-                    
-                    // בקש נתונים
-                    await purchaseSearch.search();
-                }
-            }
-        });
-    }
     
-    // ⭐ עדכן את window.purchasesTable מיד!
     window.purchasesTable = purchasesTable;
- 
     return purchasesTable;
 }
 
+
 // ===================================================================
-// רינדור שורות רכישות - עם תמיכה ב-totalItems מ-pagination
+// רינדור שורות - עם תמיכה ב-Search Mode
 // ===================================================================
-function renderPurchasesRows(data, container, pagination = null) {
+async function renderPurchasesRows(data, container, pagination = null, signal = null) {
+    console.log(`📝 renderPurchasesRows called with ${data.length} items`);
     
-    // ⭐ חלץ את הסכום הכולל מ-pagination אם קיים
+    // ⭐⭐ במצב חיפוש - הצג תוצאות חיפוש בלי טבלה מורכבת
+    if (purchasesIsSearchMode && purchasesCurrentQuery) {
+        console.log('🔍 Rendering search results...');
+        
+        if (data.length === 0) {
+            container.innerHTML = `
+                <tr>
+                    <td colspan="10" style="text-align: center; padding: 60px;">
+                        <div style="color: #9ca3af;">
+                            <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
+                            <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">לא נמצאו תוצאות</div>
+                            <div>נסה לשנות את מילות החיפוש או הפילטרים</div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        const totalItems = data.length;
+        await initPurchasesTable(data, totalItems, signal);
+        return;
+    }
+    
+    // ⭐⭐ מצב רגיל (Browse) - הצג עם TableManager
     const totalItems = pagination?.total || data.length;
-    
+    console.log(`📊 Total items to display: ${totalItems}`);
+
     if (data.length === 0) {
         if (purchasesTable) {
             purchasesTable.setData([]);
@@ -568,64 +613,23 @@ function renderPurchasesRows(data, container, pagination = null) {
         `;
         return;
     }
-    
-    // ⭐ בדוק אם ה-DOM של TableManager קיים
-    const tableWrapperExists = document.querySelector('.table-wrapper[data-fixed-width="true"]');
-    
-    // ⭐ אם המשתנה קיים אבל ה-DOM נמחק - אפס את המשתנה!
-    if (!tableWrapperExists && purchasesTable) {
-        console.log('🗑️ TableManager DOM was deleted, resetting purchasesTable variable');
-        purchasesTable = null;
-        window.purchasesTable = null;
-    }
 
-    // עכשיו בדוק אם צריך לבנות מחדש
-    if (!purchasesTable || !tableWrapperExists) {
-        // אין TableManager או שה-DOM שלו נמחק - בנה מחדש!
-        initPurchasesTable(data, totalItems);  // ⭐ העברת totalItems!
-    } else {    
-        // ⭐ עדכן גם את totalItems ב-TableManager!
+    // ⭐⭐⭐ אתחול או עדכון טבלה
+    if (!purchasesTable) {
+        console.log(`🆕 Initializing TableManager with ${totalItems} items`);
+        await initPurchasesTable(data, totalItems, signal);
+    } else {
+        console.log(`♻️ Updating TableManager with ${totalItems} items`);
         if (purchasesTable.config) {
             purchasesTable.config.totalItems = totalItems;
         }
-        
-        // ⭐ אם יש עוד נתונים ב-UniversalSearch, הוסף אותם!
-        if (purchaseSearch && purchaseSearch.state) {
-            const allData = purchaseSearch.state.results || [];
-            if (allData.length > data.length) {
-                console.log(`📦 UniversalSearch has ${allData.length} items, updating TableManager...`);
-                purchasesTable.setData(allData);
-                return;
-            }
-        }
-        
         purchasesTable.setData(data);
     }
 }
 
 // ===================================================================
-// פונקציות פורמט ועזר
-// ===================================================================
-function formatPurchaseType(type) {
-    const types = {
-        1: 'רגיל',
-        2: 'מיוחד',
-        3: 'אחר'
-    };
-    return types[type] || '-';
-}
-
-// פורמט סטטוס רכישה
-function formatPurchaseStatus(status) {
-    const statuses = {
-        1: { text: 'פעיל', color: '#10b981' },
-        0: { text: 'לא פעיל', color: '#ef4444' }
-    };
-    const statusInfo = statuses[status] || statuses[1];
-    return `<span style="background: ${statusInfo.color}; color: white; padding: 3px 8px; border-radius: 4px; font-size: 12px; display: inline-block;">${statusInfo.text}</span>`;
-}
-
 // פורמט תאריך
+// ===================================================================
 function formatDate(dateString) {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -633,10 +637,71 @@ function formatDate(dateString) {
 }
 
 // ===================================================================
-// פונקציות CRUD
+// פונקציות עזר לפורמט
+// ===================================================================
+function formatPurchaseType(type) {
+    const types = {
+        'new': 'רכישה חדשה',
+        'transfer': 'העברת בעלות',
+        'renewal': 'חידוש'
+    };
+    return types[type] || '-';
+}
+
+function formatPurchaseStatus(status) {
+    const statuses = {
+        'pending': { text: 'ממתין', color: '#f59e0b' },
+        'approved': { text: 'מאושר', color: '#3b82f6' },
+        'completed': { text: 'הושלם', color: '#10b981' },
+        'cancelled': { text: 'בוטל', color: '#ef4444' }
+    };
+    const statusInfo = statuses[status] || statuses['pending'];
+    return `<span style="background: ${statusInfo.color}; color: white; padding: 3px 8px; border-radius: 4px; font-size: 12px; display: inline-block;">${statusInfo.text}</span>`;
+}
+
+function formatCurrency(amount) {
+    if (!amount) return '-';
+    return new Intl.NumberFormat('he-IL', {
+        style: 'currency',
+        currency: 'ILS'
+    }).format(amount);
+}
+
+// ===================================================================
+// טעינת סטטיסטיקות
+// ===================================================================
+async function loadPurchaseStats(signal) {
+    try {
+        const response = await fetch('/dashboard/dashboards/cemeteries/api/purchases-api.php?action=stats', { signal: signal });
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            console.log('📊 Purchase stats:', result.data);
+            
+            if (document.getElementById('totalPurchases')) {
+                document.getElementById('totalPurchases').textContent = result.data.total_purchases || 0;
+            }
+            if (document.getElementById('completedPurchases')) {
+                document.getElementById('completedPurchases').textContent = result.data.completed || 0;
+            }
+            if (document.getElementById('newThisMonth')) {
+                document.getElementById('newThisMonth').textContent = result.data.new_this_month || 0;
+            }
+        }
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            console.log('⚠️ Purchase stats loading aborted - this is expected');
+            return;
+        }
+        console.error('Error loading purchase stats:', error);
+    }
+}
+
+// ===================================================================
+// מחיקת רכישה
 // ===================================================================
 async function deletePurchase(purchaseId) {
-    if (!confirm('האם אתה בטוח שברצונך למחוק רכישה זו?')) {
+    if (!confirm('האם אתה בטוח שברצונך למחוק את הרכישה?')) {
         return;
     }
     
@@ -645,42 +710,31 @@ async function deletePurchase(purchaseId) {
             method: 'DELETE'
         });
         
-        const data = await response.json();
+        const result = await response.json();
         
-        if (data.success) {
-            showToast('הרכישה נמחקה בהצלחה', 'success');
-            
-            if (purchaseSearch) {
-                purchaseSearch.refresh();
-            }
-        } else {
-            showToast(data.error || 'שגיאה במחיקת רכישה', 'error');
+        if (!result.success) {
+            throw new Error(result.error || 'שגיאה במחיקת הרכישה');
         }
+        
+        showToast('הרכישה נמחקה בהצלחה', 'success');
+        
+        if (purchaseSearch) {
+            purchaseSearch.refresh();
+        }
+        
     } catch (error) {
         console.error('Error deleting purchase:', error);
-        showToast('שגיאה במחיקת רכישה', 'error');
+        showToast(error.message, 'error');
     }
 }
 
-// ===================================================================
-// טעינת סטטיסטיקות
-// ===================================================================
-async function loadPurchaseStats() {
-    try {
-        const response = await fetch('/dashboard/dashboards/cemeteries/api/purchases-api.php?action=stats');
-        const data = await response.json();
-        
-        if (data.success) {
-            console.log('Purchase stats:', data.data);
-        }
-    } catch (error) {
-        console.error('Error loading purchase stats:', error);
-    }
-}
 
-// הצגת הודעת Toast
+// ===================================================================
+// הצגת הודעות Toast
+// ===================================================================
 function showToast(message, type = 'info') {
     const toast = document.createElement('div');
+    toast.className = 'toast-message';
     toast.style.cssText = `
         position: fixed;
         top: 20px;
@@ -711,15 +765,20 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-// פונקציה לרענון נתונים
-async function refreshData() {
-    if (purchaseSearch) {
-        purchaseSearch.refresh();
-    }
+
+// ===================================================================
+// רענון נתונים
+// ===================================================================
+async function purchasesRefreshData() {
+    // טעינה מחדש ישירה מה-API (כי UniversalSearch מושבת)
+    await loadPurchases();
 }
 
-// פונקציה לבדיקת סטטוס הטעינה
-function checkScrollStatus() {
+
+// ===================================================================
+// בדיקת סטטוס טעינה
+// ===================================================================
+function checkPurchasesScrollStatus() {
     if (!purchasesTable) {
         console.log('❌ Table not initialized');
         return;
@@ -736,20 +795,20 @@ function checkScrollStatus() {
     console.log(`   Progress: ${Math.round((displayed / total) * 100)}%`);
     
     if (remaining > 0) {
-        console.log(`   🔽 Scroll down to load ${Math.min(purchasesTable.config.itemsPerPage, remaining)} more items`);
+        console.log(`   🔽 Scroll down to load more items`);
     } else {
         console.log('   ✅ All items loaded');
     }
 }
 
-// ===================================================
-// פונקציה לטיפול בדאבל-קליק על רכישה
-// ===================================================
+
+// ===================================================================
+// דאבל-קליק על רכישה
+// ===================================================================
 async function handlePurchaseDoubleClick(purchaseId) {
     console.log('🖱️ Double-click on purchase:', purchaseId);
     
     try {
-        // יצירת והצגת כרטיס
         if (typeof createPurchaseCard === 'function') {
             const cardHtml = await createPurchaseCard(purchaseId);
             if (cardHtml && typeof displayHierarchyCard === 'function') {
@@ -771,13 +830,21 @@ async function handlePurchaseDoubleClick(purchaseId) {
 }
 
 window.handlePurchaseDoubleClick = handlePurchaseDoubleClick;
-
 // ===================================================================
 // הפוך לגלובלי
 // ===================================================================
 window.loadPurchases = loadPurchases;
+
+window.appendMorePurchases = appendMorePurchases;
+
 window.deletePurchase = deletePurchase;
-window.refreshData = refreshData;
+
+window.purchasesRefreshData = purchasesRefreshData;
+
 window.purchasesTable = purchasesTable;
-window.checkScrollStatus = checkScrollStatus;
+
+window.checkPurchasesScrollStatus = checkPurchasesScrollStatus;
+
 window.purchaseSearch = purchaseSearch;
+
+console.log('✅ purchases-management.js v4.0.0 - Loaded successfully!');

@@ -381,6 +381,103 @@ async function buildAreaGravesContainer(signal, plotId = null, plotName = null) 
 // ===================================================================
 // אתחול UniversalSearch - עם Pagination!
 // ===================================================================
+async function initAreaGravesSearch1(signal, plotId) {
+    console.log('🔍 אתחול חיפוש שורות קבר...');
+    
+    // ⭐ טוען searchableFields מהשרת
+    let searchableFields = [];
+
+    try {
+        const fieldsResponse = await fetch(
+            `/dashboard/dashboards/cemeteries/api/get-config.php?type=areaGrave&section=searchableFields`,
+            { signal: signal }
+        );
+        const fieldsResult = await fieldsResponse.json();
+        
+        if (fieldsResult.success && fieldsResult.data) {
+            searchableFields = fieldsResult.data;
+        }
+    } catch (error) {
+        console.error('❌ Error loading searchableFields:', error);
+    }
+
+    // קונפיגורציה
+    const config = {
+        entityType: 'area-grave',
+        apiEndpoint: '/dashboard/dashboards/cemeteries/api/areaGraves-api.php',
+        
+        searchableFields: searchableFields || [],
+        
+        displayColumns: [
+            { key: 'areaGraveNameHe', label: 'שם' },
+            { key: 'coordinates', label: 'מיקום' },
+            { key: 'graveType', label: 'סוג' },
+            { key: 'graves_count', label: 'כמות קברים' }
+        ],
+
+        searchContainerSelector: '#areaGraveSearchSection',
+        resultsContainerSelector: '#tableBody',  
+        
+        // ⭐ Infinite Scroll אמיתי - טעינה מדורגת
+        apiLimit: 200,  // ⭐ טוען 200 רשומות מהשרת בכל בקשה
+        showPagination: false,  // ⭐ ללא footer - infinite scroll!
+        
+        apiParams: {
+            level: 'area-grave',
+            plotId: plotId
+        },
+        
+        renderFunction: (data, container, pagination, signal) => {
+            // ⭐ עדכן מצב חיפוש
+            isSearchMode = true;
+            
+            // שמור תוצאות
+            if (pagination && pagination.page === 1) {
+                searchResults = data;
+            } else {
+                searchResults = [...searchResults, ...data];
+            }
+
+            // קריאה לפונקציה המקורית עם כל הפרמטרים
+            renderAreaGravesRows(data, container, pagination, signal);
+        },
+        
+        callbacks: {
+            // ⭐ כשנתונים נטענו
+            onDataLoaded: (response) => {
+                console.log('✅ נתונים נטענו:', response.data.length);
+                
+                // עדכון מונה כולל ב-TableManager
+                if (window.areaGravesTable && response.pagination) {
+                    window.areaGravesTable.updateTotalItems(response.pagination.total);
+                }
+            },
+            
+            // ⭐ כשמנקים חיפוש
+            onClear: () => {
+                isSearchMode = false;
+                currentQuery = '';
+                searchResults = [];
+                
+                // חזרה ל-Browse
+                loadBrowseData(currentPlotId);
+            }
+        }
+    };
+
+    // ⭐ הוסף פילטר plotId אם קיים
+    if (plotId) {
+        config.dataSource.plotId = plotId;
+    }
+    
+    // יצירת instance
+    const searchInstance = window.initUniversalSearch(config);
+    
+    // שמירה גלובלית
+    window.areaGraveSearch = searchInstance;
+    
+    return searchInstance;
+}
 async function initAreaGravesSearch(signal, plotId) {
     console.log('🔍 אתחול חיפוש שורות קבר...');
     
@@ -441,6 +538,28 @@ async function initAreaGravesSearch(signal, plotId) {
             // קריאה לפונקציה המקורית עם כל הפרמטרים
             renderAreaGravesRows(data, container, pagination, signal);
         },
+        
+        // callbacks: {
+        //     // ⭐ כשנתונים נטענו
+        //     onDataLoaded: (response) => {
+        //         console.log('✅ נתונים נטענו:', response.data.length);
+                
+        //         // עדכון מונה כולל ב-TableManager
+        //         if (window.areaGravesTable && response.pagination) {
+        //             window.areaGravesTable.updateTotalItems(response.pagination.total);
+        //         }
+        //     },
+            
+        //     // ⭐ כשמנקים חיפוש
+        //     onClear: () => {
+        //         isSearchMode = false;
+        //         currentQuery = '';
+        //         searchResults = [];
+                
+        //         // חזרה ל-Browse
+        //         loadBrowseData(currentPlotId);
+        //     }
+        // }
 
         callbacks: {
             // ⭐ לפני חיפוש - נקה הכל והצג spinner
@@ -886,7 +1005,6 @@ function getGraveTypeName(type) {
     return types[type] || 'לא מוגדר';
 }
 
-
 // ===================================================================
 // טעינת סטטיסטיקות
 // ===================================================================
@@ -1002,6 +1120,7 @@ async function refreshData() {
     await loadAreaGraves(currentPlotId, currentPlotName, false);
 }
 
+
 // ===================================================================
 // בדיקת סטטוס טעינה
 // ===================================================================
@@ -1028,6 +1147,7 @@ function checkScrollStatus() {
         console.log('   ✅ All items loaded');
     }
 }
+
 
 // ===================================================================
 // דאבל-קליק על אחוזת קבר
@@ -1057,18 +1177,29 @@ async function handleAreaGraveDoubleClick(areaGraveId, areaGraveName) {
     }
 }
 
+
 window.handleAreaGraveDoubleClick = handleAreaGraveDoubleClick;
+
 
 // ===================================================================
 // הפוך לגלובלי
 // ===================================================================
 window.loadAreaGraves = loadAreaGraves;
+
 window.appendMoreAreaGraves = appendMoreAreaGraves;
+
 window.deleteAreaGrave = deleteAreaGrave;
+
 window.refreshData = refreshData;
+
 window.areaGravesTable = areaGravesTable;
+
 window.checkScrollStatus = checkScrollStatus;
+
 window.currentPlotId = currentPlotId;
+
 window.currentPlotName = currentPlotName;
+
 window.areaGraveSearch = areaGraveSearch;
+
 console.log('✅ area-graves-management.js v1.5.3 - Loaded successfully!');

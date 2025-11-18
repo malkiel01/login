@@ -170,11 +170,11 @@ async function loadGraves(areaGraveId = null, areaGraveName = null, forceReset =
         return;
     }
 
-    // // ⭐ טעינה ישירה (Browse Mode) - פעם אחת!
-    // await loadGravesBrowseData(areaGraveId, signal);
+    // ⭐ טעינה ישירה (Browse Mode) - פעם אחת!
+    await loadGravesBrowseData(areaGraveId, signal);
     
-    // // טען סטטיסטיקות
-    // await loadGraveStats(signal, areaGraveId);
+    // טען סטטיסטיקות
+    await loadGraveStats(signal, areaGraveId);
 }
 
 
@@ -872,41 +872,41 @@ function renderGravesRows(data, container, pagination = null, signal = null) {
 //     return statuses[status] || { label: 'לא מוגדר', color: '#9ca3af' };
 // }
 
-// // ===================================================================
-// // טעינת סטטיסטיקות
-// // ===================================================================
-// async function loadGraveStats(signal, areaGraveId = null) {
-//     try {
-//         let url = '/dashboard/dashboards/cemeteries/api/graves-api.php?action=stats';
-//         if (areaGraveId) {
-//             url += `&areaGraveId=${areaGraveId}`;
-//         }
+// ===================================================================
+// טעינת סטטיסטיקות
+// ===================================================================
+async function loadGraveStats(signal, areaGraveId = null) {
+    try {
+        let url = '/dashboard/dashboards/cemeteries/api/graves-api.php?action=stats';
+        if (areaGraveId) {
+            url += `&areaGraveId=${areaGraveId}`;
+        }
         
-//         const response = await fetch(url, { signal: signal });
-//         const result = await response.json();
+        const response = await fetch(url, { signal: signal });
+        const result = await response.json();
         
-//         if (result.success && result.data) {
-//             console.log('📊 Area grave stats:', result.data);
+        if (result.success && result.data) {
+            console.log('📊 Area grave stats:', result.data);
             
-//             if (document.getElementById('totalGraves')) {
-//                 document.getElementById('totalGraves').textContent = result.data.total_graves || 0;
-//             }
-//             if (document.getElementById('totalGraves')) {
-//                 document.getElementById('totalGraves').textContent = result.data.total_graves || 0;
-//             }
-//             if (document.getElementById('newThisMonth')) {
-//                 document.getElementById('newThisMonth').textContent = result.data.new_this_month || 0;
-//             }
-//         }
-//     } catch (error) {
-//         // בדיקה: אם זה ביטול מכוון - זה לא שגיאה
-//         if (error.name === 'AbortError') {
-//             console.log('⚠️ Grave stats loading aborted - this is expected');
-//             return;
-//         }
-//         console.error('Error loading area grave stats:', error);
-//     }
-// }
+            if (document.getElementById('totalGraves')) {
+                document.getElementById('totalGraves').textContent = result.data.total_graves || 0;
+            }
+            if (document.getElementById('totalGraves')) {
+                document.getElementById('totalGraves').textContent = result.data.total_graves || 0;
+            }
+            if (document.getElementById('newThisMonth')) {
+                document.getElementById('newThisMonth').textContent = result.data.new_this_month || 0;
+            }
+        }
+    } catch (error) {
+        // בדיקה: אם זה ביטול מכוון - זה לא שגיאה
+        if (error.name === 'AbortError') {
+            console.log('⚠️ Grave stats loading aborted - this is expected');
+            return;
+        }
+        console.error('Error loading area grave stats:', error);
+    }
+}
 
 // // ===================================================================
 // // מחיקת אחוזת קבר

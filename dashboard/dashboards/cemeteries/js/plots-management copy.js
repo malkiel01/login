@@ -1,15 +1,15 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/plots-management.js
- * Version: 1.4.0
- * Updated: 2025-11-18
+ * Version: 1.3.0
+ * Updated: 2025-11-03
  * Author: Malkiel
  * Change Summary:
- * - v1.4.0: 🔥 תיקון קריטי - שמות ייחודיים לכל המשתנים הגלובליים
- *   ✅ החלפות שבוצעו (רק שמות משתנים - ללא שינוי לוגיקה):
- *   - currentBlockId → plotsFilterBlockId (19 מופעים)
- *   - currentBlockName → plotsFilterBlockName (12 מופעים)
- *   📌 סה"כ: 31 החלפות - אחידות מושלמת!
  * - v1.3.0: הוספת תמיכה מלאה בטעינה מדורגת
+ *   - pagination מצטברת עם scroll loading אינסופי
+ *   - סינון client-side מתקדם לפי blockId
+ *   - עדכון אוטומטי של state.totalResults
+ *   - תיקון כפתורי Delete לקרוא ל-deletePlot()
+ *   - תמיכה בכמות רשומות בלתי מוגבלת
  * - v1.2.0: תיקון קריטי - שמירת סינון קיים
  * - v1.1.0: תיקון סינון חלקות לפי גוש נבחר
  * - v1.0.0: גרסה ראשונית - ניהול חלקות
@@ -24,8 +24,8 @@ let plotsTable = null;
 let editingPlotId = null;
 
 // ⭐ חדש: שמירת ה-block context הנוכחי
-let plotsFilterBlockId = null;
-let plotsFilterBlockName = null;
+let currentBlockId = null;
+let currentBlockName = null;
 
 // ===================================================================
 // טעינת חלקות (הפונקציה הראשית)
@@ -38,33 +38,33 @@ async function loadPlots(blockId = null, blockName = null, forceReset = false) {
     // ⭐ שינוי: אם קוראים ללא פרמטרים (מהתפריט) - אפס את הסינון!
     if (blockId === null && blockName === null && !forceReset) {
         // בדוק אם יש סינון קיים מהעבר
-        if (window.plotsFilterBlockId !== null || plotsFilterBlockId !== null) {
+        if (window.currentBlockId !== null || currentBlockId !== null) {
             console.log('🔄 Resetting filter - called from menu without params');
-            plotsFilterBlockId = null;
-            plotsFilterBlockName = null;
-            window.plotsFilterBlockId = null;
-            window.plotsFilterBlockName = null;
+            currentBlockId = null;
+            currentBlockName = null;
+            window.currentBlockId = null;
+            window.currentBlockName = null;
         }
         console.log('🔍 Block filter: None (showing all plots)');
     } else if (forceReset) {
         console.log('🔄 Force reset filter');
-        plotsFilterBlockId = null;
-        plotsFilterBlockName = null;
-        window.plotsFilterBlockId = null;
-        window.plotsFilterBlockName = null;
+        currentBlockId = null;
+        currentBlockName = null;
+        window.currentBlockId = null;
+        window.currentBlockName = null;
     } else {
         // יש blockId - עדכן את הסינון
         console.log('🔄 Setting filter:', { blockId, blockName });
-        plotsFilterBlockId = blockId;
-        plotsFilterBlockName = blockName;
-        window.plotsFilterBlockId = blockId;
-        window.plotsFilterBlockName = blockName;
+        currentBlockId = blockId;
+        currentBlockName = blockName;
+        window.currentBlockId = blockId;
+        window.currentBlockName = blockName;
     }
     
-    console.log('🔍 Final filter:', { blockId: plotsFilterBlockId, blockName: plotsFilterBlockName });
+    console.log('🔍 Final filter:', { blockId: currentBlockId, blockName: currentBlockName });
         
-    window.plotsFilterBlockId = plotsFilterBlockId;
-    window.plotsFilterBlockName = plotsFilterBlockName;
+    window.currentBlockId = currentBlockId;
+    window.currentBlockName = currentBlockName;
   
     // עדכן את הסוג הנוכחי
     window.currentType = 'plot';
@@ -320,7 +320,7 @@ async function initPlotsSearch(signal, blockId = null) {
            },
            
            onSearch: (query, filters) => {
-               console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()), blockId: plotsFilterBlockId });
+               console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()), blockId: currentBlockId });
            },
 
             onResults: (data) => {
@@ -347,10 +347,10 @@ async function initPlotsSearch(signal, blockId = null) {
                 
                 // ⭐ אם יש סינון - סנן את currentPlots!
                 let filteredCount = currentPlots.length;
-                if (plotsFilterBlockId && currentPlots.length > 0) {
+                if (currentBlockId && currentPlots.length > 0) {
                     const filteredData = currentPlots.filter(plot => {
                         const plotBlockId = plot.blockId || plot.block_id || plot.BlockId;
-                        return String(plotBlockId) === String(plotsFilterBlockId);
+                        return String(plotBlockId) === String(currentBlockId);
                     });
                     
                     console.log('⚠️ Client-side filter:', currentPlots.length, '→', filteredData.length, 'plots');
@@ -575,10 +575,10 @@ function renderPlotsRows(data, container, pagination = null, signal = null) {
     
     // ⭐ סינון client-side לפי blockId
     let filteredData = data;
-    if (plotsFilterBlockId) {
+    if (currentBlockId) {
         filteredData = data.filter(plot => 
-            plot.blockId === plotsFilterBlockId || 
-            plot.block_id === plotsFilterBlockId
+            plot.blockId === currentBlockId || 
+            plot.block_id === currentBlockId
         );
         console.log(`🎯 Client-side filtered: ${data.length} → ${filteredData.length} plots`);
     }
@@ -594,7 +594,7 @@ function renderPlotsRows(data, container, pagination = null, signal = null) {
         }
         
         // ⭐⭐⭐ הודעה מותאמת לגוש ריק!
-        if (plotsFilterBlockId && plotsFilterBlockName) {
+        if (currentBlockId && currentBlockName) {
             // נכנסנו לגוש ספציפי ואין חלקות
             container.innerHTML = `
                 <tr>
@@ -602,13 +602,13 @@ function renderPlotsRows(data, container, pagination = null, signal = null) {
                         <div style="color: #6b7280;">
                             <div style="font-size: 48px; margin-bottom: 16px;">📋</div>
                             <div style="font-size: 20px; font-weight: 600; margin-bottom: 12px; color: #374151;">
-                                אין חלקות בגוש ${plotsFilterBlockName}
+                                אין חלקות בגוש ${currentBlockName}
                             </div>
                             <div style="font-size: 14px; margin-bottom: 24px; color: #6b7280;">
                                 הגוש עדיין לא מכיל חלקות. תוכל להוסיף חלקה חדשה
                             </div>
                             <button 
-                                onclick="if(typeof FormHandler !== 'undefined' && FormHandler.openForm) { FormHandler.openForm('plot', '${plotsFilterBlockId}', null); } else { alert('FormHandler לא זמין'); }" 
+                                onclick="if(typeof FormHandler !== 'undefined' && FormHandler.openForm) { FormHandler.openForm('plot', '${currentBlockId}', null); } else { alert('FormHandler לא זמין'); }" 
                                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
                                        color: white; 
                                        border: none; 
@@ -865,6 +865,6 @@ window.deletePlot = deletePlot;
 window.refreshData = refreshData;
 window.plotsTable = plotsTable;
 window.checkScrollStatus = checkScrollStatus;
-window.plotsFilterBlockId = plotsFilterBlockId;
-window.plotsFilterBlockName = plotsFilterBlockName;
+window.currentBlockId = currentBlockId;
+window.currentBlockName = currentBlockName;
 window.plotSearch = plotSearch;

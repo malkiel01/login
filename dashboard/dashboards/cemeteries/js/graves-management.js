@@ -25,9 +25,9 @@ let gravesIsSearchMode = false;      // האם אנחנו במצב חיפוש?
 let gravesCurrentQuery = '';         // מה החיפוש הנוכחי?
 let gravesSearchResults = [];        // תוצאות החיפוש
 
-// // ⭐ שמירת ה-areaGrave context הנוכחי
-// let currentAreaGraveId = null;
-// let currentAreaGraveName = null;
+// ⭐ שמירת ה-areaGrave context הנוכחי
+let currentAreaGraveId = null;
+let currentAreaGraveName = null;
 
 // // ⭐ Infinite Scroll - מעקב אחרי עמוד נוכחי (שמות ייחודיים!)
 // let gravesCurrentPage = 1;

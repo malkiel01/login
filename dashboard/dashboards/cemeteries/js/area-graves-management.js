@@ -22,13 +22,13 @@ let areaGraveSearch = null;
 let areaGravesTable = null;
 let editingAreaGraveId = null;
 
-let isSearchMode = false;      // האם אנחנו במצב חיפוש?
-let currentQuery = '';         // מה החיפוש הנוכחי?
-let searchResults = [];        // תוצאות החיפוש
+let areaGravesIsSearchMode = false;      // האם אנחנו במצב חיפוש?
+let areaGravesCurrentQuery = '';         // מה החיפוש הנוכחי?
+let areaGravesSearchResults = [];        // תוצאות החיפוש
 
 // ⭐ שמירת ה-plot context הנוכחי
-let currentPlotId = null;
-let currentPlotName = null;
+let areaGravesFilterPlotId = null;
+let areaGravesFilterPlotName = null;
 
 // ⭐ Infinite Scroll - מעקב אחרי עמוד נוכחי (שמות ייחודיים!)
 let areaGravesCurrentPage = 1;
@@ -71,32 +71,32 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
     const signal = OperationManager.start('areaGrave');
 
     // ⭐ איפוס מצב חיפוש
-    isSearchMode = false;
-    currentQuery = '';
-    searchResults = [];
+    areaGravesIsSearchMode = false;
+    areaGravesCurrentQuery = '';
+    areaGravesSearchResults = [];
 
     // ⭐ לוגיקת סינון
     if (plotId === null && plotName === null && !forceReset) {
-        if (window.currentPlotId !== null || currentPlotId !== null) {
-            currentPlotId = null;
-            currentPlotName = null;
-            window.currentPlotId = null;
-            window.currentPlotName = null;
+        if (window.areaGravesFilterPlotId !== null || areaGravesFilterPlotId !== null) {
+            areaGravesFilterPlotId = null;
+            areaGravesFilterPlotName = null;
+            window.areaGravesFilterPlotId = null;
+            window.areaGravesFilterPlotName = null;
         }
     } else if (forceReset) {
-        currentPlotId = null;
-        currentPlotName = null;
-        window.currentPlotId = null;
-        window.currentPlotName = null;
+        areaGravesFilterPlotId = null;
+        areaGravesFilterPlotName = null;
+        window.areaGravesFilterPlotId = null;
+        window.areaGravesFilterPlotName = null;
     } else {
-        currentPlotId = plotId;
-        currentPlotName = plotName;
-        window.currentPlotId = plotId;
-        window.currentPlotName = plotName;
+        areaGravesFilterPlotId = plotId;
+        areaGravesFilterPlotName = plotName;
+        window.areaGravesFilterPlotId = plotId;
+        window.areaGravesFilterPlotName = plotName;
     }
     
-    window.currentPlotId = currentPlotId;
-    window.currentPlotName = currentPlotName;
+    window.areaGravesFilterPlotId = areaGravesFilterPlotId;
+    window.areaGravesFilterPlotName = areaGravesFilterPlotName;
     
     // עדכן את הסוג הנוכחי
     window.currentType = 'areaGrave';
@@ -206,8 +206,8 @@ async function appendMoreAreaGraves() {
         let apiUrl = `/dashboard/dashboards/cemeteries/api/areaGraves-api.php?action=list&limit=200&page=${nextPage}`;
         apiUrl += '&orderBy=createDate&sortDirection=DESC';
         
-        if (currentPlotId) {
-            apiUrl += `&plotId=${currentPlotId}`;
+        if (areaGravesFilterPlotId) {
+            apiUrl += `&plotId=${areaGravesFilterPlotId}`;
         }
         
         // שלח בקשה
@@ -430,13 +430,13 @@ async function initAreaGravesSearch(signal, plotId) {
         
         renderFunction: (data, container, pagination, signal) => {
             // ⭐ עדכן מצב חיפוש
-            isSearchMode = true;
+            areaGravesIsSearchMode = true;
             
             // שמור תוצאות
             if (pagination && pagination.page === 1) {
-                searchResults = data;
+                areaGravesSearchResults = data;
             } else {
-                searchResults = [...searchResults, ...data];
+                areaGravesSearchResults = [...areaGravesSearchResults, ...data];
             }
 
             // קריאה לפונקציה המקורית עם כל הפרמטרים
@@ -499,9 +499,9 @@ async function initAreaGravesSearch(signal, plotId) {
             onClear: () => {
                 console.log('🧹 מנקה חיפוש...');
                 
-                isSearchMode = false;
-                currentQuery = '';
-                searchResults = [];
+                areaGravesIsSearchMode = false;
+                areaGravesCurrentQuery = '';
+                areaGravesSearchResults = [];
                 
                 // ⭐ מחק את TableManager
                 const existingWrapper = document.querySelector('.table-wrapper[data-table-manager]');
@@ -515,7 +515,7 @@ async function initAreaGravesSearch(signal, plotId) {
                 }
                 
                 // חזרה ל-Browse
-                loadBrowseData(currentPlotId);
+                loadBrowseData(areaGravesFilterPlotId);
             }
         }
     };
@@ -692,7 +692,7 @@ async function initAreaGravesTable(data, totalItems = null, signal) {
         // ============================================
 
         onLoadMore: async () => {
-            if (isSearchMode) {
+            if (areaGravesIsSearchMode) {
                 // ⭐ חיפוש - טען דרך UniversalSearch
                 if (areaGraveSearch && typeof areaGraveSearch.loadNextPage === 'function') {
                     if (areaGraveSearch.state.currentPage >= areaGraveSearch.state.totalPages) {
@@ -746,10 +746,10 @@ function renderAreaGravesRows(data, container, pagination = null, signal = null)
     // ⭐⭐ סינון client-side לפי plotId
     let filteredData = data;
 
-    if (!isSearchMode && currentPlotId) {
+    if (!areaGravesIsSearchMode && areaGravesFilterPlotId) {
         filteredData = data.filter(ag => {
             const agPlotId = ag.plotId || ag.plot_id || ag.PlotId;
-            return String(agPlotId) === String(currentPlotId);
+            return String(agPlotId) === String(areaGravesFilterPlotId);
         });
     }
     
@@ -767,7 +767,7 @@ function renderAreaGravesRows(data, container, pagination = null, signal = null)
         }
         
         // ⭐⭐⭐ הודעה מותאמת לחלקה ריקה!
-        if (currentPlotId && currentPlotName) {
+        if (areaGravesFilterPlotId && areaGravesFilterPlotName) {
             // נכנסנו לחלקה ספציפית ואין אחוזות קבר
             container.innerHTML = `
                 <tr>
@@ -775,13 +775,13 @@ function renderAreaGravesRows(data, container, pagination = null, signal = null)
                         <div style="color: #6b7280;">
                             <div style="font-size: 48px; margin-bottom: 16px;">🏘️</div>
                             <div style="font-size: 20px; font-weight: 600; margin-bottom: 12px; color: #374151;">
-                                אין אחוזות קבר בחלקה ${currentPlotName}
+                                אין אחוזות קבר בחלקה ${areaGravesFilterPlotName}
                             </div>
                             <div style="font-size: 14px; margin-bottom: 24px; color: #6b7280;">
                                 החלקה עדיין לא מכילה אחוזות קבר. תוכל להוסיף אחוזת קבר חדשה
                             </div>
                             <button 
-                                onclick="if(typeof FormHandler !== 'undefined' && FormHandler.openForm) { FormHandler.openForm('areaGrave', '${currentPlotId}', null); } else { alert('FormHandler לא זמין'); }" 
+                                onclick="if(typeof FormHandler !== 'undefined' && FormHandler.openForm) { FormHandler.openForm('areaGrave', '${areaGravesFilterPlotId}', null); } else { alert('FormHandler לא זמין'); }" 
                                 style="background: linear-gradient(135deg, #FC466B 0%, #3F5EFB 100%); 
                                        color: white; 
                                        border: none; 
@@ -981,7 +981,7 @@ function showToast(message, type = 'info') {
 
 async function refreshData() {
     // טעינה מחדש ישירה מה-API (כי UniversalSearch מושבת)
-    await loadAreaGraves(currentPlotId, currentPlotName, false);
+    await loadAreaGraves(areaGravesFilterPlotId, areaGravesFilterPlotName, false);
 }
 
 
@@ -1060,9 +1060,9 @@ window.areaGravesTable = areaGravesTable;
 
 window.checkScrollStatus = checkScrollStatus;
 
-window.currentPlotId = currentPlotId;
+window.areaGravesFilterPlotId = areaGravesFilterPlotId;
 
-window.currentPlotName = currentPlotName;
+window.areaGravesFilterPlotName = areaGravesFilterPlotName;
 
 window.areaGraveSearch = areaGraveSearch;
 

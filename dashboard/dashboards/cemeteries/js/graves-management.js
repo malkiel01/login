@@ -38,6 +38,7 @@ let gravesIsLoadingMore = false;
 // ===================================================================
 // טעינת אחוזות קבר (הפונקציה הראשית)
 // ===================================================================
+// לא פעיל
 async function loadBrowseData(areaGraveId = null, signal = null) {
     gravesCurrentPage = 1;
     currentGraves = [];
@@ -181,6 +182,7 @@ async function loadGraves(areaGraveId = null, areaGraveName = null, forceReset =
 // ===================================================================
 // 📥 טעינת עוד אחוזות קבר (Infinite Scroll)
 // ===================================================================
+// לא פעיל
 async function appendMoreGraves() {
     // בדיקות בסיסיות
     if (gravesIsLoadingMore) {
@@ -283,6 +285,7 @@ async function appendMoreGraves() {
 // ===================================================================
 // בניית המבנה
 // ===================================================================
+// לא פעיל
 async function buildGravesContainer(signal, areaGraveId = null, areaGraveName = null) {
     console.log('🏗️ Building area graves container...');
     
@@ -381,6 +384,7 @@ async function buildGravesContainer(signal, areaGraveId = null, areaGraveName = 
 // ===================================================================
 // אתחול UniversalSearch - עם Pagination!
 // ===================================================================
+// לא פעיל
 async function initGravesSearch(signal, areaGraveId) {
     console.log('🔍 אתחול חיפוש שורות קבר...');
     
@@ -531,6 +535,7 @@ async function initGravesSearch(signal, areaGraveId) {
 // ===================================================================
 // אתחול TableManager - עם Scroll Loading!
 // ===================================================================
+// לא פעיל
 async function initGravesTable(data, totalItems = null, signal) {
     const actualTotalItems = totalItems !== null ? totalItems : data.length;
     
@@ -741,6 +746,7 @@ async function initGravesTable(data, totalItems = null, signal) {
  * רינדור שורות טבלה - פונקציה מלאה עם כל הלוגיקה!
  * v1.3.2 - שוחזרה הפונקציה המקורית המלאה
  */
+// לא פעיל
 function renderGravesRows(data, container, pagination = null, signal = null) {
     // ⭐⭐ סינון client-side לפי areaGraveId
     let filteredData = data;
@@ -849,7 +855,7 @@ function renderGravesRows(data, container, pagination = null, signal = null) {
 // ===================================================================
 // פורמט תאריך
 // ===================================================================
-
+// לא פעיל
 function formatDate(dateString) {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -859,6 +865,7 @@ function formatDate(dateString) {
 // ===================================================================
 // פונקציית עזר לשם סוג קבר
 // ===================================================================
+// לא פעיל
 function getGraveStatusInfo(status) {
     const statuses = {
         1: { label: 'פנוי', color: '#10b981' },
@@ -868,9 +875,11 @@ function getGraveStatusInfo(status) {
     };
     return statuses[status] || { label: 'לא מוגדר', color: '#9ca3af' };
 }
+
 // ===================================================================
 // טעינת סטטיסטיקות
 // ===================================================================
+// לא פעיל
 async function loadGraveStats(signal, areaGraveId = null) {
     try {
         let url = '/dashboard/dashboards/cemeteries/api/graves-api.php?action=stats';
@@ -907,6 +916,7 @@ async function loadGraveStats(signal, areaGraveId = null) {
 // ===================================================================
 // מחיקת אחוזת קבר
 // ===================================================================
+// לא פעיל
 async function deleteGrave(graveId) {
     if (!confirm('האם אתה בטוח שברצונך למחוק את אחוזת הקבר?')) {
         return;
@@ -939,7 +949,7 @@ async function deleteGrave(graveId) {
 // ===================================================================
 // הצגת הודעות Toast
 // ===================================================================
-
+// לא פעיל
 function showToast(message, type = 'info') {
     const toast = document.createElement('div');
     toast.className = 'toast-message';
@@ -988,7 +998,7 @@ async function refreshGravesData() {
 // בדיקת סטטוס טעינה
 // ===================================================================
 
-function checkScrollStatus() {
+function checkGravesScrollStatus() {
     if (!gravesTable) {
         console.log('❌ Table not initialized');
         return;
@@ -1015,7 +1025,7 @@ function checkScrollStatus() {
 // ===================================================================
 // דאבל-קליק על אחוזת קבר
 // ===================================================================
-
+// לא פעיל
 async function handleGraveDoubleClick(graveId, graveName) {
     console.log('🖱️ Double-click on area grave:', graveName, graveId);
     
@@ -1041,7 +1051,7 @@ async function handleGraveDoubleClick(graveId, graveName) {
 }
 
 
-window.handleGraveDoubleClick = handleGraveDoubleClick;
+// window.handleGraveDoubleClick = handleGraveDoubleClick;
 
 
 // ===================================================================
@@ -1049,15 +1059,15 @@ window.handleGraveDoubleClick = handleGraveDoubleClick;
 // ===================================================================
 window.loadGraves = loadGraves;
 
-window.appendMoreGraves = appendMoreGraves;
+// window.appendMoreGraves = appendMoreGraves;
 
-window.deleteGrave = deleteGrave;
+// window.deleteGrave = deleteGrave;
 
 window.refreshGravesData = refreshGravesData;
 
 window.gravesTable = gravesTable;
 
-window.checkGravesScrollStatus = checkScrollStatus;
+window.checkGravesScrollStatus = checkGravesScrollStatus;
 
 window.currentAreaGraveId = currentAreaGraveId;
 

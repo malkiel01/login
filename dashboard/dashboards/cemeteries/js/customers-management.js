@@ -784,7 +784,7 @@ async function customersRefreshData() {
 // ===================================================================
 // בדיקת סטטוס טעינה
 // ===================================================================
-function customersCheckScrollStatus() {
+function checkCustomersScrollStatus() {
     if (!customersTable) {
         console.log('❌ Table not initialized');
         return;
@@ -836,7 +836,6 @@ async function handleCustomerDoubleClick(customerId) {
 }
 
 window.handleCustomerDoubleClick = handleCustomerDoubleClick;
-
 // ===================================================================
 // הפוך לגלובלי
 // ===================================================================
@@ -850,7 +849,7 @@ window.customersRefreshData = customersRefreshData;
 
 window.customersTable = customersTable;
 
-window.customersCheckScrollStatus = customersCheckScrollStatus;
+window.checkCustomersScrollStatus = checkCustomersScrollStatus;
 
 window.customerSearch = customerSearch;
 

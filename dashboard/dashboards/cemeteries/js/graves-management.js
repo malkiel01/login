@@ -26,13 +26,16 @@ let gravesCurrentQuery = '';         // מה החיפוש הנוכחי?
 let gravesSearchResults = [];        // תוצאות החיפוש
 
 // ⭐ שמירת ה-areaGrave context הנוכחי
-let currentAreaGraveId = null;
-let currentAreaGraveName = null;
+let gravesFilterAreaGraveId = null;
+let gravesFilterAreaGraveName = null;
 
 // ⭐ Infinite Scroll - מעקב אחרי עמוד נוכחי (שמות ייחודיים!)
 let gravesCurrentPage = 1;
 let gravesTotalPages = 1;
 let gravesIsLoadingMore = false;
+
+
+
 
 
 // ===================================================================
@@ -66,6 +69,7 @@ async function loadGravesBrowseData(areaGraveId = null, signal = null) {
         }
     }
 }
+
 async function loadGraves(areaGraveId = null, areaGraveName = null, forceReset = false) {
     const signal = OperationManager.start('grave');
 
@@ -76,26 +80,26 @@ async function loadGraves(areaGraveId = null, areaGraveName = null, forceReset =
 
     // ⭐ לוגיקת סינון
     if (areaGraveId === null && areaGraveName === null && !forceReset) {
-        if (window.currentAreaGraveId !== null || currentAreaGraveId !== null) {
-            currentAreaGraveId = null;
-            currentAreaGraveName = null;
+        if (window.currentAreaGraveId !== null || gravesFilterAreaGraveId !== null) {
+            gravesFilterAreaGraveId = null;
+            gravesFilterAreaGraveName = null;
             window.currentAreaGraveId = null;
             window.currentAreaGraveName = null;
         }
     } else if (forceReset) {
-        currentAreaGraveId = null;
-        currentAreaGraveName = null;
+        gravesFilterAreaGraveId = null;
+        gravesFilterAreaGraveName = null;
         window.currentAreaGraveId = null;
         window.currentAreaGraveName = null;
     } else {
-        currentAreaGraveId = areaGraveId;
-        currentAreaGraveName = areaGraveName;
+        gravesFilterAreaGraveId = areaGraveId;
+        gravesFilterAreaGraveName = areaGraveName;
         window.currentAreaGraveId = areaGraveId;
         window.currentAreaGraveName = areaGraveName;
     }
     
-    window.currentAreaGraveId = currentAreaGraveId;
-    window.currentAreaGraveName = currentAreaGraveName;
+    window.currentAreaGraveId = gravesFilterAreaGraveId;
+    window.currentAreaGraveName = gravesFilterAreaGraveName;
     
     // עדכן את הסוג הנוכחי
     window.currentType = 'grave';
@@ -205,8 +209,8 @@ async function appendMoreGraves() {
         let apiUrl = `/dashboard/dashboards/cemeteries/api/graves-api.php?action=list&limit=200&page=${nextPage}`;
         apiUrl += '&orderBy=createDate&sortDirection=DESC';
         
-        if (currentAreaGraveId) {
-            apiUrl += `&areaGraveId=${currentAreaGraveId}`;
+        if (gravesFilterAreaGraveId) {
+            apiUrl += `&areaGraveId=${gravesFilterAreaGraveId}`;
         }
         
         // שלח בקשה
@@ -514,7 +518,7 @@ async function initGravesSearch(signal, areaGraveId) {
                 }
                 
                 // חזרה ל-Browse
-                loadGravesBrowseData(currentAreaGraveId);
+                loadGravesBrowseData(gravesFilterAreaGraveId);
             }
         }
     };
@@ -745,10 +749,10 @@ function renderGravesRows(data, container, pagination = null, signal = null) {
     // ⭐⭐ סינון client-side לפי areaGraveId
     let filteredData = data;
 
-    if (!gravesIsSearchMode && currentAreaGraveId) {
+    if (!gravesIsSearchMode && gravesFilterAreaGraveId) {
         filteredData = data.filter(grave => {
             const graveAreaGraveId = grave.areaGraveId || grave.area_grave_id || grave.AreaGraveId;
-            return String(graveAreaGraveId) === String(currentAreaGraveId);
+            return String(graveAreaGraveId) === String(gravesFilterAreaGraveId);
         });
     }
     
@@ -766,7 +770,7 @@ function renderGravesRows(data, container, pagination = null, signal = null) {
         }
         
         // ⭐⭐⭐ הודעה מותאמת לחלקה ריקה!
-        if (currentAreaGraveId && currentAreaGraveName) {
+        if (gravesFilterAreaGraveId && gravesFilterAreaGraveName) {
             // נכנסנו לחלקה ספציפית ואין אחוזות קבר
             container.innerHTML = `
                 <tr>
@@ -774,13 +778,13 @@ function renderGravesRows(data, container, pagination = null, signal = null) {
                         <div style="color: #6b7280;">
                             <div style="font-size: 48px; margin-bottom: 16px;">🏘️</div>
                             <div style="font-size: 20px; font-weight: 600; margin-bottom: 12px; color: #374151;">
-                                אין אחוזות קבר בחלקה ${currentAreaGraveName}
+                                אין אחוזות קבר בחלקה ${gravesFilterAreaGraveName}
                             </div>
                             <div style="font-size: 14px; margin-bottom: 24px; color: #6b7280;">
                                 החלקה עדיין לא מכילה אחוזות קבר. תוכל להוסיף אחוזת קבר חדשה
                             </div>
                             <button 
-                                onclick="if(typeof FormHandler !== 'undefined' && FormHandler.openForm) { FormHandler.openForm('grave', '${currentAreaGraveId}', null); } else { alert('FormHandler לא זמין'); }" 
+                                onclick="if(typeof FormHandler !== 'undefined' && FormHandler.openForm) { FormHandler.openForm('grave', '${gravesFilterAreaGraveId}', null); } else { alert('FormHandler לא זמין'); }" 
                                 style="background: linear-gradient(135deg, #FC466B 0%, #3F5EFB 100%); 
                                        color: white; 
                                        border: none; 
@@ -978,7 +982,7 @@ function showToast(message, type = 'info') {
 // ===================================================================
 async function refreshGravesData() {
     // טעינה מחדש ישירה מה-API (כי UniversalSearch מושבת)
-    await loadGraves(currentAreaGraveId, currentAreaGraveName, false);
+    await loadGraves(gravesFilterAreaGraveId, gravesFilterAreaGraveName, false);
 }
 
 
@@ -1036,10 +1040,7 @@ async function handleGraveDoubleClick(graveId, graveName) {
     }
 }
 
-
 window.handleGraveDoubleClick = handleGraveDoubleClick;
-
-
 // ===================================================================
 // הפוך לגלובלי
 // ===================================================================
@@ -1055,9 +1056,9 @@ window.gravesTable = gravesTable;
 
 window.checkGravesScrollStatus = checkGravesScrollStatus;
 
-window.currentAreaGraveId = currentAreaGraveId;
+window.currentAreaGraveId = gravesFilterAreaGraveId;
 
-window.currentAreaGraveName = currentAreaGraveName;
+window.currentAreaGraveName = gravesFilterAreaGraveName;
 
 window.graveSearch = graveSearch;
 

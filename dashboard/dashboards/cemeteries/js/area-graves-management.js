@@ -36,10 +36,12 @@ let areaGravesTotalPages = 1;
 let areaGravesIsLoadingMore = false;
 
 
+
+
 // ===================================================================
 // טעינת אחוזות קבר (הפונקציה הראשית)
 // ===================================================================
-async function loadBrowseData(plotId = null, signal = null) {
+async function loadAreaGravesBrowseData(plotId = null, signal = null) {
     areaGravesCurrentPage = 1;
     currentAreaGraves = [];
     
@@ -172,7 +174,7 @@ async function loadAreaGraves(plotId = null, plotName = null, forceReset = false
     }
 
     // ⭐ טעינה ישירה (Browse Mode) - פעם אחת!
-    await loadBrowseData(plotId, signal);
+    await loadAreaGravesBrowseData(plotId, signal);
     
     // טען סטטיסטיקות
     await loadAreaGraveStats(signal, plotId);
@@ -515,7 +517,7 @@ async function initAreaGravesSearch(signal, plotId) {
                 }
                 
                 // חזרה ל-Browse
-                loadBrowseData(areaGravesFilterPlotId);
+                loadAreaGravesBrowseData(areaGravesFilterPlotId);
             }
         }
     };
@@ -979,7 +981,7 @@ function showToast(message, type = 'info') {
 // רענון נתונים
 // ===================================================================
 
-async function refreshData() {
+async function refreshAreaGravesData() {
     // טעינה מחדש ישירה מה-API (כי UniversalSearch מושבת)
     await loadAreaGraves(areaGravesFilterPlotId, areaGravesFilterPlotName, false);
 }
@@ -989,7 +991,7 @@ async function refreshData() {
 // בדיקת סטטוס טעינה
 // ===================================================================
 
-function checkScrollStatus() {
+function checkAreaGravesScrollStatus() {
     if (!areaGravesTable) {
         console.log('❌ Table not initialized');
         return;
@@ -1054,11 +1056,11 @@ window.appendMoreAreaGraves = appendMoreAreaGraves;
 
 window.deleteAreaGrave = deleteAreaGrave;
 
-window.refreshData = refreshData;
+window.refreshAreaGravesData = refreshAreaGravesData;
 
 window.areaGravesTable = areaGravesTable;
 
-window.checkScrollStatus = checkScrollStatus;
+window.checkAreaGravesScrollStatus = checkAreaGravesScrollStatus;
 
 window.areaGravesFilterPlotId = areaGravesFilterPlotId;
 

@@ -39,7 +39,7 @@ let gravesIsLoadingMore = false;
 // ===================================================================
 // טעינת קברים (הפונקציה הראשית)
 // ===================================================================
-async function loadBrowseData(areaGraveId = null, signal = null) {
+async function loadGravesBrowseData(areaGraveId = null, signal = null) {
     gravesCurrentPage = 1;
     currentGraves = [];
     
@@ -172,7 +172,7 @@ async function loadGraves(areaGraveId = null, areaGraveName = null, forceReset =
     }
 
     // ⭐ טעינה ישירה (Browse Mode) - פעם אחת!
-    await loadBrowseData(areaGraveId, signal);
+    await loadGravesBrowseData(areaGraveId, signal);
     
     // טען סטטיסטיקות
     await loadGraveStats(signal, areaGraveId);
@@ -460,7 +460,7 @@ async function initGravesSearch(signal, areaGraveId) {
         //         searchResults = [];
                 
         //         // חזרה ל-Browse
-        //         loadBrowseData(currentAreaGraveId);
+        //         loadGravesBrowseData(currentAreaGraveId);
         //     }
         // }
 
@@ -536,7 +536,7 @@ async function initGravesSearch(signal, areaGraveId) {
                 }
                 
                 // חזרה ל-Browse
-                loadBrowseData(currentAreaGraveId);
+                loadGravesBrowseData(currentAreaGraveId);
             }
         }
     };

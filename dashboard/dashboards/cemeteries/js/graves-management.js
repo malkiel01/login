@@ -5,14 +5,15 @@
  * Author: Malkiel
  * Change Summary:
  * - v1.5.4: 🐛 תיקון שתי בעיות קריטיות:
- * - v1.5.7: 🐛 תיקון קונפליקט window functions עם graves
- * - v1.5.5: 🔄 מותאם מ-graves-management.js - זהה 100%
+ * - v1.5.7: 🐛 תיקון קונפליקט window functions עם area-graves
+ * - v1.5.8: 🐛 תיקון קריטי - entityType היה 'area-grave' במקום 'grave'!
+ * - v1.5.5: 🔄 מותאם מ-area-graves-management.js - זהה 100%
  *   - תיקון: שדה חיפוש מוסתר - הסרת style="display: none;"
  *   - תיקון: שכפול טבלה - הוספת await ל-initGravesTable
  *   - הפיכת renderGravesRows ל-async function
  */
 
-console.log('🚀 graves-management.js v1.5.4 - Loading...');
+console.log('🚀 graves-management.js v1.5.8 - Loading...');
 
 // ===================================================================
 // משתנים גלובליים
@@ -424,7 +425,7 @@ async function initGravesSearch1(signal, areaGraveId) {
         showPagination: false,  // ⭐ ללא footer - infinite scroll!
         
         apiParams: {
-            level: 'grave',
+            level: 'area-grave',
             areaGraveId: areaGraveId
         },
         
@@ -521,7 +522,7 @@ async function initGravesSearch(signal, areaGraveId) {
         showPagination: false,
         
         apiParams: {
-            level: 'grave',
+            level: 'area-grave',
             areaGraveId: areaGraveId
         },
         
@@ -1181,4 +1182,4 @@ window.currentAreaGraveName = currentAreaGraveName;
 
 window.graveSearch = graveSearch;
 
-console.log('✅ graves-management.js v1.5.5 - Loaded successfully!');
+console.log('✅ graves-management.js v1.5.8 - Loaded successfully!');

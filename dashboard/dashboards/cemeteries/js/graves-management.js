@@ -381,103 +381,6 @@ async function buildGravesContainer(signal, areaGraveId = null, areaGraveName = 
 // ===================================================================
 // אתחול UniversalSearch - עם Pagination!
 // ===================================================================
-async function initGravesSearch1(signal, areaGraveId) {
-    console.log('🔍 אתחול חיפוש קברים...');
-    
-    // ⭐ טוען searchableFields מהשרת
-    let searchableFields = [];
-
-    try {
-        const fieldsResponse = await fetch(
-            `/dashboard/dashboards/cemeteries/api/get-config.php?type=grave&section=searchableFields`,
-            { signal: signal }
-        );
-        const fieldsResult = await fieldsResponse.json();
-        
-        if (fieldsResult.success && fieldsResult.data) {
-            searchableFields = fieldsResult.data;
-        }
-    } catch (error) {
-        console.error('❌ Error loading searchableFields:', error);
-    }
-
-    // קונפיגורציה
-    const config = {
-        entityType: 'grave',
-        apiEndpoint: '/dashboard/dashboards/cemeteries/api/graves-api.php',
-        
-        searchableFields: searchableFields || [],
-        
-        displayColumns: [
-            { key: 'graveName', label: 'שם' },
-            { key: 'graveNumber', label: 'מספר' },
-            { key: 'status', label: 'מצב' },
-            { key: 'graves_count', label: 'כמות קברים' }
-        ],
-
-        searchContainerSelector: '#graveSearchSection',
-        resultsContainerSelector: '#tableBody',  
-        
-        // ⭐ Infinite Scroll אמיתי - טעינה מדורגת
-        apiLimit: 200,  // ⭐ טוען 200 רשומות מהשרת בכל בקשה
-        showPagination: false,  // ⭐ ללא footer - infinite scroll!
-        
-        apiParams: {
-            level: 'grave',
-            areaGraveId: areaGraveId
-        },
-        
-        renderFunction: (data, container, pagination, signal) => {
-            // ⭐ עדכן מצב חיפוש
-            isSearchMode = true;
-            
-            // שמור תוצאות
-            if (pagination && pagination.page === 1) {
-                searchResults = data;
-            } else {
-                searchResults = [...searchResults, ...data];
-            }
-
-            // קריאה לפונקציה המקורית עם כל הפרמטרים
-            renderGravesRows(data, container, pagination, signal);
-        },
-        
-        callbacks: {
-            // ⭐ כשנתונים נטענו
-            onDataLoaded: (response) => {
-                console.log('✅ נתונים נטענו:', response.data.length);
-                
-                // עדכון מונה כולל ב-TableManager
-                if (window.gravesTable && response.pagination) {
-                    window.gravesTable.updateTotalItems(response.pagination.total);
-                }
-            },
-            
-            // ⭐ כשמנקים חיפוש
-            onClear: () => {
-                isSearchMode = false;
-                currentQuery = '';
-                searchResults = [];
-                
-                // חזרה ל-Browse
-                loadBrowseData(currentAreaGraveId);
-            }
-        }
-    };
-
-    // ⭐ הוסף פילטר areaGraveId אם קיים
-    if (areaGraveId) {
-        config.dataSource.areaGraveId = areaGraveId;
-    }
-    
-    // יצירת instance
-    const searchInstance = window.initUniversalSearch(config);
-    
-    // שמירה גלובלית
-    window.graveSearch = searchInstance;
-    
-    return searchInstance;
-}
 async function initGravesSearch(signal, areaGraveId) {
     console.log('🔍 אתחול חיפוש קברים...');
     
@@ -1121,7 +1024,6 @@ async function refreshData() {
     await loadGraves(currentAreaGraveId, currentAreaGraveName, false);
 }
 
-
 // ===================================================================
 // בדיקת סטטוס טעינה
 // ===================================================================
@@ -1149,7 +1051,6 @@ function checkScrollStatus() {
     }
 }
 
-
 // ===================================================================
 // דאבל-קליק על קבר
 // ===================================================================
@@ -1174,28 +1075,22 @@ async function handleGraveDoubleClick(graveId, graveName) {
 }
 
 
-window.handleGraveDoubleClick = handleGraveDoubleClick;
 
+
+
+
+window.handleGraveDoubleClick = handleGraveDoubleClick;
 
 // ===================================================================
 // הפוך לגלובלי
 // ===================================================================
 window.loadGraves = loadGraves;
-
 window.appendMoreGraves = appendMoreGraves;
-
 window.deleteGrave = deleteGrave;
-
 window.refreshData = refreshData;
-
 window.gravesTable = gravesTable;
-
 window.checkScrollStatus = checkScrollStatus;
-
 window.currentAreaGraveId = currentAreaGraveId;
-
 window.currentAreaGraveName = currentAreaGraveName;
-
 window.graveSearch = graveSearch;
-
 console.log('✅ graves-management.js v1.5.4 - Loaded successfully!');

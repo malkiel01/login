@@ -741,114 +741,114 @@ async function loadGraves(areaGraveId = null, areaGraveName = null, forceReset =
 // רינדור שורות - עם סינון client-side! (⭐⭐ כמו ב-blocks!)
 // ===================================================================
 
-// /**
-//  * רינדור שורות טבלה - פונקציה מלאה עם כל הלוגיקה!
-//  * v1.3.2 - שוחזרה הפונקציה המקורית המלאה
-//  */
-// function renderGravesRows(data, container, pagination = null, signal = null) {
-//     // ⭐⭐ סינון client-side לפי areaGraveId
-//     let filteredData = data;
+/**
+ * רינדור שורות טבלה - פונקציה מלאה עם כל הלוגיקה!
+ * v1.3.2 - שוחזרה הפונקציה המקורית המלאה
+ */
+function renderGravesRows(data, container, pagination = null, signal = null) {
+    // // ⭐⭐ סינון client-side לפי areaGraveId
+    // let filteredData = data;
 
-//     if (!gravesIsSearchMode && currentAreaGraveId) {
-//         filteredData = data.filter(grave => {
-//             const graveAreaGraveId = grave.areaGraveId || grave.area_grave_id || grave.AreaGraveId;
-//             return String(graveAreaGraveId) === String(currentAreaGraveId);
-//         });
-//     }
+    // if (!gravesIsSearchMode && currentAreaGraveId) {
+    //     filteredData = data.filter(grave => {
+    //         const graveAreaGraveId = grave.areaGraveId || grave.area_grave_id || grave.AreaGraveId;
+    //         return String(graveAreaGraveId) === String(currentAreaGraveId);
+    //     });
+    // }
     
-//     // ⭐ עדכן את totalItems מה-pagination (סה"כ במערכת, לא רק מה שנטען!)
-//     const totalItems = pagination?.totalAll || pagination?.total || filteredData.length;
+    // // ⭐ עדכן את totalItems מה-pagination (סה"כ במערכת, לא רק מה שנטען!)
+    // const totalItems = pagination?.totalAll || pagination?.total || filteredData.length;
     
-//     console.log('🔍 [DEBUG renderGravesRows]');
-//     console.log('  pagination:', pagination);
-//     console.log('  totalItems calculated:', totalItems);
-//     console.log('  filteredData.length:', filteredData.length);
+    // console.log('🔍 [DEBUG renderGravesRows]');
+    // console.log('  pagination:', pagination);
+    // console.log('  totalItems calculated:', totalItems);
+    // console.log('  filteredData.length:', filteredData.length);
 
-//     if (filteredData.length === 0) {
-//         if (gravesTable) {
-//             gravesTable.setData([]);
-//         }
+    // if (filteredData.length === 0) {
+    //     if (gravesTable) {
+    //         gravesTable.setData([]);
+    //     }
         
-//         // ⭐⭐⭐ הודעה מותאמת לחלקה ריקה!
-//         if (currentAreaGraveId && currentAreaGraveName) {
-//             // נכנסנו לחלקה ספציפית ואין אחוזות קבר
-//             container.innerHTML = `
-//                 <tr>
-//                     <td colspan="7" style="text-align: center; padding: 60px;">
-//                         <div style="color: #6b7280;">
-//                             <div style="font-size: 48px; margin-bottom: 16px;">🏘️</div>
-//                             <div style="font-size: 20px; font-weight: 600; margin-bottom: 12px; color: #374151;">
-//                                 אין אחוזות קבר בחלקה ${currentAreaGraveName}
-//                             </div>
-//                             <div style="font-size: 14px; margin-bottom: 24px; color: #6b7280;">
-//                                 החלקה עדיין לא מכילה אחוזות קבר. תוכל להוסיף אחוזת קבר חדשה
-//                             </div>
-//                             <button 
-//                                 onclick="if(typeof FormHandler !== 'undefined' && FormHandler.openForm) { FormHandler.openForm('grave', '${currentAreaGraveId}', null); } else { alert('FormHandler לא זמין'); }" 
-//                                 style="background: linear-gradient(135deg, #FC466B 0%, #3F5EFB 100%); 
-//                                        color: white; 
-//                                        border: none; 
-//                                        padding: 12px 24px; 
-//                                        border-radius: 8px; 
-//                                        font-size: 15px; 
-//                                        font-weight: 600; 
-//                                        cursor: pointer; 
-//                                        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-//                                        transition: all 0.2s;"
-//                                 onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.15)';"
-//                                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)';">
-//                                 ➕ הוסף אחוזת קבר ראשונה
-//                             </button>
-//                         </div>
-//                     </td>
-//                 </tr>
-//             `;
-//         } else {
-//             // חיפוש כללי שלא מצא תוצאות
-//             container.innerHTML = `
-//                 <tr>
-//                     <td colspan="7" style="text-align: center; padding: 60px;">
-//                         <div style="color: #9ca3af;">
-//                             <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
-//                             <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">לא נמצאו תוצאות</div>
-//                             <div>נסה לשנות את מילות החיפוש או הפילטרים</div>
-//                         </div>
-//                     </td>
-//                 </tr>
-//             `;
-//         }
-//         return;
-//     }
+    //     // ⭐⭐⭐ הודעה מותאמת לחלקה ריקה!
+    //     if (currentAreaGraveId && currentAreaGraveName) {
+    //         // נכנסנו לחלקה ספציפית ואין אחוזות קבר
+    //         container.innerHTML = `
+    //             <tr>
+    //                 <td colspan="7" style="text-align: center; padding: 60px;">
+    //                     <div style="color: #6b7280;">
+    //                         <div style="font-size: 48px; margin-bottom: 16px;">🏘️</div>
+    //                         <div style="font-size: 20px; font-weight: 600; margin-bottom: 12px; color: #374151;">
+    //                             אין אחוזות קבר בחלקה ${currentAreaGraveName}
+    //                         </div>
+    //                         <div style="font-size: 14px; margin-bottom: 24px; color: #6b7280;">
+    //                             החלקה עדיין לא מכילה אחוזות קבר. תוכל להוסיף אחוזת קבר חדשה
+    //                         </div>
+    //                         <button 
+    //                             onclick="if(typeof FormHandler !== 'undefined' && FormHandler.openForm) { FormHandler.openForm('grave', '${currentAreaGraveId}', null); } else { alert('FormHandler לא זמין'); }" 
+    //                             style="background: linear-gradient(135deg, #FC466B 0%, #3F5EFB 100%); 
+    //                                    color: white; 
+    //                                    border: none; 
+    //                                    padding: 12px 24px; 
+    //                                    border-radius: 8px; 
+    //                                    font-size: 15px; 
+    //                                    font-weight: 600; 
+    //                                    cursor: pointer; 
+    //                                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    //                                    transition: all 0.2s;"
+    //                             onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.15)';"
+    //                             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)';">
+    //                             ➕ הוסף אחוזת קבר ראשונה
+    //                         </button>
+    //                     </div>
+    //                 </td>
+    //             </tr>
+    //         `;
+    //     } else {
+    //         // חיפוש כללי שלא מצא תוצאות
+    //         container.innerHTML = `
+    //             <tr>
+    //                 <td colspan="7" style="text-align: center; padding: 60px;">
+    //                     <div style="color: #9ca3af;">
+    //                         <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
+    //                         <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">לא נמצאו תוצאות</div>
+    //                         <div>נסה לשנות את מילות החיפוש או הפילטרים</div>
+    //                     </div>
+    //                 </td>
+    //             </tr>
+    //         `;
+    //     }
+    //     return;
+    // }
     
-//     // ⭐ בדוק אם ה-DOM של TableManager קיים
-//     const tableWrapperExists = document.querySelector('.table-wrapper[data-table-manager]');
+    // // ⭐ בדוק אם ה-DOM של TableManager קיים
+    // const tableWrapperExists = document.querySelector('.table-wrapper[data-table-manager]');
     
-//     // ⭐ אם המשתנה קיים אבל ה-DOM נמחק - אפס את המשתנה!
-//     if (!tableWrapperExists && gravesTable) {
-//         console.log('⚠️ TableManager DOM missing, resetting variable');
-//         gravesTable = null;
-//         window.gravesTable = null;
-//     }
+    // // ⭐ אם המשתנה קיים אבל ה-DOM נמחק - אפס את המשתנה!
+    // if (!tableWrapperExists && gravesTable) {
+    //     console.log('⚠️ TableManager DOM missing, resetting variable');
+    //     gravesTable = null;
+    //     window.gravesTable = null;
+    // }
     
-//     // עכשיו בדוק אם צריך לבנות מחדש
-//     if (!gravesTable || !tableWrapperExists) {
-//         console.log('🆕 Creating new TableManager');
-//         initGravesTable(filteredData, totalItems, signal);
-//     } else {
-//         console.log('♻️ Updating existing TableManager');
-//         if (gravesTable.config) {
-//             gravesTable.config.totalItems = totalItems;
-//         }
+    // // עכשיו בדוק אם צריך לבנות מחדש
+    // if (!gravesTable || !tableWrapperExists) {
+    //     console.log('🆕 Creating new TableManager');
+    //     initGravesTable(filteredData, totalItems, signal);
+    // } else {
+    //     console.log('♻️ Updating existing TableManager');
+    //     if (gravesTable.config) {
+    //         gravesTable.config.totalItems = totalItems;
+    //     }
         
-//         gravesTable.setData(filteredData);
-//     }
+    //     gravesTable.setData(filteredData);
+    // }
     
-//     // ⭐ עדכן את התצוגה של UniversalSearch
-//     if (graveSearch) {
-//         graveSearch.state.totalResults = totalItems;
-//         graveSearch.updateCounter();
-//     }
-// }
+    // // ⭐ עדכן את התצוגה של UniversalSearch
+    // if (graveSearch) {
+    //     graveSearch.state.totalResults = totalItems;
+    //     graveSearch.updateCounter();
+    // }
+}
 
 // // ===================================================================
 // // פורמט תאריך

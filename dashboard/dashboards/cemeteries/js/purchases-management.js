@@ -1,9 +1,12 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/purchases-management.js
- * Version: 4.0.0
+ * Version: 4.0.1
  * Updated: 2025-11-18
  * Author: Malkiel
  * Change Summary:
+ * - v4.0.1: 🐛 תיקון קריטי - טעינה שנייה לא הסתיימה
+ *   - הוספת בדיקת !tableWrapperExists ב-renderPurchasesRows (שורה 673)
+ *   - עכשיו זהה 100% ל-customers שעובד מעולה
  * - v4.0.0: 🔥 שיטה זהה 100% ל-customers, area-graves ו-graves
  *   ✅ הוספת משתני חיפוש ו-pagination:
  *   - purchasesIsSearchMode, purchasesCurrentQuery, purchasesSearchResults
@@ -17,7 +20,7 @@
  * - v3.0.0: שיטה זהה לבתי עלמין - UniversalSearch + TableManager
  */
 
-console.log('🚀 purchases-management.js v4.0.0 - Loading...');
+console.log('🚀 purchases-management.js v4.0.1 - Loading...');
 
 // ===================================================================
 // משתנים גלובליים
@@ -44,34 +47,49 @@ async function loadPurchasesBrowseData(signal = null) {
     purchasesCurrentPage = 1;
     currentPurchases = [];
     
-    let apiUrl = '/dashboard/dashboards/cemeteries/api/purchases-api.php?action=list&limit=200&page=1';
-    apiUrl += '&orderBy=createDate&sortDirection=DESC';
-    
-    const response = await fetch(apiUrl, { signal });
-    const result = await response.json();
-    
-    if (result.success && result.data) {
-        currentPurchases = result.data;
+    try {
+        let apiUrl = '/dashboard/dashboards/cemeteries/api/purchases-api.php?action=list&limit=200&page=1';
+        apiUrl += '&orderBy=createDate&sortDirection=DESC';
         
-        if (result.pagination) {
-            purchasesTotalPages = result.pagination.pages;
-            purchasesCurrentPage = result.pagination.page;
-        }
+        const response = await fetch(apiUrl, { signal });
+        const result = await response.json();
         
-        const tableBody = document.getElementById('tableBody');
-        if (tableBody) {
-            renderPurchasesRows(result.data, tableBody, result.pagination, signal);
+        if (result.success && result.data) {
+            currentPurchases = result.data;
+            
+            if (result.pagination) {
+                purchasesTotalPages = result.pagination.pages;
+                purchasesCurrentPage = result.pagination.page;
+            }
+            
+            const tableBody = document.getElementById('tableBody');
+            if (tableBody) {
+                renderPurchasesRows(result.data, tableBody, result.pagination, signal);
+            }
         }
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            console.log('⚠️ Browse data loading aborted - this is expected');
+            return;
+        }
+        console.error('❌ Error loading browse data:', error);
+        showToast('שגיאה בטעינת רכישות', 'error');
     }
 }
 
 async function loadPurchases() {
+    console.log('══════════════════════════════════════════════════');
+    console.log('🚀 loadPurchases() STARTED');
+    console.log('══════════════════════════════════════════════════');
+    
     const signal = OperationManager.start('purchase');
+    console.log('✅ Step 1: OperationManager started');
 
     // ⭐ איפוס מצב חיפוש
     purchasesIsSearchMode = false;
     purchasesCurrentQuery = '';
     purchasesSearchResults = [];
+    console.log('✅ Step 2: Search state reset');
     
     // עדכן את הסוג הנוכחי
     window.currentType = 'purchase';
@@ -81,6 +99,7 @@ async function loadPurchases() {
     if (window.tableRenderer) {
         window.tableRenderer.currentType = 'purchase';
     }
+    console.log('✅ Step 3: Current type set to purchase');
 
     // ⭐ נקה
     if (typeof DashboardCleaner !== 'undefined') {
@@ -88,6 +107,7 @@ async function loadPurchases() {
     } else if (typeof clearDashboard === 'function') {
         clearDashboard({ targetLevel: 'purchase' });
     }
+    console.log('✅ Step 4: Dashboard cleared');
     
     if (typeof clearAllSidebarSelections === 'function') {
         clearAllSidebarSelections();
@@ -109,11 +129,14 @@ async function loadPurchases() {
     
     // עדכון כותרת החלון
     document.title = 'ניהול רכישות - מערכת בתי עלמין';
+    console.log('✅ Step 5: UI updated');
     
     // ⭐ בנה מבנה
     await buildPurchasesContainer(signal);
+    console.log('✅ Step 6: Container built');
     
     if (OperationManager.shouldAbort('purchase')) {
+        console.log('⚠️ ABORTED at step 6');
         return;
     }
 
@@ -122,8 +145,9 @@ async function loadPurchases() {
         window.purchasesLoadCounter = 0;
     }
     window.purchasesLoadCounter++;
+    console.log(`✅ Step 7: Load counter = ${window.purchasesLoadCounter}`);
     
-    // השמד חיפוש קודם
+    // ⭐ השמד חיפוש קודם
     if (purchaseSearch && typeof purchaseSearch.destroy === 'function') {
         console.log('🗑️ Destroying previous purchaseSearch instance...');
         purchaseSearch.destroy();
@@ -131,20 +155,38 @@ async function loadPurchases() {
         window.purchaseSearch = null;
     }
     
+    // ⭐ איפוס טבלה קודמת
+    if (purchasesTable) {
+        console.log('🗑️ Resetting previous purchasesTable instance...');
+        purchasesTable = null;
+        window.purchasesTable = null;
+    }
+    console.log('✅ Step 8: Previous instances destroyed');
+    
     // ⭐ אתחול UniversalSearch - פעם אחת!
     console.log('🆕 Creating fresh purchaseSearch instance...');
     purchaseSearch = await initPurchasesSearch(signal);
+    console.log('✅ Step 9: UniversalSearch initialized');
     
     if (OperationManager.shouldAbort('purchase')) {
+        console.log('⚠️ ABORTED at step 9');
         console.log('⚠️ Purchase operation aborted');
         return;
     }
 
     // ⭐ טעינה ישירה (Browse Mode) - פעם אחת!
+    console.log('📥 Loading browse data...');
     await loadPurchasesBrowseData(signal);
+    console.log('✅ Step 10: Browse data loaded');
     
     // טען סטטיסטיקות
+    console.log('📊 Loading stats...');
     await loadPurchaseStats(signal);
+    console.log('✅ Step 11: Stats loaded');
+    
+    console.log('══════════════════════════════════════════════════');
+    console.log('✅ loadPurchases() COMPLETED SUCCESSFULLY');
+    console.log('══════════════════════════════════════════════════');
 }
 
 
@@ -566,6 +608,9 @@ async function initPurchasesTable(data, totalItems = null, signal = null) {
 // ===================================================================
 async function renderPurchasesRows(data, container, pagination = null, signal = null) {
     console.log(`📝 renderPurchasesRows called with ${data.length} items`);
+    console.log(`   Pagination:`, pagination);
+    console.log(`   purchasesIsSearchMode: ${purchasesIsSearchMode}`);
+    console.log(`   purchasesTable exists: ${!!purchasesTable}`);
     
     // ⭐⭐ במצב חיפוש - הצג תוצאות חיפוש בלי טבלה מורכבת
     if (purchasesIsSearchMode && purchasesCurrentQuery) {
@@ -583,11 +628,14 @@ async function renderPurchasesRows(data, container, pagination = null, signal = 
                     </td>
                 </tr>
             `;
+            console.log('   → Empty search results displayed');
             return;
         }
         
         const totalItems = data.length;
+        console.log(`   → Initializing table with ${totalItems} search results`);
         await initPurchasesTable(data, totalItems, signal);
+        console.log('   ✅ Search results table initialized');
         return;
     }
     
@@ -596,6 +644,7 @@ async function renderPurchasesRows(data, container, pagination = null, signal = 
     console.log(`📊 Total items to display: ${totalItems}`);
 
     if (data.length === 0) {
+        console.log('   → No data to display');
         if (purchasesTable) {
             purchasesTable.setData([]);
         }
@@ -613,17 +662,28 @@ async function renderPurchasesRows(data, container, pagination = null, signal = 
         `;
         return;
     }
+    
+    const tableWrapperExists = document.querySelector('.table-wrapper[data-fixed-width="true"]');
+    console.log(`   tableWrapperExists: ${!!tableWrapperExists}`);
+    
+    if (!tableWrapperExists && purchasesTable) {
+        console.log('🗑️ TableManager DOM was deleted, resetting purchasesTable variable');
+        purchasesTable = null;
+        window.purchasesTable = null;
+    }
 
     // ⭐⭐⭐ אתחול או עדכון טבלה
-    if (!purchasesTable) {
+    if (!purchasesTable || !tableWrapperExists) {
         console.log(`🆕 Initializing TableManager with ${totalItems} items`);
         await initPurchasesTable(data, totalItems, signal);
+        console.log('   ✅ TableManager initialized');
     } else {
         console.log(`♻️ Updating TableManager with ${totalItems} items`);
         if (purchasesTable.config) {
             purchasesTable.config.totalItems = totalItems;
         }
         purchasesTable.setData(data);
+        console.log('   ✅ TableManager updated');
     }
 }
 
@@ -847,4 +907,4 @@ window.checkPurchasesScrollStatus = checkPurchasesScrollStatus;
 
 window.purchaseSearch = purchaseSearch;
 
-console.log('✅ purchases-management.js v4.0.0 - Loaded successfully!');
+console.log('✅ purchases-management.js v4.0.1 - Loaded successfully!');

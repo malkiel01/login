@@ -66,7 +66,7 @@ async function loadBrowseData(areaGraveId = null, signal = null) {
         }
     }
 }
-async function loadGraves(areaGraveId = null, areaGraveName = null, forceReset = false) {
+async function loadGraves_old(areaGraveId = null, areaGraveName = null, forceReset = false) {
     const signal = OperationManager.start('grave');
 
     // ⭐ איפוס מצב חיפוש
@@ -175,6 +175,10 @@ async function loadGraves(areaGraveId = null, areaGraveName = null, forceReset =
     
     // טען סטטיסטיקות
     await loadGraveStats(signal, areaGraveId);
+}
+
+async function loadGraves(areaGraveId = null, areaGraveName = null, forceReset = false) {
+   console.log('🆕 Connected function loadGraves...');
 }
 
 

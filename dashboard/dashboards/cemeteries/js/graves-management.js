@@ -5,8 +5,8 @@
  * Author: Malkiel
  * Change Summary:
  * - v1.5.4: 🐛 תיקון שתי בעיות קריטיות:
- * - v1.5.7: 🐛 תיקון קונפליקט window functions עם area-graves
- * - v1.5.5: 🔄 מותאם מ-area-graves-management.js - זהה 100%
+ * - v1.5.7: 🐛 תיקון קונפליקט window functions עם graves
+ * - v1.5.5: 🔄 מותאם מ-graves-management.js - זהה 100%
  *   - תיקון: שדה חיפוש מוסתר - הסרת style="display: none;"
  *   - תיקון: שכפול טבלה - הוספת await ל-initGravesTable
  *   - הפיכת renderGravesRows ל-async function
@@ -404,7 +404,7 @@ async function initGravesSearch1(signal, areaGraveId) {
 
     // קונפיגורציה
     const config = {
-        entityType: 'area-grave',
+        entityType: 'grave',
         apiEndpoint: '/dashboard/dashboards/cemeteries/api/graves-api.php',
         
         searchableFields: searchableFields || [],
@@ -424,7 +424,7 @@ async function initGravesSearch1(signal, areaGraveId) {
         showPagination: false,  // ⭐ ללא footer - infinite scroll!
         
         apiParams: {
-            level: 'area-grave',
+            level: 'grave',
             areaGraveId: areaGraveId
         },
         
@@ -501,7 +501,7 @@ async function initGravesSearch(signal, areaGraveId) {
 
     // ⭐ השתמש בקונפיג הישן - זה עובד!
     const config = {
-        entityType: 'area-grave',  // ⭐ חובה!
+        entityType: 'grave',  // ⭐ חובה!
         apiEndpoint: '/dashboard/dashboards/cemeteries/api/graves-api.php',
         
         searchableFields: searchableFields || [],
@@ -521,7 +521,7 @@ async function initGravesSearch(signal, areaGraveId) {
         showPagination: false,
         
         apiParams: {
-            level: 'area-grave',
+            level: 'grave',
             areaGraveId: areaGraveId
         },
         

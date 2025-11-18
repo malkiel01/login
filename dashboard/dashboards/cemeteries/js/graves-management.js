@@ -7,8 +7,7 @@
  *   ✅ החלפות שבוצעו (רק שמות משתנים - ללא שינוי לוגיקה):
  *   - searchResults → gravesSearchResults (7 מופעים)
  *   - areaGravesCurrentQuery → gravesCurrentQuery (3 מופעים)
- *   - graveFilterAreaId → graveFilterAreaId (29 מופעים)
- *   - graveFilterAreaName → graveFilterAreaName (29 מופעים)
+ *   - currentAreaGraveName → currentAreaGraveName (29 מופעים)
  * - v1.5.4: 🐛 תיקון שתי בעיות קריטיות
  */
 
@@ -77,26 +76,26 @@ async function loadGraves(areaGraveId = null, areaGraveName = null, forceReset =
 
     // // ⭐ לוגיקת סינון
     // if (areaGraveId === null && areaGraveName === null && !forceReset) {
-    //     if (window.graveFilterAreaId !== null || currentAreaGraveId !== null) {
+    //     if (window.currentAreaGraveId !== null || currentAreaGraveId !== null) {
     //         currentAreaGraveId = null;
     //         currentAreaGraveName = null;
-    //         window.graveFilterAreaId = null;
-    //         window.graveFilterAreaName = null;
+    //         window.currentAreaGraveId = null;
+    //         window.currentAreaGraveName = null;
     //     }
     // } else if (forceReset) {
     //     currentAreaGraveId = null;
     //     currentAreaGraveName = null;
-    //     window.graveFilterAreaId = null;
-    //     window.graveFilterAreaName = null;
+    //     window.currentAreaGraveId = null;
+    //     window.currentAreaGraveName = null;
     // } else {
     //     currentAreaGraveId = areaGraveId;
     //     currentAreaGraveName = areaGraveName;
-    //     window.graveFilterAreaId = areaGraveId;
-    //     window.graveFilterAreaName = areaGraveName;
+    //     window.currentAreaGraveId = areaGraveId;
+    //     window.currentAreaGraveName = areaGraveName;
     // }
     
-    // window.graveFilterAreaId = currentAreaGraveId;
-    // window.graveFilterAreaName = currentAreaGraveName;
+    // window.currentAreaGraveId = currentAreaGraveId;
+    // window.currentAreaGraveName = currentAreaGraveName;
     
     // // עדכן את הסוג הנוכחי
     // window.currentType = 'grave';
@@ -1060,9 +1059,9 @@ window.gravesTable = gravesTable;
 
 window.checkGravesScrollStatus = checkScrollStatus;
 
-window.graveFilterAreaId = currentAreaGraveId;
+window.currentAreaGraveId = currentAreaGraveId;
 
-window.graveFilterAreaName = currentAreaGraveName;
+window.currentAreaGraveName = currentAreaGraveName;
 
 window.graveSearch = graveSearch;
 

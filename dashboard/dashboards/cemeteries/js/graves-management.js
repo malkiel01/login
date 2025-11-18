@@ -39,32 +39,32 @@ let gravesIsLoadingMore = false;
 // טעינת אחוזות קבר (הפונקציה הראשית)
 // ===================================================================
 async function loadBrowseData(areaGraveId = null, signal = null) {
-    gravesCurrentPage = 1;
-    currentGraves = [];
+    // gravesCurrentPage = 1;
+    // currentGraves = [];
     
-    let apiUrl = '/dashboard/dashboards/cemeteries/api/graves-api.php?action=list&limit=200&page=1';
-    apiUrl += '&orderBy=createDate&sortDirection=DESC';
+    // let apiUrl = '/dashboard/dashboards/cemeteries/api/graves-api.php?action=list&limit=200&page=1';
+    // apiUrl += '&orderBy=createDate&sortDirection=DESC';
     
-    if (areaGraveId) {
-        apiUrl += `&areaGraveId=${areaGraveId}`;
-    }
+    // if (areaGraveId) {
+    //     apiUrl += `&areaGraveId=${areaGraveId}`;
+    // }
     
-    const response = await fetch(apiUrl, { signal });
-    const result = await response.json();
+    // const response = await fetch(apiUrl, { signal });
+    // const result = await response.json();
     
-    if (result.success && result.data) {
-        currentGraves = result.data;
+    // if (result.success && result.data) {
+    //     currentGraves = result.data;
         
-        if (result.pagination) {
-            gravesTotalPages = result.pagination.pages;
-            gravesCurrentPage = result.pagination.page;
-        }
+    //     if (result.pagination) {
+    //         gravesTotalPages = result.pagination.pages;
+    //         gravesCurrentPage = result.pagination.page;
+    //     }
         
-        const tableBody = document.getElementById('tableBody');
-        if (tableBody) {
-            renderGravesRows(result.data, tableBody, result.pagination, signal);
-        }
-    }
+    //     const tableBody = document.getElementById('tableBody');
+    //     if (tableBody) {
+    //         renderGravesRows(result.data, tableBody, result.pagination, signal);
+    //     }
+    // }
 }
 async function loadGraves(areaGraveId = null, areaGraveName = null, forceReset = false) {
     // const signal = OperationManager.start('grave');

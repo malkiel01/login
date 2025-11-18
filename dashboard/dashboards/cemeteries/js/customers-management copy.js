@@ -1,78 +1,32 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/customers-management.js
- * Version: 4.0.0
- * Updated: 2025-11-18
+ * Version: 3.2.0
+ * Updated: 2025-11-03
  * Author: Malkiel
  * Change Summary:
- * - v4.0.0: 🔥 שיטה זהה 100% ל-area-graves ו-graves
- *   ✅ הוספת משתני חיפוש ו-pagination:
- *   - customersIsSearchMode, customersCurrentQuery, customersSearchResults
- *   - customersCurrentPage, customersTotalPages, customersIsLoadingMore
- *   ✅ הוספת פונקציות חסרות:
- *   - loadCustomersBrowseData() - טעינה ישירה מ-API
- *   - appendMoreCustomers() - Infinite Scroll
- *   ✅ התאמת כל הפונקציות לשיטה המאוחדת
- *   ✅ שמות ייחודיים: customersRefreshData, customersCheckScrollStatus
- * - v3.3.0: תיקון קונפליקטים בפונקציות גלובליות
  * - v3.2.0: אחידות מלאה עם cemeteries-management
+ *   - שימוש ב-window.tableRenderer.editItem() במקום editCustomer()
+ *   - הסרת פונקציית editCustomer() מיותרת
+ *   - הוספת window.loadCustomers export
+ *   - מבנה זהה לחלוטין ל-cemeteries (רמת שורש)
+ * - v3.1.0: שיפורים והתאמה לארכיטקטורה המאוחדת
+ *   - עדכון onResults עם state.totalResults ו-updateCounter()
+ *   - הוספת window.customerSearch export
  * - v3.0.0: שיטה זהה לבתי עלמין - UniversalSearch + TableManager
  */
-
-console.log('🚀 customers-management.js v4.0.0 - Loading...');
 
 // ===================================================================
 // משתנים גלובליים
 // ===================================================================
+
 let currentCustomers = [];
 let customerSearch = null;
 let customersTable = null;
 let editingCustomerId = null;
 
-let customersIsSearchMode = false;      // האם אנחנו במצב חיפוש?
-let customersCurrentQuery = '';         // מה החיפוש הנוכחי?
-let customersSearchResults = [];        // תוצאות החיפוש
-
-// ⭐ Infinite Scroll - מעקב אחרי עמוד נוכחי (שמות ייחודיים!)
-let customersCurrentPage = 1;
-let customersTotalPages = 1;
-let customersIsLoadingMore = false;
-
-
-// ===================================================================
 // טעינת לקוחות (הפונקציה הראשית)
-// ===================================================================
-async function loadCustomersBrowseData(signal = null) {
-    customersCurrentPage = 1;
-    currentCustomers = [];
-    
-    let apiUrl = '/dashboard/dashboards/cemeteries/api/customers-api.php?action=list&limit=200&page=1';
-    apiUrl += '&orderBy=createDate&sortDirection=DESC';
-    
-    const response = await fetch(apiUrl, { signal });
-    const result = await response.json();
-    
-    if (result.success && result.data) {
-        currentCustomers = result.data;
-        
-        if (result.pagination) {
-            customersTotalPages = result.pagination.pages;
-            customersCurrentPage = result.pagination.page;
-        }
-        
-        const tableBody = document.getElementById('tableBody');
-        if (tableBody) {
-            renderCustomersRows(result.data, tableBody, result.pagination, signal);
-        }
-    }
-}
-
 async function loadCustomers() {
-    const signal = OperationManager.start('customer');
-
-    // ⭐ איפוס מצב חיפוש
-    customersIsSearchMode = false;
-    customersCurrentQuery = '';
-    customersSearchResults = [];
+    console.log('📋 Loading customers - v3.0.0 (תוקן Virtual Scroll וקונפליקט שמות)...');
     
     // עדכן את הסוג הנוכחי
     window.currentType = 'customer';
@@ -83,22 +37,24 @@ async function loadCustomers() {
         window.tableRenderer.currentType = 'customer';
     }
 
-    // ⭐ נקה
+    // ⭐ נקה - DashboardCleaner ימחק גם את TableManager!
     if (typeof DashboardCleaner !== 'undefined') {
         DashboardCleaner.clear({ targetLevel: 'customer' });
     } else if (typeof clearDashboard === 'function') {
         clearDashboard({ targetLevel: 'customer' });
     }
     
+    // נקה את כל הסידבר
     if (typeof clearAllSidebarSelections === 'function') {
         clearAllSidebarSelections();
     }
-
+            
     // עדכון פריט תפריט אקטיבי
     if (typeof setActiveMenuItem === 'function') {
         setActiveMenuItem('customersItem');
     }
     
+    // עדכן את כפתור ההוספה
     if (typeof updateAddButtonText === 'function') {
         updateAddButtonText();
     }
@@ -111,131 +67,33 @@ async function loadCustomers() {
     // עדכון כותרת החלון
     document.title = 'ניהול לקוחות - מערכת בתי עלמין';
     
-    // ⭐ בנה מבנה
-    await buildCustomersContainer(signal);
-    
-    if (OperationManager.shouldAbort('customer')) {
-        return;
-    }
+    // ⭐ בנה את המבנה החדש ב-main-container
+    await buildCustomersContainer();
 
-    // ⭐ ספירת טעינות גלובלית
-    if (!window.customersLoadCounter) {
-        window.customersLoadCounter = 0;
-    }
-    window.customersLoadCounter++;
-    
-    // השמד חיפוש קודם
+    // ⭐ תמיד השמד את החיפוש הקודם ובנה מחדש
     if (customerSearch && typeof customerSearch.destroy === 'function') {
         console.log('🗑️ Destroying previous customerSearch instance...');
         customerSearch.destroy();
-        customerSearch = null; 
+        customerSearch = null;
         window.customerSearch = null;
     }
-    
-    // ⭐ אתחול UniversalSearch - פעם אחת!
-    console.log('🆕 Creating fresh customerSearch instance...');
-    customerSearch = await initCustomersSearch(signal);
-    
-    if (OperationManager.shouldAbort('customer')) {
-        console.log('⚠️ Customer operation aborted');
-        return;
-    }
 
-    // ⭐ טעינה ישירה (Browse Mode) - פעם אחת!
-    await loadCustomersBrowseData(signal);
+    // אתחל את UniversalSearch מחדש תמיד
+    console.log('🆕 Creating fresh customerSearch instance...');
+    await initCustomersSearch();
+    customerSearch.search();
     
     // טען סטטיסטיקות
-    await loadCustomerStats(signal);
+    await loadCustomerStats();
 }
 
-
 // ===================================================================
-// 📥 טעינת עוד לקוחות (Infinite Scroll)
+// ⭐ פונקציה חדשה - בניית המבנה של לקוחות ב-main-container
 // ===================================================================
-async function appendMoreCustomers() {
-    // בדיקות בסיסיות
-    if (customersIsLoadingMore) {
-        return false;
-    }
-    
-    if (customersCurrentPage >= customersTotalPages) {
-        return false;
-    }
-    
-    customersIsLoadingMore = true;
-    const nextPage = customersCurrentPage + 1;
-    
-    // ⭐ עדכון מונה טעינות
-    if (!window.customersLoadCounter) {
-        window.customersLoadCounter = 0; 
-    }
-    window.customersLoadCounter++;
-    
-    try {
-        // בנה URL לעמוד הבא
-        let apiUrl = `/dashboard/dashboards/cemeteries/api/customers-api.php?action=list&limit=200&page=${nextPage}`;
-        apiUrl += '&orderBy=createDate&sortDirection=DESC';
-        
-        // שלח בקשה
-        const response = await fetch(apiUrl);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const result = await response.json();
-        
-        if (result.success && result.data && result.data.length > 0) {
-            // ⭐ שמור את הגודל הקודם לפני ההוספה
-            const previousTotal = currentCustomers.length;
-            
-            // ⭐ הוסף לנתונים הקיימים
-            currentCustomers = [...currentCustomers, ...result.data];
-            customersCurrentPage = nextPage;
-            
-            // ⭐⭐⭐ לוג פשוט ומסודר
-            console.log(`
-╔════════════════════════════════════════════════════════════════════
-║ טעינה: ${window.customersLoadCounter}
-╠════════════════════════════════════════════════════════════════════
-║ כמות ערכים בטעינה: ${result.data.length}
-║ מספר ערך תחילת טעינה נוכחית: ${result.debug?.results_info?.from_index || (previousTotal + 1)}
-║ מספר ערך סוף טעינה נוכחית: ${result.debug?.results_info?.to_index || currentCustomers.length}
-║ סך כל הערכים שנטענו עד כה: ${currentCustomers.length}
-║ שדה למיון: ${result.debug?.sql_info?.order_field || 'createDate'}
-║ סוג מיון: ${result.debug?.sql_info?.sort_direction || 'DESC'}
-╠════════════════════════════════════════════════════════════════════
-║ עמוד: ${customersCurrentPage} / ${customersTotalPages}
-║ נותרו עוד: ${customersTotalPages - customersCurrentPage} עמודים
-╚════════════════════════════════════════════════════════════════════
-`);
-            
-            // ⭐ עדכן את הטבלה
-            if (customersTable) {
-                customersTable.setData(currentCustomers);
-            }
-            
-            customersIsLoadingMore = false;
-            return true;
-        } else {
-            console.log('📭 No more data to load');
-            customersIsLoadingMore = false;
-            return false;
-        }
-    } catch (error) {
-        console.error('❌ Error loading more customers:', error);
-        customersIsLoadingMore = false;
-        return false;
-    }
-}
-
-
-// ===================================================================
-// בניית המבנה
-// ===================================================================
-async function buildCustomersContainer(signal) {
+async function buildCustomersContainer() {
     console.log('🏗️ Building customers container...');
     
+    // מצא את main-container (צריך להיות קיים אחרי clear)
     let mainContainer = document.querySelector('.main-container');
     
     if (!mainContainer) {
@@ -252,9 +110,12 @@ async function buildCustomersContainer(signal) {
         }
     }
     
+    // ⭐ בנה את התוכן של לקוחות
     mainContainer.innerHTML = `
+        <!-- סקשן חיפוש -->
         <div id="customerSearchSection" class="search-section"></div>
         
+        <!-- table-container עבור TableManager -->
         <div class="table-container">
             <table id="mainTable" class="data-table">
                 <thead>
@@ -278,16 +139,15 @@ async function buildCustomersContainer(signal) {
     console.log('✅ Customers container built');
 }
 
-
 // ===================================================================
-// אתחול UniversalSearch
+// אתחול UniversalSearch - שימוש בפונקציה גלובלית!
 // ===================================================================
-async function initCustomersSearch(signal) {
-    const config = {
+async function initCustomersSearch() {
+    customerSearch = window.initUniversalSearch({
         entityType: 'customer',
         apiEndpoint: '/dashboard/dashboards/cemeteries/api/customers-api.php',
         action: 'list',
-        
+
         searchableFields: [
             {
                 name: 'firstName',
@@ -380,93 +240,88 @@ async function initCustomersSearch(signal) {
             
             onSearch: (query, filters) => {
                 console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()) });
-                
-                // ⭐ כאשר מתבצע חיפוש - הפעל מצב חיפוש
-                customersIsSearchMode = true;
-                customersCurrentQuery = query;
             },
 
-            onResults: async (data, signal) => {
+            onResults: (data) => {
                 console.log('📦 API returned:', data.pagination?.total || data.data.length, 'customers');
-                
-                // ⭐ אם נכנסנו למצב חיפוש - הצג רק תוצאות חיפוש
-                if (customersIsSearchMode && customersCurrentQuery) {
-                    console.log('🔍 Search mode active - showing search results only');
-                    customersSearchResults = data.data;
-                    
-                    const tableBody = document.getElementById('tableBody');
-                    if (tableBody) {
-                        await renderCustomersRows(customersSearchResults, tableBody, data.pagination, signal);
-                    }
-                    return;
-                }
                 
                 // ⭐⭐⭐ בדיקה קריטית - אם עברנו לרשומה אחרת, לא להמשיך!
                 if (window.currentType !== 'customer') {
                     console.log('⚠️ Type changed during search - aborting customer results');
                     console.log(`   Current type is now: ${window.currentType}`);
-                    return;
+                    return; // ❌ עצור כאן!
                 }
+
+                // ⭐ טיפול בדפים - מצטבר!
+                const currentPage = data.pagination?.page || 1;
+                
+                if (currentPage === 1) {
+                    // דף ראשון - התחל מחדש
+                    currentCustomers = data.data;
+                } else {
+                    // דפים נוספים - הוסף לקיימים
+                    currentCustomers = [...currentCustomers, ...data.data];
+                    console.log(`📦 Added page ${currentPage}, total now: ${currentCustomers.length}`);
+                }
+                
+                // ⭐ אין סינון client-side - זו רמת השורש!
+                let filteredCount = currentCustomers.length;
+                
+                // ⭐⭐⭐ עדכן ישירות את customerSearch!
+                if (customerSearch && customerSearch.state) {
+                    customerSearch.state.totalResults = filteredCount;
+                    if (customerSearch.updateCounter) {
+                        customerSearch.updateCounter();
+                    }
+                }
+                
+                console.log('📊 Final count:', filteredCount);
             },
             
             onError: (error) => {
                 console.error('❌ Search error:', error);
-                showToast('שגיאה בחיפוש לקוחות', 'error');
-            },
-
-            onEmpty: () => {
-                console.log('📭 No results');
+                showToast('שגיאה בחיפוש: ' + error.message, 'error');
             },
             
-            onClear: async () => {
-                console.log('🧹 Search cleared - returning to browse mode');
-                
-                // ⭐ איפוס מצב חיפוש
-                customersIsSearchMode = false;
-                customersCurrentQuery = '';
-                customersSearchResults = [];
-                
-                // ⭐ חזרה למצב Browse
-                await loadCustomersBrowseData(signal);
+            onEmpty: () => {
+                console.log('📭 No results');
             }
         }
-    };
+    });
     
-    const searchInstance = window.initUniversalSearch(config);
+    // ⭐ עדכן את window.customerSearch מיד!
+    window.customerSearch = customerSearch;
     
-    return searchInstance;
+    return customerSearch;
 }
 
-
 // ===================================================================
-// אתחול TableManager
+// אתחול TableManager - עם תמיכה ב-totalItems
 // ===================================================================
-async function initCustomersTable(data, totalItems = null, signal = null) {
-    const actualTotalItems = totalItems !== null ? totalItems : data.length;
-    
+async function initCustomersTable(data, totalItems = null) {
+     const actualTotalItems = totalItems !== null ? totalItems : data.length;
+   
     if (customersTable) {
         customersTable.config.totalItems = actualTotalItems;
         customersTable.setData(data);
         return customersTable;
     }
-        
+
     // טעינת העמודות מהשרת
     async function loadColumnsFromConfig(entityType = 'customer') {
         try {
-            const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`, {
-                signal: signal
-            });
+            const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`);
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             const result = await response.json();
-            
+
             if (!result.success || !result.data) {
                 throw new Error(result.error || 'Failed to load columns config');
             }
-            
+
             // המרת הקונפיג מ-PHP לפורמט של TableManager
             const columns = result.data.map(col => {
                 const column = {
@@ -477,21 +332,21 @@ async function initCustomersTable(data, totalItems = null, signal = null) {
                     type: col.type || 'text'
                 };
                 
-                // טיפול בסוגי עמודות מיוחדות
-                switch(col.type) {
+                // טיפול בסוגי עמודות מיוחדות - ספציפי לקברים
+                switch (column.type) {
                     case 'date':
-                        column.render = (customer) => formatDate(customer[column.field]);
+                        column.render = (item) => formatDate(item[column.field]);
                         break;
                         
                     case 'status':
                         if (column.render === 'formatCustomerStatus') {
-                            column.render = (customer) => formatCustomerStatus(customer[column.field]);
+                            column.render = (item) => formatCustomerStatus(item[column.field]);
                         }
                         break;
                         
                     case 'type':
                         if (column.render === 'formatCustomerType') {
-                            column.render = (customer) => formatCustomerType(customer[column.field]);
+                            column.render = (item) => formatCustomerType(item[column.field]);
                         }
                         break;
                         
@@ -511,8 +366,9 @@ async function initCustomersTable(data, totalItems = null, signal = null) {
                         break;
                         
                     default:
+                        // עמודת טקסט רגילה
                         if (!column.render) {
-                            column.render = (customer) => customer[column.field] || '-';
+                            column.render = (item) => item[column.field] || '-';
                         }
                 }
                 
@@ -520,38 +376,31 @@ async function initCustomersTable(data, totalItems = null, signal = null) {
             });
             
             return columns;
-            
         } catch (error) {
-            if (error.name === 'AbortError') {
-                console.log('⚠️ Column config loading aborted - this is expected');
-                return [];
-            }
-            
             console.error('❌ Failed to load columns config:', error);
+            // החזר מערך רק במקרה של שגיאה
             return [];
         }
     }
-
+    
     customersTable = new TableManager({
         tableSelector: '#mainTable',
         
+        // ⭐ הוספת totalItems כפרמטר!
         totalItems: actualTotalItems,
 
         columns: await loadColumnsFromConfig('customer'),
-
+  
+        onRowDoubleClick: (customer) => {                    // ⭐ שורה חדשה
+            handleCustomerDoubleClick(customer.unicId);
+        },
+        
         data: data,
         
         sortable: true,
         resizable: true,
         reorderable: false,
         filterable: true,
-        
-        infiniteScroll: true,
-        scrollThreshold: 200,
-        onScrollEnd: async () => {
-            console.log('📜 Reached scroll end, loading more...');
-            await appendMoreCustomers();
-        },
         
         onSort: (field, order) => {
             console.log(`📊 Sorted by ${field} ${order}`);
@@ -564,46 +413,48 @@ async function initCustomersTable(data, totalItems = null, signal = null) {
             showToast(`נמצאו ${count} תוצאות`, 'info');
         }
     });
+
+    // מאזין לאירוע גלילה לסוף - טען עוד נתונים
+    const bodyContainer = document.querySelector('.table-body-container');
+    if (bodyContainer && customerSearch) {
+        bodyContainer.addEventListener('scroll', async function() {
+            const scrollTop = this.scrollTop;
+            const scrollHeight = this.scrollHeight;
+            const clientHeight = this.clientHeight;
+            
+            // אם הגענו לתחתית והטעינה עוד לא בתהליך
+            if (scrollHeight - scrollTop - clientHeight < 100) {
+                if (!customerSearch.state.isLoading && customerSearch.state.currentPage < customerSearch.state.totalPages) {
+                    console.log('📥 Reached bottom, loading more data...');
+                    
+                    // בקש עמוד הבא מ-UniversalSearch
+                    const nextPage = customerSearch.state.currentPage + 1;
+                    
+                    // עדכן את הדף הנוכחי
+                    customerSearch.state.currentPage = nextPage;
+                    customerSearch.state.isLoading = true;
+                    
+                    // בקש נתונים
+                    await customerSearch.search();
+                }
+            }
+        });
+    }
     
+    // ⭐ עדכן את window.customersTable מיד!
     window.customersTable = customersTable;
+ 
     return customersTable;
 }
 
-
 // ===================================================================
-// רינדור שורות - עם תמיכה ב-Search Mode
+// רינדור שורות לקוחות - עם תמיכה ב-totalItems מ-pagination
 // ===================================================================
-async function renderCustomersRows(data, container, pagination = null, signal = null) {
-    console.log(`📝 renderCustomersRows called with ${data.length} items`);
+function renderCustomersRows(data, container, pagination = null) {
     
-    // ⭐⭐ במצב חיפוש - הצג תוצאות חיפוש בלי טבלה מורכבת
-    if (customersIsSearchMode && customersCurrentQuery) {
-        console.log('🔍 Rendering search results...');
-        
-        if (data.length === 0) {
-            container.innerHTML = `
-                <tr>
-                    <td colspan="10" style="text-align: center; padding: 60px;">
-                        <div style="color: #9ca3af;">
-                            <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
-                            <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">לא נמצאו תוצאות</div>
-                            <div>נסה לשנות את מילות החיפוש או הפילטרים</div>
-                        </div>
-                    </td>
-                </tr>
-            `;
-            return;
-        }
-        
-        const totalItems = data.length;
-        await initCustomersTable(data, totalItems, signal);
-        return;
-    }
-    
-    // ⭐⭐ מצב רגיל (Browse) - הצג עם TableManager
+    // ⭐ חלץ את הסכום הכולל מ-pagination אם קיים
     const totalItems = pagination?.total || data.length;
-    console.log(`📊 Total items to display: ${totalItems}`);
-
+    
     if (data.length === 0) {
         if (customersTable) {
             customersTable.setData([]);
@@ -623,37 +474,42 @@ async function renderCustomersRows(data, container, pagination = null, signal = 
         return;
     }
     
+    // ⭐ בדוק אם ה-DOM של TableManager קיים
     const tableWrapperExists = document.querySelector('.table-wrapper[data-fixed-width="true"]');
     
+    // ⭐ אם המשתנה קיים אבל ה-DOM נמחק - אפס את המשתנה!
     if (!tableWrapperExists && customersTable) {
         console.log('🗑️ TableManager DOM was deleted, resetting customersTable variable');
         customersTable = null;
         window.customersTable = null;
     }
-    
+
+    // עכשיו בדוק אם צריך לבנות מחדש
     if (!customersTable || !tableWrapperExists) {
-        console.log(`🏗️ Creating new TableManager with ${totalItems} items`);
-        await initCustomersTable(data, totalItems, signal);
-    } else {
-        console.log(`♻️ Updating TableManager with ${totalItems} items`);
+        // אין TableManager או שה-DOM שלו נמחק - בנה מחדש!
+        initCustomersTable(data, totalItems);  // ⭐ העברת totalItems!
+    } else {    
+        // ⭐ עדכן גם את totalItems ב-TableManager!
         if (customersTable.config) {
             customersTable.config.totalItems = totalItems;
         }
+        
+        // ⭐ אם יש עוד נתונים ב-UniversalSearch, הוסף אותם!
+        if (customerSearch && customerSearch.state) {
+            const allData = customerSearch.state.results || [];
+            if (allData.length > data.length) {
+                console.log(`📦 UniversalSearch has ${allData.length} items, updating TableManager...`);
+                customersTable.setData(allData);
+                return;
+            }
+        }
+        
         customersTable.setData(data);
     }
 }
 
 // ===================================================================
-// פורמט תאריך
-// ===================================================================
-function formatDate(dateString) {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('he-IL');
-}
-
-// ===================================================================
-// פונקציות עזר לפורמט
+// פונקציות פורמט ועזר
 // ===================================================================
 function formatCustomerType(type) {
     const types = {
@@ -664,6 +520,7 @@ function formatCustomerType(type) {
     return types[type] || '-';
 }
 
+// פורמט סטטוס לקוח
 function formatCustomerStatus(status) {
     const statuses = {
         1: { text: 'פעיל', color: '#10b981' },
@@ -673,41 +530,18 @@ function formatCustomerStatus(status) {
     return `<span style="background: ${statusInfo.color}; color: white; padding: 3px 8px; border-radius: 4px; font-size: 12px; display: inline-block;">${statusInfo.text}</span>`;
 }
 
-// ===================================================================
-// טעינת סטטיסטיקות
-// ===================================================================
-async function loadCustomerStats(signal) {
-    try {
-        const response = await fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=stats', { signal: signal });
-        const result = await response.json();
-        
-        if (result.success && result.data) {
-            console.log('📊 Customer stats:', result.data);
-            
-            if (document.getElementById('totalCustomers')) {
-                document.getElementById('totalCustomers').textContent = result.data.total_customers || 0;
-            }
-            if (document.getElementById('activeCustomers')) {
-                document.getElementById('activeCustomers').textContent = result.data.active || 0;
-            }
-            if (document.getElementById('newThisMonth')) {
-                document.getElementById('newThisMonth').textContent = result.data.new_this_month || 0;
-            }
-        }
-    } catch (error) {
-        if (error.name === 'AbortError') {
-            console.log('⚠️ Customer stats loading aborted - this is expected');
-            return;
-        }
-        console.error('Error loading customer stats:', error);
-    }
+// פורמט תאריך
+function formatDate(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('he-IL');
 }
 
 // ===================================================================
-// מחיקת לקוח
+// פונקציות CRUD
 // ===================================================================
 async function deleteCustomer(customerId) {
-    if (!confirm('האם אתה בטוח שברצונך למחוק את הלקוח?')) {
+    if (!confirm('האם אתה בטוח שברצונך למחוק לקוח זה?')) {
         return;
     }
     
@@ -716,31 +550,43 @@ async function deleteCustomer(customerId) {
             method: 'DELETE'
         });
         
-        const result = await response.json();
+        const data = await response.json();
         
-        if (!result.success) {
-            throw new Error(result.error || 'שגיאה במחיקת הלקוח');
+        if (data.success) {
+            showToast('הלקוח נמחק בהצלחה', 'success');
+            
+            if (customerSearch) {
+                customerSearch.refresh();
+            }
+        } else {
+            showToast(data.error || 'שגיאה במחיקת לקוח', 'error');
         }
-        
-        showToast('הלקוח נמחק בהצלחה', 'success');
-        
-        if (customerSearch) {
-            customerSearch.refresh();
-        }
-        
     } catch (error) {
         console.error('Error deleting customer:', error);
-        showToast(error.message, 'error');
+        showToast('שגיאה במחיקת לקוח', 'error');
     }
 }
 
+// עריכת לקוח
+// ===================================================================
+// טעינת סטטיסטיקות
+// ===================================================================
+async function loadCustomerStats() {
+    try {
+        const response = await fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=stats');
+        const data = await response.json();
+        
+        if (data.success) {
+            console.log('Customer stats:', data.data);
+        }
+    } catch (error) {
+        console.error('Error loading customer stats:', error);
+    }
+}
 
-// ===================================================================
-// הצגת הודעות Toast
-// ===================================================================
+// הצגת הודעת Toast
 function showToast(message, type = 'info') {
     const toast = document.createElement('div');
-    toast.className = 'toast-message';
     toast.style.cssText = `
         position: fixed;
         top: 20px;
@@ -771,20 +617,15 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-
-// ===================================================================
-// רענון נתונים
-// ===================================================================
-async function customersRefreshData() {
-    // טעינה מחדש ישירה מה-API (כי UniversalSearch מושבת)
-    await loadCustomers();
+// פונקציה לרענון נתונים
+async function refreshData() {
+    if (customerSearch) {
+        customerSearch.refresh();
+    }
 }
 
-
-// ===================================================================
-// בדיקת סטטוס טעינה
-// ===================================================================
-function customersCheckScrollStatus() {
+// פונקציה לבדיקת סטטוס הטעינה
+function checkScrollStatus() {
     if (!customersTable) {
         console.log('❌ Table not initialized');
         return;
@@ -801,20 +642,20 @@ function customersCheckScrollStatus() {
     console.log(`   Progress: ${Math.round((displayed / total) * 100)}%`);
     
     if (remaining > 0) {
-        console.log(`   🔽 Scroll down to load more items`);
+        console.log(`   🔽 Scroll down to load ${Math.min(customersTable.config.itemsPerPage, remaining)} more items`);
     } else {
         console.log('   ✅ All items loaded');
     }
 }
 
-
-// ===================================================================
-// דאבל-קליק על לקוח
-// ===================================================================
+// ===================================================
+// פונקציה לטיפול בדאבל-קליק על לקוח
+// ===================================================
 async function handleCustomerDoubleClick(customerId) {
     console.log('🖱️ Double-click on customer:', customerId);
     
     try {
+        // יצירת והצגת כרטיס
         if (typeof createCustomerCard === 'function') {
             const cardHtml = await createCustomerCard(customerId);
             if (cardHtml && typeof displayHierarchyCard === 'function') {
@@ -841,17 +682,8 @@ window.handleCustomerDoubleClick = handleCustomerDoubleClick;
 // הפוך לגלובלי
 // ===================================================================
 window.loadCustomers = loadCustomers;
-
-window.appendMoreCustomers = appendMoreCustomers;
-
 window.deleteCustomer = deleteCustomer;
-
-window.customersRefreshData = customersRefreshData;
-
+window.refreshData = refreshData;
 window.customersTable = customersTable;
-
-window.customersCheckScrollStatus = customersCheckScrollStatus;
-
+window.checkScrollStatus = checkScrollStatus;
 window.customerSearch = customerSearch;
-
-console.log('✅ customers-management.js v4.0.0 - Loaded successfully!');

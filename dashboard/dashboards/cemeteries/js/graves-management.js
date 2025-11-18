@@ -29,10 +29,10 @@ let gravesSearchResults = [];        // תוצאות החיפוש
 let currentAreaGraveId = null;
 let currentAreaGraveName = null;
 
-// // ⭐ Infinite Scroll - מעקב אחרי עמוד נוכחי (שמות ייחודיים!)
-// let gravesCurrentPage = 1;
-// let gravesTotalPages = 1;
-// let gravesIsLoadingMore = false;
+// ⭐ Infinite Scroll - מעקב אחרי עמוד נוכחי (שמות ייחודיים!)
+let gravesCurrentPage = 1;
+let gravesTotalPages = 1;
+let gravesIsLoadingMore = false;
 
 
 // // ===================================================================

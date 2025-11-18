@@ -1022,33 +1022,32 @@ function checkGravesScrollStatus() {
 }
 
 
-// ===================================================================
-// דאבל-קליק על אחוזת קבר
-// ===================================================================
-// לא פעיל
-async function handleGraveDoubleClick(graveId, graveName) {
-    console.log('🖱️ Double-click on area grave:', graveName, graveId);
+// // ===================================================================
+// // דאבל-קליק על אחוזת קבר
+// // ===================================================================
+// async function handleGraveDoubleClick(graveId, graveName) {
+//     console.log('🖱️ Double-click on area grave:', graveName, graveId);
     
-    try {
-        if (typeof createGraveCard === 'function') {
-            const cardHtml = await createGraveCard(graveId);
-            if (cardHtml && typeof displayHierarchyCard === 'function') {
-                displayHierarchyCard(cardHtml);
-            }
-        }
+//     try {
+//         if (typeof createGraveCard === 'function') {
+//             const cardHtml = await createGraveCard(graveId);
+//             if (cardHtml && typeof displayHierarchyCard === 'function') {
+//                 displayHierarchyCard(cardHtml);
+//             }
+//         }
         
-        console.log('🪦 Loading graves for area grave:', graveName);
-        if (typeof loadGraves === 'function') {
-            loadGraves(graveId, graveName);
-        } else {
-            console.warn('loadGraves function not found');
-        }
+//         console.log('🪦 Loading graves for area grave:', graveName);
+//         if (typeof loadGraves === 'function') {
+//             loadGraves(graveId, graveName);
+//         } else {
+//             console.warn('loadGraves function not found');
+//         }
         
-    } catch (error) {
-        console.error('❌ Error in handleGraveDoubleClick:', error);
-        showToast('שגיאה בטעינת פרטי אחוזת הקבר', 'error');
-    }
-}
+//     } catch (error) {
+//         console.error('❌ Error in handleGraveDoubleClick:', error);
+//         showToast('שגיאה בטעינת פרטי אחוזת הקבר', 'error');
+//     }
+// }
 
 
 // window.handleGraveDoubleClick = handleGraveDoubleClick;

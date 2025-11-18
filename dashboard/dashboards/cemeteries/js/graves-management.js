@@ -72,7 +72,7 @@ async function loadGraves(areaGraveId = null, areaGraveName = null, forceReset =
     // ⭐ איפוס מצב חיפוש
     areaGravesIsSearchMode = false;
     areaGravesCurrentQuery = '';
-    areaGravesSearchResults = [];
+    searchResults = [];
 
     // ⭐ לוגיקת סינון
     if (areaGraveId === null && areaGraveName === null && !forceReset) {
@@ -433,9 +433,9 @@ async function initGravesSearch1(signal, areaGraveId) {
             
             // שמור תוצאות
             if (pagination && pagination.page === 1) {
-                areaGravesSearchResults = data;
+                searchResults = data;
             } else {
-                areaGravesSearchResults = [...areaGravesSearchResults, ...data];
+                searchResults = [...searchResults, ...data];
             }
 
             // קריאה לפונקציה המקורית עם כל הפרמטרים
@@ -457,7 +457,7 @@ async function initGravesSearch1(signal, areaGraveId) {
             onClear: () => {
                 areaGravesIsSearchMode = false;
                 areaGravesCurrentQuery = '';
-                areaGravesSearchResults = [];
+                searchResults = [];
                 
                 // חזרה ל-Browse
                 loadBrowseData(currentAreaGraveId);
@@ -530,9 +530,9 @@ async function initGravesSearch(signal, areaGraveId) {
             
             // שמור תוצאות
             if (pagination && pagination.page === 1) {
-                areaGravesSearchResults = data;
+                searchResults = data;
             } else {
-                areaGravesSearchResults = [...areaGravesSearchResults, ...data];
+                searchResults = [...searchResults, ...data];
             }
 
             // קריאה לפונקציה המקורית עם כל הפרמטרים
@@ -597,7 +597,7 @@ async function initGravesSearch(signal, areaGraveId) {
                 
                 areaGravesIsSearchMode = false;
                 areaGravesCurrentQuery = '';
-                areaGravesSearchResults = [];
+                searchResults = [];
                 
                 // ⭐ מחק את TableManager
                 const existingWrapper = document.querySelector('.table-wrapper[data-table-manager]');

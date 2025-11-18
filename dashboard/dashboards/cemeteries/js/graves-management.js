@@ -70,7 +70,7 @@ async function loadGraves(areaGraveId = null, areaGraveName = null, forceReset =
     const signal = OperationManager.start('grave');
 
     // ⭐ איפוס מצב חיפוש
-    areaGravesIsSearchMode = false;
+    gravesIsSearchMode = false;
     areaGravesCurrentQuery = '';
     searchResults = [];
 
@@ -429,7 +429,7 @@ async function initGravesSearch1(signal, areaGraveId) {
         
         renderFunction: (data, container, pagination, signal) => {
             // ⭐ עדכן מצב חיפוש
-            areaGravesIsSearchMode = true;
+            gravesIsSearchMode = true;
             
             // שמור תוצאות
             if (pagination && pagination.page === 1) {
@@ -455,7 +455,7 @@ async function initGravesSearch1(signal, areaGraveId) {
             
             // ⭐ כשמנקים חיפוש
             onClear: () => {
-                areaGravesIsSearchMode = false;
+                gravesIsSearchMode = false;
                 areaGravesCurrentQuery = '';
                 searchResults = [];
                 
@@ -526,7 +526,7 @@ async function initGravesSearch(signal, areaGraveId) {
         
         renderFunction: (data, container, pagination, signal) => {
             // ⭐ עדכן מצב חיפוש
-            areaGravesIsSearchMode = true;
+            gravesIsSearchMode = true;
             
             // שמור תוצאות
             if (pagination && pagination.page === 1) {
@@ -595,7 +595,7 @@ async function initGravesSearch(signal, areaGraveId) {
             onClear: () => {
                 console.log('🧹 מנקה חיפוש...');
                 
-                areaGravesIsSearchMode = false;
+                gravesIsSearchMode = false;
                 areaGravesCurrentQuery = '';
                 searchResults = [];
                 
@@ -788,7 +788,7 @@ async function initGravesTable(data, totalItems = null, signal) {
         // ============================================
 
         onLoadMore: async () => {
-            if (areaGravesIsSearchMode) {
+            if (gravesIsSearchMode) {
                 // ⭐ חיפוש - טען דרך UniversalSearch
                 if (graveSearch && typeof graveSearch.loadNextPage === 'function') {
                     if (graveSearch.state.currentPage >= graveSearch.state.totalPages) {
@@ -842,7 +842,7 @@ function renderGravesRows(data, container, pagination = null, signal = null) {
     // ⭐⭐ סינון client-side לפי areaGraveId
     let filteredData = data;
 
-    if (!areaGravesIsSearchMode && currentAreaGraveId) {
+    if (!gravesIsSearchMode && currentAreaGraveId) {
         filteredData = data.filter(grave => {
             const graveAreaGraveId = grave.areaGraveId || grave.area_grave_id || grave.AreaGraveId;
             return String(graveAreaGraveId) === String(currentAreaGraveId);

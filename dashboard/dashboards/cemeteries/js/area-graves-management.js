@@ -441,28 +441,6 @@ async function initAreaGravesSearch(signal, plotId) {
             // קריאה לפונקציה המקורית עם כל הפרמטרים
             renderAreaGravesRows(data, container, pagination, signal);
         },
-        
-        // callbacks: {
-        //     // ⭐ כשנתונים נטענו
-        //     onDataLoaded: (response) => {
-        //         console.log('✅ נתונים נטענו:', response.data.length);
-                
-        //         // עדכון מונה כולל ב-TableManager
-        //         if (window.areaGravesTable && response.pagination) {
-        //             window.areaGravesTable.updateTotalItems(response.pagination.total);
-        //         }
-        //     },
-            
-        //     // ⭐ כשמנקים חיפוש
-        //     onClear: () => {
-        //         isSearchMode = false;
-        //         currentQuery = '';
-        //         searchResults = [];
-                
-        //         // חזרה ל-Browse
-        //         loadBrowseData(currentPlotId);
-        //     }
-        // }
 
         callbacks: {
             // ⭐ לפני חיפוש - נקה הכל והצג spinner

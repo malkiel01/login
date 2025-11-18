@@ -378,359 +378,359 @@ async function buildGravesContainer(signal, areaGraveId = null, areaGraveName = 
     console.log('✅ Area graves container built');
 }
 
-// // ===================================================================
-// // אתחול UniversalSearch - עם Pagination!
-// // ===================================================================
-// async function initGravesSearch(signal, areaGraveId) {
-//     console.log('🔍 אתחול חיפוש שורות קבר...');
+// ===================================================================
+// אתחול UniversalSearch - עם Pagination!
+// ===================================================================
+async function initGravesSearch(signal, areaGraveId) {
+    console.log('🔍 אתחול חיפוש שורות קבר...');
     
-//     // ⭐ טוען searchableFields מהשרת
-//     let searchableFields = [];
+    // ⭐ טוען searchableFields מהשרת
+    let searchableFields = [];
 
-//     try {
-//         const fieldsResponse = await fetch(
-//             `/dashboard/dashboards/cemeteries/api/get-config.php?type=grave&section=searchableFields`,
-//             { signal: signal }
-//         );
-//         const fieldsResult = await fieldsResponse.json();
+    try {
+        const fieldsResponse = await fetch(
+            `/dashboard/dashboards/cemeteries/api/get-config.php?type=grave&section=searchableFields`,
+            { signal: signal }
+        );
+        const fieldsResult = await fieldsResponse.json();
         
-//         if (fieldsResult.success && fieldsResult.data) {
-//             searchableFields = fieldsResult.data;
-//         }
-//     } catch (error) {
-//         console.error('❌ Error loading searchableFields:', error);
-//     }
+        if (fieldsResult.success && fieldsResult.data) {
+            searchableFields = fieldsResult.data;
+        }
+    } catch (error) {
+        console.error('❌ Error loading searchableFields:', error);
+    }
 
-//     // ⭐ השתמש בקונפיג הישן - זה עובד!
-//     const config = {
-//         entityType: 'grave',  // ⭐ חובה!
-//         apiEndpoint: '/dashboard/dashboards/cemeteries/api/graves-api.php',
+    // ⭐ השתמש בקונפיג הישן - זה עובד!
+    const config = {
+        entityType: 'grave',  // ⭐ חובה!
+        apiEndpoint: '/dashboard/dashboards/cemeteries/api/graves-api.php',
         
-//         searchableFields: searchableFields || [],
+        searchableFields: searchableFields || [],
         
-//         displayColumns: [
-//             { key: 'graveNameHe', label: 'שם' },
-//             { key: 'coordinates', label: 'מיקום' },
-//             { key: 'graveType', label: 'סוג' },
-//             { key: 'graves_count', label: 'כמות קברים' }
-//         ],
+        displayColumns: [
+            { key: 'graveNameHe', label: 'שם' },
+            { key: 'coordinates', label: 'מיקום' },
+            { key: 'graveType', label: 'סוג' },
+            { key: 'graves_count', label: 'כמות קברים' }
+        ],
 
-//         searchContainerSelector: '#graveSearchSection',
-//         resultsContainerSelector: '#tableBody',  
+        searchContainerSelector: '#graveSearchSection',
+        resultsContainerSelector: '#tableBody',  
         
-//         // ⭐ Infinite Scroll אמיתי - טעינה מדורגת
-//         apiLimit: 200,
-//         showPagination: false,
+        // ⭐ Infinite Scroll אמיתי - טעינה מדורגת
+        apiLimit: 200,
+        showPagination: false,
         
-//         apiParams: {
-//             level: 'area-grave',
-//             areaGraveId: areaGraveId
-//         },
+        apiParams: {
+            level: 'area-grave',
+            areaGraveId: areaGraveId
+        },
         
-//         renderFunction: (data, container, pagination, signal) => {
-//             // ⭐ עדכן מצב חיפוש
-//             gravesIsSearchMode = true;
+        renderFunction: (data, container, pagination, signal) => {
+            // ⭐ עדכן מצב חיפוש
+            gravesIsSearchMode = true;
             
-//             // שמור תוצאות
-//             if (pagination && pagination.page === 1) {
-//                 gravesSearchResults = data;
-//             } else {
-//                 gravesSearchResults = [...gravesSearchResults, ...data];
-//             }
+            // שמור תוצאות
+            if (pagination && pagination.page === 1) {
+                gravesSearchResults = data;
+            } else {
+                gravesSearchResults = [...gravesSearchResults, ...data];
+            }
 
-//             // קריאה לפונקציה המקורית עם כל הפרמטרים
-//             renderGravesRows(data, container, pagination, signal);
-//         },
+            // קריאה לפונקציה המקורית עם כל הפרמטרים
+            renderGravesRows(data, container, pagination, signal);
+        },
 
-//         callbacks: {
-//             // ⭐ לפני חיפוש - נקה הכל והצג spinner
-//             onSearch: (query, filters) => {
-//                 console.log('🔍 מתחיל חיפוש:', query);
+        callbacks: {
+            // ⭐ לפני חיפוש - נקה הכל והצג spinner
+            onSearch: (query, filters) => {
+                console.log('🔍 מתחיל חיפוש:', query);
                 
-//                 // ⭐ מחק את TableManager הישן
-//                 const existingWrapper = document.querySelector('.table-wrapper[data-table-manager]');
-//                 if (existingWrapper) {
-//                     console.log('🗑️ מוחק table-wrapper קיים');
-//                     existingWrapper.remove();
-//                 }
+                // ⭐ מחק את TableManager הישן
+                const existingWrapper = document.querySelector('.table-wrapper[data-table-manager]');
+                if (existingWrapper) {
+                    console.log('🗑️ מוחק table-wrapper קיים');
+                    existingWrapper.remove();
+                }
                 
-//                 // ⭐ אפס את המשתנה
-//                 if (gravesTable) {
-//                     gravesTable = null;
-//                     window.gravesTable = null;
-//                 }
+                // ⭐ אפס את המשתנה
+                if (gravesTable) {
+                    gravesTable = null;
+                    window.gravesTable = null;
+                }
                 
-//                 // ⭐ הצג spinner בטבלה המקורית
-//                 const originalTableBody = document.getElementById('tableBody');
-//                 if (originalTableBody) {
-//                     // ⭐ הצג את הטבלה המקורית
-//                     const mainTable = document.getElementById('mainTable');
-//                     if (mainTable) {
-//                         mainTable.style.display = 'table';
-//                     }
+                // ⭐ הצג spinner בטבלה המקורית
+                const originalTableBody = document.getElementById('tableBody');
+                if (originalTableBody) {
+                    // ⭐ הצג את הטבלה המקורית
+                    const mainTable = document.getElementById('mainTable');
+                    if (mainTable) {
+                        mainTable.style.display = 'table';
+                    }
                     
-//                     originalTableBody.innerHTML = `
-//                         <tr>
-//                             <td colspan="10" style="text-align: center; padding: 60px;">
-//                                 <div style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
-//                                     <div class="spinner-border" role="status" style="width: 3rem; height: 3rem; border-width: 0.3em;">
-//                                         <span class="visually-hidden">מחפש...</span>
-//                                     </div>
-//                                     <div style="font-size: 16px; color: #6b7280;">מחפש "${query}"...</div>
-//                                 </div>
-//                             </td>
-//                         </tr>
-//                     `;
-//                 }
-//             },
+                    originalTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="10" style="text-align: center; padding: 60px;">
+                                <div style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
+                                    <div class="spinner-border" role="status" style="width: 3rem; height: 3rem; border-width: 0.3em;">
+                                        <span class="visually-hidden">מחפש...</span>
+                                    </div>
+                                    <div style="font-size: 16px; color: #6b7280;">מחפש "${query}"...</div>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }
+            },
             
-//             // ⭐ כשנתונים נטענו
-//             onDataLoaded: (response) => {
-//                 console.log('✅ נתונים נטענו:', response.data.length);
+            // ⭐ כשנתונים נטענו
+            onDataLoaded: (response) => {
+                console.log('✅ נתונים נטענו:', response.data.length);
                 
-//                 // עדכון מונה כולל ב-TableManager
-//                 if (window.gravesTable && response.pagination) {
-//                     window.gravesTable.updateTotalItems(response.pagination.total);
-//                 }
-//             },
+                // עדכון מונה כולל ב-TableManager
+                if (window.gravesTable && response.pagination) {
+                    window.gravesTable.updateTotalItems(response.pagination.total);
+                }
+            },
             
-//             // ⭐ כשמנקים חיפוש
-//             onClear: () => {
-//                 console.log('🧹 מנקה חיפוש...');
+            // ⭐ כשמנקים חיפוש
+            onClear: () => {
+                console.log('🧹 מנקה חיפוש...');
                 
-//                 gravesIsSearchMode = false;
-//                 gravesCurrentQuery = '';
-//                 gravesSearchResults = [];
+                gravesIsSearchMode = false;
+                gravesCurrentQuery = '';
+                gravesSearchResults = [];
                 
-//                 // ⭐ מחק את TableManager
-//                 const existingWrapper = document.querySelector('.table-wrapper[data-table-manager]');
-//                 if (existingWrapper) {
-//                     existingWrapper.remove();
-//                 }
+                // ⭐ מחק את TableManager
+                const existingWrapper = document.querySelector('.table-wrapper[data-table-manager]');
+                if (existingWrapper) {
+                    existingWrapper.remove();
+                }
                 
-//                 if (gravesTable) {
-//                     gravesTable = null;
-//                     window.gravesTable = null;
-//                 }
+                if (gravesTable) {
+                    gravesTable = null;
+                    window.gravesTable = null;
+                }
                 
-//                 // חזרה ל-Browse
-//                 loadGravesBrowseData(currentAreaGraveId);
-//             }
-//         }
-//     };
+                // חזרה ל-Browse
+                loadGravesBrowseData(currentAreaGraveId);
+            }
+        }
+    };
     
-//     // יצירת instance
-//     const searchInstance = window.initUniversalSearch(config);
+    // יצירת instance
+    const searchInstance = window.initUniversalSearch(config);
     
-//     // שמירה גלובלית
-//     window.graveSearch = searchInstance;
+    // שמירה גלובלית
+    window.graveSearch = searchInstance;
     
-//     return searchInstance;
-// }
+    return searchInstance;
+}
 
-// // ===================================================================
-// // אתחול TableManager - עם Scroll Loading!
-// // ===================================================================
-// async function initGravesTable(data, totalItems = null, signal) {
-//     const actualTotalItems = totalItems !== null ? totalItems : data.length;
+// ===================================================================
+// אתחול TableManager - עם Scroll Loading!
+// ===================================================================
+async function initGravesTable(data, totalItems = null, signal) {
+    const actualTotalItems = totalItems !== null ? totalItems : data.length;
     
-//     if (gravesTable) {
-//         gravesTable.config.totalItems = actualTotalItems;
-//         gravesTable.setData(data);
-//         return gravesTable;
-//     }
+    if (gravesTable) {
+        gravesTable.config.totalItems = actualTotalItems;
+        gravesTable.setData(data);
+        return gravesTable;
+    }
 
-//     async function loadColumnsFromConfig(entityType = 'grave', signal) {
-//         try {
-//             const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`, {
-//                 signal: signal
-//             });
+    async function loadColumnsFromConfig(entityType = 'grave', signal) {
+        try {
+            const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`, {
+                signal: signal
+            });
             
-//             if (!response.ok) {
-//                 throw new Error(`HTTP error! status: ${response.status}`);
-//             }
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
 
-//             const result = await response.json();
+            const result = await response.json();
             
-//             if (!result.success || !result.data) {
-//                 throw new Error(result.error || 'Failed to load columns config');
-//             }
+            if (!result.success || !result.data) {
+                throw new Error(result.error || 'Failed to load columns config');
+            }
 
-//             const columns = result.data.map(col => {
-//                 const column = {
-//                     field: col.field,
-//                     label: col.title,
-//                     width: col.width,
-//                     sortable: col.sortable !== false
-//                 };
+            const columns = result.data.map(col => {
+                const column = {
+                    field: col.field,
+                    label: col.title,
+                    width: col.width,
+                    sortable: col.sortable !== false
+                };
                 
-//                 // טיפול בסוגים מיוחדים
-//                 switch(col.type) {
-//                     case 'link':
-//                         column.render = (grave) => {
-//                             return `<a href="#" onclick="handleGraveDoubleClick('${grave.unicId}', '${grave.graveNameHe?.replace(/'/g, "\\'")}'); return false;" 
-//                                     style="color: #2563eb; text-decoration: none; font-weight: 500;">
-//                                 ${grave.graveNameHe}
-//                             </a>`;
-//                         };
-//                         break;
+                // טיפול בסוגים מיוחדים
+                switch(col.type) {
+                    case 'link':
+                        column.render = (grave) => {
+                            return `<a href="#" onclick="handleGraveDoubleClick('${grave.unicId}', '${grave.graveNameHe?.replace(/'/g, "\\'")}'); return false;" 
+                                    style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                                ${grave.graveNameHe}
+                            </a>`;
+                        };
+                        break;
                         
-//                     case 'coordinates':
-//                         column.render = (grave) => {
-//                             const coords = grave.coordinates || '-';
-//                             return `<span style="font-family: monospace; font-size: 12px;">${coords}</span>`;
-//                         };
-//                         break;
+                    case 'coordinates':
+                        column.render = (grave) => {
+                            const coords = grave.coordinates || '-';
+                            return `<span style="font-family: monospace; font-size: 12px;">${coords}</span>`;
+                        };
+                        break;
                         
-//                     case 'status':
-//                         column.render = (grave) => {
-//                             const statusInfo = getGraveStatusInfo(grave.status);
-//                             return `<span style="background: ${statusInfo.color}; color: white; padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 500;">${statusInfo.label}</span>`;
-//                         };
-//                         break;
+                    case 'status':
+                        column.render = (grave) => {
+                            const statusInfo = getGraveStatusInfo(grave.status);
+                            return `<span style="background: ${statusInfo.color}; color: white; padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 500;">${statusInfo.label}</span>`;
+                        };
+                        break;
                         
-//                     case 'row':
-//                         column.render = (grave) => {
-//                             const rowName = grave.row_name || grave.lineNameHe || '-';
-//                             return `<span style="color: #6b7280;">📏 ${rowName}</span>`;
-//                         };
-//                         break;
+                    case 'row':
+                        column.render = (grave) => {
+                            const rowName = grave.row_name || grave.lineNameHe || '-';
+                            return `<span style="color: #6b7280;">📏 ${rowName}</span>`;
+                        };
+                        break;
                         
-//                     case 'badge':
-//                         column.render = (grave) => {
-//                             const count = grave[col.field] || 0;
-//                             return `<span style="background: #dcfce7; color: #15803d; padding: 3px 10px; border-radius: 4px; font-size: 13px; font-weight: 600;">${count}</span>`;
-//                         };
-//                         break;
+                    case 'badge':
+                        column.render = (grave) => {
+                            const count = grave[col.field] || 0;
+                            return `<span style="background: #dcfce7; color: #15803d; padding: 3px 10px; border-radius: 4px; font-size: 13px; font-weight: 600;">${count}</span>`;
+                        };
+                        break;
                         
-//                     case 'date':
-//                         column.render = (grave) => formatDate(grave[col.field]);
-//                         break;
+                    case 'date':
+                        column.render = (grave) => formatDate(grave[col.field]);
+                        break;
                         
-//                     case 'actions':
-//                         column.render = (item) => `
-//                             <button class="btn btn-sm btn-secondary" 
-//                                     onclick="event.stopPropagation(); window.tableRenderer.editItem('${item.unicId}')" 
-//                                     title="עריכה">
-//                                 <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
-//                             </button>
-//                             <button class="btn btn-sm btn-danger" 
-//                                     onclick="event.stopPropagation(); deleteGrave('${item.unicId}')" 
-//                                     title="מחיקה">
-//                                 <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
-//                             </button>
-//                         `;
-//                         break;
+                    case 'actions':
+                        column.render = (item) => `
+                            <button class="btn btn-sm btn-secondary" 
+                                    onclick="event.stopPropagation(); window.tableRenderer.editItem('${item.unicId}')" 
+                                    title="עריכה">
+                                <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
+                            </button>
+                            <button class="btn btn-sm btn-danger" 
+                                    onclick="event.stopPropagation(); deleteGrave('${item.unicId}')" 
+                                    title="מחיקה">
+                                <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
+                            </button>
+                        `;
+                        break;
 
-//                     default:
-//                         // עמודת טקסט רגילה
-//                         if (!column.render) {
-//                             column.render = (item) => item[column.field] || '-';
-//                         }
-//                 }
+                    default:
+                        // עמודת טקסט רגילה
+                        if (!column.render) {
+                            column.render = (item) => item[column.field] || '-';
+                        }
+                }
                 
-//                 return column;
-//             });
+                return column;
+            });
             
-//             return columns;
-//         } catch (error) {
-//             // בדיקה: אם זה ביטול מכוון - זה לא שגיאה
-//             if (error.name === 'AbortError') {
-//                 console.log('⚠️ Columns loading aborted');
-//                 return [];
-//             }
-//             console.error('Failed to load columns config:', error);
-//             return [];
-//         }
-//     }
+            return columns;
+        } catch (error) {
+            // בדיקה: אם זה ביטול מכוון - זה לא שגיאה
+            if (error.name === 'AbortError') {
+                console.log('⚠️ Columns loading aborted');
+                return [];
+            }
+            console.error('Failed to load columns config:', error);
+            return [];
+        }
+    }
 
-//     // קודם טען את העמודות
-//     const columns = await loadColumnsFromConfig('grave', signal);
+    // קודם טען את העמודות
+    const columns = await loadColumnsFromConfig('grave', signal);
 
-//     // בדוק אם בוטל
-//     if (signal && signal.aborted) {
-//         console.log('⚠️ Grave table initialization aborted');
-//         return null;
-//     }
+    // בדוק אם בוטל
+    if (signal && signal.aborted) {
+        console.log('⚠️ Grave table initialization aborted');
+        return null;
+    }
 
-//     gravesTable = new TableManager({
+    gravesTable = new TableManager({
 
-//         tableSelector: '#mainTable',   
-//         columns: columns,
-//         data: data,      
-//         sortable: true,
-//         resizable: true,
-//         reorderable: false,
-//         filterable: false,
+        tableSelector: '#mainTable',   
+        columns: columns,
+        data: data,      
+        sortable: true,
+        resizable: true,
+        reorderable: false,
+        filterable: false,
 
-//         tableHeight: 'calc(100vh - 650px)',  // גובה דינמי לפי מסך
-//         tableMinHeight: '500px',
+        tableHeight: 'calc(100vh - 650px)',  // גובה דינמי לפי מסך
+        tableMinHeight: '500px',
 
         
-//         // ============================================
-//         // ⭐ 3 פרמטרים חדשים - הוסף כאן!
-//         // ============================================
-//         totalItems: actualTotalItems,        // ⭐ סה"כ רשומות במערכת (מה-pagination)
-//         scrollLoadBatch: 100,                // ⭐ טען 100 שורות בכל גלילה (client-side)
-//         itemsPerPage: 999999,                // ⭐ עמוד אחד גדול = כל הנתונים
-//         scrollThreshold: 200,                // ⭐ התחל טעינה 200px לפני התחתית
-//         showPagination: false,               // ⭐ ללא footer pagination
+        // ============================================
+        // ⭐ 3 פרמטרים חדשים - הוסף כאן!
+        // ============================================
+        totalItems: actualTotalItems,        // ⭐ סה"כ רשומות במערכת (מה-pagination)
+        scrollLoadBatch: 100,                // ⭐ טען 100 שורות בכל גלילה (client-side)
+        itemsPerPage: 999999,                // ⭐ עמוד אחד גדול = כל הנתונים
+        scrollThreshold: 200,                // ⭐ התחל טעינה 200px לפני התחתית
+        showPagination: false,               // ⭐ ללא footer pagination
 
  
-//         // scrollLoadBatch: 0,                  // ⭐ 0 = ללא infinite scroll
-//         // itemsPerPage: 100,                   // ⭐ 100 רשומות לעמוד
-//         // showPagination: true,                // ⭐ הצג footer pagination
-//         // paginationOptions: [25, 50, 100, 200], // ⭐ אפשרויות בסלקט
+        // scrollLoadBatch: 0,                  // ⭐ 0 = ללא infinite scroll
+        // itemsPerPage: 100,                   // ⭐ 100 רשומות לעמוד
+        // showPagination: true,                // ⭐ הצג footer pagination
+        // paginationOptions: [25, 50, 100, 200], // ⭐ אפשרויות בסלקט
 
-//         // ============================================
-//         // הגדרות קיימות
-//         // ============================================
+        // ============================================
+        // הגדרות קיימות
+        // ============================================
         
-//         // ============================================
-//         // ⭐⭐⭐ Callback לטעינת עוד נתונים מהשרת
-//         // ============================================
+        // ============================================
+        // ⭐⭐⭐ Callback לטעינת עוד נתונים מהשרת
+        // ============================================
 
-//         onLoadMore: async () => {
-//             if (gravesIsSearchMode) {
-//                 // ⭐ חיפוש - טען דרך UniversalSearch
-//                 if (graveSearch && typeof graveSearch.loadNextPage === 'function') {
-//                     if (graveSearch.state.currentPage >= graveSearch.state.totalPages) {
-//                         gravesTable.state.hasMoreData = false;
-//                         return;
-//                     }
-//                     await graveSearch.loadNextPage();
-//                 }
-//             } else {
-//                 // ⭐ Browse - טען ישירות
-//                 const success = await appendMoreGraves();
-//                 if (!success) {
-//                     gravesTable.state.hasMoreData = false;
-//                 }
-//             }
-//         },
+        onLoadMore: async () => {
+            if (gravesIsSearchMode) {
+                // ⭐ חיפוש - טען דרך UniversalSearch
+                if (graveSearch && typeof graveSearch.loadNextPage === 'function') {
+                    if (graveSearch.state.currentPage >= graveSearch.state.totalPages) {
+                        gravesTable.state.hasMoreData = false;
+                        return;
+                    }
+                    await graveSearch.loadNextPage();
+                }
+            } else {
+                // ⭐ Browse - טען ישירות
+                const success = await appendMoreGraves();
+                if (!success) {
+                    gravesTable.state.hasMoreData = false;
+                }
+            }
+        },
 
-//         renderFunction: (pageData) => {
-//             // ⭐ זה לא ישמש - UniversalSearch ירנדר ישירות
-//             return renderGravesRows(pageData);
-//         },
+        renderFunction: (pageData) => {
+            // ⭐ זה לא ישמש - UniversalSearch ירנדר ישירות
+            return renderGravesRows(pageData);
+        },
     
 
-//         onSort: (field, order) => {
-//             console.log(`📊 Sorted by ${field} ${order}`);
-//             showToast(`ממוין לפי ${field} (${order === 'asc' ? 'עולה' : 'יורד'})`, 'info');
-//         },
+        onSort: (field, order) => {
+            console.log(`📊 Sorted by ${field} ${order}`);
+            showToast(`ממוין לפי ${field} (${order === 'asc' ? 'עולה' : 'יורד'})`, 'info');
+        },
         
-//         onFilter: (filters) => {
-//             console.log('🔍 Active filters:', filters);
-//             const count = gravesTable.getFilteredData().length;
-//             showToast(`נמצאו ${count} תוצאות`, 'info');
-//         }
-//     });
+        onFilter: (filters) => {
+            console.log('🔍 Active filters:', filters);
+            const count = gravesTable.getFilteredData().length;
+            showToast(`נמצאו ${count} תוצאות`, 'info');
+        }
+    });
     
-//     window.gravesTable = gravesTable;
+    window.gravesTable = gravesTable;
     
-//     return gravesTable;
-// }
+    return gravesTable;
+}
 
 
 // ===================================================================
@@ -846,27 +846,27 @@ function renderGravesRows(data, container, pagination = null, signal = null) {
     }
 }
 
-// // ===================================================================
-// // פורמט תאריך
-// // ===================================================================
-// function formatDate(dateString) {
-//     if (!dateString) return '';
-//     const date = new Date(dateString);
-//     return date.toLocaleDateString('he-IL');
-// }
+// ===================================================================
+// פורמט תאריך
+// ===================================================================
+function formatDate(dateString) {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('he-IL');
+}
 
-// // ===================================================================
-// // פונקציית עזר לשם סוג קבר
-// // ===================================================================
-// function getGraveStatusInfo(status) {
-//     const statuses = {
-//         1: { label: 'פנוי', color: '#10b981' },
-//         2: { label: 'נרכש', color: '#f59e0b' },
-//         3: { label: 'קבור', color: '#6b7280' },
-//         4: { label: 'שמור', color: '#3b82f6' }
-//     };
-//     return statuses[status] || { label: 'לא מוגדר', color: '#9ca3af' };
-// }
+// ===================================================================
+// פונקציית עזר לשם סוג קבר
+// ===================================================================
+function getGraveStatusInfo(status) {
+    const statuses = {
+        1: { label: 'פנוי', color: '#10b981' },
+        2: { label: 'נרכש', color: '#f59e0b' },
+        3: { label: 'קבור', color: '#6b7280' },
+        4: { label: 'שמור', color: '#3b82f6' }
+    };
+    return statuses[status] || { label: 'לא מוגדר', color: '#9ca3af' };
+}
 
 // ===================================================================
 // טעינת סטטיסטיקות
@@ -904,140 +904,140 @@ async function loadGraveStats(signal, areaGraveId = null) {
     }
 }
 
-// // ===================================================================
-// // מחיקת אחוזת קבר
-// // ===================================================================
-// async function deleteGrave(graveId) {
-//     if (!confirm('האם אתה בטוח שברצונך למחוק את אחוזת הקבר?')) {
-//         return;
-//     }
+// ===================================================================
+// מחיקת אחוזת קבר
+// ===================================================================
+async function deleteGrave(graveId) {
+    if (!confirm('האם אתה בטוח שברצונך למחוק את אחוזת הקבר?')) {
+        return;
+    }
     
-//     try {
-//         const response = await fetch(`/dashboard/dashboards/cemeteries/api/graves-api.php?action=delete&id=${graveId}`, {
-//             method: 'DELETE'
-//         });
+    try {
+        const response = await fetch(`/dashboard/dashboards/cemeteries/api/graves-api.php?action=delete&id=${graveId}`, {
+            method: 'DELETE'
+        });
         
-//         const result = await response.json();
+        const result = await response.json();
         
-//         if (!result.success) {
-//             throw new Error(result.error || 'שגיאה במחיקת אחוזת הקבר');
-//         }
+        if (!result.success) {
+            throw new Error(result.error || 'שגיאה במחיקת אחוזת הקבר');
+        }
         
-//         showToast('אחוזת הקבר נמחקה בהצלחה', 'success');
+        showToast('אחוזת הקבר נמחקה בהצלחה', 'success');
         
-//         if (graveSearch) {
-//             graveSearch.refresh();
-//         }
+        if (graveSearch) {
+            graveSearch.refresh();
+        }
         
-//     } catch (error) {
-//         console.error('Error deleting area grave:', error);
-//         showToast(error.message, 'error');
-//     }
-// }
+    } catch (error) {
+        console.error('Error deleting area grave:', error);
+        showToast(error.message, 'error');
+    }
+}
 
 
-// // ===================================================================
-// // הצגת הודעות Toast
-// // ===================================================================
-// function showToast(message, type = 'info') {
-//     const toast = document.createElement('div');
-//     toast.className = 'toast-message';
-//     toast.style.cssText = `
-//         position: fixed;
-//         top: 20px;
-//         left: 50%;
-//         transform: translateX(-50%);
-//         background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
-//         color: white;
-//         padding: 15px 25px;
-//         border-radius: 8px;
-//         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-//         z-index: 10000;
-//         display: flex;
-//         align-items: center;
-//         gap: 10px;
-//         animation: slideDown 0.3s ease-out;
-//     `;
+// ===================================================================
+// הצגת הודעות Toast
+// ===================================================================
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = 'toast-message';
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+        color: white;
+        padding: 15px 25px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        animation: slideDown 0.3s ease-out;
+    `;
     
-//     toast.innerHTML = `
-//         <span>${type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ'}</span>
-//         <span>${message}</span>
-//     `;
+    toast.innerHTML = `
+        <span>${type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ'}</span>
+        <span>${message}</span>
+    `;
     
-//     document.body.appendChild(toast);
+    document.body.appendChild(toast);
     
-//     setTimeout(() => {
-//         toast.style.animation = 'slideUp 0.3s ease-out';
-//         setTimeout(() => toast.remove(), 300);
-//     }, 3000);
-// }
+    setTimeout(() => {
+        toast.style.animation = 'slideUp 0.3s ease-out';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
 
 
-// // ===================================================================
-// // רענון נתונים
-// // ===================================================================
-// async function refreshGravesData() {
-//     // טעינה מחדש ישירה מה-API (כי UniversalSearch מושבת)
-//     await loadGraves(currentAreaGraveId, currentAreaGraveName, false);
-// }
+// ===================================================================
+// רענון נתונים
+// ===================================================================
+async function refreshGravesData() {
+    // טעינה מחדש ישירה מה-API (כי UniversalSearch מושבת)
+    await loadGraves(currentAreaGraveId, currentAreaGraveName, false);
+}
 
 
-// // ===================================================================
-// // בדיקת סטטוס טעינה
-// // ===================================================================
-// function checkGravesScrollStatus() {
-//     if (!gravesTable) {
-//         console.log('❌ Table not initialized');
-//         return;
-//     }
+// ===================================================================
+// בדיקת סטטוס טעינה
+// ===================================================================
+function checkGravesScrollStatus() {
+    if (!gravesTable) {
+        console.log('❌ Table not initialized');
+        return;
+    }
     
-//     const total = gravesTable.getFilteredData().length;
-//     const displayed = gravesTable.getDisplayedData().length;
-//     const remaining = total - displayed;
+    const total = gravesTable.getFilteredData().length;
+    const displayed = gravesTable.getDisplayedData().length;
+    const remaining = total - displayed;
     
-//     console.log('📊 Scroll Status:');
-//     console.log(`   Total items: ${total}`);
-//     console.log(`   Displayed: ${displayed}`);
-//     console.log(`   Remaining: ${remaining}`);
-//     console.log(`   Progress: ${Math.round((displayed / total) * 100)}%`);
+    console.log('📊 Scroll Status:');
+    console.log(`   Total items: ${total}`);
+    console.log(`   Displayed: ${displayed}`);
+    console.log(`   Remaining: ${remaining}`);
+    console.log(`   Progress: ${Math.round((displayed / total) * 100)}%`);
     
-//     if (remaining > 0) {
-//         console.log(`   🔽 Scroll down to load more items`);
-//     } else {
-//         console.log('   ✅ All items loaded');
-//     }
-// }
+    if (remaining > 0) {
+        console.log(`   🔽 Scroll down to load more items`);
+    } else {
+        console.log('   ✅ All items loaded');
+    }
+}
 
 
-// // ===================================================================
-// // דאבל-קליק על אחוזת קבר
-// // ===================================================================
-// async function handleGraveDoubleClick(graveId, graveName) {
-//     console.log('🖱️ Double-click on area grave:', graveName, graveId);
+// ===================================================================
+// דאבל-קליק על אחוזת קבר
+// ===================================================================
+async function handleGraveDoubleClick(graveId, graveName) {
+    console.log('🖱️ Double-click on area grave:', graveName, graveId);
     
-//     try {
-//         if (typeof createGraveCard === 'function') {
-//             const cardHtml = await createGraveCard(graveId);
-//             if (cardHtml && typeof displayHierarchyCard === 'function') {
-//                 displayHierarchyCard(cardHtml);
-//             }
-//         }
+    try {
+        if (typeof createGraveCard === 'function') {
+            const cardHtml = await createGraveCard(graveId);
+            if (cardHtml && typeof displayHierarchyCard === 'function') {
+                displayHierarchyCard(cardHtml);
+            }
+        }
         
-//         console.log('🪦 Loading graves for area grave:', graveName);
-//         if (typeof loadGraves === 'function') {
-//             loadGraves(graveId, graveName);
-//         } else {
-//             console.warn('loadGraves function not found');
-//         }
+        console.log('🪦 Loading graves for area grave:', graveName);
+        if (typeof loadGraves === 'function') {
+            loadGraves(graveId, graveName);
+        } else {
+            console.warn('loadGraves function not found');
+        }
         
-//     } catch (error) {
-//         console.error('❌ Error in handleGraveDoubleClick:', error);
-//         showToast('שגיאה בטעינת פרטי אחוזת הקבר', 'error');
-//     }
-// }
+    } catch (error) {
+        console.error('❌ Error in handleGraveDoubleClick:', error);
+        showToast('שגיאה בטעינת פרטי אחוזת הקבר', 'error');
+    }
+}
 
 
-// window.handleGraveDoubleClick = handleGraveDoubleClick;
+window.handleGraveDoubleClick = handleGraveDoubleClick;
 
 
 // ===================================================================
@@ -1047,18 +1047,18 @@ window.loadGraves = loadGraves;
 
 window.appendMoreGraves = appendMoreGraves;
 
-// window.deleteGrave = deleteGrave;
+window.deleteGrave = deleteGrave;
 
-// window.refreshGravesData = refreshGravesData;
+window.refreshGravesData = refreshGravesData;
 
-// window.gravesTable = gravesTable;
+window.gravesTable = gravesTable;
 
-// window.checkGravesScrollStatus = checkGravesScrollStatus;
+window.checkGravesScrollStatus = checkGravesScrollStatus;
 
-// window.currentAreaGraveId = currentAreaGraveId;
+window.currentAreaGraveId = currentAreaGraveId;
 
-// window.currentAreaGraveName = currentAreaGraveName;
+window.currentAreaGraveName = currentAreaGraveName;
 
-// window.graveSearch = graveSearch;
+window.graveSearch = graveSearch;
 
 console.log('✅ graves-management.js v1.6.0 - Loaded successfully! (No conflicts with area-graves)');

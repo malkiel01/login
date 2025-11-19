@@ -1,14 +1,15 @@
 <?php
 /*
  * File: dashboard/dashboards/cemeteries/api/purchases-api.php
- * Version: 1.2.0
- * Updated: 2025-11-18
+ * Version: 1.2.1
+ * Updated: 2025-11-19
  * Author: Malkiel
  * Change Summary:
- * - v1.2.0: 🐛 תיקון קריטי - תמיכה ב-POST data מ-UniversalSearch
- *   - הוספת טיפול ב-POST data (כמו areaGraves-api.php)
- *   - החלפת $search ל-$query בכל מקום
- *   - תמיכה גם ב-GET וגם ב-POST
+ * - v1.2.1: 🐛 **תיקון קריטי** - המרת טיפוס ב-pagination
+ *   - הוספת (int) להמרת page, limit, total ב-pagination
+ *   - תיקון בעיית "1" + 1 = "11" במקום 1 + 1 = 2
+ *   - עכשיו זהה 100% ל-areaGraves-api.php
+ * - v1.2.0: תמיכה ב-POST data מ-UniversalSearch
  * - v1.1.0: תיקון countSql עם preg_replace
  */
 
@@ -31,8 +32,8 @@ if ($postData && isset($postData['action'])) {
     $limit = $postData['limit'] ?? 200;
     $sort = $postData['orderBy'] ?? 'createDate';
     $order = strtoupper($postData['sortDirection'] ?? 'DESC');
-    $status = '';  // סטטוס מגיע מפילטרים
-    $customer_id = '';  // לקוח מגיע מפילטרים
+    $status = '';  
+    $customer_id = '';  
 } else {
     // אחרת - GET רגיל
     $action = $_GET['action'] ?? '';
@@ -40,20 +41,14 @@ if ($postData && isset($postData['action'])) {
     $filters = [];
     $page = $_GET['page'] ?? 1;
     $limit = $_GET['limit'] ?? 200;
-
-    // $sort = $_GET['sort'] ?? 'createDate';
-    // $order = strtoupper($_GET['order'] ?? 'DESC');
-
-    $orderBy = $_GET['orderBy'] ?? 'createDate';  // ✅
-    $sortDirection = $_GET['sortDirection'] ?? 'DESC';  // ✅
-
+    $sort = $_GET['sort'] ?? 'createDate';
+    $order = strtoupper($_GET['order'] ?? 'DESC');
     $status = $_GET['status'] ?? '';
     $customer_id = $_GET['customer_id'] ?? '';
 }
 
 // ⭐ $id תמיד מגיע רק מ-GET (גם בעריכה וגם במחיקה)
 $id = $_GET['id'] ?? null;
-
 // =====================================
 // 2️⃣ חיבור למסד נתונים
 // =====================================
@@ -67,7 +62,7 @@ try {
 
 try {
     switch ($action) {
-        case 'list2':
+        case 'list':
             // חישוב offset
             $offset = ($page - 1) * $limit;
             
@@ -124,7 +119,7 @@ try {
                 $params['customer_id'] = $customer_id;
             }
             
-            // ✅ ספירת סה"כ תוצאות - בדיוק כמו areaGraves!
+            // ✅ ספירת סה"כ תוצאות
             $countSql = preg_replace('/SELECT\s+.*?\s+FROM/s', 'SELECT COUNT(*) FROM', $sql);
             $countStmt = $pdo->prepare($countSql);
             $countStmt->execute($params);
@@ -164,121 +159,10 @@ try {
                 'success' => true,
                 'data' => $purchases,
                 'pagination' => [
-                    'total' => $total,
-                    'page' => $page,
-                    'limit' => $limit,
-                    'pages' => ceil($total / $limit)
-                ]
-            ]);
-            break;
-            
-        case 'list':
-            // חישוב offset
-            $offset = ($page - 1) * $limit;
-            
-            // בניית השאילתה
-            $sql = "
-                SELECT 
-                    p.*,
-                    CONCAT(c.firstName, ' ', c.lastName) as customer_name,
-                    c.numId as customer_id_number,
-                    c.phone as customer_phone,
-                    c.phoneMobile as customer_mobile,
-                    g.graveNameHe as grave_number,
-                    g.graveLocation as grave_location,
-                    g.graveStatus,
-                    ag.areaGraveNameHe,
-                    r.lineNameHe,
-                    pl.plotNameHe,
-                    b.blockNameHe,
-                    ce.cemeteryNameHe
-                FROM purchases p
-                LEFT JOIN customers c ON p.clientId = c.unicId
-                LEFT JOIN graves g ON p.graveId = g.unicId
-                LEFT JOIN areaGraves ag ON g.areaGraveId = ag.unicId
-                LEFT JOIN rows r ON ag.lineId = r.unicId
-                LEFT JOIN plots pl ON r.plotId = pl.unicId
-                LEFT JOIN blocks b ON pl.blockId = b.unicId
-                LEFT JOIN cemeteries ce ON b.cemeteryId = ce.unicId
-                WHERE p.isActive = 1
-            ";
-            $params = [];
-            
-            // ✅ חיפוש - תוקן עם placeholders ייחודיים
-            if ($query) {
-                $sql .= " AND (
-                    p.id LIKE :query1 OR 
-                    p.serialPurchaseId LIKE :query2 OR
-                    c.firstName LIKE :query3 OR 
-                    c.lastName LIKE :query4 OR
-                    c.numId LIKE :query5 OR
-                    g.graveNameHe LIKE :query6
-                )";
-                $searchTerm = "%$query%";
-                $params['query1'] = $searchTerm;
-                $params['query2'] = $searchTerm;
-                $params['query3'] = $searchTerm;
-                $params['query4'] = $searchTerm;
-                $params['query5'] = $searchTerm;
-                $params['query6'] = $searchTerm;
-            }
-            
-            // סינון לפי סטטוס
-            if ($status) {
-                $sql .= " AND p.purchaseStatus = :status";
-                $params['status'] = $status;
-            }
-            
-            // סינון לפי לקוח
-            if ($customer_id) {
-                $sql .= " AND p.clientId = :customer_id";
-                $params['customer_id'] = $customer_id;
-            }
-            
-            // ✅ ספירת סה"כ תוצאות - בדיוק כמו areaGraves!
-            $countSql = preg_replace('/SELECT\s+.*?\s+FROM/s', 'SELECT COUNT(*) FROM', $sql);
-            $countStmt = $pdo->prepare($countSql);
-            $countStmt->execute($params);
-            $total = $countStmt->fetchColumn();
-            
-            // רשימת עמודות מותרות למיון
-            $allowedSortColumns = ['createDate', 'dateOpening', 'price', 'purchaseStatus', 'id', 'serialPurchaseId'];
-            if (!in_array($sort, $allowedSortColumns)) {
-                $sort = 'createDate';
-            }
-            
-            // בדיקת כיוון המיון
-            $order = strtoupper($order) === 'ASC' ? 'ASC' : 'DESC';
-            
-            // הוספת מיון ועימוד
-            $sql .= " ORDER BY p.$sort $order LIMIT :limit OFFSET :offset";
-            
-            $stmt = $pdo->prepare($sql);
-            foreach ($params as $key => $value) {
-                $stmt->bindValue($key, $value);
-            }
-            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-            $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-            $stmt->execute();
-            
-            $purchases = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            // הוסף תאימות לאחור
-            foreach ($purchases as &$purchase) {
-                $purchase['purchase_date'] = $purchase['dateOpening'];
-                $purchase['amount'] = $purchase['price'];
-                $purchase['purchase_number'] = $purchase['serialPurchaseId'];
-                $purchase['purchase_status'] = $purchase['purchaseStatus'];
-            }
-            
-            echo json_encode([
-                'success' => true,
-                'data' => $purchases,
-                'pagination' => [
-                    'total' => $total,
-                    'page' => $page,
-                    'limit' => $limit,
-                    'pages' => ceil($total / $limit)
+                    'page' => (int)$page,      // ✅ המרה ל-INT
+                    'limit' => (int)$limit,    // ✅ המרה ל-INT
+                    'total' => (int)$total,    // ✅ המרה ל-INT
+                    'pages' => (int)ceil($total / $limit)  // ✅ המרה ל-INT
                 ]
             ]);
             break;

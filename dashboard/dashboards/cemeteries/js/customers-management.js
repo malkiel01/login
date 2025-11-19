@@ -644,13 +644,21 @@ async function renderCustomersRows(data, container, pagination = null, signal = 
 }
 
 // ===================================================================
-// פורמט תאריך
+// הפנייה לפונקציות גלובליות
 // ===================================================================
-function formatDate(dateString) {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('he-IL');
+
+function checkCustomersScrollStatus() {
+    checkEntityScrollStatus(customersTable, 'Customers');
 }
+
+// // ===================================================================
+// // פורמט תאריך
+// // ===================================================================
+// function formatDate(dateString) {
+//     if (!dateString) return '';
+//     const date = new Date(dateString);
+//     return date.toLocaleDateString('he-IL');
+// }
 
 // ===================================================================
 // פונקציות עזר לפורמט
@@ -735,41 +743,41 @@ async function deleteCustomer(customerId) {
 }
 
 
-// ===================================================================
-// הצגת הודעות Toast
-// ===================================================================
-function showToast(message, type = 'info') {
-    const toast = document.createElement('div');
-    toast.className = 'toast-message';
-    toast.style.cssText = `
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
-        color: white;
-        padding: 15px 25px;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        z-index: 10000;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        animation: slideDown 0.3s ease-out;
-    `;
+// // ===================================================================
+// // הצגת הודעות Toast
+// // ===================================================================
+// function showToast(message, type = 'info') {
+//     const toast = document.createElement('div');
+//     toast.className = 'toast-message';
+//     toast.style.cssText = `
+//         position: fixed;
+//         top: 20px;
+//         left: 50%;
+//         transform: translateX(-50%);
+//         background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+//         color: white;
+//         padding: 15px 25px;
+//         border-radius: 8px;
+//         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+//         z-index: 10000;
+//         display: flex;
+//         align-items: center;
+//         gap: 10px;
+//         animation: slideDown 0.3s ease-out;
+//     `;
     
-    toast.innerHTML = `
-        <span>${type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ'}</span>
-        <span>${message}</span>
-    `;
+//     toast.innerHTML = `
+//         <span>${type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ'}</span>
+//         <span>${message}</span>
+//     `;
     
-    document.body.appendChild(toast);
+//     document.body.appendChild(toast);
     
-    setTimeout(() => {
-        toast.style.animation = 'slideUp 0.3s ease-out';
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
-}
+//     setTimeout(() => {
+//         toast.style.animation = 'slideUp 0.3s ease-out';
+//         setTimeout(() => toast.remove(), 300);
+//     }, 3000);
+// }
 
 
 // ===================================================================
@@ -781,31 +789,31 @@ async function customersRefreshData() {
 }
 
 
-// ===================================================================
-// בדיקת סטטוס טעינה
-// ===================================================================
-function checkCustomersScrollStatus() {
-    if (!customersTable) {
-        console.log('❌ Table not initialized');
-        return;
-    }
+// // ===================================================================
+// // בדיקת סטטוס טעינה
+// // ===================================================================
+// function checkCustomersScrollStatus() {
+//     if (!customersTable) {
+//         console.log('❌ Table not initialized');
+//         return;
+//     }
     
-    const total = customersTable.getFilteredData().length;
-    const displayed = customersTable.getDisplayedData().length;
-    const remaining = total - displayed;
+//     const total = customersTable.getFilteredData().length;
+//     const displayed = customersTable.getDisplayedData().length;
+//     const remaining = total - displayed;
     
-    console.log('📊 Scroll Status:');
-    console.log(`   Total items: ${total}`);
-    console.log(`   Displayed: ${displayed}`);
-    console.log(`   Remaining: ${remaining}`);
-    console.log(`   Progress: ${Math.round((displayed / total) * 100)}%`);
+//     console.log('📊 Scroll Status:');
+//     console.log(`   Total items: ${total}`);
+//     console.log(`   Displayed: ${displayed}`);
+//     console.log(`   Remaining: ${remaining}`);
+//     console.log(`   Progress: ${Math.round((displayed / total) * 100)}%`);
     
-    if (remaining > 0) {
-        console.log(`   🔽 Scroll down to load more items`);
-    } else {
-        console.log('   ✅ All items loaded');
-    }
-}
+//     if (remaining > 0) {
+//         console.log(`   🔽 Scroll down to load more items`);
+//     } else {
+//         console.log('   ✅ All items loaded');
+//     }
+// }
 
 
 // ===================================================================

@@ -580,9 +580,23 @@ async function initPurchasesTable(data, totalItems = null, signal = null) {
         
         infiniteScroll: true,
         scrollThreshold: 200,
-        onScrollEnd: async () => {
-            console.log('📜 Reached scroll end, loading more...');
-            await appendMorePurchases();
+        onLoadMore: async () => {
+            if (purchasesIsSearchMode) {
+                // במצב חיפוש - טען דרך UniversalSearch
+                if (purchaseSearch && typeof purchaseSearch.loadNextPage === 'function') {
+                    if (purchaseSearch.state.currentPage >= purchaseSearch.state.totalPages) {
+                        purchasesTable.state.hasMoreData = false;
+                        return;
+                    }
+                    await purchaseSearch.loadNextPage();
+                }
+            } else {
+                // במצב Browse - טען ישירות
+                const success = await appendMorePurchases();
+                if (!success) {
+                    purchasesTable.state.hasMoreData = false;
+                }
+            }
         },
         
         onSort: (field, order) => {

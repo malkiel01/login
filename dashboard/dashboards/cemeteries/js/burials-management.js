@@ -592,9 +592,23 @@ async function initBurialsTable(data, totalItems = null, signal = null) {
         
         infiniteScroll: true,
         scrollThreshold: 200,
-        onScrollEnd: async () => {
-            console.log('📜 Reached scroll end, loading more...');
-            await appendMoreBurials();
+        onLoadMore: async () => {
+            if (burialsIsSearchMode) {
+                // במצב חיפוש - טען דרך UniversalSearch
+                if (burialSearch && typeof burialSearch.loadNextPage === 'function') {
+                    if (burialSearch.state.currentPage >= burialSearch.state.totalPages) {
+                        burialsTable.state.hasMoreData = false;
+                        return;
+                    }
+                    await burialSearch.loadNextPage();
+                }
+            } else {
+                // במצב Browse - טען ישירות
+                const success = await appendMoreBurials();
+                if (!success) {
+                    burialsTable.state.hasMoreData = false;
+                }
+            }
         },
         
         onSort: (field, order) => {

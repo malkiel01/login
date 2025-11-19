@@ -687,31 +687,34 @@ function formatCustomerStatus(status) {
 // ===================================================================
 // טעינת סטטיסטיקות
 // ===================================================================
-async function loadCustomerStats(signal) {
-    try {
-        const response = await fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=stats', { signal: signal });
-        const result = await response.json();
+// async function loadCustomerStats(signal) {
+//     try {
+//         const response = await fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=stats', { signal: signal });
+//         const result = await response.json();
         
-        if (result.success && result.data) {
-            console.log('📊 Customer stats:', result.data);
+//         if (result.success && result.data) {
+//             console.log('📊 Customer stats:', result.data);
             
-            if (document.getElementById('totalCustomers')) {
-                document.getElementById('totalCustomers').textContent = result.data.total_customers || 0;
-            }
-            if (document.getElementById('activeCustomers')) {
-                document.getElementById('activeCustomers').textContent = result.data.active || 0;
-            }
-            if (document.getElementById('newThisMonth')) {
-                document.getElementById('newThisMonth').textContent = result.data.new_this_month || 0;
-            }
-        }
-    } catch (error) {
-        if (error.name === 'AbortError') {
-            console.log('⚠️ Customer stats loading aborted - this is expected');
-            return;
-        }
-        console.error('Error loading customer stats:', error);
-    }
+//             if (document.getElementById('totalCustomers')) {
+//                 document.getElementById('totalCustomers').textContent = result.data.total_customers || 0;
+//             }
+//             if (document.getElementById('activeCustomers')) {
+//                 document.getElementById('activeCustomers').textContent = result.data.active || 0;
+//             }
+//             if (document.getElementById('newThisMonth')) {
+//                 document.getElementById('newThisMonth').textContent = result.data.new_this_month || 0;
+//             }
+//         }
+//     } catch (error) {
+//         if (error.name === 'AbortError') {
+//             console.log('⚠️ Customer stats loading aborted - this is expected');
+//             return;
+//         }
+//         console.error('Error loading customer stats:', error);
+//     }
+// }
+async function loadCustomerStats(signal) {
+    await loadEntityStats('customer', signal);
 }
 
 // ===================================================================

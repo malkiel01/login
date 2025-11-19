@@ -478,12 +478,17 @@ function checkEntityScrollStatus(tableInstance, entityName = 'Entity') {
     }
 }
 
-
 // ===================================================================
 // הפוך לגלובלי
 // ===================================================================
+window.ENTITY_CONFIG = ENTITY_CONFIG;                 // 🆕
 window.showToast = showToast;
 window.formatDate = formatDate;
 window.checkEntityScrollStatus = checkEntityScrollStatus;
+window.deleteEntity = deleteEntity;                   // 🆕 (כבר קיים, רק וודא)
+window.refreshEntityData = refreshEntityData;         // 🆕 (כבר קיים, רק וודא)
+window.loadEntityStats = loadEntityStats;             // 🆕
+window.formatEntityStatus = formatEntityStatus;       // 🆕
+window.formatCurrency = formatCurrency;               // 🆕
 
 console.log('✅ entities-common-utils.js v1.0.0 - Loaded successfully!');

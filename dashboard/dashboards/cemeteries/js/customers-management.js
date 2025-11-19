@@ -675,13 +675,16 @@ function formatCustomerType(type) {
     return types[type] || '-';
 }
 
+// function formatCustomerStatus(status) {
+//     const statuses = {
+//         1: { text: 'פעיל', color: '#10b981' },
+//         0: { text: 'לא פעיל', color: '#ef4444' }
+//     };
+//     const statusInfo = statuses[status] || statuses[1];
+//     return `<span style="background: ${statusInfo.color}; color: white; padding: 3px 8px; border-radius: 4px; font-size: 12px; display: inline-block;">${statusInfo.text}</span>`;
+// }
 function formatCustomerStatus(status) {
-    const statuses = {
-        1: { text: 'פעיל', color: '#10b981' },
-        0: { text: 'לא פעיל', color: '#ef4444' }
-    };
-    const statusInfo = statuses[status] || statuses[1];
-    return `<span style="background: ${statusInfo.color}; color: white; padding: 3px 8px; border-radius: 4px; font-size: 12px; display: inline-block;">${statusInfo.text}</span>`;
+    return formatEntityStatus('customer', status);
 }
 
 // ===================================================================

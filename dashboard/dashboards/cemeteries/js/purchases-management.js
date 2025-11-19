@@ -578,7 +578,11 @@ async function initPurchasesTable(data, totalItems = null, signal = null) {
         reorderable: false,
         filterable: true,
         
-        infiniteScroll: true,
+        
+        scrollLoadBatch: 100,
+        itemsPerPage: 999999,
+        showPagination: false,
+
         scrollThreshold: 200,
         onLoadMore: async () => {
             if (purchasesIsSearchMode) {

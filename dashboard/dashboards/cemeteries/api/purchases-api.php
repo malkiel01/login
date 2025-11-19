@@ -40,8 +40,13 @@ if ($postData && isset($postData['action'])) {
     $filters = [];
     $page = $_GET['page'] ?? 1;
     $limit = $_GET['limit'] ?? 200;
-    $sort = $_GET['sort'] ?? 'createDate';
-    $order = strtoupper($_GET['order'] ?? 'DESC');
+
+    // $sort = $_GET['sort'] ?? 'createDate';
+    // $order = strtoupper($_GET['order'] ?? 'DESC');
+
+    $orderBy = $_GET['orderBy'] ?? 'createDate';  // ✅
+    $sortDirection = $_GET['sortDirection'] ?? 'DESC';  // ✅
+
     $status = $_GET['status'] ?? '';
     $customer_id = $_GET['customer_id'] ?? '';
 }

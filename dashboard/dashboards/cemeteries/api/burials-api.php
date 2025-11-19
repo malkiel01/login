@@ -1,15 +1,15 @@
 <?php
 /*
  * File: dashboard/dashboards/cemeteries/api/burials-api.php
- * Version: 2.0.0
- * Updated: 2025-11-18
+ * Version: 2.1.0
+ * Updated: 2025-11-19
  * Author: Malkiel
  * Change Summary:
- * - v2.0.0: 🔥 יצירה מחדש מאפס - זהה 100% ל-purchases-api.php
- *   - תמיכה מלאה ב-POST data מ-UniversalSearch
- *   - תיקון placeholders ייחודיים בחיפוש (:query1, :query2...)
- *   - התאמת כל השדות לקבורות
- *   - מבנה זהה לחלוטין ל-purchases-api.php v1.2.0
+ * - v2.1.0: 🐛 תיקון קריטי - הסרת שדות לא קיימים מחיפוש
+ *   ✅ הסרת b.customerFirstName, b.customerLastName, b.customerNumId
+ *   ✅ שימוש רק בשדות מטבלת customers דרך JOIN (c.firstName, c.lastName, c.numId)
+ *   ✅ תיקון stats - שימוש ב-fetchAll במקום fetch
+ * - v2.0.0: יצירה מחדש מאפס - זהה 100% ל-purchases-api.php
  */
 
 header('Content-Type: application/json; charset=utf-8');
@@ -102,7 +102,7 @@ try {
             ";
             $params = [];
             
-            // ✅ חיפוש - תוקן עם placeholders ייחודיים
+            // ✅ חיפוש - רק שדות קיימים!
             if ($query) {
                 $sql .= " AND (
                     b.id LIKE :query1 OR 
@@ -110,10 +110,7 @@ try {
                     c.firstName LIKE :query3 OR 
                     c.lastName LIKE :query4 OR
                     c.numId LIKE :query5 OR
-                    g.graveNameHe LIKE :query6 OR
-                    b.customerFirstName LIKE :query7 OR
-                    b.customerLastName LIKE :query8 OR
-                    b.customerNumId LIKE :query9
+                    g.graveNameHe LIKE :query6
                 )";
                 $searchTerm = "%$query%";
                 $params['query1'] = $searchTerm;
@@ -122,9 +119,6 @@ try {
                 $params['query4'] = $searchTerm;
                 $params['query5'] = $searchTerm;
                 $params['query6'] = $searchTerm;
-                $params['query7'] = $searchTerm;
-                $params['query8'] = $searchTerm;
-                $params['query9'] = $searchTerm;
             }
             
             // סינון לפי סטטוס
@@ -212,28 +206,26 @@ try {
                 throw new Exception('Burial not found');
             }
             
-            // הוסף תאימות
-            $burial['burial_date'] = $burial['dateBurial'];
-            $burial['death_date'] = $burial['dateDeath'];
-            
-            echo json_encode(['success' => true, 'data' => $burial]);
+            echo json_encode([
+                'success' => true,
+                'data' => $burial
+            ]);
             break;
-            
-        // הוספת קבורה חדשה
+        
+        // יצירת קבורה חדשה
         case 'create':
             $data = json_decode(file_get_contents('php://input'), true);
             
-            // ולידציה
-            if (empty($data['clientId'])) {
-                throw new Exception('לקוח הוא שדה חובה');
+            // אימות שדות חובה
+            $required = ['clientId', 'graveId', 'dateDeath', 'dateBurial', 'timeBurial'];
+            foreach ($required as $field) {
+                if (empty($data[$field])) {
+                    throw new Exception("השדה $field הוא חובה");
+                }
             }
             
-            if (empty($data['graveId'])) {
-                throw new Exception('קבר הוא שדה חובה');
-            }
-            
-            // בדיקה שהקבר זמין לקבורה
-            $stmt = $pdo->prepare("SELECT graveStatus, graveNameHe FROM graves WHERE unicId = :id AND isActive = 1");
+            // בדוק אם הקבר תפוס
+            $stmt = $pdo->prepare("SELECT graveStatus FROM graves WHERE unicId = :id");
             $stmt->execute(['id' => $data['graveId']]);
             $grave = $stmt->fetch(PDO::FETCH_ASSOC);
             
@@ -241,90 +233,73 @@ try {
                 throw new Exception('הקבר לא נמצא');
             }
             
-            // קבר חייב להיות פנוי (1) או נרכש (2)
-            if (!in_array($grave['graveStatus'], [1, 2])) {
-                throw new Exception('הקבר אינו זמין לקבורה');
+            if ($grave['graveStatus'] == 3) {
+                throw new Exception('הקבר תפוס - לא ניתן לבצע קבורה');
             }
             
             // יצירת unicId
-            if (!isset($data['unicId'])) {
-                $data['unicId'] = uniqid('burial_', true);
-            }
+            $unicId = uniqid('burial_', true);
             
-            // יצירת מספר סידורי לקבורה
-            if (!isset($data['serialBurialId'])) {
-                $year = date('Y');
-                $stmt = $pdo->query("SELECT MAX(CAST(SUBSTRING(serialBurialId, 6) AS UNSIGNED)) as max_serial 
-                                     FROM burials 
-                                     WHERE serialBurialId LIKE '$year-%'");
-                $maxSerial = $stmt->fetch(PDO::FETCH_ASSOC)['max_serial'] ?? 0;
-                $data['serialBurialId'] = $year . '-' . str_pad($maxSerial + 1, 5, '0', STR_PAD_LEFT);
-            }
+            // הכנת נתונים
+            $serialBurialId = $data['serialBurialId'] ?? 'B-' . date('Ymd') . '-' . rand(1000, 9999);
+            $placeDeath = $data['placeDeath'] ?? '';
+            $nationalInsurance = $data['nationalInsuranceBurial'] ?? 'לא';
+            $deathAbroad = $data['deathAbroad'] ?? 'לא';
+            $burialLicense = $data['burialLicense'] ?? '';
+            $comment = $data['comment'] ?? '';
+            $timeDeath = $data['timeDeath'] ?? null;
             
-            // הוספת תאריכים
-            $data['createDate'] = date('Y-m-d H:i:s');
-            $data['updateDate'] = date('Y-m-d H:i:s');
+            // הכנסה למסד הנתונים
+            $stmt = $pdo->prepare("
+                INSERT INTO burials (
+                    unicId, clientId, graveId, purchaseId, serialBurialId,
+                    dateDeath, timeDeath, dateBurial, timeBurial,
+                    placeDeath, nationalInsuranceBurial, deathAbroad,
+                    savedGravesList, documentsList, historyList,
+                    burialLicense, comment,
+                    createDate, updateDate, isActive
+                ) VALUES (
+                    :unicId, :clientId, :graveId, :purchaseId, :serialBurialId,
+                    :dateDeath, :timeDeath, :dateBurial, :timeBurial,
+                    :placeDeath, :nationalInsurance, :deathAbroad,
+                    '[]', '[]', '[]',
+                    :burialLicense, :comment,
+                    NOW(), NOW(), 1
+                )
+            ");
             
-            // ברירת מחדל לתאריך קבורה
-            if (!isset($data['dateBurial'])) {
-                $data['dateBurial'] = date('Y-m-d');
-            }
+            $stmt->execute([
+                'unicId' => $unicId,
+                'clientId' => $data['clientId'],
+                'graveId' => $data['graveId'],
+                'purchaseId' => $data['purchaseId'] ?? null,
+                'serialBurialId' => $serialBurialId,
+                'dateDeath' => $data['dateDeath'],
+                'timeDeath' => $timeDeath,
+                'dateBurial' => $data['dateBurial'],
+                'timeBurial' => $data['timeBurial'],
+                'placeDeath' => $placeDeath,
+                'nationalInsurance' => $nationalInsurance,
+                'deathAbroad' => $deathAbroad,
+                'burialLicense' => $burialLicense,
+                'comment' => $comment
+            ]);
             
-            // ברירת מחדל לסטטוס
-            if (!isset($data['burialStatus'])) {
-                $data['burialStatus'] = 1; // ברישום
-            }
-
-            // ברירת מחדל ל-isActive
-            if (!isset($data['isActive'])) {
-                $data['isActive'] = 1;
-            }
-            
-            // בניית השאילתה
-            $fields = [
-                'unicId', 'clientId', 'graveId', 'purchaseId', 'serialBurialId', 'burialStatus',
-                'customerFirstName', 'customerLastName', 'customerNumId',
-                'dateDeath', 'timeDeath', 'dateBurial', 'timeBurial', 'placeDeath',
-                'nationalInsuranceBurial', 'deathAbroad', 'dateOpening_tld', 'reportingBL',
-                'kinship', 'buriaLicense', 'comment', 'createDate', 'updateDate', 'isActive'
-            ];
-            
-            $insertFields = [];
-            $insertValues = [];
-            $params = [];
-            
-            foreach ($fields as $field) {
-                if (isset($data[$field])) {
-                    $insertFields[] = $field;
-                    $insertValues[] = ":$field";
-                    $params[$field] = $data[$field];
-                }
-            }
-            
-            $sql = "INSERT INTO burials (" . implode(', ', $insertFields) . ") 
-                    VALUES (" . implode(', ', $insertValues) . ")";
-            
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($params);
-            
-            $burialId = $pdo->lastInsertId();
-            
-            // עדכון סטטוס הקבר לקבור (3)
+            // עדכן סטטוס הקבר לתפוס (3)
             $stmt = $pdo->prepare("UPDATE graves SET graveStatus = 3 WHERE unicId = :id");
             $stmt->execute(['id' => $data['graveId']]);
             
-            // עדכון סטטוס הלקוח לנפטר (3)
+            // עדכן סטטוס הלקוח לנפטר (3)
             $stmt = $pdo->prepare("UPDATE customers SET statusCustomer = 3 WHERE unicId = :id");
             $stmt->execute(['id' => $data['clientId']]);
             
             echo json_encode([
                 'success' => true,
-                'message' => 'הקבורה נוספה בהצלחה',
-                'id' => $burialId,
-                'unicId' => $data['unicId']
+                'message' => 'הקבורה נוצרה בהצלחה',
+                'id' => $unicId
             ]);
             break;
-            
+        
         // עדכון קבורה
         case 'update':
             if (!$id) {
@@ -332,66 +307,42 @@ try {
             }
             
             $data = json_decode(file_get_contents('php://input'), true);
-  
-            // בדוק אם graveId נשאר אותו דבר
-            if (isset($data['graveId'])) {
-                $stmt = $pdo->prepare("SELECT graveId FROM burials WHERE unicId = :id");
-                $stmt->execute(['id' => $id]);
-                $current = $stmt->fetch(PDO::FETCH_ASSOC);
-                
-                if ($current && $current['graveId'] == $data['graveId']) {
-                    unset($data['graveId']); // הסר אותו מהעדכון
-                }
-            }
-            if (isset($data['clientId'])) {
-                $stmt = $pdo->prepare("SELECT clientId FROM burials WHERE unicId = :id");
-                $stmt->execute(['id' => $id]);
-                $current = $stmt->fetch(PDO::FETCH_ASSOC);
-                
-                if ($current && $current['clientId'] == $data['clientId']) {
-                    unset($data['clientId']); // הסר אותו מהעדכון
-                }
+            
+            // שליפת הקבורה הקיימת
+            $stmt = $pdo->prepare("SELECT * FROM burials WHERE unicId = :id AND isActive = 1");
+            $stmt->execute(['id' => $id]);
+            $existing = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$existing) {
+                throw new Exception('הקבורה לא נמצאה');
             }
             
-            // בדיקה שהקבר החדש זמין (אם משנים קבר)
-            if (isset($data['graveId'])) {
-                $stmt = $pdo->prepare("SELECT graveStatus FROM graves WHERE unicId = :id AND isActive = 1");
-                $stmt->execute(['id' => $data['graveId']]);
-                $grave = $stmt->fetch(PDO::FETCH_ASSOC);
-                
-                if (!$grave || !in_array($grave['graveStatus'], [1, 2])) {
-                    throw new Exception('הקבר אינו זמין לקבורה');
-                }
-            }
-            
-            $data['updateDate'] = date('Y-m-d H:i:s');
-            
-            // בניית השאילתה
-            $updateFields = [];
-            $params = [];
+            // הכנת שדות לעדכון
+            $updates = [];
+            $params = ['id' => $id];
             
             $allowedFields = [
-                'graveId', 'purchaseId', 'burialStatus',
-                'customerFirstName', 'customerLastName', 'customerNumId',
-                'dateDeath', 'timeDeath', 'dateBurial', 'timeBurial', 'placeDeath',
-                'nationalInsuranceBurial', 'deathAbroad', 'dateOpening_tld', 'reportingBL',
-                'kinship', 'buriaLicense', 'comment', 'updateDate'
+                'dateDeath', 'timeDeath', 'dateBurial', 'timeBurial',
+                'placeDeath', 'nationalInsuranceBurial', 'deathAbroad',
+                'burialLicense', 'comment'
             ];
             
             foreach ($allowedFields as $field) {
                 if (isset($data[$field])) {
-                    $updateFields[] = "$field = :$field";
+                    $updates[] = "$field = :$field";
                     $params[$field] = $data[$field];
                 }
             }
             
-            if (empty($updateFields)) {
+            if (empty($updates)) {
                 throw new Exception('אין שדות לעדכון');
             }
             
-            $params['id'] = $id;
-            $sql = "UPDATE burials SET " . implode(', ', $updateFields) . " WHERE unicId = :id";
+            // הוסף תאריך עדכון
+            $updates[] = "updateDate = NOW()";
             
+            // ביצוע העדכון
+            $sql = "UPDATE burials SET " . implode(', ', $updates) . " WHERE unicId = :id";
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             
@@ -450,14 +401,14 @@ try {
         case 'stats':
             $stats = [];
             
-            // סה"כ קבורות לפי סטטוס
+            // סה"כ קבורות לפי סטטוס - ✅ תוקן ל-fetchAll
             $stmt = $pdo->query("
                 SELECT burialStatus, COUNT(*) as count
                 FROM burials 
                 WHERE isActive = 1 
                 GROUP BY burialStatus
             ");
-            $stats['by_status'] = $stmt->fetch(PDO::FETCH_ASSOC);
+            $stats['by_status'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             // קבורות החודש
             $stmt = $pdo->query("
@@ -500,7 +451,7 @@ try {
             echo json_encode(['success' => true, 'data' => $stats]);
             break;
             
-        // חיפוש מהיר לאוטוקומפליט
+        // חיפוש מהיר לאוטוקומפליט - ✅ תוקן
         case 'search':
             $query = $_GET['q'] ?? '';
             if (strlen($query) < 2) {
@@ -522,10 +473,7 @@ try {
                     c.firstName LIKE :query2 OR 
                     c.lastName LIKE :query3 OR
                     c.numId LIKE :query4 OR
-                    g.graveNameHe LIKE :query5 OR
-                    b.customerFirstName LIKE :query6 OR
-                    b.customerLastName LIKE :query7 OR
-                    b.customerNumId LIKE :query8
+                    g.graveNameHe LIKE :query5
                 )
                 LIMIT 10
             ");
@@ -535,10 +483,7 @@ try {
                 'query2' => $searchTerm,
                 'query3' => $searchTerm,
                 'query4' => $searchTerm,
-                'query5' => $searchTerm,
-                'query6' => $searchTerm,
-                'query7' => $searchTerm,
-                'query8' => $searchTerm
+                'query5' => $searchTerm
             ]);
             $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
             

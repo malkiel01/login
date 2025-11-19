@@ -64,7 +64,6 @@ async function loadCustomersBrowseData(signal = null) {
         }
     }
 }
-
 async function loadCustomers() {
     const signal = OperationManager.start('customer');
 
@@ -547,9 +546,23 @@ async function initCustomersTable(data, totalItems = null, signal = null) {
         
         infiniteScroll: true,
         scrollThreshold: 200,
-        onScrollEnd: async () => {
-            console.log('📜 Reached scroll end, loading more...');
-            await appendMoreCustomers();
+        onLoadMore: async () => {
+            if (customersIsSearchMode) {
+                // במצב חיפוש - טען דרך UniversalSearch
+                if (customerSearch && typeof customerSearch.loadNextPage === 'function') {
+                    if (customerSearch.state.currentPage >= customerSearch.state.totalPages) {
+                        customersTable.state.hasMoreData = false;
+                        return;
+                    }
+                    await customerSearch.loadNextPage();
+                }
+            } else {
+                // במצב Browse - טען ישירות
+                const success = await appendMoreCustomers();
+                if (!success) {
+                    customersTable.state.hasMoreData = false;
+                }
+            }
         },
         
         onSort: (field, order) => {

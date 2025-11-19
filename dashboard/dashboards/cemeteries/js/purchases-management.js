@@ -766,8 +766,7 @@ async function deletePurchase(purchaseId) {
 // רענון נתונים
 // ===================================================================
 async function purchasesRefreshData() {
-    // טעינה מחדש ישירה מה-API (כי UniversalSearch מושבת)
-    await loadPurchases();
+    await refreshEntityData('purchase');
 }
 
 // ===================================================================

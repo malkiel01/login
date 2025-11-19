@@ -712,7 +712,8 @@ async function deleteCustomer(customerId) {
 // רענון נתונים
 // ===================================================================
 async function customersRefreshData() {
-    await refreshEntityData('customer');
+    // טעינה מחדש ישירה מה-API (כי UniversalSearch מושבת)
+    await loadCustomers();
 }
 
 // ===================================================================

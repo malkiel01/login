@@ -105,6 +105,49 @@ async function deleteEntity(entityType, entityId) {
     }
 }
 
+// ===================================================================
+// 5️⃣ רענון נתוני יישות - גלובלי
+// ===================================================================
+/**
+ * מרענן את נתוני היישות (טבלה וחיפוש)
+ * @param {string} entityType - סוג היישות (cemetery, plot, burial, customer, purchase, areaGrave)
+ * @returns {Promise<void>}
+ */
+async function refreshEntityData(entityType) {
+    console.log(`🔄 refreshEntityData('${entityType}') called`);
+    
+    // ⭐ בדוק אם יש searchInstance
+    const searchVarName = `${entityType}Search`;
+    const searchInstance = window[searchVarName];
+    
+    if (searchInstance && typeof searchInstance.refresh === 'function') {
+        // דפוס 1: יש חיפוש מתקדם - השתמש ב-refresh()
+        console.log(`   ✅ Using ${searchVarName}.refresh()`);
+        searchInstance.refresh();
+        return;
+    }
+    
+    // ⭐ דפוס 2: אין חיפוש - קרא ישירות ל-load()
+    const loadFunctionName = `load${entityType.charAt(0).toUpperCase() + entityType.slice(1)}s`;
+    const loadFunction = window[loadFunctionName];
+    
+    if (typeof loadFunction === 'function') {
+        console.log(`   ✅ Calling ${loadFunctionName}()`);
+        
+        // ⭐ טיפול מיוחד ל-areaGrave שצריך פרמטרים
+        if (entityType === 'areaGrave') {
+            const plotId = window.areaGravesFilterPlotId || null;
+            const plotName = window.areaGravesFilterPlotName || null;
+            await loadFunction(plotId, plotName, false);
+        } else {
+            await loadFunction();
+        }
+    } else {
+        console.error(`❌ No refresh method found for entity type: ${entityType}`);
+        showToast(`שגיאה: לא נמצאה פונקציית רענון עבור ${entityType}`, 'error');
+    }
+}
+
 
 // ===================================================================
 // 1️⃣ הצגת הודעות Toast למשתמש

@@ -761,8 +761,7 @@ async function deleteBurial(burialId) {
 // רענון נתונים
 // ===================================================================
 async function burialsRefreshData() {
-    // טעינה מחדש ישירה מה-API (כי UniversalSearch מושבת)
-    await loadBurials();
+    await refreshEntityData('burial');
 }
 
 // ===================================================================

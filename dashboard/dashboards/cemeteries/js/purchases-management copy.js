@@ -1,93 +1,112 @@
 /*
- * File: dashboards/dashboard/cemeteries/assets/js/customers-management.js
- * Version: 4.0.0
+ * File: dashboards/dashboard/cemeteries/assets/js/purchases-management.js
+ * Version: 4.0.1
  * Updated: 2025-11-18
  * Author: Malkiel
  * Change Summary:
- * - v4.0.0: 🔥 שיטה זהה 100% ל-area-graves ו-graves
+ * - v4.0.1: 🐛 תיקון קריטי - טעינה שנייה לא הסתיימה
+ *   - הוספת בדיקת !tableWrapperExists ב-renderPurchasesRows (שורה 673)
+ *   - עכשיו זהה 100% ל-customers שעובד מעולה
+ * - v4.0.0: 🔥 שיטה זהה 100% ל-customers, area-graves ו-graves
  *   ✅ הוספת משתני חיפוש ו-pagination:
- *   - customersIsSearchMode, customersCurrentQuery, customersSearchResults
- *   - customersCurrentPage, customersTotalPages, customersIsLoadingMore
+ *   - purchasesIsSearchMode, purchasesCurrentQuery, purchasesSearchResults
+ *   - purchasesCurrentPage, purchasesTotalPages, purchasesIsLoadingMore
  *   ✅ הוספת פונקציות חסרות:
- *   - loadCustomersBrowseData() - טעינה ישירה מ-API
- *   - appendMoreCustomers() - Infinite Scroll
+ *   - loadPurchasesBrowseData() - טעינה ישירה מ-API
+ *   - appendMorePurchases() - Infinite Scroll
  *   ✅ התאמת כל הפונקציות לשיטה המאוחדת
- * - v3.3.0: תיקון קונפליקטים בפונקציות גלובליות
- * - v3.2.0: אחידות מלאה עם cemeteries-management
+ * - v3.2.1: אחידות חלקית עם customers-management
  * - v3.0.0: שיטה זהה לבתי עלמין - UniversalSearch + TableManager
  */
 
-console.log('🚀 customers-management.js v4.0.0 - Loading...');
+console.log('🚀 purchases-management.js v4.0.1 - Loading...');
 
 // ===================================================================
 // משתנים גלובליים
 // ===================================================================
-let currentCustomers = [];
-let customerSearch = null;
-let customersTable = null;
-let editingCustomerId = null;
+let currentPurchases = [];
+let purchaseSearch = null;
+let purchasesTable = null;
+let editingPurchaseId = null;
 
-let customersIsSearchMode = false;      // האם אנחנו במצב חיפוש?
-let customersCurrentQuery = '';         // מה החיפוש הנוכחי?
-let customersSearchResults = [];        // תוצאות החיפוש
+let purchasesIsSearchMode = false;      // האם אנחנו במצב חיפוש?
+let purchasesCurrentQuery = '';         // מה החיפוש הנוכחי?
+let purchasesSearchResults = [];        // תוצאות החיפוש
 
 // ⭐ Infinite Scroll - מעקב אחרי עמוד נוכחי (שמות ייחודיים!)
-let customersCurrentPage = 1;
-let customersTotalPages = 1;
-let customersIsLoadingMore = false;
+let purchasesCurrentPage = 1;
+let purchasesTotalPages = 1;
+let purchasesIsLoadingMore = false;
 
 
 // ===================================================================
-// טעינת לקוחות (הפונקציה הראשית)
+// טעינת רכישות (הפונקציה הראשית)
 // ===================================================================
-async function loadCustomersBrowseData(signal = null) {
-    customersCurrentPage = 1;
-    currentCustomers = [];
+async function loadPurchasesBrowseData(signal = null) {
+    purchasesCurrentPage = 1;
+    currentPurchases = [];
     
-    let apiUrl = '/dashboard/dashboards/cemeteries/api/customers-api.php?action=list&limit=200&page=1';
-    apiUrl += '&orderBy=createDate&sortDirection=DESC';
-    
-    const response = await fetch(apiUrl, { signal });
-    const result = await response.json();
-    
-    if (result.success && result.data) {
-        currentCustomers = result.data;
+    try {
+        let apiUrl = '/dashboard/dashboards/cemeteries/api/purchases-api.php?action=list&limit=200&page=1';
+        apiUrl += '&orderBy=createDate&sortDirection=DESC';
         
-        if (result.pagination) {
-            customersTotalPages = result.pagination.pages;
-            customersCurrentPage = result.pagination.page;
-        }
+        const response = await fetch(apiUrl, { signal });
+        const result = await response.json();
         
-        const tableBody = document.getElementById('tableBody');
-        if (tableBody) {
-            renderCustomersRows(result.data, tableBody, result.pagination, signal);
+        if (result.success && result.data) {
+            currentPurchases = result.data;
+            
+            if (result.pagination) {
+                purchasesTotalPages = result.pagination.pages;
+                purchasesCurrentPage = result.pagination.page;
+            }
+            
+            const tableBody = document.getElementById('tableBody');
+            if (tableBody) {
+                renderPurchasesRows(result.data, tableBody, result.pagination, signal);
+            }
         }
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            console.log('⚠️ Browse data loading aborted - this is expected');
+            return;
+        }
+        console.error('❌ Error loading browse data:', error);
+        showToast('שגיאה בטעינת רכישות', 'error');
     }
 }
 
-async function loadCustomers() {
-    const signal = OperationManager.start('customer');
+async function loadPurchases() {
+    console.log('══════════════════════════════════════════════════');
+    console.log('🚀 loadPurchases() STARTED');
+    console.log('══════════════════════════════════════════════════');
+    
+    const signal = OperationManager.start('purchase');
+    console.log('✅ Step 1: OperationManager started');
 
     // ⭐ איפוס מצב חיפוש
-    customersIsSearchMode = false;
-    customersCurrentQuery = '';
-    customersSearchResults = [];
+    purchasesIsSearchMode = false;
+    purchasesCurrentQuery = '';
+    purchasesSearchResults = [];
+    console.log('✅ Step 2: Search state reset');
     
     // עדכן את הסוג הנוכחי
-    window.currentType = 'customer';
+    window.currentType = 'purchase';
     window.currentParentId = null;
 
     // ⭐ עדכן גם את tableRenderer.currentType!
     if (window.tableRenderer) {
-        window.tableRenderer.currentType = 'customer';
+        window.tableRenderer.currentType = 'purchase';
     }
+    console.log('✅ Step 3: Current type set to purchase');
 
     // ⭐ נקה
     if (typeof DashboardCleaner !== 'undefined') {
-        DashboardCleaner.clear({ targetLevel: 'customer' });
+        DashboardCleaner.clear({ targetLevel: 'purchase' });
     } else if (typeof clearDashboard === 'function') {
-        clearDashboard({ targetLevel: 'customer' });
+        clearDashboard({ targetLevel: 'purchase' });
     }
+    console.log('✅ Step 4: Dashboard cleared');
     
     if (typeof clearAllSidebarSelections === 'function') {
         clearAllSidebarSelections();
@@ -95,7 +114,7 @@ async function loadCustomers() {
 
     // עדכון פריט תפריט אקטיבי
     if (typeof setActiveMenuItem === 'function') {
-        setActiveMenuItem('customersItem');
+        setActiveMenuItem('purchasesItem');
     }
     
     if (typeof updateAddButtonText === 'function') {
@@ -104,75 +123,97 @@ async function loadCustomers() {
     
     // עדכן breadcrumb
     if (typeof updateBreadcrumb === 'function') {
-        updateBreadcrumb({ customer: { name: 'לקוחות' } });
+        updateBreadcrumb({ purchase: { name: 'רכישות' } });
     }
     
     // עדכון כותרת החלון
-    document.title = 'ניהול לקוחות - מערכת בתי עלמין';
+    document.title = 'ניהול רכישות - מערכת בתי עלמין';
+    console.log('✅ Step 5: UI updated');
     
     // ⭐ בנה מבנה
-    await buildCustomersContainer(signal);
+    await buildPurchasesContainer(signal);
+    console.log('✅ Step 6: Container built');
     
-    if (OperationManager.shouldAbort('customer')) {
+    if (OperationManager.shouldAbort('purchase')) {
+        console.log('⚠️ ABORTED at step 6');
         return;
     }
 
     // ⭐ ספירת טעינות גלובלית
-    if (!window.customersLoadCounter) {
-        window.customersLoadCounter = 0;
+    if (!window.purchasesLoadCounter) {
+        window.purchasesLoadCounter = 0;
     }
-    window.customersLoadCounter++;
+    window.purchasesLoadCounter++;
+    console.log(`✅ Step 7: Load counter = ${window.purchasesLoadCounter}`);
     
-    // השמד חיפוש קודם
-    if (customerSearch && typeof customerSearch.destroy === 'function') {
-        console.log('🗑️ Destroying previous customerSearch instance...');
-        customerSearch.destroy();
-        customerSearch = null; 
-        window.customerSearch = null;
+    // ⭐ השמד חיפוש קודם
+    if (purchaseSearch && typeof purchaseSearch.destroy === 'function') {
+        console.log('🗑️ Destroying previous purchaseSearch instance...');
+        purchaseSearch.destroy();
+        purchaseSearch = null; 
+        window.purchaseSearch = null;
     }
+    
+    // ⭐ איפוס טבלה קודמת
+    if (purchasesTable) {
+        console.log('🗑️ Resetting previous purchasesTable instance...');
+        purchasesTable = null;
+        window.purchasesTable = null;
+    }
+    console.log('✅ Step 8: Previous instances destroyed');
     
     // ⭐ אתחול UniversalSearch - פעם אחת!
-    console.log('🆕 Creating fresh customerSearch instance...');
-    customerSearch = await initCustomersSearch(signal);
+    console.log('🆕 Creating fresh purchaseSearch instance...');
+    purchaseSearch = await initPurchasesSearch(signal);
+    console.log('✅ Step 9: UniversalSearch initialized');
     
-    if (OperationManager.shouldAbort('customer')) {
-        console.log('⚠️ Customer operation aborted');
+    if (OperationManager.shouldAbort('purchase')) {
+        console.log('⚠️ ABORTED at step 9');
+        console.log('⚠️ Purchase operation aborted');
         return;
     }
 
     // ⭐ טעינה ישירה (Browse Mode) - פעם אחת!
-    await loadCustomersBrowseData(signal);
+    console.log('📥 Loading browse data...');
+    await loadPurchasesBrowseData(signal);
+    console.log('✅ Step 10: Browse data loaded');
     
     // טען סטטיסטיקות
-    await loadCustomerStats(signal);
+    console.log('📊 Loading stats...');
+    await loadPurchaseStats(signal);
+    console.log('✅ Step 11: Stats loaded');
+    
+    console.log('══════════════════════════════════════════════════');
+    console.log('✅ loadPurchases() COMPLETED SUCCESSFULLY');
+    console.log('══════════════════════════════════════════════════');
 }
 
 
 // ===================================================================
-// 📥 טעינת עוד לקוחות (Infinite Scroll)
+// 📥 טעינת עוד רכישות (Infinite Scroll)
 // ===================================================================
-async function appendMoreCustomers() {
+async function appendMorePurchases() {
     // בדיקות בסיסיות
-    if (customersIsLoadingMore) {
+    if (purchasesIsLoadingMore) {
         return false;
     }
     
-    if (customersCurrentPage >= customersTotalPages) {
+    if (purchasesCurrentPage >= purchasesTotalPages) {
         return false;
     }
     
-    customersIsLoadingMore = true;
-    const nextPage = customersCurrentPage + 1;
+    purchasesIsLoadingMore = true;
+    const nextPage = purchasesCurrentPage + 1;
     
     // ⭐ עדכון מונה טעינות
-    if (!window.customersLoadCounter) {
-        window.customersLoadCounter = 0; 
+    if (!window.purchasesLoadCounter) {
+        window.purchasesLoadCounter = 0; 
     }
-    window.customersLoadCounter++;
+    window.purchasesLoadCounter++;
     
     try {
         // בנה URL לעמוד הבא
-        let apiUrl = `/dashboard/dashboards/cemeteries/api/customers-api.php?action=list&limit=200&page=${nextPage}`;
+        let apiUrl = `/dashboard/dashboards/cemeteries/api/purchases-api.php?action=list&limit=200&page=${nextPage}`;
         apiUrl += '&orderBy=createDate&sortDirection=DESC';
         
         // שלח בקשה
@@ -186,44 +227,44 @@ async function appendMoreCustomers() {
         
         if (result.success && result.data && result.data.length > 0) {
             // ⭐ שמור את הגודל הקודם לפני ההוספה
-            const previousTotal = currentCustomers.length;
+            const previousTotal = currentPurchases.length;
             
             // ⭐ הוסף לנתונים הקיימים
-            currentCustomers = [...currentCustomers, ...result.data];
-            customersCurrentPage = nextPage;
+            currentPurchases = [...currentPurchases, ...result.data];
+            purchasesCurrentPage = nextPage;
             
             // ⭐⭐⭐ לוג פשוט ומסודר
             console.log(`
 ╔════════════════════════════════════════════════════════════════════
-║ טעינה: ${window.customersLoadCounter}
+║ טעינה: ${window.purchasesLoadCounter}
 ╠════════════════════════════════════════════════════════════════════
 ║ כמות ערכים בטעינה: ${result.data.length}
 ║ מספר ערך תחילת טעינה נוכחית: ${result.debug?.results_info?.from_index || (previousTotal + 1)}
-║ מספר ערך סוף טעינה נוכחית: ${result.debug?.results_info?.to_index || currentCustomers.length}
-║ סך כל הערכים שנטענו עד כה: ${currentCustomers.length}
+║ מספר ערך סוף טעינה נוכחית: ${result.debug?.results_info?.to_index || currentPurchases.length}
+║ סך כל הערכים שנטענו עד כה: ${currentPurchases.length}
 ║ שדה למיון: ${result.debug?.sql_info?.order_field || 'createDate'}
 ║ סוג מיון: ${result.debug?.sql_info?.sort_direction || 'DESC'}
 ╠════════════════════════════════════════════════════════════════════
-║ עמוד: ${customersCurrentPage} / ${customersTotalPages}
-║ נותרו עוד: ${customersTotalPages - customersCurrentPage} עמודים
+║ עמוד: ${purchasesCurrentPage} / ${purchasesTotalPages}
+║ נותרו עוד: ${purchasesTotalPages - purchasesCurrentPage} עמודים
 ╚════════════════════════════════════════════════════════════════════
 `);
             
             // ⭐ עדכן את הטבלה
-            if (customersTable) {
-                customersTable.setData(currentCustomers);
+            if (purchasesTable) {
+                purchasesTable.setData(currentPurchases);
             }
             
-            customersIsLoadingMore = false;
+            purchasesIsLoadingMore = false;
             return true;
         } else {
             console.log('📭 No more data to load');
-            customersIsLoadingMore = false;
+            purchasesIsLoadingMore = false;
             return false;
         }
     } catch (error) {
-        console.error('❌ Error loading more customers:', error);
-        customersIsLoadingMore = false;
+        console.error('❌ Error loading more purchases:', error);
+        purchasesIsLoadingMore = false;
         return false;
     }
 }
@@ -232,8 +273,8 @@ async function appendMoreCustomers() {
 // ===================================================================
 // בניית המבנה
 // ===================================================================
-async function buildCustomersContainer(signal) {
-    console.log('🏗️ Building customers container...');
+async function buildPurchasesContainer(signal) {
+    console.log('🏗️ Building purchases container...');
     
     let mainContainer = document.querySelector('.main-container');
     
@@ -252,7 +293,7 @@ async function buildCustomersContainer(signal) {
     }
     
     mainContainer.innerHTML = `
-        <div id="customerSearchSection" class="search-section"></div>
+        <div id="purchaseSearchSection" class="search-section"></div>
         
         <div class="table-container">
             <table id="mainTable" class="data-table">
@@ -265,7 +306,7 @@ async function buildCustomersContainer(signal) {
                     <tr>
                         <td style="text-align: center; padding: 40px;">
                             <div class="spinner-border" role="status">
-                                <span class="visually-hidden">טוען לקוחות...</span>
+                                <span class="visually-hidden">טוען רכישות...</span>
                             </div>
                         </td>
                     </tr>
@@ -274,135 +315,123 @@ async function buildCustomersContainer(signal) {
         </div>
     `;
     
-    console.log('✅ Customers container built');
+    console.log('✅ Purchases container built');
 }
 
 
 // ===================================================================
 // אתחול UniversalSearch
 // ===================================================================
-async function initCustomersSearch(signal) {
+async function initPurchasesSearch(signal) {
     const config = {
-        entityType: 'customer',
-        apiEndpoint: '/dashboard/dashboards/cemeteries/api/customers-api.php',
+        entityType: 'purchase',
+        apiEndpoint: '/dashboard/dashboards/cemeteries/api/purchases-api.php',
         action: 'list',
         
         searchableFields: [
             {
-                name: 'firstName',
-                label: 'שם פרטי',
-                table: 'customers',
-                type: 'text',
-                matchType: ['exact', 'fuzzy', 'startsWith']
-            },
-            {
-                name: 'lastName',
-                label: 'שם משפחה',
-                table: 'customers',
-                type: 'text',
-                matchType: ['exact', 'fuzzy', 'startsWith']
-            },
-            {
-                name: 'numId',
-                label: 'תעודת זהות',
-                table: 'customers',
+                name: 'purchaseNumber',
+                label: 'מספר רכישה',
+                table: 'purchases',
                 type: 'text',
                 matchType: ['exact', 'startsWith']
             },
             {
-                name: 'phone',
-                label: 'טלפון',
-                table: 'customers',
+                name: 'customerName',
+                label: 'שם לקוח',
+                table: 'purchases',
+                type: 'text',
+                matchType: ['exact', 'fuzzy', 'startsWith']
+            },
+            {
+                name: 'graveLocation',
+                label: 'מיקום קבר',
+                table: 'purchases',
                 type: 'text',
                 matchType: ['exact', 'fuzzy']
             },
             {
-                name: 'phoneMobile',
-                label: 'נייד',
-                table: 'customers',
-                type: 'text',
-                matchType: ['exact', 'fuzzy']
+                name: 'totalAmount',
+                label: 'סכום כולל',
+                table: 'purchases',
+                type: 'number',
+                matchType: ['exact', 'greater', 'less', 'between']
             },
             {
-                name: 'cityId',
-                label: 'עיר',
-                table: 'customers',
-                type: 'text',
-                matchType: ['exact']
-            },
-            {
-                name: 'statusCustomer',
+                name: 'status',
                 label: 'סטטוס',
-                table: 'customers',
+                table: 'purchases',
                 type: 'select',
                 matchType: ['exact'],
                 options: [
-                    { value: '1', label: 'פעיל' },
-                    { value: '0', label: 'לא פעיל' }
+                    { value: 'pending', label: 'ממתין' },
+                    { value: 'approved', label: 'מאושר' },
+                    { value: 'completed', label: 'הושלם' },
+                    { value: 'cancelled', label: 'בוטל' }
                 ]
             },
             {
-                name: 'statusResident',
-                label: 'סוג תושבות',
-                table: 'customers',
+                name: 'type',
+                label: 'סוג רכישה',
+                table: 'purchases',
                 type: 'select',
                 matchType: ['exact'],
                 options: [
-                    { value: '1', label: 'תושב' },
-                    { value: '2', label: 'תושב חוץ' },
-                    { value: '3', label: 'אחר' }
+                    { value: 'new', label: 'רכישה חדשה' },
+                    { value: 'transfer', label: 'העברת בעלות' },
+                    { value: 'renewal', label: 'חידוש' }
                 ]
             },
             {
                 name: 'createDate',
                 label: 'תאריך יצירה',
-                table: 'customers',
+                table: 'purchases',
                 type: 'date',
                 matchType: ['exact', 'before', 'after', 'between', 'today', 'thisWeek', 'thisMonth']
             }
         ],
         
-        displayColumns: ['numId', 'firstName', 'lastName', 'phone', 'streetAddress', 'city_name', 'statusCustomer', 'statusResident', 'createDate'],
+        displayColumns: ['purchaseNumber', 'customerName', 'graveLocation', 'totalAmount', 'status', 'type', 'createDate'],
         
-        searchContainerSelector: '#customerSearchSection',
+        searchContainerSelector: '#purchaseSearchSection',
         resultsContainerSelector: '#tableBody',
         
-        placeholder: 'חיפוש לקוחות לפי שם, ת.ז, טלפון...',
+        placeholder: 'חיפוש רכישות לפי מספר, לקוח, קבר...',
         itemsPerPage: 999999,
         
-        renderFunction: renderCustomersRows,
+        renderFunction: renderPurchasesRows,
         
         callbacks: {
             onInit: () => {
-                console.log('✅ UniversalSearch initialized for customers');
+                console.log('✅ UniversalSearch initialized for purchases');
             },
             
             onSearch: (query, filters) => {
                 console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()) });
                 
                 // ⭐ כאשר מתבצע חיפוש - הפעל מצב חיפוש
-                customersIsSearchMode = true;
-                customersCurrentQuery = query;
+                purchasesIsSearchMode = true;
+                purchasesCurrentQuery = query;
             },
 
             onResults: async (data, signal) => {
-                console.log('📦 API returned:', data.pagination?.total || data.data.length, 'customers');
+                console.log('📦 API returned:', data.pagination?.total || data.data.length, 'purchases');
                 
                 // ⭐ אם נכנסנו למצב חיפוש - הצג רק תוצאות חיפוש
-                if (customersIsSearchMode && customersCurrentQuery) {
+                if (purchasesIsSearchMode && purchasesCurrentQuery) {
                     console.log('🔍 Search mode active - showing search results only');
-                    customersSearchResults = data.data;
+                    purchasesSearchResults = data.data;
                     
                     const tableBody = document.getElementById('tableBody');
                     if (tableBody) {
-                        await renderCustomersRows(customersSearchResults, tableBody, data.pagination, signal);
+                        await renderPurchasesRows(purchasesSearchResults, tableBody, data.pagination, signal);
                     }
                     return;
                 }
                 
                 // ⭐⭐⭐ בדיקה קריטית - אם עברנו לרשומה אחרת, לא להמשיך!
-                if (window.currentType !== 'customer') {
-                    console.log('⚠️ Type changed during search - aborting customer results');
+                if (window.currentType !== 'purchase') {
+                    console.log('⚠️ Type changed during search - aborting purchase results');
                     console.log(`   Current type is now: ${window.currentType}`);
                     return;
                 }
@@ -410,7 +439,7 @@ async function initCustomersSearch(signal) {
             
             onError: (error) => {
                 console.error('❌ Search error:', error);
-                showToast('שגיאה בחיפוש לקוחות', 'error');
+                showToast('שגיאה בחיפוש רכישות', 'error');
             },
 
             onEmpty: () => {
@@ -421,12 +450,12 @@ async function initCustomersSearch(signal) {
                 console.log('🧹 Search cleared - returning to browse mode');
                 
                 // ⭐ איפוס מצב חיפוש
-                customersIsSearchMode = false;
-                customersCurrentQuery = '';
-                customersSearchResults = [];
+                purchasesIsSearchMode = false;
+                purchasesCurrentQuery = '';
+                purchasesSearchResults = [];
                 
                 // ⭐ חזרה למצב Browse
-                await loadCustomersBrowseData(signal);
+                await loadPurchasesBrowseData(signal);
             }
         }
     };
@@ -440,17 +469,17 @@ async function initCustomersSearch(signal) {
 // ===================================================================
 // אתחול TableManager
 // ===================================================================
-async function initCustomersTable(data, totalItems = null, signal = null) {
+async function initPurchasesTable(data, totalItems = null, signal = null) {
     const actualTotalItems = totalItems !== null ? totalItems : data.length;
     
-    if (customersTable) {
-        customersTable.config.totalItems = actualTotalItems;
-        customersTable.setData(data);
-        return customersTable;
+    if (purchasesTable) {
+        purchasesTable.config.totalItems = actualTotalItems;
+        purchasesTable.setData(data);
+        return purchasesTable;
     }
         
     // טעינת העמודות מהשרת
-    async function loadColumnsFromConfig(entityType = 'customer') {
+    async function loadColumnsFromConfig(entityType = 'purchase') {
         try {
             const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`, {
                 signal: signal
@@ -479,19 +508,23 @@ async function initCustomersTable(data, totalItems = null, signal = null) {
                 // טיפול בסוגי עמודות מיוחדות
                 switch(col.type) {
                     case 'date':
-                        column.render = (customer) => formatDate(customer[column.field]);
+                        column.render = (purchase) => formatDate(purchase[column.field]);
                         break;
                         
                     case 'status':
-                        if (column.render === 'formatCustomerStatus') {
-                            column.render = (customer) => formatCustomerStatus(customer[column.field]);
+                        if (col.render === 'formatPurchaseStatus') {
+                            column.render = (purchase) => formatPurchaseStatus(purchase[column.field]);
                         }
                         break;
                         
                     case 'type':
-                        if (column.render === 'formatCustomerType') {
-                            column.render = (customer) => formatCustomerType(customer[column.field]);
+                        if (col.render === 'formatPurchaseType') {
+                            column.render = (purchase) => formatPurchaseType(purchase[column.field]);
                         }
+                        break;
+                        
+                    case 'currency':
+                        column.render = (purchase) => formatCurrency(purchase[column.field]);
                         break;
                         
                     case 'actions':
@@ -502,7 +535,7 @@ async function initCustomersTable(data, totalItems = null, signal = null) {
                                 <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
                             </button>
                             <button class="btn btn-sm btn-danger" 
-                                    onclick="event.stopPropagation(); deleteCustomer('${item.unicId}')" 
+                                    onclick="event.stopPropagation(); deletePurchase('${item.unicId}')" 
                                     title="מחיקה">
                                 <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
                             </button>
@@ -511,7 +544,7 @@ async function initCustomersTable(data, totalItems = null, signal = null) {
                         
                     default:
                         if (!column.render) {
-                            column.render = (customer) => customer[column.field] || '-';
+                            column.render = (purchase) => purchase[column.field] || '-';
                         }
                 }
                 
@@ -531,12 +564,12 @@ async function initCustomersTable(data, totalItems = null, signal = null) {
         }
     }
 
-    customersTable = new TableManager({
+    purchasesTable = new TableManager({
         tableSelector: '#mainTable',
         
         totalItems: actualTotalItems,
 
-        columns: await loadColumnsFromConfig('customer'),
+        columns: await loadColumnsFromConfig('purchase'),
 
         data: data,
         
@@ -549,7 +582,7 @@ async function initCustomersTable(data, totalItems = null, signal = null) {
         scrollThreshold: 200,
         onScrollEnd: async () => {
             console.log('📜 Reached scroll end, loading more...');
-            await appendMoreCustomers();
+            await appendMorePurchases();
         },
         
         onSort: (field, order) => {
@@ -559,24 +592,27 @@ async function initCustomersTable(data, totalItems = null, signal = null) {
         
         onFilter: (filters) => {
             console.log('🔍 Active filters:', filters);
-            const count = customersTable.getFilteredData().length;
+            const count = purchasesTable.getFilteredData().length;
             showToast(`נמצאו ${count} תוצאות`, 'info');
         }
     });
     
-    window.customersTable = customersTable;
-    return customersTable;
+    window.purchasesTable = purchasesTable;
+    return purchasesTable;
 }
 
 
 // ===================================================================
 // רינדור שורות - עם תמיכה ב-Search Mode
 // ===================================================================
-async function renderCustomersRows(data, container, pagination = null, signal = null) {
-    console.log(`📝 renderCustomersRows called with ${data.length} items`);
+async function renderPurchasesRows(data, container, pagination = null, signal = null) {
+    console.log(`📝 renderPurchasesRows called with ${data.length} items`);
+    console.log(`   Pagination:`, pagination);
+    console.log(`   purchasesIsSearchMode: ${purchasesIsSearchMode}`);
+    console.log(`   purchasesTable exists: ${!!purchasesTable}`);
     
     // ⭐⭐ במצב חיפוש - הצג תוצאות חיפוש בלי טבלה מורכבת
-    if (customersIsSearchMode && customersCurrentQuery) {
+    if (purchasesIsSearchMode && purchasesCurrentQuery) {
         console.log('🔍 Rendering search results...');
         
         if (data.length === 0) {
@@ -591,11 +627,14 @@ async function renderCustomersRows(data, container, pagination = null, signal = 
                     </td>
                 </tr>
             `;
+            console.log('   → Empty search results displayed');
             return;
         }
         
         const totalItems = data.length;
-        await initCustomersTable(data, totalItems, signal);
+        console.log(`   → Initializing table with ${totalItems} search results`);
+        await initPurchasesTable(data, totalItems, signal);
+        console.log('   ✅ Search results table initialized');
         return;
     }
     
@@ -604,8 +643,9 @@ async function renderCustomersRows(data, container, pagination = null, signal = 
     console.log(`📊 Total items to display: ${totalItems}`);
 
     if (data.length === 0) {
-        if (customersTable) {
-            customersTable.setData([]);
+        console.log('   → No data to display');
+        if (purchasesTable) {
+            purchasesTable.setData([]);
         }
         
         container.innerHTML = `
@@ -623,22 +663,26 @@ async function renderCustomersRows(data, container, pagination = null, signal = 
     }
     
     const tableWrapperExists = document.querySelector('.table-wrapper[data-fixed-width="true"]');
+    console.log(`   tableWrapperExists: ${!!tableWrapperExists}`);
     
-    if (!tableWrapperExists && customersTable) {
-        console.log('🗑️ TableManager DOM was deleted, resetting customersTable variable');
-        customersTable = null;
-        window.customersTable = null;
+    if (!tableWrapperExists && purchasesTable) {
+        console.log('🗑️ TableManager DOM was deleted, resetting purchasesTable variable');
+        purchasesTable = null;
+        window.purchasesTable = null;
     }
-    
-    if (!customersTable || !tableWrapperExists) {
-        console.log(`🏗️ Creating new TableManager with ${totalItems} items`);
-        await initCustomersTable(data, totalItems, signal);
+
+    // ⭐⭐⭐ אתחול או עדכון טבלה
+    if (!purchasesTable || !tableWrapperExists) {
+        console.log(`🆕 Initializing TableManager with ${totalItems} items`);
+        await initPurchasesTable(data, totalItems, signal);
+        console.log('   ✅ TableManager initialized');
     } else {
         console.log(`♻️ Updating TableManager with ${totalItems} items`);
-        if (customersTable.config) {
-            customersTable.config.totalItems = totalItems;
+        if (purchasesTable.config) {
+            purchasesTable.config.totalItems = totalItems;
         }
-        customersTable.setData(data);
+        purchasesTable.setData(data);
+        console.log('   ✅ TableManager updated');
     }
 }
 
@@ -646,47 +690,57 @@ async function renderCustomersRows(data, container, pagination = null, signal = 
 // הפנייה לפונקציות גלובליות
 // ===================================================================
 
-function checkCustomersScrollStatus() {
-    checkEntityScrollStatus(customersTable, 'Customers');
+function checkPurchasesScrollStatus() {
+    checkEntityScrollStatus(purchasesTable, 'Purchases');
 }
 
 // ===================================================================
 // פונקציות עזר לפורמט
 // ===================================================================
-function formatCustomerType(type) {
+function formatPurchaseType(type) {
     const types = {
-        1: 'תושב',
-        2: 'תושב חוץ',
-        3: 'אחר'
+        'new': 'רכישה חדשה',
+        'transfer': 'העברת בעלות',
+        'renewal': 'חידוש'
     };
     return types[type] || '-';
 }
 
-function formatCustomerStatus(status) {
+function formatPurchaseStatus(status) {
     const statuses = {
-        1: { text: 'פעיל', color: '#10b981' },
-        0: { text: 'לא פעיל', color: '#ef4444' }
+        'pending': { text: 'ממתין', color: '#f59e0b' },
+        'approved': { text: 'מאושר', color: '#3b82f6' },
+        'completed': { text: 'הושלם', color: '#10b981' },
+        'cancelled': { text: 'בוטל', color: '#ef4444' }
     };
-    const statusInfo = statuses[status] || statuses[1];
+    const statusInfo = statuses[status] || statuses['pending'];
     return `<span style="background: ${statusInfo.color}; color: white; padding: 3px 8px; border-radius: 4px; font-size: 12px; display: inline-block;">${statusInfo.text}</span>`;
+}
+
+function formatCurrency(amount) {
+    if (!amount) return '-';
+    return new Intl.NumberFormat('he-IL', {
+        style: 'currency',
+        currency: 'ILS'
+    }).format(amount);
 }
 
 // ===================================================================
 // טעינת סטטיסטיקות
 // ===================================================================
-async function loadCustomerStats(signal) {
+async function loadPurchaseStats(signal) {
     try {
-        const response = await fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=stats', { signal: signal });
+        const response = await fetch('/dashboard/dashboards/cemeteries/api/purchases-api.php?action=stats', { signal: signal });
         const result = await response.json();
         
         if (result.success && result.data) {
-            console.log('📊 Customer stats:', result.data);
+            console.log('📊 Purchase stats:', result.data);
             
-            if (document.getElementById('totalCustomers')) {
-                document.getElementById('totalCustomers').textContent = result.data.total_customers || 0;
+            if (document.getElementById('totalPurchases')) {
+                document.getElementById('totalPurchases').textContent = result.data.total_purchases || 0;
             }
-            if (document.getElementById('activeCustomers')) {
-                document.getElementById('activeCustomers').textContent = result.data.active || 0;
+            if (document.getElementById('completedPurchases')) {
+                document.getElementById('completedPurchases').textContent = result.data.completed || 0;
             }
             if (document.getElementById('newThisMonth')) {
                 document.getElementById('newThisMonth').textContent = result.data.new_this_month || 0;
@@ -694,70 +748,71 @@ async function loadCustomerStats(signal) {
         }
     } catch (error) {
         if (error.name === 'AbortError') {
-            console.log('⚠️ Customer stats loading aborted - this is expected');
+            console.log('⚠️ Purchase stats loading aborted - this is expected');
             return;
         }
-        console.error('Error loading customer stats:', error);
+        console.error('Error loading purchase stats:', error);
     }
 }
 
 // ===================================================================
-// מחיקת לקוח
+// מחיקת רכישה
 // ===================================================================
-async function deleteCustomer(customerId) {
-    await deleteEntity('customer', customerId);
+async function deletePurchase(purchaseId) {
+    await deleteEntity('purchase', purchaseId);
 }
 
 // ===================================================================
 // רענון נתונים
 // ===================================================================
-async function customersRefreshData() {
-    await refreshEntityData('customer');
+async function purchasesRefreshData() {
+    // טעינה מחדש ישירה מה-API (כי UniversalSearch מושבת)
+    await loadPurchases();
 }
 
 // ===================================================================
-// דאבל-קליק על לקוח
+// דאבל-קליק על רכישה
 // ===================================================================
-async function handleCustomerDoubleClick(customerId) {
-    console.log('🖱️ Double-click on customer:', customerId);
+async function handlePurchaseDoubleClick(purchaseId) {
+    console.log('🖱️ Double-click on purchase:', purchaseId);
     
     try {
-        if (typeof createCustomerCard === 'function') {
-            const cardHtml = await createCustomerCard(customerId);
+        if (typeof createPurchaseCard === 'function') {
+            const cardHtml = await createPurchaseCard(purchaseId);
             if (cardHtml && typeof displayHierarchyCard === 'function') {
                 displayHierarchyCard(cardHtml);
             }
         } else {
-            console.warn('⚠️ createCustomerCard not found - opening edit form');
+            console.warn('⚠️ createPurchaseCard not found - opening edit form');
             if (typeof window.tableRenderer !== 'undefined' && window.tableRenderer.editItem) {
-                window.tableRenderer.editItem(customerId);
+                window.tableRenderer.editItem(purchaseId);
             } else {
                 console.error('❌ tableRenderer.editItem not available');
                 showToast('שגיאה בפתיחת טופס עריכה', 'error');
             }
         }
     } catch (error) {
-        console.error('❌ Error in handleCustomerDoubleClick:', error);
-        showToast('שגיאה בטעינת פרטי לקוח', 'error');
+        console.error('❌ Error in handlePurchaseDoubleClick:', error);
+        showToast('שגיאה בטעינת פרטי רכישה', 'error');
     }
 }
 
-window.handleCustomerDoubleClick = handleCustomerDoubleClick;
+window.handlePurchaseDoubleClick = handlePurchaseDoubleClick;
 // ===================================================================
 // הפוך לגלובלי
 // ===================================================================
-window.loadCustomers = loadCustomers;
+window.loadPurchases = loadPurchases;
 
-window.appendMoreCustomers = appendMoreCustomers;
+window.appendMorePurchases = appendMorePurchases;
 
-window.deleteCustomer = deleteCustomer;
+window.deletePurchase = deletePurchase;
 
-window.customersRefreshData = customersRefreshData;
+window.purchasesRefreshData = purchasesRefreshData;
 
-window.customersTable = customersTable;
+window.purchasesTable = purchasesTable;
 
-window.checkCustomersScrollStatus = checkCustomersScrollStatus;
+window.checkPurchasesScrollStatus = checkPurchasesScrollStatus;
 
-window.customerSearch = customerSearch;
+window.purchaseSearch = purchaseSearch;
 
-console.log('✅ customers-management.js v4.0.0 - Loaded successfully!');
+console.log('✅ purchases-management.js v4.0.1 - Loaded successfully!');

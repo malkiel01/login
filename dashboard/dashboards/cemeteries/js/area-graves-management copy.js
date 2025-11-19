@@ -943,10 +943,11 @@ async function deleteAreaGrave(areaGraveId) {
 // ===================================================================
 // רענון נתונים
 // ===================================================================
-async function refreshAreaGravesData() {
-    await refreshEntityData('areaGrave');
-}
 
+async function refreshAreaGravesData() {
+    // טעינה מחדש ישירה מה-API (כי UniversalSearch מושבת)
+    await loadAreaGraves(areaGravesFilterPlotId, areaGravesFilterPlotName, false);
+}
 
 // ===================================================================
 // דאבל-קליק על אחוזת קבר

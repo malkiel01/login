@@ -898,7 +898,9 @@ async function deletePlot(plotId) {
 // רענון נתונים
 // ===================================================================
 async function plotsRefreshData() {
-    await refreshEntityData('plot');
+    if (plotSearch) {
+        plotSearch.refresh();
+    }
 }
 
 // ===================================================

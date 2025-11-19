@@ -918,8 +918,7 @@ async function deleteGrave(graveId) {
 // רענון נתונים
 // ===================================================================
 async function refreshGravesData() {
-    // טעינה מחדש ישירה מה-API (כי UniversalSearch מושבת)
-    await loadGraves(gravesFilterAreaGraveId, gravesFilterAreaGraveName, false);
+    await refreshEntityData('grave');
 }
 
 // ===================================================================

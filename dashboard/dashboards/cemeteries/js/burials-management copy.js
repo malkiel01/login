@@ -1,93 +1,106 @@
 /*
- * File: dashboards/dashboard/cemeteries/assets/js/customers-management.js
- * Version: 4.0.0
+ * File: dashboards/dashboard/cemeteries/assets/js/burials-management.js
+ * Version: 5.0.0
  * Updated: 2025-11-18
  * Author: Malkiel
  * Change Summary:
- * - v4.0.0: 🔥 שיטה זהה 100% ל-area-graves ו-graves
- *   ✅ הוספת משתני חיפוש ו-pagination:
- *   - customersIsSearchMode, customersCurrentQuery, customersSearchResults
- *   - customersCurrentPage, customersTotalPages, customersIsLoadingMore
- *   ✅ הוספת פונקציות חסרות:
- *   - loadCustomersBrowseData() - טעינה ישירה מ-API
- *   - appendMoreCustomers() - Infinite Scroll
- *   ✅ התאמת כל הפונקציות לשיטה המאוחדת
- * - v3.3.0: תיקון קונפליקטים בפונקציות גלובליות
- * - v3.2.0: אחידות מלאה עם cemeteries-management
- * - v3.0.0: שיטה זהה לבתי עלמין - UniversalSearch + TableManager
+ * - v5.0.0: 🔥 יצירה מחדש מאפס - זהה 100% לרכישות
+ *   ✅ העתקה מלאה של purchases-management.js v4.0.1
+ *   ✅ התאמת כל השמות: purchase → burial
+ *   ✅ התאמת כל הטקסטים: רכישות → קבורות
+ *   ✅ התאמת השדות הספציפיים לקבורות
+ *   ✅ searchableFields מותאם לקבורות (9 שדות)
+ *   ✅ displayColumns מותאם לקבורות
  */
 
-console.log('🚀 customers-management.js v4.0.0 - Loading...');
+console.log('🚀 burials-management.js v5.0.0 - Loading...');
 
 // ===================================================================
 // משתנים גלובליים
 // ===================================================================
-let currentCustomers = [];
-let customerSearch = null;
-let customersTable = null;
-let editingCustomerId = null;
+let currentBurials = [];
+let burialSearch = null;
+let burialsTable = null;
+let editingBurialId = null;
 
-let customersIsSearchMode = false;      // האם אנחנו במצב חיפוש?
-let customersCurrentQuery = '';         // מה החיפוש הנוכחי?
-let customersSearchResults = [];        // תוצאות החיפוש
+let burialsIsSearchMode = false;      // האם אנחנו במצב חיפוש?
+let burialsCurrentQuery = '';         // מה החיפוש הנוכחי?
+let burialsSearchResults = [];        // תוצאות החיפוש
 
 // ⭐ Infinite Scroll - מעקב אחרי עמוד נוכחי (שמות ייחודיים!)
-let customersCurrentPage = 1;
-let customersTotalPages = 1;
-let customersIsLoadingMore = false;
+let burialsCurrentPage = 1;
+let burialsTotalPages = 1;
+let burialsIsLoadingMore = false;
 
 
 // ===================================================================
-// טעינת לקוחות (הפונקציה הראשית)
+// טעינת קבורות (הפונקציה הראשית)
 // ===================================================================
-async function loadCustomersBrowseData(signal = null) {
-    customersCurrentPage = 1;
-    currentCustomers = [];
+async function loadBurialsBrowseData(signal = null) {
+    burialsCurrentPage = 1;
+    currentBurials = [];
     
-    let apiUrl = '/dashboard/dashboards/cemeteries/api/customers-api.php?action=list&limit=200&page=1';
-    apiUrl += '&orderBy=createDate&sortDirection=DESC';
-    
-    const response = await fetch(apiUrl, { signal });
-    const result = await response.json();
-    
-    if (result.success && result.data) {
-        currentCustomers = result.data;
+    try {
+        let apiUrl = '/dashboard/dashboards/cemeteries/api/burials-api.php?action=list&limit=200&page=1';
+        apiUrl += '&orderBy=createDate&sortDirection=DESC';
         
-        if (result.pagination) {
-            customersTotalPages = result.pagination.pages;
-            customersCurrentPage = result.pagination.page;
-        }
+        const response = await fetch(apiUrl, { signal });
+        const result = await response.json();
         
-        const tableBody = document.getElementById('tableBody');
-        if (tableBody) {
-            renderCustomersRows(result.data, tableBody, result.pagination, signal);
+        if (result.success && result.data) {
+            currentBurials = result.data;
+            
+            if (result.pagination) {
+                burialsTotalPages = result.pagination.pages;
+                burialsCurrentPage = result.pagination.page;
+            }
+            
+            const tableBody = document.getElementById('tableBody');
+            if (tableBody) {
+                renderBurialsRows(result.data, tableBody, result.pagination, signal);
+            }
         }
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            console.log('⚠️ Browse data loading aborted - this is expected');
+            return;
+        }
+        console.error('❌ Error loading browse data:', error);
+        showToast('שגיאה בטעינת קבורות', 'error');
     }
 }
 
-async function loadCustomers() {
-    const signal = OperationManager.start('customer');
+async function loadBurials() {
+    console.log('══════════════════════════════════════════════════');
+    console.log('🚀 loadBurials() STARTED');
+    console.log('══════════════════════════════════════════════════');
+    
+    const signal = OperationManager.start('burial');
+    console.log('✅ Step 1: OperationManager started');
 
     // ⭐ איפוס מצב חיפוש
-    customersIsSearchMode = false;
-    customersCurrentQuery = '';
-    customersSearchResults = [];
+    burialsIsSearchMode = false;
+    burialsCurrentQuery = '';
+    burialsSearchResults = [];
+    console.log('✅ Step 2: Search state reset');
     
     // עדכן את הסוג הנוכחי
-    window.currentType = 'customer';
+    window.currentType = 'burial';
     window.currentParentId = null;
 
     // ⭐ עדכן גם את tableRenderer.currentType!
     if (window.tableRenderer) {
-        window.tableRenderer.currentType = 'customer';
+        window.tableRenderer.currentType = 'burial';
     }
+    console.log('✅ Step 3: Current type set to burial');
 
     // ⭐ נקה
     if (typeof DashboardCleaner !== 'undefined') {
-        DashboardCleaner.clear({ targetLevel: 'customer' });
+        DashboardCleaner.clear({ targetLevel: 'burial' });
     } else if (typeof clearDashboard === 'function') {
-        clearDashboard({ targetLevel: 'customer' });
+        clearDashboard({ targetLevel: 'burial' });
     }
+    console.log('✅ Step 4: Dashboard cleared');
     
     if (typeof clearAllSidebarSelections === 'function') {
         clearAllSidebarSelections();
@@ -95,7 +108,7 @@ async function loadCustomers() {
 
     // עדכון פריט תפריט אקטיבי
     if (typeof setActiveMenuItem === 'function') {
-        setActiveMenuItem('customersItem');
+        setActiveMenuItem('burialsItem');
     }
     
     if (typeof updateAddButtonText === 'function') {
@@ -104,75 +117,97 @@ async function loadCustomers() {
     
     // עדכן breadcrumb
     if (typeof updateBreadcrumb === 'function') {
-        updateBreadcrumb({ customer: { name: 'לקוחות' } });
+        updateBreadcrumb({ burial: { name: 'קבורות' } });
     }
     
     // עדכון כותרת החלון
-    document.title = 'ניהול לקוחות - מערכת בתי עלמין';
+    document.title = 'ניהול קבורות - מערכת בתי עלמין';
+    console.log('✅ Step 5: UI updated');
     
     // ⭐ בנה מבנה
-    await buildCustomersContainer(signal);
+    await buildBurialsContainer(signal);
+    console.log('✅ Step 6: Container built');
     
-    if (OperationManager.shouldAbort('customer')) {
+    if (OperationManager.shouldAbort('burial')) {
+        console.log('⚠️ ABORTED at step 6');
         return;
     }
 
     // ⭐ ספירת טעינות גלובלית
-    if (!window.customersLoadCounter) {
-        window.customersLoadCounter = 0;
+    if (!window.burialsLoadCounter) {
+        window.burialsLoadCounter = 0;
     }
-    window.customersLoadCounter++;
+    window.burialsLoadCounter++;
+    console.log(`✅ Step 7: Load counter = ${window.burialsLoadCounter}`);
     
-    // השמד חיפוש קודם
-    if (customerSearch && typeof customerSearch.destroy === 'function') {
-        console.log('🗑️ Destroying previous customerSearch instance...');
-        customerSearch.destroy();
-        customerSearch = null; 
-        window.customerSearch = null;
+    // ⭐ השמד חיפוש קודם
+    if (burialSearch && typeof burialSearch.destroy === 'function') {
+        console.log('🗑️ Destroying previous burialSearch instance...');
+        burialSearch.destroy();
+        burialSearch = null; 
+        window.burialSearch = null;
     }
+    
+    // ⭐ איפוס טבלה קודמת
+    if (burialsTable) {
+        console.log('🗑️ Resetting previous burialsTable instance...');
+        burialsTable = null;
+        window.burialsTable = null;
+    }
+    console.log('✅ Step 8: Previous instances destroyed');
     
     // ⭐ אתחול UniversalSearch - פעם אחת!
-    console.log('🆕 Creating fresh customerSearch instance...');
-    customerSearch = await initCustomersSearch(signal);
+    console.log('🆕 Creating fresh burialSearch instance...');
+    burialSearch = await initBurialsSearch(signal);
+    console.log('✅ Step 9: UniversalSearch initialized');
     
-    if (OperationManager.shouldAbort('customer')) {
-        console.log('⚠️ Customer operation aborted');
+    if (OperationManager.shouldAbort('burial')) {
+        console.log('⚠️ ABORTED at step 9');
+        console.log('⚠️ Burial operation aborted');
         return;
     }
 
     // ⭐ טעינה ישירה (Browse Mode) - פעם אחת!
-    await loadCustomersBrowseData(signal);
+    console.log('📥 Loading browse data...');
+    await loadBurialsBrowseData(signal);
+    console.log('✅ Step 10: Browse data loaded');
     
     // טען סטטיסטיקות
-    await loadCustomerStats(signal);
+    console.log('📊 Loading stats...');
+    await loadBurialStats(signal);
+    console.log('✅ Step 11: Stats loaded');
+    
+    console.log('══════════════════════════════════════════════════');
+    console.log('✅ loadBurials() COMPLETED SUCCESSFULLY');
+    console.log('══════════════════════════════════════════════════');
 }
 
 
 // ===================================================================
-// 📥 טעינת עוד לקוחות (Infinite Scroll)
+// 📥 טעינת עוד קבורות (Infinite Scroll)
 // ===================================================================
-async function appendMoreCustomers() {
+async function appendMoreBurials() {
     // בדיקות בסיסיות
-    if (customersIsLoadingMore) {
+    if (burialsIsLoadingMore) {
         return false;
     }
     
-    if (customersCurrentPage >= customersTotalPages) {
+    if (burialsCurrentPage >= burialsTotalPages) {
         return false;
     }
     
-    customersIsLoadingMore = true;
-    const nextPage = customersCurrentPage + 1;
+    burialsIsLoadingMore = true;
+    const nextPage = burialsCurrentPage + 1;
     
     // ⭐ עדכון מונה טעינות
-    if (!window.customersLoadCounter) {
-        window.customersLoadCounter = 0; 
+    if (!window.burialsLoadCounter) {
+        window.burialsLoadCounter = 0; 
     }
-    window.customersLoadCounter++;
+    window.burialsLoadCounter++;
     
     try {
         // בנה URL לעמוד הבא
-        let apiUrl = `/dashboard/dashboards/cemeteries/api/customers-api.php?action=list&limit=200&page=${nextPage}`;
+        let apiUrl = `/dashboard/dashboards/cemeteries/api/burials-api.php?action=list&limit=200&page=${nextPage}`;
         apiUrl += '&orderBy=createDate&sortDirection=DESC';
         
         // שלח בקשה
@@ -186,44 +221,44 @@ async function appendMoreCustomers() {
         
         if (result.success && result.data && result.data.length > 0) {
             // ⭐ שמור את הגודל הקודם לפני ההוספה
-            const previousTotal = currentCustomers.length;
+            const previousTotal = currentBurials.length;
             
             // ⭐ הוסף לנתונים הקיימים
-            currentCustomers = [...currentCustomers, ...result.data];
-            customersCurrentPage = nextPage;
+            currentBurials = [...currentBurials, ...result.data];
+            burialsCurrentPage = nextPage;
             
             // ⭐⭐⭐ לוג פשוט ומסודר
             console.log(`
 ╔════════════════════════════════════════════════════════════════════
-║ טעינה: ${window.customersLoadCounter}
+║ טעינה: ${window.burialsLoadCounter}
 ╠════════════════════════════════════════════════════════════════════
 ║ כמות ערכים בטעינה: ${result.data.length}
 ║ מספר ערך תחילת טעינה נוכחית: ${result.debug?.results_info?.from_index || (previousTotal + 1)}
-║ מספר ערך סוף טעינה נוכחית: ${result.debug?.results_info?.to_index || currentCustomers.length}
-║ סך כל הערכים שנטענו עד כה: ${currentCustomers.length}
+║ מספר ערך סוף טעינה נוכחית: ${result.debug?.results_info?.to_index || currentBurials.length}
+║ סך כל הערכים שנטענו עד כה: ${currentBurials.length}
 ║ שדה למיון: ${result.debug?.sql_info?.order_field || 'createDate'}
 ║ סוג מיון: ${result.debug?.sql_info?.sort_direction || 'DESC'}
 ╠════════════════════════════════════════════════════════════════════
-║ עמוד: ${customersCurrentPage} / ${customersTotalPages}
-║ נותרו עוד: ${customersTotalPages - customersCurrentPage} עמודים
+║ עמוד: ${burialsCurrentPage} / ${burialsTotalPages}
+║ נותרו עוד: ${burialsTotalPages - burialsCurrentPage} עמודים
 ╚════════════════════════════════════════════════════════════════════
 `);
             
             // ⭐ עדכן את הטבלה
-            if (customersTable) {
-                customersTable.setData(currentCustomers);
+            if (burialsTable) {
+                burialsTable.setData(currentBurials);
             }
             
-            customersIsLoadingMore = false;
+            burialsIsLoadingMore = false;
             return true;
         } else {
             console.log('📭 No more data to load');
-            customersIsLoadingMore = false;
+            burialsIsLoadingMore = false;
             return false;
         }
     } catch (error) {
-        console.error('❌ Error loading more customers:', error);
-        customersIsLoadingMore = false;
+        console.error('❌ Error loading more burials:', error);
+        burialsIsLoadingMore = false;
         return false;
     }
 }
@@ -232,8 +267,8 @@ async function appendMoreCustomers() {
 // ===================================================================
 // בניית המבנה
 // ===================================================================
-async function buildCustomersContainer(signal) {
-    console.log('🏗️ Building customers container...');
+async function buildBurialsContainer(signal) {
+    console.log('🏗️ Building burials container...');
     
     let mainContainer = document.querySelector('.main-container');
     
@@ -252,7 +287,7 @@ async function buildCustomersContainer(signal) {
     }
     
     mainContainer.innerHTML = `
-        <div id="customerSearchSection" class="search-section"></div>
+        <div id="burialSearchSection" class="search-section"></div>
         
         <div class="table-container">
             <table id="mainTable" class="data-table">
@@ -265,7 +300,7 @@ async function buildCustomersContainer(signal) {
                     <tr>
                         <td style="text-align: center; padding: 40px;">
                             <div class="spinner-border" role="status">
-                                <span class="visually-hidden">טוען לקוחות...</span>
+                                <span class="visually-hidden">טוען קבורות...</span>
                             </div>
                         </td>
                     </tr>
@@ -274,135 +309,136 @@ async function buildCustomersContainer(signal) {
         </div>
     `;
     
-    console.log('✅ Customers container built');
+    console.log('✅ Burials container built');
 }
 
 
 // ===================================================================
 // אתחול UniversalSearch
 // ===================================================================
-async function initCustomersSearch(signal) {
+async function initBurialsSearch(signal) {
     const config = {
-        entityType: 'customer',
-        apiEndpoint: '/dashboard/dashboards/cemeteries/api/customers-api.php',
+        entityType: 'burial',
+        apiEndpoint: '/dashboard/dashboards/cemeteries/api/burials-api.php',
         action: 'list',
         
         searchableFields: [
             {
-                name: 'firstName',
-                label: 'שם פרטי',
-                table: 'customers',
-                type: 'text',
-                matchType: ['exact', 'fuzzy', 'startsWith']
-            },
-            {
-                name: 'lastName',
-                label: 'שם משפחה',
-                table: 'customers',
-                type: 'text',
-                matchType: ['exact', 'fuzzy', 'startsWith']
-            },
-            {
-                name: 'numId',
-                label: 'תעודת זהות',
-                table: 'customers',
+                name: 'serialBurialId',
+                label: 'מס׳ תיק קבורה',
+                table: 'burials',
                 type: 'text',
                 matchType: ['exact', 'startsWith']
             },
             {
-                name: 'phone',
-                label: 'טלפון',
-                table: 'customers',
+                name: 'customerLastName',
+                label: 'שם משפחה נפטר',
+                table: 'burials',
                 type: 'text',
-                matchType: ['exact', 'fuzzy']
+                matchType: ['exact', 'fuzzy', 'startsWith']
             },
             {
-                name: 'phoneMobile',
-                label: 'נייד',
-                table: 'customers',
+                name: 'customerFirstName',
+                label: 'שם פרטי נפטר',
+                table: 'burials',
                 type: 'text',
-                matchType: ['exact', 'fuzzy']
+                matchType: ['exact', 'fuzzy', 'startsWith']
             },
             {
-                name: 'cityId',
-                label: 'עיר',
-                table: 'customers',
+                name: 'customerNumId',
+                label: 'ת.ז. נפטר',
+                table: 'burials',
                 type: 'text',
                 matchType: ['exact']
             },
             {
-                name: 'statusCustomer',
-                label: 'סטטוס',
-                table: 'customers',
+                name: 'dateDeath',
+                label: 'תאריך פטירה',
+                table: 'burials',
+                type: 'date',
+                matchType: ['exact', 'before', 'after', 'between', 'today', 'thisWeek', 'thisMonth']
+            },
+            {
+                name: 'dateBurial',
+                label: 'תאריך קבורה',
+                table: 'burials',
+                type: 'date',
+                matchType: ['exact', 'before', 'after', 'between', 'today', 'thisWeek', 'thisMonth']
+            },
+            {
+                name: 'burialStatus',
+                label: 'סטטוס קבורה',
+                table: 'burials',
                 type: 'select',
                 matchType: ['exact'],
                 options: [
-                    { value: '1', label: 'פעיל' },
-                    { value: '0', label: 'לא פעיל' }
+                    { value: '1', label: 'ברישום' },
+                    { value: '2', label: 'אושרה' },
+                    { value: '3', label: 'בוצעה' },
+                    { value: '4', label: 'בוטלה' }
                 ]
             },
             {
-                name: 'statusResident',
-                label: 'סוג תושבות',
-                table: 'customers',
+                name: 'nationalInsuranceBurial',
+                label: 'ביטוח לאומי',
+                table: 'burials',
                 type: 'select',
                 matchType: ['exact'],
                 options: [
-                    { value: '1', label: 'תושב' },
-                    { value: '2', label: 'תושב חוץ' },
-                    { value: '3', label: 'אחר' }
+                    { value: 'כן', label: 'כן' },
+                    { value: 'לא', label: 'לא' }
                 ]
             },
             {
                 name: 'createDate',
                 label: 'תאריך יצירה',
-                table: 'customers',
+                table: 'burials',
                 type: 'date',
                 matchType: ['exact', 'before', 'after', 'between', 'today', 'thisWeek', 'thisMonth']
             }
         ],
         
-        displayColumns: ['numId', 'firstName', 'lastName', 'phone', 'streetAddress', 'city_name', 'statusCustomer', 'statusResident', 'createDate'],
+        displayColumns: ['serialBurialId', 'customerLastName', 'customerNumId', 'dateDeath', 'dateBurial', 'timeBurial', 'fullLocation', 'burialStatus', 'nationalInsuranceBurial'],
         
-        searchContainerSelector: '#customerSearchSection',
+        searchContainerSelector: '#burialSearchSection',
         resultsContainerSelector: '#tableBody',
         
-        placeholder: 'חיפוש לקוחות לפי שם, ת.ז, טלפון...',
+        placeholder: 'חיפוש קבורות לפי מספר תיק, שם נפטר, תאריך...',
         itemsPerPage: 999999,
         
-        renderFunction: renderCustomersRows,
+        renderFunction: renderBurialsRows,
         
         callbacks: {
             onInit: () => {
-                console.log('✅ UniversalSearch initialized for customers');
+                console.log('✅ UniversalSearch initialized for burials');
             },
             
             onSearch: (query, filters) => {
                 console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()) });
                 
                 // ⭐ כאשר מתבצע חיפוש - הפעל מצב חיפוש
-                customersIsSearchMode = true;
-                customersCurrentQuery = query;
+                burialsIsSearchMode = true;
+                burialsCurrentQuery = query;
             },
 
             onResults: async (data, signal) => {
-                console.log('📦 API returned:', data.pagination?.total || data.data.length, 'customers');
+                console.log('📦 API returned:', data.pagination?.total || data.data.length, 'burials');
                 
                 // ⭐ אם נכנסנו למצב חיפוש - הצג רק תוצאות חיפוש
-                if (customersIsSearchMode && customersCurrentQuery) {
+                if (burialsIsSearchMode && burialsCurrentQuery) {
                     console.log('🔍 Search mode active - showing search results only');
-                    customersSearchResults = data.data;
+                    burialsSearchResults = data.data;
                     
                     const tableBody = document.getElementById('tableBody');
                     if (tableBody) {
-                        await renderCustomersRows(customersSearchResults, tableBody, data.pagination, signal);
+                        await renderBurialsRows(burialsSearchResults, tableBody, data.pagination, signal);
                     }
                     return;
                 }
                 
                 // ⭐⭐⭐ בדיקה קריטית - אם עברנו לרשומה אחרת, לא להמשיך!
-                if (window.currentType !== 'customer') {
-                    console.log('⚠️ Type changed during search - aborting customer results');
+                if (window.currentType !== 'burial') {
+                    console.log('⚠️ Type changed during search - aborting burial results');
                     console.log(`   Current type is now: ${window.currentType}`);
                     return;
                 }
@@ -410,7 +446,7 @@ async function initCustomersSearch(signal) {
             
             onError: (error) => {
                 console.error('❌ Search error:', error);
-                showToast('שגיאה בחיפוש לקוחות', 'error');
+                showToast('שגיאה בחיפוש קבורות', 'error');
             },
 
             onEmpty: () => {
@@ -421,12 +457,12 @@ async function initCustomersSearch(signal) {
                 console.log('🧹 Search cleared - returning to browse mode');
                 
                 // ⭐ איפוס מצב חיפוש
-                customersIsSearchMode = false;
-                customersCurrentQuery = '';
-                customersSearchResults = [];
+                burialsIsSearchMode = false;
+                burialsCurrentQuery = '';
+                burialsSearchResults = [];
                 
                 // ⭐ חזרה למצב Browse
-                await loadCustomersBrowseData(signal);
+                await loadBurialsBrowseData(signal);
             }
         }
     };
@@ -440,17 +476,17 @@ async function initCustomersSearch(signal) {
 // ===================================================================
 // אתחול TableManager
 // ===================================================================
-async function initCustomersTable(data, totalItems = null, signal = null) {
+async function initBurialsTable(data, totalItems = null, signal = null) {
     const actualTotalItems = totalItems !== null ? totalItems : data.length;
     
-    if (customersTable) {
-        customersTable.config.totalItems = actualTotalItems;
-        customersTable.setData(data);
-        return customersTable;
+    if (burialsTable) {
+        burialsTable.config.totalItems = actualTotalItems;
+        burialsTable.setData(data);
+        return burialsTable;
     }
         
     // טעינת העמודות מהשרת
-    async function loadColumnsFromConfig(entityType = 'customer') {
+    async function loadColumnsFromConfig(entityType = 'burial') {
         try {
             const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`, {
                 signal: signal
@@ -479,30 +515,39 @@ async function initCustomersTable(data, totalItems = null, signal = null) {
                 // טיפול בסוגי עמודות מיוחדות
                 switch(col.type) {
                     case 'date':
-                        column.render = (customer) => formatDate(customer[column.field]);
+                        column.render = (burial) => formatDate(burial[column.field]);
+                        break;
+                        
+                    case 'time':
+                        column.render = (burial) => burial[column.field] || '-';
                         break;
                         
                     case 'status':
-                        if (column.render === 'formatCustomerStatus') {
-                            column.render = (customer) => formatCustomerStatus(customer[column.field]);
+                        if (col.render === 'formatBurialStatus') {
+                            column.render = (burial) => formatBurialStatus(burial[column.field]);
                         }
                         break;
                         
-                    case 'type':
-                        if (column.render === 'formatCustomerType') {
-                            column.render = (customer) => formatCustomerType(customer[column.field]);
-                        }
+                    case 'boolean':
+                        column.render = (burial) => burial[column.field] === 'כן' ? 
+                            '<span style="color: #10b981;">✓ כן</span>' : 
+                            '<span style="color: #ef4444;">✗ לא</span>';
                         break;
                         
                     case 'actions':
                         column.render = (item) => `
+                            <button class="btn btn-sm btn-info" 
+                                    onclick="event.stopPropagation(); handleBurialDoubleClick('${item.unicId}')" 
+                                    title="צפייה">
+                                <svg class="icon"><use xlink:href="#icon-view"></use></svg>
+                            </button>
                             <button class="btn btn-sm btn-secondary" 
                                     onclick="event.stopPropagation(); window.tableRenderer.editItem('${item.unicId}')" 
                                     title="עריכה">
                                 <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
                             </button>
                             <button class="btn btn-sm btn-danger" 
-                                    onclick="event.stopPropagation(); deleteCustomer('${item.unicId}')" 
+                                    onclick="event.stopPropagation(); deleteBurial('${item.unicId}')" 
                                     title="מחיקה">
                                 <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
                             </button>
@@ -511,7 +556,7 @@ async function initCustomersTable(data, totalItems = null, signal = null) {
                         
                     default:
                         if (!column.render) {
-                            column.render = (customer) => customer[column.field] || '-';
+                            column.render = (burial) => burial[column.field] || '-';
                         }
                 }
                 
@@ -531,12 +576,12 @@ async function initCustomersTable(data, totalItems = null, signal = null) {
         }
     }
 
-    customersTable = new TableManager({
+    burialsTable = new TableManager({
         tableSelector: '#mainTable',
         
         totalItems: actualTotalItems,
 
-        columns: await loadColumnsFromConfig('customer'),
+        columns: await loadColumnsFromConfig('burial'),
 
         data: data,
         
@@ -549,7 +594,7 @@ async function initCustomersTable(data, totalItems = null, signal = null) {
         scrollThreshold: 200,
         onScrollEnd: async () => {
             console.log('📜 Reached scroll end, loading more...');
-            await appendMoreCustomers();
+            await appendMoreBurials();
         },
         
         onSort: (field, order) => {
@@ -559,24 +604,27 @@ async function initCustomersTable(data, totalItems = null, signal = null) {
         
         onFilter: (filters) => {
             console.log('🔍 Active filters:', filters);
-            const count = customersTable.getFilteredData().length;
+            const count = burialsTable.getFilteredData().length;
             showToast(`נמצאו ${count} תוצאות`, 'info');
         }
     });
     
-    window.customersTable = customersTable;
-    return customersTable;
+    window.burialsTable = burialsTable;
+    return burialsTable;
 }
 
 
 // ===================================================================
 // רינדור שורות - עם תמיכה ב-Search Mode
 // ===================================================================
-async function renderCustomersRows(data, container, pagination = null, signal = null) {
-    console.log(`📝 renderCustomersRows called with ${data.length} items`);
+async function renderBurialsRows(data, container, pagination = null, signal = null) {
+    console.log(`📝 renderBurialsRows called with ${data.length} items`);
+    console.log(`   Pagination:`, pagination);
+    console.log(`   burialsIsSearchMode: ${burialsIsSearchMode}`);
+    console.log(`   burialsTable exists: ${!!burialsTable}`);
     
     // ⭐⭐ במצב חיפוש - הצג תוצאות חיפוש בלי טבלה מורכבת
-    if (customersIsSearchMode && customersCurrentQuery) {
+    if (burialsIsSearchMode && burialsCurrentQuery) {
         console.log('🔍 Rendering search results...');
         
         if (data.length === 0) {
@@ -591,11 +639,14 @@ async function renderCustomersRows(data, container, pagination = null, signal = 
                     </td>
                 </tr>
             `;
+            console.log('   → Empty search results displayed');
             return;
         }
         
         const totalItems = data.length;
-        await initCustomersTable(data, totalItems, signal);
+        console.log(`   → Initializing table with ${totalItems} search results`);
+        await initBurialsTable(data, totalItems, signal);
+        console.log('   ✅ Search results table initialized');
         return;
     }
     
@@ -604,8 +655,9 @@ async function renderCustomersRows(data, container, pagination = null, signal = 
     console.log(`📊 Total items to display: ${totalItems}`);
 
     if (data.length === 0) {
-        if (customersTable) {
-            customersTable.setData([]);
+        console.log('   → No data to display');
+        if (burialsTable) {
+            burialsTable.setData([]);
         }
         
         container.innerHTML = `
@@ -623,22 +675,26 @@ async function renderCustomersRows(data, container, pagination = null, signal = 
     }
     
     const tableWrapperExists = document.querySelector('.table-wrapper[data-fixed-width="true"]');
+    console.log(`   tableWrapperExists: ${!!tableWrapperExists}`);
     
-    if (!tableWrapperExists && customersTable) {
-        console.log('🗑️ TableManager DOM was deleted, resetting customersTable variable');
-        customersTable = null;
-        window.customersTable = null;
+    if (!tableWrapperExists && burialsTable) {
+        console.log('🗑️ TableManager DOM was deleted, resetting burialsTable variable');
+        burialsTable = null;
+        window.burialsTable = null;
     }
-    
-    if (!customersTable || !tableWrapperExists) {
-        console.log(`🏗️ Creating new TableManager with ${totalItems} items`);
-        await initCustomersTable(data, totalItems, signal);
+
+    // ⭐⭐⭐ אתחול או עדכון טבלה
+    if (!burialsTable || !tableWrapperExists) {
+        console.log(`🆕 Initializing TableManager with ${totalItems} items`);
+        await initBurialsTable(data, totalItems, signal);
+        console.log('   ✅ TableManager initialized');
     } else {
         console.log(`♻️ Updating TableManager with ${totalItems} items`);
-        if (customersTable.config) {
-            customersTable.config.totalItems = totalItems;
+        if (burialsTable.config) {
+            burialsTable.config.totalItems = totalItems;
         }
-        customersTable.setData(data);
+        burialsTable.setData(data);
+        console.log('   ✅ TableManager updated');
     }
 }
 
@@ -646,47 +702,40 @@ async function renderCustomersRows(data, container, pagination = null, signal = 
 // הפנייה לפונקציות גלובליות
 // ===================================================================
 
-function checkCustomersScrollStatus() {
-    checkEntityScrollStatus(customersTable, 'Customers');
+function checkBurialsScrollStatus() {
+    checkEntityScrollStatus(burialsTable, 'Burials');
 }
 
 // ===================================================================
 // פונקציות עזר לפורמט
 // ===================================================================
-function formatCustomerType(type) {
-    const types = {
-        1: 'תושב',
-        2: 'תושב חוץ',
-        3: 'אחר'
-    };
-    return types[type] || '-';
-}
-
-function formatCustomerStatus(status) {
+function formatBurialStatus(status) {
     const statuses = {
-        1: { text: 'פעיל', color: '#10b981' },
-        0: { text: 'לא פעיל', color: '#ef4444' }
+        '1': { text: 'ברישום', color: '#f59e0b' },
+        '2': { text: 'אושרה', color: '#3b82f6' },
+        '3': { text: 'בוצעה', color: '#10b981' },
+        '4': { text: 'בוטלה', color: '#ef4444' }
     };
-    const statusInfo = statuses[status] || statuses[1];
+    const statusInfo = statuses[status] || statuses['1'];
     return `<span style="background: ${statusInfo.color}; color: white; padding: 3px 8px; border-radius: 4px; font-size: 12px; display: inline-block;">${statusInfo.text}</span>`;
 }
 
 // ===================================================================
 // טעינת סטטיסטיקות
 // ===================================================================
-async function loadCustomerStats(signal) {
+async function loadBurialStats(signal) {
     try {
-        const response = await fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=stats', { signal: signal });
+        const response = await fetch('/dashboard/dashboards/cemeteries/api/burials-api.php?action=stats', { signal: signal });
         const result = await response.json();
         
         if (result.success && result.data) {
-            console.log('📊 Customer stats:', result.data);
+            console.log('📊 Burial stats:', result.data);
             
-            if (document.getElementById('totalCustomers')) {
-                document.getElementById('totalCustomers').textContent = result.data.total_customers || 0;
+            if (document.getElementById('totalBurials')) {
+                document.getElementById('totalBurials').textContent = result.data.total_burials || 0;
             }
-            if (document.getElementById('activeCustomers')) {
-                document.getElementById('activeCustomers').textContent = result.data.active || 0;
+            if (document.getElementById('completedBurials')) {
+                document.getElementById('completedBurials').textContent = result.data.completed || 0;
             }
             if (document.getElementById('newThisMonth')) {
                 document.getElementById('newThisMonth').textContent = result.data.new_this_month || 0;
@@ -694,70 +743,71 @@ async function loadCustomerStats(signal) {
         }
     } catch (error) {
         if (error.name === 'AbortError') {
-            console.log('⚠️ Customer stats loading aborted - this is expected');
+            console.log('⚠️ Burial stats loading aborted - this is expected');
             return;
         }
-        console.error('Error loading customer stats:', error);
+        console.error('Error loading burial stats:', error);
     }
 }
 
 // ===================================================================
-// מחיקת לקוח
+// מחיקת קבורה
 // ===================================================================
-async function deleteCustomer(customerId) {
-    await deleteEntity('customer', customerId);
+async function deleteBurial(burialId) {
+    await deleteEntity('burial', burialId);
 }
 
 // ===================================================================
 // רענון נתונים
 // ===================================================================
-async function customersRefreshData() {
-    await refreshEntityData('customer');
+async function burialsRefreshData() {
+    // טעינה מחדש ישירה מה-API (כי UniversalSearch מושבת)
+    await loadBurials();
 }
 
 // ===================================================================
-// דאבל-קליק על לקוח
+// דאבל-קליק על קבורה
 // ===================================================================
-async function handleCustomerDoubleClick(customerId) {
-    console.log('🖱️ Double-click on customer:', customerId);
+async function handleBurialDoubleClick(burialId) {
+    console.log('🖱️ Double-click on burial:', burialId);
     
     try {
-        if (typeof createCustomerCard === 'function') {
-            const cardHtml = await createCustomerCard(customerId);
+        if (typeof createBurialCard === 'function') {
+            const cardHtml = await createBurialCard(burialId);
             if (cardHtml && typeof displayHierarchyCard === 'function') {
                 displayHierarchyCard(cardHtml);
             }
         } else {
-            console.warn('⚠️ createCustomerCard not found - opening edit form');
+            console.warn('⚠️ createBurialCard not found - opening edit form');
             if (typeof window.tableRenderer !== 'undefined' && window.tableRenderer.editItem) {
-                window.tableRenderer.editItem(customerId);
+                window.tableRenderer.editItem(burialId);
             } else {
                 console.error('❌ tableRenderer.editItem not available');
                 showToast('שגיאה בפתיחת טופס עריכה', 'error');
             }
         }
     } catch (error) {
-        console.error('❌ Error in handleCustomerDoubleClick:', error);
-        showToast('שגיאה בטעינת פרטי לקוח', 'error');
+        console.error('❌ Error in handleBurialDoubleClick:', error);
+        showToast('שגיאה בטעינת פרטי קבורה', 'error');
     }
 }
 
-window.handleCustomerDoubleClick = handleCustomerDoubleClick;
+window.handleBurialDoubleClick = handleBurialDoubleClick;
 // ===================================================================
 // הפוך לגלובלי
 // ===================================================================
-window.loadCustomers = loadCustomers;
+window.loadBurials = loadBurials;
 
-window.appendMoreCustomers = appendMoreCustomers;
+window.appendMoreBurials = appendMoreBurials;
 
-window.deleteCustomer = deleteCustomer;
+window.deleteBurial = deleteBurial;
 
-window.customersRefreshData = customersRefreshData;
+window.burialsRefreshData = burialsRefreshData;
 
-window.customersTable = customersTable;
+window.burialsTable = burialsTable;
 
-window.checkCustomersScrollStatus = checkCustomersScrollStatus;
+window.checkBurialsScrollStatus = checkBurialsScrollStatus;
 
-window.customerSearch = customerSearch;
+window.burialSearch = burialSearch;
 
-console.log('✅ customers-management.js v4.0.0 - Loaded successfully!');
+console.log('✅ burials-management.js v5.0.0 - Loaded successfully!');

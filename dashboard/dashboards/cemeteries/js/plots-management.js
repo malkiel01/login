@@ -4,17 +4,14 @@
  * Updated: 2025-11-19
  * Author: Malkiel
  * Change Summary:
- * - v2.0.0: 🔥 התאמה מלאה לשיטה המאוחדת - זהה 100% לכל היישויות
- *   ✅ הוספת משתני חיפוש ו-pagination:
- *   - plotsIsSearchMode, plotsCurrentQuery, plotsSearchResults
- *   - plotsCurrentPage, plotsTotalPages, plotsIsLoadingMore
- *   ✅ הוספת פונקציות חסרות:
- *   - loadPlotsBrowseData() - טעינה ישירה מ-API
- *   - appendMorePlots() - Infinite Scroll
- *   ✅ התאמת כל הפונקציות לשיטה המאוחדת
- *   ✅ שמות ייחודיים: plotsRefreshData, plotsCheckScrollStatus
- *   ✅ לוגים מפורטים זהים לכולם
- * - v1.4.0: תיקון קריטי - שמות ייחודיים
+ * - v2.0.0: 🔥 הוספת פונקציות חסרות בלבד - ללא שינוי מבנה קיים
+ *   ✅ הוספת משתני pagination: plotsCurrentPage, plotsTotalPages, plotsIsLoadingMore
+ *   ✅ הוספת משתני חיפוש: plotsIsSearchMode, plotsCurrentQuery, plotsSearchResults
+ *   ✅ הוספת loadPlotsBrowseData() - טעינה ישירה מ-API
+ *   ✅ הוספת appendMorePlots() - Infinite Scroll
+ *   ✅ שינוי שמות: refreshData → plotsRefreshData, checkScrollStatus → plotsCheckScrollStatus
+ *   ✅ לוגים מפורטים כמו purchases/burials
+ * - v1.4.0: תיקון קריטי - שמות ייחודיים לכל המשתנים הגלובליים
  */
 
 console.log('🚀 plots-management.js v2.0.0 - Loading...');
@@ -202,7 +199,7 @@ async function loadPlots(blockId = null, blockName = null, forceReset = false) {
     
     // ⭐ אתחול UniversalSearch - פעם אחת!
     console.log('🆕 Creating fresh plotSearch instance...');
-    plotSearch = await initPlotsSearch(signal, blockId);
+    await initPlotsSearch(signal, blockId);
     console.log('✅ Step 9: UniversalSearch initialized');
     
     if (OperationManager.shouldAbort('plot')) {
@@ -211,10 +208,10 @@ async function loadPlots(blockId = null, blockName = null, forceReset = false) {
         return;
     }
 
-    // ⭐ טעינה ישירה (Browse Mode) - פעם אחת!
-    console.log('📥 Loading browse data...');
-    await loadPlotsBrowseData(blockId, signal);
-    console.log('✅ Step 10: Browse data loaded');
+    // ⭐ טעינה ישירה (Browse Mode) עם UniversalSearch
+    console.log('📥 Starting search...');
+    plotSearch.search();
+    console.log('✅ Step 10: Search initiated');
     
     // טען סטטיסטיקות
     console.log('📊 Loading stats...');
@@ -313,7 +310,7 @@ async function appendMorePlots() {
 
 
 // ===================================================================
-// בניית המבנה
+// ⭐ פונקציה מעודכנת - בניית המבנה של חלקות ב-main-container
 // ===================================================================
 async function buildPlotsContainer(signal, blockId = null, blockName = null) {
     console.log('🏗️ Building plots container...');
@@ -388,224 +385,463 @@ async function buildPlotsContainer(signal, blockId = null, blockName = null) {
         <!-- סקשן חיפוש -->
         <div id="plotSearchSection" class="search-section"></div>
         
-        <!-- סקשן סטטיסטיקות -->
-        <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
-            <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">סה"כ חלקות</div>
-                <div style="font-size: 32px; font-weight: bold;" id="totalPlots">0</div>
-            </div>
-            <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">סה"כ שורות</div>
-                <div style="font-size: 32px; font-weight: bold;" id="totalRows">0</div>
-            </div>
-            <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">חדשות החודש</div>
-                <div style="font-size: 32px; font-weight: bold;" id="newThisMonth">0</div>
-            </div>
-        </div>
-        
-        <!-- סקשן טבלה -->
-        <div id="plotTableSection" class="table-section">
-            <table class="data-table" id="plotsTable">
+        <!-- table-container עבור TableManager -->
+        <div class="table-container">
+            <table id="mainTable" class="data-table">
                 <thead>
-                    <tr>
-                        <th>מספר חלקה</th>
-                        <th>שם חלקה</th>
-                        <th>תיאור</th>
-                        <th>סטטוס</th>
-                        <th>תאריך יצירה</th>
-                        <th>פעולות</th>
+                    <tr id="tableHeaders">
+                        <th style="text-align: center;">טוען...</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody">
                     <tr>
-                        <td colspan="6" style="text-align: center; padding: 40px;">
-                            <div class="loading-spinner"></div>
-                            <div style="margin-top: 10px; color: #64748b;">טוען נתונים...</div>
+                        <td style="text-align: center; padding: 40px;">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">טוען חלקות...</span>
+                            </div>
                         </td>
                     </tr>
                 </tbody>
             </table>
         </div>
     `;
+    
+    console.log('✅ Plots container built');
 }
 
-
 // ===================================================================
-// אתחול חיפוש
+// אתחול UniversalSearch - עם סינון משופר!
 // ===================================================================
 async function initPlotsSearch(signal, blockId = null) {
-    const searchSection = document.getElementById('plotSearchSection');
-    if (!searchSection) {
-        console.error('❌ plotSearchSection not found');
+    const config = {
+        entityType: 'plot',
+        signal: signal,
+        apiEndpoint: '/dashboard/dashboards/cemeteries/api/plots-api.php',
+        action: 'list',
+        
+        searchableFields: [
+            {
+                name: 'plotNameHe',
+                label: 'שם חלקה (עברית)',
+                table: 'plots',
+                type: 'text',
+                matchType: ['exact', 'fuzzy', 'startsWith']
+            },
+            {
+                name: 'plotNameEn',
+                label: 'שם חלקה (אנגלית)',
+                table: 'plots',
+                type: 'text',
+                matchType: ['exact', 'fuzzy', 'startsWith']
+            },
+            {
+                name: 'plotCode',
+                label: 'קוד חלקה',
+                table: 'plots',
+                type: 'text',
+                matchType: ['exact', 'startsWith']
+            },
+            {
+                name: 'plotLocation',
+                label: 'מיקום חלקה',
+                table: 'plots',
+                type: 'text',
+                matchType: ['exact', 'startsWith']
+            },
+            {
+                name: 'blockNameHe',
+                label: 'גוש',
+                table: 'blocks',
+                type: 'text',
+                matchType: ['exact', 'fuzzy']
+            },
+            {
+                name: 'comments',
+                label: 'הערות',
+                table: 'plots',
+                type: 'text',
+                matchType: ['exact', 'fuzzy']
+            },
+            {
+                name: 'createDate',
+                label: 'תאריך יצירה',
+                table: 'plots',
+                type: 'date',
+                matchType: ['exact', 'before', 'after', 'between', 'today', 'thisWeek', 'thisMonth']
+            }
+        ],
+        
+        displayColumns: ['plotNameHe', 'plotCode', 'plotLocation', 'blockNameHe', 'comments', 'rows_count', 'createDate'],
+        
+        searchContainerSelector: '#plotSearchSection',
+        resultsContainerSelector: '#tableBody',
+        
+        placeholder: 'חיפוש חלקות לפי שם, קוד, מיקום...',
+        itemsPerPage: 999999,
+        
+        renderFunction: renderPlotsRows,
+
+       callbacks: {
+           onInit: () => {
+               console.log('✅ UniversalSearch initialized for plots');
+           },
+           
+           onSearch: (query, filters) => {
+               console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()), blockId: plotsFilterBlockId });
+           },
+
+            onResults: (data) => {
+                console.log('📦 API returned:', data.pagination?.total || data.data.length, 'plots');
+                
+                // ⭐⭐⭐ בדיקה קריטית - אם עברנו לרשומה אחרת, לא להמשיך!
+                if (window.currentType !== 'plot') {
+                    console.log('⚠️ Type changed during search - aborting plot results');
+                    console.log(`   Current type is now: ${window.currentType}`);
+                    return; // ❌ עצור כאן!
+                }
+
+                // ⭐ טיפול בדפים - מצטבר!
+                const currentPage = data.pagination?.page || 1;
+                
+                if (currentPage === 1) {
+                    // דף ראשון - התחל מחדש
+                    currentPlots = data.data;
+                } else {
+                    // דפים נוספים - הוסף לקיימים
+                    currentPlots = [...currentPlots, ...data.data];
+                    console.log(`📦 Added page ${currentPage}, total now: ${currentPlots.length}`);
+                }
+                
+                // ⭐ אם יש סינון - סנן את currentPlots!
+                let filteredCount = currentPlots.length;
+                if (plotsFilterBlockId && currentPlots.length > 0) {
+                    const filteredData = currentPlots.filter(plot => {
+                        const plotBlockId = plot.blockId || plot.block_id || plot.BlockId;
+                        return String(plotBlockId) === String(plotsFilterBlockId);
+                    });
+                    
+                    console.log('⚠️ Client-side filter:', currentPlots.length, '→', filteredData.length, 'plots');
+                    
+                    // ⭐ עדכן את currentPlots
+                    currentPlots = filteredData;
+                    filteredCount = filteredData.length;
+                    
+                    // ⭐ עדכן את pagination.total
+                    if (data.pagination) {
+                        data.pagination.total = filteredCount;
+                    }
+                }
+                
+                // ⭐⭐⭐ עדכן ישירות את plotSearch!
+                if (plotSearch && plotSearch.state) {
+                    plotSearch.state.totalResults = filteredCount;
+                    if (plotSearch.updateCounter) {
+                        plotSearch.updateCounter();
+                    }
+                }
+                
+                console.log('📊 Final count:', filteredCount);
+            },
+           
+           onError: (error) => {
+               console.error('❌ Search error:', error);
+               showToast('שגיאה בחיפוש חלקות', 'error');
+           },
+
+           onEmpty: () => {
+               console.log('📭 No results');
+           }
+       }
+    };
+    
+    // ⭐ אם יש סינון לפי גוש, הוסף פרמטר ל-API
+    if (blockId) {
+        console.log('🎯 Adding blockId filter to API request:', blockId);
+        config.additionalParams = { blockId: blockId };
+    }
+    
+    plotSearch = window.initUniversalSearch(config);
+    
+    // ⭐ עדכן את window.plotSearch מיד!
+    window.plotSearch = plotSearch;
+    
+    return plotSearch;
+}
+
+// ===================================================================
+// אתחול TableManager לחלקות
+// ===================================================================
+async function initPlotsTable(data, totalItems = null, signal) {
+    const actualTotalItems = totalItems !== null ? totalItems : data.length;
+    
+    // אם הטבלה כבר קיימת, רק עדכן נתונים
+    if (plotsTable) {
+        plotsTable.config.totalItems = actualTotalItems;
+        plotsTable.setData(data);
+        return plotsTable;
+    }
+
+    // טעינת העמודות מהשרת
+    async function loadColumnsFromConfig(entityType = 'plot', signal) {
+        try {
+            const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`, {
+                signal: signal
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            
+            if (!result.success || !result.data) {
+                throw new Error(result.error || 'Failed to load columns config');
+            }
+            
+            // המרת הקונפיג מ-PHP לפורמט של TableManager
+            const columns = result.data.map(col => {
+                const column = {
+                    field: col.field,
+                    label: col.title,
+                    width: col.width || 'auto',
+                    sortable: col.sortable !== false,
+                    type: col.type || 'text'
+                };
+                
+                // טיפול בסוגי עמודות מיוחדות
+                switch(col.type) {
+                    case 'link':
+                        column.render = (plot) => {
+                            return `<a href="#" onclick="handlePlotDoubleClick('${plot.unicId}', '${plot.plotNameHe?.replace(/'/g, "\\'")}'); return false;" 
+                                    style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                                ${plot.plotNameHe || '-'}
+                            </a>`;
+                        };
+                        break;
+                        
+                    case 'badge':
+                        column.render = (plot) => {
+                            const count = plot[column.field] || 0;
+                            return `<span style="background: #dbeafe; color: #1e40af; padding: 3px 10px; border-radius: 4px; font-size: 13px; font-weight: 600; display: inline-block;">${count}</span>`;
+                        };
+                        break;
+                        
+                    case 'status':
+                        column.render = (plot) => {
+                            const status = plot.statusPlot || plot.isActive;
+                            return status == 1 
+                                ? '<span class="status-badge status-active">פעיל</span>'
+                                : '<span class="status-badge status-inactive">לא פעיל</span>';
+                        };
+                        break;
+                        
+                    case 'date':
+                        column.render = (plot) => formatDate(plot[column.field]);
+                        break;
+                        
+                    case 'actions':
+                        column.render = (item) => `
+                            <button class="btn btn-sm btn-secondary" 
+                                    onclick="event.stopPropagation(); window.tableRenderer.editItem('${item.unicId}')" 
+                                    title="עריכה">
+                                <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
+                            </button>
+                            <button class="btn btn-sm btn-danger" 
+                                    onclick="event.stopPropagation(); deletePlot('${item.unicId}')" 
+                                    title="מחיקה">
+                                <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
+                            </button>
+                        `;
+                        break;
+                        
+                    default:
+                        // עמודת טקסט רגילה
+                        if (!column.render) {
+                            column.render = (item) => item[column.field] || '-';
+                        }
+                }
+                
+                return column;
+            });
+            
+            return columns;
+            
+        } catch (error) {
+            // בדיקה: אם זה ביטול מכוון - זה לא שגיאה
+            if (error.name === 'AbortError') {
+                console.log('⚠️ Columns loading aborted');
+                return [];
+            }
+            console.error('Failed to load columns config:', error);
+            return [];
+        }
+    }
+      
+    // קודם טען את העמודות
+    const columns = await loadColumnsFromConfig('plot', signal);
+
+    // בדוק אם בוטל
+    if (signal && signal.aborted) {
+        console.log('⚠️ Block table initialization aborted');
         return null;
     }
 
-    // ⭐ בנייה מפורשת של config
-    const searchConfig = {
-        searchInputId: 'plotSearchInput',
-        containerId: 'plotSearchSection',
-        entityType: 'plot',
-        entityNameHebrew: 'חלקה',
-        entityNamePluralHebrew: 'חלקות',
-        apiEndpoint: '/dashboard/dashboards/cemeteries/api/plots-api.php',
-        onResultsReceived: async (data, query, totalResults) => {
-            console.log(`🔍 Search results received: ${totalResults} plots found`);
-            
-            plotsIsSearchMode = true;
-            plotsCurrentQuery = query;
-            plotsSearchResults = data;
-            
-            const tableBody = document.getElementById('tableBody');
-            if (tableBody) {
-                await renderPlotsRows(data, tableBody, { total: totalResults }, signal);
-            }
+
+    plotsTable = new TableManager({
+        tableSelector: '#mainTable',        
+        totalItems: actualTotalItems,
+        columns: columns,
+        data: data,      
+        sortable: true,
+        resizable: true,
+        reorderable: false,
+        filterable: true,
+        
+        onSort: (field, order) => {
+            console.log(`📊 Sorted by ${field} ${order}`);
+            showToast(`ממוין לפי ${field} (${order === 'asc' ? 'עולה' : 'יורד'})`, 'info');
         },
-        searchableFields: [
-            'plotNumber',
-            'plotName', 
-            'description',
-            'blockName'
-        ],
-        limit: 200,
-        orderBy: 'createDate',
-        sortDirection: 'DESC'
-    };
+        
+        onFilter: (filters) => {
+            console.log('🔍 Active filters:', filters);
+            const count = plotsTable.getFilteredData().length;
+            showToast(`נמצאו ${count} תוצאות`, 'info');
+        }
+    });
 
-    // ⭐ הוסף blockId ל-config אם קיים
-    if (blockId) {
-        searchConfig.filterParams = { blockId: blockId };
+    // ⭐ מאזין לגלילה - טען עוד דפים!
+    const bodyContainer = document.querySelector('.table-body-container');
+    if (bodyContainer && plotSearch) {
+        bodyContainer.addEventListener('scroll', async function() {
+            const scrollTop = this.scrollTop;
+            const scrollHeight = this.scrollHeight;
+            const clientHeight = this.clientHeight;
+            
+            if (scrollHeight - scrollTop - clientHeight < 100) {
+                if (!plotSearch.state.isLoading && plotSearch.state.currentPage < plotSearch.state.totalPages) {
+                    console.log('📥 Reached bottom, loading more data...');
+                    
+                    const nextPage = plotSearch.state.currentPage + 1;
+                    plotSearch.state.currentPage = nextPage;
+                    plotSearch.state.isLoading = true;
+                    await plotSearch.search();
+                }
+            }
+        });
     }
-
-    console.log('🔍 Initializing UniversalSearch with config:', searchConfig);
     
-    const searchInstance = new UniversalSearch(searchConfig);
-    window.plotSearch = searchInstance;
-    
-    return searchInstance;
+    window.plotsTable = plotsTable;  
+    return plotsTable;
 }
 
-
 // ===================================================================
-// אתחול טבלה
+// רינדור שורות החלקות - עם הודעה מותאמת לגוש ריק
 // ===================================================================
-async function initPlotsTable(data, totalItems, signal) {
-    console.log('🏗️ Initializing TableManager...');
-    console.log(`   Data items: ${data.length}`);
-    console.log(`   Total items: ${totalItems}`);
+function renderPlotsRows(data, container, pagination = null, signal = null) {
+    console.log(`📝 renderPlotsRows called with ${data.length} items`);
     
-    const tableBody = document.getElementById('tableBody');
-    if (!tableBody) {
-        console.error('❌ tableBody element not found');
-        return;
+    // ⭐ סינון client-side לפי blockId
+    let filteredData = data;
+    if (plotsFilterBlockId) {
+        filteredData = data.filter(plot => 
+            plot.blockId === plotsFilterBlockId || 
+            plot.block_id === plotsFilterBlockId
+        );
+        console.log(`🎯 Client-side filtered: ${data.length} → ${filteredData.length} plots`);
     }
+    
+    // ⭐ עדכן את totalItems להיות המספר המסונן!
+    const totalItems = filteredData.length;
+    
+    console.log(`📊 Total items to display: ${totalItems}`);
 
-    // ⭐ בדיקה - אם הפעולה בוטלה, אל תמשיך!
-    if (signal && signal.aborted) {
-        console.log('⚠️ Table initialization aborted');
-        return;
-    }
-
-    const config = {
-        tableBodyId: 'tableBody',
-        itemsPerPage: 50,
-        totalItems: totalItems,
-        onLoadMore: async () => {
-            console.log('📥 TableManager requesting more data...');
-            return await appendMorePlots();
-        },
-        renderRow: (plot) => {
-            const statusClass = plot.isActive === 1 ? 'status-active' : 'status-inactive';
-            const statusText = plot.isActive === 1 ? 'פעיל' : 'לא פעיל';
-            
-            return `
-                <tr data-id="${plot.unicId}" ondblclick="handlePlotDoubleClick('${plot.unicId}', '${plot.plotName || 'ללא שם'}')">
-                    <td>${plot.plotNumber || '-'}</td>
-                    <td>${plot.plotName || '-'}</td>
-                    <td>${plot.description || '-'}</td>
-                    <td><span class="${statusClass}">${statusText}</span></td>
-                    <td>${formatDate(plot.createDate)}</td>
-                    <td>
-                        <button onclick="window.tableRenderer.editItem('${plot.unicId}')" class="btn-edit">✏️</button>
-                        <button onclick="deletePlot('${plot.unicId}')" class="btn-delete">🗑️</button>
+    if (filteredData.length === 0) {
+        if (plotsTable) {
+            plotsTable.setData([]);
+        }
+        
+        // ⭐⭐⭐ הודעה מותאמת לגוש ריק!
+        if (plotsFilterBlockId && plotsFilterBlockName) {
+            // נכנסנו לגוש ספציפי ואין חלקות
+            container.innerHTML = `
+                <tr>
+                    <td colspan="9" style="text-align: center; padding: 60px;">
+                        <div style="color: #6b7280;">
+                            <div style="font-size: 48px; margin-bottom: 16px;">📋</div>
+                            <div style="font-size: 20px; font-weight: 600; margin-bottom: 12px; color: #374151;">
+                                אין חלקות בגוש ${plotsFilterBlockName}
+                            </div>
+                            <div style="font-size: 14px; margin-bottom: 24px; color: #6b7280;">
+                                הגוש עדיין לא מכיל חלקות. תוכל להוסיף חלקה חדשה
+                            </div>
+                            <button 
+                                onclick="if(typeof FormHandler !== 'undefined' && FormHandler.openForm) { FormHandler.openForm('plot', '${plotsFilterBlockId}', null); } else { alert('FormHandler לא זמין'); }" 
+                                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                                       color: white; 
+                                       border: none; 
+                                       padding: 12px 24px; 
+                                       border-radius: 8px; 
+                                       font-size: 15px; 
+                                       font-weight: 600; 
+                                       cursor: pointer; 
+                                       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                                       transition: all 0.2s;"
+                                onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.15)';"
+                                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)';">
+                                ➕ הוסף חלקה ראשונה
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        } else {
+            // חיפוש כללי שלא מצא תוצאות
+            container.innerHTML = `
+                <tr>
+                    <td colspan="9" style="text-align: center; padding: 60px;">
+                        <div style="color: #9ca3af;">
+                            <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
+                            <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">לא נמצאו תוצאות</div>
+                            <div>נסה לשנות את מילות החיפוש או הפילטרים</div>
+                        </div>
                     </td>
                 </tr>
             `;
         }
-    };
-
-    console.log('⚙️ TableManager config:', config);
-    
-    plotsTable = new TableManager(config);
-    window.plotsTable = plotsTable;
-    
-    plotsTable.setData(data);
-    
-    console.log('✅ TableManager initialized successfully');
-}
-
-
-// ===================================================================
-// רינדור שורות הטבלה
-// ===================================================================
-async function renderPlotsRows(data, tableBody, pagination = {}, signal = null) {
-    console.log('═══════════════════════════════════════════════════════════');
-    console.log(`🎨 renderPlotsRows called with ${data.length} items`);
-    console.log(`   Pagination:`, pagination);
-    console.log('═══════════════════════════════════════════════════════════');
-
-    // ⭐ בדיקה - אם הפעולה בוטלה, אל תמשיך!
-    if (signal && signal.aborted) {
-        console.log('⚠️ Render aborted - operation cancelled');
-        return;
-    }
-
-    const totalItems = pagination.total || data.length;
-    console.log(`   Total items to manage: ${totalItems}`);
-
-    // בדוק אם tableBody קיים
-    if (!tableBody) {
-        console.error('❌ tableBody element not found!');
-        return;
-    }
-
-    // אם אין נתונים - הצג הודעה
-    if (!data || data.length === 0) {
-        console.log('📭 No data to display');
-        tableBody.innerHTML = `
-            <tr>
-                <td colspan="6" style="text-align: center; padding: 40px; color: #64748b;">
-                    אין חלקות להצגה
-                </td>
-            </tr>
-        `;
         return;
     }
     
+    // ⭐ בדוק אם ה-DOM של TableManager קיים
     const tableWrapperExists = document.querySelector('.table-wrapper[data-fixed-width="true"]');
-    console.log(`   tableWrapperExists: ${!!tableWrapperExists}`);
     
+    // ⭐ אם המשתנה קיים אבל ה-DOM נמחק - אפס את המשתנה!
     if (!tableWrapperExists && plotsTable) {
         console.log('🗑️ TableManager DOM was deleted, resetting plotsTable variable');
         plotsTable = null;
         window.plotsTable = null;
     }
-
-    // ⭐⭐⭐ אתחול או עדכון טבלה
+    
+    // עכשיו בדוק אם צריך לבנות מחדש
     if (!plotsTable || !tableWrapperExists) {
-        console.log(`🆕 Initializing TableManager with ${totalItems} items`);
-        await initPlotsTable(data, totalItems, signal);
-        console.log('   ✅ TableManager initialized');
+        // אין TableManager או שה-DOM שלו נמחק - בנה מחדש!
+        console.log(`🏗️ Creating new TableManager with ${totalItems} items`);
+        initPlotsTable(filteredData, totalItems, signal);
     } else {
+        // ⭐ עדכן גם את totalItems ב-TableManager!
         console.log(`♻️ Updating TableManager with ${totalItems} items`);
         if (plotsTable.config) {
             plotsTable.config.totalItems = totalItems;
         }
-        plotsTable.setData(data);
-        console.log('   ✅ TableManager updated');
+        
+        plotsTable.setData(filteredData);
+    }
+    
+    // ⭐ עדכן את התצוגה של UniversalSearch
+    if (plotSearch) {
+        plotSearch.state.totalResults = totalItems;
+        plotSearch.updateCounter();
     }
 }
-
 
 // ===================================================================
 // פורמט תאריך
@@ -616,9 +852,8 @@ function formatDate(dateString) {
     return date.toLocaleDateString('he-IL');
 }
 
-
 // ===================================================================
-// טעינת סטטיסטיקות
+// טעינת סטטיסטיקות חלקות
 // ===================================================================
 async function loadPlotStats(signal, blockId = null) {
     try {
@@ -633,6 +868,7 @@ async function loadPlotStats(signal, blockId = null) {
         if (result.success && result.data) {
             console.log('📊 Plot stats:', result.data);
             
+            // עדכון מונים בממשק אם קיימים
             if (document.getElementById('totalPlots')) {
                 document.getElementById('totalPlots').textContent = result.data.total_plots || 0;
             }
@@ -644,6 +880,7 @@ async function loadPlotStats(signal, blockId = null) {
             }
         }
     } catch (error) {
+        // בדיקה: אם זה ביטול מכוון - זה לא שגיאה
         if (error.name === 'AbortError') {
             console.log('⚠️ Plot stats loading aborted - this is expected');
             return;
@@ -651,7 +888,6 @@ async function loadPlotStats(signal, blockId = null) {
         console.error('Error loading plot stats:', error);
     }
 }
-
 
 // ===================================================================
 // מחיקת חלקה
@@ -674,6 +910,7 @@ async function deletePlot(plotId) {
         
         showToast('החלקה נמחקה בהצלחה', 'success');
         
+        // רענן את הנתונים
         if (plotSearch) {
             plotSearch.refresh();
         }
@@ -683,7 +920,6 @@ async function deletePlot(plotId) {
         showToast(error.message, 'error');
     }
 }
-
 
 // ===================================================================
 // הצגת הודעות Toast
@@ -721,15 +957,14 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-
 // ===================================================================
 // רענון נתונים
 // ===================================================================
 async function plotsRefreshData() {
-    // טעינה מחדש ישירה מה-API (כי UniversalSearch מושבת)
-    await loadPlots(plotsFilterBlockId, plotsFilterBlockName, false);
+    if (plotSearch) {
+        plotSearch.refresh();
+    }
 }
-
 
 // ===================================================================
 // בדיקת סטטוס טעינה
@@ -757,15 +992,14 @@ function plotsCheckScrollStatus() {
     }
 }
 
-
-// ===================================================================
-// דאבל-קליק על חלקה
-// ===================================================================
+// ===================================================
+// ⭐ פונקציה מתוקנת - טיפול בדאבל-קליק על חלקה
+// ===================================================
 async function handlePlotDoubleClick(plotId, plotName) {
     console.log('🖱️ Double-click on plot:', plotName, plotId);
     
     try {
-        // // 1. יצירת והצגת כרטיס (אופציונלי)
+        // // 1. יצירת והצגת כרטיס ✅
         // if (typeof createPlotCard === 'function') {
         //     const cardHtml = await createPlotCard(plotId);
         //     if (cardHtml && typeof displayHierarchyCard === 'function') {
@@ -773,7 +1007,7 @@ async function handlePlotDoubleClick(plotId, plotName) {
         //     }
         // }
         
-        // 2. טעינת אחוזות קבר
+        // 2. טעינת אחוזות קבר (נכדים דרך השורות) ✅ שינוי!
         console.log('🏘️ Loading area graves for plot:', plotName);
         if (typeof loadAreaGraves === 'function') {
             loadAreaGraves(plotId, plotName);
@@ -788,7 +1022,6 @@ async function handlePlotDoubleClick(plotId, plotName) {
 }
 
 window.handlePlotDoubleClick = handlePlotDoubleClick;
-
 
 // ===================================================================
 // הפוך לגלובלי

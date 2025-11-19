@@ -706,15 +706,6 @@ function checkBurialsScrollStatus() {
     checkEntityScrollStatus(burialsTable, 'Burials');
 }
 
-// // ===================================================================
-// // פורמט תאריך
-// // ===================================================================
-// function formatDate(dateString) {
-//     if (!dateString) return '';
-//     const date = new Date(dateString);
-//     return date.toLocaleDateString('he-IL');
-// }
-
 // ===================================================================
 // פונקציות עזר לפורמט
 // ===================================================================
@@ -763,70 +754,8 @@ async function loadBurialStats(signal) {
 // מחיקת קבורה
 // ===================================================================
 async function deleteBurial(burialId) {
-    if (!confirm('האם אתה בטוח שברצונך למחוק את הקבורה?')) {
-        return;
-    }
-    
-    try {
-        const response = await fetch(`/dashboard/dashboards/cemeteries/api/burials-api.php?action=delete&id=${burialId}`, {
-            method: 'DELETE'
-        });
-        
-        const result = await response.json();
-        
-        if (!result.success) {
-            throw new Error(result.error || 'שגיאה במחיקת הקבורה');
-        }
-        
-        showToast('הקבורה נמחקה בהצלחה', 'success');
-        
-        if (burialSearch) {
-            burialSearch.refresh();
-        }
-        
-    } catch (error) {
-        console.error('Error deleting burial:', error);
-        showToast(error.message, 'error');
-    }
+    await deleteEntity('burial', burialId);
 }
-
-
-// // ===================================================================
-// // הצגת הודעות Toast
-// // ===================================================================
-// function showToast(message, type = 'info') {
-//     const toast = document.createElement('div');
-//     toast.className = 'toast-message';
-//     toast.style.cssText = `
-//         position: fixed;
-//         top: 20px;
-//         left: 50%;
-//         transform: translateX(-50%);
-//         background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
-//         color: white;
-//         padding: 15px 25px;
-//         border-radius: 8px;
-//         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-//         z-index: 10000;
-//         display: flex;
-//         align-items: center;
-//         gap: 10px;
-//         animation: slideDown 0.3s ease-out;
-//     `;
-    
-//     toast.innerHTML = `
-//         <span>${type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ'}</span>
-//         <span>${message}</span>
-//     `;
-    
-//     document.body.appendChild(toast);
-    
-//     setTimeout(() => {
-//         toast.style.animation = 'slideUp 0.3s ease-out';
-//         setTimeout(() => toast.remove(), 300);
-//     }, 3000);
-// }
-
 
 // ===================================================================
 // רענון נתונים
@@ -835,34 +764,6 @@ async function burialsRefreshData() {
     // טעינה מחדש ישירה מה-API (כי UniversalSearch מושבת)
     await loadBurials();
 }
-
-
-// // ===================================================================
-// // בדיקת סטטוס טעינה
-// // ===================================================================
-// function checkBurialsScrollStatus() {
-//     if (!burialsTable) {
-//         console.log('❌ Table not initialized');
-//         return;
-//     }
-    
-//     const total = burialsTable.getFilteredData().length;
-//     const displayed = burialsTable.getDisplayedData().length;
-//     const remaining = total - displayed;
-    
-//     console.log('📊 Scroll Status:');
-//     console.log(`   Total items: ${total}`);
-//     console.log(`   Displayed: ${displayed}`);
-//     console.log(`   Remaining: ${remaining}`);
-//     console.log(`   Progress: ${Math.round((displayed / total) * 100)}%`);
-    
-//     if (remaining > 0) {
-//         console.log(`   🔽 Scroll down to load more items`);
-//     } else {
-//         console.log('   ✅ All items loaded');
-//     }
-// }
-
 
 // ===================================================================
 // דאבל-קליק על קבורה

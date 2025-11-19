@@ -15,7 +15,6 @@
  *   - loadPurchasesBrowseData() - טעינה ישירה מ-API
  *   - appendMorePurchases() - Infinite Scroll
  *   ✅ התאמת כל הפונקציות לשיטה המאוחדת
- *   ✅ שמות ייחודיים: purchasesRefreshData, purchasesCheckScrollStatus
  * - v3.2.1: אחידות חלקית עם customers-management
  * - v3.0.0: שיטה זהה לבתי עלמין - UniversalSearch + TableManager
  */
@@ -695,15 +694,6 @@ function checkPurchasesScrollStatus() {
     checkEntityScrollStatus(purchasesTable, 'Purchases');
 }
 
-// // ===================================================================
-// // פורמט תאריך
-// // ===================================================================
-// function formatDate(dateString) {
-//     if (!dateString) return '';
-//     const date = new Date(dateString);
-//     return date.toLocaleDateString('he-IL');
-// }
-
 // ===================================================================
 // פונקציות עזר לפורמט
 // ===================================================================
@@ -769,70 +759,8 @@ async function loadPurchaseStats(signal) {
 // מחיקת רכישה
 // ===================================================================
 async function deletePurchase(purchaseId) {
-    if (!confirm('האם אתה בטוח שברצונך למחוק את הרכישה?')) {
-        return;
-    }
-    
-    try {
-        const response = await fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=delete&id=${purchaseId}`, {
-            method: 'DELETE'
-        });
-        
-        const result = await response.json();
-        
-        if (!result.success) {
-            throw new Error(result.error || 'שגיאה במחיקת הרכישה');
-        }
-        
-        showToast('הרכישה נמחקה בהצלחה', 'success');
-        
-        if (purchaseSearch) {
-            purchaseSearch.refresh();
-        }
-        
-    } catch (error) {
-        console.error('Error deleting purchase:', error);
-        showToast(error.message, 'error');
-    }
+    await deleteEntity('purchase', purchaseId);
 }
-
-
-// // ===================================================================
-// // הצגת הודעות Toast
-// // ===================================================================
-// function showToast(message, type = 'info') {
-//     const toast = document.createElement('div');
-//     toast.className = 'toast-message';
-//     toast.style.cssText = `
-//         position: fixed;
-//         top: 20px;
-//         left: 50%;
-//         transform: translateX(-50%);
-//         background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
-//         color: white;
-//         padding: 15px 25px;
-//         border-radius: 8px;
-//         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-//         z-index: 10000;
-//         display: flex;
-//         align-items: center;
-//         gap: 10px;
-//         animation: slideDown 0.3s ease-out;
-//     `;
-    
-//     toast.innerHTML = `
-//         <span>${type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ'}</span>
-//         <span>${message}</span>
-//     `;
-    
-//     document.body.appendChild(toast);
-    
-//     setTimeout(() => {
-//         toast.style.animation = 'slideUp 0.3s ease-out';
-//         setTimeout(() => toast.remove(), 300);
-//     }, 3000);
-// }
-
 
 // ===================================================================
 // רענון נתונים
@@ -841,34 +769,6 @@ async function purchasesRefreshData() {
     // טעינה מחדש ישירה מה-API (כי UniversalSearch מושבת)
     await loadPurchases();
 }
-
-
-// // ===================================================================
-// // בדיקת סטטוס טעינה
-// // ===================================================================
-// function checkPurchasesScrollStatus() {
-//     if (!purchasesTable) {
-//         console.log('❌ Table not initialized');
-//         return;
-//     }
-    
-//     const total = purchasesTable.getFilteredData().length;
-//     const displayed = purchasesTable.getDisplayedData().length;
-//     const remaining = total - displayed;
-    
-//     console.log('📊 Scroll Status:');
-//     console.log(`   Total items: ${total}`);
-//     console.log(`   Displayed: ${displayed}`);
-//     console.log(`   Remaining: ${remaining}`);
-//     console.log(`   Progress: ${Math.round((displayed / total) * 100)}%`);
-    
-//     if (remaining > 0) {
-//         console.log(`   🔽 Scroll down to load more items`);
-//     } else {
-//         console.log('   ✅ All items loaded');
-//     }
-// }
-
 
 // ===================================================================
 // דאבל-קליק על רכישה

@@ -13,6 +13,100 @@
 console.log('🚀 entities-common-utils.js v1.0.0 - Loading...');
 
 // ===================================================================
+// קונפיג יישויות - טקסטים ו-endpoints
+// ===================================================================
+const ENTITY_CONFIG = {
+    purchase: {
+        singular: 'רכישה',
+        singularArticle: 'את הרכישה',
+        apiFile: 'purchases-api.php',
+        searchVar: 'purchaseSearch'
+    },
+    customer: {
+        singular: 'לקוח',
+        singularArticle: 'את הלקוח',
+        apiFile: 'customers-api.php',
+        searchVar: 'customerSearch'
+    },
+    burial: {
+        singular: 'קבורה',
+        singularArticle: 'את הקבורה',
+        apiFile: 'burials-api.php',
+        searchVar: 'burialSearch'
+    },
+    plot: {
+        singular: 'חלקה',
+        singularArticle: 'את החלקה',
+        apiFile: 'plots-api.php',
+        searchVar: 'plotSearch'
+    },
+    areaGrave: {
+        singular: 'אחוזת קבר',
+        singularArticle: 'את אחוזת הקבר',
+        apiFile: 'areaGraves-api.php',
+        searchVar: 'areaGraveSearch'
+    },
+    grave: {
+        singular: 'קבר',
+        singularArticle: 'את הקבר',
+        apiFile: 'graves-api.php',
+        searchVar: 'graveSearch'
+    }
+};
+
+// ===================================================================
+// 4️⃣ מחיקת יישות - גלובלי
+// ===================================================================
+/**
+ * מוחק יישות לאחר אישור המשתמש
+ * @param {string} entityType - סוג היישות (purchase, customer, burial, וכו')
+ * @param {string} entityId - מזהה הרשומה למחיקה
+ */
+async function deleteEntity(entityType, entityId) {
+    const config = ENTITY_CONFIG[entityType];
+    
+    if (!config) {
+        console.error(`❌ Unknown entity type: ${entityType}`);
+        showToast('שגיאה: סוג יישות לא מוכר', 'error');
+        return;
+    }
+    
+    // ⭐ אישור מחיקה
+    if (!confirm(`האם אתה בטוח שברצונך למחוק ${config.singularArticle}?`)) {
+        return;
+    }
+    
+    try {
+        // ⭐ שליחת בקשת DELETE ל-API
+        const response = await fetch(
+            `/dashboard/dashboards/cemeteries/api/${config.apiFile}?action=delete&id=${entityId}`, 
+            { method: 'DELETE' }
+        );
+        
+        const result = await response.json();
+        
+        // ⭐ טיפול בשגיאה מה-API
+        if (!result.success) {
+            throw new Error(result.error || `שגיאה במחיקת ה${config.singular}`);
+        }
+        
+        // ⭐ הודעת הצלחה
+        showToast(`ה${config.singular} נמחקה בהצלחה`, 'success');
+        
+        // ⭐ רענון החיפוש
+        const searchInstance = window[config.searchVar];
+        if (searchInstance && typeof searchInstance.refresh === 'function') {
+            searchInstance.refresh();
+        }
+        
+    } catch (error) {
+        console.error(`Error deleting ${entityType}:`, error);
+        showToast(error.message, 'error');
+    }
+}
+
+
+// ===================================================================
 // 1️⃣ הצגת הודעות Toast למשתמש
 // ===================================================================
 /**

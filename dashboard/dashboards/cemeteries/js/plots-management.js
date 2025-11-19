@@ -9,7 +9,6 @@
  *   ✅ הוספת משתני חיפוש: plotsIsSearchMode, plotsCurrentQuery, plotsSearchResults
  *   ✅ הוספת loadPlotsBrowseData() - טעינה ישירה מ-API
  *   ✅ הוספת appendMorePlots() - Infinite Scroll
- *   ✅ שינוי שמות: refreshData → plotsRefreshData, checkScrollStatus → plotsCheckScrollStatus
  *   ✅ לוגים מפורטים כמו purchases/burials
  * - v1.4.0: תיקון קריטי - שמות ייחודיים לכל המשתנים הגלובליים
  */
@@ -847,19 +846,9 @@ function renderPlotsRows(data, container, pagination = null, signal = null) {
 // הפנייה לפונקציות גלובליות
 // ===================================================================
 
-function plotsCheckScrollStatus() {
+function checkPlotsScrollStatus() {
     checkEntityScrollStatus(plotsTable, 'Plots');
 }
-
-
-// // ===================================================================
-// // פורמט תאריך
-// // ===================================================================
-// function formatDate(dateString) {
-//     if (!dateString) return '';
-//     const date = new Date(dateString);
-//     return date.toLocaleDateString('he-IL');
-// }
 
 // ===================================================================
 // טעינת סטטיסטיקות חלקות
@@ -902,69 +891,8 @@ async function loadPlotStats(signal, blockId = null) {
 // מחיקת חלקה
 // ===================================================================
 async function deletePlot(plotId) {
-    if (!confirm('האם אתה בטוח שברצונך למחוק את החלקה?')) {
-        return;
-    }
-    
-    try {
-        const response = await fetch(`/dashboard/dashboards/cemeteries/api/plots-api.php?action=delete&id=${plotId}`, {
-            method: 'DELETE'
-        });
-        
-        const result = await response.json();
-        
-        if (!result.success) {
-            throw new Error(result.error || 'שגיאה במחיקת החלקה');
-        }
-        
-        showToast('החלקה נמחקה בהצלחה', 'success');
-        
-        // רענן את הנתונים
-        if (plotSearch) {
-            plotSearch.refresh();
-        }
-        
-    } catch (error) {
-        console.error('Error deleting plot:', error);
-        showToast(error.message, 'error');
-    }
+    await deleteEntity('plot', plotId);
 }
-
-// // ===================================================================
-// // הצגת הודעות Toast
-// // ===================================================================
-// function showToast(message, type = 'info') {
-//     const toast = document.createElement('div');
-//     toast.className = 'toast-message';
-//     toast.style.cssText = `
-//         position: fixed;
-//         top: 20px;
-//         left: 50%;
-//         transform: translateX(-50%);
-//         background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
-//         color: white;
-//         padding: 15px 25px;
-//         border-radius: 8px;
-//         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-//         z-index: 10000;
-//         display: flex;
-//         align-items: center;
-//         gap: 10px;
-//         animation: slideDown 0.3s ease-out;
-//     `;
-    
-//     toast.innerHTML = `
-//         <span>${type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ'}</span>
-//         <span>${message}</span>
-//     `;
-    
-//     document.body.appendChild(toast);
-    
-//     setTimeout(() => {
-//         toast.style.animation = 'slideUp 0.3s ease-out';
-//         setTimeout(() => toast.remove(), 300);
-//     }, 3000);
-// }
 
 // ===================================================================
 // רענון נתונים
@@ -974,32 +902,6 @@ async function plotsRefreshData() {
         plotSearch.refresh();
     }
 }
-
-// // ===================================================================
-// // בדיקת סטטוס טעינה
-// // ===================================================================
-// function plotsCheckScrollStatus() {
-//     if (!plotsTable) {
-//         console.log('❌ Table not initialized');
-//         return;
-//     }
-    
-//     const total = plotsTable.getFilteredData().length;
-//     const displayed = plotsTable.getDisplayedData().length;
-//     const remaining = total - displayed;
-    
-//     console.log('📊 Scroll Status:');
-//     console.log(`   Total items: ${total}`);
-//     console.log(`   Displayed: ${displayed}`);
-//     console.log(`   Remaining: ${remaining}`);
-//     console.log(`   Progress: ${Math.round((displayed / total) * 100)}%`);
-    
-//     if (remaining > 0) {
-//         console.log(`   🔽 Scroll down to load more items`);
-//     } else {
-//         console.log('   ✅ All items loaded');
-//     }
-// }
 
 // ===================================================
 // ⭐ פונקציה מתוקנת - טיפול בדאבל-קליק על חלקה
@@ -1045,7 +947,7 @@ window.plotsRefreshData = plotsRefreshData;
 
 window.plotsTable = plotsTable;
 
-window.plotsCheckScrollStatus = plotsCheckScrollStatus;
+window.checkPlotsScrollStatus = checkPlotsScrollStatus;
 
 window.plotsFilterBlockId = plotsFilterBlockId;
 

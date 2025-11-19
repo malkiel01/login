@@ -858,15 +858,6 @@ function checkGravesScrollStatus() {
     checkEntityScrollStatus(gravesTable, 'Graves');
 }
 
-// // ===================================================================
-// // פורמט תאריך
-// // ===================================================================
-// function formatDate(dateString) {
-//     if (!dateString) return '';
-//     const date = new Date(dateString);
-//     return date.toLocaleDateString('he-IL');
-// }
-
 // ===================================================================
 // פונקציית עזר לשם סוג קבר
 // ===================================================================
@@ -920,70 +911,8 @@ async function loadGraveStats(signal, areaGraveId = null) {
 // מחיקת אחוזת קבר
 // ===================================================================
 async function deleteGrave(graveId) {
-    if (!confirm('האם אתה בטוח שברצונך למחוק את אחוזת הקבר?')) {
-        return;
-    }
-    
-    try {
-        const response = await fetch(`/dashboard/dashboards/cemeteries/api/graves-api.php?action=delete&id=${graveId}`, {
-            method: 'DELETE'
-        });
-        
-        const result = await response.json();
-        
-        if (!result.success) {
-            throw new Error(result.error || 'שגיאה במחיקת אחוזת הקבר');
-        }
-        
-        showToast('אחוזת הקבר נמחקה בהצלחה', 'success');
-        
-        if (graveSearch) {
-            graveSearch.refresh();
-        }
-        
-    } catch (error) {
-        console.error('Error deleting area grave:', error);
-        showToast(error.message, 'error');
-    }
+    await deleteEntity('grave', graveId);
 }
-
-
-// // ===================================================================
-// // הצגת הודעות Toast
-// // ===================================================================
-// function showToast(message, type = 'info') {
-//     const toast = document.createElement('div');
-//     toast.className = 'toast-message';
-//     toast.style.cssText = `
-//         position: fixed;
-//         top: 20px;
-//         left: 50%;
-//         transform: translateX(-50%);
-//         background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
-//         color: white;
-//         padding: 15px 25px;
-//         border-radius: 8px;
-//         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-//         z-index: 10000;
-//         display: flex;
-//         align-items: center;
-//         gap: 10px;
-//         animation: slideDown 0.3s ease-out;
-//     `;
-    
-//     toast.innerHTML = `
-//         <span>${type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ'}</span>
-//         <span>${message}</span>
-//     `;
-    
-//     document.body.appendChild(toast);
-    
-//     setTimeout(() => {
-//         toast.style.animation = 'slideUp 0.3s ease-out';
-//         setTimeout(() => toast.remove(), 300);
-//     }, 3000);
-// }
-
 
 // ===================================================================
 // רענון נתונים
@@ -992,34 +921,6 @@ async function refreshGravesData() {
     // טעינה מחדש ישירה מה-API (כי UniversalSearch מושבת)
     await loadGraves(gravesFilterAreaGraveId, gravesFilterAreaGraveName, false);
 }
-
-
-// // ===================================================================
-// // בדיקת סטטוס טעינה
-// // ===================================================================
-// function checkGravesScrollStatus() {
-//     if (!gravesTable) {
-//         console.log('❌ Table not initialized');
-//         return;
-//     }
-    
-//     const total = gravesTable.getFilteredData().length;
-//     const displayed = gravesTable.getDisplayedData().length;
-//     const remaining = total - displayed;
-    
-//     console.log('📊 Scroll Status:');
-//     console.log(`   Total items: ${total}`);
-//     console.log(`   Displayed: ${displayed}`);
-//     console.log(`   Remaining: ${remaining}`);
-//     console.log(`   Progress: ${Math.round((displayed / total) * 100)}%`);
-    
-//     if (remaining > 0) {
-//         console.log(`   🔽 Scroll down to load more items`);
-//     } else {
-//         console.log('   ✅ All items loaded');
-//     }
-// }
-
 
 // ===================================================================
 // דאבל-קליק על אחוזת קבר

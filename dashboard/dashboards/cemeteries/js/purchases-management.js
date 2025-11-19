@@ -828,4 +828,6 @@ window.checkPurchasesScrollStatus = checkPurchasesScrollStatus;
 
 window.purchaseSearch = purchaseSearch;
 
+window.loadPurchasesBrowseData = loadPurchasesBrowseData;
+
 console.log('✅ purchases-management.js v4.0.1 - Loaded successfully!');

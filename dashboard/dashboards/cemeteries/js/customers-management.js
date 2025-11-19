@@ -773,4 +773,6 @@ window.checkCustomersScrollStatus = checkCustomersScrollStatus;
 
 window.customerSearch = customerSearch;
 
+window.loadCustomersBrowseData = loadCustomersBrowseData;
+
 console.log('✅ customers-management.js v4.0.0 - Loaded successfully!');

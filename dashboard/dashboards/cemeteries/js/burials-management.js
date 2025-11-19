@@ -823,4 +823,6 @@ window.checkBurialsScrollStatus = checkBurialsScrollStatus;
 
 window.burialSearch = burialSearch;
 
+window.loadBurialsBrowseData = loadBurialsBrowseData;
+
 console.log('✅ burials-management.js v5.0.0 - Loaded successfully!');

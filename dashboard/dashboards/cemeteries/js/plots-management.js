@@ -953,4 +953,6 @@ window.plotsFilterBlockName = plotsFilterBlockName;
 
 window.plotSearch = plotSearch;
 
+window.loadPlotsBrowseData = loadPlotsBrowseData;
+
 console.log('✅ plots-management.js v2.0.0 - Loaded successfully!');

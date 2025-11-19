@@ -964,10 +964,12 @@ window.gravesTable = gravesTable;
 
 window.checkGravesScrollStatus = checkGravesScrollStatus;
 
-window.currentAreaGraveId = gravesFilterAreaGraveId;
+window.gravesFilterAreaGraveId = gravesFilterAreaGraveId;
 
-window.currentAreaGraveName = gravesFilterAreaGraveName;
+window.gravesFilterAreaGraveName = gravesFilterAreaGraveName;
 
 window.graveSearch = graveSearch;
+
+window.loadGravesBrowseData = loadGravesBrowseData;
 
 console.log('✅ graves-management.js v1.6.0 - Loaded successfully! (No conflicts with area-graves)');

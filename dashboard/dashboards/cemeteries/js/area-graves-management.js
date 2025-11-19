@@ -1001,4 +1001,6 @@ window.areaGravesFilterPlotName = areaGravesFilterPlotName;
 
 window.areaGraveSearch = areaGraveSearch;
 
+window.loadAreaGravesBrowseData = loadAreaGravesBrowseData;
+
 console.log('✅ area-graves-management.js v1.5.3 - Loaded successfully!');

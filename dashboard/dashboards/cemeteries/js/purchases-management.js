@@ -603,7 +603,7 @@ async function initPurchasesTable(data, totalItems = null, signal = null) {
 
         renderFunction: (pageData) => {
             // ⭐ זה לא ישמש - UniversalSearch ירנדר ישירות
-            return renderAreaGravesRows(pageData);
+            return renderPurchasesRows(pageData);
         },
         
         onSort: (field, order) => {

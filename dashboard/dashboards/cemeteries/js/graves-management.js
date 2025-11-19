@@ -875,37 +875,9 @@ function getGraveStatusInfo(status) {
 // טעינת סטטיסטיקות
 // ===================================================================
 async function loadGraveStats(signal, areaGraveId = null) {
-    try {
-        let url = '/dashboard/dashboards/cemeteries/api/graves-api.php?action=stats';
-        if (areaGraveId) {
-            url += `&areaGraveId=${areaGraveId}`;
-        }
-        
-        const response = await fetch(url, { signal: signal });
-        const result = await response.json();
-        
-        if (result.success && result.data) {
-            console.log('📊 Area grave stats:', result.data);
-            
-            if (document.getElementById('totalGraves')) {
-                document.getElementById('totalGraves').textContent = result.data.total_graves || 0;
-            }
-            if (document.getElementById('totalGraves')) {
-                document.getElementById('totalGraves').textContent = result.data.total_graves || 0;
-            }
-            if (document.getElementById('newThisMonth')) {
-                document.getElementById('newThisMonth').textContent = result.data.new_this_month || 0;
-            }
-        }
-    } catch (error) {
-        // בדיקה: אם זה ביטול מכוון - זה לא שגיאה
-        if (error.name === 'AbortError') {
-            console.log('⚠️ Grave stats loading aborted - this is expected');
-            return;
-        }
-        console.error('Error loading area grave stats:', error);
-    }
+    await loadEntityStats('grave', signal, areaGraveId);
 }
+
 
 // ===================================================================
 // מחיקת אחוזת קבר

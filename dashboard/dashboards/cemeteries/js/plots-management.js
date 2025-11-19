@@ -854,37 +854,7 @@ function checkPlotsScrollStatus() {
 // טעינת סטטיסטיקות חלקות
 // ===================================================================
 async function loadPlotStats(signal, blockId = null) {
-    try {
-        let url = '/dashboard/dashboards/cemeteries/api/plots-api.php?action=stats';
-        if (blockId) {
-            url += `&blockId=${blockId}`;
-        }
-        
-        const response = await fetch(url, { signal: signal });
-        const result = await response.json();
-        
-        if (result.success && result.data) {
-            console.log('📊 Plot stats:', result.data);
-            
-            // עדכון מונים בממשק אם קיימים
-            if (document.getElementById('totalPlots')) {
-                document.getElementById('totalPlots').textContent = result.data.total_plots || 0;
-            }
-            if (document.getElementById('totalRows')) {
-                document.getElementById('totalRows').textContent = result.data.total_rows || 0;
-            }
-            if (document.getElementById('newThisMonth')) {
-                document.getElementById('newThisMonth').textContent = result.data.new_this_month || 0;
-            }
-        }
-    } catch (error) {
-        // בדיקה: אם זה ביטול מכוון - זה לא שגיאה
-        if (error.name === 'AbortError') {
-            console.log('⚠️ Plot stats loading aborted - this is expected');
-            return;
-        }
-        console.error('Error loading plot stats:', error);
-    }
+    await loadEntityStats('plot', signal, blockId);
 }
 
 // ===================================================================

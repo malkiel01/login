@@ -854,68 +854,12 @@ function getGraveTypeName(type) {
 // טעינת סטטיסטיקות
 // ===================================================================
 async function loadAreaGraveStats(signal, plotId = null) {
-    try {
-        let url = '/dashboard/dashboards/cemeteries/api/areaGraves-api.php?action=stats';
-        if (plotId) {
-            url += `&plotId=${plotId}`;
-        }
-        
-        const response = await fetch(url, { signal: signal });
-        const result = await response.json();
-        
-        if (result.success && result.data) {
-            console.log('📊 Area grave stats:', result.data);
-            
-            if (document.getElementById('totalAreaGraves')) {
-                document.getElementById('totalAreaGraves').textContent = result.data.total_area_graves || 0;
-            }
-            if (document.getElementById('totalGraves')) {
-                document.getElementById('totalGraves').textContent = result.data.total_graves || 0;
-            }
-            if (document.getElementById('newThisMonth')) {
-                document.getElementById('newThisMonth').textContent = result.data.new_this_month || 0;
-            }
-        }
-    } catch (error) {
-        // בדיקה: אם זה ביטול מכוון - זה לא שגיאה
-        if (error.name === 'AbortError') {
-            console.log('⚠️ AreaGrave stats loading aborted - this is expected');
-            return;
-        }
-        console.error('Error loading area grave stats:', error);
-    }
+    await loadEntityStats('areaGrave', signal, plotId);
 }
 
 // ===================================================================
 // מחיקת אחוזת קבר
 // ===================================================================
-async function deleteAreaGrave(areaGraveId) {
-    if (!confirm('האם אתה בטוח שברצונך למחוק את אחוזת הקבר?')) {
-        return;
-    }
-    
-    try {
-        const response = await fetch(`/dashboard/dashboards/cemeteries/api/areaGraves-api.php?action=delete&id=${areaGraveId}`, {
-            method: 'DELETE'
-        });
-        
-        const result = await response.json();
-        
-        if (!result.success) {
-            throw new Error(result.error || 'שגיאה במחיקת אחוזת הקבר');
-        }
-        
-        showToast('אחוזת הקבר נמחקה בהצלחה', 'success');
-        
-        if (areaGraveSearch) {
-            areaGraveSearch.refresh();
-        }
-        
-    } catch (error) {
-        console.error('Error deleting area grave:', error);
-        showToast(error.message, 'error');
-    }
-}
 async function deleteAreaGrave(areaGraveId) {
     await deleteEntity('areaGrave', areaGraveId);
 }

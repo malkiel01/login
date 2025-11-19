@@ -738,30 +738,7 @@ function formatBurialStatus(status) {
 // טעינת סטטיסטיקות
 // ===================================================================
 async function loadBurialStats(signal) {
-    try {
-        const response = await fetch('/dashboard/dashboards/cemeteries/api/burials-api.php?action=stats', { signal: signal });
-        const result = await response.json();
-        
-        if (result.success && result.data) {
-            console.log('📊 Burial stats:', result.data);
-            
-            if (document.getElementById('totalBurials')) {
-                document.getElementById('totalBurials').textContent = result.data.total_burials || 0;
-            }
-            if (document.getElementById('completedBurials')) {
-                document.getElementById('completedBurials').textContent = result.data.completed || 0;
-            }
-            if (document.getElementById('newThisMonth')) {
-                document.getElementById('newThisMonth').textContent = result.data.new_this_month || 0;
-            }
-        }
-    } catch (error) {
-        if (error.name === 'AbortError') {
-            console.log('⚠️ Burial stats loading aborted - this is expected');
-            return;
-        }
-        console.error('Error loading burial stats:', error);
-    }
+    await loadEntityStats('burial', signal);
 }
 
 // ===================================================================

@@ -720,53 +720,61 @@ function formatPurchaseType(type) {
     return types[type] || '-';
 }
 
+// function formatPurchaseStatus(status) {
+//     const statuses = {
+//         'pending': { text: 'ממתין', color: '#f59e0b' },
+//         'approved': { text: 'מאושר', color: '#3b82f6' },
+//         'completed': { text: 'הושלם', color: '#10b981' },
+//         'cancelled': { text: 'בוטל', color: '#ef4444' }
+//     };
+//     const statusInfo = statuses[status] || statuses['pending'];
+//     return `<span style="background: ${statusInfo.color}; color: white; padding: 3px 8px; border-radius: 4px; font-size: 12px; display: inline-block;">${statusInfo.text}</span>`;
+// }
 function formatPurchaseStatus(status) {
-    const statuses = {
-        'pending': { text: 'ממתין', color: '#f59e0b' },
-        'approved': { text: 'מאושר', color: '#3b82f6' },
-        'completed': { text: 'הושלם', color: '#10b981' },
-        'cancelled': { text: 'בוטל', color: '#ef4444' }
-    };
-    const statusInfo = statuses[status] || statuses['pending'];
-    return `<span style="background: ${statusInfo.color}; color: white; padding: 3px 8px; border-radius: 4px; font-size: 12px; display: inline-block;">${statusInfo.text}</span>`;
+    return formatEntityStatus('purchase', status);
 }
 
-function formatCurrency(amount) {
-    if (!amount) return '-';
-    return new Intl.NumberFormat('he-IL', {
-        style: 'currency',
-        currency: 'ILS'
-    }).format(amount);
-}
+// function formatCurrency(amount) {
+//     if (!amount) return '-';
+//     return new Intl.NumberFormat('he-IL', {
+//         style: 'currency',
+//         currency: 'ILS'
+//     }).format(amount);
+// }
 
 // ===================================================================
 // טעינת סטטיסטיקות
 // ===================================================================
-async function loadPurchaseStats(signal) {
-    try {
-        const response = await fetch('/dashboard/dashboards/cemeteries/api/purchases-api.php?action=stats', { signal: signal });
-        const result = await response.json();
+
+// async function loadPurchaseStats(signal) {
+//     try {
+//         const response = await fetch('/dashboard/dashboards/cemeteries/api/purchases-api.php?action=stats', { signal: signal });
+//         const result = await response.json();
         
-        if (result.success && result.data) {
-            console.log('📊 Purchase stats:', result.data);
+//         if (result.success && result.data) {
+//             console.log('📊 Purchase stats:', result.data);
             
-            if (document.getElementById('totalPurchases')) {
-                document.getElementById('totalPurchases').textContent = result.data.total_purchases || 0;
-            }
-            if (document.getElementById('completedPurchases')) {
-                document.getElementById('completedPurchases').textContent = result.data.completed || 0;
-            }
-            if (document.getElementById('newThisMonth')) {
-                document.getElementById('newThisMonth').textContent = result.data.new_this_month || 0;
-            }
-        }
-    } catch (error) {
-        if (error.name === 'AbortError') {
-            console.log('⚠️ Purchase stats loading aborted - this is expected');
-            return;
-        }
-        console.error('Error loading purchase stats:', error);
-    }
+//             if (document.getElementById('totalPurchases')) {
+//                 document.getElementById('totalPurchases').textContent = result.data.total_purchases || 0;
+//             }
+//             if (document.getElementById('completedPurchases')) {
+//                 document.getElementById('completedPurchases').textContent = result.data.completed || 0;
+//             }
+//             if (document.getElementById('newThisMonth')) {
+//                 document.getElementById('newThisMonth').textContent = result.data.new_this_month || 0;
+//             }
+//         }
+//     } catch (error) {
+//         if (error.name === 'AbortError') {
+//             console.log('⚠️ Purchase stats loading aborted - this is expected');
+//             return;
+//         }
+//         console.error('Error loading purchase stats:', error);
+//     }
+// }
+
+async function loadPurchaseStats(signal) {
+    await loadEntityStats('purchase', signal);
 }
 
 // ===================================================================

@@ -566,24 +566,22 @@ async function initPurchasesTable(data, totalItems = null, signal = null) {
 
     purchasesTable = new TableManager({
         tableSelector: '#mainTable',
-        
-        totalItems: actualTotalItems,
-
-        columns: await loadColumnsFromConfig('purchase'),
-
-        data: data,
-        
+        columns: await loadColumnsFromConfig('purchase'),        
+        data: data,        
         sortable: true,
         resizable: true,
         reorderable: false,
         filterable: true,
+
+        tableHeight: 'calc(100vh - 650px)',  // גובה דינמי לפי מסך
+        tableMinHeight: '500px',
         
-        
+        totalItems: actualTotalItems,    
         scrollLoadBatch: 100,
         itemsPerPage: 999999,
+        scrollThreshold: 200,
         showPagination: false,
 
-        scrollThreshold: 200,
         onLoadMore: async () => {
             if (purchasesIsSearchMode) {
                 // במצב חיפוש - טען דרך UniversalSearch
@@ -601,6 +599,11 @@ async function initPurchasesTable(data, totalItems = null, signal = null) {
                     purchasesTable.state.hasMoreData = false;
                 }
             }
+        },
+
+        renderFunction: (pageData) => {
+            // ⭐ זה לא ישמש - UniversalSearch ירנדר ישירות
+            return renderAreaGravesRows(pageData);
         },
         
         onSort: (field, order) => {

@@ -1,34 +1,89 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/burials-management.js
- * Version: 1.0.1
- * Updated: 2025-11-04
+ * Version: 5.0.0
+ * Updated: 2025-11-18
  * Author: Malkiel
  * Change Summary:
- * - v1.0.1: ⭐ תיקון סופי - עכשיו זהה לחלוטין ל-purchases-management
- *   - הוספת כל ההערות המסבירות
- *   - הוספת כל השורות הריקות
- *   - הוספת case 'time' ו-case 'boolean' במקום 'currency'
- *   - searchableFields מותאם לקבורות (9 שדות)
- *   - הוספת כפתור "צפייה" ב-actions (3 כפתורים)
- *   - המבנה עכשיו זהה ממש - רק שמות משתנים שונים
- * - v1.0.0: מבנה חדש לחלוטין - זהה ל-purchases
- *   - שימוש ב-UniversalSearch + TableManager
- *   - טעינת עמודות דינמית מ-PHP דרך loadColumnsFromConfig('burial')
- *   - מאזין גלילה + onResults עם state.totalResults
+ * - v5.0.0: 🔥 יצירה מחדש מאפס - זהה 100% לרכישות
+ *   ✅ העתקה מלאה של purchases-management.js v4.0.1
+ *   ✅ התאמת כל השמות: purchase → burial
+ *   ✅ התאמת כל הטקסטים: רכישות → קבורות
+ *   ✅ התאמת השדות הספציפיים לקבורות
+ *   ✅ searchableFields מותאם לקבורות (9 שדות)
+ *   ✅ displayColumns מותאם לקבורות
  */
+
+console.log('🚀 burials-management.js v5.0.0 - Loading...');
 
 // ===================================================================
 // משתנים גלובליים
 // ===================================================================
-
 let currentBurials = [];
 let burialSearch = null;
 let burialsTable = null;
 let editingBurialId = null;
 
-async function loadBurials() {
-    console.log('📋 Loading burials - v1.0.2-debug...');
+let burialsIsSearchMode = false;      // האם אנחנו במצב חיפוש?
+let burialsCurrentQuery = '';         // מה החיפוש הנוכחי?
+let burialsSearchResults = [];        // תוצאות החיפוש
 
+// ⭐ Infinite Scroll - מעקב אחרי עמוד נוכחי (שמות ייחודיים!)
+let burialsCurrentPage = 1;
+let burialsTotalPages = 1;
+let burialsIsLoadingMore = false;
+
+
+// ===================================================================
+// טעינת קבורות (הפונקציה הראשית)
+// ===================================================================
+async function loadBurialsBrowseData(signal = null) {
+    burialsCurrentPage = 1;
+    currentBurials = [];
+    
+    try {
+        let apiUrl = '/dashboard/dashboards/cemeteries/api/burials-api.php?action=list&limit=200&page=1';
+        apiUrl += '&orderBy=createDate&sortDirection=DESC';
+        
+        const response = await fetch(apiUrl, { signal });
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            currentBurials = result.data;
+            
+            if (result.pagination) {
+                burialsTotalPages = result.pagination.pages;
+                burialsCurrentPage = result.pagination.page;
+            }
+            
+            const tableBody = document.getElementById('tableBody');
+            if (tableBody) {
+                renderBurialsRows(result.data, tableBody, result.pagination, signal);
+            }
+        }
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            console.log('⚠️ Browse data loading aborted - this is expected');
+            return;
+        }
+        console.error('❌ Error loading browse data:', error);
+        showToast('שגיאה בטעינת קבורות', 'error');
+    }
+}
+
+async function loadBurials() {
+    console.log('══════════════════════════════════════════════════');
+    console.log('🚀 loadBurials() STARTED');
+    console.log('══════════════════════════════════════════════════');
+    
+    const signal = OperationManager.start('burial');
+    console.log('✅ Step 1: OperationManager started');
+
+    // ⭐ איפוס מצב חיפוש
+    burialsIsSearchMode = false;
+    burialsCurrentQuery = '';
+    burialsSearchResults = [];
+    console.log('✅ Step 2: Search state reset');
+    
     // עדכן את הסוג הנוכחי
     window.currentType = 'burial';
     window.currentParentId = null;
@@ -37,25 +92,25 @@ async function loadBurials() {
     if (window.tableRenderer) {
         window.tableRenderer.currentType = 'burial';
     }
+    console.log('✅ Step 3: Current type set to burial');
 
-    // ⭐ נקה - DashboardCleaner ימחק גם את TableManager!
+    // ⭐ נקה
     if (typeof DashboardCleaner !== 'undefined') {
         DashboardCleaner.clear({ targetLevel: 'burial' });
     } else if (typeof clearDashboard === 'function') {
         clearDashboard({ targetLevel: 'burial' });
     }
+    console.log('✅ Step 4: Dashboard cleared');
     
-    // נקה את כל הסידבר
     if (typeof clearAllSidebarSelections === 'function') {
         clearAllSidebarSelections();
     }
-            
+
     // עדכון פריט תפריט אקטיבי
     if (typeof setActiveMenuItem === 'function') {
         setActiveMenuItem('burialsItem');
     }
     
-    // עדכן את כפתור ההוספה
     if (typeof updateAddButtonText === 'function') {
         updateAddButtonText();
     }
@@ -67,34 +122,154 @@ async function loadBurials() {
     
     // עדכון כותרת החלון
     document.title = 'ניהול קבורות - מערכת בתי עלמין';
+    console.log('✅ Step 5: UI updated');
     
-    // ⭐ בנה את המבנה החדש ב-main-container
-    await buildBurialsContainer();
+    // ⭐ בנה מבנה
+    await buildBurialsContainer(signal);
+    console.log('✅ Step 6: Container built');
+    
+    if (OperationManager.shouldAbort('burial')) {
+        console.log('⚠️ ABORTED at step 6');
+        return;
+    }
 
-    // ⭐ תמיד השמד את החיפוש הקודם ובנה מחדש
+    // ⭐ ספירת טעינות גלובלית
+    if (!window.burialsLoadCounter) {
+        window.burialsLoadCounter = 0;
+    }
+    window.burialsLoadCounter++;
+    console.log(`✅ Step 7: Load counter = ${window.burialsLoadCounter}`);
+    
+    // ⭐ השמד חיפוש קודם
     if (burialSearch && typeof burialSearch.destroy === 'function') {
         console.log('🗑️ Destroying previous burialSearch instance...');
         burialSearch.destroy();
-        burialSearch = null;
+        burialSearch = null; 
         window.burialSearch = null;
     }
-
-    // אתחל את UniversalSearch מחדש תמיד
+    
+    // ⭐ איפוס טבלה קודמת
+    if (burialsTable) {
+        console.log('🗑️ Resetting previous burialsTable instance...');
+        burialsTable = null;
+        window.burialsTable = null;
+    }
+    console.log('✅ Step 8: Previous instances destroyed');
+    
+    // ⭐ אתחול UniversalSearch - פעם אחת!
     console.log('🆕 Creating fresh burialSearch instance...');
-    await initBurialsSearch();
-    burialSearch.search();
+    burialSearch = await initBurialsSearch(signal);
+    console.log('✅ Step 9: UniversalSearch initialized');
+    
+    if (OperationManager.shouldAbort('burial')) {
+        console.log('⚠️ ABORTED at step 9');
+        console.log('⚠️ Burial operation aborted');
+        return;
+    }
+
+    // ⭐ טעינה ישירה (Browse Mode) - פעם אחת!
+    console.log('📥 Loading browse data...');
+    await loadBurialsBrowseData(signal);
+    console.log('✅ Step 10: Browse data loaded');
     
     // טען סטטיסטיקות
-    await loadBurialStats();
+    console.log('📊 Loading stats...');
+    await loadBurialStats(signal);
+    console.log('✅ Step 11: Stats loaded');
+    
+    console.log('══════════════════════════════════════════════════');
+    console.log('✅ loadBurials() COMPLETED SUCCESSFULLY');
+    console.log('══════════════════════════════════════════════════');
 }
 
+
 // ===================================================================
-// ⭐ פונקציה חדשה - בניית המבנה של קבורות ב-main-container
+// 📥 טעינת עוד קבורות (Infinite Scroll)
 // ===================================================================
-async function buildBurialsContainer() {
+async function appendMoreBurials() {
+    // בדיקות בסיסיות
+    if (burialsIsLoadingMore) {
+        return false;
+    }
+    
+    if (burialsCurrentPage >= burialsTotalPages) {
+        return false;
+    }
+    
+    burialsIsLoadingMore = true;
+    const nextPage = burialsCurrentPage + 1;
+    
+    // ⭐ עדכון מונה טעינות
+    if (!window.burialsLoadCounter) {
+        window.burialsLoadCounter = 0; 
+    }
+    window.burialsLoadCounter++;
+    
+    try {
+        // בנה URL לעמוד הבא
+        let apiUrl = `/dashboard/dashboards/cemeteries/api/burials-api.php?action=list&limit=200&page=${nextPage}`;
+        apiUrl += '&orderBy=createDate&sortDirection=DESC';
+        
+        // שלח בקשה
+        const response = await fetch(apiUrl);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success && result.data && result.data.length > 0) {
+            // ⭐ שמור את הגודל הקודם לפני ההוספה
+            const previousTotal = currentBurials.length;
+            
+            // ⭐ הוסף לנתונים הקיימים
+            currentBurials = [...currentBurials, ...result.data];
+            burialsCurrentPage = nextPage;
+            
+            // ⭐⭐⭐ לוג פשוט ומסודר
+            console.log(`
+╔════════════════════════════════════════════════════════════════════
+║ טעינה: ${window.burialsLoadCounter}
+╠════════════════════════════════════════════════════════════════════
+║ כמות ערכים בטעינה: ${result.data.length}
+║ מספר ערך תחילת טעינה נוכחית: ${result.debug?.results_info?.from_index || (previousTotal + 1)}
+║ מספר ערך סוף טעינה נוכחית: ${result.debug?.results_info?.to_index || currentBurials.length}
+║ סך כל הערכים שנטענו עד כה: ${currentBurials.length}
+║ שדה למיון: ${result.debug?.sql_info?.order_field || 'createDate'}
+║ סוג מיון: ${result.debug?.sql_info?.sort_direction || 'DESC'}
+╠════════════════════════════════════════════════════════════════════
+║ עמוד: ${burialsCurrentPage} / ${burialsTotalPages}
+║ נותרו עוד: ${burialsTotalPages - burialsCurrentPage} עמודים
+╚════════════════════════════════════════════════════════════════════
+`);
+            
+            // ⭐ עדכן את הטבלה
+            if (burialsTable) {
+                burialsTable.setData(currentBurials);
+            }
+            
+            burialsIsLoadingMore = false;
+            return true;
+        } else {
+            console.log('📭 No more data to load');
+            burialsIsLoadingMore = false;
+            return false;
+        }
+    } catch (error) {
+        console.error('❌ Error loading more burials:', error);
+        burialsIsLoadingMore = false;
+        return false;
+    }
+}
+
+
+// ===================================================================
+// בניית המבנה
+// ===================================================================
+async function buildBurialsContainer(signal) {
     console.log('🏗️ Building burials container...');
     
-    // מצא את main-container (צריך להיות קיים אחרי clear)
     let mainContainer = document.querySelector('.main-container');
     
     if (!mainContainer) {
@@ -111,12 +286,9 @@ async function buildBurialsContainer() {
         }
     }
     
-    // ⭐ בנה את התוכן של קבורות
     mainContainer.innerHTML = `
-        <!-- סקשן חיפוש -->
         <div id="burialSearchSection" class="search-section"></div>
         
-        <!-- table-container עבור TableManager -->
         <div class="table-container">
             <table id="mainTable" class="data-table">
                 <thead>
@@ -140,15 +312,16 @@ async function buildBurialsContainer() {
     console.log('✅ Burials container built');
 }
 
+
 // ===================================================================
-// אתחול UniversalSearch - שימוש בפונקציה גלובלית!
+// אתחול UniversalSearch
 // ===================================================================
-async function initBurialsSearch() {
-    burialSearch = window.initUniversalSearch({
+async function initBurialsSearch(signal) {
+    const config = {
         entityType: 'burial',
         apiEndpoint: '/dashboard/dashboards/cemeteries/api/burials-api.php',
         action: 'list',
-
+        
         searchableFields: [
             {
                 name: 'serialBurialId',
@@ -242,88 +415,93 @@ async function initBurialsSearch() {
             
             onSearch: (query, filters) => {
                 console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()) });
+                
+                // ⭐ כאשר מתבצע חיפוש - הפעל מצב חיפוש
+                burialsIsSearchMode = true;
+                burialsCurrentQuery = query;
             },
 
-            onResults: (data) => {
+            onResults: async (data, signal) => {
                 console.log('📦 API returned:', data.pagination?.total || data.data.length, 'burials');
+                
+                // ⭐ אם נכנסנו למצב חיפוש - הצג רק תוצאות חיפוש
+                if (burialsIsSearchMode && burialsCurrentQuery) {
+                    console.log('🔍 Search mode active - showing search results only');
+                    burialsSearchResults = data.data;
+                    
+                    const tableBody = document.getElementById('tableBody');
+                    if (tableBody) {
+                        await renderBurialsRows(burialsSearchResults, tableBody, data.pagination, signal);
+                    }
+                    return;
+                }
                 
                 // ⭐⭐⭐ בדיקה קריטית - אם עברנו לרשומה אחרת, לא להמשיך!
                 if (window.currentType !== 'burial') {
                     console.log('⚠️ Type changed during search - aborting burial results');
                     console.log(`   Current type is now: ${window.currentType}`);
-                    return; // ❌ עצור כאן!
+                    return;
                 }
-
-                // ⭐ טיפול בדפים - מצטבר!
-                const currentPage = data.pagination?.page || 1;
-                
-                if (currentPage === 1) {
-                    // דף ראשון - התחל מחדש
-                    currentBurials = data.data;
-                } else {
-                    // דפים נוספים - הוסף לקיימים
-                    currentBurials = [...currentBurials, ...data.data];
-                    console.log(`📦 Added page ${currentPage}, total now: ${currentBurials.length}`);
-                }
-                
-                // ⭐ אין סינון client-side - זו רמת השורש!
-                let filteredCount = currentBurials.length;
-                
-                // ⭐⭐⭐ עדכן ישירות את burialSearch!
-                if (burialSearch && burialSearch.state) {
-                    burialSearch.state.totalResults = filteredCount;
-                    if (burialSearch.updateCounter) {
-                        burialSearch.updateCounter();
-                    }
-                }
-                
-                console.log('📊 Final count:', filteredCount);
             },
             
             onError: (error) => {
                 console.error('❌ Search error:', error);
-                showToast('שגיאה בחיפוש: ' + error.message, 'error');
+                showToast('שגיאה בחיפוש קבורות', 'error');
             },
-            
+
             onEmpty: () => {
                 console.log('📭 No results');
+            },
+            
+            onClear: async () => {
+                console.log('🧹 Search cleared - returning to browse mode');
+                
+                // ⭐ איפוס מצב חיפוש
+                burialsIsSearchMode = false;
+                burialsCurrentQuery = '';
+                burialsSearchResults = [];
+                
+                // ⭐ חזרה למצב Browse
+                await loadBurialsBrowseData(signal);
             }
         }
-    });
+    };
     
-    // ⭐ עדכן את window.burialSearch מיד!
-    window.burialSearch = burialSearch;
+    const searchInstance = window.initUniversalSearch(config);
     
-    return burialSearch;
+    return searchInstance;
 }
 
+
 // ===================================================================
-// אתחול TableManager - עם תמיכה ב-totalItems
+// אתחול TableManager
 // ===================================================================
-async function initBurialsTable(data, totalItems = null) {
-     const actualTotalItems = totalItems !== null ? totalItems : data.length;
-   
+async function initBurialsTable(data, totalItems = null, signal = null) {
+    const actualTotalItems = totalItems !== null ? totalItems : data.length;
+    
     if (burialsTable) {
         burialsTable.config.totalItems = actualTotalItems;
         burialsTable.setData(data);
         return burialsTable;
     }
-
+        
     // טעינת העמודות מהשרת
     async function loadColumnsFromConfig(entityType = 'burial') {
         try {
-            const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`);
+            const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`, {
+                signal: signal
+            });
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-
+            
             const result = await response.json();
-
+            
             if (!result.success || !result.data) {
                 throw new Error(result.error || 'Failed to load columns config');
             }
-
+            
             // המרת הקונפיג מ-PHP לפורמט של TableManager
             const columns = result.data.map(col => {
                 const column = {
@@ -335,44 +513,31 @@ async function initBurialsTable(data, totalItems = null) {
                 };
                 
                 // טיפול בסוגי עמודות מיוחדות
-                switch (column.type) {
+                switch(col.type) {
                     case 'date':
-                        column.render = (item) => formatDate(item[column.field]);
-                        break;
-                        
-                    case 'status':
-                        // if (column.render === 'formatBurialStatus') {
-                            column.render = (item) => formatBurialStatus(item[column.field]);
-                        // }
-                        break;
-                        
-                    case 'type':
-                        if (column.render === 'formatBurialType') {
-                            column.render = (item) => formatBurialType(item[column.field]);
-                        }
+                        column.render = (burial) => formatDate(burial[column.field]);
                         break;
                         
                     case 'time':
-                        column.render = (item) => {
-                            const value = item[column.field];
-                            return value ? value.substring(0, 5) : '-';
-                        };
+                        column.render = (burial) => burial[column.field] || '-';
+                        break;
+                        
+                    case 'status':
+                        if (col.render === 'formatBurialStatus') {
+                            column.render = (burial) => formatBurialStatus(burial[column.field]);
+                        }
                         break;
                         
                     case 'boolean':
-                        column.render = (item) => {
-                            const value = item[column.field];
-                            if (value === 'כן' || value === 1 || value === true) {
-                                return '<span style="color: green;">✓</span>';
-                            }
-                            return '<span style="color: #ccc;">✗</span>';
-                        };
+                        column.render = (burial) => burial[column.field] === 'כן' ? 
+                            '<span style="color: #10b981;">✓ כן</span>' : 
+                            '<span style="color: #ef4444;">✗ לא</span>';
                         break;
                         
                     case 'actions':
                         column.render = (item) => `
                             <button class="btn btn-sm btn-info" 
-                                    onclick="event.stopPropagation(); viewBurial('${item.unicId}')" 
+                                    onclick="event.stopPropagation(); handleBurialDoubleClick('${item.unicId}')" 
                                     title="צפייה">
                                 <svg class="icon"><use xlink:href="#icon-view"></use></svg>
                             </button>
@@ -390,9 +555,8 @@ async function initBurialsTable(data, totalItems = null) {
                         break;
                         
                     default:
-                        // עמודת טקסט רגילה
                         if (!column.render) {
-                            column.render = (item) => item[column.field] || '-';
+                            column.render = (burial) => burial[column.field] || '-';
                         }
                 }
                 
@@ -400,138 +564,38 @@ async function initBurialsTable(data, totalItems = null) {
             });
             
             return columns;
-        } catch (error) {
-            console.error('❌ Failed to load columns config:', error);
-            // החזר מערך ריק במקרה של שגיאה
-            return [];
-        }
-    }
-
-    async function loadColumnsFromConfig3(entityType = 'burial') {
-        try {
-            const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`);
             
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const result = await response.json();
-
-            if (!result.success || !result.data) {
-                throw new Error(result.error || 'Failed to load columns config');
+        } catch (error) {
+            if (error.name === 'AbortError') {
+                console.log('⚠️ Column config loading aborted - this is expected');
+                return [];
             }
             
-            const columns = result.data.map(col => {
-                const column = {
-                    field: col.field,
-                    label: col.title,
-                    width: col.width || 'auto',
-                    sortable: col.sortable !== false,
-                    type: col.type || 'text'
-                };
-
-                switch (column.type) {
-                    case 'date':
-                        column.render = (item) => formatDate(item[column.field]);
-                        break;
-                        
-                    case 'status':
-                        // if (column.render === 'formatBurialStatus') {
-                            column.render = (item) => formatBurialStatus(item[column.field]);
-                        // }
-                        break;
-                        
-                    case 'type':
-                        if (column.render === 'formatBurialType') {
-                            column.render = (item) => formatBurialType(item[column.field]);
-                        }
-                        break;
-                        
-                    case 'time':
-                        column.render = (item) => {
-                            const value = item[column.field];
-                            return value ? value.substring(0, 5) : '-';
-                        };
-                        break;
-                        
-                    case 'boolean':
-                        column.render = (item) => {
-                            const value = item[column.field];
-                            if (value === 'כן' || value === 1 || value === true) {
-                                return '<span style="color: green;">✓</span>';
-                            }
-                            return '<span style="color: #ccc;">✗</span>';
-                        };
-                        break;
-                        
-                    case 'actions':
-                        column.render = (item) => `
-                            <button class="btn btn-sm btn-info" 
-                                    onclick="event.stopPropagation(); console.log('🔍 [VIEW] Clicked burial:', '${item.unicId}'); viewBurial('${item.unicId}')" 
-                                    title="צפייה">
-                                <svg class="icon"><use xlink:href="#icon-view"></use></svg>
-                            </button>
-                            <button class="btn btn-sm btn-secondary" 
-                                    onclick="event.stopPropagation(); 
-                                            console.log('🔍 [EDIT CLICK] burialId:', '${item.unicId}'); 
-                                            console.log('🔍 [EDIT CLICK] window.currentType:', window.currentType); 
-                                            console.log('🔍 [EDIT CLICK] tableRenderer.currentType:', window.tableRenderer?.currentType);
-                                            window.tableRenderer.editItem('${item.unicId}')" 
-                                    title="עריכה">
-                                <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
-                            </button>
-                            <button class="btn btn-sm btn-danger" 
-                                    onclick="event.stopPropagation(); console.log('🔍 [DELETE] Clicked burial:', '${item.unicId}'); deleteBurial('${item.unicId}')" 
-                                    title="מחיקה">
-                                <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
-                            </button>
-                        `;
-                        break;
-                        
-                    default:
-                        if (!column.render) {
-                            column.render = (item) => item[column.field] || '-';
-                        }
-                }
-                
-                return column;
-            });
-            
-            return columns;
-        } catch (error) {
             console.error('❌ Failed to load columns config:', error);
             return [];
         }
     }
-    
+
     burialsTable = new TableManager({
         tableSelector: '#mainTable',
         
-        // containerWidth: '80vw',
-        // fixedLayout: true,
-        
-        // scrolling: {
-        //     enabled: true,
-        //     headerHeight: '50px',
-        //     itemsPerPage: 50,
-        //     scrollThreshold: 300
-        // },
-        
-        // ⭐ הוספת totalItems כפרמטר!
         totalItems: actualTotalItems,
 
         columns: await loadColumnsFromConfig('burial'),
 
-        onRowDoubleClick: (burial) => {
-            handleBurialDoubleClick(burial.unicId);
-        },
-        
         data: data,
         
         sortable: true,
         resizable: true,
         reorderable: false,
         filterable: true,
+        
+        infiniteScroll: true,
+        scrollThreshold: 200,
+        onScrollEnd: async () => {
+            console.log('📜 Reached scroll end, loading more...');
+            await appendMoreBurials();
+        },
         
         onSort: (field, order) => {
             console.log(`📊 Sorted by ${field} ${order}`);
@@ -544,50 +608,54 @@ async function initBurialsTable(data, totalItems = null) {
             showToast(`נמצאו ${count} תוצאות`, 'info');
         }
     });
-
-    // מאזין לאירוע גלילה לסוף - טען עוד נתונים
-    const bodyContainer = document.querySelector('.table-body-container');
-    if (bodyContainer && burialSearch) {
-        bodyContainer.addEventListener('scroll', async function() {
-            const scrollTop = this.scrollTop;
-            const scrollHeight = this.scrollHeight;
-            const clientHeight = this.clientHeight;
-            
-            // אם הגענו לתחתית והטעינה עוד לא בתהליך
-            if (scrollHeight - scrollTop - clientHeight < 100) {
-                if (!burialSearch.state.isLoading && burialSearch.state.currentPage < burialSearch.state.totalPages) {
-                    console.log('📥 Reached bottom, loading more data...');
-                    
-                    // בקש עמוד הבא מ-UniversalSearch
-                    const nextPage = burialSearch.state.currentPage + 1;
-                    
-                    // עדכן את הדף הנוכחי
-                    burialSearch.state.currentPage = nextPage;
-                    burialSearch.state.isLoading = true;
-                    
-                    // בקש נתונים
-                    await burialSearch.search();
-                }
-            }
-        });
-    }
     
-    // ⭐ עדכן את window.burialsTable מיד!
     window.burialsTable = burialsTable;
- 
     return burialsTable;
 }
 
+
 // ===================================================================
-// רינדור שורות קבורות - עם תמיכה ב-totalItems מ-pagination
+// רינדור שורות - עם תמיכה ב-Search Mode
 // ===================================================================
-function renderBurialsRows(data, container, pagination = null) {
+async function renderBurialsRows(data, container, pagination = null, signal = null) {
     console.log(`📝 renderBurialsRows called with ${data.length} items`);
+    console.log(`   Pagination:`, pagination);
+    console.log(`   burialsIsSearchMode: ${burialsIsSearchMode}`);
+    console.log(`   burialsTable exists: ${!!burialsTable}`);
     
-    // ⭐ חלץ את הסכום הכולל מ-pagination אם קיים
+    // ⭐⭐ במצב חיפוש - הצג תוצאות חיפוש בלי טבלה מורכבת
+    if (burialsIsSearchMode && burialsCurrentQuery) {
+        console.log('🔍 Rendering search results...');
+        
+        if (data.length === 0) {
+            container.innerHTML = `
+                <tr>
+                    <td colspan="10" style="text-align: center; padding: 60px;">
+                        <div style="color: #9ca3af;">
+                            <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
+                            <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">לא נמצאו תוצאות</div>
+                            <div>נסה לשנות את מילות החיפוש או הפילטרים</div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            console.log('   → Empty search results displayed');
+            return;
+        }
+        
+        const totalItems = data.length;
+        console.log(`   → Initializing table with ${totalItems} search results`);
+        await initBurialsTable(data, totalItems, signal);
+        console.log('   ✅ Search results table initialized');
+        return;
+    }
+    
+    // ⭐⭐ מצב רגיל (Browse) - הצג עם TableManager
     const totalItems = pagination?.total || data.length;
-    
+    console.log(`📊 Total items to display: ${totalItems}`);
+
     if (data.length === 0) {
+        console.log('   → No data to display');
         if (burialsTable) {
             burialsTable.setData([]);
         }
@@ -606,63 +674,33 @@ function renderBurialsRows(data, container, pagination = null) {
         return;
     }
     
-    // ⭐ בדוק אם ה-DOM של TableManager קיים
     const tableWrapperExists = document.querySelector('.table-wrapper[data-fixed-width="true"]');
+    console.log(`   tableWrapperExists: ${!!tableWrapperExists}`);
     
-    // ⭐ אם המשתנה קיים אבל ה-DOM נמחק - אפס את המשתנה!
     if (!tableWrapperExists && burialsTable) {
         console.log('🗑️ TableManager DOM was deleted, resetting burialsTable variable');
         burialsTable = null;
         window.burialsTable = null;
     }
 
-    // עכשיו בדוק אם צריך לבנות מחדש
+    // ⭐⭐⭐ אתחול או עדכון טבלה
     if (!burialsTable || !tableWrapperExists) {
-        // אין TableManager או שה-DOM שלו נמחק - בנה מחדש!
-        initBurialsTable(data, totalItems);  // ⭐ העברת totalItems!
-    } else {    
-        // ⭐ עדכן גם את totalItems ב-TableManager!
+        console.log(`🆕 Initializing TableManager with ${totalItems} items`);
+        await initBurialsTable(data, totalItems, signal);
+        console.log('   ✅ TableManager initialized');
+    } else {
+        console.log(`♻️ Updating TableManager with ${totalItems} items`);
         if (burialsTable.config) {
             burialsTable.config.totalItems = totalItems;
         }
-        
-        // ⭐ אם יש עוד נתונים ב-UniversalSearch, הוסף אותם!
-        if (burialSearch && burialSearch.state) {
-            const allData = burialSearch.state.results || [];
-            if (allData.length > data.length) {
-                console.log(`📦 UniversalSearch has ${allData.length} items, updating TableManager...`);
-                burialsTable.setData(allData);
-                return;
-            }
-        }
-        
         burialsTable.setData(data);
+        console.log('   ✅ TableManager updated');
     }
 }
 
 // ===================================================================
-// פונקציות פורמט ועזר
-// ===================================================================
-function formatBurialType(type) {
-    const types = {
-        1: 'רגיל',
-        2: 'מיוחד',
-        3: 'אחר'
-    };
-    return types[type] || '-';
-}
-
-// פורמט סטטוס קבורה
-function formatBurialStatus(status) {
-    const statuses = {
-        1: { text: 'פעיל', color: '#10b981' },
-        0: { text: 'לא פעיל', color: '#ef4444' }
-    };
-    const statusInfo = statuses[status] || statuses[1];
-    return `<span style="background: ${statusInfo.color}; color: white; padding: 3px 8px; border-radius: 4px; font-size: 12px; display: inline-block;">${statusInfo.text}</span>`;
-}
-
 // פורמט תאריך
+// ===================================================================
 function formatDate(dateString) {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -670,10 +708,54 @@ function formatDate(dateString) {
 }
 
 // ===================================================================
-// פונקציות CRUD
+// פונקציות עזר לפורמט
+// ===================================================================
+function formatBurialStatus(status) {
+    const statuses = {
+        '1': { text: 'ברישום', color: '#f59e0b' },
+        '2': { text: 'אושרה', color: '#3b82f6' },
+        '3': { text: 'בוצעה', color: '#10b981' },
+        '4': { text: 'בוטלה', color: '#ef4444' }
+    };
+    const statusInfo = statuses[status] || statuses['1'];
+    return `<span style="background: ${statusInfo.color}; color: white; padding: 3px 8px; border-radius: 4px; font-size: 12px; display: inline-block;">${statusInfo.text}</span>`;
+}
+
+// ===================================================================
+// טעינת סטטיסטיקות
+// ===================================================================
+async function loadBurialStats(signal) {
+    try {
+        const response = await fetch('/dashboard/dashboards/cemeteries/api/burials-api.php?action=stats', { signal: signal });
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            console.log('📊 Burial stats:', result.data);
+            
+            if (document.getElementById('totalBurials')) {
+                document.getElementById('totalBurials').textContent = result.data.total_burials || 0;
+            }
+            if (document.getElementById('completedBurials')) {
+                document.getElementById('completedBurials').textContent = result.data.completed || 0;
+            }
+            if (document.getElementById('newThisMonth')) {
+                document.getElementById('newThisMonth').textContent = result.data.new_this_month || 0;
+            }
+        }
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            console.log('⚠️ Burial stats loading aborted - this is expected');
+            return;
+        }
+        console.error('Error loading burial stats:', error);
+    }
+}
+
+// ===================================================================
+// מחיקת קבורה
 // ===================================================================
 async function deleteBurial(burialId) {
-    if (!confirm('האם אתה בטוח שברצונך למחוק קבורה זו?')) {
+    if (!confirm('האם אתה בטוח שברצונך למחוק את הקבורה?')) {
         return;
     }
     
@@ -682,62 +764,31 @@ async function deleteBurial(burialId) {
             method: 'DELETE'
         });
         
-        const data = await response.json();
+        const result = await response.json();
         
-        if (data.success) {
-            showToast('הקבורה נמחקה בהצלחה', 'success');
-            
-            if (burialSearch) {
-                burialSearch.refresh();
-            }
-        } else {
-            showToast(data.error || 'שגיאה במחיקת קבורה', 'error');
+        if (!result.success) {
+            throw new Error(result.error || 'שגיאה במחיקת הקבורה');
         }
+        
+        showToast('הקבורה נמחקה בהצלחה', 'success');
+        
+        if (burialSearch) {
+            burialSearch.refresh();
+        }
+        
     } catch (error) {
         console.error('Error deleting burial:', error);
-        showToast('שגיאה במחיקת קבורה', 'error');
+        showToast(error.message, 'error');
     }
 }
 
-// צפייה בקבורה
-async function viewBurial(burialId) {
-    console.log('👁️ View burial:', burialId);
-    
-    try {
-        if (typeof createBurialCard === 'function') {
-            const cardHtml = await createBurialCard(burialId);
-            if (cardHtml && typeof displayHierarchyCard === 'function') {
-                displayHierarchyCard(cardHtml);
-            }
-        } else {
-            console.warn('⚠️ createBurialCard not found');
-            showToast('פונקציית תצוגה לא זמינה', 'warning');
-        }
-    } catch (error) {
-        console.error('❌ Error in viewBurial:', error);
-        showToast('שגיאה בטעינת פרטי קבורה', 'error');
-    }
-}
 
 // ===================================================================
-// טעינת סטטיסטיקות
+// הצגת הודעות Toast
 // ===================================================================
-async function loadBurialStats() {
-    try {
-        const response = await fetch('/dashboard/dashboards/cemeteries/api/burials-api.php?action=stats');
-        const data = await response.json();
-        
-        if (data.success) {
-            console.log('Burial stats:', data.data);
-        }
-    } catch (error) {
-        console.error('Error loading burial stats:', error);
-    }
-}
-
-// הצגת הודעת Toast
 function showToast(message, type = 'info') {
     const toast = document.createElement('div');
+    toast.className = 'toast-message';
     toast.style.cssText = `
         position: fixed;
         top: 20px;
@@ -768,15 +819,20 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-// פונקציה לרענון נתונים
-async function refreshData() {
-    if (burialSearch) {
-        burialSearch.refresh();
-    }
+
+// ===================================================================
+// רענון נתונים
+// ===================================================================
+async function burialsRefreshData() {
+    // טעינה מחדש ישירה מה-API (כי UniversalSearch מושבת)
+    await loadBurials();
 }
 
-// פונקציה לבדיקת סטטוס הטעינה
-function checkScrollStatus() {
+
+// ===================================================================
+// בדיקת סטטוס טעינה
+// ===================================================================
+function checkBurialsScrollStatus() {
     if (!burialsTable) {
         console.log('❌ Table not initialized');
         return;
@@ -793,20 +849,20 @@ function checkScrollStatus() {
     console.log(`   Progress: ${Math.round((displayed / total) * 100)}%`);
     
     if (remaining > 0) {
-        console.log(`   🔽 Scroll down to load ${Math.min(burialsTable.config.itemsPerPage, remaining)} more items`);
+        console.log(`   🔽 Scroll down to load more items`);
     } else {
         console.log('   ✅ All items loaded');
     }
 }
 
-// ===================================================
-// פונקציה לטיפול בדאבל-קליק על קבורה
-// ===================================================
+
+// ===================================================================
+// דאבל-קליק על קבורה
+// ===================================================================
 async function handleBurialDoubleClick(burialId) {
     console.log('🖱️ Double-click on burial:', burialId);
     
     try {
-        // יצירת והצגת כרטיס
         if (typeof createBurialCard === 'function') {
             const cardHtml = await createBurialCard(burialId);
             if (cardHtml && typeof displayHierarchyCard === 'function') {
@@ -828,14 +884,21 @@ async function handleBurialDoubleClick(burialId) {
 }
 
 window.handleBurialDoubleClick = handleBurialDoubleClick;
-
 // ===================================================================
 // הפוך לגלובלי
 // ===================================================================
 window.loadBurials = loadBurials;
+
+window.appendMoreBurials = appendMoreBurials;
+
 window.deleteBurial = deleteBurial;
-window.viewBurial = viewBurial;
-window.refreshData = refreshData;
+
+window.burialsRefreshData = burialsRefreshData;
+
 window.burialsTable = burialsTable;
-window.checkScrollStatus = checkScrollStatus;
+
+window.checkBurialsScrollStatus = checkBurialsScrollStatus;
+
 window.burialSearch = burialSearch;
+
+console.log('✅ burials-management.js v5.0.0 - Loaded successfully!');

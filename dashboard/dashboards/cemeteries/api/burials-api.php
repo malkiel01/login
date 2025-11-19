@@ -20,6 +20,131 @@ $id = $_GET['id'] ?? null;
 
 try {
     switch ($action) {
+        case 'list':
+            // חישוב offset
+            $offset = ($page - 1) * $limit;
+            
+            // בניית השאילתה
+            $sql = "
+                SELECT 
+                    b.*,
+                    CONCAT(c.firstName, ' ', c.lastName) as customer_name,
+                    c.numId as customer_id_number,
+                    c.phone as customer_phone,
+                    c.phoneMobile as customer_mobile,
+                    g.graveNameHe as grave_number,
+                    g.graveLocation as grave_location,
+                    g.graveStatus,
+                    ag.areaGraveNameHe,
+                    r.lineNameHe,
+                    pl.plotNameHe,
+                    bl.blockNameHe,
+                    ce.cemeteryNameHe,
+                    CONCAT(
+                        ce.cemeteryNameHe, ' → ',
+                        bl.blockNameHe, ' → ',
+                        pl.plotNameHe, ' → ',
+                        r.lineNameHe, ' → ',
+                        ag.areaGraveNameHe, ' → ',
+                        g.graveNameHe
+                    ) as fullLocation
+                FROM burials b
+                LEFT JOIN customers c ON b.clientId = c.unicId
+                LEFT JOIN graves g ON b.graveId = g.unicId
+                LEFT JOIN areaGraves ag ON g.areaGraveId = ag.unicId
+                LEFT JOIN rows r ON ag.lineId = r.unicId
+                LEFT JOIN plots pl ON r.plotId = pl.unicId
+                LEFT JOIN blocks bl ON pl.blockId = bl.unicId
+                LEFT JOIN cemeteries ce ON bl.cemeteryId = ce.unicId
+                WHERE b.isActive = 1
+            ";
+            $params = [];
+            
+            // ✅ חיפוש - תוקן עם placeholders ייחודיים
+            if ($query) {
+                $sql .= " AND (
+                    b.id LIKE :query1 OR 
+                    b.serialBurialId LIKE :query2 OR
+                    c.firstName LIKE :query3 OR 
+                    c.lastName LIKE :query4 OR
+                    c.numId LIKE :query5 OR
+                    g.graveNameHe LIKE :query6 OR
+                    b.customerFirstName LIKE :query7 OR
+                    b.customerLastName LIKE :query8 OR
+                    b.customerNumId LIKE :query9
+                )";
+                $searchTerm = "%$query%";
+                $params['query1'] = $searchTerm;
+                $params['query2'] = $searchTerm;
+                $params['query3'] = $searchTerm;
+                $params['query4'] = $searchTerm;
+                $params['query5'] = $searchTerm;
+                $params['query6'] = $searchTerm;
+                $params['query7'] = $searchTerm;
+                $params['query8'] = $searchTerm;
+                $params['query9'] = $searchTerm;
+            }
+            
+            // סינון לפי סטטוס
+            if ($status) {
+                $sql .= " AND b.burialStatus = :status";
+                $params['status'] = $status;
+            }
+            
+            // סינון לפי לקוח
+            if ($customer_id) {
+                $sql .= " AND b.clientId = :customer_id";
+                $params['customer_id'] = $customer_id;
+            }
+            
+            // ✅ ספירת סה"כ תוצאות
+            $countSql = preg_replace('/SELECT\s+.*?\s+FROM/s', 'SELECT COUNT(*) FROM', $sql);
+            $countStmt = $pdo->prepare($countSql);
+            $countStmt->execute($params);
+            $total = $countStmt->fetchColumn();
+            
+            // רשימת עמודות מותרות למיון
+            $allowedSortColumns = ['createDate', 'dateBurial', 'dateDeath', 'burialStatus', 'id', 'serialBurialId'];
+            if (!in_array($sort, $allowedSortColumns)) {
+                $sort = 'createDate';
+            }
+            
+            // בדיקת כיוון המיון
+            $order = strtoupper($order) === 'ASC' ? 'ASC' : 'DESC';
+            
+            // הוספת מיון ועימוד
+            $sql .= " ORDER BY b.$sort $order LIMIT :limit OFFSET :offset";
+            
+            $stmt = $pdo->prepare($sql);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            $burials = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // הוסף תאימות לאחור
+            foreach ($burials as &$burial) {
+                $burial['burial_date'] = $burial['dateBurial'];
+                $burial['death_date'] = $burial['dateDeath'];
+                $burial['burial_number'] = $burial['serialBurialId'];
+                $burial['burial_status'] = $burial['burialStatus'];
+            }
+            
+            echo json_encode([
+                'success' => true,
+                'data' => $burials,
+                'pagination' => [
+                    'total' => $total,
+                    'page' => $page,
+                    'limit' => $limit,
+                    'pages' => ceil($total / $limit)
+                ]
+            ]);
+            break;
+
         case 'get':
             if (!$id) {
                 throw new Exception('Burial ID is required');
@@ -174,7 +299,7 @@ try {
             ]);
             break;
             
-        case 'list':
+        case 'list2':
             $search = $_GET['search'] ?? '';
             $status = $_GET['status'] ?? '';
             $customer_id = $_GET['customer_id'] ?? '';

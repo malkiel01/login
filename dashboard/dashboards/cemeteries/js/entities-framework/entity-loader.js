@@ -193,6 +193,70 @@ class EntityLoader {
         }
     }
 
+    // /**
+    //  * טעינת סטטיסטיקות
+    //  * @param {string} entityType - סוג היישות
+    //  * @param {AbortSignal} signal - signal לביטול
+    //  * @param {string|null} parentId - מזהה הורה (אופציונלי)
+    //  * @returns {Promise<Object>} הסטטיסטיקות
+    //  */
+    // static async loadStats(entityType, signal = null, parentId = null) {
+    //     const config = ENTITY_CONFIG[entityType];
+    //     const statsConfig = config.statsConfig;
+        
+    //     if (!statsConfig || !statsConfig.elements) {
+    //         console.warn(`⚠️ No stats config for ${entityType}`);
+    //         return { success: false };
+    //     }
+        
+    //     console.log(`📊 Loading stats for ${entityType}...`);
+        
+    //     try {
+    //         // בניית URL
+    //         let apiUrl = `${config.apiEndpoint}?action=stats`;
+            
+    //         // הוספת parent ID אם נדרש
+    //         if (parentId && statsConfig.parentParam) {
+    //             apiUrl += `&${statsConfig.parentParam}=${parentId}`;
+    //         }
+            
+    //         // שליחת בקשה
+    //         const response = await fetch(apiUrl, { signal });
+            
+    //         if (!response.ok) {
+    //             throw new Error(`HTTP error! status: ${response.status}`);
+    //         }
+            
+    //         const result = await response.json();
+            
+    //         if (result.success && result.stats) {
+    //             // עדכון ה-DOM
+    //             Object.entries(statsConfig.elements).forEach(([elementId, statKey]) => {
+    //                 const element = document.getElementById(elementId);
+    //                 if (element && result.stats[statKey] !== undefined) {
+    //                     element.textContent = result.stats[statKey];
+    //                 }
+    //             });
+                
+    //             console.log(`✅ Stats loaded for ${entityType}:`, result.stats);
+    //             return { success: true, stats: result.stats };
+                
+    //         } else {
+    //             throw new Error(result.error || 'Failed to load stats');
+    //         }
+            
+    //     } catch (error) {
+    //         if (error.name === 'AbortError') {
+    //             console.log(`⚠️ ${entityType} stats loading aborted`);
+    //             return { success: false, aborted: true };
+    //         }
+            
+    //         console.error(`❌ Error loading ${entityType} stats:`, error);
+    //         return { success: false, error: error.message };
+    //     }
+    // }
+
+
     /**
      * טעינת סטטיסטיקות
      * @param {string} entityType - סוג היישות
@@ -220,14 +284,20 @@ class EntityLoader {
                 apiUrl += `&${statsConfig.parentParam}=${parentId}`;
             }
             
+            console.log(`   📡 Fetching: ${apiUrl}`);
+            
             // שליחת בקשה
             const response = await fetch(apiUrl, { signal });
             
+            console.log(`   📥 Response status: ${response.status}`);
+            
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                console.warn(`⚠️ API returned status ${response.status} for ${entityType} stats`);
+                return { success: false, error: `HTTP ${response.status}` };
             }
             
             const result = await response.json();
+            console.log(`   📦 Response data:`, result);
             
             if (result.success && result.stats) {
                 // עדכון ה-DOM
@@ -235,14 +305,17 @@ class EntityLoader {
                     const element = document.getElementById(elementId);
                     if (element && result.stats[statKey] !== undefined) {
                         element.textContent = result.stats[statKey];
+                        console.log(`   ✅ Updated #${elementId} = ${result.stats[statKey]}`);
                     }
                 });
                 
-                console.log(`✅ Stats loaded for ${entityType}:`, result.stats);
+                console.log(`✅ Stats loaded successfully for ${entityType}`);
                 return { success: true, stats: result.stats };
                 
             } else {
-                throw new Error(result.error || 'Failed to load stats');
+                // לא שגיאה קריטית - אולי ה-API לא תומך בסטטיסטיקות
+                console.warn(`⚠️ Stats not available for ${entityType} (API returned: ${JSON.stringify(result)})`);
+                return { success: false, error: result.error || 'Stats not available' };
             }
             
         } catch (error) {
@@ -251,7 +324,8 @@ class EntityLoader {
                 return { success: false, aborted: true };
             }
             
-            console.error(`❌ Error loading ${entityType} stats:`, error);
+            // לא שגיאה קריטית - רק warning
+            console.warn(`⚠️ Could not load ${entityType} stats:`, error.message);
             return { success: false, error: error.message };
         }
     }

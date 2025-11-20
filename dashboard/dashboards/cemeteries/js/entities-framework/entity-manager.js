@@ -254,6 +254,90 @@ class EntityManager {
         }
     }
 
+    // /**
+    //  * אתחול UniversalSearch
+    //  * @param {string} entityType - סוג היישות
+    //  * @param {AbortSignal} signal - signal לביטול
+    //  * @param {string|null} parentId - מזהה הורה
+    //  * @returns {Promise<Object>} instance של UniversalSearch
+    //  */
+    // static async initSearch(entityType, signal = null, parentId = null) {
+    //     const config = ENTITY_CONFIG[entityType];
+        
+    //     // בדוק אם UniversalSearch קיים
+    //     if (typeof UniversalSearch === 'undefined') {
+    //         console.warn('⚠️ UniversalSearch not available');
+    //         return null;
+    //     }
+        
+    //     // הכן קונפיגורציה
+    //     const searchConfig = {
+    //         entityType: entityType,
+    //         apiEndpoint: config.apiEndpoint,
+    //         action: 'list',
+            
+    //         searchableFields: config.searchableFields,
+            
+    //         displayColumns: config.columns.filter(col => col.type !== 'actions').map(col => ({
+    //             field: col.field,
+    //             label: col.label
+    //         })),
+            
+    //         onSearchStart: (query, mode) => {
+    //             console.log(`🔍 Search started: "${query}" (${mode})`);
+    //             entityState.setSearchMode(entityType, true, query, []);
+    //         },
+            
+    //         onSearchComplete: async (results) => {
+    //             console.log(`✅ Search completed: ${results.length} results`);
+                
+    //             // עדכון state
+    //             entityState.setSearchMode(entityType, true, '', results);
+    //             entityState.setState(entityType, {
+    //                 currentData: results
+    //             });
+                
+    //             // רינדור תוצאות
+    //             const tableBody = document.getElementById('tableBody');
+    //             if (tableBody) {
+    //                 await EntityRenderer.render(entityType, results, tableBody, null, signal);
+    //             }
+    //         },
+            
+    //         onSearchClear: async () => {
+    //             console.log('🔄 Search cleared, returning to browse mode');
+                
+    //             // איפוס מצב חיפוש
+    //             entityState.setSearchMode(entityType, false, '', []);
+                
+    //             // טעינה מחדש של browse data
+    //             const result = await EntityLoader.loadBrowseData(entityType, signal, parentId);
+                
+    //             if (result.success && result.data) {
+    //                 const tableBody = document.getElementById('tableBody');
+    //                 if (tableBody) {
+    //                     await EntityRenderer.render(entityType, result.data, tableBody, result.pagination, signal);
+    //                 }
+    //             }
+    //         }
+    //     };
+        
+    //     // הוסף parent param אם נדרש
+    //     if (parentId && config.parentParam) {
+    //         searchConfig.additionalParams = {
+    //             [config.parentParam]: parentId
+    //         };
+    //     }
+        
+    //     // יצירת instance
+    //     const searchInstance = new UniversalSearch(searchConfig);
+        
+    //     // שמירה ב-state
+    //     entityState.setSearchInstance(entityType, searchInstance);
+        
+    //     return searchInstance;
+    // }
+
     /**
      * אתחול UniversalSearch
      * @param {string} entityType - סוג היישות
@@ -270,41 +354,56 @@ class EntityManager {
             return null;
         }
         
-        // הכן קונפיגורציה
+        // ✅ הכן קונפיגורציה נכונה עבור UniversalSearch
         const searchConfig = {
             entityType: entityType,
-            apiEndpoint: config.apiEndpoint,
-            action: 'list',
+            
+            // ✅ תיקון: dataSource במבנה הנכון!
+            dataSource: {
+                endpoint: config.apiEndpoint,
+                action: 'list'
+            },
             
             searchableFields: config.searchableFields,
             
-            displayColumns: config.columns.filter(col => col.type !== 'actions').map(col => ({
-                field: col.field,
-                label: col.label
-            })),
+            displayColumns: config.columns
+                .filter(col => col.type !== 'actions')
+                .map(col => ({
+                    key: col.field,
+                    label: col.label
+                })),
             
-            onSearchStart: (query, mode) => {
-                console.log(`🔍 Search started: "${query}" (${mode})`);
+            // ✅ תיקון: selectors במבנה הנכון!
+            searchContainerSelector: `#${entityType}SearchSection`,
+            resultsContainerSelector: '#tableBody',
+            
+            // הגדרות נוספות
+            apiLimit: config.defaultLimit || 200,
+            showPagination: false,
+            
+            // callbacks
+            onSearch: (query, filters) => {
+                console.log(`🔍 Search started: "${query}"`);
                 entityState.setSearchMode(entityType, true, query, []);
             },
             
-            onSearchComplete: async (results) => {
-                console.log(`✅ Search completed: ${results.length} results`);
+            onDataLoaded: async (response) => {
+                console.log(`✅ Search completed: ${response.data.length} results`);
                 
                 // עדכון state
-                entityState.setSearchMode(entityType, true, '', results);
+                entityState.setSearchMode(entityType, true, '', response.data);
                 entityState.setState(entityType, {
-                    currentData: results
+                    currentData: response.data
                 });
                 
                 // רינדור תוצאות
                 const tableBody = document.getElementById('tableBody');
                 if (tableBody) {
-                    await EntityRenderer.render(entityType, results, tableBody, null, signal);
+                    await EntityRenderer.render(entityType, response.data, tableBody, response.pagination, signal);
                 }
             },
             
-            onSearchClear: async () => {
+            onClear: async () => {
                 console.log('🔄 Search cleared, returning to browse mode');
                 
                 // איפוס מצב חיפוש
@@ -324,13 +423,15 @@ class EntityManager {
         
         // הוסף parent param אם נדרש
         if (parentId && config.parentParam) {
-            searchConfig.additionalParams = {
+            searchConfig.apiParams = {
                 [config.parentParam]: parentId
             };
         }
         
-        // יצירת instance
-        const searchInstance = new UniversalSearch(searchConfig);
+        // ✅ תיקון: קריאה נכונה ל-UniversalSearch
+        const searchInstance = window.initUniversalSearch 
+            ? window.initUniversalSearch(searchConfig)
+            : new UniversalSearch(searchConfig);
         
         // שמירה ב-state
         entityState.setSearchInstance(entityType, searchInstance);

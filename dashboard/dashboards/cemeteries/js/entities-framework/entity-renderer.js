@@ -149,126 +149,252 @@ class EntityRenderer {
         console.log(`✅ ${config.plural} container built`);
     }
 
+    // /**
+    //  * אתחול TableManager
+    //  * @param {string} entityType - סוג היישות
+    //  * @param {Array} data - נתוני הטבלה
+    //  * @param {number} totalItems - סה"כ רשומות
+    //  * @param {AbortSignal} signal - signal לביטול
+    //  * @returns {Promise<Object>} instance של TableManager
+    //  */
+    // static async initTable(entityType, data, totalItems, signal = null) {
+    //     const config = ENTITY_CONFIG[entityType];
+        
+    //     console.log(`🆕 Initializing TableManager for ${entityType}...`);
+        
+    //     // המתן ל-DOM
+    //     const tableBody = await this.waitForElement('#tableBody', 5000);
+    //     if (!tableBody) {
+    //         console.error('❌ tableBody not found after 5 seconds');
+    //         return null;
+    //     }
+        
+    //     // הגדרת עמודות
+    //     const columns = config.columns.map(col => {
+    //         const columnDef = {
+    //             field: col.field,
+    //             label: col.label,
+    //             width: col.width
+    //         };
+            
+    //         // טיפול בסוגי עמודות מיוחדות
+    //         if (col.type === 'status') {
+    //             columnDef.render = (value, row) => {
+    //                 return formatEntityStatus(entityType, value);
+    //             };
+    //         } else if (col.type === 'currency') {
+    //             columnDef.render = (value) => {
+    //                 return formatCurrency(value);
+    //             };
+    //         } else if (col.type === 'date') {
+    //             columnDef.render = (value) => {
+    //                 return formatDate(value);
+    //             };
+    //         } else if (col.type === 'enum') {
+    //             columnDef.render = (value) => {
+    //                 // פונקציות עזר ספציפיות
+    //                 if (col.field === 'purchaseType') {
+    //                     return this.formatPurchaseType(value);
+    //                 } else if (col.field === 'graveType') {
+    //                     return this.getGraveTypeName(value);
+    //                 }
+    //                 return value || '-';
+    //             };
+    //         } else if (col.type === 'actions') {
+    //             columnDef.render = (value, row) => {
+    //                 const idField = this.getIdField(entityType);
+    //                 const entityId = row[idField];
+    //                 return `
+    //                     <div class="action-buttons">
+    //                         <button onclick="if(typeof window.tableRenderer !== 'undefined' && window.tableRenderer.editItem) { window.tableRenderer.editItem('${entityId}'); }" 
+    //                                 class="btn-edit" title="ערוך">
+    //                             ✏️
+    //                         </button>
+    //                         <button onclick="EntityLoader.deleteEntity('${entityType}', '${entityId}')" 
+    //                                 class="btn-delete" title="מחק">
+    //                             🗑️
+    //                         </button>
+    //                     </div>
+    //                 `;
+    //             };
+    //         }
+            
+    //         return columnDef;
+    //     });
+        
+    //     // יצירת TableManager
+    //     const tableManager = new TableManager({
+    //         containerId: 'mainTable',
+    //         data: data,
+    //         columns: columns,
+    //         initialPageSize: 50,
+    //         totalItems: totalItems,
+    //         pageSizeOptions: [50, 100, 200],
+    //         enableInfiniteScroll: true,
+    //         scrollThreshold: 200,
+    //         fixedWidth: true,
+            
+    //         onRowDoubleClick: (row) => {
+    //             this.handleDoubleClick(entityType, row);
+    //         },
+            
+    //         onLoadMore: async () => {
+    //             const state = entityState.getState(entityType);
+    //             const parentId = config.hasParent ? state.parentId : null;
+    //             return await EntityLoader.appendMoreData(entityType, parentId);
+    //         },
+            
+    //         onSort: (field, order) => {
+    //             console.log(`📊 Sorted by ${field} ${order}`);
+    //             if (typeof showToast === 'function') {
+    //                 showToast(`ממוין לפי ${field} (${order === 'asc' ? 'עולה' : 'יורד'})`, 'info');
+    //             }
+    //         },
+            
+    //         onFilter: (filters) => {
+    //             console.log('🔍 Active filters:', filters);
+    //             const state = entityState.getState(entityType);
+    //             if (state.tableInstance) {
+    //                 const count = state.tableInstance.getFilteredData().length;
+    //                 if (typeof showToast === 'function') {
+    //                     showToast(`נמצאו ${count} תוצאות`, 'info');
+    //                 }
+    //             }
+    //         }
+    //     });
+        
+    //     // שמור את ה-instance
+    //     entityState.setTableInstance(entityType, tableManager);
+        
+    //     console.log(`✅ TableManager initialized for ${entityType}`);
+    //     return tableManager;
+    // }
+
     /**
-     * אתחול TableManager
-     * @param {string} entityType - סוג היישות
-     * @param {Array} data - נתוני הטבלה
-     * @param {number} totalItems - סה"כ רשומות
-     * @param {AbortSignal} signal - signal לביטול
-     * @returns {Promise<Object>} instance של TableManager
-     */
-    static async initTable(entityType, data, totalItems, signal = null) {
-        const config = ENTITY_CONFIG[entityType];
-        
-        console.log(`🆕 Initializing TableManager for ${entityType}...`);
-        
-        // המתן ל-DOM
-        const tableBody = await this.waitForElement('#tableBody', 5000);
-        if (!tableBody) {
-            console.error('❌ tableBody not found after 5 seconds');
-            return null;
-        }
-        
-        // הגדרת עמודות
-        const columns = config.columns.map(col => {
-            const columnDef = {
-                field: col.field,
-                label: col.label,
-                width: col.width
-            };
-            
-            // טיפול בסוגי עמודות מיוחדות
-            if (col.type === 'status') {
-                columnDef.render = (value, row) => {
-                    return formatEntityStatus(entityType, value);
-                };
-            } else if (col.type === 'currency') {
-                columnDef.render = (value) => {
-                    return formatCurrency(value);
-                };
-            } else if (col.type === 'date') {
-                columnDef.render = (value) => {
-                    return formatDate(value);
-                };
-            } else if (col.type === 'enum') {
-                columnDef.render = (value) => {
-                    // פונקציות עזר ספציפיות
-                    if (col.field === 'purchaseType') {
-                        return this.formatPurchaseType(value);
-                    } else if (col.field === 'graveType') {
-                        return this.getGraveTypeName(value);
-                    }
-                    return value || '-';
-                };
-            } else if (col.type === 'actions') {
-                columnDef.render = (value, row) => {
-                    const idField = this.getIdField(entityType);
-                    const entityId = row[idField];
-                    return `
-                        <div class="action-buttons">
-                            <button onclick="if(typeof window.tableRenderer !== 'undefined' && window.tableRenderer.editItem) { window.tableRenderer.editItem('${entityId}'); }" 
-                                    class="btn-edit" title="ערוך">
-                                ✏️
-                            </button>
-                            <button onclick="EntityLoader.deleteEntity('${entityType}', '${entityId}')" 
-                                    class="btn-delete" title="מחק">
-                                🗑️
-                            </button>
-                        </div>
-                    `;
-                };
-            }
-            
-            return columnDef;
-        });
-        
-        // יצירת TableManager
-        const tableManager = new TableManager({
-            containerId: 'mainTable',
-            data: data,
-            columns: columns,
-            initialPageSize: 50,
-            totalItems: totalItems,
-            pageSizeOptions: [50, 100, 200],
-            enableInfiniteScroll: true,
-            scrollThreshold: 200,
-            fixedWidth: true,
-            
-            onRowDoubleClick: (row) => {
-                this.handleDoubleClick(entityType, row);
-            },
-            
-            onLoadMore: async () => {
-                const state = entityState.getState(entityType);
-                const parentId = config.hasParent ? state.parentId : null;
-                return await EntityLoader.appendMoreData(entityType, parentId);
-            },
-            
-            onSort: (field, order) => {
-                console.log(`📊 Sorted by ${field} ${order}`);
-                if (typeof showToast === 'function') {
-                    showToast(`ממוין לפי ${field} (${order === 'asc' ? 'עולה' : 'יורד'})`, 'info');
-                }
-            },
-            
-            onFilter: (filters) => {
-                console.log('🔍 Active filters:', filters);
-                const state = entityState.getState(entityType);
-                if (state.tableInstance) {
-                    const count = state.tableInstance.getFilteredData().length;
-                    if (typeof showToast === 'function') {
-                        showToast(`נמצאו ${count} תוצאות`, 'info');
-                    }
-                }
-            }
-        });
-        
-        // שמור את ה-instance
-        entityState.setTableInstance(entityType, tableManager);
-        
-        console.log(`✅ TableManager initialized for ${entityType}`);
-        return tableManager;
-    }
+    * אתחול TableManager
+    * @param {string} entityType - סוג היישות
+    * @param {Array} data - נתוני הטבלה
+    * @param {number} totalItems - סה"כ רשומות
+    * @param {AbortSignal} signal - signal לביטול
+    * @returns {Promise<Object>} instance של TableManager
+    */
+   static async initTable(entityType, data, totalItems, signal = null) {
+       const config = ENTITY_CONFIG[entityType];
+       
+       console.log(`🆕 Initializing TableManager for ${entityType}...`);
+       
+       // המתן ל-DOM
+       const tableBody = await this.waitForElement('#tableBody', 5000);
+       if (!tableBody) {
+           console.error('❌ tableBody not found after 5 seconds');
+           return null;
+       }
+       
+       // הגדרת עמודות
+       const columns = config.columns.map(col => {
+           const columnDef = {
+               field: col.field,
+               label: col.label,
+               width: col.width
+           };
+           
+           // טיפול בסוגי עמודות מיוחדות
+           if (col.type === 'status') {
+               columnDef.render = (value, row) => {
+                   return formatEntityStatus(entityType, value);
+               };
+           } else if (col.type === 'currency') {
+               columnDef.render = (value) => {
+                   return formatCurrency(value);
+               };
+           } else if (col.type === 'date') {
+               columnDef.render = (value) => {
+                   return formatDate(value);
+               };
+           } else if (col.type === 'enum') {
+               columnDef.render = (value) => {
+                   // פונקציות עזר ספציפיות
+                   if (col.field === 'purchaseType') {
+                       return this.formatPurchaseType(value);
+                   } else if (col.field === 'graveType') {
+                       return this.getGraveTypeName(value);
+                   }
+                   return value || '-';
+               };
+           } else if (col.type === 'actions') {
+               columnDef.render = (value, row) => {
+                   const idField = this.getIdField(entityType);
+                   const entityId = row[idField];
+                   return `
+                       <div class="action-buttons">
+                           <button onclick="if(typeof window.tableRenderer !== 'undefined' && window.tableRenderer.editItem) { window.tableRenderer.editItem('${entityId}'); }" 
+                                   class="btn-edit" title="ערוך">
+                               ✏️
+                           </button>
+                           <button onclick="EntityLoader.deleteEntity('${entityType}', '${entityId}')" 
+                                   class="btn-delete" title="מחק">
+                               🗑️
+                           </button>
+                       </div>
+                   `;
+               };
+           }
+           
+           return columnDef;
+       });
+       
+       // ✅ תיקון: יצירת TableManager עם הפרמטרים הנכונים!
+       const tableManager = new TableManager({
+           tableSelector: '#mainTable',  // ✅ שם נכון!
+           data: data,
+           columns: columns,
+           
+           // הגדרות Infinite Scroll
+           totalItems: totalItems,
+           scrollLoadBatch: 100,
+           itemsPerPage: 999999,
+           showPagination: false,
+           
+           // ✅ גובה טבלה
+           tableHeight: 'calc(100vh - 650px)',
+           tableMinHeight: '500px',
+           
+           // ✅ callbacks
+           onRowDoubleClick: (row) => {
+               this.handleDoubleClick(entityType, row);
+           },
+           
+           onLoadMore: async () => {
+               const state = entityState.getState(entityType);
+               const parentId = config.hasParent ? state.parentId : null;
+               return await EntityLoader.appendMoreData(entityType, parentId);
+           },
+           
+           onSort: (field, order) => {
+               console.log(`📊 Sorted by ${field} ${order}`);
+               if (typeof showToast === 'function') {
+                   showToast(`ממוין לפי ${field} (${order === 'asc' ? 'עולה' : 'יורד'})`, 'info');
+               }
+           },
+           
+           onFilter: (filters) => {
+               console.log('🔍 Active filters:', filters);
+               const state = entityState.getState(entityType);
+               if (state.tableInstance) {
+                   const count = state.tableInstance.getFilteredData().length;
+                   if (typeof showToast === 'function') {
+                       showToast(`נמצאו ${count} תוצאות`, 'info');
+                   }
+               }
+           }
+       });
+       
+       // שמור את ה-instance
+       entityState.setTableInstance(entityType, tableManager);
+       
+       console.log(`✅ TableManager initialized for ${entityType}`);
+       return tableManager;
+   }
 
     /**
      * רינדור מצב ריק

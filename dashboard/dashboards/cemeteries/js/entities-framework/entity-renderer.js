@@ -1,0 +1,485 @@
+/*
+ * File: dashboards/dashboard/cemeteries/assets/js/entities-framework/entity-renderer.js
+ * Version: 1.0.0
+ * Updated: 2025-11-20
+ * Author: Malkiel
+ * Change Summary:
+ * - v1.0.0: 🆕 מנהל רינדור גנרי לטבלאות
+ *   ✅ render() - רינדור כללי לכל היישויות
+ *   ✅ buildContainer() - בניית HTML container
+ *   ✅ initTable() - אתחול TableManager
+ *   ✅ renderEmptyState() - הצגת מצב ריק
+ *   ✅ תמיכה במצב חיפוש ו-Browse
+ */
+
+console.log('🚀 entity-renderer.js v1.0.0 - Loading...');
+
+// ===================================================================
+// מנהל רינדור גנרי
+// ===================================================================
+class EntityRenderer {
+
+    /**
+     * רינדור נתונים לטבלה
+     * @param {string} entityType - סוג היישות
+     * @param {Array} data - המידע לרינדור
+     * @param {HTMLElement} container - הקונטיינר (tbody)
+     * @param {Object} pagination - מידע pagination
+     * @param {AbortSignal} signal - signal לביטול
+     * @returns {Promise<void>}
+     */
+    static async render(entityType, data, container, pagination = null, signal = null) {
+        const config = ENTITY_CONFIG[entityType];
+        const state = entityState.getState(entityType);
+        
+        console.log(`📝 Rendering ${data.length} ${config.plural}...`);
+        console.log(`   Pagination:`, pagination);
+        console.log(`   Search mode: ${state.isSearchMode}`);
+        console.log(`   Table instance exists: ${!!state.tableInstance}`);
+        
+        // מצב חיפוש - רינדור פשוט
+        if (state.isSearchMode && state.currentQuery) {
+            console.log('🔍 Rendering search results...');
+            
+            if (data.length === 0) {
+                this.renderEmptyState(container, config, 'search');
+                return;
+            }
+            
+            const totalItems = data.length;
+            await this.initTable(entityType, data, totalItems, signal);
+            return;
+        }
+        
+        // מצב Browse רגיל
+        const totalItems = pagination?.total || data.length;
+        console.log(`📊 Total items to display: ${totalItems}`);
+        
+        // בדיקה אם אין נתונים
+        if (data.length === 0) {
+            if (state.tableInstance) {
+                state.tableInstance.setData([]);
+            }
+            this.renderEmptyState(container, config, 'browse', state);
+            return;
+        }
+        
+        // בדיקה אם ה-DOM של TableManager קיים
+        const tableWrapperExists = document.querySelector('.table-wrapper[data-table-manager]');
+        
+        // אם המשתנה קיים אבל ה-DOM נמחק - אפס!
+        if (!tableWrapperExists && state.tableInstance) {
+            console.log('⚠️ TableManager DOM missing, resetting variable');
+            entityState.setTableInstance(entityType, null);
+        }
+        
+        // אתחול או עדכון טבלה
+        if (!state.tableInstance || !tableWrapperExists) {
+            console.log(`🆕 Initializing TableManager with ${totalItems} items`);
+            await this.initTable(entityType, data, totalItems, signal);
+        } else {
+            console.log(`♻️ Updating TableManager with ${totalItems} items`);
+            if (state.tableInstance.config) {
+                state.tableInstance.config.totalItems = totalItems;
+            }
+            state.tableInstance.setData(data);
+        }
+        
+        // עדכון מונה ב-UniversalSearch
+        if (state.searchInstance) {
+            state.searchInstance.state.totalResults = totalItems;
+            state.searchInstance.updateCounter();
+        }
+    }
+
+    /**
+     * בניית HTML container ליישות
+     * @param {string} entityType - סוג היישות
+     * @param {AbortSignal} signal - signal לביטול
+     * @param {string|null} parentId - מזהה הורה
+     * @param {string|null} parentName - שם הורה
+     * @returns {Promise<void>}
+     */
+    static async buildContainer(entityType, signal = null, parentId = null, parentName = null) {
+        const config = ENTITY_CONFIG[entityType];
+        
+        console.log(`🏗️ Building ${config.plural} container...`);
+        
+        // מצא או צור main-container
+        let mainContainer = document.querySelector('.main-container');
+        
+        if (!mainContainer) {
+            console.log('⚠️ main-container not found, creating one...');
+            const mainContent = document.querySelector('.main-content');
+            mainContainer = document.createElement('div');
+            mainContainer.className = 'main-container';
+            
+            const actionBar = mainContent.querySelector('.action-bar');
+            if (actionBar) {
+                actionBar.insertAdjacentElement('afterend', mainContainer);
+            } else {
+                mainContent.appendChild(mainContainer);
+            }
+        }
+        
+        // בנה את ה-HTML
+        mainContainer.innerHTML = `
+            <div id="${entityType}SearchSection" class="search-section"></div>
+            
+            <div class="table-container">
+                <table id="mainTable" class="data-table">
+                    <thead>
+                        <tr id="tableHeaders">
+                            <th style="text-align: center;">טוען...</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <tr>
+                            <td style="text-align: center; padding: 40px;">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">טוען ${config.plural}...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        `;
+        
+        console.log(`✅ ${config.plural} container built`);
+    }
+
+    /**
+     * אתחול TableManager
+     * @param {string} entityType - סוג היישות
+     * @param {Array} data - נתוני הטבלה
+     * @param {number} totalItems - סה"כ רשומות
+     * @param {AbortSignal} signal - signal לביטול
+     * @returns {Promise<Object>} instance של TableManager
+     */
+    static async initTable(entityType, data, totalItems, signal = null) {
+        const config = ENTITY_CONFIG[entityType];
+        
+        console.log(`🆕 Initializing TableManager for ${entityType}...`);
+        
+        // המתן ל-DOM
+        const tableBody = await this.waitForElement('#tableBody', 5000);
+        if (!tableBody) {
+            console.error('❌ tableBody not found after 5 seconds');
+            return null;
+        }
+        
+        // הגדרת עמודות
+        const columns = config.columns.map(col => {
+            const columnDef = {
+                field: col.field,
+                label: col.label,
+                width: col.width
+            };
+            
+            // טיפול בסוגי עמודות מיוחדות
+            if (col.type === 'status') {
+                columnDef.render = (value, row) => {
+                    return formatEntityStatus(entityType, value);
+                };
+            } else if (col.type === 'currency') {
+                columnDef.render = (value) => {
+                    return formatCurrency(value);
+                };
+            } else if (col.type === 'date') {
+                columnDef.render = (value) => {
+                    return formatDate(value);
+                };
+            } else if (col.type === 'enum') {
+                columnDef.render = (value) => {
+                    // פונקציות עזר ספציפיות
+                    if (col.field === 'purchaseType') {
+                        return this.formatPurchaseType(value);
+                    } else if (col.field === 'graveType') {
+                        return this.getGraveTypeName(value);
+                    }
+                    return value || '-';
+                };
+            } else if (col.type === 'actions') {
+                columnDef.render = (value, row) => {
+                    const idField = this.getIdField(entityType);
+                    const entityId = row[idField];
+                    return `
+                        <div class="action-buttons">
+                            <button onclick="if(typeof window.tableRenderer !== 'undefined' && window.tableRenderer.editItem) { window.tableRenderer.editItem('${entityId}'); }" 
+                                    class="btn-edit" title="ערוך">
+                                ✏️
+                            </button>
+                            <button onclick="EntityLoader.deleteEntity('${entityType}', '${entityId}')" 
+                                    class="btn-delete" title="מחק">
+                                🗑️
+                            </button>
+                        </div>
+                    `;
+                };
+            }
+            
+            return columnDef;
+        });
+        
+        // יצירת TableManager
+        const tableManager = new TableManager({
+            containerId: 'mainTable',
+            data: data,
+            columns: columns,
+            initialPageSize: 50,
+            totalItems: totalItems,
+            pageSizeOptions: [50, 100, 200],
+            enableInfiniteScroll: true,
+            scrollThreshold: 200,
+            fixedWidth: true,
+            
+            onRowDoubleClick: (row) => {
+                this.handleDoubleClick(entityType, row);
+            },
+            
+            onLoadMore: async () => {
+                const state = entityState.getState(entityType);
+                const parentId = config.hasParent ? state.parentId : null;
+                return await EntityLoader.appendMoreData(entityType, parentId);
+            },
+            
+            onSort: (field, order) => {
+                console.log(`📊 Sorted by ${field} ${order}`);
+                if (typeof showToast === 'function') {
+                    showToast(`ממוין לפי ${field} (${order === 'asc' ? 'עולה' : 'יורד'})`, 'info');
+                }
+            },
+            
+            onFilter: (filters) => {
+                console.log('🔍 Active filters:', filters);
+                const state = entityState.getState(entityType);
+                if (state.tableInstance) {
+                    const count = state.tableInstance.getFilteredData().length;
+                    if (typeof showToast === 'function') {
+                        showToast(`נמצאו ${count} תוצאות`, 'info');
+                    }
+                }
+            }
+        });
+        
+        // שמור את ה-instance
+        entityState.setTableInstance(entityType, tableManager);
+        
+        console.log(`✅ TableManager initialized for ${entityType}`);
+        return tableManager;
+    }
+
+    /**
+     * רינדור מצב ריק
+     * @param {HTMLElement} container - הקונטיינר
+     * @param {Object} config - קונפיגורציה
+     * @param {string} mode - 'search' או 'browse'
+     * @param {Object} state - state של היישות
+     */
+    static renderEmptyState(container, config, mode = 'browse', state = null) {
+        if (mode === 'search') {
+            // אין תוצאות חיפוש
+            container.innerHTML = `
+                <tr>
+                    <td colspan="10" style="text-align: center; padding: 60px;">
+                        <div style="color: #9ca3af;">
+                            <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
+                            <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">לא נמצאו תוצאות</div>
+                            <div>נסה לשנות את מילות החיפוש או הפילטרים</div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        } else if (config.hasParent && state && state.parentId && state.parentName) {
+            // יישות עם הורה - אין נתונים בהורה הספציפי
+            const parentSingular = this.getParentSingular(config);
+            container.innerHTML = `
+                <tr>
+                    <td colspan="10" style="text-align: center; padding: 60px;">
+                        <div style="color: #6b7280;">
+                            <div style="font-size: 48px; margin-bottom: 16px;">🏘️</div>
+                            <div style="font-size: 20px; font-weight: 600; margin-bottom: 12px; color: #374151;">
+                                אין ${config.plural} ${parentSingular} ${state.parentName}
+                            </div>
+                            <div style="font-size: 14px; margin-bottom: 24px; color: #6b7280;">
+                                ${parentSingular} עדיין לא ${config.hasParent ? 'מכיל' : 'מכילה'} ${config.plural}. תוכל להוסיף ${config.singular} ${config.hasParent ? 'חדש' : 'חדשה'}
+                            </div>
+                            <button 
+                                onclick="if(typeof FormHandler !== 'undefined' && FormHandler.openForm) { FormHandler.openForm('${config.entityType || Object.keys(ENTITY_CONFIG).find(k => ENTITY_CONFIG[k] === config)}', '${state.parentId}', null); } else { alert('FormHandler לא זמין'); }" 
+                                style="background: linear-gradient(135deg, #FC466B 0%, #3F5EFB 100%); 
+                                       color: white; 
+                                       border: none; 
+                                       padding: 12px 24px; 
+                                       border-radius: 8px; 
+                                       font-size: 15px; 
+                                       font-weight: 600; 
+                                       cursor: pointer; 
+                                       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                                       transition: all 0.2s;"
+                                onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.15)';"
+                                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)';">
+                                ➕ הוסף ${config.singular} ${config.hasParent ? 'ראשון' : 'ראשונה'}
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        } else {
+            // אין נתונים כלליים
+            container.innerHTML = `
+                <tr>
+                    <td colspan="10" style="text-align: center; padding: 60px;">
+                        <div style="color: #9ca3af;">
+                            <div style="font-size: 48px; margin-bottom: 16px;">📂</div>
+                            <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">אין ${config.plural}</div>
+                            <div>לא נמצאו ${config.plural} במערכת</div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+    }
+
+    /**
+     * טיפול בדאבל-קליק על שורה
+     * @param {string} entityType - סוג היישות
+     * @param {Object} row - נתוני השורה
+     */
+    static handleDoubleClick(entityType, row) {
+        const config = ENTITY_CONFIG[entityType];
+        const idField = this.getIdField(entityType);
+        const entityId = row[idField];
+        
+        console.log(`🖱️ Double-click on ${entityType}:`, entityId);
+        
+        // קריאה לפונקציית handler ספציפית אם קיימת
+        const handlerName = `handle${this.capitalize(entityType)}DoubleClick`;
+        if (typeof window[handlerName] === 'function') {
+            window[handlerName](entityId, row.name || row[`${entityType}Name`]);
+        } else {
+            // ברירת מחדל - פתיחת כרטיס
+            this.openCard(entityType, entityId);
+        }
+    }
+
+    /**
+     * פתיחת כרטיס של יישות
+     * @param {string} entityType - סוג היישות
+     * @param {string} entityId - מזהה היישות
+     */
+    static async openCard(entityType, entityId) {
+        const cardFunctionName = `create${this.capitalize(entityType)}Card`;
+        
+        if (typeof window[cardFunctionName] === 'function') {
+            const cardHtml = await window[cardFunctionName](entityId);
+            if (cardHtml && typeof displayHierarchyCard === 'function') {
+                displayHierarchyCard(cardHtml);
+            }
+        } else {
+            console.warn(`⚠️ ${cardFunctionName} not found`);
+        }
+    }
+
+    // ===================================================================
+    // פונקציות עזר
+    // ===================================================================
+
+    /**
+     * המתנה לאלמנט DOM
+     */
+    static waitForElement(selector, timeout = 5000) {
+        return new Promise((resolve) => {
+            const element = document.querySelector(selector);
+            if (element) {
+                resolve(element);
+                return;
+            }
+            
+            const observer = new MutationObserver(() => {
+                const element = document.querySelector(selector);
+                if (element) {
+                    observer.disconnect();
+                    resolve(element);
+                }
+            });
+            
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+            
+            setTimeout(() => {
+                observer.disconnect();
+                resolve(null);
+            }, timeout);
+        });
+    }
+
+    /**
+     * קבלת שדה ID ליישות
+     */
+    static getIdField(entityType) {
+        const idFields = {
+            customer: 'customerId',
+            purchase: 'purchaseId',
+            burial: 'burialId',
+            plot: 'plotId',
+            areaGrave: 'areaGraveId',
+            grave: 'graveId'
+        };
+        return idFields[entityType] || `${entityType}Id`;
+    }
+
+    /**
+     * קבלת שם יחיד של ההורה
+     */
+    static getParentSingular(config) {
+        if (!config.hasParent) return '';
+        
+        const parentNames = {
+            blockId: 'בגוש',
+            plotId: 'בחלקה',
+            areaGraveId: 'באחוזת הקבר'
+        };
+        return parentNames[config.parentParam] || '';
+    }
+
+    /**
+     * Capitalize ראשון
+     */
+    static capitalize(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    /**
+     * פורמט סוג רכישה
+     */
+    static formatPurchaseType(type) {
+        const types = {
+            'new': 'רכישה חדשה',
+            'transfer': 'העברת בעלות',
+            'renewal': 'חידוש'
+        };
+        return types[type] || '-';
+    }
+
+    /**
+     * פורמט סוג קבר
+     */
+    static getGraveTypeName(type) {
+        const types = {
+            1: 'שדה',
+            2: 'רוויה',
+            3: 'סנהדרין'
+        };
+        return types[type] || 'לא מוגדר';
+    }
+}
+
+// ===================================================================
+// הפוך לגלובלי
+// ===================================================================
+window.EntityRenderer = EntityRenderer;
+
+console.log('✅ entity-renderer.js v1.0.0 - Loaded successfully!');

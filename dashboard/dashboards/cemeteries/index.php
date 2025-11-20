@@ -165,6 +165,15 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <script src="/dashboard/dashboards/cemeteries/js/responsive.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/unified-table-renderer.js"></script>
 
+    <!-- טען את המערכת החדשה לפני הישנה -->
+    <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-config.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-state-manager.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-loader.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-renderer.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-manager.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-initializer.js"></script>
+
+
     <script src="/dashboard/dashboards/cemeteries/js/operation-manager.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/entities-common-utils.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/cemeteries-management.js"></script>

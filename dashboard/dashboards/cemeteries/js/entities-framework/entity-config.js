@@ -1,0 +1,485 @@
+/*
+ * File: dashboards/dashboard/cemeteries/assets/js/entities-framework/entity-config.js
+ * Version: 2.0.0
+ * Updated: 2025-11-20
+ * Author: Malkiel
+ * Change Summary:
+ * - v2.0.0: 🔥 הרחבה מלאה של הקונפיגורציה
+ *   ✅ הוספת כל השדות הנדרשים לכל יישות
+ *   ✅ הוספת קונפיגורציית טבלה (columns)
+ *   ✅ הוספת קונפיגורציית חיפוש (searchableFields)
+ *   ✅ הוספת קונפיגורציית סטטיסטיקות
+ *   ✅ הוספת פונקציות עזר ייחודיות (adapters)
+ */
+
+console.log('🚀 entity-config.js v2.0.0 - Loading...');
+
+// ===================================================================
+// קונפיגורציה מרכזית לכל היישויות
+// ===================================================================
+const ENTITY_CONFIG = {
+    // ===================================================================
+    // לקוחות (Customers)
+    // ===================================================================
+    customer: {
+        // מידע בסיסי
+        singular: 'לקוח',
+        singularArticle: 'את הלקוח',
+        plural: 'לקוחות',
+        
+        // API
+        apiFile: 'customers-api.php',
+        apiEndpoint: '/dashboard/dashboards/cemeteries/api/customers-api.php',
+        
+        // משתנים גלובליים
+        searchVar: 'customerSearch',
+        tableVar: 'customersTable',
+        currentPageVar: 'customersCurrentPage',
+        totalPagesVar: 'customersTotalPages',
+        dataArrayVar: 'currentCustomers',
+        isLoadingVar: 'customersIsLoadingMore',
+        isSearchModeVar: 'customersIsSearchMode',
+        currentQueryVar: 'customersCurrentQuery',
+        searchResultsVar: 'customersSearchResults',
+        
+        // פונקציות
+        renderFunctionName: 'renderCustomersRows',
+        loadFunctionName: 'loadCustomers',
+        loadBrowseFunctionName: 'loadCustomersBrowseData',
+        appendMoreFunctionName: 'appendMoreCustomers',
+        
+        // פרמטרים
+        hasParent: false,
+        parentParam: null,
+        defaultLimit: 200,
+        defaultOrderBy: 'createDate',
+        defaultSortDirection: 'DESC',
+        
+        // עמודות טבלה
+        columns: [
+            { field: 'firstName', label: 'שם פרטי', width: '15%' },
+            { field: 'lastName', label: 'שם משפחה', width: '15%' },
+            { field: 'idNumber', label: 'ת.ז', width: '12%' },
+            { field: 'phone', label: 'טלפון', width: '12%' },
+            { field: 'email', label: 'אימייל', width: '18%' },
+            { field: 'city', label: 'עיר', width: '12%' },
+            { field: 'status', label: 'סטטוס', width: '10%', type: 'status' },
+            { field: 'actions', label: 'פעולות', width: '6%', type: 'actions' }
+        ],
+        
+        // שדות חיפוש
+        searchableFields: [
+            { name: 'firstName', label: 'שם פרטי', table: 'customers', type: 'text', matchType: ['exact', 'fuzzy', 'startsWith'] },
+            { name: 'lastName', label: 'שם משפחה', table: 'customers', type: 'text', matchType: ['exact', 'fuzzy', 'startsWith'] },
+            { name: 'idNumber', label: 'ת.ז', table: 'customers', type: 'text', matchType: ['exact'] },
+            { name: 'phone', label: 'טלפון', table: 'customers', type: 'text', matchType: ['exact', 'fuzzy'] },
+            { name: 'email', label: 'אימייל', table: 'customers', type: 'text', matchType: ['exact', 'fuzzy'] },
+            { name: 'city', label: 'עיר', table: 'customers', type: 'text', matchType: ['exact', 'fuzzy'] },
+            { name: 'status', label: 'סטטוס', table: 'customers', type: 'select', matchType: ['exact'], 
+              options: [
+                  { value: 'active', label: 'פעיל' },
+                  { value: 'inactive', label: 'לא פעיל' }
+              ]
+            }
+        ],
+        
+        // סטטיסטיקות
+        statsConfig: {
+            elements: {
+                'totalCustomers': 'total_customers',
+                'activeCustomers': 'active',
+                'newThisMonth': 'new_this_month'
+            }
+        },
+        
+        // סטטוסים
+        statuses: {
+            'active': { text: 'פעיל', color: '#10b981' },
+            'inactive': { text: 'לא פעיל', color: '#6b7280' }
+        }
+    },
+
+    // ===================================================================
+    // רכישות (Purchases)
+    // ===================================================================
+    purchase: {
+        singular: 'רכישה',
+        singularArticle: 'את הרכישה',
+        plural: 'רכישות',
+        
+        apiFile: 'purchases-api.php',
+        apiEndpoint: '/dashboard/dashboards/cemeteries/api/purchases-api.php',
+        
+        searchVar: 'purchaseSearch',
+        tableVar: 'purchasesTable',
+        currentPageVar: 'purchasesCurrentPage',
+        totalPagesVar: 'purchasesTotalPages',
+        dataArrayVar: 'currentPurchases',
+        isLoadingVar: 'purchasesIsLoadingMore',
+        isSearchModeVar: 'purchasesIsSearchMode',
+        currentQueryVar: 'purchasesCurrentQuery',
+        searchResultsVar: 'purchasesSearchResults',
+        
+        renderFunctionName: 'renderPurchasesRows',
+        loadFunctionName: 'loadPurchases',
+        loadBrowseFunctionName: 'loadPurchasesBrowseData',
+        appendMoreFunctionName: 'appendMorePurchases',
+        
+        hasParent: false,
+        parentParam: null,
+        defaultLimit: 200,
+        defaultOrderBy: 'createDate',
+        defaultSortDirection: 'DESC',
+        
+        columns: [
+            { field: 'purchaseNumber', label: 'מספר רכישה', width: '10%' },
+            { field: 'customerName', label: 'שם לקוח', width: '18%' },
+            { field: 'purchaseType', label: 'סוג רכישה', width: '12%', type: 'enum' },
+            { field: 'totalAmount', label: 'סכום', width: '12%', type: 'currency' },
+            { field: 'paidAmount', label: 'שולם', width: '12%', type: 'currency' },
+            { field: 'purchaseDate', label: 'תאריך', width: '12%', type: 'date' },
+            { field: 'status', label: 'סטטוס', width: '10%', type: 'status' },
+            { field: 'actions', label: 'פעולות', width: '6%', type: 'actions' }
+        ],
+        
+        searchableFields: [
+            { name: 'purchaseNumber', label: 'מספר רכישה', table: 'purchases', type: 'text', matchType: ['exact'] },
+            { name: 'firstName', label: 'שם פרטי לקוח', table: 'customers', type: 'text', matchType: ['fuzzy'] },
+            { name: 'lastName', label: 'שם משפחה לקוח', table: 'customers', type: 'text', matchType: ['fuzzy'] },
+            { name: 'idNumber', label: 'ת.ז לקוח', table: 'customers', type: 'text', matchType: ['exact'] },
+            { name: 'purchaseType', label: 'סוג רכישה', table: 'purchases', type: 'select', matchType: ['exact'],
+              options: [
+                  { value: 'new', label: 'רכישה חדשה' },
+                  { value: 'transfer', label: 'העברת בעלות' },
+                  { value: 'renewal', label: 'חידוש' }
+              ]
+            },
+            { name: 'status', label: 'סטטוס', table: 'purchases', type: 'select', matchType: ['exact'],
+              options: [
+                  { value: 'completed', label: 'הושלם' },
+                  { value: 'pending', label: 'ממתין' },
+                  { value: 'cancelled', label: 'מבוטל' }
+              ]
+            }
+        ],
+        
+        statsConfig: {
+            elements: {
+                'totalPurchases': 'total_purchases',
+                'completedPurchases': 'completed',
+                'newThisMonth': 'new_this_month'
+            }
+        },
+        
+        statuses: {
+            'completed': { text: 'הושלם', color: '#10b981' },
+            'pending': { text: 'ממתין', color: '#f59e0b' },
+            'cancelled': { text: 'מבוטל', color: '#ef4444' }
+        }
+    },
+
+    // ===================================================================
+    // קבורות (Burials)
+    // ===================================================================
+    burial: {
+        singular: 'קבורה',
+        singularArticle: 'את הקבורה',
+        plural: 'קבורות',
+        
+        apiFile: 'burials-api.php',
+        apiEndpoint: '/dashboard/dashboards/cemeteries/api/burials-api.php',
+        
+        searchVar: 'burialSearch',
+        tableVar: 'burialsTable',
+        currentPageVar: 'burialsCurrentPage',
+        totalPagesVar: 'burialsTotalPages',
+        dataArrayVar: 'currentBurials',
+        isLoadingVar: 'burialsIsLoadingMore',
+        isSearchModeVar: 'burialsIsSearchMode',
+        currentQueryVar: 'burialsCurrentQuery',
+        searchResultsVar: 'burialsSearchResults',
+        
+        renderFunctionName: 'renderBurialsRows',
+        loadFunctionName: 'loadBurials',
+        loadBrowseFunctionName: 'loadBurialsBrowseData',
+        appendMoreFunctionName: 'appendMoreBurials',
+        
+        hasParent: false,
+        parentParam: null,
+        defaultLimit: 200,
+        defaultOrderBy: 'createDate',
+        defaultSortDirection: 'DESC',
+        
+        columns: [
+            { field: 'burialNumber', label: 'מספר קבורה', width: '10%' },
+            { field: 'deceasedName', label: 'שם המנוח', width: '18%' },
+            { field: 'customerName', label: 'שם לקוח', width: '18%' },
+            { field: 'burialDate', label: 'תאריך קבורה', width: '12%', type: 'date' },
+            { field: 'graveName', label: 'קבר', width: '15%' },
+            { field: 'status', label: 'סטטוס', width: '10%', type: 'status' },
+            { field: 'actions', label: 'פעולות', width: '6%', type: 'actions' }
+        ],
+        
+        searchableFields: [
+            { name: 'burialNumber', label: 'מספר קבורה', table: 'burials', type: 'text', matchType: ['exact'] },
+            { name: 'deceasedFirstName', label: 'שם פרטי מנוח', table: 'burials', type: 'text', matchType: ['fuzzy'] },
+            { name: 'deceasedLastName', label: 'שם משפחה מנוח', table: 'burials', type: 'text', matchType: ['fuzzy'] },
+            { name: 'firstName', label: 'שם פרטי לקוח', table: 'customers', type: 'text', matchType: ['fuzzy'] },
+            { name: 'lastName', label: 'שם משפחה לקוח', table: 'customers', type: 'text', matchType: ['fuzzy'] },
+            { name: 'status', label: 'סטטוס', table: 'burials', type: 'select', matchType: ['exact'],
+              options: [
+                  { value: 'completed', label: 'הושלם' },
+                  { value: 'pending', label: 'ממתין' }
+              ]
+            }
+        ],
+        
+        statsConfig: {
+            elements: {
+                'totalBurials': 'total_burials',
+                'completedBurials': 'completed',
+                'newThisMonth': 'new_this_month'
+            }
+        },
+        
+        statuses: {
+            'completed': { text: 'הושלם', color: '#10b981' },
+            'pending': { text: 'ממתין', color: '#f59e0b' }
+        }
+    },
+
+    // ===================================================================
+    // חלקות (Plots)
+    // ===================================================================
+    plot: {
+        singular: 'חלקה',
+        singularArticle: 'את החלקה',
+        plural: 'חלקות',
+        
+        apiFile: 'plots-api.php',
+        apiEndpoint: '/dashboard/dashboards/cemeteries/api/plots-api.php',
+        
+        searchVar: 'plotSearch',
+        tableVar: 'plotsTable',
+        currentPageVar: 'plotsCurrentPage',
+        totalPagesVar: 'plotsTotalPages',
+        dataArrayVar: 'currentPlots',
+        isLoadingVar: 'plotsIsLoadingMore',
+        isSearchModeVar: 'plotsIsSearchMode',
+        currentQueryVar: 'plotsCurrentQuery',
+        searchResultsVar: 'plotsSearchResults',
+        
+        renderFunctionName: 'renderPlotsRows',
+        loadFunctionName: 'loadPlots',
+        loadBrowseFunctionName: 'loadPlotsBrowseData',
+        appendMoreFunctionName: 'appendMorePlots',
+        
+        hasParent: true,
+        parentParam: 'blockId',
+        parentFilterIdVar: 'plotsFilterBlockId',
+        parentFilterNameVar: 'plotsFilterBlockName',
+        defaultLimit: 200,
+        defaultOrderBy: 'createDate',
+        defaultSortDirection: 'DESC',
+        
+        columns: [
+            { field: 'plotNumber', label: 'מספר חלקה', width: '12%' },
+            { field: 'plotName', label: 'שם חלקה', width: '20%' },
+            { field: 'blockName', label: 'גוש', width: '18%' },
+            { field: 'totalAreaGraves', label: 'אחוזות קבר', width: '12%' },
+            { field: 'totalGraves', label: 'קברים', width: '12%' },
+            { field: 'status', label: 'סטטוס', width: '10%', type: 'status' },
+            { field: 'actions', label: 'פעולות', width: '6%', type: 'actions' }
+        ],
+        
+        searchableFields: [
+            { name: 'plotNumber', label: 'מספר חלקה', table: 'plots', type: 'text', matchType: ['exact', 'startsWith'] },
+            { name: 'plotName', label: 'שם חלקה', table: 'plots', type: 'text', matchType: ['fuzzy'] },
+            { name: 'blockName', label: 'שם גוש', table: 'blocks', type: 'text', matchType: ['fuzzy'] },
+            { name: 'status', label: 'סטטוס', table: 'plots', type: 'select', matchType: ['exact'],
+              options: [
+                  { value: 'active', label: 'פעיל' },
+                  { value: 'inactive', label: 'לא פעיל' },
+                  { value: 'full', label: 'מלא' }
+              ]
+            }
+        ],
+        
+        statsConfig: {
+            elements: {
+                'totalPlots': 'total_plots',
+                'totalAreaGraves': 'total_area_graves',
+                'newThisMonth': 'new_this_month'
+            },
+            parentParam: 'blockId'
+        },
+        
+        statuses: {
+            'active': { text: 'פעיל', color: '#10b981' },
+            'inactive': { text: 'לא פעיל', color: '#6b7280' },
+            'full': { text: 'מלא', color: '#ef4444' }
+        }
+    },
+
+    // ===================================================================
+    // אחוזות קבר (Area Graves)
+    // ===================================================================
+    areaGrave: {
+        singular: 'אחוזת קבר',
+        singularArticle: 'את אחוזת הקבר',
+        plural: 'אחוזות קבר',
+        
+        apiFile: 'areaGraves-api.php',
+        apiEndpoint: '/dashboard/dashboards/cemeteries/api/areaGraves-api.php',
+        
+        searchVar: 'areaGraveSearch',
+        tableVar: 'areaGravesTable',
+        currentPageVar: 'areaGravesCurrentPage',
+        totalPagesVar: 'areaGravesTotalPages',
+        dataArrayVar: 'currentAreaGraves',
+        isLoadingVar: 'areaGravesIsLoadingMore',
+        isSearchModeVar: 'areaGravesIsSearchMode',
+        currentQueryVar: 'areaGravesCurrentQuery',
+        searchResultsVar: 'areaGravesSearchResults',
+        
+        renderFunctionName: 'renderAreaGravesRows',
+        loadFunctionName: 'loadAreaGraves',
+        loadBrowseFunctionName: 'loadAreaGravesBrowseData',
+        appendMoreFunctionName: 'appendMoreAreaGraves',
+        
+        hasParent: true,
+        parentParam: 'plotId',
+        parentFilterIdVar: 'areaGravesFilterPlotId',
+        parentFilterNameVar: 'areaGravesFilterPlotName',
+        defaultLimit: 200,
+        defaultOrderBy: 'createDate',
+        defaultSortDirection: 'DESC',
+        
+        columns: [
+            { field: 'areaGraveNumber', label: 'מספר אחוזה', width: '12%' },
+            { field: 'areaGraveName', label: 'שם אחוזה', width: '18%' },
+            { field: 'plotName', label: 'חלקה', width: '15%' },
+            { field: 'graveType', label: 'סוג קבר', width: '12%', type: 'enum' },
+            { field: 'totalGraves', label: 'קברים', width: '10%' },
+            { field: 'status', label: 'סטטוס', width: '10%', type: 'status' },
+            { field: 'actions', label: 'פעולות', width: '6%', type: 'actions' }
+        ],
+        
+        searchableFields: [
+            { name: 'areaGraveNumber', label: 'מספר אחוזה', table: 'area_graves', type: 'text', matchType: ['exact', 'startsWith'] },
+            { name: 'areaGraveName', label: 'שם אחוזה', table: 'area_graves', type: 'text', matchType: ['fuzzy'] },
+            { name: 'plotName', label: 'שם חלקה', table: 'plots', type: 'text', matchType: ['fuzzy'] },
+            { name: 'graveType', label: 'סוג קבר', table: 'area_graves', type: 'select', matchType: ['exact'],
+              options: [
+                  { value: '1', label: 'שדה' },
+                  { value: '2', label: 'רוויה' },
+                  { value: '3', label: 'סנהדרין' }
+              ]
+            },
+            { name: 'status', label: 'סטטוס', table: 'area_graves', type: 'select', matchType: ['exact'],
+              options: [
+                  { value: 'available', label: 'פנוי' },
+                  { value: 'occupied', label: 'תפוס' },
+                  { value: 'reserved', label: 'שמור' }
+              ]
+            }
+        ],
+        
+        statsConfig: {
+            elements: {
+                'totalAreaGraves': 'total_area_graves',
+                'totalGraves': 'total_graves',
+                'newThisMonth': 'new_this_month'
+            },
+            parentParam: 'plotId'
+        },
+        
+        statuses: {
+            'available': { text: 'פנוי', color: '#10b981' },
+            'occupied': { text: 'תפוס', color: '#ef4444' },
+            'reserved': { text: 'שמור', color: '#f59e0b' }
+        }
+    },
+
+    // ===================================================================
+    // קברים (Graves)
+    // ===================================================================
+    grave: {
+        singular: 'קבר',
+        singularArticle: 'את הקבר',
+        plural: 'קברים',
+        
+        apiFile: 'graves-api.php',
+        apiEndpoint: '/dashboard/dashboards/cemeteries/api/graves-api.php',
+        
+        searchVar: 'graveSearch',
+        tableVar: 'gravesTable',
+        currentPageVar: 'gravesCurrentPage',
+        totalPagesVar: 'gravesTotalPages',
+        dataArrayVar: 'currentGraves',
+        isLoadingVar: 'gravesIsLoadingMore',
+        isSearchModeVar: 'gravesIsSearchMode',
+        currentQueryVar: 'gravesCurrentQuery',
+        searchResultsVar: 'gravesSearchResults',
+        
+        renderFunctionName: 'renderGravesRows',
+        loadFunctionName: 'loadGraves',
+        loadBrowseFunctionName: 'loadGravesBrowseData',
+        appendMoreFunctionName: 'appendMoreGraves',
+        
+        hasParent: true,
+        parentParam: 'areaGraveId',
+        parentFilterIdVar: 'gravesFilterAreaGraveId',
+        parentFilterNameVar: 'gravesFilterAreaGraveName',
+        defaultLimit: 200,
+        defaultOrderBy: 'createDate',
+        defaultSortDirection: 'DESC',
+        
+        columns: [
+            { field: 'graveNumber', label: 'מספר קבר', width: '12%' },
+            { field: 'graveName', label: 'שם קבר', width: '18%' },
+            { field: 'areaGraveName', label: 'אחוזת קבר', width: '15%' },
+            { field: 'rowNumber', label: 'שורה', width: '10%' },
+            { field: 'positionNumber', label: 'עמדה', width: '10%' },
+            { field: 'status', label: 'סטטוס', width: '10%', type: 'status' },
+            { field: 'actions', label: 'פעולות', width: '6%', type: 'actions' }
+        ],
+        
+        searchableFields: [
+            { name: 'graveNumber', label: 'מספר קבר', table: 'graves', type: 'text', matchType: ['exact', 'startsWith'] },
+            { name: 'graveName', label: 'שם קבר', table: 'graves', type: 'text', matchType: ['fuzzy'] },
+            { name: 'areaGraveName', label: 'שם אחוזת קבר', table: 'area_graves', type: 'text', matchType: ['fuzzy'] },
+            { name: 'rowNumber', label: 'שורה', table: 'graves', type: 'text', matchType: ['exact'] },
+            { name: 'status', label: 'סטטוס', table: 'graves', type: 'select', matchType: ['exact'],
+              options: [
+                  { value: 'available', label: 'פנוי' },
+                  { value: 'occupied', label: 'תפוס' },
+                  { value: 'reserved', label: 'שמור' }
+              ]
+            }
+        ],
+        
+        statsConfig: {
+            elements: {
+                'totalGraves': 'total_graves',
+                'occupiedGraves': 'occupied',
+                'newThisMonth': 'new_this_month'
+            },
+            parentParam: 'areaGraveId'
+        },
+        
+        statuses: {
+            'available': { text: 'פנוי', color: '#10b981' },
+            'occupied': { text: 'תפוס', color: '#ef4444' },
+            'reserved': { text: 'שמור', color: '#f59e0b' }
+        }
+    }
+};
+
+// ===================================================================
+// הפוך לגלובלי
+// ===================================================================
+window.ENTITY_CONFIG = ENTITY_CONFIG;
+
+console.log('✅ entity-config.js v2.0.0 - Loaded successfully!');
+console.log('📊 Configured entities:', Object.keys(ENTITY_CONFIG).join(', '));

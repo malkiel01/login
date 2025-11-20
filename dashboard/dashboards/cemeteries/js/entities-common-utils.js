@@ -15,45 +15,6 @@ console.log('🚀 entities-common-utils.js v1.0.0 - Loading...');
 // ===================================================================
 // קונפיג יישויות - טקסטים ו-endpoints
 // ===================================================================
-const ENTITY_CONFIG_OLD = {
-    purchase: {
-        singular: 'רכישה',
-        singularArticle: 'את הרכישה',
-        apiFile: 'purchases-api.php',
-        searchVar: 'purchaseSearch'
-    },
-    customer: {
-        singular: 'לקוח',
-        singularArticle: 'את הלקוח',
-        apiFile: 'customers-api.php',
-        searchVar: 'customerSearch'
-    },
-    burial: {
-        singular: 'קבורה',
-        singularArticle: 'את הקבורה',
-        apiFile: 'burials-api.php',
-        searchVar: 'burialSearch'
-    },
-    plot: {
-        singular: 'חלקה',
-        singularArticle: 'את החלקה',
-        apiFile: 'plots-api.php',
-        searchVar: 'plotSearch'
-    },
-    areaGrave: {
-        singular: 'אחוזת קבר',
-        singularArticle: 'את אחוזת הקבר',
-        apiFile: 'areaGraves-api.php',
-        searchVar: 'areaGraveSearch'
-    },
-    grave: {
-        singular: 'קבר',
-        singularArticle: 'את הקבר',
-        apiFile: 'graves-api.php',
-        searchVar: 'graveSearch'
-    }
-};
-
 const ENTITY_CONFIG = {
     purchase: {
         singular: 'רכישה',
@@ -65,7 +26,8 @@ const ENTITY_CONFIG = {
         currentPageVar: 'purchasesCurrentPage',        // 🆕
         totalPagesVar: 'purchasesTotalPages',          // 🆕
         dataArrayVar: 'currentPurchases',              // 🆕
-        isLoadingVar: 'purchasesIsLoadingMore'         // 🆕
+        isLoadingVar: 'purchasesIsLoadingMore',
+        renderFunctionName: 'renderPurchasesRows'
     },
     customer: {
         singular: 'לקוח',
@@ -77,7 +39,8 @@ const ENTITY_CONFIG = {
         currentPageVar: 'customersCurrentPage',
         totalPagesVar: 'customersTotalPages',
         dataArrayVar: 'currentCustomers',
-        isLoadingVar: 'customersIsLoadingMore'
+        isLoadingVar: 'customersIsLoadingMore',
+        renderFunctionName: 'renderCustomersRows'
     },
     burial: {
         singular: 'קבורה',
@@ -89,7 +52,8 @@ const ENTITY_CONFIG = {
         currentPageVar: 'burialsCurrentPage',
         totalPagesVar: 'burialsTotalPages',
         dataArrayVar: 'currentBurials',
-        isLoadingVar: 'burialsIsLoadingMore'
+        isLoadingVar: 'burialsIsLoadingMore',
+        renderFunctionName: 'renderBurialsRows'
     },
     plot: {
         singular: 'חלקה',
@@ -102,7 +66,8 @@ const ENTITY_CONFIG = {
         totalPagesVar: 'plotsTotalPages',
         dataArrayVar: 'currentPlots',
         isLoadingVar: 'plotsIsLoadingMore',
-        parentParam: 'blockId'                         // 🆕
+        parentParam: 'blockId',
+        renderFunctionName: 'renderPlotsRows'                        // 🆕
     },
     areaGrave: {
         singular: 'אחוזת קבר',
@@ -115,7 +80,8 @@ const ENTITY_CONFIG = {
         totalPagesVar: 'areaGravesTotalPages',
         dataArrayVar: 'currentAreaGraves',
         isLoadingVar: 'areaGravesIsLoadingMore',
-        parentParam: 'plotId'
+        parentParam: 'plotId',
+        renderFunctionName: 'renderAreaGravesRows'
     },
     grave: {
         singular: 'קבר',
@@ -128,9 +94,78 @@ const ENTITY_CONFIG = {
         totalPagesVar: 'gravesTotalPages',
         dataArrayVar: 'currentGraves',
         isLoadingVar: 'gravesIsLoadingMore',
-        parentParam: 'areaGraveId'
+        parentParam: 'areaGraveId',
+        renderFunctionName: 'renderGravesRows'
     }
 };
+
+// ===================================================================
+// 9️⃣ טעינת Browse Data גנרית
+// ===================================================================
+/**
+ * טוען נתוני Browse באופן גנרי (טעינה ראשונית)
+ * @param {string} entityType - סוג היישות (customer, purchase, burial, וכו')
+ * @param {AbortSignal|null} signal - signal לביטול
+ * @param {string|null} parentId - מזהה הורה (עבור plot/areaGrave/grave)
+ */
+async function genericLoadBrowseData(entityType, signal = null, parentId = null) {
+    const config = ENTITY_CONFIG[entityType];
+    
+    if (!config) {
+        console.error(`❌ Unknown entity type: ${entityType}`);
+        return;
+    }
+    
+    // איפוס משתני state
+    window[config.currentPageVar] = 1;
+    window[config.dataArrayVar] = [];
+    
+    try {
+        // בניית URL
+        let apiUrl = `/dashboard/dashboards/cemeteries/api/${config.apiFile}?action=list&limit=200&page=1`;
+        apiUrl += '&orderBy=createDate&sortDirection=DESC';
+        
+        // הוספת parent ID אם קיים
+        if (parentId && config.parentParam) {
+            apiUrl += `&${config.parentParam}=${parentId}`;
+        }
+        
+        // שליחת בקשה
+        const response = await fetch(apiUrl, { signal });
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            // עדכון נתונים
+            window[config.dataArrayVar] = result.data;
+            
+            // עדכון pagination
+            if (result.pagination) {
+                window[config.totalPagesVar] = result.pagination.pages;
+                window[config.currentPageVar] = result.pagination.page;
+            }
+            
+            // רינדור לטבלה
+            const tableBody = document.getElementById('tableBody');
+            if (tableBody) {
+                const renderFunctionName = config.renderFunctionName;
+                const renderFunction = window[renderFunctionName];
+                
+                if (typeof renderFunction === 'function') {
+                    await renderFunction(result.data, tableBody, result.pagination, signal);
+                } else {
+                    console.error(`❌ Render function not found: ${renderFunctionName}`);
+                }
+            }
+        }
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            console.log(`⚠️ ${entityType} browse data loading aborted - this is expected`);
+            return;
+        }
+        console.error(`❌ Error loading ${entityType} browse data:`, error);
+        showToast(`שגיאה בטעינת ${config.plural}`, 'error');
+    }
+}
 
 // ===================================================================
 // 6️⃣ טעינת סטטיסטיקות יישות - גלובלי

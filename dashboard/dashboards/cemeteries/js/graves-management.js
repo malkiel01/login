@@ -38,250 +38,250 @@ let gravesIsLoadingMore = false;
 
 
 
-// ===================================================================
-// טעינת אחוזות קבר (הפונקציה הראשית)
-// ===================================================================
-async function loadGravesBrowseData(areaGraveId = null, signal = null) {
-    gravesCurrentPage = 1;
-    currentGraves = [];
+// // ===================================================================
+// // טעינת אחוזות קבר (הפונקציה הראשית)
+// // ===================================================================
+// async function loadGravesBrowseData(areaGraveId = null, signal = null) {
+//     gravesCurrentPage = 1;
+//     currentGraves = [];
     
-    let apiUrl = '/dashboard/dashboards/cemeteries/api/graves-api.php?action=list&limit=200&page=1';
-    apiUrl += '&orderBy=createDate&sortDirection=DESC';
+//     let apiUrl = '/dashboard/dashboards/cemeteries/api/graves-api.php?action=list&limit=200&page=1';
+//     apiUrl += '&orderBy=createDate&sortDirection=DESC';
     
-    if (areaGraveId) {
-        apiUrl += `&areaGraveId=${areaGraveId}`;
-    }
+//     if (areaGraveId) {
+//         apiUrl += `&areaGraveId=${areaGraveId}`;
+//     }
     
-    const response = await fetch(apiUrl, { signal });
-    const result = await response.json();
+//     const response = await fetch(apiUrl, { signal });
+//     const result = await response.json();
     
-    if (result.success && result.data) {
-        currentGraves = result.data;
+//     if (result.success && result.data) {
+//         currentGraves = result.data;
         
-        if (result.pagination) {
-            gravesTotalPages = result.pagination.pages;
-            gravesCurrentPage = result.pagination.page;
-        }
+//         if (result.pagination) {
+//             gravesTotalPages = result.pagination.pages;
+//             gravesCurrentPage = result.pagination.page;
+//         }
         
-        const tableBody = document.getElementById('tableBody');
-        if (tableBody) {
-            renderGravesRows(result.data, tableBody, result.pagination, signal);
-        }
-    }
-}
+//         const tableBody = document.getElementById('tableBody');
+//         if (tableBody) {
+//             renderGravesRows(result.data, tableBody, result.pagination, signal);
+//         }
+//     }
+// }
 
-async function loadGraves(areaGraveId = null, areaGraveName = null, forceReset = false) {
-    const signal = OperationManager.start('grave');
+// async function loadGraves(areaGraveId = null, areaGraveName = null, forceReset = false) {
+//     const signal = OperationManager.start('grave');
 
-    // ⭐ איפוס מצב חיפוש
-    gravesIsSearchMode = false;
-    gravesCurrentQuery = '';
-    gravesSearchResults = [];
+//     // ⭐ איפוס מצב חיפוש
+//     gravesIsSearchMode = false;
+//     gravesCurrentQuery = '';
+//     gravesSearchResults = [];
 
-    // ⭐ לוגיקת סינון
-    if (areaGraveId === null && areaGraveName === null && !forceReset) {
-        if (window.currentAreaGraveId !== null || gravesFilterAreaGraveId !== null) {
-            gravesFilterAreaGraveId = null;
-            gravesFilterAreaGraveName = null;
-            window.currentAreaGraveId = null;
-            window.currentAreaGraveName = null;
-        }
-    } else if (forceReset) {
-        gravesFilterAreaGraveId = null;
-        gravesFilterAreaGraveName = null;
-        window.currentAreaGraveId = null;
-        window.currentAreaGraveName = null;
-    } else {
-        gravesFilterAreaGraveId = areaGraveId;
-        gravesFilterAreaGraveName = areaGraveName;
-        window.currentAreaGraveId = areaGraveId;
-        window.currentAreaGraveName = areaGraveName;
-    }
+//     // ⭐ לוגיקת סינון
+//     if (areaGraveId === null && areaGraveName === null && !forceReset) {
+//         if (window.currentAreaGraveId !== null || gravesFilterAreaGraveId !== null) {
+//             gravesFilterAreaGraveId = null;
+//             gravesFilterAreaGraveName = null;
+//             window.currentAreaGraveId = null;
+//             window.currentAreaGraveName = null;
+//         }
+//     } else if (forceReset) {
+//         gravesFilterAreaGraveId = null;
+//         gravesFilterAreaGraveName = null;
+//         window.currentAreaGraveId = null;
+//         window.currentAreaGraveName = null;
+//     } else {
+//         gravesFilterAreaGraveId = areaGraveId;
+//         gravesFilterAreaGraveName = areaGraveName;
+//         window.currentAreaGraveId = areaGraveId;
+//         window.currentAreaGraveName = areaGraveName;
+//     }
     
-    window.currentAreaGraveId = gravesFilterAreaGraveId;
-    window.currentAreaGraveName = gravesFilterAreaGraveName;
+//     window.currentAreaGraveId = gravesFilterAreaGraveId;
+//     window.currentAreaGraveName = gravesFilterAreaGraveName;
     
-    // עדכן את הסוג הנוכחי
-    window.currentType = 'grave';
-    window.currentParentId = areaGraveId;
+//     // עדכן את הסוג הנוכחי
+//     window.currentType = 'grave';
+//     window.currentParentId = areaGraveId;
 
-    // ⭐ עדכן גם את tableRenderer.currentType!
-    if (window.tableRenderer) {
-        window.tableRenderer.currentType = 'grave';
-    }
+//     // ⭐ עדכן גם את tableRenderer.currentType!
+//     if (window.tableRenderer) {
+//         window.tableRenderer.currentType = 'grave';
+//     }
     
-    // ⭐ נקה
-    if (typeof DashboardCleaner !== 'undefined') {
-        DashboardCleaner.clear({ targetLevel: 'grave' });
-    } else if (typeof clearDashboard === 'function') {
-        clearDashboard({ targetLevel: 'grave' });
-    }
+//     // ⭐ נקה
+//     if (typeof DashboardCleaner !== 'undefined') {
+//         DashboardCleaner.clear({ targetLevel: 'grave' });
+//     } else if (typeof clearDashboard === 'function') {
+//         clearDashboard({ targetLevel: 'grave' });
+//     }
     
-    if (typeof clearAllSidebarSelections === 'function') {
-        clearAllSidebarSelections();
-    }
+//     if (typeof clearAllSidebarSelections === 'function') {
+//         clearAllSidebarSelections();
+//     }
 
-    // עדכון פריט תפריט אקטיבי
-    if (typeof setActiveMenuItem === 'function') {
-        setActiveMenuItem('gravesItem');
-    }
+//     // עדכון פריט תפריט אקטיבי
+//     if (typeof setActiveMenuItem === 'function') {
+//         setActiveMenuItem('gravesItem');
+//     }
     
-    if (typeof updateAddButtonText === 'function') {
-        updateAddButtonText();
-    }
+//     if (typeof updateAddButtonText === 'function') {
+//         updateAddButtonText();
+//     }
     
-    // עדכן breadcrumb
-    if (typeof updateBreadcrumb === 'function') {
-        const breadcrumbData = { 
-            grave: { name: areaGraveName ? `אחוזות קבר של ${areaGraveName}` : 'אחוזות קבר' }
-        };
-        if (areaGraveId && areaGraveName) {
-            breadcrumbData.areaGrave = { id: areaGraveId, name: areaGraveName };
-        }
-        updateBreadcrumb(breadcrumbData);
-    }
+//     // עדכן breadcrumb
+//     if (typeof updateBreadcrumb === 'function') {
+//         const breadcrumbData = { 
+//             grave: { name: areaGraveName ? `אחוזות קבר של ${areaGraveName}` : 'אחוזות קבר' }
+//         };
+//         if (areaGraveId && areaGraveName) {
+//             breadcrumbData.areaGrave = { id: areaGraveId, name: areaGraveName };
+//         }
+//         updateBreadcrumb(breadcrumbData);
+//     }
     
-    // עדכון כותרת החלון
-    document.title = areaGraveName ? `אחוזות קבר - ${areaGraveName}` : 'ניהול אחוזות קבר - מערכת בתי עלמין';
+//     // עדכון כותרת החלון
+//     document.title = areaGraveName ? `אחוזות קבר - ${areaGraveName}` : 'ניהול אחוזות קבר - מערכת בתי עלמין';
     
-    // ⭐ בנה מבנה
-    await buildGravesContainer(signal, areaGraveId, areaGraveName);
+//     // ⭐ בנה מבנה
+//     await buildGravesContainer(signal, areaGraveId, areaGraveName);
     
-    if (OperationManager.shouldAbort('grave')) {
-        return;
-    }
+//     if (OperationManager.shouldAbort('grave')) {
+//         return;
+//     }
 
-    // ⭐ ספירת טעינות גלובלית
-    if (!window.gravesLoadCounter) {
-        window.gravesLoadCounter = 0;
-    }
-    window.gravesLoadCounter++;
+//     // ⭐ ספירת טעינות גלובלית
+//     if (!window.gravesLoadCounter) {
+//         window.gravesLoadCounter = 0;
+//     }
+//     window.gravesLoadCounter++;
     
-    // השמד חיפוש קודם
-    if (graveSearch && typeof graveSearch.destroy === 'function') {
-        console.log('🗑️ Destroying previous graveSearch instance...');
-        graveSearch.destroy();
-        graveSearch = null; 
-        window.graveSearch = null;
-    }
+//     // השמד חיפוש קודם
+//     if (graveSearch && typeof graveSearch.destroy === 'function') {
+//         console.log('🗑️ Destroying previous graveSearch instance...');
+//         graveSearch.destroy();
+//         graveSearch = null; 
+//         window.graveSearch = null;
+//     }
     
-    // ⭐ אתחול UniversalSearch - פעם אחת!
-    console.log('🆕 Creating fresh graveSearch instance...');
-    graveSearch = await initGravesSearch(signal, areaGraveId);
+//     // ⭐ אתחול UniversalSearch - פעם אחת!
+//     console.log('🆕 Creating fresh graveSearch instance...');
+//     graveSearch = await initGravesSearch(signal, areaGraveId);
     
-    if (OperationManager.shouldAbort('grave')) {
-        console.log('⚠️ Grave operation aborted');
-        return;
-    }
+//     if (OperationManager.shouldAbort('grave')) {
+//         console.log('⚠️ Grave operation aborted');
+//         return;
+//     }
 
-    // ⭐ טעינה ישירה (Browse Mode) - פעם אחת!
-    await loadGravesBrowseData(areaGraveId, signal);
+//     // ⭐ טעינה ישירה (Browse Mode) - פעם אחת!
+//     await loadGravesBrowseData(areaGraveId, signal);
     
-    // טען סטטיסטיקות
-    await loadGraveStats(signal, areaGraveId);
-}
+//     // טען סטטיסטיקות
+//     await loadGraveStats(signal, areaGraveId);
+// }
 
 
-// ===================================================================
-// 📥 טעינת עוד אחוזות קבר (Infinite Scroll)
-// ===================================================================
-async function appendMoreGraves() {
-    // בדיקות בסיסיות
-    if (gravesIsLoadingMore) {
-        return false;
-    }
+// // ===================================================================
+// // 📥 טעינת עוד אחוזות קבר (Infinite Scroll)
+// // ===================================================================
+// async function appendMoreGraves() {
+//     // בדיקות בסיסיות
+//     if (gravesIsLoadingMore) {
+//         return false;
+//     }
     
-    if (gravesCurrentPage >= gravesTotalPages) {
-        return false;
-    }
+//     if (gravesCurrentPage >= gravesTotalPages) {
+//         return false;
+//     }
     
-    gravesIsLoadingMore = true;
-    const nextPage = gravesCurrentPage + 1;
+//     gravesIsLoadingMore = true;
+//     const nextPage = gravesCurrentPage + 1;
     
-    // ⭐ עדכון מונה טעינות
-    if (!window.gravesLoadCounter) {
-        window.gravesLoadCounter = 0; 
-    }
-    window.gravesLoadCounter++;
+//     // ⭐ עדכון מונה טעינות
+//     if (!window.gravesLoadCounter) {
+//         window.gravesLoadCounter = 0; 
+//     }
+//     window.gravesLoadCounter++;
     
-    try {
-        // בנה URL לעמוד הבא
-        let apiUrl = `/dashboard/dashboards/cemeteries/api/graves-api.php?action=list&limit=200&page=${nextPage}`;
-        apiUrl += '&orderBy=createDate&sortDirection=DESC';
+//     try {
+//         // בנה URL לעמוד הבא
+//         let apiUrl = `/dashboard/dashboards/cemeteries/api/graves-api.php?action=list&limit=200&page=${nextPage}`;
+//         apiUrl += '&orderBy=createDate&sortDirection=DESC';
         
-        if (gravesFilterAreaGraveId) {
-            apiUrl += `&areaGraveId=${gravesFilterAreaGraveId}`;
-        }
+//         if (gravesFilterAreaGraveId) {
+//             apiUrl += `&areaGraveId=${gravesFilterAreaGraveId}`;
+//         }
         
-        // שלח בקשה
-        const response = await fetch(apiUrl);
+//         // שלח בקשה
+//         const response = await fetch(apiUrl);
         
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+//         if (!response.ok) {
+//             throw new Error(`HTTP error! status: ${response.status}`);
+//         }
         
-        const result = await response.json();
+//         const result = await response.json();
         
-        if (result.success && result.data && result.data.length > 0) {
-            // ⭐ שמור את הגודל הקודם לפני ההוספה
-            const previousTotal = currentGraves.length;
+//         if (result.success && result.data && result.data.length > 0) {
+//             // ⭐ שמור את הגודל הקודם לפני ההוספה
+//             const previousTotal = currentGraves.length;
             
-            // ⭐ הוסף לנתונים הקיימים
-            currentGraves = [...currentGraves, ...result.data];
-            gravesCurrentPage = nextPage;
+//             // ⭐ הוסף לנתונים הקיימים
+//             currentGraves = [...currentGraves, ...result.data];
+//             gravesCurrentPage = nextPage;
             
-            // ⭐⭐⭐ לוג פשוט ומסודר
-            console.log(`
-╔════════════════════════════════════════════════════════════════════
-║ טעינה: ${window.gravesLoadCounter}
-╠════════════════════════════════════════════════════════════════════
-║ כמות ערכים בטעינה: ${result.data.length}
-║ מספר ערך תחילת טעינה נוכחית: ${result.debug?.results_info?.from_index || (previousTotal + 1)}
-║ מספר ערך סוף טעינה נוכחית: ${result.debug?.results_info?.to_index || currentGraves.length}
-║ סך כל הערכים שנטענו עד כה: ${currentGraves.length}
-║ שדה למיון: ${result.debug?.sql_info?.order_field || 'createDate'}
-║ סוג מיון: ${result.debug?.sql_info?.sort_direction || 'DESC'}
-╠════════════════════════════════════════════════════════════════════
-║ הערכים שנטענו כעת:
-╚════════════════════════════════════════════════════════════════════
-            `);
-            console.table(result.data.map((item, idx) => ({
-                '#': previousTotal + idx + 1,
-                'unicId': item.unicId,
-                'שם': item.graveNameHe,
-                'קואורדינטות': item.coordinates || '-',
-                'תאריך יצירה': item.createDate
-            })));
+//             // ⭐⭐⭐ לוג פשוט ומסודר
+//             console.log(`
+// ╔════════════════════════════════════════════════════════════════════
+// ║ טעינה: ${window.gravesLoadCounter}
+// ╠════════════════════════════════════════════════════════════════════
+// ║ כמות ערכים בטעינה: ${result.data.length}
+// ║ מספר ערך תחילת טעינה נוכחית: ${result.debug?.results_info?.from_index || (previousTotal + 1)}
+// ║ מספר ערך סוף טעינה נוכחית: ${result.debug?.results_info?.to_index || currentGraves.length}
+// ║ סך כל הערכים שנטענו עד כה: ${currentGraves.length}
+// ║ שדה למיון: ${result.debug?.sql_info?.order_field || 'createDate'}
+// ║ סוג מיון: ${result.debug?.sql_info?.sort_direction || 'DESC'}
+// ╠════════════════════════════════════════════════════════════════════
+// ║ הערכים שנטענו כעת:
+// ╚════════════════════════════════════════════════════════════════════
+//             `);
+//             console.table(result.data.map((item, idx) => ({
+//                 '#': previousTotal + idx + 1,
+//                 'unicId': item.unicId,
+//                 'שם': item.graveNameHe,
+//                 'קואורדינטות': item.coordinates || '-',
+//                 'תאריך יצירה': item.createDate
+//             })));
             
-            console.log(`
-╔════════════════════════════════════════════════════════════════════
-║ הערכים שנטענו עד כה (סה"כ):
-╚════════════════════════════════════════════════════════════════════
-            `);
-            console.table(currentGraves.map((item, idx) => ({
-                '#': idx + 1,
-                'unicId': item.unicId,
-                'שם': item.graveNameHe
-            })));
+//             console.log(`
+// ╔════════════════════════════════════════════════════════════════════
+// ║ הערכים שנטענו עד כה (סה"כ):
+// ╚════════════════════════════════════════════════════════════════════
+//             `);
+//             console.table(currentGraves.map((item, idx) => ({
+//                 '#': idx + 1,
+//                 'unicId': item.unicId,
+//                 'שם': item.graveNameHe
+//             })));
             
-            // ⭐ עדכן את הטבלה
-            if (gravesTable) {
-                gravesTable.setData(currentGraves);
-            }
+//             // ⭐ עדכן את הטבלה
+//             if (gravesTable) {
+//                 gravesTable.setData(currentGraves);
+//             }
             
-            return true;
-        } else {
-            return false;
-        }
+//             return true;
+//         } else {
+//             return false;
+//         }
         
-    } catch (error) {
-        console.error('❌ Error loading more data:', error);
-        showToast('שגיאה בטעינת נתונים נוספים: ' + error.message, 'error');
-        return false;
-    } finally {
-        gravesIsLoadingMore = false;
-    }
-}
+//     } catch (error) {
+//         console.error('❌ Error loading more data:', error);
+//         showToast('שגיאה בטעינת נתונים נוספים: ' + error.message, 'error');
+//         return false;
+//     } finally {
+//         gravesIsLoadingMore = false;
+//     }
+// }
 
 
 // ===================================================================
@@ -850,13 +850,13 @@ function renderGravesRows(data, container, pagination = null, signal = null) {
     }
 }
 
-// ===================================================================
-// הפנייה לפונקציות גלובליות
-// ===================================================================
+// // ===================================================================
+// // הפנייה לפונקציות גלובליות
+// // ===================================================================
 
-function checkGravesScrollStatus() {
-    checkEntityScrollStatus(gravesTable, 'Graves');
-}
+// function checkGravesScrollStatus() {
+//     checkEntityScrollStatus(gravesTable, 'Graves');
+// }
 
 // ===================================================================
 // פונקציית עזר לשם סוג קבר
@@ -871,12 +871,12 @@ function getGraveStatusInfo(status) {
     return statuses[status] || { label: 'לא מוגדר', color: '#9ca3af' };
 }
 
-// ===================================================================
-// טעינת סטטיסטיקות
-// ===================================================================
-async function loadGraveStats(signal, areaGraveId = null) {
-    await loadEntityStats('grave', signal, areaGraveId);
-}
+// // ===================================================================
+// // טעינת סטטיסטיקות
+// // ===================================================================
+// async function loadGraveStats(signal, areaGraveId = null) {
+//     await loadEntityStats('grave', signal, areaGraveId);
+// }
 
 
 // ===================================================================
@@ -886,12 +886,12 @@ async function deleteGrave(graveId) {
     await deleteEntity('grave', graveId);
 }
 
-// ===================================================================
-// רענון נתונים
-// ===================================================================
-async function refreshGravesData() {
-    await refreshEntityData('grave');
-}
+// // ===================================================================
+// // רענון נתונים
+// // ===================================================================
+// async function refreshGravesData() {
+//     await refreshEntityData('grave');
+// }
 
 // ===================================================================
 // דאבל-קליק על אחוזת קבר
@@ -924,17 +924,17 @@ window.handleGraveDoubleClick = handleGraveDoubleClick;
 // ===================================================================
 // הפוך לגלובלי
 // ===================================================================
-window.loadGraves = loadGraves;
+// window.loadGraves = loadGraves;
 
-window.appendMoreGraves = appendMoreGraves;
+// window.appendMoreGraves = appendMoreGraves;
 
-window.deleteGrave = deleteGrave;
+// window.deleteGrave = deleteGrave;
 
-window.refreshGravesData = refreshGravesData;
+// window.refreshGravesData = refreshGravesData;
 
 window.gravesTable = gravesTable;
 
-window.checkGravesScrollStatus = checkGravesScrollStatus;
+// window.checkGravesScrollStatus = checkGravesScrollStatus;
 
 window.gravesFilterAreaGraveId = gravesFilterAreaGraveId;
 

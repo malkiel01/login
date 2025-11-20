@@ -324,82 +324,6 @@ const ENTITY_CONFIG = {
     // ===================================================================
     // אחוזות קבר (Area Graves)
     // ===================================================================
-    // areaGrave: {
-    //     singular: 'אחוזת קבר',
-    //     singularArticle: 'את אחוזת הקבר',
-    //     plural: 'אחוזות קבר',
-        
-    //     apiFile: 'areaGraves-api.php',
-    //     apiEndpoint: '/dashboard/dashboards/cemeteries/api/areaGraves-api.php',
-        
-    //     searchVar: 'areaGraveSearch',
-    //     tableVar: 'areaGravesTable',
-    //     currentPageVar: 'areaGravesCurrentPage',
-    //     totalPagesVar: 'areaGravesTotalPages',
-    //     dataArrayVar: 'currentAreaGraves',
-    //     isLoadingVar: 'areaGravesIsLoadingMore',
-    //     isSearchModeVar: 'areaGravesIsSearchMode',
-    //     currentQueryVar: 'areaGravesCurrentQuery',
-    //     searchResultsVar: 'areaGravesSearchResults',
-        
-    //     renderFunctionName: 'renderAreaGravesRows',
-    //     loadFunctionName: 'loadAreaGraves',
-    //     loadBrowseFunctionName: 'loadAreaGravesBrowseData',
-    //     appendMoreFunctionName: 'appendMoreAreaGraves',
-        
-    //     hasParent: true,
-    //     parentParam: 'plotId',
-    //     parentFilterIdVar: 'areaGravesFilterPlotId',
-    //     parentFilterNameVar: 'areaGravesFilterPlotName',
-    //     defaultLimit: 200,
-    //     defaultOrderBy: 'createDate',
-    //     defaultSortDirection: 'DESC',
-        
-    //     columns: [
-    //         { field: 'areaGraveNumber', label: 'מספר אחוזה', width: '12%' },
-    //         { field: 'areaGraveName', label: 'שם אחוזה', width: '18%' },
-    //         { field: 'plotName', label: 'חלקה', width: '15%' },
-    //         { field: 'graveType', label: 'סוג קבר', width: '12%', type: 'enum' },
-    //         { field: 'totalGraves', label: 'קברים', width: '10%' },
-    //         { field: 'status', label: 'סטטוס', width: '10%', type: 'status' },
-    //         { field: 'actions', label: 'פעולות', width: '6%', type: 'actions' }
-    //     ],
-        
-    //     searchableFields: [
-    //         { name: 'areaGraveNumber', label: 'מספר אחוזה', table: 'area_graves', type: 'text', matchType: ['exact', 'startsWith'] },
-    //         { name: 'areaGraveName', label: 'שם אחוזה', table: 'area_graves', type: 'text', matchType: ['fuzzy'] },
-    //         { name: 'plotName', label: 'שם חלקה', table: 'plots', type: 'text', matchType: ['fuzzy'] },
-    //         { name: 'graveType', label: 'סוג קבר', table: 'area_graves', type: 'select', matchType: ['exact'],
-    //           options: [
-    //               { value: '1', label: 'שדה' },
-    //               { value: '2', label: 'רוויה' },
-    //               { value: '3', label: 'סנהדרין' }
-    //           ]
-    //         },
-    //         { name: 'status', label: 'סטטוס', table: 'area_graves', type: 'select', matchType: ['exact'],
-    //           options: [
-    //               { value: 'available', label: 'פנוי' },
-    //               { value: 'occupied', label: 'תפוס' },
-    //               { value: 'reserved', label: 'שמור' }
-    //           ]
-    //         }
-    //     ],
-        
-    //     statsConfig: {
-    //         elements: {
-    //             'totalAreaGraves': 'total_area_graves',
-    //             'totalGraves': 'total_graves',
-    //             'newThisMonth': 'new_this_month'
-    //         },
-    //         parentParam: 'plotId'
-    //     },
-        
-    //     statuses: {
-    //         'available': { text: 'פנוי', color: '#10b981' },
-    //         'occupied': { text: 'תפוס', color: '#ef4444' },
-    //         'reserved': { text: 'שמור', color: '#f59e0b' }
-    //     }
-    // },
     'areaGrave': {
         singular: 'אחוזת קבר',
         singularArticle: 'את אחוזת הקבר',
@@ -500,68 +424,80 @@ const ENTITY_CONFIG = {
         apiFile: 'graves-api.php',
         apiEndpoint: '/dashboard/dashboards/cemeteries/api/graves-api.php',
         
-        searchVar: 'graveSearch',
-        tableVar: 'gravesTable',
-        currentPageVar: 'gravesCurrentPage',
-        totalPagesVar: 'gravesTotalPages',
-        dataArrayVar: 'currentGraves',
-        isLoadingVar: 'gravesIsLoadingMore',
-        isSearchModeVar: 'gravesIsSearchMode',
-        currentQueryVar: 'gravesCurrentQuery',
-        searchResultsVar: 'gravesSearchResults',
-        
-        renderFunctionName: 'renderGravesRows',
-        loadFunctionName: 'loadGraves',
-        loadBrowseFunctionName: 'loadGravesBrowseData',
-        appendMoreFunctionName: 'appendMoreGraves',
+        idField: 'unicId',
+        nameField: 'graveNameHe',
         
         hasParent: true,
         parentParam: 'areaGraveId',
-        parentFilterIdVar: 'gravesFilterAreaGraveId',
-        parentFilterNameVar: 'gravesFilterAreaGraveName',
+        
         defaultLimit: 200,
-        defaultOrderBy: 'createDate',
+        defaultSort: 'createDate',
         defaultSortDirection: 'DESC',
         
-        columns: [
-            { field: 'graveNumber', label: 'מספר קבר', width: '12%' },
-            { field: 'graveName', label: 'שם קבר', width: '18%' },
-            { field: 'areaGraveName', label: 'אחוזת קבר', width: '15%' },
-            { field: 'rowNumber', label: 'שורה', width: '10%' },
-            { field: 'positionNumber', label: 'עמדה', width: '10%' },
-            { field: 'status', label: 'סטטוס', width: '10%', type: 'status' },
-            { field: 'actions', label: 'פעולות', width: '6%', type: 'actions' }
+        searchableFields: [
+            'graveNameHe',
+            'area_grave_name',
+            'comments'
         ],
         
-        searchableFields: [
-            { name: 'graveNumber', label: 'מספר קבר', table: 'graves', type: 'text', matchType: ['exact', 'startsWith'] },
-            { name: 'graveName', label: 'שם קבר', table: 'graves', type: 'text', matchType: ['fuzzy'] },
-            { name: 'areaGraveName', label: 'שם אחוזת קבר', table: 'area_graves', type: 'text', matchType: ['fuzzy'] },
-            { name: 'rowNumber', label: 'שורה', table: 'graves', type: 'text', matchType: ['exact'] },
-            { name: 'status', label: 'סטטוס', table: 'graves', type: 'select', matchType: ['exact'],
-              options: [
-                  { value: 'available', label: 'פנוי' },
-                  { value: 'occupied', label: 'תפוס' },
-                  { value: 'reserved', label: 'שמור' }
-              ]
+        columns: [
+            { 
+                field: 'graveNameHe', 
+                label: 'שם קבר', 
+                type: 'link',
+                width: '200px',
+                sortable: true
+            },
+            { 
+                field: 'area_grave_name', 
+                label: 'אחוזת קבר', 
+                type: 'text',
+                width: '180px',
+                sortable: true
+            },
+            { 
+                field: 'plotType', 
+                label: 'סוג חלקה', 
+                type: 'plotType',
+                width: '120px',
+                sortable: true
+            },
+            { 
+                field: 'graveStatus', 
+                label: 'סטטוס', 
+                type: 'graveStatus',
+                width: '110px',
+                sortable: true
+            },
+            { 
+                field: 'createDate', 
+                label: 'תאריך יצירה', 
+                type: 'date',
+                width: '120px',
+                sortable: true
+            },
+            { 
+                field: 'actions', 
+                label: 'פעולות', 
+                type: 'actions',
+                width: '120px',
+                sortable: false
             }
         ],
         
         statsConfig: {
+            endpoint: '/dashboard/dashboards/cemeteries/api/graves-api.php?action=stats',
             elements: {
-                'totalGraves': 'total_graves',
-                'occupiedGraves': 'occupied',
-                'newThisMonth': 'new_this_month'
+                'gravesTotalCount': 'total_graves',
+                'gravesAvailable': 'available',
+                'gravesPurchased': 'purchased',
+                'gravesBuried': 'buried',
+                'gravesReserved': 'reserved',
+                'gravesNewThisMonth': 'new_this_month'
             },
             parentParam: 'areaGraveId'
-        },
-        
-        statuses: {
-            'available': { text: 'פנוי', color: '#10b981' },
-            'occupied': { text: 'תפוס', color: '#ef4444' },
-            'reserved': { text: 'שמור', color: '#f59e0b' }
         }
-    }
+    },
 };
 
 // ===================================================================

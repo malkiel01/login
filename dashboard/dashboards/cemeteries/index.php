@@ -144,28 +144,34 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
             </main>
         </div>
     </div>
-     
-    <!-- JavaScript Files - כולל הקובץ החדש לרספונסיביות -->
 
-    <!-- קודם: UniversalSearch (הבסיס) -->
+    <!-- JavaScript Files - סדר קריטי! -->
+
+    <!-- 1️⃣ בסיס -->
     <script src="/dashboard/dashboards/cemeteries/js/universal-search.js"></script>
-
     <script src="/dashboard/dashboards/cemeteries/js/breadcrumb.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/main.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/sidebar-counts.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/clearDashboard.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/table-manager.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/universal-search-init.js"></script>
-    <!-- מערכת טפסים חדשה -->
+
+    <!-- 2️⃣ מערכת טפסים -->
     <script src="/dashboard/dashboards/cemeteries/forms/FormValidations.js"></script>
     <script src="/dashboard/dashboards/cemeteries/forms/payment-display-manager.js"></script>
     <script src="/dashboard/dashboards/cemeteries/forms/form-handler.js"></script>
+
+    <!-- 3️⃣ כרטיסים -->
     <script src="/dashboard/dashboards/cemeteries/js/hierarchy-cards.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/cards.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/responsive.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/unified-table-renderer.js"></script>
 
-    <!-- טען את המערכת החדשה לפני הישנה -->
+    <!-- 4️⃣ OperationManager ו-Utilities (קריטי - לפני המערכת החדשה!) -->
+    <script src="/dashboard/dashboards/cemeteries/js/operation-manager.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/entities-common-utils.js"></script>
+
+    <!-- 5️⃣ 🆕 המערכת החדשה - Entity Framework (אחרי הכל!) -->
     <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-config.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-state-manager.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-loader.js"></script>
@@ -173,9 +179,7 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-manager.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-initializer.js"></script>
 
-
-    <script src="/dashboard/dashboards/cemeteries/js/operation-manager.js"></script>
-    <script src="/dashboard/dashboards/cemeteries/js/entities-common-utils.js"></script>
+    <!-- 6️⃣ הקבצים הישנים (יישארו כ-fallback) -->
     <script src="/dashboard/dashboards/cemeteries/js/cemeteries-management.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/blocks-management.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/plots-management.js"></script>
@@ -191,9 +195,87 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
 
     <script src="/dashboard/dashboards/cemeteries/js/live-search.js"></script>
 
-    <!-- הוסף את זה: -->
+    <!-- 7️⃣ אתחול -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            initDashboard();
+            if (typeof initializeEntityItems === 'function') {
+                initializeEntityItems();
+            }
+            if (typeof handleTableResponsive === 'function') {
+                handleTableResponsive();
+            }
+        });
+    </script>
 
     <script>
+        window.PAYMENT_TYPES_CONFIG = <?php echo json_encode($paymentTypesConfig['payment_types']); ?>;
+    </script>
+    <script src="/dashboard/dashboards/cemeteries/js/smart-select.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+     
+    <!-- JavaScript Files - כולל הקובץ החדש לרספונסיביות -->
+
+    <!-- קודם: UniversalSearch (הבסיס) -->
+    <!-- <script src="/dashboard/dashboards/cemeteries/js/universal-search.js"></script>
+
+    <script src="/dashboard/dashboards/cemeteries/js/breadcrumb.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/main.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/sidebar-counts.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/clearDashboard.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/table-manager.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/universal-search-init.js"></script> -->
+    <!-- מערכת טפסים חדשה -->
+    <!-- <script src="/dashboard/dashboards/cemeteries/forms/FormValidations.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/forms/payment-display-manager.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/forms/form-handler.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/hierarchy-cards.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/cards.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/responsive.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/unified-table-renderer.js"></script> -->
+
+    <!-- טען את המערכת החדשה לפני הישנה -->
+    <!-- <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-config.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-state-manager.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-loader.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-renderer.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-manager.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-initializer.js"></script> -->
+
+
+    <!-- <script src="/dashboard/dashboards/cemeteries/js/operation-manager.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/entities-common-utils.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/cemeteries-management.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/blocks-management.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/plots-management.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/area-graves-management.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/graves-management.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/customers-management.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/purchases-management.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/burials-management.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/payments-management.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/residency-management.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/countries-management.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/cities-management.js"></script>
+
+    <script src="/dashboard/dashboards/cemeteries/js/live-search.js"></script> -->
+
+    <!-- הוסף את זה: -->
+
+    <!-- <script>
         // Initialize dashboard on load
         document.addEventListener('DOMContentLoaded', function() {
             initDashboard();
@@ -205,12 +287,12 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
                 handleTableResponsive();
             }
         });
-    </script>
+    </script> -->
 
-    <script>
+    <!-- <script>
         // העבר את הקונפיג ל-JavaScript
-        window.PAYMENT_TYPES_CONFIG = <?php echo json_encode($paymentTypesConfig['payment_types']); ?>;
-    </script>
-    <script src="/dashboard/dashboards/cemeteries/js/smart-select.js"></script>
+        window.PAYMENT_TYPES_CONFIG = < ?php echo json_encode($paymentTypesConfig['payment_types']); ?>;
+    </script> -->
+    <!-- <script src="/dashboard/dashboards/cemeteries/js/smart-select.js"></script> -->
 </body>
 </html>

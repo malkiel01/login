@@ -451,7 +451,7 @@ class EntityRenderer {
                     }
                     return value || '-';
                 };
-            } else if (col.type === 'link') {
+            } else if (col.type === 'link2') {
                 columnDef.render = (row) => {
                     const value = row[col.field];
                     const idField = this.getIdField(entityType);
@@ -463,6 +463,23 @@ class EntityRenderer {
                         ${displayName}
                     </a>`;
                 };
+
+            } else if (col.type === 'link') {
+                columnDef.render = (row) => {
+                    const idField = this.getIdField(entityType);
+                    const nameField = config.nameField || col.field;
+                    const entityId = row[idField];
+                    const entityName = row[nameField] || row[col.field];
+                    
+                    // escape של תווים מיוחדים
+                    const escapedName = (entityName || '').replace(/'/g, "\\'");
+                    
+                    return `<a href="#" 
+                            onclick="EntityRenderer.handleDoubleClick('${entityType}', '${entityId}', '${escapedName}'); return false;" 
+                            style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                        ${entityName || '-'}
+                    </a>`;
+                }    
             } else if (col.type === 'badge') {
                 columnDef.render = (row) => {
                     const value = row[col.field] || 0;
@@ -631,27 +648,59 @@ class EntityRenderer {
         }
     }
 
+    // /**
+    //  * טיפול בדאבל-קליק על שורה
+    //  * @param {string} entityType - סוג היישות
+    //  * @param {Object} row - נתוני השורה
+    //  */
+    // static handleDoubleClick(entityType, row) {
+    //     const config = ENTITY_CONFIG[entityType];
+    //     const idField = this.getIdField(entityType);
+    //     const entityId = row[idField];
+        
+    //     console.log(`🖱️ Double-click on ${entityType}:`, entityId);
+        
+    //     // קריאה לפונקציית handler ספציפית אם קיימת
+    //     const handlerName = `handle${this.capitalize(entityType)}DoubleClick`;
+    //     if (typeof window[handlerName] === 'function') {
+    //         window[handlerName](entityId, row.name || row[`${entityType}Name`]);
+    //     } else {
+    //         // ברירת מחדל - פתיחת כרטיס
+    //         this.openCard(entityType, entityId);
+    //     }
+    // }
     /**
-     * טיפול בדאבל-קליק על שורה
+     * טיפול בלחיצה כפולה על שורה
      * @param {string} entityType - סוג היישות
-     * @param {Object} row - נתוני השורה
+     * @param {string} entityId - מזהה היישות
+     * @param {string} entityName - שם היישות
      */
-    static handleDoubleClick(entityType, row) {
-        const config = ENTITY_CONFIG[entityType];
-        const idField = this.getIdField(entityType);
-        const entityId = row[idField];
+    static handleDoubleClick(entityType, entityId, entityName) {
+        console.log(`🖱️ Double-click on ${entityType}:`, entityId, entityName);
         
-        console.log(`🖱️ Double-click on ${entityType}:`, entityId);
+        // מיפוי לשמות הפונקציות הספציפיות
+        const handlers = {
+            'areaGrave': 'handleAreaGraveDoubleClick',
+            'grave': 'handleGraveDoubleClick',
+            'plot': 'handlePlotDoubleClick',
+            'block': 'handleBlockDoubleClick',
+            'customer': 'handleCustomerDoubleClick',
+            'purchase': 'handlePurchaseDoubleClick',
+            'burial': 'handleBurialDoubleClick'
+        };
         
-        // קריאה לפונקציית handler ספציפית אם קיימת
-        const handlerName = `handle${this.capitalize(entityType)}DoubleClick`;
-        if (typeof window[handlerName] === 'function') {
-            window[handlerName](entityId, row.name || row[`${entityType}Name`]);
+        const handlerName = handlers[entityType];
+        
+        if (handlerName && typeof window[handlerName] === 'function') {
+            console.log(`✅ Calling ${handlerName}('${entityId}', '${entityName}')`);
+            window[handlerName](entityId, entityName);
         } else {
-            // ברירת מחדל - פתיחת כרטיס
+            console.warn(`⚠️ Handler ${handlerName} not found for ${entityType}`);
+            // fallback - פתיחת כרטיס
             this.openCard(entityType, entityId);
         }
     }
+
 
     /**
      * פתיחת כרטיס של יישות

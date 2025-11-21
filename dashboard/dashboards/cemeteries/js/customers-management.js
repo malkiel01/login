@@ -37,195 +37,195 @@ let customersTotalPages = 1;
 let customersIsLoadingMore = false;
 
 
-// ===================================================================
-// טעינת לקוחות (הפונקציה הראשית)
-// ===================================================================
-async function loadCustomersBrowseData(signal = null) {
-    customersCurrentPage = 1;
-    currentCustomers = [];
+// // ===================================================================
+// // טעינת לקוחות (הפונקציה הראשית)
+// // ===================================================================
+// async function loadCustomersBrowseData(signal = null) {
+//     customersCurrentPage = 1;
+//     currentCustomers = [];
     
-    let apiUrl = '/dashboard/dashboards/cemeteries/api/customers-api.php?action=list&limit=200&page=1';
-    apiUrl += '&orderBy=createDate&sortDirection=DESC';
+//     let apiUrl = '/dashboard/dashboards/cemeteries/api/customers-api.php?action=list&limit=200&page=1';
+//     apiUrl += '&orderBy=createDate&sortDirection=DESC';
     
-    const response = await fetch(apiUrl, { signal });
-    const result = await response.json();
+//     const response = await fetch(apiUrl, { signal });
+//     const result = await response.json();
     
-    if (result.success && result.data) {
-        currentCustomers = result.data;
+//     if (result.success && result.data) {
+//         currentCustomers = result.data;
         
-        if (result.pagination) {
-            customersTotalPages = result.pagination.pages;
-            customersCurrentPage = result.pagination.page;
-        }
+//         if (result.pagination) {
+//             customersTotalPages = result.pagination.pages;
+//             customersCurrentPage = result.pagination.page;
+//         }
         
-        const tableBody = document.getElementById('tableBody');
-        if (tableBody) {
-            renderCustomersRows(result.data, tableBody, result.pagination, signal);
-        }
-    }
-}
-async function loadCustomers() {
-    const signal = OperationManager.start('customer');
+//         const tableBody = document.getElementById('tableBody');
+//         if (tableBody) {
+//             renderCustomersRows(result.data, tableBody, result.pagination, signal);
+//         }
+//     }
+// }
+// async function loadCustomers() {
+//     const signal = OperationManager.start('customer');
 
-    // ⭐ איפוס מצב חיפוש
-    customersIsSearchMode = false;
-    customersCurrentQuery = '';
-    customersSearchResults = [];
+//     // ⭐ איפוס מצב חיפוש
+//     customersIsSearchMode = false;
+//     customersCurrentQuery = '';
+//     customersSearchResults = [];
     
-    // עדכן את הסוג הנוכחי
-    window.currentType = 'customer';
-    window.currentParentId = null;
+//     // עדכן את הסוג הנוכחי
+//     window.currentType = 'customer';
+//     window.currentParentId = null;
 
-    // ⭐ עדכן גם את tableRenderer.currentType!
-    if (window.tableRenderer) {
-        window.tableRenderer.currentType = 'customer';
-    }
+//     // ⭐ עדכן גם את tableRenderer.currentType!
+//     if (window.tableRenderer) {
+//         window.tableRenderer.currentType = 'customer';
+//     }
 
-    // ⭐ נקה
-    if (typeof DashboardCleaner !== 'undefined') {
-        DashboardCleaner.clear({ targetLevel: 'customer' });
-    } else if (typeof clearDashboard === 'function') {
-        clearDashboard({ targetLevel: 'customer' });
-    }
+//     // ⭐ נקה
+//     if (typeof DashboardCleaner !== 'undefined') {
+//         DashboardCleaner.clear({ targetLevel: 'customer' });
+//     } else if (typeof clearDashboard === 'function') {
+//         clearDashboard({ targetLevel: 'customer' });
+//     }
     
-    if (typeof clearAllSidebarSelections === 'function') {
-        clearAllSidebarSelections();
-    }
+//     if (typeof clearAllSidebarSelections === 'function') {
+//         clearAllSidebarSelections();
+//     }
 
-    // עדכון פריט תפריט אקטיבי
-    if (typeof setActiveMenuItem === 'function') {
-        setActiveMenuItem('customersItem');
-    }
+//     // עדכון פריט תפריט אקטיבי
+//     if (typeof setActiveMenuItem === 'function') {
+//         setActiveMenuItem('customersItem');
+//     }
     
-    if (typeof updateAddButtonText === 'function') {
-        updateAddButtonText();
-    }
+//     if (typeof updateAddButtonText === 'function') {
+//         updateAddButtonText();
+//     }
     
-    // עדכן breadcrumb
-    if (typeof updateBreadcrumb === 'function') {
-        updateBreadcrumb({ customer: { name: 'לקוחות' } });
-    }
+//     // עדכן breadcrumb
+//     if (typeof updateBreadcrumb === 'function') {
+//         updateBreadcrumb({ customer: { name: 'לקוחות' } });
+//     }
     
-    // עדכון כותרת החלון
-    document.title = 'ניהול לקוחות - מערכת בתי עלמין';
+//     // עדכון כותרת החלון
+//     document.title = 'ניהול לקוחות - מערכת בתי עלמין';
     
-    // ⭐ בנה מבנה
-    await buildCustomersContainer(signal);
+//     // ⭐ בנה מבנה
+//     await buildCustomersContainer(signal);
     
-    if (OperationManager.shouldAbort('customer')) {
-        return;
-    }
+//     if (OperationManager.shouldAbort('customer')) {
+//         return;
+//     }
 
-    // ⭐ ספירת טעינות גלובלית
-    if (!window.customersLoadCounter) {
-        window.customersLoadCounter = 0;
-    }
-    window.customersLoadCounter++;
+//     // ⭐ ספירת טעינות גלובלית
+//     if (!window.customersLoadCounter) {
+//         window.customersLoadCounter = 0;
+//     }
+//     window.customersLoadCounter++;
     
-    // השמד חיפוש קודם
-    if (customerSearch && typeof customerSearch.destroy === 'function') {
-        console.log('🗑️ Destroying previous customerSearch instance...');
-        customerSearch.destroy();
-        customerSearch = null; 
-        window.customerSearch = null;
-    }
+//     // השמד חיפוש קודם
+//     if (customerSearch && typeof customerSearch.destroy === 'function') {
+//         console.log('🗑️ Destroying previous customerSearch instance...');
+//         customerSearch.destroy();
+//         customerSearch = null; 
+//         window.customerSearch = null;
+//     }
     
-    // ⭐ אתחול UniversalSearch - פעם אחת!
-    console.log('🆕 Creating fresh customerSearch instance...');
-    customerSearch = await initCustomersSearch(signal);
+//     // ⭐ אתחול UniversalSearch - פעם אחת!
+//     console.log('🆕 Creating fresh customerSearch instance...');
+//     customerSearch = await initCustomersSearch(signal);
     
-    if (OperationManager.shouldAbort('customer')) {
-        console.log('⚠️ Customer operation aborted');
-        return;
-    }
+//     if (OperationManager.shouldAbort('customer')) {
+//         console.log('⚠️ Customer operation aborted');
+//         return;
+//     }
 
-    // ⭐ טעינה ישירה (Browse Mode) - פעם אחת!
-    await loadCustomersBrowseData(signal);
+//     // ⭐ טעינה ישירה (Browse Mode) - פעם אחת!
+//     await loadCustomersBrowseData(signal);
     
-    // טען סטטיסטיקות
-    await loadCustomerStats(signal);
-}
+//     // טען סטטיסטיקות
+//     await loadCustomerStats(signal);
+// }
 
 
-// ===================================================================
-// 📥 טעינת עוד לקוחות (Infinite Scroll)
-// ===================================================================
-async function appendMoreCustomers() {
-    // בדיקות בסיסיות
-    if (customersIsLoadingMore) {
-        return false;
-    }
+// // ===================================================================
+// // 📥 טעינת עוד לקוחות (Infinite Scroll)
+// // ===================================================================
+// async function appendMoreCustomers() {
+//     // בדיקות בסיסיות
+//     if (customersIsLoadingMore) {
+//         return false;
+//     }
     
-    if (customersCurrentPage >= customersTotalPages) {
-        return false;
-    }
+//     if (customersCurrentPage >= customersTotalPages) {
+//         return false;
+//     }
     
-    customersIsLoadingMore = true;
-    const nextPage = customersCurrentPage + 1;
+//     customersIsLoadingMore = true;
+//     const nextPage = customersCurrentPage + 1;
     
-    // ⭐ עדכון מונה טעינות
-    if (!window.customersLoadCounter) {
-        window.customersLoadCounter = 0; 
-    }
-    window.customersLoadCounter++;
+//     // ⭐ עדכון מונה טעינות
+//     if (!window.customersLoadCounter) {
+//         window.customersLoadCounter = 0; 
+//     }
+//     window.customersLoadCounter++;
     
-    try {
-        // בנה URL לעמוד הבא
-        let apiUrl = `/dashboard/dashboards/cemeteries/api/customers-api.php?action=list&limit=200&page=${nextPage}`;
-        apiUrl += '&orderBy=createDate&sortDirection=DESC';
+//     try {
+//         // בנה URL לעמוד הבא
+//         let apiUrl = `/dashboard/dashboards/cemeteries/api/customers-api.php?action=list&limit=200&page=${nextPage}`;
+//         apiUrl += '&orderBy=createDate&sortDirection=DESC';
         
-        // שלח בקשה
-        const response = await fetch(apiUrl);
+//         // שלח בקשה
+//         const response = await fetch(apiUrl);
         
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+//         if (!response.ok) {
+//             throw new Error(`HTTP error! status: ${response.status}`);
+//         }
         
-        const result = await response.json();
+//         const result = await response.json();
         
-        if (result.success && result.data && result.data.length > 0) {
-            // ⭐ שמור את הגודל הקודם לפני ההוספה
-            const previousTotal = currentCustomers.length;
+//         if (result.success && result.data && result.data.length > 0) {
+//             // ⭐ שמור את הגודל הקודם לפני ההוספה
+//             const previousTotal = currentCustomers.length;
             
-            // ⭐ הוסף לנתונים הקיימים
-            currentCustomers = [...currentCustomers, ...result.data];
-            customersCurrentPage = nextPage;
+//             // ⭐ הוסף לנתונים הקיימים
+//             currentCustomers = [...currentCustomers, ...result.data];
+//             customersCurrentPage = nextPage;
             
-            // ⭐⭐⭐ לוג פשוט ומסודר
-            console.log(`
-╔════════════════════════════════════════════════════════════════════
-║ טעינה: ${window.customersLoadCounter}
-╠════════════════════════════════════════════════════════════════════
-║ כמות ערכים בטעינה: ${result.data.length}
-║ מספר ערך תחילת טעינה נוכחית: ${result.debug?.results_info?.from_index || (previousTotal + 1)}
-║ מספר ערך סוף טעינה נוכחית: ${result.debug?.results_info?.to_index || currentCustomers.length}
-║ סך כל הערכים שנטענו עד כה: ${currentCustomers.length}
-║ שדה למיון: ${result.debug?.sql_info?.order_field || 'createDate'}
-║ סוג מיון: ${result.debug?.sql_info?.sort_direction || 'DESC'}
-╠════════════════════════════════════════════════════════════════════
-║ עמוד: ${customersCurrentPage} / ${customersTotalPages}
-║ נותרו עוד: ${customersTotalPages - customersCurrentPage} עמודים
-╚════════════════════════════════════════════════════════════════════
-`);
+//             // ⭐⭐⭐ לוג פשוט ומסודר
+//             console.log(`
+// ╔════════════════════════════════════════════════════════════════════
+// ║ טעינה: ${window.customersLoadCounter}
+// ╠════════════════════════════════════════════════════════════════════
+// ║ כמות ערכים בטעינה: ${result.data.length}
+// ║ מספר ערך תחילת טעינה נוכחית: ${result.debug?.results_info?.from_index || (previousTotal + 1)}
+// ║ מספר ערך סוף טעינה נוכחית: ${result.debug?.results_info?.to_index || currentCustomers.length}
+// ║ סך כל הערכים שנטענו עד כה: ${currentCustomers.length}
+// ║ שדה למיון: ${result.debug?.sql_info?.order_field || 'createDate'}
+// ║ סוג מיון: ${result.debug?.sql_info?.sort_direction || 'DESC'}
+// ╠════════════════════════════════════════════════════════════════════
+// ║ עמוד: ${customersCurrentPage} / ${customersTotalPages}
+// ║ נותרו עוד: ${customersTotalPages - customersCurrentPage} עמודים
+// ╚════════════════════════════════════════════════════════════════════
+// `);
             
-            // ⭐ עדכן את הטבלה
-            if (customersTable) {
-                customersTable.setData(currentCustomers);
-            }
+//             // ⭐ עדכן את הטבלה
+//             if (customersTable) {
+//                 customersTable.setData(currentCustomers);
+//             }
             
-            customersIsLoadingMore = false;
-            return true;
-        } else {
-            console.log('📭 No more data to load');
-            customersIsLoadingMore = false;
-            return false;
-        }
-    } catch (error) {
-        console.error('❌ Error loading more customers:', error);
-        customersIsLoadingMore = false;
-        return false;
-    }
-}
+//             customersIsLoadingMore = false;
+//             return true;
+//         } else {
+//             console.log('📭 No more data to load');
+//             customersIsLoadingMore = false;
+//             return false;
+//         }
+//     } catch (error) {
+//         console.error('❌ Error loading more customers:', error);
+//         customersIsLoadingMore = false;
+//         return false;
+//     }
+// }
 
 
 // ===================================================================
@@ -655,13 +655,13 @@ async function renderCustomersRows(data, container, pagination = null, signal = 
     }
 }
 
-// ===================================================================
-// הפנייה לפונקציות גלובליות
-// ===================================================================
+// // ===================================================================
+// // הפנייה לפונקציות גלובליות
+// // ===================================================================
 
-function checkCustomersScrollStatus() {
-    checkEntityScrollStatus(customersTable, 'Customers');
-}
+// function checkCustomersScrollStatus() {
+//     checkEntityScrollStatus(customersTable, 'Customers');
+// }
 
 // ===================================================================
 // פונקציות עזר לפורמט
@@ -675,64 +675,56 @@ function formatCustomerType(type) {
     return types[type] || '-';
 }
 
-// function formatCustomerStatus(status) {
-//     const statuses = {
-//         1: { text: 'פעיל', color: '#10b981' },
-//         0: { text: 'לא פעיל', color: '#ef4444' }
-//     };
-//     const statusInfo = statuses[status] || statuses[1];
-//     return `<span style="background: ${statusInfo.color}; color: white; padding: 3px 8px; border-radius: 4px; font-size: 12px; display: inline-block;">${statusInfo.text}</span>`;
-// }
 function formatCustomerStatus(status) {
     return formatEntityStatus('customer', status);
 }
 
-// ===================================================================
-// טעינת סטטיסטיקות
-// ===================================================================
-// async function loadCustomerStats(signal) {
-//     try {
-//         const response = await fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=stats', { signal: signal });
-//         const result = await response.json();
+// // ===================================================================
+// // טעינת סטטיסטיקות
+// // ===================================================================
+// // async function loadCustomerStats(signal) {
+// //     try {
+// //         const response = await fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=stats', { signal: signal });
+// //         const result = await response.json();
         
-//         if (result.success && result.data) {
-//             console.log('📊 Customer stats:', result.data);
+// //         if (result.success && result.data) {
+// //             console.log('📊 Customer stats:', result.data);
             
-//             if (document.getElementById('totalCustomers')) {
-//                 document.getElementById('totalCustomers').textContent = result.data.total_customers || 0;
-//             }
-//             if (document.getElementById('activeCustomers')) {
-//                 document.getElementById('activeCustomers').textContent = result.data.active || 0;
-//             }
-//             if (document.getElementById('newThisMonth')) {
-//                 document.getElementById('newThisMonth').textContent = result.data.new_this_month || 0;
-//             }
-//         }
-//     } catch (error) {
-//         if (error.name === 'AbortError') {
-//             console.log('⚠️ Customer stats loading aborted - this is expected');
-//             return;
-//         }
-//         console.error('Error loading customer stats:', error);
-//     }
+// //             if (document.getElementById('totalCustomers')) {
+// //                 document.getElementById('totalCustomers').textContent = result.data.total_customers || 0;
+// //             }
+// //             if (document.getElementById('activeCustomers')) {
+// //                 document.getElementById('activeCustomers').textContent = result.data.active || 0;
+// //             }
+// //             if (document.getElementById('newThisMonth')) {
+// //                 document.getElementById('newThisMonth').textContent = result.data.new_this_month || 0;
+// //             }
+// //         }
+// //     } catch (error) {
+// //         if (error.name === 'AbortError') {
+// //             console.log('⚠️ Customer stats loading aborted - this is expected');
+// //             return;
+// //         }
+// //         console.error('Error loading customer stats:', error);
+// //     }
+// // }
+// async function loadCustomerStats(signal) {
+//     await loadEntityStats('customer', signal);
 // }
-async function loadCustomerStats(signal) {
-    await loadEntityStats('customer', signal);
-}
 
-// ===================================================================
-// מחיקת לקוח
-// ===================================================================
-async function deleteCustomer(customerId) {
-    await deleteEntity('customer', customerId);
-}
+// // ===================================================================
+// // מחיקת לקוח
+// // ===================================================================
+// async function deleteCustomer(customerId) {
+//     await deleteEntity('customer', customerId);
+// }
 
-// ===================================================================
-// רענון נתונים
-// ===================================================================
-async function customersRefreshData() {
-    await refreshEntityData('customer');
-}
+// // ===================================================================
+// // רענון נתונים
+// // ===================================================================
+// async function customersRefreshData() {
+//     await refreshEntityData('customer');
+// }
 
 // ===================================================================
 // דאבל-קליק על לקוח
@@ -765,20 +757,20 @@ window.handleCustomerDoubleClick = handleCustomerDoubleClick;
 // ===================================================================
 // הפוך לגלובלי
 // ===================================================================
-window.loadCustomers = loadCustomers;
+// window.loadCustomers = loadCustomers;
 
-window.appendMoreCustomers = appendMoreCustomers;
+// window.appendMoreCustomers = appendMoreCustomers;
 
-window.deleteCustomer = deleteCustomer;
+// window.deleteCustomer = deleteCustomer;
 
-window.customersRefreshData = customersRefreshData;
+// window.customersRefreshData = customersRefreshData;
 
 window.customersTable = customersTable;
 
-window.checkCustomersScrollStatus = checkCustomersScrollStatus;
+// window.checkCustomersScrollStatus = checkCustomersScrollStatus;
 
 window.customerSearch = customerSearch;
 
-window.loadCustomersBrowseData = loadCustomersBrowseData;
+// window.loadCustomersBrowseData = loadCustomersBrowseData;
 
 console.log('✅ customers-management.js v4.0.0 - Loaded successfully!');

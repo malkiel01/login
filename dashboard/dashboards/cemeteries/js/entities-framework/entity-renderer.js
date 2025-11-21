@@ -699,7 +699,7 @@ class EntityRenderer {
             // fallback - פתיחת כרטיס
             this.openCard(entityType, entityId);
         }
-    }
+    } 
 
 
     /**

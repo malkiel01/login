@@ -758,7 +758,7 @@ class EntityRenderer {
     /**
      * קבלת שדה ID ליישות
      */
-    static getIdField(entityType) {
+    static getIdField2(entityType) {
         const idFields = {
             customer: 'customerId',
             purchase: 'purchaseId',
@@ -768,6 +768,20 @@ class EntityRenderer {
             grave: 'graveId'
         };
         return idFields[entityType] || `${entityType}Id`;
+    }
+    /**
+     * קבלת שדה ID ליישות
+     */
+    static getIdField(entityType) {
+        const config = ENTITY_CONFIG[entityType];
+        
+        // אם מוגדר במפורש בקונפיג - השתמש בו
+        if (config && config.idField) {
+            return config.idField;
+        }
+        
+        // ברירת מחדל
+        return 'unicId';
     }
 
     /**

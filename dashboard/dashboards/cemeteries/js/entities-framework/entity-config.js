@@ -324,7 +324,7 @@ const ENTITY_CONFIG = {
     // ===================================================================
     // אחוזות קבר (Area Graves)
     // ===================================================================
-    'areaGrave': {
+    'areaGrave2': {
         singular: 'אחוזת קבר',
         singularArticle: 'את אחוזת הקבר',
         plural: 'אחוזות קבר',
@@ -376,6 +376,94 @@ const ENTITY_CONFIG = {
                 field: 'graveType', 
                 label: 'סוג', 
                 type: 'graveType',  // ✅ שינוי מ-enum ל-graveType
+                width: '100px',
+                sortable: true
+            },
+            { 
+                field: 'graves_count', 
+                label: 'כמות קברים', 
+                type: 'badge', 
+                width: '120px',
+                sortable: true
+            },
+            { 
+                field: 'createDate', 
+                label: 'תאריך יצירה', 
+                type: 'date', 
+                width: '120px',
+                sortable: true
+            },
+            { 
+                field: 'actions', 
+                label: 'פעולות', 
+                type: 'actions', 
+                width: '120px',
+                sortable: false
+            }
+        ],
+        
+        statsConfig: {
+            endpoint: '/dashboard/dashboards/cemeteries/api/areaGraves-api.php?action=stats',
+            elements: {
+                'areaGravesTotalCount': 'total_area_graves',
+                'gravesTotalCount': 'total_graves',
+                'areaGravesNewThisMonth': 'new_this_month'
+            },
+            parentParam: 'plotId'
+        }
+    },
+    'areaGrave': {
+        singular: 'אחוזת קבר',
+        singularArticle: 'את אחוזת הקבר',
+        plural: 'אחוזות קבר',
+        
+        apiFile: 'areaGraves-api.php',
+        apiEndpoint: '/dashboard/dashboards/cemeteries/api/areaGraves-api.php',
+        
+        idField: 'unicId',  // ✅ תיקון!
+        nameField: 'areaGraveNameHe',
+        
+        hasParent: true,
+        parentParam: 'plotId',
+        
+        defaultLimit: 200,
+        defaultSort: 'createDate',
+        defaultSortDirection: 'DESC',
+        
+        searchableFields: [
+            'areaGraveNameHe',
+            'areaGraveNameEn', 
+            'areaGraveNameAr',
+            'coordinates',
+            'lineNameHe'
+        ],
+        
+        columns: [
+            { 
+                field: 'areaGraveNameHe', 
+                label: 'שם אחוזת קבר', 
+                type: 'link', 
+                width: '200px',
+                sortable: true
+            },
+            { 
+                field: 'coordinates', 
+                label: 'קואורדינטות', 
+                type: 'text', 
+                width: '150px',
+                sortable: true
+            },
+            { 
+                field: 'lineNameHe', 
+                label: 'שורה', 
+                type: 'text', 
+                width: '120px',
+                sortable: true
+            },
+            { 
+                field: 'graveType', 
+                label: 'סוג', 
+                type: 'graveType',
                 width: '100px',
                 sortable: true
             },

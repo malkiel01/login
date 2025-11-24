@@ -36,6 +36,8 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/table-manager.css">
 
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/reports/graves-inventory-report.css">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/grave-card-modal.css">
+
 
 </head>
 <body>
@@ -180,6 +182,10 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-renderer.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-manager.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-initializer.js"></script>
+
+
+    <!-- הוסף לפני </body>, אחרי graves-management.js -->
+    <script src="/dashboard/dashboards/cemeteries/js/grave-card-modal.js"></script>
 
     <!-- 6️⃣ הקבצים הישנים (יישארו כ-fallback) -->
     <script src="/dashboard/dashboards/cemeteries/js/cemeteries-management.js"></script>

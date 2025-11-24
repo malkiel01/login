@@ -292,56 +292,6 @@ try {
             echo json_encode(['success' => true, 'data' => $stats]);
             break;
             
-        case 'available2':
-            // ✅ קבל את הקבר הנוכחי אם קיים
-            $currentGraveId = $_GET['currentGraveId'] ?? null;
-            $areaGraveId = $_GET['areaGraveId'] ?? null;
-            
-            if ($currentGraveId) {
-                // ✅ במצב עריכה - כלול גם את הקבר הנוכחי
-                $sql = "
-                    SELECT 
-                        g.*,
-                        ag.areaGraveNameHe as area_grave_name,
-                        CASE WHEN g.unicId = :currentGrave THEN 1 ELSE 0 END as is_current
-                    FROM graves g
-                    LEFT JOIN areaGraves ag ON g.areaGraveId = ag.unicId
-                    WHERE (g.graveStatus = 1 OR g.unicId = :currentGrave2)
-                    AND g.isActive = 1
-                ";
-                $params = [
-                    'currentGrave' => $currentGraveId,
-                    'currentGrave2' => $currentGraveId
-                ];
-            } else {
-                // ✅ במצב הוספה - רק קברים פנויים
-                $sql = "
-                    SELECT 
-                        g.*,
-                        ag.areaGraveNameHe as area_grave_name
-                    FROM graves g
-                    LEFT JOIN areaGraves ag ON g.areaGraveId = ag.unicId
-                    WHERE g.graveStatus = 1 
-                    AND g.isActive = 1
-                ";
-                $params = [];
-            }
-            
-            // סינון לפי אחוזת קבר אם צוין
-            if ($areaGraveId) {
-                $sql .= " AND g.areaGraveId = :areaGraveId";
-                $params['areaGraveId'] = $areaGraveId;
-            }
-            
-            $sql .= " ORDER BY " . ($currentGraveId ? "is_current DESC, " : "") . "g.graveNameHe";
-            
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute($params);
-            
-            $graves = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            echo json_encode(['success' => true, 'data' => $graves]);
-            break;
-            
         case 'available':
             $currentGraveId = $_GET['currentGraveId'] ?? null;
             $areaGraveId = $_GET['areaGraveId'] ?? null;
@@ -395,6 +345,84 @@ try {
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
             echo json_encode(['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
+            break;
+        case 'getDetails':
+            // קבלת פרטי קבר מלאים כולל רכישה וקבורה
+            if (!$id) {
+                throw new Exception('מזהה קבר חסר');
+            }
+            
+            // שליפת פרטי הקבר עם כל ההיררכיה
+            $stmt = $pdo->prepare("
+                SELECT 
+                    g.*,
+                    agv.areaGraveNameHe,
+                    agv.lineNameHe,
+                    agv.plotNameHe,
+                    agv.blockNameHe,
+                    agv.cemeteryNameHe,
+                    agv.cemeteryId,
+                    agv.blockId,
+                    agv.plotId,
+                    agv.lineId
+                FROM graves g
+                LEFT JOIN areaGraves_view agv ON g.areaGraveId = agv.unicId
+                WHERE (g.unicId = :id OR g.id = :id2) 
+                AND g.isActive = 1
+            ");
+            $stmt->execute(['id' => $id, 'id2' => $id]);
+            $grave = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$grave) {
+                throw new Exception('הקבר לא נמצא');
+            }
+            
+            // שליפת פרטי רכישה אם קיימים
+            $stmt = $pdo->prepare("
+                SELECT 
+                    p.*,
+                    c.fullNameHe as clientFullNameHe,
+                    c.numId as clientNumId,
+                    contact.fullNameHe as contactFullNameHe
+                FROM purchases p
+                LEFT JOIN customers c ON p.clientId = c.unicId
+                LEFT JOIN customers contact ON p.contactId = contact.unicId
+                WHERE p.graveId = :graveId AND p.isActive = 1
+                LIMIT 1
+            ");
+            $stmt->execute(['graveId' => $grave['unicId']]);
+            $purchase = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($purchase) {
+                $grave['purchase'] = $purchase;
+            }
+            
+            // שליפת פרטי קבורה אם קיימים
+            $stmt = $pdo->prepare("
+                SELECT 
+                    b.*,
+                    c.fullNameHe as clientFullNameHe,
+                    c.numId as clientNumId,
+                    c.nameFather as clientNameFather,
+                    c.nameMother as clientNameMother,
+                    contact.fullNameHe as contactFullNameHe
+                FROM burials b
+                LEFT JOIN customers c ON b.clientId = c.unicId
+                LEFT JOIN customers contact ON b.contactId = contact.unicId
+                WHERE b.graveId = :graveId AND b.isActive = 1
+                LIMIT 1
+            ");
+            $stmt->execute(['graveId' => $grave['unicId']]);
+            $burial = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($burial) {
+                $grave['burial'] = $burial;
+            }
+            
+            echo json_encode([
+                'success' => true,
+                'data' => $grave
+            ], JSON_UNESCAPED_UNICODE);
             break;
         default:
             throw new Exception('Invalid action');

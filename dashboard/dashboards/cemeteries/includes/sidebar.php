@@ -120,6 +120,11 @@
     <!-- קו מפריד -->
     <div style="margin: 20px 15px; border-top: 2px solid #e5e7eb;"></div>
 
+
+    <!-- <button onclick="GravesInventoryReport.open()" class="btn-primary">
+        📊 דוח יתרות קברים
+    </button> -->
+
     <!-- ניהול מערכת -->
     <div class="system-management-section" style="padding: 0 15px;">
         <h4 style="font-size: 14px; color: #718096; margin-bottom: 10px; font-weight: 600;">
@@ -127,6 +132,15 @@
             ניהול מערכת
         </h4>
         
+        <!-- תשלומים -->
+        <div class="management-item" style="margin-bottom: 10px;">
+            <div class="hierarchy-header" id="paymentsItem" onclick="GravesInventoryReport.open()">
+                <span class="hierarchy-icon">📊</span>
+                <span class="hierarchy-title">דוח יתרות קברים</span>
+                <span class="hierarchy-count" id="paymentsCount">0</span>
+            </div>
+        </div>  
+
         <!-- תשלומים -->
         <div class="management-item" style="margin-bottom: 10px;">
             <div class="hierarchy-header" id="paymentsItem" onclick="handleSidebarClick('paymentsItem', loadPayments)">

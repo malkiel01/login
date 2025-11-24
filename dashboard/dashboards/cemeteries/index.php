@@ -197,7 +197,6 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
 
     <script src="/dashboard/dashboards/cemeteries/js/live-search.js"></script>
 
-
     <script src="/dashboards/dashboard/cemeteries/js/reports/graves-inventory-report.js"></script>
 
     <!-- 7️⃣ אתחול -->

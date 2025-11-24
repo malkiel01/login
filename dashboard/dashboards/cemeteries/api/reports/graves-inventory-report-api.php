@@ -1,15 +1,13 @@
 <?php
 /*
  * File: api/reports/graves-inventory-report-api.php
- * Version: 1.0.0
+ * Version: 1.1.0
  * Updated: 2025-01-21
  * Author: Malkiel
  * Description: API לדוח ניהול יתרות קברים פנויים לפי תאריך
  * Change Summary:
- * - יצירה ראשונית של API הדוח
- * - תמיכה בדוח מצומצם ומורחב
- * - חישוב יתרות פתיחה וסגירה
- * - מעקב אחר כל תנועות המלאי
+ * - v1.1.0: תיקון שיטת התחברות - זהה ל-cemeteries-api.php
+ * - שימוש ב-getDBConnection() במקום getDatabaseConnection()
  */
 
 header('Content-Type: application/json; charset=utf-8');
@@ -17,14 +15,37 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
 header('Access-Control-Allow-Headers: Content-Type');
 
-// חיבור לבסיס נתונים
+// חיבור לבסיס נתונים - זהה לכל ה-API במערכת
 require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config.php';
-require_once $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config/reports-config.php';
 
 try {
     $pdo = getDBConnection();
 } catch(PDOException $e) {
     die(json_encode(['success' => false, 'error' => 'Connection failed: ' . $e->getMessage()]));
+}
+
+// ========== פונקציות עזר ==========
+
+/**
+ * המרת תאריך לפורמט עברי קריא
+ */
+function formatHebrewDate($date) {
+    if (empty($date)) return '';
+    
+    $timestamp = strtotime($date);
+    if ($timestamp === false) return $date;
+    
+    $hebrewMonths = [
+        1 => 'ינואר', 2 => 'פברואר', 3 => 'מרץ', 4 => 'אפריל',
+        5 => 'מאי', 6 => 'יוני', 7 => 'יולי', 8 => 'אוגוסט',
+        9 => 'ספטמבר', 10 => 'אוקטובר', 11 => 'נובמבר', 12 => 'דצמבר'
+    ];
+    
+    $day = date('d', $timestamp);
+    $month = (int)date('m', $timestamp);
+    $year = date('Y', $timestamp);
+    
+    return "{$day} ב{$hebrewMonths[$month]} {$year}";
 }
 
 /**
@@ -68,8 +89,7 @@ function generateInventoryReport($pdo, $params) {
     } catch (Exception $e) {
         return [
             'success' => false,
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
+            'error' => $e->getMessage()
         ];
     }
 }
@@ -96,13 +116,16 @@ function validateParams($params) {
         : 'summary';
     
     // סינון לפי בית עלמין (אופציונלי)
-    $validated['cemeteryId'] = isset($params['cemeteryId']) ? $params['cemeteryId'] : null;
+    $validated['cemeteryId'] = isset($params['cemeteryId']) && !empty($params['cemeteryId']) 
+        ? $params['cemeteryId'] : null;
     
     // סינון לפי גוש (אופציונלי)
-    $validated['blockId'] = isset($params['blockId']) ? $params['blockId'] : null;
+    $validated['blockId'] = isset($params['blockId']) && !empty($params['blockId']) 
+        ? $params['blockId'] : null;
     
     // סינון לפי חלקה (אופציונלי)
-    $validated['plotId'] = isset($params['plotId']) ? $params['plotId'] : null;
+    $validated['plotId'] = isset($params['plotId']) && !empty($params['plotId']) 
+        ? $params['plotId'] : null;
     
     // ולידציה שתאריך סיום אחרי תאריך התחלה
     if (strtotime($validated['startDate']) > strtotime($validated['endDate'])) {
@@ -123,48 +146,35 @@ function getOpeningBalance($pdo, $params) {
             SUM(CASE WHEN g.plotType = 2 THEN 1 ELSE 0 END) as unusualCount,
             SUM(CASE WHEN g.plotType = 3 THEN 1 ELSE 0 END) as closeCount
         FROM graves g
-        INNER JOIN graves_view gv ON g.unicId = gv.unicId
+        LEFT JOIN graves_view gv ON g.unicId = gv.unicId
         WHERE g.isActive = 1
         AND g.createDate < :startDate
     ";
     
     // הוספת תנאי סינון
-    $conditions = [];
-    if ($params['cemeteryId']) {
-        $conditions[] = "gv.cemeteryId = :cemeteryId";
-    }
-    if ($params['blockId']) {
-        $conditions[] = "gv.blockId = :blockId";
-    }
-    if ($params['plotId']) {
-        $conditions[] = "gv.plotId = :plotId";
-    }
-    
-    if (!empty($conditions)) {
-        $sql .= " AND " . implode(" AND ", $conditions);
-    }
+    $sql .= addFilterConditions($params);
     
     // חישוב כמה מהם היו תפוסים לפני תאריך ההתחלה
     $sql .= "
         AND g.unicId NOT IN (
-            -- קברים שנרכשו לפני תאריך ההתחלה ועדיין פעילים
             SELECT graveId FROM purchases 
             WHERE graveId IS NOT NULL 
-            AND createDate < :startDate 
+            AND createDate < :startDate2 
             AND isActive = 1
             
             UNION
             
-            -- קברים שנקברו לפני תאריך ההתחלה ועדיין פעילים
             SELECT graveId FROM burials 
             WHERE graveId IS NOT NULL 
-            AND createDate < :startDate 
+            AND createDate < :startDate3 
             AND isActive = 1
         )
     ";
     
     $stmt = $pdo->prepare($sql);
     $stmt->bindValue(':startDate', $params['startDate']);
+    $stmt->bindValue(':startDate2', $params['startDate']);
+    $stmt->bindValue(':startDate3', $params['startDate']);
     
     if ($params['cemeteryId']) $stmt->bindValue(':cemeteryId', $params['cemeteryId']);
     if ($params['blockId']) $stmt->bindValue(':blockId', $params['blockId']);
@@ -174,11 +184,11 @@ function getOpeningBalance($pdo, $params) {
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     
     return [
-        'total' => (int)$result['totalAvailable'],
+        'total' => (int)($result['totalAvailable'] ?? 0),
         'byType' => [
-            'exempt' => (int)$result['exemptCount'],
-            'unusual' => (int)$result['unusualCount'],
-            'close' => (int)$result['closeCount']
+            'exempt' => (int)($result['exemptCount'] ?? 0),
+            'unusual' => (int)($result['unusualCount'] ?? 0),
+            'close' => (int)($result['closeCount'] ?? 0)
         ]
     ];
 }
@@ -240,7 +250,7 @@ function getNewGraves($pdo, $params) {
             'קבר_חדש' as movementType,
             '+1' as quantity
         FROM graves g
-        INNER JOIN graves_view gv ON g.unicId = gv.unicId
+        LEFT JOIN graves_view gv ON g.unicId = gv.unicId
         WHERE g.createDate >= :startDate
         AND g.createDate <= :endDate
         AND g.isActive = 1
@@ -272,7 +282,7 @@ function getPurchases($pdo, $params) {
             'רכישה' as movementType,
             '-1' as quantity
         FROM purchases p
-        INNER JOIN graves_view gv ON p.graveId = gv.unicId
+        LEFT JOIN graves_view gv ON p.graveId = gv.unicId
         LEFT JOIN customers c ON p.clientId = c.unicId
         WHERE p.createDate >= :startDate
         AND p.createDate <= :endDate
@@ -280,7 +290,7 @@ function getPurchases($pdo, $params) {
         AND p.graveId IS NOT NULL
     ";
     
-    $sql .= addFilterConditions($params, 'gv');
+    $sql .= addFilterConditions($params);
     $sql .= " ORDER BY p.createDate ASC";
     
     return executeMovementQuery($pdo, $sql, $params);
@@ -306,7 +316,7 @@ function getBurials($pdo, $params) {
             'קבורה' as movementType,
             '-1' as quantity
         FROM burials b
-        INNER JOIN graves_view gv ON b.graveId = gv.unicId
+        LEFT JOIN graves_view gv ON b.graveId = gv.unicId
         LEFT JOIN customers c ON b.clientId = c.unicId
         WHERE b.createDate >= :startDate
         AND b.createDate <= :endDate
@@ -314,7 +324,7 @@ function getBurials($pdo, $params) {
         AND b.graveId IS NOT NULL
     ";
     
-    $sql .= addFilterConditions($params, 'gv');
+    $sql .= addFilterConditions($params);
     $sql .= " ORDER BY b.createDate ASC";
     
     return executeMovementQuery($pdo, $sql, $params);
@@ -340,20 +350,20 @@ function getCanceledPurchases($pdo, $params) {
             'ביטול_רכישה' as movementType,
             '+1' as quantity
         FROM purchases p
-        INNER JOIN graves_view gv ON p.graveId = gv.unicId
+        LEFT JOIN graves_view gv ON p.graveId = gv.unicId
         LEFT JOIN customers c ON p.clientId = c.unicId
         WHERE (
             (p.cancelDate >= :startDate AND p.cancelDate <= :endDate)
-            OR (p.inactiveDate >= :startDate AND p.inactiveDate <= :endDate)
+            OR (p.inactiveDate >= :startDate2 AND p.inactiveDate <= :endDate2)
         )
         AND p.isActive = 0
         AND p.graveId IS NOT NULL
     ";
     
-    $sql .= addFilterConditions($params, 'gv');
+    $sql .= addFilterConditions($params);
     $sql .= " ORDER BY COALESCE(p.cancelDate, p.inactiveDate) ASC";
     
-    return executeMovementQuery($pdo, $sql, $params);
+    return executeMovementQueryExtended($pdo, $sql, $params);
 }
 
 /**
@@ -376,20 +386,20 @@ function getCanceledBurials($pdo, $params) {
             'ביטול_קבורה' as movementType,
             '+1' as quantity
         FROM burials b
-        INNER JOIN graves_view gv ON b.graveId = gv.unicId
+        LEFT JOIN graves_view gv ON b.graveId = gv.unicId
         LEFT JOIN customers c ON b.clientId = c.unicId
         WHERE (
             (b.cancelDate >= :startDate AND b.cancelDate <= :endDate)
-            OR (b.inactiveDate >= :startDate AND b.inactiveDate <= :endDate)
+            OR (b.inactiveDate >= :startDate2 AND b.inactiveDate <= :endDate2)
         )
         AND b.isActive = 0
         AND b.graveId IS NOT NULL
     ";
     
-    $sql .= addFilterConditions($params, 'gv');
+    $sql .= addFilterConditions($params);
     $sql .= " ORDER BY COALESCE(b.cancelDate, b.inactiveDate) ASC";
     
-    return executeMovementQuery($pdo, $sql, $params);
+    return executeMovementQueryExtended($pdo, $sql, $params);
 }
 
 /**
@@ -398,13 +408,13 @@ function getCanceledBurials($pdo, $params) {
 function addFilterConditions($params, $tableAlias = 'gv') {
     $conditions = [];
     
-    if ($params['cemeteryId']) {
+    if (!empty($params['cemeteryId'])) {
         $conditions[] = "{$tableAlias}.cemeteryId = :cemeteryId";
     }
-    if ($params['blockId']) {
+    if (!empty($params['blockId'])) {
         $conditions[] = "{$tableAlias}.blockId = :blockId";
     }
-    if ($params['plotId']) {
+    if (!empty($params['plotId'])) {
         $conditions[] = "{$tableAlias}.plotId = :plotId";
     }
     
@@ -412,16 +422,34 @@ function addFilterConditions($params, $tableAlias = 'gv') {
 }
 
 /**
- * ביצוע שאילתת תנועה
+ * ביצוע שאילתת תנועה רגילה
  */
 function executeMovementQuery($pdo, $sql, $params) {
     $stmt = $pdo->prepare($sql);
     $stmt->bindValue(':startDate', $params['startDate']);
     $stmt->bindValue(':endDate', $params['endDate']);
     
-    if ($params['cemeteryId']) $stmt->bindValue(':cemeteryId', $params['cemeteryId']);
-    if ($params['blockId']) $stmt->bindValue(':blockId', $params['blockId']);
-    if ($params['plotId']) $stmt->bindValue(':plotId', $params['plotId']);
+    if (!empty($params['cemeteryId'])) $stmt->bindValue(':cemeteryId', $params['cemeteryId']);
+    if (!empty($params['blockId'])) $stmt->bindValue(':blockId', $params['blockId']);
+    if (!empty($params['plotId'])) $stmt->bindValue(':plotId', $params['plotId']);
+    
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+/**
+ * ביצוע שאילתת תנועה מורחבת (לביטולים)
+ */
+function executeMovementQueryExtended($pdo, $sql, $params) {
+    $stmt = $pdo->prepare($sql);
+    $stmt->bindValue(':startDate', $params['startDate']);
+    $stmt->bindValue(':endDate', $params['endDate']);
+    $stmt->bindValue(':startDate2', $params['startDate']);
+    $stmt->bindValue(':endDate2', $params['endDate']);
+    
+    if (!empty($params['cemeteryId'])) $stmt->bindValue(':cemeteryId', $params['cemeteryId']);
+    if (!empty($params['blockId'])) $stmt->bindValue(':blockId', $params['blockId']);
+    if (!empty($params['plotId'])) $stmt->bindValue(':plotId', $params['plotId']);
     
     $stmt->execute();
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -434,7 +462,9 @@ function summarizeByPlot($movements) {
     $summary = [];
     
     foreach ($movements as $movement) {
-        $key = $movement['plotNameHe'] ?? 'לא_מוגדר';
+        $key = ($movement['cemeteryNameHe'] ?? '') . '_' . 
+               ($movement['blockNameHe'] ?? '') . '_' . 
+               ($movement['plotNameHe'] ?? 'לא_מוגדר');
         
         if (!isset($summary[$key])) {
             $summary[$key] = [
@@ -452,10 +482,12 @@ function summarizeByPlot($movements) {
             ];
         }
         
-        $type = $movement['movementType'];
-        $qty = (int)$movement['quantity'];
+        $type = $movement['movementType'] ?? '';
+        $qty = (int)($movement['quantity'] ?? 0);
         
-        $summary[$key]['movements'][$type]++;
+        if (isset($summary[$key]['movements'][$type])) {
+            $summary[$key]['movements'][$type]++;
+        }
         $summary[$key]['netChange'] += $qty;
     }
     
@@ -476,21 +508,27 @@ function calculateClosingBalance($openingBalance, $movements) {
     ];
     
     foreach ($movements as $movement) {
-        $qty = (int)($movement['quantity'] ?? 0);
-        $plotType = (int)($movement['plotType'] ?? 0);
-        
-        $netChange['total'] += $qty;
-        
-        switch ($plotType) {
-            case 1:
-                $netChange['byType']['exempt'] += $qty;
-                break;
-            case 2:
-                $netChange['byType']['unusual'] += $qty;
-                break;
-            case 3:
-                $netChange['byType']['close'] += $qty;
-                break;
+        // בדוח מצומצם, השתמש ב-netChange
+        if (isset($movement['netChange'])) {
+            $netChange['total'] += (int)$movement['netChange'];
+        } else {
+            // בדוח מפורט
+            $qty = (int)($movement['quantity'] ?? 0);
+            $plotType = (int)($movement['plotType'] ?? 0);
+            
+            $netChange['total'] += $qty;
+            
+            switch ($plotType) {
+                case 1:
+                    $netChange['byType']['exempt'] += $qty;
+                    break;
+                case 2:
+                    $netChange['byType']['unusual'] += $qty;
+                    break;
+                case 3:
+                    $netChange['byType']['close'] += $qty;
+                    break;
+            }
         }
     }
     
@@ -507,15 +545,17 @@ function calculateClosingBalance($openingBalance, $movements) {
 // ========== נקודת הכניסה הראשית ==========
 
 try {
-    // קבלת חיבור למסד הנתונים
-    $pdo = getDatabaseConnection();
-    
     // קבלת פרמטרים
     $input = file_get_contents('php://input');
     $params = json_decode($input, true);
     
-    if (json_last_error() !== JSON_ERROR_NONE) {
-        throw new Exception('שגיאה בפענוח JSON: ' . json_last_error_msg());
+    // אם אין JSON, ננסה GET/POST רגיל
+    if ($params === null) {
+        $params = array_merge($_GET, $_POST);
+    }
+    
+    if (empty($params)) {
+        $params = [];
     }
     
     // הפקת הדוח
@@ -525,9 +565,10 @@ try {
     echo json_encode($report, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
     
 } catch (Exception $e) {
-    http_response_code(500);
+    http_response_code(400);
     echo json_encode([
         'success' => false,
         'error' => $e->getMessage()
     ], JSON_UNESCAPED_UNICODE);
 }
+?>

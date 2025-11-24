@@ -132,7 +132,7 @@
             ניהול מערכת
         </h4>
         
-        <!-- תשלומים -->
+        <!-- דוח קברים -->
         <div class="management-item" style="margin-bottom: 10px;">
             <div class="hierarchy-header" id="paymentsItem" onclick="GravesInventoryReport.open()">
                 <span class="hierarchy-icon">📊</span>

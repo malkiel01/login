@@ -35,7 +35,7 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/universal-search.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/table-manager.css">
 
-    <link rel="stylesheet" href="/dashboards/dashboard/cemeteries/css/reports/graves-inventory-report.css">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/reports/graves-inventory-report.css">
 
 </head>
 <body>
@@ -197,7 +197,7 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
 
     <script src="/dashboard/dashboards/cemeteries/js/live-search.js"></script>
 
-    <script src="/dashboards/dashboard/cemeteries/js/reports/graves-inventory-report.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/reports/graves-inventory-report.js"></script>
 
     <!-- 7️⃣ אתחול -->
     <script>

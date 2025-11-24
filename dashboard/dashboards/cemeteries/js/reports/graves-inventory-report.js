@@ -1,20 +1,18 @@
 /*
- * File: dashboards/dashboard/cemeteries/js/reports/graves-inventory-report.js
- * Version: 1.0.0
+ * File: dashboard/dashboards/cemeteries/js/reports/graves-inventory-report.js
+ * Version: 1.1.0
  * Updated: 2025-01-21
  * Author: Malkiel
  * Description: מודול JavaScript להצגת דוח ניהול יתרות קברים
  * Change Summary:
- * - יצירה ראשונית של מודול הדוח
- * - תמיכה בדוח מצומצם ומורחב
- * - חלון מודאלי עם עיצוב מותאם
+ * - v1.1.0: תיקון נתיבי API לפי מבנה הפרויקט
  */
 
 const GravesInventoryReport = (() => {
-    // ========== קונפיגורציה ==========
+    // ========== קונפיגורציה - נתיבים מתוקנים! ==========
     const CONFIG = {
-        apiUrl: '/api/reports/graves-inventory-report-api.php',
-        configUrl: '/config/reports-config.php',
+        apiUrl: '/dashboard/dashboards/cemeteries/api/reports/graves-inventory-report-api.php',
+        configUrl: '/dashboard/dashboards/cemeteries/config/reports-config.php',
         defaultDateRange: 30 // ימים
     };
 
@@ -23,24 +21,27 @@ const GravesInventoryReport = (() => {
     // ========== פונקציות עזר ==========
 
     /**
-     * טעינת קונפיגורציה מהשרת
+     * טעינת קונפיגורציה - עם ברירת מחדל אם לא קיים
      */
     async function loadConfig() {
         try {
             const response = await fetch(CONFIG.configUrl);
+            if (!response.ok) {
+                throw new Error('Config file not found');
+            }
             const config = await response.json();
             reportConfig = config.gravesInventory;
             return reportConfig;
         } catch (error) {
-            console.error('שגיאה בטעינת קונפיגורציה:', error);
-            // קונפיגורציה ברירת מחדל
+            console.warn('⚠️ שימוש בקונפיגורציה ברירת מחדל:', error.message);
+            // קונפיגורציה ברירת מחדל - לא צריך קובץ חיצוני
             reportConfig = getDefaultConfig();
             return reportConfig;
         }
     }
 
     /**
-     * קונפיגורציה ברירת מחדל
+     * קונפיגורציה ברירת מחדל - מלאה!
      */
     function getDefaultConfig() {
         return {
@@ -52,8 +53,43 @@ const GravesInventoryReport = (() => {
             },
             colors: {
                 primary: '#2c3e50',
+                secondary: '#34495e',
                 success: '#27ae60',
-                danger: '#e74c3c'
+                danger: '#e74c3c',
+                warning: '#f39c12',
+                info: '#3498db'
+            },
+            movementTypes: {
+                'קבר_חדש': {
+                    label: 'קבר חדש',
+                    color: '#27ae60',
+                    icon: '➕'
+                },
+                'רכישה': {
+                    label: 'רכישה',
+                    color: '#e74c3c',
+                    icon: '➖'
+                },
+                'קבורה': {
+                    label: 'קבורה',
+                    color: '#c0392b',
+                    icon: '⚰️'
+                },
+                'ביטול_רכישה': {
+                    label: 'ביטול רכישה',
+                    color: '#3498db',
+                    icon: '↩️'
+                },
+                'ביטול_קבורה': {
+                    label: 'ביטול קבורה',
+                    color: '#9b59b6',
+                    icon: '🔄'
+                }
+            },
+            plotTypes: {
+                1: 'פטור',
+                2: 'יוצא דופן',
+                3: 'סמוך'
             }
         };
     }
@@ -95,11 +131,11 @@ const GravesInventoryReport = (() => {
                                 </select>
                             </div>
 
-                            <div class="filter-group">
+                            <div class="filter-group filter-buttons">
                                 <button onclick="GravesInventoryReport.generate()" class="btn-generate">
                                     📊 הפק דוח
                                 </button>
-                                <button onclick="GravesInventoryReport.exportToExcel()" class="btn-export" style="display: none;">
+                                <button onclick="GravesInventoryReport.exportToExcel()" class="btn-export" id="btnExport" style="display: none;">
                                     📥 ייצא ל-Excel
                                 </button>
                             </div>
@@ -155,7 +191,7 @@ const GravesInventoryReport = (() => {
         // יצירת המודאל אם עדיין לא קיים
         if (!document.getElementById('gravesInventoryReportModal')) {
             createReportModal();
-            applyStyling();
+            injectStyles();
         }
 
         // הצגת המודאל
@@ -167,7 +203,10 @@ const GravesInventoryReport = (() => {
      * סגירת המודאל
      */
     function close() {
-        document.getElementById('gravesInventoryReportModal').style.display = 'none';
+        const modal = document.getElementById('gravesInventoryReportModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
         document.body.style.overflow = 'auto';
     }
 
@@ -206,11 +245,15 @@ const GravesInventoryReport = (() => {
                 })
             });
 
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
             const data = await response.json();
 
             if (data.success) {
                 displayReport(data);
-                document.querySelector('.btn-export').style.display = 'inline-block';
+                document.getElementById('btnExport').style.display = 'inline-block';
             } else {
                 throw new Error(data.error || 'שגיאה לא ידועה');
             }
@@ -278,6 +321,10 @@ const GravesInventoryReport = (() => {
      * טבלה מפורטת
      */
     function renderDetailedTable(movements) {
+        if (!movements || movements.length === 0) {
+            return '<p class="no-data">אין תנועות בתקופה זו</p>';
+        }
+
         let html = `
             <table class="report-table">
                 <thead>
@@ -306,8 +353,8 @@ const GravesInventoryReport = (() => {
                 <tr class="movement-row ${movement.movementType}">
                     <td>${formatDate(movement.date)}</td>
                     <td>
-                        <span class="movement-badge" style="background-color: ${movementTypeConfig.color}">
-                            ${movementTypeConfig.icon} ${movementTypeConfig.label}
+                        <span class="movement-badge" style="background-color: ${movementTypeConfig.color || '#999'}">
+                            ${movementTypeConfig.icon || ''} ${movementTypeConfig.label || movement.movementType}
                         </span>
                     </td>
                     <td>${movement.cemeteryNameHe || '-'}</td>
@@ -318,7 +365,7 @@ const GravesInventoryReport = (() => {
                     <td>${movement.graveNameHe || '-'}</td>
                     <td>${plotTypeName}</td>
                     <td>${movement.customerName || movement.serialPurchaseId || movement.serialBurialId || '-'}</td>
-                    <td class="quantity ${movement.quantity > 0 ? 'positive' : 'negative'}">
+                    <td class="quantity ${parseInt(movement.quantity) > 0 ? 'positive' : 'negative'}">
                         ${movement.quantity}
                     </td>
                 </tr>
@@ -337,6 +384,10 @@ const GravesInventoryReport = (() => {
      * טבלה מסוכמת
      */
     function renderSummaryTable(movements) {
+        if (!movements || movements.length === 0) {
+            return '<p class="no-data">אין תנועות בתקופה זו</p>';
+        }
+
         let html = `
             <table class="report-table summary-table">
                 <thead>
@@ -361,13 +412,13 @@ const GravesInventoryReport = (() => {
                     <td>${plot.cemeteryName || '-'}</td>
                     <td>${plot.blockName || '-'}</td>
                     <td>${plot.plotName || '-'}</td>
-                    <td class="positive">${plot.movements.קבר_חדש || 0}</td>
-                    <td class="negative">${plot.movements.רכישה || 0}</td>
-                    <td class="negative">${plot.movements.קבורה || 0}</td>
-                    <td class="positive">${plot.movements.ביטול_רכישה || 0}</td>
-                    <td class="positive">${plot.movements.ביטול_קבורה || 0}</td>
+                    <td class="positive">${plot.movements['קבר_חדש'] || 0}</td>
+                    <td class="negative">${plot.movements['רכישה'] || 0}</td>
+                    <td class="negative">${plot.movements['קבורה'] || 0}</td>
+                    <td class="positive">${plot.movements['ביטול_רכישה'] || 0}</td>
+                    <td class="positive">${plot.movements['ביטול_קבורה'] || 0}</td>
                     <td class="net-change ${plot.netChange >= 0 ? 'positive' : 'negative'}">
-                        ${plot.netChange}
+                        ${plot.netChange > 0 ? '+' : ''}${plot.netChange}
                     </td>
                 </tr>
             `;
@@ -398,7 +449,10 @@ const GravesInventoryReport = (() => {
      * הצגת/הסתרת לואדר
      */
     function showLoader(show) {
-        document.getElementById('reportLoader').style.display = show ? 'flex' : 'none';
+        const loader = document.getElementById('reportLoader');
+        if (loader) {
+            loader.style.display = show ? 'flex' : 'none';
+        }
     }
 
     /**
@@ -406,12 +460,14 @@ const GravesInventoryReport = (() => {
      */
     function showError(message) {
         const contentDiv = document.getElementById('reportContent');
-        contentDiv.innerHTML = `
-            <div class="report-error">
-                <span class="error-icon">⚠️</span>
-                <p>${message}</p>
-            </div>
-        `;
+        if (contentDiv) {
+            contentDiv.innerHTML = `
+                <div class="report-error">
+                    <span class="error-icon">⚠️</span>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
     }
 
     /**
@@ -424,17 +480,358 @@ const GravesInventoryReport = (() => {
     }
 
     /**
-     * החלת עיצוב דינמי
+     * הזרקת סגנונות CSS לתוך הדף
      */
-    function applyStyling() {
-        if (!reportConfig) return;
+    function injectStyles() {
+        if (document.getElementById('gravesReportStyles')) return;
 
-        const modal = document.querySelector('.graves-report-container');
-        if (modal) {
-            modal.style.width = reportConfig.modal.width;
-            modal.style.maxWidth = reportConfig.modal.maxWidth;
-            modal.style.height = reportConfig.modal.height;
-        }
+        const styles = `
+            /* מודאל ראשי */
+            .graves-report-modal {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 10000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-family: 'Heebo', Arial, sans-serif;
+            }
+
+            .graves-report-overlay {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.6);
+                backdrop-filter: blur(4px);
+            }
+
+            .graves-report-container {
+                position: relative;
+                width: 95%;
+                max-width: 1400px;
+                height: 90vh;
+                background-color: #ffffff;
+                border-radius: 8px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+            }
+
+            /* כותרת */
+            .graves-report-header {
+                background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+                color: #ffffff;
+                padding: 20px 30px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-bottom: 3px solid #1a252f;
+            }
+
+            .graves-report-title {
+                margin: 0;
+                font-size: 24px;
+                font-weight: 700;
+            }
+
+            .graves-report-close-btn {
+                background: rgba(255, 255, 255, 0.2);
+                border: none;
+                color: #ffffff;
+                font-size: 24px;
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                cursor: pointer;
+                transition: all 0.3s ease;
+            }
+
+            .graves-report-close-btn:hover {
+                background: rgba(255, 255, 255, 0.3);
+                transform: rotate(90deg);
+            }
+
+            /* פילטרים */
+            .graves-report-filters {
+                padding: 20px 30px;
+                background-color: #f8f9fa;
+                border-bottom: 1px solid #dee2e6;
+            }
+
+            .filter-row {
+                display: flex;
+                gap: 15px;
+                align-items: flex-end;
+                flex-wrap: wrap;
+            }
+
+            .filter-group {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .filter-group label {
+                font-size: 14px;
+                font-weight: 600;
+                color: #2c3e50;
+            }
+
+            .filter-input {
+                padding: 8px 12px;
+                border: 1px solid #ced4da;
+                border-radius: 4px;
+                font-size: 14px;
+                min-width: 150px;
+            }
+
+            .filter-input:focus {
+                outline: none;
+                border-color: #3498db;
+                box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+            }
+
+            .filter-buttons {
+                flex-direction: row !important;
+                gap: 10px !important;
+            }
+
+            .btn-generate, .btn-export {
+                padding: 10px 20px;
+                border: none;
+                border-radius: 4px;
+                font-size: 14px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.3s ease;
+            }
+
+            .btn-generate {
+                background-color: #3498db;
+                color: #ffffff;
+            }
+
+            .btn-generate:hover {
+                background-color: #2980b9;
+            }
+
+            .btn-export {
+                background-color: #27ae60;
+                color: #ffffff;
+            }
+
+            .btn-export:hover {
+                background-color: #229954;
+            }
+
+            /* תוכן הדוח */
+            .graves-report-content {
+                flex: 1;
+                overflow-y: auto;
+                padding: 30px;
+            }
+
+            .report-placeholder, .no-data {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 100%;
+                color: #95a5a6;
+                font-size: 16px;
+                text-align: center;
+            }
+
+            /* סיכום */
+            .report-summary { margin-bottom: 30px; }
+            .summary-header h3 {
+                margin: 0 0 20px 0;
+                color: #2c3e50;
+                font-size: 20px;
+            }
+
+            .summary-cards {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 20px;
+            }
+
+            .summary-card {
+                background: #ffffff;
+                border-radius: 8px;
+                padding: 20px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                border-right: 4px solid;
+            }
+
+            .summary-card.opening { border-color: #3498db; }
+            .summary-card.movements { border-color: #f39c12; }
+            .summary-card.closing { border-color: #27ae60; }
+
+            .summary-card h4 {
+                margin: 0 0 10px 0;
+                color: #7f8c8d;
+                font-size: 14px;
+            }
+
+            .summary-card .card-value {
+                font-size: 32px;
+                font-weight: 700;
+                color: #2c3e50;
+            }
+
+            .summary-card .card-breakdown {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+                font-size: 13px;
+                color: #7f8c8d;
+                margin-top: 10px;
+            }
+
+            /* טבלה */
+            .report-table-container {
+                background: #ffffff;
+                border-radius: 8px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                overflow: hidden;
+            }
+
+            .report-table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 14px;
+            }
+
+            .report-table thead {
+                background-color: #34495e;
+                color: #ffffff;
+                position: sticky;
+                top: 0;
+            }
+
+            .report-table th {
+                padding: 12px 15px;
+                text-align: right;
+                font-weight: 600;
+            }
+
+            .report-table tbody tr {
+                border-bottom: 1px solid #dee2e6;
+            }
+
+            .report-table tbody tr:nth-child(even) {
+                background-color: #f8f9fa;
+            }
+
+            .report-table tbody tr:hover {
+                background-color: #e9ecef;
+            }
+
+            .report-table td {
+                padding: 10px 15px;
+                text-align: right;
+            }
+
+            /* תגי תנועה */
+            .movement-badge {
+                display: inline-block;
+                padding: 4px 10px;
+                border-radius: 20px;
+                color: #ffffff;
+                font-size: 12px;
+                font-weight: 600;
+            }
+
+            /* צבעים */
+            .positive { color: #27ae60; font-weight: 600; }
+            .negative { color: #e74c3c; font-weight: 600; }
+
+            /* לואדר */
+            .report-loader {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(255, 255, 255, 0.95);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                z-index: 100;
+            }
+
+            .loader-spinner {
+                width: 50px;
+                height: 50px;
+                border: 4px solid #ecf0f1;
+                border-top-color: #3498db;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            }
+
+            @keyframes spin {
+                to { transform: rotate(360deg); }
+            }
+
+            .report-loader p {
+                margin-top: 20px;
+                font-size: 16px;
+                color: #7f8c8d;
+            }
+
+            /* שגיאות */
+            .report-error {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 100%;
+                color: #e74c3c;
+            }
+
+            .report-error .error-icon {
+                font-size: 48px;
+                margin-bottom: 15px;
+            }
+
+            /* Responsive */
+            @media (max-width: 768px) {
+                .graves-report-container {
+                    width: 100%;
+                    height: 100vh;
+                    border-radius: 0;
+                }
+
+                .filter-row {
+                    flex-direction: column;
+                    align-items: stretch;
+                }
+
+                .filter-input {
+                    width: 100%;
+                }
+
+                .summary-cards {
+                    grid-template-columns: 1fr;
+                }
+
+                .report-table {
+                    font-size: 12px;
+                }
+            }
+        `;
+
+        const styleElement = document.createElement('style');
+        styleElement.id = 'gravesReportStyles';
+        styleElement.textContent = styles;
+        document.head.appendChild(styleElement);
     }
 
     // ========== API ציבורי ==========

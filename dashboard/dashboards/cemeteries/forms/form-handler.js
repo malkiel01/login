@@ -132,57 +132,6 @@ const FormHandler = {
             
             // חפש את המודאל
             const modal = tempDiv.querySelector('#' + type + 'FormModal');
-            
-            // if (modal) {
-            //     document.body.appendChild(modal);
-            //     document.body.style.overflow = 'hidden';
-                
-            //     this.handleFormSpecificLogic(type, parentId, itemId);
-                
-            // } else {
-            //     console.error('❌ Modal not found in HTML');
-   
-            //     const allModals = tempDiv.querySelectorAll('.modal');
-            //     // console.log('Found modals:', allModals.length);
-            //     allModals.forEach(m => {
-            //         // console.log('Modal id:', m.id);
-            //     });
-            // }
-
-            // if (modal) {
-            //     document.body.appendChild(modal);
-            //     document.body.style.overflow = 'hidden';
-                
-            //     // // 🆕 אתחל FormValidations
-            //     // const form = modal.querySelector('form');
-            //     // if (form && window.FormValidations) {
-            //     //     FormValidations.init(form);
-            //     //     console.log('✅ FormValidations initialized for', type);
-            //     // } else {
-            //     //     console.warn('⚠️ FormValidations not found');
-            //     // }
-
-            //     // 🆕 אתחל FormValidations אחרי רנדור מלא
-            //     setTimeout(() => {
-            //         const form = modal.querySelector('form');
-            //         if (form && window.FormValidations) {
-            //             FormValidations.init(form);
-            //             console.log('✅ FormValidations initialized for', type);
-            //         } else {
-            //             console.warn('⚠️ FormValidations not found or form not ready');
-            //         }
-            //     }, 100); // 100ms מספיק
-                
-            //     this.handleFormSpecificLogic(type, parentId, itemId);
-            // } else {
-            //     console.error('❌ Modal not found in HTML');
-   
-            //     const allModals = tempDiv.querySelectorAll('.modal');
-            //     // console.log('Found modals:', allModals.length);
-            //     allModals.forEach(m => {
-            //         // console.log('Modal id:', m.id);
-            //     });
-            // }
 
             if (modal) {
                 document.body.appendChild(modal);
@@ -228,10 +177,6 @@ const FormHandler = {
 
     handleFormSpecificLogic: function(type, parentId, itemId) {
             switch(type) {
-                case 'areaGrave2':
-                    this.handleAreaGraveForm(parentId);
-                    break;
-                
                 case 'areaGrave':
                     // טען שורות אם יש parentId
                     if (parentId) {
@@ -258,7 +203,11 @@ const FormHandler = {
                 case 'payment':
                     this.handlePaymentForm(itemId);
                     break;
-                    
+                
+                case 'graveCard':
+                    this.handleGraveCardForm(itemId);
+                    break;
+
                 default:
                     if (itemId) {
                         this.loadFormData(type, itemId);
@@ -1267,6 +1216,33 @@ const FormHandler = {
                 alert('שגיאה בטעינת רשימת המדינות והערים');
             }
         })();
+    },
+
+    /**
+     * טיפול בכרטיס קבר
+     * @param {string} itemId - מזהה הקבר
+     */
+    handleGraveCardForm: function(itemId) {
+        console.log('🪦 [GraveCard] אתחול כרטיס קבר:', itemId);
+        
+        // טען את graveCard-handler.js אם לא קיים
+        if (!window.GraveCardHandler) {
+            const script = document.createElement('script');
+            script.src = '/dashboard/dashboards/cemeteries/js/forms/graveCard-handler.js';
+            script.onload = function() {
+                console.log('✅ [GraveCard] Handler נטען בהצלחה');
+                // אתחל אחרי טעינה
+                if (window.GraveCardHandler && window.GraveCardHandler.init) {
+                    window.GraveCardHandler.init(itemId);
+                }
+            };
+            document.head.appendChild(script);
+        } else {
+            // כבר נטען - אתחל ישירות
+            if (window.GraveCardHandler.init) {
+                window.GraveCardHandler.init(itemId);
+            }
+        }
     },
 
     /**

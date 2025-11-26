@@ -358,41 +358,53 @@ echo $formBuilder->renderModal();
 ?>
 
 <script>
-// העבר נתונים ל-JavaScript
-window.graveCardData = {
-    unicId: '<?= $grave['unicId'] ?>',
-    graveStatus: <?= $grave['graveStatus'] ?>,
-    hasPurchase: <?= $purchase ? 'true' : 'false' ?>,
-    hasBurial: <?= $burial ? 'true' : 'false' ?>,
-    areaGraveId: '<?= $grave['areaGraveId'] ?? '' ?>'
-};
+ // העבר נתונים ל-JavaScript
+ window.graveCardData = {
+     unicId: '<?= $grave['unicId'] ?>',
+     graveStatus: <?= $grave['graveStatus'] ?>,
+     hasPurchase: <?= $purchase ? 'true' : 'false' ?>,
+     hasBurial: <?= $burial ? 'true' : 'false' ?>,
+     areaGraveId: '<?= $grave['areaGraveId'] ?? '' ?>'
+ };
 
-// החלף כפתורים ב-footer לפי סטטוס
-document.addEventListener('DOMContentLoaded', function() {
-    const footer = document.querySelector('#graveCardFormModal .modal-footer');
-    if (!footer) return;
-    
-    const status = window.graveCardData.graveStatus;
-    let buttonsHTML = '';
-    
-    // כפתור סגור - תמיד
-    buttonsHTML += '<button type="button" class="btn btn-secondary" onclick="FormHandler.closeForm(\'graveCard\')"><i class="fas fa-times"></i> סגור</button>';
-    
-    // לפי סטטוס
-    if (status === 1) {
-        // פנוי - כל האופציות
-        buttonsHTML += '<button type="button" class="btn btn-warning" onclick="GraveCardHandler.saveGrave()"><i class="fas fa-bookmark"></i> שמור קבר</button>';
-        buttonsHTML += '<button type="button" class="btn btn-success" onclick="GraveCardHandler.openNewPurchase()"><i class="fas fa-shopping-cart"></i> + רכישה חדשה</button>';
-        buttonsHTML += '<button type="button" class="btn btn-info" onclick="GraveCardHandler.openNewBurial()"><i class="fas fa-cross"></i> + קבורה חדשה</button>';
-    } else if (status === 2) {
-        // נרכש - רק קבורה
-        buttonsHTML += '<button type="button" class="btn btn-info" onclick="GraveCardHandler.openNewBurial()"><i class="fas fa-cross"></i> + קבורה חדשה</button>';
-    } else if (status === 4) {
-        // שמור - בטל שמירה
-        buttonsHTML += '<button type="button" class="btn btn-danger" onclick="GraveCardHandler.cancelSavedGrave()"><i class="fas fa-ban"></i> בטל שמירה</button>';
-    }
-    // סטטוס 3 (קבור) - אין כפתורים נוספים
-    
-    footer.innerHTML = buttonsHTML;
-});
+ // החלף כפתורים ב-footer לפי סטטוס
+ document.addEventListener('DOMContentLoaded', function() {
+     const footer = document.querySelector('#graveCardFormModal .modal-footer');
+     if (!footer) return;
+     
+     const status = window.graveCardData.graveStatus;
+     let buttonsHTML = '';
+     
+     // כפתור סגור - תמיד
+     buttonsHTML += '<button type="button" class="btn btn-secondary" onclick="FormHandler.closeForm(\'graveCard\')"><i class="fas fa-times"></i> סגור</button>';
+     
+     // לפי סטטוס
+     if (status === 1) {
+         // פנוי - כל האופציות
+         buttonsHTML += '<button type="button" class="btn btn-warning" onclick="GraveCardHandler.saveGrave()"><i class="fas fa-bookmark"></i> שמור קבר</button>';
+         buttonsHTML += '<button type="button" class="btn btn-success" onclick="GraveCardHandler.openNewPurchase()"><i class="fas fa-shopping-cart"></i> + רכישה חדשה</button>';
+         buttonsHTML += '<button type="button" class="btn btn-info" onclick="GraveCardHandler.openNewBurial()"><i class="fas fa-cross"></i> + קבורה חדשה</button>';
+     } else if (status === 2) {
+         // נרכש - רק קבורה
+         buttonsHTML += '<button type="button" class="btn btn-info" onclick="GraveCardHandler.openNewBurial()"><i class="fas fa-cross"></i> + קבורה חדשה</button>';
+     } else if (status === 4) {
+         // שמור - בטל שמירה
+         buttonsHTML += '<button type="button" class="btn btn-danger" onclick="GraveCardHandler.cancelSavedGrave()"><i class="fas fa-ban"></i> בטל שמירה</button>';
+     }
+     // סטטוס 3 (קבור) - אין כפתורים נוספים
+     
+     footer.innerHTML = buttonsHTML;
+ });
 </script>
+
+<style>
+    /* הרחבת הטופס */
+    #graveCardFormModal .modal-dialog {
+        max-width: 95% !important;
+        width: 1200px !important;
+    }
+    
+    #graveCardFormModal .modal-body {
+        max-height: 80vh !important;
+    }
+</style>

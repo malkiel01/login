@@ -129,33 +129,43 @@ $formBuilder = new FormBuilder('graveCard', $itemId, null);
 
 // HTML מותאם - היררכיה
 $hierarchyHTML = '
-<fieldset class="form-section" style="border: 2px solid #e0f2fe; border-radius: 12px; padding: 20px; margin-bottom: 20px; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);">
-    <legend style="padding: 0 15px; font-weight: bold; color: #0284c7; font-size: 16px;">
-        <i class="fas fa-sitemap"></i> מיקום בהיררכיה
-    </legend>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
-        <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bae6fd;">
-            <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">בית עלמין</div>
-            <div style="font-weight: 600; color: #0c4a6e;">' . htmlspecialchars($grave['cemeteryNameHe'] ?? '-') . '</div>
-        </div>
-        <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bae6fd;">
-            <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">גוש</div>
-            <div style="font-weight: 600; color: #0c4a6e;">' . htmlspecialchars($grave['blockNameHe'] ?? '-') . '</div>
-        </div>
-        <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bae6fd;">
-            <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">חלקה</div>
-            <div style="font-weight: 600; color: #0c4a6e;">' . htmlspecialchars($grave['plotNameHe'] ?? '-') . '</div>
-        </div>
-        <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bae6fd;">
-            <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">שורה</div>
-            <div style="font-weight: 600; color: #0c4a6e;">' . htmlspecialchars($grave['lineNameHe'] ?? '-') . '</div>
-        </div>
-        <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bae6fd;">
-            <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">אחוזת קבר</div>
-            <div style="font-weight: 600; color: #0c4a6e;">' . htmlspecialchars($grave['areaGraveNameHe'] ?? '-') . '</div>
-        </div>
-    </div>
-</fieldset>';
+ <style>
+     #graveCardFormModal .modal-dialog {
+         max-width: 95% !important;
+         width: 1200px !important;
+     }
+     #graveCardFormModal .modal-body {
+         max-height: 80vh !important;
+     }
+ </style>
+
+ <fieldset class="form-section" style="border: 2px solid #e0f2fe; border-radius: 12px; padding: 20px; margin-bottom: 20px; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);">
+     <legend style="padding: 0 15px; font-weight: bold; color: #0284c7; font-size: 16px;">
+         <i class="fas fa-sitemap"></i> מיקום בהיררכיה
+     </legend>
+     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+         <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bae6fd;">
+             <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">בית עלמין</div>
+             <div style="font-weight: 600; color: #0c4a6e;">' . htmlspecialchars($grave['cemeteryNameHe'] ?? '-') . '</div>
+         </div>
+         <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bae6fd;">
+             <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">גוש</div>
+             <div style="font-weight: 600; color: #0c4a6e;">' . htmlspecialchars($grave['blockNameHe'] ?? '-') . '</div>
+         </div>
+         <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bae6fd;">
+             <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">חלקה</div>
+             <div style="font-weight: 600; color: #0c4a6e;">' . htmlspecialchars($grave['plotNameHe'] ?? '-') . '</div>
+         </div>
+         <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bae6fd;">
+             <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">שורה</div>
+             <div style="font-weight: 600; color: #0c4a6e;">' . htmlspecialchars($grave['lineNameHe'] ?? '-') . '</div>
+         </div>
+         <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bae6fd;">
+             <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">אחוזת קבר</div>
+             <div style="font-weight: 600; color: #0c4a6e;">' . htmlspecialchars($grave['areaGraveNameHe'] ?? '-') . '</div>
+         </div>
+     </div>
+ </fieldset>';
 
 $formBuilder->addCustomHTML($hierarchyHTML);
 

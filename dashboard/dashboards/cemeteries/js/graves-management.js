@@ -621,100 +621,114 @@ async function deleteGrave(graveId) {
 // ===================================================================
 // דאבל-קליק על אחוזת קבר
 // ===================================================================
-async function handleGraveDoubleClick2(graveId, graveName) {
-    console.log('🖱️ Double-click on area grave:', graveName, graveId);
+// async function handleGraveDoubleClick2(graveId, graveName) {
+//     console.log('🖱️ Double-click on area grave:', graveName, graveId);
     
-    try {
-        if (typeof createGraveCard === 'function') {
-            const cardHtml = await createGraveCard(graveId);
-            if (cardHtml && typeof displayHierarchyCard === 'function') {
-                displayHierarchyCard(cardHtml);
-            }
-        }
+//     try {
+//         if (typeof createGraveCard === 'function') {
+//             const cardHtml = await createGraveCard(graveId);
+//             if (cardHtml && typeof displayHierarchyCard === 'function') {
+//                 displayHierarchyCard(cardHtml);
+//             }
+//         }
         
-        console.log('🪦 Loading graves for area grave:', graveName);
-        if (typeof loadGraves === 'function') {
-            loadGraves(graveId, graveName);
-        } else {
-            console.warn('loadGraves function not found');
-        }
+//         console.log('🪦 Loading graves for area grave:', graveName);
+//         if (typeof loadGraves === 'function') {
+//             loadGraves(graveId, graveName);
+//         } else {
+//             console.warn('loadGraves function not found');
+//         }
         
-    } catch (error) {
-        console.error('❌ Error in handleGraveDoubleClick:', error);
-        showToast('שגיאה בטעינת פרטי אחוזת הקבר', 'error');
-    }
-}
+//     } catch (error) {
+//         console.error('❌ Error in handleGraveDoubleClick:', error);
+//         showToast('שגיאה בטעינת פרטי אחוזת הקבר', 'error');
+//     }
+// }
 
-// --- START patch v1.1.0 (הוספת לחיצה כפולה לפתיחת כרטיס קבר) ---
+// // --- START patch v1.1.0 (הוספת לחיצה כפולה לפתיחת כרטיס קבר) ---
 
-/**
- * פונקציה גלובלית לטיפול בלחיצה כפולה על קבר
- * @param {string} graveId - מזהה הקבר
- * @param {string} graveName - שם הקבר (לצורך לוג)
- */
-window.handleGraveDoubleClick = function(graveId, graveName) {
-    console.log('🖱️ Double-click on grave:', graveId, graveName);
+// /**
+//  * פונקציה גלובלית לטיפול בלחיצה כפולה על קבר
+//  * @param {string} graveId - מזהה הקבר
+//  * @param {string} graveName - שם הקבר (לצורך לוג)
+//  */
+// window.handleGraveDoubleClick2 = function(graveId, graveName) {
+//     console.log('🖱️ Double-click on grave:', graveId, graveName);
     
-    // פתיחת כרטיס הקבר
-    if (typeof GraveCardModal !== 'undefined' && GraveCardModal.open) {
-        GraveCardModal.open(graveId);
-    } else {
-        console.warn('GraveCardModal לא נטען - פותח בעריכה');
-        // fallback לעריכה אם המודל לא נטען
-        if (typeof window.tableRenderer !== 'undefined') {
-            window.tableRenderer.editItem(graveId);
-        }
-    }
-};
+//     // פתיחת כרטיס הקבר
+//     if (typeof GraveCardModal !== 'undefined' && GraveCardModal.open) {
+//         GraveCardModal.open(graveId);
+//     } else {
+//         console.warn('GraveCardModal לא נטען - פותח בעריכה');
+//         // fallback לעריכה אם המודל לא נטען
+//         if (typeof window.tableRenderer !== 'undefined') {
+//             window.tableRenderer.editItem(graveId);
+//         }
+//     }
+// };
 
-/**
- * הוספת מאזין double-click לשורות הטבלה
- * קוראים לפונקציה זו אחרי כל רינדור של הטבלה
- */
-function attachGraveRowDoubleClickListeners() {
-    // מחכים שהטבלה תהיה מוכנה
-    setTimeout(() => {
-        const tableBody = document.querySelector('#mainTable tbody');
-        if (!tableBody) {
-            console.warn('⚠️ לא נמצא tbody בטבלה');
-            return;
-        }
+// /**
+//  * הוספת מאזין double-click לשורות הטבלה
+//  * קוראים לפונקציה זו אחרי כל רינדור של הטבלה
+//  */
+// function attachGraveRowDoubleClickListeners() {
+//     // מחכים שהטבלה תהיה מוכנה
+//     setTimeout(() => {
+//         const tableBody = document.querySelector('#mainTable tbody');
+//         if (!tableBody) {
+//             console.warn('⚠️ לא נמצא tbody בטבלה');
+//             return;
+//         }
         
-        const rows = tableBody.querySelectorAll('tr[data-id]');
-        console.log(`🔗 מקשר double-click ל-${rows.length} שורות`);
+//         const rows = tableBody.querySelectorAll('tr[data-id]');
+//         console.log(`🔗 מקשר double-click ל-${rows.length} שורות`);
         
-        rows.forEach(row => {
-            // הסר מאזין קודם אם קיים
-            row.removeEventListener('dblclick', row._dblClickHandler);
+//         rows.forEach(row => {
+//             // הסר מאזין קודם אם קיים
+//             row.removeEventListener('dblclick', row._dblClickHandler);
             
-            // צור מאזין חדש
-            row._dblClickHandler = function(e) {
-                // מנע פתיחה אם הלחיצה הייתה על כפתור
-                if (e.target.closest('button') || e.target.closest('a')) {
-                    return;
-                }
+//             // צור מאזין חדש
+//             row._dblClickHandler = function(e) {
+//                 // מנע פתיחה אם הלחיצה הייתה על כפתור
+//                 if (e.target.closest('button') || e.target.closest('a')) {
+//                     return;
+//                 }
                 
-                const graveId = this.getAttribute('data-id');
-                const graveName = this.querySelector('td:first-child')?.textContent || '';
+//                 const graveId = this.getAttribute('data-id');
+//                 const graveName = this.querySelector('td:first-child')?.textContent || '';
                 
-                handleGraveDoubleClick(graveId, graveName);
-            };
+//                 handleGraveDoubleClick(graveId, graveName);
+//             };
             
-            // הוסף את המאזין
-            row.addEventListener('dblclick', row._dblClickHandler);
+//             // הוסף את המאזין
+//             row.addEventListener('dblclick', row._dblClickHandler);
             
-            // הוסף cursor pointer לציון שניתן ללחוץ
-            row.style.cursor = 'pointer';
-        });
+//             // הוסף cursor pointer לציון שניתן ללחוץ
+//             row.style.cursor = 'pointer';
+//         });
         
-    }, 100);
-}
+//     }, 100);
+// }
 
-// הוסף לאחר כל רינדור של הטבלה
-// ניתן לקרוא לפונקציה זו מתוך renderGravesRows או מהקולבק של TableManager
-window.attachGraveRowDoubleClickListeners = attachGraveRowDoubleClickListeners;
+
+
+// // הוסף לאחר כל רינדור של הטבלה
+// // ניתן לקרוא לפונקציה זו מתוך renderGravesRows או מהקולבק של TableManager
+// window.attachGraveRowDoubleClickListeners = attachGraveRowDoubleClickListeners;
 
 // --- END patch v1.1.0 ---
+
+function handleGraveDoubleClick(graveId, graveName) {
+// window.handleGraveDoubleClick = function(graveId, graveName) {
+    console.log('🖱️ Double-click on grave:', graveId, graveName);
+    
+    // פתיחת כרטיס הקבר החדש דרך FormHandler
+    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
+        FormHandler.openForm('graveCard', null, graveId);
+    } else {
+        console.error('❌ FormHandler לא נמצא');
+    }
+};
 
 window.handleGraveDoubleClick = handleGraveDoubleClick;
 // ===================================================================

@@ -183,10 +183,6 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-manager.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-initializer.js"></script>
 
-
-    <!-- הוסף לפני </body>, אחרי graves-management.js -->
-    <script src="/dashboard/dashboards/cemeteries/js/grave-card-modal.js"></script>
-
     <!-- 6️⃣ הקבצים הישנים (יישארו כ-fallback) -->
     <script src="/dashboard/dashboards/cemeteries/js/cemeteries-management.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/blocks-management.js"></script>

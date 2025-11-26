@@ -126,7 +126,6 @@ function formatPhone($phone) {
 
 // יצירת FormBuilder
 $formBuilder = new FormBuilder('graveCard', $itemId, null);
-$formBuilder->setTitle('כרטיס קבר');
 
 // HTML מותאם - היררכיה
 $hierarchyHTML = '

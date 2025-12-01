@@ -4831,6 +4831,23 @@ window.onGraveSelected = function(graveId) {
     }
 };
 
+/**
+ * פתיחת טופס עריכת קבר
+ * @param {string} graveId - מזהה הקבר
+ */
+window.openGraveEdit = function(graveId) {
+    console.log('📝 פותח עריכת קבר:', graveId);
+    // סגור את כרטיס הקבר
+    FormHandler.closeForm('graveCard');
+    // פתח טופס עריכה
+    FormHandler.openForm('grave', null, graveId);
+};
+
+// טען את מנהל התשלומים
+if (typeof PaymentDisplayManager !== 'undefined') {
+    window.PaymentDisplayManager = PaymentDisplayManager;
+}
+
 // טען את מנהל התשלומים
 if (typeof PaymentDisplayManager !== 'undefined') {
     window.PaymentDisplayManager = PaymentDisplayManager;

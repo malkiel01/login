@@ -1222,7 +1222,7 @@ const FormHandler = {
      * טיפול בכרטיס קבר
      * @param {string} itemId - מזהה הקבר
      */
-    handleGraveCardForm: function(itemId) {
+    handleGraveCardForm1: function(itemId) {
         console.log('🪦 [GraveCard] אתחול כרטיס קבר:', itemId);
         
         // טען את graveCard-handler.js אם לא קיים
@@ -1241,6 +1241,175 @@ const FormHandler = {
             // כבר נטען - אתחל ישירות
             if (window.GraveCardHandler.init) {
                 window.GraveCardHandler.init(itemId);
+            }
+        }
+    },
+
+    /**
+     * טיפול בכרטיס קבר
+     * @param {string} itemId - מזהה הקבר
+     */
+    handleGraveCardForm: function(itemId) {
+        console.log('🪦 [GraveCard] אתחול כרטיס קבר:', itemId);
+        
+        // חכה שהטופס יהיה מוכן
+        this.waitForElement('#graveCardFormModal', (modal) => {
+            console.log('✅ [GraveCard] Modal נטען');
+            
+            // קרא נתונים מה-hidden fields
+            const unicIdField = modal.querySelector('input[name="unicId"]');
+            const statusField = modal.querySelector('input[name="currentGraveStatus"]');
+            
+            if (!unicIdField || !statusField) {
+                console.error('❌ [GraveCard] Hidden fields לא נמצאו!');
+                return;
+            }
+            
+            const currentGrave = {
+                unicId: unicIdField.value,
+                graveStatus: parseInt(statusField.value)
+            };
+            
+            console.log('📋 [GraveCard] נתוני קבר:', currentGrave);
+            
+            // החלף כפתורים בפוטר
+            updateGraveCardFooter(modal, currentGrave);
+            
+            // הגדר פונקציות לכפתורים
+            setupGraveCardButtons(modal, currentGrave);
+        });
+        
+        // ========================================
+        // פונקציה: עדכון כפתורים בפוטר
+        // ========================================
+        function updateGraveCardFooter(modal, grave) {
+            const footer = modal.querySelector('.modal-footer');
+            if (!footer) return;
+            
+            const status = grave.graveStatus;
+            let buttonsHTML = '';
+            
+            // כפתור סגור - תמיד
+            buttonsHTML += '<button type="button" class="btn btn-secondary" onclick="FormHandler.closeForm(\'graveCard\')"><i class="fas fa-times"></i> סגור</button>';
+            
+            // לפי סטטוס
+            if (status === 1) {
+                // פנוי - כל האופציות
+                buttonsHTML += '<button type="button" class="btn btn-warning" id="btnSaveGrave"><i class="fas fa-bookmark"></i> שמור קבר</button>';
+                buttonsHTML += '<button type="button" class="btn btn-success" id="btnNewPurchase"><i class="fas fa-shopping-cart"></i> + רכישה חדשה</button>';
+                buttonsHTML += '<button type="button" class="btn btn-info" id="btnNewBurial"><i class="fas fa-cross"></i> + קבורה חדשה</button>';
+            } else if (status === 2) {
+                // נרכש - רק קבורה
+                buttonsHTML += '<button type="button" class="btn btn-info" id="btnNewBurial"><i class="fas fa-cross"></i> + קבורה חדשה</button>';
+            } else if (status === 4) {
+                // שמור - בטל שמירה
+                buttonsHTML += '<button type="button" class="btn btn-danger" id="btnCancelSaved"><i class="fas fa-ban"></i> בטל שמירה</button>';
+            }
+            // סטטוס 3 (קבור) - אין כפתורים נוספים
+            
+            footer.innerHTML = buttonsHTML;
+            console.log('✅ [GraveCard] כפתורים עודכנו לסטטוס:', status);
+        }
+        
+        // ========================================
+        // פונקציה: הגדרת אירועים לכפתורים
+        // ========================================
+        function setupGraveCardButtons(modal, grave) {
+            // כפתור שמור קבר
+            const btnSave = modal.querySelector('#btnSaveGrave');
+            if (btnSave) {
+                btnSave.onclick = async function() {
+                    try {
+                        const response = await fetch('/dashboard/dashboards/cemeteries/api/graves-api.php?action=update', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({
+                                unicId: grave.unicId,
+                                graveStatus: 4,
+                                saveDate: new Date().toISOString().split('T')[0]
+                            })
+                        });
+                        
+                        const result = await response.json();
+                        if (result.success) {
+                            FormHandler.showMessage('הקבר נשמר בהצלחה', 'success');
+                            FormHandler.closeForm('graveCard');
+                            if (typeof refreshData === 'function') refreshData();
+                        } else {
+                            FormHandler.showMessage('שגיאה: ' + result.error, 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        FormHandler.showMessage('שגיאה בשמירת הקבר', 'error');
+                    }
+                };
+            }
+            
+            // כפתור ביטול שמירה
+            const btnCancel = modal.querySelector('#btnCancelSaved');
+            if (btnCancel) {
+                btnCancel.onclick = async function() {
+                    try {
+                        const response = await fetch('/dashboard/dashboards/cemeteries/api/graves-api.php?action=update', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({
+                                unicId: grave.unicId,
+                                graveStatus: 1,
+                                saveDate: null
+                            })
+                        });
+                        
+                        const result = await response.json();
+                        if (result.success) {
+                            FormHandler.showMessage('השמירה בוטלה בהצלחה', 'success');
+                            FormHandler.closeForm('graveCard');
+                            if (typeof refreshData === 'function') refreshData();
+                        } else {
+                            FormHandler.showMessage('שגיאה: ' + result.error, 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        FormHandler.showMessage('שגיאה בביטול השמירה', 'error');
+                    }
+                };
+            }
+            
+            // כפתור רכישה חדשה
+            const btnPurchase = modal.querySelector('#btnNewPurchase');
+            if (btnPurchase) {
+                btnPurchase.onclick = function() {
+                    FormHandler.closeForm('graveCard');
+                    FormHandler.openForm('purchase', grave.unicId, null);
+                };
+            }
+            
+            // כפתור קבורה חדשה
+            const btnBurial = modal.querySelector('#btnNewBurial');
+            if (btnBurial) {
+                btnBurial.onclick = function() {
+                    FormHandler.closeForm('graveCard');
+                    FormHandler.openForm('burial', grave.unicId, null);
+                };
+            }
+            
+            // כפתורי עריכה (אם קיימים)
+            const btnEditPurchase = modal.querySelector('[onclick*="editPurchase"]');
+            if (btnEditPurchase) {
+                const purchaseId = btnEditPurchase.getAttribute('onclick').match(/'([^']+)'/)[1];
+                btnEditPurchase.onclick = function() {
+                    FormHandler.closeForm('graveCard');
+                    FormHandler.openForm('purchase', null, purchaseId);
+                };
+            }
+            
+            const btnEditBurial = modal.querySelector('[onclick*="editBurial"]');
+            if (btnEditBurial) {
+                const burialId = btnEditBurial.getAttribute('onclick').match(/'([^']+)'/)[1];
+                btnEditBurial.onclick = function() {
+                    FormHandler.closeForm('graveCard');
+                    FormHandler.openForm('burial', null, burialId);
+                };
             }
         }
     },

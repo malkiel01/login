@@ -4832,15 +4832,35 @@ window.onGraveSelected = function(graveId) {
 };
 
 /**
- * פתיחת טופס עריכת קבר
- * @param {string} graveId - מזהה הקבר
+ * פתיחת טופס עריכת אחוזת קבר (דרך כפתור בכרטיס קבר)
+ * @param {string} graveId - מזהה הקבר (לא בשימוש כרגע, אבל שומרים למקרה)
  */
 window.openGraveEdit = function(graveId) {
-    console.log('📝 פותח עריכת קבר:', graveId);
+    console.log('📝 פותח עריכת אחוזת קבר עבור קבר:', graveId);
+    
+    // ⭐ קרא את ה-areaGraveId מה-hidden field
+    const modal = document.getElementById('graveCardFormModal');
+    if (!modal) {
+        console.error('❌ Modal לא נמצא!');
+        alert('שגיאה: חלון כרטיס הקבר לא נמצא');
+        return;
+    }
+    
+    const areaGraveIdField = modal.querySelector('input[name="areaGraveId"]');
+    if (!areaGraveIdField || !areaGraveIdField.value) {
+        console.error('❌ areaGraveId לא נמצא!');
+        alert('שגיאה: לא נמצא מזהה אחוזת הקבר');
+        return;
+    }
+    
+    const areaGraveId = areaGraveIdField.value;
+    console.log('✅ נמצא areaGraveId:', areaGraveId);
+    
     // סגור את כרטיס הקבר
     FormHandler.closeForm('graveCard');
-    // פתח טופס עריכה
-    FormHandler.openForm('grave', null, graveId);
+    
+    // פתח עריכת אחוזת הקבר
+    FormHandler.openForm('areaGrave', null, areaGraveId);
 };
 
 // טען את מנהל התשלומים

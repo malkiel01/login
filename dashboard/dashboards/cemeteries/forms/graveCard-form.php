@@ -166,22 +166,11 @@ $hierarchyHTML = '
          </div>
      </div>
 
-     
-     <!-- ⭐ כפתור עריכה ישן -->
-    <-- <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #bae6fd;">
-         <button type="button" 
-                 class="btn btn-sm btn-primary" 
-                 onclick="openGraveEdit(\'' . $grave['unicId'] . '\')"
-                 style="width: 100%; background: linear-gradient(135deg, #0284c7, #0369a1); border: none; padding: 10px; font-weight: 600;">
-             <i class="fas fa-edit"></i> ערוך פרטי קבר
-         </button>
-     </div> --!>
-
     <!-- ⭐ כפתור עריכת אחוזת קבר -->
     <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #bae6fd;">
         <button type="button" 
                 class="btn btn-sm btn-primary" 
-                onclick="openGraveEdit(\'' . $grave['unicId'] . '\')"
+                onclick="openGraveEdit(\'' . $grave['areaGraveId'] . '\')"
                 style="width: 100%; background: linear-gradient(135deg, #0284c7, #0369a1); border: none; padding: 10px; font-weight: 600;">
             <i class="fas fa-edit"></i> ערוך אחוזת קבר
         </button>

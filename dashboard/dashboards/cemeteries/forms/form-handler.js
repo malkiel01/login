@@ -175,7 +175,7 @@ const FormHandler = {
         }
     },
 
-    handleFormSpecificLogic: function(type, parentId, itemId) {
+    handleFormSpecificLogic2: function(type, parentId, itemId) {
             switch(type) {
                 case 'areaGrave':
                     // טען שורות אם יש parentId
@@ -184,11 +184,55 @@ const FormHandler = {
                     }
                     // אם זה עריכה, טען את נתוני הקברים
                     if (itemId) {
-                        this.loadFormData(type, itemId);  // ⭐ הוסף את זה!
                         this.loadAreaGraveWithGraves(itemId);
                     }
                     break;
                     
+                case 'customer':
+                    this.handleCustomerForm(itemId);
+                    break;
+                    
+                case 'purchase':
+                    this.handlePurchaseForm(itemId);
+                    break;  
+
+                case 'burial':
+                    this.handleBurialForm(itemId);
+                    break;
+
+                case 'payment':
+                    this.handlePaymentForm(itemId);
+                    break;
+                
+                case 'graveCard':
+                    this.handleGraveCardForm(itemId);
+                    break;
+
+                default:
+                    if (itemId) {
+                        this.loadFormData(type, itemId);
+                    }
+                    // if (itemId) {
+                    //     // ⭐ העבר גם את parentId!
+                    //     this.loadFormData(type, itemId, parentId);
+                    // }
+                    break;
+            }
+    },
+
+    handleFormSpecificLogic: function(type, parentId, itemId) {
+            switch(type) {
+                case 'areaGrave':
+                    if (itemId) {
+                        // מצב עריכה - טען נתונים ואתחל מערכת קברים
+                        this.loadFormData(type, itemId);
+                        this.handleAreaGraveForm(itemId);  // ← חשוב! העבר itemId
+                    } else if (parentId) {
+                        // מצב הוספה חדשה - אתחל מערכת קברים בלבד
+                        this.handleAreaGraveForm(parentId);
+                    }
+                    break;
+
                 case 'customer':
                     this.handleCustomerForm(itemId);
                     break;

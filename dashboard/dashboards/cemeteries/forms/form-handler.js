@@ -220,18 +220,36 @@ const FormHandler = {
             }
     },
 
-    handleFormSpecificLogic: function(type, parentId, itemId) {
+    handleFormSpecificLogic: async function(type, parentId, itemId) {
             switch(type) {
                 case 'areaGrave':
-                    if (itemId) {
-                        // מצב עריכה - טען נתונים ואתחל מערכת קברים
-                        this.loadFormData(type, itemId);
-                        this.handleAreaGraveForm(itemId);  // ← חשוב! העבר itemId
-                    } else if (parentId) {
-                        // מצב הוספה חדשה - אתחל מערכת קברים בלבד
-                        this.handleAreaGraveForm(parentId);
-                    }
-                    break;
+                            // אם זה עריכה אבל אין parentId - שלוף אותו מה-API
+                            if (itemId && !parentId) {
+                                console.log('🔍 [areaGrave] מצב עריכה ללא parentId - שולף מה-API...');
+                                try {
+                                    const response = await fetch(`${API_BASE}areaGraves-api.php?action=get&id=${itemId}`);
+                                    const result = await response.json();
+                                    
+                                    if (result.success && result.data) {
+                                        // ⭐ שלוף את ה-lineId (זה ה-parentId!)
+                                        parentId = result.data.lineId || result.data.line_id || result.data.rowId || result.data.row_id;
+                                        console.log('✅ נמצא parentId מה-API:', parentId);
+                                    }
+                                } catch (error) {
+                                    console.error('❌ שגיאה בשליפת parentId:', error);
+                                }
+                            }
+                            
+                            // עכשיו אתחל עם parentId נכון
+                            if (itemId) {
+                                // מצב עריכה - טען נתונים ואתחל מערכת קברים
+                                this.loadFormData(type, itemId);
+                                this.handleAreaGraveForm(parentId || itemId);  // העבר parentId אם יש, אחרת itemId
+                            } else if (parentId) {
+                                // מצב הוספה חדשה - אתחל מערכת קברים בלבד
+                                this.handleAreaGraveForm(parentId);
+                            }
+                            break;
 
                 case 'customer':
                     this.handleCustomerForm(itemId);

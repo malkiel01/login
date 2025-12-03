@@ -222,34 +222,45 @@ const FormHandler = {
 
     handleFormSpecificLogic: async function(type, parentId, itemId) {
             switch(type) {
+
                 case 'areaGrave':
-                            // אם זה עריכה אבל אין parentId - שלוף אותו מה-API
-                            if (itemId && !parentId) {
-                                console.log('🔍 [areaGrave] מצב עריכה ללא parentId - שולף מה-API...');
-                                try {
-                                    const response = await fetch(`${API_BASE}areaGraves-api.php?action=get&id=${itemId}`);
-                                    const result = await response.json();
-                                    
-                                    if (result.success && result.data) {
-                                        // ⭐ שלוף את ה-lineId (זה ה-parentId!)
-                                        parentId = result.data.lineId || result.data.line_id || result.data.rowId || result.data.row_id;
-                                        console.log('✅ נמצא parentId מה-API:', parentId);
-                                    }
-                                } catch (error) {
-                                    console.error('❌ שגיאה בשליפת parentId:', error);
-                                }
-                            }
+                    // ⭐ אם זה עריכה אבל אין parentId - שלוף אותו מה-API
+                    if (itemId && !parentId) {
+                        console.log('🔍 [areaGrave] מצב עריכה ללא parentId - שולף מה-API...');
+                        try {
+                            const response = await fetch(`${API_BASE}areaGraves-api.php?action=get&id=${itemId}`);
+                            const result = await response.json();
                             
-                            // עכשיו אתחל עם parentId נכון
-                            if (itemId) {
-                                // מצב עריכה - טען נתונים ואתחל מערכת קברים
-                                this.loadFormData(type, itemId);
-                                this.handleAreaGraveForm(parentId || itemId);  // העבר parentId אם יש, אחרת itemId
-                            } else if (parentId) {
-                                // מצב הוספה חדשה - אתחל מערכת קברים בלבד
-                                this.handleAreaGraveForm(parentId);
+                            if (result.success && result.data) {
+                                // ⭐ שלוף את ה-lineId (זה ה-parentId!)
+                                parentId = result.data.lineId || result.data.line_id || result.data.rowId || result.data.row_id;
+                                console.log('✅ נמצא parentId מה-API:', parentId);
+                            } else {
+                                console.warn('⚠️ לא נמצא parentId ב-API response');
                             }
-                            break;
+                        } catch (error) {
+                            console.error('❌ שגיאה בשליפת parentId:', error);
+                        }
+                    }
+                    
+                    // ⭐⭐⭐ עכשיו - אחרי שיש parentId - אתחל!
+                    if (itemId) {
+                        // מצב עריכה - טען נתונים ואתחל מערכת קברים
+                        this.loadFormData(type, itemId);
+                        
+                        // ⭐ חובה להעביר parentId! אם אין - זה בעיה
+                        if (parentId) {
+                            this.handleAreaGraveForm(parentId);
+                            console.log('✅ handleAreaGraveForm called with parentId:', parentId);
+                        } else {
+                            console.error('❌ אין parentId! לא ניתן לאתחל מערכת קברים');
+                            this.showMessage('שגיאה: לא נמצא מזהה השורה של אחוזת הקבר', 'error');
+                        }
+                    } else if (parentId) {
+                        // מצב הוספה חדשה - אתחל מערכת קברים בלבד
+                        this.handleAreaGraveForm(parentId);
+                    }
+                    break;
 
                 case 'customer':
                     this.handleCustomerForm(itemId);

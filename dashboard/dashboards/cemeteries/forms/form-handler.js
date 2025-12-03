@@ -223,6 +223,44 @@ const FormHandler = {
     handleFormSpecificLogic: async function(type, parentId, itemId) {
             switch(type) {
 
+                // case 'areaGrave':
+                //     // ⭐ אם זה עריכה אבל אין parentId - שלוף אותו מה-API
+                //     if (itemId && !parentId) {
+                //         console.log('🔍 [areaGrave] מצב עריכה ללא parentId - שולף מה-API...');
+                //         try {
+                //             const response = await fetch(`${API_BASE}areaGraves-api.php?action=get&id=${itemId}`);
+                //             const result = await response.json();
+                            
+                //             if (result.success && result.data) {
+                //                 // ⭐ שלוף את ה-lineId (זה ה-parentId!)
+                //                 parentId = result.data.lineId || result.data.line_id || result.data.rowId || result.data.row_id;
+                //                 console.log('✅ נמצא parentId מה-API:', parentId);
+                //             } else {
+                //                 console.warn('⚠️ לא נמצא parentId ב-API response');
+                //             }
+                //         } catch (error) {
+                //             console.error('❌ שגיאה בשליפת parentId:', error);
+                //         }
+                //     }
+                    
+                //     // ⭐⭐⭐ עכשיו - אחרי שיש parentId - אתחל!
+                //     if (itemId) {
+                //         // מצב עריכה - טען נתונים ואתחל מערכת קברים
+                //         this.loadFormData(type, itemId);
+                        
+                //         // ⭐ חובה להעביר parentId! אם אין - זה בעיה
+                //         if (parentId) {
+                //             this.handleAreaGraveForm(parentId);
+                //             console.log('✅ handleAreaGraveForm called with parentId:', parentId);
+                //         } else {
+                //             console.error('❌ אין parentId! לא ניתן לאתחל מערכת קברים');
+                //             this.showMessage('שגיאה: לא נמצא מזהה השורה של אחוזת הקבר', 'error');
+                //         }
+                //     } else if (parentId) {
+                //         // מצב הוספה חדשה - אתחל מערכת קברים בלבד
+                //         this.handleAreaGraveForm(parentId);
+                //     }
+                //     break;
                 case 'areaGrave':
                     // ⭐ אם זה עריכה אבל אין parentId - שלוף אותו מה-API
                     if (itemId && !parentId) {
@@ -235,6 +273,9 @@ const FormHandler = {
                                 // ⭐ שלוף את ה-lineId (זה ה-parentId!)
                                 parentId = result.data.lineId || result.data.line_id || result.data.rowId || result.data.row_id;
                                 console.log('✅ נמצא parentId מה-API:', parentId);
+                                
+                                // ⭐⭐⭐ עדכן את התצוגה בטופס!
+                                await this.updateParentDisplay(type, parentId);
                             } else {
                                 console.warn('⚠️ לא נמצא parentId ב-API response');
                             }
@@ -243,12 +284,11 @@ const FormHandler = {
                         }
                     }
                     
-                    // ⭐⭐⭐ עכשיו - אחרי שיש parentId - אתחל!
+                    // עכשיו אתחל עם parentId נכון
                     if (itemId) {
                         // מצב עריכה - טען נתונים ואתחל מערכת קברים
                         this.loadFormData(type, itemId);
                         
-                        // ⭐ חובה להעביר parentId! אם אין - זה בעיה
                         if (parentId) {
                             this.handleAreaGraveForm(parentId);
                             console.log('✅ handleAreaGraveForm called with parentId:', parentId);
@@ -329,6 +369,51 @@ const FormHandler = {
             }         
         } catch (error) {
             console.error('❌ Error loading area grave data:', error);
+        }
+    },
+
+    updateParentDisplay: async function(type, parentId) {
+        if (!parentId) return;
+        
+        console.log('🔄 מעדכן תצוגת הורה:', parentId);
+        
+        try {
+            // שלוף את שם ההורה מה-API
+            let parentName = '';
+            
+            if (type === 'areaGrave') {
+                // ההורה הוא שורה
+                const response = await fetch(`${API_BASE}rows-api.php?action=get&id=${parentId}`);
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    parentName = result.data.lineNameHe || result.data.rowNameHe || `שורה ${result.data.serialNumber}`;
+                }
+            }
+            
+            // עדכן את האלמנט בטופס
+            const parentNameElement = document.getElementById('currentParentName');
+            if (parentNameElement && parentName) {
+                parentNameElement.textContent = parentName;
+                console.log('✅ עודכן שם הורה:', parentName);
+            }
+            
+            // עדכן hidden field אם יש
+            const parentIdField = document.querySelector('input[name="parentId"]');
+            if (parentIdField) {
+                parentIdField.value = parentId;
+                console.log('✅ עודכן parentId בשדה:', parentId);
+            }
+            
+            // עדכן hidden field של lineId
+            const lineIdField = document.querySelector('input[name="lineId"]');
+            if (lineIdField) {
+                lineIdField.value = parentId;
+                console.log('✅ עודכן lineId בשדה:', parentId);
+            }
+            
+        } catch (error) {
+            console.error('❌ שגיאה בעדכון תצוגת הורה:', error);
         }
     },
 
@@ -1290,33 +1375,6 @@ const FormHandler = {
                 alert('שגיאה בטעינת רשימת המדינות והערים');
             }
         })();
-    },
-
-    /**
-     * טיפול בכרטיס קבר
-     * @param {string} itemId - מזהה הקבר
-     */
-    handleGraveCardForm1: function(itemId) {
-        console.log('🪦 [GraveCard] אתחול כרטיס קבר:', itemId);
-        
-        // טען את graveCard-handler.js אם לא קיים
-        if (!window.GraveCardHandler) {
-            const script = document.createElement('script');
-            script.src = '/dashboard/dashboards/cemeteries/js/forms/graveCard-handler.js';
-            script.onload = function() {
-                console.log('✅ [GraveCard] Handler נטען בהצלחה');
-                // אתחל אחרי טעינה
-                if (window.GraveCardHandler && window.GraveCardHandler.init) {
-                    window.GraveCardHandler.init(itemId);
-                }
-            };
-            document.head.appendChild(script);
-        } else {
-            // כבר נטען - אתחל ישירות
-            if (window.GraveCardHandler.init) {
-                window.GraveCardHandler.init(itemId);
-            }
-        }
     },
 
     /**
@@ -4909,7 +4967,7 @@ window.onGraveSelected = function(graveId) {
  * פתיחת טופס עריכת אחוזת קבר (דרך כפתור בכרטיס קבר)
  * @param {string} graveId - מזהה הקבר (לא בשימוש כרגע, אבל שומרים למקרה)
  */
-window.openGraveEdit = function(graveId) {
+window.openGraveEdit2 = function(graveId) {
     console.log('📝 פותח עריכת אחוזת קבר עבור קבר:', graveId);
     
     // ⭐ קרא את ה-areaGraveId מה-hidden field
@@ -4935,6 +4993,62 @@ window.openGraveEdit = function(graveId) {
     
     // פתח עריכת אחוזת הקבר
     FormHandler.openForm('areaGrave', null, areaGraveId);
+};
+/**
+ * פתיחת טופס עריכת אחוזת קבר (דרך כפתור בכרטיס קבר)
+ * ⭐ גרסה מתוקנת - שולפת parentId לפני פתיחת הטופס
+ */
+window.openGraveEdit = async function(graveId) {
+    console.log('📝 פותח עריכת אחוזת קבר עבור קבר:', graveId);
+    
+    // 1️⃣ קרא את ה-areaGraveId מה-hidden field
+    const modal = document.getElementById('graveCardFormModal');
+    if (!modal) {
+        console.error('❌ Modal לא נמצא!');
+        alert('שגיאה: חלון כרטיס הקבר לא נמצא');
+        return;
+    }
+    
+    const areaGraveIdField = modal.querySelector('input[name="areaGraveId"]');
+    if (!areaGraveIdField || !areaGraveIdField.value) {
+        console.error('❌ areaGraveId לא נמצא!');
+        alert('שגיאה: לא נמצא מזהה אחוזת הקבר');
+        return;
+    }
+    
+    const areaGraveId = areaGraveIdField.value;
+    console.log('✅ נמצא areaGraveId:', areaGraveId);
+    
+    // 2️⃣ ⭐ שלוף את ה-parentId מה-API לפני פתיחת הטופס!
+    try {
+        console.log('🔍 שולף parentId לפני פתיחת הטופס...');
+        
+        const response = await fetch(`/dashboard/dashboards/cemeteries/api/areaGraves-api.php?action=get&id=${areaGraveId}`);
+        const result = await response.json();
+        
+        let parentId = null;
+        
+        if (result.success && result.data) {
+            // ⭐ שלוף את ה-lineId (ההורה)
+            parentId = result.data.lineId || result.data.line_id || result.data.rowId || result.data.row_id;
+            console.log('✅ נמצא parentId:', parentId);
+        } else {
+            console.warn('⚠️ לא הצלחנו לשלוף parentId מה-API');
+        }
+        
+        // 3️⃣ סגור את כרטיס הקבר
+        FormHandler.closeForm('graveCard');
+        
+        // 4️⃣ ⭐ פתח עריכת אחוזת הקבר עם parentId נכון!
+        FormHandler.openForm('areaGrave', parentId, areaGraveId);
+        
+    } catch (error) {
+        console.error('❌ שגיאה בשליפת parentId:', error);
+        
+        // במקרה של שגיאה - פתח בלי parentId
+        FormHandler.closeForm('graveCard');
+        FormHandler.openForm('areaGrave', null, areaGraveId);
+    }
 };
 
 // טען את מנהל התשלומים

@@ -184,6 +184,7 @@ const FormHandler = {
                     }
                     // אם זה עריכה, טען את נתוני הקברים
                     if (itemId) {
+                        this.loadFormData(type, itemId);  // ⭐ הוסף את זה!
                         this.loadAreaGraveWithGraves(itemId);
                     }
                     break;

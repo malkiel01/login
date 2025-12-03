@@ -407,6 +407,11 @@ $formBuilder->addField('currentGraveStatus', '', 'hidden', [
     'value' => $grave['graveStatus']
 ]);
 
+// שדה מוסתר - areaGraveId (למעבר לעריכת אחוזת קבר)
+$formBuilder->addField('areaGraveId', '', 'hidden', [
+    'value' => $grave['areaGraveId']
+]);
+
 // הצג את הטופס
 echo $formBuilder->renderModal();
 ?>

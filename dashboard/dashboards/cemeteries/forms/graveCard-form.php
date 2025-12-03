@@ -166,6 +166,7 @@ $hierarchyHTML = '
          </div>
      </div>
 
+     
      <!-- ⭐ כפתור עריכה ישן -->
     <-- <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #bae6fd;">
          <button type="button" 

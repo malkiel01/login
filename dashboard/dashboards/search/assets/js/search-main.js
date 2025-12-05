@@ -73,7 +73,7 @@ window.performConfigurableSearch = async function() {
         SearchUI.displayResults(results, currentSearch, currentSearchType, currentView);
     } catch (error) {
         console.error('Search error:', error);
-        alert('אירעה שגיאה בחיפוש');
+        alert('אירעה שגיאה 1 בחיפוש');
     } finally {
         SearchUI.showLoading(false);
     }
@@ -94,7 +94,7 @@ window.performAdvancedConfigurableSearch = async function() {
         SearchUI.displayResults(results, currentSearch, currentSearchType, currentView);
     } catch (error) {
         console.error('Advanced search error:', error);
-        alert('אירעה שגיאה בחיפוש');
+        alert('אירעה שגיאה 2 בחיפוש');
     } finally {
         SearchUI.showLoading(false);
     }

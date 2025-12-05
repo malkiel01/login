@@ -417,7 +417,7 @@ function hideLoading() {
  */
 function showError(message) {
     hideLoading();
-    alert(message || 'אירעה שגיאה בחיפוש');
+    alert(message || 'אירעה שגיאה 3 בחיפוש');
 }
 
 /**

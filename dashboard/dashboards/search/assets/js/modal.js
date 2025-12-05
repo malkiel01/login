@@ -61,6 +61,7 @@ window.DeceasedModal = {
         
         return `
             <div class="deceased-modal-card">
+            ררררררר
                 <div class="deceased-modal-header">
                     <div class="deceased-modal-image">
                         ${initials}

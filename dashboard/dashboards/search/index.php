@@ -121,7 +121,7 @@
         </div>
 
         <div class="header-left">
-            <a href="/auth/logout.php" class="logout-btn">התנתק</a>
+            <a href="/auth/logout.php" class="logout-btn">התנתק2</a>
         </div>
     </div>
     <br/>

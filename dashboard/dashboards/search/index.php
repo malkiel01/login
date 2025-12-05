@@ -123,8 +123,8 @@
         <div class="header-left">
             <a href="/auth/logout.php" class="logout-btn">התנתק</a>
         </div>
-        <br/>
     </div>
+    <br/>
 
     <!-- בורר סוג חיפוש -->
     <div class="search-type-selector">

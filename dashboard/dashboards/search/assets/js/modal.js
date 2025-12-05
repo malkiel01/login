@@ -61,7 +61,6 @@ window.DeceasedModal = {
         
         return `
             <div class="deceased-modal-card">
-            ררררררר
                 <div class="deceased-modal-header">
                     <div class="deceased-modal-image">
                         ${initials}
@@ -173,7 +172,6 @@ window.DeceasedModal = {
                             }
                         </div>
                     </div>
-                    היייייייי
                     <!-- הערות -->
                     ${record.c_comment ? `
                         <div class="comment-section">

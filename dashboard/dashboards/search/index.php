@@ -20,10 +20,10 @@
                 <div class="icon">💰</div>
                 <div class="label">קברים שנרכשו</div>
             </button>
-            <button class="search-type-tab" data-search-type="available_graves">
+            <!-- <button class="search-type-tab" data-search-type="available_graves">
                 <div class="icon">✅</div>
                 <div class="label">קברים פנויים</div>
-            </button>
+            </button> -->
         </div>
     </div>
 

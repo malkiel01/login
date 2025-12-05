@@ -1,22 +1,3 @@
-<?php
-    session_start();
-    require_once $_SERVER['DOCUMENT_ROOT'] . '/config.php';
-
-    $pdo = getDBConnection();
-    $userId = $_SESSION['user_id'];
-
-    // שליפת נתוני המשתמש
-    $stmt = $pdo->prepare("SELECT name, username, email FROM users WHERE id = ?");
-    $stmt->execute([$userId]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    // פונקציית יצירת לוגו עיגול עם אות ראשונה
-    function getAvatar($name) {
-        $char = mb_substr($name, 0, 1, 'UTF-8');
-        return strtoupper($char);
-    }
-?>
-
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
@@ -26,105 +7,8 @@
     <link rel="stylesheet" href="dashboards/search/assets/css/search.css">
     <link rel="stylesheet" href="dashboards/search/assets/css/custom-search.css">
     <link rel="stylesheet" href="dashboards/search/assets/css/modal.css">
-    <style>
-        .mobile-header {
-            width: 100%;
-            background: #ffffff;
-            border-bottom: 1px solid #e5e7eb;
-            padding: 12px 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 18px;
-        }
-
-        .user-info-text {
-            line-height: 1.1;
-        }
-
-        .user-name {
-            font-size: 15px;
-            font-weight: 600;
-            color: #111827;
-        }
-
-        .user-email {
-            font-size: 12px;
-            color: #6b7280;
-        }
-
-        .logout-btn {
-            background: #ef4444;
-            color: white;
-            padding: 8px 14px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 14px;
-            transition: 0.2s;
-        }
-
-        .logout-btn:hover {
-            background: #dc2626;
-        }
-
-        /* התאמה למובייל */
-        @media (max-width: 600px) {
-            .mobile-header {
-                padding: 10px;
-            }
-            .user-email {
-                display: none; /* מסתיר מייל במסכים קטנים */
-            }
-            .logout-btn {
-                padding: 6px 10px;
-                font-size: 12px;
-            }
-        }
-    </style>
-
 </head>
 <body>
-
-    <!-- HEADER חדש -->
-    <div class="mobile-header">
-        <div class="header-right">
-            <div class="user-avatar">
-                <?php echo getAvatar($user['name'] ?? $user['username']); ?>
-            </div>
-            <div class="user-info-text">
-                <div class="user-name"><?php echo htmlspecialchars($user['name'] ?? $user['username']); ?></div>
-                <div class="user-email"><?php echo htmlspecialchars($user['email']); ?></div>
-            </div>
-        </div>
-
-        <div class="header-left">
-            <a href="/auth/logout.php" class="logout-btn">התנתק</a>
-        </div>
-    </div>
-
     <!-- בורר סוג חיפוש -->
     <div class="search-type-selector">
         <div class="search-type-tabs">

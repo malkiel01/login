@@ -32,15 +32,15 @@
             padding: 0 !important;
         }
         .mobile-header {
-            margin: -10 !important;
-            /* width: 100%; */
+            margin: 0 !important;
+            width: 100%;
             background: #ffffff;
-            /* border-bottom: 1px solid #e5e7eb; */
-            /* padding: 12px 15px; */
+            border-bottom: 1px solid #e5e7eb;
+            padding: 12px 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            /* gap: 10px; */
+            gap: 10px;
             position: sticky;
             top: 0;
             z-index: 1000;
@@ -49,7 +49,7 @@
         .header-right {
             display: flex;
             align-items: center;
-            /* gap: 10px; */
+            gap: 10px;
         }
 
         .user-avatar {

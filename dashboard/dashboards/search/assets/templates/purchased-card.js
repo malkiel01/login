@@ -1,4 +1,4 @@
-window.PurchasedCardTemplate = {
+window.PurchasedCardTemplate2 = {
     render: function(record) {
         const initials = this.getInitials(record.c_firstName, record.c_lastName);
         

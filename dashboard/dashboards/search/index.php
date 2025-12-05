@@ -129,10 +129,7 @@
             <a href="/auth/logout.php" class="logout-btn">התנתק</a>
         </div>
         
-        <pre><code>
-        <!-- כאן אתה שם את קוד ה-HTML שלך -->
-         Version 1.1
-        </code></pre>
+        <!-- <pre><code>Version 1.1</code></pre> -->
 
     </div>
     <br/>

@@ -219,8 +219,8 @@
     <!-- <script src="dashboards/search/assets/templates/available-card.js"></script> -->
     <!-- <script src="dashboards/search/assets/templates/available-table.js"></script> -->
     <script src="dashboards/search/assets/js/search-api.js"></script>
-    <script src="dashboards/search/assets/js/search-ui.js"></script>
-    <!-- <script src="dashboards/search/assets/js/search-main.js"></script> -->
+    <!-- <script src="dashboards/search/assets/js/search-ui.js"></script> -->
+    <script src="dashboards/search/assets/js/search-main.js"></script>
     <script src="dashboards/search/assets/js/modal.js"></script>
 </body>
 </html>

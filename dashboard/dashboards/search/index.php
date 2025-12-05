@@ -27,6 +27,10 @@
     <link rel="stylesheet" href="dashboards/search/assets/css/custom-search.css">
     <link rel="stylesheet" href="dashboards/search/assets/css/modal.css">
     <style>
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
         .mobile-header {
             margin: -10 !important;
             /* width: 100%; */

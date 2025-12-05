@@ -29,7 +29,7 @@
     <style>
         .mobile-header {
             margin: 0 !important;
-            width: 100%;
+            /* width: 100%;
             background: #ffffff;
             border-bottom: 1px solid #e5e7eb;
             padding: 12px 15px;
@@ -38,7 +38,7 @@
             align-items: center;
             gap: 10px;
             position: sticky;
-            top: 0;
+            top: 0; */
             z-index: 1000;
         }
 

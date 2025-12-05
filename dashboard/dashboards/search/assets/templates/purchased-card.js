@@ -25,6 +25,7 @@ window.PurchasedCardTemplate = {
                             ${record.graveNameHe ? `, קבר ${record.graveNameHe}` : ''}
                         </span>
                     </div>
+                    <div class="click-hint">לחץ לפרטים מלאים</div>
                 </div>
             </div>
         `;

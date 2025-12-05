@@ -158,15 +158,18 @@ window.DeceasedModal = {
                                 </span>
                                 `
                                 :
-                                (record.graveNameHe) 
-                                `
-                                <span class="location-item">
-                                    <strong>אחוזת קבר:</strong> ${record.areaGraveNameHe}
-                                </span>
-                                <span class="location-item">
-                                    <strong>קבר:</strong> ${record.graveNameHe}
-                                </span>
-                                ` : 'חסר פרטי קבר'
+                                (record.graveNameHe ? 
+                                    `
+                                    <span class="location-item">
+                                        <strong>אחוזת קבר:</strong> ${record.areaGraveNameHe}
+                                    </span>
+                                    <span class="location-item">
+                                        <strong>קבר:</strong> ${record.graveNameHe}
+                                    </span>
+                                    ` 
+                                    : '<span class="location-item">חסר פרטי קבר</span>'
+                                )
+                            : ''
                             }
                         </div>
                     </div>

@@ -17,6 +17,7 @@ window.PurchasedCardTemplate = {
                     </div>
                     <div class="location">
                         <span class="location-icon">📍</span>
+                        <span class="location-icon">📍</span>
                         <span>
                             ${record.cemeteryNameHe || ''}
                             ${record.blockNameHe ? `, גוש ${record.blockNameHe}` : ''}

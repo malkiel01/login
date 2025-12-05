@@ -21,7 +21,9 @@ window.PurchasedCardTemplate = {
                             ${record.cemeteryNameHe || ''}
                             ${record.blockNameHe ? `, גוש ${record.blockNameHe}` : ''}
                             ${record.plotNameHe ? `, חלקה ${record.plotNameHe}` : ''}
-                            ${record.graveNameHe ? `, קב222ר ${record.graveNameHe}` : ''}
+                            ${record.graveNameHe ? `, קבר ${record.graveNameHe}` : ''}
+                            ${record.plotNameHe ? `, חלקה ${record.plotNameHe}` : ''}
+                            ${record.graveNameHe ? `, קבר ${record.graveNameHe}` : ''}
                         </span>
                     </div>
                 </div>

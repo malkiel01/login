@@ -621,7 +621,6 @@ async function deleteGrave(graveId) {
 // ===================================================================
 // דאבל-קליק על אחוזת קבר
 // ===================================================================
-
 function handleGraveDoubleClick(graveId, graveName) {
 // window.handleGraveDoubleClick = function(graveId, graveName) {
     console.log('🖱️ Double-click on grave:', graveId, graveName);

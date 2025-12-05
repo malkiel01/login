@@ -144,21 +144,29 @@ window.DeceasedModal = {
                                     <strong>חלקה:</strong> ${record.plotNameHe}
                                 </span>
                             ` : ''}
-                            ${record.areaGraveNameHe ? `
-                                <span class="location-item">
-                                    <strong>אזור:</strong> ${record.areaGraveNameHe}
-                                </span>
-                            ` : ''}
                             ${record.lineNameHe ? `
                                 <span class="location-item">
-                                    <strong>שורה:</strong> ${record.lineNameHe}
+                                <strong>שורה:</strong> ${record.lineNameHe}
                                 </span>
-                            ` : ''}
-                            ${record.graveNameHe ? `
+                                ` : ''}
+                            ${record.areaGraveNameHe ?
+                                (record.graveNameHe && record.graveNameHe === record.areaGraveNameHe) ?
+                                `
                                 <span class="location-item">
-                                    <strong>מספר קבר:</strong> ${record.graveNameHe}
+                                    <strong>קבר:</strong> ${record.areaGraveNameHe}
                                 </span>
-                            ` : ''}
+                                `
+                                :
+                                (record.graveNameHe) 
+                                `
+                                <span class="location-item">
+                                    <strong>אחוזת קבר:</strong> ${record.areaGraveNameHe}
+                                </span>
+                                <span class="location-item">
+                                    <strong>קבר:</strong> ${record.graveNameHe}
+                                </span>
+                                ` : 'חסר פרטי קבר'
+                            }
                         </div>
                     </div>
                     

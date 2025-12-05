@@ -206,12 +206,12 @@
 
     <!-- Scripts -->
     <script src="dashboards/search/assets/js/search-config.js"></script>
-    <!-- <script src="dashboards/search/assets/templates/deceased-card.js"></script>
+    <script src="dashboards/search/assets/templates/deceased-card.js"></script>
     <script src="dashboards/search/assets/templates/deceased-table.js"></script>
     <script src="dashboards/search/assets/templates/purchased-card.js"></script>
     <script src="dashboards/search/assets/templates/purchased-table.js"></script>
     <script src="dashboards/search/assets/templates/available-card.js"></script>
-    <script src="dashboards/search/assets/templates/available-table.js"></script> -->
+    <script src="dashboards/search/assets/templates/available-table.js"></script>
     <script src="dashboards/search/assets/js/search-api.js"></script>
     <script src="dashboards/search/assets/js/search-ui.js"></script>
     <script src="dashboards/search/assets/js/search-main.js"></script>

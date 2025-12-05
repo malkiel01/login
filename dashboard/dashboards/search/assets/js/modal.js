@@ -170,7 +170,7 @@ window.DeceasedModal = {
                             }
                         </div>
                     </div>
-                    
+                    היייייייי
                     <!-- הערות -->
                     ${record.c_comment ? `
                         <div class="comment-section">

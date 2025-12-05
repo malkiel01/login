@@ -38,7 +38,7 @@
             align-items: center;
             /* gap: 10px; */
             position: sticky;
-            /* top: 0; */
+            top: 0;
             z-index: 1000;
         }
 

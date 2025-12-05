@@ -31,7 +31,7 @@
             margin: 0 !important;
             /* width: 100%; */
             background: #ffffff;
-            border-bottom: 1px solid #e5e7eb;
+            /* border-bottom: 1px solid #e5e7eb; */
             /* padding: 12px 15px; */
             display: flex;
             justify-content: space-between;
@@ -45,7 +45,7 @@
         .header-right {
             display: flex;
             align-items: center;
-            gap: 10px;
+            /* gap: 10px; */
         }
 
         .user-avatar {

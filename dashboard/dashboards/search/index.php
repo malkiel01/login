@@ -28,6 +28,7 @@
     <link rel="stylesheet" href="dashboards/search/assets/css/modal.css">
     <style>
         .mobile-header {
+            margin: 0 !important;
             width: 100%;
             background: #ffffff;
             border-bottom: 1px solid #e5e7eb;

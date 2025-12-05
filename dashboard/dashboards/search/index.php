@@ -111,20 +111,20 @@
 
     <!-- HEADER חדש -->
     <div class="mobile-header">
-        <div class="header-right">
+        <!-- <div class="header-right">
             <div class="user-avatar">
-                <?php echo getAvatar($user['name'] ?? $user['username']); ?>
+                < ?php echo getAvatar($user['name'] ?? $user['username']); ?>
             </div>
             <div class="user-info-text">
-                <div class="user-name"><?php echo htmlspecialchars($user['name'] ?? $user['username']); ?></div>
-                <div class="user-email"><?php echo htmlspecialchars($user['email']); ?></div>
+                <div class="user-name">< ?php echo htmlspecialchars($user['name'] ?? $user['username']); ?></div>
+                <div class="user-email">< ?php echo htmlspecialchars($user['email']); ?></div>
             </div>
         </div>
 
         <div class="header-left">
             <a href="/auth/logout.php" class="logout-btn">התנתק2</a>
         </div>
-    </div>
+    </div> -->
     <br/>
 
     <!-- בורר סוג חיפוש -->

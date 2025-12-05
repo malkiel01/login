@@ -31,13 +31,13 @@
             width: 100%;
             background: #ffffff;
             border-bottom: 1px solid #e5e7eb;
-            padding: 120px 15px;
+            padding: 12px 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             gap: 10px;
             position: sticky;
-            top: 0;
+            top: 10;
             z-index: 1000;
         }
 

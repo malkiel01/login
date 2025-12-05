@@ -131,7 +131,7 @@
         
         <pre><code>
         <!-- כאן אתה שם את קוד ה-HTML שלך -->
-         Version 1.0
+         Version 1.1
         </code></pre>
 
     </div>

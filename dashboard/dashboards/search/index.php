@@ -126,8 +126,14 @@
         </div>
 
         <div class="header-left">
-            <a href="/auth/logout.php" class="logout-btn">התנתק3</a>
+            <a href="/auth/logout.php" class="logout-btn">התנתק</a>
         </div>
+        
+        <pre><code>
+        <!-- כאן אתה שם את קוד ה-HTML שלך -->
+         Version 1.0
+        </code></pre>
+
     </div>
     <br/>
 

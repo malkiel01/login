@@ -24,6 +24,9 @@ window.DeceasedCardTemplate = {
                         <span class="location-icon">📍</span>
                         <span>
                             ${record.cemeteryNameHe || ''}
+                            ${record.blockNameHe ? `, גוש ${record.blockNameHe}` : ''}
+                            ${record.plotNameHe ? `, חלקה ${record.plotNameHe}` : ''}
+                            ${record.graveNameHe ? `, שורה ${record.lineNameHe}` : ''}
                             ${record.graveNameHe ? `, קבר ${record.graveNameHe}` : ''}
                         </span>
                     </div>

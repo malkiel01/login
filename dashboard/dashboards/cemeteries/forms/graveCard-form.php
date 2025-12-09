@@ -318,9 +318,6 @@ if ($purchase) {
             <i class="fas fa-inbox" style="font-size: 32px; margin-bottom: 10px; display: block; opacity: 0.5;"></i>
             אין רכישה מקושרת לקבר זה
         </div>
-        <button type="button" class="btn btn-success" onclick="GraveCardHandler.openNewPurchase()" style="padding: 10px 24px; font-size: 15px;">
-            <i class="fas fa-plus"></i> הוסף רכישה
-        </button>
         <button type="button" class="btn btn-success btn-open-purchase"
             style="padding: 10px 24px; font-size: 15px;">
             <i class="fas fa-plus"></i> הוסף רכישה

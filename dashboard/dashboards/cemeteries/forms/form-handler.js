@@ -3886,50 +3886,6 @@ const FormHandler = {
             }
         };
 
-        // אירוע לבחירת לקוח
-        const setupCustomerListener = function() {
-            const customerSelect = document.querySelector('[name="clientId"]');
-            if (customerSelect) {
-                customerSelect.addEventListener('change', async function() {
-                    const customerId = this.value;
-                    
-                    if (customerId) {
-                        // ✅ קרא את resident ישירות מה-option
-                        const selectedOption = this.options[this.selectedIndex];
-                        const resident = parseInt(selectedOption.dataset.resident) || 3;
-                        
-                        // ✅ שמור מיד ללא קריאת API נוספת
-                        window.selectedCustomerData = {
-                            id: customerId,
-                            resident: resident,
-                            name: selectedOption.textContent.split(' - ')[0] // חתוך את הטלפון
-                        };
-                        
-                        console.log('👤 לקוח נבחר:', window.selectedCustomerData);
-                        
-                        // ✅ עדכן פרמטרים
-                        if (window.selectedGraveData && window.updatePaymentParameters) {
-                            window.updatePaymentParameters();
-                        }
-                        
-                        // ✅ חשב תשלומים
-                        await window.tryCalculatePayments();
-                        
-                    } else {
-                        // ✅ ניקוי בחירה
-                        window.selectedCustomerData = null;
-                        
-                        if (!window.isEditMode) {
-                            window.purchasePayments = [];
-                            document.getElementById('total_price').value = '0.00';
-                            document.getElementById('paymentsDisplay').innerHTML = '<p style="color: #999;">לא הוגדרו תשלומים</p>';
-                            document.getElementById('paymentsList').value = '[]';
-                        }
-                    }
-                });
-            }
-        };
-
         // מנהל תשלומים חכם לרכישה חדשה
         const SmartPaymentsManager = {
             open: function(availablePayments) {
@@ -4376,7 +4332,6 @@ const FormHandler = {
         window.ExistingPaymentsManager = ExistingPaymentsManager;
 
         // אתחול הטופס
-        setupCustomerListener();
         window.formInitialized = true;
 
         

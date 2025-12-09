@@ -2881,7 +2881,7 @@ const FormHandler = {
             }
 
             // אכלס לקוחות
-            window.populateCustomers(result.data);
+            populateCustomers(result.data);
 
             // ⭐ במצב עריכה - בחר את הלקוח אחרי האכלוס
             if (window.isEditMode) {

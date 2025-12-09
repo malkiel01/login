@@ -3761,7 +3761,7 @@ const FormHandler = {
                 }
 
                 // נסה לקרוא מה-data attribute
-                if (!currentGraveId) {  
+                // if (!currentGraveId) {  
                     const fieldset = document.querySelector('#grave-selector-fieldset');
                     if (fieldset) {
                         const dataGraveId = fieldset.getAttribute('data-burial-grave-id');
@@ -3770,7 +3770,7 @@ const FormHandler = {
                             console.log('✅ [Burial] נמצא graveId מ-data attribute:', currentGraveId);
                         }
                     }
-                }         
+                // }         
                 
                 // ✅ מלא בתי עלמין - כולם פעילים כבר!
                 cemeterySelect.innerHTML = '<option value="">-- בחר בית עלמין --</option>';

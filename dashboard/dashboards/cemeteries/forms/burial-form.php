@@ -33,16 +33,16 @@
     // יצירת FormBuilder
     $formBuilder = new FormBuilder('burial', $itemId, $parentId);
 
-    // // ✅ לקוחות - טעינה מ-API (כמו ב-purchase)
-    // $customersSelectorHTML = '
-    // <div class="form-group">
-    //     <label>נפטר/ת <span class="text-danger">*</span></label>
-    //     <select name="clientId" id="clientId" class="form-control" required>
-    //         <option value="">טוען לקוחות...</option>
-    //     </select>
-    // </div>';
+    // ✅ לקוחות - טעינה מ-API (כמו ב-purchase)
+    $customersSelectorHTML = '
+    <div class="form-group">
+        <label>נפטר/ת <span class="text-danger">*</span></label>
+        <select name="clientId" id="clientId" class="form-control" required>
+            <option value="">טוען לקוחות...</option>
+        </select>
+    </div>';
 
-    // $formBuilder->addCustomHTML($customersSelectorHTML);
+    $formBuilder->addCustomHTML($customersSelectorHTML);
 
 
     // ✅ SmartSelect ללקוחות - ריק (יתמלא ב-JavaScript)
@@ -63,7 +63,6 @@
     <fieldset class="form-section" 
     id="grave-selector-fieldset"
     data-load-from-api="true"
-        <!-- data-burial-grave-id="' . htmlspecialchars($burial['graveId'] ?? '', ENT_QUOTES) . '" -->
         data-purchase-grave-id="' . htmlspecialchars($parentId ?? $purchase['graveId'] ?? '', ENT_QUOTES) . '"
         style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
         <legend style="padding: 0 10px; font-weight: bold;">בחירת קבר</legend>

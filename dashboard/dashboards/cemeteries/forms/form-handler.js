@@ -4401,12 +4401,21 @@ const FormHandler = {
                 customerInstance.optionsContainer.appendChild(option);
                 customerInstance.allOptions.push(option);
             });
-            
-            // עדכן טקסט ל-"בחר נפטר/ת..."
-            if (!customers.some(c => c.is_current)) {
+
+            // ⭐⭐⭐ עדכן תצוגה אם יש לקוח נוכחי ⭐⭐⭐
+            const currentCustomer = customers.find(c => c.is_current);
+            if (currentCustomer) {
+                let displayText = `${currentCustomer.firstName} ${currentCustomer.lastName}`;
+                if (currentCustomer.phone || currentCustomer.phoneMobile) {
+                    displayText += ` - ${currentCustomer.phone || currentCustomer.phoneMobile}`;
+                }
+                customerInstance.valueSpan.textContent = displayText;
+                console.log('✅ עודכן תצוגת לקוח נוכחי (burial):', displayText);
+            } else {
                 customerInstance.valueSpan.textContent = 'בחר נפטר/ת...';
                 customerInstance.hiddenInput.value = '';
             }
+
             
             console.log(`✅ Populated ${customers.length} customers (burial)`);
         };

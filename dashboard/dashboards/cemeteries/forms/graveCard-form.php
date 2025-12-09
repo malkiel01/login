@@ -321,6 +321,10 @@ if ($purchase) {
         <button type="button" class="btn btn-success" onclick="GraveCardHandler.openNewPurchase()" style="padding: 10px 24px; font-size: 15px;">
             <i class="fas fa-plus"></i> הוסף רכישה
         </button>
+        <button type="button" class="btn btn-success btn-open-purchase"
+            style="padding: 10px 24px; font-size: 15px;">
+            <i class="fas fa-plus"></i> הוסף רכישה
+        </button>
     </fieldset>';
     $formBuilder->addCustomHTML($noPurchaseHTML);
 }

@@ -174,6 +174,7 @@ $hierarchyHTML = '
                 style="width: 100%; background: linear-gradient(135deg, #0284c7, #0369a1); border: none; padding: 10px; font-weight: 600;">
             <i class="fas fa-edit"></i> ערוך אחוזת קבר
         </button>
+        היי
     </div>
  </fieldset>';
 

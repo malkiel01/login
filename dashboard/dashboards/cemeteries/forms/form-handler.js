@@ -3363,6 +3363,13 @@ const FormHandler = {
             graves: []
         };
 
+        // ⭐⭐⭐ הוסף את זה כאן! ⭐⭐⭐
+        // נקה SmartSelect instances ישנים
+        if (window.SmartSelectManager?.instances?.clientId) {
+            console.log('🧹 מנקה SmartSelect instance ישן');
+            delete window.SmartSelectManager.instances.clientId;
+        }
+
         // ✅ הוסף את זה כאן - מיד בהתחלה!
         // ===========================================================
         // פונקציות להיררכית בתי עלמין

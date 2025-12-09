@@ -3095,7 +3095,7 @@ const FormHandler = {
             }
         }
 
-        (async function loadAvailableCustomers() {
+        async function loadAvailableCustomers() {
             console.log('👥 מתחיל לטעון לקוחות פנויים מה-API...');
             
             const clientSelect = document.getElementById('clientId');
@@ -3165,7 +3165,8 @@ const FormHandler = {
                 hideSelectSpinner('clientId');
                 console.log('✅ Spinner cleanup complete');
             }
-        })();
+        }
+        loadAvailableCustomers();
 
         /**
          * מחכה ל-clientId להופיע ואז טוען לקוחות

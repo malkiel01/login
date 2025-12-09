@@ -1372,10 +1372,10 @@ const FormHandler = {
                 // פנוי - כל האופציות
                 buttonsHTML += '<button type="button" class="btn btn-warning" id="btnSaveGrave"><i class="fas fa-bookmark"></i> שמור קבר</button>';
                 buttonsHTML += '<button type="button" class="btn btn-success" id="btnNewPurchase"><i class="fas fa-shopping-cart"></i> + רכישה חדשה</button>';
-                buttonsHTML += '<button type="button" class="btn btn-info" id="btnNewBurial"><i class="fas fa-cross"></i> + קבורה חדשה</button>';
+                buttonsHTML += '<button type="button" class="btn btn-info" id="btnNewBurial"><i class="fas fa-cross"></i> + קבו44רה חדשה</button>';
             } else if (status === 2) {
                 // נרכש - רק קבורה
-                buttonsHTML += '<button type="button" class="btn btn-info" id="btnNewBurial"><i class="fas fa-cross"></i> + קבורה חדשה</button>';
+                buttonsHTML += '<button type="button" class="btn btn-info" id="btnNewBurial"><i class="fas fa-cross"></i> + קבו55רה חדשה</button>';
             } else if (status === 4) {
                 // שמור - בטל שמירה
                 buttonsHTML += '<button type="button" class="btn btn-danger" id="btnCancelSaved"><i class="fas fa-ban"></i> בטל שמירה</button>';

@@ -2929,7 +2929,7 @@ const FormHandler = {
             }
         })();
 
-        async function loadAvailableCustomers() {
+        async function loadAvailableCustomersOld2() {
             console.log('👥 מתחיל לטעון לקוחות פנויים מה-API...');
             
             // ⭐ אם האלמנט לא קיים עדיין - צא בשקט (הטופס עדיין בונה)
@@ -3000,6 +3000,98 @@ const FormHandler = {
                 if (el) {
                     removeSpinner(el, true);
                 }
+            }
+        }
+
+        async function loadAvailableCustomers() {
+            console.log('👥 מתחיל לטעון לקוחות פנויים מה-API...');
+            
+            const clientSelect = document.getElementById('clientId');
+            if (!clientSelect) {
+                console.warn('⚠️ clientId not ready yet, will retry via observer');
+                observeClientIdAndLoad();
+                return;
+            }
+            
+            console.log('🔄 הוספת ספינר ל-clientId');
+            
+            // ⭐ הוסף ספינר - שמור את ההפניה!
+            const spinnerAdded = addSpinner(clientSelect, true);
+            console.log('Spinner added:', spinnerAdded);
+            
+            try {
+                const response = await fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=getAvailable');
+                const data = await response.json();
+
+                if (!data.success) {
+                    throw new Error(data.message || 'Failed to load customers');
+                }
+
+                console.log('✅ נטענו', data.data.length, 'לקוחות');
+
+                if (window.isEditMode) {
+                    const currentClientId = clientSelect.value;
+                    
+                    if (currentClientId && currentClientId.trim() !== '') {
+                        const currentCustomer = data.data.find(c => c.unicId === currentClientId);
+                        
+                        if (currentCustomer) {
+                            currentCustomer.is_current = true;
+                            console.log('✅ לקוח נוכחי נמצא:', currentCustomer.firstName, currentCustomer.lastName);
+                        }
+                    }
+                }
+
+                if (window.SmartSelectManager && !window.SmartSelectManager.instances['clientId']) {
+                    window.SmartSelectManager.init('clientId');
+                    console.log('✅ SmartSelect initialized');
+                }
+
+                if (window.populateCustomers) {
+                    populateCustomers(data.data);
+                }
+
+                if (window.isEditMode) {
+                    const currentClientId = clientSelect.value;
+                    
+                    if (currentClientId && window.SmartSelectManager?.instances['clientId']) {
+                        window.SmartSelectManager.select('clientId', currentClientId);
+                        console.log('✅ לקוח נבחר:', currentClientId);
+                    }
+                }
+
+                console.log('✅ לקוחות נטענו בהצלחה');
+                
+            } catch (error) {
+                console.error('❌ שגיאה בטעינת לקוחות:', error);
+            } finally {
+                // ⭐⭐⭐ הסרה מפורשת של הספינר ⭐⭐⭐
+                console.log('🔄 מסיר ספינר מ-clientId');
+                
+                // נסיון 1: removeSpinner
+                const el = document.getElementById('clientId');
+                if (el) {
+                    const removed1 = removeSpinner(el, true);
+                    console.log('Spinner removed (method 1):', removed1);
+                }
+                
+                // נסיון 2: hideSelectSpinner
+                if (typeof hideSelectSpinner === 'function') {
+                    hideSelectSpinner('clientId');
+                    console.log('Spinner hidden (method 2)');
+                }
+                
+                // נסיון 3: הסרה ידנית
+                const wrapper = clientSelect?.closest('.smart-select-wrapper');
+                if (wrapper) {
+                    const spinner = wrapper.querySelector('.spinner-border, .loading-spinner');
+                    if (spinner) {
+                        spinner.remove();
+                        console.log('✅ Spinner removed manually');
+                    }
+                }
+                
+                console.log('✅ Spinner cleanup complete');
             }
         }
 

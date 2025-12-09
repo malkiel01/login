@@ -384,9 +384,10 @@ if ($burial) {
         <button type="button" class="btn btn-info" onclick="GraveCardHandler.openNewBurial()" style="padding: 10px 24px; font-size: 15px;">
             <i class="fas fa-plus"></i> הוסף קבורה
         </button>
-        <button type="button" class="btn btn-info btn-open-burial" 
+        <button type="button" class="btn btn-info" 
+            id="btnAddBurial"
             style="padding: 10px 24px; font-size: 15px;">
-            <i class="fas fa-plus"></i> הוסף קבורה
+            <i class="fas fa-plus"></i> הוס2ף קבורה
         </button>
     </fieldset>';
     $formBuilder->addCustomHTML($noBurialHTML);

@@ -1451,13 +1451,13 @@ const FormHandler = {
             }
             
             // כפתור רכישה חדשה
-            const btnPurchase = modal.querySelector('#btnNewPurchase');
-            if (btnPurchase) {
-                btnPurchase.onclick = function() {
-                    FormHandler.closeForm('graveCard');
-                    FormHandler.openForm('purchase', grave.unicId, null);
-                };
-            }
+            // const btnPurchase = modal.querySelector('#btnNewPurchase');
+            // if (btnPurchase) {
+            //     btnPurchase.onclick = function() {
+            //         FormHandler.closeForm('graveCard');
+            //         FormHandler.openForm('purchase', grave.unicId, null);
+            //     };
+            // }
             
             // // כפתור קבורה חדשה (footer)
             // const btnBurial = modal.querySelector('#btnNewBurial');
@@ -1476,6 +1476,15 @@ const FormHandler = {
             //         FormHandler.openForm('burial', grave.unicId, null);
             //     };
             // }
+
+            // כפתורי רכישה
+            const purchaseButtons = modal.querySelectorAll('.btn-open-purchase');
+            purchaseButtons.forEach(btn => {
+                btn.onclick = function() {
+                    FormHandler.closeForm('graveCard');
+                    FormHandler.openForm('purchase', grave.unicId, null);
+                };
+            });
 
             // כפתורי קבורה
             const burialButtons = modal.querySelectorAll('.btn-open-burial');

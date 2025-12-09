@@ -1938,7 +1938,7 @@ const FormHandler = {
         };
 
         // ⭐ פונקציה למילוי לקוחות ב-SmartSelect
-        window.populateCustomers = function(customers) {
+        window.populateCustomersP = function(customers) {
             console.log('👥 populateCustomers called with', customers.length, 'customers');
             
             const customerInstance = window.SmartSelectManager?.instances['clientId'];
@@ -2866,7 +2866,7 @@ const FormHandler = {
                 }
                 
                 // ⭐ אכלס לקוחות
-                window.populateCustomers(result.data);
+                window.populateCustomersP(result.data);
                 
                 // ⭐ אם יש לקוח נוכחי - שמור את הנתונים
                 const currentCustomer = result.data.find(c => c.is_current);
@@ -3270,7 +3270,7 @@ const FormHandler = {
         };
 
         // ⭐ פונקציה למילוי לקוחות ב-SmartSelect (מתוקנת!)
-        window.populateCustomers = function(customers) {
+        window.populateCustomersB = function(customers) {
             console.log('👥 populateCustomers called with', customers.length, 'customers');
             
             const customerInstance = window.SmartSelectManager?.instances['clientId'];
@@ -3885,7 +3885,7 @@ const FormHandler = {
                 }
                 
                 // ⭐ אכלס לקוחות
-                window.populateCustomers(result.data);
+                window.populateCustomersB(result.data);
                 
                 // ⭐ אם יש לקוח נוכחי - שמור את הנתונים
                 const currentCustomer = result.data.find(c => c.is_current);

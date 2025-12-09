@@ -3111,7 +3111,7 @@ const FormHandler = {
             showSelectSpinner('clientId');
             
             try {
-                const response = await fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=getAvailable');
+                const response = await fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=available');
                 const data = await response.json();
 
                 if (!data.success) {

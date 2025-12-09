@@ -1373,9 +1373,11 @@ const FormHandler = {
                 buttonsHTML += '<button type="button" class="btn btn-warning" id="btnSaveGrave"><i class="fas fa-bookmark"></i> שמור קבר</button>';
                 buttonsHTML += '<button type="button" class="btn btn-success" id="btnNewPurchase"><i class="fas fa-shopping-cart"></i> + רכישה חדשה</button>';
                 buttonsHTML += '<button type="button" class="btn btn-info" id="btnNewBurial"><i class="fas fa-cross"></i> + קבורה חדשה</button>';
+                buttonsHTML += `<button type="button" class="btn btn-info btn-open-burial"><i class="fas fa-cross"></i> + קבורה חדשvה</button>`
             } else if (status === 2) {
                 // נרכש - רק קבורה
                 buttonsHTML += '<button type="button" class="btn btn-info" id="btnNewBurial"><i class="fas fa-cross"></i> + קבורה חדשה</button>';
+                buttonsHTML += `<button type="button" class="btn btn-info btn-open-burial"><i class="fas fa-cross"></i> + קבורה חדשvה</button>`
             } else if (status === 4) {
                 // שמור - בטל שמירה
                 buttonsHTML += '<button type="button" class="btn btn-danger" id="btnCancelSaved"><i class="fas fa-ban"></i> בטל שמירה</button>';
@@ -1459,23 +1461,32 @@ const FormHandler = {
                 };
             }
             
-            // כפתור קבורה חדשה (footer)
-            const btnBurial = modal.querySelector('#btnNewBurial');
-            if (btnBurial) {
-                btnBurial.onclick = function() {
-                    FormHandler.closeForm('graveCard');
-                    FormHandler.openForm('burial', grave.unicId, null);
-                };
-            }
+            // // כפתור קבורה חדשה (footer)
+            // const btnBurial = modal.querySelector('#btnNewBurial');
+            // if (btnBurial) {
+            //     btnBurial.onclick = function() {
+            //         FormHandler.closeForm('graveCard');
+            //         FormHandler.openForm('burial', grave.unicId, null);
+            //     };
+            // }
 
-            // כפתור הוסף קבורה (fieldset)
-            const btnAddBurial = modal.querySelector('#btnAddBurial');
-            if (btnAddBurial) {
-                btnAddBurial.onclick = function() {
+            // // כפתור הוסף קבורה (fieldset)
+            // const btnAddBurial = modal.querySelector('#btnAddBurial');
+            // if (btnAddBurial) {
+            //     btnAddBurial.onclick = function() {
+            //         FormHandler.closeForm('graveCard');
+            //         FormHandler.openForm('burial', grave.unicId, null);
+            //     };
+            // }
+
+            // כפתורי קבורה
+            const burialButtons = modal.querySelectorAll('.btn-open-burial');
+            burialButtons.forEach(btn => {
+                btn.onclick = function() {
                     FormHandler.closeForm('graveCard');
                     FormHandler.openForm('burial', grave.unicId, null);
                 };
-            }
+            });
             
             // כפתורי עריכה (אם קיימים)
             const btnEditPurchase = modal.querySelector('[onclick*="editPurchase"]');

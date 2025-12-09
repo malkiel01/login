@@ -381,13 +381,9 @@ if ($burial) {
             <i class="fas fa-inbox" style="font-size: 32px; margin-bottom: 10px; display: block; opacity: 0.5;"></i>
             אין קבורה מקושרת לקבר זה
         </div>
-        <button type="button" class="btn btn-info" onclick="GraveCardHandler.openNewBurial()" style="padding: 10px 24px; font-size: 15px;">
-            <i class="fas fa-plus"></i> הוסף קבורה
-        </button>
-        <button type="button" class="btn btn-info" 
-            id="btnAddBurial"
+        <button type="button" class="btn btn-info btn-open-burial" 
             style="padding: 10px 24px; font-size: 15px;">
-            <i class="fas fa-plus"></i> הוס2ף קבורה
+            <i class="fas fa-plus"></i> הוסף קבורה
         </button>
     </fieldset>';
     $formBuilder->addCustomHTML($noBurialHTML);

@@ -1938,7 +1938,7 @@ const FormHandler = {
         };
 
         // ⭐ פונקציה למילוי לקוחות ב-SmartSelect
-        function populateCustomers(customers) {
+        function populateCustomersOld1(customers) {
             console.log('👥 populateCustomers called with', customers.length, 'customers');
             
             const customerInstance = window.SmartSelectManager?.instances['clientId'];
@@ -2004,6 +2004,79 @@ const FormHandler = {
             if (typeof customerInstance.refresh === 'function') {
                 customerInstance.refresh();
                 console.log('✅ SmartSelect refreshed');
+            }
+            
+            console.log(`✅ Populated ${customers.length} customers`);
+        }
+
+        function populateCustomers(customers) {
+            console.log('👥 populateCustomers called with', customers.length, 'customers');
+            
+            const customerInstance = window.SmartSelectManager?.instances['clientId'];
+            
+            if (!customerInstance) {
+                console.warn('⚠️ Customer SmartSelect instance not found');
+                return;
+            }
+            
+            // נקה אופציות
+            customerInstance.optionsContainer.innerHTML = '';
+            customerInstance.allOptions = [];
+            
+            // מלא לקוחות
+            customers.forEach(customer => {
+                const option = document.createElement('div');
+                option.className = 'smart-select-option';
+                option.dataset.value = customer.unicId;
+                option.dataset.resident = customer.resident || 3;  // ⭐ שמור ב-dataset
+                option.dataset.firstName = customer.firstName || '';
+                option.dataset.lastName = customer.lastName || '';
+                
+                let displayText = `${customer.firstName} ${customer.lastName}`;
+                if (customer.phone || customer.phoneMobile) {
+                    displayText += ` - ${customer.phone || customer.phoneMobile}`;
+                }
+                
+                option.textContent = displayText;
+                
+                // ⭐ סמן אם זה לקוח נוכחי
+                if (customer.is_current) {
+                    option.classList.add('selected');
+                }
+                
+                // ⭐ שמור את כל הנתונים ב-dataset
+                option.addEventListener('click', function() {
+                    const unicId = this.dataset.value;
+                    const resident = parseInt(this.dataset.resident) || 3;
+                    const firstName = this.dataset.firstName;
+                    const lastName = this.dataset.lastName;
+                    
+                    window.SmartSelectManager.select('clientId', unicId);
+                    
+                    // ⭐ שמור את נתוני הלקוח
+                    window.selectedCustomerData = {
+                        id: unicId,
+                        resident: resident,
+                        name: `${firstName} ${lastName}`
+                    };
+                    
+                    console.log('👤 לקוח נבחר:', window.selectedCustomerData);
+                    
+                    // עדכן פרמטרים וחשב תשלומים
+                    if (window.selectedGraveData && window.updatePaymentParameters) {
+                        window.updatePaymentParameters();
+                    }
+                    window.tryCalculatePayments();
+                });
+                
+                customerInstance.optionsContainer.appendChild(option);
+                customerInstance.allOptions.push(option);
+            });
+            
+            // עדכן טקסט ל-"בחר לקוח..."
+            if (!customers.some(c => c.is_current)) {
+                customerInstance.valueSpan.textContent = 'בחר לקוח...';
+                customerInstance.hiddenInput.value = '';
             }
             
             console.log(`✅ Populated ${customers.length} customers`);
@@ -2826,276 +2899,112 @@ const FormHandler = {
             }
         })();
 
-        // (async function loadAvailableCustomersOld1() {
-        //     try {
-        //         console.log('👥 מתחיל לטעון לקוחות פנויים מה-API...');
-                
-        //         // ✅ הוסף ספינר
-        //         showSelectSpinner('clientId');
-                
-        //         // ✅ בנה URL עם הלקוח הנוכחי אם במצב עריכה
-        //         let apiUrl = '/dashboard/dashboards/cemeteries/api/customers-api.php?action=available';
-        //         if (window.isEditMode && itemId) {
-        //             const purchaseResponse = await fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=get&id=${itemId}`);
-        //             const purchaseData = await purchaseResponse.json();
+        // (
+            // async function loadAvailableCustomersOld1() {
+            //     try {
+            //         console.log('👥 מתחיל לטעון לקוחות פנויים מה-API...');
                     
-        //             if (purchaseData.success && purchaseData.data?.clientId) {
-        //                 apiUrl += `&currentClientId=${purchaseData.data.clientId}`;
-        //             }
-        //         }
-                
-        //         // ✅ קריאה ל-API
-        //         const response = await fetch(apiUrl);
-        //         const result = await response.json();
-                
-        //         if (!result.success) {
-        //             console.error('❌ שגיאה בטעינת לקוחות:', result.error);
-        //             hideSelectSpinner('clientId');
-        //             return;
-        //         }
-                
-        //         console.log(`✅ נטענו ${result.data.length} לקוחות`);
-
-        //         // ⭐ במצב עריכה - סמן את הלקוח הנוכחי
-        //         if (window.isEditMode) {
-        //             const currentClientId = document.getElementById('clientId')?.value;
+            //         // ✅ הוסף ספינר
+            //         showSelectSpinner('clientId');
                     
-        //             if (currentClientId && currentClientId.trim() !== '') {
-        //                 console.log('🔍 מחפש לקוח נוכחי:', currentClientId);
+            //         // ✅ בנה URL עם הלקוח הנוכחי אם במצב עריכה
+            //         let apiUrl = '/dashboard/dashboards/cemeteries/api/customers-api.php?action=available';
+            //         if (window.isEditMode && itemId) {
+            //             const purchaseResponse = await fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=get&id=${itemId}`);
+            //             const purchaseData = await purchaseResponse.json();
                         
-        //                 const currentCustomer = result.data.find(c => c.unicId === currentClientId);
+            //             if (purchaseData.success && purchaseData.data?.clientId) {
+            //                 apiUrl += `&currentClientId=${purchaseData.data.clientId}`;
+            //             }
+            //         }
+                    
+            //         // ✅ קריאה ל-API
+            //         const response = await fetch(apiUrl);
+            //         const result = await response.json();
+                    
+            //         if (!result.success) {
+            //             console.error('❌ שגיאה בטעינת לקוחות:', result.error);
+            //             hideSelectSpinner('clientId');
+            //             return;
+            //         }
+                    
+            //         console.log(`✅ נטענו ${result.data.length} לקוחות`);
+
+            //         // ⭐ במצב עריכה - סמן את הלקוח הנוכחי
+            //         if (window.isEditMode) {
+            //             const currentClientId = document.getElementById('clientId')?.value;
                         
-        //                 if (currentCustomer) {
-        //                     currentCustomer.is_current = true;
-        //                     console.log('✅ לקוח נוכחי נמצא:', currentCustomer.firstName, currentCustomer.lastName);
-        //                 } else {
-        //                     console.warn('⚠️ לקוח נוכחי לא נמצא ברשימה:', currentClientId);
-        //                 }
-        //             }
-        //         }
+            //             if (currentClientId && currentClientId.trim() !== '') {
+            //                 console.log('🔍 מחפש לקוח נוכחי:', currentClientId);
+                            
+            //                 const currentCustomer = result.data.find(c => c.unicId === currentClientId);
+                            
+            //                 if (currentCustomer) {
+            //                     currentCustomer.is_current = true;
+            //                     console.log('✅ לקוח נוכחי נמצא:', currentCustomer.firstName, currentCustomer.lastName);
+            //                 } else {
+            //                     console.warn('⚠️ לקוח נוכחי לא נמצא ברשימה:', currentClientId);
+            //                 }
+            //             }
+            //         }
 
-        //         // אתחל SmartSelect
-        //         if (window.SmartSelectManager && !window.SmartSelectManager.instances['clientId']) {
-        //             window.SmartSelectManager.init('clientId');
-        //             console.log('✅ SmartSelect initialized for customers');
-        //         }
+            //         // אתחל SmartSelect
+            //         if (window.SmartSelectManager && !window.SmartSelectManager.instances['clientId']) {
+            //             window.SmartSelectManager.init('clientId');
+            //             console.log('✅ SmartSelect initialized for customers');
+            //         }
 
-        //         // אכלס לקוחות
-        //         populateCustomers(result.data);
+            //         // אכלס לקוחות
+            //         populateCustomers(result.data);
 
-        //         // ⭐ במצב עריכה - בחר את הלקוח אחרי האכלוס
-        //         if (window.isEditMode) {
-        //             const currentClientId = document.getElementById('clientId')?.value;
-                    
-        //             if (currentClientId && currentClientId.trim() !== '') {
-        //                 setTimeout(() => {
-        //                     if (window.SmartSelectManager?.instances['clientId']) {
-        //                         window.SmartSelectManager.select('clientId', currentClientId);
-        //                         console.log('✅ לקוח נבחר אוטומטית:', currentClientId);
-        //                     }
-        //                 }, 100);
-        //             }
-        //         }
-                
-        //         // ⭐ המתן ל-SmartSelect
-        //         const customerInput = document.getElementById('clientId');
-                
-        //         if (!customerInput) {
-        //             console.warn('⚠️ Customer input לא נמצא עדיין, ננסה שוב...');
-        //             setTimeout(loadAvailableCustomers, 500);
-        //             return;
-        //         }
-
-        //         // ⭐ אם יש לקוח נוכחי - שמור את הנתונים
-        //         const currentCustomer = result.data.find(c => c.is_current);
-        //         if (currentCustomer) {
-        //             window.selectedCustomerData = {
-        //                 id: currentCustomer.unicId,
-        //                 resident: currentCustomer.resident || 3,
-        //                 name: `${currentCustomer.firstName} ${currentCustomer.lastName}`
-        //             };
-                    
-        //             console.log('👤 לקוח נוכחי נבחר:', window.selectedCustomerData);
-        //         }
-                
-        //         // ✅ הסר ספינר
-        //         hideSelectSpinner('clientId');
-                
-        //         console.log('✅ לקוחות נטענו בהצלחה');
-                
-        //     } catch (error) {
-        //         console.error('❌ שגיאה בטעינת לקוחות:', error);
-        //         hideSelectSpinner('clientId');
-        //     }
-        // })();
-
-        async function loadAvailableCustomersOld2() {
-            console.log('👥 מתחיל לטעון לקוחות פנויים מה-API...');
-            
-            // ⭐ אם האלמנט לא קיים עדיין - צא בשקט (הטופס עדיין בונה)
-            const clientSelect = document.getElementById('clientId');
-            if (!clientSelect) {
-                console.warn('⚠️ clientId not ready yet, will retry via observer');
-                // ⭐ רשום observer לטעינה כשהאלמנט יופיע
-                observeClientIdAndLoad();
-                return;
-            }
-            
-            // הוסף spinner
-            addSpinner(clientSelect, true);
-            
-            try {
-                // טען לקוחות
-                const response = await fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=getAvailable');
-                const data = await response.json();
-
-                if (!data.success) {
-                    throw new Error(data.message || 'Failed to load customers');
-                }
-
-                console.log('✅ נטענו', data.data.length, 'לקוחות');
-
-                // ⭐ במצב עריכה - סמן את הלקוח הנוכחי
-                if (window.isEditMode) {
-                    const currentClientId = clientSelect.value;
-                    
-                    if (currentClientId && currentClientId.trim() !== '') {
-                        const currentCustomer = data.data.find(c => c.unicId === currentClientId);
+            //         // ⭐ במצב עריכה - בחר את הלקוח אחרי האכלוס
+            //         if (window.isEditMode) {
+            //             const currentClientId = document.getElementById('clientId')?.value;
                         
-                        if (currentCustomer) {
-                            currentCustomer.is_current = true;
-                            console.log('✅ לקוח נוכחי נמצא:', currentCustomer.firstName, currentCustomer.lastName);
-                        }
-                    }
-                }
-
-                // ⭐ אתחל SmartSelect אם צריך
-                if (window.SmartSelectManager && !window.SmartSelectManager.instances['clientId']) {
-                    window.SmartSelectManager.init('clientId');
-                    console.log('✅ SmartSelect initialized');
-                }
-
-                // אכלס לקוחות
-                if (window.populateCustomers) {
-                    window.populateCustomers(data.data);
-                }
-
-                // ⭐ במצב עריכה - בחר את הלקוח
-                if (window.isEditMode) {
-                    const currentClientId = clientSelect.value;
+            //             if (currentClientId && currentClientId.trim() !== '') {
+            //                 setTimeout(() => {
+            //                     if (window.SmartSelectManager?.instances['clientId']) {
+            //                         window.SmartSelectManager.select('clientId', currentClientId);
+            //                         console.log('✅ לקוח נבחר אוטומטית:', currentClientId);
+            //                     }
+            //                 }, 100);
+            //             }
+            //         }
                     
-                    if (currentClientId && window.SmartSelectManager?.instances['clientId']) {
-                        window.SmartSelectManager.select('clientId', currentClientId);
-                        console.log('✅ לקוח נבחר:', currentClientId);
-                    }
-                }
-
-                console.log('✅ לקוחות נטענו בהצלחה');
-                
-            } catch (error) {
-                console.error('❌ שגיאה בטעינת לקוחות:', error);
-            } finally {
-                // ⭐ הסר spinner - תמיד! גם אם יש שגיאה!
-                const el = document.getElementById('clientId');
-                if (el) {
-                    removeSpinner(el, true);
-                }
-            }
-        }
-
-        async function loadAvailableCustomersOld3() {
-            console.log('👥 מתחיל לטעון לקוחות פנויים מה-API...');
-            
-            const clientSelect = document.getElementById('clientId');
-            if (!clientSelect) {
-                console.warn('⚠️ clientId not ready yet, will retry via observer');
-                observeClientIdAndLoad();
-                return;
-            }
-            
-            console.log('🔄 הוספת ספינר ל-clientId');
-            
-            // ⭐ הוסף ספינר - שמור את ההפניה!
-            const spinnerAdded = addSpinner(clientSelect, true);
-            console.log('Spinner added:', spinnerAdded);
-            
-            try {
-                const response = await fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=getAvailable');
-                const data = await response.json();
-
-                if (!data.success) {
-                    throw new Error(data.message || 'Failed to load customers');
-                }
-
-                console.log('✅ נטענו', data.data.length, 'לקוחות');
-
-                if (window.isEditMode) {
-                    const currentClientId = clientSelect.value;
+            //         // ⭐ המתן ל-SmartSelect
+            //         const customerInput = document.getElementById('clientId');
                     
-                    if (currentClientId && currentClientId.trim() !== '') {
-                        const currentCustomer = data.data.find(c => c.unicId === currentClientId);
+            //         if (!customerInput) {
+            //             console.warn('⚠️ Customer input לא נמצא עדיין, ננסה שוב...');
+            //             setTimeout(loadAvailableCustomers, 500);
+            //             return;
+            //         }
+
+            //         // ⭐ אם יש לקוח נוכחי - שמור את הנתונים
+            //         const currentCustomer = result.data.find(c => c.is_current);
+            //         if (currentCustomer) {
+            //             window.selectedCustomerData = {
+            //                 id: currentCustomer.unicId,
+            //                 resident: currentCustomer.resident || 3,
+            //                 name: `${currentCustomer.firstName} ${currentCustomer.lastName}`
+            //             };
                         
-                        if (currentCustomer) {
-                            currentCustomer.is_current = true;
-                            console.log('✅ לקוח נוכחי נמצא:', currentCustomer.firstName, currentCustomer.lastName);
-                        }
-                    }
-                }
-
-                if (window.SmartSelectManager && !window.SmartSelectManager.instances['clientId']) {
-                    window.SmartSelectManager.init('clientId');
-                    console.log('✅ SmartSelect initialized');
-                }
-
-                if (window.populateCustomers) {
-                    populateCustomers(data.data);
-                }
-
-                if (window.isEditMode) {
-                    const currentClientId = clientSelect.value;
+            //             console.log('👤 לקוח נוכחי נבחר:', window.selectedCustomerData);
+            //         }
                     
-                    if (currentClientId && window.SmartSelectManager?.instances['clientId']) {
-                        window.SmartSelectManager.select('clientId', currentClientId);
-                        console.log('✅ לקוח נבחר:', currentClientId);
-                    }
-                }
+            //         // ✅ הסר ספינר
+            //         hideSelectSpinner('clientId');
+                    
+            //         console.log('✅ לקוחות נטענו בהצלחה');
+                    
+            //     } catch (error) {
+            //         console.error('❌ שגיאה בטעינת לקוחות:', error);
+            //         hideSelectSpinner('clientId');
+            //     }
+            // }
+        // )();
 
-                console.log('✅ לקוחות נטענו בהצלחה');
-                
-            } catch (error) {
-                console.error('❌ שגיאה בטעינת לקוחות:', error);
-            } finally {
-                // ⭐⭐⭐ הסרה מפורשת של הספינר ⭐⭐⭐
-                console.log('🔄 מסיר ספינר מ-clientId');
-                
-                // נסיון 1: removeSpinner
-                const el = document.getElementById('clientId');
-                if (el) {
-                    const removed1 = removeSpinner(el, true);
-                    console.log('Spinner removed (method 1):', removed1);
-                }
-                
-                // נסיון 2: hideSelectSpinner
-                if (typeof hideSelectSpinner === 'function') {
-                    hideSelectSpinner('clientId');
-                    console.log('Spinner hidden (method 2)');
-                }
-                
-                // נסיון 3: הסרה ידנית
-                const wrapper = clientSelect?.closest('.smart-select-wrapper');
-                if (wrapper) {
-                    const spinner = wrapper.querySelector('.spinner-border, .loading-spinner');
-                    if (spinner) {
-                        spinner.remove();
-                        console.log('✅ Spinner removed manually');
-                    }
-                }
-                
-                console.log('✅ Spinner cleanup complete');
-            }
-        }
-
-        async function loadAvailableCustomers() {
+        async function loadAvailableCustomersOld1() {
             console.log('👥 מתחיל לטעון לקוחות פנויים מה-API...');
             
             const clientSelect = document.getElementById('clientId');
@@ -3161,6 +3070,88 @@ const FormHandler = {
                 console.error('❌ שגיאה בטעינת לקוחות:', error);
             } finally {
                 // ⭐ השתמש בפונקציה הנכונה!
+                console.log('🔄 מסיר ספינר מ-clientId');
+                hideSelectSpinner('clientId');
+                console.log('✅ Spinner cleanup complete');
+            }
+        }
+        async function loadAvailableCustomers() {
+            console.log('👥 מתחיל לטעון לקוחות פנויים מה-API...');
+            
+            const clientSelect = document.getElementById('clientId');
+            if (!clientSelect) {
+                console.warn('⚠️ clientId not ready yet, will retry via observer');
+                observeClientIdAndLoad();
+                return;
+            }
+            
+            console.log('🔄 הוספת ספינר ל-clientId');
+            showSelectSpinner('clientId');
+            
+            try {
+                const response = await fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=available');
+                const data = await response.json();
+
+                if (!data.success) {
+                    throw new Error(data.message || 'Failed to load customers');
+                }
+
+                console.log('✅ נטענו', data.data.length, 'לקוחות');
+
+                // במצב עריכה - סמן את הלקוח הנוכחי
+                if (window.isEditMode) {
+                    const currentClientId = clientSelect.value;
+                    
+                    if (currentClientId && currentClientId.trim() !== '') {
+                        console.log('🔍 מחפש לקוח נוכחי:', currentClientId);
+                        
+                        const currentCustomer = data.data.find(c => c.unicId === currentClientId);
+                        
+                        if (currentCustomer) {
+                            currentCustomer.is_current = true;
+                            console.log('✅ לקוח נוכחי נמצא:', currentCustomer.firstName, currentCustomer.lastName);
+                            
+                            // ⭐ שמור מיד את selectedCustomerData
+                            window.selectedCustomerData = {
+                                id: currentCustomer.unicId,
+                                resident: currentCustomer.resident || 3,
+                                name: `${currentCustomer.firstName} ${currentCustomer.lastName}`
+                            };
+                            console.log('👤 לקוח נוכחי נשמר:', window.selectedCustomerData);
+                        }
+                    }
+                }
+
+                // אתחל SmartSelect אם צריך
+                if (window.SmartSelectManager && !window.SmartSelectManager.instances['clientId']) {
+                    window.SmartSelectManager.init('clientId');
+                    console.log('✅ SmartSelect initialized');
+                }
+
+                // אכלס לקוחות
+                if (window.populateCustomers) {
+                    populateCustomers(data.data);
+                }
+
+                // ⭐ במצב עריכה - בחר את הלקוח עם setTimeout
+                if (window.isEditMode) {
+                    const currentClientId = clientSelect.value;
+                    
+                    if (currentClientId && currentClientId.trim() !== '') {
+                        setTimeout(() => {
+                            if (window.SmartSelectManager?.instances['clientId']) {
+                                window.SmartSelectManager.select('clientId', currentClientId);
+                                console.log('✅ לקוח נבחר אוטומטית:', currentClientId);
+                            }
+                        }, 100);  // ⭐ השארתי את ה-setTimeout!
+                    }
+                }
+
+                console.log('✅ לקוחות נטענו בהצלחה');
+                
+            } catch (error) {
+                console.error('❌ שגיאה בטעינת לקוחות:', error);
+            } finally {
                 console.log('🔄 מסיר ספינר מ-clientId');
                 hideSelectSpinner('clientId');
                 console.log('✅ Spinner cleanup complete');

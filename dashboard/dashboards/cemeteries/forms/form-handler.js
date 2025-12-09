@@ -2668,21 +2668,6 @@ const FormHandler = {
                         select.style.opacity = '0.5';
                     }
                 });
-                
-                // // ✅ קבל קבר נוכחי
-                // let currentGraveId = null;
-                // if (window.isEditMode && itemId) {
-                //     try {
-                //         const purchaseResponse = await fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=get&id=${itemId}`);
-                //         const purchaseData = await purchaseResponse.json();
-                        
-                //         if (purchaseData.success && purchaseData.data?.graveId) {
-                //             currentGraveId = purchaseData.data.graveId;
-                //         }
-                //     } catch (error) {
-                //         console.warn('⚠️ Could not load current grave:', error);
-                //     }
-                // }
 
                 // ✅ קבל קבר נוכחי
                 let currentGraveId = null;

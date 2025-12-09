@@ -3682,15 +3682,43 @@ const FormHandler = {
                     }
                 });
                 
+                // // ✅ קבל קבר נוכחי
+                // let currentGraveId = null;
+                // if (window.isEditMode && itemId) {
+                //     try {
+                //         const burialResponse = await fetch(`/dashboard/dashboards/cemeteries/api/burials-api.php?action=get&id=${itemId}`);
+                //         const burialData = await burialResponse.json();
+                        
+                //         if (burialData.success && burialData.data?.graveId) {
+                //             currentGraveId = burialData.data.graveId;
+                //         }
+                //     } catch (error) {
+                //         console.warn('⚠️ Could not load current grave:', error);
+                //     }
+                // }
+
                 // ✅ קבל קבר נוכחי
                 let currentGraveId = null;
-                if (window.isEditMode && itemId) {
+
+                // ⭐ תחילה נסה לקרוא מה-data attribute
+                const fieldset = document.querySelector('#grave-selector-fieldset');
+                if (fieldset) {
+                    const dataGraveId = fieldset.getAttribute('data-burial-grave-id');
+                    if (dataGraveId && dataGraveId.trim() !== '') {
+                        currentGraveId = dataGraveId;
+                        console.log('✅ [Burial] נמצא graveId מ-data attribute:', currentGraveId);
+                    }
+                }
+
+                // אם לא נמצא, ובמצב עריכה - שלוף מה-API
+                if (!currentGraveId && window.isEditMode && itemId) {
                     try {
                         const burialResponse = await fetch(`/dashboard/dashboards/cemeteries/api/burials-api.php?action=get&id=${itemId}`);
                         const burialData = await burialResponse.json();
                         
                         if (burialData.success && burialData.data?.graveId) {
                             currentGraveId = burialData.data.graveId;
+                            console.log('✅ [Burial] נמצא graveId מ-API:', currentGraveId);
                         }
                     } catch (error) {
                         console.warn('⚠️ Could not load current grave:', error);

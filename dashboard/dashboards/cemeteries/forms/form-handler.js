@@ -4407,7 +4407,7 @@ const FormHandler = {
             if (currentCustomer) {
                 let displayText = `${currentCustomer.firstName} ${currentCustomer.lastName}`;
                 if (currentCustomer.phone || currentCustomer.phoneMobile) {
-                    displayText += ` - ${currentCustomer.phone || currentCustomer.phoneMobile}`;
+                    displayText += ` - ${currentCustomer.numId || currentCustomer.phoneMobile}`;
                 }
                 customerInstance.valueSpan.textContent = displayText;
                 console.log('✅ עודכן תצוגת לקוח נוכחי (burial):', displayText);

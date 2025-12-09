@@ -33,18 +33,6 @@
     // יצירת FormBuilder
     $formBuilder = new FormBuilder('burial', $itemId, $parentId);
 
-    // ✅ לקוחות - טעינה מ-API (כמו ב-purchase)
-    $customersSelectorHTML = '
-    <div class="form-group">
-        <label>נפטר/ת <span class="text-danger">*</span></label>
-        <select name="clientId" id="clientId" class="form-control" required>
-            <option value="">טוען לקוחות...</option>
-        </select>
-    </div>';
-
-    $formBuilder->addCustomHTML($customersSelectorHTML);
-
-
     // ✅ SmartSelect ללקוחות - ריק (יתמלא ב-JavaScript)
     $smartCustomer = new SmartSelect('clientId', 'נפטר/ת', [], [
         'searchable' => true,

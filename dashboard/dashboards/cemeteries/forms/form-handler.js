@@ -2863,7 +2863,7 @@ const FormHandler = {
                     if (currentClientId && currentClientId.trim() !== '') {
                         console.log('🔍 מחפש לקוח נוכחי:', currentClientId);
                         
-                        const currentCustomer = data.data.find(c => c.unicId === currentClientId);
+                        const currentCustomer = result.data.find(c => c.unicId === currentClientId);
                         
                         if (currentCustomer) {
                             currentCustomer.is_current = true;

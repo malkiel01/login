@@ -1938,111 +1938,6 @@ const FormHandler = {
         };
 
         // ⭐ פונקציה למילוי לקוחות ב-SmartSelect
-        populateCustomers2 = function(customers) {
-            console.log('👥 populateCustomers called with', customers.length, 'customers');
-            
-            const customerInstance = window.SmartSelectManager?.instances['clientId'];
-            
-            if (!customerInstance) {
-                console.warn('⚠️ Customer SmartSelect instance not found');
-                return;
-            }
-            
-            // נקה אופציות
-            customerInstance.optionsContainer.innerHTML = '';
-            customerInstance.allOptions = [];
-            
-            // מלא לקוחות
-            customers.forEach(customer => {
-                const option = document.createElement('div');
-                option.className = 'smart-select-option';
-                option.dataset.value = customer.unicId;
-                option.dataset.resident = customer.resident || 3;
-                
-                let displayText = `${customer.firstName} ${customer.lastName}`;
-                if (customer.phone || customer.phoneMobile) {
-                    displayText += ` - ${customer.phone || customer.phoneMobile}`;
-                }
-                
-                option.textContent = displayText;
-                
-                // ⭐ סמן אם זה לקוח נוכחי
-                if (customer.is_current) {
-                    option.classList.add('selected');
-                }
-                
-                option.addEventListener('click', function() {
-                    window.SmartSelectManager.select('clientId', customer.unicId);
-                    
-                    // ⭐ שמור את נתוני הלקוח
-                    window.selectedCustomerData = {
-                        id: customer.unicId,
-                        resident: customer.resident || 3,
-                        name: `${customer.firstName} ${customer.lastName}`
-                    };
-                    
-                    console.log('👤 לקוח נבחר:', window.selectedCustomerData);
-                    
-                    // עדכן פרמטרים וחשב תשלומים
-                    if (window.selectedGraveData && window.updatePaymentParameters) {
-                        window.updatePaymentParameters();
-                    }
-                    window.tryCalculatePayments();
-                });
-                
-                customerInstance.optionsContainer.appendChild(option);
-                customerInstance.allOptions.push(option);
-            });
-            
-            // עדכן טקסט ל-"בחר לקוח..."
-            if (!customers.some(c => c.is_current)) {
-                customerInstance.valueSpan.textContent = 'בחר לקוח...';
-                customerInstance.hiddenInput.value = '';
-            }
-            
-            console.log(`✅ Populated ${customers.length} customers`);
-        };
-
-        function populateCustomersOld1(customers) {
-            console.log('👥 populateCustomers called with', customers.length, 'customers');
-            
-            if (!window.SmartSelectManager || !window.SmartSelectManager.instances['clientId']) {
-                console.error('❌ SmartSelect not initialized for clientId');
-                return;
-            }
-
-            const instance = window.SmartSelectManager.instances['clientId'];
-            
-            // ניקוי אופציות קיימות
-            instance.allOptions = [];
-            instance.optionsContainer.innerHTML = '';
-
-            // הוספת אופציות חדשות
-            customers.forEach(customer => {
-                const option = document.createElement('div');
-                option.className = 'smart-select-option';
-                option.dataset.value = customer.unicId;
-                option.dataset.resident = customer.isResident;
-                option.textContent = customer.fullName;
-                
-                instance.allOptions.push(option);
-                instance.optionsContainer.appendChild(option);
-            });
-
-            console.log('✅ Populated', customers.length, 'customers');
-            
-            // ⭐ עדכון התצוגה
-            if (typeof instance.updateDisplay === 'function') {
-                instance.updateDisplay();
-                console.log('✅ SmartSelect display updated');
-            } else {
-                // עדכון ידני אם אין פונקציה
-                const count = instance.allOptions.length;
-                instance.valueSpan.textContent = count > 0 ? `${count} לקוחות זמינים` : 'אין לקוחות זמינים';
-                console.log('✅ Display updated manually:', instance.valueSpan.textContent);
-            }
-        }
-
         function populateCustomers(customers) {
             console.log('👥 populateCustomers called with', customers.length, 'customers');
             
@@ -2960,6 +2855,47 @@ const FormHandler = {
                 }
                 
                 console.log(`✅ נטענו ${result.data.length} לקוחות`);
+
+                // ⭐ במצב עריכה - סמן את הלקוח הנוכחי
+                if (window.isEditMode) {
+                    const currentClientId = document.getElementById('clientId')?.value;
+                    
+                    if (currentClientId && currentClientId.trim() !== '') {
+                        console.log('🔍 מחפש לקוח נוכחי:', currentClientId);
+                        
+                        const currentCustomer = data.data.find(c => c.unicId === currentClientId);
+                        
+                        if (currentCustomer) {
+                            currentCustomer.is_current = true;
+                            console.log('✅ לקוח נוכחי נמצא:', currentCustomer.firstName, currentCustomer.lastName);
+                        } else {
+                            console.warn('⚠️ לקוח נוכחי לא נמצא ברשימה:', currentClientId);
+                        }
+                    }
+                }
+
+            // אתחל SmartSelect
+            if (window.SmartSelectManager && !window.SmartSelectManager.instances['clientId']) {
+                window.SmartSelectManager.init('clientId');
+                console.log('✅ SmartSelect initialized for customers');
+            }
+
+            // אכלס לקוחות
+            window.populateCustomers(data.data);
+
+            // ⭐ במצב עריכה - בחר את הלקוח אחרי האכלוס
+            if (window.isEditMode) {
+                const currentClientId = document.getElementById('clientId')?.value;
+                
+                if (currentClientId && currentClientId.trim() !== '') {
+                    setTimeout(() => {
+                        if (window.SmartSelectManager?.instances['clientId']) {
+                            window.SmartSelectManager.select('clientId', currentClientId);
+                            console.log('✅ לקוח נבחר אוטומטית:', currentClientId);
+                        }
+                    }, 100);
+                }
+            }
                 
                 // ⭐ המתן ל-SmartSelect
                 const customerInput = document.getElementById('clientId');
@@ -2970,14 +2906,14 @@ const FormHandler = {
                     return;
                 }
                 
-                // ⭐ אתחל SmartSelect
-                if (window.SmartSelectManager) {
-                    SmartSelectManager.init();
-                    console.log('✅ SmartSelect initialized for customers');
-                }
+                // // ⭐ אתחל SmartSelect
+                // if (window.SmartSelectManager) {
+                //     SmartSelectManager.init();
+                //     console.log('✅ SmartSelect initialized for customers');
+                // }
                 
-                // ⭐ אכלס לקוחות
-                populateCustomers(result.data);
+                // // ⭐ אכלס לקוחות
+                // populateCustomers(result.data);
                 
                 // ⭐ אם יש לקוח נוכחי - שמור את הנתונים
                 const currentCustomer = result.data.find(c => c.is_current);

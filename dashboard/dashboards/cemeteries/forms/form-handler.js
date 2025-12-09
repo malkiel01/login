@@ -2003,6 +2003,46 @@ const FormHandler = {
             console.log(`✅ Populated ${customers.length} customers`);
         };
 
+        function populateCustomers(customers) {
+            console.log('👥 populateCustomers called with', customers.length, 'customers');
+            
+            if (!window.SmartSelectManager || !window.SmartSelectManager.instances['clientId']) {
+                console.error('❌ SmartSelect not initialized for clientId');
+                return;
+            }
+
+            const instance = window.SmartSelectManager.instances['clientId'];
+            
+            // ניקוי אופציות קיימות
+            instance.allOptions = [];
+            instance.optionsContainer.innerHTML = '';
+
+            // הוספת אופציות חדשות
+            customers.forEach(customer => {
+                const option = document.createElement('div');
+                option.className = 'smart-select-option';
+                option.dataset.value = customer.unicId;
+                option.dataset.resident = customer.isResident;
+                option.textContent = customer.fullName;
+                
+                instance.allOptions.push(option);
+                instance.optionsContainer.appendChild(option);
+            });
+
+            console.log('✅ Populated', customers.length, 'customers');
+            
+            // ⭐ עדכון התצוגה
+            if (typeof instance.updateDisplay === 'function') {
+                instance.updateDisplay();
+                console.log('✅ SmartSelect display updated');
+            } else {
+                // עדכון ידני אם אין פונקציה
+                const count = instance.allOptions.length;
+                instance.valueSpan.textContent = count > 0 ? `${count} לקוחות זמינים` : 'אין לקוחות זמינים';
+                console.log('✅ Display updated manually:', instance.valueSpan.textContent);
+            }
+        }
+
         // ⭐ פונקציה לבחירת לקוח (במצב עריכה)
         window.selectCustomer = function(customerId, customerName) {
             console.log('🎯 Selecting customer:', customerId, customerName);
@@ -2866,7 +2906,7 @@ const FormHandler = {
                 }
                 
                 // ⭐ אכלס לקוחות
-                populateCustomersP(result.data);
+                populateCustomers(result.data);
                 
                 // ⭐ אם יש לקוח נוכחי - שמור את הנתונים
                 const currentCustomer = result.data.find(c => c.is_current);

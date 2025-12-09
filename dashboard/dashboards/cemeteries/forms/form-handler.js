@@ -2784,7 +2784,11 @@ const FormHandler = {
                         const row = window.hierarchyData.rows.find(r => r.unicId == areaGrave?.lineId);
                         const plot = window.hierarchyData.plots.find(p => p.unicId == row?.plotId);
                         const block = window.hierarchyData.blocks.find(b => b.unicId == plot?.blockId);
+                        const cemetery = window.hierarchyData.cemeteries.find(c => c.unicId == block?.cemeteryId);
                         
+                        // ⭐ בחר את בית העלמין תחילה!
+                        document.getElementById('cemeterySelect').value = cemetery?.unicId;
+
                         // טען גושים
                         window.populateBlocks();
                         document.getElementById('blockSelect').value = block?.unicId;
@@ -3819,8 +3823,7 @@ const FormHandler = {
                         const plot = window.hierarchyData.plots.find(p => p.unicId == row?.plotId);
                         const block = window.hierarchyData.blocks.find(b => b.unicId == plot?.blockId);
                         const cemetery = window.hierarchyData.cemeteries.find(c => c.unicId == block?.cemeteryId);
-                        
-                        
+                                               
                         // ⭐ בחר את בית העלמין תחילה!
                         document.getElementById('cemeterySelect').value = cemetery?.unicId;
                         

@@ -3703,13 +3703,13 @@ const FormHandler = {
                                 // נסה לקרוא מה-data attribute
                 // if (!currentGraveId) {  
                     const fieldset = document.querySelector('#grave-selector-fieldset');
-                    if (fieldset) {
-                        const dataGraveId = fieldset.getAttribute('data-burial-grave-id');
-                        if (dataGraveId && dataGraveId.trim() !== '') {
-                            currentGraveId = dataGraveId;
-                            console.log('✅ [Burial] נמצא graveId מ-data attribute:', currentGraveId);
-                        }
-                    }
+                    // if (fieldset) {
+                    //     const dataGraveId = fieldset.getAttribute('data-burial-grave-id');
+                    //     if (dataGraveId && dataGraveId.trim() !== '') {
+                    //         currentGraveId = dataGraveId;
+                    //         console.log('✅ [Burial] נמצא graveId מ-data attribute:', currentGraveId);
+                    //     }
+                    // }
                 // }       
 
                 // אם לא נמצא, ובמצב עריכה - שלוף מה-API
@@ -3774,7 +3774,6 @@ const FormHandler = {
 
                 // נסה לקרוא מה-data attribute
                 // if (!currentGraveId) {  
-                    // const fieldset = document.querySelector('#grave-selector-fieldset');
                     if (fieldset) {
                         const dataGraveId = fieldset.getAttribute('data-burial-grave-id');
                         if (dataGraveId && dataGraveId.trim() !== '') {

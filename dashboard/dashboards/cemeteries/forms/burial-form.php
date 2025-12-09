@@ -56,12 +56,15 @@
 
     $formBuilder->addCustomHTML('<div style="margin-bottom: 15px;">' . $smartCustomer->render() . '</div>');
 
+
+    
     // ✅ בחירת קבר - זהה לחלוטין ל-purchase
     $graveSelectorHTML = '
     <fieldset class="form-section" 
-        id="grave-selector-fieldset"
-        data-load-from-api="true"
-        data-burial-grave-id="' . htmlspecialchars($burial['graveId'] ?? '', ENT_QUOTES) . '"
+    id="grave-selector-fieldset"
+    data-load-from-api="true"
+        <!-- data-burial-grave-id="' . htmlspecialchars($burial['graveId'] ?? '', ENT_QUOTES) . '" -->
+        data-purchase-grave-id="' . htmlspecialchars($parentId ?? $purchase['graveId'] ?? '', ENT_QUOTES) . '"
         style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
         <legend style="padding: 0 10px; font-weight: bold;">בחירת קבר</legend>
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
@@ -199,3 +202,4 @@
 
     echo $formBuilder->renderModal();
 ?>
+

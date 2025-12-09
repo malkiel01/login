@@ -1449,33 +1449,6 @@ const FormHandler = {
                     }
                 };
             }
-            
-            // כפתור רכישה חדשה
-            // const btnPurchase = modal.querySelector('#btnNewPurchase');
-            // if (btnPurchase) {
-            //     btnPurchase.onclick = function() {
-            //         FormHandler.closeForm('graveCard');
-            //         FormHandler.openForm('purchase', grave.unicId, null);
-            //     };
-            // }
-            
-            // // כפתור קבורה חדשה (footer)
-            // const btnBurial = modal.querySelector('#btnNewBurial');
-            // if (btnBurial) {
-            //     btnBurial.onclick = function() {
-            //         FormHandler.closeForm('graveCard');
-            //         FormHandler.openForm('burial', grave.unicId, null);
-            //     };
-            // }
-
-            // // כפתור הוסף קבורה (fieldset)
-            // const btnAddBurial = modal.querySelector('#btnAddBurial');
-            // if (btnAddBurial) {
-            //     btnAddBurial.onclick = function() {
-            //         FormHandler.closeForm('graveCard');
-            //         FormHandler.openForm('burial', grave.unicId, null);
-            //     };
-            // }
 
             // כפתורי רכישה
             const purchaseButtons = modal.querySelectorAll('.btn-open-purchase');

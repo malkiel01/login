@@ -2009,7 +2009,7 @@ const FormHandler = {
             console.log(`✅ Populated ${customers.length} customers`);
         }
 
-        function populateCustomers(customers) {
+        function populateCustomersOld2(customers) {
             console.log('👥 populateCustomers called with', customers.length, 'customers');
             
             const customerInstance = window.SmartSelectManager?.instances['clientId'];
@@ -2075,6 +2075,84 @@ const FormHandler = {
             
             // עדכן טקסט ל-"בחר לקוח..."
             if (!customers.some(c => c.is_current)) {
+                customerInstance.valueSpan.textContent = 'בחר לקוח...';
+                customerInstance.hiddenInput.value = '';
+            }
+            
+            console.log(`✅ Populated ${customers.length} customers`);
+        }
+
+        function populateCustomers(customers) {
+            console.log('👥 populateCustomers called with', customers.length, 'customers');
+            
+            const customerInstance = window.SmartSelectManager?.instances['clientId'];
+            
+            if (!customerInstance) {
+                console.warn('⚠️ Customer SmartSelect instance not found');
+                return;
+            }
+            
+            // נקה אופציות
+            customerInstance.optionsContainer.innerHTML = '';
+            customerInstance.allOptions = [];
+            
+            // מלא לקוחות
+            customers.forEach(customer => {
+                const option = document.createElement('div');
+                option.className = 'smart-select-option';
+                option.dataset.value = customer.unicId;
+                option.dataset.resident = customer.resident || 3;
+                option.dataset.firstName = customer.firstName || '';
+                option.dataset.lastName = customer.lastName || '';
+                
+                let displayText = `${customer.firstName} ${customer.lastName}`;
+                if (customer.phone || customer.phoneMobile) {
+                    displayText += ` - ${customer.phone || customer.phoneMobile}`;
+                }
+                
+                option.textContent = displayText;
+                
+                // ⭐ סמן אם זה לקוח נוכחי
+                if (customer.is_current) {
+                    option.classList.add('selected');
+                }
+                
+                option.addEventListener('click', function() {
+                    const unicId = this.dataset.value;
+                    const resident = parseInt(this.dataset.resident) || 3;
+                    const firstName = this.dataset.firstName;
+                    const lastName = this.dataset.lastName;
+                    
+                    window.SmartSelectManager.select('clientId', unicId);
+                    
+                    window.selectedCustomerData = {
+                        id: unicId,
+                        resident: resident,
+                        name: `${firstName} ${lastName}`
+                    };
+                    
+                    console.log('👤 לקוח נבחר:', window.selectedCustomerData);
+                    
+                    if (window.selectedGraveData && window.updatePaymentParameters) {
+                        window.updatePaymentParameters();
+                    }
+                    window.tryCalculatePayments();
+                });
+                
+                customerInstance.optionsContainer.appendChild(option);
+                customerInstance.allOptions.push(option);
+            });
+            
+            // ⭐⭐⭐ עדכן את התצוגה אם יש לקוח נוכחי ⭐⭐⭐
+            const currentCustomer = customers.find(c => c.is_current);
+            if (currentCustomer) {
+                let displayText = `${currentCustomer.firstName} ${currentCustomer.lastName}`;
+                if (currentCustomer.phone || currentCustomer.phoneMobile) {
+                    displayText += ` - ${currentCustomer.phone || currentCustomer.phoneMobile}`;
+                }
+                customerInstance.valueSpan.textContent = displayText;
+                console.log('✅ עודכן תצוגת לקוח נוכחי:', displayText);
+            } else {
                 customerInstance.valueSpan.textContent = 'בחר לקוח...';
                 customerInstance.hiddenInput.value = '';
             }

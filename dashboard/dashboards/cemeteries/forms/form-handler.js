@@ -3839,79 +3839,6 @@ const FormHandler = {
             }
         })();
 
-        // (async function loadAvailableCustomers() {
-        //     try {
-        //         console.log('👥 מתחיל לטעון לקוחות מה-API...');
-                
-        //         showSelectSpinner('clientId');
-                
-        //         // ✅ בנה URL עם הלקוח הנוכחי אם במצב עריכה + type=burial
-        //         let apiUrl = '/dashboard/dashboards/cemeteries/api/customers-api.php?action=available&type=burial';
-        //         if (window.isEditMode && itemId) {
-        //             const burialResponse = await fetch(`/dashboard/dashboards/cemeteries/api/burials-api.php?action=get&id=${itemId}`);
-        //             const burialData = await burialResponse.json();
-                    
-        //             if (burialData.success && burialData.data?.clientId) {
-        //                 apiUrl += `&currentClientId=${burialData.data.clientId}`;
-        //             }
-        //         }
-                
-        //         const response = await fetch(apiUrl);
-        //         const result = await response.json();
-                
-        //         if (!result.success) {
-        //             console.error('❌ שגיאה בטעינת לקוחות:', result.error);
-        //             hideSelectSpinner('clientId');
-        //             return;
-        //         }
-                
-        //         console.log(`✅ נטענו ${result.data.length} לקוחות`);
-                
-        //         const customerSelect = document.querySelector('[name="clientId"]');
-                
-        //         if (!customerSelect) {
-        //             console.warn('⚠️ Customer select לא נמצא עדיין, ננסה שוב...');
-        //             setTimeout(loadAvailableCustomers, 500);
-        //             return;
-        //         }
-                
-        //         customerSelect.innerHTML = '<option value="">-- בחר נפטר/ת --</option>';
-                
-        //         result.data.forEach(customer => {
-        //             const option = document.createElement('option');
-        //             option.value = customer.unicId;
-                    
-        //             let displayText = `${customer.firstName} ${customer.lastName}`;
-                    
-        //             if (customer.phone || customer.phoneMobile) {
-        //                 displayText += ` - ${customer.phone || customer.phoneMobile}`;
-        //             }
-                    
-        //             option.textContent = displayText;
-                    
-        //             if (customer.is_current) {
-        //                 option.selected = true;
-                        
-        //                 window.selectedCustomerData = {
-        //                     id: customer.unicId,
-        //                     name: `${customer.firstName} ${customer.lastName}`
-        //                 };
-                        
-        //                 console.log('👤 לקוח נוכחי נבחר:', window.selectedCustomerData);
-        //             }
-                    
-        //             customerSelect.appendChild(option);
-        //         });
-                
-        //         console.log('✅ לקוחות נטענו בהצלחה');
-        //         hideSelectSpinner('clientId');
-                
-        //     } catch (error) {
-        //         console.error('❌ שגיאה בטעינת לקוחות:', error);
-        //         hideSelectSpinner('clientId');
-        //     }
-        // })();
-
         (async function loadAvailableCustomers() {
             try {
                 console.log('👥 מתחיל לטעון לקוחות מה-API...');
@@ -3975,6 +3902,39 @@ const FormHandler = {
                 hideSelectSpinner('clientId');
                 
                 console.log('✅ לקוחות נטענו בהצלחה');
+
+                // ⭐ אם לא במצב עריכה - בדוק אם יש רכישה לקבר
+                if (!window.isEditMode) {
+                    const fieldset = document.querySelector('#grave-selector-fieldset');
+                    const graveId = fieldset?.getAttribute('data-burial-grave-id');
+                    
+                    if (graveId && graveId.trim() !== '') {
+                        try {
+                            const response = await fetch(`/dashboard/dashboards/cemeteries/api/purchases-api.php?action=getByGrave&graveId=${graveId}`);
+                            const data = await response.json();
+                            
+                            if (data.success && data.data) {
+                                const purchase = data.data;
+                                
+                                // ⭐ מלא את הלקוח (SmartSelect כבר מוכן כאן!)
+                                if (purchase.clientId && window.SmartSelectManager?.instances['clientId']) {
+                                    window.SmartSelectManager.select('clientId', purchase.clientId);
+                                    
+                                    window.selectedCustomerData = {
+                                        id: purchase.clientId,
+                                        name: purchase.customer_name || ''
+                                    };
+                                    
+                                    console.log('✅ [Burial] לקוח מולא אוטומטית מרכישה:', purchase.customer_name);
+                                } else {
+                                    console.log('ℹ️ [Burial] לא נמצאה רכישה לקבר זה');
+                                }
+                            }
+                        } catch (error) {
+                            console.error('❌ שגיאה בטעינת רכישה:', error);
+                        }
+                    }
+                }
                 
             } catch (error) {
                 console.error('❌ שגיאה בטעינת לקוחות:', error);

@@ -2739,16 +2739,14 @@ const FormHandler = {
                 }
 
                 // נסה לקרוא מה-data attribute
-                // if (!currentGraveId) {
-                    const fieldset = document.querySelector('#grave-selector-fieldset');
-                    if (fieldset) {
-                        const dataGraveId = fieldset.getAttribute('data-purchase-grave-id');
-                        if (dataGraveId && dataGraveId.trim() !== '') {
-                            currentGraveId = dataGraveId;
-                            console.log('✅ [Purchase] נמצא graveId מ-data attribute:', currentGraveId);
-                        }
+                const fieldset = document.querySelector('#grave-selector-fieldset');
+                if (fieldset) {
+                    const dataGraveId = fieldset.getAttribute('data-purchase-grave-id');
+                    if (dataGraveId && dataGraveId.trim() !== '') {
+                        currentGraveId = dataGraveId;
+                        console.log('✅ [Purchase] נמצא graveId מ-data attribute:', currentGraveId);
                     }
-                // }
+                }
                 
                 // ✅ מלא בתי עלמין - כולם פעילים כבר!
                 cemeterySelect.innerHTML = '<option value="">-- בחר בית עלמין --</option>';
@@ -3702,19 +3700,7 @@ const FormHandler = {
                 });
 
                 // ✅ קבל קבר נוכחי
-                let currentGraveId = null;
-
-                                // נסה לקרוא מה-data attribute
-                // if (!currentGraveId) {  
-                    const fieldset = document.querySelector('#grave-selector-fieldset');
-                    // if (fieldset) {
-                    //     const dataGraveId = fieldset.getAttribute('data-burial-grave-id');
-                    //     if (dataGraveId && dataGraveId.trim() !== '') {
-                    //         currentGraveId = dataGraveId;
-                    //         console.log('✅ [Burial] נמצא graveId מ-data attribute:', currentGraveId);
-                    //     }
-                    // }
-                // }       
+                let currentGraveId = null;    
 
                 // אם לא נמצא, ובמצב עריכה - שלוף מה-API
                 if (!currentGraveId && window.isEditMode && itemId) {
@@ -3777,15 +3763,14 @@ const FormHandler = {
                 }
 
                 // נסה לקרוא מה-data attribute
-                // if (!currentGraveId) {  
-                    if (fieldset) {
-                        const dataGraveId = fieldset.getAttribute('data-burial-grave-id');
-                        if (dataGraveId && dataGraveId.trim() !== '') {
-                            currentGraveId = dataGraveId;
-                            console.log('✅ [Burial] נמצא graveId מ-data attribute:', currentGraveId);
-                        }
+                const fieldset = document.querySelector('#grave-selector-fieldset'); 
+                if (fieldset) {
+                    const dataGraveId = fieldset.getAttribute('data-burial-grave-id');
+                    if (dataGraveId && dataGraveId.trim() !== '') {
+                        currentGraveId = dataGraveId;
+                        console.log('✅ [Burial] נמצא graveId מ-data attribute:', currentGraveId);
                     }
-                // }         
+                }    
                 
                 // ✅ מלא בתי עלמין - כולם פעילים כבר!
                 cemeterySelect.innerHTML = '<option value="">-- בחר בית עלמין --</option>';

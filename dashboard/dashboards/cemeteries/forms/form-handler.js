@@ -3806,14 +3806,23 @@ const FormHandler = {
                 
                 hideSelectSpinner('cemeterySelect');
 
+
                 // ✅ אם יש קבר נוכחי, טען את ההיררכיה
                 if (currentGraveId) {
                     const currentGrave = window.hierarchyData.graves.find(g => g.unicId == currentGraveId);
+
                     if (currentGrave) {
+
+                        // מצא את כל הערכים 
                         const areaGrave = window.hierarchyData.areaGraves.find(ag => ag.unicId == currentGrave.areaGraveId);
                         const row = window.hierarchyData.rows.find(r => r.unicId == areaGrave?.lineId);
                         const plot = window.hierarchyData.plots.find(p => p.unicId == row?.plotId);
                         const block = window.hierarchyData.blocks.find(b => b.unicId == plot?.blockId);
+                        const cemetery = window.hierarchyData.cemeteries.find(c => c.unicId == block?.cemeteryId);
+                        
+                        
+                        // ⭐ בחר את בית העלמין תחילה!
+                        document.getElementById('cemeterySelect').value = cemetery?.unicId;
                         
                         window.populateBlocks();
                         document.getElementById('blockSelect').value = block?.unicId;

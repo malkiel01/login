@@ -2725,7 +2725,7 @@ const FormHandler = {
         window.ExistingPaymentsManager = ExistingPaymentsManager;
 
         // אתחול הטופס
-        setupCustomerListener();
+        // setupCustomerListener();
         window.formInitialized = true;
 
         

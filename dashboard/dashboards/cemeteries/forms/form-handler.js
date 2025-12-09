@@ -3089,7 +3089,18 @@ const FormHandler = {
             showSelectSpinner('clientId');
             
             try {
-                const response = await fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=available');
+                // ⭐ בנה URL עם currentClientId
+                let apiUrl = '/dashboard/dashboards/cemeteries/api/customers-api.php?action=available';
+                
+                if (window.isEditMode) {
+                    const currentClientId = clientSelect.value;
+                    if (currentClientId && currentClientId.trim() !== '') {
+                        apiUrl += `&currentClientId=${currentClientId}`;
+                        console.log('🔍 מוסיף currentClientId ל-API:', currentClientId);
+                    }
+                }
+                
+                const response = await fetch(apiUrl);
                 const data = await response.json();
 
                 if (!data.success) {
@@ -3118,6 +3129,8 @@ const FormHandler = {
                                 name: `${currentCustomer.firstName} ${currentCustomer.lastName}`
                             };
                             console.log('👤 לקוח נוכחי נשמר:', window.selectedCustomerData);
+                        } else {
+                            console.warn('⚠️ לקוח נוכחי לא נמצא ברשימה:', currentClientId);
                         }
                     }
                 }
@@ -3133,7 +3146,7 @@ const FormHandler = {
                     populateCustomers(data.data);
                 }
 
-                // ⭐ במצב עריכה - בחר את הלקוח עם setTimeout
+                // במצב עריכה - בחר את הלקוח
                 if (window.isEditMode) {
                     const currentClientId = clientSelect.value;
                     
@@ -3143,7 +3156,7 @@ const FormHandler = {
                                 window.SmartSelectManager.select('clientId', currentClientId);
                                 console.log('✅ לקוח נבחר אוטומטית:', currentClientId);
                             }
-                        }, 100);  // ⭐ השארתי את ה-setTimeout!
+                        }, 100);
                     }
                 }
 

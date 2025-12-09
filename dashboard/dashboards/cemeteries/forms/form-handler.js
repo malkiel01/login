@@ -1938,7 +1938,7 @@ const FormHandler = {
         };
 
         // ⭐ פונקציה למילוי לקוחות ב-SmartSelect
-        populateCustomers = function(customers) {
+        populateCustomers2 = function(customers) {
             console.log('👥 populateCustomers called with', customers.length, 'customers');
             
             const customerInstance = window.SmartSelectManager?.instances['clientId'];

@@ -28,58 +28,6 @@ $formType = basename(__FILE__, '.php'); // מזהה אוטומטי של סוג �
             $purchase = $stmt->fetch(PDO::FETCH_ASSOC);
         }
 
-        // עכשיו טען את ההיררכיה
-        $hierarchyData = [];
-        $cemeteries = [];
-
-        // בתי עלמין - כלול גם את בית העלמין של הקבר הנוכחי
-        if ($purchase && $purchase['graveId']) {
-            $cemeteriesStmt = $conn->prepare("
-                SELECT c.unicId, c.cemeteryNameHe as name,
-                (EXISTS (
-                    SELECT 1 FROM graves g
-                    INNER JOIN areaGraves ag ON g.areaGraveId = ag.unicId
-                    INNER JOIN rows r ON ag.lineId = r.unicId
-                    INNER JOIN plots p ON r.plotId = p.unicId
-                    INNER JOIN blocks b ON p.blockId = b.unicId
-                    WHERE b.cemeteryId = c.unicId
-                    AND g.graveStatus = 1 
-                    AND g.isActive = 1
-                ) OR EXISTS (
-                    SELECT 1 FROM graves g
-                    INNER JOIN areaGraves ag ON g.areaGraveId = ag.unicId
-                    INNER JOIN rows r ON ag.lineId = r.unicId
-                    INNER JOIN plots p ON r.plotId = p.unicId
-                    INNER JOIN blocks b ON p.blockId = b.unicId
-                    WHERE b.cemeteryId = c.unicId
-                    AND g.unicId = :currentGrave
-                )) as has_available_graves
-                FROM cemeteries c
-                WHERE c.isActive = 1
-                ORDER BY c.cemeteryNameHe
-            ");
-            $cemeteriesStmt->execute(['currentGrave' => $purchase['graveId']]);
-        } else {
-            // קוד רגיל לרכישה חדשה
-            $cemeteriesStmt = $conn->prepare("
-                SELECT c.unicId, c.cemeteryNameHe as name,
-                EXISTS (
-                    SELECT 1 FROM graves g
-                    INNER JOIN areaGraves ag ON g.areaGraveId = ag.unicId
-                    INNER JOIN rows r ON ag.lineId = r.unicId
-                    INNER JOIN plots p ON r.plotId = p.unicId
-                    INNER JOIN blocks b ON p.blockId = b.unicId
-                    WHERE b.cemeteryId = c.unicId
-                    AND g.graveStatus = 1 
-                    AND g.isActive = 1
-                ) as has_available_graves
-                FROM cemeteries c
-                WHERE c.isActive = 1
-                ORDER BY c.cemeteryNameHe
-            ");
-            $cemeteriesStmt->execute();
-        }
-        
     } catch (Exception $e) {
         FormUtils::handleError($e);
     }

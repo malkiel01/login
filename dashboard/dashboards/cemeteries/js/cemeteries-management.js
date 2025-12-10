@@ -409,7 +409,7 @@ async function initCemeteriesTable(data, totalItems = null, signal) {
         columns: columns,
 
         tableHeight: 'calc(100vh - 650px)',  // גובה דינמי לפי מסך
-        tableMinHeight: '500px',
+        tableMinHeight: '100px',
         
         data: data,
         

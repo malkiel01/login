@@ -164,6 +164,24 @@ function buildCemeteriesContainer() {
 // אתחול UniversalSearch - שימוש בפונקציה גלובלית!
 // ===================================================================
 async function initCemeteriesSearch(signal) {
+    // ⭐ שלב 1: טען את הגדרות העמודות מהקונפיג
+    let tableColumns = [];
+    let displayColumns = ['cemeteryNameHe', 'cemeteryCode', 'createDate']; // ברירת מחדל
+    
+    try {
+        const configResponse = await fetch('/dashboard/dashboards/cemeteries/api/get-config.php?type=cemetery&section=table_columns');
+        const configData = await configResponse.json();
+        if (configData.success && configData.data) {
+            tableColumns = configData.data;
+            // ⭐ חלץ את שמות השדות מהקונפיג
+            displayColumns = tableColumns.map(col => col.field).filter(f => f !== 'actions' && f !== 'index');
+            console.log('✅ Loaded table_columns from config:', displayColumns);
+        }
+    } catch (error) {
+        console.warn('⚠️ Could not load config, using defaults:', error);
+    }
+
+
     cemeterySearch = window.initUniversalSearch({
         entityType: 'cemetery',
         signal: signal,
@@ -222,7 +240,7 @@ async function initCemeteriesSearch(signal) {
             }
         ],
         
-        displayColumns: ['cemeteryNameHe', 'cemeteryCode', 'address', 'contactName', 'contactPhoneName', 'blocks_count', 'createDate'],
+        displayColumns: displayColumns,
         
         searchContainerSelector: '#cemeterySearchSection',
         resultsContainerSelector: '#tableBody',

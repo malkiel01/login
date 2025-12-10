@@ -1,555 +1,182 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/entities-framework/entity-config.js
- * Version: 2.0.0
- * Updated: 2025-11-20
+ * Version: 3.0.0
+ * Updated: 2025-12-10
  * Author: Malkiel
  * Change Summary:
- * - v2.0.0: 🔥 הרחבה מלאה של הקונפיגורציה
- *   ✅ הוספת כל השדות הנדרשים לכל יישות
- *   ✅ הוספת קונפיגורציית טבלה (columns)
- *   ✅ הוספת קונפיגורציית חיפוש (searchableFields)
- *   ✅ הוספת קונפיגורציית סטטיסטיקות
- *   ✅ הוספת פונקציות עזר ייחודיות (adapters)
+ * - v3.0.0: 🔥 מעבר לטעינה דינמית מ-API
+ *   ✅ הקונפיג נטען מ-cemetery-hierarchy-config.php דרך API
+ *   ✅ מקור אמת יחיד - PHP בלבד
+ *   ✅ תמיכה בטעינה סינכרונית ואסינכרונית
+ *   ✅ Cache לביצועים
+ * - v2.0.0: הרחבה מלאה של הקונפיגורציה (hardcoded)
+ * - v1.0.0: גרסה ראשונית
  */
 
-console.log('🚀 entity-config.js v2.0.0 - Loading...');
+console.log('🚀 entity-config.js v3.0.0 - Loading (Dynamic Mode)...');
 
 // ===================================================================
-// קונפיגורציה מרכזית לכל היישויות
+// קונפיגורציה מרכזית - תיטען מה-API
 // ===================================================================
-const ENTITY_CONFIG = {
-    // ===================================================================
-    // לקוחות (Customers)
-    // ===================================================================
-    customer: {
-        // מידע בסיסי
-        singular: 'לקוח',
-        singularArticle: 'את הלקוח',
-        plural: 'לקוחות',
-        
-        // API
-        apiFile: 'customers-api.php',
-        apiEndpoint: '/dashboard/dashboards/cemeteries/api/customers-api.php',
-        
-        // משתנים גלובליים
-        searchVar: 'customerSearch',
-        tableVar: 'customersTable',
-        currentPageVar: 'customersCurrentPage',
-        totalPagesVar: 'customersTotalPages',
-        dataArrayVar: 'currentCustomers',
-        isLoadingVar: 'customersIsLoadingMore',
-        isSearchModeVar: 'customersIsSearchMode',
-        currentQueryVar: 'customersCurrentQuery',
-        searchResultsVar: 'customersSearchResults',
-        
-        // פונקציות
-        renderFunctionName: 'renderCustomersRows',
-        loadFunctionName: 'loadCustomers',
-        loadBrowseFunctionName: 'loadCustomersBrowseData',
-        appendMoreFunctionName: 'appendMoreCustomers',
-        
-        // פרמטרים
-        hasParent: false,
-        parentParam: null,
-        defaultLimit: 200,
-        defaultOrderBy: 'createDate',
-        defaultSortDirection: 'DESC',
-        
-        // עמודות טבלה
-        columns: [
-            { field: 'firstName', label: 'שם פרטי', width: '15%' },
-            { field: 'lastName', label: 'שם משפחה', width: '15%' },
-            { field: 'idNumber', label: 'ת.ז', width: '12%' },
-            { field: 'phone', label: 'טלפון', width: '12%' },
-            { field: 'email', label: 'אימייל', width: '18%' },
-            { field: 'city', label: 'עיר', width: '12%' },
-            { field: 'status', label: 'סטטוס', width: '10%', type: 'status' },
-            { field: 'actions', label: 'פעולות', width: '6%', type: 'actions' }
-        ],
-        
-        // שדות חיפוש
-        searchableFields: [
-            { name: 'firstName', label: 'שם פרטי', table: 'customers', type: 'text', matchType: ['exact', 'fuzzy', 'startsWith'] },
-            { name: 'lastName', label: 'שם משפחה', table: 'customers', type: 'text', matchType: ['exact', 'fuzzy', 'startsWith'] },
-            { name: 'idNumber', label: 'ת.ז', table: 'customers', type: 'text', matchType: ['exact'] },
-            { name: 'phone', label: 'טלפון', table: 'customers', type: 'text', matchType: ['exact', 'fuzzy'] },
-            { name: 'email', label: 'אימייל', table: 'customers', type: 'text', matchType: ['exact', 'fuzzy'] },
-            { name: 'city', label: 'עיר', table: 'customers', type: 'text', matchType: ['exact', 'fuzzy'] },
-            { name: 'status', label: 'סטטוס', table: 'customers', type: 'select', matchType: ['exact'], 
-              options: [
-                  { value: 'active', label: 'פעיל' },
-                  { value: 'inactive', label: 'לא פעיל' }
-              ]
-            }
-        ],
-        
-        // סטטיסטיקות
-        statsConfig: {
-            elements: {
-                'totalCustomers': 'total_customers',
-                'activeCustomers': 'active',
-                'newThisMonth': 'new_this_month'
-            }
-        },
-        
-        // סטטוסים
-        statuses: {
-            'active': { text: 'פעיל', color: '#10b981' },
-            'inactive': { text: 'לא פעיל', color: '#6b7280' }
-        }
-    },
+let ENTITY_CONFIG = {};
 
-    // ===================================================================
-    // רכישות (Purchases)
-    // ===================================================================
-    purchase: {
-        singular: 'רכישה',
-        singularArticle: 'את הרכישה',
-        plural: 'רכישות',
-        
-        apiFile: 'purchases-api.php',
-        apiEndpoint: '/dashboard/dashboards/cemeteries/api/purchases-api.php',
-        
-        searchVar: 'purchaseSearch',
-        tableVar: 'purchasesTable',
-        currentPageVar: 'purchasesCurrentPage',
-        totalPagesVar: 'purchasesTotalPages',
-        dataArrayVar: 'currentPurchases',
-        isLoadingVar: 'purchasesIsLoadingMore',
-        isSearchModeVar: 'purchasesIsSearchMode',
-        currentQueryVar: 'purchasesCurrentQuery',
-        searchResultsVar: 'purchasesSearchResults',
-        
-        renderFunctionName: 'renderPurchasesRows',
-        loadFunctionName: 'loadPurchases',
-        loadBrowseFunctionName: 'loadPurchasesBrowseData',
-        appendMoreFunctionName: 'appendMorePurchases',
-        
-        hasParent: false,
-        parentParam: null,
-        defaultLimit: 200,
-        defaultOrderBy: 'createDate',
-        defaultSortDirection: 'DESC',
-        
-        columns: [
-            { field: 'purchaseNumber', label: 'מספר רכישה', width: '10%' },
-            { field: 'customerName', label: 'שם לקוח', width: '18%' },
-            { field: 'purchaseType', label: 'סוג רכישה', width: '12%', type: 'enum' },
-            { field: 'totalAmount', label: 'סכום', width: '12%', type: 'currency' },
-            { field: 'paidAmount', label: 'שולם', width: '12%', type: 'currency' },
-            { field: 'purchaseDate', label: 'תאריך', width: '12%', type: 'date' },
-            { field: 'status', label: 'סטטוס', width: '10%', type: 'status' },
-            { field: 'actions', label: 'פעולות', width: '6%', type: 'actions' }
-        ],
-        
-        searchableFields: [
-            { name: 'purchaseNumber', label: 'מספר רכישה', table: 'purchases', type: 'text', matchType: ['exact'] },
-            { name: 'firstName', label: 'שם פרטי לקוח', table: 'customers', type: 'text', matchType: ['fuzzy'] },
-            { name: 'lastName', label: 'שם משפחה לקוח', table: 'customers', type: 'text', matchType: ['fuzzy'] },
-            { name: 'idNumber', label: 'ת.ז לקוח', table: 'customers', type: 'text', matchType: ['exact'] },
-            { name: 'purchaseType', label: 'סוג רכישה', table: 'purchases', type: 'select', matchType: ['exact'],
-              options: [
-                  { value: 'new', label: 'רכישה חדשה' },
-                  { value: 'transfer', label: 'העברת בעלות' },
-                  { value: 'renewal', label: 'חידוש' }
-              ]
-            },
-            { name: 'status', label: 'סטטוס', table: 'purchases', type: 'select', matchType: ['exact'],
-              options: [
-                  { value: 'completed', label: 'הושלם' },
-                  { value: 'pending', label: 'ממתין' },
-                  { value: 'cancelled', label: 'מבוטל' }
-              ]
-            }
-        ],
-        
-        statsConfig: {
-            elements: {
-                'totalPurchases': 'total_purchases',
-                'completedPurchases': 'completed',
-                'newThisMonth': 'new_this_month'
-            }
-        },
-        
-        statuses: {
-            'completed': { text: 'הושלם', color: '#10b981' },
-            'pending': { text: 'ממתין', color: '#f59e0b' },
-            'cancelled': { text: 'מבוטל', color: '#ef4444' }
-        }
-    },
+// רשימת הישויות שצריך לטעון
+const ENTITY_TYPES = ['plot', 'areaGrave', 'grave', 'customer', 'purchase', 'burial'];
 
-    // ===================================================================
-    // קבורות (Burials)
-    // ===================================================================
-    burial: {
-        singular: 'קבורה',
-        singularArticle: 'את הקבורה',
-        plural: 'קבורות',
-        
-        apiFile: 'burials-api.php',
-        apiEndpoint: '/dashboard/dashboards/cemeteries/api/burials-api.php',
-        
-        searchVar: 'burialSearch',
-        tableVar: 'burialsTable',
-        currentPageVar: 'burialsCurrentPage',
-        totalPagesVar: 'burialsTotalPages',
-        dataArrayVar: 'currentBurials',
-        isLoadingVar: 'burialsIsLoadingMore',
-        isSearchModeVar: 'burialsIsSearchMode',
-        currentQueryVar: 'burialsCurrentQuery',
-        searchResultsVar: 'burialsSearchResults',
-        
-        renderFunctionName: 'renderBurialsRows',
-        loadFunctionName: 'loadBurials',
-        loadBrowseFunctionName: 'loadBurialsBrowseData',
-        appendMoreFunctionName: 'appendMoreBurials',
-        
-        hasParent: false,
-        parentParam: null,
-        defaultLimit: 200,
-        defaultOrderBy: 'createDate',
-        defaultSortDirection: 'DESC',
-        
-        columns: [
-            { field: 'burialNumber', label: 'מספר קבורה', width: '10%' },
-            { field: 'deceasedName', label: 'שם המנוח', width: '18%' },
-            { field: 'customerName', label: 'שם לקוח', width: '18%' },
-            { field: 'burialDate', label: 'תאריך קבורה', width: '12%', type: 'date' },
-            { field: 'graveName', label: 'קבר', width: '15%' },
-            { field: 'status', label: 'סטטוס', width: '10%', type: 'status' },
-            { field: 'actions', label: 'פעולות', width: '6%', type: 'actions' }
-        ],
-        
-        searchableFields: [
-            { name: 'burialNumber', label: 'מספר קבורה', table: 'burials', type: 'text', matchType: ['exact'] },
-            { name: 'deceasedFirstName', label: 'שם פרטי מנוח', table: 'burials', type: 'text', matchType: ['fuzzy'] },
-            { name: 'deceasedLastName', label: 'שם משפחה מנוח', table: 'burials', type: 'text', matchType: ['fuzzy'] },
-            { name: 'firstName', label: 'שם פרטי לקוח', table: 'customers', type: 'text', matchType: ['fuzzy'] },
-            { name: 'lastName', label: 'שם משפחה לקוח', table: 'customers', type: 'text', matchType: ['fuzzy'] },
-            { name: 'status', label: 'סטטוס', table: 'burials', type: 'select', matchType: ['exact'],
-              options: [
-                  { value: 'completed', label: 'הושלם' },
-                  { value: 'pending', label: 'ממתין' }
-              ]
-            }
-        ],
-        
-        statsConfig: {
-            elements: {
-                'totalBurials': 'total_burials',
-                'completedBurials': 'completed',
-                'newThisMonth': 'new_this_month'
-            }
-        },
-        
-        statuses: {
-            'completed': { text: 'הושלם', color: '#10b981' },
-            'pending': { text: 'ממתין', color: '#f59e0b' }
-        }
-    },
+// נתיב ל-API
+const CONFIG_API_ENDPOINT = '/dashboard/dashboards/cemeteries/api/get-config.php';
 
-    // ===================================================================
-    // חלקות (Plots)
-    // ===================================================================
-    'plot': {
-        singular: 'חלקה',
-        singularArticle: 'את החלקה',
-        plural: 'חלקות',
+// ===================================================================
+// פונקציה לטעינת קונפיג מה-API
+// ===================================================================
+async function loadEntityConfig(entityType) {
+    try {
+        const url = `${CONFIG_API_ENDPOINT}?type=${entityType}&section=entity`;
+        console.log(`📥 Loading config for ${entityType}...`);
         
-        apiFile: 'plots-api.php',
-        apiEndpoint: '/dashboard/dashboards/cemeteries/api/plots-api.php',
+        const response = await fetch(url);
         
-        // ✅ שדות זיהוי
-        idField: 'unicId',
-        nameField: 'plotNameHe',  // או 'plotName' - תלוי מה ה-API מחזיר
-        
-        searchVar: 'plotSearch',
-        tableVar: 'plotsTable',
-        currentPageVar: 'plotsCurrentPage',
-        totalPagesVar: 'plotsTotalPages',
-        dataArrayVar: 'currentPlots',
-        isLoadingVar: 'plotsIsLoadingMore',
-        isSearchModeVar: 'plotsIsSearchMode',
-        currentQueryVar: 'plotsCurrentQuery',
-        searchResultsVar: 'plotsSearchResults',
-        
-        renderFunctionName: 'renderPlotsRows',
-        loadFunctionName: 'loadPlots',
-        loadBrowseFunctionName: 'loadPlotsBrowseData',
-        appendMoreFunctionName: 'appendMorePlots',
-        
-        hasParent: true,
-        parentParam: 'blockId',
-        parentFilterIdVar: 'plotsFilterBlockId',
-        parentFilterNameVar: 'plotsFilterBlockName',
-        defaultLimit: 200,
-        defaultOrderBy: 'createDate',
-        defaultSortDirection: 'DESC',
-        
-        columns: [
-            { 
-                field: 'plotNumber', 
-                label: 'מספר חלקה', 
-                type: 'text',
-                width: '12%',
-                sortable: true
-            },
-            { 
-                field: 'plotName',  // או 'plotNameHe'
-                label: 'שם חלקה', 
-                type: 'link',  // ✅ שינוי ל-link!
-                width: '20%',
-                sortable: true
-            },
-            { 
-                field: 'blockName', 
-                label: 'גוש', 
-                type: 'text',
-                width: '18%',
-                sortable: true
-            },
-            { 
-                field: 'totalAreaGraves', 
-                label: 'אחוזות קבר', 
-                type: 'badge',  // ✅ שינוי ל-badge
-                width: '12%',
-                sortable: true
-            },
-            { 
-                field: 'totalGraves', 
-                label: 'קברים', 
-                type: 'badge',  // ✅ שינוי ל-badge
-                width: '12%',
-                sortable: true
-            },
-            { 
-                field: 'status', 
-                label: 'סטטוס', 
-                type: 'status',
-                width: '10%',
-                sortable: true
-            },
-            { 
-                field: 'actions', 
-                label: 'פעולות', 
-                type: 'actions',
-                width: '6%',
-                sortable: false
-            }
-        ],
-        
-        searchableFields: [
-            { name: 'plotNumber', label: 'מספר חלקה', table: 'plots', type: 'text', matchType: ['exact', 'startsWith'] },
-            { name: 'plotName', label: 'שם חלקה', table: 'plots', type: 'text', matchType: ['fuzzy'] },
-            { name: 'blockName', label: 'שם גוש', table: 'blocks', type: 'text', matchType: ['fuzzy'] },
-            { name: 'status', label: 'סטטוס', table: 'plots', type: 'select', matchType: ['exact'],
-            options: [
-                { value: 'active', label: 'פעיל' },
-                { value: 'inactive', label: 'לא פעיל' },
-                { value: 'full', label: 'מלא' }
-            ]
-            }
-        ],
-        
-        statsConfig: {
-            elements: {
-                'totalPlots': 'total_plots',
-                'totalAreaGraves': 'total_area_graves',
-                'newThisMonth': 'new_this_month'
-            },
-            parentParam: 'blockId'
-        },
-        
-        statuses: {
-            'active': { text: 'פעיל', color: '#10b981' },
-            'inactive': { text: 'לא פעיל', color: '#6b7280' },
-            'full': { text: 'מלא', color: '#ef4444' }
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
-    },
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error(result.error || 'Unknown error');
+        }
+        
+        console.log(`✅ Config loaded for ${entityType}:`, result.data);
+        return result.data;
+        
+    } catch (error) {
+        console.error(`❌ Failed to load config for ${entityType}:`, error);
+        return null;
+    }
+}
 
-    // ===================================================================
-    // אחוזות קבר (Area Graves)
-    // ===================================================================
-    'areaGrave': {
-        singular: 'אחוזת קבר',
-        singularArticle: 'את אחוזת הקבר',
-        plural: 'אחוזות קבר',
-        
-        apiFile: 'areaGraves-api.php',
-        apiEndpoint: '/dashboard/dashboards/cemeteries/api/areaGraves-api.php',
-        
-        idField: 'unicId',  // ✅ תיקון!
-        nameField: 'areaGraveNameHe',
-        
-        hasParent: true,
-        parentParam: 'plotId',
-        
-        defaultLimit: 200,
-        defaultSort: 'createDate',
-        defaultSortDirection: 'DESC',
-        
-        searchableFields: [
-            'areaGraveNameHe',
-            'areaGraveNameEn', 
-            'areaGraveNameAr',
-            'coordinates',
-            'lineNameHe'
-        ],
-        
-        columns: [
-            { 
-                field: 'areaGraveNameHe', 
-                label: 'שם אחוזת קבר', 
-                type: 'link', 
-                width: '200px',
-                sortable: true
-            },
-            { 
-                field: 'coordinates', 
-                label: 'קואורדינטות', 
-                type: 'text', 
-                width: '150px',
-                sortable: true
-            },
-            { 
-                field: 'lineNameHe', 
-                label: 'שורה', 
-                type: 'text', 
-                width: '120px',
-                sortable: true
-            },
-            { 
-                field: 'graveType', 
-                label: 'סוג', 
-                type: 'graveType',
-                width: '100px',
-                sortable: true
-            },
-            { 
-                field: 'graves_count', 
-                label: 'כמות קברים', 
-                type: 'badge', 
-                width: '120px',
-                sortable: true
-            },
-            { 
-                field: 'createDate', 
-                label: 'תאריך יצירה', 
-                type: 'date', 
-                width: '120px',
-                sortable: true
-            },
-            { 
-                field: 'actions', 
-                label: 'פעולות', 
-                type: 'actions', 
-                width: '120px',
-                sortable: false
-            }
-        ],
-        
-        statsConfig: {
-            endpoint: '/dashboard/dashboards/cemeteries/api/areaGraves-api.php?action=stats',
-            elements: {
-                'areaGravesTotalCount': 'total_area_graves',
-                'gravesTotalCount': 'total_graves',
-                'areaGravesNewThisMonth': 'new_this_month'
-            },
-            parentParam: 'plotId'
+// ===================================================================
+// פונקציה לטעינת כל הקונפיגים
+// ===================================================================
+async function loadAllEntityConfigs() {
+    console.log('╔════════════════════════════════════════════════════════════════');
+    console.log('║ 📥 LOADING ENTITY CONFIGS FROM API');
+    console.log('╠════════════════════════════════════════════════════════════════');
+    
+    const startTime = performance.now();
+    
+    // טעינה מקבילית של כל הישויות
+    const promises = ENTITY_TYPES.map(async (type) => {
+        const config = await loadEntityConfig(type);
+        if (config) {
+            ENTITY_CONFIG[type] = config;
+            return { type, success: true };
         }
-    },
+        return { type, success: false };
+    });
+    
+    const results = await Promise.all(promises);
+    
+    const endTime = performance.now();
+    const duration = (endTime - startTime).toFixed(2);
+    
+    // סיכום
+    const successful = results.filter(r => r.success).length;
+    const failed = results.filter(r => !r.success);
+    
+    console.log('╠════════════════════════════════════════════════════════════════');
+    console.log(`║ ✅ Loaded: ${successful}/${ENTITY_TYPES.length} entities`);
+    console.log(`║ ⏱️ Time: ${duration}ms`);
+    
+    if (failed.length > 0) {
+        console.log(`║ ❌ Failed: ${failed.map(f => f.type).join(', ')}`);
+    }
+    
+    console.log('╚════════════════════════════════════════════════════════════════');
+    
+    // הפוך לגלובלי
+    window.ENTITY_CONFIG = ENTITY_CONFIG;
+    
+    return ENTITY_CONFIG;
+}
 
-    // ===================================================================
-    // קברים (Graves)
-    // ===================================================================
-    'grave': {
-        singular: 'קבר',
-        singularArticle: 'את הקבר',
-        plural: 'קברים',
-        
-        apiFile: 'graves-api.php',
-        apiEndpoint: '/dashboard/dashboards/cemeteries/api/graves-api.php',
-        
-        idField: 'unicId',
-        nameField: 'graveNameHe',
-        
-        hasParent: true,
-        parentParam: 'areaGraveId',
-        
-        defaultLimit: 200,
-        defaultSort: 'createDate',
-        defaultSortDirection: 'DESC',
-        
-        searchableFields: [
-            'graveNameHe',
-            'area_grave_name',
-            'comments'
-        ],
-        
-        columns: [
-            { 
-                field: 'graveNameHe', 
-                label: 'שם קבר', 
-                type: 'link',
-                width: '200px',
-                sortable: true
-            },
-            { 
-                field: 'area_grave_name', 
-                label: 'אחוזת קבר', 
-                type: 'text',
-                width: '180px',
-                sortable: true
-            },
-            { 
-                field: 'plotType', 
-                label: 'סוג חלקה', 
-                type: 'plotType',
-                width: '120px',
-                sortable: true
-            },
-            { 
-                field: 'graveStatus', 
-                label: 'סטטוס', 
-                type: 'graveStatus',
-                width: '110px',
-                sortable: true
-            },
-            { 
-                field: 'createDate', 
-                label: 'תאריך יצירה', 
-                type: 'date',
-                width: '120px',
-                sortable: true
-            },
-            { 
-                field: 'actions', 
-                label: 'פעולות', 
-                type: 'actions',
-                width: '120px',
-                sortable: false
-            }
-        ],
-        
-        statsConfig: {
-            endpoint: '/dashboard/dashboards/cemeteries/api/graves-api.php?action=stats',
-            elements: {
-                'gravesTotalCount': 'total_graves',
-                'gravesAvailable': 'available',
-                'gravesPurchased': 'purchased',
-                'gravesBuried': 'buried',
-                'gravesReserved': 'reserved',
-                'gravesNewThisMonth': 'new_this_month'
-            },
-            parentParam: 'areaGraveId'
-        }
-    },
-};
+// ===================================================================
+// פונקציה לטעינת ישות בודדת (on-demand)
+// ===================================================================
+async function ensureEntityConfig(entityType) {
+    if (ENTITY_CONFIG[entityType]) {
+        return ENTITY_CONFIG[entityType];
+    }
+    
+    const config = await loadEntityConfig(entityType);
+    if (config) {
+        ENTITY_CONFIG[entityType] = config;
+        window.ENTITY_CONFIG = ENTITY_CONFIG;
+    }
+    
+    return config;
+}
+
+// ===================================================================
+// פונקציה סינכרונית לקבלת קונפיג (אם כבר נטען)
+// ===================================================================
+function getEntityConfig(entityType) {
+    if (!ENTITY_CONFIG[entityType]) {
+        console.warn(`⚠️ Config for '${entityType}' not loaded yet. Use ensureEntityConfig() for async loading.`);
+        return null;
+    }
+    return ENTITY_CONFIG[entityType];
+}
+
+// ===================================================================
+// פונקציה לבדיקת מוכנות
+// ===================================================================
+function isConfigReady() {
+    return Object.keys(ENTITY_CONFIG).length > 0;
+}
+
+// ===================================================================
+// פונקציה לקבלת רשימת ישויות זמינות
+// ===================================================================
+function getAvailableEntities() {
+    return Object.keys(ENTITY_CONFIG);
+}
+
+// ===================================================================
+// אתחול - טעינת כל הקונפיגים
+// ===================================================================
+let configLoadPromise = null;
+
+function initEntityConfig() {
+    if (!configLoadPromise) {
+        configLoadPromise = loadAllEntityConfigs();
+    }
+    return configLoadPromise;
+}
 
 // ===================================================================
 // הפוך לגלובלי
 // ===================================================================
 window.ENTITY_CONFIG = ENTITY_CONFIG;
+window.loadEntityConfig = loadEntityConfig;
+window.loadAllEntityConfigs = loadAllEntityConfigs;
+window.ensureEntityConfig = ensureEntityConfig;
+window.getEntityConfig = getEntityConfig;
+window.isConfigReady = isConfigReady;
+window.getAvailableEntities = getAvailableEntities;
+window.initEntityConfig = initEntityConfig;
 
-console.log('✅ entity-config.js v2.0.0 - Loaded successfully!');
-console.log('📊 Configured entities:', Object.keys(ENTITY_CONFIG).join(', '));
+// ===================================================================
+// טעינה אוטומטית בעת טעינת הקובץ
+// ===================================================================
+initEntityConfig().then(() => {
+    console.log('✅ entity-config.js v3.0.0 - Ready!');
+    console.log('📊 Configured entities:', Object.keys(ENTITY_CONFIG).join(', '));
+    
+    // שליחת אירוע שהקונפיג מוכן
+    window.dispatchEvent(new CustomEvent('entityConfigReady', { 
+        detail: { entities: Object.keys(ENTITY_CONFIG) }
+    }));
+}).catch(error => {
+    console.error('❌ Failed to initialize entity config:', error);
+});

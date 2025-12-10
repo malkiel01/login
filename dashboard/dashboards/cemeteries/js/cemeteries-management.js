@@ -167,7 +167,7 @@ async function initCemeteriesSearch(signal) {
     cemeterySearch = await window.initUniversalSearch({
         entityType: 'cemetery',
         signal: signal,
-        apiEndpoint: '/dashboard/dashboards/cemeteries/api/cemeteries-api.php',
+        // apiEndpoint: '/dashboard/dashboards/cemeteries/api/cemeteries-api.php',
         action: 'list',
 
         searchContainerSelector: '#cemeterySearchSection',

@@ -80,6 +80,28 @@ window.initUniversalSearch = async function(config) {
             console.warn('⚠️ Could not load displayColumns from config');
         }
     }
+
+    // ⭐ אם לא קיבלנו apiEndpoint - נטען מהקונפיג
+    if (!config.apiEndpoint) {
+        console.log('📥 apiEndpoint not provided, loading from config...');
+        try {
+            const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${config.entityType}&section=api`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.data && data.data.endpoint) {
+                    config.apiEndpoint = data.data.endpoint;
+                    console.log('✅ apiEndpoint loaded from config:', config.apiEndpoint);
+                }
+            }
+        } catch (e) {
+            console.warn('⚠️ Could not load apiEndpoint from config');
+        }
+        
+        // אם עדיין ריק - זרוק שגיאה
+        if (!config.apiEndpoint) {
+            throw new Error('❌ apiEndpoint is required and not found in config!');
+        }
+    }
     
     // בניית הקונפיגורציה המלאה ל-UniversalSearch
     const searchConfig = {

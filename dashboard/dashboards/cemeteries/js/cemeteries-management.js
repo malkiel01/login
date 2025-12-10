@@ -164,18 +164,27 @@ function buildCemeteriesContainer() {
 // אתחול UniversalSearch - שימוש בפונקציה גלובלית!
 // ===================================================================
 async function initCemeteriesSearch(signal) {
-    // ⭐ שלב 1: טען את הגדרות העמודות מהקונפיג
-    let tableColumns = [];
+    // ═══════════════════════════════════════════════════════════════
+    // שלב 1: טעינת כל ההגדרות מהקונפיג
+    // ═══════════════════════════════════════════════════════════════
     let displayColumns = ['cemeteryNameHe', 'cemeteryCode', 'createDate']; // ברירת מחדל
+    let searchableFields = []; // ברירת מחדל ריקה
     
     try {
-        const configResponse = await fetch('/dashboard/dashboards/cemeteries/api/get-config.php?type=cemetery&section=table_columns');
-        const configData = await configResponse.json();
-        if (configData.success && configData.data) {
-            tableColumns = configData.data;
-            // ⭐ חלץ את שמות השדות מהקונפיג
-            displayColumns = tableColumns.map(col => col.field).filter(f => f !== 'actions' && f !== 'index');
+        // טען table_columns
+        const columnsResponse = await fetch('/dashboard/dashboards/cemeteries/api/get-config.php?type=cemetery&section=table_columns');
+        const columnsData = await columnsResponse.json();
+        if (columnsData.success && columnsData.data) {
+            displayColumns = columnsData.data.map(col => col.field).filter(f => f !== 'actions' && f !== 'index');
             console.log('✅ Loaded table_columns from config:', displayColumns);
+        }
+        
+        // טען searchableFields
+        const searchResponse = await fetch('/dashboard/dashboards/cemeteries/api/get-config.php?type=cemetery&section=searchableFields');
+        const searchData = await searchResponse.json();
+        if (searchData.success && searchData.data) {
+            searchableFields = searchData.data;
+            console.log('✅ Loaded searchableFields from config:', searchableFields.length, 'fields');
         }
     } catch (error) {
         console.warn('⚠️ Could not load config, using defaults:', error);
@@ -187,59 +196,8 @@ async function initCemeteriesSearch(signal) {
         signal: signal,
         apiEndpoint: '/dashboard/dashboards/cemeteries/api/cemeteries-api.php',
         action: 'list',
-        
-        searchableFields: [
-            {
-                name: 'cemeteryNameHe',
-                label: 'שם בית עלמין (עברית)',
-                table: 'cemeteries',
-                type: 'text',
-                matchType: ['exact', 'fuzzy', 'startsWith']
-            },
-            {
-                name: 'cemeteryNameEn',
-                label: 'שם בית עלמין (אנגלית)',
-                table: 'cemeteries',
-                type: 'text',
-                matchType: ['exact', 'fuzzy', 'startsWith']
-            },
-            {
-                name: 'cemeteryCode',
-                label: 'קוד בית עלמין',
-                table: 'cemeteries',
-                type: 'text',
-                matchType: ['exact', 'startsWith']
-            },
-            {
-                name: 'address',
-                label: 'כתובת',
-                table: 'cemeteries',
-                type: 'text',
-                matchType: ['exact', 'fuzzy']
-            },
-            {
-                name: 'contactName',
-                label: 'איש קשר',
-                table: 'cemeteries',
-                type: 'text',
-                matchType: ['exact', 'fuzzy']
-            },
-            {
-                name: 'contactPhoneName',
-                label: 'טלפון',
-                table: 'cemeteries',
-                type: 'text',
-                matchType: ['exact', 'fuzzy']
-            },
-            {
-                name: 'createDate',
-                label: 'תאריך יצירה',
-                table: 'cemeteries',
-                type: 'date',
-                matchType: ['exact', 'before', 'after', 'between', 'today', 'thisWeek', 'thisMonth']
-            }
-        ],
-        
+                
+        searchableFields: searchableFields,        
         displayColumns: displayColumns,
 
         searchContainerSelector: '#cemeterySearchSection',
@@ -501,7 +459,6 @@ function renderCemeteriesRows(data, container, pagination = null, signal = null)
     }
     
     // ⭐ בדוק אם ה-DOM של TableManager קיים
-    // const tableWrapperExists = document.querySelector('.table-wrapper[data-fixed-width="true"]');
     const tableWrapperExists = document.querySelector('.table-wrapper[data-table-manager]');
     
     // ⭐ אם המשתנה קיים אבל ה-DOM נמחק - אפס את המשתנה!

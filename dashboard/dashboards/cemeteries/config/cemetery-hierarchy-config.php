@@ -126,14 +126,6 @@ return [
                 'sortable' => true,
                 'type' => 'text'
             ],
-            // [
-            //     'field' => 'blocks_count',
-            //     'title' => 'גושים',
-            //     'width' => '80px',
-            //     'sortable' => true,
-            //     'type' => 'badge',  // ⭐ סוג מיוחד - יטופל ב-JS
-            //     'badge_style' => 'info'
-            // ],
             [
                 'field' => 'availableSum',
                 'title' => 'פנויים',
@@ -184,7 +176,60 @@ return [
                 'type' => 'actions',  // ⭐ סוג מיוחד - יטופל ב-JS
                 'actions' => ['edit', 'delete']
             ]
-        ]
+        ],
+
+        // ⭐ שדות חיפוש
+        'searchableFields' => [
+            [
+                'name' => 'cemeteryNameHe',
+                'label' => 'שם בית עלמין (עברית)',
+                'table' => 'cemeteries',
+                'type' => 'text',
+                'matchType' => ['exact', 'fuzzy', 'startsWith']
+            ],
+            [
+                'name' => 'cemeteryNameEn',
+                'label' => 'שם בית עלמין (אנגלית)',
+                'table' => 'cemeteries',
+                'type' => 'text',
+                'matchType' => ['exact', 'fuzzy', 'startsWith']
+            ],
+            [
+                'name' => 'cemeteryCode',
+                'label' => 'קוד בית עלמין',
+                'table' => 'cemeteries',
+                'type' => 'text',
+                'matchType' => ['exact', 'startsWith']
+            ],
+            [
+                'name' => 'address',
+                'label' => 'כתובת',
+                'table' => 'cemeteries',
+                'type' => 'text',
+                'matchType' => ['exact', 'fuzzy']
+            ],
+            [
+                'name' => 'contactName',
+                'label' => 'איש קשר',
+                'table' => 'cemeteries',
+                'type' => 'text',
+                'matchType' => ['exact', 'fuzzy']
+            ],
+            [
+                'name' => 'contactPhoneName',
+                'label' => 'טלפון',
+                'table' => 'cemeteries',
+                'type' => 'text',
+                'matchType' => ['exact', 'fuzzy']
+            ],
+            [
+                'name' => 'createDate',
+                'label' => 'תאריך יצירה',
+                'table' => 'cemeteries',
+                'type' => 'date',
+                'matchType' => ['exact', 'before', 'after', 'between', 'today', 'thisWeek', 'thisMonth']
+            ]
+        ],
     ], 
     
     // ========================================

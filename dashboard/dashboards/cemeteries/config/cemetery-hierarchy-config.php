@@ -446,390 +446,6 @@ return [
     // ========================================
     // הגדרות לחלקות
     // ========================================
-    'plot2' => [
-        'table' => 'plots',
-        'title' => 'חלקות',
-        'singular' => 'חלקה',
-        'icon' => '📋',
-        'primaryKey' => 'unicId',
-        'parentKey' => 'blockId',
-        
-        'queryFields' => [
-            'id',
-            'unicId',
-            'plotNameHe',
-            'plotNameEn',
-            'plotCode',
-            'plotLocation',
-            'nationalInsuranceCode',
-            'coordinates',
-            'comments',
-            'documentsList',
-            'blockId',
-            'createDate',
-            'updateDate',
-            'isActive'
-        ],
-        
-        'displayFields' => [
-            'name' => 'plotNameHe',
-            'nameEn' => 'plotNameEn',
-            'code' => 'plotCode',
-            'location' => 'plotLocation',
-            'created' => 'createDate',
-            'status' => 'isActive'
-        ],
-        
-        'form_fields' => [
-            [
-                'name' => 'plotNameHe',
-                'label' => 'שם חלקה בעברית',
-                'type' => 'text',
-                'required' => true
-            ],
-            [
-                'name' => 'plotNameEn',
-                'label' => 'שם חלקה באנגלית',
-                'type' => 'text'
-            ],
-            [
-                'name' => 'plotCode',
-                'label' => 'קוד חלקה',
-                'type' => 'text'
-            ],
-            [
-                'name' => 'plotLocation',
-                'label' => 'מיקום',
-                'type' => 'text'
-            ],
-            [
-                'name' => 'comments',
-                'label' => 'הערות',
-                'type' => 'textarea',
-                'rows' => 3
-            ]
-        ],
-
-        'table_columns' => [
-            [
-                'field' => 'plotNameHe',
-                'title' => 'שם חלקה',
-                'width' => '200px',
-                'sortable' => true,
-                'type' => 'link'
-            ],
-            [
-                'field' => 'plotCode',
-                'title' => 'קוד',
-                'width' => '100px',
-                'sortable' => true,
-                'type' => 'text'
-            ],
-            [
-                'field' => 'cemeteryNameHe',  // ⭐ זה כבר מגיע מה-API
-                'title' => 'בית עלמין',
-                'width' => '200px',
-                'sortable' => true,
-                'type' => 'text'
-            ],
-            [
-                'field' => 'blockNameHe',  // ⭐ זה כבר מגיע מה-API
-                'title' => 'גוש',
-                'width' => '200px',
-                'sortable' => true,
-                'type' => 'text'
-            ],
-            [
-                'field' => 'rows_count',
-                'title' => 'שורות',
-                'width' => '80px',
-                'sortable' => true,
-                'type' => 'badge'
-            ],
-            [
-                'field' => 'statusPlot',
-                'title' => 'סטטוס',
-                'width' => '100px',
-                'sortable' => true,
-                'type' => 'status'
-            ],
-            [
-                'field' => 'createDate',
-                'title' => 'תאריך',
-                'width' => '120px',
-                'sortable' => true,
-                'type' => 'date'
-            ],
-            [
-                'field' => 'actions',
-                'title' => 'פעולות',
-                'width' => '120px',
-                'sortable' => false,
-                'type' => 'actions'
-            ]
-        ]
-    ],
-    'plot' => [
-        'table' => 'plots',
-        'title' => 'חלקות',
-        'singular' => 'חלקה',
-        'icon' => '📋',
-        'primaryKey' => 'unicId',
-        'parentKey' => 'blockId',
-        
-        'queryFields' => [
-            'id',
-            'unicId',
-            'plotNameHe',
-            'plotNameEn',
-            'plotCode',
-            'plotLocation',
-            'nationalInsuranceCode',
-            'coordinates',
-            'comments',
-            'documentsList',
-            'blockId',
-            'createDate',
-            'updateDate',
-            'isActive'
-        ],
-        
-        'displayFields' => [
-            'name' => 'plotNameHe',
-            'nameEn' => 'plotNameEn',
-            'code' => 'plotCode',
-            'location' => 'plotLocation',
-            'created' => 'createDate',
-            'status' => 'isActive'
-        ],
-        
-        // ⭐ עמודות טבלה
-        'table_columns2' => [
-            [
-                'field' => 'plotNameHe',
-                'title' => 'שם חלקה',
-                'width' => '200px',
-                'sortable' => true,
-                'type' => 'link'
-            ],
-            [
-                'field' => 'plotCode',
-                'title' => 'קוד',
-                'width' => '100px',
-                'sortable' => true,
-                'type' => 'text'
-            ],
-            [
-                'field' => 'blockNameHe',
-                'title' => 'גוש',
-                'width' => '150px',
-                'sortable' => true,
-                'type' => 'text'
-            ],
-            [
-                'field' => 'rows_count',
-                'title' => 'שורות',
-                'width' => '80px',
-                'sortable' => true,
-                'type' => 'badge'
-            ],
-            [
-                'field' => 'createDate',
-                'title' => 'תאריך',
-                'width' => '120px',
-                'sortable' => true,
-                'type' => 'date'
-            ],
-            [
-                'field' => 'actions',
-                'title' => 'פעולות',
-                'width' => '120px',
-                'sortable' => false,
-                'type' => 'actions'
-            ]
-        ],
-        // ⭐ עמודות טבלה
-        'table_columns' => [
-            [
-                'field' => 'plotNameHe',
-                'title' => 'שם חלקה',
-                'width' => '180px',
-                'sortable' => true,
-                'type' => 'link'
-            ],
-            [
-                'field' => 'plotCode',
-                'title' => 'קוד',
-                'width' => '80px',
-                'sortable' => true,
-                'type' => 'text'
-            ],
-            [
-                'field' => 'cemeteryNameHe',
-                'title' => 'בית עלמין',
-                'width' => '150px',
-                'sortable' => true,
-                'type' => 'text'
-            ],
-            [
-                'field' => 'blockNameHe',
-                'title' => 'גוש',
-                'width' => '120px',
-                'sortable' => true,
-                'type' => 'text'
-            ],
-            [
-                'field' => 'availableSum',
-                'title' => 'פנויים',
-                'width' => '70px',
-                'sortable' => true,
-                'type' => 'badge',
-                'style' => 'success'
-            ],
-            [
-                'field' => 'savedSum',
-                'title' => 'שמורים',
-                'width' => '70px',
-                'sortable' => true,
-                'type' => 'badge',
-                'style' => 'warning'
-            ],
-            [
-                'field' => 'purchasedSum',
-                'title' => 'נרכשו',
-                'width' => '70px',
-                'sortable' => true,
-                'type' => 'badge',
-                'style' => 'info'
-            ],
-            [
-                'field' => 'buriedSum',
-                'title' => 'קבורים',
-                'width' => '70px',
-                'sortable' => true,
-                'type' => 'badge',
-                'style' => 'secondary'
-            ],
-            [
-                'field' => 'graveSum',
-                'title' => 'סה"כ',
-                'width' => '70px',
-                'sortable' => true,
-                'type' => 'badge',
-                'style' => 'primary'
-            ],
-            [
-                'field' => 'createDate',
-                'title' => 'תאריך',
-                'width' => '100px',
-                'sortable' => true,
-                'type' => 'date'
-            ],
-            [
-                'field' => 'actions',
-                'title' => 'פעולות',
-                'width' => '120px',
-                'sortable' => false,
-                'type' => 'actions'
-            ]
-        ],
-        
-        // ⭐ שדות חיפוש
-        'searchableFields' => [
-            [
-                'name' => 'plotNameHe',
-                'label' => 'שם חלקה (עברית)',
-                'table' => 'plots',
-                'type' => 'text',
-                'matchType' => ['exact', 'fuzzy', 'startsWith']
-            ],
-            [
-                'name' => 'plotNameEn',
-                'label' => 'שם חלקה (אנגלית)',
-                'table' => 'plots',
-                'type' => 'text',
-                'matchType' => ['exact', 'fuzzy', 'startsWith']
-            ],
-            [
-                'name' => 'plotCode',
-                'label' => 'קוד חלקה',
-                'table' => 'plots',
-                'type' => 'text',
-                'matchType' => ['exact', 'startsWith']
-            ],
-            [
-                'name' => 'plotLocation',
-                'label' => 'מיקום חלקה',
-                'table' => 'plots',
-                'type' => 'text',
-                'matchType' => ['exact', 'startsWith']
-            ],
-            [
-                'name' => 'blockNameHe',
-                'label' => 'גוש',
-                'table' => 'blocks',
-                'type' => 'text',
-                'matchType' => ['exact', 'fuzzy']
-            ],
-            [
-                'name' => 'comments',
-                'label' => 'הערות',
-                'table' => 'plots',
-                'type' => 'text',
-                'matchType' => ['exact', 'fuzzy']
-            ],
-            [
-                'name' => 'createDate',
-                'label' => 'תאריך יצירה',
-                'table' => 'plots',
-                'type' => 'date',
-                'matchType' => ['exact', 'before', 'after', 'between', 'today', 'thisWeek', 'thisMonth']
-            ]
-        ],
-        
-        // ⭐ שדות טופס
-        'form_fields' => [
-            [
-                'name' => 'plotNameHe',
-                'label' => 'שם חלקה בעברית',
-                'type' => 'text',
-                'required' => true
-            ],
-            [
-                'name' => 'plotNameEn',
-                'label' => 'שם חלקה באנגלית',
-                'type' => 'text'
-            ],
-            [
-                'name' => 'plotCode',
-                'label' => 'קוד חלקה',
-                'type' => 'text'
-            ],
-            [
-                'name' => 'plotLocation',
-                'label' => 'מיקום',
-                'type' => 'text'
-            ],
-            [
-                'name' => 'comments',
-                'label' => 'הערות',
-                'type' => 'textarea',
-                'rows' => 3
-            ]
-        ],
-        
-        // ⭐ הגדרות API
-        'api' => [
-            'endpoint' => '/dashboard/dashboards/cemeteries/api/plots-api.php',
-            'methods' => ['GET', 'POST', 'PUT', 'DELETE']
-        ],
-
-        // ⭐ הגדרות חיפוש
-        'search' => [
-            'placeholder' => 'חיפוש חלקות לפי שם, קוד, מיקום...',
-            'minLength' => 0
-        ],
-    ],
     'plot' => [
         // ⭐ שדות חדשים להוסיף:
         'singularArticle' => 'את החלקה',
@@ -1101,7 +717,7 @@ return [
     // ========================================
     // הגדרות לשורות
     // ========================================
-    'row' => [
+    'row2' => [
         'table' => 'rows',
         'title' => 'שורות',
         'singular' => 'שורה',
@@ -1196,6 +812,235 @@ return [
                 'label' => 'הערות',
                 'type' => 'textarea'
             ]
+        ]
+    ],
+    'row' => [
+        // ⭐ שדות חדשים
+        'singularArticle' => 'את השורה',
+        'plural' => 'שורות',
+        'nameField' => 'lineNameHe',
+        'idField' => 'unicId',
+        
+        // פרמטרים
+        'hasParent' => true,
+        'parentParam' => 'plotId',
+        'defaultLimit' => 200,
+        'defaultOrderBy' => 'serialNumber',
+        'defaultSortDirection' => 'ASC',
+
+        // מקורי
+        'table' => 'rows',
+        'title' => 'שורות',
+        'singular' => 'שורה',
+        'icon' => '📏',
+        'primaryKey' => 'unicId',
+        'parentKey' => 'plotId',
+        
+        'queryFields' => [
+            'id',
+            'unicId',
+            'lineNameHe',
+            'lineNameEn',
+            'lineLocation',
+            'serialNumber',
+            'comments',
+            'documentsList',
+            'plotId',
+            'createDate',
+            'updateDate',
+            'isActive'
+        ],
+        
+        'displayFields' => [
+            'name' => 'lineNameHe',
+            'nameEn' => 'lineNameEn',
+            'serial' => 'serialNumber',
+            'location' => 'lineLocation',
+            'created' => 'createDate',
+            'status' => 'isActive'
+        ],
+        
+        'table_columns' => [
+            [
+                'field' => 'serialNumber',
+                'title' => 'מס׳ סידורי',
+                'width' => '100px',
+                'type' => 'number',
+                'sortable' => true
+            ],
+            [
+                'field' => 'lineNameHe',
+                'title' => 'שם שורה',
+                'width' => '180px',
+                'type' => 'link',
+                'sortable' => true
+            ],
+            [
+                'field' => 'plotNameHe',
+                'title' => 'חלקה',
+                'width' => '150px',
+                'type' => 'text',
+                'sortable' => true
+            ],
+            [
+                'field' => 'blockNameHe',
+                'title' => 'גוש',
+                'width' => '120px',
+                'type' => 'text',
+                'sortable' => true
+            ],
+            [
+                'field' => 'cemeteryNameHe',
+                'title' => 'בית עלמין',
+                'width' => '150px',
+                'type' => 'text',
+                'sortable' => true
+            ],
+            [
+                'field' => 'areaGraves_count',
+                'title' => 'אחוזות קבר',
+                'width' => '100px',
+                'type' => 'badge',
+                'style' => 'info'
+            ],
+            [
+                'field' => 'lineLocation',
+                'title' => 'מיקום',
+                'width' => '120px',
+                'type' => 'text'
+            ],
+            [
+                'field' => 'createDate',
+                'title' => 'נוצר',
+                'type' => 'date',
+                'width' => '120px',
+                'sortable' => true
+            ],
+            [
+                'field' => 'actions',
+                'title' => 'פעולות',
+                'type' => 'actions',
+                'width' => '120px',
+                'sortable' => false
+            ]
+        ],
+        
+        'searchableFields' => [
+            [
+                'name' => 'lineNameHe',
+                'label' => 'שם שורה (עברית)',
+                'table' => 'rows',
+                'type' => 'text',
+                'matchType' => ['exact', 'fuzzy', 'startsWith']
+            ],
+            [
+                'name' => 'lineNameEn',
+                'label' => 'שם שורה (אנגלית)',
+                'table' => 'rows',
+                'type' => 'text',
+                'matchType' => ['exact', 'fuzzy', 'startsWith']
+            ],
+            [
+                'name' => 'serialNumber',
+                'label' => 'מספר סידורי',
+                'table' => 'rows',
+                'type' => 'number',
+                'matchType' => ['exact']
+            ],
+            [
+                'name' => 'plotNameHe',
+                'label' => 'חלקה',
+                'table' => 'plots',
+                'type' => 'text',
+                'matchType' => ['exact', 'fuzzy']
+            ],
+            [
+                'name' => 'comments',
+                'label' => 'הערות',
+                'table' => 'rows',
+                'type' => 'text',
+                'matchType' => ['fuzzy']
+            ]
+        ],
+        
+        'form_fields' => [
+            [
+                'name' => 'lineNameHe',
+                'label' => 'שם שורה בעברית',
+                'type' => 'text',
+                'required' => true
+            ],
+            [
+                'name' => 'lineNameEn',
+                'label' => 'שם שורה באנגלית',
+                'type' => 'text'
+            ],
+            [
+                'name' => 'serialNumber',
+                'label' => 'מספר סידורי',
+                'type' => 'number',
+                'required' => true
+            ],
+            [
+                'name' => 'lineLocation',
+                'label' => 'מיקום',
+                'type' => 'text'
+            ],
+            [
+                'name' => 'comments',
+                'label' => 'הערות',
+                'type' => 'textarea',
+                'rows' => 3
+            ]
+        ],
+        
+        // ⭐ הגדרות API
+        'api' => [
+            'endpoint' => '/dashboard/dashboards/cemeteries/api/rows-api.php',
+            'methods' => ['GET', 'POST', 'PUT', 'DELETE']
+        ],
+
+        // ⭐ הגדרות חיפוש
+        'search' => [
+            'placeholder' => 'חיפוש שורות לפי שם, מספר סידורי...',
+            'minLength' => 0
+        ],
+    
+        // משתנים גלובליים
+        'jsVars' => [
+            'searchVar' => 'rowSearch',
+            'tableVar' => 'rowsTable',
+            'currentPageVar' => 'rowsCurrentPage',
+            'totalPagesVar' => 'rowsTotalPages',
+            'dataArrayVar' => 'currentRows',
+            'isLoadingVar' => 'rowsIsLoadingMore',
+            'isSearchModeVar' => 'rowsIsSearchMode',
+            'currentQueryVar' => 'rowsCurrentQuery',
+            'searchResultsVar' => 'rowsSearchResults',
+        ],
+        
+        // פונקציות
+        'jsFunctions' => [
+            'renderFunctionName' => 'renderRowsRows',
+            'loadFunctionName' => 'loadRows',
+            'loadBrowseFunctionName' => 'loadRowsBrowseData',
+            'appendMoreFunctionName' => 'appendMoreRows',
+        ],
+        
+        // סטטיסטיקות
+        'statsConfig' => [
+            'elements' => [
+                'totalRows' => 'total_rows',
+                'totalAreaGraves' => 'total_area_graves',
+                'newThisMonth' => 'new_this_month'
+            ],
+            'parentParam' => 'plotId'
+        ],
+        
+        // סטטוסים
+        'statuses' => [
+            'active' => ['text' => 'פעיל', 'color' => '#10b981'],
+            'inactive' => ['text' => 'לא פעיל', 'color' => '#6b7280']
         ]
     ],
     

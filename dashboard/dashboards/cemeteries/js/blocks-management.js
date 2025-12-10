@@ -393,7 +393,7 @@ async function initBlocksSearch(signal, cemeteryId = null) {
         config.additionalParams = { cemeteryId: cemeteryId };
     }
     
-    blockSearch = window.initUniversalSearch(config);
+    blockSearch = await window.initUniversalSearch(config);
     
     // ⭐ עדכן את window.blockSearch מיד!
     window.blockSearch = blockSearch;

@@ -196,8 +196,60 @@ async function initCemeteriesSearch(signal) {
         signal: signal,
         apiEndpoint: '/dashboard/dashboards/cemeteries/api/cemeteries-api.php',
         action: 'list',
-                
-        searchableFields: searchableFields,        
+        
+        searchableFields: [
+            {
+                name: 'cemeteryNameHe',
+                label: 'שם בית עלמין (עברית)',
+                table: 'cemeteries',
+                type: 'text',
+                matchType: ['exact', 'fuzzy', 'startsWith']
+            },
+            {
+                name: 'cemeteryNameEn',
+                label: 'שם בית עלמין (אנגלית)',
+                table: 'cemeteries',
+                type: 'text',
+                matchType: ['exact', 'fuzzy', 'startsWith']
+            },
+            {
+                name: 'cemeteryCode',
+                label: 'קוד בית עלמין',
+                table: 'cemeteries',
+                type: 'text',
+                matchType: ['exact', 'startsWith']
+            },
+            {
+                name: 'address',
+                label: 'כתובת',
+                table: 'cemeteries',
+                type: 'text',
+                matchType: ['exact', 'fuzzy']
+            },
+            {
+                name: 'contactName',
+                label: 'איש קשר',
+                table: 'cemeteries',
+                type: 'text',
+                matchType: ['exact', 'fuzzy']
+            },
+            {
+                name: 'contactPhoneName',
+                label: 'טלפון',
+                table: 'cemeteries',
+                type: 'text',
+                matchType: ['exact', 'fuzzy']
+            },
+            {
+                name: 'createDate',
+                label: 'תאריך יצירה',
+                table: 'cemeteries',
+                type: 'date',
+                matchType: ['exact', 'before', 'after', 'between', 'today', 'thisWeek', 'thisMonth']
+            }
+        ],
+
+        // searchableFields: searchableFields,        
         displayColumns: displayColumns,
 
         searchContainerSelector: '#cemeterySearchSection',

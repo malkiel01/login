@@ -1488,7 +1488,7 @@ return [
     // ========================================
     // הגדרות לקברים
     // ========================================
-    'grave' => [
+    'grave2' => [
         'table' => 'graves',
         'title' => 'קברים',
         'singular' => 'קבר',
@@ -1660,6 +1660,340 @@ return [
                 'type' => 'textarea',
                 'rows' => 3
             ]
+        ]
+    ],
+    'grave' => [
+        // ⭐ שדות חדשים
+        'singularArticle' => 'את הקבר',
+        'plural' => 'קברים',
+        'nameField' => 'graveNameHe',
+        'idField' => 'unicId',
+        
+        // פרמטרים
+        'hasParent' => true,
+        'parentParam' => 'areaGraveId',
+        'defaultLimit' => 200,
+        'defaultOrderBy' => 'graveLocation',
+        'defaultSortDirection' => 'ASC',
+
+        // מקורי
+        'table' => 'graves',
+        'title' => 'קברים',
+        'singular' => 'קבר',
+        'icon' => '🪦',
+        'primaryKey' => 'unicId',
+        'parentKey' => 'areaGraveId',
+        
+        'queryFields' => [
+            'id',
+            'unicId',
+            'graveNameHe',
+            'plotType',
+            'graveStatus',
+            'graveLocation',
+            'constructionCost',
+            'isSmallGrave',
+            'areaGraveId',
+            'comments',
+            'documentsList',
+            'createDate',
+            'updateDate',
+            'saveDate',
+            'isActive'
+        ],
+        
+        'displayFields' => [
+            'name' => 'graveNameHe',
+            'status' => 'graveStatus',
+            'type' => 'plotType',
+            'location' => 'graveLocation',
+            'created' => 'createDate',
+            'active' => 'isActive'
+        ],
+        
+        // ⭐ עמודות טבלה (עם היררכיה!)
+        'table_columns' => [
+            [
+                'field' => 'graveNameHe',
+                'title' => 'מספר קבר',
+                'width' => '120px',
+                'type' => 'link',
+                'sortable' => true
+            ],
+            [
+                'field' => 'graveStatus',
+                'title' => 'סטטוס',
+                'type' => 'graveStatus',
+                'width' => '100px',
+                'sortable' => true
+            ],
+            [
+                'field' => 'plotType',
+                'title' => 'סוג חלקה',
+                'type' => 'plotType',
+                'width' => '100px',
+                'sortable' => true
+            ],
+            [
+                'field' => 'graveLocation',
+                'title' => 'מיקום',
+                'type' => 'number',
+                'width' => '80px',
+                'sortable' => true
+            ],
+            [
+                'field' => 'areaGraveNameHe',
+                'title' => 'אחוזת קבר',
+                'width' => '150px',
+                'type' => 'text',
+                'sortable' => true
+            ],
+            [
+                'field' => 'lineNameHe',
+                'title' => 'שורה',
+                'width' => '120px',
+                'type' => 'text',
+                'sortable' => true
+            ],
+            [
+                'field' => 'plotNameHe',
+                'title' => 'חלקה',
+                'width' => '120px',
+                'type' => 'text',
+                'sortable' => true
+            ],
+            [
+                'field' => 'blockNameHe',
+                'title' => 'גוש',
+                'width' => '120px',
+                'type' => 'text',
+                'sortable' => true
+            ],
+            [
+                'field' => 'cemeteryNameHe',
+                'title' => 'בית עלמין',
+                'width' => '150px',
+                'type' => 'text',
+                'sortable' => true
+            ],
+            [
+                'field' => 'isSmallGrave',
+                'title' => 'קבר קטן',
+                'type' => 'boolean',
+                'width' => '80px',
+                'sortable' => true
+            ],
+            [
+                'field' => 'constructionCost',
+                'title' => 'עלות בנייה',
+                'type' => 'currency',
+                'width' => '100px',
+                'sortable' => true,
+                'permissions' => ['admin', 'cemetery_manager', 'manager']
+            ],
+            [
+                'field' => 'createDate',
+                'title' => 'נוצר',
+                'type' => 'date',
+                'width' => '100px',
+                'sortable' => true
+            ],
+            [
+                'field' => 'actions',
+                'title' => 'פעולות',
+                'type' => 'actions',
+                'width' => '120px',
+                'sortable' => false
+            ]
+        ],
+        
+        // ⭐ שדות חיפוש
+        'searchableFields' => [
+            [
+                'name' => 'graveNameHe',
+                'label' => 'מספר קבר',
+                'table' => 'graves',
+                'type' => 'text',
+                'matchType' => ['exact', 'fuzzy', 'startsWith']
+            ],
+            [
+                'name' => 'graveStatus',
+                'label' => 'סטטוס קבר',
+                'table' => 'graves',
+                'type' => 'select',
+                'matchType' => ['exact'],
+                'options' => [
+                    ['value' => 1, 'label' => 'פנוי'],
+                    ['value' => 2, 'label' => 'נרכש'],
+                    ['value' => 3, 'label' => 'קבור'],
+                    ['value' => 4, 'label' => 'שמור']
+                ]
+            ],
+            [
+                'name' => 'plotType',
+                'label' => 'סוג חלקה',
+                'table' => 'graves',
+                'type' => 'select',
+                'matchType' => ['exact'],
+                'options' => [
+                    ['value' => 1, 'label' => 'פטורה'],
+                    ['value' => 2, 'label' => 'חריגה'],
+                    ['value' => 3, 'label' => 'סגורה']
+                ]
+            ],
+            [
+                'name' => 'areaGraveNameHe',
+                'label' => 'אחוזת קבר',
+                'table' => 'areaGraves',
+                'type' => 'text',
+                'matchType' => ['exact', 'fuzzy']
+            ],
+            [
+                'name' => 'lineNameHe',
+                'label' => 'שורה',
+                'table' => 'rows',
+                'type' => 'text',
+                'matchType' => ['exact', 'fuzzy']
+            ],
+            [
+                'name' => 'plotNameHe',
+                'label' => 'חלקה',
+                'table' => 'plots',
+                'type' => 'text',
+                'matchType' => ['exact', 'fuzzy']
+            ],
+            [
+                'name' => 'comments',
+                'label' => 'הערות',
+                'table' => 'graves',
+                'type' => 'text',
+                'matchType' => ['fuzzy']
+            ]
+        ],
+        
+        'form_fields' => [
+            [
+                'name' => 'graveNameHe',
+                'label' => 'מספר קבר',
+                'type' => 'text',
+                'required' => true,
+                'placeholder' => 'הזן מספר קבר'
+            ],
+            [
+                'name' => 'plotType',
+                'label' => 'סוג חלקה',
+                'type' => 'select',
+                'options' => [
+                    1 => 'פטורה',
+                    2 => 'חריגה',
+                    3 => 'סגורה'
+                ],
+                'required' => true
+            ],
+            [
+                'name' => 'graveStatus',
+                'label' => 'סטטוס קבר',
+                'type' => 'select',
+                'options' => [
+                    1 => 'פנוי',
+                    2 => 'נרכש',
+                    3 => 'קבור',
+                    4 => 'שמור'
+                ],
+                'default' => 1,
+                'required' => true
+            ],
+            [
+                'name' => 'graveLocation',
+                'label' => 'מיקום בשורה',
+                'type' => 'number',
+                'min' => 1
+            ],
+            [
+                'name' => 'isSmallGrave',
+                'label' => 'קבר קטן',
+                'type' => 'checkbox',
+                'default' => 0
+            ],
+            [
+                'name' => 'constructionCost',
+                'label' => 'עלות בנייה',
+                'type' => 'number',
+                'step' => '0.01',
+                'permissions' => ['admin', 'cemetery_manager', 'manager']
+            ],
+            [
+                'name' => 'comments',
+                'label' => 'הערות',
+                'type' => 'textarea',
+                'rows' => 3
+            ]
+        ],
+        
+        // ⭐ הגדרות API
+        'api' => [
+            'endpoint' => '/dashboard/dashboards/cemeteries/api/graves-api.php',
+            'methods' => ['GET', 'POST', 'PUT', 'DELETE']
+        ],
+
+        // ⭐ הגדרות חיפוש
+        'search' => [
+            'placeholder' => 'חיפוש קברים לפי מספר, סטטוס, מיקום...',
+            'minLength' => 0
+        ],
+    
+        // משתנים גלובליים
+        'jsVars' => [
+            'searchVar' => 'graveSearch',
+            'tableVar' => 'gravesTable',
+            'currentPageVar' => 'gravesCurrentPage',
+            'totalPagesVar' => 'gravesTotalPages',
+            'dataArrayVar' => 'currentGraves',
+            'isLoadingVar' => 'gravesIsLoadingMore',
+            'isSearchModeVar' => 'gravesIsSearchMode',
+            'currentQueryVar' => 'gravesCurrentQuery',
+            'searchResultsVar' => 'gravesSearchResults',
+        ],
+        
+        // פונקציות
+        'jsFunctions' => [
+            'renderFunctionName' => 'renderGravesRows',
+            'loadFunctionName' => 'loadGraves',
+            'loadBrowseFunctionName' => 'loadGravesBrowseData',
+            'appendMoreFunctionName' => 'appendMoreGraves',
+        ],
+        
+        // סטטיסטיקות
+        'statsConfig' => [
+            'elements' => [
+                'totalGraves' => 'total_graves',
+                'availableGraves' => 'available',
+                'purchasedGraves' => 'purchased',
+                'buriedGraves' => 'buried',
+                'savedGraves' => 'saved',
+                'newThisMonth' => 'new_this_month'
+            ],
+            'parentParam' => 'areaGraveId'
+        ],
+        
+        // סטטוסים קבר
+        'graveStatuses' => [
+            1 => ['text' => 'פנוי', 'color' => '#10b981', 'class' => 'badge-success'],
+            2 => ['text' => 'נרכש', 'color' => '#3b82f6', 'class' => 'badge-info'],
+            3 => ['text' => 'קבור', 'color' => '#6b7280', 'class' => 'badge-secondary'],
+            4 => ['text' => 'שמור', 'color' => '#f59e0b', 'class' => 'badge-warning']
+        ],
+        
+        // סוגי חלקה
+        'plotTypes' => [
+            1 => ['text' => 'פטורה', 'color' => '#10b981', 'class' => 'badge-success'],
+            2 => ['text' => 'חריגה', 'color' => '#f59e0b', 'class' => 'badge-warning'],
+            3 => ['text' => 'סגורה', 'color' => '#ef4444', 'class' => 'badge-danger']
+        ],
+        
+        'statuses' => [
+            'active' => ['text' => 'פעיל', 'color' => '#10b981'],
+            'inactive' => ['text' => 'לא פעיל', 'color' => '#6b7280']
         ]
     ],
 

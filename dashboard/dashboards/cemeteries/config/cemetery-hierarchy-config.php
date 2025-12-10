@@ -70,20 +70,6 @@ return [
                 'sortable' => true,
                 'searchable' => true
             ],
-            // [
-            //     'field' => 'address',
-            //     'title' => 'כתובת',
-            //     'type' => 'text',
-            //     'show_secondary' => 'coordinates',
-            //     'icon_secondary' => '📍'
-            // ],
-            // [
-            //     'field' => 'contactName',
-            //     'title' => 'איש קשר',
-            //     'type' => 'text',
-            //     'show_secondary' => 'contactPhoneName',
-            //     'icon_secondary' => '📞'
-            // ],
             [
                 'field' => 'createDate',
                 'title' => 'נוצר',
@@ -97,7 +83,42 @@ return [
                 'type' => 'actions',
                 'width' => '190px',
                 'actions' => ['edit', 'delete', 'enter']
-            ]
+            ],
+            [
+                'field' => 'availableSum',
+                'title' => 'פנויים',
+                'width' => '80px',
+                'type' => 'badge',
+                'badge_style' => 'success'
+            ],
+            [
+                'field' => 'savedSum',
+                'title' => 'שמורים',
+                'width' => '80px',
+                'type' => 'badge',
+                'badge_style' => 'warning'
+            ],
+            [
+                'field' => 'purchasedSum',
+                'title' => 'נרכשו',
+                'width' => '80px',
+                'type' => 'badge',
+                'badge_style' => 'info'
+            ],
+            [
+                'field' => 'buriedSum',
+                'title' => 'קבורים',
+                'width' => '80px',
+                'type' => 'badge',
+                'badge_style' => 'secondary'
+            ],
+            [
+                'field' => 'graveSum',
+                'title' => 'סה"כ',
+                'width' => '80px',
+                'type' => 'badge',
+                'badge_style' => 'primary'
+            ],
         ],
         
         // שדות לטופס הוספה/עריכה

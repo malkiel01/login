@@ -229,7 +229,7 @@ return [
                 'type' => 'date',
                 'matchType' => ['exact', 'before', 'after', 'between', 'today', 'thisWeek', 'thisMonth']
             ]
-        ],
+        ]
     ], 
     
     // ========================================

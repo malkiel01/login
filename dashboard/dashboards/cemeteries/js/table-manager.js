@@ -240,6 +240,7 @@ class TableManager {
         const wrapper = document.createElement('div');
         wrapper.className = 'table-wrapper';
         wrapper.setAttribute('data-table-manager', 'v2.1.0');  // ✅ עדכן גרסה
+        wrapper.setAttribute('data-fixed-width', 'true');
         wrapper.setAttribute('style', `
             display: flex !important; 
             flex-direction: column !important; 

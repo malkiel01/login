@@ -284,7 +284,7 @@ return [
         'table_columns' => [
             [
                 'field' => 'blockNameHe',
-                'title' => 'שם גוש',
+                'title' => 'שם 2גוש',
                 'width' => '200px',
                 'sortable' => true,
                 'type' => 'link'

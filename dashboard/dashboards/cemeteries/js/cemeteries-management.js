@@ -408,9 +408,8 @@ async function initCemeteriesTable(data, totalItems = null, signal) {
         totalItems: actualTotalItems,
         columns: columns,
 
-        // onRowDoubleClick: (cemetery) => {                    // ⭐ שורה חדשה
-        //     // handleCemeteryDoubleClick(cemetery.unicId, cemetery.cemeteryNameHe);
-        // },
+        tableHeight: 'calc(100vh - 650px)',  // גובה דינמי לפי מסך
+        tableMinHeight: '500px',
         
         data: data,
         

@@ -169,13 +169,13 @@ async function initCemeteriesSearch(signal) {
     // ═══════════════════════════════════════════════════════════════
     let displayColumns = ['cemeteryNameHe', 'cemeteryCode', 'createDate']; // ברירת מחדל
     let searchableFields = [
-            {
-                name: 'cemeteryNameHe',
-                label: 'שם בית עלמין (עברית)',
-                table: 'cemeteries',
-                type: 'text',
-                matchType: ['exact', 'fuzzy', 'startsWith']
-            },
+            // {
+            //     name: 'cemeteryNameHe',
+            //     label: 'שם בית עלמין (עברית)',
+            //     table: 'cemeteries',
+            //     type: 'text',
+            //     matchType: ['exact', 'fuzzy', 'startsWith']
+            // },
             // {
             //     name: 'cemeteryNameEn',
             //     label: 'שם בית עלמין (אנגלית)',

@@ -45,7 +45,7 @@ return [
         ],
         
         // הגדרות טבלה
-        'table_columns' => [
+        'table_columns2' => [
             [
                 'field' => 'index',
                 'title' => 'מס׳',
@@ -187,7 +187,7 @@ return [
         ],
 
         // שדות לטבלה
-        'table_columns2' => [
+        'table_columns' => [
             [
                 'field' => 'cemeteryNameHe',
                 'title' => 'שם בית עלמין',  // ⚠️ שים לב: title ולא label
@@ -210,6 +210,41 @@ return [
                 'sortable' => true,
                 'type' => 'badge',  // ⭐ סוג מיוחד - יטופל ב-JS
                 'badge_style' => 'info'
+            ],
+            [
+                'field' => 'availableSum',
+                'title' => 'פנויים',
+                'width' => '80px',
+                'type' => 'badge',
+                'badge_style' => 'success'
+            ],
+            [
+                'field' => 'savedSum',
+                'title' => 'שמורים',
+                'width' => '80px',
+                'type' => 'badge',
+                'badge_style' => 'warning'
+            ],
+            [
+                'field' => 'purchasedSum',
+                'title' => 'נרכשו',
+                'width' => '80px',
+                'type' => 'badge',
+                'badge_style' => 'info'
+            ],
+            [
+                'field' => 'buriedSum',
+                'title' => 'קבורים',
+                'width' => '80px',
+                'type' => 'badge',
+                'badge_style' => 'secondary'
+            ],
+            [
+                'field' => 'graveSum',
+                'title' => 'סה"כ',
+                'width' => '80px',
+                'type' => 'badge',
+                'badge_style' => 'primary'
             ],
             [
                 'field' => 'createDate',

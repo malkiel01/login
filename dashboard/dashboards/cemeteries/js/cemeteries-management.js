@@ -167,17 +167,17 @@ async function initCemeteriesSearch(signal) {
     // ═══════════════════════════════════════════════════════════════
     // שלב 1: טעינת כל ההגדרות מהקונפיג
     // ═══════════════════════════════════════════════════════════════
-    let displayColumns = ['cemeteryNameHe', 'cemeteryCode', 'createDate']; // ברירת מחדל
+    // let displayColumns = ['cemeteryNameHe', 'cemeteryCode', 'createDate']; // ברירת מחדל
     
-    try {
-        const response = await fetch('/dashboard/dashboards/cemeteries/api/get-config.php?type=cemetery&section=table_columns');
-        const data = await response.json();
-        if (data.success && data.data) {
-            displayColumns = data.data.map(col => col.field).filter(f => f !== 'actions' && f !== 'index');
-        }
-    } catch (error) {
-        console.warn('⚠️ Could not load config, using defaults:', error);
-    }
+    // try {
+    //     const response = await fetch('/dashboard/dashboards/cemeteries/api/get-config.php?type=cemetery&section=table_columns');
+    //     const data = await response.json();
+    //     if (data.success && data.data) {
+    //         displayColumns = data.data.map(col => col.field).filter(f => f !== 'actions' && f !== 'index');
+    //     }
+    // } catch (error) {
+    //     console.warn('⚠️ Could not load config, using defaults:', error);
+    // }
 
     cemeterySearch = await window.initUniversalSearch({
         entityType: 'cemetery',
@@ -186,7 +186,7 @@ async function initCemeteriesSearch(signal) {
         action: 'list',
         
         searchableFields: [], 
-        displayColumns: displayColumns,
+        displayColumns: [],
 
         searchContainerSelector: '#cemeterySearchSection',
         resultsContainerSelector: '#tableBody',

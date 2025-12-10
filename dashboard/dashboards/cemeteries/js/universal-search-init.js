@@ -38,9 +38,6 @@ window.initUniversalSearch = async function(config) {
     if (!config.apiEndpoint) {
         throw new Error('❌ apiEndpoint is required!');
     }
-    // if (!config.searchableFields || config.searchableFields.length === 0) {
-    //     throw new Error('❌ searchableFields are required!');
-    // }
 
     // ⭐ אם לא קיבלנו searchableFields - נטען מהקונפיג
     if (!config.searchableFields || config.searchableFields.length === 0) {
@@ -63,9 +60,28 @@ window.initUniversalSearch = async function(config) {
             throw new Error('❌ searchableFields are required and not found in config!');
         }
     }
+
+    // ⭐ אם לא קיבלנו displayColumns - נטען מהקונפיג
+    if (!config.displayColumns || config.displayColumns.length === 0) {
+        console.log('📥 displayColumns not provided, loading from config...');
+        try {
+            const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${config.entityType}&section=table_columns`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.data && data.data.length > 0) {
+                    // חלץ רק את שמות השדות (ללא actions ו-index)
+                    config.displayColumns = data.data
+                        .map(col => col.field)
+                        .filter(f => f && f !== 'actions' && f !== 'index');
+                    console.log('✅ displayColumns loaded from config:', config.displayColumns.length);
+                }
+            }
+        } catch (e) {
+            console.warn('⚠️ Could not load displayColumns from config');
+        }
+    }
     
     // בניית הקונפיגורציה המלאה ל-UniversalSearch
-
     const searchConfig = {
         dataSource: {
             type: 'api',

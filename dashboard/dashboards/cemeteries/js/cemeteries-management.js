@@ -167,13 +167,11 @@ async function initCemeteriesSearch(signal) {
     cemeterySearch = await window.initUniversalSearch({
         entityType: 'cemetery',
         signal: signal,
-        // apiEndpoint: '/dashboard/dashboards/cemeteries/api/cemeteries-api.php',
         action: 'list',
 
         searchContainerSelector: '#cemeterySearchSection',
         resultsContainerSelector: '#tableBody',
         
-        placeholder: 'חיפוש בתי עלמין לפי שם, קוד, כתובת...',
         itemsPerPage: 999999,
         
         renderFunction: renderCemeteriesRows,
@@ -234,8 +232,7 @@ async function initCemeteriesSearch(signal) {
     });
     
     // ⭐ עדכן את window.cemeterySearch מיד!
-    window.cemeterySearch = cemeterySearch;
-    
+    window.cemeterySearch = cemeterySearch;   
     return cemeterySearch;
 }
 

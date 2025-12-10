@@ -18,6 +18,12 @@ return [
             'endpoint' => '/dashboard/dashboards/cemeteries/api/cemeteries-api.php',
             'methods' => ['GET', 'POST', 'PUT', 'DELETE']
         ],
+                
+        // ⭐ הגדרות חיפוש
+        'search' => [
+            'placeholder' => 'חיפוש בתי עלמין לפי שם, קוד, כתובת...',
+            'minLength' => 0
+        ],
         
         // שדות לשאילתות SELECT
         'queryFields' => [
@@ -240,7 +246,7 @@ return [
     // ========================================
     // הגדרות לגושים
     // ========================================
-    'block' => [
+    'block2' => [
         'table' => 'blocks',
         'title' => 'גושים',
         'singular' => 'גוש',
@@ -421,6 +427,196 @@ return [
             ]
         ]
 
+    ],
+    'block' => [
+        'table' => 'blocks',
+        'title' => 'גושים',
+        'singular' => 'גוש',
+        'icon' => '📦',
+        'primaryKey' => 'unicId',
+        'parentKey' => 'cemeteryId',
+        
+        'queryFields' => [
+            'id',
+            'unicId',
+            'blockNameHe',
+            'blockNameEn',
+            'blockCode',
+            'blockLocation',
+            'nationalInsuranceCode',
+            'coordinates',
+            'comments',
+            'documentsList',
+            'cemeteryId',
+            'createDate',
+            'updateDate',
+            'isActive'
+        ],
+        
+        'displayFields' => [
+            'name' => 'blockNameHe',
+            'nameEn' => 'blockNameEn',
+            'code' => 'blockCode',
+            'location' => 'blockLocation',
+            'created' => 'createDate',
+            'status' => 'isActive'
+        ],
+        
+        // ⭐ עמודות טבלה (אחת בלבד!)
+        'table_columns' => [
+            [
+                'field' => 'blockNameHe',
+                'title' => 'שם גוש',
+                'width' => '200px',
+                'sortable' => true,
+                'type' => 'link'
+            ],
+            [
+                'field' => 'blockCode',
+                'title' => 'קוד',
+                'width' => '100px',
+                'sortable' => true,
+                'type' => 'text'
+            ],
+            [
+                'field' => 'cemeteryNameHe',
+                'title' => 'בית עלמין',
+                'width' => '200px',
+                'sortable' => true,
+                'type' => 'text'
+            ],
+            [
+                'field' => 'plots_count',
+                'title' => 'חלקות',
+                'width' => '80px',
+                'sortable' => true,
+                'type' => 'badge'
+            ],
+            [
+                'field' => 'createDate',
+                'title' => 'תאריך',
+                'width' => '120px',
+                'sortable' => true,
+                'type' => 'date'
+            ],
+            [
+                'field' => 'actions',
+                'title' => 'פעולות',
+                'width' => '120px',
+                'sortable' => false,
+                'type' => 'actions'
+            ]
+        ],
+        
+        // ⭐ שדות חיפוש
+        'searchableFields' => [
+            [
+                'name' => 'blockNameHe',
+                'label' => 'שם גוש (עברית)',
+                'table' => 'blocks',
+                'type' => 'text',
+                'matchType' => ['exact', 'fuzzy', 'startsWith']
+            ],
+            [
+                'name' => 'blockNameEn',
+                'label' => 'שם גוש (אנגלית)',
+                'table' => 'blocks',
+                'type' => 'text',
+                'matchType' => ['exact', 'fuzzy', 'startsWith']
+            ],
+            [
+                'name' => 'blockCode',
+                'label' => 'קוד גוש',
+                'table' => 'blocks',
+                'type' => 'text',
+                'matchType' => ['exact', 'startsWith']
+            ],
+            [
+                'name' => 'blockLocation',
+                'label' => 'מיקום גוש',
+                'table' => 'blocks',
+                'type' => 'text',
+                'matchType' => ['exact', 'startsWith']
+            ],
+            [
+                'name' => 'cemeteryNameHe',
+                'label' => 'בית עלמין',
+                'table' => 'cemeteries',
+                'type' => 'text',
+                'matchType' => ['exact', 'fuzzy']
+            ],
+            [
+                'name' => 'comments',
+                'label' => 'הערות',
+                'table' => 'blocks',
+                'type' => 'text',
+                'matchType' => ['exact', 'fuzzy']
+            ],
+            [
+                'name' => 'createDate',
+                'label' => 'תאריך יצירה',
+                'table' => 'blocks',
+                'type' => 'date',
+                'matchType' => ['exact', 'before', 'after', 'between', 'today', 'thisWeek', 'thisMonth']
+            ]
+        ],
+        
+        // ⭐ שדות טופס
+        'form_fields' => [
+            [
+                'name' => 'blockNameHe',
+                'label' => 'שם גוש בעברית',
+                'type' => 'text',
+                'required' => true,
+                'placeholder' => 'הזן שם גוש',
+                'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
+            ],
+            [
+                'name' => 'blockNameEn',
+                'label' => 'שם גוש באנגלית',
+                'type' => 'text',
+                'placeholder' => 'Enter block name',
+                'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
+            ],
+            [
+                'name' => 'blockCode',
+                'label' => 'קוד גוש',
+                'type' => 'text',
+                'permissions' => ['admin', 'cemetery_manager', 'manager']
+            ],
+            [
+                'name' => 'blockLocation',
+                'label' => 'מיקום',
+                'type' => 'text',
+                'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
+            ],
+            [
+                'name' => 'nationalInsuranceCode',
+                'label' => 'קוד ביטוח לאומי',
+                'type' => 'text',
+                'permissions' => ['admin', 'cemetery_manager']
+            ],
+            [
+                'name' => 'coordinates',
+                'label' => 'קואורדינטות',
+                'type' => 'text',
+                'placeholder' => 'lat,lng',
+                'permissions' => ['admin', 'cemetery_manager', 'manager']
+            ],
+            [
+                'name' => 'comments',
+                'label' => 'הערות',
+                'type' => 'textarea',
+                'rows' => 3,
+                'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
+            ]
+        ],
+        
+        // ⭐ הגדרות API
+        'api' => [
+            'endpoint' => '/dashboard/dashboards/cemeteries/api/blocks-api.php',
+            'methods' => ['GET', 'POST', 'PUT', 'DELETE']
+        ]
     ],
     
     // ========================================

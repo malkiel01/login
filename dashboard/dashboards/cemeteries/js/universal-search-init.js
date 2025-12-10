@@ -99,6 +99,22 @@ window.initUniversalSearch = async function(config) {
             console.warn('⚠️ Could not load displayColumns from config');
         }
     }
+
+    // ⭐ אם לא קיבלנו placeholder - נטען מהקונפיג
+    if (!config.placeholder) {
+        try {
+            const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${config.entityType}&section=search`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.data && data.data.placeholder) {
+                    config.placeholder = data.data.placeholder;
+                    console.log('✅ placeholder loaded from config');
+                }
+            }
+        } catch (e) {
+            console.warn('⚠️ Could not load placeholder from config');
+        }
+    }
     
     // בניית הקונפיגורציה המלאה ל-UniversalSearch
     const searchConfig = {

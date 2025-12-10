@@ -49,10 +49,41 @@
 
         // ⭐ אם מבקשים searchableFields - טען מקונפיג החיפוש!
         if ($section === 'searchableFields') {
+            // נסה קודם לטעון מ-cemetery-hierarchy-config.php
+            $configPath = $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config/cemetery-hierarchy-config.php';
+            
+            if (file_exists($configPath)) {
+                $config = require $configPath;
+                
+                // אם קיים בקונפיג הראשי - השתמש בו
+                if (isset($config[$type]) && isset($config[$type]['searchableFields'])) {
+                    echo json_encode([
+                        'success' => true,
+                        'data' => $config[$type]['searchableFields']
+                    ], JSON_UNESCAPED_UNICODE);
+                    exit;
+                }
+            }
+            
+            // אם לא נמצא - נסה search-config.php (fallback)
             $searchConfigPath = $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards/cemeteries/config/search-config.php';
             
+            if (file_exists($searchConfigPath)) {
+                $searchConfig = require $searchConfigPath;
+                
+                if (isset($searchConfig[$type]) && isset($searchConfig[$type]['searchableFields'])) {
+                    echo json_encode([
+                        'success' => true,
+                        'data' => $searchConfig[$type]['searchableFields']
+                    ], JSON_UNESCAPED_UNICODE);
+                    exit;
+                }
+            }
+
             if (!file_exists($searchConfigPath)) {
                 sendError('קובץ search-config.php לא נמצא', 500);
+                // לא נמצא בשום מקום
+                sendError("searchableFields לא נמצא עבור '{$type}'", 404);
             }
             
             $searchConfig = require $searchConfigPath;

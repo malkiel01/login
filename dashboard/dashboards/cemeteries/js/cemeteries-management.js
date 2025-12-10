@@ -168,78 +168,16 @@ async function initCemeteriesSearch(signal) {
     // שלב 1: טעינת כל ההגדרות מהקונפיג
     // ═══════════════════════════════════════════════════════════════
     let displayColumns = ['cemeteryNameHe', 'cemeteryCode', 'createDate']; // ברירת מחדל
-    let searchableFields = [
-            // {
-            //     name: 'cemeteryNameHe',
-            //     label: 'שם בית עלמין (עברית)',
-            //     table: 'cemeteries',
-            //     type: 'text',
-            //     matchType: ['exact', 'fuzzy', 'startsWith']
-            // },
-            // {
-            //     name: 'cemeteryNameEn',
-            //     label: 'שם בית עלמין (אנגלית)',
-            //     table: 'cemeteries',
-            //     type: 'text',
-            //     matchType: ['exact', 'fuzzy', 'startsWith']
-            // },
-            // {
-            //     name: 'cemeteryCode',
-            //     label: 'קוד בית עלמין',
-            //     table: 'cemeteries',
-            //     type: 'text',
-            //     matchType: ['exact', 'startsWith']
-            // },
-            // {
-            //     name: 'address',
-            //     label: 'כתובת',
-            //     table: 'cemeteries',
-            //     type: 'text',
-            //     matchType: ['exact', 'fuzzy']
-            // },
-            // {
-            //     name: 'contactName',
-            //     label: 'איש קשר',
-            //     table: 'cemeteries',
-            //     type: 'text',
-            //     matchType: ['exact', 'fuzzy']
-            // },
-            // {
-            //     name: 'contactPhoneName',
-            //     label: 'טלפון',
-            //     table: 'cemeteries',
-            //     type: 'text',
-            //     matchType: ['exact', 'fuzzy']
-            // },
-            // {
-            //     name: 'createDate',
-            //     label: 'תאריך יצירה',
-            //     table: 'cemeteries',
-            //     type: 'date',
-            //     matchType: ['exact', 'before', 'after', 'between', 'today', 'thisWeek', 'thisMonth']
-            // }
-        ]
     
     try {
-        // טען table_columns
-        const columnsResponse = await fetch('/dashboard/dashboards/cemeteries/api/get-config.php?type=cemetery&section=table_columns');
-        const columnsData = await columnsResponse.json();
-        if (columnsData.success && columnsData.data) {
-            displayColumns = columnsData.data.map(col => col.field).filter(f => f !== 'actions' && f !== 'index');
-            console.log('✅ Loaded table_columns from config:', displayColumns);
-        }
-        
-        // טען searchableFields
-        const searchResponse = await fetch('/dashboard/dashboards/cemeteries/api/get-config.php?type=cemetery&section=searchableFields');
-        const searchData = await searchResponse.json();
-        if (searchData.success && searchData.data) {
-            searchableFields = searchData.data;
-            console.log('✅ Loaded searchableFields from config:', searchableFields.length, 'fields');
+        const response = await fetch('/dashboard/dashboards/cemeteries/api/get-config.php?type=cemetery&section=table_columns');
+        const data = await response.json();
+        if (data.success && data.data) {
+            displayColumns = data.data.map(col => col.field).filter(f => f !== 'actions' && f !== 'index');
         }
     } catch (error) {
         console.warn('⚠️ Could not load config, using defaults:', error);
     }
-
 
     cemeterySearch = window.initUniversalSearch({
         entityType: 'cemetery',
@@ -299,7 +237,8 @@ async function initCemeteriesSearch(signal) {
         //     }
         // ],
 
-        searchableFields: searchableFields,        
+        
+        searchableFields: [], 
         displayColumns: displayColumns,
 
         searchContainerSelector: '#cemeterySearchSection',

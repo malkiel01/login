@@ -28,7 +28,7 @@
  * @param {Object} config.callbacks - callbacks מותאמים
  * @returns {UniversalSearch} instance של UniversalSearch
  */
-window.initUniversalSearch = function(config) {
+window.initUniversalSearch = async function(config) {
     console.log(`🔍 Initializing UniversalSearch for: ${config.entityType}`);
     
     // ולידציה
@@ -38,8 +38,30 @@ window.initUniversalSearch = function(config) {
     if (!config.apiEndpoint) {
         throw new Error('❌ apiEndpoint is required!');
     }
+    // if (!config.searchableFields || config.searchableFields.length === 0) {
+    //     throw new Error('❌ searchableFields are required!');
+    // }
+
+    // ⭐ אם לא קיבלנו searchableFields - נטען מהקונפיג
     if (!config.searchableFields || config.searchableFields.length === 0) {
-        throw new Error('❌ searchableFields are required!');
+        console.log('📥 searchableFields not provided, loading from config...');
+        try {
+            const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${config.entityType}&section=searchableFields`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.data && data.data.length > 0) {
+                    config.searchableFields = data.data;
+                    console.log('✅ searchableFields loaded from config:', config.searchableFields.length);
+                }
+            }
+        } catch (e) {
+            console.warn('⚠️ Could not load searchableFields from config');
+        }
+        
+        // אם עדיין ריק - עכשיו זרוק שגיאה
+        if (!config.searchableFields || config.searchableFields.length === 0) {
+            throw new Error('❌ searchableFields are required and not found in config!');
+        }
     }
     
     // בניית הקונפיגורציה המלאה ל-UniversalSearch

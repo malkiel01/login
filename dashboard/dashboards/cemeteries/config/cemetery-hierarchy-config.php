@@ -203,14 +203,14 @@ return [
                 'sortable' => true,
                 'type' => 'text'
             ],
-            [
-                'field' => 'blocks_count',
-                'title' => 'גושים',
-                'width' => '80px',
-                'sortable' => true,
-                'type' => 'badge',  // ⭐ סוג מיוחד - יטופל ב-JS
-                'badge_style' => 'info'
-            ],
+            // [
+            //     'field' => 'blocks_count',
+            //     'title' => 'גושים',
+            //     'width' => '80px',
+            //     'sortable' => true,
+            //     'type' => 'badge',  // ⭐ סוג מיוחד - יטופל ב-JS
+            //     'badge_style' => 'info'
+            // ],
             [
                 'field' => 'availableSum',
                 'title' => 'פנויים',
@@ -232,13 +232,13 @@ return [
                 'type' => 'badge',
                 'badge_style' => 'info'
             ],
-            // [
-            //     'field' => 'buriedSum',
-            //     'title' => 'קבורים',
-            //     'width' => '80px',
-            //     'type' => 'badge',
-            //     'badge_style' => 'secondary'
-            // ],
+            [
+                'field' => 'buriedSum',
+                'title' => 'קבורים',
+                'width' => '80px',
+                'type' => 'badge',
+                'badge_style' => 'secondary'
+            ],
             [
                 'field' => 'graveSum',
                 'title' => 'סה"כ',

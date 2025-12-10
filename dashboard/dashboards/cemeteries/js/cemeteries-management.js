@@ -179,7 +179,7 @@ async function initCemeteriesSearch(signal) {
         console.warn('⚠️ Could not load config, using defaults:', error);
     }
 
-    cemeterySearch = window.initUniversalSearch({
+    cemeterySearch = await window.initUniversalSearch({
         entityType: 'cemetery',
         signal: signal,
         apiEndpoint: '/dashboard/dashboards/cemeteries/api/cemeteries-api.php',

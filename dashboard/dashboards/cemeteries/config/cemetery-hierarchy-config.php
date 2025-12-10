@@ -232,13 +232,13 @@ return [
                 'type' => 'badge',
                 'badge_style' => 'info'
             ],
-            [
-                'field' => 'buriedSum',
-                'title' => 'קבורים',
-                'width' => '80px',
-                'type' => 'badge',
-                'badge_style' => 'secondary'
-            ],
+            // [
+            //     'field' => 'buriedSum',
+            //     'title' => 'קבורים',
+            //     'width' => '80px',
+            //     'type' => 'badge',
+            //     'badge_style' => 'secondary'
+            // ],
             [
                 'field' => 'graveSum',
                 'title' => 'סה"כ',

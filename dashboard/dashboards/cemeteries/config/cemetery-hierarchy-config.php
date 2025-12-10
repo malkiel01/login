@@ -187,7 +187,7 @@ return [
         ],
 
         // שדות לטבלה
-        'table_columns' => [
+        'table_columns2' => [
             [
                 'field' => 'cemeteryNameHe',
                 'title' => 'שם בית עלמין',  // ⚠️ שים לב: title ולא label
@@ -203,27 +203,6 @@ return [
                 'sortable' => true,
                 'type' => 'text'
             ],
-            // [
-            //     'field' => 'address',
-            //     'title' => 'כתובת',
-            //     'width' => '250px',
-            //     'sortable' => true,
-            //     'type' => 'text'
-            // ],
-            // [
-            //     'field' => 'contactName',
-            //     'title' => 'איש קשר',
-            //     'width' => '150px',
-            //     'sortable' => true,
-            //     'type' => 'text'
-            // ],
-            // [
-            //     'field' => 'contactPhoneName',
-            //     'title' => 'טלפון',
-            //     'width' => '120px',
-            //     'sortable' => true,
-            //     'type' => 'text'
-            // ],
             [
                 'field' => 'blocks_count',
                 'title' => 'גושים',

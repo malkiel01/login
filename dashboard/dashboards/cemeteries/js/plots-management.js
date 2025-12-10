@@ -139,7 +139,7 @@ async function buildPlotsContainer(signal, blockId = null, blockName = null) {
 // ===================================================================
 // אתחול UniversalSearch - עם סינון משופר!
 // ===================================================================
-async function initPlotsSearch(signal, blockId = null) {
+async function initPlotsSearch2(signal, blockId = null) {
     const config = {
         entityType: 'plot',
         signal: signal,
@@ -290,6 +290,95 @@ async function initPlotsSearch(signal, blockId = null) {
     plotSearch = await window.initUniversalSearch(config);
     
     // ⭐ עדכן את window.plotSearch מיד!
+    window.plotSearch = plotSearch;
+    
+    return plotSearch;
+}
+async function initPlotsSearch(signal, blockId = null) {
+    const config = {
+        entityType: 'plot',
+        signal: signal,
+        action: 'list',
+        
+        searchContainerSelector: '#plotSearchSection',
+        resultsContainerSelector: '#tableBody',
+        
+        itemsPerPage: 999999,
+        
+        renderFunction: renderPlotsRows,
+
+        callbacks: {
+            onInit: () => {
+                console.log('✅ UniversalSearch initialized for plots');
+            },
+            
+            onSearch: (query, filters) => {
+                console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()), blockId: plotsFilterBlockId });
+            },
+
+            onResults: (data) => {
+                console.log('📦 API returned:', data.pagination?.total || data.data.length, 'plots');
+                
+                if (window.currentType !== 'plot') {
+                    console.log('⚠️ Type changed during search - aborting plot results');
+                    return;
+                }
+
+                const currentPage = data.pagination?.page || 1;
+                
+                if (currentPage === 1) {
+                    currentPlots = data.data;
+                } else {
+                    currentPlots = [...currentPlots, ...data.data];
+                    console.log(`📦 Added page ${currentPage}, total now: ${currentPlots.length}`);
+                }
+                
+                let filteredCount = currentPlots.length;
+                if (plotsFilterBlockId && currentPlots.length > 0) {
+                    const filteredData = currentPlots.filter(plot => {
+                        const plotBlockId = plot.blockId || plot.block_id || plot.BlockId;
+                        return String(plotBlockId) === String(plotsFilterBlockId);
+                    });
+                    
+                    console.log('⚠️ Client-side filter:', currentPlots.length, '→', filteredData.length, 'plots');
+                    
+                    currentPlots = filteredData;
+                    filteredCount = filteredData.length;
+                    
+                    if (data.pagination) {
+                        data.pagination.total = filteredCount;
+                    }
+                }
+                
+                if (plotSearch && plotSearch.state) {
+                    plotSearch.state.totalResults = filteredCount;
+                    if (plotSearch.updateCounter) {
+                        plotSearch.updateCounter();
+                    }
+                }
+                
+                console.log('📊 Final count:', filteredCount);
+            },
+            
+            onError: (error) => {
+                console.error('❌ Search error:', error);
+                showToast('שגיאה בחיפוש חלקות', 'error');
+            },
+
+            onEmpty: () => {
+                console.log('📭 No results');
+            }
+        }
+    };
+    
+    // ⭐ אם יש סינון לפי גוש, הוסף פרמטר ל-API
+    if (blockId) {
+        console.log('🎯 Adding blockId filter to API request:', blockId);
+        config.additionalParams = { blockId: blockId };
+    }
+    
+    plotSearch = await window.initUniversalSearch(config);
+    
     window.plotSearch = plotSearch;
     
     return plotSearch;

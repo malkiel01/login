@@ -246,188 +246,6 @@ return [
     // ========================================
     // הגדרות לגושים
     // ========================================
-    'block2' => [
-        'table' => 'blocks',
-        'title' => 'גושים',
-        'singular' => 'גוש',
-        'icon' => '📦',
-        'primaryKey' => 'unicId',
-        'parentKey' => 'cemeteryId',
-        
-        'queryFields' => [
-            'id',
-            'unicId',
-            'blockNameHe',
-            'blockNameEn',
-            'blockCode',
-            'blockLocation',
-            'nationalInsuranceCode',
-            'coordinates',
-            'comments',
-            'documentsList',
-            'cemeteryId',
-            'createDate',
-            'updateDate',
-            'isActive'
-        ],
-        
-        'displayFields' => [
-            'name' => 'blockNameHe',
-            'nameEn' => 'blockNameEn',
-            'code' => 'blockCode',
-            'location' => 'blockLocation',
-            'created' => 'createDate',
-            'status' => 'isActive'
-        ],
-        
-        'table_columns' => [
-            [
-                'field' => 'index',
-                'title' => 'מס׳',
-                'width' => '60px',
-                'type' => 'index'
-            ],
-            [
-                'field' => 'blockNameHe',
-                'title' => 'שם גוש',
-                'type' => 'text',
-                'sortable' => true,
-                'searchable' => true,
-                'show_secondary' => 'blockNameEn',
-                'required' => true
-            ],
-            [
-                'field' => 'blockCode',
-                'title' => 'קוד',
-                'type' => 'text',
-                'width' => '100px',
-                'sortable' => true,
-                'searchable' => true
-            ],
-            [
-                'field' => 'blockLocation',
-                'title' => 'מיקום',
-                'type' => 'text'
-            ],
-            [
-                'field' => 'createDate',
-                'title' => 'נוצר',
-                'type' => 'date',
-                'width' => '120px',
-                'sortable' => true
-            ],
-            [
-                'field' => 'actions',
-                'title' => 'פעולות',
-                'type' => 'actions',
-                'width' => '190px',
-                'actions' => ['edit', 'delete', 'enter']
-            ]
-        ],
-        
-        'form_fields' => [
-            [
-                'name' => 'blockNameHe',
-                'label' => 'שם גוש בעברית',
-                'type' => 'text',
-                'required' => true,
-                'placeholder' => 'הזן שם גוש',
-                'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
-            ],
-            [
-                'name' => 'blockNameEn',
-                'label' => 'שם גוש באנגלית',
-                'type' => 'text',
-                'placeholder' => 'Enter block name',
-                'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
-            ],
-            [
-                'name' => 'blockCode',
-                'label' => 'קוד גוש',
-                'type' => 'text',
-                'permissions' => ['admin', 'cemetery_manager', 'manager']
-            ],
-            [
-                'name' => 'blockLocation',
-                'label' => 'מיקום',
-                'type' => 'text',
-                'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
-            ],
-            [
-                'name' => 'nationalInsuranceCode',
-                'label' => 'קוד ביטוח לאומי',
-                'type' => 'text',
-                'permissions' => ['admin', 'cemetery_manager']
-            ],
-            [
-                'name' => 'coordinates',
-                'label' => 'קואורדינטות',
-                'type' => 'text',
-                'placeholder' => 'lat,lng',
-                'permissions' => ['admin', 'cemetery_manager', 'manager']
-            ],
-            [
-                'name' => 'comments',
-                'label' => 'הערות',
-                'type' => 'textarea',
-                'rows' => 3,
-                'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
-            ]
-        ],
-
-        'table_columns' => [
-            [
-                'field' => 'blockNameHe',
-                'title' => 'שם גוש',
-                'width' => '200px',
-                'sortable' => true,
-                'type' => 'link'  // ⭐ סוג מיוחד
-            ],
-            [
-                'field' => 'blockCode',
-                'title' => 'קוד',
-                'width' => '100px',
-                'sortable' => true,
-                'type' => 'text'
-            ],
-            [
-                'field' => 'cemeteryNameHe',
-                'title' => 'בית עלמין',
-                'width' => '200px',
-                'sortable' => true,
-                'type' => 'text'
-            ],
-            [
-                'field' => 'plots_count',
-                'title' => 'חלקות',
-                'width' => '80px',
-                'sortable' => true,
-                'type' => 'badge'  // ⭐ סוג מיוחד
-            ],
-            [
-                'field' => 'statusBlock',
-                'title' => 'סטטוס',
-                'width' => '100px',
-                'sortable' => true,
-                'type' => 'status'  // ⭐ סוג מיוחד
-            ],
-            [
-                'field' => 'createDate',
-                'title' => 'תאריך',
-                'width' => '120px',
-                'sortable' => true,
-                'type' => 'date'  // ⭐ סוג מיוחד
-            ],
-            [
-                'field' => 'actions',
-                'title' => 'פעולות',
-                'width' => '120px',
-                'sortable' => false,
-                'type' => 'actions'  // ⭐ סוג מיוחד
-            ]
-        ]
-
-    ],
     'block' => [
         'table' => 'blocks',
         'title' => 'גושים',
@@ -616,13 +434,19 @@ return [
         'api' => [
             'endpoint' => '/dashboard/dashboards/cemeteries/api/blocks-api.php',
             'methods' => ['GET', 'POST', 'PUT', 'DELETE']
-        ]
+        ],
+
+        // ⭐ הגדרות חיפוש
+        'search' => [
+            'placeholder' => 'חיפוש גושים לפי שם, קוד, מיקום...',
+            'minLength' => 0
+        ],
     ],
     
     // ========================================
     // הגדרות לחלקות
     // ========================================
-    'plot' => [
+    'plot2' => [
         'table' => 'plots',
         'title' => 'חלקות',
         'singular' => 'חלקה',
@@ -744,6 +568,182 @@ return [
                 'type' => 'actions'
             ]
         ]
+    ],
+    'plot' => [
+        'table' => 'plots',
+        'title' => 'חלקות',
+        'singular' => 'חלקה',
+        'icon' => '📋',
+        'primaryKey' => 'unicId',
+        'parentKey' => 'blockId',
+        
+        'queryFields' => [
+            'id',
+            'unicId',
+            'plotNameHe',
+            'plotNameEn',
+            'plotCode',
+            'plotLocation',
+            'nationalInsuranceCode',
+            'coordinates',
+            'comments',
+            'documentsList',
+            'blockId',
+            'createDate',
+            'updateDate',
+            'isActive'
+        ],
+        
+        'displayFields' => [
+            'name' => 'plotNameHe',
+            'nameEn' => 'plotNameEn',
+            'code' => 'plotCode',
+            'location' => 'plotLocation',
+            'created' => 'createDate',
+            'status' => 'isActive'
+        ],
+        
+        // ⭐ עמודות טבלה
+        'table_columns' => [
+            [
+                'field' => 'plotNameHe',
+                'title' => 'שם חלקה',
+                'width' => '200px',
+                'sortable' => true,
+                'type' => 'link'
+            ],
+            [
+                'field' => 'plotCode',
+                'title' => 'קוד',
+                'width' => '100px',
+                'sortable' => true,
+                'type' => 'text'
+            ],
+            [
+                'field' => 'blockNameHe',
+                'title' => 'גוש',
+                'width' => '150px',
+                'sortable' => true,
+                'type' => 'text'
+            ],
+            [
+                'field' => 'rows_count',
+                'title' => 'שורות',
+                'width' => '80px',
+                'sortable' => true,
+                'type' => 'badge'
+            ],
+            [
+                'field' => 'createDate',
+                'title' => 'תאריך',
+                'width' => '120px',
+                'sortable' => true,
+                'type' => 'date'
+            ],
+            [
+                'field' => 'actions',
+                'title' => 'פעולות',
+                'width' => '120px',
+                'sortable' => false,
+                'type' => 'actions'
+            ]
+        ],
+        
+        // ⭐ שדות חיפוש
+        'searchableFields' => [
+            [
+                'name' => 'plotNameHe',
+                'label' => 'שם חלקה (עברית)',
+                'table' => 'plots',
+                'type' => 'text',
+                'matchType' => ['exact', 'fuzzy', 'startsWith']
+            ],
+            [
+                'name' => 'plotNameEn',
+                'label' => 'שם חלקה (אנגלית)',
+                'table' => 'plots',
+                'type' => 'text',
+                'matchType' => ['exact', 'fuzzy', 'startsWith']
+            ],
+            [
+                'name' => 'plotCode',
+                'label' => 'קוד חלקה',
+                'table' => 'plots',
+                'type' => 'text',
+                'matchType' => ['exact', 'startsWith']
+            ],
+            [
+                'name' => 'plotLocation',
+                'label' => 'מיקום חלקה',
+                'table' => 'plots',
+                'type' => 'text',
+                'matchType' => ['exact', 'startsWith']
+            ],
+            [
+                'name' => 'blockNameHe',
+                'label' => 'גוש',
+                'table' => 'blocks',
+                'type' => 'text',
+                'matchType' => ['exact', 'fuzzy']
+            ],
+            [
+                'name' => 'comments',
+                'label' => 'הערות',
+                'table' => 'plots',
+                'type' => 'text',
+                'matchType' => ['exact', 'fuzzy']
+            ],
+            [
+                'name' => 'createDate',
+                'label' => 'תאריך יצירה',
+                'table' => 'plots',
+                'type' => 'date',
+                'matchType' => ['exact', 'before', 'after', 'between', 'today', 'thisWeek', 'thisMonth']
+            ]
+        ],
+        
+        // ⭐ שדות טופס
+        'form_fields' => [
+            [
+                'name' => 'plotNameHe',
+                'label' => 'שם חלקה בעברית',
+                'type' => 'text',
+                'required' => true
+            ],
+            [
+                'name' => 'plotNameEn',
+                'label' => 'שם חלקה באנגלית',
+                'type' => 'text'
+            ],
+            [
+                'name' => 'plotCode',
+                'label' => 'קוד חלקה',
+                'type' => 'text'
+            ],
+            [
+                'name' => 'plotLocation',
+                'label' => 'מיקום',
+                'type' => 'text'
+            ],
+            [
+                'name' => 'comments',
+                'label' => 'הערות',
+                'type' => 'textarea',
+                'rows' => 3
+            ]
+        ],
+        
+        // ⭐ הגדרות API
+        'api' => [
+            'endpoint' => '/dashboard/dashboards/cemeteries/api/plots-api.php',
+            'methods' => ['GET', 'POST', 'PUT', 'DELETE']
+        ],
+
+        // ⭐ הגדרות חיפוש
+        'search' => [
+            'placeholder' => 'חיפוש חלקות לפי שם, קוד, מיקום...',
+            'minLength' => 0
+        ],
     ],
     
     // ========================================

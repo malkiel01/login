@@ -429,7 +429,7 @@ class EntityManager {
     //     }
         
     //     // ✅ תיקון: קריאה נכונה ל-UniversalSearch
-    //     const searchInstance = window.initUniversalSearch 
+    //     const searchInstance = await window.initUniversalSearch 
     //         ? window.initUniversalSearch(searchConfig)
     //         : new UniversalSearch(searchConfig);
         
@@ -536,7 +536,7 @@ class EntityManager {
         }
         
         // ✅ יצירת instance
-        const searchInstance = window.initUniversalSearch(searchConfig);
+        const searchInstance = await window.initUniversalSearch(searchConfig);
         
         // שמירה ב-state
         entityState.setSearchInstance(entityType, searchInstance);

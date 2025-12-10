@@ -287,7 +287,7 @@ async function initPlotsSearch(signal, blockId = null) {
         config.additionalParams = { blockId: blockId };
     }
     
-    plotSearch = window.initUniversalSearch(config);
+    plotSearch = await window.initUniversalSearch(config);
     
     // ⭐ עדכן את window.plotSearch מיד!
     window.plotSearch = plotSearch;

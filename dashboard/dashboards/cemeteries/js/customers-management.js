@@ -238,7 +238,7 @@ async function initCustomersSearch(signal) {
         }
     };
     
-    const searchInstance = window.initUniversalSearch(config);
+    const searchInstance = await window.initUniversalSearch(config);
     
     return searchInstance;
 }

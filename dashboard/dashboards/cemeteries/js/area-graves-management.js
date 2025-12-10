@@ -275,7 +275,7 @@ async function initAreaGravesSearch(signal, plotId) {
     };
     
     // יצירת instance
-    const searchInstance = window.initUniversalSearch(config);
+    const searchInstance = await window.initUniversalSearch(config);
     
     // שמירה גלובלית
     window.areaGraveSearch = searchInstance;

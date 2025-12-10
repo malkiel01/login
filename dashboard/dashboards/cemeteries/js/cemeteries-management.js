@@ -240,8 +240,9 @@ async function initCemeteriesSearch(signal) {
             }
         ],
         
-        displayColumns: displayColumns,
-        
+        displayColumns: ['cemeteryNameHe', 'cemeteryCode', 'address', 'contactName', 'contactPhoneName', 'blocks_count', 'createDate'],
+        // displayColumns: displayColumns,
+
         searchContainerSelector: '#cemeterySearchSection',
         resultsContainerSelector: '#tableBody',
         

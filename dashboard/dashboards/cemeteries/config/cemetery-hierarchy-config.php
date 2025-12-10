@@ -604,7 +604,7 @@ return [
         ],
         
         // ⭐ עמודות טבלה
-        'table_columns' => [
+        'table_columns2' => [
             [
                 'field' => 'plotNameHe',
                 'title' => 'שם חלקה',
@@ -637,6 +637,91 @@ return [
                 'field' => 'createDate',
                 'title' => 'תאריך',
                 'width' => '120px',
+                'sortable' => true,
+                'type' => 'date'
+            ],
+            [
+                'field' => 'actions',
+                'title' => 'פעולות',
+                'width' => '120px',
+                'sortable' => false,
+                'type' => 'actions'
+            ]
+        ],
+        // ⭐ עמודות טבלה
+        'table_columns' => [
+            [
+                'field' => 'plotNameHe',
+                'title' => 'שם חלקה',
+                'width' => '180px',
+                'sortable' => true,
+                'type' => 'link'
+            ],
+            [
+                'field' => 'plotCode',
+                'title' => 'קוד',
+                'width' => '80px',
+                'sortable' => true,
+                'type' => 'text'
+            ],
+            [
+                'field' => 'cemeteryNameHe',
+                'title' => 'בית עלמין',
+                'width' => '150px',
+                'sortable' => true,
+                'type' => 'text'
+            ],
+            [
+                'field' => 'blockNameHe',
+                'title' => 'גוש',
+                'width' => '120px',
+                'sortable' => true,
+                'type' => 'text'
+            ],
+            [
+                'field' => 'availableSum',
+                'title' => 'פנויים',
+                'width' => '70px',
+                'sortable' => true,
+                'type' => 'badge',
+                'style' => 'success'
+            ],
+            [
+                'field' => 'savedSum',
+                'title' => 'שמורים',
+                'width' => '70px',
+                'sortable' => true,
+                'type' => 'badge',
+                'style' => 'warning'
+            ],
+            [
+                'field' => 'purchasedSum',
+                'title' => 'נרכשו',
+                'width' => '70px',
+                'sortable' => true,
+                'type' => 'badge',
+                'style' => 'info'
+            ],
+            [
+                'field' => 'buriedSum',
+                'title' => 'קבורים',
+                'width' => '70px',
+                'sortable' => true,
+                'type' => 'badge',
+                'style' => 'secondary'
+            ],
+            [
+                'field' => 'graveSum',
+                'title' => 'סה"כ',
+                'width' => '70px',
+                'sortable' => true,
+                'type' => 'badge',
+                'style' => 'primary'
+            ],
+            [
+                'field' => 'createDate',
+                'title' => 'תאריך',
+                'width' => '100px',
                 'sortable' => true,
                 'type' => 'date'
             ],

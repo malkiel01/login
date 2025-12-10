@@ -35,9 +35,6 @@ window.initUniversalSearch = async function(config) {
     if (!config.entityType) {
         throw new Error('❌ entityType is required!');
     }
-    if (!config.apiEndpoint) {
-        throw new Error('❌ apiEndpoint is required!');
-    }
 
     // ⭐ אם לא קיבלנו searchableFields - נטען מהקונפיג
     if (!config.searchableFields || config.searchableFields.length === 0) {

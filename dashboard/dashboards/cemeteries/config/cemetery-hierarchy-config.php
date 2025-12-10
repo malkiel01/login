@@ -13,6 +13,11 @@ return [
         'icon' => '🏛️',
         'primaryKey' => 'unicId',
         'parentKey' => null,
+
+        'api' => [
+            'endpoint' => '/dashboard/dashboards/cemeteries/api/cemeteries-api.php',
+            'methods' => ['GET', 'POST', 'PUT', 'DELETE']
+        ],
         
         // שדות לשאילתות SELECT
         'queryFields' => [

@@ -105,19 +105,6 @@ return [
                 'placeholder' => 'lat,lng',
                 'permissions' => ['admin', 'cemetery_manager', 'manager']
             ],
-            // [
-            //     'name' => 'contactName',
-            //     'label' => 'שם איש קשר',
-            //     'type' => 'text',
-            //     'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
-            // ],
-            // [
-            //     'name' => 'contactPhoneName',
-            //     'label' => 'טלפון איש קשר',
-            //     'type' => 'tel',
-            //     'placeholder' => '050-0000000',
-            //     'permissions' => ['admin', 'cemetery_manager', 'manager', 'editor']
-            // ],
         ],
 
         // שדות לטבלה
@@ -950,173 +937,6 @@ return [
     // ========================================
     // הגדרות לאחוזות קבר
     // ========================================
-    'areaGrave2' => [
-        'table' => 'areaGraves',
-        'title' => 'אחוזות קבר',
-        'singular' => 'אחוזת קבר',
-        'icon' => '🏘️',
-        'primaryKey' => 'unicId',
-        'parentKey' => 'lineId',
-        
-        'queryFields' => [
-            'id',
-            'unicId',
-            'areaGraveNameHe',
-            'coordinates',
-            'gravesList',
-            'graveType',
-            'lineId',
-            'comments',
-            'documentsList',
-            'createDate',
-            'updateDate',
-            'isActive'
-        ],
-        
-        'displayFields' => [
-            'name' => 'areaGraveNameHe',
-            'type' => 'graveType',
-            'created' => 'createDate',
-            'status' => 'isActive'
-        ],
-        
-        'form_fields' => [
-            [
-                'name' => 'areaGraveNameHe',
-                'label' => 'שם אחוזת קבר',
-                'type' => 'text',
-                'required' => true
-            ],
-            [
-                'name' => 'lineId',
-                'label' => 'שורה',
-                'type' => 'select',
-                'required' => true,
-                'placeholder' => 'בחר שורה',
-                'validation' => [
-                    'required' => true,
-                    'message' => 'חובה לבחור שורה'
-                ]
-            ],
-            [
-                'name' => 'graveType',
-                'label' => 'סוג אחוזת קבר',
-                'type' => 'select',
-                'options' => [
-                    1 => 'שדה',
-                    2 => 'רוויה',
-                    3 => 'סנהדרין'
-                ],
-                'required' => true
-            ],
-            [
-                'name' => 'coordinates',
-                'label' => 'קואורדינטות',
-                'type' => 'text'
-            ],
-            [
-                'name' => 'comments',
-                'label' => 'הערות',
-                'type' => 'textarea'
-            ]
-        ],
-
-        'table_columns' => [
-            [
-                'field' => 'areaGraveNameHe',
-                'title' => 'שם אחוזת קבר',
-                'width' => '200px',
-                'sortable' => true,
-                'type' => 'link'
-            ],
-            [
-                'field' => 'areaGraveCode',
-                'title' => 'קוד',
-                'width' => '100px',
-                'sortable' => true,
-                'type' => 'text'
-            ],
-            [
-                'field' => 'lineNameHe',  // ⭐ חדש
-                'title' => 'שורה',
-                'width' => '120px',
-                'sortable' => true,
-                'type' => 'text'
-            ],
-            [
-                'field' => 'plotNameHe',  // ⭐ חדש
-                'title' => 'חלקה',
-                'width' => '120px',
-                'sortable' => true,
-                'type' => 'text'
-            ],
-            [
-                'field' => 'blockNameHe',  // ⭐ חדש
-                'title' => 'גוש',
-                'width' => '120px',
-                'sortable' => true,
-                'type' => 'text'
-            ],
-            [
-                'field' => 'cemeteryNameHe',  // ⭐ חדש
-                'title' => 'בית עלמין',
-                'width' => '150px',
-                'sortable' => true,
-                'type' => 'text'
-            ],
-            [
-                'field' => 'plotNameHe',
-                'title' => 'חלקה',
-                'width' => '150px',
-                'sortable' => true,
-                'type' => 'text'
-            ],
-            [
-                'field' => 'coordinates',
-                'title' => 'קואורדינטות',
-                'width' => '150px',
-                'sortable' => true,
-                'type' => 'coordinates'  // סוג מיוחד
-            ],
-            [
-                'field' => 'graveType',
-                'title' => 'סוג קבר',
-                'width' => '120px',
-                'sortable' => true,
-                'type' => 'graveType'  // סוג מיוחד
-            ],
-            [
-                'field' => 'lineNameHe',
-                'title' => 'שורה',
-                'width' => '150px',
-                'sortable' => true,
-                'type' => 'row'  // סוג מיוחד
-            ],
-            [
-                'field' => 'graves_count',
-                'title' => 'קברים',
-                'width' => '80px',
-                'sortable' => true,
-                'type' => 'badge',
-                'badge_style' => 'success'
-            ],
-            [
-                'field' => 'createDate',
-                'title' => 'תאריך',
-                'width' => '120px',
-                'sortable' => true,
-                'type' => 'date'
-            ],
-            [
-                'field' => 'actions',
-                'title' => 'פעולות',
-                'width' => '120px',
-                'sortable' => false,
-                'type' => 'actions',
-                'actions' => ['edit', 'delete']
-            ]
-        ]
-    ],
     'areaGrave' => [
         // ⭐ שדות חדשים
         'singularArticle' => 'את אחוזת הקבר',
@@ -1143,7 +963,7 @@ return [
             'id',
             'unicId',
             'areaGraveNameHe',
-            'areaGraveCode',
+            // 'areaGraveCode',
             'coordinates',
             'gravesList',
             'graveType',
@@ -1171,13 +991,13 @@ return [
                 'sortable' => true,
                 'type' => 'link'
             ],
-            [
-                'field' => 'areaGraveCode',
-                'title' => 'קוד',
-                'width' => '80px',
-                'sortable' => true,
-                'type' => 'text'
-            ],
+            // [
+            //     'field' => 'areaGraveCode',
+            //     'title' => 'קוד',
+            //     'width' => '80px',
+            //     'sortable' => true,
+            //     'type' => 'text'
+            // ],
             [
                 'field' => 'graveType',
                 'title' => 'סוג',
@@ -1246,13 +1066,13 @@ return [
                 'type' => 'text',
                 'matchType' => ['exact', 'fuzzy', 'startsWith']
             ],
-            [
-                'name' => 'areaGraveCode',
-                'label' => 'קוד',
-                'table' => 'areaGraves',
-                'type' => 'text',
-                'matchType' => ['exact', 'startsWith']
-            ],
+            // [
+            //     'name' => 'areaGraveCode',
+            //     'label' => 'קוד',
+            //     'table' => 'areaGraves',
+            //     'type' => 'text',
+            //     'matchType' => ['exact', 'startsWith']
+            // ],
             [
                 'name' => 'graveType',
                 'label' => 'סוג אחוזת קבר',
@@ -1295,11 +1115,11 @@ return [
                 'type' => 'text',
                 'required' => true
             ],
-            [
-                'name' => 'areaGraveCode',
-                'label' => 'קוד',
-                'type' => 'text'
-            ],
+            // [
+            //     'name' => 'areaGraveCode',
+            //     'label' => 'קוד',
+            //     'type' => 'text'
+            // ],
             [
                 'name' => 'lineId',
                 'label' => 'שורה',
@@ -1385,6 +1205,173 @@ return [
         'statuses' => [
             'active' => ['text' => 'פעיל', 'color' => '#10b981'],
             'inactive' => ['text' => 'לא פעיל', 'color' => '#6b7280']
+        ]
+    ],
+    'areaGrave2' => [
+        'table' => 'areaGraves',
+        'title' => 'אחוזות קבר',
+        'singular' => 'אחוזת קבר',
+        'icon' => '🏘️',
+        'primaryKey' => 'unicId',
+        'parentKey' => 'lineId',
+        
+        'queryFields' => [
+            'id',
+            'unicId',
+            'areaGraveNameHe',
+            'coordinates',
+            'gravesList',
+            'graveType',
+            'lineId',
+            'comments',
+            'documentsList',
+            'createDate',
+            'updateDate',
+            'isActive'
+        ],
+        
+        'displayFields' => [
+            'name' => 'areaGraveNameHe',
+            'type' => 'graveType',
+            'created' => 'createDate',
+            'status' => 'isActive'
+        ],
+        
+        'form_fields' => [
+            [
+                'name' => 'areaGraveNameHe',
+                'label' => 'שם אחוזת קבר',
+                'type' => 'text',
+                'required' => true
+            ],
+            [
+                'name' => 'lineId',
+                'label' => 'שורה',
+                'type' => 'select',
+                'required' => true,
+                'placeholder' => 'בחר שורה',
+                'validation' => [
+                    'required' => true,
+                    'message' => 'חובה לבחור שורה'
+                ]
+            ],
+            [
+                'name' => 'graveType',
+                'label' => 'סוג אחוזת קבר',
+                'type' => 'select',
+                'options' => [
+                    1 => 'שדה',
+                    2 => 'רוויה',
+                    3 => 'סנהדרין'
+                ],
+                'required' => true
+            ],
+            [
+                'name' => 'coordinates',
+                'label' => 'קואורדינטות',
+                'type' => 'text'
+            ],
+            [
+                'name' => 'comments',
+                'label' => 'הערות',
+                'type' => 'textarea'
+            ]
+        ],
+
+        'table_columns' => [
+            [
+                'field' => 'areaGraveNameHe',
+                'title' => 'שם אחוזת קבר',
+                'width' => '200px',
+                'sortable' => true,
+                'type' => 'link'
+            ],
+            // [
+            //     'field' => 'areaGraveCode',
+            //     'title' => 'קוד',
+            //     'width' => '100px',
+            //     'sortable' => true,
+            //     'type' => 'text'
+            // ],
+            [
+                'field' => 'lineNameHe',  // ⭐ חדש
+                'title' => 'שורה',
+                'width' => '120px',
+                'sortable' => true,
+                'type' => 'text'
+            ],
+            [
+                'field' => 'plotNameHe',  // ⭐ חדש
+                'title' => 'חלקה',
+                'width' => '120px',
+                'sortable' => true,
+                'type' => 'text'
+            ],
+            [
+                'field' => 'blockNameHe',  // ⭐ חדש
+                'title' => 'גוש',
+                'width' => '120px',
+                'sortable' => true,
+                'type' => 'text'
+            ],
+            [
+                'field' => 'cemeteryNameHe',  // ⭐ חדש
+                'title' => 'בית עלמין',
+                'width' => '150px',
+                'sortable' => true,
+                'type' => 'text'
+            ],
+            [
+                'field' => 'plotNameHe',
+                'title' => 'חלקה',
+                'width' => '150px',
+                'sortable' => true,
+                'type' => 'text'
+            ],
+            [
+                'field' => 'coordinates',
+                'title' => 'קואורדינטות',
+                'width' => '150px',
+                'sortable' => true,
+                'type' => 'coordinates'  // סוג מיוחד
+            ],
+            [
+                'field' => 'graveType',
+                'title' => 'סוג קבר',
+                'width' => '120px',
+                'sortable' => true,
+                'type' => 'graveType'  // סוג מיוחד
+            ],
+            [
+                'field' => 'lineNameHe',
+                'title' => 'שורה',
+                'width' => '150px',
+                'sortable' => true,
+                'type' => 'row'  // סוג מיוחד
+            ],
+            [
+                'field' => 'graves_count',
+                'title' => 'קברים',
+                'width' => '80px',
+                'sortable' => true,
+                'type' => 'badge',
+                'badge_style' => 'success'
+            ],
+            [
+                'field' => 'createDate',
+                'title' => 'תאריך',
+                'width' => '120px',
+                'sortable' => true,
+                'type' => 'date'
+            ],
+            [
+                'field' => 'actions',
+                'title' => 'פעולות',
+                'width' => '120px',
+                'sortable' => false,
+                'type' => 'actions',
+                'actions' => ['edit', 'delete']
+            ]
         ]
     ],
     

@@ -2379,20 +2379,15 @@ return [
         ]
     ],
     'purchase' => [
-        // ⭐ שדות חדשים
         'singularArticle' => 'את הרכישה',
         'plural' => 'רכישות',
         'nameField' => 'serialPurchaseId',
         'idField' => 'unicId',
-        
-        // פרמטרים
         'hasParent' => false,
         'parentParam' => null,
         'defaultLimit' => 200,
         'defaultOrderBy' => 'createDate',
         'defaultSortDirection' => 'DESC',
-
-        // מקורי
         'table' => 'purchases',
         'title' => 'רכישות',
         'singular' => 'רכישה',
@@ -2400,395 +2395,86 @@ return [
         'primaryKey' => 'unicId',
         'parentKey' => null,
         
+        // ⭐ שדות מה-VIEW - שמות נכונים!
         'queryFields' => [
-            'id',
-            'unicId',
-            'serialPurchaseId',
-            'clientId',
-            'graveId',
-            'price',
-            'calculated_price',
-            'dateOpening',
-            'purchaseStatus',
-            'buyerStatus',
-            'numOfPayments',
-            'PaymentEndDate',
-            'clientFullNameHe',
-            'clientNumId',
-            'contactFullNameHe',
-            'graveNameHe',
-            'areaGraveNameHe',
-            'lineNameHe',
-            'plotNameHe',
-            'blockNameHe',
-            'cemeteryNameHe',
-            'graveStatus',
-            'createDate',
-            'updateDate',
-            'isActive'
+            'id', 'unicId', 'serialPurchaseId', 'clientId', 'graveId',
+            'price', 'calculated_price', 'dateOpening',
+            'purchaseStatus', 'buyerStatus',  // ✅ שמות נכונים
+            'numOfPayments', 'PaymentEndDate',
+            'clientFullNameHe', 'clientNumId', 'contactFullNameHe',
+            'graveNameHe', 'areaGraveNameHe', 'lineNameHe', 'plotNameHe', 
+            'blockNameHe', 'cemeteryNameHe', 'graveStatus',
+            'createDate', 'updateDate', 'isActive'
         ],
         
-        'displayFields' => [
-            'serial_number' => 'serialPurchaseId',
-            'customer_name' => 'clientFullNameHe',
-            'customer_id' => 'clientNumId',
-            'contact_name' => 'contactFullNameHe',
-            'grave' => 'graveNameHe',
-            'area_grave' => 'areaGraveNameHe',
-            'row' => 'lineNameHe',
-            'plot' => 'plotNameHe',
-            'block' => 'blockNameHe',
-            'cemetery' => 'cemeteryNameHe',
-            'price' => 'price',
-            'date' => 'dateOpening',
-            'status' => 'purchaseStatus',
-            'buyer_status' => 'buyerStatus',
-            'created' => 'createDate'
-        ],
-        
-        // ⭐ עמודות טבלה
         'table_columns' => [
-            [
-                'field' => 'serialPurchaseId',
-                'title' => 'מספר רכישה',
-                'type' => 'text',
-                'width' => '120px',
-                'sortable' => true,
-                'searchable' => true
-            ],
-            [
-                'field' => 'clientFullNameHe',
-                'title' => 'שם לקוח',
-                'type' => 'text',
-                'width' => '180px',
-                'sortable' => true,
-                'searchable' => true
-            ],
-            [
-                'field' => 'clientNumId',
-                'title' => 'ת.ז. לקוח',
-                'type' => 'text',
-                'width' => '110px',
-                'sortable' => true,
-                'searchable' => true
-            ],
-            [
-                'field' => 'graveNameHe',
-                'title' => 'קבר',
-                'type' => 'text',
-                'width' => '100px',
-                'sortable' => true
-            ],
-            [
-                'field' => 'areaGraveNameHe',
-                'title' => 'אחוזת קבר',
-                'type' => 'text',
-                'width' => '120px',
-                'sortable' => true
-            ],
-            [
-                'field' => 'plotNameHe',
-                'title' => 'חלקה',
-                'type' => 'text',
-                'width' => '100px',
-                'sortable' => true
-            ],
-            [
-                'field' => 'blockNameHe',
-                'title' => 'גוש',
-                'type' => 'text',
-                'width' => '100px',
-                'sortable' => true
-            ],
-            [
-                'field' => 'cemeteryNameHe',
-                'title' => 'בית עלמין',
-                'type' => 'text',
-                'width' => '120px',
-                'sortable' => true
-            ],
-            [
-                'field' => 'price',
-                'title' => 'סכום',
-                'type' => 'currency',
-                'width' => '100px',
-                'sortable' => true
-            ],
-            [
-                'field' => 'dateOpening',
-                'title' => 'תאריך רכישה',
-                'type' => 'date',
-                'width' => '110px',
-                'sortable' => true
-            ],
-            [
-                'field' => 'purchaseStatus',
-                'title' => 'סטטוס',
-                'type' => 'status',
-                'width' => '100px',
-                'sortable' => true,
-                'render' => 'formatPurchaseStatus'
-            ],
-            [
-                'field' => 'buyerStatus',
-                'title' => 'סוג רוכש',
-                'type' => 'type',
-                'width' => '100px',
-                'sortable' => true,
-                'render' => 'formatBuyerStatus'
-            ],
-            [
-                'field' => 'actions',
-                'title' => 'פעולות',
-                'type' => 'actions',
-                'width' => '120px',
-                'sortable' => false,
-                'actions' => ['view', 'edit', 'delete']
-            ]
+            ['field' => 'serialPurchaseId', 'title' => 'מספר רכישה', 'type' => 'text', 'width' => '120px', 'sortable' => true, 'searchable' => true],
+            ['field' => 'clientFullNameHe', 'title' => 'שם לקוח', 'type' => 'text', 'width' => '180px', 'sortable' => true, 'searchable' => true],
+            ['field' => 'clientNumId', 'title' => 'ת.ז. לקוח', 'type' => 'text', 'width' => '110px', 'sortable' => true],
+            ['field' => 'graveNameHe', 'title' => 'קבר', 'type' => 'text', 'width' => '100px', 'sortable' => true],
+            ['field' => 'areaGraveNameHe', 'title' => 'אחוזת קבר', 'type' => 'text', 'width' => '120px', 'sortable' => true],
+            ['field' => 'plotNameHe', 'title' => 'חלקה', 'type' => 'text', 'width' => '100px', 'sortable' => true],
+            ['field' => 'blockNameHe', 'title' => 'גוש', 'type' => 'text', 'width' => '100px', 'sortable' => true],
+            ['field' => 'cemeteryNameHe', 'title' => 'בית עלמין', 'type' => 'text', 'width' => '120px', 'sortable' => true],
+            ['field' => 'price', 'title' => 'סכום', 'type' => 'currency', 'width' => '100px', 'sortable' => true],
+            ['field' => 'dateOpening', 'title' => 'תאריך רכישה', 'type' => 'date', 'width' => '110px', 'sortable' => true],
+            ['field' => 'purchaseStatus', 'title' => 'סטטוס', 'type' => 'status', 'width' => '100px', 'sortable' => true, 'render' => 'formatPurchaseStatus'],
+            ['field' => 'buyerStatus', 'title' => 'סוג רוכש', 'type' => 'type', 'width' => '100px', 'sortable' => true, 'render' => 'formatBuyerStatus'],
+            ['field' => 'actions', 'title' => 'פעולות', 'type' => 'actions', 'width' => '120px', 'sortable' => false]
         ],
         
-        // ⭐ שדות חיפוש
         'searchableFields' => [
-            [
-                'name' => 'serialPurchaseId',
-                'label' => 'מספר רכישה',
-                'table' => 'purchases',
-                'type' => 'text',
-                'matchType' => ['exact', 'fuzzy', 'startsWith']
-            ],
-            [
-                'name' => 'clientFullNameHe',
-                'label' => 'שם לקוח',
-                'table' => 'purchases_view',
-                'type' => 'text',
-                'matchType' => ['exact', 'fuzzy', 'startsWith']
-            ],
-            [
-                'name' => 'clientNumId',
-                'label' => 'ת.ז. לקוח',
-                'table' => 'purchases_view',
-                'type' => 'text',
-                'matchType' => ['exact', 'startsWith']
-            ],
-            [
-                'name' => 'graveNameHe',
-                'label' => 'מספר קבר',
-                'table' => 'purchases_view',
-                'type' => 'text',
-                'matchType' => ['exact', 'fuzzy']
-            ],
-            [
-                'name' => 'purchaseStatus',
-                'label' => 'סטטוס רכישה',
-                'table' => 'purchases',
-                'type' => 'select',
-                'matchType' => ['exact'],
+            ['name' => 'serialPurchaseId', 'label' => 'מספר רכישה', 'type' => 'text', 'matchType' => ['exact', 'fuzzy', 'startsWith']],
+            ['name' => 'clientFullNameHe', 'label' => 'שם לקוח', 'type' => 'text', 'matchType' => ['exact', 'fuzzy', 'startsWith']],
+            ['name' => 'clientNumId', 'label' => 'ת.ז. לקוח', 'type' => 'text', 'matchType' => ['exact', 'startsWith']],
+            ['name' => 'graveNameHe', 'label' => 'מספר קבר', 'type' => 'text', 'matchType' => ['exact', 'fuzzy']],
+            ['name' => 'purchaseStatus', 'label' => 'סטטוס רכישה', 'type' => 'select', 'matchType' => ['exact'],
                 'options' => [
                     ['value' => 1, 'label' => 'טיוטה'],
                     ['value' => 2, 'label' => 'פעיל'],
-                    ['value' => 3, 'label' => 'שולם'],
-                    ['value' => 4, 'label' => 'בוטל']
+                    ['value' => 3, 'label' => 'שולם']
                 ]
             ],
-            [
-                'name' => 'buyerStatus',
-                'label' => 'סוג רוכש',
-                'table' => 'purchases',
-                'type' => 'select',
-                'matchType' => ['exact'],
+            ['name' => 'buyerStatus', 'label' => 'סוג רוכש', 'type' => 'select', 'matchType' => ['exact'],
                 'options' => [
                     ['value' => 1, 'label' => 'רוכש לעצמו'],
                     ['value' => 2, 'label' => 'רוכש לאחר']
                 ]
             ],
-            [
-                'name' => 'cemeteryNameHe',
-                'label' => 'בית עלמין',
-                'table' => 'purchases_view',
-                'type' => 'text',
-                'matchType' => ['exact', 'fuzzy']
-            ],
-            [
-                'name' => 'blockNameHe',
-                'label' => 'גוש',
-                'table' => 'purchases_view',
-                'type' => 'text',
-                'matchType' => ['exact', 'fuzzy']
-            ],
-            [
-                'name' => 'plotNameHe',
-                'label' => 'חלקה',
-                'table' => 'purchases_view',
-                'type' => 'text',
-                'matchType' => ['exact', 'fuzzy']
-            ],
-            [
-                'name' => 'dateOpening',
-                'label' => 'תאריך רכישה',
-                'table' => 'purchases',
-                'type' => 'date',
-                'matchType' => ['exact', 'before', 'after', 'between']
-            ]
+            ['name' => 'cemeteryNameHe', 'label' => 'בית עלמין', 'type' => 'text', 'matchType' => ['exact', 'fuzzy']],
+            ['name' => 'blockNameHe', 'label' => 'גוש', 'type' => 'text', 'matchType' => ['exact', 'fuzzy']],
+            ['name' => 'plotNameHe', 'label' => 'חלקה', 'type' => 'text', 'matchType' => ['exact', 'fuzzy']],
+            ['name' => 'dateOpening', 'label' => 'תאריך רכישה', 'type' => 'date', 'matchType' => ['exact', 'before', 'after', 'between']]
         ],
         
-        'form_fields' => [
-            [
-                'name' => 'clientId',
-                'label' => 'לקוח',
-                'type' => 'select',
-                'required' => true,
-                'dataSource' => 'customers',
-                'placeholder' => 'בחר לקוח'
-            ],
-            [
-                'name' => 'buyerStatus',
-                'label' => 'סוג רוכש',
-                'type' => 'select',
-                'required' => true,
-                'options' => [
-                    ['value' => 1, 'label' => 'רוכש לעצמו'],
-                    ['value' => 2, 'label' => 'רוכש לאחר']
-                ],
-                'default' => 1
-            ],
-            [
-                'name' => 'contactId',
-                'label' => 'איש קשר',
-                'type' => 'select',
-                'required' => false,
-                'dataSource' => 'customers',
-                'placeholder' => 'בחר איש קשר (אופציונלי)'
-            ],
-            [
-                'name' => 'graveId',
-                'label' => 'קבר',
-                'type' => 'select',
-                'required' => true,
-                'dataSource' => 'graves',
-                'placeholder' => 'בחר קבר'
-            ],
-            [
-                'name' => 'price',
-                'label' => 'סכום רכישה',
-                'type' => 'number',
-                'step' => '0.01',
-                'required' => true,
-                'placeholder' => '0.00'
-            ],
-            [
-                'name' => 'dateOpening',
-                'label' => 'תאריך רכישה',
-                'type' => 'date',
-                'required' => true
-            ],
-            [
-                'name' => 'purchaseStatus',
-                'label' => 'סטטוס רכישה',
-                'type' => 'select',
-                'required' => true,
-                'options' => [
-                    ['value' => 1, 'label' => 'טיוטה'],
-                    ['value' => 2, 'label' => 'פעיל'],
-                    ['value' => 3, 'label' => 'שולם'],
-                    ['value' => 4, 'label' => 'בוטל']
-                ],
-                'default' => 1
-            ],
-            [
-                'name' => 'numOfPayments',
-                'label' => 'מספר תשלומים',
-                'type' => 'number',
-                'min' => 1,
-                'default' => 1
-            ],
-            [
-                'name' => 'deedNum',
-                'label' => 'מספר שטר',
-                'type' => 'text',
-                'required' => false
-            ],
-            [
-                'name' => 'comment',
-                'label' => 'הערות',
-                'type' => 'textarea',
-                'rows' => 3
-            ]
-        ],
-        
-        // ⭐ הגדרות API
-        'api' => [
-            'endpoint' => '/dashboard/dashboards/cemeteries/api/purchases-api.php',
-            'methods' => ['GET', 'POST', 'PUT', 'DELETE']
-        ],
-
-        // ⭐ הגדרות חיפוש
-        'search' => [
-            'placeholder' => 'חיפוש רכישות לפי מספר, לקוח, קבר...',
-            'minLength' => 0
-        ],
-
-        // משתנים גלובליים
-        'jsVars' => [
-            'searchVar' => 'purchaseSearch',
-            'tableVar' => 'purchasesTable',
-            'currentPageVar' => 'purchasesCurrentPage',
-            'totalPagesVar' => 'purchasesTotalPages',
-            'dataArrayVar' => 'currentPurchases',
-            'isLoadingVar' => 'purchasesIsLoadingMore',
-            'isSearchModeVar' => 'purchasesIsSearchMode',
-            'currentQueryVar' => 'purchasesCurrentQuery',
-            'searchResultsVar' => 'purchasesSearchResults',
-        ],
-        
-        // פונקציות
-        'jsFunctions' => [
-            'renderFunctionName' => 'renderPurchasesRows',
-            'loadFunctionName' => 'loadPurchases',
-            'loadBrowseFunctionName' => 'loadPurchasesBrowseData',
-            'appendMoreFunctionName' => 'appendMorePurchases',
-        ],
-        
-        // סטטיסטיקות
-        'statsConfig' => [
-            'elements' => [
-                'totalPurchases' => 'total_purchases',
-                'draftPurchases' => 'draft',
-                'activePurchases' => 'active',
-                'paidPurchases' => 'paid',
-                'cancelledPurchases' => 'cancelled',
-                'totalAmount' => 'total_amount',
-                'newThisMonth' => 'new_this_month'
-            ],
-            'parentParam' => null
-        ],
-        
-        // סטטוסים רכישה
+        // סטטוסים
         'purchaseStatuses' => [
             1 => ['text' => 'טיוטה', 'color' => '#6b7280', 'class' => 'badge-secondary'],
             2 => ['text' => 'פעיל', 'color' => '#3b82f6', 'class' => 'badge-info'],
-            3 => ['text' => 'שולם', 'color' => '#10b981', 'class' => 'badge-success'],
-            4 => ['text' => 'בוטל', 'color' => '#ef4444', 'class' => 'badge-danger']
+            3 => ['text' => 'שולם', 'color' => '#10b981', 'class' => 'badge-success']
         ],
         
-        // סוגי רוכש
         'buyerStatuses' => [
             1 => ['text' => 'רוכש לעצמו', 'color' => '#10b981', 'class' => 'badge-success'],
             2 => ['text' => 'רוכש לאחר', 'color' => '#3b82f6', 'class' => 'badge-info']
         ],
         
-        'statuses' => [
-            'active' => ['text' => 'פעיל', 'color' => '#10b981'],
-            'inactive' => ['text' => 'לא פעיל', 'color' => '#6b7280']
+        'api' => [
+            'endpoint' => '/dashboard/dashboards/cemeteries/api/purchases-api.php',
+            'methods' => ['GET', 'POST', 'PUT', 'DELETE']
         ],
-
+        
+        'search' => [
+            'placeholder' => 'חיפוש רכישות לפי מספר, לקוח, קבר...',
+            'minLength' => 0
+        ],
+        
         'enable_search' => true,
         'enable_filters' => true,
         'enable_export' => true,
         'items_per_page' => 999999,
-        'enable_soft_delete' => true,
-        'enable_audit_log' => true
+        'enable_soft_delete' => true
     ],
-
 
     // ========================================
     // הגדרות קבורות (Burials)

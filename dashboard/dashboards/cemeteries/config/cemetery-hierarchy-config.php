@@ -2043,6 +2043,20 @@ return [
         'enable_audit_log' => true
     ],
     'customer' => [
+        // ⭐ שדות חדשים
+        'singularArticle' => 'את הלקוח',
+        'plural' => 'לקוחות',
+        'nameField' => 'fullNameHe',
+        'idField' => 'unicId',
+        
+        // פרמטרים
+        'hasParent' => false,
+        'parentParam' => null,
+        'defaultLimit' => 200,
+        'defaultOrderBy' => 'createDate',
+        'defaultSortDirection' => 'DESC',
+
+        // מקורי
         'table' => 'customers',
         'title' => 'לקוחות',
         'singular' => 'לקוח',
@@ -2088,6 +2102,7 @@ return [
             'created' => 'createDate'
         ],
         
+        // ⭐ עמודות טבלה
         'table_columns' => [
             [
                 'field' => 'numId',
@@ -2178,6 +2193,89 @@ return [
             ]
         ],
         
+        // ⭐ שדות חיפוש
+        'searchableFields' => [
+            [
+                'name' => 'numId',
+                'label' => 'תעודת זהות',
+                'table' => 'customers',
+                'type' => 'text',
+                'matchType' => ['exact', 'fuzzy', 'startsWith']
+            ],
+            [
+                'name' => 'fullNameHe',
+                'label' => 'שם מלא',
+                'table' => 'customers',
+                'type' => 'text',
+                'matchType' => ['exact', 'fuzzy', 'startsWith']
+            ],
+            [
+                'name' => 'firstName',
+                'label' => 'שם פרטי',
+                'table' => 'customers',
+                'type' => 'text',
+                'matchType' => ['exact', 'fuzzy', 'startsWith']
+            ],
+            [
+                'name' => 'lastName',
+                'label' => 'שם משפחה',
+                'table' => 'customers',
+                'type' => 'text',
+                'matchType' => ['exact', 'fuzzy', 'startsWith']
+            ],
+            [
+                'name' => 'phone',
+                'label' => 'טלפון',
+                'table' => 'customers',
+                'type' => 'text',
+                'matchType' => ['exact', 'fuzzy']
+            ],
+            [
+                'name' => 'phoneMobile',
+                'label' => 'נייד',
+                'table' => 'customers',
+                'type' => 'text',
+                'matchType' => ['exact', 'fuzzy']
+            ],
+            [
+                'name' => 'statusCustomer',
+                'label' => 'סטטוס לקוח',
+                'table' => 'customers',
+                'type' => 'select',
+                'matchType' => ['exact'],
+                'options' => [
+                    ['value' => 1, 'label' => 'פעיל'],
+                    ['value' => 2, 'label' => 'רכש'],
+                    ['value' => 3, 'label' => 'נפטר']
+                ]
+            ],
+            [
+                'name' => 'resident',
+                'label' => 'תושבות',
+                'table' => 'customers',
+                'type' => 'select',
+                'matchType' => ['exact'],
+                'options' => [
+                    ['value' => 1, 'label' => 'תושב'],
+                    ['value' => 2, 'label' => 'לא תושב']
+                ]
+            ],
+            [
+                'name' => 'cityNameHe',
+                'label' => 'עיר',
+                'table' => 'customers',
+                'type' => 'text',
+                'matchType' => ['exact', 'fuzzy']
+            ],
+            [
+                'name' => 'countryNameHe',
+                'label' => 'מדינה',
+                'table' => 'customers',
+                'type' => 'text',
+                'matchType' => ['exact', 'fuzzy']
+            ]
+        ],
+        
         'form_fields' => [
             [
                 'name' => 'numId',
@@ -2247,9 +2345,84 @@ return [
                     ['value' => 1, 'label' => 'תושב'],
                     ['value' => 2, 'label' => 'לא תושב']
                 ]
+            ],
+            [
+                'name' => 'statusCustomer',
+                'label' => 'סטטוס',
+                'type' => 'select',
+                'required' => false,
+                'options' => [
+                    ['value' => 1, 'label' => 'פעיל'],
+                    ['value' => 2, 'label' => 'רכש'],
+                    ['value' => 3, 'label' => 'נפטר']
+                ],
+                'default' => 1
             ]
         ],
-    
+        
+        // ⭐ הגדרות API
+        'api' => [
+            'endpoint' => '/dashboard/dashboards/cemeteries/api/customers-api.php',
+            'methods' => ['GET', 'POST', 'PUT', 'DELETE']
+        ],
+
+        // ⭐ הגדרות חיפוש
+        'search' => [
+            'placeholder' => 'חיפוש לקוחות לפי שם, ת.ז., טלפון...',
+            'minLength' => 0
+        ],
+
+        // משתנים גלובליים
+        'jsVars' => [
+            'searchVar' => 'customerSearch',
+            'tableVar' => 'customersTable',
+            'currentPageVar' => 'customersCurrentPage',
+            'totalPagesVar' => 'customersTotalPages',
+            'dataArrayVar' => 'currentCustomers',
+            'isLoadingVar' => 'customersIsLoadingMore',
+            'isSearchModeVar' => 'customersIsSearchMode',
+            'currentQueryVar' => 'customersCurrentQuery',
+            'searchResultsVar' => 'customersSearchResults',
+        ],
+        
+        // פונקציות
+        'jsFunctions' => [
+            'renderFunctionName' => 'renderCustomersRows',
+            'loadFunctionName' => 'loadCustomers',
+            'loadBrowseFunctionName' => 'loadCustomersBrowseData',
+            'appendMoreFunctionName' => 'appendMoreCustomers',
+        ],
+        
+        // סטטיסטיקות
+        'statsConfig' => [
+            'elements' => [
+                'totalCustomers' => 'total_customers',
+                'activeCustomers' => 'active',
+                'purchasedCustomers' => 'purchased',
+                'deceasedCustomers' => 'deceased',
+                'newThisMonth' => 'new_this_month'
+            ],
+            'parentParam' => null
+        ],
+        
+        // סטטוסים לקוח
+        'customerStatuses' => [
+            1 => ['text' => 'פעיל', 'color' => '#10b981', 'class' => 'badge-success'],
+            2 => ['text' => 'רכש', 'color' => '#3b82f6', 'class' => 'badge-info'],
+            3 => ['text' => 'נפטר', 'color' => '#6b7280', 'class' => 'badge-secondary']
+        ],
+        
+        // סוגי תושבות
+        'residentTypes' => [
+            1 => ['text' => 'תושב', 'color' => '#10b981', 'class' => 'badge-success'],
+            2 => ['text' => 'לא תושב', 'color' => '#f59e0b', 'class' => 'badge-warning']
+        ],
+        
+        'statuses' => [
+            'active' => ['text' => 'פעיל', 'color' => '#10b981'],
+            'inactive' => ['text' => 'לא פעיל', 'color' => '#6b7280']
+        ],
+
         'enable_search' => true,
         'enable_filters' => true,
         'enable_export' => true,

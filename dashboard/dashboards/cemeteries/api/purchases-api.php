@@ -62,7 +62,7 @@ try {
 
 try {
     switch ($action) {
-        case 'list':
+        case 'list2':
             // חישוב offset
             $offset = ($page - 1) * $limit;
             
@@ -167,6 +167,74 @@ try {
                 ]
             ]);
             break;
+    
+        case 'list':
+            $offset = ($page - 1) * $limit;
+            
+            // ✅ שאילתא פשוטה מה-VIEW - בלי JOINs!
+            $sql = "SELECT * FROM purchases_view WHERE isActive = 1";
+            $params = [];
+            
+            // חיפוש
+            if ($query) {
+                $sql .= " AND (
+                    serialPurchaseId LIKE :query OR
+                    clientFullNameHe LIKE :query OR
+                    clientNumId LIKE :query OR
+                    graveNameHe LIKE :query
+                )";
+                $params['query'] = "%$query%";
+            }
+            
+            // סינון לפי סטטוס
+            if ($status) {
+                $sql .= " AND purchaseStatus = :status";
+                $params['status'] = $status;
+            }
+            
+            // סינון לפי לקוח
+            if ($customer_id) {
+                $sql .= " AND clientId = :customer_id";
+                $params['customer_id'] = $customer_id;
+            }
+            
+            // ✅ ספירת סה"כ
+            $countSql = preg_replace('/SELECT\s+\*\s+FROM/i', 'SELECT COUNT(*) FROM', $sql);
+            $countStmt = $pdo->prepare($countSql);
+            $countStmt->execute($params);
+            $total = $countStmt->fetchColumn();
+            
+            // עמודות מותרות למיון
+            $allowedSortColumns = ['createDate', 'dateOpening', 'price', 'purchaseStatus', 'id', 'serialPurchaseId'];
+            if (!in_array($sort, $allowedSortColumns)) {
+                $sort = 'createDate';
+            }
+            
+            $order = strtoupper($order) === 'ASC' ? 'ASC' : 'DESC';
+            $sql .= " ORDER BY $sort $order LIMIT :limit OFFSET :offset";
+            
+            $stmt = $pdo->prepare($sql);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+            $stmt->execute();
+            
+            $purchases = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            echo json_encode([
+                'success' => true,
+                'data' => $purchases,
+                'pagination' => [
+                    'page' => (int)$page,
+                    'limit' => (int)$limit,
+                    'total' => (int)$total,
+                    'pages' => (int)ceil($total / $limit)
+                ]
+            ]);
+            break;
+        
         // קבלת רכישה בודדת
         case 'get':
             if (!$id) {

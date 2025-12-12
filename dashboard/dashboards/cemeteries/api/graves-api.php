@@ -39,12 +39,14 @@ try {
             $areaGraveId = $_GET['areaGraveId'] ?? null;
             
             // בניית השאילתה עם JOIN לאחוזת קבר
-            $sql = "SELECT 
-                g.*,
-                ag.areaGraveNameHe as area_grave_name
-                FROM graves g
-                LEFT JOIN areaGraves ag ON g.areaGraveId = ag.unicId
-                WHERE g.isActive = 1";
+            // $sql = "SELECT 
+            //     g.*,
+            //     ag.areaGraveNameHe as area_grave_name
+            //     FROM graves g
+            //     LEFT JOIN areaGraves ag ON g.areaGraveId = ag.unicId
+            //     WHERE g.isActive = 1";
+
+            $sql = "SELECT g.* FROM graves_view g WHERE g.isActive = 1";
             $params = [];
             
             // סינון לפי אחוזת קבר

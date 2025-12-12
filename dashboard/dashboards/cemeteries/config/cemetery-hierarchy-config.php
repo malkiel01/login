@@ -1826,222 +1826,6 @@ return [
     // ========================================
     // הגדרות ללקוחות (Customers)
     // ========================================
-    'customer2' => [
-        'table' => 'customers',
-        'title' => 'לקוחות',
-        'singular' => 'לקוח',
-        'icon' => '👤',
-        'primaryKey' => 'unicId',
-        'parentKey' => null,  // רמת שורש - אין parent
-        
-        // שדות לשאילתות SELECT
-        'queryFields' => [
-            'id',
-            'unicId',
-            'numId',
-            'firstName',
-            'lastName',
-            'phone',
-            'phoneMobile',
-            'email',
-            'streetAddress',
-            'city',
-            'city_name',
-            'statusCustomer',
-            'statusResident',
-            'createDate',
-            'updateDate',
-            'isActive'
-        ],
-        
-        // מיפוי שדות לתצוגה
-        'displayFields' => [
-            'id_number' => 'numId',
-            'first_name' => 'firstName',
-            'last_name' => 'lastName',
-            'phone' => 'phone',
-            'mobile' => 'phoneMobile',
-            'email' => 'email',
-            'address' => 'streetAddress',
-            'city' => 'city_name',
-            'status' => 'statusCustomer',
-            'type' => 'statusResident',
-            'created' => 'createDate'
-        ],
-        
-        // הגדרות טבלה
-        'table_columns' => [
-            [
-                'field' => 'numId',
-                'title' => 'ת.ז.',
-                'type' => 'text',
-                'width' => '120px',
-                'sortable' => true,
-                'searchable' => true
-            ],
-            [
-                'field' => 'firstName',
-                'title' => 'שם פרטי',
-                'type' => 'text',
-                'width' => '150px',
-                'sortable' => true,
-                'searchable' => true,
-                'required' => true
-            ],
-            [
-                'field' => 'lastName',
-                'title' => 'שם משפחה',
-                'type' => 'text',
-                'width' => '150px',
-                'sortable' => true,
-                'searchable' => true,
-                'required' => true
-            ],
-            [
-                'field' => 'phone',
-                'title' => 'טלפון',
-                'type' => 'text',
-                'width' => '120px',
-                'sortable' => false,
-                'searchable' => true
-            ],
-            [
-                'field' => 'phoneMobile',
-                'title' => 'נייד',
-                'type' => 'text',
-                'width' => '120px',
-                'sortable' => false,
-                'searchable' => true
-            ],
-            [
-                'field' => 'email',
-                'title' => 'אימייל',
-                'type' => 'text',
-                'width' => '200px',
-                'sortable' => false,
-                'searchable' => true
-            ],
-            [
-                'field' => 'streetAddress',
-                'title' => 'רחוב',
-                'type' => 'text',
-                'width' => '150px',
-                'sortable' => false,
-                'searchable' => true
-            ],
-            [
-                'field' => 'city_name',
-                'title' => 'עיר',
-                'type' => 'text',
-                'width' => '120px',
-                'sortable' => true,
-                'searchable' => true
-            ],
-            [
-                'field' => 'statusCustomer',
-                'title' => 'סטטוס',
-                'type' => 'status',
-                'width' => '100px',
-                'sortable' => true,
-                'render' => 'formatCustomerStatus'
-            ],
-            [
-                'field' => 'statusResident',
-                'title' => 'סוג',
-                'type' => 'type',
-                'width' => '100px',
-                'sortable' => true,
-                'render' => 'formatCustomerType'
-            ],
-            [
-                'field' => 'createDate',
-                'title' => 'תאריך',
-                'type' => 'date',
-                'width' => '120px',
-                'sortable' => true
-            ],
-            [
-                'field' => 'actions',
-                'title' => 'פעולות',
-                'type' => 'actions',
-                'width' => '120px',
-                'sortable' => false,
-                'actions' => ['edit', 'delete']
-            ]
-        ],
-        
-        // שדות לטופס הוספה/עריכה (אופציונלי - ניתן להוסיף בעתיד)
-        'form_fields' => [
-            [
-                'name' => 'numId',
-                'label' => 'תעודת זהות',
-                'type' => 'text',
-                'required' => true,
-                'placeholder' => 'הזן מספר ת.ז.',
-                'validation' => ['required', 'numeric', 'length:9']
-            ],
-            [
-                'name' => 'firstName',
-                'label' => 'שם פרטי',
-                'type' => 'text',
-                'required' => true,
-                'placeholder' => 'הזן שם פרטי',
-                'validation' => ['required', 'minLength:2']
-            ],
-            [
-                'name' => 'lastName',
-                'label' => 'שם משפחה',
-                'type' => 'text',
-                'required' => true,
-                'placeholder' => 'הזן שם משפחה',
-                'validation' => ['required', 'minLength:2']
-            ],
-            [
-                'name' => 'phone',
-                'label' => 'טלפון',
-                'type' => 'tel',
-                'required' => false,
-                'placeholder' => '02-1234567'
-            ],
-            [
-                'name' => 'phoneMobile',
-                'label' => 'טלפון נייד',
-                'type' => 'tel',
-                'required' => false,
-                'placeholder' => '050-1234567'
-            ],
-            [
-                'name' => 'email',
-                'label' => 'דואר אלקטרוני',
-                'type' => 'email',
-                'required' => false,
-                'placeholder' => 'example@domain.com',
-                'validation' => ['email']
-            ],
-            [
-                'name' => 'streetAddress',
-                'label' => 'רחוב',
-                'type' => 'text',
-                'required' => false,
-                'placeholder' => 'הזן כתובת'
-            ],
-            [
-                'name' => 'city',
-                'label' => 'עיר',
-                'type' => 'text',
-                'required' => false,
-                'placeholder' => 'הזן עיר'
-            ]
-        ],
-        
-        // הגדרות נוספות
-        'enable_search' => true,
-        'enable_filters' => true,
-        'enable_export' => true,
-        'items_per_page' => 999999,
-        'enable_soft_delete' => true,
-        'enable_audit_log' => true
-    ],
     'customer' => [
         // ⭐ שדות חדשים
         'singularArticle' => 'את הלקוח',
@@ -2434,7 +2218,7 @@ return [
     // ========================================
     // הגדרות רכישות (Purchases)
     // ========================================
-    'purchase' => [
+    'purchase2' => [
         'table' => 'purchases',
         'title' => 'רכישות',
         'singular' => 'רכישה',
@@ -2593,6 +2377,416 @@ return [
                 'rows' => 3
             ]
         ]
+    ],
+    'purchase' => [
+        // ⭐ שדות חדשים
+        'singularArticle' => 'את הרכישה',
+        'plural' => 'רכישות',
+        'nameField' => 'serialPurchaseId',
+        'idField' => 'unicId',
+        
+        // פרמטרים
+        'hasParent' => false,
+        'parentParam' => null,
+        'defaultLimit' => 200,
+        'defaultOrderBy' => 'createDate',
+        'defaultSortDirection' => 'DESC',
+
+        // מקורי
+        'table' => 'purchases',
+        'title' => 'רכישות',
+        'singular' => 'רכישה',
+        'icon' => '📋',
+        'primaryKey' => 'unicId',
+        'parentKey' => null,
+        
+        'queryFields' => [
+            'id',
+            'unicId',
+            'serialPurchaseId',
+            'clientId',
+            'graveId',
+            'price',
+            'calculated_price',
+            'dateOpening',
+            'purchaseStatus',
+            'buyerStatus',
+            'numOfPayments',
+            'PaymentEndDate',
+            'clientFullNameHe',
+            'clientNumId',
+            'contactFullNameHe',
+            'graveNameHe',
+            'areaGraveNameHe',
+            'lineNameHe',
+            'plotNameHe',
+            'blockNameHe',
+            'cemeteryNameHe',
+            'graveStatus',
+            'createDate',
+            'updateDate',
+            'isActive'
+        ],
+        
+        'displayFields' => [
+            'serial_number' => 'serialPurchaseId',
+            'customer_name' => 'clientFullNameHe',
+            'customer_id' => 'clientNumId',
+            'contact_name' => 'contactFullNameHe',
+            'grave' => 'graveNameHe',
+            'area_grave' => 'areaGraveNameHe',
+            'row' => 'lineNameHe',
+            'plot' => 'plotNameHe',
+            'block' => 'blockNameHe',
+            'cemetery' => 'cemeteryNameHe',
+            'price' => 'price',
+            'date' => 'dateOpening',
+            'status' => 'purchaseStatus',
+            'buyer_status' => 'buyerStatus',
+            'created' => 'createDate'
+        ],
+        
+        // ⭐ עמודות טבלה
+        'table_columns' => [
+            [
+                'field' => 'serialPurchaseId',
+                'title' => 'מספר רכישה',
+                'type' => 'text',
+                'width' => '120px',
+                'sortable' => true,
+                'searchable' => true
+            ],
+            [
+                'field' => 'clientFullNameHe',
+                'title' => 'שם לקוח',
+                'type' => 'text',
+                'width' => '180px',
+                'sortable' => true,
+                'searchable' => true
+            ],
+            [
+                'field' => 'clientNumId',
+                'title' => 'ת.ז. לקוח',
+                'type' => 'text',
+                'width' => '110px',
+                'sortable' => true,
+                'searchable' => true
+            ],
+            [
+                'field' => 'graveNameHe',
+                'title' => 'קבר',
+                'type' => 'text',
+                'width' => '100px',
+                'sortable' => true
+            ],
+            [
+                'field' => 'areaGraveNameHe',
+                'title' => 'אחוזת קבר',
+                'type' => 'text',
+                'width' => '120px',
+                'sortable' => true
+            ],
+            [
+                'field' => 'plotNameHe',
+                'title' => 'חלקה',
+                'type' => 'text',
+                'width' => '100px',
+                'sortable' => true
+            ],
+            [
+                'field' => 'blockNameHe',
+                'title' => 'גוש',
+                'type' => 'text',
+                'width' => '100px',
+                'sortable' => true
+            ],
+            [
+                'field' => 'cemeteryNameHe',
+                'title' => 'בית עלמין',
+                'type' => 'text',
+                'width' => '120px',
+                'sortable' => true
+            ],
+            [
+                'field' => 'price',
+                'title' => 'סכום',
+                'type' => 'currency',
+                'width' => '100px',
+                'sortable' => true
+            ],
+            [
+                'field' => 'dateOpening',
+                'title' => 'תאריך רכישה',
+                'type' => 'date',
+                'width' => '110px',
+                'sortable' => true
+            ],
+            [
+                'field' => 'purchaseStatus',
+                'title' => 'סטטוס',
+                'type' => 'status',
+                'width' => '100px',
+                'sortable' => true,
+                'render' => 'formatPurchaseStatus'
+            ],
+            [
+                'field' => 'buyerStatus',
+                'title' => 'סוג רוכש',
+                'type' => 'type',
+                'width' => '100px',
+                'sortable' => true,
+                'render' => 'formatBuyerStatus'
+            ],
+            [
+                'field' => 'actions',
+                'title' => 'פעולות',
+                'type' => 'actions',
+                'width' => '120px',
+                'sortable' => false,
+                'actions' => ['view', 'edit', 'delete']
+            ]
+        ],
+        
+        // ⭐ שדות חיפוש
+        'searchableFields' => [
+            [
+                'name' => 'serialPurchaseId',
+                'label' => 'מספר רכישה',
+                'table' => 'purchases',
+                'type' => 'text',
+                'matchType' => ['exact', 'fuzzy', 'startsWith']
+            ],
+            [
+                'name' => 'clientFullNameHe',
+                'label' => 'שם לקוח',
+                'table' => 'purchases_view',
+                'type' => 'text',
+                'matchType' => ['exact', 'fuzzy', 'startsWith']
+            ],
+            [
+                'name' => 'clientNumId',
+                'label' => 'ת.ז. לקוח',
+                'table' => 'purchases_view',
+                'type' => 'text',
+                'matchType' => ['exact', 'startsWith']
+            ],
+            [
+                'name' => 'graveNameHe',
+                'label' => 'מספר קבר',
+                'table' => 'purchases_view',
+                'type' => 'text',
+                'matchType' => ['exact', 'fuzzy']
+            ],
+            [
+                'name' => 'purchaseStatus',
+                'label' => 'סטטוס רכישה',
+                'table' => 'purchases',
+                'type' => 'select',
+                'matchType' => ['exact'],
+                'options' => [
+                    ['value' => 1, 'label' => 'טיוטה'],
+                    ['value' => 2, 'label' => 'פעיל'],
+                    ['value' => 3, 'label' => 'שולם'],
+                    ['value' => 4, 'label' => 'בוטל']
+                ]
+            ],
+            [
+                'name' => 'buyerStatus',
+                'label' => 'סוג רוכש',
+                'table' => 'purchases',
+                'type' => 'select',
+                'matchType' => ['exact'],
+                'options' => [
+                    ['value' => 1, 'label' => 'רוכש לעצמו'],
+                    ['value' => 2, 'label' => 'רוכש לאחר']
+                ]
+            ],
+            [
+                'name' => 'cemeteryNameHe',
+                'label' => 'בית עלמין',
+                'table' => 'purchases_view',
+                'type' => 'text',
+                'matchType' => ['exact', 'fuzzy']
+            ],
+            [
+                'name' => 'blockNameHe',
+                'label' => 'גוש',
+                'table' => 'purchases_view',
+                'type' => 'text',
+                'matchType' => ['exact', 'fuzzy']
+            ],
+            [
+                'name' => 'plotNameHe',
+                'label' => 'חלקה',
+                'table' => 'purchases_view',
+                'type' => 'text',
+                'matchType' => ['exact', 'fuzzy']
+            ],
+            [
+                'name' => 'dateOpening',
+                'label' => 'תאריך רכישה',
+                'table' => 'purchases',
+                'type' => 'date',
+                'matchType' => ['exact', 'before', 'after', 'between']
+            ]
+        ],
+        
+        'form_fields' => [
+            [
+                'name' => 'clientId',
+                'label' => 'לקוח',
+                'type' => 'select',
+                'required' => true,
+                'dataSource' => 'customers',
+                'placeholder' => 'בחר לקוח'
+            ],
+            [
+                'name' => 'buyerStatus',
+                'label' => 'סוג רוכש',
+                'type' => 'select',
+                'required' => true,
+                'options' => [
+                    ['value' => 1, 'label' => 'רוכש לעצמו'],
+                    ['value' => 2, 'label' => 'רוכש לאחר']
+                ],
+                'default' => 1
+            ],
+            [
+                'name' => 'contactId',
+                'label' => 'איש קשר',
+                'type' => 'select',
+                'required' => false,
+                'dataSource' => 'customers',
+                'placeholder' => 'בחר איש קשר (אופציונלי)'
+            ],
+            [
+                'name' => 'graveId',
+                'label' => 'קבר',
+                'type' => 'select',
+                'required' => true,
+                'dataSource' => 'graves',
+                'placeholder' => 'בחר קבר'
+            ],
+            [
+                'name' => 'price',
+                'label' => 'סכום רכישה',
+                'type' => 'number',
+                'step' => '0.01',
+                'required' => true,
+                'placeholder' => '0.00'
+            ],
+            [
+                'name' => 'dateOpening',
+                'label' => 'תאריך רכישה',
+                'type' => 'date',
+                'required' => true
+            ],
+            [
+                'name' => 'purchaseStatus',
+                'label' => 'סטטוס רכישה',
+                'type' => 'select',
+                'required' => true,
+                'options' => [
+                    ['value' => 1, 'label' => 'טיוטה'],
+                    ['value' => 2, 'label' => 'פעיל'],
+                    ['value' => 3, 'label' => 'שולם'],
+                    ['value' => 4, 'label' => 'בוטל']
+                ],
+                'default' => 1
+            ],
+            [
+                'name' => 'numOfPayments',
+                'label' => 'מספר תשלומים',
+                'type' => 'number',
+                'min' => 1,
+                'default' => 1
+            ],
+            [
+                'name' => 'deedNum',
+                'label' => 'מספר שטר',
+                'type' => 'text',
+                'required' => false
+            ],
+            [
+                'name' => 'comment',
+                'label' => 'הערות',
+                'type' => 'textarea',
+                'rows' => 3
+            ]
+        ],
+        
+        // ⭐ הגדרות API
+        'api' => [
+            'endpoint' => '/dashboard/dashboards/cemeteries/api/purchases-api.php',
+            'methods' => ['GET', 'POST', 'PUT', 'DELETE']
+        ],
+
+        // ⭐ הגדרות חיפוש
+        'search' => [
+            'placeholder' => 'חיפוש רכישות לפי מספר, לקוח, קבר...',
+            'minLength' => 0
+        ],
+
+        // משתנים גלובליים
+        'jsVars' => [
+            'searchVar' => 'purchaseSearch',
+            'tableVar' => 'purchasesTable',
+            'currentPageVar' => 'purchasesCurrentPage',
+            'totalPagesVar' => 'purchasesTotalPages',
+            'dataArrayVar' => 'currentPurchases',
+            'isLoadingVar' => 'purchasesIsLoadingMore',
+            'isSearchModeVar' => 'purchasesIsSearchMode',
+            'currentQueryVar' => 'purchasesCurrentQuery',
+            'searchResultsVar' => 'purchasesSearchResults',
+        ],
+        
+        // פונקציות
+        'jsFunctions' => [
+            'renderFunctionName' => 'renderPurchasesRows',
+            'loadFunctionName' => 'loadPurchases',
+            'loadBrowseFunctionName' => 'loadPurchasesBrowseData',
+            'appendMoreFunctionName' => 'appendMorePurchases',
+        ],
+        
+        // סטטיסטיקות
+        'statsConfig' => [
+            'elements' => [
+                'totalPurchases' => 'total_purchases',
+                'draftPurchases' => 'draft',
+                'activePurchases' => 'active',
+                'paidPurchases' => 'paid',
+                'cancelledPurchases' => 'cancelled',
+                'totalAmount' => 'total_amount',
+                'newThisMonth' => 'new_this_month'
+            ],
+            'parentParam' => null
+        ],
+        
+        // סטטוסים רכישה
+        'purchaseStatuses' => [
+            1 => ['text' => 'טיוטה', 'color' => '#6b7280', 'class' => 'badge-secondary'],
+            2 => ['text' => 'פעיל', 'color' => '#3b82f6', 'class' => 'badge-info'],
+            3 => ['text' => 'שולם', 'color' => '#10b981', 'class' => 'badge-success'],
+            4 => ['text' => 'בוטל', 'color' => '#ef4444', 'class' => 'badge-danger']
+        ],
+        
+        // סוגי רוכש
+        'buyerStatuses' => [
+            1 => ['text' => 'רוכש לעצמו', 'color' => '#10b981', 'class' => 'badge-success'],
+            2 => ['text' => 'רוכש לאחר', 'color' => '#3b82f6', 'class' => 'badge-info']
+        ],
+        
+        'statuses' => [
+            'active' => ['text' => 'פעיל', 'color' => '#10b981'],
+            'inactive' => ['text' => 'לא פעיל', 'color' => '#6b7280']
+        ],
+
+        'enable_search' => true,
+        'enable_filters' => true,
+        'enable_export' => true,
+        'items_per_page' => 999999,
+        'enable_soft_delete' => true,
+        'enable_audit_log' => true
     ],
 
 

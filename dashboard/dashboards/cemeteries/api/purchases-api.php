@@ -67,30 +67,48 @@ try {
             $offset = ($page - 1) * $limit;
             
             // בניית השאילתה
+            // $sql = "
+            //     SELECT 
+            //         p.*,
+            //         CONCAT(c.firstName, ' ', c.lastName) as customer_name,
+            //         c.numId as customer_id_number,
+            //         c.phone as customer_phone,
+            //         c.phoneMobile as customer_mobile,
+            //         g.graveNameHe as grave_number,
+            //         g.graveLocation as grave_location,
+            //         g.graveStatus,
+            //         ag.areaGraveNameHe,
+            //         r.lineNameHe,
+            //         pl.plotNameHe,
+            //         b.blockNameHe,
+            //         ce.cemeteryNameHe
+            //     FROM purchases p
+            //     LEFT JOIN customers c ON p.clientId = c.unicId
+            //     LEFT JOIN graves g ON p.graveId = g.unicId
+            //     LEFT JOIN areaGraves ag ON g.areaGraveId = ag.unicId
+            //     LEFT JOIN rows r ON ag.lineId = r.unicId
+            //     LEFT JOIN plots pl ON r.plotId = pl.unicId
+            //     LEFT JOIN blocks b ON pl.blockId = b.unicId
+            //     LEFT JOIN cemeteries ce ON b.cemeteryId = ce.unicId
+            //     WHERE p.isActive = 1
+            // ";
             $sql = "
                 SELECT 
-                    p.*,
-                    CONCAT(c.firstName, ' ', c.lastName) as customer_name,
-                    c.numId as customer_id_number,
-                    c.phone as customer_phone,
-                    c.phoneMobile as customer_mobile,
-                    g.graveNameHe as grave_number,
-                    g.graveLocation as grave_location,
-                    g.graveStatus,
-                    ag.areaGraveNameHe,
-                    r.lineNameHe,
-                    pl.plotNameHe,
-                    b.blockNameHe,
-                    ce.cemeteryNameHe
+                    p.*,                           -- כל שדות purchases
+                    gv.cemeteryNameHe,            -- שם בית עלמין
+                    gv.blockNameHe,               -- שם גוש
+                    gv.plotNameHe,                -- שם חלקה
+                    gv.lineNameHe,                -- שם שורה
+                    gv.areaGraveNameHe,           -- שם אזור קבר
+                    gv.graveNameHe,               -- שם קבר
+                    gv.graveStatus,               -- סטטוס קבר
+                    cust1.fullNameHe AS clientFullNameHe,    -- שם לקוח מלא
+                    cust1.numId AS clientNumId,              -- ת.ז. לקוח
+                    cust2.fullNameHe AS contactFullNameHe    -- שם איש קשר
                 FROM purchases p
-                LEFT JOIN customers c ON p.clientId = c.unicId
-                LEFT JOIN graves g ON p.graveId = g.unicId
-                LEFT JOIN areaGraves ag ON g.areaGraveId = ag.unicId
-                LEFT JOIN rows r ON ag.lineId = r.unicId
-                LEFT JOIN plots pl ON r.plotId = pl.unicId
-                LEFT JOIN blocks b ON pl.blockId = b.unicId
-                LEFT JOIN cemeteries ce ON b.cemeteryId = ce.unicId
-                WHERE p.isActive = 1
+                LEFT JOIN graves_view gv ON p.graveId = gv.unicId
+                LEFT JOIN customers cust1 ON p.clientId = cust1.unicId
+                LEFT JOIN customers cust2 ON p.contactId = cust2.unicId
             ";
 
             $params = [];

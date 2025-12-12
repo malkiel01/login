@@ -2218,166 +2218,6 @@ return [
     // ========================================
     // הגדרות רכישות (Purchases)
     // ========================================
-    'purchase2' => [
-        'table' => 'purchases',
-        'title' => 'רכישות',
-        'singular' => 'רכישה',
-        'icon' => '📋',
-        'primaryKey' => 'unicId',
-        'parentKey' => null,
-        
-        'queryFields' => [
-            'id',
-            'unicId',
-            'serialPurchaseId',
-            'clientId',
-            'graveId',
-            'purchaseAmount',
-            'purchaseDate',
-            'statusPurchase',
-            'buyer_status',
-            'paymentsList',
-            'documentsList',
-            'comments',
-            'createDate',
-            'updateDate',
-            'isActive'
-        ],
-        
-        'displayFields' => [
-            'serialNumber' => 'serialPurchaseId',
-            'customer' => 'clientId',
-            'grave' => 'graveId',
-            'amount' => 'purchaseAmount',
-            'date' => 'purchaseDate',
-            'status' => 'statusPurchase',
-            'created' => 'createDate'
-        ],
-        
-        'table_columns' => [
-            [
-                'field' => 'index',
-                'title' => '#',
-                'width' => '60px',
-                'type' => 'index',
-                'sortable' => false
-            ],
-            [
-                'field' => 'serialPurchaseId',
-                'title' => 'מספר רכישה',
-                'width' => '120px',
-                'type' => 'text',
-                'sortable' => true,
-                'searchable' => true
-            ],
-            [
-                'field' => 'customerName',
-                'title' => 'שם לקוח',
-                'width' => '180px',
-                'type' => 'text',
-                'sortable' => true,
-                'searchable' => true
-            ],
-            [
-                'field' => 'graveName',
-                'title' => 'קבר',
-                'width' => '150px',
-                'type' => 'text',
-                'sortable' => true
-            ],
-            [
-                'field' => 'purchaseAmount',
-                'title' => 'סכום',
-                'width' => '120px',
-                'type' => 'currency',
-                'sortable' => true
-            ],
-            [
-                'field' => 'purchaseDate',
-                'title' => 'תאריך רכישה',
-                'width' => '130px',
-                'type' => 'date',
-                'sortable' => true
-            ],
-            [
-                'field' => 'statusPurchase',
-                'title' => 'סטטוס',
-                'width' => '100px',
-                'type' => 'status',
-                'sortable' => true
-            ],
-            [
-                'field' => 'createDate',
-                'title' => 'נוצר בתאריך',
-                'width' => '130px',
-                'type' => 'date',
-                'sortable' => true
-            ],
-            [
-                'field' => 'actions',
-                'title' => 'פעולות',
-                'width' => '150px',
-                'type' => 'actions',
-                'sortable' => false
-            ]
-        ],
-        
-        'form_fields' => [
-            [
-                'name' => 'clientId',
-                'label' => 'לקוח',
-                'type' => 'select',
-                'required' => true
-            ],
-            [
-                'name' => 'buyer_status',
-                'label' => 'סטטוס רוכש',
-                'type' => 'select',
-                'options' => [
-                    1 => 'רוכש לעצמו',
-                    2 => 'רוכש לאחר'
-                ],
-                'default' => 1
-            ],
-            [
-                'name' => 'graveId',
-                'label' => 'קבר',
-                'type' => 'select',
-                'required' => true
-            ],
-            [
-                'name' => 'purchaseAmount',
-                'label' => 'סכום רכישה',
-                'type' => 'number',
-                'step' => '0.01',
-                'required' => true
-            ],
-            [
-                'name' => 'purchaseDate',
-                'label' => 'תאריך רכישה',
-                'type' => 'date',
-                'required' => true
-            ],
-            [
-                'name' => 'statusPurchase',
-                'label' => 'סטטוס רכישה',
-                'type' => 'select',
-                'options' => [
-                    1 => 'טיוטה',
-                    2 => 'אושר',
-                    3 => 'שולם',
-                    4 => 'בוטל'
-                ],
-                'default' => 1
-            ],
-            [
-                'name' => 'comments',
-                'label' => 'הערות',
-                'type' => 'textarea',
-                'rows' => 3
-            ]
-        ]
-    ],
     'purchase' => [
         'singularArticle' => 'את הרכישה',
         'plural' => 'רכישות',
@@ -2479,7 +2319,7 @@ return [
     // ========================================
     // הגדרות קבורות (Burials)
     // ========================================
-    'burial' => [
+    'burial2' => [
         'table' => 'burials',
         'title' => 'קבורות',
         'singular' => 'קבורה',
@@ -2667,6 +2507,96 @@ return [
                 'default' => 'לא'
             ]
         ]
+    ],
+    'burial' => [
+        'singularArticle' => 'את הקבורה',
+        'plural' => 'קבורות',
+        'nameField' => 'serialBurialId',
+        'idField' => 'unicId',
+        'hasParent' => false,
+        'parentParam' => null,
+        'defaultLimit' => 200,
+        'defaultOrderBy' => 'createDate',
+        'defaultSortDirection' => 'DESC',
+        'table' => 'burials',
+        'title' => 'קבורות',
+        'singular' => 'קבורה',
+        'icon' => '⚰️',
+        'primaryKey' => 'unicId',
+        'parentKey' => null,
+        
+        // ⭐ שדות מה-VIEW - שמות נכונים!
+        'queryFields' => [
+            'id', 'unicId', 'serialBurialId', 'clientId', 'graveId', 'purchaseId',
+            'dateDeath', 'timeDeath', 'dateBurial', 'timeBurial',
+            'placeDeath', 'nationalInsuranceBurial', 'deathAbroad',
+            'dateOpening', 'reportingBL', 'contactId', 'kinship',
+            'buriaLicense', 'comment',
+            'clientFullNameHe', 'clientNumId', 'clientNameFather', 'clientNameMother',
+            'contactFullNameHe',
+            'graveNameHe', 'areaGraveNameHe', 'lineNameHe', 'plotNameHe', 
+            'blockNameHe', 'cemeteryNameHe', 'graveStatus', 'graveComments',
+            'cemeteryId', 'blockId', 'plotId',
+            'createDate', 'updateDate', 'isActive'
+        ],
+        
+        'table_columns' => [
+            ['field' => 'serialBurialId', 'title' => 'מס׳ תיק קבורה', 'type' => 'text', 'width' => '130px', 'sortable' => true, 'searchable' => true],
+            ['field' => 'clientFullNameHe', 'title' => 'נפטר/ת', 'type' => 'text', 'width' => '180px', 'sortable' => true, 'searchable' => true],
+            ['field' => 'clientNumId', 'title' => 'ת.ז.', 'type' => 'text', 'width' => '110px', 'sortable' => true, 'searchable' => true],
+            ['field' => 'clientNameFather', 'title' => 'שם האב', 'type' => 'text', 'width' => '120px', 'sortable' => false],
+            ['field' => 'dateDeath', 'title' => 'תאריך פטירה', 'type' => 'date', 'width' => '110px', 'sortable' => true],
+            ['field' => 'dateBurial', 'title' => 'תאריך קבורה', 'type' => 'date', 'width' => '110px', 'sortable' => true],
+            ['field' => 'timeBurial', 'title' => 'שעה', 'type' => 'time', 'width' => '80px', 'sortable' => false],
+            ['field' => 'graveNameHe', 'title' => 'קבר', 'type' => 'text', 'width' => '80px', 'sortable' => true],
+            ['field' => 'areaGraveNameHe', 'title' => 'אחוזת קבר', 'type' => 'text', 'width' => '100px', 'sortable' => true],
+            ['field' => 'plotNameHe', 'title' => 'חלקה', 'type' => 'text', 'width' => '100px', 'sortable' => true],
+            ['field' => 'blockNameHe', 'title' => 'גוש', 'type' => 'text', 'width' => '100px', 'sortable' => true],
+            ['field' => 'cemeteryNameHe', 'title' => 'בית עלמין', 'type' => 'text', 'width' => '120px', 'sortable' => true],
+            ['field' => 'nationalInsuranceBurial', 'title' => 'ב.ל.', 'type' => 'boolean', 'width' => '70px', 'sortable' => false],
+            ['field' => 'actions', 'title' => 'פעולות', 'type' => 'actions', 'width' => '120px', 'sortable' => false]
+        ],
+        
+        'searchableFields' => [
+            ['name' => 'serialBurialId', 'label' => 'מס׳ תיק קבורה', 'type' => 'text', 'matchType' => ['exact', 'fuzzy', 'startsWith']],
+            ['name' => 'clientFullNameHe', 'label' => 'שם נפטר/ת', 'type' => 'text', 'matchType' => ['exact', 'fuzzy', 'startsWith']],
+            ['name' => 'clientNumId', 'label' => 'ת.ז.', 'type' => 'text', 'matchType' => ['exact', 'startsWith']],
+            ['name' => 'clientNameFather', 'label' => 'שם האב', 'type' => 'text', 'matchType' => ['exact', 'fuzzy']],
+            ['name' => 'graveNameHe', 'label' => 'מספר קבר', 'type' => 'text', 'matchType' => ['exact', 'fuzzy']],
+            ['name' => 'nationalInsuranceBurial', 'label' => 'ביטוח לאומי', 'type' => 'select', 'matchType' => ['exact'],
+                'options' => [
+                    ['value' => 'כן', 'label' => 'כן'],
+                    ['value' => 'לא', 'label' => 'לא']
+                ]
+            ],
+            ['name' => 'cemeteryNameHe', 'label' => 'בית עלמין', 'type' => 'text', 'matchType' => ['exact', 'fuzzy']],
+            ['name' => 'blockNameHe', 'label' => 'גוש', 'type' => 'text', 'matchType' => ['exact', 'fuzzy']],
+            ['name' => 'plotNameHe', 'label' => 'חלקה', 'type' => 'text', 'matchType' => ['exact', 'fuzzy']],
+            ['name' => 'dateDeath', 'label' => 'תאריך פטירה', 'type' => 'date', 'matchType' => ['exact', 'before', 'after', 'between']],
+            ['name' => 'dateBurial', 'label' => 'תאריך קבורה', 'type' => 'date', 'matchType' => ['exact', 'before', 'after', 'between']]
+        ],
+        
+        // סטטוסים - ביטוח לאומי
+        'nationalInsuranceStatuses' => [
+            'כן' => ['text' => 'כן', 'color' => '#10b981', 'class' => 'badge-success'],
+            'לא' => ['text' => 'לא', 'color' => '#ef4444', 'class' => 'badge-danger']
+        ],
+        
+        'api' => [
+            'endpoint' => '/dashboard/dashboards/cemeteries/api/burials-api.php',
+            'methods' => ['GET', 'POST', 'PUT', 'DELETE']
+        ],
+        
+        'search' => [
+            'placeholder' => 'חיפוש קבורות לפי מספר תיק, שם נפטר, ת.ז., קבר...',
+            'minLength' => 0
+        ],
+        
+        'enable_search' => true,
+        'enable_filters' => true,
+        'enable_export' => true,
+        'items_per_page' => 999999,
+        'enable_soft_delete' => true
     ],
 
 

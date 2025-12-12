@@ -67,39 +67,58 @@ try {
             $offset = ($page - 1) * $limit;
             
             // בניית השאילתה
+                // $sql = "
+                //     SELECT 
+                //         b.*,
+                //         CONCAT(c.firstName, ' ', c.lastName) as customer_name,
+                //         c.numId as customer_id_number,
+                //         c.phone as customer_phone,
+                //         c.phoneMobile as customer_mobile,
+                //         g.graveNameHe as grave_number,
+                //         g.graveLocation as grave_location,
+                //         g.graveStatus,
+                //         ag.areaGraveNameHe,
+                //         r.lineNameHe,
+                //         pl.plotNameHe,
+                //         bl.blockNameHe,
+                //         ce.cemeteryNameHe,
+                //         CONCAT(
+                //             ce.cemeteryNameHe, ' → ',
+                //             bl.blockNameHe, ' → ',
+                //             pl.plotNameHe, ' → ',
+                //             r.lineNameHe, ' → ',
+                //             ag.areaGraveNameHe, ' → ',
+                //             g.graveNameHe
+                //         ) as fullLocation
+                //     FROM burials b
+                //     LEFT JOIN customers c ON b.clientId = c.unicId
+                //     LEFT JOIN graves g ON b.graveId = g.unicId
+                //     LEFT JOIN areaGraves ag ON g.areaGraveId = ag.unicId
+                //     LEFT JOIN rows r ON ag.lineId = r.unicId
+                //     LEFT JOIN plots pl ON r.plotId = pl.unicId
+                //     LEFT JOIN blocks bl ON pl.blockId = bl.unicId
+                //     LEFT JOIN cemeteries ce ON bl.cemeteryId = ce.unicId
+                //     WHERE b.isActive = 1
+                // ";
+        
             $sql = "
                 SELECT 
-                    b.*,
-                    CONCAT(c.firstName, ' ', c.lastName) as customer_name,
-                    c.numId as customer_id_number,
-                    c.phone as customer_phone,
-                    c.phoneMobile as customer_mobile,
-                    g.graveNameHe as grave_number,
-                    g.graveLocation as grave_location,
-                    g.graveStatus,
-                    ag.areaGraveNameHe,
-                    r.lineNameHe,
-                    pl.plotNameHe,
-                    bl.blockNameHe,
-                    ce.cemeteryNameHe,
-                    CONCAT(
-                        ce.cemeteryNameHe, ' → ',
-                        bl.blockNameHe, ' → ',
-                        pl.plotNameHe, ' → ',
-                        r.lineNameHe, ' → ',
-                        ag.areaGraveNameHe, ' → ',
-                        g.graveNameHe
-                    ) as fullLocation
+                    b.*,                                    -- כל שדות burials
+                    gv.cemeteryNameHe, gv.blockNameHe,     -- היררכיית בית עלמין
+                    gv.plotNameHe, gv.lineNameHe,
+                    gv.areaGraveNameHe, gv.graveNameHe,
+                    gv.graveStatus, gv.comments AS graveComments,
+                    cust1.fullNameHe AS clientFullNameHe,   -- פרטי נפטר
+                    cust1.numId AS clientNumId,
+                    cust1.nameFather AS clientNameFather,
+                    cust1.nameMother AS clientNameMother,
+                    cust2.fullNameHe AS contactFullNameHe   -- איש קשר
                 FROM burials b
-                LEFT JOIN customers c ON b.clientId = c.unicId
-                LEFT JOIN graves g ON b.graveId = g.unicId
-                LEFT JOIN areaGraves ag ON g.areaGraveId = ag.unicId
-                LEFT JOIN rows r ON ag.lineId = r.unicId
-                LEFT JOIN plots pl ON r.plotId = pl.unicId
-                LEFT JOIN blocks bl ON pl.blockId = bl.unicId
-                LEFT JOIN cemeteries ce ON bl.cemeteryId = ce.unicId
-                WHERE b.isActive = 1
+                LEFT JOIN graves_view gv ON b.graveId = gv.unicId
+                LEFT JOIN customers cust1 ON b.clientId = cust1.unicId
+                LEFT JOIN customers cust2 ON b.contactId = cust2.unicId
             ";
+
             $params = [];
             
             // ✅ חיפוש - רק שדות קיימים!

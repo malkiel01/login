@@ -142,16 +142,17 @@
                 }
                 
                 // בניית השאילתה הראשית
-                $sql = "
-                    SELECT 
-                        c.*,
-                        co.countryNameHe as country_name,
-                        ci.cityNameHe as city_name
-                    FROM customers c
-                    LEFT JOIN countries co ON c.countryId = co.unicId
-                    LEFT JOIN cities ci ON c.cityId = ci.unicId
-                    WHERE c.isActive = 1
-                ";
+                // $sql = "
+                //     SELECT 
+                //         c.*,
+                //         co.countryNameHe as country_name,
+                //         ci.cityNameHe as city_name
+                //     FROM customers c
+                //     LEFT JOIN countries co ON c.countryId = co.unicId
+                //     LEFT JOIN cities ci ON c.cityId = ci.unicId
+                //     WHERE c.isActive = 1
+                // ";
+                $sql = "SELECT c.*, c.countryNameHe as country_name, c.cityNameHe as city_name FROM customers c WHERE c.isActive = 1";
                 $params = [];
                 
                 // חיפוש כללי (search bar)

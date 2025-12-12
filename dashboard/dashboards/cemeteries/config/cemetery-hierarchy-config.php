@@ -1826,7 +1826,7 @@ return [
     // ========================================
     // הגדרות ללקוחות (Customers)
     // ========================================
-    'customer' => [
+    'customer2' => [
         'table' => 'customers',
         'title' => 'לקוחות',
         'singular' => 'לקוח',
@@ -2035,6 +2035,221 @@ return [
         ],
         
         // הגדרות נוספות
+        'enable_search' => true,
+        'enable_filters' => true,
+        'enable_export' => true,
+        'items_per_page' => 999999,
+        'enable_soft_delete' => true,
+        'enable_audit_log' => true
+    ],
+    'customer' => [
+        'table' => 'customers',
+        'title' => 'לקוחות',
+        'singular' => 'לקוח',
+        'icon' => '👤',
+        'primaryKey' => 'unicId',
+        'parentKey' => null,
+        
+        'queryFields' => [
+            'id',
+            'unicId',
+            'numId',
+            'firstName',
+            'lastName',
+            'fullNameHe',
+            'phone',
+            'phoneMobile',
+            'address',
+            'cityNameHe',
+            'countryNameHe',
+            'statusCustomer',
+            'resident',
+            'graveNameHe',
+            'cemeteryNameHe',
+            'createDate',
+            'updateDate',
+            'isActive'
+        ],
+        
+        'displayFields' => [
+            'id_number' => 'numId',
+            'first_name' => 'firstName',
+            'last_name' => 'lastName',
+            'full_name' => 'fullNameHe',
+            'phone' => 'phone',
+            'mobile' => 'phoneMobile',
+            'address' => 'address',
+            'city' => 'cityNameHe',
+            'country' => 'countryNameHe',
+            'status' => 'statusCustomer',
+            'resident' => 'resident',
+            'grave' => 'graveNameHe',
+            'cemetery' => 'cemeteryNameHe',
+            'created' => 'createDate'
+        ],
+        
+        'table_columns' => [
+            [
+                'field' => 'numId',
+                'title' => 'ת.ז.',
+                'type' => 'text',
+                'width' => '110px',
+                'sortable' => true,
+                'searchable' => true
+            ],
+            [
+                'field' => 'fullNameHe',
+                'title' => 'שם מלא',
+                'type' => 'text',
+                'width' => '180px',
+                'sortable' => true,
+                'searchable' => true
+            ],
+            [
+                'field' => 'phone',
+                'title' => 'טלפון',
+                'type' => 'text',
+                'width' => '110px',
+                'sortable' => false,
+                'searchable' => true
+            ],
+            [
+                'field' => 'phoneMobile',
+                'title' => 'נייד',
+                'type' => 'text',
+                'width' => '110px',
+                'sortable' => false,
+                'searchable' => true
+            ],
+            [
+                'field' => 'address',
+                'title' => 'כתובת',
+                'type' => 'text',
+                'width' => '150px',
+                'sortable' => false,
+                'searchable' => true
+            ],
+            [
+                'field' => 'cityNameHe',
+                'title' => 'עיר',
+                'type' => 'text',
+                'width' => '100px',
+                'sortable' => true,
+                'searchable' => true
+            ],
+            [
+                'field' => 'countryNameHe',
+                'title' => 'מדינה',
+                'type' => 'text',
+                'width' => '100px',
+                'sortable' => true,
+                'searchable' => true
+            ],
+            [
+                'field' => 'statusCustomer',
+                'title' => 'סטטוס',
+                'type' => 'status',
+                'width' => '90px',
+                'sortable' => true,
+                'render' => 'formatCustomerStatus'
+            ],
+            [
+                'field' => 'resident',
+                'title' => 'תושבות',
+                'type' => 'type',
+                'width' => '90px',
+                'sortable' => true,
+                'render' => 'formatResidentType'
+            ],
+            [
+                'field' => 'createDate',
+                'title' => 'תאריך',
+                'type' => 'date',
+                'width' => '100px',
+                'sortable' => true
+            ],
+            [
+                'field' => 'actions',
+                'title' => 'פעולות',
+                'type' => 'actions',
+                'width' => '100px',
+                'sortable' => false,
+                'actions' => ['edit', 'delete']
+            ]
+        ],
+        
+        'form_fields' => [
+            [
+                'name' => 'numId',
+                'label' => 'תעודת זהות',
+                'type' => 'text',
+                'required' => true,
+                'placeholder' => 'הזן מספר ת.ז.',
+                'validation' => ['required', 'numeric', 'length:9']
+            ],
+            [
+                'name' => 'firstName',
+                'label' => 'שם פרטי',
+                'type' => 'text',
+                'required' => true,
+                'placeholder' => 'הזן שם פרטי',
+                'validation' => ['required', 'minLength:2']
+            ],
+            [
+                'name' => 'lastName',
+                'label' => 'שם משפחה',
+                'type' => 'text',
+                'required' => true,
+                'placeholder' => 'הזן שם משפחה',
+                'validation' => ['required', 'minLength:2']
+            ],
+            [
+                'name' => 'phone',
+                'label' => 'טלפון',
+                'type' => 'tel',
+                'required' => false,
+                'placeholder' => '02-1234567'
+            ],
+            [
+                'name' => 'phoneMobile',
+                'label' => 'טלפון נייד',
+                'type' => 'tel',
+                'required' => false,
+                'placeholder' => '050-1234567'
+            ],
+            [
+                'name' => 'address',
+                'label' => 'כתובת',
+                'type' => 'text',
+                'required' => false,
+                'placeholder' => 'הזן כתובת'
+            ],
+            [
+                'name' => 'cityId',
+                'label' => 'עיר',
+                'type' => 'select',
+                'required' => false,
+                'dataSource' => 'cities'
+            ],
+            [
+                'name' => 'countryId',
+                'label' => 'מדינה',
+                'type' => 'select',
+                'required' => false,
+                'dataSource' => 'countries'
+            ],
+            [
+                'name' => 'resident',
+                'label' => 'תושבות',
+                'type' => 'select',
+                'required' => false,
+                'options' => [
+                    ['value' => 1, 'label' => 'תושב'],
+                    ['value' => 2, 'label' => 'לא תושב']
+                ]
+            ]
+        ],
+    
         'enable_search' => true,
         'enable_filters' => true,
         'enable_export' => true,

@@ -65,42 +65,8 @@ try {
         case 'list':
             // חישוב offset
             $offset = ($page - 1) * $limit;
-            
-            // בניית השאילתה
-                // $sql = "
-                //     SELECT 
-                //         b.*,
-                //         CONCAT(c.firstName, ' ', c.lastName) as customer_name,
-                //         c.numId as customer_id_number,
-                //         c.phone as customer_phone,
-                //         c.phoneMobile as customer_mobile,
-                //         g.graveNameHe as grave_number,
-                //         g.graveLocation as grave_location,
-                //         g.graveStatus,
-                //         ag.areaGraveNameHe,
-                //         r.lineNameHe,
-                //         pl.plotNameHe,
-                //         bl.blockNameHe,
-                //         ce.cemeteryNameHe,
-                //         CONCAT(
-                //             ce.cemeteryNameHe, ' → ',
-                //             bl.blockNameHe, ' → ',
-                //             pl.plotNameHe, ' → ',
-                //             r.lineNameHe, ' → ',
-                //             ag.areaGraveNameHe, ' → ',
-                //             g.graveNameHe
-                //         ) as fullLocation
-                //     FROM burials b
-                //     LEFT JOIN customers c ON b.clientId = c.unicId
-                //     LEFT JOIN graves g ON b.graveId = g.unicId
-                //     LEFT JOIN areaGraves ag ON g.areaGraveId = ag.unicId
-                //     LEFT JOIN rows r ON ag.lineId = r.unicId
-                //     LEFT JOIN plots pl ON r.plotId = pl.unicId
-                //     LEFT JOIN blocks bl ON pl.blockId = bl.unicId
-                //     LEFT JOIN cemeteries ce ON bl.cemeteryId = ce.unicId
-                //     WHERE b.isActive = 1
-                // ";
-        
+
+            // בניית השאילתא
             $sql = "
                 SELECT 
                     b.*,                                    -- כל שדות burials

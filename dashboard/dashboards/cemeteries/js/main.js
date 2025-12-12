@@ -78,6 +78,14 @@ async function loadStats() {
         const response = await fetch(`${API_BASE}cemetery-hierarchy.php?action=stats`);
         const data = await response.json();
         
+        // 👇 בדיקה!
+        console.log('=== Before updateSidebarCounts ===');
+        console.log('counts object:', data.stats.counts);
+        console.log('cemetery exists?', data.stats.counts.cemetery);
+        console.log('cemeteries exists?', data.stats.counts.cemeteries);
+        console.log('areaGrave exists?', data.stats.counts.areaGrave);
+        console.log('areaGraves exists?', data.stats.counts.areaGraves);
+
         if (data.success) {
             updateHeaderStats(data.stats);
             updateSidebarCounts(data.stats);

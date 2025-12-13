@@ -136,7 +136,8 @@ async function buildAreaGravesContainer(signal, plotId = null, plotName = null) 
 // ===================================================================
 // אתחול UniversalSearch - עם Pagination!
 // ===================================================================
-async function initAreaGravesSearch(signal, plotId) {
+// השיטה הישנה
+async function initAreaGravesSearch2(signal, plotId) {
     console.log('🔍 אתחול חיפוש שורות קבר...');
     
     // ⭐ טוען searchableFields מהשרת
@@ -338,7 +339,8 @@ async function initAreaGravesSearch(signal, plotId) {
     
     return searchInstance;
 }
-async function initAreaGravesSearch2(signal, plotId = null) {
+// השיטה החדשה
+async function initAreaGravesSearch(signal, plotId = null) {
     console.log('🔍 אתחול חיפוש אחוזות קבר...');
     
     const config = {
@@ -350,6 +352,7 @@ async function initAreaGravesSearch2(signal, plotId = null) {
         resultsContainerSelector: '#tableBody',
 
         itemsPerPage: 999999,
+        apiLimit: 999999,  // ⭐ הוסף את זה!
         
         renderFunction: renderAreaGravesRows,  // ⭐ תוקן: ישיר במקום wrapper!
 

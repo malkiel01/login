@@ -143,6 +143,7 @@ window.initUniversalSearch = async function(config) {
             containerSelector: config.resultsContainerSelector,
             itemsPerPage: config.itemsPerPage || 200,
             showPagination: config.showPagination || false,
+            apiLimit: config.itemsPerPage || 200,  // ⭐ הוסף את זה!
             showCounter: config.showCounter !== false, // ברירת מחדל: true
             columns: config.displayColumns,
             renderFunction: config.renderFunction

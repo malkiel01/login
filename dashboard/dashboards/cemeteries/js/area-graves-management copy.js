@@ -246,6 +246,208 @@ async function buildAreaGravesContainer(signal, plotId = null, plotName = null) 
 // ===================================================================
 // אתחול UniversalSearch - עם Pagination!
 // ===================================================================
+async function initAreaGravesSearch2(signal, plotId) {
+    console.log('🔍 אתחול חיפוש שורות קבר...');
+    
+    // ⭐ טוען searchableFields מהשרת
+    let searchableFields = [];
+
+    try {
+        const fieldsResponse = await fetch(
+            `/dashboard/dashboards/cemeteries/api/get-config.php?type=areaGrave&section=searchableFields`,
+            { signal: signal }
+        );
+        const fieldsResult = await fieldsResponse.json();
+        
+        if (fieldsResult.success && fieldsResult.data) {
+            searchableFields = fieldsResult.data;
+        }
+    } catch (error) {
+        console.error('❌ Error loading searchableFields:', error);
+    }
+
+    // ⭐ השתמש בקונפיג הישן - זה עובד!
+    const config = {
+        entityType: 'area-grave',  // ⭐ חובה!
+        apiEndpoint: '/dashboard/dashboards/cemeteries/api/areaGraves-api.php',
+        
+        searchableFields: searchableFields || [],
+        
+        displayColumns: [
+            { key: 'areaGraveNameHe', label: 'שם' },
+            { key: 'coordinates', label: 'מיקום' },
+            { key: 'graveType', label: 'סוג' },
+            { key: 'graves_count', label: 'כמות קברים' }
+        ],
+
+        searchContainerSelector: '#areaGraveSearchSection',
+        resultsContainerSelector: '#tableBody',  
+        
+        // ⭐ Infinite Scroll אמיתי - טעינה מדורגת
+        apiLimit: 200,
+        showPagination: false,
+        
+        // apiParams: {
+        //     level: 'area-grave',
+        //     plotId: plotId
+        // },
+        
+        additionalParams: plotId ? { plotId: plotId } : {},
+
+        renderFunction: (data, container, pagination, signal) => {
+            // ⭐ עדכן מצב חיפוש
+            areaGravesIsSearchMode = true;
+            
+            // שמור תוצאות
+            if (pagination && pagination.page === 1) {
+                areaGravesSearchResults = data;
+            } else {
+                areaGravesSearchResults = [...areaGravesSearchResults, ...data];
+            }
+
+            // קריאה לפונקציה המקורית עם כל הפרמטרים
+            renderAreaGravesRows(data, container, pagination, signal);
+        },
+
+        callbacks: {
+            // ⭐ לפני חיפוש - נקה הכל והצג spinner
+            onSearch: (query, filters) => {
+                console.log('🔍 מתחיל חיפוש:', query);
+                
+                // ⭐ מחק את TableManager הישן
+                const existingWrapper = document.querySelector('.table-wrapper[data-table-manager]');
+                if (existingWrapper) {
+                    console.log('🗑️ מוחק table-wrapper קיים');
+                    existingWrapper.remove();
+                }
+                
+                // ⭐ אפס את המשתנה
+                if (areaGravesTable) {
+                    areaGravesTable = null;
+                    window.areaGravesTable = null;
+                }
+                
+                // ⭐ הצג spinner בטבלה המקורית
+                const originalTableBody = document.getElementById('tableBody');
+                if (originalTableBody) {
+                    // ⭐ הצג את הטבלה המקורית
+                    const mainTable = document.getElementById('mainTable');
+                    if (mainTable) {
+                        mainTable.style.display = 'table';
+                    }
+                    
+                    originalTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="10" style="text-align: center; padding: 60px;">
+                                <div style="display: flex; flex-direction: column; align-items: center; gap: 15px;">
+                                    <div class="spinner-border" role="status" style="width: 3rem; height: 3rem; border-width: 0.3em;">
+                                        <span class="visually-hidden">מחפש...</span>
+                                    </div>
+                                    <div style="font-size: 16px; color: #6b7280;">מחפש "${query}"...</div>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }
+            },
+            
+            // ⭐ כשנתונים נטענו
+            onDataLoaded: (response) => {
+                console.log('✅ נתונים נטענו:', response.data.length);
+                
+                // עדכון מונה כולל ב-TableManager
+                if (window.areaGravesTable && response.pagination) {
+                    window.areaGravesTable.updateTotalItems(response.pagination.total);
+                }
+            },
+
+            // ⭐⭐⭐ הוסף את זה!
+            onResults: (data) => {
+                console.log('📦 API returned:', data.pagination?.total || data.data.length, 'area graves');
+                
+                // ⭐⭐⭐ בדיקה קריטית - אם עברנו לרשומה אחרת, לא להמשיך!
+                if (window.currentType !== 'areaGrave') {
+                    console.log('⚠️ Type changed during search - aborting area grave results');
+                    console.log(`   Current type is now: ${window.currentType}`);
+                    return; // ❌ עצור כאן!
+                }
+
+                // ⭐ טיפול בדפים - מצטבר!
+                const currentPage = data.pagination?.page || 1;
+                
+                if (currentPage === 1) {
+                    // דף ראשון - התחל מחדש
+                    currentAreaGraves = data.data;
+                } else {
+                    // דפים נוספים - הוסף לקיימים
+                    currentAreaGraves = [...currentAreaGraves, ...data.data];
+                    console.log(`📦 Added page ${currentPage}, total now: ${currentAreaGraves.length}`);
+                }
+                
+                // ⭐ אם יש סינון - סנן את currentAreaGraves!
+                let filteredCount = currentAreaGraves.length;
+                if (areaGravesFilterPlotId && currentAreaGraves.length > 0) {
+                    const filteredData = currentAreaGraves.filter(areaGrave => {
+                        const areaGravePlotId = areaGrave.plotId || areaGrave.plot_id || areaGrave.PlotId;
+                        return String(areaGravePlotId) === String(areaGravesFilterPlotId);
+                    });
+                    
+                    console.log('⚠️ Client-side filter:', currentAreaGraves.length, '→', filteredData.length, 'area graves');
+                    
+                    // ⭐ עדכן את currentAreaGraves
+                    currentAreaGraves = filteredData;
+                    filteredCount = filteredData.length;
+                    
+                    // ⭐ עדכן את pagination.total
+                    if (data.pagination) {
+                        data.pagination.total = filteredCount;
+                    }
+                }
+                
+                // ⭐⭐⭐ עדכן ישירות את areaGraveSearch!
+                if (areaGraveSearch && areaGraveSearch.state) {
+                    areaGraveSearch.state.totalResults = filteredCount;
+                    if (areaGraveSearch.updateCounter) {
+                        areaGraveSearch.updateCounter();
+                    }
+                }
+                
+                console.log('📊 Final count:', filteredCount);
+            },
+            
+            // ⭐ כשמנקים חיפוש
+            onClear: () => {
+                console.log('🧹 מנקה חיפוש...');
+                
+                areaGravesIsSearchMode = false;
+                areaGravesCurrentQuery = '';
+                areaGravesSearchResults = [];
+                
+                // ⭐ מחק את TableManager
+                const existingWrapper = document.querySelector('.table-wrapper[data-table-manager]');
+                if (existingWrapper) {
+                    existingWrapper.remove();
+                }
+                
+                if (areaGravesTable) {
+                    areaGravesTable = null;
+                    window.areaGravesTable = null;
+                }
+                
+                // חזרה ל-Browse
+                loadAreaGravesBrowseData(areaGravesFilterPlotId);
+            }
+        }
+    };
+    
+    // יצירת instance
+    const searchInstance = await window.initUniversalSearch(config);
+    
+    // שמירה גלובלית
+    window.areaGraveSearch = searchInstance;
+    
+    return searchInstance;
+}
 async function initAreaGravesSearch(signal, plotId = null) {
     console.log('🔍 אתחול חיפוש אחוזות קבר...');
     

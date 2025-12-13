@@ -177,11 +177,13 @@ async function initAreaGravesSearch(signal, plotId) {
         apiLimit: 200,
         showPagination: false,
         
-        apiParams: {
-            level: 'area-grave',
-            plotId: plotId
-        },
+        // apiParams: {
+        //     level: 'area-grave',
+        //     plotId: plotId
+        // },
         
+        additionalParams: plotId ? { plotId: plotId } : {},
+
         renderFunction: (data, container, pagination, signal) => {
             // ⭐ עדכן מצב חיפוש
             areaGravesIsSearchMode = true;
@@ -237,6 +239,13 @@ async function initAreaGravesSearch(signal, plotId) {
                         </tr>
                     `;
                 }
+            },
+
+            onResults: (data) => {
+                console.log(`📊 סה"כ ${filteredCount} אחוזות קבר נמצאו`);
+                displayAreaGravesResults(currentAreaGraves);
+                updateAreaGravesCounter(filteredCount);
+                isSearching = false;
             },
             
             // ⭐ כשנתונים נטענו

@@ -459,6 +459,11 @@ async function initAreaGravesSearch(signal, plotId = null) {
         searchContainerSelector: '#areaGraveSearchSection',
         resultsContainerSelector: '#tableBody',
         
+        apiParams: {
+            level: 'area-grave',
+            plotId: plotId
+        },
+
         itemsPerPage: 999999,
         
         renderFunction: renderAreaGravesRows,  // ⭐ תוקן: ישיר במקום wrapper!

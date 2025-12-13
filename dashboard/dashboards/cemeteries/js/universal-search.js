@@ -544,12 +544,14 @@ class UniversalSearch {
                 
                 // ⭐ העבר גם pagination!
                 this.renderResults(data.data, data.pagination);
-                this.updateCounter();
-                
-                // callbacks
-                if (this.config.callbacks.onResults) {
-                    this.config.callbacks.onResults(data);
-                }
+
+                // ⭐ קרא ל-onResults לפני updateCounter!
+                    if (this.config.callbacks.onResults) {
+                        this.config.callbacks.onResults(data);
+                    }
+                    
+                    // ⭐ עכשיו עדכן את המונה (אחרי onResults)
+                    this.updateCounter();
                 
                 if (this.config.callbacks.onDataLoaded) {
                     this.config.callbacks.onDataLoaded(data);

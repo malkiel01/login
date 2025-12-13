@@ -393,13 +393,26 @@ async function initAreaGravesSearch(signal, plotId) {
                     });
                     
                     console.log('⚠️ Client-side filter:', currentAreaGraves.length, '→', filteredData.length, 'area graves');
+                    
+                    // ⭐ עדכן את currentAreaGraves
                     currentAreaGraves = filteredData;
                     filteredCount = filteredData.length;
+                    
+                    // ⭐ עדכן את pagination.total
+                    if (data.pagination) {
+                        data.pagination.total = filteredCount;
+                    }
                 }
                 
-                console.log(`📊 סה"כ ${filteredCount} אחוזות קבר נמצאו`);
-                displayAreaGravesResults(currentAreaGraves);
-                updateAreaGravesCounter(filteredCount);
+                // ⭐⭐⭐ עדכן ישירות את areaGraveSearch!
+                if (areaGraveSearch && areaGraveSearch.state) {
+                    areaGraveSearch.state.totalResults = filteredCount;
+                    if (areaGraveSearch.updateCounter) {
+                        areaGraveSearch.updateCounter();
+                    }
+                }
+                
+                console.log('📊 Final count:', filteredCount);
             },
             
             // ⭐ כשמנקים חיפוש

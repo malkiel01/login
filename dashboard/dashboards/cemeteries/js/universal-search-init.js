@@ -125,7 +125,7 @@ window.initUniversalSearch = async function(config) {
             method: 'GET',
             tables: [config.entityType + 's'],
             joins: config.joins || [],
-            params: config.apiParams || {}  // ⭐ הוסף את זה!
+            params: config.additionalParams || config.apiParams || {}
         },
         
         searchableFields: config.searchableFields,

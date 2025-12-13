@@ -502,6 +502,13 @@ class UniversalSearch {
                     params.append(`filter_${index}_value`, filter.value);
                     params.append(`filter_${index}_type`, filter.matchType);
                 });
+
+                // ⭐ הוסף את כל ה-params מה-dataSource (במקום רק plotId)!
+                if (this.config.dataSource.params) {
+                    Object.entries(this.config.dataSource.params).forEach(([key, value]) => {
+                        params.append(key, value);
+                    });
+                }
                 
                 const url = `${this.config.dataSource.endpoint}?${params.toString()}`;
                 
@@ -592,7 +599,8 @@ class UniversalSearch {
             joins: this.config.dataSource.joins,
             filters: [],
             page: this.state.currentPage,
-            apiLimit: this.config.results.apiLimit  // ⭐ שונה מ-itemsPerPage
+            apiLimit: this.config.results.apiLimit,
+            ...this.config.dataSource.params
         };
         
         // הוספת פילטרים

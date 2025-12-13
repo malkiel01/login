@@ -460,7 +460,8 @@ async function initAreaGravesSearch(signal, plotId = null) {
         resultsContainerSelector: '#tableBody',
 
         itemsPerPage: 999999,
-        
+        apiLimit: 999999,  // ⭐ הוסף את זה!
+
         renderFunction: renderAreaGravesRows,  // ⭐ תוקן: ישיר במקום wrapper!
 
         callbacks: {

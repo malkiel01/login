@@ -739,14 +739,12 @@ function renderAreaGravesRows(data, container, pagination = null, signal = null)
     // ⭐⭐ סינון client-side לפי plotId
     let filteredData = data;
 
-    // if (!areaGravesIsSearchMode && areaGravesFilterPlotId) {
-    //     filteredData = data.filter(ag => {
-    //         const agPlotId = ag.plotId || ag.plot_id || ag.PlotId;
-    //         return String(agPlotId) === String(areaGravesFilterPlotId);
-    //     });
-    // }
-    
-    
+    if (!areaGravesIsSearchMode && areaGravesFilterPlotId) {
+        filteredData = data.filter(ag => {
+            const agPlotId = ag.plotId || ag.plot_id || ag.PlotId;
+            return String(agPlotId) === String(areaGravesFilterPlotId);
+        });
+    }
     
     // ⭐ עדכן את totalItems מה-pagination (סה"כ במערכת, לא רק מה שנטען!)
     const totalItems = pagination?.totalAll || pagination?.total || filteredData.length;

@@ -458,11 +458,6 @@ async function initAreaGravesSearch(signal, plotId = null) {
         
         searchContainerSelector: '#areaGraveSearchSection',
         resultsContainerSelector: '#tableBody',
-        
-        apiParams: {
-            level: 'areaGrave',
-            plotId: plotId
-        },
 
         itemsPerPage: 999999,
         

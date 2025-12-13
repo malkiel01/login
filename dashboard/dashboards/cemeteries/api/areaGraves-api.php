@@ -121,6 +121,12 @@ try {
         case 'list':
             $plotId = $postData['plotId'] ?? $_GET['plotId'] ?? null;
             $rowId = $postData['rowId'] ?? $_GET['rowId'] ?? null;
+
+            // ⭐ הוסף את זה!
+            error_log("DEBUG areaGraves-api.php - plotId received: " . ($plotId ?? 'NULL'));
+            error_log("DEBUG areaGraves-api.php - postData: " . json_encode($postData));
+            error_log("DEBUG areaGraves-api.php - _GET: " . json_encode($_GET));
+
             $offset = ($page - 1) * $limit;
             
             $sql = "SELECT ag.* FROM areaGraves_view ag WHERE ag.isActive = 1";

@@ -281,12 +281,12 @@ async function initAreaGravesSearch(signal, plotId) {
         apiLimit: 200,
         showPagination: false,
         
-        // apiParams: {
-        //     level: 'area-grave',
-        //     plotId: plotId
-        // },
+        apiParams: {
+            level: 'area-grave',
+            plotId: plotId
+        },
         
-        additionalParams: plotId ? { plotId: plotId } : {},
+        // additionalParams: plotId ? { plotId: plotId } : {},
 
         renderFunction: (data, container, pagination, signal) => {
             // ⭐ עדכן מצב חיפוש
@@ -587,12 +587,12 @@ function renderAreaGravesRows(data, container, pagination = null, signal = null)
     // ⭐⭐ סינון client-side לפי plotId
     let filteredData = data;
 
-    // if (!areaGravesIsSearchMode && areaGravesFilterPlotId) {
-    //     filteredData = data.filter(ag => {
-    //         const agPlotId = ag.plotId || ag.plot_id || ag.PlotId;
-    //         return String(agPlotId) === String(areaGravesFilterPlotId);
-    //     });
-    // }
+    if (!areaGravesIsSearchMode && areaGravesFilterPlotId) {
+        filteredData = data.filter(ag => {
+            const agPlotId = ag.plotId || ag.plot_id || ag.PlotId;
+            return String(agPlotId) === String(areaGravesFilterPlotId);
+        });
+    }
     
     
     

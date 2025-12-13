@@ -246,7 +246,7 @@ async function buildAreaGravesContainer(signal, plotId = null, plotName = null) 
 // ===================================================================
 // אתחול UniversalSearch - עם Pagination!
 // ===================================================================
-async function initAreaGravesSearch(signal, plotId) {
+async function initAreaGravesSearch2(signal, plotId) {
     console.log('🔍 אתחול חיפוש שורות קבר...');
     
     // ⭐ טוען searchableFields מהשרת
@@ -447,6 +447,98 @@ async function initAreaGravesSearch(signal, plotId) {
     window.areaGraveSearch = searchInstance;
     
     return searchInstance;
+}
+async function initAreaGravesSearch(signal, plotId = null) {
+    console.log('🔍 אתחול חיפוש אחוזות קבר...');
+    
+    const config = {
+        entityType: 'areaGrave',  // ⭐ תוקן: areaGrave במקום area-grave!
+        signal: signal,
+        action: 'list',
+        
+        searchContainerSelector: '#areaGraveSearchSection',
+        resultsContainerSelector: '#tableBody',
+        
+        itemsPerPage: 999999,
+        
+        renderFunction: renderAreaGravesRows,  // ⭐ תוקן: ישיר במקום wrapper!
+
+        callbacks: {
+            onInit: () => {
+                console.log('✅ UniversalSearch initialized for area graves');
+            },
+            
+            onSearch: (query, filters) => {
+                console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()), plotId: areaGravesFilterPlotId });
+            },
+
+            onResults: (data) => {
+                console.log('📦 API returned:', data.pagination?.total || data.data.length, 'area graves');
+
+                // ⭐ בדיקה קריטית - אם עברנו לרשומה אחרת, לא להמשיך!
+                if (window.currentType !== 'areaGrave') {
+                    console.log('⚠️ Type changed during search - aborting area grave results');
+                    return;
+                }
+                
+                const currentPage = data.pagination?.page || 1;
+                
+                if (currentPage === 1) {
+                    currentAreaGraves = data.data;
+                } else {
+                    currentAreaGraves = [...currentAreaGraves, ...data.data];
+                    console.log(`📦 Added page ${currentPage}, total now: ${currentAreaGraves.length}`);
+                }
+                
+                let filteredCount = currentAreaGraves.length;
+                if (areaGravesFilterPlotId && currentAreaGraves.length > 0) {
+                    const filteredData = currentAreaGraves.filter(areaGrave => {
+                        const areaGravePlotId = areaGrave.plotId || areaGrave.plot_id || areaGrave.PlotId;
+                        return String(areaGravePlotId) === String(areaGravesFilterPlotId);
+                    });
+                    
+                    console.log('⚠️ Client-side filter:', currentAreaGraves.length, '→', filteredData.length, 'area graves');
+                    
+                    currentAreaGraves = filteredData;
+                    filteredCount = filteredData.length;
+                    
+                    if (data.pagination) {
+                        data.pagination.total = filteredCount;
+                    }
+                }
+                
+                if (areaGraveSearch && areaGraveSearch.state) {
+                    areaGraveSearch.state.totalResults = filteredCount;
+                    if (areaGraveSearch.updateCounter) {
+                        areaGraveSearch.updateCounter();
+                    }
+                }
+                
+                console.log('📊 Final count:', filteredCount);
+            },
+                    
+            onError: (error) => {
+                console.error('❌ Search error:', error);
+                showToast('שגיאה בחיפוש אחוזות קבר', 'error');
+            },
+
+            onEmpty: () => {
+                console.log('📭 No results');
+            }
+        }
+    };
+    
+    // ⭐ אם יש סינון לפי חלקה, הוסף פרמטר ל-API (בחוץ!)
+    if (plotId) {
+        console.log('🎯 Adding plotId filter to API request:', plotId);
+        config.additionalParams = { plotId: plotId };
+    }
+    
+    areaGraveSearch = await window.initUniversalSearch(config);
+    
+    window.areaGraveSearch = areaGraveSearch;
+    
+    return areaGraveSearch;
 }
 
 // ===================================================================

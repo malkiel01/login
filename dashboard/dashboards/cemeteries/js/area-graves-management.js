@@ -460,7 +460,7 @@ async function initAreaGravesSearch(signal, plotId = null) {
         resultsContainerSelector: '#tableBody',
         
         apiParams: {
-            level: 'area-grave',
+            level: 'areaGrave',
             plotId: plotId
         },
 

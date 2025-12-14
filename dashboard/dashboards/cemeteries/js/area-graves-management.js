@@ -38,7 +38,7 @@ let areaGravesIsLoadingMore = false;
 // ===================================================================
 // טעינת אחוזות קבר - פונקציה ראשית
 // ===================================================================
-async function loadAreaGraves2(plotId = null, plotName = null, forceReset = false) {
+async function loadAreaGraves(plotId = null, plotName = null, forceReset = false) {
     console.log('📋 Loading area graves...');
     
     const signal = OperationManager.start('areaGrave');  // ⭐ תוקן: areaGrave במקום area-grave
@@ -687,7 +687,7 @@ window.handleAreaGraveDoubleClick = handleAreaGraveDoubleClick;
 // הפוך לגלובלי
 // ===================================================================
 
-// window.loadAreaGraves = loadAreaGraves;
+window.loadAreaGraves = loadAreaGraves;
 window.areaGravesTable = areaGravesTable;
 window.areaGravesFilterPlotId = areaGravesFilterPlotId;
 window.areaGravesFilterPlotName = areaGravesFilterPlotName;

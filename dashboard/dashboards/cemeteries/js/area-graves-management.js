@@ -687,7 +687,7 @@ window.handleAreaGraveDoubleClick = handleAreaGraveDoubleClick;
 // הפוך לגלובלי
 // ===================================================================
 
-window.loadAreaGraves = loadAreaGraves;
+// window.loadAreaGraves = loadAreaGraves;
 window.areaGravesTable = areaGravesTable;
 window.areaGravesFilterPlotId = areaGravesFilterPlotId;
 window.areaGravesFilterPlotName = areaGravesFilterPlotName;

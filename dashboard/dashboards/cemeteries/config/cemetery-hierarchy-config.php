@@ -946,7 +946,8 @@ return [
         
         // פרמטרים
         'hasParent' => true,
-        'parentParam' => 'lineId',
+        // 'parentParam' => 'lineId',
+        'parentParam' => 'plotId',
         'defaultLimit' => 200,
         'defaultOrderBy' => 'createDate',
         'defaultSortDirection' => 'DESC',
@@ -1172,7 +1173,8 @@ return [
                 'totalGraves' => 'total_graves',
                 'newThisMonth' => 'new_this_month'
             ],
-            'parentParam' => 'lineId'
+            // 'parentParam' => 'lineId',
+            'parentParam' => 'plotId',
         ],
         
         // סטטוסים (סוגי אחוזות קבר)

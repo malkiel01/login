@@ -211,6 +211,30 @@
             animation: spin 1s linear infinite;
             margin: 0 auto 15px;
         }
+
+        .delete-source-btn {
+            background: #f59e0b;
+            margin-top: 10px;
+        }
+
+        .delete-source-btn:hover {
+            box-shadow: 0 10px 25px rgba(245, 158, 11, 0.4);
+        }
+
+        .delete-processed-btn {
+            background: #ef4444;
+            margin-top: 10px;
+        }
+
+        .delete-processed-btn:hover {
+            box-shadow: 0 10px 25px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
         
         @keyframes spin {
             0% { transform: rotate(0deg); }
@@ -258,7 +282,7 @@
         
         <div class="error" id="error"></div>
         
-        <div class="results" id="results">
+        <!-- <div class="results" id="results">
             <div class="results-header">
                 <h2>✅ הקובץ עובד בהצלחה!</h2>
             </div>
@@ -277,6 +301,38 @@
                 </div>
                 <button class="btn download-btn" id="downloadBtn">
                     💾 הורד את הקובץ המעודכן
+                </button>
+            </div>
+        </div> -->
+        <div class="results" id="results">
+            <div class="results-header">
+                <h2>✅ הקובץ עובד בהצלחה!</h2>
+            </div>
+            <div class="results-content">
+                <div class="result-item">
+                    <span class="result-label">מספר דפים:</span>
+                    <span class="result-value" id="pageCount"></span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">רוחב הדף:</span>
+                    <span class="result-value" id="pageWidth"></span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">גובה הדף:</span>
+                    <span class="result-value" id="pageHeight"></span>
+                </div>
+                
+                <!-- כפתורים מעודכנים -->
+                <button class="btn download-btn" id="downloadBtn">
+                    💾 הורד את הקובץ המעובד
+                </button>
+                
+                <button class="btn delete-source-btn" id="deleteSourceBtn">
+                    🗑️ מחק קובץ מקור מהשרת
+                </button>
+                
+                <button class="btn delete-processed-btn" id="deleteProcessedBtn">
+                    🗑️ מחק קובץ מעובד מהשרת
                 </button>
             </div>
         </div>
@@ -395,6 +451,69 @@
             error.textContent = message;
             error.classList.add('show');
         }
+
+        const deleteSourceBtn = document.getElementById('deleteSourceBtn');
+        const deleteProcessedBtn = document.getElementById('deleteProcessedBtn');
+
+        // מחיקת קובץ מקור
+        deleteSourceBtn.addEventListener('click', async () => {
+            if (!confirm('האם אתה בטוח שברצונך למחוק את הקובץ המקורי מהשרת?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('delete.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        type: 'source',
+                        file: selectedFile.name 
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    deleteSourceBtn.classList.add('disabled');
+                    deleteSourceBtn.textContent = '✅ קובץ מקור נמחק';
+                } else {
+                    alert('שגיאה במחיקה: ' + data.error);
+                }
+            } catch (err) {
+                alert('שגיאה בתקשורת');
+            }
+        });
+
+        // מחיקת קובץ מעובד
+        deleteProcessedBtn.addEventListener('click', async () => {
+            if (!confirm('האם אתה בטוח שברצונך למחוק את הקובץ המעובד מהשרת?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('delete.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        type: 'processed',
+                        file: processedFileName 
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    deleteProcessedBtn.classList.add('disabled');
+                    deleteProcessedBtn.textContent = '✅ קובץ מעובד נמחק';
+                    downloadBtn.classList.add('disabled');
+                    downloadBtn.textContent = '❌ הקובץ נמחק';
+                } else {
+                    alert('שגיאה במחיקה: ' + data.error);
+                }
+            } catch (err) {
+                alert('שגיאה בתקשורת');
+            }
+        });
     </script>
 </body>
 </html>

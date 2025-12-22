@@ -64,18 +64,6 @@ if (!move_uploaded_file($file['tmp_name'], $input_path)) {
 }
 
 // Call Python script
-
-// // נתיב ל-Python של venv
-// $venv_python = '/home2/mbeplusc/public_html/form/login/venv/bin/python3';
-
-// $command = sprintf(
-//     '%s %s %s %s 2>&1',
-//     $venv_python,
-//     escapeshellarg($python_script),
-//     escapeshellarg($input_path),
-//     escapeshellarg($output_path)
-// );
-
 $venv_python = dirname(__DIR__, 4) . '/venv/bin/python3';
 
 $command = sprintf(

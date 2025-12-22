@@ -62,8 +62,11 @@ def add_text_to_pdf(input_file, output_file, text="ניסיון", font_name="dav
             text_to_display = text[::-1] if actual_font != "Helvetica" else text
             
             text_width = can.stringWidth(text_to_display, actual_font, font_size)
-            x = (current_width - text_width) / 2
-            y = current_height / 2
+            
+            x = current_width / 2  # ← הצד הימני במרכז הרוחב
+            y = current_height / 2  # ← התחתית במרכז הגובה
+            
+            # x = (current_width - text_width) / 2
             
             can.drawString(x, y, text_to_display)
             can.save()

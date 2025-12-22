@@ -64,15 +64,19 @@ if (!move_uploaded_file($file['tmp_name'], $input_path)) {
 }
 
 // Call Python script
+
+// // נתיב ל-Python של venv
+// $venv_python = '/home2/mbeplusc/public_html/form/login/venv/bin/python3';
+
 // $command = sprintf(
-//     'python3 %s %s %s 2>&1',
+//     '%s %s %s %s 2>&1',
+//     $venv_python,
 //     escapeshellarg($python_script),
 //     escapeshellarg($input_path),
 //     escapeshellarg($output_path)
 // );
 
-// נתיב ל-Python של venv
-$venv_python = '/home2/mbeplusc/public_html/form/login/venv/bin/python3';
+$venv_python = dirname(__DIR__, 4) . '/venv/bin/python3';
 
 $command = sprintf(
     '%s %s %s %s 2>&1',

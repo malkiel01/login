@@ -7,77 +7,85 @@ import sys
 import json
 from pypdf import PdfReader, PdfWriter
 from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 import io
 import os
 
-def add_text_to_pdf(input_file, output_file, text="ניסיון", font_name="david"):
+def add_text_to_pdf(input_file, output_file, text="ניסיון"):
     """
     Add Hebrew text to the center of each page in a PDF
+    
+    Args:
+        input_file: Path to input PDF
+        output_file: Path to output PDF
+        text: Text to add (default: "ניסיון")
     """
     try:
-        # Register Hebrew fonts
-        fonts_dir = os.path.join(os.path.dirname(__file__), 'fonts')
-        
-        font_files = {
-            'david': 'david.ttf',
-            'rubik': 'rubik.ttf',
-            'helvetica': None  # Built-in font
-        }
-        
-        # Register selected font if not Helvetica
-        if font_name != 'helvetica' and font_name in font_files:
-            font_path = os.path.join(fonts_dir, font_files[font_name])
-            if os.path.exists(font_path):
-                pdfmetrics.registerFont(TTFont(font_name, font_path))
-                actual_font = font_name
-            else:
-                print(f"Warning: Font file not found: {font_path}, using Helvetica", file=sys.stderr)
-                actual_font = "Helvetica"
-        else:
-            actual_font = "Helvetica"
-        
+        # Read the input PDF
         reader = PdfReader(input_file)
         writer = PdfWriter()
         
+        # Get dimensions from first page
         first_page = reader.pages[0]
         page_width = float(first_page.mediabox.width)
         page_height = float(first_page.mediabox.height)
         
+        # Process each page
         num_pages = len(reader.pages)
         
-        for page in reader.pages:
+        for page_num, page in enumerate(reader.pages):
+            # Get page dimensions (they might vary per page)
             current_width = float(page.mediabox.width)
             current_height = float(page.mediabox.height)
             
+            # Create overlay with text
             packet = io.BytesIO()
             can = canvas.Canvas(packet, pagesize=(current_width, current_height))
             
-            font_size = 48
-            can.setFont(actual_font, font_size)
+            # Try to use a font that supports Hebrew
+            # If Hebrew font is not available, use default
+            try:
+                # Try to register a Hebrew-supporting font
+                # You may need to add a Hebrew font file to support this better
+                font_name = "Helvetica"
+                font_size = 48
+            except:
+                font_name = "Helvetica"
+                font_size = 48
+            
+            # Set font
+            can.setFont(font_name, font_size)
+            
+            # Set text color (semi-transparent gray)
             can.setFillColorRGB(0.5, 0.5, 0.5, alpha=0.5)
             
-            # Reverse Hebrew text for proper RTL display
-            text_to_display = text[::-1] if actual_font != "Helvetica" else text
-            
-            text_width = can.stringWidth(text_to_display, actual_font, font_size)
+            # Calculate center position
+            text_width = can.stringWidth(text, font_name, font_size)
             x = (current_width - text_width) / 2
             y = current_height / 2
             
-            can.drawString(x, y, text_to_display)
+            # Draw the text
+            can.drawString(x, y, text)
             can.save()
             
+            # Move to the beginning of the BytesIO buffer
             packet.seek(0)
+            
+            # Read the overlay PDF
             overlay = PdfReader(packet)
             overlay_page = overlay.pages[0]
             
+            # Merge the overlay with the original page
             page.merge_page(overlay_page)
             writer.add_page(page)
         
+        # Write output file
         with open(output_file, 'wb') as output_pdf:
             writer.write(output_pdf)
         
+        # Return metadata
         return {
             'success': True,
             'pages': num_pages,
@@ -96,13 +104,12 @@ if __name__ == '__main__':
     if len(sys.argv) < 3:
         print(json.dumps({
             'success': False,
-            'error': 'Usage: python3 add_text_to_pdf.py <input_file> <output_file> [font_name]'
+            'error': 'Usage: python3 add_text_to_pdf.py <input_file> <output_file>'
         }))
         sys.exit(1)
     
     input_file = sys.argv[1]
     output_file = sys.argv[2]
-    font_name = sys.argv[3] if len(sys.argv) > 3 else 'david'
     
-    result = add_text_to_pdf(input_file, output_file, font_name=font_name)
+    result = add_text_to_pdf(input_file, output_file)
     print(json.dumps(result, ensure_ascii=False))

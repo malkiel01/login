@@ -66,23 +66,12 @@ if (!move_uploaded_file($file['tmp_name'], $input_path)) {
 // Call Python script
 $venv_python = dirname(__DIR__, 4) . '/venv/bin/python3';
 
-// קבל את הפונט שנבחר
-$font = isset($_POST['font']) ? $_POST['font'] : 'david';
-
-// ולידציה
-$allowed_fonts = ['david', 'rubik', 'helvetica'];
-if (!in_array($font, $allowed_fonts)) {
-    $font = 'david';
-}
-
-// Call Python script
 $command = sprintf(
-    '%s %s %s %s %s 2>&1',
+    '%s %s %s %s 2>&1',
     $venv_python,
     escapeshellarg($python_script),
     escapeshellarg($input_path),
-    escapeshellarg($output_path),
-    escapeshellarg($font)  // ← הוסף את זה!
+    escapeshellarg($output_path)
 );
 
 $output = [];
@@ -139,5 +128,3 @@ function cleanOldFiles($dir, $max_age) {
         }
     }
 }
-
-

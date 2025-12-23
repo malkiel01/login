@@ -9,9 +9,13 @@
 .test-field input,
 .test-field label,
 .field-label-text {
-    font-family: david, rubik, 'Heebo', Arial, sans-serif !important;
-    direction: rtl;
-    text-align: right;
+    font-family: inherit !important;
+    direction: rtl !important;
+    text-align: right !important;
+}
+
+.test-field input {
+    font-size: 18px !important;
 }
 
 

@@ -198,6 +198,21 @@ async function openTestModal(templateId) {
                 </div>
             `;
         }).join('');
+
+        fieldsContainer.innerHTML = currentTestTemplate.fields.map(field => `
+            <div class="test-field">
+                <label>
+                    <span class="field-label-text">${escapeHtml(field.label)}</span>
+                    <span class="field-id">${field.id}</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="test_${field.id}" 
+                    value="${field.text}"
+                    placeholder="הזן ערך עבור ${field.label}"
+                >
+            </div>
+        `).join('');
         
         document.getElementById('testTemplateModal').classList.add('show');
         

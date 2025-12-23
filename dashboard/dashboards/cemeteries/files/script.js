@@ -410,30 +410,6 @@ function updatePageButtons() {
 document.getElementById('prevPage').addEventListener('click', onPrevPage);
 document.getElementById('nextPage').addEventListener('click', onNextPage);
 
-function drawTextsOnCanvas2(viewport) {
-    textItems.forEach(item => {
-        const text = item.text;
-        const fontName = item.font === 'david' ? 'David Libre' : 
-                        item.font === 'rubik' ? 'Rubik' : 'Arial';
-        const fontSize = parseInt(item.size);
-        const color = item.color;
-        const topOffset = parseFloat(item.top);
-        const rightOffset = parseFloat(item.right);
-        
-        const x = viewport.width - rightOffset;
-        const y = topOffset;
-        
-        ctx.font = `${fontSize}px ${fontName}`;
-        ctx.fillStyle = color;
-        ctx.globalAlpha = 0.7;
-        
-        const reversedText = text.split('').reverse().join('');
-        ctx.fillText(reversedText, x, y);
-        
-        ctx.globalAlpha = 1.0;
-    });
-}
-
 function drawTextsOnCanvas(viewport) {
     textItems.forEach(item => {
         const text = item.text;

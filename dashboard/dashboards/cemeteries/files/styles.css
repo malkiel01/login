@@ -341,89 +341,6 @@ input[type="file"] {
 }
 
 /* Preview Section */
-/* .preview-section {
-    width: 400px;
-    background: white;
-    border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    padding: 20px;
-    position: sticky;
-    top: 20px;
-    height: fit-content;
-}
-
-.preview-header {
-    margin-bottom: 15px;
-}
-
-.preview-header h3 {
-    color: #667eea;
-    margin-bottom: 10px;
-    text-align: center;
-}
-
-.page-navigation {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 15px;
-    margin-top: 10px;
-}
-
-.page-navigation button {
-    background: #667eea;
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 1em;
-}
-
-.page-navigation button:hover {
-    background: #5568d3;
-}
-
-.page-navigation button:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
-
-.preview-container {
-    width: 400px;
-    height: 400px;
-    overflow: auto;
-    border: 2px solid #e0e7ff;
-    border-radius: 10px;
-    position: relative;
-    background: #f8f9ff;
-}
-
-.preview-container {
-    width: 400px;
-    height: 400px;
-    overflow: auto;
-    border: 2px solid #e0e7ff;
-    border-radius: 10px;
-    position: relative;
-    background: #f8f9ff;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-}
-
-
-#pdfCanvas {
-    display: block;
-    cursor: grab;
-}
-
-#pdfCanvas:active {
-    cursor: grabbing;
-} */
-
-/*  */
-/* Preview Section */
 .preview-section {
     width: 440px;  /* 400 + 20 + 20 פדינג */
     background: white;
@@ -496,4 +413,3 @@ input[type="file"] {
 #pdfCanvas:active {
     cursor: grabbing;
 }
-/*  */

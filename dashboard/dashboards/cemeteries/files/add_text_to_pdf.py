@@ -143,10 +143,12 @@ def add_texts_to_pdf(input_file, output_file, texts_config):
             
             # Read the overlay PDF
             overlay = PdfReader(packet)
-            overlay_page = overlay.pages[0]
             
-            # Merge the overlay with the original page
-            page.merge_page(overlay_page)
+            # Only merge if overlay has pages
+            if len(overlay.pages) > 0:
+                overlay_page = overlay.pages[0]
+                page.merge_page(overlay_page)
+            
             writer.add_page(page)
         
         # Write output file

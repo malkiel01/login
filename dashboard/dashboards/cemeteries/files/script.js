@@ -410,7 +410,7 @@ function updatePageButtons() {
 document.getElementById('prevPage').addEventListener('click', onPrevPage);
 document.getElementById('nextPage').addEventListener('click', onNextPage);
 
-function drawTextsOnCanvas(viewport) {
+function drawTextsOnCanvas2(viewport) {
     textItems.forEach(item => {
         const text = item.text;
         const fontName = item.font === 'david' ? 'David Libre' : 
@@ -432,5 +432,43 @@ function drawTextsOnCanvas(viewport) {
         ctx.fillText(text, x, y);  // ← השתמש ישירות ב-text
         
         ctx.globalAlpha = 1.0;
+    });
+}
+
+function drawTextsOnCanvas(viewport) {
+    textItems.forEach(item => {
+        const text = item.text;
+        
+        // שמות הפונטים המדויקים מ-Google Fonts
+        let fontName;
+        if (item.font === 'david') {
+            fontName = '"David Libre", serif';
+        } else if (item.font === 'rubik') {
+            fontName = '"Rubik", sans-serif';
+        } else {
+            fontName = 'Arial, sans-serif';
+        }
+        
+        const fontSize = parseInt(item.size);
+        const color = item.color;
+        const topOffset = parseFloat(item.top);
+        const rightOffset = parseFloat(item.right);
+        
+        // חישוב מיקום
+        const x = viewport.width - rightOffset;
+        const y = topOffset;
+        
+        // הגדרת פונט
+        ctx.font = `${fontSize}px ${fontName}`;
+        ctx.fillStyle = color;
+        ctx.globalAlpha = 0.7;
+        ctx.textAlign = 'right';
+        
+        // ציור הטקסט
+        ctx.fillText(text, x, y);
+        
+        // איפוס
+        ctx.globalAlpha = 1.0;
+        ctx.textAlign = 'left';
     });
 }

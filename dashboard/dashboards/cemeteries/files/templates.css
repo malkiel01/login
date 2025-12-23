@@ -5,16 +5,7 @@
     font-family: 'Heebo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Hebrew Font Support for Input Fields */
-.test-field input,
-.test-field label,
-.field-label-text {
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif !important;
-}
 
-.test-field input {
-    font-size: 18px !important;
-}
 
 
 .templates-page {
@@ -303,6 +294,8 @@
     border-radius: 8px;
     font-size: 1em;
     font-family: inherit;
+    direction: rtl;      /* ← הוסף */
+    text-align: right;   /* ← הוסף */
 }
 
 .test-field input:focus {

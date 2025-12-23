@@ -23,7 +23,6 @@ def load_fonts_from_json(script_dir):
     registered_fonts = set()
     
     if not os.path.exists(fonts_json_path):
-        print(f"Warning: fonts.json not found at {fonts_json_path}", file=sys.stderr)
         return registered_fonts
     
     try:
@@ -40,16 +39,14 @@ def load_fonts_from_json(script_dir):
                 try:
                     pdfmetrics.registerFont(TTFont(font_id, font_path))
                     registered_fonts.add(font_id)
-                    print(f"✅ Registered font: {font_name} ({font_id})", file=sys.stderr)
                 except Exception as e:
-                    print(f"❌ Could not register font {font_id}: {e}", file=sys.stderr)
+                    pass
             else:
-                print(f"⚠️  Font file not found: {font_path}", file=sys.stderr)
+                pass
         
         return registered_fonts
         
     except Exception as e:
-        print(f"Error loading fonts.json: {e}", file=sys.stderr)
         return registered_fonts
 
 def add_texts_to_pdf(input_file, output_file, texts_config):
@@ -100,7 +97,6 @@ def add_texts_to_pdf(input_file, output_file, texts_config):
                     actual_font = font_name
                 else:
                     actual_font = 'Helvetica'
-                    print(f"⚠️  Font '{font_name}' not registered, using Helvetica", file=sys.stderr)
                 
                 try:
                     can.setFont(actual_font, font_size)

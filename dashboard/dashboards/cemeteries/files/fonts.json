@@ -1,0 +1,25 @@
+{
+  "fonts": [
+    {
+      "id": "david",
+      "name": "דיויד",
+      "filename": "david.ttf",
+      "path": "fonts/system/david.ttf",
+      "type": "system"
+    },
+    {
+      "id": "rubik",
+      "name": "רוביק",
+      "filename": "rubik.ttf",
+      "path": "fonts/system/rubik.ttf",
+      "type": "system"
+    },
+    {
+      "id": "custom_123",
+      "name": "פונט מותאם של הלקוח",
+      "filename": "my-font.ttf",
+      "path": "fonts/custom/my-font.ttf",
+      "type": "custom"
+    }
+  ]
+}

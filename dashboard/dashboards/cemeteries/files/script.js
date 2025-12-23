@@ -29,6 +29,54 @@ const canvas = document.getElementById('pdfCanvas');
 const ctx = canvas.getContext('2d');
 
 // ===============================
+// Dynamic Font Loading
+// ===============================
+
+let availableFonts = [];
+
+async function loadFonts() {
+    try {
+        const response = await fetch('fonts.json');
+        const data = await response.json();
+        availableFonts = data.fonts;
+        
+        // טען כל פונט דינמית
+        for (const font of availableFonts) {
+            const fontFace = new FontFace(
+                font.id, 
+                `url(${font.path})`
+            );
+            
+            try {
+                await fontFace.load();
+                document.fonts.add(fontFace);
+                console.log(`✅ Loaded font: ${font.name}`);
+            } catch (err) {
+                console.error(`❌ Failed to load font ${font.name}:`, err);
+            }
+        }
+        
+        // עדכן את ה-select
+        updateFontSelectors();
+        
+    } catch (error) {
+        console.error('Error loading fonts:', error);
+    }
+}
+
+function updateFontSelectors() {
+    // עדכן כל ה-select של הפונטים
+    document.querySelectorAll('select[data-font-selector]').forEach(select => {
+        select.innerHTML = availableFonts.map(font => 
+            `<option value="${font.id}">${font.name}</option>`
+        ).join('');
+    });
+}
+
+// טען פונטים בטעינת הדף
+loadFonts();
+
+// ===============================
 // File Upload Handlers
 // ===============================
 
@@ -114,7 +162,7 @@ function addTextItem() {
     }
 }
 
-function renderTextItem(item) {
+function renderTextItem2(item) {
     const textsList = document.getElementById('textsList');
     const itemDiv = document.createElement('div');
     itemDiv.className = 'text-item';
@@ -138,6 +186,64 @@ function renderTextItem(item) {
                     <option value="david" ${item.font === 'david' ? 'selected' : ''}>דיויד</option>
                     <option value="rubik" ${item.font === 'rubik' ? 'selected' : ''}>רוביק</option>
                     <option value="helvetica" ${item.font === 'helvetica' ? 'selected' : ''}>הלבטיקה</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>גודל פונט:</label>
+                <input type="number" value="${item.size}" min="8" max="200" oninput="updateTextItem(${item.id}, 'size', this.value)">
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label>צבע:</label>
+                <input type="color" value="${item.color}" oninput="updateTextItem(${item.id}, 'color', this.value)">
+            </div>
+            
+            <div class="form-group">
+                <label>מרחק מלמעלה (פיקסלים):</label>
+                <input type="number" value="${item.top}" min="0" oninput="updateTextItem(${item.id}, 'top', this.value)">
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label>מרחק מימין (פיקסלים):</label>
+                <input type="number" value="${item.right}" min="0" oninput="updateTextItem(${item.id}, 'right', this.value)">
+            </div>
+        </div>
+    `;
+    
+    textsList.appendChild(itemDiv);
+}
+function renderTextItem(item) {
+    const textsList = document.getElementById('textsList');
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'text-item';
+    itemDiv.id = `text-item-${item.id}`;
+    
+    // בנה אפשרויות פונט דינמית
+    const fontOptions = availableFonts.map(font => 
+        `<option value="${font.id}" ${item.font === font.id ? 'selected' : ''}>${font.name}</option>`
+    ).join('');
+    
+    itemDiv.innerHTML = `
+        <div class="text-item-header">
+            <span class="text-item-title">טקסט #${item.id}</span>
+            <button type="button" class="remove-text-btn" onclick="removeTextItem(${item.id})">🗑️ הסר</button>
+        </div>
+        
+        <div class="form-group full-width">
+            <label>תוכן הטקסט:</label>
+            <input type="text" value="${item.text}" oninput="updateTextItem(${item.id}, 'text', this.value)">
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label>פונט:</label>
+                <select onchange="updateTextItem(${item.id}, 'font', this.value)">
+                    ${fontOptions}
                 </select>
             </div>
             
@@ -413,31 +519,6 @@ document.getElementById('nextPage').addEventListener('click', onNextPage);
 function drawTextsOnCanvas2(viewport) {
     textItems.forEach(item => {
         const text = item.text;
-        const fontName = item.font === 'david' ? 'David Libre' : 
-                        item.font === 'rubik' ? 'Rubik' : 'Arial';
-        const fontSize = parseInt(item.size);
-        const color = item.color;
-        const topOffset = parseFloat(item.top);
-        const rightOffset = parseFloat(item.right);
-        
-        const x = viewport.width - rightOffset;
-        const y = topOffset;
-        
-        ctx.font = `${fontSize}px ${fontName}`;
-        ctx.fillStyle = color;
-        ctx.globalAlpha = 0.7;
-        ctx.textAlign = 'right';  // ← הוסף את זה! יישור ימינה
-        
-        // אל תהפוך את הטקסט - הפונטים העבריים מטפלים בזה
-        ctx.fillText(text, x, y);  // ← השתמש ישירות ב-text
-        
-        ctx.globalAlpha = 1.0;
-    });
-}
-
-function drawTextsOnCanvas(viewport) {
-    textItems.forEach(item => {
-        const text = item.text;
         
         // שמות הפונטים המדויקים מ-Google Fonts
         let fontName;
@@ -468,6 +549,33 @@ function drawTextsOnCanvas(viewport) {
         ctx.fillText(text, x, y);
         
         // איפוס
+        ctx.globalAlpha = 1.0;
+        ctx.textAlign = 'left';
+    });
+}
+
+function drawTextsOnCanvas(viewport) {
+    textItems.forEach(item => {
+        const text = item.text;
+        const fontSize = parseInt(item.size);
+        const color = item.color;
+        const topOffset = parseFloat(item.top);
+        const rightOffset = parseFloat(item.right);
+        
+        // מצא את הפונט ברשימה
+        const fontData = availableFonts.find(f => f.id === item.font);
+        const fontName = fontData ? fontData.id : 'Arial';
+        
+        const x = viewport.width - rightOffset;
+        const y = topOffset;
+        
+        ctx.font = `${fontSize}px "${fontName}", sans-serif`;
+        ctx.fillStyle = color;
+        ctx.globalAlpha = 0.7;
+        ctx.textAlign = 'right';
+        
+        ctx.fillText(text, x, y);
+        
         ctx.globalAlpha = 1.0;
         ctx.textAlign = 'left';
     });

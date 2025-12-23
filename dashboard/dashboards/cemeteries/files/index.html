@@ -629,7 +629,6 @@
             const formData = new FormData();
             formData.append('pdf', selectedFile);
             formData.append('texts', JSON.stringify(textItems));
-            formData.append('font', document.getElementById('fontSelect').value);
 
             processBtn.disabled = true;
             processBtn.textContent = 'מעבד...';

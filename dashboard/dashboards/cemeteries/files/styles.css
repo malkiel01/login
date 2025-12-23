@@ -342,7 +342,7 @@ input[type="file"] {
 
 /* Preview Section */
 .preview-section {
-    width: 440px;  /* 400 + 20 + 20 פדינג */
+    width: 640px;  /* 600 + 20 + 20 פדינג */
     background: white;
     border-radius: 20px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
@@ -353,6 +353,17 @@ input[type="file"] {
     max-height: calc(100vh - 40px);
     display: flex;
     flex-direction: column;
+}
+
+.preview-container {
+    width: 600px;   /* ← הגדל */
+    height: 800px;  /* ← הגדל */
+    overflow: auto;
+    border: 2px solid #e0e7ff;
+    border-radius: 10px;
+    position: relative;
+    background: #f8f9ff;
+    flex-shrink: 0;
 }
 
 .preview-header {
@@ -391,17 +402,6 @@ input[type="file"] {
 .page-navigation button:disabled {
     opacity: 0.4;
     cursor: not-allowed;
-}
-
-.preview-container {
-    width: 400px;
-    height: 400px;
-    overflow: auto;  /* גלילה בשני הכיוונים */
-    border: 2px solid #e0e7ff;
-    border-radius: 10px;
-    position: relative;
-    background: #f8f9ff;
-    flex-shrink: 0;  /* לא יתכווץ */
 }
 
 /* הקנבס בגודל מלא - 100% */

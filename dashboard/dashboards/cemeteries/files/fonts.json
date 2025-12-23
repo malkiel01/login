@@ -17,8 +17,8 @@
     {
       "id": "custom_123",
       "name": "פונט מותאם של הלקוח",
-      "filename": "my-font.ttf",
-      "path": "fonts/custom/my-font.ttf",
+      "filename": "BA-Franknatan-Regular.ttf",
+      "path": "fonts/custom/BA-Franknatan-Regular.ttf",
       "type": "custom"
     }
   ]

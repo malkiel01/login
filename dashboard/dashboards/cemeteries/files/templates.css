@@ -1,3 +1,16 @@
+/* Hebrew Font Support */
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;700&display=swap');
+
+* {
+    font-family: 'Heebo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.test-field input {
+    font-family: 'Heebo', sans-serif;
+    direction: rtl;
+    text-align: right;
+}
+
 .templates-page {
     max-width: 1200px;
     margin: 0 auto;

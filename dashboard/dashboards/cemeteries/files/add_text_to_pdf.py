@@ -80,7 +80,8 @@ def add_texts_to_pdf(input_file, output_file, texts_config):
         for idx, item in enumerate(texts_config):
             print(f"DEBUG: Item {idx}: page={item.get('page', 1)}, text={item.get('text', '')[:10]}", file=sys.stderr)
         
-        for page_num, page in enumerate(reader.pages, start=1):
+        for page_num in range(1, num_pages + 1):
+            page = reader.pages[page_num - 1]  # Pages are 0-indexed
             current_width = float(page.mediabox.width)
             current_height = float(page.mediabox.height)
             

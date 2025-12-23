@@ -73,20 +73,10 @@ def add_texts_to_pdf(input_file, output_file, texts_config):
         
         num_pages = len(reader.pages)
         
-        # DEBUG
-        import sys
-        print(f"DEBUG: Total pages in PDF: {num_pages}", file=sys.stderr)
-        print(f"DEBUG: Number of text items: {len(texts_config)}", file=sys.stderr)
-        for idx, item in enumerate(texts_config):
-            print(f"DEBUG: Item {idx}: page={item.get('page', 1)}, text={item.get('text', '')[:10]}", file=sys.stderr)
-        
         for page_num in range(1, num_pages + 1):
-            print(f"DEBUG: Processing page {page_num}/{num_pages}", file=sys.stderr)
             page = reader.pages[page_num - 1]  # Pages are 0-indexed
-            print(f"DEBUG: Got page object", file=sys.stderr)
             current_width = float(page.mediabox.width)
             current_height = float(page.mediabox.height)
-            print(f"DEBUG: Page dimensions: {current_width}x{current_height}", file=sys.stderr)
             
             # Create overlay with all texts
             packet = io.BytesIO()

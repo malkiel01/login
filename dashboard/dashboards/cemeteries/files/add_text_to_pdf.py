@@ -64,8 +64,8 @@ def add_texts_to_pdf(input_file, output_file, texts_config):
             # Add each text
             for text_item in texts_config:
                 text = text_item.get('text', 'ניסיון')
-                text = text[::-1]
-                text_to_display = text[::-1] if actual_font != "Helvetica" else text
+                text_to_display = text[::-1]
+                # text_to_display = text[::-1] if actual_font != "Helvetica" else text
             
                 font_name = text_item.get('font', 'david')
                 font_size = int(text_item.get('size', 48))
@@ -94,7 +94,8 @@ def add_texts_to_pdf(input_file, output_file, texts_config):
                 x = current_width - right_offset
                 
                 # Draw the text
-                can.drawString(x, y, text)
+                # can.drawString(x, y, text)
+                can.drawString(x, y, text_to_display) 
             
             can.save()
             

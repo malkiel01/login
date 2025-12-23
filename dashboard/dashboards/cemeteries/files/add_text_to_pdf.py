@@ -65,7 +65,8 @@ def add_text_to_pdf(input_file, output_file, text="ניסיון", font_name="dav
             
             # x = current_width / 2  # ← הצד הימני במרכז הרוחב
             x = (current_width / 2) - text_width  # ← השמאל של הטקסט במרכז
-            y = current_height / 2  # ← התחתית במרכז הגובה
+            # y = current_height / 2  # ← התחתית במרכז הגובה
+            y = current_height - 300   # 300 פיקסלים מלמעלה 
             
             # x = (current_width - text_width) / 2
             

@@ -1,17 +1,20 @@
 // ===============================
-// Global Variables
-// ===============================
-
-let allTemplates = [];
-let currentTestTemplate = null;
-
-// ===============================
 // Page Load
 // ===============================
 
 document.addEventListener('DOMContentLoaded', () => {
+    loadFonts();
     loadTemplates();
 });
+
+// ===============================
+// Global Variables
+// ===============================
+
+
+let allTemplates = [];
+let currentTestTemplate = null;
+
 
 // ===============================
 // API Documentation Toggle
@@ -421,3 +424,42 @@ function formatDate(dateString) {
         minute: '2-digit'
     });
 }
+
+// ===============================
+// Dynamic Font Loading
+// ===============================
+
+let availableFonts = [];
+
+async function loadFonts() {
+    try {
+        const response = await fetch('fonts.json');
+        const data = await response.json();
+        availableFonts = data.fonts;
+        
+        // טען כל פונט דינמית
+        for (const font of availableFonts) {
+            const fontFace = new FontFace(
+                font.id, 
+                `url(${font.path})`
+            );
+            
+            try {
+                await fontFace.load();
+                document.fonts.add(fontFace);
+                console.log(`✅ Loaded font: ${font.name}`);
+            } catch (err) {
+                console.error(`❌ Failed to load font ${font.name}:`, err);
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error loading fonts:', error);
+    }
+}
+
+// טען פונטים בטעינת הדף
+document.addEventListener('DOMContentLoaded', () => {
+    loadFonts();
+    loadTemplates();
+});

@@ -31,8 +31,8 @@ def add_texts_to_pdf(input_file, output_file, texts_config):
         fonts_dir = os.path.join(os.path.dirname(__file__), 'fonts')
         
         font_files = {
-            'david': 'david.ttf',
-            'rubik': 'rubik.ttf'
+            'david': 'system/david.ttf',
+            'rubik': 'system/rubik.ttf'
         }
         
         # Register all fonts

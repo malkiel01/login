@@ -9,9 +9,7 @@
 .test-field input,
 .test-field label,
 .field-label-text {
-    font-family: inherit !important;
-    direction: rtl !important;
-    text-align: right !important;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif !important;
 }
 
 .test-field input {

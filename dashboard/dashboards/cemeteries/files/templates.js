@@ -177,20 +177,27 @@ async function openTestModal(templateId) {
         document.getElementById('testTemplateName').textContent = currentTestTemplate.template_name || 'תבנית';
         
         const fieldsContainer = document.getElementById('testFieldsContainer');
-        fieldsContainer.innerHTML = currentTestTemplate.fields.map(field => `
-            <div class="test-field">
-                <label>
-                    <span class="field-label-text">${escapeHtml(field.label)}</span>
-                    <span class="field-id">${field.id}</span>
-                </label>
-                <input 
-                    type="text" 
-                    id="test_${field.id}" 
-                    value="${escapeHtml(field.text)}"
-                    placeholder="הזן ערך עבור ${escapeHtml(field.label)}"
-                >
-            </div>
-        `).join('');
+        fieldsContainer.innerHTML = currentTestTemplate.fields.map(field => {
+            // מצא את הפונט
+            const fontData = availableFonts.find(f => f.id === field.font);
+            const fontFamily = fontData ? fontData.id : 'Arial';
+            
+            return `
+                <div class="test-field">
+                    <label>
+                        <span class="field-label-text">${escapeHtml(field.label)}</span>
+                        <span class="field-id">${field.id}</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="test_${field.id}" 
+                        value="${escapeHtml(field.text)}"
+                        placeholder="הזן ערך עבור ${escapeHtml(field.label)}"
+                        style="font-family: '${fontFamily}', Arial, sans-serif; direction: rtl; text-align: right;"
+                    >
+                </div>
+            `;
+        }).join('');
         
         document.getElementById('testTemplateModal').classList.add('show');
         

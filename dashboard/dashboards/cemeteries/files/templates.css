@@ -5,11 +5,15 @@
     font-family: 'Heebo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.test-field input {
-    font-family: 'Heebo', sans-serif;
+/* Hebrew Font Support for Input Fields */
+.test-field input,
+.test-field label,
+.field-label-text {
+    font-family: david, rubik, 'Heebo', Arial, sans-serif !important;
     direction: rtl;
     text-align: right;
 }
+
 
 .templates-page {
     max-width: 1200px;

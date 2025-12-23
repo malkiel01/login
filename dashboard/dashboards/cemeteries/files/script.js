@@ -216,9 +216,7 @@ function renderTextItem(item) {
                 <label>מרחק מימין (פיקסלים):</label>
                 <input type="number" value="${item.right}" min="0" oninput="updateTextItem(${item.id}, 'right', this.value)">
             </div>
-        </div>
 
-        <div class="form-row">
             <div class="form-group">
                 <label>עמוד להדפסה:</label>
                 <input type="number" value="${item.page || 1}" min="1" max="99" oninput="updateTextItem(${item.id}, 'page', this.value)">

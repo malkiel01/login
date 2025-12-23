@@ -370,8 +370,7 @@ document.getElementById('generateTestBtn').addEventListener('click', async () =>
             size: field.size,
             color: field.color,
             top: field.top,
-            right: field.right,
-            page: field.page || 1  // ← הוסף page
+            right: field.right
         }));
 
         // צור FormData בדיוק כמו באינדקס

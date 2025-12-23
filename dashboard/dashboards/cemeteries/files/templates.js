@@ -382,6 +382,10 @@ document.getElementById('generateTestBtn').addEventListener('click', async () =>
         formData.append('pdf', pdfBlob, 'template.pdf');
         formData.append('texts', JSON.stringify(textItems));
 
+        // הוסף מיד אחריה:
+        console.log('TEMPLATE - Sending texts:', textItems);
+        console.log('TEMPLATE - JSON:', JSON.stringify(textItems, null, 2));
+
         // שלח ל-process.php!
         const response = await fetch('process.php', {
             method: 'POST',

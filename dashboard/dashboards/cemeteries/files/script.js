@@ -258,6 +258,10 @@ processBtn.addEventListener('click', async () => {
     formData.append('pdf', selectedFile);
     formData.append('texts', JSON.stringify(textItems));
 
+    // הוסף מיד אחריה:
+   console.log('INDEX - Sending texts:', textItems);
+   console.log('INDEX - JSON:', JSON.stringify(textItems, null, 2));
+
     processBtn.disabled = true;
     processBtn.textContent = 'מעבד...';
     loading.classList.add('show');

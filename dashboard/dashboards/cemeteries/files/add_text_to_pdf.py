@@ -64,6 +64,7 @@ def add_texts_to_pdf(input_file, output_file, texts_config):
             # Add each text
             for text_item in texts_config:
                 text = text_item.get('text', 'ניסיון')
+                text_to_display = text[::-1]
                 font_name = text_item.get('font', 'david')
                 font_size = int(text_item.get('size', 48))
                 color_hex = text_item.get('color', '#808080')

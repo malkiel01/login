@@ -62,11 +62,46 @@ def add_texts_to_pdf(input_file, output_file, texts_config):
             can = canvas.Canvas(packet, pagesize=(current_width, current_height))
             
             # Add each text
+            # for text_item in texts_config:
+            #     text = text_item.get('text', 'ניסיון')
+            #     text_to_display = text[::-1]
+            #     # text_to_display = text[::-1] if actual_font != "Helvetica" else text
+            
+            #     font_name = text_item.get('font', 'david')
+            #     font_size = int(text_item.get('size', 48))
+            #     color_hex = text_item.get('color', '#808080')
+            #     top_offset = float(text_item.get('top', 300))
+            #     right_offset = float(text_item.get('right', 200))
+                
+            #     # Use registered font or fallback to Helvetica
+            #     actual_font = font_name if font_name in ['david', 'rubik'] else 'Helvetica'
+                
+            #     try:
+            #         can.setFont(actual_font, font_size)
+            #     except:
+            #         can.setFont('Helvetica', font_size)
+            #         actual_font = 'Helvetica'
+                
+            #     # Set color
+            #     r, g, b = hex_to_rgb(color_hex)
+            #     can.setFillColorRGB(r, g, b, alpha=0.7)
+                
+            #     # Calculate position
+            #     # Y: from top
+            #     y = current_height - top_offset
+                
+            #     # X: from right
+            #     x = current_width - right_offset
+                
+            #     # Draw the text
+            #     # can.drawString(x, y, text)
+            #     can.drawString(x, y, text_to_display) 
+            
+            # Add each text
             for text_item in texts_config:
                 text = text_item.get('text', 'ניסיון')
                 text_to_display = text[::-1]
-                # text_to_display = text[::-1] if actual_font != "Helvetica" else text
-            
+                
                 font_name = text_item.get('font', 'david')
                 font_size = int(text_item.get('size', 48))
                 color_hex = text_item.get('color', '#808080')
@@ -93,10 +128,9 @@ def add_texts_to_pdf(input_file, output_file, texts_config):
                 # X: from right
                 x = current_width - right_offset
                 
-                # Draw the text
-                # can.drawString(x, y, text)
-                can.drawString(x, y, text_to_display) 
-            
+                # Draw the text with RIGHT alignment
+                can.drawRightString(x, y, text_to_display)  # ← שונה מ-drawString!
+                
             can.save()
             
             # Move to the beginning of the BytesIO buffer

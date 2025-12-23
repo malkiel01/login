@@ -108,7 +108,7 @@ function renderTemplates(templates) {
 
 async function openTestModal(templateId) {
     try {
-        const response = await fetch(`get_template.php?id=${templateId}`);
+        const response = await fetch(`get_templates.php?id=${templateId}`);
         const data = await response.json();
         
         if (!data.success) {
@@ -210,7 +210,7 @@ document.getElementById('generateTestBtn').addEventListener('click', async () =>
 
 async function viewTemplate(templateId) {
     try {
-        const response = await fetch(`get_template.php?id=${templateId}`);
+        const response = await fetch(`get_templates.php?id=${templateId}`);
         const data = await response.json();
         
         if (!data.success) {

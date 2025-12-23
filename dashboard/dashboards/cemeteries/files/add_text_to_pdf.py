@@ -85,6 +85,11 @@ def add_texts_to_pdf(input_file, output_file, texts_config):
             for text_item in texts_config:
                 # בדוק אם הטקסט שייך לעמוד הנוכחי
                 text_page = int(text_item.get('page', 1))
+                
+                # ודא שמספר העמוד תקין
+                if text_page < 1 or text_page > num_pages:
+                    continue  # דלג על עמודים לא תקינים
+                
                 if text_page != page_num:
                     continue  # דלג על טקסטים שלא שייכים לעמוד הזה
                 

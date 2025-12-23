@@ -256,6 +256,86 @@
             direction: rtl;
             text-align: right;
         }
+
+        .texts-container {
+            background: #f0f2ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .texts-container.show {
+            display: block !important;
+        }
+
+        .text-item {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 2px solid #e0e7ff;
+        }
+
+        .text-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e0e7ff;
+        }
+
+        .text-item-title {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .remove-text-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 10px;
+            border: 2px solid #e0e7ff;
+            border-radius: 6px;
+            font-size: 1em;
+            font-family: inherit;
+        }
+
+        .form-group input[type="color"] {
+            height: 45px;
+            cursor: pointer;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
         
         @keyframes spin {
             0% { transform: rotate(0deg); }
@@ -294,13 +374,17 @@
             <div class="file-size" id="fileSize"></div>
         </div>
 
-        <div class="font-selector" id="fontSelector">
-            <label for="fontSelect" style="display: block; margin-bottom: 10px; color: #667eea; font-weight: 600;">בחר פונט:</label>
-            <select id="fontSelect" style="width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #667eea; font-size: 1em; margin-bottom: 20px; font-family: inherit;">
-                <option value="david">דיויד (David Libre)</option>
-                <option value="rubik">רוּביק (Rubik)</option>
-                <option value="helvetica">הלבטיקה (ברירת מחדל)</option>
-            </select>
+        <div class="texts-container" id="textsContainer" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="color: #667eea; margin: 0;">טקסטים להוספה</h3>
+                <button type="button" id="addTextBtn" style="background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9em;">
+                    ➕ הוסף טקסט
+                </button>
+            </div>
+            
+            <div id="textsList">
+                <!-- טקסטים יתוספו כאן דינמית -->
+            </div>
         </div>
         
         <button class="btn" id="processBtn">עבד את הקובץ</button>
@@ -361,6 +445,129 @@
         let selectedFile = null;
         let processedFileName = null;
 
+
+        // אחרי הגדרת המשתנים הקיימים:
+        let textItems = [];
+        let nextTextId = 1;
+
+        // הצג את אזור הטקסטים כשמעלים קובץ
+        function handleFile(file) {
+            if (!file) return;
+            
+            if (file.type !== 'application/pdf') {
+                showError('נא להעלות קובץ PDF בלבד');
+                return;
+            }
+
+            selectedFile = file;
+            fileName.textContent = `📄 ${file.name}`;
+            fileSize.textContent = `גודל: ${formatFileSize(file.size)}`;
+            fileInfo.classList.add('show');
+            
+            // הצג את אזור הטקסטים
+            document.getElementById('textsContainer').classList.add('show');
+            
+            // הוסף טקסט ברירת מחדל אם אין עדיין
+            if (textItems.length === 0) {
+                addTextItem();
+            }
+            
+            processBtn.classList.add('show');
+            results.classList.remove('show');
+            error.classList.remove('show');
+        }
+
+        // פונקציה להוספת טקסט חדש
+        document.getElementById('addTextBtn').addEventListener('click', addTextItem);
+
+        function addTextItem() {
+            const id = nextTextId++;
+            const textItem = {
+                id: id,
+                text: 'ניסיון',
+                font: 'david',
+                size: 48,
+                color: '#808080',
+                top: 300,
+                right: 200
+            };
+            
+            textItems.push(textItem);
+            renderTextItem(textItem);
+        }
+
+        function renderTextItem(item) {
+            const textsList = document.getElementById('textsList');
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'text-item';
+            itemDiv.id = `text-item-${item.id}`;
+            
+            itemDiv.innerHTML = `
+                <div class="text-item-header">
+                    <span class="text-item-title">טקסט #${item.id}</span>
+                    <button type="button" class="remove-text-btn" onclick="removeTextItem(${item.id})">🗑️ הסר</button>
+                </div>
+                
+                <div class="form-group full-width">
+                    <label>תוכן הטקסט:</label>
+                    <input type="text" value="${item.text}" onchange="updateTextItem(${item.id}, 'text', this.value)">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>פונט:</label>
+                        <select onchange="updateTextItem(${item.id}, 'font', this.value)">
+                            <option value="david" ${item.font === 'david' ? 'selected' : ''}>דיויד</option>
+                            <option value="rubik" ${item.font === 'rubik' ? 'selected' : ''}>רוביק</option>
+                            <option value="helvetica" ${item.font === 'helvetica' ? 'selected' : ''}>הלבטיקה</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>גודל פונט:</label>
+                        <input type="number" value="${item.size}" min="8" max="200" onchange="updateTextItem(${item.id}, 'size', this.value)">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>צבע:</label>
+                        <input type="color" value="${item.color}" onchange="updateTextItem(${item.id}, 'color', this.value)">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>מרחק מלמעלה (פיקסלים):</label>
+                        <input type="number" value="${item.top}" min="0" onchange="updateTextItem(${item.id}, 'top', this.value)">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>מרחק מימין (פיקסלים):</label>
+                        <input type="number" value="${item.right}" min="0" onchange="updateTextItem(${item.id}, 'right', this.value)">
+                    </div>
+                </div>
+            `;
+            
+            textsList.appendChild(itemDiv);
+        }
+
+        function updateTextItem(id, field, value) {
+            const item = textItems.find(t => t.id === id);
+            if (item) {
+                item[field] = value;
+            }
+        }
+
+        function removeTextItem(id) {
+            const index = textItems.findIndex(t => t.id === id);
+            if (index > -1) {
+                textItems.splice(index, 1);
+                document.getElementById(`text-item-${id}`).remove();
+            }
+        }
+
+
         // Click to upload
         uploadArea.addEventListener('click', () => fileInput.click());
 
@@ -414,8 +621,14 @@
         processBtn.addEventListener('click', async () => {
             if (!selectedFile) return;
 
+            if (textItems.length === 0) {
+                showError('נא להוסיף לפחות טקסט אחד');
+                return;
+            }
+
             const formData = new FormData();
             formData.append('pdf', selectedFile);
+            formData.append('texts', JSON.stringify(textItems));
             formData.append('font', document.getElementById('fontSelect').value);
 
             processBtn.disabled = true;

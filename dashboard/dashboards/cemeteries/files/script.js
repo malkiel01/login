@@ -450,6 +450,7 @@ function drawTextsOnCanvas(viewport) {
         ctx.font = `${fontSize}px ${fontName}`;
         ctx.fillStyle = color;
         ctx.globalAlpha = 0.7;
+        ctx.textAlign = 'right';  // ← הוסף את זה! יישור ימינה
         
         // אל תהפוך את הטקסט - הפונטים העבריים מטפלים בזה
         ctx.fillText(text, x, y);  // ← השתמש ישירות ב-text

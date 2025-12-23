@@ -222,7 +222,7 @@ async function openTestModal3(templateId) {
     }
 }
 
-async function openTestModal(templateId) {
+async function openTestModal4(templateId) {
     try {
         const response = await fetch(`get_templates.php?id=${templateId}`);
         const data = await response.json();
@@ -280,6 +280,54 @@ async function openTestModal(templateId) {
             
             fieldDiv.appendChild(label);
             fieldDiv.appendChild(input);
+            fieldsContainer.appendChild(fieldDiv);
+        });
+        
+        document.getElementById('testTemplateModal').classList.add('show');
+        
+    } catch (error) {
+        console.error('Error opening test modal:', error);
+        alert('שגיאה בטעינת התבנית');
+    }
+}
+
+async function openTestModal(templateId) {
+    try {
+        const response = await fetch(`get_templates.php?id=${templateId}`);
+        const data = await response.json();
+        
+        console.log('API Response:', data);
+        
+        if (!data.success || !data.template) {
+            alert('שגיאה בטעינת התבנית');
+            return;
+        }
+        
+        currentTestTemplate = data.template;
+        
+        if (!currentTestTemplate.fields || currentTestTemplate.fields.length === 0) {
+            alert('התבנית לא מכילה שדות');
+            return;
+        }
+        
+        document.getElementById('testTemplateName').textContent = currentTestTemplate.template_name || 'תבנית';
+        
+        const fieldsContainer = document.getElementById('testFieldsContainer');
+        fieldsContainer.innerHTML = '';
+        
+        // ← השתמש בדיוק באותו קוד כמו renderTextItem!
+        currentTestTemplate.fields.forEach(field => {
+            const fieldDiv = document.createElement('div');
+            fieldDiv.className = 'test-field';
+            
+            fieldDiv.innerHTML = `
+                <label>
+                    <span class="field-label-text">${field.label}</span>
+                    <span class="field-id">${field.id}</span>
+                </label>
+                <input type="text" id="test_${field.id}" value="${field.text}">
+            `;
+            
             fieldsContainer.appendChild(fieldDiv);
         });
         

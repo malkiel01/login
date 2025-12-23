@@ -17,41 +17,6 @@ def hex_to_rgb(hex_color):
     hex_color = hex_color.lstrip('#')
     return tuple(int(hex_color[i:i+2], 16) / 255.0 for i in (0, 2, 4))
 
-def load_fonts_from_json(script_dir):
-    """Load all fonts from fonts.json"""
-    fonts_json_path = os.path.join(script_dir, 'fonts.json')
-    registered_fonts = set()
-    
-    if not os.path.exists(fonts_json_path):
-        print(f"Warning: fonts.json not found at {fonts_json_path}", file=sys.stderr)
-        return registered_fonts
-    
-    try:
-        with open(fonts_json_path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-            fonts = data.get('fonts', [])
-        
-        for font in fonts:
-            font_id = font.get('id')
-            font_path = os.path.join(script_dir, font.get('path'))
-            font_name = font.get('name')
-            
-            if os.path.exists(font_path):
-                try:
-                    pdfmetrics.registerFont(TTFont(font_id, font_path))
-                    registered_fonts.add(font_id)
-                    print(f"✅ Registered font: {font_name} ({font_id})", file=sys.stderr)
-                except Exception as e:
-                    print(f"❌ Could not register font {font_id}: {e}", file=sys.stderr)
-            else:
-                print(f"⚠️  Font file not found: {font_path}", file=sys.stderr)
-        
-        return registered_fonts
-        
-    except Exception as e:
-        print(f"Error loading fonts.json: {e}", file=sys.stderr)
-        return registered_fonts
-
 def add_texts_to_pdf(input_file, output_file, texts_config):
     """
     Add multiple Hebrew texts to PDF pages
@@ -62,10 +27,29 @@ def add_texts_to_pdf(input_file, output_file, texts_config):
         texts_config: List of text configurations
     """
     try:
-        script_dir = os.path.dirname(__file__)
+        # Register Hebrew fonts
+        fonts_dir = os.path.join(os.path.dirname(__file__), 'fonts')
         
-        # Load all fonts dynamically from fonts.json
-        registered_fonts = load_fonts_from_json(script_dir)
+        font_files = {
+            'david': 'system/david.ttf',
+            'rubik': 'system/rubik.ttf'
+        }
+        
+        # Register all fonts
+        for font_name, font_file in font_files.items():
+            font_path = os.path.join(fonts_dir, font_file)
+            if os.path.exists(font_path):
+                try:
+                    pdfmetrics.registerFont(TTFont(font_name, font_path))
+                except Exception as e:
+                    print(f"Warning: Could not register font {font_name}: {e}", file=sys.stderr)
+
+        # הוסף:
+        # print(f"DEBUG: Fonts dir = {fonts_dir}", file=sys.stderr)
+        # print(f"DEBUG: Font files = {font_files}", file=sys.stderr)
+        # for font_name, font_file in font_files.items():
+        #     font_path = os.path.join(fonts_dir, font_file)
+        #     print(f"DEBUG: Checking {font_name}: {font_path}, exists={os.path.exists(font_path)}", file=sys.stderr)
         
         reader = PdfReader(input_file)
         writer = PdfWriter()
@@ -87,7 +71,7 @@ def add_texts_to_pdf(input_file, output_file, texts_config):
             # Add each text
             for text_item in texts_config:
                 text = text_item.get('text', 'ניסיון')
-                text_to_display = text[::-1]  # Reverse for Hebrew RTL
+                text_to_display = text[::-1]
                 
                 font_name = text_item.get('font', 'david')
                 font_size = int(text_item.get('size', 48))
@@ -96,11 +80,7 @@ def add_texts_to_pdf(input_file, output_file, texts_config):
                 right_offset = float(text_item.get('right', 200))
                 
                 # Use registered font or fallback to Helvetica
-                if font_name in registered_fonts:
-                    actual_font = font_name
-                else:
-                    actual_font = 'Helvetica'
-                    print(f"⚠️  Font '{font_name}' not registered, using Helvetica", file=sys.stderr)
+                actual_font = font_name if font_name in ['david', 'rubik'] else 'Helvetica'
                 
                 try:
                     can.setFont(actual_font, font_size)
@@ -113,11 +93,14 @@ def add_texts_to_pdf(input_file, output_file, texts_config):
                 can.setFillColorRGB(r, g, b, alpha=0.7)
                 
                 # Calculate position
+                # Y: from top
                 y = current_height - top_offset
+                
+                # X: from right
                 x = current_width - right_offset
                 
                 # Draw the text with RIGHT alignment
-                can.drawRightString(x, y, text_to_display)
+                can.drawRightString(x, y, text_to_display)  # ← שונה מ-drawString!
                 
             can.save()
             

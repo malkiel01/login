@@ -73,7 +73,7 @@ def add_texts_to_pdf(input_file, output_file, texts_config):
         
         num_pages = len(reader.pages)
         
-        for page_num, page in enumerate(reader.pages, start=1):
+        for page in reader.pages:
             current_width = float(page.mediabox.width)
             current_height = float(page.mediabox.height)
             
@@ -83,11 +83,6 @@ def add_texts_to_pdf(input_file, output_file, texts_config):
             
             # Add each text
             for text_item in texts_config:
-                # בדוק אם הטקסט שייך לעמוד הנוכחי
-                text_page = int(text_item.get('page', 1))
-                if text_page != page_num:
-                    continue  # דלג על טקסטים שלא שייכים לעמוד הזה
-                
                 text = text_item.get('text', 'ניסיון')
                 text_to_display = text[::-1]  # Reverse for Hebrew RTL
                 

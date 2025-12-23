@@ -473,12 +473,6 @@ document.getElementById('nextPage').addEventListener('click', onNextPage);
 
 function drawTextsOnCanvas(viewport) {
     textItems.forEach(item => {
-        // בדוק אם הטקסט שייך לעמוד הנוכחי
-        const itemPage = parseInt(item.page) || 1;
-        if (itemPage !== currentPageNum) {
-            return; // דלג על טקסטים שלא שייכים לעמוד הזה
-        }
-        
         const text = item.text;
         const fontSize = parseInt(item.size);
         const color = item.color;
@@ -574,8 +568,7 @@ confirmSaveBtn.addEventListener('click', async () => {
             size: parseInt(item.size),
             color: item.color,
             top: parseFloat(item.top),
-            right: parseFloat(item.right),
-            page: parseInt(item.page) || 1  // ← הוסף page
+            right: parseFloat(item.right)
         }))
     };
     

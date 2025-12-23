@@ -162,61 +162,6 @@ function addTextItem() {
     }
 }
 
-function renderTextItem2(item) {
-    const textsList = document.getElementById('textsList');
-    const itemDiv = document.createElement('div');
-    itemDiv.className = 'text-item';
-    itemDiv.id = `text-item-${item.id}`;
-    
-    itemDiv.innerHTML = `
-        <div class="text-item-header">
-            <span class="text-item-title">טקסט #${item.id}</span>
-            <button type="button" class="remove-text-btn" onclick="removeTextItem(${item.id})">🗑️ הסר</button>
-        </div>
-        
-        <div class="form-group full-width">
-            <label>תוכן הטקסט:</label>
-            <input type="text" value="${item.text}" oninput="updateTextItem(${item.id}, 'text', this.value)">
-        </div>
-        
-        <div class="form-row">
-            <div class="form-group">
-                <label>פונט:</label>
-                <select onchange="updateTextItem(${item.id}, 'font', this.value)">
-                    <option value="david" ${item.font === 'david' ? 'selected' : ''}>דיויד</option>
-                    <option value="rubik" ${item.font === 'rubik' ? 'selected' : ''}>רוביק</option>
-                    <option value="helvetica" ${item.font === 'helvetica' ? 'selected' : ''}>הלבטיקה</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label>גודל פונט:</label>
-                <input type="number" value="${item.size}" min="8" max="200" oninput="updateTextItem(${item.id}, 'size', this.value)">
-            </div>
-        </div>
-        
-        <div class="form-row">
-            <div class="form-group">
-                <label>צבע:</label>
-                <input type="color" value="${item.color}" oninput="updateTextItem(${item.id}, 'color', this.value)">
-            </div>
-            
-            <div class="form-group">
-                <label>מרחק מלמעלה (פיקסלים):</label>
-                <input type="number" value="${item.top}" min="0" oninput="updateTextItem(${item.id}, 'top', this.value)">
-            </div>
-        </div>
-        
-        <div class="form-row">
-            <div class="form-group">
-                <label>מרחק מימין (פיקסלים):</label>
-                <input type="number" value="${item.right}" min="0" oninput="updateTextItem(${item.id}, 'right', this.value)">
-            </div>
-        </div>
-    `;
-    
-    textsList.appendChild(itemDiv);
-}
 function renderTextItem(item) {
     const textsList = document.getElementById('textsList');
     const itemDiv = document.createElement('div');
@@ -516,44 +461,6 @@ function updatePageButtons() {
 document.getElementById('prevPage').addEventListener('click', onPrevPage);
 document.getElementById('nextPage').addEventListener('click', onNextPage);
 
-function drawTextsOnCanvas2(viewport) {
-    textItems.forEach(item => {
-        const text = item.text;
-        
-        // שמות הפונטים המדויקים מ-Google Fonts
-        let fontName;
-        if (item.font === 'david') {
-            fontName = '"David Libre", serif';
-        } else if (item.font === 'rubik') {
-            fontName = '"Rubik", sans-serif';
-        } else {
-            fontName = 'Arial, sans-serif';
-        }
-        
-        const fontSize = parseInt(item.size);
-        const color = item.color;
-        const topOffset = parseFloat(item.top);
-        const rightOffset = parseFloat(item.right);
-        
-        // חישוב מיקום
-        const x = viewport.width - rightOffset;
-        const y = topOffset;
-        
-        // הגדרת פונט
-        ctx.font = `${fontSize}px ${fontName}`;
-        ctx.fillStyle = color;
-        ctx.globalAlpha = 0.7;
-        ctx.textAlign = 'right';
-        
-        // ציור הטקסט
-        ctx.fillText(text, x, y);
-        
-        // איפוס
-        ctx.globalAlpha = 1.0;
-        ctx.textAlign = 'left';
-    });
-}
-
 function drawTextsOnCanvas(viewport) {
     textItems.forEach(item => {
         const text = item.text;
@@ -579,4 +486,120 @@ function drawTextsOnCanvas(viewport) {
         ctx.globalAlpha = 1.0;
         ctx.textAlign = 'left';
     });
+}
+
+// ===============================
+// Save Template Functionality
+// ===============================
+
+const saveTemplateBtn = document.getElementById('saveTemplateBtn');
+const saveTemplateModal = document.getElementById('saveTemplateModal');
+const templateNameInput = document.getElementById('templateName');
+const templateDescriptionInput = document.getElementById('templateDescription');
+const cancelSaveBtn = document.getElementById('cancelSaveBtn');
+const confirmSaveBtn = document.getElementById('confirmSaveBtn');
+const modalError = document.getElementById('modalError');
+
+saveTemplateBtn.addEventListener('click', () => {
+    // פתח את המודל
+    saveTemplateModal.classList.add('show');
+    templateNameInput.value = '';
+    templateDescriptionInput.value = '';
+    modalError.classList.remove('show');
+    templateNameInput.focus();
+});
+
+cancelSaveBtn.addEventListener('click', () => {
+    saveTemplateModal.classList.remove('show');
+});
+
+// סגירה בלחיצה מחוץ למודל
+saveTemplateModal.addEventListener('click', (e) => {
+    if (e.target === saveTemplateModal) {
+        saveTemplateModal.classList.remove('show');
+    }
+});
+
+confirmSaveBtn.addEventListener('click', async () => {
+    const templateName = templateNameInput.value.trim();
+    const templateDescription = templateDescriptionInput.value.trim();
+    
+    // ולידציה
+    if (!templateName) {
+        showModalError('נא להזין שם לתבנית');
+        return;
+    }
+    
+    if (templateName.length < 3) {
+        showModalError('שם התבנית חייב להכיל לפחות 3 תווים');
+        return;
+    }
+    
+    if (templateName.length > 50) {
+        showModalError('שם התבנית ארוך מדי (מקסימום 50 תווים)');
+        return;
+    }
+    
+    // הכן את הנתונים לשמירה
+    const templateData = {
+        name: templateName,
+        description: templateDescription,
+        original_filename: selectedFile.name,
+        pdf_dimensions: {
+            width: parseFloat(document.getElementById('pageWidth').textContent),
+            height: parseFloat(document.getElementById('pageHeight').textContent)
+        },
+        page_count: parseInt(document.getElementById('pageCount').textContent),
+        fields: textItems.map((item, index) => ({
+            id: `field_${index + 1}`,
+            label: item.text, // כרגע השם הוא הטקסט עצמו
+            text: item.text,
+            font: item.font,
+            size: parseInt(item.size),
+            color: item.color,
+            top: parseFloat(item.top),
+            right: parseFloat(item.right)
+        }))
+    };
+    
+    // שלח לשרת
+    confirmSaveBtn.disabled = true;
+    confirmSaveBtn.textContent = 'שומר...';
+    
+    try {
+        // צור FormData עם הקובץ המקורי והנתונים
+        const formData = new FormData();
+        formData.append('template_data', JSON.stringify(templateData));
+        formData.append('pdf_file', selectedFile);
+        
+        const response = await fetch('save_template.php', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // סגור את המודל
+            saveTemplateModal.classList.remove('show');
+            
+            // הצג הודעת הצלחה
+            alert(`✅ התבנית "${templateName}" נשמרה בהצלחה!\nמזהה: ${result.template_id}`);
+            
+        } else {
+            showModalError(result.error || 'שגיאה בשמירת התבנית');
+        }
+        
+    } catch (error) {
+        console.error('Error saving template:', error);
+        showModalError('שגיאה בתקשורת עם השרת');
+    } finally {
+        confirmSaveBtn.disabled = false;
+        confirmSaveBtn.textContent = 'שמור תבנית';
+    }
+});
+
+function showModalError(message) {
+    modalError.textContent = message;
+    modalError.classList.add('show');
 }

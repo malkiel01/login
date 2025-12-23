@@ -70,6 +70,10 @@
                             <span class="result-value" id="pageHeight"></span>
                         </div>
 
+                        <button class="btn save-template-btn" id="saveTemplateBtn">
+                            💾 שמור כתבנית
+                        </button>
+
                         <button class="btn download-btn" id="downloadBtn">
                             💾 הורד את הקובץ המעובד
                         </button>
@@ -103,5 +107,28 @@
     </div>
 
     <script src="script.js"></script>
+
+    <!-- Modal for saving template -->
+    <div class="modal" id="saveTemplateModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>💾 שמירת תבנית</h2>
+                <p style="color: #666; font-size: 0.9em;">שמור את התבנית לשימוש חוזר</p>
+            </div>
+            <div class="modal-body">
+                <label for="templateName">שם התבנית: *</label>
+                <input type="text" id="templateName" placeholder="לדוגמה: תעודת פטירה" required>
+                
+                <label for="templateDescription">תיאור התבנית:</label>
+                <textarea id="templateDescription" placeholder="תיאור קצר של התבנית (אופציונלי)"></textarea>
+                
+                <div class="modal-error" id="modalError"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-secondary" id="cancelSaveBtn">ביטול</button>
+                <button class="modal-btn modal-btn-primary" id="confirmSaveBtn">שמור תבנית</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

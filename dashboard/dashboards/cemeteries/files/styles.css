@@ -413,3 +413,126 @@ input[type="file"] {
 #pdfCanvas:active {
     cursor: grabbing;
 }
+
+/* שמירת טמפלטים */
+
+.save-template-btn {
+    background: #8b5cf6;
+    margin-top: 10px;
+}
+
+.save-template-btn:hover {
+    box-shadow: 0 10px 25px rgba(139, 92, 246, 0.4);
+}
+
+/* Modal for template name */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal.show {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    margin-bottom: 20px;
+}
+
+.modal-header h2 {
+    color: #667eea;
+    margin-bottom: 10px;
+}
+
+.modal-body {
+    margin-bottom: 20px;
+}
+
+.modal-body label {
+    display: block;
+    color: #667eea;
+    font-weight: 600;
+    margin-bottom: 8px;
+    margin-top: 15px;
+}
+
+.modal-body input[type="text"],
+.modal-body textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e0e7ff;
+    border-radius: 8px;
+    font-size: 1em;
+    font-family: inherit;
+}
+
+.modal-body textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+.modal-footer {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.modal-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.modal-btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.modal-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+}
+
+.modal-btn-secondary {
+    background: #e5e7eb;
+    color: #333;
+}
+
+.modal-btn-secondary:hover {
+    background: #d1d5db;
+}
+
+.modal-error {
+    background: #fee;
+    color: #c00;
+    padding: 10px;
+    border-radius: 6px;
+    margin-top: 10px;
+    font-size: 0.9em;
+    display: none;
+}
+
+.modal-error.show {
+    display: block;
+}

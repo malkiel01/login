@@ -397,6 +397,15 @@ input[type="file"] {
     border-radius: 10px;
     position: relative;
     background: #f8f9ff;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.preview-container canvas {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
 }
 
 #pdfCanvas {

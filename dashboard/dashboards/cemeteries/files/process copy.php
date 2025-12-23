@@ -1,6 +1,7 @@
 <?php
 /**
  * PDF Processor - Server-side handler
+ * Receives PDF upload, processes it with Python script, and returns metadata
  */
 
 header('Content-Type: application/json; charset=utf-8');
@@ -9,9 +10,6 @@ header('Content-Type: application/json; charset=utf-8');
 $upload_dir = __DIR__ . '/uploads/';
 $output_dir = __DIR__ . '/outputs/';
 $python_script = __DIR__ . '/add_text_to_pdf.py';
-
-// נתיב ל-Python של venv
-$venv_python = '/home2/mbeplusc/public_html/form/login/venv/bin/python3';
 
 // Create directories if they don't exist
 if (!file_exists($upload_dir)) {
@@ -30,18 +28,6 @@ if (!isset($_FILES['pdf']) || $_FILES['pdf']['error'] !== UPLOAD_ERR_OK) {
     echo json_encode([
         'success' => false,
         'error' => 'לא התקבל קובץ או שגיאה בהעלאה'
-    ], JSON_UNESCAPED_UNICODE);
-    exit;
-}
-
-// Get texts JSON
-$texts_json = isset($_POST['texts']) ? $_POST['texts'] : '[]';
-$texts = json_decode($texts_json, true);
-
-if (empty($texts)) {
-    echo json_encode([
-        'success' => false,
-        'error' => 'לא נשלחו טקסטים להדפסה'
     ], JSON_UNESCAPED_UNICODE);
     exit;
 }
@@ -77,9 +63,17 @@ if (!move_uploaded_file($file['tmp_name'], $input_path)) {
     exit;
 }
 
-// Create temp JSON file for texts
-$texts_file = $upload_dir . $unique_id . '_texts.json';
-file_put_contents($texts_file, json_encode($texts, JSON_UNESCAPED_UNICODE));
+// Call Python script
+$venv_python = dirname(__DIR__, 4) . '/venv/bin/python3';
+
+// קבל את הפונט שנבחר
+$font = isset($_POST['font']) ? $_POST['font'] : 'david';
+
+// ולידציה
+$allowed_fonts = ['david', 'rubik', 'helvetica'];
+if (!in_array($font, $allowed_fonts)) {
+    $font = 'david';
+}
 
 // Call Python script
 $command = sprintf(
@@ -88,15 +82,12 @@ $command = sprintf(
     escapeshellarg($python_script),
     escapeshellarg($input_path),
     escapeshellarg($output_path),
-    escapeshellarg($texts_file)
+    escapeshellarg($font)  // ← הוסף את זה!
 );
 
 $output = [];
 $return_var = 0;
 exec($command, $output, $return_var);
-
-// Clean up texts file
-@unlink($texts_file);
 
 // Parse Python output
 $python_output = implode("\n", $output);
@@ -114,7 +105,7 @@ if ($return_var !== 0 || !$result || !isset($result['success']) || !$result['suc
     exit;
 }
 
-// Clean up input file
+// Clean up input file (we don't need it anymore)
 @unlink($input_path);
 
 // Return success with metadata
@@ -126,6 +117,12 @@ echo json_encode([
     'output_file' => $output_filename
 ], JSON_UNESCAPED_UNICODE);
 
+/**
+ * Clean old files from directory
+ * 
+ * @param string $dir Directory path
+ * @param int $max_age Maximum age in seconds
+ */
 function cleanOldFiles($dir, $max_age) {
     if (!is_dir($dir)) {
         return;
@@ -142,3 +139,5 @@ function cleanOldFiles($dir, $max_age) {
         }
     }
 }
+
+

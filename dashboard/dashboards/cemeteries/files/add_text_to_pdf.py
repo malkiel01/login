@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-PDF Processor - Add Hebrew text overlay to PDF pages
+PDF Processor - Add multiple Hebrew texts with custom positioning
 """
 import sys
 import json
@@ -12,9 +12,19 @@ from reportlab.pdfbase.ttfonts import TTFont
 import io
 import os
 
-def add_text_to_pdf(input_file, output_file, text="ניסיון", font_name="david"):
+def hex_to_rgb(hex_color):
+    """Convert hex color to RGB tuple (0-1 range)"""
+    hex_color = hex_color.lstrip('#')
+    return tuple(int(hex_color[i:i+2], 16) / 255.0 for i in (0, 2, 4))
+
+def add_texts_to_pdf(input_file, output_file, texts_config):
     """
-    Add Hebrew text to the center of each page in a PDF
+    Add multiple Hebrew texts to PDF pages
+    
+    Args:
+        input_file: Path to input PDF
+        output_file: Path to output PDF
+        texts_config: List of text configurations
     """
     try:
         # Register Hebrew fonts
@@ -22,21 +32,17 @@ def add_text_to_pdf(input_file, output_file, text="ניסיון", font_name="dav
         
         font_files = {
             'david': 'david.ttf',
-            'rubik': 'rubik.ttf',
-            'helvetica': None  # Built-in font
+            'rubik': 'rubik.ttf'
         }
         
-        # Register selected font if not Helvetica
-        if font_name != 'helvetica' and font_name in font_files:
-            font_path = os.path.join(fonts_dir, font_files[font_name])
+        # Register all fonts
+        for font_name, font_file in font_files.items():
+            font_path = os.path.join(fonts_dir, font_file)
             if os.path.exists(font_path):
-                pdfmetrics.registerFont(TTFont(font_name, font_path))
-                actual_font = font_name
-            else:
-                print(f"Warning: Font file not found: {font_path}, using Helvetica", file=sys.stderr)
-                actual_font = "Helvetica"
-        else:
-            actual_font = "Helvetica"
+                try:
+                    pdfmetrics.registerFont(TTFont(font_name, font_path))
+                except Exception as e:
+                    print(f"Warning: Could not register font {font_name}: {e}", file=sys.stderr)
         
         reader = PdfReader(input_file)
         writer = PdfWriter()
@@ -51,35 +57,56 @@ def add_text_to_pdf(input_file, output_file, text="ניסיון", font_name="dav
             current_width = float(page.mediabox.width)
             current_height = float(page.mediabox.height)
             
+            # Create overlay with all texts
             packet = io.BytesIO()
             can = canvas.Canvas(packet, pagesize=(current_width, current_height))
             
-            font_size = 48
-            can.setFont(actual_font, font_size)
-            can.setFillColorRGB(0.5, 0.5, 0.5, alpha=0.5)
+            # Add each text
+            for text_item in texts_config:
+                text = text_item.get('text', 'ניסיון')
+                font_name = text_item.get('font', 'david')
+                font_size = int(text_item.get('size', 48))
+                color_hex = text_item.get('color', '#808080')
+                top_offset = float(text_item.get('top', 300))
+                right_offset = float(text_item.get('right', 200))
+                
+                # Use registered font or fallback to Helvetica
+                actual_font = font_name if font_name in ['david', 'rubik'] else 'Helvetica'
+                
+                try:
+                    can.setFont(actual_font, font_size)
+                except:
+                    can.setFont('Helvetica', font_size)
+                    actual_font = 'Helvetica'
+                
+                # Set color
+                r, g, b = hex_to_rgb(color_hex)
+                can.setFillColorRGB(r, g, b, alpha=0.7)
+                
+                # Calculate position
+                # Y: from top
+                y = current_height - top_offset
+                
+                # X: from right
+                x = current_width - right_offset
+                
+                # Draw the text
+                can.drawString(x, y, text)
             
-            # Reverse Hebrew text for proper RTL display
-            text_to_display = text[::-1] if actual_font != "Helvetica" else text
-            
-            text_width = can.stringWidth(text_to_display, actual_font, font_size)
-            
-            # x = current_width / 2  # ← הצד הימני במרכז הרוחב
-            x = (current_width / 2) - text_width  # ← השמאל של הטקסט במרכז
-            # y = current_height / 2  # ← התחתית במרכז הגובה
-            y = current_height - 300   # 300 פיקסלים מלמעלה 
-            
-            # x = (current_width - text_width) / 2
-            
-            can.drawString(x, y, text_to_display)
             can.save()
             
+            # Move to the beginning of the BytesIO buffer
             packet.seek(0)
+            
+            # Read the overlay PDF
             overlay = PdfReader(packet)
             overlay_page = overlay.pages[0]
             
+            # Merge the overlay with the original page
             page.merge_page(overlay_page)
             writer.add_page(page)
         
+        # Write output file
         with open(output_file, 'wb') as output_pdf:
             writer.write(output_pdf)
         
@@ -98,16 +125,27 @@ def add_text_to_pdf(input_file, output_file, text="ניסיון", font_name="dav
         }
 
 if __name__ == '__main__':
-    if len(sys.argv) < 3:
+    if len(sys.argv) < 4:
         print(json.dumps({
             'success': False,
-            'error': 'Usage: python3 add_text_to_pdf.py <input_file> <output_file> [font_name]'
+            'error': 'Usage: python3 add_text_to_pdf.py <input_file> <output_file> <texts_json_file>'
         }))
         sys.exit(1)
     
     input_file = sys.argv[1]
     output_file = sys.argv[2]
-    font_name = sys.argv[3] if len(sys.argv) > 3 else 'david'
+    texts_json_file = sys.argv[3]
     
-    result = add_text_to_pdf(input_file, output_file, font_name=font_name)
+    # Read texts configuration
+    try:
+        with open(texts_json_file, 'r', encoding='utf-8') as f:
+            texts_config = json.load(f)
+    except Exception as e:
+        print(json.dumps({
+            'success': False,
+            'error': f'Failed to read texts config: {str(e)}'
+        }))
+        sys.exit(1)
+    
+    result = add_texts_to_pdf(input_file, output_file, texts_config)
     print(json.dumps(result, ensure_ascii=False))

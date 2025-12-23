@@ -45,11 +45,11 @@ def add_texts_to_pdf(input_file, output_file, texts_config):
                     print(f"Warning: Could not register font {font_name}: {e}", file=sys.stderr)
 
         # הוסף:
-        print(f"DEBUG: Fonts dir = {fonts_dir}", file=sys.stderr)
-        print(f"DEBUG: Font files = {font_files}", file=sys.stderr)
-        for font_name, font_file in font_files.items():
-            font_path = os.path.join(fonts_dir, font_file)
-            print(f"DEBUG: Checking {font_name}: {font_path}, exists={os.path.exists(font_path)}", file=sys.stderr)
+        # print(f"DEBUG: Fonts dir = {fonts_dir}", file=sys.stderr)
+        # print(f"DEBUG: Font files = {font_files}", file=sys.stderr)
+        # for font_name, font_file in font_files.items():
+        #     font_path = os.path.join(fonts_dir, font_file)
+        #     print(f"DEBUG: Checking {font_name}: {font_path}, exists={os.path.exists(font_path)}", file=sys.stderr)
         
         reader = PdfReader(input_file)
         writer = PdfWriter()

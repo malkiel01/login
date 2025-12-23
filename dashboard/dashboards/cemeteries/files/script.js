@@ -151,7 +151,8 @@ function addTextItem() {
         size: 48,
         color: '#808080',
         top: 300,
-        right: 200
+        right: 200,
+        page: 1
     };
     
     textItems.push(textItem);
@@ -214,6 +215,13 @@ function renderTextItem(item) {
             <div class="form-group">
                 <label>מרחק מימין (פיקסלים):</label>
                 <input type="number" value="${item.right}" min="0" oninput="updateTextItem(${item.id}, 'right', this.value)">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>עמוד להדפסה:</label>
+                <input type="number" value="${item.page || 1}" min="1" max="99" oninput="updateTextItem(${item.id}, 'page', this.value)">
             </div>
         </div>
     `;

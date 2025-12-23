@@ -392,7 +392,7 @@ document.getElementById('generateTestBtn').addEventListener('click', async () =>
         
         if (result.success) {
             // הורד את הקובץ
-            window.location.href = result.pdf_url;
+            window.location.href = 'download.php?file=' + encodeURIComponent(result.output_file);
             
             // סגור את המודל
             setTimeout(() => {

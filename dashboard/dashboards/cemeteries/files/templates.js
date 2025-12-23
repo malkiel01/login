@@ -106,7 +106,7 @@ function renderTemplates(templates) {
 // Test Template Modal
 // ===============================
 
-async function openTestModal(templateId) {
+async function openTestModal2(templateId) {
     try {
         const response = await fetch(`get_templates.php?id=${templateId}`);
         const data = await response.json();
@@ -118,10 +118,63 @@ async function openTestModal(templateId) {
         
         currentTestTemplate = data.template;
         
-        document.getElementById('testTemplateName').textContent = data.template.template_name;
+        document.getElementById('testTemplateName').textContent = data.template.template_name || 'תבנית ללא שם';
         
         const fieldsContainer = document.getElementById('testFieldsContainer');
         fieldsContainer.innerHTML = data.template.fields.map(field => `
+            <div class="test-field">
+                <label>
+                    <span class="field-label-text">${escapeHtml(field.label)}</span>
+                    <span class="field-id">${field.id}</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="test_${field.id}" 
+                    value="${escapeHtml(field.text)}"
+                    placeholder="הזן ערך עבור ${escapeHtml(field.label)}"
+                >
+            </div>
+        `).join('');
+        
+        document.getElementById('testTemplateModal').classList.add('show');
+        
+    } catch (error) {
+        console.error('Error opening test modal:', error);
+        alert('שגיאה בטעינת התבנית');
+    }
+}
+
+async function openTestModal(templateId) {
+    try {
+        const response = await fetch(`get_templates.php?id=${templateId}`);
+        const data = await response.json();
+        
+        console.log('API Response:', data); // ← לדיבוג
+        
+        if (!data.success) {
+            alert('שגיאה בטעינת התבנית: ' + (data.error || 'לא ידוע'));
+            return;
+        }
+        
+        // בדוק אם template קיים
+        if (!data.template) {
+            alert('שגיאה: התבנית לא הוחזרה מהשרת');
+            console.error('Data received:', data);
+            return;
+        }
+        
+        currentTestTemplate = data.template;
+        
+        // בדוק אם יש fields
+        if (!currentTestTemplate.fields || currentTestTemplate.fields.length === 0) {
+            alert('התבנית לא מכילה שדות');
+            return;
+        }
+        
+        document.getElementById('testTemplateName').textContent = currentTestTemplate.template_name || 'תבנית';
+        
+        const fieldsContainer = document.getElementById('testFieldsContainer');
+        fieldsContainer.innerHTML = currentTestTemplate.fields.map(field => `
             <div class="test-field">
                 <label>
                     <span class="field-label-text">${escapeHtml(field.label)}</span>
@@ -226,7 +279,7 @@ async function viewTemplate(templateId) {
                 <div class="detail-grid">
                     <div class="detail-item">
                         <span class="detail-label">שם תבנית:</span>
-                        <span class="detail-value">${escapeHtml(template.template_name)}</span>
+                        <span class="detail-value">${escapeHtml(template.template_name || 'ללא שם')}</span>
                     </div>
                     <div class="detail-item">
                         <span class="detail-label">מזהה:</span>

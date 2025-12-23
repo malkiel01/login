@@ -116,6 +116,7 @@ if (!move_uploaded_file($pdf_file['tmp_name'], $pdf_path)) {
 // Create config.json
 $config = [
     'template_id' => $template_id,
+    'name' => $template_name,
     'template_name' => $template_name,
     'description' => $template_data['description'] ?? '',
     'created_at' => date('Y-m-d\TH:i:s'),

@@ -147,7 +147,7 @@ async function openTestModal2(templateId) {
     }
 }
 
-async function openTestModal(templateId) {
+async function openTestModal3(templateId) {
     try {
         const response = await fetch(`get_templates.php?id=${templateId}`);
         const data = await response.json();
@@ -213,6 +213,75 @@ async function openTestModal(templateId) {
                 >
             </div>
         `).join('');
+        
+        document.getElementById('testTemplateModal').classList.add('show');
+        
+    } catch (error) {
+        console.error('Error opening test modal:', error);
+        alert('שגיאה בטעינת התבנית');
+    }
+}
+
+async function openTestModal(templateId) {
+    try {
+        const response = await fetch(`get_templates.php?id=${templateId}`);
+        const data = await response.json();
+        
+        console.log('API Response:', data);
+        
+        if (!data.success) {
+            alert('שגיאה בטעינת התבנית: ' + (data.error || 'לא ידוע'));
+            return;
+        }
+        
+        if (!data.template) {
+            alert('שגיאה: התבנית לא הוחזרה מהשרת');
+            console.error('Data received:', data);
+            return;
+        }
+        
+        currentTestTemplate = data.template;
+        
+        if (!currentTestTemplate.fields || currentTestTemplate.fields.length === 0) {
+            alert('התבנית לא מכילה שדות');
+            return;
+        }
+        
+        document.getElementById('testTemplateName').textContent = currentTestTemplate.template_name || 'תבנית';
+        
+        const fieldsContainer = document.getElementById('testFieldsContainer');
+        fieldsContainer.innerHTML = ''; // נקה
+        
+        // צור כל שדה ב-JavaScript (לא HTML string!)
+        currentTestTemplate.fields.forEach(field => {
+            const fieldDiv = document.createElement('div');
+            fieldDiv.className = 'test-field';
+            
+            const label = document.createElement('label');
+            
+            const labelText = document.createElement('span');
+            labelText.className = 'field-label-text';
+            labelText.textContent = field.label;
+            
+            const fieldId = document.createElement('span');
+            fieldId.className = 'field-id';
+            fieldId.textContent = field.id;
+            
+            label.appendChild(labelText);
+            label.appendChild(fieldId);
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.id = `test_${field.id}`;
+            input.value = field.text;  // ← ישירות ב-JavaScript!
+            input.placeholder = `הזן ערך עבור ${field.label}`;
+            input.style.direction = 'rtl';
+            input.style.textAlign = 'right';
+            
+            fieldDiv.appendChild(label);
+            fieldDiv.appendChild(input);
+            fieldsContainer.appendChild(fieldDiv);
+        });
         
         document.getElementById('testTemplateModal').classList.add('show');
         

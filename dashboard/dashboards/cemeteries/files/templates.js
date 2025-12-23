@@ -363,15 +363,29 @@ document.getElementById('generateTestBtn').addEventListener('click', async () =>
     generateBtn.textContent = 'יוצר PDF...';
     
     try {
-        const response = await fetch('generate_pdf.php', {
+        // בנה את textItems בדיוק כמו באינדקס
+        const textItems = currentTestTemplate.fields.map(field => ({
+            text: data[field.id] || field.text,
+            font: field.font,
+            size: field.size,
+            color: field.color,
+            top: field.top,
+            right: field.right
+        }));
+
+        // צור FormData בדיוק כמו באינדקס
+        const formData = new FormData();
+
+        // קרא את ה-PDF מהשרת (התבנית)
+        const pdfResponse = await fetch(`templates/${currentTestTemplate.template_id}/template.pdf`);
+        const pdfBlob = await pdfResponse.blob();
+        formData.append('pdf', pdfBlob, 'template.pdf');
+        formData.append('texts', JSON.stringify(textItems));
+
+        // שלח ל-process.php!
+        const response = await fetch('process.php', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                template_id: currentTestTemplate.template_id,
-                data: data
-            })
+            body: formData
         });
         
         const result = await response.json();

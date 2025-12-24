@@ -370,14 +370,15 @@ input[type="file"] {
 }
 
 .preview-container {
-    flex: none;  /* ← בטל flex */
-    width: 100%;  /* ← הוסף! */
-    height: calc(100% - 96px);  /* ← גובה קבוע: 100% פחות הכותרת (73px + 15px margin) */
+    flex: none;
+    width: 100%;
+    height: calc(100% - 96px);
     overflow: auto;
     border: 2px solid #e0e7ff;
     border-radius: 10px;
     background: #f8f9ff;
-    padding: 20;
+    padding: 0;  /* ← 0 בלי padding */
+    box-sizing: border-box;  /* ← הוסף! */
 }
 
 .preview-header h3 {
@@ -416,8 +417,6 @@ input[type="file"] {
 #pdfCanvas {
     display: block;
     cursor: grab;
-        max-width: 100%;   /* ← הוסף! חשוב! */
-    height: auto;      /* ← הוסף! */
 }
 
 #pdfCanvas:active {

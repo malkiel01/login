@@ -359,7 +359,7 @@ input[type="file"] {
     padding: 20px;
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 400px);  /* ← שנה מ-max-height ל-height */
+    height: calc(100vh - 4px);  /* ← שנה מ-max-height ל-height */
     box-sizing: border-box;
 }
 

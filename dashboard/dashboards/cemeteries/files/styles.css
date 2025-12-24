@@ -370,14 +370,13 @@ input[type="file"] {
 }
 
 .preview-container {
-    flex: 1 1 0;  /* ← שנה */
+    flex: none;  /* ← בטל flex */
+    height: calc(100% - 88px);  /* ← גובה קבוע: 100% פחות הכותרת (73px + 15px margin) */
     overflow: auto;
     border: 2px solid #e0e7ff;
     border-radius: 10px;
     background: #f8f9ff;
     padding: 0;
-    min-height: 0;
-    align-self: stretch;  /* ← הוסף */
 }
 
 .preview-header h3 {

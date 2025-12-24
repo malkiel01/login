@@ -350,16 +350,14 @@ input[type="file"] {
     display: block;
 }
 
-.preview-section {
-    flex: 1;
-    background: white;
-    border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-    box-sizing: border-box;
+.preview-container {
+    flex: none;  /* ← בטל flex */
+    height: calc(100% - 88px);  /* ← גובה קבוע: 100% פחות הכותרת (73px + 15px margin) */
+    overflow: auto;
+    border: 2px solid #e0e7ff;
+    border-radius: 10px;
+    background: #f8f9ff;
+    padding: 0;
 }
 
 .preview-header {

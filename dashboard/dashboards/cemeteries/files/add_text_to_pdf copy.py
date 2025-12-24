@@ -95,13 +95,7 @@ def add_texts_to_pdf(input_file, output_file, texts_config):
                     continue  # דלג על טקסטים שלא שייכים לעמוד הזה
                 
                 text = text_item.get('text', 'ניסיון')
-                align = text_item.get('align', 'right')  # ← הוסף
-                
-                # Reverse text only for RTL (right align)
-                if align == 'right':
-                    text_to_display = text[::-1]  # Reverse for Hebrew RTL
-                else:
-                    text_to_display = text  # Keep as-is for LTR
+                text_to_display = text[::-1]  # Reverse for Hebrew RTL
                 
                 font_name = text_item.get('font', 'david')
                 font_size = int(text_item.get('size', 48))
@@ -125,14 +119,12 @@ def add_texts_to_pdf(input_file, output_file, texts_config):
                 r, g, b = hex_to_rgb(color_hex)
                 can.setFillColorRGB(r, g, b, alpha=0.7)
                 
-                # Calculate position based on alignment
+                # Calculate position
                 y = current_height - top_offset
-                if align == 'right':
-                    x = current_width - right_offset
-                    can.drawRightString(x, y, text_to_display)
-                else:  # left
-                    x = right_offset
-                    can.drawString(x, y, text_to_display)
+                x = current_width - right_offset
+                
+                # Draw the text with RIGHT alignment
+                can.drawRightString(x, y, text_to_display)
                 
             can.save()
             

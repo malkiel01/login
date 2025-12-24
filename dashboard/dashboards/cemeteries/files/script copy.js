@@ -152,8 +152,7 @@ function addTextItem() {
         color: '#808080',
         top: 300,
         right: 200,
-        page: 1,
-        align: 'right'  // ← הוסף: 'right' או 'left'
+        page: 1
     };
     
     textItems.push(textItem);
@@ -221,16 +220,6 @@ function renderTextItem(item) {
             <div class="form-group">
                 <label>עמוד להדפסה:</label>
                 <input type="number" value="${item.page || 1}" min="1" max="99" oninput="updateTextItem(${item.id}, 'page', this.value)">
-            </div>
-        </div>
-        
-        <div class="form-row">
-            <div class="form-group">
-                <label>יישור טקסט:</label>
-                <select onchange="updateTextItem(${item.id}, 'align', this.value)">
-                    <option value="right" ${(item.align || 'right') === 'right' ? 'selected' : ''}>ימין (עברית)</option>
-                    <option value="left" ${item.align === 'left' ? 'selected' : ''}>שמאל (אנגלית)</option>
-                </select>
             </div>
         </div>
     `;
@@ -495,25 +484,18 @@ function drawTextsOnCanvas(viewport) {
         const color = item.color;
         const topOffset = parseFloat(item.top);
         const rightOffset = parseFloat(item.right);
-        const align = item.align || 'right';  // ← הוסף
         
         // מצא את הפונט ברשימה
         const fontData = availableFonts.find(f => f.id === item.font);
         const fontName = fontData ? fontData.id : 'Arial';
         
-        // חשב X לפי יישור
-        let x;
-        if (align === 'right') {
-            x = viewport.width - rightOffset;  // מימין
-        } else {
-            x = rightOffset;  // משמאל
-        }
+        const x = viewport.width - rightOffset;
         const y = topOffset;
         
         ctx.font = `${fontSize}px "${fontName}", sans-serif`;
         ctx.fillStyle = color;
         ctx.globalAlpha = 0.7;
-        ctx.textAlign = align;  // ← דינמי
+        ctx.textAlign = 'right';
         
         ctx.fillText(text, x, y);
         
@@ -593,8 +575,7 @@ confirmSaveBtn.addEventListener('click', async () => {
             color: item.color,
             top: parseFloat(item.top),
             right: parseFloat(item.right),
-            page: parseInt(item.page) || 1,
-            align: item.align || 'right'  // ← הוסף align
+            page: parseInt(item.page) || 1  // ← הוסף page
         }))
     };
     

@@ -98,8 +98,8 @@ def add_texts_to_pdf(input_file, output_file, texts_config):
                 align = text_item.get('align', 'right')  # ← הוסף
 
                 # ← הוסף את זה!
-                import sys
-                print(f"DEBUG: text='{text}', align='{align}'", file=sys.stderr)
+                # import sys
+                # print(f"DEBUG: text='{text}', align='{align}'", file=sys.stderr)
                 
                 # Reverse text only for RTL (right align)
                 if align == 'right':

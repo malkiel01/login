@@ -25,6 +25,32 @@ let pageRendering = false;
 let pageNumPending = null;
 let pdfScale = 2.0;
 
+const minScale = 0.5;
+const maxScale = 4.0;
+const scaleStep = 0.25;
+
+// Zoom Controls
+document.getElementById('zoomIn').addEventListener('click', () => {
+    if (pdfScale < maxScale) {
+        pdfScale += scaleStep;
+        updateZoom();
+    }
+});
+
+document.getElementById('zoomOut').addEventListener('click', () => {
+    if (pdfScale > minScale) {
+        pdfScale -= scaleStep;
+        updateZoom();
+    }
+});
+
+function updateZoom() {
+    document.getElementById('zoomLevel').textContent = Math.round(pdfScale * 100) + '%';
+    if (pdfDoc) {
+        renderPage(currentPageNum);
+    }
+}
+
 const canvas = document.getElementById('pdfCanvas');
 const ctx = canvas.getContext('2d');
 

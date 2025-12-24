@@ -71,6 +71,8 @@ canvas.addEventListener('mouseup', handleCanvasMouseUp);
 
 
 function handleCanvasMouseDown(e) {
+    console.log('Mouse down!', e.clientX, e.clientY);  // ← הוסף
+    
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;

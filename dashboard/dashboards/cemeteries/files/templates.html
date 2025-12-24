@@ -6,6 +6,15 @@
     <title>ניהול תבניות PDF</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="templates.css">
+    
+    <!-- הוסף את זה! -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;700&display=swap');
+        
+        body, input, textarea, select, button {
+            font-family: 'Heebo', 'Segoe UI', Arial, sans-serif !important;
+        }
+    </style>
 </head>
 <body>
     <div class="templates-page">
@@ -164,41 +173,6 @@ if ($result['success']) {
         </div>
     </div>
 
-    <!-- Load fonts and shared functions first -->
-    <script>
-        // Copy only the font loading logic from script.js
-        let availableFonts = [];
-
-        async function loadFonts() {
-            try {
-                const response = await fetch('fonts.json');
-                const data = await response.json();
-                availableFonts = data.fonts;
-                
-                for (const font of availableFonts) {
-                    const fontFace = new FontFace(
-                        font.id, 
-                        `url(${font.path})`
-                    );
-                    
-                    try {
-                        await fontFace.load();
-                        document.fonts.add(fontFace);
-                        console.log(`✅ Loaded font: ${font.name}`);
-                    } catch (e) {
-                        console.error(`Failed to load font ${font.name}:`, e);
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading fonts:', error);
-            }
-        }
-
-        // Load fonts immediately
-        loadFonts();
-    </script>
-    
-    <!-- Then load templates-specific code -->
     <script src="templates.js"></script>
 </body>
 </html>

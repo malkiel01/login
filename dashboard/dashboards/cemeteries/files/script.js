@@ -70,9 +70,9 @@ canvas.addEventListener('mouseup', handleCanvasMouseUp);
 // ===============================
 
 
-function handleCanvasMouseDown(e) {
+function handleCanvasMouseDown2(e) {
     console.log('Mouse down!', e.clientX, e.clientY);  // ← הוסף
-    
+
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -86,6 +86,31 @@ function handleCanvasMouseDown(e) {
         dragStartTop = clickedText.top;
         dragStartRight = clickedText.right;
         canvas.style.cursor = 'grabbing';
+    }
+}
+
+function handleCanvasMouseDown(e) {
+    console.log('Mouse down!', e.clientX, e.clientY);
+    
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    console.log('Canvas coords:', x, y);  // ← הוסף
+    
+    const clickedText = findTextAtPosition(x, y);
+    console.log('Clicked text:', clickedText);  // ← הוסף
+    
+    if (clickedText) {
+        console.log('Starting drag!');  // ← הוסף
+        draggingTextId = clickedText.id;
+        dragStartX = x;
+        dragStartY = y;
+        dragStartTop = clickedText.top;
+        dragStartRight = clickedText.right;
+        canvas.style.cursor = 'grabbing';
+    } else {
+        console.log('No text found at this position');  // ← הוסף
     }
 }
 

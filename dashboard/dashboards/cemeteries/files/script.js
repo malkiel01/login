@@ -179,7 +179,7 @@ function handleCanvasMouseMove2(e) {
     }
 }
 
-function handleCanvasMouseMove(e) {
+function handleCanvasMouseMove3(e) {
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -230,6 +230,82 @@ function handleCanvasMouseMove(e) {
         updateFieldValues(item);
         renderPage(currentPageNum);
     }
+}
+
+async function handleCanvasMouseMove(e) {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    const canvasX = x * scaleX;
+    const canvasY = y * scaleY;
+    
+    // אם בresize
+    if (resizingCorner !== null) {
+        const item = textItems.find(t => t.id === selectedTextId);
+        if (item) {
+            // חשב שינוי בגודל לפי מרחק מהנקודה ההתחלתית
+            const deltaX = canvasX - resizeStartX;
+            const deltaY = canvasY - resizeStartY;
+            const delta = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            
+            // קבע כיוון (+/-)
+            let sign = 1;
+            if (resizingCorner === 'top-left' || resizingCorner === 'bottom-left') {
+                sign = deltaX < 0 ? 1 : -1;
+            } else {
+                sign = deltaX > 0 ? 1 : -1;
+            }
+            
+            const newSize = Math.max(12, Math.round(resizeStartSize + (delta * sign / pdfScale / 3)));
+            item.size = newSize;
+            
+            updateFieldValues(item);
+            renderPage(currentPageNum);
+        }
+        return;
+    }
+    
+    // אם בגרירה
+    if (draggingTextId !== null) {
+        const deltaX = canvasX - dragStartX;
+        const deltaY = canvasY - dragStartY;
+        
+        const item = textItems.find(t => t.id === draggingTextId);
+        if (item) {
+            item.top = Math.round(dragStartTop + (deltaY / pdfScale));
+            item.right = Math.round(dragStartRight - (deltaX / pdfScale));
+            
+            updateFieldValues(item);
+            renderPage(currentPageNum);
+        }
+        return;
+    }
+    
+    // שנה cursor כשעוברים על פינות
+    if (selectedTextId !== null) {
+        const selectedItem = textItems.find(t => t.id === selectedTextId);
+        if (selectedItem && (parseInt(selectedItem.page) || 1) === currentPageNum) {
+            const page = await pdfDoc.getPage(currentPageNum);
+            const viewport = page.getViewport({ scale: pdfScale });
+            const corner = findCornerAtPosition(canvasX, canvasY, selectedItem, viewport);
+            
+            if (corner) {
+                if (corner === 'top-right' || corner === 'bottom-left') {
+                    canvas.style.cursor = 'nesw-resize';
+                } else {
+                    canvas.style.cursor = 'nwse-resize';
+                }
+                return;
+            }
+        }
+    }
+    
+    // אם לא על פינה ולא בגרירה, cursor רגיל
+    canvas.style.cursor = 'grab';
 }
 
 function handleCanvasMouseUp2() {

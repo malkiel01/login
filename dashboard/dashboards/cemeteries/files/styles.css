@@ -359,7 +359,7 @@ input[type="file"] {
     display: flex;
     flex-direction: column;
     min-height: 0;
-    box-sizing: border-box;  /* ← חשוב */
+    box-sizing: border-box;
 }
 
 .preview-header {

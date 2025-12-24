@@ -365,7 +365,8 @@ input[type="file"] {
 .preview-header {
     margin-bottom: 15px;
     flex-shrink: 0;
-    height: auto;  /* ← הוסף */
+    height: auto;
+    margin: 0 0 15px 0;  /* ← הוסף - מאפס margins אחרים */
 }
 
 .preview-container {

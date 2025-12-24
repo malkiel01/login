@@ -262,6 +262,13 @@ function findTextAtPosition(x, y) {
         const rightOffset = parseFloat(item.right) * pdfScale;
         const align = item.align || 'right';
         
+        // מצא את הפונט ברשימה למדידת רוחב
+        const fontData = availableFonts.find(f => f.id === item.font);
+        const fontName = fontData ? fontData.id : 'Arial';
+        
+        ctx.font = `${fontSize}px "${fontName}", sans-serif`;
+        const textWidth = ctx.measureText(item.text).width;
+        
         let textX, textY;
         if (align === 'right') {
             textX = canvas.width - rightOffset;
@@ -270,11 +277,31 @@ function findTextAtPosition(x, y) {
         }
         textY = topOffset;
         
-        console.log(`  Position: x=${textX}, y=${textY}, fontSize=${fontSize}`);
+        // הגדר hitbox גדול יותר - מלבן מלא סביב הטקסט
+        let hitBoxLeft, hitBoxRight, hitBoxTop, hitBoxBottom;
         
-        // ... המשך הפונקציה
+        if (align === 'right') {
+            hitBoxRight = textX + 10;  // margin קטן מימין
+            hitBoxLeft = textX - textWidth - 10;  // margin קטן משמאל
+        } else {
+            hitBoxLeft = textX - 10;
+            hitBoxRight = textX + textWidth + 10;
+        }
+        
+        hitBoxTop = textY - fontSize * 1.2;  // מעל הטקסט (כולל ascenders)
+        hitBoxBottom = textY + fontSize * 0.3;  // מתחת לטקסט (כולל descenders)
+        
+        console.log(`  HitBox: left=${hitBoxLeft}, right=${hitBoxRight}, top=${hitBoxTop}, bottom=${hitBoxBottom}`);
+        console.log(`  Click: x=${x}, y=${y}`);
+        
+        if (x >= hitBoxLeft && x <= hitBoxRight &&
+            y >= hitBoxTop && y <= hitBoxBottom) {
+            console.log('  ✅ HIT!');
+            return item;
+        }
     }
     
+    console.log('No text found');
     return null;
 }
 

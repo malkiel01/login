@@ -24,13 +24,6 @@ body {
     box-sizing: border-box;
 }
 
-/* .main-container {
-    display: flex;
-    gap: 20px;
-    max-width: 1400px;
-    margin: 0 auto;
-} */
-
 /* Controls Section - Fixed width on right */
 .controls-section {
     flex: 0 0 500px;
@@ -39,11 +32,6 @@ body {
     overflow-y: auto;
     max-height: calc(100vh - 40px);
 }
-
-/* .controls-section {
-    flex: 1;
-    min-width: 600px;
-} */
 
 .container {
     background: white;
@@ -374,22 +362,8 @@ input[type="file"] {
     max-height: calc(100vh - 40px);
 }
 
-/* .preview-section {
-    width: 640px;
-    background: white;
-    border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    padding: 20px;
-    position: sticky;
-    top: 20px;
-    height: fit-content;
-    max-height: calc(100vh - 40px);
-    display: flex;
-    flex-direction: column;
-} */
-
 /* Preview Container - 100% scale with scroll */
-.preview-container {
+/* .preview-container {
     flex: 1;
     overflow: auto;
     border: 2px solid #e0e7ff;
@@ -400,18 +374,17 @@ input[type="file"] {
     justify-content: center;
     align-items: flex-start;
     padding: 20px;
-}
+} */
 
-/* .preview-container {
-    width: 600px; 
-    height: 800px; 
+.preview-container {
+    flex: 1;
     overflow: auto;
     border: 2px solid #e0e7ff;
     border-radius: 10px;
     position: relative;
     background: #f8f9ff;
-    flex-shrink: 0;
-} */
+    padding: 0;  /* ← ללא padding */
+}
 
 .preview-header {
     margin-bottom: 15px;
@@ -452,9 +425,16 @@ input[type="file"] {
 }
 
 /* הקנבס בגודל מלא - 100% */
+/* #pdfCanvas {
+    display: block;
+    cursor: grab;
+} */
+
 #pdfCanvas {
     display: block;
     cursor: grab;
+    max-width: none;
+    max-height: none;
 }
 
 #pdfCanvas:active {

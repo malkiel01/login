@@ -547,7 +547,7 @@ function drawTextsOnCanvas2(viewport) {
         ctx.textAlign = 'left';
     });
 }
-function drawTextsOnCanvas(viewport) {
+function drawTextsOnCanvas3(viewport) {
     // קבל viewport ב-scale 1.0 לחישוב נכון
     const baseScale = viewport.scale;  // ← ה-scale הנוכחי
     
@@ -571,6 +571,44 @@ function drawTextsOnCanvas(viewport) {
         let x;
         if (align === 'right') {
             x = viewport.width - rightOffset;
+        } else {
+            x = rightOffset;
+        }
+        const y = topOffset;
+        
+        ctx.font = `${fontSize}px "${fontName}", sans-serif`;
+        ctx.fillStyle = color;
+        ctx.globalAlpha = 0.7;
+        ctx.textAlign = align;
+        
+        ctx.fillText(text, x, y);
+        
+        ctx.globalAlpha = 1.0;
+        ctx.textAlign = 'left';
+    });
+}
+function drawTextsOnCanvas(viewport) {
+    const baseScale = viewport.scale;
+    
+    textItems.forEach(item => {
+        const itemPage = parseInt(item.page) || 1;
+        if (itemPage !== currentPageNum) {
+            return;
+        }
+        
+        const text = item.text;
+        const fontSize = Math.round(parseInt(item.size) * baseScale);  // ← עיגול
+        const color = item.color;
+        const topOffset = Math.round(parseFloat(item.top) * baseScale);  // ← עיגול
+        const rightOffset = Math.round(parseFloat(item.right) * baseScale);  // ← עיגול
+        const align = item.align || 'right';
+        
+        const fontData = availableFonts.find(f => f.id === item.font);
+        const fontName = fontData ? fontData.id : 'Arial';
+        
+        let x;
+        if (align === 'right') {
+            x = Math.round(viewport.width - rightOffset);  // ← עיגול
         } else {
             x = rightOffset;
         }

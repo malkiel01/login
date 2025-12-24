@@ -91,15 +91,33 @@
         </div>
         
         <!-- צד ימין - תצוגה מקדימה -->
+
+        
         <div class="preview-section" id="previewSection" style="display: none;">
             <div class="preview-header">
                 <h3>תצוגה מקדימה</h3>
+                
+                <!-- ← הוסף כאן -->
+                <div class="zoom-controls">
+                    <button id="zoomOut">🔍-</button>
+                    <span id="zoomLevel">100%</span>
+                    <button id="zoomIn">🔍+</button>
+                </div>
+                
                 <div class="page-navigation" id="pageNav" style="display: none;">
                     <button id="prevPage">◀</button>
                     <span id="pageInfo">דף <span id="currentPage">1</span> מתוך <span id="totalPages">1</span></span>
                     <button id="nextPage">▶</button>
                 </div>
             </div>
+            <!-- <div class="preview-header">
+                <h3>תצוגה מקדימה</h3>
+                <div class="page-navigation" id="pageNav" style="display: none;">
+                    <button id="prevPage">◀</button>
+                    <span id="pageInfo">דף <span id="currentPage">1</span> מתוך <span id="totalPages">1</span></span>
+                    <button id="nextPage">▶</button>
+                </div>
+            </div> -->
             <div class="preview-container" id="previewContainer">
                 <canvas id="pdfCanvas"></canvas>
             </div>

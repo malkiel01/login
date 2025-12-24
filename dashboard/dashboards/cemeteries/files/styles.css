@@ -543,3 +543,33 @@ input[type="file"] {
 .modal-error.show {
     display: block;
 }
+
+
+.zoom-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.zoom-controls button {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1.2em;
+}
+
+.zoom-controls button:hover {
+    background: #5568d3;
+}
+
+#zoomLevel {
+    min-width: 60px;
+    text-align: center;
+    font-weight: bold;
+    color: #667eea;
+}

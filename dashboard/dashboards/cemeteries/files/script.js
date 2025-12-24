@@ -23,7 +23,7 @@ let currentPageNum = 1;
 let totalPagesNum = 0;
 let pageRendering = false;
 let pageNumPending = null;
-let pdfScale = 2.0;
+let pdfScale = 1.0;
 
 const canvas = document.getElementById('pdfCanvas');
 const ctx = canvas.getContext('2d');

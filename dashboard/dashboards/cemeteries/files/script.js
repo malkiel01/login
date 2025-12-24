@@ -610,7 +610,8 @@ function drawTextsOnCanvas(viewport) {
         if (align === 'right') {
             // ← הוסף offset קטן לתיקון
             // x = Math.round(viewport.width - rightOffset) + (fontSize * 0.02);
-            x = Math.round(viewport.width - rightOffset) - (fontSize * 0.04);
+            // x = Math.round(viewport.width - rightOffset) - (fontSize * 0.04);
+            x = viewport.width - rightOffset;
         } else {
             x = rightOffset;
         }

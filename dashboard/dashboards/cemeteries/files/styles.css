@@ -386,7 +386,7 @@ input[type="file"] {
     padding: 0;
 }
 
-.preview-container3 {
+.preview-container {
     flex: 1;  /* ← חזור ל-flex */
     overflow: auto;
     border: 2px solid #e0e7ff;
@@ -394,13 +394,6 @@ input[type="file"] {
     background: #f8f9ff;
     padding: 0;
     min-height: 0;  /* ← חשוב! */
-}
-
-.preview-container {
-    flex: 1 1 0;
-    overflow: auto;
-    min-height: 0;
-    max-height: 100%;  /* ← זה מגביל! */
 }
 
 .preview-header h3 {
@@ -436,9 +429,17 @@ input[type="file"] {
     cursor: not-allowed;
 }
 
+#pdfCanvas2 {
+    display: block;
+    cursor: grab;
+}
+
 #pdfCanvas {
     display: block;
     cursor: grab;
+    max-width: 100%;   /* ← לעולם לא יעבור את רוחב ה-container */
+    max-height: 100%;  /* ← לעולם לא יעבור את גובה ה-container */
+    object-fit: contain;  /* ← שמור על יחס גובה-רוחב */
 }
 
 #pdfCanvas:active {

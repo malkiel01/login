@@ -307,7 +307,7 @@ function findTextAtPosition(x, y) {
     return null;
 }
 
-function updateFieldValues(item) {
+function updateFieldValues2(item) {
     // עדכן את השדות בטופס
     const itemDiv = document.getElementById(`text-item-${item.id}`);
     if (itemDiv) {
@@ -315,6 +315,17 @@ function updateFieldValues(item) {
         const inputs = itemDiv.querySelectorAll('input[type="number"]');
         inputs[2].value = item.top;  // top
         inputs[3].value = item.right; // right
+    }
+}
+
+function updateFieldValues(item) {
+    const itemDiv = document.getElementById(`text-item-${item.id}`);
+    if (itemDiv) {
+        const inputs = itemDiv.querySelectorAll('input[type="number"]');
+        inputs[0].value = item.size;   // ← size (index 0)
+        inputs[1].value = item.page;   // ← page (index 1)
+        inputs[2].value = item.top;    // ← top (index 2)
+        inputs[3].value = item.right;  // ← right (index 3)
     }
 }
 

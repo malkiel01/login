@@ -371,8 +371,7 @@ document.getElementById('generateTestBtn').addEventListener('click', async () =>
             color: field.color,
             top: field.top,
             right: field.right,
-            page: field.page || 1,
-            align: field.align || 'right'  // ← הוסף align
+            page: field.page || 1  // ← הוסף page
         }));
 
         // צור FormData בדיוק כמו באינדקס

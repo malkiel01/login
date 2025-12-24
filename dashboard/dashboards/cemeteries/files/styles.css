@@ -371,6 +371,7 @@ input[type="file"] {
 
 .preview-container {
     flex: none;  /* ← בטל flex */
+    width: 100%;  /* ← הוסף! */
     height: calc(100% - 96px);  /* ← גובה קבוע: 100% פחות הכותרת (73px + 15px margin) */
     overflow: auto;
     border: 2px solid #e0e7ff;

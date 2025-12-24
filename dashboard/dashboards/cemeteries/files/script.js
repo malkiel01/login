@@ -597,10 +597,10 @@ function drawTextsOnCanvas(viewport) {
         }
         
         const text = item.text;
-        const fontSize = Math.round(parseInt(item.size) * baseScale);  // ← עיגול
+        const fontSize = Math.round(parseInt(item.size) * baseScale);
         const color = item.color;
-        const topOffset = Math.round(parseFloat(item.top) * baseScale);  // ← עיגול
-        const rightOffset = Math.round(parseFloat(item.right) * baseScale);  // ← עיגול
+        const topOffset = Math.round(parseFloat(item.top) * baseScale);
+        const rightOffset = Math.round(parseFloat(item.right) * baseScale);
         const align = item.align || 'right';
         
         const fontData = availableFonts.find(f => f.id === item.font);
@@ -608,7 +608,8 @@ function drawTextsOnCanvas(viewport) {
         
         let x;
         if (align === 'right') {
-            x = Math.round(viewport.width - rightOffset);  // ← עיגול
+            // ← הוסף offset קטן לתיקון
+            x = Math.round(viewport.width - rightOffset) + (fontSize * 0.02);
         } else {
             x = rightOffset;
         }

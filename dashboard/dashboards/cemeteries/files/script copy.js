@@ -25,12 +25,6 @@ let pageRendering = false;
 let pageNumPending = null;
 let pdfScale = 2.0;
 
-let draggingTextId = null;
-let dragStartX = 0;
-let dragStartY = 0;
-let dragStartTop = 0;
-let dragStartRight = 0;
-
 const minScale = 0.5;
 const maxScale = 4.0;
 const scaleStep = 0.25;
@@ -59,112 +53,6 @@ function updateZoom() {
 
 const canvas = document.getElementById('pdfCanvas');
 const ctx = canvas.getContext('2d');
-
-canvas.addEventListener('mousedown', handleCanvasMouseDown);
-canvas.addEventListener('mousemove', handleCanvasMouseMove);
-canvas.addEventListener('mouseup', handleCanvasMouseUp);
-
-
-// ===============================
-// גרירה על הקנבס
-// ===============================
-
-
-function handleCanvasMouseDown(e) {
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    // מצא את הטקסט שנלחץ
-    const clickedText = findTextAtPosition(x, y);
-    if (clickedText) {
-        draggingTextId = clickedText.id;
-        dragStartX = x;
-        dragStartY = y;
-        dragStartTop = clickedText.top;
-        dragStartRight = clickedText.right;
-        canvas.style.cursor = 'grabbing';
-    }
-}
-
-function handleCanvasMouseMove(e) {
-    if (draggingTextId === null) return;
-    
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    const deltaX = x - dragStartX;
-    const deltaY = y - dragStartY;
-    
-    // חשב מיקום חדש (התחשב ב-scale!)
-    const item = textItems.find(t => t.id === draggingTextId);
-    if (item) {
-        item.top = Math.round(dragStartTop + (deltaY / pdfScale));
-        item.right = Math.round(dragStartRight - (deltaX / pdfScale));
-        
-        // עדכן את השדות
-        updateFieldValues(item);
-        
-        // רנדר מחדש
-        renderPage(currentPageNum);
-    }
-}
-
-function handleCanvasMouseUp() {
-    draggingTextId = null;
-    canvas.style.cursor = 'grab';
-}
-
-function findTextAtPosition(x, y) {
-    // מצא טקסט שהעכבר עליו
-    for (let i = textItems.length - 1; i >= 0; i--) {
-        const item = textItems[i];
-        const itemPage = parseInt(item.page) || 1;
-        if (itemPage !== currentPageNum) continue;
-        
-        const fontSize = parseInt(item.size) * pdfScale;
-        const topOffset = parseFloat(item.top) * pdfScale;
-        const rightOffset = parseFloat(item.right) * pdfScale;
-        const align = item.align || 'right';
-        
-        let textX, textY;
-        if (align === 'right') {
-            textX = canvas.width - rightOffset;
-        } else {
-            textX = rightOffset;
-        }
-        textY = topOffset;
-        
-        // בדוק אם העכבר בתוך הטקסט (בערך)
-        ctx.font = `${fontSize}px "${item.font}", sans-serif`;
-        const textWidth = ctx.measureText(item.text).width;
-        
-        if (align === 'right') {
-            if (x >= textX - textWidth && x <= textX &&
-                y >= textY - fontSize && y <= textY) {
-                return item;
-            }
-        } else {
-            if (x >= textX && x <= textX + textWidth &&
-                y >= textY - fontSize && y <= textY) {
-                return item;
-            }
-        }
-    }
-    return null;
-}
-
-function updateFieldValues(item) {
-    // עדכן את השדות בטופס
-    const itemDiv = document.getElementById(`text-item-${item.id}`);
-    if (itemDiv) {
-        const topInput = itemDiv.querySelector('input[type="number"]');
-        const inputs = itemDiv.querySelectorAll('input[type="number"]');
-        inputs[2].value = item.top;  // top
-        inputs[3].value = item.right; // right
-    }
-}
 
 // ===============================
 // Dynamic Font Loading

@@ -89,7 +89,7 @@ function handleCanvasMouseDown2(e) {
     }
 }
 
-function handleCanvasMouseDown(e) {
+function handleCanvasMouseDown3(e) {
     console.log('Mouse down!', e.clientX, e.clientY);
     
     const rect = canvas.getBoundingClientRect();
@@ -114,7 +114,39 @@ function handleCanvasMouseDown(e) {
     }
 }
 
-function handleCanvasMouseMove(e) {
+function handleCanvasMouseDown(e) {
+    console.log('Mouse down!', e.clientX, e.clientY);
+    
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    // ← התאם ליחס בין גודל תצוגה לגודל אמיתי
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    const canvasX = x * scaleX;
+    const canvasY = y * scaleY;
+    
+    console.log('Canvas coords (adjusted):', canvasX, canvasY);
+    
+    const clickedText = findTextAtPosition(canvasX, canvasY);
+    console.log('Clicked text:', clickedText);
+    
+    if (clickedText) {
+        console.log('Starting drag!');
+        draggingTextId = clickedText.id;
+        dragStartX = canvasX;  // ← שנה
+        dragStartY = canvasY;  // ← שנה
+        dragStartTop = clickedText.top;
+        dragStartRight = clickedText.right;
+        canvas.style.cursor = 'grabbing';
+    } else {
+        console.log('No text found at this position');
+    }
+}
+
+function handleCanvasMouseMove2(e) {
     if (draggingTextId === null) return;
     
     const rect = canvas.getBoundingClientRect();
@@ -134,6 +166,33 @@ function handleCanvasMouseMove(e) {
         updateFieldValues(item);
         
         // רנדר מחדש
+        renderPage(currentPageNum);
+    }
+}
+
+function handleCanvasMouseMove(e) {
+    if (draggingTextId === null) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    // ← התאם
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    const canvasX = x * scaleX;
+    const canvasY = y * scaleY;
+    
+    const deltaX = canvasX - dragStartX;
+    const deltaY = canvasY - dragStartY;
+    
+    const item = textItems.find(t => t.id === draggingTextId);
+    if (item) {
+        item.top = Math.round(dragStartTop + (deltaY / pdfScale));
+        item.right = Math.round(dragStartRight - (deltaX / pdfScale));
+        
+        updateFieldValues(item);
         renderPage(currentPageNum);
     }
 }

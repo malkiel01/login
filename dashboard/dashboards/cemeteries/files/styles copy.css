@@ -9,41 +9,19 @@ body {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
     padding: 20px;
-    padding: 0;  /* ← שנה מ-20px ל-0 */
-    margin: 0;
 }
 
-/* Main Container - Full screen layout */
 .main-container {
-    display: flex;
-    gap: 20px;
-    max-width: 100%;
-    margin: 0;
-    height: 100vh;
-    padding: 20px;
-    box-sizing: border-box;
-}
-
-/* .main-container {
     display: flex;
     gap: 20px;
     max-width: 1400px;
     margin: 0 auto;
-} */
-
-/* Controls Section - Fixed width on right */
-.controls-section {
-    flex: 0 0 500px;
-    min-width: 500px;
-    max-width: 500px;
-    overflow-y: auto;
-    max-height: calc(100vh - 40px);
 }
 
-/* .controls-section {
+.controls-section {
     flex: 1;
     min-width: 600px;
-} */
+}
 
 .container {
     background: white;
@@ -362,20 +340,9 @@ input[type="file"] {
     display: block;
 }
 
-/* Preview Section - Takes remaining space */
+/* Preview Section */
 .preview-section {
-    flex: 1;
-    background: white;
-    border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    max-height: calc(100vh - 40px);
-}
-
-/* .preview-section {
-    width: 640px;
+    width: 640px;  /* 600 + 20 + 20 פדינג */
     background: white;
     border-radius: 20px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
@@ -386,32 +353,18 @@ input[type="file"] {
     max-height: calc(100vh - 40px);
     display: flex;
     flex-direction: column;
-} */
-
-/* Preview Container - 100% scale with scroll */
-.preview-container {
-    flex: 1;
-    overflow: auto;
-    border: 2px solid #e0e7ff;
-    border-radius: 10px;
-    position: relative;
-    background: #f8f9ff;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding: 20px;
 }
 
-/* .preview-container {
-    width: 600px; 
-    height: 800px; 
+.preview-container {
+    width: 600px;   /* ← הגדל */
+    height: 800px;  /* ← הגדל */
     overflow: auto;
     border: 2px solid #e0e7ff;
     border-radius: 10px;
     position: relative;
     background: #f8f9ff;
     flex-shrink: 0;
-} */
+}
 
 .preview-header {
     margin-bottom: 15px;

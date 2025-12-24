@@ -482,24 +482,15 @@ async function renderPage(num) {
         const page = await pdfDoc.getPage(num);
         const viewport = page.getViewport({ scale: pdfScale });
         
-        const outputScale = window.devicePixelRatio || 1;
-        canvas.width = viewport.width * outputScale;
-        canvas.height = viewport.height * outputScale;
-        canvas.style.width = viewport.width + 'px';
-        canvas.style.height = viewport.height + 'px';
-
-        ctx.save();  // ← הוסף - שמור מצב
-        ctx.scale(outputScale, outputScale);
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
         
         const renderContext = {
             canvasContext: ctx,
-            viewport: viewport,
-            intent: 'print' 
+            viewport: viewport
         };
         
         await page.render(renderContext).promise;
-        
-        ctx.restore();  // ← הוסף - שחזר מצב
         
         pageRendering = false;
         

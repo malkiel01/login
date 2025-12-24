@@ -416,6 +416,8 @@ input[type="file"] {
 #pdfCanvas {
     display: block;
     cursor: grab;
+        max-width: 100%;   /* ← הוסף! חשוב! */
+    height: auto;      /* ← הוסף! */
 }
 
 #pdfCanvas:active {

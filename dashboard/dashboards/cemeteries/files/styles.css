@@ -368,7 +368,7 @@ input[type="file"] {
 }
 
 .preview-container {
-    flex: 1;
+    flex: 1 1 0;
     overflow: auto;  /* ← גלילה */
     border: 2px solid #e0e7ff;
     border-radius: 10px;

@@ -350,7 +350,6 @@ input[type="file"] {
     display: block;
 }
 
-
 .preview-section {
     flex: 1;
     background: white;
@@ -359,8 +358,8 @@ input[type="file"] {
     padding: 20px;
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 40px);  /* ← שנה מ-max-height ל-height */
-    box-sizing: border-box;
+    min-height: 0;  /* ← הוסף את זה! חשוב! */
+    overflow: hidden;  /* ← הוסף */
 }
 
 .preview-header {
@@ -371,44 +370,15 @@ input[type="file"] {
 }
 
 .preview-container {
-    flex: 1 1 0;
-    overflow: auto;  /* ← גלילה אוטומטית */
+    flex: 1;
+    overflow: auto;
     border: 2px solid #e0e7ff;
     border-radius: 10px;
     background: #f8f9ff;
     padding: 0;
-    min-height: 0;
-    box-sizing: border-box;
+    min-height: 0;  /* ← חשוב! */
+    height: 100%;  /* ← הוסף */
 }
-
-/* Preview Container - 100% scale with scroll */
-/* .preview-container {
-    flex: 1;
-    overflow: auto;
-    border: 2px solid #e0e7ff;
-    border-radius: 10px;
-    position: relative;
-    background: #f8f9ff;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding: 20px;
-} */
-
-/* .preview-container {
-    flex: 1;
-    overflow: auto;
-    border: 2px solid #e0e7ff;
-    border-radius: 10px;
-    position: relative;
-    background: #f8f9ff;
-    padding: 0;
-} */
-
-/* .preview-header {
-    margin-bottom: 15px;
-    flex-shrink: 0;
-} */
 
 .preview-header h3 {
     color: #667eea;

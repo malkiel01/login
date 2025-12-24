@@ -706,7 +706,7 @@ async function loadPDF(file) {
     fileReader.readAsArrayBuffer(file);
 }
 
-async function renderPage2(num) {
+async function renderPage(num) {
     pageRendering = true;
     
     try {
@@ -737,7 +737,7 @@ async function renderPage2(num) {
         pageRendering = false;
     }
 }
-async function renderPage(num) {
+async function renderPage2(num) {
     pageRendering = true;
     
     try {

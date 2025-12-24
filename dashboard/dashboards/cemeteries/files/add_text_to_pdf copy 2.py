@@ -95,7 +95,7 @@ def add_texts_to_pdf(input_file, output_file, texts_config):
                     continue  # דלג על טקסטים שלא שייכים לעמוד הזה
                 
                 text = text_item.get('text', 'ניסיון')
-                align = text_item.get('align', 'right')
+                align = text_item.get('align', 'right')  # ← הוסף
                 
                 # Reverse text only for RTL (right align)
                 if align == 'right':

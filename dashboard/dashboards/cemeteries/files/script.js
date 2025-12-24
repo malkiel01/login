@@ -444,6 +444,37 @@ async function loadPDF(file) {
     fileReader.readAsArrayBuffer(file);
 }
 
+async function renderPage2(num) {
+    pageRendering = true;
+    
+    try {
+        const page = await pdfDoc.getPage(num);
+        const viewport = page.getViewport({ scale: pdfScale });
+        
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        
+        const renderContext = {
+            canvasContext: ctx,
+            viewport: viewport,
+        };
+        
+        await page.render(renderContext).promise;
+        
+        pageRendering = false;
+        
+        if (pageNumPending !== null) {
+            renderPage(pageNumPending);
+            pageNumPending = null;
+        }
+        
+        drawTextsOnCanvas(viewport);
+        
+    } catch (error) {
+        console.error('Error rendering page:', error);
+        pageRendering = false;
+    }
+}
 async function renderPage(num) {
     pageRendering = true;
     
@@ -451,15 +482,13 @@ async function renderPage(num) {
         const page = await pdfDoc.getPage(num);
         const viewport = page.getViewport({ scale: pdfScale });
         
-        // canvas.width = viewport.width;
-        // canvas.height = viewport.height;
-
         const outputScale = window.devicePixelRatio || 1;
         canvas.width = viewport.width * outputScale;
         canvas.height = viewport.height * outputScale;
         canvas.style.width = viewport.width + 'px';
         canvas.style.height = viewport.height + 'px';
 
+        ctx.save();  // ← הוסף - שמור מצב
         ctx.scale(outputScale, outputScale);
         
         const renderContext = {
@@ -469,6 +498,8 @@ async function renderPage(num) {
         };
         
         await page.render(renderContext).promise;
+        
+        ctx.restore();  // ← הוסף - שחזר מצב
         
         pageRendering = false;
         

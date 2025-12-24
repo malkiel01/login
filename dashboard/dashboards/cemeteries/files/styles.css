@@ -429,12 +429,12 @@ input[type="file"] {
     cursor: not-allowed;
 }
 
-#pdfCanvas2 {
+#pdfCanvas {
     display: block;
     cursor: grab;
 }
 
-#pdfCanvas {
+#pdfCanvas3 {
     display: block;
     cursor: grab;
     max-width: 100%;   /* ← לעולם לא יעבור את רוחב ה-container */

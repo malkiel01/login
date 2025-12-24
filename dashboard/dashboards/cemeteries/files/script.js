@@ -30,6 +30,7 @@ let dragStartX = 0;
 let dragStartY = 0;
 let dragStartTop = 0;
 let dragStartRight = 0;
+let selectedTextId = null;
 
 const minScale = 0.5;
 const maxScale = 4.0;
@@ -69,103 +70,30 @@ canvas.addEventListener('mouseup', handleCanvasMouseUp);
 // גרירה על הקנבס
 // ===============================
 
-
-function handleCanvasMouseDown2(e) {
-    console.log('Mouse down!', e.clientX, e.clientY);  // ← הוסף
-
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    // מצא את הטקסט שנלחץ
-    const clickedText = findTextAtPosition(x, y);
-    if (clickedText) {
-        draggingTextId = clickedText.id;
-        dragStartX = x;
-        dragStartY = y;
-        dragStartTop = clickedText.top;
-        dragStartRight = clickedText.right;
-        canvas.style.cursor = 'grabbing';
-    }
-}
-
-function handleCanvasMouseDown3(e) {
-    console.log('Mouse down!', e.clientX, e.clientY);
-    
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    console.log('Canvas coords:', x, y);  // ← הוסף
-    
-    const clickedText = findTextAtPosition(x, y);
-    console.log('Clicked text:', clickedText);  // ← הוסף
-    
-    if (clickedText) {
-        console.log('Starting drag!');  // ← הוסף
-        draggingTextId = clickedText.id;
-        dragStartX = x;
-        dragStartY = y;
-        dragStartTop = clickedText.top;
-        dragStartRight = clickedText.right;
-        canvas.style.cursor = 'grabbing';
-    } else {
-        console.log('No text found at this position');  // ← הוסף
-    }
-}
-
 function handleCanvasMouseDown(e) {
-    console.log('Mouse down!', e.clientX, e.clientY);
-    
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     
-    // ← התאם ליחס בין גודל תצוגה לגודל אמיתי
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
     
     const canvasX = x * scaleX;
     const canvasY = y * scaleY;
     
-    console.log('Canvas coords (adjusted):', canvasX, canvasY);
-    
     const clickedText = findTextAtPosition(canvasX, canvasY);
-    console.log('Clicked text:', clickedText);
     
     if (clickedText) {
-        console.log('Starting drag!');
+        selectedTextId = clickedText.id;  // ← בחר את הטקסט
         draggingTextId = clickedText.id;
-        dragStartX = canvasX;  // ← שנה
-        dragStartY = canvasY;  // ← שנה
+        dragStartX = canvasX;
+        dragStartY = canvasY;
         dragStartTop = clickedText.top;
         dragStartRight = clickedText.right;
         canvas.style.cursor = 'grabbing';
+        renderPage(currentPageNum);  // ← רנדר מחדש עם מסגרת
     } else {
-        console.log('No text found at this position');
-    }
-}
-
-function handleCanvasMouseMove2(e) {
-    if (draggingTextId === null) return;
-    
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    const deltaX = x - dragStartX;
-    const deltaY = y - dragStartY;
-    
-    // חשב מיקום חדש (התחשב ב-scale!)
-    const item = textItems.find(t => t.id === draggingTextId);
-    if (item) {
-        item.top = Math.round(dragStartTop + (deltaY / pdfScale));
-        item.right = Math.round(dragStartRight - (deltaX / pdfScale));
-        
-        // עדכן את השדות
-        updateFieldValues(item);
-        
-        // רנדר מחדש
+        selectedTextId = null;  // ← בטל בחירה
         renderPage(currentPageNum);
     }
 }
@@ -200,45 +128,6 @@ function handleCanvasMouseMove(e) {
 function handleCanvasMouseUp() {
     draggingTextId = null;
     canvas.style.cursor = 'grab';
-}
-
-function findTextAtPosition2(x, y) {
-    // מצא טקסט שהעכבר עליו
-    for (let i = textItems.length - 1; i >= 0; i--) {
-        const item = textItems[i];
-        const itemPage = parseInt(item.page) || 1;
-        if (itemPage !== currentPageNum) continue;
-        
-        const fontSize = parseInt(item.size) * pdfScale;
-        const topOffset = parseFloat(item.top) * pdfScale;
-        const rightOffset = parseFloat(item.right) * pdfScale;
-        const align = item.align || 'right';
-        
-        let textX, textY;
-        if (align === 'right') {
-            textX = canvas.width - rightOffset;
-        } else {
-            textX = rightOffset;
-        }
-        textY = topOffset;
-        
-        // בדוק אם העכבר בתוך הטקסט (בערך)
-        ctx.font = `${fontSize}px "${item.font}", sans-serif`;
-        const textWidth = ctx.measureText(item.text).width;
-        
-        if (align === 'right') {
-            if (x >= textX - textWidth && x <= textX &&
-                y >= textY - fontSize && y <= textY) {
-                return item;
-            }
-        } else {
-            if (x >= textX && x <= textX + textWidth &&
-                y >= textY - fontSize && y <= textY) {
-                return item;
-            }
-        }
-    }
-    return null;
 }
 
 function findTextAtPosition(x, y) {
@@ -314,6 +203,64 @@ function updateFieldValues(item) {
         inputs[2].value = item.top;  // top
         inputs[3].value = item.right; // right
     }
+}
+
+function drawSelectionBox(item, viewport) {
+    const fontSize = parseInt(item.size) * pdfScale;
+    const topOffset = parseFloat(item.top) * pdfScale;
+    const rightOffset = parseFloat(item.right) * pdfScale;
+    const align = item.align || 'right';
+    
+    const fontData = availableFonts.find(f => f.id === item.font);
+    const fontName = fontData ? fontData.id : 'Arial';
+    
+    ctx.font = `${fontSize}px "${fontName}", sans-serif`;
+    const textWidth = ctx.measureText(item.text).width;
+    
+    let textX, textY;
+    if (align === 'right') {
+        textX = viewport.width - rightOffset;
+    } else {
+        textX = rightOffset;
+    }
+    textY = topOffset;
+    
+    // מסגרת
+    let boxLeft, boxRight, boxTop, boxBottom;
+    
+    if (align === 'right') {
+        boxRight = textX + 5;
+        boxLeft = textX - textWidth - 5;
+    } else {
+        boxLeft = textX - 5;
+        boxRight = textX + textWidth + 5;
+    }
+    
+    boxTop = textY - fontSize * 1.1;
+    boxBottom = textY + fontSize * 0.2;
+    
+    // צייר מסגרת
+    ctx.strokeStyle = '#667eea';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 5]);
+    ctx.strokeRect(boxLeft, boxTop, boxRight - boxLeft, boxBottom - boxTop);
+    ctx.setLineDash([]);
+    
+    // צייר פינות (נקודות resize)
+    const cornerSize = 8;
+    ctx.fillStyle = '#667eea';
+    
+    // פינה ימנית עליונה
+    ctx.fillRect(boxRight - cornerSize/2, boxTop - cornerSize/2, cornerSize, cornerSize);
+    
+    // פינה שמאלית עליונה
+    ctx.fillRect(boxLeft - cornerSize/2, boxTop - cornerSize/2, cornerSize, cornerSize);
+    
+    // פינה ימנית תחתונה
+    ctx.fillRect(boxRight - cornerSize/2, boxBottom - cornerSize/2, cornerSize, cornerSize);
+    
+    // פינה שמאלית תחתונה
+    ctx.fillRect(boxLeft - cornerSize/2, boxBottom - cornerSize/2, cornerSize, cornerSize);
 }
 
 // ===============================
@@ -810,85 +757,6 @@ function updatePageButtons() {
 document.getElementById('prevPage').addEventListener('click', onPrevPage);
 document.getElementById('nextPage').addEventListener('click', onNextPage);
 
-function drawTextsOnCanvas2(viewport) {
-    textItems.forEach(item => {
-        // בדוק אם הטקסט שייך לעמוד הנוכחי
-        const itemPage = parseInt(item.page) || 1;
-        if (itemPage !== currentPageNum) {
-            return;
-        }
-        
-        const text = item.text;
-        const fontSize = parseInt(item.size) * pdfScale;  // ← הכפל ב-scale!
-        const color = item.color;
-        const topOffset = parseFloat(item.top) * pdfScale;  // ← הכפל ב-scale!
-        const rightOffset = parseFloat(item.right) * pdfScale;  // ← הכפל ב-scale!
-        const align = item.align || 'right';
-        
-        // מצא את הפונט ברשימה
-        const fontData = availableFonts.find(f => f.id === item.font);
-        const fontName = fontData ? fontData.id : 'Arial';
-        
-        // חשב X לפי יישור
-        let x;
-        if (align === 'right') {
-            x = viewport.width - rightOffset;
-        } else {
-            x = rightOffset;
-        }
-        const y = topOffset;
-        
-        ctx.font = `${fontSize}px "${fontName}", sans-serif`;
-        ctx.fillStyle = color;
-        ctx.globalAlpha = 0.7;
-        ctx.textAlign = align;
-        
-        ctx.fillText(text, x, y);
-        
-        ctx.globalAlpha = 1.0;
-        ctx.textAlign = 'left';
-    });
-}
-function drawTextsOnCanvas3(viewport) {
-    // קבל viewport ב-scale 1.0 לחישוב נכון
-    const baseScale = viewport.scale;  // ← ה-scale הנוכחי
-    
-    textItems.forEach(item => {
-        const itemPage = parseInt(item.page) || 1;
-        if (itemPage !== currentPageNum) {
-            return;
-        }
-        
-        const text = item.text;
-        // השתמש בערכים המקוריים (ללא scale) והכפל ב-scale הנוכחי
-        const fontSize = parseInt(item.size) * baseScale;
-        const color = item.color;
-        const topOffset = parseFloat(item.top) * baseScale;
-        const rightOffset = parseFloat(item.right) * baseScale;
-        const align = item.align || 'right';
-        
-        const fontData = availableFonts.find(f => f.id === item.font);
-        const fontName = fontData ? fontData.id : 'Arial';
-        
-        let x;
-        if (align === 'right') {
-            x = viewport.width - rightOffset;
-        } else {
-            x = rightOffset;
-        }
-        const y = topOffset;
-        
-        ctx.font = `${fontSize}px "${fontName}", sans-serif`;
-        ctx.fillStyle = color;
-        ctx.globalAlpha = 0.7;
-        ctx.textAlign = align;
-        
-        ctx.fillText(text, x, y);
-        
-        ctx.globalAlpha = 1.0;
-        ctx.textAlign = 'left';
-    });
-}
 function drawTextsOnCanvas(viewport) {
     const baseScale = viewport.scale;
     
@@ -929,6 +797,14 @@ function drawTextsOnCanvas(viewport) {
         ctx.globalAlpha = 1.0;
         ctx.textAlign = 'left';
     });
+
+    // צייר מסגרת סביב טקסט נבחר
+    if (selectedTextId !== null) {
+        const selectedItem = textItems.find(t => t.id === selectedTextId);
+        if (selectedItem && (parseInt(selectedItem.page) || 1) === currentPageNum) {
+            drawSelectionBox(selectedItem, viewport);
+        }
+    }
 }
 
 // ===============================

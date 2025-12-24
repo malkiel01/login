@@ -32,6 +32,11 @@ let dragStartTop = 0;
 let dragStartRight = 0;
 let selectedTextId = null;
 
+let resizingCorner = null;  // 'top-right', 'top-left', 'bottom-right', 'bottom-left'
+let resizeStartSize = 0;
+let resizeStartX = 0;
+let resizeStartY = 0;
+
 const minScale = 0.5;
 const maxScale = 4.0;
 const scaleStep = 0.25;
@@ -70,7 +75,7 @@ canvas.addEventListener('mouseup', handleCanvasMouseUp);
 // גרירה על הקנבס
 // ===============================
 
-function handleCanvasMouseDown(e) {
+function handleCanvasMouseDown2(e) {
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -98,7 +103,55 @@ function handleCanvasMouseDown(e) {
     }
 }
 
-function handleCanvasMouseMove(e) {
+async function handleCanvasMouseDown(e) {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    const canvasX = x * scaleX;
+    const canvasY = y * scaleY;
+    
+    // בדוק אם לחצנו על פינה של טקסט נבחר
+    if (selectedTextId !== null) {
+        const selectedItem = textItems.find(t => t.id === selectedTextId);
+        if (selectedItem) {
+            const page = await pdfDoc.getPage(currentPageNum);
+            const viewport = page.getViewport({ scale: pdfScale });
+            const corner = findCornerAtPosition(canvasX, canvasY, selectedItem, viewport);
+            
+            if (corner) {
+                // התחל resize
+                resizingCorner = corner;
+                resizeStartSize = parseInt(selectedItem.size);
+                resizeStartX = canvasX;
+                resizeStartY = canvasY;
+                canvas.style.cursor = 'nwse-resize';
+                return;
+            }
+        }
+    }
+    
+    const clickedText = findTextAtPosition(canvasX, canvasY);
+    
+    if (clickedText) {
+        selectedTextId = clickedText.id;
+        draggingTextId = clickedText.id;
+        dragStartX = canvasX;
+        dragStartY = canvasY;
+        dragStartTop = clickedText.top;
+        dragStartRight = clickedText.right;
+        canvas.style.cursor = 'grabbing';
+        renderPage(currentPageNum);
+    } else {
+        selectedTextId = null;
+        renderPage(currentPageNum);
+    }
+}
+
+function handleCanvasMouseMove2(e) {
     if (draggingTextId === null) return;
     
     const rect = canvas.getBoundingClientRect();
@@ -125,8 +178,67 @@ function handleCanvasMouseMove(e) {
     }
 }
 
+function handleCanvasMouseMove(e) {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    const canvasX = x * scaleX;
+    const canvasY = y * scaleY;
+    
+    // אם בresize
+    if (resizingCorner !== null) {
+        const item = textItems.find(t => t.id === selectedTextId);
+        if (item) {
+            // חשב שינוי בגודל לפי מרחק מהנקודה ההתחלתית
+            const deltaX = canvasX - resizeStartX;
+            const deltaY = canvasY - resizeStartY;
+            const delta = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            
+            // קבע כיוון (+/-)
+            let sign = 1;
+            if (resizingCorner === 'top-left' || resizingCorner === 'bottom-left') {
+                sign = deltaX < 0 ? 1 : -1;
+            } else {
+                sign = deltaX > 0 ? 1 : -1;
+            }
+            
+            const newSize = Math.max(12, Math.round(resizeStartSize + (delta * sign / pdfScale / 3)));
+            item.size = newSize;
+            
+            updateFieldValues(item);
+            renderPage(currentPageNum);
+        }
+        return;
+    }
+    
+    // אם בגרירה
+    if (draggingTextId === null) return;
+    
+    const deltaX = canvasX - dragStartX;
+    const deltaY = canvasY - dragStartY;
+    
+    const item = textItems.find(t => t.id === draggingTextId);
+    if (item) {
+        item.top = Math.round(dragStartTop + (deltaY / pdfScale));
+        item.right = Math.round(dragStartRight - (deltaX / pdfScale));
+        
+        updateFieldValues(item);
+        renderPage(currentPageNum);
+    }
+}
+
+function handleCanvasMouseUp2() {
+    draggingTextId = null;
+    canvas.style.cursor = 'grab';
+}
+
 function handleCanvasMouseUp() {
     draggingTextId = null;
+    resizingCorner = null;
     canvas.style.cursor = 'grab';
 }
 
@@ -261,6 +373,59 @@ function drawSelectionBox(item, viewport) {
     
     // פינה שמאלית תחתונה
     ctx.fillRect(boxLeft - cornerSize/2, boxBottom - cornerSize/2, cornerSize, cornerSize);
+}
+
+function findCornerAtPosition(x, y, item, viewport) {
+    const fontSize = parseInt(item.size) * pdfScale;
+    const topOffset = parseFloat(item.top) * pdfScale;
+    const rightOffset = parseFloat(item.right) * pdfScale;
+    const align = item.align || 'right';
+    
+    const fontData = availableFonts.find(f => f.id === item.font);
+    const fontName = fontData ? fontData.id : 'Arial';
+    
+    ctx.font = `${fontSize}px "${fontName}", sans-serif`;
+    const textWidth = ctx.measureText(item.text).width;
+    
+    let textX, textY;
+    if (align === 'right') {
+        textX = viewport.width - rightOffset;
+    } else {
+        textX = rightOffset;
+    }
+    textY = topOffset;
+    
+    let boxLeft, boxRight, boxTop, boxBottom;
+    
+    if (align === 'right') {
+        boxRight = textX + 5;
+        boxLeft = textX - textWidth - 5;
+    } else {
+        boxLeft = textX - 5;
+        boxRight = textX + textWidth + 5;
+    }
+    
+    boxTop = textY - fontSize * 1.1;
+    boxBottom = textY + fontSize * 0.2;
+    
+    const cornerSize = 8;
+    const hitSize = 12;  // אזור לחיצה גדול יותר
+    
+    // בדוק כל פינה
+    if (Math.abs(x - boxRight) < hitSize && Math.abs(y - boxTop) < hitSize) {
+        return 'top-right';
+    }
+    if (Math.abs(x - boxLeft) < hitSize && Math.abs(y - boxTop) < hitSize) {
+        return 'top-left';
+    }
+    if (Math.abs(x - boxRight) < hitSize && Math.abs(y - boxBottom) < hitSize) {
+        return 'bottom-right';
+    }
+    if (Math.abs(x - boxLeft) < hitSize && Math.abs(y - boxBottom) < hitSize) {
+        return 'bottom-left';
+    }
+    
+    return null;
 }
 
 // ===============================

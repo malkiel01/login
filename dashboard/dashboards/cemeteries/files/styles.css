@@ -375,7 +375,7 @@ input[type="file"] {
     border: 2px solid #e0e7ff;
     border-radius: 10px;
     background: #f8f9ff;
-    padding: 20px;  /* ← שנה מ-0 ל-20px */
+    padding: 0px;  /* ← שנה מ-0 ל-20px */
     min-height: 0;
     height: 100%;
 }

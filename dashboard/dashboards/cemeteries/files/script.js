@@ -456,7 +456,8 @@ async function renderPage(num) {
         
         const renderContext = {
             canvasContext: ctx,
-            viewport: viewport
+            viewport: viewport,
+            intent: 'print' 
         };
         
         await page.render(renderContext).promise;

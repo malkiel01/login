@@ -372,12 +372,13 @@ input[type="file"] {
 
 .preview-container {
     flex: 1 1 0;
-    overflow: auto;  /* ← גלילה */
+    overflow: auto;  /* ← גלילה אוטומטית */
     border: 2px solid #e0e7ff;
     border-radius: 10px;
     background: #f8f9ff;
     padding: 0;
-    min-height: 0;  /* ← חשוב! זה מאפשר ל-flex לעבוד */
+    min-height: 0;
+    box-sizing: border-box;
 }
 
 /* Preview Container - 100% scale with scroll */
@@ -441,15 +442,6 @@ input[type="file"] {
     opacity: 0.4;
     cursor: not-allowed;
 }
-
-/* #pdfCanvas {
-    display: block;
-    cursor: grab;
-    max-width: none !important;
-    max-height: none !important;
-    width: auto !important;
-    height: auto !important;
-} */
 
 #pdfCanvas {
     display: block;

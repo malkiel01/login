@@ -143,7 +143,7 @@ function handleCanvasMouseUp() {
     canvas.style.cursor = 'grab';
 }
 
-function findTextAtPosition(x, y) {
+function findTextAtPosition2(x, y) {
     // מצא טקסט שהעכבר עליו
     for (let i = textItems.length - 1; i >= 0; i--) {
         const item = textItems[i];
@@ -179,6 +179,43 @@ function findTextAtPosition(x, y) {
             }
         }
     }
+    return null;
+}
+
+function findTextAtPosition(x, y) {
+    console.log('Looking for text at:', x, y);
+    console.log('Current page:', currentPageNum);
+    console.log('Text items:', textItems);
+    
+    for (let i = textItems.length - 1; i >= 0; i--) {
+        const item = textItems[i];
+        const itemPage = parseInt(item.page) || 1;
+        
+        console.log(`Checking item ${i}: page=${itemPage}, currentPage=${currentPageNum}`);
+        
+        if (itemPage !== currentPageNum) {
+            console.log('  Skipping - wrong page');
+            continue;
+        }
+        
+        const fontSize = parseInt(item.size) * pdfScale;
+        const topOffset = parseFloat(item.top) * pdfScale;
+        const rightOffset = parseFloat(item.right) * pdfScale;
+        const align = item.align || 'right';
+        
+        let textX, textY;
+        if (align === 'right') {
+            textX = canvas.width - rightOffset;
+        } else {
+            textX = rightOffset;
+        }
+        textY = topOffset;
+        
+        console.log(`  Position: x=${textX}, y=${textY}, fontSize=${fontSize}`);
+        
+        // ... המשך הפונקציה
+    }
+    
     return null;
 }
 

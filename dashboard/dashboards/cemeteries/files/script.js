@@ -151,6 +151,7 @@ async function handleCanvasMouseDown(e) {
     }
 }
 
+
 function handleCanvasMouseMove2(e) {
     if (draggingTextId === null) return;
     
@@ -178,7 +179,7 @@ function handleCanvasMouseMove2(e) {
     }
 }
 
-function handleCanvasMouseMove2(e) {
+function handleCanvasMouseMove(e) {
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -229,52 +230,6 @@ function handleCanvasMouseMove2(e) {
         updateFieldValues(item);
         renderPage(currentPageNum);
     }
-}
-
-async function handleCanvasMouseMove(e) {
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    
-    const canvasX = x * scaleX;
-    const canvasY = y * scaleY;
-    
-    // אם בresize
-    if (resizingCorner !== null) {
-        // ... הקוד הקיים ...
-        return;
-    }
-    
-    // אם בגרירה
-    if (draggingTextId !== null) {
-        // ... הקוד הקיים ...
-        return;
-    }
-    
-    // ← הוסף: שנה cursor כשעוברים על פינות
-    if (selectedTextId !== null) {
-        const selectedItem = textItems.find(t => t.id === selectedTextId);
-        if (selectedItem) {
-            const page = await pdfDoc.getPage(currentPageNum);
-            const viewport = page.getViewport({ scale: pdfScale });
-            const corner = findCornerAtPosition(canvasX, canvasY, selectedItem, viewport);
-            
-            if (corner) {
-                if (corner === 'top-right' || corner === 'bottom-left') {
-                    canvas.style.cursor = 'nesw-resize';
-                } else {
-                    canvas.style.cursor = 'nwse-resize';
-                }
-                return;
-            }
-        }
-    }
-    
-    // אם לא על פינה, cursor רגיל
-    canvas.style.cursor = 'grab';
 }
 
 function handleCanvasMouseUp2() {
@@ -352,7 +307,7 @@ function findTextAtPosition(x, y) {
     return null;
 }
 
-function updateFieldValues2(item) {
+function updateFieldValues(item) {
     // עדכן את השדות בטופס
     const itemDiv = document.getElementById(`text-item-${item.id}`);
     if (itemDiv) {
@@ -360,17 +315,6 @@ function updateFieldValues2(item) {
         const inputs = itemDiv.querySelectorAll('input[type="number"]');
         inputs[2].value = item.top;  // top
         inputs[3].value = item.right; // right
-    }
-}
-
-function updateFieldValues(item) {
-    const itemDiv = document.getElementById(`text-item-${item.id}`);
-    if (itemDiv) {
-        const inputs = itemDiv.querySelectorAll('input[type="number"]');
-        inputs[0].value = item.size;   // ← size (index 0)
-        inputs[1].value = item.page;   // ← page (index 1)
-        inputs[2].value = item.top;    // ← top (index 2)
-        inputs[3].value = item.right;  // ← right (index 3)
     }
 }
 

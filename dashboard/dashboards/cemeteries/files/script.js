@@ -513,45 +513,6 @@ function drawTextsOnCanvas2(viewport) {
         // בדוק אם הטקסט שייך לעמוד הנוכחי
         const itemPage = parseInt(item.page) || 1;
         if (itemPage !== currentPageNum) {
-            return; // דלג על טקסטים שלא שייכים לעמוד הזה
-        }
-        
-        const text = item.text;
-        const fontSize = parseInt(item.size);
-        const color = item.color;
-        const topOffset = parseFloat(item.top);
-        const rightOffset = parseFloat(item.right);
-        const align = item.align || 'right';  // ← הוסף
-        
-        // מצא את הפונט ברשימה
-        const fontData = availableFonts.find(f => f.id === item.font);
-        const fontName = fontData ? fontData.id : 'Arial';
-        
-        // חשב X לפי יישור
-        let x;
-        if (align === 'right') {
-            x = viewport.width - rightOffset;  // מימין
-        } else {
-            x = rightOffset;  // משמאל
-        }
-        const y = topOffset;
-        
-        ctx.font = `${fontSize}px "${fontName}", sans-serif`;
-        ctx.fillStyle = color;
-        ctx.globalAlpha = 0.7;
-        ctx.textAlign = align;  // ← דינמי
-        
-        ctx.fillText(text, x, y);
-        
-        ctx.globalAlpha = 1.0;
-        ctx.textAlign = 'left';
-    });
-}
-function drawTextsOnCanvas(viewport) {
-    textItems.forEach(item => {
-        // בדוק אם הטקסט שייך לעמוד הנוכחי
-        const itemPage = parseInt(item.page) || 1;
-        if (itemPage !== currentPageNum) {
             return;
         }
         
@@ -567,6 +528,46 @@ function drawTextsOnCanvas(viewport) {
         const fontName = fontData ? fontData.id : 'Arial';
         
         // חשב X לפי יישור
+        let x;
+        if (align === 'right') {
+            x = viewport.width - rightOffset;
+        } else {
+            x = rightOffset;
+        }
+        const y = topOffset;
+        
+        ctx.font = `${fontSize}px "${fontName}", sans-serif`;
+        ctx.fillStyle = color;
+        ctx.globalAlpha = 0.7;
+        ctx.textAlign = align;
+        
+        ctx.fillText(text, x, y);
+        
+        ctx.globalAlpha = 1.0;
+        ctx.textAlign = 'left';
+    });
+}
+function drawTextsOnCanvas(viewport) {
+    // קבל viewport ב-scale 1.0 לחישוב נכון
+    const baseScale = viewport.scale;  // ← ה-scale הנוכחי
+    
+    textItems.forEach(item => {
+        const itemPage = parseInt(item.page) || 1;
+        if (itemPage !== currentPageNum) {
+            return;
+        }
+        
+        const text = item.text;
+        // השתמש בערכים המקוריים (ללא scale) והכפל ב-scale הנוכחי
+        const fontSize = parseInt(item.size) * baseScale;
+        const color = item.color;
+        const topOffset = parseFloat(item.top) * baseScale;
+        const rightOffset = parseFloat(item.right) * baseScale;
+        const align = item.align || 'right';
+        
+        const fontData = availableFonts.find(f => f.id === item.font);
+        const fontName = fontData ? fontData.id : 'Arial';
+        
         let x;
         if (align === 'right') {
             x = viewport.width - rightOffset;

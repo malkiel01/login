@@ -396,13 +396,6 @@ input[type="file"] {
     min-height: 0;  /* ← חשוב! */
 }
 
-.preview-container {
-    flex: 1 1 0;
-    overflow: auto;
-    min-height: 0;
-    max-height: 100%;  /* ← זה מגביל! */
-}
-
 .preview-header h3 {
     color: #667eea;
     margin-bottom: 10px;

@@ -442,13 +442,18 @@ input[type="file"] {
     cursor: not-allowed;
 }
 
-#pdfCanvas {
+/* #pdfCanvas {
     display: block;
     cursor: grab;
     max-width: none !important;
     max-height: none !important;
     width: auto !important;
     height: auto !important;
+} */
+
+#pdfCanvas {
+    display: block;
+    cursor: grab;
 }
 
 #pdfCanvas:active {

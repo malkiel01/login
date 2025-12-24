@@ -350,6 +350,7 @@ input[type="file"] {
     display: block;
 }
 
+
 .preview-section {
     flex: 1;
     background: white;
@@ -358,7 +359,7 @@ input[type="file"] {
     padding: 20px;
     display: flex;
     flex-direction: column;
-    max-height: calc(100vh - 40px);
+    height: calc(100vh - 40px);  /* ← שנה מ-max-height ל-height */
     box-sizing: border-box;
 }
 

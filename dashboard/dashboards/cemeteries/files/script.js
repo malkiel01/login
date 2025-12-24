@@ -508,7 +508,7 @@ function updatePageButtons() {
 document.getElementById('prevPage').addEventListener('click', onPrevPage);
 document.getElementById('nextPage').addEventListener('click', onNextPage);
 
-function drawTextsOnCanvas(viewport) {
+function drawTextsOnCanvas2(viewport) {
     textItems.forEach(item => {
         // בדוק אם הטקסט שייך לעמוד הנוכחי
         const itemPage = parseInt(item.page) || 1;
@@ -540,6 +540,45 @@ function drawTextsOnCanvas(viewport) {
         ctx.fillStyle = color;
         ctx.globalAlpha = 0.7;
         ctx.textAlign = align;  // ← דינמי
+        
+        ctx.fillText(text, x, y);
+        
+        ctx.globalAlpha = 1.0;
+        ctx.textAlign = 'left';
+    });
+}
+function drawTextsOnCanvas(viewport) {
+    textItems.forEach(item => {
+        // בדוק אם הטקסט שייך לעמוד הנוכחי
+        const itemPage = parseInt(item.page) || 1;
+        if (itemPage !== currentPageNum) {
+            return;
+        }
+        
+        const text = item.text;
+        const fontSize = parseInt(item.size) * pdfScale;  // ← הכפל ב-scale!
+        const color = item.color;
+        const topOffset = parseFloat(item.top) * pdfScale;  // ← הכפל ב-scale!
+        const rightOffset = parseFloat(item.right) * pdfScale;  // ← הכפל ב-scale!
+        const align = item.align || 'right';
+        
+        // מצא את הפונט ברשימה
+        const fontData = availableFonts.find(f => f.id === item.font);
+        const fontName = fontData ? fontData.id : 'Arial';
+        
+        // חשב X לפי יישור
+        let x;
+        if (align === 'right') {
+            x = viewport.width - rightOffset;
+        } else {
+            x = rightOffset;
+        }
+        const y = topOffset;
+        
+        ctx.font = `${fontSize}px "${fontName}", sans-serif`;
+        ctx.fillStyle = color;
+        ctx.globalAlpha = 0.7;
+        ctx.textAlign = align;
         
         ctx.fillText(text, x, y);
         

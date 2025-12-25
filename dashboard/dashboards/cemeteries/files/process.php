@@ -114,8 +114,14 @@ exec($command, $output, $return_var);
 // Clean up data file
 @unlink($data_file);
 
-// Parse Python output
-$python_output = implode("\n", $output);
+// Parse Python output - סנן DEBUG messages
+$json_lines = [];
+foreach ($output as $line) {
+    if (strpos($line, 'DEBUG:') === false) {
+        $json_lines[] = $line;
+    }
+}
+$python_output = implode("\n", $json_lines);
 $result = json_decode($python_output, true);
 
 if ($return_var !== 0 || !$result || !isset($result['success']) || !$result['success']) {

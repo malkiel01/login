@@ -56,7 +56,7 @@ def add_texts_to_pdf(input_file, output_file, texts_config):
     Args:
         input_file: Path to input PDF
         output_file: Path to output PDF
-        texts_config: List of text configurations (only texts, filtered from allItems)
+        texts_config: List of text configurations
     """
     try:
         script_dir = os.path.dirname(__file__)
@@ -171,38 +171,39 @@ if __name__ == '__main__':
     if len(sys.argv) < 4:
         print(json.dumps({
             'success': False,
-            'error': 'Usage: python3 add_text_to_pdf.py <input_file> <output_file> <data_json_file>'
+            'error': 'Usage: python3 add_text_to_pdf.py <input_file> <output_file> <texts_json_file>'
         }))
         sys.exit(1)
     
     input_file = sys.argv[1]
     output_file = sys.argv[2]
-    data_json_file = sys.argv[3]
+    texts_json_file = sys.argv[3]
     
-    # Read data configuration
+    # Read texts configuration
     try:
-        with open(data_json_file, 'r', encoding='utf-8') as f:
+        # with open(texts_json_file, 'r', encoding='utf-8') as f:
+        #     texts_config = json.load(f)
+
+        # קרא את הקובץ
+        with open(texts_file, 'r', encoding='utf-8') as f:
             data = json.load(f)
-        
+
         # בדוק אם זה הפורמט החדש עם allItems
         if isinstance(data, dict) and 'allItems' in data:
             all_items = data.get('allItems', [])
-            texts_from_dict = data.get('texts', [])
+            texts = data.get('texts', [])
             images = data.get('images', [])
-            
-            # סנן רק טקסטים מ-allItems (לפי סדר השכבות)
-            texts_config = [item for item in all_items if item.get('type') == 'text']
-            
-            print(f"DEBUG: Found {len(texts_from_dict)} texts in dict, {len(images)} images, {len(all_items)} total items, using {len(texts_config)} texts from allItems", file=sys.stderr)
         else:
             # פורמט ישן - רק טקסטים
-            texts_config = data if isinstance(data, list) else []
-            print(f"DEBUG: Using old format with {len(texts_config)} texts", file=sys.stderr)
-            
+            texts = data
+            images = []
+            all_items = texts
+
+        print(f"DEBUG: Found {len(texts)} texts, {len(images)} images, {len(all_items)} total items", file=sys.stderr)
     except Exception as e:
         print(json.dumps({
             'success': False,
-            'error': f'Failed to read data config: {str(e)}'
+            'error': f'Failed to read texts config: {str(e)}'
         }))
         sys.exit(1)
     

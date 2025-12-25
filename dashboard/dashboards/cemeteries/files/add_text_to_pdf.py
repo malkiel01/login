@@ -181,8 +181,25 @@ if __name__ == '__main__':
     
     # Read texts configuration
     try:
-        with open(texts_json_file, 'r', encoding='utf-8') as f:
-            texts_config = json.load(f)
+        # with open(texts_json_file, 'r', encoding='utf-8') as f:
+        #     texts_config = json.load(f)
+
+        # קרא את הקובץ
+        with open(texts_file, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+
+        # בדוק אם זה הפורמט החדש עם allItems
+        if isinstance(data, dict) and 'allItems' in data:
+            all_items = data.get('allItems', [])
+            texts = data.get('texts', [])
+            images = data.get('images', [])
+        else:
+            # פורמט ישן - רק טקסטים
+            texts = data
+            images = []
+            all_items = texts
+
+        print(f"DEBUG: Found {len(texts)} texts, {len(images)} images, {len(all_items)} total items", file=sys.stderr)
     except Exception as e:
         print(json.dumps({
             'success': False,

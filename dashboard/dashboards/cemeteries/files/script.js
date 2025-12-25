@@ -209,6 +209,40 @@ function removeImageItem(id) {
     }
 }
 
+async function drawImagesOnCanvas(viewport) {
+    for (const imageItem of imageItems) {
+        // בדוק אם התמונה שייכת לעמוד הנוכחי
+        const imagePage = parseInt(imageItem.page) || 1;
+        if (imagePage !== currentPageNum) {
+            continue;
+        }
+        
+        // טען את התמונה
+        const img = new Image();
+        img.src = imageItem.base64;
+        
+        // חכה שהתמונה תיטען
+        await new Promise((resolve) => {
+            if (img.complete) {
+                resolve();
+            } else {
+                img.onload = resolve;
+            }
+        });
+        
+        // חשב מיקום ומידות
+        const x = parseFloat(imageItem.left) * pdfScale;
+        const y = parseFloat(imageItem.top) * pdfScale;
+        const width = parseFloat(imageItem.width) * pdfScale;
+        const height = parseFloat(imageItem.height) * pdfScale;
+        
+        // צייר את התמונה
+        ctx.globalAlpha = parseFloat(imageItem.opacity) || 1.0;
+        ctx.drawImage(img, x, y, width, height);
+        ctx.globalAlpha = 1.0;
+    }
+}
+
 // ===============================
 // גרירה על הקנבס
 // ===============================
@@ -944,6 +978,7 @@ async function renderPage(num) {
             pageNumPending = null;
         }
         
+        await drawImagesOnCanvas(viewport);  // ← הוסף תמונות לפני טקסטים
         drawTextsOnCanvas(viewport);
         
     } catch (error) {

@@ -212,6 +212,19 @@ function removeImageItem(id) {
     }
 }
 
+function updateImageFieldValues(item) {
+    const itemDiv = document.getElementById(`image-item-${item.id}`);
+    if (itemDiv) {
+        const inputs = itemDiv.querySelectorAll('input[type="number"]');
+        inputs[0].value = Math.round(item.width);   // width
+        inputs[1].value = Math.round(item.height);  // height
+        inputs[2].value = Math.round(item.top);     // top
+        inputs[3].value = Math.round(item.left);    // left
+        // inputs[4] = page
+        // inputs[5] = opacity
+    }
+}
+
 async function drawImagesOnCanvas(viewport) {
     for (const imageItem of imageItems) {
         // בדוק אם התמונה שייכת לעמוד הנוכחי

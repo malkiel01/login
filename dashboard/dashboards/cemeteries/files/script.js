@@ -30,6 +30,9 @@ let dragStartX = 0;
 let dragStartY = 0;
 let dragStartTop = 0;
 let dragStartRight = 0;
+let selectedImageId = null;
+let draggingImageId = null;
+let resizingImageCorner = null;
 let selectedTextId = null;
 
 let resizingCorner = null;  // 'top-right', 'top-left', 'bottom-right', 'bottom-left'
@@ -242,12 +245,92 @@ async function drawImagesOnCanvas(viewport) {
         ctx.globalAlpha = 1.0;
     }
 }
+// מציאת מיקום תמונה
+function findImageAtPosition(x, y) {
+    // חפש מהסוף להתחלה (תמונות עליונות קודם)
+    for (let i = imageItems.length - 1; i >= 0; i--) {
+        const item = imageItems[i];
+        const imagePage = parseInt(item.page) || 1;
+        if (imagePage !== currentPageNum) continue;
+        
+        const imgX = parseFloat(item.left) * pdfScale;
+        const imgY = parseFloat(item.top) * pdfScale;
+        const imgWidth = parseFloat(item.width) * pdfScale;
+        const imgHeight = parseFloat(item.height) * pdfScale;
+        
+        if (x >= imgX && x <= imgX + imgWidth &&
+            y >= imgY && y <= imgY + imgHeight) {
+            return item;
+        }
+    }
+    return null;
+}
+
+// מציאת פינת תמונה
+function findImageCornerAtPosition(x, y, imageItem) {
+    const imgX = parseFloat(imageItem.left) * pdfScale;
+    const imgY = parseFloat(imageItem.top) * pdfScale;
+    const imgWidth = parseFloat(imageItem.width) * pdfScale;
+    const imgHeight = parseFloat(imageItem.height) * pdfScale;
+    
+    const hitSize = 12;
+    
+    // פינה ימנית תחתונה (resize)
+    if (Math.abs(x - (imgX + imgWidth)) < hitSize && 
+        Math.abs(y - (imgY + imgHeight)) < hitSize) {
+        return 'bottom-right';
+    }
+    
+    // פינה שמאלית תחתונה
+    if (Math.abs(x - imgX) < hitSize && 
+        Math.abs(y - (imgY + imgHeight)) < hitSize) {
+        return 'bottom-left';
+    }
+    
+    // פינה ימנית עליונה
+    if (Math.abs(x - (imgX + imgWidth)) < hitSize && 
+        Math.abs(y - imgY) < hitSize) {
+        return 'top-right';
+    }
+    
+    // פינה שמאלית עליונה
+    if (Math.abs(x - imgX) < hitSize && 
+        Math.abs(y - imgY) < hitSize) {
+        return 'top-left';
+    }
+    
+    return null;
+}
+
+// ציור על מסגרת לתמונה
+function drawImageSelectionBox(imageItem) {
+    const imgX = parseFloat(imageItem.left) * pdfScale;
+    const imgY = parseFloat(imageItem.top) * pdfScale;
+    const imgWidth = parseFloat(imageItem.width) * pdfScale;
+    const imgHeight = parseFloat(imageItem.height) * pdfScale;
+    
+    // מסגרת
+    ctx.strokeStyle = '#8b5cf6';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 5]);
+    ctx.strokeRect(imgX, imgY, imgWidth, imgHeight);
+    ctx.setLineDash([]);
+    
+    // פינות
+    const cornerSize = 8;
+    ctx.fillStyle = '#8b5cf6';
+    
+    ctx.fillRect(imgX - cornerSize/2, imgY - cornerSize/2, cornerSize, cornerSize);
+    ctx.fillRect(imgX + imgWidth - cornerSize/2, imgY - cornerSize/2, cornerSize, cornerSize);
+    ctx.fillRect(imgX - cornerSize/2, imgY + imgHeight - cornerSize/2, cornerSize, cornerSize);
+    ctx.fillRect(imgX + imgWidth - cornerSize/2, imgY + imgHeight - cornerSize/2, cornerSize, cornerSize);
+}
 
 // ===============================
 // גרירה על הקנבס
 // ===============================
 
-async function handleCanvasMouseDown(e) {
+async function handleCanvasMouseDown2(e) {
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -295,8 +378,91 @@ async function handleCanvasMouseDown(e) {
     }
 }
 
+async function handleCanvasMouseDown(e) {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    const canvasX = x * scaleX;
+    const canvasY = y * scaleY;
+    
+    // בדוק אם לחצנו על פינה של תמונה נבחרת
+    if (selectedImageId !== null) {
+        const selectedImage = imageItems.find(img => img.id === selectedImageId);
+        if (selectedImage) {
+            const corner = findImageCornerAtPosition(canvasX, canvasY, selectedImage);
+            
+            if (corner) {
+                resizingImageCorner = corner;
+                resizeStartX = canvasX;
+                resizeStartY = canvasY;
+                resizeStartSize = {
+                    width: parseFloat(selectedImage.width),
+                    height: parseFloat(selectedImage.height)
+                };
+                canvas.style.cursor = 'nwse-resize';
+                return;
+            }
+        }
+    }
+    
+    // בדוק אם לחצנו על פינה של טקסט נבחר
+    if (selectedTextId !== null) {
+        const selectedItem = textItems.find(t => t.id === selectedTextId);
+        if (selectedItem) {
+            const page = await pdfDoc.getPage(currentPageNum);
+            const viewport = page.getViewport({ scale: pdfScale });
+            const corner = findCornerAtPosition(canvasX, canvasY, selectedItem, viewport);
+            
+            if (corner) {
+                resizingCorner = corner;
+                resizeStartSize = parseInt(selectedItem.size);
+                resizeStartX = canvasX;
+                resizeStartY = canvasY;
+                canvas.style.cursor = 'nwse-resize';
+                return;
+            }
+        }
+    }
+    
+    // בדוק אם לחצנו על תמונה
+    const clickedImage = findImageAtPosition(canvasX, canvasY);
+    if (clickedImage) {
+        selectedImageId = clickedImage.id;
+        selectedTextId = null;  // בטל בחירת טקסט
+        draggingImageId = clickedImage.id;
+        dragStartX = canvasX;
+        dragStartY = canvasY;
+        dragStartTop = clickedImage.top;
+        dragStartLeft = clickedImage.left;
+        canvas.style.cursor = 'grabbing';
+        renderPage(currentPageNum);
+        return;
+    }
+    
+    // בדוק אם לחצנו על טקסט
+    const clickedText = findTextAtPosition(canvasX, canvasY);
+    if (clickedText) {
+        selectedTextId = clickedText.id;
+        selectedImageId = null;  // בטל בחירת תמונה
+        draggingTextId = clickedText.id;
+        dragStartX = canvasX;
+        dragStartY = canvasY;
+        dragStartTop = clickedText.top;
+        dragStartRight = clickedText.right;
+        canvas.style.cursor = 'grabbing';
+        renderPage(currentPageNum);
+    } else {
+        selectedTextId = null;
+        selectedImageId = null;
+        renderPage(currentPageNum);
+    }
+}
 
-async function handleCanvasMouseMove(e) {
+async function handleCanvasMouseMove2(e) {
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -372,9 +538,152 @@ async function handleCanvasMouseMove(e) {
     canvas.style.cursor = 'grab';
 }
 
-function handleCanvasMouseUp() {
+function handleCanvasMouseMove(e) {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    const canvasX = x * scaleX;
+    const canvasY = y * scaleY;
+    
+    // אם בresize תמונה
+    if (resizingImageCorner !== null) {
+        const item = imageItems.find(img => img.id === selectedImageId);
+        if (item) {
+            const deltaX = (canvasX - resizeStartX) / pdfScale;
+            const deltaY = (canvasY - resizeStartY) / pdfScale;
+            
+            if (resizingImageCorner === 'bottom-right') {
+                item.width = Math.max(20, resizeStartSize.width + deltaX);
+                item.height = Math.max(20, resizeStartSize.height + deltaY);
+            } else if (resizingImageCorner === 'bottom-left') {
+                item.width = Math.max(20, resizeStartSize.width - deltaX);
+                item.height = Math.max(20, resizeStartSize.height + deltaY);
+                item.left = parseFloat(item.left) - (item.width - resizeStartSize.width);
+            } else if (resizingImageCorner === 'top-right') {
+                item.width = Math.max(20, resizeStartSize.width + deltaX);
+                item.height = Math.max(20, resizeStartSize.height - deltaY);
+                item.top = parseFloat(item.top) - (item.height - resizeStartSize.height);
+            } else if (resizingImageCorner === 'top-left') {
+                item.width = Math.max(20, resizeStartSize.width - deltaX);
+                item.height = Math.max(20, resizeStartSize.height - deltaY);
+                item.left = parseFloat(item.left) - (item.width - resizeStartSize.width);
+                item.top = parseFloat(item.top) - (item.height - resizeStartSize.height);
+            }
+            
+            updateImageFieldValues(item);
+            renderPage(currentPageNum);
+        }
+        return;
+    }
+    
+    // אם בגרירת תמונה
+    if (draggingImageId !== null) {
+        const deltaX = (canvasX - dragStartX) / pdfScale;
+        const deltaY = (canvasY - dragStartY) / pdfScale;
+        
+        const item = imageItems.find(img => img.id === draggingImageId);
+        if (item) {
+            item.left = Math.round(dragStartLeft + deltaX);
+            item.top = Math.round(dragStartTop + deltaY);
+            
+            updateImageFieldValues(item);
+            renderPage(currentPageNum);
+        }
+        return;
+    }
+    
+    // אם בresize טקסט
+    if (resizingCorner !== null) {
+        const item = textItems.find(t => t.id === selectedTextId);
+        if (item) {
+            const deltaX = canvasX - resizeStartX;
+            const deltaY = canvasY - resizeStartY;
+            const delta = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            
+            let sign = 1;
+            if (resizingCorner === 'top-left' || resizingCorner === 'bottom-left') {
+                sign = deltaX < 0 ? 1 : -1;
+            } else {
+                sign = deltaX > 0 ? 1 : -1;
+            }
+            
+            const newSize = Math.max(12, Math.round(resizeStartSize + (delta * sign / pdfScale / 3)));
+            item.size = newSize;
+            
+            updateFieldValues(item);
+            renderPage(currentPageNum);
+        }
+        return;
+    }
+    
+    // אם בגרירת טקסט
+    if (draggingTextId !== null) {
+        const deltaX = canvasX - dragStartX;
+        const deltaY = canvasY - dragStartY;
+        
+        const item = textItems.find(t => t.id === draggingTextId);
+        if (item) {
+            item.top = Math.round(dragStartTop + (deltaY / pdfScale));
+            item.right = Math.round(dragStartRight - (deltaX / pdfScale));
+            
+            updateFieldValues(item);
+            renderPage(currentPageNum);
+        }
+        return;
+    }
+    
+    // שנה cursor כשעוברים על פינות תמונה
+    if (selectedImageId !== null) {
+        const selectedImage = imageItems.find(img => img.id === selectedImageId);
+        if (selectedImage && (parseInt(selectedImage.page) || 1) === currentPageNum) {
+            const corner = findImageCornerAtPosition(canvasX, canvasY, selectedImage);
+            
+            if (corner) {
+                canvas.style.cursor = 'nwse-resize';
+                return;
+            }
+        }
+    }
+    
+    // שנה cursor כשעוברים על פינות טקסט
+    if (selectedTextId !== null) {
+        const selectedItem = textItems.find(t => t.id === selectedTextId);
+        if (selectedItem && (parseInt(selectedItem.page) || 1) === currentPageNum) {
+            const page = pdfDoc.getPage(currentPageNum);
+            page.then(p => {
+                const viewport = p.getViewport({ scale: pdfScale });
+                const corner = findCornerAtPosition(canvasX, canvasY, selectedItem, viewport);
+                
+                if (corner) {
+                    if (corner === 'top-right' || corner === 'bottom-left') {
+                        canvas.style.cursor = 'nesw-resize';
+                    } else {
+                        canvas.style.cursor = 'nwse-resize';
+                    }
+                }
+            });
+            return;
+        }
+    }
+    
+    canvas.style.cursor = 'grab';
+}
+
+function handleCanvasMouseUp2() {
     draggingTextId = null;
     resizingCorner = null;
+    canvas.style.cursor = 'grab';
+}
+
+function handleCanvasMouseUp() {
+    draggingTextId = null;
+    draggingImageId = null;
+    resizingCorner = null;
+    resizingImageCorner = null;
     canvas.style.cursor = 'grab';
 }
 

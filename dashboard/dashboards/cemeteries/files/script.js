@@ -132,7 +132,7 @@ function addImageItem(base64Image, fileName) {
     }
 }
 
-function renderImageItem(imageItem) {
+function renderImageItem2(imageItem) {
     const container = document.getElementById('textsList');
     
     const itemDiv = document.createElement('div');
@@ -190,6 +190,91 @@ function renderImageItem(imageItem) {
     `;
     
     container.appendChild(itemDiv);
+}
+
+function renderImageItem(imageItem) {
+    const container = document.getElementById('textsList');
+    
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'text-item';
+    itemDiv.id = `image-item-${imageItem.id}`;
+    itemDiv.setAttribute('data-item-id', imageItem.id);
+    itemDiv.setAttribute('data-item-type', 'image');
+    itemDiv.setAttribute('draggable', 'true');  // ← הוסף
+    
+    const layerIndex = imageItems.indexOf(imageItem) + 1;
+    
+    itemDiv.innerHTML = `
+        <div class="text-item-header">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="drag-handle">⋮⋮</span>
+                <span class="layer-number">#${layerIndex}</span>
+                <span class="text-item-title">🖼️ תמונה #${imageItem.id}</span>
+            </div>
+            <div style="display: flex; gap: 5px;">
+                <button type="button" class="collapse-btn" onclick="toggleCollapse(${imageItem.id}, 'image')">
+                    <span class="collapse-icon">▼</span>
+                </button>
+                <button type="button" class="remove-text-btn" onclick="removeImageItem(${imageItem.id})">🗑️</button>
+            </div>
+        </div>
+        
+        <div class="text-item-body" id="image-item-body-${imageItem.id}">
+            <!-- השדות הקיימים -->
+            ${generateImageItemFields(imageItem)}
+        </div>
+    `;
+    
+    setupDragAndDrop(itemDiv);  // ← הוסף
+    
+    container.appendChild(itemDiv);
+}
+
+function generateImageItemFields(imageItem) {
+    return `
+        <div class="form-row">
+            <div class="form-group">
+                <label>רוחב (px)</label>
+                <input type="number" value="${imageItem.width}" min="10" max="2000" 
+                    onchange="updateImageItem(${imageItem.id}, 'width', parseInt(this.value))">
+            </div>
+            <div class="form-group">
+                <label>גובה (px)</label>
+                <input type="number" value="${imageItem.height}" min="10" max="2000" 
+                    onchange="updateImageItem(${imageItem.id}, 'height', parseInt(this.value))">
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label>מעלה (px)</label>
+                <input type="number" value="${imageItem.top}" min="0" 
+                    onchange="updateImageItem(${imageItem.id}, 'top', parseFloat(this.value))">
+            </div>
+            <div class="form-group">
+                <label>משמאל (px)</label>
+                <input type="number" value="${imageItem.left}" min="0" 
+                    onchange="updateImageItem(${imageItem.id}, 'left', parseFloat(this.value))">
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label>עמוד</label>
+                <input type="number" value="${imageItem.page}" min="1" 
+                    onchange="updateImageItem(${imageItem.id}, 'page', parseInt(this.value))">
+            </div>
+            <div class="form-group">
+                <label>שקיפות</label>
+                <input type="number" value="${imageItem.opacity}" min="0" max="1" step="0.1" 
+                    onchange="updateImageItem(${imageItem.id}, 'opacity', parseFloat(this.value))">
+            </div>
+        </div>
+        
+        <div class="form-group full-width">
+            <img src="${imageItem.base64}" style="max-width: 100%; max-height: 150px; border-radius: 8px; margin-top: 10px;">
+        </div>
+    `;
 }
 
 function updateImageItem(id, field, value) {

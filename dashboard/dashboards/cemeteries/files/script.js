@@ -1273,10 +1273,10 @@ function refreshItemsList() {
 processBtn.addEventListener('click', async () => {
     if (!selectedFile) return;
 
-    if (textItems.length === 0) {
-        showError('נא להוסיף לפחות טקסט אחד');
-        return;
-    }
+    // if (textItems.length === 0) {
+    //     showError('נא להוסיף לפחות טקסט אחד');
+    //     return;
+    // }
 
     const formData = new FormData();
     formData.append('pdf', selectedFile);

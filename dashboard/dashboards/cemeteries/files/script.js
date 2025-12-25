@@ -917,7 +917,7 @@ function addTextItem() {
     }
 }
 
-function renderTextItem(item) {
+function renderTextItem2(item) {
     const textsList = document.getElementById('textsList');
     const itemDiv = document.createElement('div');
     itemDiv.className = 'text-item';
@@ -989,6 +989,112 @@ function renderTextItem(item) {
     `;
     
     textsList.appendChild(itemDiv);
+}
+
+function renderTextItem(item) {
+    const textsList = document.getElementById('textsList');
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'text-item';
+    itemDiv.id = `text-item-${item.id}`;
+    itemDiv.setAttribute('data-item-id', item.id);
+    itemDiv.setAttribute('data-item-type', 'text');
+    
+    const fontOptions = availableFonts.map(font => 
+        `<option value="${font.id}" ${item.font === font.id ? 'selected' : ''}>${font.name}</option>`
+    ).join('');
+    
+    const layerIndex = textItems.indexOf(item) + 1;
+    
+    itemDiv.innerHTML = `
+        <div class="text-item-header">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="layer-number">#${layerIndex}</span>
+                <span class="text-item-title">📝 טקסט #${item.id}</span>
+            </div>
+            <div style="display: flex; gap: 5px;">
+                <button type="button" class="collapse-btn" onclick="toggleCollapse(${item.id}, 'text')">
+                    <span class="collapse-icon">▼</span>
+                </button>
+                <button type="button" class="remove-text-btn" onclick="removeTextItem(${item.id})">🗑️</button>
+            </div>
+        </div>
+        
+        <div class="text-item-body" id="text-item-body-${item.id}">
+            <!-- כל השדות הקיימים כאן -->
+            <div class="form-group full-width">
+                <label>תוכן הטקסט:</label>
+                <input type="text" value="${item.text}" oninput="updateTextItem(${item.id}, 'text', this.value)">
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>פונט:</label>
+                    <select onchange="updateTextItem(${item.id}, 'font', this.value)">
+                        ${fontOptions}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>גודל פונט:</label>
+                    <input type="number" value="${item.size}" min="8" max="200" oninput="updateTextItem(${item.id}, 'size', this.value)">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>צבע:</label>
+                    <input type="color" value="${item.color}" oninput="updateTextItem(${item.id}, 'color', this.value)">
+                </div>
+                
+                <div class="form-group">
+                    <label>מרחק מלמעלה (px):</label>
+                    <input type="number" value="${item.top}" min="0" oninput="updateTextItem(${item.id}, 'top', this.value)">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>מרחק מימין (px):</label>
+                    <input type="number" value="${item.right}" min="0" oninput="updateTextItem(${item.id}, 'right', this.value)">
+                </div>
+
+                <div class="form-group">
+                    <label>עמוד:</label>
+                    <input type="number" value="${item.page || 1}" min="1" max="99" oninput="updateTextItem(${item.id}, 'page', this.value)">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>יישור:</label>
+                    <select onchange="updateTextItem(${item.id}, 'align', this.value)">
+                        <option value="right" ${(item.align || 'right') === 'right' ? 'selected' : ''}>ימין</option>
+                        <option value="left" ${item.align === 'left' ? 'selected' : ''}>שמאל</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    textsList.appendChild(itemDiv);
+}
+
+function toggleCollapse(id, type) {
+    const bodyId = type === 'text' ? `text-item-body-${id}` : `image-item-body-${id}`;
+    const body = document.getElementById(bodyId);
+    const icon = body.parentElement.querySelector('.collapse-icon');
+    
+    if (body.classList.contains('collapsed')) {
+        body.classList.remove('collapsed');
+        body.style.maxHeight = body.scrollHeight + 'px';
+        icon.textContent = '▼';
+    } else {
+        body.style.maxHeight = body.scrollHeight + 'px';
+        setTimeout(() => {
+            body.classList.add('collapsed');
+            icon.textContent = '▶';
+        }, 10);
+    }
 }
 
 function updateTextItem(id, field, value) {

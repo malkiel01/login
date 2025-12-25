@@ -34,28 +34,17 @@ if (!isset($_FILES['pdf']) || $_FILES['pdf']['error'] !== UPLOAD_ERR_OK) {
     exit;
 }
 
-// קבל את כל הנתונים
+// Get texts JSON
 $texts_json = isset($_POST['texts']) ? $_POST['texts'] : '[]';
-$images_json = isset($_POST['images']) ? $_POST['images'] : '[]';
-$allItems_json = isset($_POST['allItems']) ? $_POST['allItems'] : '[]';
-
 $texts = json_decode($texts_json, true);
-$images = json_decode($images_json, true);
-$allItems = json_decode($allItems_json, true);
 
-// Debug log
-error_log("PROCESS.PHP - Received texts count: " . count($texts));
-error_log("PROCESS.PHP - Received images count: " . count($images));
-error_log("PROCESS.PHP - Received allItems count: " . count($allItems));
-
-// ← הסר את הבדיקה הזו!
-// if (empty($texts)) {
-//     echo json_encode([
-//         'success' => false,
-//         'error' => 'לא נשלחו טקסטים להדפסה'
-//     ], JSON_UNESCAPED_UNICODE);
-//     exit;
-// }
+if (empty($texts)) {
+    echo json_encode([
+        'success' => false,
+        'error' => 'לא נשלחו טקסטים להדפסה'
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 $file = $_FILES['pdf'];
 
@@ -88,14 +77,9 @@ if (!move_uploaded_file($file['tmp_name'], $input_path)) {
     exit;
 }
 
-// Create temp JSON file - שלח את allItems במקום texts
-$data_file = $upload_dir . $unique_id . '_data.json';
-$data_to_send = [
-    'texts' => $texts,
-    'images' => $images,
-    'allItems' => $allItems
-];
-file_put_contents($data_file, json_encode($data_to_send, JSON_UNESCAPED_UNICODE));
+// Create temp JSON file for texts
+$texts_file = $upload_dir . $unique_id . '_texts.json';
+file_put_contents($texts_file, json_encode($texts, JSON_UNESCAPED_UNICODE));
 
 // Call Python script
 $command = sprintf(
@@ -104,15 +88,15 @@ $command = sprintf(
     escapeshellarg($python_script),
     escapeshellarg($input_path),
     escapeshellarg($output_path),
-    escapeshellarg($data_file)
+    escapeshellarg($texts_file)
 );
 
 $output = [];
 $return_var = 0;
 exec($command, $output, $return_var);
 
-// Clean up data file
-@unlink($data_file);
+// Clean up texts file
+@unlink($texts_file);
 
 // Parse Python output
 $python_output = implode("\n", $output);

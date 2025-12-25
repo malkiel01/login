@@ -193,7 +193,7 @@ if __name__ == '__main__':
             # סנן רק טקסטים מ-allItems (לפי סדר השכבות)
             texts_config = [item for item in all_items if item.get('type') == 'text']
             
-            print(f"DEBUG: Found {len(texts_from_dict)} texts in dict, {len(images)} images, {len(all_items)} total items, using {len(texts_config)} texts from allItems", file=sys.stderr)
+            # print(f"DEBUG: Found {len(texts_from_dict)} texts in dict, {len(images)} images, {len(all_items)} total items, using {len(texts_config)} texts from allItems", file=sys.stderr)
         else:
             # פורמט ישן - רק טקסטים
             texts_config = data if isinstance(data, list) else []

@@ -1682,7 +1682,7 @@ confirmSaveBtn.addEventListener('click', async () => {
     }
     
     // הכן את הנתונים לשמירה
-    const templateData = {
+    const templateData2 = {
         name: templateName,
         description: templateDescription,
         original_filename: selectedFile.name,
@@ -1691,6 +1691,7 @@ confirmSaveBtn.addEventListener('click', async () => {
             height: parseFloat(document.getElementById('pageHeight').textContent)
         },
         page_count: parseInt(document.getElementById('pageCount').textContent),
+        
         fields: textItems.map((item, index) => ({
             id: `field_${index + 1}`,
             label: item.text, // כרגע השם הוא הטקסט עצמו
@@ -1702,12 +1703,22 @@ confirmSaveBtn.addEventListener('click', async () => {
             right: parseFloat(item.right),
             page: parseInt(item.page) || 1,
             align: item.align || 'right',
-
-            allItems: allItems,           // ← הוסף את זה
-            texts: textItems,             // ← הוסף את זה
-            images: imageItems,           // ← הוסף את זה
-            fields: allItems              // ← שנה מ-textItems ל-allItems
         }))
+    };
+
+    const templateData = {
+        name: templateName,
+        description: templateDescription,
+        original_filename: selectedFile.name,
+        pdf_dimensions: {
+            width: parseFloat(document.getElementById('pageWidth').textContent),
+            height: parseFloat(document.getElementById('pageHeight').textContent)
+        },
+        page_count: parseInt(document.getElementById('pageCount').textContent),
+        allItems: allItems,
+        texts: textItems,
+        images: imageItems,
+        fields: allItems
     };
     
     // שלח לשרת

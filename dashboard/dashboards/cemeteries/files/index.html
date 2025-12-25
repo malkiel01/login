@@ -33,37 +33,25 @@
                 </div>
 
                 <div class="texts-container" id="textsContainer" style="display: none;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                        <h3 style="color: #667eea; margin: 0;">טקסטים להוספה</h3>
-                        <button type="button" id="addTextBtn" style="background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9em;">
-                            ➕ הוסף טקסט
-                        </button>
-                    </div>
-                    <div class="texts-container" id="textsContainer" style="display: none;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 10px;">
-                            <h3 style="color: #667eea; margin: 0;">טקסטים ותמונות להוספה</h3>
-                            <div style="display: flex; gap: 10px;">
-                                <button type="button" id="addImageBtn" style="background: #8b5cf6; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9em;">
-                                    🖼️ הוסף תמונה
-                                </button>
-                                <button type="button" id="addTextBtn" style="background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9em;">
-                                    ➕ הוסף טקסט
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div id="textsList">
-                            <!-- טקסטים ותמונות יתוספו כאן דינמית -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 10px;">
+                        <h3 style="color: #667eea; margin: 0;">טקסטים ותמונות להוספה</h3>
+                        <div style="display: flex; gap: 10px;">
+                            <button type="button" id="addImageBtn" style="background: #8b5cf6; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9em;">
+                                🖼️ הוסף תמונה
+                            </button>
+                            <button type="button" id="addTextBtn" style="background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9em;">
+                                ➕ הוסף טקסט
+                            </button>
                         </div>
                     </div>
-
-                    <!-- input מוסתר להעלאת תמונה -->
-                    <input type="file" id="imageFileInput" accept="image/png,image/jpeg,image/jpg" style="display: none;">
                     
                     <div id="textsList">
-                        <!-- טקסטים יתוספו כאן דינמית -->
+                        <!-- טקסטים ותמונות יתוספו כאן דינמית -->
                     </div>
                 </div>
+
+                <!-- input מוסתר להעלאת תמונה -->
+                <input type="file" id="imageFileInput" accept="image/png,image/jpeg,image/jpg" style="display: none;">
                 
                 <button class="btn" id="processBtn">עבד את הקובץ</button>
                 

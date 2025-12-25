@@ -80,6 +80,7 @@ canvas.addEventListener('mouseup', handleCanvasMouseUp);
 // משתנה לשמירת תמונות
 let imageItems = [];
 let imageIdCounter = 1;
+let renderTimeout = null;
 
 // כפתור הוספת תמונה
 document.getElementById('addImageBtn').addEventListener('click', () => {
@@ -337,6 +338,18 @@ function drawImageSelectionBox(imageItem) {
     ctx.fillRect(imgX + imgWidth - cornerSize/2, imgY + imgHeight - cornerSize/2, cornerSize, cornerSize);
 }
 
+function scheduleRender() {
+    if (renderTimeout) {
+        clearTimeout(renderTimeout);
+    }
+    renderTimeout = setTimeout(() => {
+        if (!pageRendering) {
+            renderPage(currentPageNum);
+        }
+        renderTimeout = null;
+    }, 16);
+}
+
 // ===============================
 // גרירה על הקנבס
 // ===============================
@@ -399,7 +412,7 @@ async function handleCanvasMouseDown(e) {
     
     const canvasX = x * scaleX;
     const canvasY = y * scaleY;
-    
+
     // בדוק אם לחצנו על פינה של תמונה נבחרת
     if (selectedImageId !== null) {
         const selectedImage = imageItems.find(img => img.id === selectedImageId);
@@ -414,6 +427,8 @@ async function handleCanvasMouseDown(e) {
                     width: parseFloat(selectedImage.width),
                     height: parseFloat(selectedImage.height)
                 };
+                dragStartLeft = parseFloat(selectedImage.left);  // ← הוסף!
+                dragStartTop = parseFloat(selectedImage.top);     // ← הוסף!
                 canvas.style.cursor = 'nwse-resize';
                 return;
             }
@@ -549,7 +564,7 @@ async function handleCanvasMouseMove2(e) {
     canvas.style.cursor = 'grab';
 }
 
-function handleCanvasMouseMove(e) {
+function handleCanvasMouseMove3(e) {
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -650,6 +665,149 @@ function handleCanvasMouseMove(e) {
             
             updateFieldValues(item);
             renderPage(currentPageNum);
+        }
+        return;
+    }
+    
+    // שנה cursor כשעוברים על פינות תמונה
+    if (selectedImageId !== null) {
+        const selectedImage = imageItems.find(img => img.id === selectedImageId);
+        if (selectedImage && (parseInt(selectedImage.page) || 1) === currentPageNum) {
+            const corner = findImageCornerAtPosition(canvasX, canvasY, selectedImage);
+            
+            if (corner) {
+                canvas.style.cursor = 'nwse-resize';
+                return;
+            }
+        }
+    }
+    
+    // שנה cursor כשעוברים על פינות טקסט
+    if (selectedTextId !== null) {
+        const selectedItem = textItems.find(t => t.id === selectedTextId);
+        if (selectedItem && (parseInt(selectedItem.page) || 1) === currentPageNum) {
+            const page = pdfDoc.getPage(currentPageNum);
+            page.then(p => {
+                const viewport = p.getViewport({ scale: pdfScale });
+                const corner = findCornerAtPosition(canvasX, canvasY, selectedItem, viewport);
+                
+                if (corner) {
+                    if (corner === 'top-right' || corner === 'bottom-left') {
+                        canvas.style.cursor = 'nesw-resize';
+                    } else {
+                        canvas.style.cursor = 'nwse-resize';
+                    }
+                }
+            });
+            return;
+        }
+    }
+    
+    canvas.style.cursor = 'grab';
+}
+
+
+function handleCanvasMouseMove(e) {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    const canvasX = x * scaleX;
+    const canvasY = y * scaleY;
+    
+    // אם בresize תמונה
+    if (resizingImageCorner !== null) {
+        const item = imageItems.find(img => img.id === selectedImageId);
+        if (item) {
+            const deltaX = (canvasX - resizeStartX) / pdfScale;
+            const deltaY = (canvasY - resizeStartY) / pdfScale;
+            
+            const oldWidth = resizeStartSize.width;
+            const oldHeight = resizeStartSize.height;
+            
+            if (resizingImageCorner === 'bottom-right') {
+                item.width = Math.max(20, oldWidth + deltaX);
+                item.height = Math.max(20, oldHeight + deltaY);
+            } else if (resizingImageCorner === 'bottom-left') {
+                const newWidth = Math.max(20, oldWidth - deltaX);
+                item.width = newWidth;
+                item.height = Math.max(20, oldHeight + deltaY);
+                item.left = dragStartLeft + (oldWidth - newWidth);
+            } else if (resizingImageCorner === 'top-right') {
+                const newHeight = Math.max(20, oldHeight - deltaY);
+                item.width = Math.max(20, oldWidth + deltaX);
+                item.height = newHeight;
+                item.top = dragStartTop + (oldHeight - newHeight);
+            } else if (resizingImageCorner === 'top-left') {
+                const newWidth = Math.max(20, oldWidth - deltaX);
+                const newHeight = Math.max(20, oldHeight - deltaY);
+                item.width = newWidth;
+                item.height = newHeight;
+                item.left = dragStartLeft + (oldWidth - newWidth);
+                item.top = dragStartTop + (oldHeight - newHeight);
+            }
+            
+            updateImageFieldValues(item);
+            scheduleRender();  // ← שינוי כאן!
+        }
+        return;
+    }
+    
+    // אם בגרירת תמונה
+    if (draggingImageId !== null) {
+        const deltaX = (canvasX - dragStartX) / pdfScale;
+        const deltaY = (canvasY - dragStartY) / pdfScale;
+        
+        const item = imageItems.find(img => img.id === draggingImageId);
+        if (item) {
+            item.left = Math.round(dragStartLeft + deltaX);
+            item.top = Math.round(dragStartTop + deltaY);
+            
+            updateImageFieldValues(item);
+            scheduleRender();  // ← שינוי כאן!
+        }
+        return;
+    }
+    
+    // אם בresize טקסט
+    if (resizingCorner !== null) {
+        const item = textItems.find(t => t.id === selectedTextId);
+        if (item) {
+            const deltaX = canvasX - resizeStartX;
+            const deltaY = canvasY - resizeStartY;
+            const delta = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            
+            let sign = 1;
+            if (resizingCorner === 'top-left' || resizingCorner === 'bottom-left') {
+                sign = deltaX < 0 ? 1 : -1;
+            } else {
+                sign = deltaX > 0 ? 1 : -1;
+            }
+            
+            const newSize = Math.max(12, Math.round(resizeStartSize + (delta * sign / pdfScale / 3)));
+            item.size = newSize;
+            
+            updateFieldValues(item);
+            scheduleRender();  // ← שינוי כאן!
+        }
+        return;
+    }
+    
+    // אם בגרירת טקסט
+    if (draggingTextId !== null) {
+        const deltaX = canvasX - dragStartX;
+        const deltaY = canvasY - dragStartY;
+        
+        const item = textItems.find(t => t.id === draggingTextId);
+        if (item) {
+            item.top = Math.round(dragStartTop + (deltaY / pdfScale));
+            item.right = Math.round(dragStartRight - (deltaX / pdfScale));
+            
+            updateFieldValues(item);
+            scheduleRender();  // ← שינוי כאן!
         }
         return;
     }
@@ -1281,7 +1439,7 @@ async function loadPDF(file) {
     fileReader.readAsArrayBuffer(file);
 }
 
-async function renderPage(num) {
+async function renderPage3(num) {
     pageRendering = true;
     
     try {
@@ -1351,6 +1509,66 @@ async function renderPage2(num) {
     } catch (error) {
         console.error('Error rendering page:', error);
         pageRendering = false;
+    }
+}
+async function renderPage(num) {
+    // אם כבר מרנדרים, המתן
+    if (pageRendering) {
+        pageNumPending = num;
+        return;
+    }
+    
+    pageRendering = true;
+    
+    try {
+        const page = await pdfDoc.getPage(num);
+        const viewport = page.getViewport({ scale: pdfScale });
+        
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        
+        const renderContext = {
+            canvasContext: ctx,
+            viewport: viewport,
+        };
+        
+        // רנדר ה-PDF
+        await page.render(renderContext).promise;
+        
+        // רנדר תמונות וטקסטים מעל ה-PDF
+        await drawImagesOnCanvas(viewport);
+        drawTextsOnCanvas(viewport);
+        
+        pageRendering = false;
+        
+        // אם יש עמוד ממתין, רנדר אותו
+        if (pageNumPending !== null) {
+            const pending = pageNumPending;
+            pageNumPending = null;
+            renderPage(pending);
+        }
+        
+    } catch (error) {
+        console.error('Error rendering page:', error);
+        pageRendering = false;
+    }
+}
+
+// פונקציה נפרדת לרנדור רק תמונות וטקסטים (ללא PDF)
+async function redrawOverlays() {
+    if (!pdfDoc) return;
+    
+    try {
+        const page = await pdfDoc.getPage(currentPageNum);
+        const viewport = page.getViewport({ scale: pdfScale });
+        
+        // נקה רק את החלק של התמונות והטקסטים
+        // אבל זה יוריד גם את ה-PDF, אז צריך לרנדר הכל מחדש
+        
+        await renderPage(currentPageNum);
+        
+    } catch (error) {
+        console.error('Error redrawing overlays:', error);
     }
 }
 

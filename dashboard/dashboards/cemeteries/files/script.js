@@ -104,7 +104,7 @@ document.getElementById('imageFileInput').addEventListener('change', async (e) =
     e.target.value = '';
 });
 
-function addImageItem(base64Image, fileName) {
+function addImageItem2(base64Image, fileName) {
     const imageId = imageIdCounter++;
     
     const imageItem = {
@@ -127,6 +127,33 @@ function addImageItem(base64Image, fileName) {
     document.getElementById('textsContainer').style.display = 'block';
     
     // רנדר מחדש את הקנבס
+    if (pdfDoc) {
+        renderPage(currentPageNum);
+    }
+}
+
+function addImageItem(base64Image, fileName) {
+    const imageId = imageIdCounter++;
+    
+    const imageItem = {
+        id: imageId,
+        type: 'image',
+        fileName: fileName,
+        base64: base64Image,
+        page: currentPageNum || 1,
+        top: 100,
+        left: 100,
+        width: 200,
+        height: 200,
+        opacity: 1.0
+    };
+    
+    imageItems.push(imageItem);
+    allItems.push(imageItem);  // ← הוסף
+    renderImageItem(imageItem);
+    
+    document.getElementById('textsContainer').style.display = 'block';
+    
     if (pdfDoc) {
         renderPage(currentPageNum);
     }
@@ -192,7 +219,7 @@ function renderImageItem2(imageItem) {
     container.appendChild(itemDiv);
 }
 
-function renderImageItem(imageItem) {
+function renderImageItem3(imageItem) {
     const container = document.getElementById('textsList');
     
     const itemDiv = document.createElement('div');
@@ -227,6 +254,46 @@ function renderImageItem(imageItem) {
     
     setupDragAndDrop(itemDiv);  // ← הוסף
     
+    container.appendChild(itemDiv);
+}
+
+function renderImageItem(imageItem) {
+    const container = document.getElementById('textsList');
+    
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'text-item';
+    itemDiv.id = `image-item-${imageItem.id}`;
+    itemDiv.setAttribute('data-item-id', imageItem.id);
+    itemDiv.setAttribute('data-item-type', 'image');
+    itemDiv.setAttribute('draggable', 'true');
+    
+    const layerIndex = imageItems.indexOf(imageItem) + 1;
+    const key = `image-${imageItem.id}`;
+    const isCollapsed = collapsedStates[key] || false;  // ← קרא מצב
+    const collapseIcon = isCollapsed ? '▶' : '▼';
+    const collapsedClass = isCollapsed ? 'collapsed' : '';
+    
+    itemDiv.innerHTML = `
+        <div class="text-item-header">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="drag-handle">⋮⋮</span>
+                <span class="layer-number">#${layerIndex}</span>
+                <span class="text-item-title">🖼️ תמונה #${imageItem.id}</span>
+            </div>
+            <div style="display: flex; gap: 5px;">
+                <button type="button" class="collapse-btn" onclick="toggleCollapse(${imageItem.id}, 'image')">
+                    <span class="collapse-icon">${collapseIcon}</span>
+                </button>
+                <button type="button" class="remove-text-btn" onclick="removeImageItem(${imageItem.id})">🗑️</button>
+            </div>
+        </div>
+        
+        <div class="text-item-body ${collapsedClass}" id="image-item-body-${imageItem.id}">
+            ${generateImageItemFields(imageItem)}
+        </div>
+    `;
+    
+    setupDragAndDrop(itemDiv);
     container.appendChild(itemDiv);
 }
 
@@ -443,6 +510,8 @@ function scheduleRender() {
 // ===============================
 // גרירה על הקנבס
 // ===============================
+
+let collapsedStates = {}; // { 'text-1': true, 'image-2': false, ... }
 
 async function handleCanvasMouseDown(e) {
     const rect = canvas.getBoundingClientRect();
@@ -980,7 +1049,7 @@ function formatFileSize(bytes) {
 
 document.getElementById('addTextBtn').addEventListener('click', addTextItem);
 
-function addTextItem() {
+function addTextItem2() {
     const id = nextTextId++;
     const textItem = {
         id: id,
@@ -995,6 +1064,30 @@ function addTextItem() {
     };
     
     textItems.push(textItem);
+    renderTextItem(textItem);
+    
+    if (pdfDoc) {
+        renderPage(currentPageNum);
+    }
+}
+
+function addTextItem() {
+    const id = nextTextId++;
+    const textItem = {
+        id: id,
+        type: 'text',  // ← הוסף
+        text: 'ניסיון',
+        font: 'david',
+        size: 48,
+        color: '#808080',
+        top: 300,
+        right: 200,
+        page: 1,
+        align: 'right'
+    };
+    
+    textItems.push(textItem);
+    allItems.push(textItem);  // ← הוסף גם כאן
     renderTextItem(textItem);
     
     if (pdfDoc) {
@@ -1164,7 +1257,7 @@ function renderTextItem3(item) {
     textsList.appendChild(itemDiv);
 }
 
-function renderTextItem(item) {
+function renderTextItem4(item) {
     const textsList = document.getElementById('textsList');
     const itemDiv = document.createElement('div');
     itemDiv.className = 'text-item';
@@ -1203,6 +1296,49 @@ function renderTextItem(item) {
     // הוסף event listeners לגרירה
     setupDragAndDrop(itemDiv);
     
+    textsList.appendChild(itemDiv);
+}
+
+function renderTextItem(item) {
+    const textsList = document.getElementById('textsList');
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'text-item';
+    itemDiv.id = `text-item-${item.id}`;
+    itemDiv.setAttribute('data-item-id', item.id);
+    itemDiv.setAttribute('data-item-type', 'text');
+    itemDiv.setAttribute('draggable', 'true');
+    
+    const fontOptions = availableFonts.map(font => 
+        `<option value="${font.id}" ${item.font === font.id ? 'selected' : ''}>${font.name}</option>`
+    ).join('');
+    
+    const layerIndex = textItems.indexOf(item) + 1;
+    const key = `text-${item.id}`;
+    const isCollapsed = collapsedStates[key] || false;  // ← קרא מצב
+    const collapseIcon = isCollapsed ? '▶' : '▼';
+    const collapsedClass = isCollapsed ? 'collapsed' : '';
+    
+    itemDiv.innerHTML = `
+        <div class="text-item-header">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="drag-handle">⋮⋮</span>
+                <span class="layer-number">#${layerIndex}</span>
+                <span class="text-item-title">📝 טקסט #${item.id}</span>
+            </div>
+            <div style="display: flex; gap: 5px;">
+                <button type="button" class="collapse-btn" onclick="toggleCollapse(${item.id}, 'text')">
+                    <span class="collapse-icon">${collapseIcon}</span>
+                </button>
+                <button type="button" class="remove-text-btn" onclick="removeTextItem(${item.id})">🗑️</button>
+            </div>
+        </div>
+        
+        <div class="text-item-body ${collapsedClass}" id="text-item-body-${item.id}">
+            ${generateTextItemFields(item, fontOptions)}
+        </div>
+    `;
+    
+    setupDragAndDrop(itemDiv);
     textsList.appendChild(itemDiv);
 }
 
@@ -1263,7 +1399,7 @@ function generateTextItemFields(item, fontOptions) {
     `;
 }
 
-function toggleCollapse(id, type) {
+function toggleCollapse2(id, type) {
     const bodyId = type === 'text' ? `text-item-body-${id}` : `image-item-body-${id}`;
     const body = document.getElementById(bodyId);
     const icon = body.parentElement.querySelector('.collapse-icon');
@@ -1277,6 +1413,27 @@ function toggleCollapse(id, type) {
         setTimeout(() => {
             body.classList.add('collapsed');
             icon.textContent = '▶';
+        }, 10);
+    }
+}
+
+function toggleCollapse(id, type) {
+    const key = `${type}-${id}`;
+    const bodyId = type === 'text' ? `text-item-body-${id}` : `image-item-body-${id}`;
+    const body = document.getElementById(bodyId);
+    const icon = body.parentElement.querySelector('.collapse-icon');
+    
+    if (body.classList.contains('collapsed')) {
+        body.classList.remove('collapsed');
+        body.style.maxHeight = body.scrollHeight + 'px';
+        icon.textContent = '▼';
+        collapsedStates[key] = false;  // ← שמור מצב
+    } else {
+        body.style.maxHeight = body.scrollHeight + 'px';
+        setTimeout(() => {
+            body.classList.add('collapsed');
+            icon.textContent = '▶';
+            collapsedStates[key] = true;  // ← שמור מצב
         }, 10);
     }
 }
@@ -1372,19 +1529,69 @@ function handleDrop(e) {
     const targetItemType = targetElement.getAttribute('data-item-type');
     
     if (draggedElement !== targetElement) {
-        // שנה סדר במערך
-        if (draggedItemType === 'text' && targetItemType === 'text') {
-            reorderTextItems(draggedItemId, targetItemId);
-        } else if (draggedItemType === 'image' && targetItemType === 'image') {
-            reorderImageItems(draggedItemId, targetItemId);
-        }
-        // אם שונים (text vs image) - יש לטפל בזה בנפרד
+        reorderAllItems(draggedItemId, draggedItemType, targetItemId, targetItemType);
     }
     
     targetElement.classList.remove('drag-over');
     
     return false;
 }
+
+function reorderAllItems(draggedId, draggedType, targetId, targetType) {
+    // מצא indices ב-allItems
+    const draggedIndex = allItems.findIndex(item => 
+        item.id === draggedId && item.type === draggedType
+    );
+    const targetIndex = allItems.findIndex(item => 
+        item.id === targetId && item.type === targetType
+    );
+    
+    if (draggedIndex === -1 || targetIndex === -1) return;
+    
+    // הוצא והכנס
+    const [draggedItem] = allItems.splice(draggedIndex, 1);
+    allItems.splice(targetIndex, 0, draggedItem);
+    
+    // עדכן גם את המערכים הנפרדים (לתאימות לאחור)
+    syncSeparateArrays();
+    
+    refreshItemsList();
+    
+    if (pdfDoc) {
+        scheduleRender();
+    }
+}
+
+function syncSeparateArrays() {
+    textItems = allItems.filter(item => item.type === 'text');
+    imageItems = allItems.filter(item => item.type === 'image');
+}
+
+// function handleDrop2(e) {
+//     if (e.stopPropagation) {
+//         e.stopPropagation();
+//     }
+    
+//     e.preventDefault();
+    
+//     const targetElement = e.currentTarget;
+//     const targetItemId = parseInt(targetElement.getAttribute('data-item-id'));
+//     const targetItemType = targetElement.getAttribute('data-item-type');
+    
+//     if (draggedElement !== targetElement) {
+//         // שנה סדר במערך
+//         if (draggedItemType === 'text' && targetItemType === 'text') {
+//             reorderTextItems(draggedItemId, targetItemId);
+//         } else if (draggedItemType === 'image' && targetItemType === 'image') {
+//             reorderImageItems(draggedItemId, targetItemId);
+//         }
+//         // אם שונים (text vs image) - יש לטפל בזה בנפרד
+//     }
+    
+//     targetElement.classList.remove('drag-over');
+    
+//     return false;
+// }
 
 function reorderTextItems(draggedId, targetId) {
     const draggedIndex = textItems.findIndex(item => item.id === draggedId);
@@ -1423,13 +1630,27 @@ function reorderImageItems(draggedId, targetId) {
     }
 }
 
-function refreshItemsList() {
+function refreshItemsList2() {
     const textsList = document.getElementById('textsList');
     textsList.innerHTML = '';
     
     // רנדר מחדש את כל הפריטים לפי הסדר החדש
     textItems.forEach(item => renderTextItem(item));
     imageItems.forEach(item => renderImageItem(item));
+}
+
+function refreshItemsList() {
+    const textsList = document.getElementById('textsList');
+    textsList.innerHTML = '';
+    
+    // עבור על allItems לפי הסדר
+    allItems.forEach(item => {
+        if (item.type === 'text') {
+            renderTextItem(item);
+        } else if (item.type === 'image') {
+            renderImageItem(item);
+        }
+    });
 }
 
 // ===============================
@@ -1591,7 +1812,7 @@ async function loadPDF(file) {
     fileReader.readAsArrayBuffer(file);
 }
 
-async function renderPage(num) {
+async function renderPage2(num) {
     // אם כבר מרנדרים, המתן
     if (pageRendering) {
         pageNumPending = num;
@@ -1631,6 +1852,113 @@ async function renderPage(num) {
     } catch (error) {
         console.error('Error rendering page:', error);
         pageRendering = false;
+    }
+}
+
+async function renderPage(num) {
+    if (pageRendering) {
+        pageNumPending = num;
+        return;
+    }
+    
+    pageRendering = true;
+    
+    try {
+        const page = await pdfDoc.getPage(num);
+        const viewport = page.getViewport({ scale: pdfScale });
+        
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        
+        const renderContext = {
+            canvasContext: ctx,
+            viewport: viewport,
+        };
+        
+        await page.render(renderContext).promise;
+        
+        // רנדר לפי allItems (סדר השכבות)
+        for (const item of allItems) {
+            const itemPage = parseInt(item.page) || 1;
+            if (itemPage !== currentPageNum) continue;
+            
+            if (item.type === 'image') {
+                await drawSingleImage(item, viewport);
+            } else if (item.type === 'text') {
+                drawSingleText(item, viewport);
+            }
+        }
+        
+        pageRendering = false;
+        
+        if (pageNumPending !== null) {
+            const pending = pageNumPending;
+            pageNumPending = null;
+            renderPage(pending);
+        }
+        
+    } catch (error) {
+        console.error('Error rendering page:', error);
+        pageRendering = false;
+    }
+}
+
+async function drawSingleImage(imageItem, viewport) {
+    const img = new Image();
+    img.src = imageItem.base64;
+    
+    await new Promise((resolve) => {
+        if (img.complete) {
+            resolve();
+        } else {
+            img.onload = resolve;
+        }
+    });
+    
+    const x = parseFloat(imageItem.left) * pdfScale;
+    const y = parseFloat(imageItem.top) * pdfScale;
+    const width = parseFloat(imageItem.width) * pdfScale;
+    const height = parseFloat(imageItem.height) * pdfScale;
+    
+    ctx.globalAlpha = parseFloat(imageItem.opacity) || 1.0;
+    ctx.drawImage(img, x, y, width, height);
+    ctx.globalAlpha = 1.0;
+    
+    if (selectedImageId === imageItem.id) {
+        drawImageSelectionBox(imageItem);
+    }
+}
+
+function drawSingleText(item, viewport) {
+    const fontSize = Math.round(parseInt(item.size) * viewport.scale);
+    const color = item.color;
+    const topOffset = Math.round(parseFloat(item.top) * viewport.scale);
+    const rightOffset = Math.round(parseFloat(item.right) * viewport.scale);
+    const align = item.align || 'right';
+    
+    const fontData = availableFonts.find(f => f.id === item.font);
+    const fontName = fontData ? fontData.id : 'Arial';
+    
+    let x;
+    if (align === 'right') {
+        x = viewport.width - rightOffset;
+    } else {
+        x = rightOffset;
+    }
+    const y = topOffset;
+    
+    ctx.font = `${fontSize}px "${fontName}", sans-serif`;
+    ctx.fillStyle = color;
+    ctx.globalAlpha = 0.7;
+    ctx.textAlign = align;
+    
+    ctx.fillText(item.text, x, y);
+    
+    ctx.globalAlpha = 1.0;
+    ctx.textAlign = 'left';
+    
+    if (selectedTextId === item.id) {
+        drawSelectionBox(item, viewport);
     }
 }
 

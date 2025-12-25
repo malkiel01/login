@@ -213,15 +213,13 @@ function removeImageItem(id) {
 }
 
 function updateImageFieldValues(item) {
-    const itemDiv = document.getElementById(`image-item-${item.id}`);
+    const itemDiv = document.getElementById(`image-item-${item.id}`);  // ← תקן כאן!
     if (itemDiv) {
         const inputs = itemDiv.querySelectorAll('input[type="number"]');
         inputs[0].value = Math.round(item.width);   // width
         inputs[1].value = Math.round(item.height);  // height
         inputs[2].value = Math.round(item.top);     // top
         inputs[3].value = Math.round(item.left);    // left
-        // inputs[4] = page
-        // inputs[5] = opacity
     }
 }
 
@@ -440,17 +438,17 @@ async function handleCanvasMouseDown(e) {
             }
         }
     }
-    
+
     // בדוק אם לחצנו על תמונה
     const clickedImage = findImageAtPosition(canvasX, canvasY);
     if (clickedImage) {
         selectedImageId = clickedImage.id;
-        selectedTextId = null;  // בטל בחירת טקסט
+        selectedTextId = null;
         draggingImageId = clickedImage.id;
         dragStartX = canvasX;
         dragStartY = canvasY;
         dragStartTop = clickedImage.top;
-        dragStartLeft = clickedImage.left;
+        dragStartLeft = clickedImage.left;  // ← וודא שזה קיים!
         canvas.style.cursor = 'grabbing';
         renderPage(currentPageNum);
         return;
@@ -569,22 +567,29 @@ function handleCanvasMouseMove(e) {
             const deltaX = (canvasX - resizeStartX) / pdfScale;
             const deltaY = (canvasY - resizeStartY) / pdfScale;
             
+            const oldWidth = resizeStartSize.width;
+            const oldHeight = resizeStartSize.height;
+            
             if (resizingImageCorner === 'bottom-right') {
-                item.width = Math.max(20, resizeStartSize.width + deltaX);
-                item.height = Math.max(20, resizeStartSize.height + deltaY);
+                item.width = Math.max(20, oldWidth + deltaX);
+                item.height = Math.max(20, oldHeight + deltaY);
             } else if (resizingImageCorner === 'bottom-left') {
-                item.width = Math.max(20, resizeStartSize.width - deltaX);
-                item.height = Math.max(20, resizeStartSize.height + deltaY);
-                item.left = parseFloat(item.left) - (item.width - resizeStartSize.width);
+                const newWidth = Math.max(20, oldWidth - deltaX);
+                item.width = newWidth;
+                item.height = Math.max(20, oldHeight + deltaY);
+                item.left = dragStartLeft + (oldWidth - newWidth);  // ← תיקון
             } else if (resizingImageCorner === 'top-right') {
-                item.width = Math.max(20, resizeStartSize.width + deltaX);
-                item.height = Math.max(20, resizeStartSize.height - deltaY);
-                item.top = parseFloat(item.top) - (item.height - resizeStartSize.height);
+                const newHeight = Math.max(20, oldHeight - deltaY);
+                item.width = Math.max(20, oldWidth + deltaX);
+                item.height = newHeight;
+                item.top = dragStartTop + (oldHeight - newHeight);  // ← תיקון
             } else if (resizingImageCorner === 'top-left') {
-                item.width = Math.max(20, resizeStartSize.width - deltaX);
-                item.height = Math.max(20, resizeStartSize.height - deltaY);
-                item.left = parseFloat(item.left) - (item.width - resizeStartSize.width);
-                item.top = parseFloat(item.top) - (item.height - resizeStartSize.height);
+                const newWidth = Math.max(20, oldWidth - deltaX);
+                const newHeight = Math.max(20, oldHeight - deltaY);
+                item.width = newWidth;
+                item.height = newHeight;
+                item.left = dragStartLeft + (oldWidth - newWidth);  // ← תיקון
+                item.top = dragStartTop + (oldHeight - newHeight);  // ← תיקון
             }
             
             updateImageFieldValues(item);

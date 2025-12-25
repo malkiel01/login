@@ -100,6 +100,114 @@ document.getElementById('imageFileInput').addEventListener('change', async (e) =
     e.target.value = '';
 });
 
+function addImageItem(base64Image, fileName) {
+    const imageId = imageIdCounter++;
+    
+    const imageItem = {
+        id: imageId,
+        type: 'image',
+        fileName: fileName,
+        base64: base64Image,
+        page: currentPageNum || 1,
+        top: 100,
+        left: 100,
+        width: 200,  // רוחב בפיקסלים
+        height: 200, // גובה בפיקסלים
+        opacity: 1.0
+    };
+    
+    imageItems.push(imageItem);
+    renderImageItem(imageItem);
+    
+    // הצג את הקונטיינר אם הוא מוסתר
+    document.getElementById('textsContainer').style.display = 'block';
+    
+    // רנדר מחדש את הקנבס
+    if (pdfDoc) {
+        renderPage(currentPageNum);
+    }
+}
+
+function renderImageItem(imageItem) {
+    const container = document.getElementById('textsList');
+    
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'text-item';
+    itemDiv.id = `image-item-${imageItem.id}`;
+    
+    itemDiv.innerHTML = `
+        <div class="text-item-header">
+            <span class="text-item-title">🖼️ תמונה #${imageItem.id} - ${imageItem.fileName}</span>
+            <button type="button" class="remove-text-btn" onclick="removeImageItem(${imageItem.id})">הסר</button>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label>רוחב (px)</label>
+                <input type="number" value="${imageItem.width}" min="10" max="2000" 
+                    onchange="updateImageItem(${imageItem.id}, 'width', parseInt(this.value))">
+            </div>
+            <div class="form-group">
+                <label>גובה (px)</label>
+                <input type="number" value="${imageItem.height}" min="10" max="2000" 
+                    onchange="updateImageItem(${imageItem.id}, 'height', parseInt(this.value))">
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label>מעלה (px)</label>
+                <input type="number" value="${imageItem.top}" min="0" 
+                    onchange="updateImageItem(${imageItem.id}, 'top', parseFloat(this.value))">
+            </div>
+            <div class="form-group">
+                <label>משמאל (px)</label>
+                <input type="number" value="${imageItem.left}" min="0" 
+                    onchange="updateImageItem(${imageItem.id}, 'left', parseFloat(this.value))">
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label>עמוד</label>
+                <input type="number" value="${imageItem.page}" min="1" 
+                    onchange="updateImageItem(${imageItem.id}, 'page', parseInt(this.value))">
+            </div>
+            <div class="form-group">
+                <label>שקיפות</label>
+                <input type="number" value="${imageItem.opacity}" min="0" max="1" step="0.1" 
+                    onchange="updateImageItem(${imageItem.id}, 'opacity', parseFloat(this.value))">
+            </div>
+        </div>
+        
+        <div class="form-group full-width">
+            <img src="${imageItem.base64}" style="max-width: 100%; max-height: 150px; border-radius: 8px; margin-top: 10px;">
+        </div>
+    `;
+    
+    container.appendChild(itemDiv);
+}
+
+function updateImageItem(id, field, value) {
+    const imageItem = imageItems.find(item => item.id === id);
+    if (imageItem) {
+        imageItem[field] = value;
+        if (pdfDoc) {
+            renderPage(currentPageNum);
+        }
+    }
+}
+
+function removeImageItem(id) {
+    imageItems = imageItems.filter(item => item.id !== id);
+    const itemDiv = document.getElementById(`image-item-${id}`);
+    if (itemDiv) {
+        itemDiv.remove();
+    }
+    if (pdfDoc) {
+        renderPage(currentPageNum);
+    }
+}
 
 // ===============================
 // גרירה על הקנבס

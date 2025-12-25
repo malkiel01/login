@@ -70,36 +70,6 @@ canvas.addEventListener('mousedown', handleCanvasMouseDown);
 canvas.addEventListener('mousemove', handleCanvasMouseMove);
 canvas.addEventListener('mouseup', handleCanvasMouseUp);
 
-// ===============================
-// תמונות על הקנבס
-// ===============================
-
-// משתנה לשמירת תמונות
-let imageItems = [];
-let imageIdCounter = 1;
-
-// כפתור הוספת תמונה
-document.getElementById('addImageBtn').addEventListener('click', () => {
-    document.getElementById('imageFileInput').click();
-});
-
-// העלאת קובץ תמונה
-document.getElementById('imageFileInput').addEventListener('change', async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    // המר תמונה ל-base64
-    const reader = new FileReader();
-    reader.onload = function(event) {
-        const base64Image = event.target.result;
-        addImageItem(base64Image, file.name);
-    };
-    reader.readAsDataURL(file);
-    
-    // אפס את ה-input
-    e.target.value = '';
-});
-
 
 // ===============================
 // גרירה על הקנבס

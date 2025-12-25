@@ -229,12 +229,36 @@ function updateImageItem(id, field, value) {
     }
 }
 
-function removeImageItem(id) {
+function removeImageItem2(id) {
     imageItems = imageItems.filter(item => item.id !== id);
     const itemDiv = document.getElementById(`image-item-${id}`);
     if (itemDiv) {
         itemDiv.remove();
     }
+    if (pdfDoc) {
+        renderPage(currentPageNum);
+    }
+}
+
+function removeImageItem(id) {
+    // מחק מ-imageItems
+    imageItems = imageItems.filter(item => item.id !== id);
+    
+    // מחק מ-allItems
+    allItems = allItems.filter(item => !(item.id === id && item.type === 'image'));
+    
+    // מחק את הבחירה אם זה הפריט הנבחר
+    if (selectedImageId === id) {
+        selectedImageId = null;
+    }
+    
+    // הסר את הטופס
+    const itemDiv = document.getElementById(`image-item-${id}`);
+    if (itemDiv) {
+        itemDiv.remove();
+    }
+    
+    // רנדר מחדש
     if (pdfDoc) {
         renderPage(currentPageNum);
     }
@@ -1079,7 +1103,7 @@ function updateTextItem(id, field, value) {
     }
 }
 
-function removeTextItem(id) {
+function removeTextItem2(id) {
     const index = textItems.findIndex(t => t.id === id);
     if (index > -1) {
         textItems.splice(index, 1);
@@ -1087,6 +1111,36 @@ function removeTextItem(id) {
         if (pdfDoc) {
             renderPage(currentPageNum);
         }
+    }
+}
+
+function removeTextItem(id) {
+    // מחק מ-textItems
+    const textIndex = textItems.findIndex(t => t.id === id);
+    if (textIndex > -1) {
+        textItems.splice(textIndex, 1);
+    }
+    
+    // מחק מ-allItems
+    const allIndex = allItems.findIndex(item => item.id === id && item.type === 'text');
+    if (allIndex > -1) {
+        allItems.splice(allIndex, 1);
+    }
+    
+    // מחק את הבחירה אם זה הפריט הנבחר
+    if (selectedTextId === id) {
+        selectedTextId = null;
+    }
+    
+    // הסר את הטופס
+    const itemDiv = document.getElementById(`text-item-${id}`);
+    if (itemDiv) {
+        itemDiv.remove();
+    }
+    
+    // רנדר מחדש
+    if (pdfDoc) {
+        renderPage(currentPageNum);
     }
 }
 

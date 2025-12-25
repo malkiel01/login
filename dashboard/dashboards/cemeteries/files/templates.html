@@ -39,26 +39,27 @@
                 <div class="api-section">
                     <h3>📤 Request</h3>
                     <p><strong>Content-Type:</strong> application/json</p>
-                    <pre class="code-block">{
-                    "template_id": "template_xxxxx",
-                    "data": {
-                        "field_1": "ערך ראשון",
-                        "field_2": "ערך שני",
-                        "field_3": "ערך שלישי"
-                    }
-                    }</pre>
+<pre class="code-block">{
+  "template_id": "template_xxxxx",
+  "data": {
+    "field_1": "ערך ראשון",
+    "field_2": "ערך שני",
+    "field_3": "ערך שלישי"
+  }
+}</pre>
                     <p><strong>הערה:</strong> השדות בתבנית כוללים גם טקסטים וגם תמונות.</p>
                     <p>רק שדות הטקסט ניתנים לעריכה דרך ה-API.</p>
                     <p>התמונות נשמרות בתבנית ומודפסות אוטומטית.</p>
-                    
-                    <!-- <pre class="code-block">{
-                        "template_id": "template_xxxxx",
-                        "data": {
-                            "field_1": "ערך ראשון",
-                            "field_2": "ערך שני",
-                            "field_3": "ערך שלישי"
-                        }
-                        }</pre> -->
+
+                    <div class="api-section">
+                        <h3>ℹ️ הערות חשובות</h3>
+                        <ul>
+                            <li><strong>שדות טקסט:</strong> ניתנים לעריכה דרך ה-API על ידי שליחת ערכים חדשים</li>
+                            <li><strong>תמונות:</strong> נשמרות בתבנית ומודפסות אוטומטית בכל PDF שנוצר</li>
+                            <li><strong>סדר שכבות:</strong> נשמר לפי ההגדרות בתבנית (תמונות + טקסטים)</li>
+                            <li><strong>מזהה שדה:</strong> כל שדה טקסט מקבל מזהה ייחודי מסוג <code>field_1</code>, <code>field_2</code> וכו'</li>
+                        </ul>
+                    </div>
                 </div>
 
                 <div class="api-section">

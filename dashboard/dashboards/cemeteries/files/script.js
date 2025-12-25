@@ -255,6 +255,11 @@ async function drawImagesOnCanvas(viewport) {
         ctx.globalAlpha = parseFloat(imageItem.opacity) || 1.0;
         ctx.drawImage(img, x, y, width, height);
         ctx.globalAlpha = 1.0;
+
+        // ← הוסף מסגרת אם התמונה נבחרת
+        if (selectedImageId === imageItem.id) {
+            drawImageSelectionBox(imageItem);
+        }
     }
 }
 // מציאת מיקום תמונה
@@ -354,54 +359,6 @@ function scheduleRender() {
 // גרירה על הקנבס
 // ===============================
 
-async function handleCanvasMouseDown2(e) {
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    
-    const canvasX = x * scaleX;
-    const canvasY = y * scaleY;
-    
-    // בדוק אם לחצנו על פינה של טקסט נבחר
-    if (selectedTextId !== null) {
-        const selectedItem = textItems.find(t => t.id === selectedTextId);
-        if (selectedItem) {
-            const page = await pdfDoc.getPage(currentPageNum);
-            const viewport = page.getViewport({ scale: pdfScale });
-            const corner = findCornerAtPosition(canvasX, canvasY, selectedItem, viewport);
-            
-            if (corner) {
-                // התחל resize
-                resizingCorner = corner;
-                resizeStartSize = parseInt(selectedItem.size);
-                resizeStartX = canvasX;
-                resizeStartY = canvasY;
-                canvas.style.cursor = 'nwse-resize';
-                return;
-            }
-        }
-    }
-    
-    const clickedText = findTextAtPosition(canvasX, canvasY);
-    
-    if (clickedText) {
-        selectedTextId = clickedText.id;
-        draggingTextId = clickedText.id;
-        dragStartX = canvasX;
-        dragStartY = canvasY;
-        dragStartTop = clickedText.top;
-        dragStartRight = clickedText.right;
-        canvas.style.cursor = 'grabbing';
-        renderPage(currentPageNum);
-    } else {
-        selectedTextId = null;
-        renderPage(currentPageNum);
-    }
-}
-
 async function handleCanvasMouseDown(e) {
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
@@ -487,225 +444,6 @@ async function handleCanvasMouseDown(e) {
         renderPage(currentPageNum);
     }
 }
-
-async function handleCanvasMouseMove2(e) {
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    
-    const canvasX = x * scaleX;
-    const canvasY = y * scaleY;
-    
-    // אם בresize
-    if (resizingCorner !== null) {
-        const item = textItems.find(t => t.id === selectedTextId);
-        if (item) {
-            // חשב שינוי בגודל לפי מרחק מהנקודה ההתחלתית
-            const deltaX = canvasX - resizeStartX;
-            const deltaY = canvasY - resizeStartY;
-            const delta = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-            
-            // קבע כיוון (+/-)
-            let sign = 1;
-            if (resizingCorner === 'top-left' || resizingCorner === 'bottom-left') {
-                sign = deltaX < 0 ? 1 : -1;
-            } else {
-                sign = deltaX > 0 ? 1 : -1;
-            }
-            
-            const newSize = Math.max(12, Math.round(resizeStartSize + (delta * sign / pdfScale / 3)));
-            item.size = newSize;
-            
-            updateFieldValues(item);
-            renderPage(currentPageNum);
-        }
-        return;
-    }
-    
-    // אם בגרירה
-    if (draggingTextId !== null) {
-        const deltaX = canvasX - dragStartX;
-        const deltaY = canvasY - dragStartY;
-        
-        const item = textItems.find(t => t.id === draggingTextId);
-        if (item) {
-            item.top = Math.round(dragStartTop + (deltaY / pdfScale));
-            item.right = Math.round(dragStartRight - (deltaX / pdfScale));
-            
-            updateFieldValues(item);
-            renderPage(currentPageNum);
-        }
-        return;
-    }
-    
-    // שנה cursor כשעוברים על פינות
-    if (selectedTextId !== null) {
-        const selectedItem = textItems.find(t => t.id === selectedTextId);
-        if (selectedItem && (parseInt(selectedItem.page) || 1) === currentPageNum) {
-            const page = await pdfDoc.getPage(currentPageNum);
-            const viewport = page.getViewport({ scale: pdfScale });
-            const corner = findCornerAtPosition(canvasX, canvasY, selectedItem, viewport);
-            
-            if (corner) {
-                if (corner === 'top-right' || corner === 'bottom-left') {
-                    canvas.style.cursor = 'nesw-resize';
-                } else {
-                    canvas.style.cursor = 'nwse-resize';
-                }
-                return;
-            }
-        }
-    }
-    
-    // אם לא על פינה ולא בגרירה, cursor רגיל
-    canvas.style.cursor = 'grab';
-}
-
-function handleCanvasMouseMove3(e) {
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    
-    const canvasX = x * scaleX;
-    const canvasY = y * scaleY;
-    
-    // אם בresize תמונה
-    if (resizingImageCorner !== null) {
-        const item = imageItems.find(img => img.id === selectedImageId);
-        if (item) {
-            const deltaX = (canvasX - resizeStartX) / pdfScale;
-            const deltaY = (canvasY - resizeStartY) / pdfScale;
-            
-            const oldWidth = resizeStartSize.width;
-            const oldHeight = resizeStartSize.height;
-            
-            if (resizingImageCorner === 'bottom-right') {
-                item.width = Math.max(20, oldWidth + deltaX);
-                item.height = Math.max(20, oldHeight + deltaY);
-            } else if (resizingImageCorner === 'bottom-left') {
-                const newWidth = Math.max(20, oldWidth - deltaX);
-                item.width = newWidth;
-                item.height = Math.max(20, oldHeight + deltaY);
-                item.left = dragStartLeft + (oldWidth - newWidth);  // ← תיקון
-            } else if (resizingImageCorner === 'top-right') {
-                const newHeight = Math.max(20, oldHeight - deltaY);
-                item.width = Math.max(20, oldWidth + deltaX);
-                item.height = newHeight;
-                item.top = dragStartTop + (oldHeight - newHeight);  // ← תיקון
-            } else if (resizingImageCorner === 'top-left') {
-                const newWidth = Math.max(20, oldWidth - deltaX);
-                const newHeight = Math.max(20, oldHeight - deltaY);
-                item.width = newWidth;
-                item.height = newHeight;
-                item.left = dragStartLeft + (oldWidth - newWidth);  // ← תיקון
-                item.top = dragStartTop + (oldHeight - newHeight);  // ← תיקון
-            }
-            
-            updateImageFieldValues(item);
-            renderPage(currentPageNum);
-        }
-        return;
-    }
-    
-    // אם בגרירת תמונה
-    if (draggingImageId !== null) {
-        const deltaX = (canvasX - dragStartX) / pdfScale;
-        const deltaY = (canvasY - dragStartY) / pdfScale;
-        
-        const item = imageItems.find(img => img.id === draggingImageId);
-        if (item) {
-            item.left = Math.round(dragStartLeft + deltaX);
-            item.top = Math.round(dragStartTop + deltaY);
-            
-            updateImageFieldValues(item);
-            renderPage(currentPageNum);
-        }
-        return;
-    }
-    
-    // אם בresize טקסט
-    if (resizingCorner !== null) {
-        const item = textItems.find(t => t.id === selectedTextId);
-        if (item) {
-            const deltaX = canvasX - resizeStartX;
-            const deltaY = canvasY - resizeStartY;
-            const delta = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-            
-            let sign = 1;
-            if (resizingCorner === 'top-left' || resizingCorner === 'bottom-left') {
-                sign = deltaX < 0 ? 1 : -1;
-            } else {
-                sign = deltaX > 0 ? 1 : -1;
-            }
-            
-            const newSize = Math.max(12, Math.round(resizeStartSize + (delta * sign / pdfScale / 3)));
-            item.size = newSize;
-            
-            updateFieldValues(item);
-            renderPage(currentPageNum);
-        }
-        return;
-    }
-    
-    // אם בגרירת טקסט
-    if (draggingTextId !== null) {
-        const deltaX = canvasX - dragStartX;
-        const deltaY = canvasY - dragStartY;
-        
-        const item = textItems.find(t => t.id === draggingTextId);
-        if (item) {
-            item.top = Math.round(dragStartTop + (deltaY / pdfScale));
-            item.right = Math.round(dragStartRight - (deltaX / pdfScale));
-            
-            updateFieldValues(item);
-            renderPage(currentPageNum);
-        }
-        return;
-    }
-    
-    // שנה cursor כשעוברים על פינות תמונה
-    if (selectedImageId !== null) {
-        const selectedImage = imageItems.find(img => img.id === selectedImageId);
-        if (selectedImage && (parseInt(selectedImage.page) || 1) === currentPageNum) {
-            const corner = findImageCornerAtPosition(canvasX, canvasY, selectedImage);
-            
-            if (corner) {
-                canvas.style.cursor = 'nwse-resize';
-                return;
-            }
-        }
-    }
-    
-    // שנה cursor כשעוברים על פינות טקסט
-    if (selectedTextId !== null) {
-        const selectedItem = textItems.find(t => t.id === selectedTextId);
-        if (selectedItem && (parseInt(selectedItem.page) || 1) === currentPageNum) {
-            const page = pdfDoc.getPage(currentPageNum);
-            page.then(p => {
-                const viewport = p.getViewport({ scale: pdfScale });
-                const corner = findCornerAtPosition(canvasX, canvasY, selectedItem, viewport);
-                
-                if (corner) {
-                    if (corner === 'top-right' || corner === 'bottom-left') {
-                        canvas.style.cursor = 'nesw-resize';
-                    } else {
-                        canvas.style.cursor = 'nwse-resize';
-                    }
-                }
-            });
-            return;
-        }
-    }
-    
-    canvas.style.cursor = 'grab';
-}
-
 
 function handleCanvasMouseMove(e) {
     const rect = canvas.getBoundingClientRect();
@@ -846,12 +584,6 @@ function handleCanvasMouseMove(e) {
         }
     }
     
-    canvas.style.cursor = 'grab';
-}
-
-function handleCanvasMouseUp2() {
-    draggingTextId = null;
-    resizingCorner = null;
     canvas.style.cursor = 'grab';
 }
 
@@ -1439,78 +1171,6 @@ async function loadPDF(file) {
     fileReader.readAsArrayBuffer(file);
 }
 
-async function renderPage3(num) {
-    pageRendering = true;
-    
-    try {
-        const page = await pdfDoc.getPage(num);
-        const viewport = page.getViewport({ scale: pdfScale });
-        
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-        
-        const renderContext = {
-            canvasContext: ctx,
-            viewport: viewport,
-        };
-        
-        await page.render(renderContext).promise;
-        
-        pageRendering = false;
-        
-        if (pageNumPending !== null) {
-            renderPage(pageNumPending);
-            pageNumPending = null;
-        }
-        
-        await drawImagesOnCanvas(viewport);  // ← הוסף תמונות לפני טקסטים
-        drawTextsOnCanvas(viewport);
-        
-    } catch (error) {
-        console.error('Error rendering page:', error);
-        pageRendering = false;
-    }
-}
-async function renderPage2(num) {
-    pageRendering = true;
-    
-    try {
-        const page = await pdfDoc.getPage(num);
-        const viewport = page.getViewport({ scale: pdfScale });
-        
-        // canvas.width = viewport.width;
-        // canvas.height = viewport.height;
-
-        const outputScale = window.devicePixelRatio || 1;
-        canvas.width = viewport.width * outputScale;
-        canvas.height = viewport.height * outputScale;
-        canvas.style.width = viewport.width + 'px';
-        canvas.style.height = viewport.height + 'px';
-
-        ctx.scale(outputScale, outputScale);
-        
-        const renderContext = {
-            canvasContext: ctx,
-            viewport: viewport,
-            intent: 'print'
-        };
-        
-        await page.render(renderContext).promise;
-        
-        pageRendering = false;
-        
-        if (pageNumPending !== null) {
-            renderPage(pageNumPending);
-            pageNumPending = null;
-        }
-        
-        drawTextsOnCanvas(viewport);
-        
-    } catch (error) {
-        console.error('Error rendering page:', error);
-        pageRendering = false;
-    }
-}
 async function renderPage(num) {
     // אם כבר מרנדרים, המתן
     if (pageRendering) {
@@ -1626,8 +1286,6 @@ function drawTextsOnCanvas(viewport) {
         let x;
         if (align === 'right') {
             // ← הוסף offset קטן לתיקון
-            // x = Math.round(viewport.width - rightOffset) + (fontSize * 0.02);
-            // x = Math.round(viewport.width - rightOffset) - (fontSize * 0.04);
             x = viewport.width - rightOffset;
         } else {
             x = rightOffset;

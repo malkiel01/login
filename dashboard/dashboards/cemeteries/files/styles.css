@@ -632,3 +632,30 @@ input[type="file"] {
     font-weight: bold;
     margin-left: 10px;
 }
+
+/* Drag handle */
+.drag-handle {
+    cursor: move;
+    padding: 5px;
+    color: #999;
+    font-size: 1.2em;
+    user-select: none;
+}
+
+.drag-handle:hover {
+    color: #667eea;
+}
+
+/* סטייל בזמן גרירה */
+.text-item.dragging {
+    opacity: 0.5;
+    transform: scale(0.98);
+}
+
+.text-item.drag-over {
+    border-top: 3px solid #667eea;
+}
+
+.text-item {
+    transition: transform 0.2s, opacity 0.2s;
+}

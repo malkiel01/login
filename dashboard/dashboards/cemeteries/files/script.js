@@ -991,7 +991,7 @@ function renderTextItem2(item) {
     textsList.appendChild(itemDiv);
 }
 
-function renderTextItem(item) {
+function renderTextItem3(item) {
     const textsList = document.getElementById('textsList');
     const itemDiv = document.createElement('div');
     itemDiv.className = 'text-item';
@@ -1079,6 +1079,105 @@ function renderTextItem(item) {
     textsList.appendChild(itemDiv);
 }
 
+function renderTextItem(item) {
+    const textsList = document.getElementById('textsList');
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'text-item';
+    itemDiv.id = `text-item-${item.id}`;
+    itemDiv.setAttribute('data-item-id', item.id);
+    itemDiv.setAttribute('data-item-type', 'text');
+    itemDiv.setAttribute('draggable', 'true');  // ← הוסף
+    
+    const fontOptions = availableFonts.map(font => 
+        `<option value="${font.id}" ${item.font === font.id ? 'selected' : ''}>${font.name}</option>`
+    ).join('');
+    
+    const layerIndex = textItems.indexOf(item) + 1;
+    
+    itemDiv.innerHTML = `
+        <div class="text-item-header">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="drag-handle">⋮⋮</span>
+                <span class="layer-number">#${layerIndex}</span>
+                <span class="text-item-title">📝 טקסט #${item.id}</span>
+            </div>
+            <div style="display: flex; gap: 5px;">
+                <button type="button" class="collapse-btn" onclick="toggleCollapse(${item.id}, 'text')">
+                    <span class="collapse-icon">▼</span>
+                </button>
+                <button type="button" class="remove-text-btn" onclick="removeTextItem(${item.id})">🗑️</button>
+            </div>
+        </div>
+        
+        <div class="text-item-body" id="text-item-body-${item.id}">
+            <!-- השדות הקיימים -->
+            ${generateTextItemFields(item, fontOptions)}
+        </div>
+    `;
+    
+    // הוסף event listeners לגרירה
+    setupDragAndDrop(itemDiv);
+    
+    textsList.appendChild(itemDiv);
+}
+
+function generateTextItemFields(item, fontOptions) {
+    return `
+        <div class="form-group full-width">
+            <label>תוכן הטקסט:</label>
+            <input type="text" value="${item.text}" oninput="updateTextItem(${item.id}, 'text', this.value)">
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label>פונט:</label>
+                <select onchange="updateTextItem(${item.id}, 'font', this.value)">
+                    ${fontOptions}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>גודל פונט:</label>
+                <input type="number" value="${item.size}" min="8" max="200" oninput="updateTextItem(${item.id}, 'size', this.value)">
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label>צבע:</label>
+                <input type="color" value="${item.color}" oninput="updateTextItem(${item.id}, 'color', this.value)">
+            </div>
+            
+            <div class="form-group">
+                <label>מרחק מלמעלה (px):</label>
+                <input type="number" value="${item.top}" min="0" oninput="updateTextItem(${item.id}, 'top', this.value)">
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label>מרחק מימין (px):</label>
+                <input type="number" value="${item.right}" min="0" oninput="updateTextItem(${item.id}, 'right', this.value)">
+            </div>
+
+            <div class="form-group">
+                <label>עמוד:</label>
+                <input type="number" value="${item.page || 1}" min="1" max="99" oninput="updateTextItem(${item.id}, 'page', this.value)">
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label>יישור:</label>
+                <select onchange="updateTextItem(${item.id}, 'align', this.value)">
+                    <option value="right" ${(item.align || 'right') === 'right' ? 'selected' : ''}>ימין</option>
+                    <option value="left" ${item.align === 'left' ? 'selected' : ''}>שמאל</option>
+                </select>
+            </div>
+        </div>
+    `;
+}
+
 function toggleCollapse(id, type) {
     const bodyId = type === 'text' ? `text-item-body-${id}` : `image-item-body-${id}`;
     const body = document.getElementById(bodyId);
@@ -1116,6 +1215,136 @@ function removeTextItem(id) {
             renderPage(currentPageNum);
         }
     }
+}
+
+// ===============================
+// לוגיקת Drag & Drop עבור תפריט
+// ===============================
+
+let draggedElement = null;
+let draggedItemId = null;
+let draggedItemType = null;
+
+function setupDragAndDrop(element) {
+    element.addEventListener('dragstart', handleDragStart);
+    element.addEventListener('dragend', handleDragEnd);
+    element.addEventListener('dragover', handleDragOver);
+    element.addEventListener('drop', handleDrop);
+    element.addEventListener('dragleave', handleDragLeave);
+}
+
+function handleDragStart(e) {
+    draggedElement = e.currentTarget;
+    draggedItemId = parseInt(draggedElement.getAttribute('data-item-id'));
+    draggedItemType = draggedElement.getAttribute('data-item-type');
+    
+    draggedElement.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', draggedElement.innerHTML);
+}
+
+function handleDragEnd(e) {
+    draggedElement.classList.remove('dragging');
+    
+    // הסר את כל ה-drag-over classes
+    document.querySelectorAll('.text-item').forEach(item => {
+        item.classList.remove('drag-over');
+    });
+    
+    draggedElement = null;
+    draggedItemId = null;
+    draggedItemType = null;
+}
+
+function handleDragOver(e) {
+    if (e.preventDefault) {
+        e.preventDefault();
+    }
+    
+    e.dataTransfer.dropEffect = 'move';
+    
+    const targetElement = e.currentTarget;
+    if (targetElement !== draggedElement) {
+        targetElement.classList.add('drag-over');
+    }
+    
+    return false;
+}
+
+function handleDragLeave(e) {
+    e.currentTarget.classList.remove('drag-over');
+}
+
+function handleDrop(e) {
+    if (e.stopPropagation) {
+        e.stopPropagation();
+    }
+    
+    e.preventDefault();
+    
+    const targetElement = e.currentTarget;
+    const targetItemId = parseInt(targetElement.getAttribute('data-item-id'));
+    const targetItemType = targetElement.getAttribute('data-item-type');
+    
+    if (draggedElement !== targetElement) {
+        // שנה סדר במערך
+        if (draggedItemType === 'text' && targetItemType === 'text') {
+            reorderTextItems(draggedItemId, targetItemId);
+        } else if (draggedItemType === 'image' && targetItemType === 'image') {
+            reorderImageItems(draggedItemId, targetItemId);
+        }
+        // אם שונים (text vs image) - יש לטפל בזה בנפרד
+    }
+    
+    targetElement.classList.remove('drag-over');
+    
+    return false;
+}
+
+function reorderTextItems(draggedId, targetId) {
+    const draggedIndex = textItems.findIndex(item => item.id === draggedId);
+    const targetIndex = textItems.findIndex(item => item.id === targetId);
+    
+    if (draggedIndex === -1 || targetIndex === -1) return;
+    
+    // הוצא את הפריט הנגרר
+    const [draggedItem] = textItems.splice(draggedIndex, 1);
+    
+    // הכנס אותו במיקום החדש
+    textItems.splice(targetIndex, 0, draggedItem);
+    
+    // רענן את התצוגה
+    refreshItemsList();
+    
+    // רנדר מחדש את הקנבס
+    if (pdfDoc) {
+        scheduleRender();
+    }
+}
+
+function reorderImageItems(draggedId, targetId) {
+    const draggedIndex = imageItems.findIndex(item => item.id === draggedId);
+    const targetIndex = imageItems.findIndex(item => item.id === targetId);
+    
+    if (draggedIndex === -1 || targetIndex === -1) return;
+    
+    const [draggedItem] = imageItems.splice(draggedIndex, 1);
+    imageItems.splice(targetIndex, 0, draggedItem);
+    
+    refreshItemsList();
+    
+    if (pdfDoc) {
+        scheduleRender();
+    }
+}
+
+function refreshItemsList() {
+    const textsList = document.getElementById('textsList');
+    textsList.innerHTML = '';
+    
+    // רנדר מחדש את כל הפריטים לפי הסדר החדש
+    textItems.forEach(item => renderTextItem(item));
+    imageItems.forEach(item => renderImageItem(item));
 }
 
 // ===============================

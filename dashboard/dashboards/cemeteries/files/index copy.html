@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>עיבוד PDF - הוספת טקסטים</title>
     <link rel="stylesheet" href="styles.css">
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script> -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.8.69/pdf.min.mjs" type="module"></script>
+    <script type="module">
+        import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.8.69/pdf.min.mjs';
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.8.69/pdf.worker.min.mjs';
+        window.pdfjsLib = pdfjsLib;
+    </script> -->
     <script src="https://unpkg.com/pdfjs-dist@5.4.449/build/pdf.min.mjs" type="module"></script>
     <script type="module">
         import * as pdfjsLib from 'https://unpkg.com/pdfjs-dist@5.4.449/build/pdf.min.mjs';
@@ -39,26 +49,6 @@
                             ➕ הוסף טקסט
                         </button>
                     </div>
-                    <div class="texts-container" id="textsContainer" style="display: none;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 10px;">
-                            <h3 style="color: #667eea; margin: 0;">טקסטים ותמונות להוספה</h3>
-                            <div style="display: flex; gap: 10px;">
-                                <button type="button" id="addImageBtn" style="background: #8b5cf6; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9em;">
-                                    🖼️ הוסף תמונה
-                                </button>
-                                <button type="button" id="addTextBtn" style="background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9em;">
-                                    ➕ הוסף טקסט
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div id="textsList">
-                            <!-- טקסטים ותמונות יתוספו כאן דינמית -->
-                        </div>
-                    </div>
-
-                    <!-- input מוסתר להעלאת תמונה -->
-                    <input type="file" id="imageFileInput" accept="image/png,image/jpeg,image/jpg" style="display: none;">
                     
                     <div id="textsList">
                         <!-- טקסטים יתוספו כאן דינמית -->
@@ -112,7 +102,8 @@
             </div>
         </div>
         
-        <!-- צד ימין - תצוגה מקדימה -->      
+        <!-- צד ימין - תצוגה מקדימה -->
+        
         <div class="preview-section" id="previewSection" style="display: none;">
             <div class="preview-header">
                 <h3>תצוגה מקדימה</h3>
@@ -132,6 +123,14 @@
                 </div>
             </div>
 
+            <!-- <div class="preview-header">
+                <h3>תצוגה מקדימה</h3>
+                <div class="page-navigation" id="pageNav" style="display: none;">
+                    <button id="prevPage">◀</button>
+                    <span id="pageInfo">דף <span id="currentPage">1</span> מתוך <span id="totalPages">1</span></span>
+                    <button id="nextPage">▶</button>
+                </div>
+            </div> -->
             <div class="preview-container" id="previewContainer">
                 <canvas id="pdfCanvas"></canvas>
             </div>

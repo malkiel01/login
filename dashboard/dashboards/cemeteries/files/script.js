@@ -75,34 +75,6 @@ canvas.addEventListener('mouseup', handleCanvasMouseUp);
 // גרירה על הקנבס
 // ===============================
 
-function handleCanvasMouseDown2(e) {
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    
-    const canvasX = x * scaleX;
-    const canvasY = y * scaleY;
-    
-    const clickedText = findTextAtPosition(canvasX, canvasY);
-    
-    if (clickedText) {
-        selectedTextId = clickedText.id;  // ← בחר את הטקסט
-        draggingTextId = clickedText.id;
-        dragStartX = canvasX;
-        dragStartY = canvasY;
-        dragStartTop = clickedText.top;
-        dragStartRight = clickedText.right;
-        canvas.style.cursor = 'grabbing';
-        renderPage(currentPageNum);  // ← רנדר מחדש עם מסגרת
-    } else {
-        selectedTextId = null;  // ← בטל בחירה
-        renderPage(currentPageNum);
-    }
-}
-
 async function handleCanvasMouseDown(e) {
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
@@ -151,86 +123,6 @@ async function handleCanvasMouseDown(e) {
     }
 }
 
-
-function handleCanvasMouseMove2(e) {
-    if (draggingTextId === null) return;
-    
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    // ← התאם
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    
-    const canvasX = x * scaleX;
-    const canvasY = y * scaleY;
-    
-    const deltaX = canvasX - dragStartX;
-    const deltaY = canvasY - dragStartY;
-    
-    const item = textItems.find(t => t.id === draggingTextId);
-    if (item) {
-        item.top = Math.round(dragStartTop + (deltaY / pdfScale));
-        item.right = Math.round(dragStartRight - (deltaX / pdfScale));
-        
-        updateFieldValues(item);
-        renderPage(currentPageNum);
-    }
-}
-
-function handleCanvasMouseMove3(e) {
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    
-    const canvasX = x * scaleX;
-    const canvasY = y * scaleY;
-    
-    // אם בresize
-    if (resizingCorner !== null) {
-        const item = textItems.find(t => t.id === selectedTextId);
-        if (item) {
-            // חשב שינוי בגודל לפי מרחק מהנקודה ההתחלתית
-            const deltaX = canvasX - resizeStartX;
-            const deltaY = canvasY - resizeStartY;
-            const delta = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-            
-            // קבע כיוון (+/-)
-            let sign = 1;
-            if (resizingCorner === 'top-left' || resizingCorner === 'bottom-left') {
-                sign = deltaX < 0 ? 1 : -1;
-            } else {
-                sign = deltaX > 0 ? 1 : -1;
-            }
-            
-            const newSize = Math.max(12, Math.round(resizeStartSize + (delta * sign / pdfScale / 3)));
-            item.size = newSize;
-            
-            updateFieldValues(item);
-            renderPage(currentPageNum);
-        }
-        return;
-    }
-    
-    // אם בגרירה
-    if (draggingTextId === null) return;
-    
-    const deltaX = canvasX - dragStartX;
-    const deltaY = canvasY - dragStartY;
-    
-    const item = textItems.find(t => t.id === draggingTextId);
-    if (item) {
-        item.top = Math.round(dragStartTop + (deltaY / pdfScale));
-        item.right = Math.round(dragStartRight - (deltaX / pdfScale));
-        
-        updateFieldValues(item);
-        renderPage(currentPageNum);
-    }
-}
 
 async function handleCanvasMouseMove(e) {
     const rect = canvas.getBoundingClientRect();
@@ -308,11 +200,6 @@ async function handleCanvasMouseMove(e) {
     canvas.style.cursor = 'grab';
 }
 
-function handleCanvasMouseUp2() {
-    draggingTextId = null;
-    canvas.style.cursor = 'grab';
-}
-
 function handleCanvasMouseUp() {
     draggingTextId = null;
     resizingCorner = null;
@@ -381,17 +268,6 @@ function findTextAtPosition(x, y) {
     
     console.log('No text found');
     return null;
-}
-
-function updateFieldValues2(item) {
-    // עדכן את השדות בטופס
-    const itemDiv = document.getElementById(`text-item-${item.id}`);
-    if (itemDiv) {
-        const topInput = itemDiv.querySelector('input[type="number"]');
-        const inputs = itemDiv.querySelectorAll('input[type="number"]');
-        inputs[2].value = item.top;  // top
-        inputs[3].value = item.right; // right
-    }
 }
 
 function updateFieldValues(item) {

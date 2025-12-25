@@ -11,8 +11,10 @@ document.addEventListener('DOMContentLoaded', () => {
 // Global Variables
 // ===============================
 
+
 let allTemplates = [];
 let currentTestTemplate = null;
+
 
 // ===============================
 // API Documentation Toggle
@@ -62,12 +64,7 @@ async function loadTemplates() {
 function renderTemplates(templates) {
     const grid = document.getElementById('templatesGrid');
     
-    grid.innerHTML = templates.map(template => {
-        const textCount = template.text_count || 0;
-        const imageCount = template.image_count || 0;
-        const totalCount = template.field_count || (textCount + imageCount);
-        
-        return `
+    grid.innerHTML = templates.map(template => `
         <div class="template-card">
             <div class="template-card-header">
                 <div class="template-name">${escapeHtml(template.name)}</div>
@@ -83,16 +80,9 @@ function renderTemplates(templates) {
                     📄 ${template.page_count} דף${template.page_count > 1 ? 'ים' : ''}
                 </div>
                 <div class="template-meta-item">
-                    📝 ${totalCount} פריט${totalCount > 1 ? 'ים' : ''}
+                    📝 ${template.field_count} שדות
                 </div>
             </div>
-            
-            ${(textCount > 0 || imageCount > 0) ? `
-            <div class="template-meta">
-                ${textCount > 0 ? `<div class="template-meta-item">✍️ ${textCount} טקסט${textCount > 1 ? 'ים' : ''}</div>` : ''}
-                ${imageCount > 0 ? `<div class="template-meta-item">🖼️ ${imageCount} תמונ${imageCount > 1 ? 'ות' : 'ה'}</div>` : ''}
-            </div>
-            ` : ''}
             
             <div class="template-meta">
                 <div class="template-meta-item">
@@ -112,68 +102,42 @@ function renderTemplates(templates) {
                 </button>
             </div>
         </div>
-        `;
-    }).join('');
+    `).join('');
 }
 
 // ===============================
 // Test Template Modal
 // ===============================
 
-async function openTestModal(templateId) {
+async function openTestModal2(templateId) {
     try {
         const response = await fetch(`get_templates.php?id=${templateId}`);
         const data = await response.json();
         
-        console.log('Loading template:', data);
-        
-        if (!data.success || !data.template) {
+        if (!data.success) {
             alert('שגיאה בטעינת התבנית');
             return;
         }
         
         currentTestTemplate = data.template;
         
-        // קבל את allItems או fields (תאימות לאחור)
-        const items = currentTestTemplate.allItems || currentTestTemplate.fields || [];
-        
-        // סנן רק טקסטים
-        const textItems = items.filter(item => {
-            // אם אין type, זה טקסט (פורמט ישן)
-            return !item.type || item.type === 'text';
-        });
-        
-        if (textItems.length === 0) {
-            alert('התבנית לא מכילה שדות טקסט לעריכה');
-            return;
-        }
-        
-        document.getElementById('testTemplateName').textContent = currentTestTemplate.template_name || currentTestTemplate.name || 'תבנית';
+        document.getElementById('testTemplateName').textContent = data.template.template_name || 'תבנית ללא שם';
         
         const fieldsContainer = document.getElementById('testFieldsContainer');
-        fieldsContainer.innerHTML = textItems.map((field, index) => {
-            const fontData = availableFonts.find(f => f.id === field.font);
-            const fontFamily = fontData ? fontData.id : 'Arial';
-            const label = field.label || field.text || 'שדה';
-            const fieldId = field.id || `field_${index + 1}`;
-            
-            return `
-                <div class="test-field">
-                    <label>
-                        <span class="field-label-text">${escapeHtml(label)}</span>
-                        <span class="field-id">${fieldId}</span>
-                    </label>
-                    <input 
-                        type="text" 
-                        id="test_${fieldId}" 
-                        data-field-index="${index}"
-                        value="${escapeHtml(field.text || '')}"
-                        placeholder="הזן ערך עבור ${escapeHtml(label)}"
-                        style="font-family: '${fontFamily}', Arial, sans-serif; direction: ${field.align === 'left' ? 'ltr' : 'rtl'}; text-align: ${field.align === 'left' ? 'left' : 'right'};"
-                    >
-                </div>
-            `;
-        }).join('');
+        fieldsContainer.innerHTML = data.template.fields.map(field => `
+            <div class="test-field">
+                <label>
+                    <span class="field-label-text">${escapeHtml(field.label)}</span>
+                    <span class="field-id">${field.id}</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="test_${field.id}" 
+                    value="${escapeHtml(field.text)}"
+                    placeholder="הזן ערך עבור ${escapeHtml(field.label)}"
+                >
+            </div>
+        `).join('');
         
         document.getElementById('testTemplateModal').classList.add('show');
         
@@ -183,73 +147,248 @@ async function openTestModal(templateId) {
     }
 }
 
-function closeTestModal() {
-    document.getElementById('testTemplateModal').classList.remove('show');
-    currentTestTemplate = null;
+async function openTestModal3(templateId) {
+    try {
+        const response = await fetch(`get_templates.php?id=${templateId}`);
+        const data = await response.json();
+        
+        console.log('API Response:', data); // ← לדיבוג
+        
+        if (!data.success) {
+            alert('שגיאה בטעינת התבנית: ' + (data.error || 'לא ידוע'));
+            return;
+        }
+        
+        // בדוק אם template קיים
+        if (!data.template) {
+            alert('שגיאה: התבנית לא הוחזרה מהשרת');
+            console.error('Data received:', data);
+            return;
+        }
+        
+        currentTestTemplate = data.template;
+        
+        // בדוק אם יש fields
+        if (!currentTestTemplate.fields || currentTestTemplate.fields.length === 0) {
+            alert('התבנית לא מכילה שדות');
+            return;
+        }
+        
+        document.getElementById('testTemplateName').textContent = currentTestTemplate.template_name || 'תבנית';
+        
+        const fieldsContainer = document.getElementById('testFieldsContainer');
+        fieldsContainer.innerHTML = currentTestTemplate.fields.map(field => {
+            // מצא את הפונט
+            const fontData = availableFonts.find(f => f.id === field.font);
+            const fontFamily = fontData ? fontData.id : 'Arial';
+            
+            return `
+                <div class="test-field">
+                    <label>
+                        <span class="field-label-text">${escapeHtml(field.label)}</span>
+                        <span class="field-id">${field.id}</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="test_${field.id}" 
+                        value="${escapeHtml(field.text)}"
+                        placeholder="הזן ערך עבור ${escapeHtml(field.label)}"
+                        style="font-family: '${fontFamily}', Arial, sans-serif; direction: rtl; text-align: right;"
+                    >
+                </div>
+            `;
+        }).join('');
+
+        fieldsContainer.innerHTML = currentTestTemplate.fields.map(field => `
+            <div class="test-field">
+                <label>
+                    <span class="field-label-text">${escapeHtml(field.label)}</span>
+                    <span class="field-id">${field.id}</span>
+                </label>
+                <input 
+                    type="text" 
+                    id="test_${field.id}" 
+                    value="${field.text}"
+                    placeholder="הזן ערך עבור ${field.label}"
+                >
+            </div>
+        `).join('');
+        
+        document.getElementById('testTemplateModal').classList.add('show');
+        
+    } catch (error) {
+        console.error('Error opening test modal:', error);
+        alert('שגיאה בטעינת התבנית');
+    }
 }
 
-// Close buttons
-document.getElementById('cancelTestBtn').addEventListener('click', closeTestModal);
+async function openTestModal4(templateId) {
+    try {
+        const response = await fetch(`get_templates.php?id=${templateId}`);
+        const data = await response.json();
+        
+        console.log('API Response:', data);
+        
+        if (!data.success) {
+            alert('שגיאה בטעינת התבנית: ' + (data.error || 'לא ידוע'));
+            return;
+        }
+        
+        if (!data.template) {
+            alert('שגיאה: התבנית לא הוחזרה מהשרת');
+            console.error('Data received:', data);
+            return;
+        }
+        
+        currentTestTemplate = data.template;
+        
+        if (!currentTestTemplate.fields || currentTestTemplate.fields.length === 0) {
+            alert('התבנית לא מכילה שדות');
+            return;
+        }
+        
+        document.getElementById('testTemplateName').textContent = currentTestTemplate.template_name || 'תבנית';
+        
+        const fieldsContainer = document.getElementById('testFieldsContainer');
+        fieldsContainer.innerHTML = ''; // נקה
+        
+        // צור כל שדה ב-JavaScript (לא HTML string!)
+        currentTestTemplate.fields.forEach(field => {
+            const fieldDiv = document.createElement('div');
+            fieldDiv.className = 'test-field';
+            
+            const label = document.createElement('label');
+            
+            const labelText = document.createElement('span');
+            labelText.className = 'field-label-text';
+            labelText.textContent = field.label;
+            
+            const fieldId = document.createElement('span');
+            fieldId.className = 'field-id';
+            fieldId.textContent = field.id;
+            
+            label.appendChild(labelText);
+            label.appendChild(fieldId);
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.id = `test_${field.id}`;
+            input.value = field.text;  // ← ישירות ב-JavaScript!
+            input.placeholder = `הזן ערך עבור ${field.label}`;
+            input.style.direction = 'rtl';
+            input.style.textAlign = 'right';
+            
+            fieldDiv.appendChild(label);
+            fieldDiv.appendChild(input);
+            fieldsContainer.appendChild(fieldDiv);
+        });
+        
+        document.getElementById('testTemplateModal').classList.add('show');
+        
+    } catch (error) {
+        console.error('Error opening test modal:', error);
+        alert('שגיאה בטעינת התבנית');
+    }
+}
 
-// ===============================
-// Generate PDF from Template
-// ===============================
+async function openTestModal(templateId) {
+    try {
+        const response = await fetch(`get_templates.php?id=${templateId}`);
+        const data = await response.json();
+        
+        console.log('API Response:', data);
+        
+        if (!data.success || !data.template) {
+            alert('שגיאה בטעינת התבנית');
+            return;
+        }
+        
+        currentTestTemplate = data.template;
+        
+        if (!currentTestTemplate.fields || currentTestTemplate.fields.length === 0) {
+            alert('התבנית לא מכילה שדות');
+            return;
+        }
+        
+        document.getElementById('testTemplateName').textContent = currentTestTemplate.template_name || 'תבנית';
+        
+        const fieldsContainer = document.getElementById('testFieldsContainer');
+        fieldsContainer.innerHTML = '';
+        
+        // ← השתמש בדיוק באותו קוד כמו renderTextItem!
+        currentTestTemplate.fields.forEach(field => {
+            const fieldDiv = document.createElement('div');
+            fieldDiv.className = 'test-field';
+            
+            fieldDiv.innerHTML = `
+                <label>
+                    <span class="field-label-text">${field.label}</span>
+                    <span class="field-id">${field.id}</span>
+                </label>
+                <input type="text" id="test_${field.id}" value="${field.text}">
+            `;
+            
+            fieldsContainer.appendChild(fieldDiv);
+        });
+        
+        document.getElementById('testTemplateModal').classList.add('show');
+        
+    } catch (error) {
+        console.error('Error opening test modal:', error);
+        alert('שגיאה בטעינת התבנית');
+    }
+}
+
+document.getElementById('cancelTestBtn').addEventListener('click', () => {
+    document.getElementById('testTemplateModal').classList.remove('show');
+    currentTestTemplate = null;
+});
 
 document.getElementById('generateTestBtn').addEventListener('click', async () => {
-    if (!currentTestTemplate) {
-        alert('אין תבנית פעילה');
-        return;
-    }
+    if (!currentTestTemplate) return;
     
     const generateBtn = document.getElementById('generateTestBtn');
+    
+    // אסוף את כל הערכים
+    const data = {};
+    currentTestTemplate.fields.forEach(field => {
+        const input = document.getElementById(`test_${field.id}`);
+        if (input) {
+            data[field.id] = input.value;
+        }
+    });
+    
+    // שלח ל-API
     generateBtn.disabled = true;
-    generateBtn.textContent = 'מעבד...';
+    generateBtn.textContent = 'יוצר PDF...';
     
     try {
-        // קבל את כל הפריטים
-        const items = currentTestTemplate.allItems || currentTestTemplate.fields || [];
-        
-        // עדכן רק את הטקסטים עם הערכים החדשים
-        const updatedItems = items.map((item, index) => {
-            if (!item.type || item.type === 'text') {
-                // זה טקסט - עדכן את הערך
-                const fieldId = item.id || `field_${index + 1}`;
-                const input = document.getElementById(`test_${fieldId}`);
-                
-                return {
-                    ...item,
-                    text: input ? input.value : item.text,
-                    type: 'text'
-                };
-            } else {
-                // זה תמונה - השאר כמו שזה
-                return item;
-            }
-        });
-        
-        // שלח לשרת
+        // בנה את textItems בדיוק כמו באינדקס
+        const textItems = currentTestTemplate.fields.map(field => ({
+            text: data[field.id] || field.text,
+            font: field.font,
+            size: field.size,
+            color: field.color,
+            top: field.top,
+            right: field.right,
+            page: field.page || 1,
+            align: field.align || 'right'  // ← הוסף align
+        }));
+
+        // צור FormData בדיוק כמו באינדקס
         const formData = new FormData();
-        
-        // טען את קובץ ה-PDF המקורי
-        const templatePdfPath = `templates/${currentTestTemplate.template_id}/${currentTestTemplate.pdf_file}`;
-        const pdfResponse = await fetch(templatePdfPath);
+
+        // קרא את ה-PDF מהשרת (התבנית)
+        const pdfResponse = await fetch(`templates/${currentTestTemplate.template_id}/template.pdf`);
         const pdfBlob = await pdfResponse.blob();
         formData.append('pdf', pdfBlob, 'template.pdf');
-        
-        // שלח את הפריטים
-        const textsOnly = updatedItems.filter(item => item.type === 'text');
-        const imagesOnly = updatedItems.filter(item => item.type === 'image');
-        
-        formData.append('texts', JSON.stringify(textsOnly));
-        formData.append('images', JSON.stringify(imagesOnly));
-        formData.append('allItems', JSON.stringify(updatedItems));
-        
-        console.log('Sending to server:', {
-            texts: textsOnly.length,
-            images: imagesOnly.length,
-            allItems: updatedItems.length
-        });
-        
+        formData.append('texts', JSON.stringify(textItems));
+
+        // הוסף מיד אחריה:
+        console.log('TEMPLATE - Sending texts:', textItems);
+        console.log('TEMPLATE - JSON:', JSON.stringify(textItems, null, 2));
+
+        // שלח ל-process.php!
         const response = await fetch('process.php', {
             method: 'POST',
             body: formData
@@ -263,7 +402,8 @@ document.getElementById('generateTestBtn').addEventListener('click', async () =>
             
             // סגור את המודל
             setTimeout(() => {
-                closeTestModal();
+                document.getElementById('testTemplateModal').classList.remove('show');
+                currentTestTemplate = null;
             }, 1000);
             
         } else {
@@ -288,17 +428,12 @@ async function viewTemplate(templateId) {
         const response = await fetch(`get_templates.php?id=${templateId}`);
         const data = await response.json();
         
-        if (!data.success || !data.template) {
+        if (!data.success) {
             alert('שגיאה בטעינת התבנית');
             return;
         }
         
         const template = data.template;
-        const items = template.allItems || template.fields || [];
-        
-        // חלק לפי סוג
-        const textItems = items.filter(item => !item.type || item.type === 'text');
-        const imageItems = items.filter(item => item.type === 'image');
         
         const content = `
             <div class="template-detail-section">
@@ -306,7 +441,7 @@ async function viewTemplate(templateId) {
                 <div class="detail-grid">
                     <div class="detail-item">
                         <span class="detail-label">שם תבנית:</span>
-                        <span class="detail-value">${escapeHtml(template.template_name || template.name || 'ללא שם')}</span>
+                        <span class="detail-value">${escapeHtml(template.template_name || 'ללא שם')}</span>
                     </div>
                     <div class="detail-item">
                         <span class="detail-label">מזהה:</span>
@@ -341,54 +476,27 @@ async function viewTemplate(templateId) {
                 </div>
             </div>
             
-            ${textItems.length > 0 ? `
             <div class="template-detail-section">
-                <h3>📝 שדות טקסט (${textItems.length})</h3>
+                <h3>📝 שדות (${template.fields.length})</h3>
                 <div class="fields-list">
-                    ${textItems.map(field => `
+                    ${template.fields.map(field => `
                         <div class="field-card">
                             <div class="field-card-header">
-                                <span class="field-name">${escapeHtml(field.label || field.text)}</span>
+                                <span class="field-name">${escapeHtml(field.label)}</span>
                                 <span class="field-id-badge">${field.id}</span>
                             </div>
                             <div class="field-properties">
-                                <div class="field-prop"><strong>טקסט:</strong> ${escapeHtml(field.text)}</div>
+                                <div class="field-prop"><strong>טקסט ברירת מחדל:</strong> ${escapeHtml(field.text)}</div>
                                 <div class="field-prop"><strong>פונט:</strong> ${field.font}</div>
                                 <div class="field-prop"><strong>גודל:</strong> ${field.size}px</div>
                                 <div class="field-prop"><strong>צבע:</strong> ${field.color}</div>
-                                <div class="field-prop"><strong>יישור:</strong> ${field.align === 'left' ? 'שמאל' : 'ימין'}</div>
                                 <div class="field-prop"><strong>מלמעלה:</strong> ${field.top}px</div>
                                 <div class="field-prop"><strong>מימין:</strong> ${field.right}px</div>
-                                <div class="field-prop"><strong>עמוד:</strong> ${field.page || 1}</div>
                             </div>
                         </div>
                     `).join('')}
                 </div>
             </div>
-            ` : ''}
-            
-            ${imageItems.length > 0 ? `
-            <div class="template-detail-section">
-                <h3>🖼️ תמונות (${imageItems.length})</h3>
-                <div class="fields-list">
-                    ${imageItems.map((img, idx) => `
-                        <div class="field-card">
-                            <div class="field-card-header">
-                                <span class="field-name">תמונה #${idx + 1}</span>
-                            </div>
-                            <div class="field-properties">
-                                <div class="field-prop"><strong>רוחב:</strong> ${img.width}px</div>
-                                <div class="field-prop"><strong>גובה:</strong> ${img.height}px</div>
-                                <div class="field-prop"><strong>שקיפות:</strong> ${img.opacity || 1}</div>
-                                <div class="field-prop"><strong>מלמעלה:</strong> ${img.top}px</div>
-                                <div class="field-prop"><strong>משמאל:</strong> ${img.left}px</div>
-                                <div class="field-prop"><strong>עמוד:</strong> ${img.page || 1}</div>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-            ` : ''}
         `;
         
         document.getElementById('viewTemplateContent').innerHTML = content;
@@ -413,7 +521,7 @@ document.getElementById('viewTemplateModal').addEventListener('click', (e) => {
 
 document.getElementById('testTemplateModal').addEventListener('click', (e) => {
     if (e.target.id === 'testTemplateModal') {
-        closeTestModal();
+        document.getElementById('testTemplateModal').classList.remove('show');
     }
 });
 
@@ -444,7 +552,7 @@ async function deleteTemplate(templateId) {
         
         if (result.success) {
             alert('✅ התבנית נמחקה בהצלחה');
-            loadTemplates();
+            loadTemplates(); // טען מחדש את הרשימה
         } else {
             alert('שגיאה במחיקה: ' + result.error);
         }
@@ -488,6 +596,7 @@ async function loadFonts() {
         const data = await response.json();
         availableFonts = data.fonts;
         
+        // טען כל פונט דינמית
         for (const font of availableFonts) {
             const fontFace = new FontFace(
                 font.id, 
@@ -507,3 +616,9 @@ async function loadFonts() {
         console.error('Error loading fonts:', error);
     }
 }
+
+// טען פונטים בטעינת הדף
+document.addEventListener('DOMContentLoaded', () => {
+    loadFonts();
+    loadTemplates();
+});

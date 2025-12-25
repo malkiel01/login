@@ -113,16 +113,7 @@ if (!move_uploaded_file($pdf_file['tmp_name'], $pdf_path)) {
     exit;
 }
 
-// Create config.json - עם תמיכה בפורמט החדש
-$allItems = $template_data['allItems'] ?? [];
-$texts = $template_data['texts'] ?? [];
-$images = $template_data['images'] ?? [];
-
-// אם אין allItems אבל יש fields (פורמט ישן), המר אותו
-if (empty($allItems) && isset($template_data['fields'])) {
-    $allItems = $template_data['fields'];
-}
-
+// Create config.json
 $config = [
     'template_id' => $template_id,
     'name' => $template_name,
@@ -133,32 +124,20 @@ $config = [
     'pdf_file' => $pdf_filename,
     'pdf_dimensions' => $template_data['pdf_dimensions'],
     'page_count' => $template_data['page_count'],
-    'allItems' => $allItems,  // ← הפורמט החדש
-    'texts' => $texts,        // ← לתאימות לאחור
-    'images' => $images,      // ← תמונות
-    'fields' => $allItems     // ← לתאימות לאחור (alias)
+    'fields' => $template_data['fields']
 ];
 
 $config_path = $template_folder . 'config.json';
 file_put_contents($config_path, json_encode($config, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
 
 // Update templates.json
-$text_count = count(array_filter($allItems, function($item) {
-    return isset($item['type']) && $item['type'] === 'text';
-}));
-$image_count = count(array_filter($allItems, function($item) {
-    return isset($item['type']) && $item['type'] === 'image';
-}));
-
 $templates_list['templates'][] = [
     'template_id' => $template_id,
     'name' => $template_name,
     'description' => $config['description'],
     'created_at' => $config['created_at'],
     'page_count' => $config['page_count'],
-    'field_count' => count($allItems),
-    'text_count' => $text_count,
-    'image_count' => $image_count
+    'field_count' => count($config['fields'])
 ];
 
 file_put_contents($templates_json, json_encode($templates_list, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));

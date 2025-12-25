@@ -1701,7 +1701,12 @@ confirmSaveBtn.addEventListener('click', async () => {
             top: parseFloat(item.top),
             right: parseFloat(item.right),
             page: parseInt(item.page) || 1,
-            align: item.align || 'right'  // ← הוסף align
+            align: item.align || 'right',
+
+            allItems: allItems,           // ← הוסף את זה
+            texts: textItems,             // ← הוסף את זה
+            images: imageItems,           // ← הוסף את זה
+            fields: allItems              // ← שנה מ-textItems ל-allItems
         }))
     };
     

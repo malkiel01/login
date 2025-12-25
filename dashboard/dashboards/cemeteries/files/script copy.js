@@ -16,6 +16,7 @@ let selectedFile = null;
 let processedFileName = null;
 let textItems = [];
 let nextTextId = 1;
+let allItems = [];
 
 // PDF Preview Variables
 let pdfDoc = null;
@@ -104,34 +105,6 @@ document.getElementById('imageFileInput').addEventListener('change', async (e) =
     e.target.value = '';
 });
 
-function addImageItem2(base64Image, fileName) {
-    const imageId = imageIdCounter++;
-    
-    const imageItem = {
-        id: imageId,
-        type: 'image',
-        fileName: fileName,
-        base64: base64Image,
-        page: currentPageNum || 1,
-        top: 100,
-        left: 100,
-        width: 200,  // רוחב בפיקסלים
-        height: 200, // גובה בפיקסלים
-        opacity: 1.0
-    };
-    
-    imageItems.push(imageItem);
-    renderImageItem(imageItem);
-    
-    // הצג את הקונטיינר אם הוא מוסתר
-    document.getElementById('textsContainer').style.display = 'block';
-    
-    // רנדר מחדש את הקנבס
-    if (pdfDoc) {
-        renderPage(currentPageNum);
-    }
-}
-
 function addImageItem(base64Image, fileName) {
     const imageId = imageIdCounter++;
     
@@ -157,104 +130,6 @@ function addImageItem(base64Image, fileName) {
     if (pdfDoc) {
         renderPage(currentPageNum);
     }
-}
-
-function renderImageItem2(imageItem) {
-    const container = document.getElementById('textsList');
-    
-    const itemDiv = document.createElement('div');
-    itemDiv.className = 'text-item';
-    itemDiv.id = `image-item-${imageItem.id}`;
-    
-    itemDiv.innerHTML = `
-        <div class="text-item-header">
-            <span class="text-item-title">🖼️ תמונה #${imageItem.id} - ${imageItem.fileName}</span>
-            <button type="button" class="remove-text-btn" onclick="removeImageItem(${imageItem.id})">הסר</button>
-        </div>
-        
-        <div class="form-row">
-            <div class="form-group">
-                <label>רוחב (px)</label>
-                <input type="number" value="${imageItem.width}" min="10" max="2000" 
-                    onchange="updateImageItem(${imageItem.id}, 'width', parseInt(this.value))">
-            </div>
-            <div class="form-group">
-                <label>גובה (px)</label>
-                <input type="number" value="${imageItem.height}" min="10" max="2000" 
-                    onchange="updateImageItem(${imageItem.id}, 'height', parseInt(this.value))">
-            </div>
-        </div>
-        
-        <div class="form-row">
-            <div class="form-group">
-                <label>מעלה (px)</label>
-                <input type="number" value="${imageItem.top}" min="0" 
-                    onchange="updateImageItem(${imageItem.id}, 'top', parseFloat(this.value))">
-            </div>
-            <div class="form-group">
-                <label>משמאל (px)</label>
-                <input type="number" value="${imageItem.left}" min="0" 
-                    onchange="updateImageItem(${imageItem.id}, 'left', parseFloat(this.value))">
-            </div>
-        </div>
-        
-        <div class="form-row">
-            <div class="form-group">
-                <label>עמוד</label>
-                <input type="number" value="${imageItem.page}" min="1" 
-                    onchange="updateImageItem(${imageItem.id}, 'page', parseInt(this.value))">
-            </div>
-            <div class="form-group">
-                <label>שקיפות</label>
-                <input type="number" value="${imageItem.opacity}" min="0" max="1" step="0.1" 
-                    onchange="updateImageItem(${imageItem.id}, 'opacity', parseFloat(this.value))">
-            </div>
-        </div>
-        
-        <div class="form-group full-width">
-            <img src="${imageItem.base64}" style="max-width: 100%; max-height: 150px; border-radius: 8px; margin-top: 10px;">
-        </div>
-    `;
-    
-    container.appendChild(itemDiv);
-}
-
-function renderImageItem3(imageItem) {
-    const container = document.getElementById('textsList');
-    
-    const itemDiv = document.createElement('div');
-    itemDiv.className = 'text-item';
-    itemDiv.id = `image-item-${imageItem.id}`;
-    itemDiv.setAttribute('data-item-id', imageItem.id);
-    itemDiv.setAttribute('data-item-type', 'image');
-    itemDiv.setAttribute('draggable', 'true');  // ← הוסף
-    
-    const layerIndex = imageItems.indexOf(imageItem) + 1;
-    
-    itemDiv.innerHTML = `
-        <div class="text-item-header">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <span class="drag-handle">⋮⋮</span>
-                <span class="layer-number">#${layerIndex}</span>
-                <span class="text-item-title">🖼️ תמונה #${imageItem.id}</span>
-            </div>
-            <div style="display: flex; gap: 5px;">
-                <button type="button" class="collapse-btn" onclick="toggleCollapse(${imageItem.id}, 'image')">
-                    <span class="collapse-icon">▼</span>
-                </button>
-                <button type="button" class="remove-text-btn" onclick="removeImageItem(${imageItem.id})">🗑️</button>
-            </div>
-        </div>
-        
-        <div class="text-item-body" id="image-item-body-${imageItem.id}">
-            <!-- השדות הקיימים -->
-            ${generateImageItemFields(imageItem)}
-        </div>
-    `;
-    
-    setupDragAndDrop(itemDiv);  // ← הוסף
-    
-    container.appendChild(itemDiv);
 }
 
 function renderImageItem(imageItem) {
@@ -354,12 +229,36 @@ function updateImageItem(id, field, value) {
     }
 }
 
-function removeImageItem(id) {
+function removeImageItem2(id) {
     imageItems = imageItems.filter(item => item.id !== id);
     const itemDiv = document.getElementById(`image-item-${id}`);
     if (itemDiv) {
         itemDiv.remove();
     }
+    if (pdfDoc) {
+        renderPage(currentPageNum);
+    }
+}
+
+function removeImageItem(id) {
+    // מחק מ-imageItems
+    imageItems = imageItems.filter(item => item.id !== id);
+    
+    // מחק מ-allItems
+    allItems = allItems.filter(item => !(item.id === id && item.type === 'image'));
+    
+    // מחק את הבחירה אם זה הפריט הנבחר
+    if (selectedImageId === id) {
+        selectedImageId = null;
+    }
+    
+    // הסר את הטופס
+    const itemDiv = document.getElementById(`image-item-${id}`);
+    if (itemDiv) {
+        itemDiv.remove();
+    }
+    
+    // רנדר מחדש
     if (pdfDoc) {
         renderPage(currentPageNum);
     }
@@ -1049,28 +948,6 @@ function formatFileSize(bytes) {
 
 document.getElementById('addTextBtn').addEventListener('click', addTextItem);
 
-function addTextItem2() {
-    const id = nextTextId++;
-    const textItem = {
-        id: id,
-        text: 'ניסיון',
-        font: 'david',
-        size: 48,
-        color: '#808080',
-        top: 300,
-        right: 200,
-        page: 1,
-        align: 'right'  // ← הוסף: 'right' או 'left'
-    };
-    
-    textItems.push(textItem);
-    renderTextItem(textItem);
-    
-    if (pdfDoc) {
-        renderPage(currentPageNum);
-    }
-}
-
 function addTextItem() {
     const id = nextTextId++;
     const textItem = {
@@ -1093,210 +970,6 @@ function addTextItem() {
     if (pdfDoc) {
         renderPage(currentPageNum);
     }
-}
-
-function renderTextItem2(item) {
-    const textsList = document.getElementById('textsList');
-    const itemDiv = document.createElement('div');
-    itemDiv.className = 'text-item';
-    itemDiv.id = `text-item-${item.id}`;
-    
-    // בנה אפשרויות פונט דינמית
-    const fontOptions = availableFonts.map(font => 
-        `<option value="${font.id}" ${item.font === font.id ? 'selected' : ''}>${font.name}</option>`
-    ).join('');
-    
-    itemDiv.innerHTML = `
-        <div class="text-item-header">
-            <span class="text-item-title">טקסט #${item.id}</span>
-            <button type="button" class="remove-text-btn" onclick="removeTextItem(${item.id})">🗑️ הסר</button>
-        </div>
-        
-        <div class="form-group full-width">
-            <label>תוכן הטקסט:</label>
-            <input type="text" value="${item.text}" oninput="updateTextItem(${item.id}, 'text', this.value)">
-        </div>
-        
-        <div class="form-row">
-            <div class="form-group">
-                <label>פונט:</label>
-                <select onchange="updateTextItem(${item.id}, 'font', this.value)">
-                    ${fontOptions}
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label>גודל פונט:</label>
-                <input type="number" value="${item.size}" min="8" max="200" oninput="updateTextItem(${item.id}, 'size', this.value)">
-            </div>
-        </div>
-        
-        <div class="form-row">
-            <div class="form-group">
-                <label>צבע:</label>
-                <input type="color" value="${item.color}" oninput="updateTextItem(${item.id}, 'color', this.value)">
-            </div>
-            
-            <div class="form-group">
-                <label>מרחק מלמעלה (פיקסלים):</label>
-                <input type="number" value="${item.top}" min="0" oninput="updateTextItem(${item.id}, 'top', this.value)">
-            </div>
-        </div>
-        
-        <div class="form-row">
-            <div class="form-group">
-                <label>מרחק מימין (פיקסלים):</label>
-                <input type="number" value="${item.right}" min="0" oninput="updateTextItem(${item.id}, 'right', this.value)">
-            </div>
-
-            <div class="form-group">
-                <label>עמוד להדפסה:</label>
-                <input type="number" value="${item.page || 1}" min="1" max="99" oninput="updateTextItem(${item.id}, 'page', this.value)">
-            </div>
-        </div>
-        
-        <div class="form-row">
-            <div class="form-group">
-                <label>יישור טקסט:</label>
-                <select onchange="updateTextItem(${item.id}, 'align', this.value)">
-                    <option value="right" ${(item.align || 'right') === 'right' ? 'selected' : ''}>ימין (עברית)</option>
-                    <option value="left" ${item.align === 'left' ? 'selected' : ''}>שמאל (אנגלית)</option>
-                </select>
-            </div>
-        </div>
-    `;
-    
-    textsList.appendChild(itemDiv);
-}
-
-function renderTextItem3(item) {
-    const textsList = document.getElementById('textsList');
-    const itemDiv = document.createElement('div');
-    itemDiv.className = 'text-item';
-    itemDiv.id = `text-item-${item.id}`;
-    itemDiv.setAttribute('data-item-id', item.id);
-    itemDiv.setAttribute('data-item-type', 'text');
-    
-    const fontOptions = availableFonts.map(font => 
-        `<option value="${font.id}" ${item.font === font.id ? 'selected' : ''}>${font.name}</option>`
-    ).join('');
-    
-    const layerIndex = textItems.indexOf(item) + 1;
-    
-    itemDiv.innerHTML = `
-        <div class="text-item-header">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <span class="layer-number">#${layerIndex}</span>
-                <span class="text-item-title">📝 טקסט #${item.id}</span>
-            </div>
-            <div style="display: flex; gap: 5px;">
-                <button type="button" class="collapse-btn" onclick="toggleCollapse(${item.id}, 'text')">
-                    <span class="collapse-icon">▼</span>
-                </button>
-                <button type="button" class="remove-text-btn" onclick="removeTextItem(${item.id})">🗑️</button>
-            </div>
-        </div>
-        
-        <div class="text-item-body" id="text-item-body-${item.id}">
-            <!-- כל השדות הקיימים כאן -->
-            <div class="form-group full-width">
-                <label>תוכן הטקסט:</label>
-                <input type="text" value="${item.text}" oninput="updateTextItem(${item.id}, 'text', this.value)">
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label>פונט:</label>
-                    <select onchange="updateTextItem(${item.id}, 'font', this.value)">
-                        ${fontOptions}
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>גודל פונט:</label>
-                    <input type="number" value="${item.size}" min="8" max="200" oninput="updateTextItem(${item.id}, 'size', this.value)">
-                </div>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label>צבע:</label>
-                    <input type="color" value="${item.color}" oninput="updateTextItem(${item.id}, 'color', this.value)">
-                </div>
-                
-                <div class="form-group">
-                    <label>מרחק מלמעלה (px):</label>
-                    <input type="number" value="${item.top}" min="0" oninput="updateTextItem(${item.id}, 'top', this.value)">
-                </div>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label>מרחק מימין (px):</label>
-                    <input type="number" value="${item.right}" min="0" oninput="updateTextItem(${item.id}, 'right', this.value)">
-                </div>
-
-                <div class="form-group">
-                    <label>עמוד:</label>
-                    <input type="number" value="${item.page || 1}" min="1" max="99" oninput="updateTextItem(${item.id}, 'page', this.value)">
-                </div>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label>יישור:</label>
-                    <select onchange="updateTextItem(${item.id}, 'align', this.value)">
-                        <option value="right" ${(item.align || 'right') === 'right' ? 'selected' : ''}>ימין</option>
-                        <option value="left" ${item.align === 'left' ? 'selected' : ''}>שמאל</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    textsList.appendChild(itemDiv);
-}
-
-function renderTextItem4(item) {
-    const textsList = document.getElementById('textsList');
-    const itemDiv = document.createElement('div');
-    itemDiv.className = 'text-item';
-    itemDiv.id = `text-item-${item.id}`;
-    itemDiv.setAttribute('data-item-id', item.id);
-    itemDiv.setAttribute('data-item-type', 'text');
-    itemDiv.setAttribute('draggable', 'true');  // ← הוסף
-    
-    const fontOptions = availableFonts.map(font => 
-        `<option value="${font.id}" ${item.font === font.id ? 'selected' : ''}>${font.name}</option>`
-    ).join('');
-    
-    const layerIndex = textItems.indexOf(item) + 1;
-    
-    itemDiv.innerHTML = `
-        <div class="text-item-header">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <span class="drag-handle">⋮⋮</span>
-                <span class="layer-number">#${layerIndex}</span>
-                <span class="text-item-title">📝 טקסט #${item.id}</span>
-            </div>
-            <div style="display: flex; gap: 5px;">
-                <button type="button" class="collapse-btn" onclick="toggleCollapse(${item.id}, 'text')">
-                    <span class="collapse-icon">▼</span>
-                </button>
-                <button type="button" class="remove-text-btn" onclick="removeTextItem(${item.id})">🗑️</button>
-            </div>
-        </div>
-        
-        <div class="text-item-body" id="text-item-body-${item.id}">
-            <!-- השדות הקיימים -->
-            ${generateTextItemFields(item, fontOptions)}
-        </div>
-    `;
-    
-    // הוסף event listeners לגרירה
-    setupDragAndDrop(itemDiv);
-    
-    textsList.appendChild(itemDiv);
 }
 
 function renderTextItem(item) {
@@ -1399,24 +1072,6 @@ function generateTextItemFields(item, fontOptions) {
     `;
 }
 
-function toggleCollapse2(id, type) {
-    const bodyId = type === 'text' ? `text-item-body-${id}` : `image-item-body-${id}`;
-    const body = document.getElementById(bodyId);
-    const icon = body.parentElement.querySelector('.collapse-icon');
-    
-    if (body.classList.contains('collapsed')) {
-        body.classList.remove('collapsed');
-        body.style.maxHeight = body.scrollHeight + 'px';
-        icon.textContent = '▼';
-    } else {
-        body.style.maxHeight = body.scrollHeight + 'px';
-        setTimeout(() => {
-            body.classList.add('collapsed');
-            icon.textContent = '▶';
-        }, 10);
-    }
-}
-
 function toggleCollapse(id, type) {
     const key = `${type}-${id}`;
     const bodyId = type === 'text' ? `text-item-body-${id}` : `image-item-body-${id}`;
@@ -1448,7 +1103,7 @@ function updateTextItem(id, field, value) {
     }
 }
 
-function removeTextItem(id) {
+function removeTextItem2(id) {
     const index = textItems.findIndex(t => t.id === id);
     if (index > -1) {
         textItems.splice(index, 1);
@@ -1456,6 +1111,36 @@ function removeTextItem(id) {
         if (pdfDoc) {
             renderPage(currentPageNum);
         }
+    }
+}
+
+function removeTextItem(id) {
+    // מחק מ-textItems
+    const textIndex = textItems.findIndex(t => t.id === id);
+    if (textIndex > -1) {
+        textItems.splice(textIndex, 1);
+    }
+    
+    // מחק מ-allItems
+    const allIndex = allItems.findIndex(item => item.id === id && item.type === 'text');
+    if (allIndex > -1) {
+        allItems.splice(allIndex, 1);
+    }
+    
+    // מחק את הבחירה אם זה הפריט הנבחר
+    if (selectedTextId === id) {
+        selectedTextId = null;
+    }
+    
+    // הסר את הטופס
+    const itemDiv = document.getElementById(`text-item-${id}`);
+    if (itemDiv) {
+        itemDiv.remove();
+    }
+    
+    // רנדר מחדש
+    if (pdfDoc) {
+        renderPage(currentPageNum);
     }
 }
 
@@ -1567,78 +1252,6 @@ function syncSeparateArrays() {
     imageItems = allItems.filter(item => item.type === 'image');
 }
 
-// function handleDrop2(e) {
-//     if (e.stopPropagation) {
-//         e.stopPropagation();
-//     }
-    
-//     e.preventDefault();
-    
-//     const targetElement = e.currentTarget;
-//     const targetItemId = parseInt(targetElement.getAttribute('data-item-id'));
-//     const targetItemType = targetElement.getAttribute('data-item-type');
-    
-//     if (draggedElement !== targetElement) {
-//         // שנה סדר במערך
-//         if (draggedItemType === 'text' && targetItemType === 'text') {
-//             reorderTextItems(draggedItemId, targetItemId);
-//         } else if (draggedItemType === 'image' && targetItemType === 'image') {
-//             reorderImageItems(draggedItemId, targetItemId);
-//         }
-//         // אם שונים (text vs image) - יש לטפל בזה בנפרד
-//     }
-    
-//     targetElement.classList.remove('drag-over');
-    
-//     return false;
-// }
-
-function reorderTextItems(draggedId, targetId) {
-    const draggedIndex = textItems.findIndex(item => item.id === draggedId);
-    const targetIndex = textItems.findIndex(item => item.id === targetId);
-    
-    if (draggedIndex === -1 || targetIndex === -1) return;
-    
-    // הוצא את הפריט הנגרר
-    const [draggedItem] = textItems.splice(draggedIndex, 1);
-    
-    // הכנס אותו במיקום החדש
-    textItems.splice(targetIndex, 0, draggedItem);
-    
-    // רענן את התצוגה
-    refreshItemsList();
-    
-    // רנדר מחדש את הקנבס
-    if (pdfDoc) {
-        scheduleRender();
-    }
-}
-
-function reorderImageItems(draggedId, targetId) {
-    const draggedIndex = imageItems.findIndex(item => item.id === draggedId);
-    const targetIndex = imageItems.findIndex(item => item.id === targetId);
-    
-    if (draggedIndex === -1 || targetIndex === -1) return;
-    
-    const [draggedItem] = imageItems.splice(draggedIndex, 1);
-    imageItems.splice(targetIndex, 0, draggedItem);
-    
-    refreshItemsList();
-    
-    if (pdfDoc) {
-        scheduleRender();
-    }
-}
-
-function refreshItemsList2() {
-    const textsList = document.getElementById('textsList');
-    textsList.innerHTML = '';
-    
-    // רנדר מחדש את כל הפריטים לפי הסדר החדש
-    textItems.forEach(item => renderTextItem(item));
-    imageItems.forEach(item => renderImageItem(item));
-}
-
 function refreshItemsList() {
     const textsList = document.getElementById('textsList');
     textsList.innerHTML = '';
@@ -1660,18 +1273,17 @@ function refreshItemsList() {
 processBtn.addEventListener('click', async () => {
     if (!selectedFile) return;
 
-    if (textItems.length === 0) {
-        showError('נא להוסיף לפחות טקסט אחד');
-        return;
-    }
-
     const formData = new FormData();
     formData.append('pdf', selectedFile);
     formData.append('texts', JSON.stringify(textItems));
+    formData.append('images', JSON.stringify(imageItems));  // ← הוסף תמונות
+    formData.append('allItems', JSON.stringify(allItems));  // ← הוסף את הסדר המלא
 
-    // הוסף מיד אחריה:
-   console.log('INDEX - Sending texts:', textItems);
-   console.log('INDEX - JSON:', JSON.stringify(textItems, null, 2));
+    // Debug
+    console.log('INDEX - Sending texts:', textItems);
+    console.log('INDEX - Sending images:', imageItems);
+    console.log('INDEX - Sending allItems:', allItems);
+    console.log('INDEX - JSON:', JSON.stringify(allItems, null, 2));
 
     processBtn.disabled = true;
     processBtn.textContent = 'מעבד...';
@@ -1810,49 +1422,6 @@ async function loadPDF(file) {
     };
     
     fileReader.readAsArrayBuffer(file);
-}
-
-async function renderPage2(num) {
-    // אם כבר מרנדרים, המתן
-    if (pageRendering) {
-        pageNumPending = num;
-        return;
-    }
-    
-    pageRendering = true;
-    
-    try {
-        const page = await pdfDoc.getPage(num);
-        const viewport = page.getViewport({ scale: pdfScale });
-        
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-        
-        const renderContext = {
-            canvasContext: ctx,
-            viewport: viewport,
-        };
-        
-        // רנדר ה-PDF
-        await page.render(renderContext).promise;
-        
-        // רנדר תמונות וטקסטים מעל ה-PDF
-        await drawImagesOnCanvas(viewport);
-        drawTextsOnCanvas(viewport);
-        
-        pageRendering = false;
-        
-        // אם יש עמוד ממתין, רנדר אותו
-        if (pageNumPending !== null) {
-            const pending = pageNumPending;
-            pageNumPending = null;
-            renderPage(pending);
-        }
-        
-    } catch (error) {
-        console.error('Error rendering page:', error);
-        pageRendering = false;
-    }
 }
 
 async function renderPage(num) {

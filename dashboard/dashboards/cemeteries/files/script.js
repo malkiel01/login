@@ -1273,18 +1273,17 @@ function refreshItemsList() {
 processBtn.addEventListener('click', async () => {
     if (!selectedFile) return;
 
-    // if (textItems.length === 0) {
-    //     showError('נא להוסיף לפחות טקסט אחד');
-    //     return;
-    // }
-
     const formData = new FormData();
     formData.append('pdf', selectedFile);
     formData.append('texts', JSON.stringify(textItems));
+    formData.append('images', JSON.stringify(imageItems));  // ← הוסף תמונות
+    formData.append('allItems', JSON.stringify(allItems));  // ← הוסף את הסדר המלא
 
-    // הוסף מיד אחריה:
-   console.log('INDEX - Sending texts:', textItems);
-   console.log('INDEX - JSON:', JSON.stringify(textItems, null, 2));
+    // Debug
+    console.log('INDEX - Sending texts:', textItems);
+    console.log('INDEX - Sending images:', imageItems);
+    console.log('INDEX - Sending allItems:', allItems);
+    console.log('INDEX - JSON:', JSON.stringify(allItems, null, 2));
 
     processBtn.disabled = true;
     processBtn.textContent = 'מעבד...';

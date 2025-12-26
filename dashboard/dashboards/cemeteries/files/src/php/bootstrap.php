@@ -80,6 +80,10 @@ use PDFEditor\Config;
  * Custom error handler
  *
  * ממיר errors ל-exceptions כך שניתן לתפוס אותם
+ *
+ * שימו לב: לא משתמשים ב-set_exception_handler() כדי לאפשר
+ * ל-catch blocks בקוד האפליקציה לתפוס exceptions בצורה תקינה.
+ * במיוחד חשוב עבור מנגנון ה-fallback ב-process.php
  */
 set_error_handler(function($errno, $errstr, $errfile, $errline) {
     // Don't throw exception for suppressed errors (@)
@@ -88,47 +92,6 @@ set_error_handler(function($errno, $errstr, $errfile, $errline) {
     }
 
     throw new \ErrorException($errstr, 0, $errno, $errfile, $errline);
-});
-
-/**
- * Custom exception handler
- *
- * מטפל ב-exceptions לא נתפסים
- */
-set_exception_handler(function($exception) {
-    // Log error
-    if (Config::LOG_ERRORS) {
-        $logMessage = sprintf(
-            "[%s] %s in %s:%d\n",
-            date('Y-m-d H:i:s'),
-            $exception->getMessage(),
-            $exception->getFile(),
-            $exception->getLine()
-        );
-
-        error_log($logMessage, 3, Config::ERROR_LOG_FILE);
-    }
-
-    // Return error response
-    http_response_code(500);
-    header('Content-Type: application/json; charset=utf-8');
-
-    $response = [
-        'success' => false,
-        'error' => 'שגיאת שרת פנימית'
-    ];
-
-    // Include details in debug mode
-    if (Config::DEBUG_MODE) {
-        $response['debug'] = [
-            'message' => $exception->getMessage(),
-            'file' => basename($exception->getFile()),
-            'line' => $exception->getLine()
-        ];
-    }
-
-    echo json_encode($response, JSON_UNESCAPED_UNICODE);
-    exit;
 });
 
 // ===================================

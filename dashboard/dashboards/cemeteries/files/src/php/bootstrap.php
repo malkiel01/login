@@ -49,11 +49,19 @@ spl_autoload_register(function ($class) {
     $relativeClass = substr($class, strlen($baseNamespace));
 
     // Convert namespace to file path
-    // PDFEditor\Core\Response -> Core/Response
+    // PDFEditor\Core\Response -> core/Response
     $file = str_replace('\\', '/', $relativeClass);
 
+    // Convert directory name to lowercase (Linux is case-sensitive)
+    // Core/Response -> core/Response
+    $parts = explode('/', $file);
+    if (count($parts) > 1) {
+        $parts[0] = strtolower($parts[0]); // directory to lowercase
+        $file = implode('/', $parts);
+    }
+
     // Build full path
-    // src/php/Core/Response.php
+    // src/php/core/Response.php
     $filePath = __DIR__ . '/' . $file . '.php';
 
     // Load file if exists

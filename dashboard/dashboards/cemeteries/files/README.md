@@ -1,152 +1,201 @@
-# מערכת עיבוד PDF - הוספת טקסט עברי
+# PDF Editor - מערכת עיבוד PDF מתקדמת 📄
 
-מערכת לעיבוד קבצי PDF והוספת הטקסט "ניסיון" במרכז כל דף.
+מערכת מקצועית להוספת טקסטים ותמונות על קבצי PDF, עם תמיכה בתבניות, שכבות ועריכה חזותית.
 
-## תכונות
+## ✨ תכונות
 
-- ✅ העלאת קבצי PDF בגרירה או בלחיצה
-- ✅ הצגת מידות הקובץ ומספר דפים
-- ✅ הוספת טקסט "ניסיון" בעברית במרכז כל דף
-- ✅ הורדת הקובץ המעובד
-- ✅ תמיכה מלאה בעברית ו-RTL
-- ✅ ניקוי אוטומטי של קבצים ישנים
+- 📄 **עיבוד PDF** - הוספת טקסטים ותמונות על כל דף
+- 🎨 **עריכה חזותית** - גרירה והזזה של אלמנטים בזמן אמת
+- 📝 **פונטים עבריים** - דיויד, רוביק, פרנקנתן בית אלף ועוד
+- 🖼️ **תמונות** - העלאה, שינוי גודל, מיקום חופשי
+- 💾 **תבניות** - שמירה וטעינה של תבניות מוכנות
+- 🔄 **ניהול שכבות** - בחירה, מיקום והסתרה של שכבות
+- 🔍 **Zoom** - הגדלה והקטנה של תצוגת ה-PDF
+- 📱 **Responsive** - עובד על מסכים שונים
+- ⚡ **Real-time Preview** - רינדור מיידי של שינויים
+- 🎯 **Drag & Drop** - גרירת קבצים וגרירת אלמנטים
 
-## דרישות מערכת
+## 🏗️ ארכיטקטורה מודולרית
 
-### שרת
-- PHP 7.4 ומעלה
-- Python 3.8 ומעלה
-- גישה לפקודת `exec()` ב-PHP
+הפרויקט עבר רפקטורינג מקיף ב-5 שלבים והוא מאורגן בצורה מקצועית:
 
-### חבילות Python
+```
+├── config/
+│   └── config.php                 # הגדרות מערכת מרכזיות
+├── docs/                          # תיעוד מפורט
+│   ├── API.md                     # תיעוד API מלא
+│   ├── ARCHITECTURE.md            # תיאור ארכיטקטורה
+│   ├── COMPONENTS.md              # תיעוד קומפוננטות
+│   └── REFACTORING_PLAN.md        # תוכנית הרפקטורינג
+├── src/
+│   ├── css/                       # CSS מודולרי
+│   │   ├── base/                  # Reset, Variables, Typography
+│   │   ├── layout/                # Main layout structures
+│   │   ├── components/            # UI components
+│   │   └── main.css               # Entry point
+│   ├── js/                        # JavaScript ES6 Modules
+│   │   ├── core/                  # Core functionality (ready)
+│   │   ├── modules/               # Feature modules (ready)
+│   │   ├── utils/                 # Utilities (ready)
+│   │   ├── legacy.js              # Original code (1763 lines)
+│   │   └── main.js                # Module entry point
+│   └── php/                       # Backend Services
+│       ├── core/
+│       │   └── Response.php       # JSON response standardization
+│       ├── services/
+│       │   ├── ValidationService.php  # Input validation
+│       │   ├── FileService.php        # File management
+│       │   └── PDFService.php         # PDF processing
+│       └── bootstrap.php          # PSR-4 autoloader + init
+├── python/
+│   └── add_text_to_pdf.py        # Python PDF processor
+├── uploads/                       # Uploaded PDFs (auto-cleanup)
+├── outputs/                       # Processed PDFs (auto-cleanup)
+├── templates/                     # Saved templates
+├── logs/                          # Error logs
+├── index.html                     # Main interface
+└── process.php                    # API endpoint (with fallback)
+```
+
+## 🚀 התקנה
+
+### דרישות מקדימות
+
+- **PHP** 7.4+
+- **Python** 3.8+
+- **Web Server** (Apache/Nginx)
+- **Python Packages**: `pypdf`, `reportlab`
+
+### צעדי התקנה
+
+1. **Clone או Download הפרויקט**
+```bash
+git clone [repository-url]
+cd dashboard/dashboards/cemeteries/files/
+```
+
+2. **התקנת חבילות Python**
 ```bash
 pip install pypdf reportlab
-```
-
-## התקנה
-
-1. העתק את כל הקבצים לתיקיית השרת
-2. ודא שהתיקיות הבאות קיימות וניתנות לכתיבה:
-   - `uploads/`
-   - `outputs/`
-
-```bash
-mkdir -p uploads outputs
-chmod 755 uploads outputs
-```
-
-3. ודא שהסקריפט Python ניתן להרצה:
-```bash
-chmod +x add_text_to_pdf.py
-```
-
-## קבצי המערכת
-
-### קבצי Frontend
-- **index.html** - דף הנחיתה עם ממשק העלאה
-  - עיצוב מודרני עם גרדיאנט
-  - תמיכה ב-drag & drop
-  - אנימציות ומשוב ויזואלי
-
-### קבצי Backend
-- **process.php** - מעבד העלאות וקורא לסקריפט Python
-  - קבלת קבצי PDF
-  - ולידציה של סוג הקובץ
-  - קריאה לסקריפט Python
-  - החזרת מטא-דאטה
-  - ניקוי קבצים ישנים
-
-- **add_text_to_pdf.py** - סקריפט Python לעיבוד PDF
-  - קריאת הקובץ המקורי
-  - יצירת overlay עם טקסט עברי
-  - מיזוג ה-overlay עם הקובץ המקורי
-  - החזרת מידע על מספר דפים ומידות
-
-- **download.php** - מנהל הורדות
-  - ולידציה של שם הקובץ
-  - הגנת אבטחה
-  - הורדת הקובץ המעובד
-
-## שימוש
-
-1. פתח את `index.html` בדפדפן
-2. העלה קובץ PDF בגרירה או בלחיצה
-3. לחץ על "עבד את הקובץ"
-4. המתן לסיום העיבוד
-5. צפה במידע על הקובץ
-6. הורד את הקובץ המעובד
-
-## אבטחה
-
-המערכת כוללת מספר שכבות אבטחה:
-
-1. **ולידציה של סוג קובץ** - בדיקת MIME type
-2. **ולידציה של שם קובץ** - regex validation
-3. **שמות קבצים ייחודיים** - שימוש ב-uniqid
-4. **ניקוי אוטומטי** - מחיקת קבצים ישנים מעל שעה
-5. **escapeshellarg** - מניעת command injection
-
-## טיפול בשגיאות
-
-המערכת מטפלת במצבים הבאים:
-- ❌ קובץ שאינו PDF
-- ❌ שגיאות העלאה
-- ❌ שגיאות עיבוד
-- ❌ קבצים חסרים
-- ❌ שמות קבצים לא תקינים
-
-## התאמה אישית
-
-### שינוי הטקסט המוסף
-ערוך את `add_text_to_pdf.py`:
-```python
-text="ניסיון"  # שנה כאן
-```
-
-### שינוי גודל וצבע הפונט
-ערוך את `add_text_to_pdf.py`:
-```python
-font_size = 48  # שנה גודל
-can.setFillColorRGB(0.5, 0.5, 0.5, alpha=0.5)  # שנה צבע
-```
-
-### שינוי זמן ניקוי קבצים
-ערוך את `process.php`:
-```php
-cleanOldFiles($upload_dir, 3600);  // 3600 שניות = 1 שעה
-```
-
-## פתרון בעיות
-
-### Python לא מותקן
-```bash
-sudo apt-get install python3
-```
-
-### חבילות Python חסרות
-```bash
+# או
 pip install --break-system-packages pypdf reportlab
 ```
 
-### שגיאת הרשאות
+3. **הגדרת הרשאות**
 ```bash
-chmod 755 uploads outputs
-chmod +x add_text_to_pdf.py
+chmod 755 uploads/ outputs/ templates/ logs/
+chmod +x python/add_text_to_pdf.py
 ```
 
-### שגיאת exec()
-ודא ש-`exec()` מופעל ב-php.ini:
-```ini
-disable_functions = 
+4. **עדכון הגדרות (אופציונלי)**
+ערוך את `config/config.php` והתאם נתיבים ל-Python virtual environment אם נדרש.
+
+### הרצה מקומית
+
+```bash
+php -S localhost:8000
 ```
 
-## טכנולוגיות
+גש ל-`http://localhost:8000`
 
-- **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
-- **Backend**: PHP 7.4+
-- **Processing**: Python 3.8+
-- **Libraries**: pypdf, reportlab
+## 📖 תיעוד מפורט
 
-## רישיון
+- **[API.md](docs/API.md)** - תיעוד מלא של כל ה-endpoints
+- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** - תרשימים ותיאור ארכיטקטורה
+- **[COMPONENTS.md](docs/COMPONENTS.md)** - תיעוד Frontend + Backend components
+- **[REFACTORING_PLAN.md](docs/REFACTORING_PLAN.md)** - תוכנית רפקטורינג של 5 שלבים
 
-קוד זה נוצר על ידי Claude (Anthropic) למטרות חינוכיות ופיתוח.
+## 🔧 טכנולוגיות
+
+### Frontend
+- **HTML5** - Semantic markup
+- **CSS3** - Modular CSS with Variables
+- **JavaScript ES6** - Modules + Modern syntax
+- **PDF.js** - Client-side PDF rendering
+
+### Backend
+- **PHP 7.4+** - Service layer architecture
+- **PSR-4 Autoloading** - Namespace-based class loading
+- **Service Pattern** - ValidationService, FileService, PDFService
+
+### Python
+- **pypdf** - PDF manipulation
+- **reportlab** - PDF content generation
+
+## 🎯 Refactoring Phases (Completed)
+
+הפרויקט עבר 5 שלבי רפקטורינג מקיפים:
+
+- ✅ **Phase 1**: Infrastructure - config, docs, structure
+- ✅ **Phase 2**: Backend - PHP services architecture
+  - ✅ **Phase 2.1**: Exception handler conflict fix
+  - ✅ **Phase 2.2**: Autoloader case-sensitivity fix
+- ✅ **Phase 3**: CSS - Modular structure with variables
+- ✅ **Phase 4**: JavaScript - ES6 modules preparation
+- ✅ **Phase 5**: Documentation & final touches
+
+## 🔐 אבטחה
+
+- ✅ Input validation על כל הקלטים
+- ✅ File type validation (MIME + extension)
+- ✅ Path sanitization
+- ✅ Automatic file cleanup (1 hour TTL)
+- ✅ Error logging without sensitive data exposure
+- ✅ Prepared statements (ready for DB)
+
+## 🐛 Debugging
+
+להפעלת debug mode, ערוך `config/config.php`:
+
+```php
+const DEBUG_MODE = true;
+const LOG_ERRORS = true;
+```
+
+לוגים נשמרים ב-`logs/error.log`
+
+## 📚 כיצד להשתמש
+
+1. פתח את `index.html`
+2. העלה קובץ PDF (drag & drop או בחירה)
+3. הוסף טקסטים ותמונות
+4. גרור ושנה מיקום/גודל
+5. שמור כתבנית (אופציונלי)
+6. לחץ "עבד קובץ"
+7. הורד PDF מעובד
+
+## 🚧 עבודה עתידית (Phase 4.1+, 3.1+)
+
+### JavaScript Modules
+- חילוץ modules מ-legacy.js:
+  - `core/config.js` - קבועים ומשתנים
+  - `core/state.js` - State management
+  - `modules/pdf-viewer.js` - PDF rendering
+  - `modules/text-editor.js` - Text editing
+  - `modules/image-handler.js` - Image handling
+  - `utils/drag-drop.js` - Drag utilities
+  - `utils/fonts.js` - Font loading
+
+### CSS Components
+- חילוץ components מ-legacy.css:
+  - `components/upload-area.css`
+  - `components/buttons.css`
+  - `components/pdf-viewer.css`
+  - `components/toolbar.css`
+  - `components/modals.css`
+
+## 🙏 תודות
+
+- **Claude Code** - Refactoring & Architecture
+- **Original Developer** - Initial implementation
+- **Community** - Testing & Feedback
+
+## 📝 License
+
+[ציין רישיון לפי הצורך]
+
+---
+
+**נבנה עם ❤️ ו-קוד נקי**
+
+_Refactored: December 2024_

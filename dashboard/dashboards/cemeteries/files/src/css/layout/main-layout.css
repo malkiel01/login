@@ -1,0 +1,36 @@
+/**
+ * Main Layout
+ *
+ * מבנה הדף הראשי - main container, controls section
+ *
+ * @package PDFEditor
+ * @since Phase 3 Refactoring
+ */
+
+/* Main Container - Full screen layout */
+.main-container {
+    display: flex;
+    gap: var(--spacing-md);
+    max-width: 100%;
+    margin: 0;
+    height: 100vh;
+    padding: var(--spacing-md);
+    box-sizing: border-box;
+}
+
+/* Controls Section - Fixed width on right */
+.controls-section {
+    flex: 0 0 var(--controls-width);
+    min-width: var(--controls-width);
+    max-width: var(--controls-width);
+    overflow-y: auto;
+    max-height: calc(100vh - 40px);
+}
+
+.container {
+    background: var(--color-bg-white);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    padding: var(--spacing-xl);
+    width: 100%;
+}

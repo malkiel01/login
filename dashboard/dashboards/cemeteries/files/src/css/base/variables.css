@@ -1,0 +1,64 @@
+/**
+ * CSS Variables
+ *
+ * משתנים גלובליים - צבעים, מרווחים, גדלים
+ * מרכזי אחד לכל הערכים החוזרים במערכת
+ *
+ * @package PDFEditor
+ * @since Phase 3 Refactoring
+ */
+
+:root {
+    /* Colors - Primary Gradient */
+    --color-primary-start: #667eea;
+    --color-primary-end: #764ba2;
+    --gradient-primary: linear-gradient(135deg, var(--color-primary-start) 0%, var(--color-primary-end) 100%);
+
+    /* Colors - Text */
+    --color-text-primary: #333;
+    --color-text-secondary: #666;
+    --color-text-hint: #999;
+
+    /* Colors - Background */
+    --color-bg-body: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --color-bg-white: #ffffff;
+    --color-bg-light: #f8f9ff;
+    --color-bg-lighter: #f0f2ff;
+    --color-bg-lightest: #e8ebff;
+
+    /* Colors - Borders */
+    --color-border-primary: #667eea;
+    --color-border-secondary: #764ba2;
+
+    /* Spacing */
+    --spacing-xs: 10px;
+    --spacing-sm: 15px;
+    --spacing-md: 20px;
+    --spacing-lg: 30px;
+    --spacing-xl: 40px;
+
+    /* Border Radius */
+    --radius-sm: 8px;
+    --radius-md: 10px;
+    --radius-lg: 15px;
+    --radius-xl: 20px;
+
+    /* Shadows */
+    --shadow-sm: 0 2px 5px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 10px 25px rgba(102, 126, 234, 0.4);
+    --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.3);
+
+    /* Transitions */
+    --transition-fast: 0.2s ease;
+    --transition-normal: 0.3s ease;
+    --transition-slow: 0.5s ease;
+
+    /* Z-index */
+    --z-base: 1;
+    --z-dropdown: 10;
+    --z-modal: 100;
+    --z-tooltip: 1000;
+
+    /* Layout Widths */
+    --controls-width: 500px;
+}

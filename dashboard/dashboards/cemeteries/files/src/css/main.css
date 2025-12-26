@@ -1,0 +1,50 @@
+/**
+ * Main CSS Entry Point
+ *
+ * קובץ ראשי שמייבא את כל קבצי ה-CSS של המערכת
+ * הסדר חשוב: base → layout → components
+ *
+ * @package PDFEditor
+ * @since Phase 3 Refactoring
+ *
+ * Phase 3.0: Infrastructure setup
+ * - Created modular CSS structure
+ * - Extracted base styles (reset, variables, typography)
+ * - Extracted layout styles
+ * - Legacy styles kept in components/legacy.css for now
+ *
+ * TODO Phase 3.1+: Continue breaking down legacy.css into components:
+ * - upload-area.css
+ * - buttons.css
+ * - pdf-viewer.css
+ * - toolbar.css
+ * - text-editor.css
+ * - image-uploader.css
+ * - templates.css
+ * - layers.css
+ * - modals.css
+ */
+
+/* ===================================
+   BASE STYLES
+   ===================================
+   Reset, Variables, Typography */
+
+@import url('./base/reset.css');
+@import url('./base/variables.css');
+@import url('./base/typography.css');
+
+/* ===================================
+   LAYOUT
+   ===================================
+   Main structure */
+
+@import url('./layout/main-layout.css');
+
+/* ===================================
+   COMPONENTS (Legacy - Temporary)
+   ===================================
+   All original styles from styles.css
+   TODO: Break down into separate component files */
+
+@import url('./components/legacy.css');

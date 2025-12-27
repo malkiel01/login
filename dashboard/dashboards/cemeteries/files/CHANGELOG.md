@@ -4,6 +4,20 @@
 
 ## [2.1.0] - 2024-12-27 - Responsive Design
 
+### 🧹 Code Cleanup
+
+#### Removed
+- ❌ `styles.css` (14KB, 783 lines) - Replaced by modular CSS
+- ❌ `script.js` (59KB, 1802 lines) - Replaced by modular JS
+- ✅ Eliminated ~73KB of duplicate code (2,585 lines)
+- ✅ Maintained only active modular codebase
+
+**Active Structure:**
+- ✅ `src/css/main.css` → imports `legacy.css`
+- ✅ `src/js/main.js` → imports `legacy.js`
+
+**Commit**: eafc7a9
+
 ### 📱 Mobile & Tablet Responsiveness
 
 #### Added
@@ -177,18 +191,19 @@
 
 ## Summary of Changes
 
-| Phase | Description | Files Changed | Lines Added | Commits |
-|-------|-------------|---------------|-------------|---------|
-| Phase 1 | Infrastructure | 10+ | 2,730 | 1 |
-| Phase 2 | Backend Refactoring | 8 | 1,807 | 1 |
+| Phase | Description | Files Changed | Lines Added/Removed | Commits |
+|-------|-------------|---------------|---------------------|---------|
+| Phase 1 | Infrastructure | 10+ | +2,730 | 1 |
+| Phase 2 | Backend Refactoring | 8 | +1,807 | 1 |
 | Phase 2.1 | Exception Fix | 1 | -37 | 1 |
-| Phase 2.2 | Autoloader Fix | 1 | 8 | 1 |
-| Phase 3 | CSS Refactoring | 7 | 859 | 1 |
-| Phase 4 | JS Refactoring | 3 | 1,797 | 1 |
-| Phase 5 | Documentation | 2 | 300+ | 1 |
-| **Bug Fix** | **Image Dragging** | **2** | **2** | **1** |
-| **v2.1.0** | **Responsive Design** | **5** | **324** | **1** |
-| **Total** | **Complete Refactoring** | **39+** | **7,826+** | **9** |
+| Phase 2.2 | Autoloader Fix | 1 | +8 | 1 |
+| Phase 3 | CSS Refactoring | 7 | +859 | 1 |
+| Phase 4 | JS Refactoring | 3 | +1,797 | 1 |
+| Phase 5 | Documentation | 2 | +300 | 1 |
+| **Bug Fix** | **Image Dragging** | **2** | **+2** | **1** |
+| **v2.1.0 - Responsive** | **Mobile Design** | **5** | **+324** | **1** |
+| **v2.1.0 - Cleanup** | **Remove Duplicates** | **2** | **-2,585** | **1** |
+| **Total** | **Complete Refactoring** | **41+** | **+5,241** | **10** |
 
 ---
 

@@ -414,13 +414,18 @@ function scheduleRender() {
 let collapsedStates = {}; // { 'text-1': true, 'image-2': false, ... }
 
 async function handleCanvasMouseDown(e) {
+    // מניעת scroll במובייל במהלך גרירה
+    if (e.cancelable) {
+        e.preventDefault();
+    }
+
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    
+
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
-    
+
     const canvasX = x * scaleX;
     const canvasY = y * scaleY;
 
@@ -500,13 +505,18 @@ async function handleCanvasMouseDown(e) {
 }
 
 function handleCanvasMouseMove(e) {
+    // מניעת scroll במובייל במהלך גרירה
+    if (e.cancelable && (draggingTextId !== null || selectedImageId !== null || resizingImageCorner !== null)) {
+        e.preventDefault();
+    }
+
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    
+
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
-    
+
     const canvasX = x * scaleX;
     const canvasY = y * scaleY;
     

@@ -2,6 +2,34 @@
 
 כל השינויים המשמעותיים בפרויקט זה מתועדים כאן.
 
+## [2.1.0] - 2024-12-27 - Responsive Design
+
+### 📱 Mobile & Tablet Responsiveness
+
+#### Added
+- ✅ Sidebar toggle button (hamburger menu ☰)
+- ✅ Mobile-first responsive design
+- ✅ Dark overlay when sidebar is open on mobile
+- ✅ Smooth slide-in/out animations
+- ✅ Click outside to close sidebar
+- ✅ Tablet support (769px-1024px)
+
+#### Changed
+- ✅ `.container` - Now takes full height (100%) instead of content-based
+- ✅ Mobile (@max-width: 768px) - Sidebar hidden by default, slides from right
+- ✅ Tablet (769px-1024px) - Sidebar toggleable with 400px width
+- ✅ Toggle button icon changes: ☰ ↔ ✕
+
+#### Technical
+- CSS: Media queries for mobile and tablet
+- JavaScript: Toggle functionality with overlay click handler
+- UX: Sidebar hidden by default on mobile
+- Files: index.html, styles.css, legacy.css, script.js, legacy.js
+- Lines added: 324
+- **Commit**: b584e21
+
+---
+
 ## [2.0.0] - 2024-12-26 - Major Refactoring
 
 ### 🎯 Phase 5: Documentation & Final Touches
@@ -158,7 +186,9 @@
 | Phase 3 | CSS Refactoring | 7 | 859 | 1 |
 | Phase 4 | JS Refactoring | 3 | 1,797 | 1 |
 | Phase 5 | Documentation | 2 | 300+ | 1 |
-| **Total** | **Complete Refactoring** | **32+** | **7,500+** | **7** |
+| **Bug Fix** | **Image Dragging** | **2** | **2** | **1** |
+| **v2.1.0** | **Responsive Design** | **5** | **324** | **1** |
+| **Total** | **Complete Refactoring** | **39+** | **7,826+** | **9** |
 
 ---
 

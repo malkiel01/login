@@ -712,17 +712,28 @@ input[type="file"] {
     /* תפריט צד - מוסתר בברירת מחדל במובייל */
     .controls-section {
         position: fixed;
-        right: -100vw;  /* מוסתר לגמרי מחוץ למסך */
+        right: -100%;  /* מוסתר לגמרי מחוץ למסך */
         top: 0;
         height: 100vh;
+        width: 85vw;  /* 85% מרוחב המסך */
+        max-width: 400px;  /* מקסימום 400px */
+        min-width: auto;  /* ביטול min-width: 500px */
+        flex: none;  /* ביטול flex מהגדרה הכללית */
         z-index: 998;
         transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
+        padding: 15px;  /* פדינג קטן יותר במובייל */
     }
 
     /* תפריט צד - נראה כשיש קלאס active */
     .controls-section.active {
         right: 0;
+    }
+
+    /* container - פדינג קטן יותר במובייל */
+    .container {
+        padding: 20px;
+        border-radius: 0;
     }
 
     /* main-container - מלא מסך במובייל */
@@ -768,19 +779,25 @@ input[type="file"] {
     }
 
     .controls-section {
-        flex: 0 0 400px;
-        min-width: 400px;
-        max-width: 400px;
         position: fixed;
-        right: -100vw;  /* מוסתר לגמרי מחוץ למסך */
+        right: -100%;  /* מוסתר לגמרי מחוץ למסך */
         top: 0;
         height: 100vh;
+        width: 400px;
+        min-width: auto;
+        max-width: 400px;
+        flex: none;
         z-index: 998;
         transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        padding: 20px;
     }
 
     .controls-section.active {
         right: 0;
+    }
+
+    .container {
+        padding: 25px;
     }
 
     .preview-section {

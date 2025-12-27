@@ -1763,3 +1763,40 @@ function showModalError(message) {
     modalError.textContent = message;
     modalError.classList.add('show');
 }
+
+// ============================================
+// Sidebar Toggle (Mobile/Tablet Responsive)
+// ============================================
+
+const sidebarToggle = document.getElementById('sidebarToggle');
+const controlsSection = document.getElementById('controlsSection');
+
+if (sidebarToggle) {
+    sidebarToggle.addEventListener('click', function() {
+        // Toggle קלאס active על ה-sidebar
+        controlsSection.classList.toggle('active');
+
+        // Toggle קלאס sidebar-open על ה-body (לצורך ה-overlay)
+        document.body.classList.toggle('sidebar-open');
+
+        // שינוי אייקון - המבורגר או X
+        if (controlsSection.classList.contains('active')) {
+            sidebarToggle.textContent = '✕';
+        } else {
+            sidebarToggle.textContent = '☰';
+        }
+    });
+}
+
+// סגירת sidebar בלחיצה על overlay (רק במובייל)
+document.addEventListener('click', function(e) {
+    // אם לחצנו על overlay (body::before) - נסגור את ה-sidebar
+    if (document.body.classList.contains('sidebar-open') &&
+        !controlsSection.contains(e.target) &&
+        e.target !== sidebarToggle) {
+
+        controlsSection.classList.remove('active');
+        document.body.classList.remove('sidebar-open');
+        sidebarToggle.textContent = '☰';
+    }
+});

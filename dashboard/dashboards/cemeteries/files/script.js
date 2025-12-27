@@ -31,6 +31,7 @@ let dragStartX = 0;
 let dragStartY = 0;
 let dragStartTop = 0;
 let dragStartRight = 0;
+let dragStartLeft = 0;  // ← Missing variable for image dragging
 let selectedImageId = null;
 let draggingImageId = null;
 let resizingImageCorner = null;

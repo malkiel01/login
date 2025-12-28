@@ -1349,10 +1349,54 @@ const FormHandler = {
             
             // החלף כפתורים בפוטר
             updateGraveCardFooter(modal, currentGrave);
-            
+
             // הגדר פונקציות לכפתורים
             setupGraveCardButtons(modal, currentGrave);
+
+            // אתחול סייר קבצים
+            initFileExplorer(modal, currentGrave.unicId);
         });
+
+        // ========================================
+        // פונקציה: אתחול סייר קבצים
+        // ========================================
+        function initFileExplorer(modal, unicId) {
+            const explorerContainer = modal.querySelector('#graveExplorer');
+            if (!explorerContainer) {
+                console.log('⚠️ [Explorer] Container לא נמצא');
+                return;
+            }
+
+            console.log('📁 [Explorer] מאתחל סייר קבצים עבור:', unicId);
+
+            // טען CSS אם לא נטען
+            if (!document.querySelector('link[href*="explorer.css"]')) {
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = '/dashboard/dashboards/cemeteries/explorer/explorer.css';
+                document.head.appendChild(link);
+            }
+
+            // טען JS ואתחל
+            if (typeof FileExplorer !== 'undefined') {
+                // כבר נטען - אתחל ישירות
+                window.graveExplorer = new FileExplorer('graveExplorer', unicId);
+                console.log('✅ [Explorer] סייר קבצים אותחל');
+            } else {
+                // טען את הסקריפט
+                const script = document.createElement('script');
+                script.src = '/dashboard/dashboards/cemeteries/explorer/explorer.js';
+                script.onload = () => {
+                    window.graveExplorer = new FileExplorer('graveExplorer', unicId);
+                    console.log('✅ [Explorer] סייר קבצים נטען ואותחל');
+                };
+                script.onerror = () => {
+                    console.error('❌ [Explorer] שגיאה בטעינת explorer.js');
+                    explorerContainer.innerHTML = '<div style="color: red; padding: 20px;">שגיאה בטעינת סייר הקבצים</div>';
+                };
+                document.head.appendChild(script);
+            }
+        }
         
         // ========================================
         // פונקציה: עדכון כפתורים בפוטר

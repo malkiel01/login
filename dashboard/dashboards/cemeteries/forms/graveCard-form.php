@@ -400,30 +400,18 @@ if (!empty($grave['comments'])) {
 }
 
 // === חלון מסמכים (סייר קבצים) ===
+$explorerUnicId = htmlspecialchars($grave['unicId']);
 $explorerHTML = '
 <fieldset class="form-section" style="border: 2px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 20px; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);">
     <legend style="padding: 0 15px; font-weight: bold; color: #475569; font-size: 16px;">
         <i class="fas fa-folder-open"></i> מסמכים
     </legend>
-    <div id="graveExplorer"></div>
+    <div id="graveExplorer" data-unic-id="' . $explorerUnicId . '">
+        <div style="text-align: center; padding: 20px; color: #666;">
+            <i class="fas fa-spinner fa-spin"></i> טוען סייר קבצים...
+        </div>
+    </div>
 </fieldset>
-
-<!-- Explorer CSS & JS -->
-<link rel="stylesheet" href="/dashboard/dashboards/cemeteries/explorer/explorer.css">
-<script src="/dashboard/dashboards/cemeteries/explorer/explorer.js"></script>
-<script>
-    // אתחול מיידי - הטופס נטען דינמית
-    (function initExplorer() {
-        var container = document.getElementById("graveExplorer");
-        if (container && typeof FileExplorer !== "undefined") {
-            console.log("Initializing FileExplorer for grave: ' . htmlspecialchars($grave['unicId']) . '");
-            window.explorer = new FileExplorer("graveExplorer", "' . htmlspecialchars($grave['unicId']) . '");
-        } else {
-            // נסה שוב אחרי 100ms
-            setTimeout(initExplorer, 100);
-        }
-    })();
-</script>
 ';
 $formBuilder->addCustomHTML($explorerHTML);
 

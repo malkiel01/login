@@ -362,10 +362,10 @@ try {
                     agv.lineId
                 FROM graves g
                 LEFT JOIN areaGraves_view agv ON g.areaGraveId = agv.unicId
-                WHERE (g.unicId = :id OR g.id = :id2) 
+                WHERE g.unicId = :id
                 AND g.isActive = 1
             ");
-            $stmt->execute(['id' => $id, 'id2' => $id]);
+            $stmt->execute(['id' => $id]);
             $grave = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if (!$grave) {

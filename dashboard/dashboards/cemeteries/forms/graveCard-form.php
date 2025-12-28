@@ -399,6 +399,29 @@ if (!empty($grave['comments'])) {
     ]);
 }
 
+// === חלון מסמכים (סייר קבצים) ===
+$explorerHTML = '
+<fieldset class="form-section" style="border: 2px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 20px; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);">
+    <legend style="padding: 0 15px; font-weight: bold; color: #475569; font-size: 16px;">
+        <i class="fas fa-folder-open"></i> מסמכים
+    </legend>
+    <div id="graveExplorer"></div>
+</fieldset>
+
+<!-- Explorer CSS & JS -->
+<link rel="stylesheet" href="/dashboard/dashboards/cemeteries/explorer/explorer.css">
+<script src="/dashboard/dashboards/cemeteries/explorer/explorer.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // אתחול הסייר עם ה-unicId של הקבר
+        setTimeout(function() {
+            window.explorer = new FileExplorer("graveExplorer", "' . htmlspecialchars($grave['unicId']) . '");
+        }, 100);
+    });
+</script>
+';
+$formBuilder->addCustomHTML($explorerHTML);
+
 // שדה מוסתר - unicId
 $formBuilder->addField('unicId', '', 'hidden', [
     'value' => $grave['unicId']

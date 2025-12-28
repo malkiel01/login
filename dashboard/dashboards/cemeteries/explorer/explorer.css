@@ -86,6 +86,58 @@
     font-size: 14px;
 }
 
+/* תפריט נפתח */
+.explorer-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.explorer-dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1000;
+    min-width: 160px;
+    padding: 5px 0;
+    margin-top: 2px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.explorer-dropdown-menu.show {
+    display: block;
+}
+
+.explorer-dropdown-menu a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 15px;
+    color: #333;
+    text-decoration: none;
+    font-size: 13px;
+    transition: background 0.15s;
+}
+
+.explorer-dropdown-menu a:hover {
+    background: #f5f5f5;
+}
+
+.explorer-dropdown-menu a i {
+    color: #666;
+    width: 16px;
+    text-align: center;
+}
+
+.explorer-dropdown-menu hr {
+    margin: 5px 0;
+    border: none;
+    border-top: 1px solid #eee;
+}
+
 /* אזור הקבצים */
 .explorer-content {
     flex: 1;

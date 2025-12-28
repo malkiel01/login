@@ -31,16 +31,26 @@ class FileExplorer {
             <div class="file-explorer">
                 <div class="explorer-toolbar">
                     <div class="explorer-breadcrumb">
-                        <a onclick="window.explorer.goToRoot()"><i class="fas fa-home"></i></a>
+                        <a href="javascript:void(0)" onclick="window.explorer.goToRoot()"><i class="fas fa-home"></i></a>
                         <span class="breadcrumb-path"></span>
                     </div>
                     <div class="explorer-actions">
                         <button class="explorer-btn" onclick="window.explorer.refresh()" title="רענון">
                             <i class="fas fa-sync-alt"></i>
                         </button>
-                        <button class="explorer-btn" onclick="window.explorer.createFolder()" title="תיקייה חדשה">
-                            <i class="fas fa-folder-plus"></i>
-                        </button>
+
+                        <!-- תפריט נפתח -->
+                        <div class="explorer-dropdown">
+                            <button class="explorer-btn" onclick="window.explorer.toggleDropdown()" title="אפשרויות">
+                                <i class="fas fa-plus"></i> חדש <i class="fas fa-caret-down" style="margin-right: 5px;"></i>
+                            </button>
+                            <div class="explorer-dropdown-menu" id="explorerDropdownMenu">
+                                <a href="javascript:void(0)" onclick="window.explorer.createFolder(); window.explorer.closeDropdown();">
+                                    <i class="fas fa-folder-plus"></i> תיקייה חדשה
+                                </a>
+                            </div>
+                        </div>
+
                         <button class="explorer-btn primary" onclick="document.getElementById('explorerFileInput').click()" title="העלאת קובץ">
                             <i class="fas fa-upload"></i> העלאה
                         </button>
@@ -57,6 +67,27 @@ class FileExplorer {
 
         this.contentEl = this.container.querySelector('.explorer-content');
         this.breadcrumbEl = this.container.querySelector('.breadcrumb-path');
+
+        // סגור dropdown בלחיצה מחוץ
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.explorer-dropdown')) {
+                this.closeDropdown();
+            }
+        });
+    }
+
+    toggleDropdown() {
+        const menu = document.getElementById('explorerDropdownMenu');
+        if (menu) {
+            menu.classList.toggle('show');
+        }
+    }
+
+    closeDropdown() {
+        const menu = document.getElementById('explorerDropdownMenu');
+        if (menu) {
+            menu.classList.remove('show');
+        }
     }
 
     async loadFiles(path = '') {

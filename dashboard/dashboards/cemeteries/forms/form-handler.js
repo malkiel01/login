@@ -1381,14 +1381,14 @@ const FormHandler = {
             // טען JS ואתחל
             if (typeof FileExplorer !== 'undefined') {
                 // כבר נטען - אתחל ישירות
-                window.graveExplorer = new FileExplorer('graveExplorer', unicId);
+                window.explorer = new FileExplorer('graveExplorer', unicId);
                 console.log('✅ [Explorer] סייר קבצים אותחל');
             } else {
                 // טען את הסקריפט
                 const script = document.createElement('script');
                 script.src = '/dashboard/dashboards/cemeteries/explorer/explorer.js';
                 script.onload = () => {
-                    window.graveExplorer = new FileExplorer('graveExplorer', unicId);
+                    window.explorer = new FileExplorer('graveExplorer', unicId);
                     console.log('✅ [Explorer] סייר קבצים נטען ואותחל');
                 };
                 script.onerror = () => {

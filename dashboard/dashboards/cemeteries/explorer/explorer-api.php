@@ -177,8 +177,8 @@ try {
                 mkdir($fullPath, 0755, true);
             }
 
-            // ניקוי שם קובץ
-            $fileName = preg_replace('/[^a-zA-Z0-9\-_\.\u0590-\u05FF]/', '_', $file['name']);
+            // ניקוי שם קובץ - מאפשר עברית, אנגלית, מספרים, נקודות ומקפים
+            $fileName = preg_replace('/[^\p{Hebrew}a-zA-Z0-9\-_\.]/u', '_', $file['name']);
             $destPath = $fullPath . $fileName;
 
             // אם קובץ קיים, הוסף מספר
@@ -212,8 +212,13 @@ try {
                 throw new Exception('Folder name required');
             }
 
-            // ניקוי שם תיקייה
-            $folderName = preg_replace('/[^a-zA-Z0-9\-_\u0590-\u05FF ]/', '', $folderName);
+            // ניקוי שם תיקייה - מאפשר עברית, אנגלית, מספרים, רווחים ומקפים
+            $folderName = preg_replace('/[^\p{Hebrew}a-zA-Z0-9\-_ ]/u', '', $folderName);
+            $folderName = trim($folderName);
+
+            if (empty($folderName)) {
+                throw new Exception('Invalid folder name');
+            }
 
             if (!is_dir($fullPath)) {
                 mkdir($fullPath, 0755, true);

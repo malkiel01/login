@@ -1472,19 +1472,8 @@ async function renderPage(num) {
         const page = await pdfDoc.getPage(num);
         const viewport = page.getViewport({ scale: pdfScale });
 
-        // תמיכה במסכי Retina/HiDPI (מובייל)
-        const dpr = window.devicePixelRatio || 1;
-
-        canvas.width = viewport.width * dpr;
-        canvas.height = viewport.height * dpr;
-        canvas.style.width = viewport.width + 'px';
-        canvas.style.height = viewport.height + 'px';
-
-        // שמור את state של context לפני scale
-        ctx.save();
-
-        // התאם את ה-context ל-DPI (רק ל-PDF rendering)
-        ctx.scale(dpr, dpr);
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
 
         const renderContext = {
             canvasContext: ctx,
@@ -1492,9 +1481,6 @@ async function renderPage(num) {
         };
 
         await page.render(renderContext).promise;
-
-        // שחזר את ה-context (ביטול ה-scale)
-        ctx.restore();
 
         // רנדר לפי allItems (סדר השכבות)
         for (const item of allItems) {

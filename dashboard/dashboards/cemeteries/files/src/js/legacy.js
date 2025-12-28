@@ -81,10 +81,13 @@ canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
 canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
 canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
 
+// Flag למניעת כפילות touch/mouse
+let lastTouchTime = 0;
+
 // המרת touch event ל-mouse event
 function handleTouchStart(e) {
-    // מנע mouse events כפולים (הדפדפן יוצר אותם אוטומטית)
-    e.preventDefault();
+    // סמן שהיה touch event
+    lastTouchTime = Date.now();
 
     if (e.touches.length === 1) {
         const touch = e.touches[0];
@@ -96,13 +99,13 @@ function handleTouchStart(e) {
         });
         // העבר את preventDefault capability
         mouseEvent.originalEvent = e;
+        mouseEvent.isTouchEvent = true;
         handleCanvasMouseDown(mouseEvent);
     }
 }
 
 function handleTouchMove(e) {
-    // מנע mouse events כפולים
-    e.preventDefault();
+    lastTouchTime = Date.now();
 
     if (e.touches.length === 1) {
         const touch = e.touches[0];
@@ -113,19 +116,20 @@ function handleTouchMove(e) {
             cancelable: true
         });
         mouseEvent.originalEvent = e;
+        mouseEvent.isTouchEvent = true;
         handleCanvasMouseMove(mouseEvent);
     }
 }
 
 function handleTouchEnd(e) {
-    // מנע mouse events כפולים
-    e.preventDefault();
+    lastTouchTime = Date.now();
 
     const mouseEvent = new MouseEvent('mouseup', {
         bubbles: true,
         cancelable: true
     });
     mouseEvent.originalEvent = e;
+    mouseEvent.isTouchEvent = true;
     handleCanvasMouseUp(mouseEvent);
 }
 
@@ -470,6 +474,11 @@ function scheduleRender() {
 let collapsedStates = {}; // { 'text-1': true, 'image-2': false, ... }
 
 async function handleCanvasMouseDown(e) {
+    // מנע mouse events כפולים: אם היה touch לפני 500ms, דלג
+    if (!e.isTouchEvent && Date.now() - lastTouchTime < 500) {
+        return;
+    }
+
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -602,6 +611,11 @@ async function handleCanvasMouseDown(e) {
 }
 
 function handleCanvasMouseMove(e) {
+    // מנע mouse events כפולים: אם היה touch לפני 500ms, דלג
+    if (!e.isTouchEvent && Date.now() - lastTouchTime < 500) {
+        return;
+    }
+
     // מניעת scroll במובייל במהלך גרירה
     if (e.cancelable && (draggingTextId !== null || draggingImageId !== null || resizingImageCorner !== null || resizingCorner !== null)) {
         e.preventDefault();
@@ -752,7 +766,12 @@ function handleCanvasMouseMove(e) {
     canvas.style.cursor = 'grab';
 }
 
-function handleCanvasMouseUp() {
+function handleCanvasMouseUp(e) {
+    // מנע mouse events כפולים: אם היה touch לפני 500ms, דלג
+    if (e && !e.isTouchEvent && Date.now() - lastTouchTime < 500) {
+        return;
+    }
+
     draggingTextId = null;
     draggingImageId = null;
     resizingCorner = null;

@@ -412,12 +412,17 @@ $explorerHTML = '
 <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/explorer/explorer.css">
 <script src="/dashboard/dashboards/cemeteries/explorer/explorer.js"></script>
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        // אתחול הסייר עם ה-unicId של הקבר
-        setTimeout(function() {
+    // אתחול מיידי - הטופס נטען דינמית
+    (function initExplorer() {
+        var container = document.getElementById("graveExplorer");
+        if (container && typeof FileExplorer !== "undefined") {
+            console.log("Initializing FileExplorer for grave: ' . htmlspecialchars($grave['unicId']) . '");
             window.explorer = new FileExplorer("graveExplorer", "' . htmlspecialchars($grave['unicId']) . '");
-        }, 100);
-    });
+        } else {
+            // נסה שוב אחרי 100ms
+            setTimeout(initExplorer, 100);
+        }
+    })();
 </script>
 ';
 $formBuilder->addCustomHTML($explorerHTML);

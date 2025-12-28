@@ -71,9 +71,54 @@ function updateZoom() {
 const canvas = document.getElementById('pdfCanvas');
 const ctx = canvas.getContext('2d');
 
+// Mouse events
 canvas.addEventListener('mousedown', handleCanvasMouseDown);
 canvas.addEventListener('mousemove', handleCanvasMouseMove);
 canvas.addEventListener('mouseup', handleCanvasMouseUp);
+
+// Touch events למובייל
+canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+
+// המרת touch event ל-mouse event
+function handleTouchStart(e) {
+    if (e.touches.length === 1) {
+        const touch = e.touches[0];
+        const mouseEvent = new MouseEvent('mousedown', {
+            clientX: touch.clientX,
+            clientY: touch.clientY,
+            bubbles: true,
+            cancelable: true
+        });
+        // העבר את preventDefault capability
+        mouseEvent.originalEvent = e;
+        handleCanvasMouseDown(mouseEvent);
+    }
+}
+
+function handleTouchMove(e) {
+    if (e.touches.length === 1) {
+        const touch = e.touches[0];
+        const mouseEvent = new MouseEvent('mousemove', {
+            clientX: touch.clientX,
+            clientY: touch.clientY,
+            bubbles: true,
+            cancelable: true
+        });
+        mouseEvent.originalEvent = e;
+        handleCanvasMouseMove(mouseEvent);
+    }
+}
+
+function handleTouchEnd(e) {
+    const mouseEvent = new MouseEvent('mouseup', {
+        bubbles: true,
+        cancelable: true
+    });
+    mouseEvent.originalEvent = e;
+    handleCanvasMouseUp(mouseEvent);
+}
 
 // ===============================
 // תמונות על הקנבס
@@ -449,6 +494,10 @@ async function handleCanvasMouseDown(e) {
                 if (e.cancelable) {
                     e.preventDefault();
                 }
+                // מנע scroll גם ב-touch events
+                if (e.originalEvent && e.originalEvent.cancelable) {
+                    e.originalEvent.preventDefault();
+                }
                 return;
             }
         }
@@ -474,6 +523,10 @@ async function handleCanvasMouseDown(e) {
                 if (e.cancelable) {
                     e.preventDefault();
                 }
+                // מנע scroll גם ב-touch events
+                if (e.originalEvent && e.originalEvent.cancelable) {
+                    e.originalEvent.preventDefault();
+                }
                 return;
             }
         }
@@ -495,6 +548,10 @@ async function handleCanvasMouseDown(e) {
         // מנע scroll כשגוררים תמונה
         if (e.cancelable) {
             e.preventDefault();
+        }
+        // מנע scroll גם ב-touch events
+        if (e.originalEvent && e.originalEvent.cancelable) {
+            e.originalEvent.preventDefault();
         }
 
         renderPage(currentPageNum);
@@ -518,6 +575,10 @@ async function handleCanvasMouseDown(e) {
         if (e.cancelable) {
             e.preventDefault();
         }
+        // מנע scroll גם ב-touch events
+        if (e.originalEvent && e.originalEvent.cancelable) {
+            e.originalEvent.preventDefault();
+        }
 
         renderPage(currentPageNum);
     } else {
@@ -531,8 +592,12 @@ async function handleCanvasMouseDown(e) {
 
 function handleCanvasMouseMove(e) {
     // מניעת scroll במובייל במהלך גרירה
-    if (e.cancelable && (draggingTextId !== null || selectedImageId !== null || resizingImageCorner !== null)) {
+    if (e.cancelable && (draggingTextId !== null || draggingImageId !== null || resizingImageCorner !== null || resizingCorner !== null)) {
         e.preventDefault();
+    }
+    // מנע scroll גם ב-touch events
+    if (e.originalEvent && e.originalEvent.cancelable && (draggingTextId !== null || draggingImageId !== null || resizingImageCorner !== null || resizingCorner !== null)) {
+        e.originalEvent.preventDefault();
     }
 
     const rect = canvas.getBoundingClientRect();

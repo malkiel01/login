@@ -83,6 +83,9 @@ canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
 
 // המרת touch event ל-mouse event
 function handleTouchStart(e) {
+    // מנע mouse events כפולים (הדפדפן יוצר אותם אוטומטית)
+    e.preventDefault();
+
     if (e.touches.length === 1) {
         const touch = e.touches[0];
         const mouseEvent = new MouseEvent('mousedown', {
@@ -98,6 +101,9 @@ function handleTouchStart(e) {
 }
 
 function handleTouchMove(e) {
+    // מנע mouse events כפולים
+    e.preventDefault();
+
     if (e.touches.length === 1) {
         const touch = e.touches[0];
         const mouseEvent = new MouseEvent('mousemove', {
@@ -112,6 +118,9 @@ function handleTouchMove(e) {
 }
 
 function handleTouchEnd(e) {
+    // מנע mouse events כפולים
+    e.preventDefault();
+
     const mouseEvent = new MouseEvent('mouseup', {
         bubbles: true,
         cancelable: true

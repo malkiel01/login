@@ -414,11 +414,6 @@ function scheduleRender() {
 let collapsedStates = {}; // { 'text-1': true, 'image-2': false, ... }
 
 async function handleCanvasMouseDown(e) {
-    // מניעת scroll במובייל במהלך גרירה
-    if (e.cancelable) {
-        e.preventDefault();
-    }
-
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -429,13 +424,16 @@ async function handleCanvasMouseDown(e) {
     const canvasX = x * scaleX;
     const canvasY = y * scaleY;
 
+    let shouldPreventDefault = false;  // דגל למניעת scroll
+
     // בדוק אם לחצנו על פינה של תמונה נבחרת
     if (selectedImageId !== null) {
         const selectedImage = imageItems.find(img => img.id === selectedImageId);
         if (selectedImage) {
             const corner = findImageCornerAtPosition(canvasX, canvasY, selectedImage);
-            
+
             if (corner) {
+                shouldPreventDefault = true;  // מנע scroll - אנחנו ב-resize
                 resizingImageCorner = corner;
                 resizeStartX = canvasX;
                 resizeStartY = canvasY;
@@ -446,11 +444,16 @@ async function handleCanvasMouseDown(e) {
                 dragStartLeft = parseFloat(selectedImage.left);  // ← הוסף!
                 dragStartTop = parseFloat(selectedImage.top);     // ← הוסף!
                 canvas.style.cursor = 'nwse-resize';
+
+                // מנע scroll כשגוררים פינה
+                if (e.cancelable) {
+                    e.preventDefault();
+                }
                 return;
             }
         }
     }
-    
+
     // בדוק אם לחצנו על פינה של טקסט נבחר
     if (selectedTextId !== null) {
         const selectedItem = textItems.find(t => t.id === selectedTextId);
@@ -458,13 +461,19 @@ async function handleCanvasMouseDown(e) {
             const page = await pdfDoc.getPage(currentPageNum);
             const viewport = page.getViewport({ scale: pdfScale });
             const corner = findCornerAtPosition(canvasX, canvasY, selectedItem, viewport);
-            
+
             if (corner) {
+                shouldPreventDefault = true;  // מנע scroll - אנחנו ב-resize
                 resizingCorner = corner;
                 resizeStartSize = parseInt(selectedItem.size);
                 resizeStartX = canvasX;
                 resizeStartY = canvasY;
                 canvas.style.cursor = 'nwse-resize';
+
+                // מנע scroll כשגוררים פינה
+                if (e.cancelable) {
+                    e.preventDefault();
+                }
                 return;
             }
         }
@@ -473,6 +482,7 @@ async function handleCanvasMouseDown(e) {
     // בדוק אם לחצנו על תמונה
     const clickedImage = findImageAtPosition(canvasX, canvasY);
     if (clickedImage) {
+        shouldPreventDefault = true;  // מנע scroll - אנחנו גוררים תמונה
         selectedImageId = clickedImage.id;
         selectedTextId = null;
         draggingImageId = clickedImage.id;
@@ -481,13 +491,20 @@ async function handleCanvasMouseDown(e) {
         dragStartTop = clickedImage.top;
         dragStartLeft = clickedImage.left;  // ← וודא שזה קיים!
         canvas.style.cursor = 'grabbing';
+
+        // מנע scroll כשגוררים תמונה
+        if (e.cancelable) {
+            e.preventDefault();
+        }
+
         renderPage(currentPageNum);
         return;
     }
-    
+
     // בדוק אם לחצנו על טקסט
     const clickedText = findTextAtPosition(canvasX, canvasY);
     if (clickedText) {
+        shouldPreventDefault = true;  // מנע scroll - אנחנו גוררים טקסט
         selectedTextId = clickedText.id;
         selectedImageId = null;  // בטל בחירת תמונה
         draggingTextId = clickedText.id;
@@ -496,11 +513,19 @@ async function handleCanvasMouseDown(e) {
         dragStartTop = clickedText.top;
         dragStartRight = clickedText.right;
         canvas.style.cursor = 'grabbing';
+
+        // מנע scroll כשגוררים טקסט
+        if (e.cancelable) {
+            e.preventDefault();
+        }
+
         renderPage(currentPageNum);
     } else {
+        // לחצנו על רקע - בטל בחירה ואפשר scroll
         selectedTextId = null;
         selectedImageId = null;
         renderPage(currentPageNum);
+        // לא עושים preventDefault() - מאפשרים scroll רגיל!
     }
 }
 
@@ -1440,21 +1465,29 @@ async function renderPage(num) {
         pageNumPending = num;
         return;
     }
-    
+
     pageRendering = true;
-    
+
     try {
         const page = await pdfDoc.getPage(num);
         const viewport = page.getViewport({ scale: pdfScale });
-        
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-        
+
+        // תמיכה במסכי Retina/HiDPI (מובייל)
+        const dpr = window.devicePixelRatio || 1;
+
+        canvas.width = viewport.width * dpr;
+        canvas.height = viewport.height * dpr;
+        canvas.style.width = viewport.width + 'px';
+        canvas.style.height = viewport.height + 'px';
+
+        // התאם את ה-context ל-DPI
+        ctx.scale(dpr, dpr);
+
         const renderContext = {
             canvasContext: ctx,
             viewport: viewport,
         };
-        
+
         await page.render(renderContext).promise;
         
         // רנדר לפי allItems (סדר השכבות)

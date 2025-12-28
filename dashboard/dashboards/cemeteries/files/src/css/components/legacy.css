@@ -421,7 +421,6 @@ input[type="file"] {
 #pdfCanvas {
     display: block;
     cursor: grab;
-    touch-action: none;  /* מניעת scroll במובייל במהלך גרירה */
 }
 
 #pdfCanvas:active {

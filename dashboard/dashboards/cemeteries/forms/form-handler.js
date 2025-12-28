@@ -1354,6 +1354,7 @@ const FormHandler = {
             setupGraveCardButtons(modal, currentGrave);
 
             // אתחול סייר קבצים
+            console.log('🔵 [GraveCard] מנסה לאתחל סייר קבצים...');
             initFileExplorer(modal, currentGrave.unicId);
         });
 

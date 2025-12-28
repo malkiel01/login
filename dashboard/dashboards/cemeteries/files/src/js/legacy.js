@@ -386,33 +386,35 @@ function findImageCornerAtPosition(x, y, imageItem) {
     const imgY = parseFloat(imageItem.top) * pdfScale;
     const imgWidth = parseFloat(imageItem.width) * pdfScale;
     const imgHeight = parseFloat(imageItem.height) * pdfScale;
-    
-    const hitSize = 12;
-    
+
+    // אזור לחיצה גדול יותר במובייל
+    const isMobile = 'ontouchstart' in window;
+    const hitSize = isMobile ? 30 : 12;
+
     // פינה ימנית תחתונה (resize)
-    if (Math.abs(x - (imgX + imgWidth)) < hitSize && 
+    if (Math.abs(x - (imgX + imgWidth)) < hitSize &&
         Math.abs(y - (imgY + imgHeight)) < hitSize) {
         return 'bottom-right';
     }
-    
+
     // פינה שמאלית תחתונה
-    if (Math.abs(x - imgX) < hitSize && 
+    if (Math.abs(x - imgX) < hitSize &&
         Math.abs(y - (imgY + imgHeight)) < hitSize) {
         return 'bottom-left';
     }
-    
+
     // פינה ימנית עליונה
-    if (Math.abs(x - (imgX + imgWidth)) < hitSize && 
+    if (Math.abs(x - (imgX + imgWidth)) < hitSize &&
         Math.abs(y - imgY) < hitSize) {
         return 'top-right';
     }
-    
+
     // פינה שמאלית עליונה
-    if (Math.abs(x - imgX) < hitSize && 
+    if (Math.abs(x - imgX) < hitSize &&
         Math.abs(y - imgY) < hitSize) {
         return 'top-left';
     }
-    
+
     return null;
 }
 
@@ -914,10 +916,12 @@ function findCornerAtPosition(x, y, item, viewport) {
     
     boxTop = textY - fontSize * 1.1;
     boxBottom = textY + fontSize * 0.2;
-    
+
     const cornerSize = 8;
-    const hitSize = 12;  // אזור לחיצה גדול יותר
-    
+    // אזור לחיצה גדול יותר במובייל
+    const isMobile = 'ontouchstart' in window;
+    const hitSize = isMobile ? 30 : 12;
+
     // בדוק כל פינה
     if (Math.abs(x - boxRight) < hitSize && Math.abs(y - boxTop) < hitSize) {
         return 'top-right';
@@ -931,7 +935,7 @@ function findCornerAtPosition(x, y, item, viewport) {
     if (Math.abs(x - boxLeft) < hitSize && Math.abs(y - boxBottom) < hitSize) {
         return 'bottom-left';
     }
-    
+
     return null;
 }
 

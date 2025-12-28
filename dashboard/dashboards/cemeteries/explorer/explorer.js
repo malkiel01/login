@@ -34,17 +34,17 @@ class FileExplorer {
             <div class="file-explorer">
                 <div class="explorer-toolbar">
                     <div class="explorer-breadcrumb">
-                        <a href="javascript:void(0)" onclick="window.explorer.goToRoot()"><i class="fas fa-home"></i></a>
+                        <span class="breadcrumb-home" onclick="window.explorer.goToRoot()"><i class="fas fa-home"></i></span>
                         <span class="breadcrumb-path"></span>
                     </div>
                     <div class="explorer-actions">
-                        <button class="explorer-btn" onclick="window.explorer.refresh()" title="רענון">
+                        <button type="button" class="explorer-btn" onclick="window.explorer.refresh()" title="רענון">
                             <i class="fas fa-sync-alt"></i>
                         </button>
 
                         <!-- תפריט מיון -->
                         <div class="explorer-dropdown">
-                            <button class="explorer-btn" onclick="window.explorer.toggleDropdown('sortMenu')" title="מיון">
+                            <button type="button" class="explorer-btn" onclick="window.explorer.toggleDropdown('sortMenu')" title="מיון">
                                 <i class="fas fa-sort"></i> מיון <i class="fas fa-caret-down" style="margin-right: 5px;"></i>
                             </button>
                             <div class="explorer-dropdown-menu" id="sortMenu">
@@ -73,7 +73,7 @@ class FileExplorer {
 
                         <!-- תפריט חדש -->
                         <div class="explorer-dropdown">
-                            <button class="explorer-btn" onclick="window.explorer.toggleDropdown('newMenu')" title="יצירה">
+                            <button type="button" class="explorer-btn" onclick="window.explorer.toggleDropdown('newMenu')" title="יצירה">
                                 <i class="fas fa-plus"></i> חדש <i class="fas fa-caret-down" style="margin-right: 5px;"></i>
                             </button>
                             <div class="explorer-dropdown-menu" id="newMenu">
@@ -83,7 +83,7 @@ class FileExplorer {
                             </div>
                         </div>
 
-                        <button class="explorer-btn primary" onclick="document.getElementById('explorerFileInput').click()" title="העלאת קובץ">
+                        <button type="button" class="explorer-btn primary" onclick="document.getElementById('explorerFileInput').click()" title="העלאת קובץ">
                             <i class="fas fa-upload"></i> העלאה
                         </button>
                         <input type="file" id="explorerFileInput" class="explorer-file-input" multiple onchange="window.explorer.handleFileSelect(event)">
@@ -255,17 +255,28 @@ class FileExplorer {
 
     updateBreadcrumb(parts) {
         if (!parts || parts.length === 0) {
-            this.breadcrumbEl.innerHTML = '<span class="separator">/</span> שורש';
+            this.breadcrumbEl.innerHTML = '<span class="breadcrumb-current">שורש</span>';
             return;
         }
 
         let html = '';
         let path = '';
 
+        // קישור לשורש
+        html += `<span class="breadcrumb-separator">/</span>`;
+        html += `<a href="javascript:void(0)" class="breadcrumb-link" onclick="window.explorer.goToRoot()">שורש</a>`;
+
         parts.forEach((part, index) => {
             path += (index > 0 ? '/' : '') + part;
-            html += `<span class="separator">/</span>`;
-            html += `<a onclick="window.explorer.loadFiles('${path}')">${part}</a>`;
+            html += `<span class="breadcrumb-separator">/</span>`;
+
+            if (index === parts.length - 1) {
+                // האחרון - לא לחיץ
+                html += `<span class="breadcrumb-current">${part}</span>`;
+            } else {
+                // לחיץ
+                html += `<a href="javascript:void(0)" class="breadcrumb-link" onclick="window.explorer.loadFiles('${path}')">${part}</a>`;
+            }
         });
 
         this.breadcrumbEl.innerHTML = html;

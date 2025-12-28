@@ -272,6 +272,136 @@ try {
             ]);
             break;
 
+        case 'rename':
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new Exception('POST method required');
+            }
+
+            $input = json_decode(file_get_contents('php://input'), true);
+            $oldPath = $input['oldPath'] ?? null;
+            $newName = $input['newName'] ?? null;
+
+            if (!$oldPath || !$newName) {
+                throw new Exception('Old path and new name required');
+            }
+
+            $oldPath = str_replace(['..', '\\'], '', $oldPath);
+            $fullOldPath = $basePath . $oldPath;
+
+            if (!file_exists($fullOldPath)) {
+                throw new Exception('File or folder not found');
+            }
+
+            // ניקוי שם חדש
+            $newName = preg_replace('/[^\p{Hebrew}a-zA-Z0-9\-_\. ]/u', '', $newName);
+            $newName = trim($newName);
+
+            if (empty($newName)) {
+                throw new Exception('Invalid new name');
+            }
+
+            // בנה נתיב חדש
+            $parentDir = dirname($fullOldPath);
+            $fullNewPath = $parentDir . '/' . $newName;
+
+            if (file_exists($fullNewPath)) {
+                throw new Exception('A file with this name already exists');
+            }
+
+            if (!rename($fullOldPath, $fullNewPath)) {
+                throw new Exception('Failed to rename');
+            }
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Renamed successfully'
+            ]);
+            break;
+
+        case 'copy':
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new Exception('POST method required');
+            }
+
+            $input = json_decode(file_get_contents('php://input'), true);
+            $sourcePath = $input['sourcePath'] ?? null;
+            $destPath = $input['destPath'] ?? '';
+
+            if (!$sourcePath) {
+                throw new Exception('Source path required');
+            }
+
+            $sourcePath = str_replace(['..', '\\'], '', $sourcePath);
+            $destPath = str_replace(['..', '\\'], '', $destPath);
+
+            $fullSourcePath = $basePath . $sourcePath;
+            $fullDestPath = $basePath . ($destPath ? $destPath . '/' : '') . basename($sourcePath);
+
+            if (!file_exists($fullSourcePath)) {
+                throw new Exception('Source not found');
+            }
+
+            // יצירת שם ייחודי אם כבר קיים
+            $counter = 1;
+            $originalDestPath = $fullDestPath;
+            while (file_exists($fullDestPath)) {
+                $info = pathinfo($originalDestPath);
+                $fullDestPath = $info['dirname'] . '/' . $info['filename'] . '_' . $counter;
+                if (isset($info['extension'])) {
+                    $fullDestPath .= '.' . $info['extension'];
+                }
+                $counter++;
+            }
+
+            if (is_dir($fullSourcePath)) {
+                copyDirectory($fullSourcePath, $fullDestPath);
+            } else {
+                copy($fullSourcePath, $fullDestPath);
+            }
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Copied successfully'
+            ]);
+            break;
+
+        case 'move':
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new Exception('POST method required');
+            }
+
+            $input = json_decode(file_get_contents('php://input'), true);
+            $sourcePath = $input['sourcePath'] ?? null;
+            $destPath = $input['destPath'] ?? '';
+
+            if (!$sourcePath) {
+                throw new Exception('Source path required');
+            }
+
+            $sourcePath = str_replace(['..', '\\'], '', $sourcePath);
+            $destPath = str_replace(['..', '\\'], '', $destPath);
+
+            $fullSourcePath = $basePath . $sourcePath;
+            $fullDestPath = $basePath . ($destPath ? $destPath . '/' : '') . basename($sourcePath);
+
+            if (!file_exists($fullSourcePath)) {
+                throw new Exception('Source not found');
+            }
+
+            if (file_exists($fullDestPath)) {
+                throw new Exception('A file with this name already exists in destination');
+            }
+
+            if (!rename($fullSourcePath, $fullDestPath)) {
+                throw new Exception('Failed to move');
+            }
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Moved successfully'
+            ]);
+            break;
+
         default:
             throw new Exception('Unknown action: ' . $action);
     }
@@ -296,4 +426,27 @@ function deleteDirectory($dir) {
         is_dir($path) ? deleteDirectory($path) : unlink($path);
     }
     rmdir($dir);
+}
+
+/**
+ * העתקת תיקייה רקורסיבית
+ */
+function copyDirectory($src, $dst) {
+    $dir = opendir($src);
+    @mkdir($dst, 0755, true);
+
+    while (($file = readdir($dir)) !== false) {
+        if ($file == '.' || $file == '..') continue;
+
+        $srcPath = $src . '/' . $file;
+        $dstPath = $dst . '/' . $file;
+
+        if (is_dir($srcPath)) {
+            copyDirectory($srcPath, $dstPath);
+        } else {
+            copy($srcPath, $dstPath);
+        }
+    }
+
+    closedir($dir);
 }

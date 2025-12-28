@@ -34,7 +34,7 @@ class FileExplorer {
             <div class="file-explorer">
                 <div class="explorer-toolbar">
                     <div class="explorer-breadcrumb">
-                        <span class="breadcrumb-home" onclick="window.explorer.goToRoot()"><i class="fas fa-home"></i></span>
+                        <span class="breadcrumb-home" onclick="window.explorer.goToRoot()" title="חזרה לשורש"><i class="fas fa-folder-open"></i></span>
                         <span class="breadcrumb-path"></span>
                     </div>
                     <div class="explorer-actions">
@@ -215,16 +215,17 @@ class FileExplorer {
     renderItem(item) {
         const icon = this.getIcon(item);
         const thumb = item.isImage ? `<img src="${item.thumbUrl}" alt="${item.name}">` : `<i class="${icon}"></i>`;
+        const escapedPath = item.path.replace(/'/g, "\\'");
+        const escapedName = item.name.replace(/'/g, "\\'");
 
         return `
             <div class="explorer-item"
                  data-path="${item.path}"
+                 data-name="${item.name}"
                  data-is-dir="${item.isDir}"
                  onclick="window.explorer.selectItem(this)"
-                 ondblclick="window.explorer.openItem('${item.path}', ${item.isDir})">
-                <button class="explorer-item-delete" onclick="event.stopPropagation(); window.explorer.deleteItem('${item.path}')" title="מחיקה">
-                    <i class="fas fa-times"></i>
-                </button>
+                 ondblclick="window.explorer.openItem('${escapedPath}', ${item.isDir})"
+                 oncontextmenu="window.explorer.showContextMenu(event, '${escapedPath}', '${escapedName}', ${item.isDir})">
                 <div class="explorer-item-icon">
                     ${thumb}
                 </div>
@@ -255,7 +256,7 @@ class FileExplorer {
 
     updateBreadcrumb(parts) {
         if (!parts || parts.length === 0) {
-            this.breadcrumbEl.innerHTML = '<span class="breadcrumb-current">שורש</span>';
+            this.breadcrumbEl.innerHTML = '';
             return;
         }
 
@@ -263,19 +264,19 @@ class FileExplorer {
         let path = '';
 
         // קישור לשורש
-        html += `<span class="breadcrumb-separator">/</span>`;
-        html += `<a href="javascript:void(0)" class="breadcrumb-link" onclick="window.explorer.goToRoot()">שורש</a>`;
+        html += `<span class="breadcrumb-separator">›</span>`;
+        html += `<a href="javascript:void(0)" class="breadcrumb-link" onclick="window.explorer.goToRoot()"><i class="fas fa-folder breadcrumb-folder-icon"></i>שורש</a>`;
 
         parts.forEach((part, index) => {
             path += (index > 0 ? '/' : '') + part;
-            html += `<span class="breadcrumb-separator">/</span>`;
+            html += `<span class="breadcrumb-separator">›</span>`;
 
             if (index === parts.length - 1) {
                 // האחרון - לא לחיץ
-                html += `<span class="breadcrumb-current">${part}</span>`;
+                html += `<span class="breadcrumb-current"><i class="fas fa-folder-open breadcrumb-folder-icon"></i>${part}</span>`;
             } else {
                 // לחיץ
-                html += `<a href="javascript:void(0)" class="breadcrumb-link" onclick="window.explorer.loadFiles('${path}')">${part}</a>`;
+                html += `<a href="javascript:void(0)" class="breadcrumb-link" onclick="window.explorer.loadFiles('${path}')"><i class="fas fa-folder breadcrumb-folder-icon"></i>${part}</a>`;
             }
         });
 
@@ -497,6 +498,130 @@ class FileExplorer {
                 <p>${message}</p>
             </div>
         `;
+    }
+
+    // ========================================
+    // תפריט קונטקסט (לחיצה ימנית)
+    // ========================================
+
+    showContextMenu(event, path, name, isDir) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        // הסר תפריט קודם אם קיים
+        this.hideContextMenu();
+
+        const menu = document.createElement('div');
+        menu.className = 'explorer-context-menu';
+        menu.id = 'explorerContextMenu';
+        menu.innerHTML = `
+            <a href="javascript:void(0)" onclick="window.explorer.copyItem('${path}')">
+                <i class="fas fa-copy"></i> העתק
+            </a>
+            <a href="javascript:void(0)" onclick="window.explorer.cutItem('${path}')">
+                <i class="fas fa-cut"></i> גזור
+            </a>
+            <hr>
+            <a href="javascript:void(0)" onclick="window.explorer.renameItem('${path}', '${name}')">
+                <i class="fas fa-edit"></i> שנה שם
+            </a>
+            <hr>
+            <a href="javascript:void(0)" class="danger" onclick="window.explorer.deleteItem('${path}')">
+                <i class="fas fa-trash"></i> מחק
+            </a>
+        `;
+
+        // מיקום התפריט
+        menu.style.left = event.clientX + 'px';
+        menu.style.top = event.clientY + 'px';
+
+        document.body.appendChild(menu);
+
+        // סגור בלחיצה מחוץ לתפריט
+        setTimeout(() => {
+            document.addEventListener('click', this.hideContextMenu);
+            document.addEventListener('contextmenu', this.hideContextMenu);
+        }, 10);
+    }
+
+    hideContextMenu() {
+        const menu = document.getElementById('explorerContextMenu');
+        if (menu) {
+            menu.remove();
+        }
+        document.removeEventListener('click', window.explorer?.hideContextMenu);
+        document.removeEventListener('contextmenu', window.explorer?.hideContextMenu);
+    }
+
+    copyItem(path) {
+        this.clipboard = { path, action: 'copy' };
+        this.hideContextMenu();
+        console.log('📋 הועתק:', path);
+    }
+
+    cutItem(path) {
+        this.clipboard = { path, action: 'cut' };
+        this.hideContextMenu();
+        console.log('✂️ נגזר:', path);
+    }
+
+    async renameItem(path, currentName) {
+        this.hideContextMenu();
+
+        const newName = prompt('שם חדש:', currentName);
+        if (!newName || newName === currentName) return;
+
+        try {
+            const response = await fetch(`${this.apiBase}?action=rename&unicId=${this.unicId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ oldPath: path, newName })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                this.refresh();
+            } else {
+                alert('שגיאה: ' + result.error);
+            }
+        } catch (error) {
+            console.error('Error renaming item:', error);
+            alert('שגיאה בשינוי שם');
+        }
+    }
+
+    async pasteItem() {
+        if (!this.clipboard) {
+            alert('אין פריט בלוח');
+            return;
+        }
+
+        try {
+            const action = this.clipboard.action === 'cut' ? 'move' : 'copy';
+            const response = await fetch(`${this.apiBase}?action=${action}&unicId=${this.unicId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    sourcePath: this.clipboard.path,
+                    destPath: this.currentPath
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                if (this.clipboard.action === 'cut') {
+                    this.clipboard = null;
+                }
+                this.refresh();
+            } else {
+                alert('שגיאה: ' + result.error);
+            }
+        } catch (error) {
+            console.error('Error pasting item:', error);
+            alert('שגיאה בהדבקה');
+        }
     }
 }
 

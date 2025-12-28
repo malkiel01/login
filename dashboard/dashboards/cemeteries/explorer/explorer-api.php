@@ -34,8 +34,8 @@ try {
         throw new Exception('unicId is required');
     }
 
-    // ניקוי unicId מתווים מסוכנים
-    $unicId = preg_replace('/[^a-zA-Z0-9\-_]/', '', $unicId);
+    // ניקוי unicId מתווים מסוכנים (מאפשר אותיות, מספרים, קו תחתי, מקף ונקודה)
+    $unicId = preg_replace('/[^a-zA-Z0-9\-_\.]/', '', $unicId);
     if (empty($unicId)) {
         throw new Exception('Invalid unicId');
     }
@@ -84,7 +84,7 @@ try {
                 // תצוגה מקדימה לתמונות
                 if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif'])) {
                     $item['isImage'] = true;
-                    $item['thumbUrl'] = "explorer-api.php?action=thumb&unicId={$unicId}&path=" . urlencode($item['path']);
+                    $item['thumbUrl'] = "/dashboard/dashboards/cemeteries/explorer/explorer-api.php?action=thumb&unicId={$unicId}&path=" . urlencode($item['path']);
                 }
 
                 $items[] = $item;

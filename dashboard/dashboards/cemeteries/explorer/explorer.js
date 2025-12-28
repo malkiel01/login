@@ -11,6 +11,9 @@ class FileExplorer {
         this.items = [];
         this.selectedItem = null;
         this.apiBase = options.apiBase || '/dashboard/dashboards/cemeteries/explorer/explorer-api.php';
+        this.sortBy = 'name'; // name, date, size
+        this.sortOrder = 'asc'; // asc, desc
+        this.uploadingCount = 0;
 
         if (!this.container) {
             console.error('Explorer container not found:', containerId);
@@ -39,13 +42,42 @@ class FileExplorer {
                             <i class="fas fa-sync-alt"></i>
                         </button>
 
-                        <!-- תפריט נפתח -->
+                        <!-- תפריט מיון -->
                         <div class="explorer-dropdown">
-                            <button class="explorer-btn" onclick="window.explorer.toggleDropdown()" title="אפשרויות">
+                            <button class="explorer-btn" onclick="window.explorer.toggleDropdown('sortMenu')" title="מיון">
+                                <i class="fas fa-sort"></i> מיון <i class="fas fa-caret-down" style="margin-right: 5px;"></i>
+                            </button>
+                            <div class="explorer-dropdown-menu" id="sortMenu">
+                                <a href="javascript:void(0)" onclick="window.explorer.setSort('name', 'asc')">
+                                    <i class="fas fa-sort-alpha-down"></i> שם (א-ת)
+                                </a>
+                                <a href="javascript:void(0)" onclick="window.explorer.setSort('name', 'desc')">
+                                    <i class="fas fa-sort-alpha-up"></i> שם (ת-א)
+                                </a>
+                                <hr>
+                                <a href="javascript:void(0)" onclick="window.explorer.setSort('date', 'desc')">
+                                    <i class="fas fa-clock"></i> חדש ביותר
+                                </a>
+                                <a href="javascript:void(0)" onclick="window.explorer.setSort('date', 'asc')">
+                                    <i class="fas fa-history"></i> ישן ביותר
+                                </a>
+                                <hr>
+                                <a href="javascript:void(0)" onclick="window.explorer.setSort('size', 'desc')">
+                                    <i class="fas fa-weight"></i> גדול ביותר
+                                </a>
+                                <a href="javascript:void(0)" onclick="window.explorer.setSort('size', 'asc')">
+                                    <i class="fas fa-feather"></i> קטן ביותר
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- תפריט חדש -->
+                        <div class="explorer-dropdown">
+                            <button class="explorer-btn" onclick="window.explorer.toggleDropdown('newMenu')" title="יצירה">
                                 <i class="fas fa-plus"></i> חדש <i class="fas fa-caret-down" style="margin-right: 5px;"></i>
                             </button>
-                            <div class="explorer-dropdown-menu" id="explorerDropdownMenu">
-                                <a href="javascript:void(0)" onclick="window.explorer.createFolder(); window.explorer.closeDropdown();">
+                            <div class="explorer-dropdown-menu" id="newMenu">
+                                <a href="javascript:void(0)" onclick="window.explorer.createFolder(); window.explorer.closeAllDropdowns();">
                                     <i class="fas fa-folder-plus"></i> תיקייה חדשה
                                 </a>
                             </div>
@@ -57,6 +89,13 @@ class FileExplorer {
                         <input type="file" id="explorerFileInput" class="explorer-file-input" multiple onchange="window.explorer.handleFileSelect(event)">
                     </div>
                 </div>
+
+                <!-- אינדיקטור העלאה -->
+                <div class="explorer-upload-indicator" id="uploadIndicator" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <span>מעלה קבצים... <span id="uploadCount">0</span></span>
+                </div>
+
                 <div class="explorer-content">
                     <div class="explorer-loading">
                         <i class="fas fa-spinner"></i>
@@ -67,27 +106,68 @@ class FileExplorer {
 
         this.contentEl = this.container.querySelector('.explorer-content');
         this.breadcrumbEl = this.container.querySelector('.breadcrumb-path');
+        this.uploadIndicator = this.container.querySelector('#uploadIndicator');
+        this.uploadCountEl = this.container.querySelector('#uploadCount');
 
-        // סגור dropdown בלחיצה מחוץ
+        // סגור dropdowns בלחיצה מחוץ
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.explorer-dropdown')) {
-                this.closeDropdown();
+                this.closeAllDropdowns();
             }
         });
     }
 
-    toggleDropdown() {
-        const menu = document.getElementById('explorerDropdownMenu');
+    toggleDropdown(menuId) {
+        // סגור כל התפריטים האחרים
+        this.container.querySelectorAll('.explorer-dropdown-menu').forEach(menu => {
+            if (menu.id !== menuId) {
+                menu.classList.remove('show');
+            }
+        });
+        // פתח/סגור את התפריט הנוכחי
+        const menu = document.getElementById(menuId);
         if (menu) {
             menu.classList.toggle('show');
         }
     }
 
-    closeDropdown() {
-        const menu = document.getElementById('explorerDropdownMenu');
-        if (menu) {
+    closeAllDropdowns() {
+        this.container.querySelectorAll('.explorer-dropdown-menu').forEach(menu => {
             menu.classList.remove('show');
-        }
+        });
+    }
+
+    setSort(sortBy, order) {
+        this.sortBy = sortBy;
+        this.sortOrder = order;
+        this.closeAllDropdowns();
+        this.sortAndRenderItems();
+    }
+
+    sortAndRenderItems() {
+        // מיון לפי הגדרות
+        this.items.sort((a, b) => {
+            // תיקיות תמיד קודם
+            if (a.isDir && !b.isDir) return -1;
+            if (!a.isDir && b.isDir) return 1;
+
+            let result = 0;
+            switch (this.sortBy) {
+                case 'name':
+                    result = a.name.localeCompare(b.name, 'he');
+                    break;
+                case 'date':
+                    result = new Date(a.modified) - new Date(b.modified);
+                    break;
+                case 'size':
+                    result = (a.size || 0) - (b.size || 0);
+                    break;
+            }
+
+            return this.sortOrder === 'desc' ? -result : result;
+        });
+
+        this.renderItems();
     }
 
     async loadFiles(path = '') {
@@ -101,7 +181,7 @@ class FileExplorer {
 
             if (result.success) {
                 this.items = result.data;
-                this.renderItems();
+                this.sortAndRenderItems();
                 this.updateBreadcrumb(result.breadcrumb);
             } else {
                 this.showError(result.error);
@@ -290,15 +370,42 @@ class FileExplorer {
     }
 
     async handleFileSelect(event) {
-        const files = event.target.files;
+        const files = Array.from(event.target.files);
         if (!files.length) return;
 
-        for (const file of files) {
-            await this.uploadFile(file);
-        }
+        // הצג אינדיקטור העלאה
+        this.showUploadIndicator(files.length);
 
+        // העלה את כל הקבצים במקביל
+        const uploadPromises = files.map(file => this.uploadFile(file));
+        await Promise.all(uploadPromises);
+
+        // הסתר אינדיקטור וריענן
+        this.hideUploadIndicator();
         event.target.value = '';
         this.refresh();
+    }
+
+    showUploadIndicator(count) {
+        this.uploadingCount = count;
+        if (this.uploadIndicator) {
+            this.uploadIndicator.style.display = 'flex';
+            this.uploadCountEl.textContent = count;
+        }
+    }
+
+    hideUploadIndicator() {
+        this.uploadingCount = 0;
+        if (this.uploadIndicator) {
+            this.uploadIndicator.style.display = 'none';
+        }
+    }
+
+    updateUploadCount() {
+        this.uploadingCount--;
+        if (this.uploadCountEl) {
+            this.uploadCountEl.textContent = this.uploadingCount;
+        }
     }
 
     async uploadFile(file) {
@@ -320,6 +427,8 @@ class FileExplorer {
         } catch (error) {
             console.error('Error uploading file:', error);
             alert('שגיאה בהעלאת ' + file.name);
+        } finally {
+            this.updateUploadCount();
         }
     }
 
@@ -346,13 +455,18 @@ class FileExplorer {
         });
 
         content.addEventListener('drop', async (e) => {
-            const files = e.dataTransfer.files;
+            const files = Array.from(e.dataTransfer.files);
             if (!files.length) return;
 
-            for (const file of files) {
-                await this.uploadFile(file);
-            }
+            // הצג אינדיקטור העלאה
+            this.showUploadIndicator(files.length);
 
+            // העלה את כל הקבצים במקביל
+            const uploadPromises = files.map(file => this.uploadFile(file));
+            await Promise.all(uploadPromises);
+
+            // הסתר אינדיקטור וריענן
+            this.hideUploadIndicator();
             this.refresh();
         });
     }

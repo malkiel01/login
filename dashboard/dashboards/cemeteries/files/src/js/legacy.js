@@ -377,18 +377,18 @@ function drawImageSelectionBox(imageItem) {
     const imgY = parseFloat(imageItem.top) * pdfScale;
     const imgWidth = parseFloat(imageItem.width) * pdfScale;
     const imgHeight = parseFloat(imageItem.height) * pdfScale;
-    
-    // מסגרת
+
+    // מסגרת - עובי קבוע (לא משתנה עם zoom)
     ctx.strokeStyle = '#8b5cf6';
-    ctx.lineWidth = 2;
-    ctx.setLineDash([5, 5]);
+    ctx.lineWidth = 2 / pdfScale;  // עובי קבוע ויזואלית
+    ctx.setLineDash([5 / pdfScale, 5 / pdfScale]);  // קיווקוב קבוע
     ctx.strokeRect(imgX, imgY, imgWidth, imgHeight);
     ctx.setLineDash([]);
-    
-    // פינות
-    const cornerSize = 8;
+
+    // פינות - גודל קבוע (לא משתנה עם zoom)
+    const cornerSize = 8 / pdfScale;
     ctx.fillStyle = '#8b5cf6';
-    
+
     ctx.fillRect(imgX - cornerSize/2, imgY - cornerSize/2, cornerSize, cornerSize);
     ctx.fillRect(imgX + imgWidth - cornerSize/2, imgY - cornerSize/2, cornerSize, cornerSize);
     ctx.fillRect(imgX - cornerSize/2, imgY + imgHeight - cornerSize/2, cornerSize, cornerSize);
@@ -793,26 +793,26 @@ function drawSelectionBox(item, viewport) {
     boxTop = textY - fontSize * 1.1;
     boxBottom = textY + fontSize * 0.2;
     
-    // צייר מסגרת
+    // צייר מסגרת - עובי קבוע (לא משתנה עם zoom)
     ctx.strokeStyle = '#667eea';
-    ctx.lineWidth = 2;
-    ctx.setLineDash([5, 5]);
+    ctx.lineWidth = 2 / pdfScale;  // עובי קבוע ויזואלית
+    ctx.setLineDash([5 / pdfScale, 5 / pdfScale]);  // קיווקוב קבוע
     ctx.strokeRect(boxLeft, boxTop, boxRight - boxLeft, boxBottom - boxTop);
     ctx.setLineDash([]);
-    
-    // צייר פינות (נקודות resize)
-    const cornerSize = 8;
+
+    // צייר פינות - גודל קבוע (לא משתנה עם zoom)
+    const cornerSize = 8 / pdfScale;
     ctx.fillStyle = '#667eea';
-    
+
     // פינה ימנית עליונה
     ctx.fillRect(boxRight - cornerSize/2, boxTop - cornerSize/2, cornerSize, cornerSize);
-    
+
     // פינה שמאלית עליונה
     ctx.fillRect(boxLeft - cornerSize/2, boxTop - cornerSize/2, cornerSize, cornerSize);
-    
+
     // פינה ימנית תחתונה
     ctx.fillRect(boxRight - cornerSize/2, boxBottom - cornerSize/2, cornerSize, cornerSize);
-    
+
     // פינה שמאלית תחתונה
     ctx.fillRect(boxLeft - cornerSize/2, boxBottom - cornerSize/2, cornerSize, cornerSize);
 }
@@ -1480,7 +1480,10 @@ async function renderPage(num) {
         canvas.style.width = viewport.width + 'px';
         canvas.style.height = viewport.height + 'px';
 
-        // התאם את ה-context ל-DPI
+        // שמור את state של context לפני scale
+        ctx.save();
+
+        // התאם את ה-context ל-DPI (רק ל-PDF rendering)
         ctx.scale(dpr, dpr);
 
         const renderContext = {
@@ -1489,12 +1492,15 @@ async function renderPage(num) {
         };
 
         await page.render(renderContext).promise;
-        
+
+        // שחזר את ה-context (ביטול ה-scale)
+        ctx.restore();
+
         // רנדר לפי allItems (סדר השכבות)
         for (const item of allItems) {
             const itemPage = parseInt(item.page) || 1;
             if (itemPage !== currentPageNum) continue;
-            
+
             if (item.type === 'image') {
                 await drawSingleImage(item, viewport);
             } else if (item.type === 'text') {

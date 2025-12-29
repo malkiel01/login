@@ -25,6 +25,8 @@ class FileExplorer {
 
     init() {
         this.clipboard = null; // לוח העתקה/גזירה
+        this.viewMode = 'grid'; // grid או list
+        this.iconSize = 'medium'; // small, medium, large
         this.render();
         this.loadFiles();
         this.setupDragDrop();
@@ -43,6 +45,33 @@ class FileExplorer {
                         <button type="button" class="explorer-btn" onclick="window.explorer.refresh()" title="רענון">
                             <i class="fas fa-sync-alt"></i>
                         </button>
+
+                        <!-- תפריט תצוגה -->
+                        <div class="explorer-dropdown">
+                            <button type="button" class="explorer-btn" onclick="window.explorer.toggleDropdown('viewMenu')" title="תצוגה">
+                                <i class="fas fa-th-large"></i> תצוגה <i class="fas fa-caret-down" style="margin-right: 5px;"></i>
+                            </button>
+                            <div class="explorer-dropdown-menu" id="viewMenu">
+                                <div class="menu-section-title">מצב תצוגה</div>
+                                <a href="javascript:void(0)" onclick="window.explorer.setViewMode('grid')" class="view-option" data-view="grid">
+                                    <i class="fas fa-th-large"></i> תצוגת רשת
+                                </a>
+                                <a href="javascript:void(0)" onclick="window.explorer.setViewMode('list')" class="view-option" data-view="list">
+                                    <i class="fas fa-list"></i> תצוגת רשימה
+                                </a>
+                                <hr>
+                                <div class="menu-section-title">גודל אייקונים</div>
+                                <a href="javascript:void(0)" onclick="window.explorer.setIconSize('small')" class="size-option" data-size="small">
+                                    <i class="fas fa-compress-alt"></i> קטן
+                                </a>
+                                <a href="javascript:void(0)" onclick="window.explorer.setIconSize('medium')" class="size-option" data-size="medium">
+                                    <i class="fas fa-expand-alt"></i> בינוני
+                                </a>
+                                <a href="javascript:void(0)" onclick="window.explorer.setIconSize('large')" class="size-option" data-size="large">
+                                    <i class="fas fa-expand"></i> גדול
+                                </a>
+                            </div>
+                        </div>
 
                         <!-- תפריט מיון -->
                         <div class="explorer-dropdown">
@@ -146,6 +175,39 @@ class FileExplorer {
         this.sortAndRenderItems();
     }
 
+    setViewMode(mode) {
+        this.viewMode = mode;
+        this.closeAllDropdowns();
+        this.updateViewClasses();
+        this.updateMenuSelection();
+    }
+
+    setIconSize(size) {
+        this.iconSize = size;
+        this.closeAllDropdowns();
+        this.updateViewClasses();
+        this.updateMenuSelection();
+    }
+
+    updateViewClasses() {
+        const content = this.contentEl;
+        // הסר classes קודמים
+        content.classList.remove('view-grid', 'view-list', 'size-small', 'size-medium', 'size-large');
+        // הוסף classes חדשים
+        content.classList.add(`view-${this.viewMode}`, `size-${this.iconSize}`);
+    }
+
+    updateMenuSelection() {
+        // עדכון בחירת תצוגה
+        this.container.querySelectorAll('.view-option').forEach(opt => {
+            opt.classList.toggle('active', opt.dataset.view === this.viewMode);
+        });
+        // עדכון בחירת גודל
+        this.container.querySelectorAll('.size-option').forEach(opt => {
+            opt.classList.toggle('active', opt.dataset.size === this.iconSize);
+        });
+    }
+
     sortAndRenderItems() {
         // מיון לפי הגדרות
         this.items.sort((a, b) => {
@@ -212,6 +274,8 @@ class FileExplorer {
         `;
 
         this.contentEl.innerHTML = html;
+        this.updateViewClasses();
+        this.updateMenuSelection();
     }
 
     renderItem(item) {
@@ -220,7 +284,10 @@ class FileExplorer {
         const escapedPath = item.path.replace(/'/g, "\\'");
         const escapedName = item.name.replace(/'/g, "\\'");
 
-        console.log('🎨 [Explorer] Rendering item:', item.name, '| isDir:', item.isDir, '| icon:', icon, '| thumb HTML:', thumb);
+        // פורמט תאריך
+        const date = item.modified ? new Date(item.modified).toLocaleDateString('he-IL') : '';
+        // פורמט גודל
+        const size = item.isDir ? '' : this.formatSize(item.size || 0);
 
         return `
             <div class="explorer-item"
@@ -234,8 +301,18 @@ class FileExplorer {
                     ${thumb}
                 </div>
                 <div class="explorer-item-name">${item.name}</div>
+                <div class="explorer-item-date">${date}</div>
+                <div class="explorer-item-size">${size}</div>
             </div>
         `;
+    }
+
+    formatSize(bytes) {
+        if (bytes === 0) return '';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
     }
 
     getIcon(item) {

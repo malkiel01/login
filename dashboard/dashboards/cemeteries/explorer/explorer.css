@@ -336,7 +336,7 @@
     font-size: 48px !important;
     display: inline-block !important;
     color: #78909c; /* צבע ברירת מחדל */
-    font-family: "Font Awesome 5 Free", "Font Awesome 5 Pro", "FontAwesome" !important;
+    font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", "FontAwesome" !important;
     font-weight: 900 !important; /* נדרש עבור solid icons (fas) */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;

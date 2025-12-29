@@ -383,9 +383,17 @@ async function initPurchasesTable(data, totalItems = null, signal = null) {
             console.log('🔍 Active filters:', filters);
             const count = purchasesTable.getFilteredData().length;
             showToast(`נמצאו ${count} תוצאות`, 'info');
+        },
+
+        // ⭐ לחיצה כפולה - פתיחת כרטיס רכישה
+        onRowDoubleClick: (purchase) => {
+            console.log('🛒 Opening purchase card:', purchase.unicId);
+            if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
+                FormHandler.openForm('purchaseCard', null, purchase.unicId);
+            }
         }
     });
-    
+
     window.purchasesTable = purchasesTable;
     return purchasesTable;
 }

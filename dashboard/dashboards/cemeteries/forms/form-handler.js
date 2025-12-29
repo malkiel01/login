@@ -243,6 +243,10 @@ const FormHandler = {
                     this.handleCustomerCardForm(itemId);
                     break;
 
+                case 'purchaseCard':
+                    this.handlePurchaseCardForm(itemId);
+                    break;
+
                 default:
                     if (itemId) {
                         this.loadFormData(type, itemId);
@@ -1679,6 +1683,122 @@ const FormHandler = {
                 };
                 script.onerror = () => {
                     console.error('❌ [CustomerExplorer] שגיאה בטעינת explorer.js');
+                    explorerContainer.innerHTML = '<div style="color: red; padding: 20px;">שגיאה בטעינת סייר הקבצים</div>';
+                };
+                document.head.appendChild(script);
+            }
+        }
+    },
+
+    handlePurchaseCardForm: async function(itemId) {
+        console.log('🛒 [PurchaseCard] אתחול כרטיס רכישה:', itemId);
+
+        // חכה שהטופס יהיה מוכן
+        this.waitForElement('#purchaseCardFormModal', (modal) => {
+            console.log('✅ [PurchaseCard] Modal נטען');
+
+            // קרא unicId מה-hidden field
+            const unicIdField = modal.querySelector('input[name="unicId"]');
+            const purchaseId = unicIdField?.value || itemId;
+
+            console.log('📋 [PurchaseCard] מזהה רכישה:', purchaseId);
+
+            // עדכן כפתורים בפוטר - רק סגור
+            const footer = modal.querySelector('.modal-footer');
+            if (footer) {
+                footer.innerHTML = '<button type="button" class="btn btn-secondary" onclick="FormHandler.closeForm(\'purchaseCard\')"><i class="fas fa-times"></i> סגור</button>';
+            }
+
+            // אתחול סייר קבצים
+            initPurchaseFileExplorer(modal, purchaseId);
+
+            // אתחול סקשנים ניתנים לגרירה (toggle, sortable, resize)
+            console.log('🔀 [PurchaseCard] מאתחל סקשנים...');
+            initPurchaseSortableSections('purchaseSortableSections', 'purchaseCard');
+
+            // הגדרת handler גלובלי לכרטיס רכישה
+            window.PurchaseCardHandler = {
+                editPurchase: function(id) {
+                    FormHandler.closeForm('purchaseCard');
+                    FormHandler.openForm('purchase', null, id);
+                },
+                viewCustomer: function(id) {
+                    FormHandler.closeForm('purchaseCard');
+                    FormHandler.openForm('customerCard', null, id);
+                },
+                viewBurial: function(id) {
+                    FormHandler.closeForm('purchaseCard');
+                    FormHandler.openForm('burialCard', null, id);
+                },
+                addBurial: function(purchaseId, graveId) {
+                    FormHandler.closeForm('purchaseCard');
+                    // פתח טופס קבורה חדש עם purchaseId ו-graveId מוגדרים מראש
+                    FormHandler.openForm('burial', null, null, { purchaseId: purchaseId, graveId: graveId });
+                }
+            };
+        });
+
+        // פונקציה לאתחול סקשנים ניתנים לגרירה
+        function initPurchaseSortableSections(containerId, storagePrefix) {
+            if (typeof SortableSections !== 'undefined') {
+                console.log('✅ [PurchaseSortable] SortableSections כבר קיים');
+                SortableSections.init(containerId, storagePrefix);
+            } else {
+                console.log('📥 [PurchaseSortable] טוען sortable-sections.js...');
+                var script = document.createElement('script');
+                script.src = '/dashboard/dashboards/cemeteries/forms/sortable-sections.js?v=' + Date.now();
+                script.onload = function() {
+                    console.log('✅ [PurchaseSortable] סקריפט נטען');
+                    if (typeof SortableSections !== 'undefined') {
+                        SortableSections.init(containerId, storagePrefix);
+                    }
+                };
+                document.head.appendChild(script);
+            }
+        }
+
+        // פונקציה לאתחול סייר קבצים עבור רכישה
+        function initPurchaseFileExplorer(modal, unicId) {
+            const explorerContainer = modal.querySelector('#purchaseExplorer');
+            if (!explorerContainer) {
+                console.log('⚠️ [PurchaseExplorer] Container לא נמצא');
+                return;
+            }
+
+            console.log('📁 [PurchaseExplorer] מאתחל סייר קבצים עבור:', unicId);
+
+            // טען Font Awesome אם לא נטען
+            if (!document.querySelector('link[href*="font-awesome"], link[href*="fontawesome"]')) {
+                const faLink = document.createElement('link');
+                faLink.rel = 'stylesheet';
+                faLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css';
+                faLink.integrity = 'sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==';
+                faLink.crossOrigin = 'anonymous';
+                document.head.appendChild(faLink);
+            }
+
+            // טען CSS
+            const cacheBuster = 'v=' + Date.now();
+            if (!document.querySelector('link[href*="explorer.css"]')) {
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = '/dashboard/dashboards/cemeteries/explorer/explorer.css?' + cacheBuster;
+                document.head.appendChild(link);
+            }
+
+            // טען JS ואתחל
+            if (typeof FileExplorer !== 'undefined') {
+                window.purchaseExplorer = new FileExplorer('purchaseExplorer', unicId, {});
+                console.log('✅ [PurchaseExplorer] סייר קבצים אותחל');
+            } else {
+                const script = document.createElement('script');
+                script.src = '/dashboard/dashboards/cemeteries/explorer/explorer.js?' + cacheBuster;
+                script.onload = () => {
+                    window.purchaseExplorer = new FileExplorer('purchaseExplorer', unicId, {});
+                    console.log('✅ [PurchaseExplorer] סייר קבצים נטען ואותחל');
+                };
+                script.onerror = () => {
+                    console.error('❌ [PurchaseExplorer] שגיאה בטעינת explorer.js');
                     explorerContainer.innerHTML = '<div style="color: red; padding: 20px;">שגיאה בטעינת סייר הקבצים</div>';
                 };
                 document.head.appendChild(script);

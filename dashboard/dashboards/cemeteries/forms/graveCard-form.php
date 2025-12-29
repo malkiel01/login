@@ -136,6 +136,9 @@ $statusColor = $statusColors[$currentStatus] ?? '#64748b';
 
 // HTML מותאם - כותרת עליונה עם תמונה והיררכיה
 $headerHTML = '
+ <!-- SortableJS -->
+ <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
  <style>
      #graveCardFormModal .modal-dialog {
          max-width: 95% !important;
@@ -144,6 +147,52 @@ $headerHTML = '
      #graveCardFormModal .modal-body {
          max-height: 85vh !important;
          padding: 20px !important;
+     }
+
+     /* סקשנים ניתנים לגרירה */
+     .sortable-sections {
+         display: flex;
+         flex-direction: column;
+         gap: 0;
+     }
+
+     .sortable-section {
+         position: relative;
+         margin-bottom: 15px;
+         border-radius: 12px;
+         background: white;
+         transition: box-shadow 0.2s, transform 0.2s;
+     }
+
+     .sortable-section.sortable-ghost {
+         opacity: 0.4;
+         background: #e0f2fe;
+     }
+
+     .sortable-section.sortable-drag {
+         box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+     }
+
+     /* ידית גרירה */
+     .section-drag-handle {
+         position: absolute;
+         top: 0;
+         right: 0;
+         left: 0;
+         height: 8px;
+         background: linear-gradient(90deg, transparent 30%, #cbd5e1 30%, #cbd5e1 33%, transparent 33%, transparent 36%, #cbd5e1 36%, #cbd5e1 39%, transparent 39%, transparent 42%, #cbd5e1 42%, #cbd5e1 45%, transparent 45%, transparent 48%, #cbd5e1 48%, #cbd5e1 51%, transparent 51%, transparent 54%, #cbd5e1 54%, #cbd5e1 57%, transparent 57%, transparent 60%, #cbd5e1 60%, #cbd5e1 63%, transparent 63%, transparent 66%, #cbd5e1 66%, #cbd5e1 69%, transparent 69%);
+         cursor: grab;
+         border-radius: 12px 12px 0 0;
+         opacity: 0;
+         transition: opacity 0.2s;
+     }
+
+     .sortable-section:hover .section-drag-handle {
+         opacity: 1;
+     }
+
+     .section-drag-handle:active {
+         cursor: grabbing;
      }
 
      /* מיכל ראשי - תמונה + פרטים */
@@ -435,7 +484,13 @@ $headerHTML = '
      }
  </style>
 
- <div class="grave-header-container">
+ <!-- מיכל לכל הסקשנים הניתנים לגרירה -->
+ <div class="sortable-sections" id="graveSortableSections">
+
+ <!-- סקשן 1: פרטי קבר ותמונה -->
+ <div class="sortable-section" data-section="header">
+     <div class="section-drag-handle"></div>
+     <div class="grave-header-container">
      <!-- מציג תמונות -->
      <div class="grave-image-viewer" id="graveImageViewer" data-unic-id="' . htmlspecialchars($grave['unicId']) . '">
          <div class="grave-image-main">
@@ -564,7 +619,9 @@ $headerHTML = '
              <i class="fas fa-edit"></i> ערוך אחוזת קבר
          </button>
      </div>
- </div>';
+     </div>
+ </div>
+ <!-- סוף סקשן 1 -->';
 
 $formBuilder->addCustomHTML($headerHTML);
 
@@ -601,127 +658,143 @@ if ($purchase) {
     ];
     $statusName = $purchaseStatusNames[$purchase['purchaseStatus']] ?? 'לא ידוע';
     $statusColor = $purchaseStatusColors[$purchase['purchaseStatus']] ?? '#64748b';
-    
+
     $purchaseHTML = '
-    <fieldset class="form-section" style="border: 2px solid #bfdbfe; border-radius: 12px; padding: 20px; margin-bottom: 20px; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);">
-        <legend style="padding: 0 15px; font-weight: bold; color: #1e40af; font-size: 16px;">
-            <i class="fas fa-shopping-cart"></i> תיק רכישה
-            <span style="background: ' . $statusColor . '; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; margin-right: 10px;">' . $statusName . '</span>
-        </legend>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
-            <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bfdbfe;">
-                <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">שם הרוכש</div>
-                <div style="font-weight: 600; color: #1e3a8a;">' . htmlspecialchars($purchase['clientFullNameHe'] ?? '-') . '</div>
+    <!-- סקשן 2: תיק רכישה -->
+    <div class="sortable-section" data-section="purchase">
+        <div class="section-drag-handle"></div>
+        <fieldset class="form-section" style="border: 2px solid #bfdbfe; border-radius: 12px; padding: 20px; margin: 0; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);">
+            <legend style="padding: 0 15px; font-weight: bold; color: #1e40af; font-size: 16px;">
+                <i class="fas fa-shopping-cart"></i> תיק רכישה
+                <span style="background: ' . $statusColor . '; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; margin-right: 10px;">' . $statusName . '</span>
+            </legend>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bfdbfe;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">שם הרוכש</div>
+                    <div style="font-weight: 600; color: #1e3a8a;">' . htmlspecialchars($purchase['clientFullNameHe'] ?? '-') . '</div>
+                </div>
+                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bfdbfe;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">ת.ז. רוכש</div>
+                    <div style="font-weight: 600; color: #1e3a8a;">' . htmlspecialchars($purchase['clientNumId'] ?? '-') . '</div>
+                </div>
+                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bfdbfe;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">מספר רכישה</div>
+                    <div style="font-weight: 600; color: #1e3a8a;">' . htmlspecialchars($purchase['serialPurchaseId'] ?? '-') . '</div>
+                </div>
+                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bfdbfe;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">מחיר רכישה</div>
+                    <div style="font-weight: 600; color: #059669; font-size: 15px;">' . formatPrice($purchase['price']) . '</div>
+                </div>
+                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bfdbfe;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">תאריך רכישה</div>
+                    <div style="font-weight: 600; color: #1e3a8a;">' . formatHebrewDate($purchase['dateOpening']) . '</div>
+                </div>
+                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bfdbfe;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">טלפון</div>
+                    <div style="font-weight: 600; color: #1e3a8a;">' . formatPhone($purchase['phone'] ?? $purchase['phoneMobile']) . '</div>
+                </div>
             </div>
-            <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bfdbfe;">
-                <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">ת.ז. רוכש</div>
-                <div style="font-weight: 600; color: #1e3a8a;">' . htmlspecialchars($purchase['clientNumId'] ?? '-') . '</div>
+            <div style="margin-top: 12px; display: flex; gap: 10px;">
+                <button type="button" class="btn btn-sm btn-primary" onclick="GraveCardHandler.editPurchase(\'' . $purchase['unicId'] . '\')">
+                    <i class="fas fa-edit"></i> ערוך רכישה
+                </button>
             </div>
-            <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bfdbfe;">
-                <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">מספר רכישה</div>
-                <div style="font-weight: 600; color: #1e3a8a;">' . htmlspecialchars($purchase['serialPurchaseId'] ?? '-') . '</div>
-            </div>
-            <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bfdbfe;">
-                <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">מחיר רכישה</div>
-                <div style="font-weight: 600; color: #059669; font-size: 15px;">' . formatPrice($purchase['price']) . '</div>
-            </div>
-            <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bfdbfe;">
-                <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">תאריך רכישה</div>
-                <div style="font-weight: 600; color: #1e3a8a;">' . formatHebrewDate($purchase['dateOpening']) . '</div>
-            </div>
-            <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bfdbfe;">
-                <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">טלפון</div>
-                <div style="font-weight: 600; color: #1e3a8a;">' . formatPhone($purchase['phone'] ?? $purchase['phoneMobile']) . '</div>
-            </div>
-        </div>
-        <div style="margin-top: 12px; display: flex; gap: 10px;">
-            <button type="button" class="btn btn-sm btn-primary" onclick="GraveCardHandler.editPurchase(\'' . $purchase['unicId'] . '\')">
-                <i class="fas fa-edit"></i> ערוך רכישה
-            </button>
-        </div>
-    </fieldset>';
+        </fieldset>
+    </div>';
     $formBuilder->addCustomHTML($purchaseHTML);
-    
+
 } elseif ($grave['graveStatus'] == 1) {
     // אין רכישה והקבר פנוי - הצג כפתור הוספה
     $noPurchaseHTML = '
-    <fieldset class="form-section" style="border: 2px dashed #bfdbfe; border-radius: 12px; padding: 30px; margin-bottom: 20px; background: #f8fafc; text-align: center;">
-        <legend style="padding: 0 15px; font-weight: bold; color: #94a3b8; font-size: 16px;">
-            <i class="fas fa-shopping-cart"></i> תיק רכישה
-        </legend>
-        <div style="color: #64748b; margin-bottom: 15px;">
-            <i class="fas fa-inbox" style="font-size: 32px; margin-bottom: 10px; display: block; opacity: 0.5;"></i>
-            אין רכישה מקושרת לקבר זה
-        </div>
-        <button type="button" class="btn btn-success btn-open-purchase"
-            style="padding: 10px 24px; font-size: 15px;">
-            <i class="fas fa-plus"></i> הוסף רכישה
-        </button>
-    </fieldset>';
+    <!-- סקשן 2: תיק רכישה (ריק) -->
+    <div class="sortable-section" data-section="purchase">
+        <div class="section-drag-handle"></div>
+        <fieldset class="form-section" style="border: 2px dashed #bfdbfe; border-radius: 12px; padding: 30px; margin: 0; background: #f8fafc; text-align: center;">
+            <legend style="padding: 0 15px; font-weight: bold; color: #94a3b8; font-size: 16px;">
+                <i class="fas fa-shopping-cart"></i> תיק רכישה
+            </legend>
+            <div style="color: #64748b; margin-bottom: 15px;">
+                <i class="fas fa-inbox" style="font-size: 32px; margin-bottom: 10px; display: block; opacity: 0.5;"></i>
+                אין רכישה מקושרת לקבר זה
+            </div>
+            <button type="button" class="btn btn-success btn-open-purchase"
+                style="padding: 10px 24px; font-size: 15px;">
+                <i class="fas fa-plus"></i> הוסף רכישה
+            </button>
+        </fieldset>
+    </div>';
     $formBuilder->addCustomHTML($noPurchaseHTML);
 }
 
 // תיק קבורה
 if ($burial) {
     $burialHTML = '
-    <fieldset class="form-section" style="border: 2px solid #fde68a; border-radius: 12px; padding: 20px; margin-bottom: 20px; background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);">
-        <legend style="padding: 0 15px; font-weight: bold; color: #92400e; font-size: 16px;">
-            <i class="fas fa-cross"></i> תיק קבורה
-        </legend>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
-            <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #fde68a; grid-column: span 2;">
-                <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">שם הנפטר/ת</div>
-                <div style="font-weight: 700; color: #78350f; font-size: 16px;">' . htmlspecialchars($burial['clientFullNameHe'] ?? '-') . '</div>
+    <!-- סקשן 3: תיק קבורה -->
+    <div class="sortable-section" data-section="burial">
+        <div class="section-drag-handle"></div>
+        <fieldset class="form-section" style="border: 2px solid #fde68a; border-radius: 12px; padding: 20px; margin: 0; background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);">
+            <legend style="padding: 0 15px; font-weight: bold; color: #92400e; font-size: 16px;">
+                <i class="fas fa-cross"></i> תיק קבורה
+            </legend>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #fde68a; grid-column: span 2;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">שם הנפטר/ת</div>
+                    <div style="font-weight: 700; color: #78350f; font-size: 16px;">' . htmlspecialchars($burial['clientFullNameHe'] ?? '-') . '</div>
+                </div>
+                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #fde68a;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">ת.ז. נפטר</div>
+                    <div style="font-weight: 600; color: #78350f;">' . htmlspecialchars($burial['clientNumId'] ?? '-') . '</div>
+                </div>
+                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #fde68a;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">מספר קבורה</div>
+                    <div style="font-weight: 600; color: #78350f;">' . htmlspecialchars($burial['serialBurialId'] ?? '-') . '</div>
+                </div>
+                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #fde68a;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">שם האב</div>
+                    <div style="font-weight: 600; color: #78350f;">' . htmlspecialchars($burial['clientNameFather'] ?? '-') . '</div>
+                </div>
+                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #fde68a;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">שם האם</div>
+                    <div style="font-weight: 600; color: #78350f;">' . htmlspecialchars($burial['clientNameMother'] ?? '-') . '</div>
+                </div>
+                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #fde68a;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">תאריך פטירה</div>
+                    <div style="font-weight: 600; color: #78350f;">' . formatHebrewDate($burial['dateDeath']) . '</div>
+                </div>
+                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #fde68a;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">תאריך קבורה</div>
+                    <div style="font-weight: 600; color: #78350f;">' . formatHebrewDate($burial['dateBurial']) . '</div>
+                </div>
             </div>
-            <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #fde68a;">
-                <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">ת.ז. נפטר</div>
-                <div style="font-weight: 600; color: #78350f;">' . htmlspecialchars($burial['clientNumId'] ?? '-') . '</div>
+            <div style="margin-top: 12px; display: flex; gap: 10px;">
+                <button type="button" class="btn btn-sm btn-primary" onclick="GraveCardHandler.editBurial(\'' . $burial['unicId'] . '\')">
+                    <i class="fas fa-edit"></i> ערוך קבורה
+                </button>
             </div>
-            <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #fde68a;">
-                <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">מספר קבורה</div>
-                <div style="font-weight: 600; color: #78350f;">' . htmlspecialchars($burial['serialBurialId'] ?? '-') . '</div>
-            </div>
-            <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #fde68a;">
-                <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">שם האב</div>
-                <div style="font-weight: 600; color: #78350f;">' . htmlspecialchars($burial['clientNameFather'] ?? '-') . '</div>
-            </div>
-            <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #fde68a;">
-                <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">שם האם</div>
-                <div style="font-weight: 600; color: #78350f;">' . htmlspecialchars($burial['clientNameMother'] ?? '-') . '</div>
-            </div>
-            <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #fde68a;">
-                <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">תאריך פטירה</div>
-                <div style="font-weight: 600; color: #78350f;">' . formatHebrewDate($burial['dateDeath']) . '</div>
-            </div>
-            <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #fde68a;">
-                <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">תאריך קבורה</div>
-                <div style="font-weight: 600; color: #78350f;">' . formatHebrewDate($burial['dateBurial']) . '</div>
-            </div>
-        </div>
-        <div style="margin-top: 12px; display: flex; gap: 10px;">
-            <button type="button" class="btn btn-sm btn-primary" onclick="GraveCardHandler.editBurial(\'' . $burial['unicId'] . '\')">
-                <i class="fas fa-edit"></i> ערוך קבורה
-            </button>
-        </div>
-    </fieldset>';
+        </fieldset>
+    </div>';
     $formBuilder->addCustomHTML($burialHTML);
-    
+
 } elseif ($grave['graveStatus'] == 1 || $grave['graveStatus'] == 2) {
     // אין קבורה והקבר פנוי או נרכש - הצג כפתור הוספה
     $noBurialHTML = '
-    <fieldset class="form-section" style="border: 2px dashed #fde68a; border-radius: 12px; padding: 30px; margin-bottom: 20px; background: #fffef5; text-align: center;">
-        <legend style="padding: 0 15px; font-weight: bold; color: #94a3b8; font-size: 16px;">
-            <i class="fas fa-cross"></i> תיק קבורה
-        </legend>
-        <div style="color: #64748b; margin-bottom: 15px;">
-            <i class="fas fa-inbox" style="font-size: 32px; margin-bottom: 10px; display: block; opacity: 0.5;"></i>
-            אין קבורה מקושרת לקבר זה
-        </div>
-        <button type="button" class="btn btn-info btn-open-burial" 
-            style="padding: 10px 24px; font-size: 15px;">
-            <i class="fas fa-plus"></i> הוסף קבורה
-        </button>
-    </fieldset>';
+    <!-- סקשן 3: תיק קבורה (ריק) -->
+    <div class="sortable-section" data-section="burial">
+        <div class="section-drag-handle"></div>
+        <fieldset class="form-section" style="border: 2px dashed #fde68a; border-radius: 12px; padding: 30px; margin: 0; background: #fffef5; text-align: center;">
+            <legend style="padding: 0 15px; font-weight: bold; color: #94a3b8; font-size: 16px;">
+                <i class="fas fa-cross"></i> תיק קבורה
+            </legend>
+            <div style="color: #64748b; margin-bottom: 15px;">
+                <i class="fas fa-inbox" style="font-size: 32px; margin-bottom: 10px; display: block; opacity: 0.5;"></i>
+                אין קבורה מקושרת לקבר זה
+            </div>
+            <button type="button" class="btn btn-info btn-open-burial"
+                style="padding: 10px 24px; font-size: 15px;">
+                <i class="fas fa-plus"></i> הוסף קבורה
+            </button>
+        </fieldset>
+    </div>';
     $formBuilder->addCustomHTML($noBurialHTML);
 }
 
@@ -737,16 +810,65 @@ if (!empty($grave['comments'])) {
 // === חלון מסמכים (סייר קבצים) ===
 $explorerUnicId = htmlspecialchars($grave['unicId']);
 $explorerHTML = '
-<fieldset class="form-section" style="border: 2px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 20px; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);">
-    <legend style="padding: 0 15px; font-weight: bold; color: #475569; font-size: 16px;">
-        <i class="fas fa-folder-open"></i> מסמכים
-    </legend>
-    <div id="graveExplorer" data-unic-id="' . $explorerUnicId . '">
-        <div style="text-align: center; padding: 20px; color: #666;">
-            <i class="fas fa-spinner fa-spin"></i> טוען סייר קבצים...
+<!-- סקשן 4: מסמכים -->
+<div class="sortable-section" data-section="documents">
+    <div class="section-drag-handle"></div>
+    <fieldset class="form-section" style="border: 2px solid #e2e8f0; border-radius: 12px; padding: 20px; margin: 0; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);">
+        <legend style="padding: 0 15px; font-weight: bold; color: #475569; font-size: 16px;">
+            <i class="fas fa-folder-open"></i> מסמכים
+        </legend>
+        <div id="graveExplorer" data-unic-id="' . $explorerUnicId . '">
+            <div style="text-align: center; padding: 20px; color: #666;">
+                <i class="fas fa-spinner fa-spin"></i> טוען סייר קבצים...
+            </div>
         </div>
-    </div>
-</fieldset>
+    </fieldset>
+</div>
+
+</div>
+<!-- סוף מיכל הסקשנים הניתנים לגרירה -->
+
+<!-- אתחול SortableJS -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    setTimeout(function() {
+        const container = document.getElementById("graveSortableSections");
+        if (container && typeof Sortable !== "undefined") {
+            new Sortable(container, {
+                animation: 150,
+                handle: ".section-drag-handle",
+                ghostClass: "sortable-ghost",
+                dragClass: "sortable-drag",
+                onEnd: function(evt) {
+                    // שמור את הסדר ל-localStorage
+                    const order = Array.from(container.children)
+                        .filter(el => el.classList.contains("sortable-section"))
+                        .map(el => el.dataset.section);
+                    localStorage.setItem("graveCardSectionOrder", JSON.stringify(order));
+                    console.log("📋 [GraveCard] סדר סקשנים נשמר:", order);
+                }
+            });
+
+            // טען סדר שמור
+            const savedOrder = localStorage.getItem("graveCardSectionOrder");
+            if (savedOrder) {
+                try {
+                    const order = JSON.parse(savedOrder);
+                    order.forEach(function(sectionId) {
+                        const section = container.querySelector("[data-section=\"" + sectionId + "\"]");
+                        if (section) {
+                            container.appendChild(section);
+                        }
+                    });
+                    console.log("📋 [GraveCard] סדר סקשנים נטען:", order);
+                } catch (e) {
+                    console.error("📋 [GraveCard] שגיאה בטעינת סדר:", e);
+                }
+            }
+        }
+    }, 200);
+});
+</script>
 ';
 $formBuilder->addCustomHTML($explorerHTML);
 

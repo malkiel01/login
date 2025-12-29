@@ -5643,6 +5643,10 @@ window.GraveImageViewer = {
     currentIndex: 0,
     unicId: null,
     apiBase: '/dashboard/dashboards/cemeteries/explorer/explorer-api.php',
+    zoomLevel: 1,
+    minZoom: 0.25,
+    maxZoom: 4,
+    zoomStep: 0.25,
 
     /**
      * אתחול מציג התמונות
@@ -5651,15 +5655,57 @@ window.GraveImageViewer = {
         this.unicId = unicId;
         this.images = [];
         this.currentIndex = 0;
+        this.zoomLevel = 1;
 
         // הוסף אירועים לכפתורי ניווט
         const prevBtn = document.getElementById('graveImagePrev');
         const nextBtn = document.getElementById('graveImageNext');
         const placeholder = document.getElementById('graveImagePlaceholder');
+        const imageEl = document.getElementById('graveImageDisplay');
 
         if (prevBtn) prevBtn.onclick = () => this.prev();
         if (nextBtn) nextBtn.onclick = () => this.next();
         if (placeholder) placeholder.onclick = () => this.upload();
+
+        // לחיצה כפולה על תמונה - פתח בפופאפ מוגדל
+        if (imageEl) {
+            imageEl.ondblclick = () => this.openLightbox();
+        }
+
+        // סגירת lightbox בלחיצה על ESC ומקשי קיצור
+        document.addEventListener('keydown', (e) => {
+            const lightbox = document.getElementById('imageLightbox');
+            if (lightbox && lightbox.classList.contains('active')) {
+                if (e.key === 'Escape') this.closeLightbox();
+                if (e.key === 'ArrowRight') this.lightboxPrev();
+                if (e.key === 'ArrowLeft') this.lightboxNext();
+                if (e.key === '+' || e.key === '=') this.zoomIn();
+                if (e.key === '-') this.zoomOut();
+                if (e.key === '0') this.zoomReset();
+            }
+        });
+
+        // זום בגלגל העכבר ב-lightbox
+        const lightbox = document.getElementById('imageLightbox');
+        if (lightbox) {
+            lightbox.addEventListener('wheel', (e) => {
+                if (lightbox.classList.contains('active')) {
+                    e.preventDefault();
+                    if (e.deltaY < 0) {
+                        this.zoomIn();
+                    } else {
+                        this.zoomOut();
+                    }
+                }
+            }, { passive: false });
+
+            // סגירה בלחיצה על הרקע
+            lightbox.addEventListener('click', (e) => {
+                if (e.target === lightbox || e.target.classList.contains('lightbox-container')) {
+                    this.closeLightbox();
+                }
+            });
+        }
 
         // טען תמונות
         this.loadImages();
@@ -5828,6 +5874,125 @@ window.GraveImageViewer = {
         } catch (error) {
             console.error('📷 [GraveImageViewer] שגיאה במחיקה:', error);
             alert('שגיאה במחיקת התמונה');
+        }
+    },
+
+    /**
+     * פתיחת תמונה בפופאפ מוגדל (Lightbox)
+     */
+    openLightbox() {
+        if (this.images.length === 0) return;
+
+        const lightbox = document.getElementById('imageLightbox');
+        const lightboxImage = document.getElementById('lightboxImage');
+        const lightboxPrev = document.getElementById('lightboxPrev');
+        const lightboxNext = document.getElementById('lightboxNext');
+
+        if (!lightbox || !lightboxImage) return;
+
+        // טען את התמונה הנוכחית
+        lightboxImage.src = this.images[this.currentIndex].url;
+
+        // אפס זום
+        this.zoomLevel = 1;
+        this.updateZoomDisplay();
+
+        // הצג/הסתר כפתורי ניווט
+        if (lightboxPrev) lightboxPrev.style.display = this.images.length > 1 ? 'flex' : 'none';
+        if (lightboxNext) lightboxNext.style.display = this.images.length > 1 ? 'flex' : 'none';
+
+        // הצג את ה-lightbox
+        lightbox.classList.add('active');
+        document.body.style.overflow = 'hidden';
+
+        console.log('📷 [GraveImageViewer] נפתח lightbox לתמונה:', this.currentIndex + 1);
+    },
+
+    /**
+     * סגירת הפופאפ
+     */
+    closeLightbox() {
+        const lightbox = document.getElementById('imageLightbox');
+        if (lightbox) {
+            lightbox.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    },
+
+    /**
+     * תמונה קודמת ב-Lightbox
+     */
+    lightboxPrev() {
+        if (this.images.length === 0) return;
+        this.currentIndex = (this.currentIndex - 1 + this.images.length) % this.images.length;
+        this.updateLightboxImage();
+        this.updateDisplay();
+    },
+
+    /**
+     * תמונה הבאה ב-Lightbox
+     */
+    lightboxNext() {
+        if (this.images.length === 0) return;
+        this.currentIndex = (this.currentIndex + 1) % this.images.length;
+        this.updateLightboxImage();
+        this.updateDisplay();
+    },
+
+    /**
+     * עדכון תמונה ב-Lightbox
+     */
+    updateLightboxImage() {
+        const lightboxImage = document.getElementById('lightboxImage');
+        if (lightboxImage && this.images.length > 0) {
+            lightboxImage.src = this.images[this.currentIndex].url;
+            // אפס זום בעת מעבר תמונה
+            this.zoomLevel = 1;
+            this.updateZoomDisplay();
+        }
+    },
+
+    /**
+     * הגדלת זום
+     */
+    zoomIn() {
+        if (this.zoomLevel < this.maxZoom) {
+            this.zoomLevel = Math.min(this.maxZoom, this.zoomLevel + this.zoomStep);
+            this.updateZoomDisplay();
+        }
+    },
+
+    /**
+     * הקטנת זום
+     */
+    zoomOut() {
+        if (this.zoomLevel > this.minZoom) {
+            this.zoomLevel = Math.max(this.minZoom, this.zoomLevel - this.zoomStep);
+            this.updateZoomDisplay();
+        }
+    },
+
+    /**
+     * איפוס זום ל-100%
+     */
+    zoomReset() {
+        this.zoomLevel = 1;
+        this.updateZoomDisplay();
+    },
+
+    /**
+     * עדכון תצוגת זום
+     */
+    updateZoomDisplay() {
+        const lightboxImage = document.getElementById('lightboxImage');
+        const zoomLevelEl = document.getElementById('lightboxZoomLevel');
+
+        if (lightboxImage) {
+            lightboxImage.style.transform = `scale(${this.zoomLevel})`;
+        }
+
+        if (zoomLevelEl) {
+            zoomLevelEl.textContent = `${Math.round(this.zoomLevel * 100)}%`;
         }
     }
 };

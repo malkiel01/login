@@ -251,6 +251,148 @@ $headerHTML = '
          background: #ef4444;
      }
 
+     .grave-image-main img {
+         cursor: pointer;
+     }
+
+     /* Lightbox - תצוגה מוגדלת */
+     .image-lightbox {
+         display: none;
+         position: fixed;
+         top: 0;
+         left: 0;
+         width: 100%;
+         height: 100%;
+         background: rgba(0, 0, 0, 0.95);
+         z-index: 10000;
+         justify-content: center;
+         align-items: center;
+         flex-direction: column;
+     }
+
+     .image-lightbox.active {
+         display: flex;
+     }
+
+     .lightbox-container {
+         position: relative;
+         max-width: 95%;
+         max-height: 85%;
+         overflow: hidden;
+         display: flex;
+         justify-content: center;
+         align-items: center;
+     }
+
+     .lightbox-image {
+         max-width: 100%;
+         max-height: 100%;
+         object-fit: contain;
+         transition: transform 0.3s ease;
+         cursor: grab;
+     }
+
+     .lightbox-image:active {
+         cursor: grabbing;
+     }
+
+     .lightbox-close {
+         position: absolute;
+         top: 20px;
+         left: 20px;
+         background: rgba(255, 255, 255, 0.15);
+         color: white;
+         border: none;
+         width: 50px;
+         height: 50px;
+         border-radius: 50%;
+         font-size: 24px;
+         cursor: pointer;
+         display: flex;
+         align-items: center;
+         justify-content: center;
+         transition: background 0.2s;
+         z-index: 10001;
+     }
+
+     .lightbox-close:hover {
+         background: rgba(255, 255, 255, 0.3);
+     }
+
+     .lightbox-controls {
+         position: absolute;
+         bottom: 30px;
+         left: 50%;
+         transform: translateX(-50%);
+         display: flex;
+         gap: 15px;
+         background: rgba(0, 0, 0, 0.7);
+         padding: 12px 20px;
+         border-radius: 30px;
+         z-index: 10001;
+     }
+
+     .lightbox-btn {
+         background: rgba(255, 255, 255, 0.2);
+         color: white;
+         border: none;
+         width: 44px;
+         height: 44px;
+         border-radius: 50%;
+         font-size: 16px;
+         cursor: pointer;
+         display: flex;
+         align-items: center;
+         justify-content: center;
+         transition: background 0.2s, transform 0.2s;
+     }
+
+     .lightbox-btn:hover {
+         background: rgba(255, 255, 255, 0.35);
+         transform: scale(1.1);
+     }
+
+     .lightbox-zoom-level {
+         color: white;
+         font-size: 14px;
+         display: flex;
+         align-items: center;
+         padding: 0 10px;
+         min-width: 60px;
+         justify-content: center;
+     }
+
+     .lightbox-nav {
+         position: absolute;
+         top: 50%;
+         transform: translateY(-50%);
+         background: rgba(255, 255, 255, 0.15);
+         color: white;
+         border: none;
+         width: 50px;
+         height: 50px;
+         border-radius: 50%;
+         font-size: 20px;
+         cursor: pointer;
+         display: flex;
+         align-items: center;
+         justify-content: center;
+         transition: background 0.2s;
+         z-index: 10001;
+     }
+
+     .lightbox-nav:hover {
+         background: rgba(255, 255, 255, 0.3);
+     }
+
+     .lightbox-nav.prev {
+         right: 30px;
+     }
+
+     .lightbox-nav.next {
+         left: 30px;
+     }
+
      /* פרטי הקבר */
      .grave-details-container {
          display: flex;
@@ -322,6 +464,34 @@ $headerHTML = '
              </div>
          </div>
          <input type="file" id="graveImageInput" accept="image/*" style="display: none;" onchange="GraveImageViewer.handleUpload(event)" />
+     </div>
+
+     <!-- Lightbox לתצוגה מוגדלת -->
+     <div class="image-lightbox" id="imageLightbox">
+         <button type="button" class="lightbox-close" onclick="GraveImageViewer.closeLightbox()" title="סגור">
+             <i class="fas fa-times"></i>
+         </button>
+         <button type="button" class="lightbox-nav prev" id="lightboxPrev" onclick="GraveImageViewer.lightboxPrev()">
+             <i class="fas fa-chevron-right"></i>
+         </button>
+         <button type="button" class="lightbox-nav next" id="lightboxNext" onclick="GraveImageViewer.lightboxNext()">
+             <i class="fas fa-chevron-left"></i>
+         </button>
+         <div class="lightbox-container">
+             <img class="lightbox-image" id="lightboxImage" />
+         </div>
+         <div class="lightbox-controls">
+             <button type="button" class="lightbox-btn" onclick="GraveImageViewer.zoomOut()" title="הקטן">
+                 <i class="fas fa-search-minus"></i>
+             </button>
+             <span class="lightbox-zoom-level" id="lightboxZoomLevel">100%</span>
+             <button type="button" class="lightbox-btn" onclick="GraveImageViewer.zoomIn()" title="הגדל">
+                 <i class="fas fa-search-plus"></i>
+             </button>
+             <button type="button" class="lightbox-btn" onclick="GraveImageViewer.zoomReset()" title="אפס">
+                 <i class="fas fa-expand"></i>
+             </button>
+         </div>
      </div>
 
      <!-- פרטים והיררכיה -->

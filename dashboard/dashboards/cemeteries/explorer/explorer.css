@@ -332,6 +332,15 @@
     background: #e3f2fd;
 }
 
+/* פריט שנגזר - שקוף למחצה */
+.explorer-item.cut {
+    opacity: 0.5;
+}
+
+.explorer-item.cut .explorer-item-icon {
+    border-style: dashed;
+}
+
 /* מסגרת רק על אזור האייקון */
 .explorer-item-icon {
     width: 64px;

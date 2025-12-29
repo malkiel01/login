@@ -9,7 +9,7 @@ class FileExplorer {
         this.unicId = unicId;
         this.currentPath = '';
         this.items = [];
-        this.selectedItem = null;
+        this.selectedItems = []; // מערך של פריטים נבחרים
         this.apiBase = options.apiBase || '/dashboard/dashboards/cemeteries/explorer/explorer-api.php';
         this.sortBy = 'name'; // name, date, size
         this.sortOrder = 'asc'; // asc, desc
@@ -294,7 +294,7 @@ class FileExplorer {
                  data-path="${item.path}"
                  data-name="${item.name}"
                  data-is-dir="${item.isDir}"
-                 onclick="window.explorer.selectItem(this)"
+                 onclick="window.explorer.selectItem(event, this)"
                  ondblclick="window.explorer.openItem('${escapedPath}', ${item.isDir})"
                  oncontextmenu="window.explorer.showContextMenu(event, '${escapedPath}', '${escapedName}', ${item.isDir})">
                 <div class="explorer-item-icon">
@@ -364,14 +364,54 @@ class FileExplorer {
         this.breadcrumbEl.innerHTML = html;
     }
 
-    selectItem(el) {
-        // הסר בחירה קודמת
+    selectItem(event, el) {
+        const path = el.dataset.path;
+        const isCtrl = event.ctrlKey || event.metaKey; // Ctrl או Cmd (Mac)
+        const isShift = event.shiftKey;
+
+        if (isCtrl) {
+            // Ctrl+Click - הוסף/הסר מהבחירה
+            if (this.selectedItems.includes(path)) {
+                // הסר מהבחירה
+                this.selectedItems = this.selectedItems.filter(p => p !== path);
+                el.classList.remove('selected');
+            } else {
+                // הוסף לבחירה
+                this.selectedItems.push(path);
+                el.classList.add('selected');
+            }
+        } else if (isShift && this.selectedItems.length > 0) {
+            // Shift+Click - בחר טווח
+            const allItems = Array.from(this.container.querySelectorAll('.explorer-item'));
+            const lastSelectedPath = this.selectedItems[this.selectedItems.length - 1];
+            const lastIndex = allItems.findIndex(item => item.dataset.path === lastSelectedPath);
+            const currentIndex = allItems.findIndex(item => item.dataset.path === path);
+
+            const start = Math.min(lastIndex, currentIndex);
+            const end = Math.max(lastIndex, currentIndex);
+
+            // נקה בחירה קודמת
+            this.clearSelection();
+
+            // בחר את הטווח
+            for (let i = start; i <= end; i++) {
+                const itemPath = allItems[i].dataset.path;
+                this.selectedItems.push(itemPath);
+                allItems[i].classList.add('selected');
+            }
+        } else {
+            // לחיצה רגילה - בחר רק את הפריט הזה
+            this.clearSelection();
+            this.selectedItems = [path];
+            el.classList.add('selected');
+        }
+    }
+
+    clearSelection() {
         this.container.querySelectorAll('.explorer-item.selected').forEach(item => {
             item.classList.remove('selected');
         });
-
-        el.classList.add('selected');
-        this.selectedItem = el.dataset.path;
+        this.selectedItems = [];
     }
 
     openItem(path, isDir) {
@@ -458,6 +498,33 @@ class FileExplorer {
             }
         } catch (error) {
             console.error('Error deleting item:', error);
+            alert('שגיאה במחיקה');
+        }
+    }
+
+    async deleteItems() {
+        this.hideContextMenu();
+        const count = this.selectedItems.length;
+        const confirmMsg = count === 1 ? 'האם למחוק את הפריט?' : `האם למחוק ${count} פריטים?`;
+        if (!confirm(confirmMsg)) return;
+
+        try {
+            // מחק את כל הפריטים אחד אחד
+            for (const path of this.selectedItems) {
+                const response = await fetch(`${this.apiBase}?action=delete&unicId=${this.unicId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path })
+                });
+                const result = await response.json();
+                if (!result.success) {
+                    console.error('Error deleting:', path, result.error);
+                }
+            }
+            this.selectedItems = [];
+            this.refresh();
+        } catch (error) {
+            console.error('Error deleting items:', error);
             alert('שגיאה במחיקה');
         }
     }
@@ -592,23 +659,35 @@ class FileExplorer {
         // הסר תפריט קודם אם קיים
         this.hideContextMenu();
 
+        // אם הפריט הנלחץ לא נבחר, בחר אותו בלבד
+        if (!this.selectedItems.includes(path)) {
+            this.clearSelection();
+            this.selectedItems = [path];
+            const el = this.container.querySelector(`[data-path="${path}"]`);
+            if (el) el.classList.add('selected');
+        }
+
+        const count = this.selectedItems.length;
+        const countText = count > 1 ? ` (${count} פריטים)` : '';
+        const isMultiple = count > 1;
+
         const menu = document.createElement('div');
         menu.className = 'explorer-context-menu';
         menu.id = 'explorerContextMenu';
         menu.innerHTML = `
-            <a href="javascript:void(0)" onclick="window.explorer.copyItem('${path}')">
-                <i class="fas fa-copy"></i> העתק
+            <a href="javascript:void(0)" onclick="window.explorer.copyItems()">
+                <i class="fas fa-copy"></i> העתק${countText}
             </a>
-            <a href="javascript:void(0)" onclick="window.explorer.cutItem('${path}')">
-                <i class="fas fa-cut"></i> גזור
+            <a href="javascript:void(0)" onclick="window.explorer.cutItems()">
+                <i class="fas fa-cut"></i> גזור${countText}
             </a>
             <hr>
-            <a href="javascript:void(0)" onclick="window.explorer.renameItem('${path}', '${name}')">
+            <a href="javascript:void(0)" class="${isMultiple ? 'disabled' : ''}" onclick="${isMultiple ? 'void(0)' : `window.explorer.renameItem('${path}', '${name}')`}">
                 <i class="fas fa-edit"></i> שנה שם
             </a>
             <hr>
-            <a href="javascript:void(0)" class="danger" onclick="window.explorer.deleteItem('${path}')">
-                <i class="fas fa-trash"></i> מחק
+            <a href="javascript:void(0)" class="danger" onclick="window.explorer.deleteItems()">
+                <i class="fas fa-trash"></i> מחק${countText}
             </a>
         `;
 
@@ -634,16 +713,22 @@ class FileExplorer {
         document.removeEventListener('contextmenu', window.explorer?.hideContextMenu);
     }
 
-    copyItem(path) {
-        this.clipboard = { path, action: 'copy' };
+    copyItems() {
+        this.clipboard = { paths: [...this.selectedItems], action: 'copy' };
         this.hideContextMenu();
-        console.log('📋 הועתק:', path);
+        console.log('📋 הועתקו:', this.clipboard.paths.length, 'פריטים');
     }
 
-    cutItem(path) {
-        this.clipboard = { path, action: 'cut' };
+    cutItems() {
+        this.clipboard = { paths: [...this.selectedItems], action: 'cut' };
         this.hideContextMenu();
-        console.log('✂️ נגזר:', path);
+        // סמן ויזואלית את הפריטים שנגזרו
+        this.container.querySelectorAll('.explorer-item').forEach(item => {
+            if (this.clipboard.paths.includes(item.dataset.path)) {
+                item.classList.add('cut');
+            }
+        });
+        console.log('✂️ נגזרו:', this.clipboard.paths.length, 'פריטים');
     }
 
     async renameItem(path, currentName) {
@@ -672,35 +757,52 @@ class FileExplorer {
         }
     }
 
-    async pasteItem() {
-        if (!this.clipboard) {
-            alert('אין פריט בלוח');
+    async pasteItems() {
+        if (!this.clipboard || !this.clipboard.paths || this.clipboard.paths.length === 0) {
+            alert('אין פריטים בלוח');
             return;
         }
 
+        this.hideContextMenu();
+        const action = this.clipboard.action === 'cut' ? 'move' : 'copy';
+        let successCount = 0;
+        let errorCount = 0;
+
         try {
-            const action = this.clipboard.action === 'cut' ? 'move' : 'copy';
-            const response = await fetch(`${this.apiBase}?action=${action}&unicId=${this.unicId}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    sourcePath: this.clipboard.path,
-                    destPath: this.currentPath
-                })
-            });
+            // העתק/העבר את כל הפריטים
+            for (const sourcePath of this.clipboard.paths) {
+                const response = await fetch(`${this.apiBase}?action=${action}&unicId=${this.unicId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sourcePath: sourcePath,
+                        destPath: this.currentPath
+                    })
+                });
 
-            const result = await response.json();
-
-            if (result.success) {
-                if (this.clipboard.action === 'cut') {
-                    this.clipboard = null;
+                const result = await response.json();
+                if (result.success) {
+                    successCount++;
+                } else {
+                    errorCount++;
+                    console.error('Error pasting:', sourcePath, result.error);
                 }
-                this.refresh();
-            } else {
-                alert('שגיאה: ' + result.error);
             }
+
+            if (this.clipboard.action === 'cut') {
+                this.clipboard = null;
+                // הסר סימון cut מכל הפריטים
+                this.container.querySelectorAll('.explorer-item.cut').forEach(item => {
+                    item.classList.remove('cut');
+                });
+            }
+
+            if (errorCount > 0) {
+                alert(`הודבקו ${successCount} פריטים, ${errorCount} נכשלו`);
+            }
+            this.refresh();
         } catch (error) {
-            console.error('Error pasting item:', error);
+            console.error('Error pasting items:', error);
             alert('שגיאה בהדבקה');
         }
     }
@@ -727,15 +829,24 @@ class FileExplorer {
         // הסר תפריט קודם אם קיים
         this.hideContextMenu();
 
-        const hasClipboard = this.clipboard !== null;
-        const clipboardInfo = hasClipboard ?
-            `(${this.clipboard.action === 'cut' ? 'גזור' : 'העתק'}: ${this.clipboard.path.split('/').pop() || this.clipboard.path})` : '';
+        const hasClipboard = this.clipboard && this.clipboard.paths && this.clipboard.paths.length > 0;
+        let clipboardInfo = '';
+        if (hasClipboard) {
+            const actionText = this.clipboard.action === 'cut' ? 'גזור' : 'העתק';
+            const count = this.clipboard.paths.length;
+            if (count === 1) {
+                const fileName = this.clipboard.paths[0].split('/').pop() || this.clipboard.paths[0];
+                clipboardInfo = `(${actionText}: ${fileName})`;
+            } else {
+                clipboardInfo = `(${actionText}: ${count} פריטים)`;
+            }
+        }
 
         const menu = document.createElement('div');
         menu.className = 'explorer-context-menu';
         menu.id = 'explorerContextMenu';
         menu.innerHTML = `
-            <a href="javascript:void(0)" class="${!hasClipboard ? 'disabled' : ''}" onclick="${hasClipboard ? 'window.explorer.pasteItem()' : 'void(0)'}">
+            <a href="javascript:void(0)" class="${!hasClipboard ? 'disabled' : ''}" onclick="${hasClipboard ? 'window.explorer.pasteItems()' : 'void(0)'}">
                 <i class="fas fa-paste"></i> הדבק ${clipboardInfo}
             </a>
             <hr>

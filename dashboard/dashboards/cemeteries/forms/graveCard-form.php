@@ -187,7 +187,7 @@ $headerHTML = '
      }
 
      .section-drag-handle::before {
-         content: '';
+         content: "";
          width: 40px;
          height: 4px;
          background: #94a3b8;

@@ -1370,13 +1370,16 @@ const FormHandler = {
 
             console.log('📁 [Explorer] מאתחל סייר קבצים עבור:', unicId);
 
-            // טען CSS אם לא נטען
-            if (!document.querySelector('link[href*="explorer.css"]')) {
-                const link = document.createElement('link');
-                link.rel = 'stylesheet';
-                link.href = '/dashboard/dashboards/cemeteries/explorer/explorer.css';
-                document.head.appendChild(link);
+            // טען CSS (עם cache-busting לוודא טעינה טרייה)
+            const cacheBuster = 'v=' + Date.now();
+            const existingLink = document.querySelector('link[href*="explorer.css"]');
+            if (existingLink) {
+                existingLink.remove(); // הסר גרסה ישנה
             }
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = '/dashboard/dashboards/cemeteries/explorer/explorer.css?' + cacheBuster;
+            document.head.appendChild(link);
 
             // טען JS ואתחל
             if (typeof FileExplorer !== 'undefined') {
@@ -1386,7 +1389,7 @@ const FormHandler = {
             } else {
                 // טען את הסקריפט
                 const script = document.createElement('script');
-                script.src = '/dashboard/dashboards/cemeteries/explorer/explorer.js';
+                script.src = '/dashboard/dashboards/cemeteries/explorer/explorer.js?' + cacheBuster;
                 script.onload = () => {
                     window.explorer = new FileExplorer('graveExplorer', unicId);
                     console.log('✅ [Explorer] סייר קבצים נטען ואותחל');

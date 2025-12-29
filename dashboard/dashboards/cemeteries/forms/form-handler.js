@@ -1372,7 +1372,13 @@ const FormHandler = {
             initSectionResize(modal);
 
             // הגדרת פונקציית צימצום/הרחבה גלובלית
-            window.toggleSection = function(btn) {
+            window.toggleSection = function(btn, event) {
+                // מניעת פעולה כפולה
+                if (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+
                 const section = btn.closest('.sortable-section');
                 if (section) {
                     section.classList.toggle('collapsed');
@@ -1396,6 +1402,14 @@ const FormHandler = {
                     localStorage.setItem('graveCardCollapsed', JSON.stringify(collapsedSections));
                 }
             };
+
+            // הוספת תמיכה ב-touch לכפתורי צימצום
+            modal.querySelectorAll('.section-toggle-btn').forEach(function(btn) {
+                btn.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    window.toggleSection(btn, e);
+                }, { passive: false });
+            });
 
             // טען מצב צימצום שמור
             const collapsedSections = JSON.parse(localStorage.getItem('graveCardCollapsed') || '[]');
@@ -1527,47 +1541,74 @@ const FormHandler = {
                     content.style.maxHeight = savedHeights[sectionId] + 'px';
                 }
 
-                resizeHandle.addEventListener('mousedown', function(e) {
-                    e.preventDefault();
+                // פונקציות עזר לטיפול ב-resize
+                function startResize(clientY) {
                     isResizing = true;
-                    startY = e.clientY;
+                    startY = clientY;
                     startHeight = content.offsetHeight;
-
                     section.classList.add('resizing');
                     document.body.style.cursor = 'ns-resize';
                     document.body.style.userSelect = 'none';
-
                     console.log('📏 [Resize] התחלת שינוי גובה:', sectionId);
-                });
+                }
 
-                document.addEventListener('mousemove', function(e) {
+                function doResize(clientY) {
                     if (!isResizing) return;
-
-                    const deltaY = e.clientY - startY;
+                    const deltaY = clientY - startY;
                     let newHeight = startHeight + deltaY;
-
-                    // הגבלת גובה
                     newHeight = Math.max(minHeight, Math.min(maxHeight, newHeight));
-
                     content.style.height = newHeight + 'px';
                     content.style.maxHeight = newHeight + 'px';
-                });
+                }
 
-                document.addEventListener('mouseup', function(e) {
+                function endResize() {
                     if (!isResizing) return;
-
                     isResizing = false;
                     section.classList.remove('resizing');
                     document.body.style.cursor = '';
                     document.body.style.userSelect = '';
-
-                    // שמור גובה
                     const currentHeight = content.offsetHeight;
                     const savedHeights = JSON.parse(localStorage.getItem('graveCardSectionHeights') || '{}');
                     savedHeights[sectionId] = currentHeight;
                     localStorage.setItem('graveCardSectionHeights', JSON.stringify(savedHeights));
-
                     console.log('📏 [Resize] גובה נשמר:', sectionId, currentHeight + 'px');
+                }
+
+                // אירועי עכבר
+                resizeHandle.addEventListener('mousedown', function(e) {
+                    e.preventDefault();
+                    startResize(e.clientY);
+                });
+
+                document.addEventListener('mousemove', function(e) {
+                    doResize(e.clientY);
+                });
+
+                document.addEventListener('mouseup', function(e) {
+                    endResize();
+                });
+
+                // אירועי מגע (touch)
+                resizeHandle.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    if (e.touches.length === 1) {
+                        startResize(e.touches[0].clientY);
+                    }
+                }, { passive: false });
+
+                document.addEventListener('touchmove', function(e) {
+                    if (isResizing && e.touches.length === 1) {
+                        e.preventDefault();
+                        doResize(e.touches[0].clientY);
+                    }
+                }, { passive: false });
+
+                document.addEventListener('touchend', function(e) {
+                    endResize();
+                });
+
+                document.addEventListener('touchcancel', function(e) {
+                    endResize();
                 });
             });
 

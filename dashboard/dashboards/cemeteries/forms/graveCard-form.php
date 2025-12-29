@@ -626,6 +626,113 @@ $allSectionsHTML = '
              height: 250px;
          }
      }
+
+     /* תמיכה במובייל */
+     @media (max-width: 768px) {
+         #graveCardFormModal .modal-dialog {
+             max-width: 100% !important;
+             width: 100% !important;
+             margin: 0 !important;
+             height: 100vh !important;
+             max-height: 100vh !important;
+         }
+
+         #graveCardFormModal .modal-content {
+             height: 100vh !important;
+             border-radius: 0 !important;
+         }
+
+         #graveCardFormModal .modal-header {
+             position: sticky !important;
+             top: 0 !important;
+             z-index: 1050 !important;
+             background: white !important;
+             padding: 12px 15px !important;
+             min-height: 50px !important;
+             border-bottom: 2px solid #e2e8f0 !important;
+         }
+
+         #graveCardFormModal .modal-title {
+             font-size: 16px !important;
+         }
+
+         #graveCardFormModal .modal-header .btn-close,
+         #graveCardFormModal .modal-header .close {
+             font-size: 24px !important;
+             padding: 10px !important;
+             opacity: 1 !important;
+         }
+
+         #graveCardFormModal .modal-body {
+             max-height: calc(100vh - 120px) !important;
+             padding: 10px !important;
+             padding-bottom: 80px !important;
+             overflow-y: auto !important;
+             -webkit-overflow-scrolling: touch !important;
+         }
+
+         #graveCardFormModal .modal-footer {
+             position: sticky !important;
+             bottom: 0 !important;
+             background: white !important;
+             z-index: 1050 !important;
+             padding: 10px 15px !important;
+             border-top: 2px solid #e2e8f0 !important;
+         }
+
+         /* כפתור צימצום/הרחבה - גדול יותר למובייל */
+         .section-toggle-btn {
+             width: 36px !important;
+             height: 36px !important;
+             font-size: 14px !important;
+             -webkit-tap-highlight-color: transparent;
+             touch-action: manipulation;
+         }
+
+         /* ידית גרירה גדולה יותר למובייל */
+         .section-drag-handle {
+             height: 40px !important;
+             touch-action: manipulation;
+         }
+
+         /* ידית שינוי גובה גדולה יותר למובייל */
+         .section-resize-handle {
+             height: 20px !important;
+             touch-action: none;
+         }
+
+         .section-resize-handle::after {
+             opacity: 1 !important;
+             width: 50px !important;
+             height: 5px !important;
+             bottom: 8px !important;
+         }
+
+         /* כותרת סקשן במובייל */
+         .section-title {
+             right: 50px !important;
+             font-size: 11px !important;
+         }
+
+         /* היררכיה */
+         .grave-header-container > fieldset > div {
+             grid-template-columns: repeat(2, 1fr) !important;
+         }
+
+         /* פרטי קבר */
+         .grave-details-container > div:last-of-type {
+             grid-template-columns: repeat(2, 1fr) !important;
+         }
+
+         /* הוספת רווח תחתון */
+         .sortable-sections {
+             padding-bottom: 20px !important;
+         }
+
+         .sortable-section:last-child {
+             margin-bottom: 30px !important;
+         }
+     }
  </style>
 
  <!-- מיכל לכל הסקשנים הניתנים לגרירה -->

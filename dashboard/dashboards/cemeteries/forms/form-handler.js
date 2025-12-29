@@ -1367,6 +1367,10 @@ const FormHandler = {
             console.log('🔀 [GraveCard] מאתחל גרירת סקשנים...');
             initSortableSections(modal);
 
+            // אתחול שינוי גובה סקשנים
+            console.log('📏 [GraveCard] מאתחל שינוי גובה סקשנים...');
+            initSectionResize(modal);
+
             // הגדרת פונקציית צימצום/הרחבה גלובלית
             window.toggleSection = function(btn) {
                 const section = btn.closest('.sortable-section');
@@ -1495,6 +1499,79 @@ const FormHandler = {
                     console.error('❌ [Sortable] שגיאה בטעינת סדר:', e);
                 }
             }
+        }
+
+        // ========================================
+        // פונקציה: שינוי גובה סקשנים (Resize)
+        // ========================================
+        function initSectionResize(modal) {
+            const sections = modal.querySelectorAll('.sortable-section');
+
+            sections.forEach(function(section) {
+                const resizeHandle = section.querySelector('.section-resize-handle');
+                const content = section.querySelector('.section-content');
+
+                if (!resizeHandle || !content) return;
+
+                let isResizing = false;
+                let startY = 0;
+                let startHeight = 0;
+                const sectionId = section.dataset.section;
+                const minHeight = 50;
+                const maxHeight = 800;
+
+                // טען גובה שמור
+                const savedHeights = JSON.parse(localStorage.getItem('graveCardSectionHeights') || '{}');
+                if (savedHeights[sectionId]) {
+                    content.style.height = savedHeights[sectionId] + 'px';
+                    content.style.maxHeight = savedHeights[sectionId] + 'px';
+                }
+
+                resizeHandle.addEventListener('mousedown', function(e) {
+                    e.preventDefault();
+                    isResizing = true;
+                    startY = e.clientY;
+                    startHeight = content.offsetHeight;
+
+                    section.classList.add('resizing');
+                    document.body.style.cursor = 'ns-resize';
+                    document.body.style.userSelect = 'none';
+
+                    console.log('📏 [Resize] התחלת שינוי גובה:', sectionId);
+                });
+
+                document.addEventListener('mousemove', function(e) {
+                    if (!isResizing) return;
+
+                    const deltaY = e.clientY - startY;
+                    let newHeight = startHeight + deltaY;
+
+                    // הגבלת גובה
+                    newHeight = Math.max(minHeight, Math.min(maxHeight, newHeight));
+
+                    content.style.height = newHeight + 'px';
+                    content.style.maxHeight = newHeight + 'px';
+                });
+
+                document.addEventListener('mouseup', function(e) {
+                    if (!isResizing) return;
+
+                    isResizing = false;
+                    section.classList.remove('resizing');
+                    document.body.style.cursor = '';
+                    document.body.style.userSelect = '';
+
+                    // שמור גובה
+                    const currentHeight = content.offsetHeight;
+                    const savedHeights = JSON.parse(localStorage.getItem('graveCardSectionHeights') || '{}');
+                    savedHeights[sectionId] = currentHeight;
+                    localStorage.setItem('graveCardSectionHeights', JSON.stringify(savedHeights));
+
+                    console.log('📏 [Resize] גובה נשמר:', sectionId, currentHeight + 'px');
+                });
+            });
+
+            console.log('✅ [Resize] שינוי גובה אותחל עבור', sections.length, 'סקשנים');
         }
 
         // ========================================

@@ -252,6 +252,25 @@ $allSectionsHTML = '
         transition: transform 0.3s;
     }
 
+    /* כותרת הסקשן במצב מצומצם */
+    .section-title {
+        position: absolute;
+        right: 35px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 12px;
+        font-weight: 600;
+        color: #64748b;
+        opacity: 0;
+        transition: opacity 0.3s;
+        pointer-events: none;
+        white-space: nowrap;
+    }
+
+    .sortable-section.collapsed .section-title {
+        opacity: 1;
+    }
+
     /* מצב מצומצם */
     .sortable-section.collapsed .section-content {
         display: none;
@@ -266,9 +285,58 @@ $allSectionsHTML = '
         border-bottom: none;
     }
 
+    .sortable-section.collapsed .section-resize-handle {
+        display: none;
+    }
+
     /* תוכן הסקשן */
     .section-content {
         transition: all 0.3s ease;
+        overflow: auto;
+        min-height: 50px;
+    }
+
+    /* ידית שינוי גובה */
+    .section-resize-handle {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 8px;
+        cursor: ns-resize;
+        background: transparent;
+        transition: background 0.2s;
+        border-radius: 0 0 10px 10px;
+    }
+
+    .section-resize-handle:hover {
+        background: linear-gradient(to top, rgba(59, 130, 246, 0.3), transparent);
+    }
+
+    .section-resize-handle::after {
+        content: "";
+        position: absolute;
+        bottom: 3px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 30px;
+        height: 3px;
+        background: #cbd5e1;
+        border-radius: 2px;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+
+    .section-resize-handle:hover::after {
+        opacity: 1;
+    }
+
+    .sortable-section.resizing {
+        user-select: none;
+    }
+
+    .sortable-section.resizing .section-content {
+        transition: none;
     }
 
      /* מיכל ראשי - תמונה + פרטים */
@@ -569,6 +637,7 @@ $allSectionsHTML = '
         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)" title="צמצם/הרחב">
             <i class="fas fa-chevron-down"></i>
         </button>
+        <span class="section-title"><i class="fas fa-monument"></i> פרטי קבר</span>
     </div>
     <div class="section-content">
     <div class="grave-header-container">
@@ -702,6 +771,7 @@ $allSectionsHTML = '
      </div>
     </div>
     </div><!-- סוף section-content -->
+    <div class="section-resize-handle"></div>
 </div>
 <!-- סוף סקשן 1 -->
 ';
@@ -720,6 +790,7 @@ if ($purchase) {
         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)" title="צמצם/הרחב">
             <i class="fas fa-chevron-down"></i>
         </button>
+        <span class="section-title"><i class="fas fa-shopping-cart"></i> תיק רכישה</span>
     </div>
     <div class="section-content">
     <fieldset class="form-section" style="border: none; border-radius: 0 0 10px 10px; padding: 20px; margin: 0; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);">
@@ -760,6 +831,7 @@ if ($purchase) {
         </div>
     </fieldset>
     </div><!-- סוף section-content -->
+    <div class="section-resize-handle"></div>
 </div>
 ';
 } elseif ($grave['graveStatus'] == 1) {
@@ -771,6 +843,7 @@ if ($purchase) {
         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)" title="צמצם/הרחב">
             <i class="fas fa-chevron-down"></i>
         </button>
+        <span class="section-title"><i class="fas fa-shopping-cart"></i> תיק רכישה</span>
     </div>
     <div class="section-content">
     <fieldset class="form-section" style="border: none; border-radius: 0 0 10px 10px; padding: 30px; margin: 0; background: #f8fafc; text-align: center;">
@@ -786,6 +859,7 @@ if ($purchase) {
         </button>
     </fieldset>
     </div><!-- סוף section-content -->
+    <div class="section-resize-handle"></div>
 </div>
 ';
 }
@@ -799,6 +873,7 @@ if ($burial) {
         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)" title="צמצם/הרחב">
             <i class="fas fa-chevron-down"></i>
         </button>
+        <span class="section-title"><i class="fas fa-cross"></i> תיק קבורה</span>
     </div>
     <div class="section-content">
     <fieldset class="form-section" style="border: none; border-radius: 0 0 10px 10px; padding: 20px; margin: 0; background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);">
@@ -842,6 +917,7 @@ if ($burial) {
         </div>
     </fieldset>
     </div><!-- סוף section-content -->
+    <div class="section-resize-handle"></div>
 </div>
 ';
 } elseif ($grave['graveStatus'] == 1 || $grave['graveStatus'] == 2) {
@@ -853,6 +929,7 @@ if ($burial) {
         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)" title="צמצם/הרחב">
             <i class="fas fa-chevron-down"></i>
         </button>
+        <span class="section-title"><i class="fas fa-cross"></i> תיק קבורה</span>
     </div>
     <div class="section-content">
     <fieldset class="form-section" style="border: 2px dashed #fde68a; border-radius: 12px; padding: 30px; margin: 0; background: #fffef5; text-align: center;">
@@ -868,6 +945,7 @@ if ($burial) {
     </button>
     </fieldset>
     </div><!-- סוף section-content -->
+    <div class="section-resize-handle"></div>
 </div>
 ';
 }
@@ -881,6 +959,7 @@ $allSectionsHTML .= '
         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)" title="צמצם/הרחב">
             <i class="fas fa-chevron-down"></i>
         </button>
+        <span class="section-title"><i class="fas fa-folder-open"></i> מסמכים</span>
     </div>
     <div class="section-content">
     <fieldset class="form-section" style="border: none; border-radius: 0 0 10px 10px; padding: 20px; margin: 0; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);">
@@ -894,6 +973,7 @@ $allSectionsHTML .= '
         </div>
     </fieldset>
     </div><!-- סוף section-content -->
+    <div class="section-resize-handle"></div>
 </div>
 
 </div>

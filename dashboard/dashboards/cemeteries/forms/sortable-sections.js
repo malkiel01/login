@@ -95,16 +95,51 @@ window.SortableSections = {
             // הסר onclick ישן אם קיים
             btn.removeAttribute('onclick');
 
-            // הוסף event listener חדש
-            btn.addEventListener('click', function(e) {
-                self.toggleSection(btn, e);
-            });
+            // פונקציה לטיפול בלחיצה
+            function handleToggleClick(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
 
-            // תמיכה ב-touch למובייל
+                console.log('🔘 [Toggle] לחיצה על כפתור');
+
+                const section = btn.closest('.sortable-section');
+                if (section) {
+                    section.classList.toggle('collapsed');
+
+                    // שמירה ב-localStorage
+                    const sectionId = section.dataset.section;
+                    const storageKey = storagePrefix + 'Collapsed';
+                    const collapsedSections = JSON.parse(localStorage.getItem(storageKey) || '[]');
+
+                    if (section.classList.contains('collapsed')) {
+                        if (!collapsedSections.includes(sectionId)) {
+                            collapsedSections.push(sectionId);
+                        }
+                    } else {
+                        const index = collapsedSections.indexOf(sectionId);
+                        if (index > -1) {
+                            collapsedSections.splice(index, 1);
+                        }
+                    }
+                    localStorage.setItem(storageKey, JSON.stringify(collapsedSections));
+                    console.log('✅ [Toggle] סקשן', sectionId, section.classList.contains('collapsed') ? 'מצומצם' : 'מורחב');
+                }
+            }
+
+            // הוסף event listeners עם capture phase כדי לתפוס לפני SortableJS
+            btn.addEventListener('click', handleToggleClick, true);
+            btn.addEventListener('mousedown', function(e) {
+                e.stopPropagation();
+            }, true);
+            btn.addEventListener('touchstart', function(e) {
+                e.stopPropagation();
+            }, { passive: false, capture: true });
             btn.addEventListener('touchend', function(e) {
                 e.preventDefault();
-                self.toggleSection(btn, e);
-            }, { passive: false });
+                e.stopPropagation();
+                handleToggleClick(e);
+            }, { passive: false, capture: true });
         });
 
         console.log('✅ [SortableSections] אתחול', buttons.length, 'כפתורי toggle');

@@ -336,6 +336,14 @@
     font-size: 48px !important;
     display: inline-block !important;
     color: #78909c; /* צבע ברירת מחדל */
+    font-family: "Font Awesome 5 Free", "Font Awesome 5 Pro", "FontAwesome" !important;
+    font-weight: 900 !important; /* נדרש עבור solid icons (fas) */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-style: normal;
+    font-variant: normal;
+    text-rendering: auto;
+    line-height: 1;
 }
 
 .explorer-item-icon img {

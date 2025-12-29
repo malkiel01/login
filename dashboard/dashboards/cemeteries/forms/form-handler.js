@@ -1681,30 +1681,12 @@ const FormHandler = {
         function updateGraveCardFooter(modal, grave) {
             const footer = modal.querySelector('.modal-footer');
             if (!footer) return;
-            
-            const status = grave.graveStatus;
-            let buttonsHTML = '';
-            
-            // כפתור סגור - תמיד
-            buttonsHTML += '<button type="button" class="btn btn-secondary" onclick="FormHandler.closeForm(\'graveCard\')"><i class="fas fa-times"></i> סגור</button>';
-            
-            // לפי סטטוס
-            if (status === 1) {
-                // פנוי - כל האופציות
-                buttonsHTML += '<button type="button" class="btn btn-warning" id="btnSaveGrave"><i class="fas fa-bookmark"></i> שמור קבר</button>';
-                buttonsHTML += `<button type="button" class="btn btn-success btn-open-purchase"><i class="fas fa-shopping-cart"></i> רכישה חדשה</button>`
-                buttonsHTML += `<button type="button" class="btn btn-info btn-open-burial"><i class="fas fa-cross"></i> + קבורה חדשה</button>`
-            } else if (status === 2) {
-                // נרכש - רק קבורה
-                buttonsHTML += `<button type="button" class="btn btn-info btn-open-burial"><i class="fas fa-cross"></i> + קבורה חדשה</button>`
-            } else if (status === 4) {
-                // שמור - בטל שמירה
-                buttonsHTML += '<button type="button" class="btn btn-danger" id="btnCancelSaved"><i class="fas fa-ban"></i> בטל שמירה</button>';
-            }
-            // סטטוס 3 (קבור) - אין כפתורים נוספים
-            
+
+            // רק כפתור סגור
+            let buttonsHTML = '<button type="button" class="btn btn-secondary" onclick="FormHandler.closeForm(\'graveCard\')"><i class="fas fa-times"></i> סגור</button>';
+
             footer.innerHTML = buttonsHTML;
-            console.log('✅ [GraveCard] כפתורים עודכנו לסטטוס:', status);
+            console.log('✅ [GraveCard] כפתורים עודכנו');
         }
         
         // ========================================

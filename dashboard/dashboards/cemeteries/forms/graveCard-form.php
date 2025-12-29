@@ -690,19 +690,19 @@ $allSectionsHTML = '
              border-top: 1px solid #e2e8f0 !important;
          }
 
-         /* כפתור צימצום/הרחבה - גדול יותר למובייל ומחוץ לאזור הגרירה */
+         /* כפתור צימצום/הרחבה - נגיש למובייל */
          .section-toggle-btn {
-             width: 40px !important;
-             height: 40px !important;
-             font-size: 16px !important;
+             width: 32px !important;
+             height: 32px !important;
+             font-size: 14px !important;
              -webkit-tap-highlight-color: transparent;
              touch-action: manipulation;
              z-index: 100 !important;
          }
 
-         /* ידית גרירה גדולה יותר למובייל */
+         /* ידית גרירה דקה יותר במובייל */
          .section-drag-handle {
-             height: 44px !important;
+             height: 32px !important;
          }
 
          /* ידית שינוי גובה גדולה יותר למובייל */

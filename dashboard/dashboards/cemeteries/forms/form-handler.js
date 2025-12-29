@@ -1379,14 +1379,40 @@ const FormHandler = {
                 return;
             }
 
-            // בדוק אם SortableJS נטען
+            console.log('📦 [Sortable] מיכל נמצא, בודק ספרייה...');
+
+            // בדוק אם SortableJS נטען - אם לא, טען אותו דינמית
             if (typeof Sortable === 'undefined') {
-                console.error('❌ [Sortable] SortableJS לא נטען!');
+                console.log('📦 [Sortable] טוען SortableJS מהרשת...');
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js';
+                script.onload = function() {
+                    console.log('✅ [Sortable] SortableJS נטען בהצלחה!');
+                    setupSortable(container);
+                };
+                script.onerror = function() {
+                    console.error('❌ [Sortable] שגיאה בטעינת SortableJS');
+                };
+                document.head.appendChild(script);
                 return;
             }
 
+            // הספרייה כבר נטענה
+            console.log('✅ [Sortable] ספרייה כבר קיימת');
+            setupSortable(container);
+        }
+
+        // ========================================
+        // פונקציה: הגדרת Sortable על המיכל
+        // ========================================
+        function setupSortable(container) {
             const sections = container.querySelectorAll('.sortable-section');
             console.log('📋 [Sortable] סקשנים שנמצאו:', sections.length);
+
+            if (sections.length === 0) {
+                console.warn('⚠️ [Sortable] לא נמצאו סקשנים לגרירה');
+                return;
+            }
 
             // אתחל Sortable
             const sortable = new Sortable(container, {
@@ -1413,7 +1439,7 @@ const FormHandler = {
                 }
             });
 
-            console.log('✅ [Sortable] SortableJS אותחל בהצלחה!');
+            console.log('✅ [Sortable] SortableJS אותחל בהצלחה!', sortable);
 
             // טען סדר שמור
             const savedOrder = localStorage.getItem('graveCardSectionOrder');

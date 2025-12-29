@@ -135,10 +135,8 @@ $statusName = $statusNames[$currentStatus] ?? 'לא ידוע';
 $statusColor = $statusColors[$currentStatus] ?? '#64748b';
 
 // === בניית כל ה-HTML כמחרוזת אחת ===
+// הערה: SortableJS נטען דינמית ב-form-handler.js
 $allSectionsHTML = '
-<!-- SortableJS -->
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-
 <style>
     #graveCardFormModal .modal-dialog {
         max-width: 95% !important;

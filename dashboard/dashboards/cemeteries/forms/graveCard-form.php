@@ -138,11 +138,12 @@ $statusColor = $statusColors[$currentStatus] ?? '#64748b';
 // הערה: SortableJS נטען דינמית ב-form-handler.js
 $allSectionsHTML = '
 <style>
-    #graveCardFormModal .modal-dialog {
+    /* תיקון שם המודל - graveCardModal ולא graveCardFormModal */
+    #graveCardModal .modal-dialog {
         max-width: 95% !important;
         width: 1400px !important;
     }
-    #graveCardFormModal .modal-body {
+    #graveCardModal .modal-body {
         max-height: 85vh !important;
         padding: 20px !important;
     }
@@ -627,110 +628,119 @@ $allSectionsHTML = '
          }
      }
 
-     /* תמיכה במובייל */
+     /* תמיכה במובייל - שם מודל נכון: graveCardModal */
      @media (max-width: 768px) {
-         #graveCardFormModal .modal-dialog {
+         /* המודל עצמו - מסך מלא */
+         #graveCardModal {
+             padding: 0 !important;
+         }
+
+         #graveCardModal .modal-dialog {
              max-width: 100% !important;
              width: 100% !important;
+             height: 100% !important;
              margin: 0 !important;
-             height: 100vh !important;
-             max-height: 100vh !important;
          }
 
-         #graveCardFormModal .modal-content {
-             height: 100vh !important;
+         #graveCardModal .modal-content {
+             height: 100% !important;
+             max-height: 100% !important;
              border-radius: 0 !important;
+             display: flex !important;
+             flex-direction: column !important;
          }
 
-         #graveCardFormModal .modal-header {
-             position: sticky !important;
-             top: 0 !important;
-             z-index: 1050 !important;
-             background: white !important;
+         /* כותרת קבועה עליונה */
+         #graveCardModal .modal-header {
+             flex-shrink: 0 !important;
+             position: relative !important;
+             z-index: 10 !important;
              padding: 12px 15px !important;
              min-height: 50px !important;
-             border-bottom: 2px solid #e2e8f0 !important;
          }
 
-         #graveCardFormModal .modal-title {
+         #graveCardModal .modal-title {
              font-size: 16px !important;
          }
 
-         #graveCardFormModal .modal-header .btn-close,
-         #graveCardFormModal .modal-header .close {
-             font-size: 24px !important;
-             padding: 10px !important;
+         #graveCardModal .modal-header .close {
+             font-size: 28px !important;
+             width: 40px !important;
+             height: 40px !important;
              opacity: 1 !important;
          }
 
-         #graveCardFormModal .modal-body {
-             max-height: calc(100vh - 120px) !important;
-             padding: 10px !important;
-             padding-bottom: 80px !important;
+         /* תוכן גולל באמצע */
+         #graveCardModal .modal-body {
+             flex: 1 !important;
              overflow-y: auto !important;
+             overflow-x: hidden !important;
+             padding: 10px !important;
+             padding-bottom: 20px !important;
              -webkit-overflow-scrolling: touch !important;
          }
 
-         #graveCardFormModal .modal-footer {
-             position: sticky !important;
-             bottom: 0 !important;
-             background: white !important;
-             z-index: 1050 !important;
+         /* כפתורים קבועים תחתונים */
+         #graveCardModal .modal-footer {
+             flex-shrink: 0 !important;
+             position: relative !important;
+             z-index: 10 !important;
              padding: 10px 15px !important;
-             border-top: 2px solid #e2e8f0 !important;
+             background: #f8fafc !important;
+             border-top: 1px solid #e2e8f0 !important;
          }
 
-         /* כפתור צימצום/הרחבה - גדול יותר למובייל */
+         /* כפתור צימצום/הרחבה - גדול יותר למובייל ומחוץ לאזור הגרירה */
          .section-toggle-btn {
-             width: 36px !important;
-             height: 36px !important;
-             font-size: 14px !important;
+             width: 40px !important;
+             height: 40px !important;
+             font-size: 16px !important;
              -webkit-tap-highlight-color: transparent;
              touch-action: manipulation;
+             z-index: 100 !important;
          }
 
          /* ידית גרירה גדולה יותר למובייל */
          .section-drag-handle {
-             height: 40px !important;
-             touch-action: manipulation;
+             height: 44px !important;
          }
 
          /* ידית שינוי גובה גדולה יותר למובייל */
          .section-resize-handle {
-             height: 20px !important;
+             height: 24px !important;
              touch-action: none;
          }
 
          .section-resize-handle::after {
              opacity: 1 !important;
-             width: 50px !important;
-             height: 5px !important;
-             bottom: 8px !important;
+             width: 60px !important;
+             height: 6px !important;
+             bottom: 9px !important;
          }
 
          /* כותרת סקשן במובייל */
          .section-title {
-             right: 50px !important;
-             font-size: 11px !important;
+             right: 55px !important;
+             font-size: 12px !important;
          }
 
-         /* היררכיה */
-         .grave-header-container > fieldset > div {
+         /* היררכיה - 2 עמודות במובייל */
+         .grave-header-container > .grave-details-container > fieldset > div {
              grid-template-columns: repeat(2, 1fr) !important;
          }
 
-         /* פרטי קבר */
-         .grave-details-container > div:last-of-type {
+         /* פרטי קבר - 2 עמודות במובייל */
+         .grave-details-container > div[style*="grid-template-columns"] {
              grid-template-columns: repeat(2, 1fr) !important;
          }
 
          /* הוספת רווח תחתון */
          .sortable-sections {
-             padding-bottom: 20px !important;
+             padding-bottom: 10px !important;
          }
 
          .sortable-section:last-child {
-             margin-bottom: 30px !important;
+             margin-bottom: 10px !important;
          }
      }
  </style>

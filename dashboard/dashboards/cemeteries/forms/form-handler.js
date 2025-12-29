@@ -1474,10 +1474,15 @@ const FormHandler = {
             const sortable = new Sortable(container, {
                 animation: 150,
                 handle: '.section-drag-handle',
+                filter: '.section-toggle-btn', // מניעת גרירה בלחיצה על כפתור הצמצום
+                preventOnFilter: false, // לאפשר לחיצה על הכפתור
                 ghostClass: 'sortable-ghost',
                 dragClass: 'sortable-drag',
                 chosenClass: 'sortable-chosen',
                 forceFallback: false,
+                delay: 150, // השהייה קלה למניעת גרירה בטעות במובייל
+                delayOnTouchOnly: true, // ההשהייה רק במובייל
+                touchStartThreshold: 5, // סף תנועה לפני תחילת גרירה
                 onStart: function(evt) {
                     console.log('🚀 [Sortable] התחלת גרירה:', evt.item.dataset.section);
                     evt.item.style.opacity = '0.9';

@@ -354,7 +354,7 @@ $allSectionsHTML = '
 <!-- סקשן 1: פרטי לקוח -->
 <div class="sortable-section" data-section="details">
     <div class="section-drag-handle">
-        <button type="button" class="section-toggle-btn" onclick="toggleSection(this)" title="צמצם/הרחב">
+        <button type="button" class="section-toggle-btn" title="צמצם/הרחב">
             <i class="fas fa-chevron-down"></i>
         </button>
         <span class="section-title"><i class="fas fa-user"></i> פרטי לקוח</span>
@@ -416,7 +416,7 @@ $allSectionsHTML .= '
 <!-- סקשן 2: תיקי רכישה -->
 <div class="sortable-section" data-section="purchases">
     <div class="section-drag-handle">
-        <button type="button" class="section-toggle-btn" onclick="toggleSection(this)" title="צמצם/הרחב">
+        <button type="button" class="section-toggle-btn" title="צמצם/הרחב">
             <i class="fas fa-chevron-down"></i>
         </button>
         <span class="section-title"><i class="fas fa-shopping-cart"></i> תיקי רכישה (' . $purchaseCount . ')</span>
@@ -479,7 +479,7 @@ $allSectionsHTML .= '
 <!-- סקשן 3: תיקי קבורה -->
 <div class="sortable-section" data-section="burials">
     <div class="section-drag-handle">
-        <button type="button" class="section-toggle-btn" onclick="toggleSection(this)" title="צמצם/הרחב">
+        <button type="button" class="section-toggle-btn" title="צמצם/הרחב">
             <i class="fas fa-chevron-down"></i>
         </button>
         <span class="section-title"><i class="fas fa-cross"></i> תיקי קבורה (' . $burialCount . ')</span>
@@ -535,7 +535,7 @@ $allSectionsHTML .= '
 <!-- סקשן 4: מסמכים -->
 <div class="sortable-section" data-section="documents">
     <div class="section-drag-handle">
-        <button type="button" class="section-toggle-btn" onclick="toggleSection(this)" title="צמצם/הרחב">
+        <button type="button" class="section-toggle-btn" title="צמצם/הרחב">
             <i class="fas fa-chevron-down"></i>
         </button>
         <span class="section-title"><i class="fas fa-folder-open"></i> מסמכים</span>

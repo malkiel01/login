@@ -1566,6 +1566,9 @@ const FormHandler = {
                 footer.innerHTML = '<button type="button" class="btn btn-secondary" onclick="FormHandler.closeForm(\'customerCard\')"><i class="fas fa-times"></i> סגור</button>';
             }
 
+            // אתחול סייר קבצים (זהה לקבר)
+            initCustomerFileExplorer(modal, customerId);
+
             // הגדרת handler גלובלי לכרטיס לקוח
             window.CustomerCardHandler = {
                 editCustomer: function(id) {
@@ -1585,6 +1588,54 @@ const FormHandler = {
             // הערה: גרירה, צימצום ושינוי גובה מטופלים ע"י sortable-sections.js
             // שנטען בתוך הטופס עצמו (customerCard-form.php)
         });
+
+        // פונקציה לאתחול סייר קבצים עבור לקוח
+        function initCustomerFileExplorer(modal, unicId) {
+            const explorerContainer = modal.querySelector('#customerExplorer');
+            if (!explorerContainer) {
+                console.log('⚠️ [CustomerExplorer] Container לא נמצא');
+                return;
+            }
+
+            console.log('📁 [CustomerExplorer] מאתחל סייר קבצים עבור:', unicId);
+
+            // טען Font Awesome אם לא נטען
+            if (!document.querySelector('link[href*="font-awesome"], link[href*="fontawesome"]')) {
+                const faLink = document.createElement('link');
+                faLink.rel = 'stylesheet';
+                faLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css';
+                faLink.integrity = 'sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==';
+                faLink.crossOrigin = 'anonymous';
+                document.head.appendChild(faLink);
+            }
+
+            // טען CSS
+            const cacheBuster = 'v=' + Date.now();
+            if (!document.querySelector('link[href*="explorer.css"]')) {
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = '/dashboard/dashboards/cemeteries/explorer/explorer.css?' + cacheBuster;
+                document.head.appendChild(link);
+            }
+
+            // טען JS ואתחל
+            if (typeof FileExplorer !== 'undefined') {
+                window.customerExplorer = new FileExplorer('customerExplorer', unicId, {});
+                console.log('✅ [CustomerExplorer] סייר קבצים אותחל');
+            } else {
+                const script = document.createElement('script');
+                script.src = '/dashboard/dashboards/cemeteries/explorer/explorer.js?' + cacheBuster;
+                script.onload = () => {
+                    window.customerExplorer = new FileExplorer('customerExplorer', unicId, {});
+                    console.log('✅ [CustomerExplorer] סייר קבצים נטען ואותחל');
+                };
+                script.onerror = () => {
+                    console.error('❌ [CustomerExplorer] שגיאה בטעינת explorer.js');
+                    explorerContainer.innerHTML = '<div style="color: red; padding: 20px;">שגיאה בטעינת סייר הקבצים</div>';
+                };
+                document.head.appendChild(script);
+            }
+        }
     },
 
     /**

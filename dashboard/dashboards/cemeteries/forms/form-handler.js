@@ -1319,28 +1319,28 @@ const FormHandler = {
             console.error('❌ שגיאה בשליפת נתוני קבר:', error);
         }
         
-        // חכה שהטופס יהיה מוכן
-        this.waitForElement('#graveCardFormModal', (modal) => {
+        // חכה שהטופס יהיה מוכן (שם המודל הנכון: graveCardModal)
+        this.waitForElement('#graveCardModal', (modal) => {
             console.log('✅ [GraveCard] Modal נטען');
-            
+
             // קרא נתונים מה-hidden fields
             const unicIdField = modal.querySelector('input[name="unicId"]');
             const statusField = modal.querySelector('input[name="currentGraveStatus"]');
-            
+
             if (!unicIdField || !statusField) {
                 console.error('❌ [GraveCard] Hidden fields לא נמצאו!');
                 return;
             }
-            
+
             const currentGrave = {
                 unicId: unicIdField.value,
                 graveStatus: parseInt(statusField.value),
-                areaGraveId: graveData?.areaGraveId || graveData?.area_grave_id  // ⭐ הוסף!
+                areaGraveId: graveData?.areaGraveId || graveData?.area_grave_id
             };
-            
+
             console.log('📋 [GraveCard] נתוני קבר:', currentGrave);
-            
-            // ⭐⭐⭐ עדכן את hidden field של areaGraveId (אם לא קיים)
+
+            // עדכן את hidden field של areaGraveId (אם לא קיים)
             let areaGraveIdField = modal.querySelector('input[name="areaGraveId"]');
             if (!areaGraveIdField && currentGrave.areaGraveId) {
                 console.log('⚙️ יוצר hidden field ל-areaGraveId');
@@ -1350,7 +1350,7 @@ const FormHandler = {
                 areaGraveIdField.value = currentGrave.areaGraveId;
                 modal.querySelector('form').appendChild(areaGraveIdField);
             }
-            
+
             // החלף כפתורים בפוטר
             updateGraveCardFooter(modal, currentGrave);
 
@@ -1367,262 +1367,9 @@ const FormHandler = {
                 GraveImageViewer.init(currentGrave.unicId);
             }
 
-            // אתחול גרירת סקשנים (SortableJS)
-            console.log('🔀 [GraveCard] מאתחל גרירת סקשנים...');
-            initSortableSections(modal);
-
-            // אתחול שינוי גובה סקשנים
-            console.log('📏 [GraveCard] מאתחל שינוי גובה סקשנים...');
-            initSectionResize(modal);
-
-            // הגדרת פונקציית צימצום/הרחבה גלובלית
-            window.toggleSection = function(btn, event) {
-                // מניעת פעולה כפולה
-                if (event) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-
-                const section = btn.closest('.sortable-section');
-                if (section) {
-                    section.classList.toggle('collapsed');
-
-                    // שמור מצב ל-localStorage
-                    const sectionId = section.dataset.section;
-                    const collapsedSections = JSON.parse(localStorage.getItem('graveCardCollapsed') || '[]');
-
-                    if (section.classList.contains('collapsed')) {
-                        if (!collapsedSections.includes(sectionId)) {
-                            collapsedSections.push(sectionId);
-                        }
-                        console.log('📦 [Toggle] סקשן מצומצם:', sectionId);
-                    } else {
-                        const index = collapsedSections.indexOf(sectionId);
-                        if (index > -1) {
-                            collapsedSections.splice(index, 1);
-                        }
-                        console.log('📦 [Toggle] סקשן מורחב:', sectionId);
-                    }
-                    localStorage.setItem('graveCardCollapsed', JSON.stringify(collapsedSections));
-                }
-            };
-
-            // הוספת תמיכה ב-touch לכפתורי צימצום
-            modal.querySelectorAll('.section-toggle-btn').forEach(function(btn) {
-                btn.addEventListener('touchend', function(e) {
-                    e.preventDefault();
-                    window.toggleSection(btn, e);
-                }, { passive: false });
-            });
-
-            // טען מצב צימצום שמור
-            const collapsedSections = JSON.parse(localStorage.getItem('graveCardCollapsed') || '[]');
-            collapsedSections.forEach(sectionId => {
-                const section = modal.querySelector('[data-section="' + sectionId + '"]');
-                if (section) {
-                    section.classList.add('collapsed');
-                }
-            });
-            if (collapsedSections.length > 0) {
-                console.log('📦 [Toggle] מצב צימצום נטען:', collapsedSections);
-            }
+            // הערה: גרירה, צימצום ושינוי גובה מטופלים ע"י sortable-sections.js
+            // שנטען בתוך הטופס עצמו (graveCard-form.php)
         });
-
-        // ========================================
-        // פונקציה: אתחול גרירת סקשנים
-        // ========================================
-        function initSortableSections(modal) {
-            const container = modal.querySelector('#graveSortableSections');
-
-            if (!container) {
-                console.warn('⚠️ [Sortable] מיכל הסקשנים לא נמצא');
-                return;
-            }
-
-            console.log('📦 [Sortable] מיכל נמצא, בודק ספרייה...');
-
-            // בדוק אם SortableJS נטען - אם לא, טען אותו דינמית
-            if (typeof Sortable === 'undefined') {
-                console.log('📦 [Sortable] טוען SortableJS מהרשת...');
-                const script = document.createElement('script');
-                script.src = 'https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js';
-                script.onload = function() {
-                    console.log('✅ [Sortable] SortableJS נטען בהצלחה!');
-                    setupSortable(container);
-                };
-                script.onerror = function() {
-                    console.error('❌ [Sortable] שגיאה בטעינת SortableJS');
-                };
-                document.head.appendChild(script);
-                return;
-            }
-
-            // הספרייה כבר נטענה
-            console.log('✅ [Sortable] ספרייה כבר קיימת');
-            setupSortable(container);
-        }
-
-        // ========================================
-        // פונקציה: הגדרת Sortable על המיכל
-        // ========================================
-        function setupSortable(container) {
-            const sections = container.querySelectorAll('.sortable-section');
-            console.log('📋 [Sortable] סקשנים שנמצאו:', sections.length);
-
-            if (sections.length === 0) {
-                console.warn('⚠️ [Sortable] לא נמצאו סקשנים לגרירה');
-                return;
-            }
-
-            // אתחל Sortable
-            const sortable = new Sortable(container, {
-                animation: 150,
-                handle: '.section-drag-handle',
-                filter: '.section-toggle-btn', // מניעת גרירה בלחיצה על כפתור הצמצום
-                preventOnFilter: false, // לאפשר לחיצה על הכפתור
-                ghostClass: 'sortable-ghost',
-                dragClass: 'sortable-drag',
-                chosenClass: 'sortable-chosen',
-                forceFallback: false,
-                delay: 150, // השהייה קלה למניעת גרירה בטעות במובייל
-                delayOnTouchOnly: true, // ההשהייה רק במובייל
-                touchStartThreshold: 5, // סף תנועה לפני תחילת גרירה
-                onStart: function(evt) {
-                    console.log('🚀 [Sortable] התחלת גרירה:', evt.item.dataset.section);
-                    evt.item.style.opacity = '0.9';
-                },
-                onEnd: function(evt) {
-                    console.log('✅ [Sortable] סיום גרירה');
-                    evt.item.style.opacity = '1';
-
-                    // שמור את הסדר
-                    const order = Array.from(container.children)
-                        .filter(el => el.classList.contains('sortable-section'))
-                        .map(el => el.dataset.section);
-                    localStorage.setItem('graveCardSectionOrder', JSON.stringify(order));
-                    console.log('💾 [Sortable] סדר נשמר:', order);
-                }
-            });
-
-            console.log('✅ [Sortable] SortableJS אותחל בהצלחה!', sortable);
-
-            // טען סדר שמור
-            const savedOrder = localStorage.getItem('graveCardSectionOrder');
-            if (savedOrder) {
-                try {
-                    const order = JSON.parse(savedOrder);
-                    order.forEach(function(sectionId) {
-                        const section = container.querySelector('[data-section="' + sectionId + '"]');
-                        if (section) {
-                            container.appendChild(section);
-                        }
-                    });
-                    console.log('📥 [Sortable] סדר נטען:', order);
-                } catch (e) {
-                    console.error('❌ [Sortable] שגיאה בטעינת סדר:', e);
-                }
-            }
-        }
-
-        // ========================================
-        // פונקציה: שינוי גובה סקשנים (Resize)
-        // ========================================
-        function initSectionResize(modal) {
-            const sections = modal.querySelectorAll('.sortable-section');
-
-            sections.forEach(function(section) {
-                const resizeHandle = section.querySelector('.section-resize-handle');
-                const content = section.querySelector('.section-content');
-
-                if (!resizeHandle || !content) return;
-
-                let isResizing = false;
-                let startY = 0;
-                let startHeight = 0;
-                const sectionId = section.dataset.section;
-                const minHeight = 50;
-                const maxHeight = 800;
-
-                // טען גובה שמור
-                const savedHeights = JSON.parse(localStorage.getItem('graveCardSectionHeights') || '{}');
-                if (savedHeights[sectionId]) {
-                    content.style.height = savedHeights[sectionId] + 'px';
-                    content.style.maxHeight = savedHeights[sectionId] + 'px';
-                }
-
-                // פונקציות עזר לטיפול ב-resize
-                function startResize(clientY) {
-                    isResizing = true;
-                    startY = clientY;
-                    startHeight = content.offsetHeight;
-                    section.classList.add('resizing');
-                    document.body.style.cursor = 'ns-resize';
-                    document.body.style.userSelect = 'none';
-                    console.log('📏 [Resize] התחלת שינוי גובה:', sectionId);
-                }
-
-                function doResize(clientY) {
-                    if (!isResizing) return;
-                    const deltaY = clientY - startY;
-                    let newHeight = startHeight + deltaY;
-                    newHeight = Math.max(minHeight, Math.min(maxHeight, newHeight));
-                    content.style.height = newHeight + 'px';
-                    content.style.maxHeight = newHeight + 'px';
-                }
-
-                function endResize() {
-                    if (!isResizing) return;
-                    isResizing = false;
-                    section.classList.remove('resizing');
-                    document.body.style.cursor = '';
-                    document.body.style.userSelect = '';
-                    const currentHeight = content.offsetHeight;
-                    const savedHeights = JSON.parse(localStorage.getItem('graveCardSectionHeights') || '{}');
-                    savedHeights[sectionId] = currentHeight;
-                    localStorage.setItem('graveCardSectionHeights', JSON.stringify(savedHeights));
-                    console.log('📏 [Resize] גובה נשמר:', sectionId, currentHeight + 'px');
-                }
-
-                // אירועי עכבר
-                resizeHandle.addEventListener('mousedown', function(e) {
-                    e.preventDefault();
-                    startResize(e.clientY);
-                });
-
-                document.addEventListener('mousemove', function(e) {
-                    doResize(e.clientY);
-                });
-
-                document.addEventListener('mouseup', function(e) {
-                    endResize();
-                });
-
-                // אירועי מגע (touch)
-                resizeHandle.addEventListener('touchstart', function(e) {
-                    e.preventDefault();
-                    if (e.touches.length === 1) {
-                        startResize(e.touches[0].clientY);
-                    }
-                }, { passive: false });
-
-                document.addEventListener('touchmove', function(e) {
-                    if (isResizing && e.touches.length === 1) {
-                        e.preventDefault();
-                        doResize(e.touches[0].clientY);
-                    }
-                }, { passive: false });
-
-                document.addEventListener('touchend', function(e) {
-                    endResize();
-                });
-
-                document.addEventListener('touchcancel', function(e) {
-                    endResize();
-                });
-            });
-
-            console.log('✅ [Resize] שינוי גובה אותחל עבור', sections.length, 'סקשנים');
-        }
 
         // ========================================
         // פונקציה: אתחול סייר קבצים
@@ -1819,60 +1566,6 @@ const FormHandler = {
                 footer.innerHTML = '<button type="button" class="btn btn-secondary" onclick="FormHandler.closeForm(\'customerCard\')"><i class="fas fa-times"></i> סגור</button>';
             }
 
-            // הגדרת פונקציית צימצום/הרחבה (אותה פונקציה כמו בכרטיס קבר)
-            if (typeof window.toggleSection !== 'function') {
-                window.toggleSection = function(btn, event) {
-                    if (event) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                    }
-
-                    const section = btn.closest('.sortable-section');
-                    if (section) {
-                        section.classList.toggle('collapsed');
-
-                        const sectionId = section.dataset.section;
-                        const storageKey = section.closest('#customerCardModal') ? 'customerCardCollapsed' : 'graveCardCollapsed';
-                        const collapsedSections = JSON.parse(localStorage.getItem(storageKey) || '[]');
-
-                        if (section.classList.contains('collapsed')) {
-                            if (!collapsedSections.includes(sectionId)) {
-                                collapsedSections.push(sectionId);
-                            }
-                        } else {
-                            const index = collapsedSections.indexOf(sectionId);
-                            if (index > -1) {
-                                collapsedSections.splice(index, 1);
-                            }
-                        }
-                        localStorage.setItem(storageKey, JSON.stringify(collapsedSections));
-                    }
-                };
-            }
-
-            // הוספת תמיכה ב-touch לכפתורי צימצום
-            modal.querySelectorAll('.section-toggle-btn').forEach(function(btn) {
-                btn.addEventListener('touchend', function(e) {
-                    e.preventDefault();
-                    window.toggleSection(btn, e);
-                }, { passive: false });
-            });
-
-            // טען מצב צימצום שמור
-            const collapsedSections = JSON.parse(localStorage.getItem('customerCardCollapsed') || '[]');
-            collapsedSections.forEach(sectionId => {
-                const section = modal.querySelector('.sortable-section[data-section="' + sectionId + '"]');
-                if (section) {
-                    section.classList.add('collapsed');
-                }
-            });
-
-            // אתחול SortableJS לסקשנים
-            initCustomerSortable(modal);
-
-            // אתחול resize לסקשנים
-            initCustomerResize(modal);
-
             // הגדרת handler גלובלי לכרטיס לקוח
             window.CustomerCardHandler = {
                 editCustomer: function(id) {
@@ -1888,117 +1581,10 @@ const FormHandler = {
                     FormHandler.openForm('burial', null, id);
                 }
             };
+
+            // הערה: גרירה, צימצום ושינוי גובה מטופלים ע"י sortable-sections.js
+            // שנטען בתוך הטופס עצמו (customerCard-form.php)
         });
-
-        // פונקציה לאתחול Sortable
-        function initCustomerSortable(modal) {
-            const container = modal.querySelector('#customerSortableSections');
-            if (!container) return;
-
-            if (typeof Sortable === 'undefined') {
-                const script = document.createElement('script');
-                script.src = 'https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js';
-                script.onload = function() {
-                    setupCustomerSortable(container);
-                };
-                document.head.appendChild(script);
-                return;
-            }
-            setupCustomerSortable(container);
-        }
-
-        function setupCustomerSortable(container) {
-            new Sortable(container, {
-                animation: 150,
-                handle: '.section-drag-handle',
-                filter: '.section-toggle-btn',
-                preventOnFilter: false,
-                ghostClass: 'sortable-ghost',
-                chosenClass: 'sortable-chosen',
-                delay: 150,
-                delayOnTouchOnly: true,
-                onEnd: function(evt) {
-                    const order = Array.from(container.children)
-                        .filter(el => el.classList.contains('sortable-section'))
-                        .map(el => el.dataset.section);
-                    localStorage.setItem('customerCardSectionOrder', JSON.stringify(order));
-                }
-            });
-
-            // טען סדר שמור
-            const savedOrder = localStorage.getItem('customerCardSectionOrder');
-            if (savedOrder) {
-                try {
-                    const order = JSON.parse(savedOrder);
-                    order.forEach(function(sectionId) {
-                        const section = container.querySelector('.sortable-section[data-section="' + sectionId + '"]');
-                        if (section) {
-                            container.appendChild(section);
-                        }
-                    });
-                } catch (e) {}
-            }
-        }
-
-        // פונקציה לאתחול Resize
-        function initCustomerResize(modal) {
-            const sections = modal.querySelectorAll('.sortable-section');
-
-            sections.forEach(function(section) {
-                const resizeHandle = section.querySelector('.section-resize-handle');
-                const content = section.querySelector('.section-content');
-
-                if (!resizeHandle || !content) return;
-
-                let isResizing = false;
-                let startY = 0;
-                let startHeight = 0;
-                const sectionId = section.dataset.section;
-                const minHeight = 50;
-                const maxHeight = 600;
-
-                // טען גובה שמור
-                const savedHeights = JSON.parse(localStorage.getItem('customerCardSectionHeights') || '{}');
-                if (savedHeights[sectionId]) {
-                    content.style.height = savedHeights[sectionId] + 'px';
-                    content.style.maxHeight = savedHeights[sectionId] + 'px';
-                }
-
-                function startResize(clientY) {
-                    isResizing = true;
-                    startY = clientY;
-                    startHeight = content.offsetHeight;
-                    section.classList.add('resizing');
-                    document.body.style.cursor = 'ns-resize';
-                }
-
-                function doResize(clientY) {
-                    if (!isResizing) return;
-                    const deltaY = clientY - startY;
-                    let newHeight = startHeight + deltaY;
-                    newHeight = Math.max(minHeight, Math.min(maxHeight, newHeight));
-                    content.style.height = newHeight + 'px';
-                    content.style.maxHeight = newHeight + 'px';
-                }
-
-                function endResize() {
-                    if (!isResizing) return;
-                    isResizing = false;
-                    section.classList.remove('resizing');
-                    document.body.style.cursor = '';
-                    const savedHeights = JSON.parse(localStorage.getItem('customerCardSectionHeights') || '{}');
-                    savedHeights[sectionId] = content.offsetHeight;
-                    localStorage.setItem('customerCardSectionHeights', JSON.stringify(savedHeights));
-                }
-
-                resizeHandle.addEventListener('mousedown', (e) => { e.preventDefault(); startResize(e.clientY); });
-                document.addEventListener('mousemove', (e) => doResize(e.clientY));
-                document.addEventListener('mouseup', () => endResize());
-                resizeHandle.addEventListener('touchstart', (e) => { e.preventDefault(); if (e.touches.length === 1) startResize(e.touches[0].clientY); }, { passive: false });
-                document.addEventListener('touchmove', (e) => { if (isResizing && e.touches.length === 1) { e.preventDefault(); doResize(e.touches[0].clientY); } }, { passive: false });
-                document.addEventListener('touchend', () => endResize());
-            });
-        }
     },
 
     /**

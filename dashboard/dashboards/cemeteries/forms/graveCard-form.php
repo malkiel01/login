@@ -1095,6 +1095,19 @@ $allSectionsHTML .= '
 
 </div>
 <!-- סוף מיכל הסקשנים הניתנים לגרירה -->
+
+<!-- טעינת קוד משותף לסקשנים -->
+<script src="forms/sortable-sections.js"></script>
+<script>
+    // אתחול כשהמודל מוכן
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", function() {
+            SortableSections.init("graveSortableSections", "graveCard");
+        });
+    } else {
+        SortableSections.init("graveSortableSections", "graveCard");
+    }
+</script>
 ';
 
 // === הוספת כל הסקשנים כ-HTML אחד ===

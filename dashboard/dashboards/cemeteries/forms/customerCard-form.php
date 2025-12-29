@@ -558,6 +558,19 @@ $allSectionsHTML .= '
 
 </div>
 <!-- סוף מיכל הסקשנים -->
+
+<!-- טעינת קוד משותף לסקשנים -->
+<script src="forms/sortable-sections.js"></script>
+<script>
+    // אתחול כשהמודל מוכן
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", function() {
+            SortableSections.init("customerSortableSections", "customerCard");
+        });
+    } else {
+        SortableSections.init("customerSortableSections", "customerCard");
+    }
+</script>
 ';
 
 $formBuilder->addCustomHTML($allSectionsHTML);

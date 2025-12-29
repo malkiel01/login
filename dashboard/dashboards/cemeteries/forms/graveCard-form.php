@@ -127,113 +127,278 @@ function formatPhone($phone) {
 // יצירת FormBuilder
 $formBuilder = new FormBuilder('graveCard', $itemId, null);
 
-// HTML מותאם - היררכיה
-$hierarchyHTML = '
+// סטטוסים וצבעים
+$statusNames = [1 => 'פנוי', 2 => 'נרכש', 3 => 'קבור', 4 => 'שמור'];
+$statusColors = [1 => '#22c55e', 2 => '#3b82f6', 3 => '#f59e0b', 4 => '#8b5cf6'];
+$currentStatus = $grave['graveStatus'] ?? 1;
+$statusName = $statusNames[$currentStatus] ?? 'לא ידוע';
+$statusColor = $statusColors[$currentStatus] ?? '#64748b';
+
+// HTML מותאם - כותרת עליונה עם תמונה והיררכיה
+$headerHTML = '
  <style>
      #graveCardFormModal .modal-dialog {
          max-width: 95% !important;
-         width: 1200px !important;
+         width: 1400px !important;
      }
      #graveCardFormModal .modal-body {
-         max-height: 80vh !important;
+         max-height: 85vh !important;
+         padding: 20px !important;
+     }
+
+     /* מיכל ראשי - תמונה + פרטים */
+     .grave-header-container {
+         display: grid;
+         grid-template-columns: 280px 1fr;
+         gap: 20px;
+         margin-bottom: 20px;
+     }
+
+     /* מציג תמונות */
+     .grave-image-viewer {
+         background: #1e293b;
+         border-radius: 12px;
+         overflow: hidden;
+         height: 320px;
+         display: flex;
+         flex-direction: column;
+     }
+
+     .grave-image-main {
+         flex: 1;
+         display: flex;
+         align-items: center;
+         justify-content: center;
+         position: relative;
+         overflow: hidden;
+     }
+
+     .grave-image-main img {
+         max-width: 100%;
+         max-height: 100%;
+         object-fit: contain;
+     }
+
+     .grave-image-placeholder {
+         color: #64748b;
+         text-align: center;
+     }
+
+     .grave-image-placeholder i {
+         font-size: 48px;
+         margin-bottom: 10px;
+         display: block;
+     }
+
+     .grave-image-nav {
+         position: absolute;
+         top: 50%;
+         transform: translateY(-50%);
+         background: rgba(0,0,0,0.5);
+         color: white;
+         border: none;
+         width: 32px;
+         height: 32px;
+         border-radius: 50%;
+         cursor: pointer;
+         display: flex;
+         align-items: center;
+         justify-content: center;
+         transition: background 0.2s;
+     }
+
+     .grave-image-nav:hover {
+         background: rgba(0,0,0,0.8);
+     }
+
+     .grave-image-nav.prev { right: 8px; }
+     .grave-image-nav.next { left: 8px; }
+
+     .grave-image-controls {
+         background: #334155;
+         padding: 10px;
+         display: flex;
+         justify-content: space-between;
+         align-items: center;
+     }
+
+     .grave-image-counter {
+         color: #94a3b8;
+         font-size: 12px;
+     }
+
+     .grave-image-actions {
+         display: flex;
+         gap: 8px;
+     }
+
+     .grave-image-btn {
+         background: #475569;
+         color: white;
+         border: none;
+         padding: 6px 10px;
+         border-radius: 6px;
+         font-size: 12px;
+         cursor: pointer;
+         transition: background 0.2s;
+     }
+
+     .grave-image-btn:hover {
+         background: #64748b;
+     }
+
+     .grave-image-btn.danger:hover {
+         background: #ef4444;
+     }
+
+     /* פרטי הקבר */
+     .grave-details-container {
+         display: flex;
+         flex-direction: column;
+         gap: 15px;
+     }
+
+     /* כותרת קבר */
+     .grave-title-bar {
+         display: flex;
+         align-items: center;
+         justify-content: space-between;
+         padding: 15px;
+         background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+         border-radius: 10px;
+         border: 1px solid #e2e8f0;
+     }
+
+     .grave-title {
+         font-size: 20px;
+         font-weight: 700;
+         color: #1e293b;
+     }
+
+     .grave-status-badge {
+         padding: 8px 16px;
+         border-radius: 20px;
+         font-weight: 600;
+         font-size: 14px;
+         color: white;
+     }
+
+     @media (max-width: 900px) {
+         .grave-header-container {
+             grid-template-columns: 1fr;
+         }
+         .grave-image-viewer {
+             height: 250px;
+         }
      }
  </style>
 
- <fieldset class="form-section" style="border: 2px solid #e0f2fe; border-radius: 12px; padding: 20px; margin-bottom: 20px; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);">
-     <legend style="padding: 0 15px; font-weight: bold; color: #0284c7; font-size: 16px;">
-         <i class="fas fa-sitemap"></i> מיקום בהיררכיה
-     </legend>
-     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
-         <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bae6fd;">
-             <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">בית עלמין</div>
-             <div style="font-weight: 600; color: #0c4a6e;">' . htmlspecialchars($grave['cemeteryNameHe'] ?? '-') . '</div>
+ <div class="grave-header-container">
+     <!-- מציג תמונות -->
+     <div class="grave-image-viewer" id="graveImageViewer" data-unic-id="' . htmlspecialchars($grave['unicId']) . '">
+         <div class="grave-image-main">
+             <div class="grave-image-placeholder" id="graveImagePlaceholder">
+                 <i class="fas fa-image"></i>
+                 <div>אין תמונות</div>
+                 <div style="font-size: 11px; margin-top: 5px;">לחץ להעלאה</div>
+             </div>
+             <img id="graveImageDisplay" style="display: none;" />
+             <button class="grave-image-nav prev" id="graveImagePrev" style="display: none;">
+                 <i class="fas fa-chevron-right"></i>
+             </button>
+             <button class="grave-image-nav next" id="graveImageNext" style="display: none;">
+                 <i class="fas fa-chevron-left"></i>
+             </button>
          </div>
-         <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bae6fd;">
-             <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">גוש</div>
-             <div style="font-weight: 600; color: #0c4a6e;">' . htmlspecialchars($grave['blockNameHe'] ?? '-') . '</div>
+         <div class="grave-image-controls">
+             <span class="grave-image-counter" id="graveImageCounter">0 / 0</span>
+             <div class="grave-image-actions">
+                 <button type="button" class="grave-image-btn" onclick="GraveImageViewer.upload()" title="העלה תמונה">
+                     <i class="fas fa-upload"></i>
+                 </button>
+                 <button type="button" class="grave-image-btn danger" onclick="GraveImageViewer.delete()" title="מחק תמונה" id="graveImageDeleteBtn" style="display: none;">
+                     <i class="fas fa-trash"></i>
+                 </button>
+             </div>
          </div>
-         <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bae6fd;">
-             <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">חלקה</div>
-             <div style="font-weight: 600; color: #0c4a6e;">' . htmlspecialchars($grave['plotNameHe'] ?? '-') . '</div>
-         </div>
-         <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bae6fd;">
-             <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">שורה</div>
-             <div style="font-weight: 600; color: #0c4a6e;">' . htmlspecialchars($grave['lineNameHe'] ?? '-') . '</div>
-         </div>
-         <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bae6fd;">
-             <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">אחוזת קבר</div>
-             <div style="font-weight: 600; color: #0c4a6e;">' . htmlspecialchars($grave['areaGraveNameHe'] ?? '-') . '</div>
-         </div>
+         <input type="file" id="graveImageInput" accept="image/*" style="display: none;" onchange="GraveImageViewer.handleUpload(event)" />
      </div>
 
-    <!-- ⭐ כפתור עריכת אחוזת קבר -->
-    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #bae6fd;">
-        <button type="button" 
-                class="btn btn-sm btn-primary" 
-                onclick="openGraveEdit(\'' . $grave['areaGraveId'] . '\')"
-                style="width: 100%; background: linear-gradient(135deg, #0284c7, #0369a1); border: none; padding: 10px; font-weight: 600;">
-            <i class="fas fa-edit"></i> ערוך אחוזת קבר
-        </button>
-    </div>
- </fieldset>';
+     <!-- פרטים והיררכיה -->
+     <div class="grave-details-container">
+         <!-- כותרת וסטטוס -->
+         <div class="grave-title-bar">
+             <span class="grave-title">
+                 <i class="fas fa-monument" style="color: #64748b; margin-left: 8px;"></i>
+                 ' . htmlspecialchars($grave['graveNameHe'] ?? 'קבר') . '
+             </span>
+             <span class="grave-status-badge" style="background: ' . $statusColor . ';">
+                 ' . $statusName . '
+             </span>
+         </div>
 
-$formBuilder->addCustomHTML($hierarchyHTML);
+         <!-- היררכיה -->
+         <fieldset class="form-section" style="border: 2px solid #e0f2fe; border-radius: 12px; padding: 15px; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); margin: 0;">
+             <legend style="padding: 0 10px; font-weight: bold; color: #0284c7; font-size: 14px;">
+                 <i class="fas fa-sitemap"></i> מיקום בהיררכיה
+             </legend>
+             <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;">
+                 <div style="background: white; padding: 10px; border-radius: 8px; border: 1px solid #bae6fd; text-align: center;">
+                     <div style="font-size: 10px; color: #64748b; margin-bottom: 2px;">בית עלמין</div>
+                     <div style="font-weight: 600; color: #0c4a6e; font-size: 13px;">' . htmlspecialchars($grave['cemeteryNameHe'] ?? '-') . '</div>
+                 </div>
+                 <div style="background: white; padding: 10px; border-radius: 8px; border: 1px solid #bae6fd; text-align: center;">
+                     <div style="font-size: 10px; color: #64748b; margin-bottom: 2px;">גוש</div>
+                     <div style="font-weight: 600; color: #0c4a6e; font-size: 13px;">' . htmlspecialchars($grave['blockNameHe'] ?? '-') . '</div>
+                 </div>
+                 <div style="background: white; padding: 10px; border-radius: 8px; border: 1px solid #bae6fd; text-align: center;">
+                     <div style="font-size: 10px; color: #64748b; margin-bottom: 2px;">חלקה</div>
+                     <div style="font-weight: 600; color: #0c4a6e; font-size: 13px;">' . htmlspecialchars($grave['plotNameHe'] ?? '-') . '</div>
+                 </div>
+                 <div style="background: white; padding: 10px; border-radius: 8px; border: 1px solid #bae6fd; text-align: center;">
+                     <div style="font-size: 10px; color: #64748b; margin-bottom: 2px;">שורה</div>
+                     <div style="font-weight: 600; color: #0c4a6e; font-size: 13px;">' . htmlspecialchars($grave['lineNameHe'] ?? '-') . '</div>
+                 </div>
+                 <div style="background: white; padding: 10px; border-radius: 8px; border: 1px solid #bae6fd; text-align: center;">
+                     <div style="font-size: 10px; color: #64748b; margin-bottom: 2px;">אחוזת קבר</div>
+                     <div style="font-weight: 600; color: #0c4a6e; font-size: 13px;">' . htmlspecialchars($grave['areaGraveNameHe'] ?? '-') . '</div>
+                 </div>
+             </div>
+         </fieldset>
 
-// שדות קבר בסיסיים
-$formBuilder->addField('graveNameHe', 'שם הקבר', 'text', [
-    'value' => $grave['graveNameHe'] ?? '',
-    'readonly' => true
-]);
+         <!-- פרטי קבר -->
+         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+             <div style="background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                 <div style="font-size: 10px; color: #64748b; margin-bottom: 2px;">סוג חלקה</div>
+                 <div style="font-weight: 600; color: #334155; font-size: 13px;">' . ($grave['plotType'] == 1 ? 'פטורה' : ($grave['plotType'] == 2 ? 'חריגה' : 'סגורה')) . '</div>
+             </div>
+             <div style="background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                 <div style="font-size: 10px; color: #64748b; margin-bottom: 2px;">מיקום בשורה</div>
+                 <div style="font-weight: 600; color: #334155; font-size: 13px;">' . ($grave['graveLocation'] == 1 ? 'עליון' : ($grave['graveLocation'] == 2 ? 'תחתון' : 'אמצעי')) . '</div>
+             </div>
+             <div style="background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                 <div style="font-size: 10px; color: #64748b; margin-bottom: 2px;">קבר קטן</div>
+                 <div style="font-weight: 600; color: #334155; font-size: 13px;">' . ($grave['isSmallGrave'] ? 'כן' : 'לא') . '</div>
+             </div>
+             <div style="background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                 <div style="font-size: 10px; color: #64748b; margin-bottom: 2px;">עלות בנייה</div>
+                 <div style="font-weight: 600; color: #059669; font-size: 13px;">' . formatPrice($grave['constructionCost']) . '</div>
+             </div>
+         </div>
 
-$formBuilder->addField('plotType', 'סוג חלקה', 'select', [
-    'options' => [
-        1 => 'פטורה',
-        2 => 'חריגה',
-        3 => 'סגורה'
-    ],
-    'value' => $grave['plotType'] ?? 1,
-    'readonly' => true
-]);
+         <!-- כפתור עריכה -->
+         <button type="button"
+                 class="btn btn-sm btn-primary"
+                 onclick="openGraveEdit(\'' . $grave['areaGraveId'] . '\')"
+                 style="background: linear-gradient(135deg, #0284c7, #0369a1); border: none; padding: 10px; font-weight: 600;">
+             <i class="fas fa-edit"></i> ערוך אחוזת קבר
+         </button>
+     </div>
+ </div>';
 
-$formBuilder->addField('graveStatus', 'סטטוס קבר', 'select', [
-    'options' => [
-        1 => 'פנוי',
-        2 => 'נרכש',
-        3 => 'קבור',
-        4 => 'שמור'
-    ],
-    'value' => $grave['graveStatus'] ?? 1,
-    'readonly' => true
-]);
+$formBuilder->addCustomHTML($headerHTML);
 
-$formBuilder->addField('graveLocation', 'מיקום בשורה', 'select', [
-    'options' => [
-        1 => 'עליון',
-        2 => 'תחתון',
-        3 => 'אמצעי'
-    ],
-    'value' => $grave['graveLocation'] ?? 1,
-    'readonly' => true
-]);
-
-$formBuilder->addField('isSmallGrave', 'קבר קטן', 'select', [
-    'options' => [
-        0 => 'לא',
-        1 => 'כן'
-    ],
-    'value' => $grave['isSmallGrave'] ?? 0,
-    'readonly' => true
-]);
-
-$formBuilder->addField('constructionCost', 'עלות בנייה', 'text', [
-    'value' => formatPrice($grave['constructionCost']),
-    'readonly' => true
-]);
-
-$formBuilder->addField('createDate', 'תאריך יצירה', 'text', [
-    'value' => formatHebrewDate($grave['createDate']),
-    'readonly' => true
-]);
+// שדות אלה הועברו לכותרת העליונה ולכן הוסרו מהטופס
 
 // תיק שמירה (רק אם סטטוס 4)
 if ($grave['graveStatus'] == 4) {

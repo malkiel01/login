@@ -1356,6 +1356,12 @@ const FormHandler = {
             // אתחול סייר קבצים
             console.log('🔵 [GraveCard] מנסה לאתחל סייר קבצים...');
             initFileExplorer(modal, currentGrave.unicId);
+
+            // אתחול מציג תמונות הקבר
+            console.log('📷 [GraveCard] מאתחל מציג תמונות...');
+            if (typeof GraveImageViewer !== 'undefined') {
+                GraveImageViewer.init(currentGrave.unicId);
+            }
         });
 
         // ========================================
@@ -5626,5 +5632,202 @@ window.hideSelectSpinner = function(selectId) {
         
         input.disabled = false;
         input.style.opacity = '1';
+    }
+};
+
+// ========================================
+// GraveImageViewer - מציג תמונות קבר
+// ========================================
+window.GraveImageViewer = {
+    images: [],
+    currentIndex: 0,
+    unicId: null,
+    apiBase: '/dashboard/dashboards/cemeteries/explorer/explorer-api.php',
+
+    /**
+     * אתחול מציג התמונות
+     */
+    init: function(unicId) {
+        this.unicId = unicId;
+        this.images = [];
+        this.currentIndex = 0;
+
+        // הוסף אירועים לכפתורי ניווט
+        const prevBtn = document.getElementById('graveImagePrev');
+        const nextBtn = document.getElementById('graveImageNext');
+        const placeholder = document.getElementById('graveImagePlaceholder');
+
+        if (prevBtn) prevBtn.onclick = () => this.prev();
+        if (nextBtn) nextBtn.onclick = () => this.next();
+        if (placeholder) placeholder.onclick = () => this.upload();
+
+        // טען תמונות
+        this.loadImages();
+        console.log('📷 [GraveImageViewer] אותחל עבור:', unicId);
+    },
+
+    /**
+     * טעינת רשימת תמונות מהשרת
+     */
+    async loadImages() {
+        if (!this.unicId) return;
+
+        try {
+            const response = await fetch(`${this.apiBase}?action=listGraveImages&unicId=${this.unicId}`);
+            const result = await response.json();
+
+            if (result.success) {
+                this.images = result.images || [];
+                this.currentIndex = 0;
+                this.updateDisplay();
+                console.log('📷 [GraveImageViewer] נטענו', this.images.length, 'תמונות');
+            }
+        } catch (error) {
+            console.error('📷 [GraveImageViewer] שגיאה בטעינת תמונות:', error);
+        }
+    },
+
+    /**
+     * עדכון התצוגה
+     */
+    updateDisplay() {
+        const placeholder = document.getElementById('graveImagePlaceholder');
+        const imageEl = document.getElementById('graveImageDisplay');
+        const prevBtn = document.getElementById('graveImagePrev');
+        const nextBtn = document.getElementById('graveImageNext');
+        const counter = document.getElementById('graveImageCounter');
+        const deleteBtn = document.getElementById('graveImageDeleteBtn');
+
+        if (this.images.length === 0) {
+            // אין תמונות - הצג placeholder
+            if (placeholder) placeholder.style.display = 'block';
+            if (imageEl) imageEl.style.display = 'none';
+            if (prevBtn) prevBtn.style.display = 'none';
+            if (nextBtn) nextBtn.style.display = 'none';
+            if (deleteBtn) deleteBtn.style.display = 'none';
+            if (counter) counter.textContent = '0 / 0';
+        } else {
+            // יש תמונות - הצג
+            if (placeholder) placeholder.style.display = 'none';
+            if (imageEl) {
+                imageEl.style.display = 'block';
+                imageEl.src = this.images[this.currentIndex].url;
+            }
+            if (prevBtn) prevBtn.style.display = this.images.length > 1 ? 'flex' : 'none';
+            if (nextBtn) nextBtn.style.display = this.images.length > 1 ? 'flex' : 'none';
+            if (deleteBtn) deleteBtn.style.display = 'inline-flex';
+            if (counter) counter.textContent = `${this.currentIndex + 1} / ${this.images.length}`;
+        }
+    },
+
+    /**
+     * תמונה קודמת
+     */
+    prev() {
+        if (this.images.length === 0) return;
+        this.currentIndex = (this.currentIndex - 1 + this.images.length) % this.images.length;
+        this.updateDisplay();
+    },
+
+    /**
+     * תמונה הבאה
+     */
+    next() {
+        if (this.images.length === 0) return;
+        this.currentIndex = (this.currentIndex + 1) % this.images.length;
+        this.updateDisplay();
+    },
+
+    /**
+     * פתיחת דיאלוג העלאה
+     */
+    upload() {
+        const input = document.getElementById('graveImageInput');
+        if (input) input.click();
+    },
+
+    /**
+     * טיפול בהעלאת קובץ
+     */
+    async handleUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        // בדיקה שזה תמונה
+        if (!file.type.startsWith('image/')) {
+            alert('יש להעלות קובץ תמונה בלבד');
+            return;
+        }
+
+        // בדיקת גודל (5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('גודל התמונה מקסימלי הוא 5MB');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('image', file);
+
+        try {
+            const response = await fetch(`${this.apiBase}?action=uploadGraveImage&unicId=${this.unicId}`, {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                console.log('📷 [GraveImageViewer] תמונה הועלתה:', result.fileName);
+                // רענן רשימה והצג את החדשה
+                await this.loadImages();
+                this.currentIndex = 0; // התמונה החדשה תהיה ראשונה (ממוינת לפי תאריך)
+                this.updateDisplay();
+            } else {
+                alert('שגיאה בהעלאת התמונה: ' + result.error);
+            }
+        } catch (error) {
+            console.error('📷 [GraveImageViewer] שגיאה בהעלאה:', error);
+            alert('שגיאה בהעלאת התמונה');
+        }
+
+        // נקה את ה-input
+        event.target.value = '';
+    },
+
+    /**
+     * מחיקת התמונה הנוכחית
+     */
+    async delete() {
+        if (this.images.length === 0) return;
+
+        if (!confirm('האם למחוק את התמונה?')) return;
+
+        const currentImage = this.images[this.currentIndex];
+
+        try {
+            const response = await fetch(`${this.apiBase}?action=deleteGraveImage&unicId=${this.unicId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fileName: currentImage.name })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                console.log('📷 [GraveImageViewer] תמונה נמחקה:', currentImage.name);
+                // רענן רשימה
+                await this.loadImages();
+                // התאם אינדקס
+                if (this.currentIndex >= this.images.length && this.images.length > 0) {
+                    this.currentIndex = this.images.length - 1;
+                }
+                this.updateDisplay();
+            } else {
+                alert('שגיאה במחיקת התמונה: ' + result.error);
+            }
+        } catch (error) {
+            console.error('📷 [GraveImageViewer] שגיאה במחיקה:', error);
+            alert('שגיאה במחיקת התמונה');
+        }
     }
 };

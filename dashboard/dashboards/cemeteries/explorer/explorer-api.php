@@ -57,6 +57,12 @@ try {
                 mkdir($basePath, 0755, true);
             }
 
+            // יצירת תיקיית תמונות מוסתרת אם לא קיימת
+            $hiddenImagesPath = $basePath . '.images/';
+            if (!is_dir($hiddenImagesPath)) {
+                mkdir($hiddenImagesPath, 0755, true);
+            }
+
             if (!is_dir($fullPath)) {
                 $fullPath = $basePath;
                 $subPath = '';
@@ -67,6 +73,9 @@ try {
 
             foreach ($files as $file) {
                 if ($file === '.' || $file === '..') continue;
+
+                // הסתר תיקיות וקבצים שמתחילים בנקודה (hidden)
+                if (strpos($file, '.') === 0) continue;
 
                 $filePath = $fullPath . $file;
                 $isDir = is_dir($filePath);
@@ -399,6 +408,157 @@ try {
             echo json_encode([
                 'success' => true,
                 'message' => 'Moved successfully'
+            ]);
+            break;
+
+        // ========================================
+        // API לתמונות קבר (תיקיה מוסתרת .images)
+        // ========================================
+
+        case 'listGraveImages':
+            // יצירת תיקיית תמונות מוסתרת אם לא קיימת
+            $imagesPath = $basePath . '.images/';
+            if (!is_dir($imagesPath)) {
+                mkdir($imagesPath, 0755, true);
+            }
+
+            $images = [];
+            $files = scandir($imagesPath);
+
+            foreach ($files as $file) {
+                if ($file === '.' || $file === '..') continue;
+
+                $filePath = $imagesPath . $file;
+                if (is_dir($filePath)) continue;
+
+                $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+                if (!in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) continue;
+
+                $images[] = [
+                    'name' => $file,
+                    'url' => "/dashboard/dashboards/cemeteries/explorer/explorer-api.php?action=getGraveImage&unicId={$unicId}&file=" . urlencode($file),
+                    'modified' => date('Y-m-d H:i:s', filemtime($filePath))
+                ];
+            }
+
+            // מיון לפי תאריך שינוי (חדש ראשון)
+            usort($images, function($a, $b) {
+                return strtotime($b['modified']) - strtotime($a['modified']);
+            });
+
+            echo json_encode([
+                'success' => true,
+                'images' => $images
+            ]);
+            break;
+
+        case 'getGraveImage':
+            $fileName = $_GET['file'] ?? null;
+            if (!$fileName) {
+                throw new Exception('File name required');
+            }
+
+            $fileName = basename($fileName); // אבטחה
+            $filePath = $basePath . '.images/' . $fileName;
+
+            if (!file_exists($filePath)) {
+                throw new Exception('Image not found');
+            }
+
+            $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+            $mimeTypes = [
+                'jpg' => 'image/jpeg',
+                'jpeg' => 'image/jpeg',
+                'png' => 'image/png',
+                'gif' => 'image/gif',
+                'webp' => 'image/webp'
+            ];
+
+            if (!isset($mimeTypes[$ext])) {
+                throw new Exception('Not an image');
+            }
+
+            header('Content-Type: ' . $mimeTypes[$ext]);
+            header('Content-Length: ' . filesize($filePath));
+            header('Cache-Control: max-age=86400'); // cache ליום
+            readfile($filePath);
+            exit;
+
+        case 'uploadGraveImage':
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new Exception('POST method required');
+            }
+
+            if (!isset($_FILES['image'])) {
+                throw new Exception('No image uploaded');
+            }
+
+            $file = $_FILES['image'];
+
+            // בדיקת שגיאות העלאה
+            if ($file['error'] !== UPLOAD_ERR_OK) {
+                throw new Exception('Upload error: ' . $file['error']);
+            }
+
+            // בדיקת גודל (5MB לתמונות)
+            if ($file['size'] > 5 * 1024 * 1024) {
+                throw new Exception('Image too large (max 5MB)');
+            }
+
+            // בדיקת סיומת
+            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            if (!in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
+                throw new Exception('Only images allowed (jpg, png, gif, webp)');
+            }
+
+            // יצירת תיקיה אם לא קיימת
+            $imagesPath = $basePath . '.images/';
+            if (!is_dir($imagesPath)) {
+                mkdir($imagesPath, 0755, true);
+            }
+
+            // שם קובץ ייחודי
+            $fileName = 'grave_' . date('Ymd_His') . '_' . uniqid() . '.' . $ext;
+            $destPath = $imagesPath . $fileName;
+
+            if (!move_uploaded_file($file['tmp_name'], $destPath)) {
+                throw new Exception('Failed to save image');
+            }
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Image uploaded successfully',
+                'fileName' => $fileName,
+                'url' => "/dashboard/dashboards/cemeteries/explorer/explorer-api.php?action=getGraveImage&unicId={$unicId}&file=" . urlencode($fileName)
+            ]);
+            break;
+
+        case 'deleteGraveImage':
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new Exception('POST method required');
+            }
+
+            $input = json_decode(file_get_contents('php://input'), true);
+            $fileName = $input['fileName'] ?? null;
+
+            if (!$fileName) {
+                throw new Exception('File name required');
+            }
+
+            $fileName = basename($fileName); // אבטחה
+            $filePath = $basePath . '.images/' . $fileName;
+
+            if (!file_exists($filePath)) {
+                throw new Exception('Image not found');
+            }
+
+            if (!unlink($filePath)) {
+                throw new Exception('Failed to delete image');
+            }
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Image deleted successfully'
             ]);
             break;
 

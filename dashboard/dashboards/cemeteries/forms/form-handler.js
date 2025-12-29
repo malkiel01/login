@@ -1319,8 +1319,8 @@ const FormHandler = {
             console.error('❌ שגיאה בשליפת נתוני קבר:', error);
         }
         
-        // חכה שהטופס יהיה מוכן (שם המודל הנכון: graveCardModal)
-        this.waitForElement('#graveCardModal', (modal) => {
+        // חכה שהטופס יהיה מוכן
+        this.waitForElement('#graveCardFormModal', (modal) => {
             console.log('✅ [GraveCard] Modal נטען');
 
             // קרא נתונים מה-hidden fields
@@ -1551,7 +1551,7 @@ const FormHandler = {
         console.log('👤 [CustomerCard] אתחול כרטיס לקוח:', itemId);
 
         // חכה שהטופס יהיה מוכן
-        this.waitForElement('#customerCardModal', (modal) => {
+        this.waitForElement('#customerCardFormModal', (modal) => {
             console.log('✅ [CustomerCard] Modal נטען');
 
             // קרא unicId מה-hidden field

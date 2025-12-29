@@ -139,11 +139,11 @@ $statusColor = $statusColors[$currentStatus] ?? '#64748b';
 $allSectionsHTML = '
 <style>
     /* תיקון שם המודל - graveCardModal ולא graveCardFormModal */
-    #graveCardModal .modal-dialog {
+    #graveCardFormModal .modal-dialog {
         max-width: 95% !important;
         width: 1400px !important;
     }
-    #graveCardModal .modal-body {
+    #graveCardFormModal .modal-body {
         max-height: 85vh !important;
         padding: 20px !important;
     }
@@ -631,18 +631,18 @@ $allSectionsHTML = '
      /* תמיכה במובייל - שם מודל נכון: graveCardModal */
      @media (max-width: 768px) {
          /* המודל עצמו - מסך מלא */
-         #graveCardModal {
+         #graveCardFormModal {
              padding: 0 !important;
          }
 
-         #graveCardModal .modal-dialog {
+         #graveCardFormModal .modal-dialog {
              max-width: 100% !important;
              width: 100% !important;
              height: 100% !important;
              margin: 0 !important;
          }
 
-         #graveCardModal .modal-content {
+         #graveCardFormModal .modal-content {
              height: 100% !important;
              max-height: 100% !important;
              border-radius: 0 !important;
@@ -651,7 +651,7 @@ $allSectionsHTML = '
          }
 
          /* כותרת קבועה עליונה */
-         #graveCardModal .modal-header {
+         #graveCardFormModal .modal-header {
              flex-shrink: 0 !important;
              position: relative !important;
              z-index: 10 !important;
@@ -659,11 +659,11 @@ $allSectionsHTML = '
              min-height: 50px !important;
          }
 
-         #graveCardModal .modal-title {
+         #graveCardFormModal .modal-title {
              font-size: 16px !important;
          }
 
-         #graveCardModal .modal-header .close {
+         #graveCardFormModal .modal-header .close {
              font-size: 28px !important;
              width: 40px !important;
              height: 40px !important;
@@ -671,7 +671,7 @@ $allSectionsHTML = '
          }
 
          /* תוכן גולל באמצע */
-         #graveCardModal .modal-body {
+         #graveCardFormModal .modal-body {
              flex: 1 !important;
              overflow-y: auto !important;
              overflow-x: hidden !important;
@@ -681,7 +681,7 @@ $allSectionsHTML = '
          }
 
          /* כפתורים קבועים תחתונים */
-         #graveCardModal .modal-footer {
+         #graveCardFormModal .modal-footer {
              flex-shrink: 0 !important;
              position: relative !important;
              z-index: 10 !important;
@@ -1097,16 +1097,28 @@ $allSectionsHTML .= '
 <!-- סוף מיכל הסקשנים הניתנים לגרירה -->
 
 <!-- טעינת קוד משותף לסקשנים -->
-<script src="forms/sortable-sections.js"></script>
 <script>
-    // אתחול כשהמודל מוכן
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", function() {
+(function() {
+    function initSections() {
+        if (typeof SortableSections !== "undefined") {
             SortableSections.init("graveSortableSections", "graveCard");
-        });
-    } else {
-        SortableSections.init("graveSortableSections", "graveCard");
+        } else {
+            console.error("SortableSections not loaded!");
+        }
     }
+
+    // בדוק אם הסקריפט כבר נטען
+    if (typeof SortableSections !== "undefined") {
+        initSections();
+    } else {
+        // טען את הסקריפט דינמית
+        var script = document.createElement("script");
+        script.src = "/dashboard/dashboards/cemeteries/forms/sortable-sections.js";
+        script.onload = initSections;
+        script.onerror = function() { console.error("Failed to load sortable-sections.js"); };
+        document.head.appendChild(script);
+    }
+})();
 </script>
 ';
 

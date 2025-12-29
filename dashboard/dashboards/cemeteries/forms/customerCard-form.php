@@ -111,11 +111,11 @@ $fullName = htmlspecialchars($customer['fullNameHe'] ?? ($customer['firstName'] 
 $allSectionsHTML = '
 <style>
     /* רוחב זהה לכרטיס קבר */
-    #customerCardModal .modal-dialog {
+    #customerCardFormModal .modal-dialog {
         max-width: 95% !important;
         width: 1400px !important;
     }
-    #customerCardModal .modal-body {
+    #customerCardFormModal .modal-body {
         max-height: 85vh !important;
         padding: 20px !important;
     }
@@ -298,18 +298,18 @@ $allSectionsHTML = '
 
     /* תמיכה במובייל */
     @media (max-width: 768px) {
-        #customerCardModal {
+        #customerCardFormModal {
             padding: 0 !important;
         }
 
-        #customerCardModal .modal-dialog {
+        #customerCardFormModal .modal-dialog {
             max-width: 100% !important;
             width: 100% !important;
             height: 100% !important;
             margin: 0 !important;
         }
 
-        #customerCardModal .modal-content {
+        #customerCardFormModal .modal-content {
             height: 100% !important;
             max-height: 100% !important;
             border-radius: 0 !important;
@@ -317,13 +317,13 @@ $allSectionsHTML = '
             flex-direction: column !important;
         }
 
-        #customerCardModal .modal-header {
+        #customerCardFormModal .modal-header {
             flex-shrink: 0 !important;
             padding: 12px 15px !important;
             min-height: 50px !important;
         }
 
-        #customerCardModal .modal-body {
+        #customerCardFormModal .modal-body {
             flex: 1 !important;
             overflow-y: auto !important;
             overflow-x: hidden !important;
@@ -331,7 +331,7 @@ $allSectionsHTML = '
             -webkit-overflow-scrolling: touch !important;
         }
 
-        #customerCardModal .modal-footer {
+        #customerCardFormModal .modal-footer {
             flex-shrink: 0 !important;
             padding: 10px 15px !important;
         }
@@ -560,16 +560,28 @@ $allSectionsHTML .= '
 <!-- סוף מיכל הסקשנים -->
 
 <!-- טעינת קוד משותף לסקשנים -->
-<script src="forms/sortable-sections.js"></script>
 <script>
-    // אתחול כשהמודל מוכן
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", function() {
+(function() {
+    function initSections() {
+        if (typeof SortableSections !== "undefined") {
             SortableSections.init("customerSortableSections", "customerCard");
-        });
-    } else {
-        SortableSections.init("customerSortableSections", "customerCard");
+        } else {
+            console.error("SortableSections not loaded!");
+        }
     }
+
+    // בדוק אם הסקריפט כבר נטען
+    if (typeof SortableSections !== "undefined") {
+        initSections();
+    } else {
+        // טען את הסקריפט דינמית
+        var script = document.createElement("script");
+        script.src = "/dashboard/dashboards/cemeteries/forms/sortable-sections.js";
+        script.onload = initSections;
+        script.onerror = function() { console.error("Failed to load sortable-sections.js"); };
+        document.head.appendChild(script);
+    }
+})();
 </script>
 ';
 

@@ -173,26 +173,38 @@ $headerHTML = '
          box-shadow: 0 10px 40px rgba(0,0,0,0.2);
      }
 
-     /* ידית גרירה */
+     /* ידית גרירה - פס עליון ברור */
      .section-drag-handle {
-         position: absolute;
-         top: 0;
-         right: 0;
-         left: 0;
-         height: 8px;
-         background: linear-gradient(90deg, transparent 30%, #cbd5e1 30%, #cbd5e1 33%, transparent 33%, transparent 36%, #cbd5e1 36%, #cbd5e1 39%, transparent 39%, transparent 42%, #cbd5e1 42%, #cbd5e1 45%, transparent 45%, transparent 48%, #cbd5e1 48%, #cbd5e1 51%, transparent 51%, transparent 54%, #cbd5e1 54%, #cbd5e1 57%, transparent 57%, transparent 60%, #cbd5e1 60%, #cbd5e1 63%, transparent 63%, transparent 66%, #cbd5e1 66%, #cbd5e1 69%, transparent 69%);
+         height: 28px;
+         background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
          cursor: grab;
          border-radius: 12px 12px 0 0;
-         opacity: 0;
-         transition: opacity 0.2s;
+         display: flex;
+         align-items: center;
+         justify-content: center;
+         border-bottom: 1px solid #cbd5e1;
+         transition: background 0.2s;
      }
 
-     .sortable-section:hover .section-drag-handle {
-         opacity: 1;
+     .section-drag-handle::before {
+         content: '';
+         width: 40px;
+         height: 4px;
+         background: #94a3b8;
+         border-radius: 2px;
+     }
+
+     .section-drag-handle:hover {
+         background: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%);
+     }
+
+     .section-drag-handle:hover::before {
+         background: #64748b;
      }
 
      .section-drag-handle:active {
          cursor: grabbing;
+         background: #94a3b8;
      }
 
      /* מיכל ראשי - תמונה + פרטים */
@@ -833,40 +845,59 @@ $explorerHTML = '
 document.addEventListener("DOMContentLoaded", function() {
     setTimeout(function() {
         const container = document.getElementById("graveSortableSections");
-        if (container && typeof Sortable !== "undefined") {
-            new Sortable(container, {
-                animation: 150,
-                handle: ".section-drag-handle",
-                ghostClass: "sortable-ghost",
-                dragClass: "sortable-drag",
-                onEnd: function(evt) {
-                    // שמור את הסדר ל-localStorage
-                    const order = Array.from(container.children)
-                        .filter(el => el.classList.contains("sortable-section"))
-                        .map(el => el.dataset.section);
-                    localStorage.setItem("graveCardSectionOrder", JSON.stringify(order));
-                    console.log("📋 [GraveCard] סדר סקשנים נשמר:", order);
-                }
-            });
+        console.log("📋 [GraveCard] מחפש מיכל:", container);
+        console.log("📋 [GraveCard] Sortable קיים:", typeof Sortable);
 
-            // טען סדר שמור
-            const savedOrder = localStorage.getItem("graveCardSectionOrder");
-            if (savedOrder) {
-                try {
-                    const order = JSON.parse(savedOrder);
-                    order.forEach(function(sectionId) {
-                        const section = container.querySelector("[data-section=\"" + sectionId + "\"]");
-                        if (section) {
-                            container.appendChild(section);
-                        }
-                    });
-                    console.log("📋 [GraveCard] סדר סקשנים נטען:", order);
-                } catch (e) {
-                    console.error("📋 [GraveCard] שגיאה בטעינת סדר:", e);
-                }
+        if (!container) {
+            console.error("📋 [GraveCard] מיכל לא נמצא!");
+            return;
+        }
+
+        if (typeof Sortable === "undefined") {
+            console.error("📋 [GraveCard] SortableJS לא נטען!");
+            return;
+        }
+
+        const sections = container.querySelectorAll(".sortable-section");
+        console.log("📋 [GraveCard] סקשנים שנמצאו:", sections.length);
+
+        const sortable = new Sortable(container, {
+            animation: 150,
+            handle: ".section-drag-handle",
+            ghostClass: "sortable-ghost",
+            dragClass: "sortable-drag",
+            onStart: function(evt) {
+                console.log("📋 [GraveCard] התחלת גרירה:", evt.item.dataset.section);
+            },
+            onEnd: function(evt) {
+                console.log("📋 [GraveCard] סיום גרירה");
+                const order = Array.from(container.children)
+                    .filter(el => el.classList.contains("sortable-section"))
+                    .map(el => el.dataset.section);
+                localStorage.setItem("graveCardSectionOrder", JSON.stringify(order));
+                console.log("📋 [GraveCard] סדר סקשנים נשמר:", order);
+            }
+        });
+
+        console.log("📋 [GraveCard] SortableJS אותחל בהצלחה!", sortable);
+
+        // טען סדר שמור
+        const savedOrder = localStorage.getItem("graveCardSectionOrder");
+        if (savedOrder) {
+            try {
+                const order = JSON.parse(savedOrder);
+                order.forEach(function(sectionId) {
+                    const section = container.querySelector("[data-section=\"" + sectionId + "\"]");
+                    if (section) {
+                        container.appendChild(section);
+                    }
+                });
+                console.log("📋 [GraveCard] סדר סקשנים נטען:", order);
+            } catch (e) {
+                console.error("📋 [GraveCard] שגיאה בטעינת סדר:", e);
             }
         }
-    }, 200);
+    }, 500);
 });
 </script>
 ';

@@ -39,16 +39,20 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #f9a825;
+    color: #f9a825 !important;
     cursor: pointer;
     transition: all 0.2s;
     flex-shrink: 0;
     font-size: 16px;
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
 .breadcrumb-home:hover {
-    color: #f57f17;
+    color: #f57f17 !important;
     transform: scale(1.1);
+    background: none !important;
 }
 
 .breadcrumb-path {
@@ -61,38 +65,50 @@
 }
 
 .breadcrumb-separator {
-    color: #bbb;
-    margin: 0 2px;
+    color: #bbb !important;
+    margin: 0 4px;
     flex-shrink: 0;
-    font-size: 11px;
+    font-size: 12px;
 }
 
 .breadcrumb-folder-icon {
-    color: #f9a825;
+    color: #f9a825 !important;
     margin-left: 4px;
     font-size: 12px;
 }
 
 .breadcrumb-link {
-    display: flex;
-    align-items: center;
-    color: #1976d2;
-    text-decoration: none;
-    cursor: pointer;
-    padding: 2px 4px;
-    border-radius: 3px;
-    transition: background 0.15s;
+    display: flex !important;
+    align-items: center !important;
+    color: #1976d2 !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    padding: 2px 6px !important;
+    border-radius: 3px !important;
+    transition: background 0.15s !important;
+    background: none !important;
+    box-shadow: none !important;
+    font-weight: normal !important;
 }
 
 .breadcrumb-link:hover {
-    background: #e3f2fd;
-    text-decoration: none;
+    background: #e3f2fd !important;
+    text-decoration: none !important;
 }
 
+/* תיקייה נוכחית - טקסט שחור פשוט בלי רקע */
+.file-explorer .breadcrumb-current,
+.explorer-breadcrumb .breadcrumb-current,
 .breadcrumb-current {
-    display: flex;
-    align-items: center;
-    color: #333;
+    display: flex !important;
+    align-items: center !important;
+    color: #333 !important;
+    background: none !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    font-weight: normal !important;
+    padding: 2px 6px !important;
+    animation: none !important;
 }
 
 /* תפריט קונטקסט (לחיצה ימנית) */
@@ -275,20 +291,25 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 10px;
+    padding: 12px 10px;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s;
     position: relative;
+    border: 1px solid #e8e8e8;
+    background: #fff;
 }
 
 .explorer-item:hover {
-    background: #f0f7ff;
+    background: #f8fafc;
+    border-color: #d0d0d0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
 .explorer-item.selected {
     background: #e3f2fd;
-    box-shadow: 0 0 0 2px #2196F3;
+    border-color: #2196F3;
+    box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
 }
 
 .explorer-item-icon {
@@ -311,15 +332,44 @@
     height: 100%;
     object-fit: cover;
     border-radius: 4px;
+    border: 1px solid #eee;
 }
 
-/* צבעי אייקונים */
-.explorer-item-icon .fa-folder { color: #FFC107; }
-.explorer-item-icon .fa-file-pdf { color: #F44336; }
-.explorer-item-icon .fa-file-word { color: #2196F3; }
-.explorer-item-icon .fa-file-excel { color: #4CAF50; }
-.explorer-item-icon .fa-file-image { color: #9C27B0; }
-.explorer-item-icon .fa-file { color: #607D8B; }
+/* צבעי אייקונים - תיקייה צהובה */
+.explorer-item-icon i.fa-folder {
+    color: #f9a825 !important;
+    text-shadow: 0 2px 4px rgba(249, 168, 37, 0.3);
+}
+
+/* קבצי PDF */
+.explorer-item-icon i.fa-file-pdf {
+    color: #e53935 !important;
+}
+
+/* קבצי Word */
+.explorer-item-icon i.fa-file-word {
+    color: #1976d2 !important;
+}
+
+/* קבצי Excel */
+.explorer-item-icon i.fa-file-excel {
+    color: #388e3c !important;
+}
+
+/* קבצי תמונה */
+.explorer-item-icon i.fa-file-image {
+    color: #7b1fa2 !important;
+}
+
+/* קבצי טקסט */
+.explorer-item-icon i.fa-file-alt {
+    color: #546e7a !important;
+}
+
+/* קבצים כלליים */
+.explorer-item-icon i.fa-file {
+    color: #78909c !important;
+}
 
 .explorer-item-name {
     font-size: 12px;
@@ -328,6 +378,7 @@
     max-width: 100%;
     line-height: 1.3;
     color: #333;
+    margin-top: 4px;
 }
 
 /* כפתור מחיקה */

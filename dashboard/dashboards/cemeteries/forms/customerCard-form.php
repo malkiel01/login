@@ -1,15 +1,12 @@
 <?php
 /*
  * File: dashboard/dashboards/cemeteries/forms/customerCard-form.php
- * Version: 1.0.0
+ * Version: 1.1.0
  * Updated: 2025-12-29
  * Author: Malkiel
  * Change Summary:
- * - v1.0.0: יצירת כרטיס לקוח עם FormBuilder
- *   - תצוגת פרטי לקוח
- *   - הצגת תיקי רכישה משויכים
- *   - הצגת תיקי קבורה משויכים
- *   - מסמכים
+ * - v1.1.0: עיצוב זהה לחלוטין לכרטיס קבר
+ * - v1.0.0: יצירת כרטיס לקוח
  */
 
 error_reporting(E_ALL);
@@ -33,13 +30,9 @@ try {
 
     // שליפת נתוני הלקוח
     $stmt = $conn->prepare("
-        SELECT
-            c.*,
-            c.countryNameHe,
-            c.cityNameHe
+        SELECT c.*, c.countryNameHe, c.cityNameHe
         FROM customers c
-        WHERE c.unicId = :id
-        AND c.isActive = 1
+        WHERE c.unicId = :id AND c.isActive = 1
     ");
     $stmt->execute(['id' => $itemId]);
     $customer = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -50,13 +43,8 @@ try {
 
     // שליפת רכישות של הלקוח
     $stmt = $conn->prepare("
-        SELECT
-            p.*,
-            g.graveNameHe,
-            agv.cemeteryNameHe,
-            agv.blockNameHe,
-            agv.plotNameHe,
-            agv.lineNameHe
+        SELECT p.*, g.graveNameHe,
+            agv.cemeteryNameHe, agv.blockNameHe, agv.plotNameHe, agv.lineNameHe
         FROM purchases p
         LEFT JOIN graves g ON p.graveId = g.unicId
         LEFT JOIN areaGraves_view agv ON g.areaGraveId = agv.unicId
@@ -68,13 +56,8 @@ try {
 
     // שליפת קבורות של הלקוח (כנפטר)
     $stmt = $conn->prepare("
-        SELECT
-            b.*,
-            g.graveNameHe,
-            agv.cemeteryNameHe,
-            agv.blockNameHe,
-            agv.plotNameHe,
-            agv.lineNameHe
+        SELECT b.*, g.graveNameHe,
+            agv.cemeteryNameHe, agv.blockNameHe, agv.plotNameHe, agv.lineNameHe
         FROM burials b
         LEFT JOIN graves g ON b.graveId = g.unicId
         LEFT JOIN areaGraves_view agv ON g.areaGraveId = agv.unicId
@@ -90,17 +73,13 @@ try {
 
 // פונקציות עזר
 function formatHebrewDate($dateStr) {
-    if (!$dateStr || $dateStr === '0000-00-00' || $dateStr === '0000-00-00 00:00:00') {
-        return '-';
-    }
+    if (!$dateStr || $dateStr === '0000-00-00') return '-';
     $timestamp = strtotime($dateStr);
     return $timestamp ? date('d/m/Y', $timestamp) : '-';
 }
 
 function formatPrice($price) {
-    if (!$price || $price == 0) {
-        return '-';
-    }
+    if (!$price || $price == 0) return '-';
     return '₪' . number_format($price, 2);
 }
 
@@ -116,38 +95,39 @@ function formatPhone($phone) {
 // יצירת FormBuilder
 $formBuilder = new FormBuilder('customerCard', $itemId, null);
 
-// סטטוסים וצבעים
+// סטטוסים
 $statusNames = [1 => 'פעיל', 2 => 'רוכש', 3 => 'נפטר'];
 $statusColors = [1 => '#22c55e', 2 => '#3b82f6', 3 => '#64748b'];
 $currentStatus = $customer['statusCustomer'] ?? 1;
 $statusName = $statusNames[$currentStatus] ?? 'לא ידוע';
 $statusColor = $statusColors[$currentStatus] ?? '#64748b';
 
-// מגדר
 $genderNames = [1 => 'זכר', 2 => 'נקבה'];
 $genderName = $genderNames[$customer['gender'] ?? 0] ?? '-';
 
-// === בניית כל ה-HTML כמחרוזת אחת ===
+$fullName = htmlspecialchars($customer['fullNameHe'] ?? ($customer['firstName'] . ' ' . $customer['lastName']));
+
+// === בניית HTML - עיצוב זהה לכרטיס קבר ===
 $allSectionsHTML = '
 <style>
-    /* תיקון שם המודל */
+    /* רוחב זהה לכרטיס קבר */
     #customerCardModal .modal-dialog {
         max-width: 95% !important;
-        width: 1200px !important;
+        width: 1400px !important;
     }
     #customerCardModal .modal-body {
         max-height: 85vh !important;
         padding: 20px !important;
     }
 
-    /* סקשנים ניתנים לגרירה */
-    .customer-sortable-sections {
+    /* סקשנים - שימוש באותם קלאסים כמו קבר */
+    .sortable-sections {
         display: flex;
         flex-direction: column;
         gap: 0;
     }
 
-    .customer-sortable-section {
+    .sortable-section {
         position: relative;
         margin-bottom: 15px;
         border-radius: 12px;
@@ -156,17 +136,17 @@ $allSectionsHTML = '
         border: 2px solid transparent;
     }
 
-    .customer-sortable-section:hover {
+    .sortable-section:hover {
         border-color: #94a3b8;
     }
 
-    .customer-sortable-section.sortable-ghost {
+    .sortable-section.sortable-ghost {
         opacity: 0.5;
         background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
         border: 2px dashed #3b82f6 !important;
     }
 
-    .customer-sortable-section.sortable-chosen {
+    .sortable-section.sortable-chosen {
         box-shadow: 0 8px 30px rgba(59, 130, 246, 0.3);
         border: 2px solid #3b82f6 !important;
         transform: scale(1.01);
@@ -174,7 +154,7 @@ $allSectionsHTML = '
     }
 
     /* ידית גרירה */
-    .customer-section-drag-handle {
+    .section-drag-handle {
         height: 28px;
         background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
         cursor: grab;
@@ -187,7 +167,7 @@ $allSectionsHTML = '
         position: relative;
     }
 
-    .customer-section-drag-handle::before {
+    .section-drag-handle::before {
         content: "";
         width: 40px;
         height: 4px;
@@ -195,12 +175,12 @@ $allSectionsHTML = '
         border-radius: 2px;
     }
 
-    .customer-section-drag-handle:hover {
+    .section-drag-handle:hover {
         background: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%);
     }
 
-    /* כפתור צימצום/הרחבה */
-    .customer-section-toggle-btn {
+    /* כפתור צימצום */
+    .section-toggle-btn {
         position: absolute;
         left: 8px;
         top: 50%;
@@ -220,17 +200,17 @@ $allSectionsHTML = '
         padding: 0;
     }
 
-    .customer-section-toggle-btn:hover {
+    .section-toggle-btn:hover {
         background: rgba(100, 116, 139, 0.4);
         color: #334155;
     }
 
-    .customer-section-toggle-btn i {
+    .section-toggle-btn i {
         transition: transform 0.3s;
     }
 
-    /* כותרת הסקשן במצב מצומצם */
-    .customer-section-title {
+    /* כותרת סקשן */
+    .section-title {
         position: absolute;
         right: 35px;
         top: 50%;
@@ -244,37 +224,37 @@ $allSectionsHTML = '
         white-space: nowrap;
     }
 
-    .customer-sortable-section.collapsed .customer-section-title {
+    .sortable-section.collapsed .section-title {
         opacity: 1;
     }
 
     /* מצב מצומצם */
-    .customer-sortable-section.collapsed .customer-section-content {
+    .sortable-section.collapsed .section-content {
         display: none;
     }
 
-    .customer-sortable-section.collapsed .customer-section-toggle-btn i {
+    .sortable-section.collapsed .section-toggle-btn i {
         transform: rotate(-90deg);
     }
 
-    .customer-sortable-section.collapsed .customer-section-drag-handle {
+    .sortable-section.collapsed .section-drag-handle {
         border-radius: 10px;
         border-bottom: none;
     }
 
-    .customer-sortable-section.collapsed .customer-section-resize-handle {
+    .sortable-section.collapsed .section-resize-handle {
         display: none;
     }
 
-    /* תוכן הסקשן */
-    .customer-section-content {
+    /* תוכן */
+    .section-content {
         transition: all 0.3s ease;
         overflow: auto;
         min-height: 50px;
     }
 
     /* ידית שינוי גובה */
-    .customer-section-resize-handle {
+    .section-resize-handle {
         position: absolute;
         bottom: 0;
         left: 0;
@@ -286,11 +266,11 @@ $allSectionsHTML = '
         border-radius: 0 0 10px 10px;
     }
 
-    .customer-section-resize-handle:hover {
+    .section-resize-handle:hover {
         background: linear-gradient(to top, rgba(59, 130, 246, 0.3), transparent);
     }
 
-    .customer-section-resize-handle::after {
+    .section-resize-handle::after {
         content: "";
         position: absolute;
         bottom: 3px;
@@ -304,87 +284,16 @@ $allSectionsHTML = '
         transition: opacity 0.2s;
     }
 
-    .customer-section-resize-handle:hover::after {
+    .section-resize-handle:hover::after {
         opacity: 1;
     }
 
-    /* כרטיס לקוח */
-    .customer-info-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 12px;
+    .sortable-section.resizing {
+        user-select: none;
     }
 
-    .customer-info-item {
-        background: #f8fafc;
-        padding: 12px;
-        border-radius: 8px;
-        border: 1px solid #e2e8f0;
-    }
-
-    .customer-info-item .label {
-        font-size: 11px;
-        color: #64748b;
-        margin-bottom: 4px;
-    }
-
-    .customer-info-item .value {
-        font-weight: 600;
-        color: #334155;
-        font-size: 14px;
-    }
-
-    /* רשימת רכישות/קבורות */
-    .related-item {
-        background: white;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        padding: 12px;
-        margin-bottom: 10px;
-        transition: box-shadow 0.2s;
-    }
-
-    .related-item:hover {
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
-    .related-item:last-child {
-        margin-bottom: 0;
-    }
-
-    .related-item-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 8px;
-    }
-
-    .related-item-title {
-        font-weight: 600;
-        color: #1e293b;
-    }
-
-    .related-item-badge {
-        padding: 4px 8px;
-        border-radius: 12px;
-        font-size: 11px;
-        font-weight: 600;
-        color: white;
-    }
-
-    .related-item-details {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-        gap: 8px;
-        font-size: 12px;
-    }
-
-    .related-item-detail {
-        color: #64748b;
-    }
-
-    .related-item-detail strong {
-        color: #334155;
+    .sortable-section.resizing .section-content {
+        transition: none;
     }
 
     /* תמיכה במובייל */
@@ -427,79 +336,69 @@ $allSectionsHTML = '
             padding: 10px 15px !important;
         }
 
-        .customer-section-toggle-btn {
+        .section-toggle-btn {
             width: 32px !important;
             height: 32px !important;
             font-size: 14px !important;
         }
 
-        .customer-section-drag-handle {
+        .section-drag-handle {
             height: 32px !important;
-        }
-
-        .customer-info-grid {
-            grid-template-columns: repeat(2, 1fr) !important;
         }
     }
 </style>
 
-<!-- מיכל לכל הסקשנים -->
-<div class="customer-sortable-sections" id="customerSortableSections">
+<!-- מיכל הסקשנים - אותו ID כמו קבר כדי שהפונקציות יעבדו -->
+<div class="sortable-sections" id="customerSortableSections">
 
 <!-- סקשן 1: פרטי לקוח -->
-<div class="customer-sortable-section" data-section="details">
-    <div class="customer-section-drag-handle">
-        <button type="button" class="customer-section-toggle-btn" onclick="toggleCustomerSection(this)" title="צמצם/הרחב">
+<div class="sortable-section" data-section="details">
+    <div class="section-drag-handle">
+        <button type="button" class="section-toggle-btn" onclick="toggleSection(this)" title="צמצם/הרחב">
             <i class="fas fa-chevron-down"></i>
         </button>
-        <span class="customer-section-title"><i class="fas fa-user"></i> פרטי לקוח</span>
+        <span class="section-title"><i class="fas fa-user"></i> פרטי לקוח</span>
     </div>
-    <div class="customer-section-content">
-        <fieldset class="form-section" style="border: none; border-radius: 0 0 10px 10px; padding: 20px; margin: 0; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);">
-            <legend style="padding: 0 15px; font-weight: bold; color: #166534; font-size: 16px; display: flex; align-items: center; gap: 10px;">
-                <i class="fas fa-user"></i> פרטי לקוח
+    <div class="section-content">
+        <fieldset class="form-section" style="border: none; border-radius: 0 0 10px 10px; padding: 20px; margin: 0; background: linear-gradient(135deg, #f8fafc, #f1f5f9);">
+            <legend style="padding: 0 15px; font-weight: bold; color: #1e293b; font-size: 16px; display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-user"></i> ' . $fullName . '
                 <span style="background: ' . $statusColor . '; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px;">' . $statusName . '</span>
             </legend>
-
-            <div class="customer-info-grid">
-                <div class="customer-info-item" style="grid-column: span 2;">
-                    <div class="label">שם מלא</div>
-                    <div class="value" style="font-size: 18px; color: #166534;">' . htmlspecialchars($customer['fullNameHe'] ?? ($customer['firstName'] . ' ' . $customer['lastName'])) . '</div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">ת.ז.</div>
+                    <div style="font-weight: 600; color: #334155;">' . htmlspecialchars($customer['numId'] ?? '-') . '</div>
                 </div>
-                <div class="customer-info-item">
-                    <div class="label">ת.ז.</div>
-                    <div class="value">' . htmlspecialchars($customer['numId'] ?? '-') . '</div>
+                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">מגדר</div>
+                    <div style="font-weight: 600; color: #334155;">' . $genderName . '</div>
                 </div>
-                <div class="customer-info-item">
-                    <div class="label">מגדר</div>
-                    <div class="value">' . $genderName . '</div>
+                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">תאריך לידה</div>
+                    <div style="font-weight: 600; color: #334155;">' . formatHebrewDate($customer['dateBirth']) . '</div>
                 </div>
-                <div class="customer-info-item">
-                    <div class="label">תאריך לידה</div>
-                    <div class="value">' . formatHebrewDate($customer['dateBirth']) . '</div>
+                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">שם האב</div>
+                    <div style="font-weight: 600; color: #334155;">' . htmlspecialchars($customer['nameFather'] ?? '-') . '</div>
                 </div>
-                <div class="customer-info-item">
-                    <div class="label">שם האב</div>
-                    <div class="value">' . htmlspecialchars($customer['nameFather'] ?? '-') . '</div>
+                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">שם האם</div>
+                    <div style="font-weight: 600; color: #334155;">' . htmlspecialchars($customer['nameMother'] ?? '-') . '</div>
                 </div>
-                <div class="customer-info-item">
-                    <div class="label">שם האם</div>
-                    <div class="value">' . htmlspecialchars($customer['nameMother'] ?? '-') . '</div>
+                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">טלפון</div>
+                    <div style="font-weight: 600; color: #334155;">' . formatPhone($customer['phone']) . '</div>
                 </div>
-                <div class="customer-info-item">
-                    <div class="label">טלפון</div>
-                    <div class="value">' . formatPhone($customer['phone']) . '</div>
+                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">טלפון נייד</div>
+                    <div style="font-weight: 600; color: #334155;">' . formatPhone($customer['phoneMobile']) . '</div>
                 </div>
-                <div class="customer-info-item">
-                    <div class="label">טלפון נייד</div>
-                    <div class="value">' . formatPhone($customer['phoneMobile']) . '</div>
-                </div>
-                <div class="customer-info-item" style="grid-column: span 2;">
-                    <div class="label">כתובת</div>
-                    <div class="value">' . htmlspecialchars(trim(($customer['address'] ?? '') . ', ' . ($customer['cityNameHe'] ?? '') . ', ' . ($customer['countryNameHe'] ?? ''), ', ')) . '</div>
+                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">כתובת</div>
+                    <div style="font-weight: 600; color: #334155;">' . htmlspecialchars($customer['address'] ?? '-') . '</div>
                 </div>
             </div>
-
             <div style="margin-top: 15px;">
                 <button type="button" class="btn btn-sm btn-primary" onclick="CustomerCardHandler.editCustomer(\'' . $customer['unicId'] . '\')">
                     <i class="fas fa-edit"></i> ערוך לקוח
@@ -507,7 +406,7 @@ $allSectionsHTML = '
             </div>
         </fieldset>
     </div>
-    <div class="customer-section-resize-handle"></div>
+    <div class="section-resize-handle"></div>
 </div>
 ';
 
@@ -515,16 +414,16 @@ $allSectionsHTML = '
 $purchaseCount = count($purchases);
 $allSectionsHTML .= '
 <!-- סקשן 2: תיקי רכישה -->
-<div class="customer-sortable-section" data-section="purchases">
-    <div class="customer-section-drag-handle">
-        <button type="button" class="customer-section-toggle-btn" onclick="toggleCustomerSection(this)" title="צמצם/הרחב">
+<div class="sortable-section" data-section="purchases">
+    <div class="section-drag-handle">
+        <button type="button" class="section-toggle-btn" onclick="toggleSection(this)" title="צמצם/הרחב">
             <i class="fas fa-chevron-down"></i>
         </button>
-        <span class="customer-section-title"><i class="fas fa-shopping-cart"></i> תיקי רכישה (' . $purchaseCount . ')</span>
+        <span class="section-title"><i class="fas fa-shopping-cart"></i> תיקי רכישה (' . $purchaseCount . ')</span>
     </div>
-    <div class="customer-section-content">
-        <fieldset class="form-section" style="border: none; border-radius: 0 0 10px 10px; padding: 20px; margin: 0; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);">
-            <legend style="padding: 0 15px; font-weight: bold; color: #1e40af; font-size: 16px;">
+    <div class="section-content">
+        <fieldset class="form-section" style="border: none; border-radius: 0 0 10px 10px; padding: 20px; margin: 0; background: linear-gradient(135deg, #f8fafc, #f1f5f9);">
+            <legend style="padding: 0 15px; font-weight: bold; color: #1e293b; font-size: 16px;">
                 <i class="fas fa-shopping-cart"></i> תיקי רכישה
                 <span style="background: #3b82f6; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; margin-right: 10px;">' . $purchaseCount . '</span>
             </legend>';
@@ -538,19 +437,19 @@ if ($purchaseCount > 0) {
         $pStatusColor = $purchaseStatusColors[$purchase['purchaseStatus']] ?? '#64748b';
 
         $allSectionsHTML .= '
-            <div class="related-item">
-                <div class="related-item-header">
-                    <span class="related-item-title">
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-weight: 600; color: #1e293b;">
                         <i class="fas fa-monument" style="color: #64748b;"></i>
                         ' . htmlspecialchars($purchase['graveNameHe'] ?? 'קבר') . '
                     </span>
-                    <span class="related-item-badge" style="background: ' . $pStatusColor . ';">' . $pStatusName . '</span>
+                    <span style="background: ' . $pStatusColor . '; color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px;">' . $pStatusName . '</span>
                 </div>
-                <div class="related-item-details">
-                    <div class="related-item-detail"><strong>מס׳ רכישה:</strong> ' . htmlspecialchars($purchase['serialPurchaseId'] ?? '-') . '</div>
-                    <div class="related-item-detail"><strong>תאריך:</strong> ' . formatHebrewDate($purchase['dateOpening']) . '</div>
-                    <div class="related-item-detail"><strong>מחיר:</strong> ' . formatPrice($purchase['price']) . '</div>
-                    <div class="related-item-detail"><strong>מיקום:</strong> ' . htmlspecialchars(($purchase['cemeteryNameHe'] ?? '') . ' / ' . ($purchase['blockNameHe'] ?? '')) . '</div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; font-size: 12px; color: #64748b;">
+                    <div><strong>מס׳:</strong> ' . htmlspecialchars($purchase['serialPurchaseId'] ?? '-') . '</div>
+                    <div><strong>תאריך:</strong> ' . formatHebrewDate($purchase['dateOpening']) . '</div>
+                    <div><strong>מחיר:</strong> ' . formatPrice($purchase['price']) . '</div>
+                    <div><strong>מיקום:</strong> ' . htmlspecialchars(($purchase['cemeteryNameHe'] ?? '')) . '</div>
                 </div>
                 <div style="margin-top: 8px;">
                     <button type="button" class="btn btn-sm btn-outline-primary" onclick="CustomerCardHandler.viewPurchase(\'' . $purchase['unicId'] . '\')">
@@ -561,7 +460,7 @@ if ($purchaseCount > 0) {
     }
 } else {
     $allSectionsHTML .= '
-            <div style="text-align: center; padding: 20px; color: #64748b;">
+            <div style="text-align: center; padding: 30px; color: #64748b;">
                 <i class="fas fa-inbox" style="font-size: 32px; margin-bottom: 10px; display: block; opacity: 0.5;"></i>
                 אין רכישות משויכות ללקוח זה
             </div>';
@@ -570,7 +469,7 @@ if ($purchaseCount > 0) {
 $allSectionsHTML .= '
         </fieldset>
     </div>
-    <div class="customer-section-resize-handle"></div>
+    <div class="section-resize-handle"></div>
 </div>
 ';
 
@@ -578,16 +477,16 @@ $allSectionsHTML .= '
 $burialCount = count($burials);
 $allSectionsHTML .= '
 <!-- סקשן 3: תיקי קבורה -->
-<div class="customer-sortable-section" data-section="burials">
-    <div class="customer-section-drag-handle">
-        <button type="button" class="customer-section-toggle-btn" onclick="toggleCustomerSection(this)" title="צמצם/הרחב">
+<div class="sortable-section" data-section="burials">
+    <div class="section-drag-handle">
+        <button type="button" class="section-toggle-btn" onclick="toggleSection(this)" title="צמצם/הרחב">
             <i class="fas fa-chevron-down"></i>
         </button>
-        <span class="customer-section-title"><i class="fas fa-cross"></i> תיקי קבורה (' . $burialCount . ')</span>
+        <span class="section-title"><i class="fas fa-cross"></i> תיקי קבורה (' . $burialCount . ')</span>
     </div>
-    <div class="customer-section-content">
-        <fieldset class="form-section" style="border: none; border-radius: 0 0 10px 10px; padding: 20px; margin: 0; background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);">
-            <legend style="padding: 0 15px; font-weight: bold; color: #92400e; font-size: 16px;">
+    <div class="section-content">
+        <fieldset class="form-section" style="border: none; border-radius: 0 0 10px 10px; padding: 20px; margin: 0; background: linear-gradient(135deg, #f8fafc, #f1f5f9);">
+            <legend style="padding: 0 15px; font-weight: bold; color: #1e293b; font-size: 16px;">
                 <i class="fas fa-cross"></i> תיקי קבורה
                 <span style="background: #f59e0b; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px; margin-right: 10px;">' . $burialCount . '</span>
             </legend>';
@@ -595,18 +494,18 @@ $allSectionsHTML .= '
 if ($burialCount > 0) {
     foreach ($burials as $burial) {
         $allSectionsHTML .= '
-            <div class="related-item">
-                <div class="related-item-header">
-                    <span class="related-item-title">
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-weight: 600; color: #1e293b;">
                         <i class="fas fa-monument" style="color: #64748b;"></i>
                         ' . htmlspecialchars($burial['graveNameHe'] ?? 'קבר') . '
                     </span>
                 </div>
-                <div class="related-item-details">
-                    <div class="related-item-detail"><strong>מס׳ קבורה:</strong> ' . htmlspecialchars($burial['serialBurialId'] ?? '-') . '</div>
-                    <div class="related-item-detail"><strong>תאריך פטירה:</strong> ' . formatHebrewDate($burial['dateDeath']) . '</div>
-                    <div class="related-item-detail"><strong>תאריך קבורה:</strong> ' . formatHebrewDate($burial['dateBurial']) . '</div>
-                    <div class="related-item-detail"><strong>מיקום:</strong> ' . htmlspecialchars(($burial['cemeteryNameHe'] ?? '') . ' / ' . ($burial['blockNameHe'] ?? '')) . '</div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; font-size: 12px; color: #64748b;">
+                    <div><strong>מס׳:</strong> ' . htmlspecialchars($burial['serialBurialId'] ?? '-') . '</div>
+                    <div><strong>תאריך פטירה:</strong> ' . formatHebrewDate($burial['dateDeath']) . '</div>
+                    <div><strong>תאריך קבורה:</strong> ' . formatHebrewDate($burial['dateBurial']) . '</div>
+                    <div><strong>מיקום:</strong> ' . htmlspecialchars(($burial['cemeteryNameHe'] ?? '')) . '</div>
                 </div>
                 <div style="margin-top: 8px;">
                     <button type="button" class="btn btn-sm btn-outline-warning" onclick="CustomerCardHandler.viewBurial(\'' . $burial['unicId'] . '\')">
@@ -617,7 +516,7 @@ if ($burialCount > 0) {
     }
 } else {
     $allSectionsHTML .= '
-            <div style="text-align: center; padding: 20px; color: #64748b;">
+            <div style="text-align: center; padding: 30px; color: #64748b;">
                 <i class="fas fa-inbox" style="font-size: 32px; margin-bottom: 10px; display: block; opacity: 0.5;"></i>
                 אין קבורות משויכות ללקוח זה
             </div>';
@@ -626,7 +525,7 @@ if ($burialCount > 0) {
 $allSectionsHTML .= '
         </fieldset>
     </div>
-    <div class="customer-section-resize-handle"></div>
+    <div class="section-resize-handle"></div>
 </div>
 ';
 
@@ -634,40 +533,38 @@ $allSectionsHTML .= '
 $explorerUnicId = htmlspecialchars($customer['unicId']);
 $allSectionsHTML .= '
 <!-- סקשן 4: מסמכים -->
-<div class="customer-sortable-section" data-section="documents">
-    <div class="customer-section-drag-handle">
-        <button type="button" class="customer-section-toggle-btn" onclick="toggleCustomerSection(this)" title="צמצם/הרחב">
+<div class="sortable-section" data-section="documents">
+    <div class="section-drag-handle">
+        <button type="button" class="section-toggle-btn" onclick="toggleSection(this)" title="צמצם/הרחב">
             <i class="fas fa-chevron-down"></i>
         </button>
-        <span class="customer-section-title"><i class="fas fa-folder-open"></i> מסמכים</span>
+        <span class="section-title"><i class="fas fa-folder-open"></i> מסמכים</span>
     </div>
-    <div class="customer-section-content">
-        <fieldset class="form-section" style="border: none; border-radius: 0 0 10px 10px; padding: 20px; margin: 0; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);">
-            <legend style="padding: 0 15px; font-weight: bold; color: #475569; font-size: 16px;">
+    <div class="section-content">
+        <fieldset class="form-section" style="border: none; border-radius: 0 0 10px 10px; padding: 20px; margin: 0; background: linear-gradient(135deg, #f8fafc, #f1f5f9);">
+            <legend style="padding: 0 15px; font-weight: bold; color: #1e293b; font-size: 16px;">
                 <i class="fas fa-folder-open"></i> מסמכים
             </legend>
             <div id="customerExplorer" data-unic-id="' . $explorerUnicId . '" data-entity-type="customer">
-                <div style="text-align: center; padding: 20px; color: #666;">
-                    <i class="fas fa-spinner fa-spin"></i> טוען סייר קבצים...
+                <div style="text-align: center; padding: 20px; color: #64748b;">
+                    <i class="fas fa-folder-open" style="font-size: 32px; margin-bottom: 10px; display: block; opacity: 0.5;"></i>
+                    סייר קבצים יטען בהמשך
                 </div>
             </div>
         </fieldset>
     </div>
-    <div class="customer-section-resize-handle"></div>
+    <div class="section-resize-handle"></div>
 </div>
 
 </div>
 <!-- סוף מיכל הסקשנים -->
 ';
 
-// === הוספת כל הסקשנים כ-HTML אחד ===
 $formBuilder->addCustomHTML($allSectionsHTML);
 
-// שדה מוסתר - unicId
 $formBuilder->addField('unicId', '', 'hidden', [
     'value' => $customer['unicId']
 ]);
 
-// הצג את הטופס
 echo $formBuilder->renderModal();
 ?>

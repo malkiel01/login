@@ -1819,46 +1819,49 @@ const FormHandler = {
                 footer.innerHTML = '<button type="button" class="btn btn-secondary" onclick="FormHandler.closeForm(\'customerCard\')"><i class="fas fa-times"></i> סגור</button>';
             }
 
-            // הגדרת פונקציית צימצום/הרחבה
-            window.toggleCustomerSection = function(btn, event) {
-                if (event) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-
-                const section = btn.closest('.customer-sortable-section');
-                if (section) {
-                    section.classList.toggle('collapsed');
-
-                    const sectionId = section.dataset.section;
-                    const collapsedSections = JSON.parse(localStorage.getItem('customerCardCollapsed') || '[]');
-
-                    if (section.classList.contains('collapsed')) {
-                        if (!collapsedSections.includes(sectionId)) {
-                            collapsedSections.push(sectionId);
-                        }
-                    } else {
-                        const index = collapsedSections.indexOf(sectionId);
-                        if (index > -1) {
-                            collapsedSections.splice(index, 1);
-                        }
+            // הגדרת פונקציית צימצום/הרחבה (אותה פונקציה כמו בכרטיס קבר)
+            if (typeof window.toggleSection !== 'function') {
+                window.toggleSection = function(btn, event) {
+                    if (event) {
+                        event.preventDefault();
+                        event.stopPropagation();
                     }
-                    localStorage.setItem('customerCardCollapsed', JSON.stringify(collapsedSections));
-                }
-            };
+
+                    const section = btn.closest('.sortable-section');
+                    if (section) {
+                        section.classList.toggle('collapsed');
+
+                        const sectionId = section.dataset.section;
+                        const storageKey = section.closest('#customerCardModal') ? 'customerCardCollapsed' : 'graveCardCollapsed';
+                        const collapsedSections = JSON.parse(localStorage.getItem(storageKey) || '[]');
+
+                        if (section.classList.contains('collapsed')) {
+                            if (!collapsedSections.includes(sectionId)) {
+                                collapsedSections.push(sectionId);
+                            }
+                        } else {
+                            const index = collapsedSections.indexOf(sectionId);
+                            if (index > -1) {
+                                collapsedSections.splice(index, 1);
+                            }
+                        }
+                        localStorage.setItem(storageKey, JSON.stringify(collapsedSections));
+                    }
+                };
+            }
 
             // הוספת תמיכה ב-touch לכפתורי צימצום
-            modal.querySelectorAll('.customer-section-toggle-btn').forEach(function(btn) {
+            modal.querySelectorAll('.section-toggle-btn').forEach(function(btn) {
                 btn.addEventListener('touchend', function(e) {
                     e.preventDefault();
-                    window.toggleCustomerSection(btn, e);
+                    window.toggleSection(btn, e);
                 }, { passive: false });
             });
 
             // טען מצב צימצום שמור
             const collapsedSections = JSON.parse(localStorage.getItem('customerCardCollapsed') || '[]');
             collapsedSections.forEach(sectionId => {
-                const section = modal.querySelector('.customer-sortable-section[data-section="' + sectionId + '"]');
+                const section = modal.querySelector('.sortable-section[data-section="' + sectionId + '"]');
                 if (section) {
                     section.classList.add('collapsed');
                 }
@@ -1907,8 +1910,8 @@ const FormHandler = {
         function setupCustomerSortable(container) {
             new Sortable(container, {
                 animation: 150,
-                handle: '.customer-section-drag-handle',
-                filter: '.customer-section-toggle-btn',
+                handle: '.section-drag-handle',
+                filter: '.section-toggle-btn',
                 preventOnFilter: false,
                 ghostClass: 'sortable-ghost',
                 chosenClass: 'sortable-chosen',
@@ -1916,7 +1919,7 @@ const FormHandler = {
                 delayOnTouchOnly: true,
                 onEnd: function(evt) {
                     const order = Array.from(container.children)
-                        .filter(el => el.classList.contains('customer-sortable-section'))
+                        .filter(el => el.classList.contains('sortable-section'))
                         .map(el => el.dataset.section);
                     localStorage.setItem('customerCardSectionOrder', JSON.stringify(order));
                 }
@@ -1928,7 +1931,7 @@ const FormHandler = {
                 try {
                     const order = JSON.parse(savedOrder);
                     order.forEach(function(sectionId) {
-                        const section = container.querySelector('.customer-sortable-section[data-section="' + sectionId + '"]');
+                        const section = container.querySelector('.sortable-section[data-section="' + sectionId + '"]');
                         if (section) {
                             container.appendChild(section);
                         }
@@ -1939,11 +1942,11 @@ const FormHandler = {
 
         // פונקציה לאתחול Resize
         function initCustomerResize(modal) {
-            const sections = modal.querySelectorAll('.customer-sortable-section');
+            const sections = modal.querySelectorAll('.sortable-section');
 
             sections.forEach(function(section) {
-                const resizeHandle = section.querySelector('.customer-section-resize-handle');
-                const content = section.querySelector('.customer-section-content');
+                const resizeHandle = section.querySelector('.section-resize-handle');
+                const content = section.querySelector('.section-content');
 
                 if (!resizeHandle || !content) return;
 

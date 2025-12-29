@@ -159,6 +159,31 @@
     border-top: 1px solid #eee;
 }
 
+/* פריט מושבת בתפריט */
+.explorer-context-menu a.disabled {
+    color: #aaa !important;
+    cursor: not-allowed !important;
+    pointer-events: none;
+}
+
+.explorer-context-menu a.disabled:hover {
+    background: transparent !important;
+}
+
+.explorer-context-menu a.disabled i {
+    color: #ccc !important;
+}
+
+/* תג "בקרוב" */
+.explorer-context-menu .menu-badge {
+    font-size: 10px;
+    background: #e0e0e0;
+    color: #666;
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-right: auto;
+}
+
 .explorer-actions {
     display: flex;
     gap: 8px;

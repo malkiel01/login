@@ -24,9 +24,11 @@ class FileExplorer {
     }
 
     init() {
+        this.clipboard = null; // לוח העתקה/גזירה
         this.render();
         this.loadFiles();
         this.setupDragDrop();
+        this.setupBackgroundContextMenu();
     }
 
     render() {
@@ -624,6 +626,59 @@ class FileExplorer {
             console.error('Error pasting item:', error);
             alert('שגיאה בהדבקה');
         }
+    }
+
+    // ========================================
+    // תפריט קונטקסט על הרקע (לחיצה ימנית על שטח ריק)
+    // ========================================
+
+    setupBackgroundContextMenu() {
+        this.contentEl.addEventListener('contextmenu', (e) => {
+            // בדוק אם הלחיצה היא על פריט או על הרקע
+            const clickedItem = e.target.closest('.explorer-item');
+            if (!clickedItem) {
+                // לחיצה על הרקע - הצג תפריט רקע
+                e.preventDefault();
+                e.stopPropagation();
+                this.showBackgroundContextMenu(e);
+            }
+            // אם יש פריט, התפריט הרגיל יטופל על ידי oncontextmenu של הפריט
+        });
+    }
+
+    showBackgroundContextMenu(event) {
+        // הסר תפריט קודם אם קיים
+        this.hideContextMenu();
+
+        const hasClipboard = this.clipboard !== null;
+        const clipboardInfo = hasClipboard ?
+            `(${this.clipboard.action === 'cut' ? 'גזור' : 'העתק'}: ${this.clipboard.path.split('/').pop() || this.clipboard.path})` : '';
+
+        const menu = document.createElement('div');
+        menu.className = 'explorer-context-menu';
+        menu.id = 'explorerContextMenu';
+        menu.innerHTML = `
+            <a href="javascript:void(0)" class="${!hasClipboard ? 'disabled' : ''}" onclick="${hasClipboard ? 'window.explorer.pasteItem()' : 'void(0)'}">
+                <i class="fas fa-paste"></i> הדבק ${clipboardInfo}
+            </a>
+            <hr>
+            <a href="javascript:void(0)" class="disabled" onclick="void(0)">
+                <i class="fas fa-folder-tree"></i> העבר לתיק אחר...
+                <span class="menu-badge">בקרוב</span>
+            </a>
+        `;
+
+        // מיקום התפריט
+        menu.style.left = event.clientX + 'px';
+        menu.style.top = event.clientY + 'px';
+
+        document.body.appendChild(menu);
+
+        // סגור בלחיצה מחוץ לתפריט
+        setTimeout(() => {
+            document.addEventListener('click', this.hideContextMenu);
+            document.addEventListener('contextmenu', this.hideContextMenu);
+        }, 10);
     }
 }
 

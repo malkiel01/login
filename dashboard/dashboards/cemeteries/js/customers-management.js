@@ -496,29 +496,27 @@ function formatCustomerStatus(status) {
 }
 
 // ===================================================================
-// דאבל-קליק על לקוח
+// דאבל-קליק על לקוח - פתיחת כרטיס לקוח
 // ===================================================================
-async function handleCustomerDoubleClick(customerId) {
-    console.log('🖱️ Double-click on customer:', customerId);
-    
-    try {
-        if (typeof createCustomerCard === 'function') {
-            const cardHtml = await createCustomerCard(customerId);
-            if (cardHtml && typeof displayHierarchyCard === 'function') {
-                displayHierarchyCard(cardHtml);
-            }
-        } else {
-            console.warn('⚠️ createCustomerCard not found - opening edit form');
-            if (typeof window.tableRenderer !== 'undefined' && window.tableRenderer.editItem) {
-                window.tableRenderer.editItem(customerId);
-            } else {
-                console.error('❌ tableRenderer.editItem not available');
-                showToast('שגיאה בפתיחת טופס עריכה', 'error');
-            }
-        }
-    } catch (error) {
-        console.error('❌ Error in handleCustomerDoubleClick:', error);
-        showToast('שגיאה בטעינת פרטי לקוח', 'error');
+async function handleCustomerDoubleClick(customer) {
+    console.log('🖱️ Double-click on customer:', customer);
+
+    // תמיכה גם באובייקט וגם ב-ID
+    let customerId;
+    if (typeof customer === 'object' && customer !== null) {
+        customerId = customer.unicId || customer.id;
+    } else {
+        customerId = customer;
+    }
+
+    console.log('👤 Opening customer card for ID:', customerId);
+
+    // פתיחת כרטיס לקוח חדש
+    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
+        FormHandler.openForm('customerCard', null, customerId);
+    } else {
+        console.error('❌ FormHandler not available');
+        showToast('שגיאה בפתיחת כרטיס לקוח', 'error');
     }
 }
 

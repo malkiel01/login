@@ -155,6 +155,17 @@ $headerHTML = '
      /* GridStack Customization */
      .grid-stack {
          background: transparent;
+         min-height: 700px;
+     }
+
+     /* חשוב! GridStack משתמש ב-position absolute לפריטים */
+     .grid-stack > .grid-stack-item {
+         position: absolute;
+     }
+
+     /* גובה מינימלי למודל */
+     #graveCardFormModal .modal-content {
+         min-height: 80vh;
      }
 
      .grid-stack-item-content {
@@ -935,12 +946,37 @@ window.GraveCardLayout = {
         // טען לייאאוט שמור
         this.loadLayout();
 
+        // עדכון גובה הגריד
+        this.updateGridHeight();
+
         // שמור בעת שינוי
         this.grid.on("change", () => {
             this.saveLayout();
+            this.updateGridHeight();
         });
 
         console.log("📐 [GraveCardLayout] GridStack initialized");
+    },
+
+    updateGridHeight: function() {
+        const gridEl = document.getElementById("graveCardGrid");
+        if (!gridEl || !this.grid) return;
+
+        // חישוב הגובה המקסימלי לפי הפריטים
+        let maxBottom = 0;
+        const cellHeight = 60;
+        const margin = 8;
+
+        this.grid.getGridItems().forEach(item => {
+            const node = item.gridstackNode;
+            if (node) {
+                const bottom = (node.y + node.h) * (cellHeight + margin);
+                if (bottom > maxBottom) maxBottom = bottom;
+            }
+        });
+
+        // הוסף מרווח
+        gridEl.style.minHeight = (maxBottom + 20) + "px";
     },
 
     saveLayout: function() {
@@ -967,6 +1003,7 @@ window.GraveCardLayout = {
         if (!this.grid || !this.defaultLayout) return;
         this.grid.load(this.defaultLayout);
         localStorage.removeItem(this.storageKey);
+        this.updateGridHeight();
         console.log("📐 [GraveCardLayout] Layout reset to default");
     }
 };

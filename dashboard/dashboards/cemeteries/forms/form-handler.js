@@ -1362,7 +1362,76 @@ const FormHandler = {
             if (typeof GraveImageViewer !== 'undefined') {
                 GraveImageViewer.init(currentGrave.unicId);
             }
+
+            // אתחול גרירת סקשנים (SortableJS)
+            console.log('🔀 [GraveCard] מאתחל גרירת סקשנים...');
+            initSortableSections(modal);
         });
+
+        // ========================================
+        // פונקציה: אתחול גרירת סקשנים
+        // ========================================
+        function initSortableSections(modal) {
+            const container = modal.querySelector('#graveSortableSections');
+
+            if (!container) {
+                console.warn('⚠️ [Sortable] מיכל הסקשנים לא נמצא');
+                return;
+            }
+
+            // בדוק אם SortableJS נטען
+            if (typeof Sortable === 'undefined') {
+                console.error('❌ [Sortable] SortableJS לא נטען!');
+                return;
+            }
+
+            const sections = container.querySelectorAll('.sortable-section');
+            console.log('📋 [Sortable] סקשנים שנמצאו:', sections.length);
+
+            // אתחל Sortable
+            const sortable = new Sortable(container, {
+                animation: 150,
+                handle: '.section-drag-handle',
+                ghostClass: 'sortable-ghost',
+                dragClass: 'sortable-drag',
+                chosenClass: 'sortable-chosen',
+                forceFallback: false,
+                onStart: function(evt) {
+                    console.log('🚀 [Sortable] התחלת גרירה:', evt.item.dataset.section);
+                    evt.item.style.opacity = '0.9';
+                },
+                onEnd: function(evt) {
+                    console.log('✅ [Sortable] סיום גרירה');
+                    evt.item.style.opacity = '1';
+
+                    // שמור את הסדר
+                    const order = Array.from(container.children)
+                        .filter(el => el.classList.contains('sortable-section'))
+                        .map(el => el.dataset.section);
+                    localStorage.setItem('graveCardSectionOrder', JSON.stringify(order));
+                    console.log('💾 [Sortable] סדר נשמר:', order);
+                }
+            });
+
+            console.log('✅ [Sortable] SortableJS אותחל בהצלחה!');
+
+            // טען סדר שמור
+            const savedOrder = localStorage.getItem('graveCardSectionOrder');
+            if (savedOrder) {
+                try {
+                    const order = JSON.parse(savedOrder);
+                    order.forEach(function(sectionId) {
+                        const section = container.querySelector('[data-section="' + sectionId + '"]');
+                        if (section) {
+                            container.appendChild(section);
+                        }
+                    });
+                    console.log('📥 [Sortable] סדר נטען:', order);
+                } catch (e) {
+                    console.error('❌ [Sortable] שגיאה בטעינת סדר:', e);
+                }
+            }
+        }
 
         // ========================================
         // פונקציה: אתחול סייר קבצים

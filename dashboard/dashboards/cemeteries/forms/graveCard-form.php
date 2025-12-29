@@ -170,14 +170,23 @@ $allSectionsHTML = '
     }
 
     .sortable-section.sortable-ghost {
-        opacity: 0.4;
-        background: #e0f2fe;
-        border: 2px dashed #3b82f6;
+        opacity: 0.5;
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        border: 2px dashed #3b82f6 !important;
+        border-radius: 12px;
+    }
+
+    .sortable-section.sortable-chosen {
+        box-shadow: 0 8px 30px rgba(59, 130, 246, 0.3);
+        border: 2px solid #3b82f6 !important;
+        transform: scale(1.01);
+        z-index: 1000;
     }
 
     .sortable-section.sortable-drag {
-        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-        border-color: #3b82f6;
+        box-shadow: 0 15px 50px rgba(0,0,0,0.25);
+        border: 2px solid #2563eb !important;
+        opacity: 0.95;
     }
 
     /* ידית גרירה - פס עליון ברור */
@@ -805,67 +814,6 @@ $allSectionsHTML .= '
 
 </div>
 <!-- סוף מיכל הסקשנים הניתנים לגרירה -->
-
-<!-- אתחול SortableJS -->
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    setTimeout(function() {
-        const container = document.getElementById("graveSortableSections");
-        console.log("📋 [GraveCard] מחפש מיכל:", container);
-        console.log("📋 [GraveCard] Sortable קיים:", typeof Sortable);
-
-        if (!container) {
-            console.error("📋 [GraveCard] מיכל לא נמצא!");
-            return;
-        }
-
-        if (typeof Sortable === "undefined") {
-            console.error("📋 [GraveCard] SortableJS לא נטען!");
-            return;
-        }
-
-        const sections = container.querySelectorAll(".sortable-section");
-        console.log("📋 [GraveCard] סקשנים שנמצאו:", sections.length);
-
-        const sortable = new Sortable(container, {
-            animation: 150,
-            handle: ".section-drag-handle",
-            ghostClass: "sortable-ghost",
-            dragClass: "sortable-drag",
-            onStart: function(evt) {
-                console.log("📋 [GraveCard] התחלת גרירה:", evt.item.dataset.section);
-            },
-            onEnd: function(evt) {
-                console.log("📋 [GraveCard] סיום גרירה");
-                const order = Array.from(container.children)
-                    .filter(el => el.classList.contains("sortable-section"))
-                    .map(el => el.dataset.section);
-                localStorage.setItem("graveCardSectionOrder", JSON.stringify(order));
-                console.log("📋 [GraveCard] סדר סקשנים נשמר:", order);
-            }
-        });
-
-        console.log("📋 [GraveCard] SortableJS אותחל בהצלחה!", sortable);
-
-        // טען סדר שמור
-        const savedOrder = localStorage.getItem("graveCardSectionOrder");
-        if (savedOrder) {
-            try {
-                const order = JSON.parse(savedOrder);
-                order.forEach(function(sectionId) {
-                    const section = container.querySelector("[data-section=\"" + sectionId + "\"]");
-                    if (section) {
-                        container.appendChild(section);
-                    }
-                });
-                console.log("📋 [GraveCard] סדר סקשנים נטען:", order);
-            } catch (e) {
-                console.error("📋 [GraveCard] שגיאה בטעינת סדר:", e);
-            }
-        }
-    }, 500);
-});
-</script>
 ';
 
 // === הוספת כל הסקשנים כ-HTML אחד ===

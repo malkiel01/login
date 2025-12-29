@@ -198,6 +198,7 @@ $allSectionsHTML = '
         justify-content: center;
         border-bottom: 1px solid #cbd5e1;
         transition: background 0.2s;
+        position: relative;
     }
 
     .section-drag-handle::before {
@@ -219,6 +220,55 @@ $allSectionsHTML = '
     .section-drag-handle:active {
         cursor: grabbing;
         background: #94a3b8;
+    }
+
+    /* כפתור צימצום/הרחבה */
+    .section-toggle-btn {
+        position: absolute;
+        left: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 20px;
+        height: 20px;
+        border: none;
+        background: rgba(100, 116, 139, 0.2);
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #64748b;
+        font-size: 10px;
+        transition: all 0.2s;
+        padding: 0;
+    }
+
+    .section-toggle-btn:hover {
+        background: rgba(100, 116, 139, 0.4);
+        color: #334155;
+    }
+
+    .section-toggle-btn i {
+        transition: transform 0.3s;
+    }
+
+    /* מצב מצומצם */
+    .sortable-section.collapsed .section-content {
+        display: none;
+    }
+
+    .sortable-section.collapsed .section-toggle-btn i {
+        transform: rotate(-90deg);
+    }
+
+    .sortable-section.collapsed .section-drag-handle {
+        border-radius: 10px;
+        border-bottom: none;
+    }
+
+    /* תוכן הסקשן */
+    .section-content {
+        transition: all 0.3s ease;
     }
 
      /* מיכל ראשי - תמונה + פרטים */
@@ -514,9 +564,14 @@ $allSectionsHTML = '
  <div class="sortable-sections" id="graveSortableSections">
 
  <!-- סקשן 1: פרטי קבר ותמונה -->
- <div class="sortable-section" data-section="header">
-     <div class="section-drag-handle"></div>
-     <div class="grave-header-container">
+<div class="sortable-section" data-section="header">
+    <div class="section-drag-handle">
+        <button type="button" class="section-toggle-btn" onclick="toggleSection(this)" title="צמצם/הרחב">
+            <i class="fas fa-chevron-down"></i>
+        </button>
+    </div>
+    <div class="section-content">
+    <div class="grave-header-container">
      <!-- מציג תמונות -->
      <div class="grave-image-viewer" id="graveImageViewer" data-unic-id="' . htmlspecialchars($grave['unicId']) . '">
          <div class="grave-image-main">
@@ -646,6 +701,7 @@ $allSectionsHTML = '
          </button>
      </div>
     </div>
+    </div><!-- סוף section-content -->
 </div>
 <!-- סוף סקשן 1 -->
 ';
@@ -660,7 +716,12 @@ if ($purchase) {
     $allSectionsHTML .= '
 <!-- סקשן 2: תיק רכישה -->
 <div class="sortable-section" data-section="purchase">
-    <div class="section-drag-handle"></div>
+    <div class="section-drag-handle">
+        <button type="button" class="section-toggle-btn" onclick="toggleSection(this)" title="צמצם/הרחב">
+            <i class="fas fa-chevron-down"></i>
+        </button>
+    </div>
+    <div class="section-content">
     <fieldset class="form-section" style="border: none; border-radius: 0 0 10px 10px; padding: 20px; margin: 0; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);">
         <legend style="padding: 0 15px; font-weight: bold; color: #1e40af; font-size: 16px;">
             <i class="fas fa-shopping-cart"></i> תיק רכישה
@@ -698,6 +759,7 @@ if ($purchase) {
             </button>
         </div>
     </fieldset>
+    </div><!-- סוף section-content -->
 </div>
 ';
 } elseif ($grave['graveStatus'] == 1) {
@@ -705,7 +767,12 @@ if ($purchase) {
     $allSectionsHTML .= '
 <!-- סקשן 2: תיק רכישה (ריק) -->
 <div class="sortable-section" data-section="purchase">
-    <div class="section-drag-handle"></div>
+    <div class="section-drag-handle">
+        <button type="button" class="section-toggle-btn" onclick="toggleSection(this)" title="צמצם/הרחב">
+            <i class="fas fa-chevron-down"></i>
+        </button>
+    </div>
+    <div class="section-content">
     <fieldset class="form-section" style="border: none; border-radius: 0 0 10px 10px; padding: 30px; margin: 0; background: #f8fafc; text-align: center;">
         <legend style="padding: 0 15px; font-weight: bold; color: #94a3b8; font-size: 16px;">
             <i class="fas fa-shopping-cart"></i> תיק רכישה
@@ -718,6 +785,7 @@ if ($purchase) {
             <i class="fas fa-plus"></i> הוסף רכישה
         </button>
     </fieldset>
+    </div><!-- סוף section-content -->
 </div>
 ';
 }
@@ -727,7 +795,12 @@ if ($burial) {
     $allSectionsHTML .= '
 <!-- סקשן 3: תיק קבורה -->
 <div class="sortable-section" data-section="burial">
-    <div class="section-drag-handle"></div>
+    <div class="section-drag-handle">
+        <button type="button" class="section-toggle-btn" onclick="toggleSection(this)" title="צמצם/הרחב">
+            <i class="fas fa-chevron-down"></i>
+        </button>
+    </div>
+    <div class="section-content">
     <fieldset class="form-section" style="border: none; border-radius: 0 0 10px 10px; padding: 20px; margin: 0; background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);">
         <legend style="padding: 0 15px; font-weight: bold; color: #92400e; font-size: 16px;">
             <i class="fas fa-cross"></i> תיק קבורה
@@ -768,6 +841,7 @@ if ($burial) {
             </button>
         </div>
     </fieldset>
+    </div><!-- סוף section-content -->
 </div>
 ';
 } elseif ($grave['graveStatus'] == 1 || $grave['graveStatus'] == 2) {
@@ -775,19 +849,25 @@ if ($burial) {
     $allSectionsHTML .= '
 <!-- סקשן 3: תיק קבורה (ריק) -->
 <div class="sortable-section" data-section="burial">
-    <div class="section-drag-handle"></div>
-        <fieldset class="form-section" style="border: 2px dashed #fde68a; border-radius: 12px; padding: 30px; margin: 0; background: #fffef5; text-align: center;">
-            <legend style="padding: 0 15px; font-weight: bold; color: #94a3b8; font-size: 16px;">
-                <i class="fas fa-cross"></i> תיק קבורה
-            </legend>
-            <div style="color: #64748b; margin-bottom: 15px;">
-                <i class="fas fa-inbox" style="font-size: 32px; margin-bottom: 10px; display: block; opacity: 0.5;"></i>
+    <div class="section-drag-handle">
+        <button type="button" class="section-toggle-btn" onclick="toggleSection(this)" title="צמצם/הרחב">
+            <i class="fas fa-chevron-down"></i>
+        </button>
+    </div>
+    <div class="section-content">
+    <fieldset class="form-section" style="border: 2px dashed #fde68a; border-radius: 12px; padding: 30px; margin: 0; background: #fffef5; text-align: center;">
+        <legend style="padding: 0 15px; font-weight: bold; color: #94a3b8; font-size: 16px;">
+            <i class="fas fa-cross"></i> תיק קבורה
+        </legend>
+        <div style="color: #64748b; margin-bottom: 15px;">
+            <i class="fas fa-inbox" style="font-size: 32px; margin-bottom: 10px; display: block; opacity: 0.5;"></i>
                 אין קבורה מקושרת לקבר זה
             </div>
     <button type="button" class="btn btn-info btn-open-burial" style="padding: 10px 24px; font-size: 15px;">
         <i class="fas fa-plus"></i> הוסף קבורה
     </button>
     </fieldset>
+    </div><!-- סוף section-content -->
 </div>
 ';
 }
@@ -797,7 +877,12 @@ $explorerUnicId = htmlspecialchars($grave['unicId']);
 $allSectionsHTML .= '
 <!-- סקשן 4: מסמכים -->
 <div class="sortable-section" data-section="documents">
-    <div class="section-drag-handle"></div>
+    <div class="section-drag-handle">
+        <button type="button" class="section-toggle-btn" onclick="toggleSection(this)" title="צמצם/הרחב">
+            <i class="fas fa-chevron-down"></i>
+        </button>
+    </div>
+    <div class="section-content">
     <fieldset class="form-section" style="border: none; border-radius: 0 0 10px 10px; padding: 20px; margin: 0; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);">
         <legend style="padding: 0 15px; font-weight: bold; color: #475569; font-size: 16px;">
             <i class="fas fa-folder-open"></i> מסמכים
@@ -808,6 +893,7 @@ $allSectionsHTML .= '
             </div>
         </div>
     </fieldset>
+    </div><!-- סוף section-content -->
 </div>
 
 </div>

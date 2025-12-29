@@ -1366,6 +1366,44 @@ const FormHandler = {
             // אתחול גרירת סקשנים (SortableJS)
             console.log('🔀 [GraveCard] מאתחל גרירת סקשנים...');
             initSortableSections(modal);
+
+            // הגדרת פונקציית צימצום/הרחבה גלובלית
+            window.toggleSection = function(btn) {
+                const section = btn.closest('.sortable-section');
+                if (section) {
+                    section.classList.toggle('collapsed');
+
+                    // שמור מצב ל-localStorage
+                    const sectionId = section.dataset.section;
+                    const collapsedSections = JSON.parse(localStorage.getItem('graveCardCollapsed') || '[]');
+
+                    if (section.classList.contains('collapsed')) {
+                        if (!collapsedSections.includes(sectionId)) {
+                            collapsedSections.push(sectionId);
+                        }
+                        console.log('📦 [Toggle] סקשן מצומצם:', sectionId);
+                    } else {
+                        const index = collapsedSections.indexOf(sectionId);
+                        if (index > -1) {
+                            collapsedSections.splice(index, 1);
+                        }
+                        console.log('📦 [Toggle] סקשן מורחב:', sectionId);
+                    }
+                    localStorage.setItem('graveCardCollapsed', JSON.stringify(collapsedSections));
+                }
+            };
+
+            // טען מצב צימצום שמור
+            const collapsedSections = JSON.parse(localStorage.getItem('graveCardCollapsed') || '[]');
+            collapsedSections.forEach(sectionId => {
+                const section = modal.querySelector('[data-section="' + sectionId + '"]');
+                if (section) {
+                    section.classList.add('collapsed');
+                }
+            });
+            if (collapsedSections.length > 0) {
+                console.log('📦 [Toggle] מצב צימצום נטען:', collapsedSections);
+            }
         });
 
         // ========================================

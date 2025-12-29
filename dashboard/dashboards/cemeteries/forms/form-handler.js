@@ -1367,9 +1367,37 @@ const FormHandler = {
                 GraveImageViewer.init(currentGrave.unicId);
             }
 
-            // הערה: גרירה, צימצום ושינוי גובה מטופלים ע"י sortable-sections.js
-            // שנטען בתוך הטופס עצמו (graveCard-form.php)
+            // אתחול סקשנים ניתנים לגרירה (toggle, sortable, resize)
+            console.log('🔀 [GraveCard] מאתחל סקשנים...');
+            initSortableSections('graveSortableSections', 'graveCard');
         });
+
+        // ========================================
+        // פונקציה: אתחול סקשנים ניתנים לגרירה
+        // ========================================
+        function initSortableSections(containerId, storagePrefix) {
+            // טען את הסקריפט אם לא נטען
+            if (typeof SortableSections !== 'undefined') {
+                console.log('✅ [Sortable] SortableSections כבר קיים');
+                SortableSections.init(containerId, storagePrefix);
+            } else {
+                console.log('📥 [Sortable] טוען sortable-sections.js...');
+                var script = document.createElement('script');
+                script.src = '/dashboard/dashboards/cemeteries/forms/sortable-sections.js?v=' + Date.now();
+                script.onload = function() {
+                    console.log('✅ [Sortable] סקריפט נטען');
+                    if (typeof SortableSections !== 'undefined') {
+                        SortableSections.init(containerId, storagePrefix);
+                    } else {
+                        console.error('❌ [Sortable] SortableSections לא מוגדר!');
+                    }
+                };
+                script.onerror = function() {
+                    console.error('❌ [Sortable] שגיאה בטעינת הסקריפט');
+                };
+                document.head.appendChild(script);
+            }
+        }
 
         // ========================================
         // פונקציה: אתחול סייר קבצים
@@ -1569,6 +1597,10 @@ const FormHandler = {
             // אתחול סייר קבצים (זהה לקבר)
             initCustomerFileExplorer(modal, customerId);
 
+            // אתחול סקשנים ניתנים לגרירה (toggle, sortable, resize)
+            console.log('🔀 [CustomerCard] מאתחל סקשנים...');
+            initCustomerSortableSections('customerSortableSections', 'customerCard');
+
             // הגדרת handler גלובלי לכרטיס לקוח
             window.CustomerCardHandler = {
                 editCustomer: function(id) {
@@ -1584,10 +1616,26 @@ const FormHandler = {
                     FormHandler.openForm('burial', null, id);
                 }
             };
-
-            // הערה: גרירה, צימצום ושינוי גובה מטופלים ע"י sortable-sections.js
-            // שנטען בתוך הטופס עצמו (customerCard-form.php)
         });
+
+        // פונקציה לאתחול סקשנים ניתנים לגרירה
+        function initCustomerSortableSections(containerId, storagePrefix) {
+            if (typeof SortableSections !== 'undefined') {
+                console.log('✅ [CustomerSortable] SortableSections כבר קיים');
+                SortableSections.init(containerId, storagePrefix);
+            } else {
+                console.log('📥 [CustomerSortable] טוען sortable-sections.js...');
+                var script = document.createElement('script');
+                script.src = '/dashboard/dashboards/cemeteries/forms/sortable-sections.js?v=' + Date.now();
+                script.onload = function() {
+                    console.log('✅ [CustomerSortable] סקריפט נטען');
+                    if (typeof SortableSections !== 'undefined') {
+                        SortableSections.init(containerId, storagePrefix);
+                    }
+                };
+                document.head.appendChild(script);
+            }
+        }
 
         // פונקציה לאתחול סייר קבצים עבור לקוח
         function initCustomerFileExplorer(modal, unicId) {

@@ -1099,24 +1099,39 @@ $allSectionsHTML .= '
 <!-- טעינת קוד משותף לסקשנים -->
 <script>
 (function() {
+    console.log("🚀 [GraveCard] מתחיל טעינת sortable-sections.js");
+
     function initSections() {
+        console.log("📌 [GraveCard] initSections נקרא");
+        var container = document.getElementById("graveSortableSections");
+        console.log("📌 [GraveCard] container:", container ? "נמצא" : "לא נמצא!");
+
         if (typeof SortableSections !== "undefined") {
+            console.log("✅ [GraveCard] SortableSections קיים, מאתחל...");
             SortableSections.init("graveSortableSections", "graveCard");
         } else {
-            console.error("SortableSections not loaded!");
+            console.error("❌ [GraveCard] SortableSections לא מוגדר!");
         }
     }
 
     // בדוק אם הסקריפט כבר נטען
     if (typeof SortableSections !== "undefined") {
+        console.log("📌 [GraveCard] SortableSections כבר נטען");
         initSections();
     } else {
-        // טען את הסקריפט דינמית
+        // טען את הסקריפט דינמית עם cache buster
+        var cacheBuster = "v=" + Date.now();
         var script = document.createElement("script");
-        script.src = "/dashboard/dashboards/cemeteries/forms/sortable-sections.js";
-        script.onload = initSections;
-        script.onerror = function() { console.error("Failed to load sortable-sections.js"); };
+        script.src = "/dashboard/dashboards/cemeteries/forms/sortable-sections.js?" + cacheBuster;
+        script.onload = function() {
+            console.log("✅ [GraveCard] סקריפט נטען בהצלחה");
+            initSections();
+        };
+        script.onerror = function() {
+            console.error("❌ [GraveCard] שגיאה בטעינת sortable-sections.js");
+        };
         document.head.appendChild(script);
+        console.log("📌 [GraveCard] סקריפט נוסף ל-head");
     }
 })();
 </script>

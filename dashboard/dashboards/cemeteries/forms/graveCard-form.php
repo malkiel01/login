@@ -303,10 +303,10 @@ $headerHTML = '
                  <div style="font-size: 11px; margin-top: 5px;">לחץ להעלאה</div>
              </div>
              <img id="graveImageDisplay" style="display: none;" />
-             <button class="grave-image-nav prev" id="graveImagePrev" style="display: none;">
+             <button type="button" class="grave-image-nav prev" id="graveImagePrev" style="display: none;">
                  <i class="fas fa-chevron-right"></i>
              </button>
-             <button class="grave-image-nav next" id="graveImageNext" style="display: none;">
+             <button type="button" class="grave-image-nav next" id="graveImageNext" style="display: none;">
                  <i class="fas fa-chevron-left"></i>
              </button>
          </div>

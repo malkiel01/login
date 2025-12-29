@@ -296,22 +296,18 @@
     cursor: pointer;
     transition: all 0.2s;
     position: relative;
-    border: 1px solid #e8e8e8;
-    background: #fff;
+    background: transparent;
 }
 
 .explorer-item:hover {
     background: #f8fafc;
-    border-color: #d0d0d0;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
 .explorer-item.selected {
     background: #e3f2fd;
-    border-color: #2196F3;
-    box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
 }
 
+/* מסגרת רק על אזור האייקון */
 .explorer-item-icon {
     width: 64px;
     height: 64px;
@@ -319,12 +315,27 @@
     align-items: center;
     justify-content: center;
     margin-bottom: 8px;
-    border-radius: 4px;
+    border-radius: 8px;
     overflow: hidden;
+    border: 1px solid #e8e8e8;
+    background: #fff;
+    transition: all 0.2s;
+}
+
+.explorer-item:hover .explorer-item-icon {
+    border-color: #d0d0d0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.explorer-item.selected .explorer-item-icon {
+    border-color: #2196F3;
+    box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
 }
 
 .explorer-item-icon i {
-    font-size: 48px;
+    font-size: 48px !important;
+    display: inline-block !important;
+    color: #78909c; /* צבע ברירת מחדל */
 }
 
 .explorer-item-icon img {
@@ -336,9 +347,17 @@
 }
 
 /* צבעי אייקונים - תיקייה צהובה */
-.explorer-item-icon i.fa-folder {
+.explorer-item-icon i.fa-folder,
+.explorer-item-icon .fa-folder {
     color: #f9a825 !important;
     text-shadow: 0 2px 4px rgba(249, 168, 37, 0.3);
+}
+
+/* תיקייה פתוחה */
+.explorer-item-icon i.fa-folder-open,
+.explorer-item-icon .fa-folder-open {
+    color: #fbc02d !important;
+    text-shadow: 0 2px 4px rgba(251, 192, 45, 0.3);
 }
 
 /* קבצי PDF */

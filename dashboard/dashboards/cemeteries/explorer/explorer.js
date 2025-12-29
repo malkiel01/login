@@ -218,6 +218,8 @@ class FileExplorer {
         const escapedPath = item.path.replace(/'/g, "\\'");
         const escapedName = item.name.replace(/'/g, "\\'");
 
+        console.log('🎨 [Explorer] Rendering item:', item.name, '| isDir:', item.isDir, '| icon:', icon, '| thumb HTML:', thumb);
+
         return `
             <div class="explorer-item"
                  data-path="${item.path}"

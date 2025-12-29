@@ -239,6 +239,10 @@ const FormHandler = {
                     this.handleGraveCardForm(itemId);
                     break;
 
+                case 'customerCard':
+                    this.handleCustomerCardForm(itemId);
+                    break;
+
                 default:
                     if (itemId) {
                         this.loadFormData(type, itemId);
@@ -1789,6 +1793,208 @@ const FormHandler = {
                     FormHandler.openForm('burial', null, burialId);
                 };
             }
+        }
+    },
+
+    /**
+     * טיפול בכרטיס לקוח
+     * @param {string} itemId - מזהה הלקוח (unicId)
+     */
+    handleCustomerCardForm: async function(itemId) {
+        console.log('👤 [CustomerCard] אתחול כרטיס לקוח:', itemId);
+
+        // חכה שהטופס יהיה מוכן
+        this.waitForElement('#customerCardModal', (modal) => {
+            console.log('✅ [CustomerCard] Modal נטען');
+
+            // קרא unicId מה-hidden field
+            const unicIdField = modal.querySelector('input[name="unicId"]');
+            const customerId = unicIdField?.value || itemId;
+
+            console.log('📋 [CustomerCard] מזהה לקוח:', customerId);
+
+            // עדכן כפתורים בפוטר - רק סגור
+            const footer = modal.querySelector('.modal-footer');
+            if (footer) {
+                footer.innerHTML = '<button type="button" class="btn btn-secondary" onclick="FormHandler.closeForm(\'customerCard\')"><i class="fas fa-times"></i> סגור</button>';
+            }
+
+            // הגדרת פונקציית צימצום/הרחבה
+            window.toggleCustomerSection = function(btn, event) {
+                if (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+
+                const section = btn.closest('.customer-sortable-section');
+                if (section) {
+                    section.classList.toggle('collapsed');
+
+                    const sectionId = section.dataset.section;
+                    const collapsedSections = JSON.parse(localStorage.getItem('customerCardCollapsed') || '[]');
+
+                    if (section.classList.contains('collapsed')) {
+                        if (!collapsedSections.includes(sectionId)) {
+                            collapsedSections.push(sectionId);
+                        }
+                    } else {
+                        const index = collapsedSections.indexOf(sectionId);
+                        if (index > -1) {
+                            collapsedSections.splice(index, 1);
+                        }
+                    }
+                    localStorage.setItem('customerCardCollapsed', JSON.stringify(collapsedSections));
+                }
+            };
+
+            // הוספת תמיכה ב-touch לכפתורי צימצום
+            modal.querySelectorAll('.customer-section-toggle-btn').forEach(function(btn) {
+                btn.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    window.toggleCustomerSection(btn, e);
+                }, { passive: false });
+            });
+
+            // טען מצב צימצום שמור
+            const collapsedSections = JSON.parse(localStorage.getItem('customerCardCollapsed') || '[]');
+            collapsedSections.forEach(sectionId => {
+                const section = modal.querySelector('.customer-sortable-section[data-section="' + sectionId + '"]');
+                if (section) {
+                    section.classList.add('collapsed');
+                }
+            });
+
+            // אתחול SortableJS לסקשנים
+            initCustomerSortable(modal);
+
+            // אתחול resize לסקשנים
+            initCustomerResize(modal);
+
+            // הגדרת handler גלובלי לכרטיס לקוח
+            window.CustomerCardHandler = {
+                editCustomer: function(id) {
+                    FormHandler.closeForm('customerCard');
+                    FormHandler.openForm('customer', null, id);
+                },
+                viewPurchase: function(id) {
+                    FormHandler.closeForm('customerCard');
+                    FormHandler.openForm('purchase', null, id);
+                },
+                viewBurial: function(id) {
+                    FormHandler.closeForm('customerCard');
+                    FormHandler.openForm('burial', null, id);
+                }
+            };
+        });
+
+        // פונקציה לאתחול Sortable
+        function initCustomerSortable(modal) {
+            const container = modal.querySelector('#customerSortableSections');
+            if (!container) return;
+
+            if (typeof Sortable === 'undefined') {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js';
+                script.onload = function() {
+                    setupCustomerSortable(container);
+                };
+                document.head.appendChild(script);
+                return;
+            }
+            setupCustomerSortable(container);
+        }
+
+        function setupCustomerSortable(container) {
+            new Sortable(container, {
+                animation: 150,
+                handle: '.customer-section-drag-handle',
+                filter: '.customer-section-toggle-btn',
+                preventOnFilter: false,
+                ghostClass: 'sortable-ghost',
+                chosenClass: 'sortable-chosen',
+                delay: 150,
+                delayOnTouchOnly: true,
+                onEnd: function(evt) {
+                    const order = Array.from(container.children)
+                        .filter(el => el.classList.contains('customer-sortable-section'))
+                        .map(el => el.dataset.section);
+                    localStorage.setItem('customerCardSectionOrder', JSON.stringify(order));
+                }
+            });
+
+            // טען סדר שמור
+            const savedOrder = localStorage.getItem('customerCardSectionOrder');
+            if (savedOrder) {
+                try {
+                    const order = JSON.parse(savedOrder);
+                    order.forEach(function(sectionId) {
+                        const section = container.querySelector('.customer-sortable-section[data-section="' + sectionId + '"]');
+                        if (section) {
+                            container.appendChild(section);
+                        }
+                    });
+                } catch (e) {}
+            }
+        }
+
+        // פונקציה לאתחול Resize
+        function initCustomerResize(modal) {
+            const sections = modal.querySelectorAll('.customer-sortable-section');
+
+            sections.forEach(function(section) {
+                const resizeHandle = section.querySelector('.customer-section-resize-handle');
+                const content = section.querySelector('.customer-section-content');
+
+                if (!resizeHandle || !content) return;
+
+                let isResizing = false;
+                let startY = 0;
+                let startHeight = 0;
+                const sectionId = section.dataset.section;
+                const minHeight = 50;
+                const maxHeight = 600;
+
+                // טען גובה שמור
+                const savedHeights = JSON.parse(localStorage.getItem('customerCardSectionHeights') || '{}');
+                if (savedHeights[sectionId]) {
+                    content.style.height = savedHeights[sectionId] + 'px';
+                    content.style.maxHeight = savedHeights[sectionId] + 'px';
+                }
+
+                function startResize(clientY) {
+                    isResizing = true;
+                    startY = clientY;
+                    startHeight = content.offsetHeight;
+                    section.classList.add('resizing');
+                    document.body.style.cursor = 'ns-resize';
+                }
+
+                function doResize(clientY) {
+                    if (!isResizing) return;
+                    const deltaY = clientY - startY;
+                    let newHeight = startHeight + deltaY;
+                    newHeight = Math.max(minHeight, Math.min(maxHeight, newHeight));
+                    content.style.height = newHeight + 'px';
+                    content.style.maxHeight = newHeight + 'px';
+                }
+
+                function endResize() {
+                    if (!isResizing) return;
+                    isResizing = false;
+                    section.classList.remove('resizing');
+                    document.body.style.cursor = '';
+                    const savedHeights = JSON.parse(localStorage.getItem('customerCardSectionHeights') || '{}');
+                    savedHeights[sectionId] = content.offsetHeight;
+                    localStorage.setItem('customerCardSectionHeights', JSON.stringify(savedHeights));
+                }
+
+                resizeHandle.addEventListener('mousedown', (e) => { e.preventDefault(); startResize(e.clientY); });
+                document.addEventListener('mousemove', (e) => doResize(e.clientY));
+                document.addEventListener('mouseup', () => endResize());
+                resizeHandle.addEventListener('touchstart', (e) => { e.preventDefault(); if (e.touches.length === 1) startResize(e.touches[0].clientY); }, { passive: false });
+                document.addEventListener('touchmove', (e) => { if (isResizing && e.touches.length === 1) { e.preventDefault(); doResize(e.touches[0].clientY); } }, { passive: false });
+                document.addEventListener('touchend', () => endResize());
+            });
         }
     },
 

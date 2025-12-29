@@ -382,6 +382,14 @@ async function initCustomersTable(data, totalItems = null, signal = null) {
             console.log('🔍 Active filters:', filters);
             const count = customersTable.getFilteredData().length;
             showToast(`נמצאו ${count} תוצאות`, 'info');
+        },
+
+        // ⭐ לחיצה כפולה - פתיחת כרטיס לקוח
+        onRowDoubleClick: (customer) => {
+            console.log('👤 Opening customer card:', customer.unicId);
+            if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
+                FormHandler.openForm('customerCard', null, customer.unicId);
+            }
         }
     });
     

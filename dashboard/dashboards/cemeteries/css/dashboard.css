@@ -5,7 +5,7 @@
     display: flex;
     flex-direction: column;
     position: relative;
-    padding-top: 70px; /* Height of fixed header */
+    padding-top: 80px; /* Height of fixed header */
 }
 
 .dashboard-container {
@@ -19,7 +19,7 @@
     flex: 1;
     padding: 2rem;
     background: #f8f9fa;
-    min-height: calc(100vh - 70px);
+    min-height: calc(100vh - 80px);
     margin-right: 280px;
     transition: margin-right 0.3s ease;
 }
@@ -28,9 +28,9 @@
 .dashboard-sidebar {
     position: fixed;
     right: 0;
-    top: 70px;
+    top: 80px;
     width: 280px;
-    height: calc(100vh - 70px);
+    height: calc(100vh - 80px);
     overflow-y: auto;
     background: #fff;
     box-shadow: -2px 0 5px rgba(0,0,0,0.05);
@@ -191,7 +191,7 @@
     .sidebar-overlay {
         display: none;
         position: fixed;
-        top: 70px;
+        top: 80px;
         left: 0;
         right: 0;
         bottom: 0;

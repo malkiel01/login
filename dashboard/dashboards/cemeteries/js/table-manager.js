@@ -242,6 +242,8 @@ class TableManager {
         headerContainer.className = 'table-header-container';
         headerContainer.style.cssText = `
             flex-shrink: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
             min-width: 0 !important;
             overflow-x: auto !important;
             overflow-y: hidden !important;
@@ -256,6 +258,8 @@ class TableManager {
         bodyContainer.className = 'table-body-container';
         bodyContainer.style.cssText = `
             flex: 1 !important;
+            width: 100% !important;
+            max-width: 100% !important;
             min-width: 0 !important;
             overflow-x: auto !important;
             overflow-y: auto !important;
@@ -990,6 +994,7 @@ class TableManager {
     /**
      * ⭐ עדכון רוחב הטבלה הכולל
      * מחשב את סכום כל רוחבי העמודות ומעדכן את רוחב שתי הטבלאות
+     * הטבלה יכולה להתרחב אבל לא תכריח את הדף להתרחב
      */
     updateTableWidth() {
         // חישוב רוחב כולל מכותרות הטבלה בפועל
@@ -1003,17 +1008,17 @@ class TableManager {
         // הוספת מרווח קטן למניעת חיתוך
         totalWidth += 2;
 
-        // עדכון רוחב שתי הטבלאות
+        // עדכון רוחב שתי הטבלאות - רק width, לא min-width!
         const widthStyle = `${totalWidth}px`;
 
         if (this.elements.headerTable) {
             this.elements.headerTable.style.width = widthStyle;
-            this.elements.headerTable.style.minWidth = widthStyle;
+            // לא לשנות min-width - זה מה שגורם להרחבת הדף!
         }
 
         if (this.elements.bodyTable) {
             this.elements.bodyTable.style.width = widthStyle;
-            this.elements.bodyTable.style.minWidth = widthStyle;
+            // לא לשנות min-width - זה מה שגורם להרחבת הדף!
         }
     }
 

@@ -69,11 +69,12 @@ class TableManager {
             // ============================================
             // הגדרות כלליות
             // ============================================
-            
+
             sortable: true,
             resizable: true,
             reorderable: true,
             filterable: true,
+            multiSelect: false,         // ⭐ בחירה מרובה של שורות
             renderCell: null,
             onSort: null,
             onRowDoubleClick: null,
@@ -81,7 +82,8 @@ class TableManager {
             onColumnReorder: null,
             onLoadMore: null,           // ⭐ callback לטעינת עוד נתונים מ-API
             onPageChange: null,         // ⭐ callback לשינוי עמוד
-            
+            onSelectionChange: null,    // ⭐ callback לשינוי בחירה מרובה
+
             ...config
         };
         
@@ -111,7 +113,11 @@ class TableManager {
             // ⭐ מצב scroll loading
             isLoading: false,
             hasMoreData: true,
-            
+
+            // ⭐ בחירה מרובה
+            multiSelectEnabled: false,  // האם מופעל כרגע
+            selectedRows: new Set(),    // שורות נבחרות (לפי מזהה)
+
             filteredData: [],
             displayedData: []
         };
@@ -158,7 +164,10 @@ class TableManager {
         this.config.columns.forEach((col, index) => {
             this.state.columnVisibility[index] = col.visible !== false; // ברירת מחדל: מוצג
         });
-        
+
+        // ⭐ אתחול בחירה מרובה מהקונפיג
+        this.state.multiSelectEnabled = this.config.multiSelect || false;
+
         // חישוב עמודים
         this.calculateTotalPages();
         
@@ -289,6 +298,12 @@ class TableManager {
 
         // ⭐ חישוב רוחב טבלה התחלתי מסכום רוחבי העמודות (רק מוצגות)
         let initialWidth = 0;
+
+        // ⭐ עמודת בחירה מרובה
+        if (this.state.multiSelectEnabled) {
+            initialWidth += 50;
+        }
+
         this.config.columns.forEach((col, index) => {
             // ⭐ דלג על עמודות מוסתרות
             if (!this.state.columnVisibility[index]) return;
@@ -661,12 +676,61 @@ class TableManager {
             border-bottom: 1px solid #e5e7eb;
             background: #f9fafb;
         `;
-        header.textContent = 'הצג/הסתר עמודות';
+        header.textContent = 'הגדרות טבלה';
         menu.appendChild(header);
+
+        // ⭐ אפשרות בחירה מרובה
+        const multiSelectSection = document.createElement('div');
+        multiSelectSection.style.cssText = `
+            padding: 8px 16px;
+            border-bottom: 1px solid #e5e7eb;
+        `;
+
+        const multiSelectLabel = document.createElement('label');
+        multiSelectLabel.style.cssText = `
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        `;
+
+        const multiSelectCheckbox = document.createElement('input');
+        multiSelectCheckbox.type = 'checkbox';
+        multiSelectCheckbox.checked = this.state.multiSelectEnabled;
+        multiSelectCheckbox.style.cssText = `
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        `;
+        multiSelectCheckbox.onchange = () => {
+            this.state.multiSelectEnabled = multiSelectCheckbox.checked;
+            this.state.selectedRows.clear(); // נקה בחירות קודמות
+            this.refreshTable();
+        };
+
+        const multiSelectText = document.createElement('span');
+        multiSelectText.textContent = 'בחירה מרובה';
+        multiSelectText.style.fontWeight = '500';
+
+        multiSelectLabel.appendChild(multiSelectCheckbox);
+        multiSelectLabel.appendChild(multiSelectText);
+        multiSelectSection.appendChild(multiSelectLabel);
+        menu.appendChild(multiSelectSection);
+
+        // כותרת משנה לעמודות
+        const columnsHeader = document.createElement('div');
+        columnsHeader.style.cssText = `
+            padding: 8px 16px 4px;
+            font-size: 12px;
+            color: #6b7280;
+            font-weight: 600;
+        `;
+        columnsHeader.textContent = 'עמודות';
+        menu.appendChild(columnsHeader);
 
         // רשימת עמודות
         const list = document.createElement('div');
-        list.style.cssText = `padding: 8px 0;`;
+        list.style.cssText = `padding: 0 0 8px 0;`;
 
         this.config.columns.forEach((col, index) => {
             const item = document.createElement('label');
@@ -775,6 +839,90 @@ class TableManager {
         this.renderHeaders();
         this.syncColumnWidths();
         this.renderRows();
+    }
+
+    // ============================================
+    // ⭐ פונקציות בחירה מרובה
+    // ============================================
+
+    /**
+     * בדיקה אם כל השורות נבחרו
+     */
+    isAllSelected() {
+        if (this.state.displayedData.length === 0) return false;
+        return this.state.displayedData.every(rowData => {
+            const rowId = rowData.id || rowData.unicId || rowData._id || JSON.stringify(rowData);
+            return this.state.selectedRows.has(rowId);
+        });
+    }
+
+    /**
+     * בחירת/ביטול כל השורות
+     */
+    toggleSelectAll(checked) {
+        if (checked) {
+            this.state.displayedData.forEach(rowData => {
+                const rowId = rowData.id || rowData.unicId || rowData._id || JSON.stringify(rowData);
+                this.state.selectedRows.add(rowId);
+            });
+        } else {
+            this.state.selectedRows.clear();
+        }
+        this.renderRows();
+        this.updateSelectAllCheckbox();
+    }
+
+    /**
+     * בחירת/ביטול שורה בודדת
+     */
+    toggleRowSelection(rowId, checked, rowData) {
+        if (checked) {
+            this.state.selectedRows.add(rowId);
+        } else {
+            this.state.selectedRows.delete(rowId);
+        }
+        this.updateSelectAllCheckbox();
+
+        // callback אם הוגדר
+        if (this.config.onSelectionChange) {
+            this.config.onSelectionChange(this.getSelectedRows());
+        }
+    }
+
+    /**
+     * עדכון checkbox של "בחר הכל"
+     */
+    updateSelectAllCheckbox() {
+        const selectAllCheckbox = this.elements.thead.querySelector('.tm-select-all');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked = this.isAllSelected();
+        }
+    }
+
+    /**
+     * קבלת רשימת השורות הנבחרות
+     */
+    getSelectedRows() {
+        return this.state.displayedData.filter(rowData => {
+            const rowId = rowData.id || rowData.unicId || rowData._id || JSON.stringify(rowData);
+            return this.state.selectedRows.has(rowId);
+        });
+    }
+
+    /**
+     * קבלת מזהי השורות הנבחרות
+     */
+    getSelectedRowIds() {
+        return Array.from(this.state.selectedRows);
+    }
+
+    /**
+     * ניקוי כל הבחירות
+     */
+    clearSelection() {
+        this.state.selectedRows.clear();
+        this.renderRows();
+        this.updateSelectAllCheckbox();
     }
 
     /**
@@ -936,6 +1084,32 @@ class TableManager {
         const headerRow = document.createElement('tr');
         headerRow.className = 'tm-header-row';
 
+        // ⭐ עמודת בחירה מרובה
+        if (this.state.multiSelectEnabled) {
+            const selectAllTh = document.createElement('th');
+            selectAllTh.className = 'tm-header-cell tm-select-cell';
+            selectAllTh.style.cssText = `
+                width: 50px !important;
+                min-width: 50px !important;
+                max-width: 50px !important;
+                text-align: center !important;
+            `;
+
+            const selectAllCheckbox = document.createElement('input');
+            selectAllCheckbox.type = 'checkbox';
+            selectAllCheckbox.className = 'tm-select-all';
+            selectAllCheckbox.style.cssText = `
+                width: 18px;
+                height: 18px;
+                cursor: pointer;
+            `;
+            selectAllCheckbox.checked = this.isAllSelected();
+            selectAllCheckbox.onchange = () => this.toggleSelectAll(selectAllCheckbox.checked);
+
+            selectAllTh.appendChild(selectAllCheckbox);
+            headerRow.appendChild(selectAllTh);
+        }
+
         this.state.columnOrder.forEach(colIndex => {
             // ⭐ דלג על עמודות מוסתרות
             if (!this.state.columnVisibility[colIndex]) return;
@@ -1004,6 +1178,15 @@ class TableManager {
         }
 
         const colgroup = document.createElement('colgroup');
+
+        // ⭐ עמודת בחירה מרובה
+        if (this.state.multiSelectEnabled) {
+            const selectCol = document.createElement('col');
+            selectCol.style.width = '50px';
+            selectCol.style.minWidth = '50px';
+            colgroup.appendChild(selectCol);
+        }
+
         this.state.columnOrder.forEach(colIndex => {
             // ⭐ דלג על עמודות מוסתרות
             if (!this.state.columnVisibility[colIndex]) return;
@@ -1033,14 +1216,49 @@ class TableManager {
         const rows = dataToRender.map(rowData => {
             const tr = document.createElement('tr');
             tr.className = 'tm-row';
-            
+
+            // ⭐ מזהה ייחודי לשורה
+            const rowId = rowData.id || rowData.unicId || rowData._id || JSON.stringify(rowData);
+
             if (this.config.onRowDoubleClick) {
                 tr.style.cursor = 'pointer';
                 tr.ondblclick = () => {
                     this.config.onRowDoubleClick(rowData);
                 };
             }
-            
+
+            // ⭐ תא בחירה מרובה
+            if (this.state.multiSelectEnabled) {
+                const selectTd = document.createElement('td');
+                selectTd.className = 'tm-cell tm-select-cell';
+                selectTd.style.cssText = `
+                    width: 50px !important;
+                    min-width: 50px !important;
+                    max-width: 50px !important;
+                    text-align: center !important;
+                `;
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'tm-row-select';
+                checkbox.style.cssText = `
+                    width: 18px;
+                    height: 18px;
+                    cursor: pointer;
+                `;
+                checkbox.checked = this.state.selectedRows.has(rowId);
+                checkbox.onchange = (e) => {
+                    e.stopPropagation();
+                    this.toggleRowSelection(rowId, checkbox.checked, rowData);
+                };
+
+                // מנע double-click מלפתוח את השורה
+                selectTd.ondblclick = (e) => e.stopPropagation();
+
+                selectTd.appendChild(checkbox);
+                tr.appendChild(selectTd);
+            }
+
             this.state.columnOrder.forEach(colIndex => {
                 // ⭐ דלג על עמודות מוסתרות
                 if (!this.state.columnVisibility[colIndex]) return;
@@ -1344,6 +1562,11 @@ class TableManager {
         // ⭐ חישוב רוחב כולל מה-state.columnWidths - לא מ-offsetWidth!
         // זה מבטיח שהרוחבים המוגדרים נשמרים ולא מושפעים מהדפדפן
         let totalWidth = 0;
+
+        // ⭐ עמודת בחירה מרובה
+        if (this.state.multiSelectEnabled) {
+            totalWidth += 50;
+        }
 
         this.state.columnOrder.forEach(colIndex => {
             // ⭐ דלג על עמודות מוסתרות

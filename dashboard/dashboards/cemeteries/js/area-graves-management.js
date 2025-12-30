@@ -98,8 +98,9 @@ async function handleAreaGraveDoubleClick(areaGrave) {
         ? (areaGrave.unicId || areaGrave.id)
         : areaGrave;
 
+    // קבלת השם - רק מהשדה הנכון areaGraveNameHe
     const areaGraveName = typeof areaGrave === 'object'
-        ? (areaGrave.areaGraveNameHe || areaGrave.areaGraveName || areaGrave.name || `אחוזת קבר #${areaGraveId}`)
+        ? (areaGrave.areaGraveNameHe || `אחוזת קבר #${areaGraveId}`)
         : `אחוזת קבר #${areaGraveId}`;
 
     // שמירה ב-selectedItems לניווט

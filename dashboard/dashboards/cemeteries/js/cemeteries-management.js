@@ -83,9 +83,9 @@ async function handleCemeteryDoubleClick(cemetery) {
         ? (cemetery.unicId || cemetery.id)
         : cemetery;
 
-    // קבלת השם מכל השדות האפשריים
+    // קבלת השם - רק מהשדה הנכון cemeteryNameHe
     const cemeteryName = typeof cemetery === 'object'
-        ? (cemetery.cemeteryNameHe || cemetery.name || cemetery.cemeteryName || `בית עלמין #${cemeteryId}`)
+        ? (cemetery.cemeteryNameHe || `בית עלמין #${cemeteryId}`)
         : `בית עלמין #${cemeteryId}`;
 
     // שמירה ב-selectedItems לניווט

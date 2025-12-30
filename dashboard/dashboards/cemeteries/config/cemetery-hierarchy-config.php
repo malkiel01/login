@@ -2115,6 +2115,105 @@ return [
         'enable_soft_delete' => true
     ],
 
+    // ========================================
+    // הגדרות תשלומים (Payments)
+    // ========================================
+    'payment' => [
+        'singularArticle' => 'את התשלום',
+        'plural' => 'תשלומים',
+        'nameField' => 'id',
+        'idField' => 'id',
+        'hasParent' => false,
+        'parentParam' => null,
+        'defaultLimit' => 200,
+        'defaultOrderBy' => 'createDate',
+        'defaultSortDirection' => 'DESC',
+        'table' => 'payments',
+        'title' => 'תשלומים',
+        'singular' => 'תשלום',
+        'icon' => '💰',
+        'primaryKey' => 'id',
+        'parentKey' => null,
+
+        'queryFields' => [
+            'id', 'plotType', 'graveType', 'resident', 'priceDefinition',
+            'price', 'startPayment', 'createDate', 'updateDate', 'isActive'
+        ],
+
+        'table_columns' => [
+            ['field' => 'id', 'title' => 'מזהה', 'type' => 'text', 'width' => '80px', 'sortable' => true],
+            ['field' => 'plotType', 'title' => 'סוג חלקה', 'type' => 'badge', 'width' => '120px', 'sortable' => true, 'render' => 'getPlotTypeBadge'],
+            ['field' => 'graveType', 'title' => 'סוג קבר', 'type' => 'text', 'width' => '100px', 'sortable' => true, 'render' => 'getGraveTypeBadge'],
+            ['field' => 'resident', 'title' => 'תושב', 'type' => 'badge', 'width' => '120px', 'sortable' => true, 'render' => 'getResidentBadge'],
+            ['field' => 'priceDefinition', 'title' => 'הגדרת מחיר', 'type' => 'text', 'width' => '150px', 'sortable' => true, 'render' => 'getPriceDefinitionBadge'],
+            ['field' => 'price', 'title' => 'מחיר', 'type' => 'currency', 'width' => '120px', 'sortable' => true],
+            ['field' => 'startPayment', 'title' => 'תאריך התחלה', 'type' => 'date', 'width' => '120px', 'sortable' => true],
+            ['field' => 'createDate', 'title' => 'תאריך יצירה', 'type' => 'date', 'width' => '120px', 'sortable' => true],
+            ['field' => 'actions', 'title' => 'פעולות', 'type' => 'actions', 'width' => '120px', 'sortable' => false]
+        ],
+
+        'searchableFields' => [
+            ['name' => 'id', 'label' => 'מזהה', 'type' => 'text', 'matchType' => ['exact']],
+            ['name' => 'plotType', 'label' => 'סוג חלקה', 'type' => 'select', 'matchType' => ['exact'],
+                'options' => [
+                    ['value' => '1', 'label' => 'פטורה'],
+                    ['value' => '2', 'label' => 'חריגה'],
+                    ['value' => '3', 'label' => 'סגורה']
+                ]
+            ],
+            ['name' => 'graveType', 'label' => 'סוג קבר', 'type' => 'select', 'matchType' => ['exact'],
+                'options' => [
+                    ['value' => '1', 'label' => 'שדה'],
+                    ['value' => '2', 'label' => 'רוויה'],
+                    ['value' => '3', 'label' => 'סנהדרין']
+                ]
+            ],
+            ['name' => 'resident', 'label' => 'תושב', 'type' => 'select', 'matchType' => ['exact'],
+                'options' => [
+                    ['value' => '1', 'label' => 'ירושלים'],
+                    ['value' => '2', 'label' => 'חוץ'],
+                    ['value' => '3', 'label' => 'חו״ל']
+                ]
+            ],
+            ['name' => 'price', 'label' => 'מחיר', 'type' => 'number', 'matchType' => ['exact', 'greater', 'less', 'between']],
+            ['name' => 'startPayment', 'label' => 'תאריך התחלה', 'type' => 'date', 'matchType' => ['exact', 'before', 'after', 'between']],
+            ['name' => 'createDate', 'label' => 'תאריך יצירה', 'type' => 'date', 'matchType' => ['exact', 'before', 'after', 'between']]
+        ],
+
+        'plotTypes' => [
+            '1' => ['text' => 'פטורה', 'color' => '#10b981', 'class' => 'badge-success'],
+            '2' => ['text' => 'חריגה', 'color' => '#f97316', 'class' => 'badge-warning'],
+            '3' => ['text' => 'סגורה', 'color' => '#dc2626', 'class' => 'badge-danger']
+        ],
+
+        'graveTypes' => [
+            '1' => ['text' => 'שדה', 'color' => '#3b82f6', 'class' => 'badge-info'],
+            '2' => ['text' => 'רוויה', 'color' => '#8b5cf6', 'class' => 'badge-primary'],
+            '3' => ['text' => 'סנהדרין', 'color' => '#ec4899', 'class' => 'badge-pink']
+        ],
+
+        'residentTypes' => [
+            '1' => ['text' => 'ירושלים', 'color' => '#10b981', 'class' => 'badge-success'],
+            '2' => ['text' => 'חוץ', 'color' => '#f97316', 'class' => 'badge-warning'],
+            '3' => ['text' => 'חו״ל', 'color' => '#dc2626', 'class' => 'badge-danger']
+        ],
+
+        'api' => [
+            'endpoint' => '/dashboard/dashboards/cemeteries/api/payments-api.php',
+            'methods' => ['GET', 'POST', 'PUT', 'DELETE']
+        ],
+
+        'search' => [
+            'placeholder' => 'חיפוש תשלומים לפי מזהה, סוג, מחיר...',
+            'minLength' => 0
+        ],
+
+        'enable_search' => true,
+        'enable_filters' => true,
+        'enable_export' => true,
+        'items_per_page' => 999999,
+        'enable_soft_delete' => true
+    ],
 
     // ========================================
     // הגדרות תושבות

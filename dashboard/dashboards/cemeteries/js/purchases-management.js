@@ -502,17 +502,17 @@ function formatPurchaseStatus(status) {
 // ===================================================================
 // דאבל-קליק על רכישה
 // ===================================================================
-async function handlePurchaseDoubleClick(purchaseId) {
+async function handlePurchaseDoubleClick(purchase) {
+    // תמיכה גם באובייקט וגם ב-ID ישיר
+    const purchaseId = typeof purchase === 'object' ? (purchase.unicId || purchase.id) : purchase;
     console.log('🖱️ Double-click on purchase:', purchaseId);
-    
+
     try {
-        if (typeof createPurchaseCard === 'function') {
-            const cardHtml = await createPurchaseCard(purchaseId);
-            if (cardHtml && typeof displayHierarchyCard === 'function') {
-                displayHierarchyCard(cardHtml);
-            }
+        // פתיחת כרטיס רכישה דרך FormHandler
+        if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
+            FormHandler.openForm('purchaseCard', null, purchaseId);
         } else {
-            console.warn('⚠️ createPurchaseCard not found - opening edit form');
+            console.warn('⚠️ FormHandler not found - opening edit form');
             if (typeof window.tableRenderer !== 'undefined' && window.tableRenderer.editItem) {
                 window.tableRenderer.editItem(purchaseId);
             } else {

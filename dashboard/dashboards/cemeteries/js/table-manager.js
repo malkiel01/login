@@ -280,7 +280,23 @@ class TableManager {
         const headerTable = document.createElement('table');
         headerTable.className = 'tm-table tm-header-table';
         headerTable.id = 'headerTable';
+
+        // ⭐ חישוב רוחב טבלה התחלתי מסכום רוחבי העמודות
+        let initialWidth = 0;
+        this.config.columns.forEach((col, index) => {
+            const w = this.state.columnWidths[index];
+            if (typeof w === 'string' && w.endsWith('px')) {
+                initialWidth += parseInt(w);
+            } else if (typeof w === 'number') {
+                initialWidth += w;
+            } else {
+                initialWidth += 100; // ברירת מחדל לעמודות auto
+            }
+        });
+
         headerTable.style.cssText = `
+            width: ${initialWidth}px !important;
+            min-width: ${initialWidth}px !important;
             border-collapse: separate !important;
             border-spacing: 0 !important;
             background: white !important;
@@ -295,6 +311,8 @@ class TableManager {
         bodyTable.className = 'tm-table tm-body-table';
         bodyTable.id = 'bodyTable';
         bodyTable.style.cssText = `
+            width: ${initialWidth}px !important;
+            min-width: ${initialWidth}px !important;
             border-collapse: separate !important;
             border-spacing: 0 !important;
             background: white !important;

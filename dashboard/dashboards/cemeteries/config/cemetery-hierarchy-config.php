@@ -112,7 +112,7 @@ return [
             [
                 'field' => 'cemeteryNameHe',
                 'title' => 'שם בית עלמין',  // ⚠️ שים לב: title ולא label
-                'width' => '200px',
+                'width' => '2000px',  // ⭐ בדיקה - שינוי זמני
                 'sortable' => true,
                 'type' => 'link',  // ⭐ סוג מיוחד - יטופל ב-JS
                 'clickable' => true

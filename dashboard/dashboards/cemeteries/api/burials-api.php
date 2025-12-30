@@ -387,52 +387,71 @@ try {
         case 'stats':
             $stats = [];
 
-            // סה"כ קבורות לפי סטטוס
-            $stmt = $pdo->query("
-                SELECT burialStatus, COUNT(*) as count
-                FROM burials
-                WHERE isActive = 1
-                GROUP BY burialStatus
-            ");
-            $stats['by_status'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            try {
+                // סה"כ קבורות לפי סטטוס
+                $stmt = $pdo->query("
+                    SELECT burialStatus, COUNT(*) as count
+                    FROM burials
+                    WHERE isActive = 1
+                    GROUP BY burialStatus
+                ");
+                $stats['by_status'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            } catch (Exception $e) {
+                $stats['by_status'] = [];
+            }
 
-            // קבורות החודש
-            $stmt = $pdo->query("
-                SELECT COUNT(*) as count
-                FROM burials
-                WHERE isActive = 1
-                AND MONTH(dateBurial) = MONTH(CURRENT_DATE())
-                AND YEAR(dateBurial) = YEAR(CURRENT_DATE())
-            ");
-            $stats['this_month'] = $stmt->fetch(PDO::FETCH_ASSOC);
+            try {
+                // קבורות החודש
+                $stmt = $pdo->query("
+                    SELECT COUNT(*) as count
+                    FROM burials
+                    WHERE isActive = 1
+                    AND MONTH(dateBurial) = MONTH(CURRENT_DATE())
+                    AND YEAR(dateBurial) = YEAR(CURRENT_DATE())
+                ");
+                $stats['this_month'] = $stmt->fetch(PDO::FETCH_ASSOC);
+            } catch (Exception $e) {
+                $stats['this_month'] = ['count' => 0];
+            }
 
-            // קבורות השנה
-            $stmt = $pdo->query("
-                SELECT COUNT(*) as count
-                FROM burials
-                WHERE isActive = 1
-                AND YEAR(dateBurial) = YEAR(CURRENT_DATE())
-            ");
-            $stats['this_year'] = $stmt->fetch(PDO::FETCH_ASSOC);
+            try {
+                // קבורות השנה
+                $stmt = $pdo->query("
+                    SELECT COUNT(*) as count
+                    FROM burials
+                    WHERE isActive = 1
+                    AND YEAR(dateBurial) = YEAR(CURRENT_DATE())
+                ");
+                $stats['this_year'] = $stmt->fetch(PDO::FETCH_ASSOC);
+            } catch (Exception $e) {
+                $stats['this_year'] = ['count' => 0];
+            }
 
-            // קבורות לפי סוגים
-            $stmt = $pdo->query("
-                SELECT
-                    SUM(CASE WHEN nationalInsuranceBurial = 'כן' THEN 1 ELSE 0 END) as national_insurance,
-                    SUM(CASE WHEN deathAbroad = 'כן' THEN 1 ELSE 0 END) as abroad
-                FROM burials
-                WHERE isActive = 1
-            ");
-            $stats['by_type'] = $stmt->fetch(PDO::FETCH_ASSOC);
+            try {
+                // קבורות לפי סוגים
+                $stmt = $pdo->query("
+                    SELECT
+                        SUM(CASE WHEN nationalInsuranceBurial = 'כן' THEN 1 ELSE 0 END) as national_insurance,
+                        SUM(CASE WHEN deathAbroad = 'כן' THEN 1 ELSE 0 END) as abroad
+                    FROM burials
+                    WHERE isActive = 1
+                ");
+                $stats['by_type'] = $stmt->fetch(PDO::FETCH_ASSOC);
+            } catch (Exception $e) {
+                $stats['by_type'] = ['national_insurance' => 0, 'abroad' => 0];
+            }
 
-            // סה"כ קבורות פעילות
-            $stmt = $pdo->query("
-                SELECT
-                    COUNT(*) as total_burials
-                FROM burials
-                WHERE isActive = 1
-            ");
-            $stats['totals'] = $stmt->fetch(PDO::FETCH_ASSOC);
+            try {
+                // סה"כ קבורות פעילות
+                $stmt = $pdo->query("
+                    SELECT COUNT(*) as total_burials
+                    FROM burials
+                    WHERE isActive = 1
+                ");
+                $stats['totals'] = $stmt->fetch(PDO::FETCH_ASSOC);
+            } catch (Exception $e) {
+                $stats['totals'] = ['total_burials' => 0];
+            }
 
             echo json_encode(['success' => true, 'data' => $stats]);
             break;

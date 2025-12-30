@@ -167,11 +167,6 @@ class TableManager {
             this.initInfiniteScroll();
         }
         
-            totalItems: this.config.totalItems,
-            scrollLoadBatch: this.config.scrollLoadBatch,
-            itemsPerPage: this.config.itemsPerPage,
-            showPagination: this.config.showPagination
-        });
     }
     
     /**

@@ -259,15 +259,7 @@ class EntityStateManager {
      * דאמפ של כל ה-states (לדיבאג)
      */
     dumpStates() {
-        Object.keys(this.states).forEach(entityType => {
-            const state = this.states[entityType];
-                dataCount: state.currentData.length,
-                page: `${state.currentPage}/${state.totalPages}`,
-                isSearchMode: state.isSearchMode,
-                loadCounter: state.loadCounter,
-                lastUpdated: state.lastUpdated
-            });
-        });
+        // Debug function - enable console.log when needed
     }
 }
 

@@ -146,23 +146,7 @@ class EntityLoader {
                 
                 // עדכון pagination
                 entityState.updatePagination(entityType, nextPage, state.totalPages);
-                
-                // לוג מפורט ומסודר
-╔════════════════════════════════════════════════════════════════════
-║ ${config.plural} - טעינה: ${loadCounter}
-╠════════════════════════════════════════════════════════════════════
-║ כמות ערכים בטעינה: ${result.data.length}
-║ מספר ערך תחילת טעינה נוכחית: ${result.debug?.results_info?.from_index || (previousTotal + 1)}
-║ מספר ערך סוף טעינה נוכחית: ${result.debug?.results_info?.to_index || updatedData.length}
-║ סך כל הערכים שנטענו עד כה: ${updatedData.length}
-║ שדה למיון: ${result.debug?.sql_info?.order_field || config.defaultOrderBy}
-║ סוג מיון: ${result.debug?.sql_info?.sort_direction || config.defaultSortDirection}
-╠════════════════════════════════════════════════════════════════════
-║ עמוד: ${nextPage} / ${state.totalPages}
-║ נותרו עוד: ${state.totalPages - nextPage} עמודים
-╚════════════════════════════════════════════════════════════════════
-`);
-                
+
                 // עדכן את הטבלה אם קיימת
                 if (state.tableInstance) {
                     state.tableInstance.setData(updatedData);

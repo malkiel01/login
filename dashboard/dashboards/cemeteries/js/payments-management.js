@@ -140,7 +140,7 @@ function displayPaymentsInTable(payments) {
     }
     
     tableBody.innerHTML = payments.map(payment => `
-        <tr data-id="${payment.id}">
+        <tr data-id="${payment.id}" ondblclick="viewPayment(${payment.id})" style="cursor: pointer;">
             <td>${payment.id}</td>
             <td>${getPlotTypeBadge(payment.plotType)}</td>
             <td>${getGraveTypeBadge(payment.graveType)}</td>
@@ -253,11 +253,15 @@ async function deletePayment(id) {
     }
 }
 
-// צפייה בתשלום
+// צפייה בתשלום - פתיחת כרטיס תשלום
 async function viewPayment(id) {
-    // פשוט פתח לעריכה במצב קריאה בלבד
-    // או צור מודל צפייה ייעודי
-    editPayment(id);
+    console.log('💰 Opening payment card:', id);
+    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
+        FormHandler.openForm('paymentCard', null, id);
+    } else {
+        // fallback לעריכה
+        editPayment(id);
+    }
 }
 
 // טעינת סטטיסטיקות

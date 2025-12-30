@@ -251,6 +251,10 @@ const FormHandler = {
                     this.handleBurialCardForm(itemId);
                     break;
 
+                case 'paymentCard':
+                    this.handlePaymentCardForm(itemId);
+                    break;
+
                 default:
                     if (itemId) {
                         this.loadFormData(type, itemId);
@@ -1921,12 +1925,115 @@ const FormHandler = {
         }
     },
 
+    handlePaymentCardForm: async function(itemId) {
+        console.log('💰 [PaymentCard] אתחול כרטיס תשלום:', itemId);
+
+        // חכה שהטופס יהיה מוכן
+        this.waitForElement('#paymentCardFormModal', (modal) => {
+            console.log('✅ [PaymentCard] Modal נטען');
+
+            // קרא id מה-hidden field
+            const idField = modal.querySelector('input[name="id"]');
+            const paymentId = idField?.value || itemId;
+
+            console.log('📋 [PaymentCard] מזהה תשלום:', paymentId);
+
+            // עדכן כפתורים בפוטר - רק סגור
+            const footer = modal.querySelector('.modal-footer');
+            if (footer) {
+                footer.innerHTML = '<button type="button" class="btn btn-secondary" onclick="FormHandler.closeForm(\'paymentCard\')"><i class="fas fa-times"></i> סגור</button>';
+            }
+
+            // אתחול סייר קבצים
+            initPaymentFileExplorer(modal, 'payment_' + paymentId);
+
+            // אתחול סקשנים ניתנים לגרירה (toggle, sortable, resize)
+            console.log('🔀 [PaymentCard] מאתחל סקשנים...');
+            initPaymentSortableSections('paymentSortableSections', 'paymentCard');
+
+            // הגדרת handler גלובלי לכרטיס תשלום
+            window.PaymentCardHandler = {
+                editPayment: function(id) {
+                    FormHandler.closeForm('paymentCard');
+                    FormHandler.openForm('payment', null, id);
+                }
+            };
+        });
+
+        // פונקציה לאתחול סקשנים ניתנים לגרירה
+        function initPaymentSortableSections(containerId, storagePrefix) {
+            if (typeof SortableSections !== 'undefined') {
+                console.log('✅ [PaymentSortable] SortableSections כבר קיים');
+                SortableSections.init(containerId, storagePrefix);
+            } else {
+                console.log('📥 [PaymentSortable] טוען sortable-sections.js...');
+                var script = document.createElement('script');
+                script.src = '/dashboard/dashboards/cemeteries/forms/sortable-sections.js?v=' + Date.now();
+                script.onload = function() {
+                    console.log('✅ [PaymentSortable] סקריפט נטען');
+                    if (typeof SortableSections !== 'undefined') {
+                        SortableSections.init(containerId, storagePrefix);
+                    }
+                };
+                document.head.appendChild(script);
+            }
+        }
+
+        // פונקציה לאתחול סייר קבצים עבור תשלום
+        function initPaymentFileExplorer(modal, unicId) {
+            const explorerContainer = modal.querySelector('#paymentExplorer');
+            if (!explorerContainer) {
+                console.log('⚠️ [PaymentExplorer] Container לא נמצא');
+                return;
+            }
+
+            console.log('📁 [PaymentExplorer] מאתחל סייר קבצים עבור:', unicId);
+
+            // טען Font Awesome אם לא נטען
+            if (!document.querySelector('link[href*="font-awesome"], link[href*="fontawesome"]')) {
+                const faLink = document.createElement('link');
+                faLink.rel = 'stylesheet';
+                faLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css';
+                faLink.integrity = 'sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==';
+                faLink.crossOrigin = 'anonymous';
+                document.head.appendChild(faLink);
+            }
+
+            // טען CSS
+            const cacheBuster = 'v=' + Date.now();
+            if (!document.querySelector('link[href*="explorer.css"]')) {
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = '/dashboard/dashboards/cemeteries/explorer/explorer.css?' + cacheBuster;
+                document.head.appendChild(link);
+            }
+
+            // טען JS ואתחל
+            if (typeof FileExplorer !== 'undefined') {
+                window.paymentExplorer = new FileExplorer('paymentExplorer', unicId, {});
+                console.log('✅ [PaymentExplorer] סייר קבצים אותחל');
+            } else {
+                const script = document.createElement('script');
+                script.src = '/dashboard/dashboards/cemeteries/explorer/explorer.js?' + cacheBuster;
+                script.onload = () => {
+                    window.paymentExplorer = new FileExplorer('paymentExplorer', unicId, {});
+                    console.log('✅ [PaymentExplorer] סייר קבצים נטען ואותחל');
+                };
+                script.onerror = () => {
+                    console.error('❌ [PaymentExplorer] שגיאה בטעינת explorer.js');
+                    explorerContainer.innerHTML = '<div style="color: red; padding: 20px;">שגיאה בטעינת סייר הקבצים</div>';
+                };
+                document.head.appendChild(script);
+            }
+        }
+    },
+
     /**
      * מילוי מדינות מה-API
      */
     populateCountriesFromAPI: function(countries, selectedValue = '') {
         const countryInstance = window.SmartSelectManager?.instances['countryId'];
-        
+
         if (!countryInstance) {
             console.warn('⚠️ Country SmartSelect not found');
             return;

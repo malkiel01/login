@@ -2249,7 +2249,15 @@ return [
             'created' => 'createDate',
             'status' => 'isActive'
         ],
-        
+
+        'searchableFields' => [
+            'residencyName',
+            'residencyType',
+            'countryNameHe',
+            'cityNameHe',
+            'description'
+        ],
+
         'table_columns' => [
             [
                 'field' => 'index',

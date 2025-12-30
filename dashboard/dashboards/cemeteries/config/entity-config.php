@@ -139,5 +139,16 @@ return [
         'icon' => '💰',
         'color' => '#22c55e',
         'description' => 'תשלום עבור רכישה'
+    ],
+
+    'residency' => [
+        'nameHe' => 'הגדרת תושבות',
+        'namePluralHe' => 'הגדרות תושבות',
+        'parentType' => null,
+        'enabled' => true,
+        'level' => 0,
+        'icon' => '🏠',
+        'color' => '#0ea5e9',
+        'description' => 'הגדרות תושבות למחירון'
     ]
 ];

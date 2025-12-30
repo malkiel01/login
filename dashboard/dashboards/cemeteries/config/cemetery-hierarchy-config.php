@@ -111,67 +111,67 @@ return [
         'table_columns' => [
             [
                 'field' => 'cemeteryNameHe',
-                'title' => 'שם בית עלמין',  // ⚠️ שים לב: title ולא label
-                'width' => '2000px',  // ⭐ בדיקה - שינוי זמני
+                'title' => 'שם בית עלמין',
+                'width' => '400px',
                 'sortable' => true,
-                'type' => 'link',  // ⭐ סוג מיוחד - יטופל ב-JS
+                'type' => 'link',
                 'clickable' => true
             ],
             [
                 'field' => 'cemeteryCode',
                 'title' => 'קוד',
-                'width' => '100px',
+                'width' => '200px',
                 'sortable' => true,
                 'type' => 'text'
             ],
             [
                 'field' => 'availableSum',
                 'title' => 'פנויים',
-                'width' => '80px',
+                'width' => '150px',
                 'type' => 'badge',
                 'badge_style' => 'success'
             ],
             [
                 'field' => 'savedSum',
                 'title' => 'שמורים',
-                'width' => '80px',
+                'width' => '100px',
                 'type' => 'badge',
                 'badge_style' => 'warning'
             ],
             [
                 'field' => 'purchasedSum',
                 'title' => 'נרכשו',
-                'width' => '80px',
+                'width' => '100px',
                 'type' => 'badge',
                 'badge_style' => 'info'
             ],
             [
                 'field' => 'buriedSum',
                 'title' => 'קבורים',
-                'width' => '80px',
+                'width' => '100px',
                 'type' => 'badge',
                 'badge_style' => 'secondary'
             ],
             [
                 'field' => 'graveSum',
                 'title' => 'סה"כ',
-                'width' => '80px',
+                'width' => '100px',
                 'type' => 'badge',
                 'badge_style' => 'primary'
             ],
             [
                 'field' => 'createDate',
                 'title' => 'תאריך',
-                'width' => '120px',
+                'width' => '200px',
                 'sortable' => true,
-                'type' => 'date'  // ⭐ סוג מיוחד - יטופל ב-JS
+                'type' => 'date'
             ],
             [
                 'field' => 'actions',
                 'title' => 'פעולות',
                 'width' => '120px',
                 'sortable' => false,
-                'type' => 'actions',  // ⭐ סוג מיוחד - יטופל ב-JS
+                'type' => 'actions',
                 'actions' => ['edit', 'delete']
             ]
         ],

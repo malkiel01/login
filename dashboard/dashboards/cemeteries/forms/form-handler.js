@@ -247,6 +247,10 @@ const FormHandler = {
                     this.handlePurchaseCardForm(itemId);
                     break;
 
+                case 'burialCard':
+                    this.handleBurialCardForm(itemId);
+                    break;
+
                 default:
                     if (itemId) {
                         this.loadFormData(type, itemId);
@@ -1799,6 +1803,117 @@ const FormHandler = {
                 };
                 script.onerror = () => {
                     console.error('❌ [PurchaseExplorer] שגיאה בטעינת explorer.js');
+                    explorerContainer.innerHTML = '<div style="color: red; padding: 20px;">שגיאה בטעינת סייר הקבצים</div>';
+                };
+                document.head.appendChild(script);
+            }
+        }
+    },
+
+    handleBurialCardForm: async function(itemId) {
+        console.log('⚰️ [BurialCard] אתחול כרטיס קבורה:', itemId);
+
+        // חכה שהטופס יהיה מוכן
+        this.waitForElement('#burialCardFormModal', (modal) => {
+            console.log('✅ [BurialCard] Modal נטען');
+
+            // קרא unicId מה-hidden field
+            const unicIdField = modal.querySelector('input[name="unicId"]');
+            const burialId = unicIdField?.value || itemId;
+
+            console.log('📋 [BurialCard] מזהה קבורה:', burialId);
+
+            // עדכן כפתורים בפוטר - רק סגור
+            const footer = modal.querySelector('.modal-footer');
+            if (footer) {
+                footer.innerHTML = '<button type="button" class="btn btn-secondary" onclick="FormHandler.closeForm(\'burialCard\')"><i class="fas fa-times"></i> סגור</button>';
+            }
+
+            // אתחול סייר קבצים
+            initBurialFileExplorer(modal, burialId);
+
+            // אתחול סקשנים ניתנים לגרירה (toggle, sortable, resize)
+            console.log('🔀 [BurialCard] מאתחל סקשנים...');
+            initBurialSortableSections('burialSortableSections', 'burialCard');
+
+            // הגדרת handler גלובלי לכרטיס קבורה
+            window.BurialCardHandler = {
+                editBurial: function(id) {
+                    FormHandler.closeForm('burialCard');
+                    FormHandler.openForm('burial', null, id);
+                },
+                viewCustomer: function(id) {
+                    FormHandler.closeForm('burialCard');
+                    FormHandler.openForm('customerCard', null, id);
+                },
+                viewPurchase: function(id) {
+                    FormHandler.closeForm('burialCard');
+                    FormHandler.openForm('purchaseCard', null, id);
+                }
+            };
+        });
+
+        // פונקציה לאתחול סקשנים ניתנים לגרירה
+        function initBurialSortableSections(containerId, storagePrefix) {
+            if (typeof SortableSections !== 'undefined') {
+                console.log('✅ [BurialSortable] SortableSections כבר קיים');
+                SortableSections.init(containerId, storagePrefix);
+            } else {
+                console.log('📥 [BurialSortable] טוען sortable-sections.js...');
+                var script = document.createElement('script');
+                script.src = '/dashboard/dashboards/cemeteries/forms/sortable-sections.js?v=' + Date.now();
+                script.onload = function() {
+                    console.log('✅ [BurialSortable] סקריפט נטען');
+                    if (typeof SortableSections !== 'undefined') {
+                        SortableSections.init(containerId, storagePrefix);
+                    }
+                };
+                document.head.appendChild(script);
+            }
+        }
+
+        // פונקציה לאתחול סייר קבצים עבור קבורה
+        function initBurialFileExplorer(modal, unicId) {
+            const explorerContainer = modal.querySelector('#burialExplorer');
+            if (!explorerContainer) {
+                console.log('⚠️ [BurialExplorer] Container לא נמצא');
+                return;
+            }
+
+            console.log('📁 [BurialExplorer] מאתחל סייר קבצים עבור:', unicId);
+
+            // טען Font Awesome אם לא נטען
+            if (!document.querySelector('link[href*="font-awesome"], link[href*="fontawesome"]')) {
+                const faLink = document.createElement('link');
+                faLink.rel = 'stylesheet';
+                faLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css';
+                faLink.integrity = 'sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==';
+                faLink.crossOrigin = 'anonymous';
+                document.head.appendChild(faLink);
+            }
+
+            // טען CSS
+            const cacheBuster = 'v=' + Date.now();
+            if (!document.querySelector('link[href*="explorer.css"]')) {
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = '/dashboard/dashboards/cemeteries/explorer/explorer.css?' + cacheBuster;
+                document.head.appendChild(link);
+            }
+
+            // טען JS ואתחל
+            if (typeof FileExplorer !== 'undefined') {
+                window.burialExplorer = new FileExplorer('burialExplorer', unicId, {});
+                console.log('✅ [BurialExplorer] סייר קבצים אותחל');
+            } else {
+                const script = document.createElement('script');
+                script.src = '/dashboard/dashboards/cemeteries/explorer/explorer.js?' + cacheBuster;
+                script.onload = () => {
+                    window.burialExplorer = new FileExplorer('burialExplorer', unicId, {});
+                    console.log('✅ [BurialExplorer] סייר קבצים נטען ואותחל');
+                };
+                script.onerror = () => {
+                    console.error('❌ [BurialExplorer] שגיאה בטעינת explorer.js');
                     explorerContainer.innerHTML = '<div style="color: red; padding: 20px;">שגיאה בטעינת סייר הקבצים</div>';
                 };
                 document.head.appendChild(script);

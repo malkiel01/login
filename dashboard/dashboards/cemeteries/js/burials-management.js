@@ -504,17 +504,17 @@ function formatBurialStatus(status) {
 // ===================================================================
 // דאבל-קליק על קבורה
 // ===================================================================
-async function handleBurialDoubleClick(burialId) {
+async function handleBurialDoubleClick(burial) {
+    // תמיכה גם באובייקט וגם ב-ID ישיר
+    const burialId = typeof burial === 'object' ? (burial.unicId || burial.id) : burial;
     console.log('🖱️ Double-click on burial:', burialId);
-    
+
     try {
-        if (typeof createBurialCard === 'function') {
-            const cardHtml = await createBurialCard(burialId);
-            if (cardHtml && typeof displayHierarchyCard === 'function') {
-                displayHierarchyCard(cardHtml);
-            }
+        // פתיחת כרטיס קבורה דרך FormHandler
+        if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
+            FormHandler.openForm('burialCard', null, burialId);
         } else {
-            console.warn('⚠️ createBurialCard not found - opening edit form');
+            console.warn('⚠️ FormHandler not found - opening edit form');
             if (typeof window.tableRenderer !== 'undefined' && window.tableRenderer.editItem) {
                 window.tableRenderer.editItem(burialId);
             } else {

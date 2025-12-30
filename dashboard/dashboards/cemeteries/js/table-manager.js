@@ -1834,25 +1834,31 @@ class TableManager {
         const content = document.createElement('div');
         content.style.cssText = `padding: 16px;`;
 
-        switch (filterType) {
-            case 'text':
-                this.buildTextFilterContent(content, colIndex, column);
-                break;
-            case 'number':
-                this.buildNumberFilterContent(content, colIndex, column);
-                break;
-            case 'date':
-                this.buildDateFilterContent(content, colIndex, column);
-                break;
-            case 'enum':
-            case 'select':
-                this.buildEnumFilterContent(content, colIndex, column);
-                break;
-            default:
-                this.buildTextFilterContent(content, colIndex, column);
+        try {
+            switch (filterType) {
+                case 'text':
+                    this.buildTextFilterContent(content, colIndex, column);
+                    break;
+                case 'number':
+                    this.buildNumberFilterContent(content, colIndex, column);
+                    break;
+                case 'date':
+                    this.buildDateFilterContent(content, colIndex, column);
+                    break;
+                case 'enum':
+                case 'select':
+                    this.buildEnumFilterContent(content, colIndex, column);
+                    break;
+                default:
+                    this.buildTextFilterContent(content, colIndex, column);
+            }
+            console.log('Filter content built successfully');
+        } catch (err) {
+            console.error('Error building filter content:', err);
         }
 
         submenu.appendChild(content);
+        console.log('Submenu content appended');
 
         // כפתורי פעולה
         const actions = document.createElement('div');
@@ -1908,6 +1914,8 @@ class TableManager {
         submenu.appendChild(actions);
 
         document.body.appendChild(submenu);
+        console.log('Submenu appended to body!', submenu);
+        console.log('Submenu position:', submenu.getBoundingClientRect());
 
         // וודא שהתפריט לא יוצא מהמסך
         const submenuRect = submenu.getBoundingClientRect();

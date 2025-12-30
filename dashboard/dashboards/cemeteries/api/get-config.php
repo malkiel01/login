@@ -123,6 +123,7 @@ function convertToEntityFormat($phpConfig, $entityType) {
                 'sortable' => $col['sortable'] ?? false,
                 'style' => $col['style'] ?? null,
                 'badge_style' => $col['badge_style'] ?? null,
+                'filterType' => $col['filterType'] ?? 'text',  // ⭐ סוג פילטר
             ];
         }, $phpConfig['table_columns']);
     }

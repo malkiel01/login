@@ -150,5 +150,16 @@ return [
         'icon' => '🏠',
         'color' => '#0ea5e9',
         'description' => 'הגדרות תושבות למחירון'
+    ],
+
+    'country' => [
+        'nameHe' => 'מדינה',
+        'namePluralHe' => 'מדינות',
+        'parentType' => null,
+        'enabled' => true,
+        'level' => 0,
+        'icon' => '🌍',
+        'color' => '#14b8a6',
+        'description' => 'מדינות במערכת'
     ]
 ];

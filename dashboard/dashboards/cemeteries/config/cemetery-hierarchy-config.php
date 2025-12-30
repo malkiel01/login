@@ -2420,7 +2420,12 @@ return [
             'created' => 'createDate',
             'status' => 'isActive'
         ],
-        
+
+        'searchableFields' => [
+            'countryNameHe',
+            'countryNameEn'
+        ],
+
         'table_columns' => [
             [
                 'field' => 'index',

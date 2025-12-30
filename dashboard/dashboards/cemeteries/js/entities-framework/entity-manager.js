@@ -491,6 +491,14 @@ window.appendMoreResidencies = () => EntityManager.appendMore('residency');
 window.deleteResidency = (id) => EntityManager.delete('residency', id);
 window.residenciesRefreshData = () => EntityManager.refresh('residency');
 window.checkResidenciesScrollStatus = () => EntityManager.checkScrollStatus('residency');
+
+// Country wrappers
+window.loadCountries = () => EntityManager.load('country');
+window.loadCountriesBrowseData = (signal) => EntityLoader.loadBrowseData('country', signal);
+window.appendMoreCountries = () => EntityManager.appendMore('country');
+window.deleteCountry = (id) => EntityManager.delete('country', id);
+window.countriesRefreshData = () => EntityManager.refresh('country');
+window.checkCountriesScrollStatus = () => EntityManager.checkScrollStatus('country');
 window.checkPlotsScrollStatus = () => EntityManager.checkScrollStatus('plot');
 window.checkAreaGravesScrollStatus = () => EntityManager.checkScrollStatus('areaGrave');
 window.checkGravesScrollStatus = () => EntityManager.checkScrollStatus('grave');

@@ -1490,36 +1490,73 @@ class TableManager {
      * התאמת פילטר תאריך
      */
     matchDateFilter(cellValue, filter) {
+        // DEBUG - הסר אחרי בדיקה
+        console.log('matchDateFilter:', { cellValue, filter });
+
+        // אם אין ערך בתא - לא מתאים
         if (!cellValue) return false;
 
-        const cellDate = new Date(cellValue);
-        if (isNaN(cellDate.getTime())) return false;
+        // אם אין ערך פילטר - התאמה (אין סינון)
+        if (!filter.value) return true;
 
+        // המרת תאריך התא
+        let cellDate;
+        if (typeof cellValue === 'string') {
+            // נסה לפרסר פורמטים שונים
+            if (cellValue.includes('/')) {
+                // פורמט DD/MM/YYYY
+                const parts = cellValue.split('/');
+                if (parts.length === 3) {
+                    cellDate = new Date(parts[2], parts[1] - 1, parts[0]);
+                }
+            } else {
+                cellDate = new Date(cellValue);
+            }
+        } else if (cellValue instanceof Date) {
+            cellDate = cellValue;
+        } else {
+            cellDate = new Date(cellValue);
+        }
+
+        if (!cellDate || isNaN(cellDate.getTime())) return false;
+
+        // המרת תאריך הפילטר
         const filterDate = new Date(filter.value);
+        if (isNaN(filterDate.getTime())) return true; // פילטר לא תקין - הצג הכל
+
         const filterDate2 = filter.value2 ? new Date(filter.value2) : null;
 
-        switch (filter.operator) {
+        // ברירת מחדל לאופרטור
+        const operator = filter.operator || 'exact';
+
+        // השוואה לפי יום בלבד (ללא שעה)
+        const cellDay = new Date(cellDate.getFullYear(), cellDate.getMonth(), cellDate.getDate());
+        const filterDay = new Date(filterDate.getFullYear(), filterDate.getMonth(), filterDate.getDate());
+        const filterDay2 = filterDate2 ? new Date(filterDate2.getFullYear(), filterDate2.getMonth(), filterDate2.getDate()) : null;
+
+        switch (operator) {
             case 'exact':
-                return cellDate.toDateString() === filterDate.toDateString();
+                return cellDay.getTime() === filterDay.getTime();
 
             case 'approximate':
                 // ±2.5 שנים
                 const yearsInMs = 2.5 * 365 * 24 * 60 * 60 * 1000;
-                const minDate = new Date(filterDate.getTime() - yearsInMs);
-                const maxDate = new Date(filterDate.getTime() + yearsInMs);
-                return cellDate >= minDate && cellDate <= maxDate;
+                const minDate = new Date(filterDay.getTime() - yearsInMs);
+                const maxDate = new Date(filterDay.getTime() + yearsInMs);
+                return cellDay >= minDate && cellDay <= maxDate;
 
             case 'between':
-                return cellDate >= filterDate && cellDate <= filterDate2;
+                if (!filterDay2) return true;
+                return cellDay >= filterDay && cellDay <= filterDay2;
 
             case 'before':
-                return cellDate < filterDate;
+                return cellDay < filterDay;
 
             case 'after':
-                return cellDate > filterDate;
+                return cellDay > filterDay;
 
             default:
-                return cellDate.toDateString() === filterDate.toDateString();
+                return cellDay.getTime() === filterDay.getTime();
         }
     }
 

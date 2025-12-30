@@ -107,11 +107,21 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
             
             <!-- Main Content -->
             <main class="main-content">
-                <!-- Action Bar -->
-                <div class="action-bar">
+                <!-- Breadcrumb -->
+                <div class="breadcrumb-bar">
                     <div class="breadcrumb" id="breadcrumb">
                         <span class="breadcrumb-item">ראשי</span>
                     </div>
+                </div>
+
+                <!-- Entity Title -->
+                <div class="entity-title-container" id="entityTitleContainer">
+                    <h1 class="entity-title" id="entityTitle"></h1>
+                    <span class="entity-subtitle" id="entitySubtitle"></span>
+                </div>
+
+                <!-- Action Bar -->
+                <div class="action-bar">
                     <div class="action-buttons">
                         <button class="btn btn-secondary" onclick="refreshData()">
                             <svg class="icon"><use xlink:href="#icon-refresh"></use></svg>
@@ -122,12 +132,6 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
                             הוספה
                         </button>
                     </div>
-                </div>
-
-                <!-- Entity Title -->
-                <div class="entity-title-container" id="entityTitleContainer">
-                    <h1 class="entity-title" id="entityTitle"></h1>
-                    <span class="entity-subtitle" id="entitySubtitle"></span>
                 </div>
 
                 <!-- Table Container -->

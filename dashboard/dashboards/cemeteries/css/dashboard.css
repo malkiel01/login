@@ -67,14 +67,9 @@
     overflow-x: auto; /* גלילה אופקית לטבלאות */
 }
 
-/* Action Bar */
-.action-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-    flex-wrap: wrap;
-    gap: 1rem;
+/* Breadcrumb Bar */
+.breadcrumb-bar {
+    margin-bottom: 0.5rem;
 }
 
 .breadcrumb {
@@ -84,6 +79,16 @@
     font-size: 14px;
     color: #666;
     flex-wrap: wrap;
+}
+
+/* Action Bar */
+.action-bar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 1rem;
 }
 
 .action-buttons {

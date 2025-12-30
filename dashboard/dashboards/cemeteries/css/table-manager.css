@@ -240,15 +240,11 @@
     z-index: 100;
 }
 
-/* קונטיינר הטבלה - חובה! */
+/* קונטיינר הטבלה - שקוף, ה-table-wrapper מטפל בעיצוב */
 .table-container {
-    overflow-x: auto;
-    overflow-y: auto;
-    max-height: calc(100vh - 250px); /* התאם לפי הגובה שלך */
+    overflow: visible;
     position: relative;
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
+    width: 100%;
 }
 
 /* אם יש main-content, וודא שאין לו overflow */

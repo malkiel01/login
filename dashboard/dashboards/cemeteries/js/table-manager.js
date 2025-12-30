@@ -1007,7 +1007,7 @@ class TableManager {
     /**
      * ⭐ עדכון רוחב הטבלה הכולל
      * מחשב את סכום כל רוחבי העמודות ומעדכן את רוחב שתי הטבלאות
-     * הטבלה יכולה להתרחב אבל לא תכריח את הדף להתרחב
+     * הטבלה יכולה להתרחב - ה-fixedContainer מונע הרחבת הדף
      */
     updateTableWidth() {
         // חישוב רוחב כולל מכותרות הטבלה בפועל
@@ -1021,17 +1021,18 @@ class TableManager {
         // הוספת מרווח קטן למניעת חיתוך
         totalWidth += 2;
 
-        // עדכון רוחב שתי הטבלאות - רק width, לא min-width!
+        // עדכון רוחב שתי הטבלאות - כולל min-width כדי שעמודות לא יתכווצו
+        // ה-fixedContainer עם overflow:hidden מונע הרחבת הדף
         const widthStyle = `${totalWidth}px`;
 
         if (this.elements.headerTable) {
             this.elements.headerTable.style.width = widthStyle;
-            // לא לשנות min-width - זה מה שגורם להרחבת הדף!
+            this.elements.headerTable.style.minWidth = widthStyle;
         }
 
         if (this.elements.bodyTable) {
             this.elements.bodyTable.style.width = widthStyle;
-            // לא לשנות min-width - זה מה שגורם להרחבת הדף!
+            this.elements.bodyTable.style.minWidth = widthStyle;
         }
     }
 

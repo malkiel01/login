@@ -1977,6 +1977,16 @@ class TableManager {
     }
 
     /**
+     * ⭐ המרת תאריך למחרוזת YYYY-MM-DD בלי בעיות timezone
+     */
+    formatDateISO(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    /**
      * ⭐ חלונית בחירת תאריך בודד - לוח שנה אחד
      */
     showSingleDatePicker(container, initialDate) {
@@ -2073,7 +2083,7 @@ class TableManager {
             const confirmBtn = picker.querySelector('.picker-confirm');
             confirmBtn.onclick = () => {
                 if (selectedDate) {
-                    const dateStr = selectedDate.toISOString().split('T')[0];
+                    const dateStr = self.formatDateISO(selectedDate);
 
                     container.querySelector('.filter-value').value = dateStr;
 
@@ -2165,7 +2175,9 @@ class TableManager {
                     <div style="font-size: 15px; font-weight: 500;">
                         ${selectedFrom && selectedTo
                             ? '<span style="color: #059669;">' + self.formatDateHebrew(selectedFrom) + '</span> <span style="color: #6b7280;">עד</span> <span style="color: #dc2626;">' + self.formatDateHebrew(selectedTo) + '</span>'
-                            : '<span style="color: #9ca3af;">בחר תאריך התחלה (ימין) ותאריך סיום (שמאל)</span>'}
+                            : selectedFrom
+                                ? '<span style="color: #059669;">' + self.formatDateHebrew(selectedFrom) + '</span> <span style="color: #9ca3af;">← בחר תאריך סיום</span>'
+                                : '<span style="color: #9ca3af;">לחץ לבחירת תאריך התחלה</span>'}
                     </div>
                     <div style="display: flex; gap: 10px;">
                         <button class="picker-cancel" style="
@@ -2205,23 +2217,32 @@ class TableManager {
                 };
             });
 
-            // אירועי בחירת יום
+            // אירועי בחירת יום - לוגיקה חכמה
+            // 1. לחיצה ראשונה = תאריך התחלה
+            // 2. לחיצה שנייה = אם מאוחר מההתחלה → תאריך סיום, אם מוקדם → מחליף את ההתחלה
+            // 3. אם שניהם כבר נבחרו = איפוס, התאריך החדש הופך להתחלה
             picker.querySelectorAll('.calendar-day:not(.empty)').forEach(dayEl => {
                 dayEl.onclick = (e) => {
                     e.stopPropagation();
                     const dateStr = dayEl.dataset.date;
                     const date = new Date(dateStr);
-                    const side = dayEl.closest('.calendar-panel').dataset.side;
 
-                    if (side === 'from') {
+                    if (selectedFrom && selectedTo) {
+                        // שני התאריכים כבר נבחרו - איפוס, התאריך החדש = התחלה
                         selectedFrom = date;
-                        if (selectedTo && selectedTo < selectedFrom) {
-                            selectedTo = null;
-                        }
+                        selectedTo = null;
+                    } else if (!selectedFrom) {
+                        // אין תאריך התחלה - זו לחיצה ראשונה
+                        selectedFrom = date;
                     } else {
-                        selectedTo = date;
-                        if (selectedFrom && selectedFrom > selectedTo) {
-                            selectedFrom = null;
+                        // יש תאריך התחלה, אין סיום
+                        if (date > selectedFrom) {
+                            // התאריך מאוחר מההתחלה - הופך לסיום
+                            selectedTo = date;
+                        } else {
+                            // התאריך מוקדם או שווה להתחלה - מחליף את ההתחלה
+                            selectedFrom = date;
+                            selectedTo = null;
                         }
                     }
                     renderPicker();
@@ -2235,8 +2256,8 @@ class TableManager {
             const confirmBtn = picker.querySelector('.picker-confirm');
             confirmBtn.onclick = () => {
                 if (selectedFrom && selectedTo) {
-                    const fromStr = selectedFrom.toISOString().split('T')[0];
-                    const toStr = selectedTo.toISOString().split('T')[0];
+                    const fromStr = self.formatDateISO(selectedFrom);
+                    const toStr = self.formatDateISO(selectedTo);
 
                     container.querySelector('.filter-value-from').value = fromStr;
                     container.querySelector('.filter-value-to').value = toStr;
@@ -2308,7 +2329,7 @@ class TableManager {
         // ימי החודש
         for (let day = 1; day <= lastDay.getDate(); day++) {
             const date = new Date(year, month, day);
-            const dateStr = date.toISOString().split('T')[0];
+            const dateStr = this.formatDateISO(date);
 
             let bgColor = 'transparent';
             let textColor = '#1f2937';

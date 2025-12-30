@@ -1893,9 +1893,25 @@ class TableManager {
 
             <!-- שדה תאריך בודד (לא בין תאריכים) -->
             <div class="single-date-container" style="display: ${isBetween ? 'none' : 'block'};">
-                <label style="display: block; margin-bottom: 8px; font-weight: 500;">תאריך:</label>
-                <input type="date" class="filter-value" value="${currentFilter.value || ''}"
-                    style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box;">
+                <input type="hidden" class="filter-value" value="${currentFilter.value || ''}">
+                <button type="button" class="single-date-trigger" style="
+                    width: 100%;
+                    padding: 12px 16px;
+                    border: 1px solid #d1d5db;
+                    border-radius: 6px;
+                    background: white;
+                    cursor: pointer;
+                    text-align: right;
+                    font-size: 14px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                ">
+                    <span class="single-date-text" style="color: ${currentFilter.value ? '#1f2937' : '#9ca3af'};">
+                        ${currentFilter.value ? this.formatDateHebrew(currentFilter.value) : 'לחץ לבחירת תאריך'}
+                    </span>
+                    <span>📅</span>
+                </button>
             </div>
 
             <!-- בחירת טווח תאריכים - כפתור שפותח חלונית כפולה -->
@@ -1929,6 +1945,7 @@ class TableManager {
         const operatorSelect = container.querySelector('.filter-operator');
         const singleDateContainer = container.querySelector('.single-date-container');
         const betweenDatesContainer = container.querySelector('.between-dates-container');
+        const singleDateTrigger = container.querySelector('.single-date-trigger');
         const dateRangeTrigger = container.querySelector('.date-range-trigger');
 
         operatorSelect.onchange = () => {
@@ -1936,6 +1953,12 @@ class TableManager {
             singleDateContainer.style.display = isBetweenNow ? 'none' : 'block';
             betweenDatesContainer.style.display = isBetweenNow ? 'block' : 'none';
         };
+
+        if (singleDateTrigger) {
+            singleDateTrigger.onclick = () => {
+                this.showSingleDatePicker(container, currentFilter.value);
+            };
+        }
 
         if (dateRangeTrigger) {
             dateRangeTrigger.onclick = () => {
@@ -1951,6 +1974,131 @@ class TableManager {
         if (!dateStr) return '';
         const date = new Date(dateStr);
         return date.toLocaleDateString('he-IL');
+    }
+
+    /**
+     * ⭐ חלונית בחירת תאריך בודד - לוח שנה אחד
+     */
+    showSingleDatePicker(container, initialDate) {
+        // הסר picker קיים
+        document.querySelectorAll('.tm-date-picker').forEach(p => p.remove());
+
+        const trigger = container.querySelector('.single-date-trigger');
+        const rect = trigger.getBoundingClientRect();
+
+        const picker = document.createElement('div');
+        picker.className = 'tm-date-picker';
+        picker.style.cssText = `
+            position: fixed;
+            top: ${Math.min(rect.bottom + 5, window.innerHeight - 380)}px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+            z-index: 3000;
+            direction: rtl;
+            padding: 20px;
+            min-width: 300px;
+        `;
+
+        let selectedDate = initialDate ? new Date(initialDate) : null;
+        let currentMonth = selectedDate ? new Date(selectedDate) : new Date();
+
+        const self = this;
+
+        const renderPicker = () => {
+            picker.innerHTML = `
+                <div class="calendar-panel" data-side="single">
+                    <div style="text-align: center; margin-bottom: 12px; padding: 8px; background: #eff6ff; border-radius: 6px;">
+                        <span style="font-weight: 600; color: #3b82f6;">📅 בחר תאריך</span>
+                    </div>
+                    ${self.renderCalendarMonth(currentMonth, selectedDate, null, 'single')}
+                </div>
+
+                <!-- תצוגת בחירה וכפתורים -->
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 2px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="font-size: 15px; font-weight: 500;">
+                        ${selectedDate
+                            ? '<span style="color: #3b82f6;">' + self.formatDateHebrew(selectedDate) + '</span>'
+                            : '<span style="color: #9ca3af;">לא נבחר תאריך</span>'}
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="picker-cancel" style="
+                            padding: 10px 20px;
+                            border: 1px solid #d1d5db;
+                            border-radius: 6px;
+                            background: white;
+                            cursor: pointer;
+                            font-size: 14px;
+                        ">ביטול</button>
+                        <button class="picker-confirm" style="
+                            padding: 10px 20px;
+                            border: none;
+                            border-radius: 6px;
+                            background: ${selectedDate ? '#3b82f6' : '#d1d5db'};
+                            color: ${selectedDate ? 'white' : '#9ca3af'};
+                            cursor: ${selectedDate ? 'pointer' : 'not-allowed'};
+                            font-size: 14px;
+                            font-weight: 500;
+                        " ${!selectedDate ? 'disabled' : ''}>אישור</button>
+                    </div>
+                </div>
+            `;
+
+            // אירועי ניווט חודשים
+            picker.querySelectorAll('.calendar-nav').forEach(btn => {
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    const dir = parseInt(btn.dataset.dir);
+                    currentMonth.setMonth(currentMonth.getMonth() + dir);
+                    renderPicker();
+                };
+            });
+
+            // אירועי בחירת יום
+            picker.querySelectorAll('.calendar-day:not(.empty)').forEach(dayEl => {
+                dayEl.onclick = (e) => {
+                    e.stopPropagation();
+                    const dateStr = dayEl.dataset.date;
+                    selectedDate = new Date(dateStr);
+                    renderPicker();
+                };
+            });
+
+            // כפתור ביטול
+            picker.querySelector('.picker-cancel').onclick = () => picker.remove();
+
+            // כפתור אישור
+            const confirmBtn = picker.querySelector('.picker-confirm');
+            confirmBtn.onclick = () => {
+                if (selectedDate) {
+                    const dateStr = selectedDate.toISOString().split('T')[0];
+
+                    container.querySelector('.filter-value').value = dateStr;
+
+                    const dateText = container.querySelector('.single-date-text');
+                    dateText.textContent = self.formatDateHebrew(dateStr);
+                    dateText.style.color = '#1f2937';
+
+                    picker.remove();
+                }
+            };
+        };
+
+        renderPicker();
+        document.body.appendChild(picker);
+
+        // סגירה בלחיצה מחוץ לחלונית
+        setTimeout(() => {
+            const closePicker = (e) => {
+                if (!picker.contains(e.target) && !trigger.contains(e.target)) {
+                    picker.remove();
+                    document.removeEventListener('click', closePicker);
+                }
+            };
+            document.addEventListener('click', closePicker);
+        }, 50);
     }
 
     /**
@@ -2162,24 +2310,34 @@ class TableManager {
             const date = new Date(year, month, day);
             const dateStr = date.toISOString().split('T')[0];
 
-            let isSelectedFrom = selectedFrom && date.toDateString() === selectedFrom.toDateString();
-            let isSelectedTo = selectedTo && date.toDateString() === selectedTo.toDateString();
-            let isInRange = selectedFrom && selectedTo && date > selectedFrom && date < selectedTo;
-
             let bgColor = 'transparent';
             let textColor = '#1f2937';
             let borderRadius = '6px';
 
-            if (isSelectedFrom) {
-                bgColor = '#059669';
-                textColor = 'white';
-                borderRadius = '50%';
-            } else if (isSelectedTo) {
-                bgColor = '#dc2626';
-                textColor = 'white';
-                borderRadius = '50%';
-            } else if (isInRange) {
-                bgColor = '#dbeafe';
+            if (side === 'single') {
+                // תאריך בודד - כחול
+                if (selectedFrom && date.toDateString() === selectedFrom.toDateString()) {
+                    bgColor = '#3b82f6';
+                    textColor = 'white';
+                    borderRadius = '50%';
+                }
+            } else {
+                // טווח תאריכים - ירוק/אדום
+                let isSelectedFrom = selectedFrom && date.toDateString() === selectedFrom.toDateString();
+                let isSelectedTo = selectedTo && date.toDateString() === selectedTo.toDateString();
+                let isInRange = selectedFrom && selectedTo && date > selectedFrom && date < selectedTo;
+
+                if (isSelectedFrom) {
+                    bgColor = '#059669';
+                    textColor = 'white';
+                    borderRadius = '50%';
+                } else if (isSelectedTo) {
+                    bgColor = '#dc2626';
+                    textColor = 'white';
+                    borderRadius = '50%';
+                } else if (isInRange) {
+                    bgColor = '#dbeafe';
+                }
             }
 
             html += `

@@ -2327,13 +2327,19 @@ class TableManager {
         };
 
         if (singleDateTrigger) {
-            singleDateTrigger.onclick = () => {
+            console.log('Setting up single date trigger click handler');
+            singleDateTrigger.onclick = (e) => {
+                console.log('Single date trigger clicked!');
+                e.stopPropagation();
                 this.showSingleDatePicker(container, currentFilter.value);
             };
         }
 
         if (dateRangeTrigger) {
-            dateRangeTrigger.onclick = () => {
+            console.log('Setting up date range trigger click handler');
+            dateRangeTrigger.onclick = (e) => {
+                console.log('Date range trigger clicked!');
+                e.stopPropagation();
                 this.showDateRangePicker(container, currentFilter.value, currentFilter.value2);
             };
         }
@@ -2362,11 +2368,19 @@ class TableManager {
      * ⭐ חלונית בחירת תאריך בודד - לוח שנה אחד
      */
     showSingleDatePicker(container, initialDate) {
+        console.log('showSingleDatePicker called!', { container, initialDate });
+
         // הסר picker קיים
         document.querySelectorAll('.tm-date-picker').forEach(p => p.remove());
 
         const trigger = container.querySelector('.single-date-trigger');
+        console.log('Single date trigger:', trigger);
+        if (!trigger) {
+            console.error('Single date trigger not found in container!');
+            return;
+        }
         const rect = trigger.getBoundingClientRect();
+        console.log('Trigger rect:', rect);
 
         const picker = document.createElement('div');
         picker.className = 'tm-date-picker';

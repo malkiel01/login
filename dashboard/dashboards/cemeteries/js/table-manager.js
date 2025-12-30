@@ -1779,9 +1779,11 @@ class TableManager {
             font-weight: 500;
         `;
         applyBtn.onclick = () => {
-            this.applyFilter(colIndex, dialog);
-            dialog.remove();
-            overlay.remove();
+            const success = this.applyFilter(colIndex, dialog);
+            if (success !== false) {
+                dialog.remove();
+                overlay.remove();
+            }
         };
 
         const clearBtn = document.createElement('button');
@@ -1875,6 +1877,7 @@ class TableManager {
      */
     buildDateFilterContent(container, colIndex, column) {
         const currentFilter = this.state.filters.get(colIndex) || {};
+        const isBetween = currentFilter.operator === 'between';
 
         container.innerHTML = `
             <div style="margin-bottom: 15px;">
@@ -1887,22 +1890,43 @@ class TableManager {
                     <option value="after" ${currentFilter.operator === 'after' ? 'selected' : ''}>אחרי תאריך</option>
                 </select>
             </div>
-            <div class="filter-value-container">
+
+            <!-- שדה תאריך בודד (לא בין תאריכים) -->
+            <div class="single-date-container" style="display: ${isBetween ? 'none' : 'block'};">
                 <label style="display: block; margin-bottom: 8px; font-weight: 500;">תאריך:</label>
                 <input type="date" class="filter-value" value="${currentFilter.value || ''}"
                     style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box;">
             </div>
-            <div class="filter-value2-container" style="margin-top: 15px; display: ${currentFilter.operator === 'between' ? 'block' : 'none'};">
-                <label style="display: block; margin-bottom: 8px; font-weight: 500;">עד תאריך:</label>
-                <input type="date" class="filter-value2" value="${currentFilter.value2 || ''}"
-                    style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box;">
+
+            <!-- שדות תאריך כפולים (בין תאריכים) -->
+            <div class="between-dates-container" style="display: ${isBetween ? 'block' : 'none'};">
+                <div style="display: flex; gap: 12px; align-items: flex-end;">
+                    <div style="flex: 1;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500; color: #059669;">מתאריך:</label>
+                        <input type="date" class="filter-value-from" value="${currentFilter.value || ''}"
+                            style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box;">
+                    </div>
+                    <div style="padding-bottom: 12px; color: #6b7280; font-weight: 500;">―</div>
+                    <div style="flex: 1;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500; color: #dc2626;">עד תאריך:</label>
+                        <input type="date" class="filter-value-to" value="${currentFilter.value2 || ''}"
+                            style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box;">
+                    </div>
+                </div>
+                <p style="margin-top: 10px; font-size: 12px; color: #6b7280; text-align: center;">
+                    * שני התאריכים נדרשים
+                </p>
             </div>
         `;
 
         const operatorSelect = container.querySelector('.filter-operator');
-        const value2Container = container.querySelector('.filter-value2-container');
+        const singleDateContainer = container.querySelector('.single-date-container');
+        const betweenDatesContainer = container.querySelector('.between-dates-container');
+
         operatorSelect.onchange = () => {
-            value2Container.style.display = operatorSelect.value === 'between' ? 'block' : 'none';
+            const isBetweenNow = operatorSelect.value === 'between';
+            singleDateContainer.style.display = isBetweenNow ? 'none' : 'block';
+            betweenDatesContainer.style.display = isBetweenNow ? 'block' : 'none';
         };
     }
 
@@ -1976,7 +2000,39 @@ class TableManager {
                 this.updateClearFiltersButton();
                 return;
             }
+        } else if (filterType === 'date') {
+            // ⭐ טיפול מיוחד בפילטר תאריך
+            const operator = dialog.querySelector('.filter-operator')?.value;
+            filterData.operator = operator;
+
+            if (operator === 'between') {
+                // בין תאריכים - קריאה משדות כפולים
+                const valueFrom = dialog.querySelector('.filter-value-from')?.value;
+                const valueTo = dialog.querySelector('.filter-value-to')?.value;
+
+                if (!valueFrom || !valueTo) {
+                    // שני התאריכים נדרשים
+                    if (typeof showToast === 'function') {
+                        showToast('יש לבחור את שני התאריכים', 'warning');
+                    }
+                    return false; // לא לסגור את הדיאלוג
+                }
+
+                filterData.value = valueFrom;
+                filterData.value2 = valueTo;
+            } else {
+                // תאריך בודד
+                const value = dialog.querySelector('.filter-value')?.value;
+                if (!value) {
+                    this.state.filters.delete(colIndex);
+                    this.loadInitialData();
+                    this.updateClearFiltersButton();
+                    return;
+                }
+                filterData.value = value;
+            }
         } else {
+            // פילטר טקסט או מספר
             const operator = dialog.querySelector('.filter-operator')?.value;
             const value = dialog.querySelector('.filter-value')?.value;
             const value2 = dialog.querySelector('.filter-value2')?.value;

@@ -552,13 +552,19 @@ class TableManager {
     }
 
     /**
-     * יצירת כפתור לסרגל כלים
+     * יצירת כפתור לסרגל כלים עם tooltip מעוצב
      */
     createToolbarButton(icon, title, onClick) {
+        // wrapper לכפתור + tooltip
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = `
+            position: relative !important;
+            display: inline-block !important;
+        `;
+
         const btn = document.createElement('button');
         btn.className = 'toolbar-btn';
         btn.innerHTML = icon;
-        btn.title = title;
         btn.style.cssText = `
             padding: 8px 12px !important;
             border: 1px solid #d1d5db !important;
@@ -571,16 +577,47 @@ class TableManager {
             align-items: center !important;
             justify-content: center !important;
         `;
+
+        // tooltip מעוצב
+        const tooltip = document.createElement('div');
+        tooltip.className = 'toolbar-tooltip';
+        tooltip.textContent = title;
+        tooltip.style.cssText = `
+            position: absolute !important;
+            bottom: -35px !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            background: #1f2937 !important;
+            color: white !important;
+            padding: 6px 10px !important;
+            border-radius: 4px !important;
+            font-size: 12px !important;
+            white-space: nowrap !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+            transition: opacity 0.15s, visibility 0.15s !important;
+            z-index: 1000 !important;
+            pointer-events: none !important;
+        `;
+
         btn.onmouseover = () => {
             btn.style.background = '#e5e7eb';
             btn.style.borderColor = '#9ca3af';
+            tooltip.style.opacity = '1';
+            tooltip.style.visibility = 'visible';
         };
         btn.onmouseout = () => {
             btn.style.background = 'white';
             btn.style.borderColor = '#d1d5db';
+            tooltip.style.opacity = '0';
+            tooltip.style.visibility = 'hidden';
         };
         btn.onclick = onClick;
-        return btn;
+
+        wrapper.appendChild(btn);
+        wrapper.appendChild(tooltip);
+
+        return wrapper;
     }
 
     /**

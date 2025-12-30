@@ -161,5 +161,16 @@ return [
         'icon' => '🌍',
         'color' => '#14b8a6',
         'description' => 'מדינות במערכת'
+    ],
+
+    'city' => [
+        'nameHe' => 'עיר',
+        'namePluralHe' => 'ערים',
+        'parentType' => 'country',
+        'enabled' => true,
+        'level' => 0,
+        'icon' => '🏙️',
+        'color' => '#8b5cf6',
+        'description' => 'ערים במערכת'
     ]
 ];

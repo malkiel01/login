@@ -2540,7 +2540,13 @@ return [
             'created' => 'createDate',
             'status' => 'isActive'
         ],
-        
+
+        'searchableFields' => [
+            'cityNameHe',
+            'cityNameEn',
+            'countryNameHe'
+        ],
+
         'table_columns' => [
             [
                 'field' => 'index',

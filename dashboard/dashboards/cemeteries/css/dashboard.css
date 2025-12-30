@@ -5,6 +5,7 @@
     display: flex;
     flex-direction: column;
     position: relative;
+    padding-top: 70px; /* Height of fixed header */
 }
 
 .dashboard-container {
@@ -18,7 +19,7 @@
     flex: 1;
     padding: 2rem;
     background: #f8f9fa;
-    min-height: calc(100vh - 80px);
+    min-height: calc(100vh - 70px);
     margin-right: 280px;
     transition: margin-right 0.3s ease;
 }
@@ -27,14 +28,14 @@
 .dashboard-sidebar {
     position: fixed;
     right: 0;
-    top: 80px;
+    top: 70px;
     width: 280px;
-    height: calc(100vh - 80px);
+    height: calc(100vh - 70px);
     overflow-y: auto;
     background: #fff;
     box-shadow: -2px 0 5px rgba(0,0,0,0.05);
-    z-index: 999; /* חשוב: מתחת להידר */
-    transition: transform 0.3s ease;
+    z-index: 999;
+    transition: transform 0.3s ease, width 0.3s ease;
 }
 
 .dashboard-sidebar.collapsed {
@@ -170,90 +171,99 @@
 
 /* Tablet - 768px to 1024px */
 @media (max-width: 1024px) {
-    .dashboard-header {
-        position: relative;
-        z-index: 1000; /* מעל הסיידבר */
-    }
-    
     .btn-toggle-sidebar {
         display: block;
     }
-    
+
     .main-content {
         margin-right: 0;
     }
-    
+
     .dashboard-sidebar {
         transform: translateX(100%);
     }
-    
+
     .dashboard-sidebar.open {
         transform: translateX(0);
     }
-    
+
     /* Overlay כשהסיידבר פתוח */
     .sidebar-overlay {
         display: none;
         position: fixed;
-        top: 0;
+        top: 70px;
         left: 0;
         right: 0;
         bottom: 0;
         background: rgba(0,0,0,0.5);
         z-index: 998;
+        opacity: 0;
+        transition: opacity 0.3s ease;
     }
-    
+
     .sidebar-overlay.active {
         display: block;
+        opacity: 1;
     }
 }
 
 /* Mobile - פחות מ-768px */
 @media (max-width: 768px) {
-    .main-content {
-        padding: 1rem;
+    .dashboard-wrapper {
+        padding-top: 56px; /* Smaller header on mobile */
     }
-    
+
     .dashboard-sidebar {
+        top: 56px;
+        height: calc(100vh - 56px);
         width: 85%;
         max-width: 300px;
     }
-    
+
+    .sidebar-overlay {
+        top: 56px;
+    }
+
+    .main-content {
+        padding: 1rem;
+        min-height: calc(100vh - 56px);
+    }
+
     .action-bar {
         flex-direction: column;
         align-items: flex-start;
     }
-    
+
     .action-buttons {
         width: 100%;
     }
-    
+
     .action-buttons .btn {
         flex: 1;
     }
-    
+
     /* Entity items mobile optimization */
     .entity-item-content {
         grid-template-columns: 1fr;
     }
-    
+
     .entity-item {
         position: relative;
         padding-left: 2.5rem;
     }
-    
+
     .entity-item-expand {
         position: absolute;
         right: 0.5rem;
         top: 0.5rem;
     }
-    
+
     /* טבלאות במובייל */
     .table-responsive {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
     }
-    
+
     table {
         min-width: 500px;
     }

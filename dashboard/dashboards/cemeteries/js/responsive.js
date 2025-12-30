@@ -211,17 +211,23 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize responsive features
     initializeEntityItems();
     handleTableResponsive();
-    
+
     // Add resize listener
     window.addEventListener('resize', handleResize);
-    
+
     // Close sidebar on escape key
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             closeSidebar();
         }
     });
-    
+
+    // Attach click event to existing overlay element
+    const existingOverlay = document.getElementById('sidebarOverlay');
+    if (existingOverlay) {
+        existingOverlay.addEventListener('click', closeSidebar);
+    }
+
     // Update breadcrumb for mobile
     updateBreadcrumbMobile();
 });

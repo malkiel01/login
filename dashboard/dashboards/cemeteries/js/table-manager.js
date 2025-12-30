@@ -1872,6 +1872,7 @@ class TableManager {
 
         const applyBtn = document.createElement('button');
         applyBtn.textContent = 'החל';
+        applyBtn.id = 'filter-apply-btn';
         applyBtn.style.cssText = `
             padding: 8px 16px;
             background: #3b82f6;
@@ -1880,16 +1881,23 @@ class TableManager {
             border-radius: 6px;
             cursor: pointer;
             font-weight: 500;
+            position: relative;
+            z-index: 9999;
         `;
-        applyBtn.onclick = () => {
+        console.log('Creating apply button...');
+        applyBtn.addEventListener('mousedown', (e) => {
+            console.log('Apply button MOUSEDOWN!');
+        });
+        applyBtn.addEventListener('click', (e) => {
             console.log('Apply button clicked!', { colIndex, filterType });
+            e.stopPropagation();
             const success = this.applyFilterFromSubmenu(colIndex, content, filterType);
             console.log('applyFilterFromSubmenu returned:', success);
             if (success !== false) {
                 parentMenu.remove();
                 submenu.remove();
             }
-        };
+        });
 
         const clearBtn = document.createElement('button');
         clearBtn.textContent = 'נקה';

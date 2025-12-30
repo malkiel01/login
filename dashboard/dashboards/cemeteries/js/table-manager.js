@@ -2472,7 +2472,7 @@ class TableManager {
                 picker.remove();
             };
 
-            // כפתור אישור
+            // כפתור אישור - מפעיל את הסינון ישירות
             const confirmBtn = picker.querySelector('.picker-confirm');
             confirmBtn.onclick = () => {
                 console.log('Confirm clicked, selectedDate:', selectedDate);
@@ -2480,16 +2480,37 @@ class TableManager {
                     const dateStr = self.formatDateISO(selectedDate);
                     console.log('Setting filter value to:', dateStr);
 
+                    // שמור את הערך
                     const filterInput = container.querySelector('.filter-value');
-                    console.log('Filter input element:', filterInput);
                     filterInput.value = dateStr;
 
-                    const dateText = container.querySelector('.single-date-text');
-                    dateText.textContent = self.formatDateHebrew(dateStr);
-                    dateText.style.color = '#1f2937';
+                    // קבל את האופרטור
+                    const operatorSelect = container.querySelector('.filter-operator');
+                    const operator = operatorSelect ? operatorSelect.value : 'exact';
+
+                    // מצא את colIndex מה-submenu
+                    const submenu = container.closest('.tm-filter-submenu');
+                    const colIndex = submenu ? parseInt(submenu.dataset.colIndex) : null;
+
+                    console.log('Applying filter directly:', { colIndex, operator, dateStr });
+
+                    if (colIndex !== null) {
+                        // הפעל את הסינון ישירות
+                        self.state.filters.set(colIndex, {
+                            type: 'date',
+                            operator: operator,
+                            value: dateStr
+                        });
+                        self.loadInitialData();
+                        self.updateClearFiltersButton();
+
+                        // סגור את כל התפריטים
+                        document.querySelectorAll('.tm-column-menu').forEach(m => m.remove());
+                        document.querySelectorAll('.tm-filter-submenu').forEach(m => m.remove());
+                    }
 
                     picker.remove();
-                    console.log('Date picker closed, value saved');
+                    console.log('Filter applied and picker closed');
                 }
             };
         };

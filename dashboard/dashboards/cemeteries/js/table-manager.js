@@ -36,8 +36,8 @@ class TableManager {
             // ============================================
             // ⭐ הגדרות תצוגה
             // ============================================
-            containerWidth: '80vw',
-            containerPadding: '16px',
+            containerWidth: '100%',
+            containerPadding: '0',
             tableHeight: 'calc(100vh - 250px)',  // ⭐ חדש! ברירת מחדל דינמית
             tableMinHeight: '500px',              // ⭐ חדש! גובה מינימלי
             
@@ -196,15 +196,15 @@ class TableManager {
             
             if (currentParent.classList.contains('table-container')) {
                 currentParent.setAttribute('style', `
-                    width: ${this.config.containerWidth} !important; 
-                    padding: ${this.config.containerPadding} !important; 
-                    margin: 0 !important; 
-                    overflow: visible !important; 
-                    max-height: none !important; 
-                    height: auto !important; 
-                    box-sizing: border-box !important; 
-                    border: 1px solid #ddd !important; 
-                    background: #f5f5f5 !important;
+                    width: ${this.config.containerWidth} !important;
+                    padding: ${this.config.containerPadding} !important;
+                    margin: 0 !important;
+                    overflow: visible !important;
+                    max-height: none !important;
+                    height: auto !important;
+                    box-sizing: border-box !important;
+                    background: transparent !important;
+                    border: none !important;
                 `.replace(/\s+/g, ' ').trim());
                 fixed.push('table-container');
             }

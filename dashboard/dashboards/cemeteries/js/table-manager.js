@@ -1853,6 +1853,9 @@ class TableManager {
     applyFilterFromSubmenu(colIndex, container, filterType) {
         const column = this.config.columns[colIndex];
 
+        // DEBUG
+        console.log('applyFilterFromSubmenu:', { colIndex, filterType });
+
         let filterData = { type: filterType };
 
         if (filterType === 'enum' || filterType === 'select') {
@@ -1868,9 +1871,15 @@ class TableManager {
             const operator = container.querySelector('.filter-operator')?.value;
             filterData.operator = operator;
 
+            // DEBUG
+            console.log('Date filter - operator:', operator);
+
             if (operator === 'between') {
                 const valueFrom = container.querySelector('.filter-value-from')?.value;
                 const valueTo = container.querySelector('.filter-value-to')?.value;
+
+                // DEBUG
+                console.log('Between dates:', { valueFrom, valueTo });
 
                 if (!valueFrom || !valueTo) {
                     if (typeof showToast === 'function') {
@@ -1883,6 +1892,10 @@ class TableManager {
                 filterData.value2 = valueTo;
             } else {
                 const value = container.querySelector('.filter-value')?.value;
+
+                // DEBUG
+                console.log('Single date value:', value);
+
                 if (!value) {
                     this.state.filters.delete(colIndex);
                     this.loadInitialData();
@@ -1908,6 +1921,9 @@ class TableManager {
             if (value2) filterData.value2 = value2;
         }
 
+        // DEBUG
+        console.log('Final filterData:', filterData);
+
         this.state.filters.set(colIndex, filterData);
 
         if (this.config.onFilter) {
@@ -1918,7 +1934,7 @@ class TableManager {
         this.updateClearFiltersButton();
         return true;
     }
-    
+
     /**
      * ⭐ דיאלוג סינון מתקדם - לפי סוג השדה
      * filterType: 'text' | 'number' | 'date' | 'enum'

@@ -115,7 +115,8 @@ return [
                 'width' => '400px',
                 'sortable' => true,
                 'type' => 'link',
-                'clickable' => true
+                'clickable' => true,
+                'filterType' => 'enum'
             ],
             [
                 'field' => 'cemeteryCode',
@@ -129,42 +130,48 @@ return [
                 'title' => 'פנויים',
                 'width' => '150px',
                 'type' => 'badge',
-                'badge_style' => 'success'
+                'badge_style' => 'success',
+                'filterType' => 'number'
             ],
             [
                 'field' => 'savedSum',
                 'title' => 'שמורים',
                 'width' => '100px',
                 'type' => 'badge',
-                'badge_style' => 'warning'
+                'badge_style' => 'warning',
+                'filterType' => 'number'
             ],
             [
                 'field' => 'purchasedSum',
                 'title' => 'נרכשו',
                 'width' => '100px',
                 'type' => 'badge',
-                'badge_style' => 'info'
+                'badge_style' => 'info',
+                'filterType' => 'number'
             ],
             [
                 'field' => 'buriedSum',
                 'title' => 'קבורים',
                 'width' => '100px',
                 'type' => 'badge',
-                'badge_style' => 'secondary'
+                'badge_style' => 'secondary',
+                'filterType' => 'number'
             ],
             [
                 'field' => 'graveSum',
                 'title' => 'סה"כ',
                 'width' => '100px',
                 'type' => 'badge',
-                'badge_style' => 'primary'
+                'badge_style' => 'primary',
+                'filterType' => 'number'
             ],
             [
                 'field' => 'createDate',
                 'title' => 'תאריך',
                 'width' => '200px',
                 'sortable' => true,
-                'type' => 'date'
+                'type' => 'date',
+                'filterType' => 'date'
             ],
             [
                 'field' => 'actions',

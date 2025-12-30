@@ -18,17 +18,22 @@ let isLoading = false;
 const API_BASE = '/dashboard/dashboards/cemeteries/api/';
 
 // אתחול הדשבורד
-function initDashboard() {
-    
+async function initDashboard() {
+
     // אתחול משתנים גלובליים
     window.currentType = 'cemetery';
     window.currentParentId = null;
     window.selectedItems = window.selectedItems || {};
-    
+
     // אתחול אירועים וסטטיסטיקות
     setupEventListeners();
     loadStats();
-    
+
+    // ⭐ המתן לטעינת הקונפיג לפני טעינת נתונים
+    if (typeof initEntityConfig === 'function') {
+        await initEntityConfig();
+    }
+
     // טען נתונים ראשוניים
     if (typeof loadCemeteries === 'function') {
         loadCemeteries();

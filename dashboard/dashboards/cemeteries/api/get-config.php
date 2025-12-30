@@ -278,7 +278,30 @@ try {
     }
     
     // ===================================================================
-    // 6️⃣ טיפול ב-searchableFields (עם fallback)
+    // 6️⃣ טיפול ב-search (החזרת קונפיג חיפוש)
+    // ===================================================================
+    if ($section === 'search') {
+        if (isset($config[$type]) && isset($config[$type]['search'])) {
+            echo json_encode([
+                'success' => true,
+                'data' => $config[$type]['search']
+            ], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        // Fallback - החזר placeholder ברירת מחדל
+        $entityName = $config[$type]['plural'] ?? $type;
+        echo json_encode([
+            'success' => true,
+            'data' => [
+                'placeholder' => "חיפוש ב{$entityName}..."
+            ]
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    // ===================================================================
+    // 7️⃣ טיפול ב-searchableFields (עם fallback)
     // ===================================================================
     if ($section === 'searchableFields') {
         // נסה קודם מ-cemetery-hierarchy-config.php

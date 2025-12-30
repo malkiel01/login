@@ -393,33 +393,41 @@ class EntityRenderer {
     //     }
     // }
     /**
-     * טיפול בלחיצה כפולה על שורה
+     * טיפול בדאבל-קליק על שורה
      * @param {string} entityType - סוג היישות
-     * @param {string} entityId - מזהה היישות
-     * @param {string} entityName - שם היישות
+     * @param {Object} row - נתוני השורה
      */
-    static handleDoubleClick(entityType, entityId, entityName) {
-        
+    static handleDoubleClick(entityType, row) {
+        const idField = this.getIdField(entityType);
+        const entityId = row[idField] || row.id || row.unicId;
+        const entityName = row[`${entityType}Name`] || row[`${entityType}NameHe`] || row.name || '';
+
         // מיפוי לשמות הפונקציות הספציפיות
         const handlers = {
+            'cemetery': 'handleCemeteryDoubleClick',
+            'block': 'handleBlockDoubleClick',
+            'plot': 'handlePlotDoubleClick',
             'areaGrave': 'handleAreaGraveDoubleClick',
             'grave': 'handleGraveDoubleClick',
-            'plot': 'handlePlotDoubleClick',
-            'block': 'handleBlockDoubleClick',
             'customer': 'handleCustomerDoubleClick',
             'purchase': 'handlePurchaseDoubleClick',
-            'burial': 'handleBurialDoubleClick'
+            'burial': 'handleBurialDoubleClick',
+            'payment': 'handlePaymentDoubleClick',
+            'residency': 'handleResidencyDoubleClick',
+            'country': 'handleCountryDoubleClick',
+            'city': 'handleCityDoubleClick'
         };
-        
+
         const handlerName = handlers[entityType];
-        
+
         if (handlerName && typeof window[handlerName] === 'function') {
-            window[handlerName](entityId, entityName);
+            // שלח את כל האובייקט כדי שה-handler יוכל לחלץ מה שהוא צריך
+            window[handlerName](row);
         } else {
             // fallback - פתיחת כרטיס
             this.openCard(entityType, entityId);
         }
-    } 
+    }
 
 
     /**

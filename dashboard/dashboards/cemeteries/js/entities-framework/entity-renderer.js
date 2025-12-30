@@ -172,7 +172,8 @@ class EntityRenderer {
             const columnDef = {
                 field: col.field,
                 label: col.label,
-                width: col.width
+                width: col.width,
+                filterType: col.filterType || 'text'  // ⭐ סוג פילטר
             };
             
             // ✅ טיפול בסוגי עמודות - עם הפרמטרים הנכונים!

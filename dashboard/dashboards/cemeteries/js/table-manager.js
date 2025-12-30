@@ -199,7 +199,7 @@ class TableManager {
                     width: ${this.config.containerWidth} !important;
                     padding: ${this.config.containerPadding} !important;
                     margin: 0 !important;
-                    overflow: visible !important;
+                    overflow: hidden !important;
                     max-height: none !important;
                     height: auto !important;
                     box-sizing: border-box !important;
@@ -207,14 +207,7 @@ class TableManager {
                     border: none !important;
                 `.replace(/\s+/g, ' ').trim());
                 fixed.push('table-container');
-            }
-            else if (styles.overflow !== 'visible' || styles.overflowY !== 'visible' || styles.maxHeight !== 'none') {
-                currentParent.style.cssText += `
-                    overflow: visible !important;
-                    max-height: none !important;
-                    height: auto !important;
-                `;
-                fixed.push(currentParent.className || currentParent.tagName);
+                break; // ⭐ לא להמשיך לעדכן הורים - רק את table-container
             }
             
             currentParent = currentParent.parentElement;

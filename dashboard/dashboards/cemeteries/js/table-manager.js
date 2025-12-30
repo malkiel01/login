@@ -281,8 +281,6 @@ class TableManager {
         headerTable.className = 'tm-table tm-header-table';
         headerTable.id = 'headerTable';
         headerTable.style.cssText = `
-            width: max-content !important;
-            min-width: 100% !important;
             border-collapse: separate !important;
             border-spacing: 0 !important;
             background: white !important;
@@ -291,14 +289,12 @@ class TableManager {
         const thead = document.createElement('thead');
         headerTable.appendChild(thead);
         headerContainer.appendChild(headerTable);
-        
+
         // טבלת תוכן
         const bodyTable = document.createElement('table');
         bodyTable.className = 'tm-table tm-body-table';
         bodyTable.id = 'bodyTable';
         bodyTable.style.cssText = `
-            width: max-content !important;
-            min-width: 100% !important;
             border-collapse: separate !important;
             border-spacing: 0 !important;
             background: white !important;
@@ -338,10 +334,13 @@ class TableManager {
         
         // סנכרן גלילה אופקית
         this.syncHorizontalScroll();
-        
+
         // רינדור כותרות
         this.renderHeaders();
-        
+
+        // ⭐ קבע רוחב טבלה התחלתי לפי סכום העמודות
+        this.updateTableWidth();
+
         // טען נתונים ראשוניים
         this.loadInitialData();
         

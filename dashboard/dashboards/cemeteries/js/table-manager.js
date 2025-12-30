@@ -992,7 +992,7 @@ class TableManager {
             if (!this.state.isResizing) return;
 
             const diff = e.pageX - startX;
-            const newWidth = Math.max(50, startWidth - diff);
+            const newWidth = Math.max(80, startWidth - diff);  // מינימום 80px
             this.state.columnWidths[colIndex] = `${newWidth}px`;
 
             const th = this.elements.headerTable.querySelector(`th[data-column-index="${colIndex}"]`);

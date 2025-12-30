@@ -17,7 +17,6 @@
  * - v3.0.0: שיטה זהה לבתי עלמין - UniversalSearch + TableManager
  */
 
-console.log('🚀 customers-management.js v4.0.0 - Loading...');
 
 // ===================================================================
 // משתנים גלובליים
@@ -40,12 +39,10 @@ let customersIsLoadingMore = false;
 // בניית המבנה
 // ===================================================================
 async function buildCustomersContainer(signal) {
-    console.log('🏗️ Building customers container...');
     
     let mainContainer = document.querySelector('.main-container');
     
     if (!mainContainer) {
-        console.log('⚠️ main-container not found, creating one...');
         const mainContent = document.querySelector('.main-content');
         mainContainer = document.createElement('div');
         mainContainer.className = 'main-container';
@@ -81,7 +78,6 @@ async function buildCustomersContainer(signal) {
         </div>
     `;
     
-    console.log('✅ Customers container built');
 }
 
 
@@ -181,11 +177,9 @@ async function initCustomersSearch(signal) {
         
         callbacks: {
             onInit: () => {
-                console.log('✅ UniversalSearch initialized for customers');
             },
             
             onSearch: (query, filters) => {
-                console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()) });
                 
                 // ⭐ כאשר מתבצע חיפוש - הפעל מצב חיפוש
                 customersIsSearchMode = true;
@@ -193,11 +187,9 @@ async function initCustomersSearch(signal) {
             },
 
             onResults: async (data, signal) => {
-                console.log('📦 API returned:', data.pagination?.total || data.data.length, 'customers');
                 
                 // ⭐ אם נכנסנו למצב חיפוש - הצג רק תוצאות חיפוש
                 if (customersIsSearchMode && customersCurrentQuery) {
-                    console.log('🔍 Search mode active - showing search results only');
                     customersSearchResults = data.data;
                     
                     const tableBody = document.getElementById('tableBody');
@@ -209,8 +201,6 @@ async function initCustomersSearch(signal) {
                 
                 // ⭐⭐⭐ בדיקה קריטית - אם עברנו לרשומה אחרת, לא להמשיך!
                 if (window.currentType !== 'customer') {
-                    console.log('⚠️ Type changed during search - aborting customer results');
-                    console.log(`   Current type is now: ${window.currentType}`);
                     return;
                 }
             },
@@ -221,11 +211,9 @@ async function initCustomersSearch(signal) {
             },
 
             onEmpty: () => {
-                console.log('📭 No results');
             },
             
             onClear: async () => {
-                console.log('🧹 Search cleared - returning to browse mode');
                 
                 // ⭐ איפוס מצב חיפוש
                 customersIsSearchMode = false;
@@ -329,7 +317,6 @@ async function initCustomersTable(data, totalItems = null, signal = null) {
             
         } catch (error) {
             if (error.name === 'AbortError') {
-                console.log('⚠️ Column config loading aborted - this is expected');
                 return [];
             }
             
@@ -374,19 +361,16 @@ async function initCustomersTable(data, totalItems = null, signal = null) {
         },
         
         onSort: (field, order) => {
-            console.log(`📊 Sorted by ${field} ${order}`);
             showToast(`ממוין לפי ${field} (${order === 'asc' ? 'עולה' : 'יורד'})`, 'info');
         },
         
         onFilter: (filters) => {
-            console.log('🔍 Active filters:', filters);
             const count = customersTable.getFilteredData().length;
             showToast(`נמצאו ${count} תוצאות`, 'info');
         },
 
         // ⭐ לחיצה כפולה - פתיחת כרטיס לקוח
         onRowDoubleClick: (customer) => {
-            console.log('👤 Opening customer card:', customer.unicId);
             if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
                 FormHandler.openForm('customerCard', null, customer.unicId);
             }
@@ -402,11 +386,9 @@ async function initCustomersTable(data, totalItems = null, signal = null) {
 // רינדור שורות - עם תמיכה ב-Search Mode
 // ===================================================================
 async function renderCustomersRows(data, container, pagination = null, signal = null) {
-    console.log(`📝 renderCustomersRows called with ${data.length} items`);
     
     // ⭐⭐ במצב חיפוש - הצג תוצאות חיפוש בלי טבלה מורכבת
     if (customersIsSearchMode && customersCurrentQuery) {
-        console.log('🔍 Rendering search results...');
         
         if (data.length === 0) {
             container.innerHTML = `
@@ -430,7 +412,6 @@ async function renderCustomersRows(data, container, pagination = null, signal = 
     
     // ⭐⭐ מצב רגיל (Browse) - הצג עם TableManager
     const totalItems = pagination?.total || data.length;
-    console.log(`📊 Total items to display: ${totalItems}`);
 
     if (data.length === 0) {
         if (customersTable) {
@@ -454,16 +435,13 @@ async function renderCustomersRows(data, container, pagination = null, signal = 
     const tableWrapperExists = document.querySelector('.table-wrapper[data-fixed-width="true"]');
     
     if (!tableWrapperExists && customersTable) {
-        console.log('🗑️ TableManager DOM was deleted, resetting customersTable variable');
         customersTable = null;
         window.customersTable = null;
     }
     
     if (!customersTable || !tableWrapperExists) {
-        console.log(`🏗️ Creating new TableManager with ${totalItems} items`);
         await initCustomersTable(data, totalItems, signal);
     } else {
-        console.log(`♻️ Updating TableManager with ${totalItems} items`);
         if (customersTable.config) {
             customersTable.config.totalItems = totalItems;
         }
@@ -499,7 +477,6 @@ function formatCustomerStatus(status) {
 // דאבל-קליק על לקוח - פתיחת כרטיס לקוח
 // ===================================================================
 async function handleCustomerDoubleClick(customer) {
-    console.log('🖱️ Double-click on customer:', customer);
 
     // תמיכה גם באובייקט וגם ב-ID
     let customerId;
@@ -509,7 +486,6 @@ async function handleCustomerDoubleClick(customer) {
         customerId = customer;
     }
 
-    console.log('👤 Opening customer card for ID:', customerId);
 
     // פתיחת כרטיס לקוח חדש
     if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
@@ -529,4 +505,3 @@ window.customersTable = customersTable;
 
 window.customerSearch = customerSearch;
 
-console.log('✅ customers-management.js v4.0.0 - Loaded successfully!');

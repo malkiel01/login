@@ -14,7 +14,6 @@
  *   ✅ אינטגרציה עם כל המודולים
  */
 
-console.log('🚀 entity-manager.js v1.0.0 - Loading...');
 
 // ===================================================================
 // המנהל המרכזי לכל היישויות
@@ -37,21 +36,15 @@ class EntityManager {
             return;
         }
         
-        console.log('══════════════════════════════════════════════════');
-        console.log(`🚀 EntityManager.load('${entityType}') STARTED`);
-        console.log('══════════════════════════════════════════════════');
         
         // התחל operation
         const signal = OperationManager.start(entityType);
-        console.log('✅ Step 1: OperationManager started');
         
         // איפוס מצב חיפוש
         entityState.setSearchMode(entityType, false, '', []);
-        console.log('✅ Step 2: Search state reset');
         
         // טיפול ב-parent context (עבור יישויות היררכיות)
         this.handleParentContext(entityType, parentId, parentName, forceReset);
-        console.log('✅ Step 3: Parent context handled');
         
         // עדכון context גלובלי
         window.currentType = entityType;
@@ -60,47 +53,35 @@ class EntityManager {
         if (window.tableRenderer) {
             window.tableRenderer.currentType = entityType;
         }
-        console.log('✅ Step 4: Global context updated');
         
         // ניקוי dashboard
         this.clearDashboard(entityType);
-        console.log('✅ Step 5: Dashboard cleared');
         
         // עדכון UI
         this.updateUI(entityType, parentId, parentName);
-        console.log('✅ Step 6: UI updated');
         
         // בניית container
         await EntityRenderer.buildContainer(entityType, signal, parentId, parentName);
-        console.log('✅ Step 7: Container built');
         
         if (OperationManager.shouldAbort(entityType)) {
-            console.log('⚠️ ABORTED at step 7');
             return;
         }
         
         // עדכון מונה טעינות
         const loadCounter = entityState.incrementLoadCounter(entityType);
-        console.log(`✅ Step 8: Load counter = ${loadCounter}`);
         
         // השמדת instances קודמים
         this.destroyPreviousInstances(entityType);
-        console.log('✅ Step 9: Previous instances destroyed');
         
         // אתחול חיפוש
-        console.log('🆕 Creating fresh search instance...');
         await this.initSearch(entityType, signal, parentId);
-        console.log('✅ Step 10: UniversalSearch initialized');
         
         if (OperationManager.shouldAbort(entityType)) {
-            console.log('⚠️ ABORTED at step 10');
             return;
         }
         
         // טעינת נתונים
-        console.log('📥 Loading browse data...');
         const result = await EntityLoader.loadBrowseData(entityType, signal, parentId);
-        console.log('✅ Step 11: Browse data loaded');
         
         if (result.success && result.data) {
             // רינדור לטבלה
@@ -111,13 +92,8 @@ class EntityManager {
         }
         
         // טעינת סטטיסטיקות
-        console.log('📊 Loading stats...');
         await EntityLoader.loadStats(entityType, signal, parentId);
-        console.log('✅ Step 12: Stats loaded');
         
-        console.log('══════════════════════════════════════════════════');
-        console.log(`✅ EntityManager.load('${entityType}') COMPLETED`);
-        console.log('══════════════════════════════════════════════════');
     }
 
     /**
@@ -140,16 +116,13 @@ class EntityManager {
         if (parentId === null && parentName === null && !forceReset) {
             // נקרא מהתפריט ללא פרמטרים - איפוס סינון
             if (state.parentId !== null) {
-                console.log('🔄 Resetting filter - called from menu without params');
                 entityState.setParentContext(entityType, null, null);
             }
         } else if (forceReset) {
             // איפוס מאולץ
-            console.log('🔄 Force reset filter');
             entityState.setParentContext(entityType, null, null);
         } else {
             // הגדרת parent context חדש
-            console.log('🔄 Setting filter:', { parentId, parentName });
             entityState.setParentContext(entityType, parentId, parentName);
         }
     }
@@ -242,14 +215,12 @@ class EntityManager {
         
         // השמד חיפוש קודם
         if (state.searchInstance && typeof state.searchInstance.destroy === 'function') {
-            console.log('🗑️ Destroying previous search instance...');
             state.searchInstance.destroy();
             entityState.setSearchInstance(entityType, null);
         }
         
         // איפוס טבלה קודמת
         if (state.tableInstance) {
-            console.log('🗑️ Resetting previous table instance...');
             entityState.setTableInstance(entityType, null);
         }
     }
@@ -266,11 +237,9 @@ class EntityManager {
         
         // בדוק אם initUniversalSearch קיים
         if (typeof window.initUniversalSearch === 'undefined') {
-            console.warn('⚠️ initUniversalSearch not available');
             return null;
         }
         
-        console.log(`🔍 Initializing UniversalSearch for ${entityType}...`);
         
         // ✅ הכן קונפיגורציה במבנה הנכון (כמו בקבצים הישנים!)
         const searchConfig = {
@@ -295,7 +264,6 @@ class EntityManager {
             
             // ✅ renderFunction - חיבור לרינדור שלנו
             renderFunction: async (data, container, pagination, signal) => {
-                console.log(`📝 Rendering ${data.length} ${config.plural} from search...`);
                 
                 // עדכון state
                 entityState.setSearchMode(entityType, true, '', data);
@@ -310,12 +278,10 @@ class EntityManager {
             // ✅ callbacks
             callbacks: {
                 onSearch: (query, filters) => {
-                    console.log(`🔍 Search started: "${query}"`);
                     entityState.setSearchMode(entityType, true, query, []);
                 },
                 
                 onDataLoaded: (response) => {
-                    console.log(`✅ Search completed: ${response.data.length} results`);
                     
                     // עדכון מונה
                     const state = entityState.getState(entityType);
@@ -325,7 +291,6 @@ class EntityManager {
                 },
                 
                 onClear: async () => {
-                    console.log('🔄 Search cleared, returning to browse mode');
                     
                     // איפוס מצב חיפוש
                     entityState.setSearchMode(entityType, false, '', []);
@@ -359,7 +324,6 @@ class EntityManager {
         // שמירה ב-state
         entityState.setSearchInstance(entityType, searchInstance);
         
-        console.log(`✅ UniversalSearch initialized for ${config.plural}`);
         return searchInstance;
     }
 
@@ -369,7 +333,6 @@ class EntityManager {
      * @returns {Promise<void>}
      */
     static async refresh(entityType) {
-        console.log(`🔄 EntityManager.refresh('${entityType}') called`);
         
         const config = ENTITY_CONFIG[entityType];
         const state = entityState.getState(entityType);
@@ -379,13 +342,11 @@ class EntityManager {
         
         // בדוק אם יש instance של חיפוש
         if (state.searchInstance && typeof state.searchInstance.refresh === 'function') {
-            console.log('   ✅ Using search instance refresh');
             state.searchInstance.refresh();
             return;
         }
         
         // אחרת - טען מחדש
-        console.log('   ✅ Reloading browse data');
         await EntityLoader.refresh(entityType, parentId);
     }
 
@@ -408,7 +369,6 @@ class EntityManager {
         const state = entityState.getState(entityType);
         
         if (!state.tableInstance) {
-            console.log(`❌ ${config.plural} table not initialized`);
             return;
         }
         
@@ -416,16 +376,9 @@ class EntityManager {
         const displayed = state.tableInstance.getDisplayedData().length;
         const remaining = total - displayed;
         
-        console.log(`📊 ${config.plural} Scroll Status:`);
-        console.log(`   Total items: ${total}`);
-        console.log(`   Displayed: ${displayed}`);
-        console.log(`   Remaining: ${remaining}`);
-        console.log(`   Progress: ${Math.round((displayed / total) * 100)}%`);
         
         if (remaining > 0) {
-            console.log(`   🔽 Scroll down to load more items`);
         } else {
-            console.log('   ✅ All items loaded');
         }
     }
 
@@ -455,9 +408,6 @@ class EntityManager {
      * דאמפ של כל המערכת (לדיבאג)
      */
     static dumpSystemState() {
-        console.log('\n╔════════════════════════════════════════════════════════════════');
-        console.log('║ 📊 ENTITY MANAGEMENT SYSTEM STATE DUMP');
-        console.log('╠════════════════════════════════════════════════════════════════');
         
         const entityTypes = Object.keys(ENTITY_CONFIG);
         
@@ -465,23 +415,12 @@ class EntityManager {
             const config = ENTITY_CONFIG[entityType];
             const state = entityState.getState(entityType);
             
-            console.log(`║`);
-            console.log(`║ 📦 ${config.plural.toUpperCase()}`);
-            console.log(`║ ├─ Data: ${state.currentData.length} items loaded`);
-            console.log(`║ ├─ Pagination: ${state.currentPage}/${state.totalPages}`);
-            console.log(`║ ├─ Search Mode: ${state.isSearchMode ? '🔍 Active' : '📋 Browse'}`);
-            console.log(`║ ├─ Table: ${state.tableInstance ? '✅ Initialized' : '❌ Not initialized'}`);
-            console.log(`║ ├─ Search: ${state.searchInstance ? '✅ Initialized' : '❌ Not initialized'}`);
-            console.log(`║ ├─ Load Counter: ${state.loadCounter}`);
             
             if (config.hasParent) {
-                console.log(`║ ├─ Parent Context: ${state.parentId ? `${state.parentName} (${state.parentId})` : 'None'}`);
             }
             
-            console.log(`║ └─ Last Updated: ${state.lastUpdated || 'Never'}`);
         });
         
-        console.log('╚════════════════════════════════════════════════════════════════\n');
     }
 }
 
@@ -542,6 +481,3 @@ window.checkPlotsScrollStatus = () => EntityManager.checkScrollStatus('plot');
 window.checkAreaGravesScrollStatus = () => EntityManager.checkScrollStatus('areaGrave');
 window.checkGravesScrollStatus = () => EntityManager.checkScrollStatus('grave');
 
-console.log('✅ entity-manager.js v1.0.0 - Loaded successfully!');
-console.log('🎯 All entity management functions are now available');
-console.log('📋 Type EntityManager.dumpSystemState() to see full system state');

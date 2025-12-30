@@ -26,7 +26,6 @@ const DashboardCleaner = {
         
         settings = { ...defaults, ...settings };
         
-        console.log('🧹 Cleaning dashboard with settings:', settings);
         
         if (settings.fullReset) {
             this.fullReset();
@@ -57,84 +56,69 @@ const DashboardCleaner = {
         this.clearSearch();
         this.closeModals();
         
-        console.log('✅ Dashboard cleaned successfully');
     },
     
     /**
      * ⭐ איפוס משתנים גלובליים של TableManager ו-UniversalSearch
      */
     resetGlobalVariables() {
-        console.log('  🔄 Resetting global variables...');
         
         // איפוס TableManager instances
         if (window.cemeteriesTable) {
-            console.log('  🗑️ Resetting cemeteriesTable');
             window.cemeteriesTable = null;
         }
         
         if (window.blocksTable) {
-            console.log('  🗑️ Resetting blocksTable');
             window.blocksTable = null;
         }
         
         if (window.plotsTable) {
-            console.log('  🗑️ Resetting plotsTable');
             window.plotsTable = null;
         }
         
         if (window.areaGravesTable) {
-            console.log('  🗑️ Resetting areaGravesTable');
             window.areaGravesTable = null;
         }
         
         if (window.gravesTable) {
-            console.log('  🗑️ Resetting gravesTable');
             window.gravesTable = null;
         }
         
         if (window.customersTable) {
-            console.log('  🗑️ Resetting customersTable');
             window.customersTable = null;
         }
         
         // איפוס UniversalSearch instances
         if (window.cemeterySearch && typeof window.cemeterySearch.destroy === 'function') {
-            console.log('  🗑️ Destroying cemeterySearch');
             window.cemeterySearch.destroy();
             window.cemeterySearch = null;
         }
         
         if (window.blockSearch && typeof window.blockSearch.destroy === 'function') {
-            console.log('  🗑️ Destroying blockSearch');
             window.blockSearch.destroy();
             window.blockSearch = null;
         }
         
         if (window.plotSearch && typeof window.plotSearch.destroy === 'function') {
-            console.log('  🗑️ Destroying plotSearch');
             window.plotSearch.destroy();
             window.plotSearch = null;
         }
         
         if (window.areaGraveSearch && typeof window.areaGraveSearch.destroy === 'function') {
-            console.log('  🗑️ Destroying areaGraveSearch');
             window.areaGraveSearch.destroy();
             window.areaGraveSearch = null;
         }
         
         if (window.graveSearch && typeof window.graveSearch.destroy === 'function') {
-            console.log('  🗑️ Destroying graveSearch');
             window.graveSearch.destroy();
             window.graveSearch = null;
         }
         
         if (window.customerSearch && typeof window.customerSearch.destroy === 'function') {
-            console.log('  🗑️ Destroying customerSearch');
             window.customerSearch.destroy();
             window.customerSearch = null;
         }
         
-        console.log('  ✅ Global variables reset complete');
     },
     
     /**
@@ -159,7 +143,6 @@ const DashboardCleaner = {
     hideTableManager() {
         if (window.customersTable && window.customersTable.elements.wrapper) {
             window.customersTable.elements.wrapper.style.display = 'none';
-            console.log('  ✓ TableManager hidden');
         }
     },
     
@@ -169,7 +152,6 @@ const DashboardCleaner = {
     showTableManager() {
         if (window.customersTable && window.customersTable.elements.wrapper) {
             window.customersTable.elements.wrapper.style.display = 'flex';
-            console.log('  ✓ TableManager shown');
         }
     },
     
@@ -177,14 +159,11 @@ const DashboardCleaner = {
      * ⭐ ניקוי הטבלה/תוכן - תיקון מלא!
      */
     clearTable() {
-        console.log('  🧹 Clearing table/content...');
         
         // ⭐ שלב 1: מחק את כל ה-wrappers של TableManager
         const tableWrappers = document.querySelectorAll('.table-wrapper[data-fixed-width="true"]');
         if (tableWrappers.length > 0) {
-            console.log(`  🗑️ Removing ${tableWrappers.length} table-wrapper(s)...`);
             tableWrappers.forEach(wrapper => {
-                console.log(`  📍 Removing wrapper:`, wrapper);
                 wrapper.remove();
             });
         }
@@ -192,7 +171,6 @@ const DashboardCleaner = {
         // ⭐ שלב 2: מחק את כל האינדיקטורים של סינון
         const filterIndicators = document.querySelectorAll('.filter-indicator');
         if (filterIndicators.length > 0) {
-            console.log(`  🗑️ Removing ${filterIndicators.length} filter-indicator(s)...`);
             filterIndicators.forEach(indicator => {
                 indicator.remove();
             });
@@ -202,16 +180,13 @@ const DashboardCleaner = {
         const mainContainer = document.querySelector('.main-container');
         
         if (mainContainer) {
-            console.log('  🆕 Found main-container, clearing it completely...');
             
             // מחק את כל התוכן של main-container
             mainContainer.innerHTML = '';
-            console.log('  ✓ Main container cleared completely');
             return;
         }
         
         // ⭐ שלב 4: שיטה ישנה - עבודה עם table-container
-        console.log('  📜 Using OLD method (table-container)');
         
         const tbody = document.getElementById('tableBody');
         const thead = document.getElementById('tableHeaders');
@@ -220,12 +195,10 @@ const DashboardCleaner = {
             tbody.innerHTML = '';
             tbody.removeAttribute('data-customer-view');
             tbody.removeAttribute('data-current-type');
-            console.log('  ✓ Table body cleared');
         }
         
         if (thead) {
             thead.innerHTML = '';
-            console.log('  ✓ Table headers reset');
         }
     },
     
@@ -249,7 +222,6 @@ const DashboardCleaner = {
             }
         });
         
-        console.log('  ✓ All cards cleared');
     },
     
     /**
@@ -293,7 +265,6 @@ const DashboardCleaner = {
             }
         });
         
-        console.log('  ✓ Sidebar cleared');
     },
     
     /**
@@ -304,7 +275,6 @@ const DashboardCleaner = {
         const levelIndex = hierarchy.indexOf(level);
         
         if (levelIndex === -1) {
-            console.log('Unknown level:', level);
             return;
         }
         
@@ -317,7 +287,6 @@ const DashboardCleaner = {
             }
         }
         
-        console.log(`  ✓ Sidebar cleared below level: ${level}`);
     },
     
     /**
@@ -326,7 +295,6 @@ const DashboardCleaner = {
     resetBreadcrumb() {
         if (typeof BreadcrumbManager !== 'undefined') {
             BreadcrumbManager.reset();
-            console.log('  ✓ Breadcrumb reset');
         }
     },
     
@@ -336,7 +304,6 @@ const DashboardCleaner = {
     updateBreadcrumbForLevel(level) {
         if (typeof BreadcrumbManager !== 'undefined') {
             BreadcrumbManager.update(window.selectedItems || {}, level);
-            console.log(`  ✓ Breadcrumb updated for level: ${level}`);
         }
     },
     
@@ -370,7 +337,6 @@ const DashboardCleaner = {
      * איפוס מלא
      */
     fullReset() {
-        console.log('🔄 Performing full dashboard reset...');
         
         if (this.isTableManagerActive()) {
             this.hideTableManager();
@@ -395,7 +361,6 @@ const DashboardCleaner = {
             window.currentParentId = null;
         }
         
-        console.log('✅ Full reset completed');
     },
     
     /**
@@ -464,4 +429,3 @@ window.clearSidebarBelow = function(type) {
 
 window.DashboardCleaner = DashboardCleaner;
 
-console.log('✅ DashboardCleaner v1.6.0 loaded - Complete reset with global variables');

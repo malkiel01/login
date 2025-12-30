@@ -19,7 +19,6 @@ const API_BASE = '/dashboard/dashboards/cemeteries/api/';
 
 // אתחול הדשבורד
 function initDashboard() {
-    console.log('Initializing Cemetery Dashboard...');
     
     // אתחול משתנים גלובליים
     window.currentType = 'cemetery';
@@ -79,12 +78,6 @@ async function loadStats() {
         const data = await response.json();
         
         // 👇 בדיקה!
-        console.log('=== Before updateSidebarCounts ===');
-        console.log('counts object:', data.stats.counts);
-        console.log('cemetery exists?', data.stats.counts.cemetery);
-        console.log('cemeteries exists?', data.stats.counts.cemeteries);
-        console.log('areaGrave exists?', data.stats.counts.areaGrave);
-        console.log('areaGraves exists?', data.stats.counts.areaGraves);
 
         if (data.success) {
             updateHeaderStats(data.stats);
@@ -224,7 +217,6 @@ function toggleFullscreen() {
 
 // רענון כל הנתונים
 async function refreshAllData() {
-    console.log('Refreshing all data...');
     isLoading = true;
     
     await loadStats();
@@ -242,7 +234,6 @@ async function refreshAllData() {
 async function performQuickSearch(query) {
     if (query.length < 2) return;
     
-    console.log('Searching for:', query);
     // TODO: implement search
 }
 
@@ -447,19 +438,16 @@ function getParentName(type) {
 
 // פתיחת הוספה מהירה
 function openQuickAdd() {
-    console.log('Opening quick add');
     // TODO: implement quick add
 }
 
 // ייצוא נתונים
 function exportData() {
-    console.log('Exporting data');
     // TODO: implement export
 }
 
 // עריכת פריט
 async function editItem(id) {
-    console.log('Editing item:', id, 'Type:', window.currentType);
     
     // השתמש ב-tableRenderer לעריכה
     tableRenderer.editItem(id);
@@ -508,7 +496,6 @@ function showSuccess(message) {
     if (typeof showToast === 'function') {
         showToast('success', message);
     } else {
-        console.log('Success:', message);
     }
 }
 
@@ -524,7 +511,6 @@ function showWarning(message) {
     if (typeof showToast === 'function') {
         showToast('warning', message);
     } else {
-        console.warn('Warning:', message);
     }
 }
 
@@ -542,7 +528,6 @@ function formatDate(dateString) {
 
 // ניהול הסידבר
 function updateSidebarSelection(type, id, name) {
-    console.log('updateSidebarSelection called:', type, id, name);
     
     // הסר את כל ה-active מהכותרות
     document.querySelectorAll('.hierarchy-header').forEach(header => {
@@ -639,7 +624,6 @@ function selectTableRow(row) {
 
 // רענון נתונים - כפתור הרענון ב-action bar
 function refreshData() {
-    console.log('Refreshing current view...');
     
     // רענן לפי הסוג הנוכחי
     switch(window.currentType) {
@@ -687,9 +671,7 @@ window.handleFormSubmit = function(event, type) {
     const form = event.target;
     const formData = new FormData(form);
     
-    console.log('Submitting form - Type:', type);
     for (let [key, value] of formData.entries()) {
-        console.log(`  ${key}: ${value}`);
     }
     
     fetch('dashboard/dashboards/cemeteries/handlers/save-handler.php', {

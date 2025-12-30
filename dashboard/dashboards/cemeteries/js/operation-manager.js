@@ -14,7 +14,6 @@
  * - v1.0.0: יצירת מערכת מרכזית לניהול race conditions
  */
 
-console.log('🚀 operation-manager.js v2.0.0 - Loading...');
 
 /**
  * מנהל גלובלי לניהול פעולות אסינכרוניות
@@ -59,7 +58,6 @@ const OperationManager = {
             return this.configLoadPromise;
         }
         
-        console.log('📥 טוען קונפיג entities מהשרת...');
         
         // צור Promise חדש
         this.configLoadPromise = (async () => {
@@ -87,7 +85,6 @@ const OperationManager = {
                     this.entityConfig = result.data;
                     this.configLoaded = true;
                     
-                    console.log('✅ קונפיג נטען בהצלחה:', Object.keys(this.entityConfig).length, 'entities');
                     
                     // הדפס רשימה
                     console.table(
@@ -109,7 +106,6 @@ const OperationManager = {
                 console.error('❌ שגיאה בטעינת קונפיג:', error);
                 
                 // Fallback - קונפיג מינימלי מקומי
-                console.warn('⚠️ משתמש בקונפיג מקומי (fallback)');
                 this.entityConfig = this.getFallbackConfig();
                 this.configLoaded = true;
                 
@@ -177,7 +173,6 @@ const OperationManager = {
      */
     isValidType(type) {
         if (!this.entityConfig) {
-            console.warn('⚠️ קונפיג עדיין לא נטען - מאשר זמנית');
             return true; // אשר זמנית
         }
         
@@ -185,7 +180,6 @@ const OperationManager = {
         
         if (!isValid) {
             console.error(`❌ Entity type לא חוקי: "${type}"`);
-            console.log('📋 Types זמינים:', Object.keys(this.entityConfig).join(', '));
         }
         
         return isValid;
@@ -261,15 +255,12 @@ const OperationManager = {
         const icon = this.getIcon(type);
         const nameHe = this.getHebrewName(type, true);
         
-        console.log(`\n🚀 OperationManager.start('${type}')`);
-        console.log(`   ${icon} מתחיל פעולה: ${nameHe}`);
         
         // אם יש פעולה פעילה - בטל אותה
         if (this.currentController && this.currentType) {
             const oldIcon = this.getIcon(this.currentType);
             const oldNameHe = this.getHebrewName(this.currentType, true);
             
-            console.log(`   ⚠️ מבטל פעולה קודמת: ${oldIcon} ${oldNameHe}`);
             this.currentController.abort();
         }
         
@@ -280,7 +271,6 @@ const OperationManager = {
         // עדכן את המשתנה הגלובלי
         window.currentType = type;
         
-        console.log(`   ✅ פעולה חדשה התחילה: ${icon} ${nameHe}\n`);
         
         return this.currentController.signal;
     },
@@ -300,13 +290,11 @@ const OperationManager = {
             const currentIcon = this.getIcon(this.currentType);
             const currentNameHe = this.getHebrewName(this.currentType, true);
             
-            console.log(`   ⚠️ הסוג השתנה: ${icon} ${nameHe} → ${currentIcon} ${currentNameHe}`);
         }
         
         if (wasAborted) {
             const icon = this.getIcon(type);
             const nameHe = this.getHebrewName(type, true);
-            console.log(`   ⚠️ הפעולה בוטלה: ${icon} ${nameHe}`);
         }
         
         return typeChanged || wasAborted;
@@ -329,7 +317,6 @@ const OperationManager = {
             const icon = this.getIcon(this.currentType);
             const nameHe = this.getHebrewName(this.currentType, true);
             
-            console.log(`   ❌ ביטול ידני של: ${icon} ${nameHe}`);
             this.currentController.abort();
         }
     },
@@ -377,11 +364,8 @@ const OperationManager = {
 // טעינה אוטומטית של הקונפיג בהפעלת הקובץ
 // ===================================================================
 OperationManager.loadConfig().then(() => {
-    console.log('✅ OperationManager v2.0.0 loaded successfully!');
-    console.log('📋 זמינים:', OperationManager.getAvailableTypes().length, 'entity types');
 }).catch(err => {
     console.error('❌ שגיאה בטעינת OperationManager:', err);
-    console.log('⚠️ OperationManager ימשיך לעבוד עם קונפיג מקומי');
 });
 
 // ייצוא גלובלי

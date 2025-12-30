@@ -11,7 +11,6 @@
  */
 
 
-console.log('🚀 area-graves-management.js v1.5.4 - Loading...');
 
 
 // ===================================================================
@@ -149,12 +148,10 @@ let areaGravesIsLoadingMore = false;
 // בניית המבנה
 // ===================================================================
 async function buildAreaGravesContainer(signal, plotId = null, plotName = null) {
-    console.log('🏗️ Building area graves container...');
     
     let mainContainer = document.querySelector('.main-container');
     
     if (!mainContainer) {
-        console.log('⚠️ main-container not found, creating one...');
         const mainContent = document.querySelector('.main-content');
         mainContainer = document.createElement('div');
         mainContainer.className = 'main-container';
@@ -170,28 +167,23 @@ async function buildAreaGravesContainer(signal, plotId = null, plotName = null) 
     // ⭐⭐⭐ טעינת כרטיס מלא במקום indicator פשוט!
     let topSection = '';
     if (plotId && plotName) {
-        console.log('🎴 Creating full plot card...');
         
         // נסה ליצור את הכרטיס המלא
         if (typeof createPlotCard === 'function') {
             try {
                 topSection = await createPlotCard(plotId, signal);
-                console.log('✅ Plot card created successfully');
             } catch (error) {
                 // בדיקה: אם זה ביטול מכוון - זה לא שגיאה
                 if (error.name === 'AbortError') {
-                    console.log('⚠️ Plot card loading aborted');
                     return;
                 }
                 console.error('❌ Error creating block card:', error);
             }
         } else {
-            console.warn('⚠️ createPlotCard function not found');
         }
         
         // אם לא הצלחנו ליצור כרטיס, נשתמש ב-fallback פשוט
         if (!topSection) {
-            console.log('⚠️ Using simple filter indicator as fallback');
             topSection = `
                 <div class="filter-indicator" style="background: linear-gradient(135deg, #FC466B 0%, #3F5EFB 100%); color: white; padding: 12px 20px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                     <div style="display: flex; align-items: center; gap: 10px;">
@@ -211,7 +203,6 @@ async function buildAreaGravesContainer(signal, plotId = null, plotName = null) 
 
     // ⭐ בדיקה - אם הפעולה בוטלה, אל תמשיך!
     if (signal && signal.aborted) {
-        console.log('⚠️ Build areaGraves container aborted before innerHTML');
         return;
     }
     
@@ -240,14 +231,12 @@ async function buildAreaGravesContainer(signal, plotId = null, plotName = null) 
         </div>
     `;
   
-    console.log('✅ Area graves container built');
 }
 
 // ===================================================================
 // אתחול UniversalSearch - עם Pagination!
 // ===================================================================
 async function initAreaGravesSearch(signal, plotId = null) {
-    console.log('🔍 אתחול חיפוש אחוזות קבר...');
     
     const config = {
         entityType: 'areaGrave',  // ⭐ תוקן: areaGrave במקום area-grave!
@@ -264,19 +253,15 @@ async function initAreaGravesSearch(signal, plotId = null) {
 
         callbacks: {
             onInit: () => {
-                console.log('✅ UniversalSearch initialized for area graves');
             },
             
             onSearch: (query, filters) => {
-                console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()), plotId: areaGravesFilterPlotId });
             },
 
             onResults: (data) => {
-                console.log('📦 API returned:', data.pagination?.total || data.data.length, 'area graves');
 
                 // ⭐ בדיקה קריטית - אם עברנו לרשומה אחרת, לא להמשיך!
                 if (window.currentType !== 'areaGrave') {
-                    console.log('⚠️ Type changed during search - aborting area grave results');
                     return;
                 }
                 
@@ -286,7 +271,6 @@ async function initAreaGravesSearch(signal, plotId = null) {
                     currentAreaGraves = data.data;
                 } else {
                     currentAreaGraves = [...currentAreaGraves, ...data.data];
-                    console.log(`📦 Added page ${currentPage}, total now: ${currentAreaGraves.length}`);
                 }
                 
                 let filteredCount = currentAreaGraves.length;
@@ -296,7 +280,6 @@ async function initAreaGravesSearch(signal, plotId = null) {
                         return String(areaGravePlotId) === String(areaGravesFilterPlotId);
                     });
                     
-                    console.log('⚠️ Client-side filter:', currentAreaGraves.length, '→', filteredData.length, 'area graves');
                     
                     currentAreaGraves = filteredData;
                     filteredCount = filteredData.length;
@@ -313,7 +296,6 @@ async function initAreaGravesSearch(signal, plotId = null) {
                     }
                 }
                 
-                console.log('📊 Final count:', filteredCount);
             },
                     
             onError: (error) => {
@@ -322,14 +304,12 @@ async function initAreaGravesSearch(signal, plotId = null) {
             },
 
             onEmpty: () => {
-                console.log('📭 No results');
             }
         }
     };
     
     // ⭐ אם יש סינון לפי חלקה, הוסף פרמטר ל-API (בחוץ!)
     if (plotId) {
-        console.log('🎯 Adding plotId filter to API request:', plotId);
         config.additionalParams = { plotId: plotId };
     }
     
@@ -448,7 +428,6 @@ async function initAreaGravesTable(data, totalItems = null, signal) {
         } catch (error) {
             // בדיקה: אם זה ביטול מכוון - זה לא שגיאה
             if (error.name === 'AbortError') {
-                console.log('⚠️ Columns loading aborted');
                 return [];
             }
             console.error('Failed to load columns config:', error);
@@ -461,7 +440,6 @@ async function initAreaGravesTable(data, totalItems = null, signal) {
 
     // בדוק אם בוטל
     if (signal && signal.aborted) {
-        console.log('⚠️ AreaGrave table initialization aborted');
         return null;
     }
 
@@ -509,12 +487,10 @@ async function initAreaGravesTable(data, totalItems = null, signal) {
     
 
         onSort: (field, order) => {
-            console.log(`📊 Sorted by ${field} ${order}`);
             showToast(`ממוין לפי ${field} (${order === 'asc' ? 'עולה' : 'יורד'})`, 'info');
         },
         
         onFilter: (filters) => {
-            console.log('🔍 Active filters:', filters);
             const count = areaGravesTable.getFilteredData().length;
             showToast(`נמצאו ${count} תוצאות`, 'info');
         }
@@ -548,10 +524,6 @@ function renderAreaGravesRows(data, container, pagination = null, signal = null)
     // ⭐ עדכן את totalItems מה-pagination (סה"כ במערכת, לא רק מה שנטען!)
     const totalItems = pagination?.totalAll || pagination?.total || filteredData.length;
     
-    console.log('🔍 [DEBUG renderAreaGravesRows]');
-    console.log('  pagination:', pagination);
-    console.log('  totalItems calculated:', totalItems);
-    console.log('  filteredData.length:', filteredData.length);
 
     if (filteredData.length === 0) {
         if (areaGravesTable) {
@@ -614,17 +586,14 @@ function renderAreaGravesRows(data, container, pagination = null, signal = null)
     
     // ⭐ אם המשתנה קיים אבל ה-DOM נמחק - אפס את המשתנה!
     if (!tableWrapperExists && areaGravesTable) {
-        console.log('⚠️ TableManager DOM missing, resetting variable');
         areaGravesTable = null;
         window.areaGravesTable = null;
     }
     
     // עכשיו בדוק אם צריך לבנות מחדש
     if (!areaGravesTable || !tableWrapperExists) {
-        console.log('🆕 Creating new TableManager');
         initAreaGravesTable(filteredData, totalItems, signal);
     } else {
-        console.log('♻️ Updating existing TableManager');
         if (areaGravesTable.config) {
             areaGravesTable.config.totalItems = totalItems;
         }
@@ -656,7 +625,6 @@ function getGraveTypeName(type) {
 // ===================================================================
 
 async function handleAreaGraveDoubleClick(areaGraveId, areaGraveName) {
-    console.log('🖱️ Double-click on area grave:', areaGraveName, areaGraveId);
     
     try {
         if (typeof createAreaGraveCard === 'function') {
@@ -666,11 +634,9 @@ async function handleAreaGraveDoubleClick(areaGraveId, areaGraveName) {
             }
         }
         
-        console.log('🪦 Loading graves for area grave:', areaGraveName);
         if (typeof loadGraves === 'function') {
             loadGraves(areaGraveId, areaGraveName);
         } else {
-            console.warn('loadGraves function not found');
         }
         
     } catch (error) {
@@ -693,4 +659,3 @@ window.areaGravesFilterPlotId = areaGravesFilterPlotId;
 window.areaGravesFilterPlotName = areaGravesFilterPlotName;
 window.areaGraveSearch = areaGraveSearch;
 
-console.log('✅ area-graves-management.js v1.5.3 - Loaded successfully!');

@@ -8,7 +8,6 @@ let editingPaymentId = null;
 
 // טעינת תשלומים
 async function loadPayments() {
-    console.log('Loading payments...');
 
     setActiveMenuItem('paymentsItem'); // ✅ הוסף את זה
     
@@ -255,7 +254,6 @@ async function deletePayment(id) {
 
 // צפייה בתשלום - פתיחת כרטיס תשלום
 async function viewPayment(id) {
-    console.log('💰 Opening payment card:', id);
     if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
         FormHandler.openForm('paymentCard', null, id);
     } else {
@@ -271,7 +269,6 @@ async function loadPaymentStats() {
         const data = await response.json();
         
         if (data.success) {
-            console.log('Payment stats loaded:', data.data);
         }
     } catch (error) {
         console.error('Error loading stats:', error);

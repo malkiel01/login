@@ -54,7 +54,6 @@ const BreadcrumbManager = {
      */
     init() {
         if (this.isInitialized) {
-            console.warn('⚠️ BreadcrumbManager already initialized');
             return;
         }
         
@@ -72,9 +71,7 @@ const BreadcrumbManager = {
     log(message, data = null) {
         if (this.config.debug) {
             if (data) {
-                console.log(`[Breadcrumb] ${message}`, data);
             } else {
-                console.log(`[Breadcrumb] ${message}`);
             }
         }
     },
@@ -380,7 +377,6 @@ const BreadcrumbManager = {
 window.updateBreadcrumb = function(pathOrItems) {
     // מנע קריאות כפולות
     if (window._breadcrumbUpdateLock) {
-        console.log('[Breadcrumb] ⏭️ Skipping duplicate update');
         return;
     }
     
@@ -403,7 +399,6 @@ window.updateBreadcrumb = function(pathOrItems) {
 // ==========================================
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('===== BREADCRUMB SYSTEM STARTING =====');
     
     // נקה נתונים ישנים מ-sessionStorage
     sessionStorage.removeItem('breadcrumbPath');
@@ -412,7 +407,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // אתחל את המערכת
     BreadcrumbManager.init();
     
-    console.log('===== BREADCRUMB READY =====');
 });
 
 // ייצוא גלובלי

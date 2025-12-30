@@ -10,7 +10,6 @@ let editingCountryId = null;
 
 // טעינת מדינות - פונקציה ראשית
 async function loadCountries() {
-    console.log('Loading countries...');
 
     setActiveMenuItem('countryItem'); // ✅ הוסף
     
@@ -258,7 +257,6 @@ function displayCountriesInTable(countries) {
 
 // פתיחת טופס הוספת מדינה
 function openAddCountry() {
-    console.log('Opening add country form');
     
     window.currentType = 'country';
     window.currentParentId = null;
@@ -274,7 +272,6 @@ function openAddCountry() {
 
 // עריכת מדינה
 async function editCountry(id) {
-    console.log('Editing country:', id);
     
     window.currentType = 'country';
     
@@ -554,4 +551,3 @@ function showToast(type, message) {
     }, 3000);
 }
 
-console.log('Countries Management Module Loaded');

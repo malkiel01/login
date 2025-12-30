@@ -29,7 +29,6 @@
  * @returns {UniversalSearch} instance של UniversalSearch
  */
 window.initUniversalSearch = async function(config) {
-    console.log(`🔍 Initializing UniversalSearch for: ${config.entityType}`);
     
     // ולידציה
     if (!config.entityType) {
@@ -38,18 +37,15 @@ window.initUniversalSearch = async function(config) {
 
     // ⭐ אם לא קיבלנו apiEndpoint - נטען מהקונפיג
     if (!config.apiEndpoint) {
-        console.log('📥 apiEndpoint not provided, loading from config...');
         try {
             const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${config.entityType}&section=api`);
             if (response.ok) {
                 const data = await response.json();
                 if (data.success && data.data && data.data.endpoint) {
                     config.apiEndpoint = data.data.endpoint;
-                    console.log('✅ apiEndpoint loaded from config:', config.apiEndpoint);
                 }
             }
         } catch (e) {
-            console.warn('⚠️ Could not load apiEndpoint from config');
         }
         
         // אם עדיין ריק - זרוק שגיאה
@@ -60,18 +56,15 @@ window.initUniversalSearch = async function(config) {
 
     // ⭐ אם לא קיבלנו searchableFields - נטען מהקונפיג
     if (!config.searchableFields || config.searchableFields.length === 0) {
-        console.log('📥 searchableFields not provided, loading from config...');
         try {
             const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${config.entityType}&section=searchableFields`);
             if (response.ok) {
                 const data = await response.json();
                 if (data.success && data.data && data.data.length > 0) {
                     config.searchableFields = data.data;
-                    console.log('✅ searchableFields loaded from config:', config.searchableFields.length);
                 }
             }
         } catch (e) {
-            console.warn('⚠️ Could not load searchableFields from config');
         }
         
         // אם עדיין ריק - עכשיו זרוק שגיאה
@@ -82,7 +75,6 @@ window.initUniversalSearch = async function(config) {
 
     // ⭐ אם לא קיבלנו displayColumns - נטען מהקונפיג
     if (!config.displayColumns || config.displayColumns.length === 0) {
-        console.log('📥 displayColumns not provided, loading from config...');
         try {
             const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${config.entityType}&section=table_columns`);
             if (response.ok) {
@@ -92,11 +84,9 @@ window.initUniversalSearch = async function(config) {
                     config.displayColumns = data.data
                         .map(col => col.field)
                         .filter(f => f && f !== 'actions' && f !== 'index');
-                    console.log('✅ displayColumns loaded from config:', config.displayColumns.length);
                 }
             }
         } catch (e) {
-            console.warn('⚠️ Could not load displayColumns from config');
         }
     }
 
@@ -108,11 +98,9 @@ window.initUniversalSearch = async function(config) {
                 const data = await response.json();
                 if (data.success && data.data && data.data.placeholder) {
                     config.placeholder = data.data.placeholder;
-                    console.log('✅ placeholder loaded from config');
                 }
             }
         } catch (e) {
-            console.warn('⚠️ Could not load placeholder from config');
         }
     }
     
@@ -161,10 +149,7 @@ window.initUniversalSearch = async function(config) {
     // יצירת instance חדש
     const searchInstance = new UniversalSearch(searchConfig);
     
-    console.log(`✅ UniversalSearch created for ${config.entityType}`);
     
     return searchInstance;
 };
 
-console.log('✅ Universal Search Initializer Loaded (v1.0.0)');
-console.log('💡 Use: initUniversalSearch(config) to create search instances');

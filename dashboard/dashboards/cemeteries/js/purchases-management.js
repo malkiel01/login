@@ -19,7 +19,6 @@
  * - v3.0.0: שיטה זהה לבתי עלמין - UniversalSearch + TableManager
  */
 
-console.log('🚀 purchases-management.js v4.0.1 - Loading...');
 
 // ===================================================================
 // משתנים גלובליים
@@ -42,12 +41,10 @@ let purchasesIsLoadingMore = false;
 // בניית המבנה
 // ===================================================================
 async function buildPurchasesContainer(signal) {
-    console.log('🏗️ Building purchases container...');
     
     let mainContainer = document.querySelector('.main-container');
     
     if (!mainContainer) {
-        console.log('⚠️ main-container not found, creating one...');
         const mainContent = document.querySelector('.main-content');
         mainContainer = document.createElement('div');
         mainContainer.className = 'main-container';
@@ -83,7 +80,6 @@ async function buildPurchasesContainer(signal) {
         </div>
     `;
     
-    console.log('✅ Purchases container built');
 }
 
 
@@ -171,11 +167,9 @@ async function initPurchasesSearch(signal) {
         
         callbacks: {
             onInit: () => {
-                console.log('✅ UniversalSearch initialized for purchases');
             },
             
             onSearch: (query, filters) => {
-                console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()) });
                 
                 // ⭐ כאשר מתבצע חיפוש - הפעל מצב חיפוש
                 purchasesIsSearchMode = true;
@@ -183,11 +177,9 @@ async function initPurchasesSearch(signal) {
             },
 
             onResults: async (data, signal) => {
-                console.log('📦 API returned:', data.pagination?.total || data.data.length, 'purchases');
                 
                 // ⭐ אם נכנסנו למצב חיפוש - הצג רק תוצאות חיפוש
                 if (purchasesIsSearchMode && purchasesCurrentQuery) {
-                    console.log('🔍 Search mode active - showing search results only');
                     purchasesSearchResults = data.data;
                     
                     const tableBody = document.getElementById('tableBody');
@@ -199,8 +191,6 @@ async function initPurchasesSearch(signal) {
                 
                 // ⭐⭐⭐ בדיקה קריטית - אם עברנו לרשומה אחרת, לא להמשיך!
                 if (window.currentType !== 'purchase') {
-                    console.log('⚠️ Type changed during search - aborting purchase results');
-                    console.log(`   Current type is now: ${window.currentType}`);
                     return;
                 }
             },
@@ -211,11 +201,9 @@ async function initPurchasesSearch(signal) {
             },
 
             onEmpty: () => {
-                console.log('📭 No results');
             },
             
             onClear: async () => {
-                console.log('🧹 Search cleared - returning to browse mode');
                 
                 // ⭐ איפוס מצב חיפוש
                 purchasesIsSearchMode = false;
@@ -323,7 +311,6 @@ async function initPurchasesTable(data, totalItems = null, signal = null) {
             
         } catch (error) {
             if (error.name === 'AbortError') {
-                console.log('⚠️ Column config loading aborted - this is expected');
                 return [];
             }
             
@@ -375,19 +362,16 @@ async function initPurchasesTable(data, totalItems = null, signal = null) {
         },
         
         onSort: (field, order) => {
-            console.log(`📊 Sorted by ${field} ${order}`);
             showToast(`ממוין לפי ${field} (${order === 'asc' ? 'עולה' : 'יורד'})`, 'info');
         },
         
         onFilter: (filters) => {
-            console.log('🔍 Active filters:', filters);
             const count = purchasesTable.getFilteredData().length;
             showToast(`נמצאו ${count} תוצאות`, 'info');
         },
 
         // ⭐ לחיצה כפולה - פתיחת כרטיס רכישה
         onRowDoubleClick: (purchase) => {
-            console.log('🛒 Opening purchase card:', purchase.unicId);
             if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
                 FormHandler.openForm('purchaseCard', null, purchase.unicId);
             }
@@ -403,14 +387,9 @@ async function initPurchasesTable(data, totalItems = null, signal = null) {
 // רינדור שורות - עם תמיכה ב-Search Mode
 // ===================================================================
 async function renderPurchasesRows(data, container, pagination = null, signal = null) {
-    console.log(`📝 renderPurchasesRows called with ${data.length} items`);
-    console.log(`   Pagination:`, pagination);
-    console.log(`   purchasesIsSearchMode: ${purchasesIsSearchMode}`);
-    console.log(`   purchasesTable exists: ${!!purchasesTable}`);
     
     // ⭐⭐ במצב חיפוש - הצג תוצאות חיפוש בלי טבלה מורכבת
     if (purchasesIsSearchMode && purchasesCurrentQuery) {
-        console.log('🔍 Rendering search results...');
         
         if (data.length === 0) {
             container.innerHTML = `
@@ -424,23 +403,18 @@ async function renderPurchasesRows(data, container, pagination = null, signal = 
                     </td>
                 </tr>
             `;
-            console.log('   → Empty search results displayed');
             return;
         }
         
         const totalItems = data.length;
-        console.log(`   → Initializing table with ${totalItems} search results`);
         await initPurchasesTable(data, totalItems, signal);
-        console.log('   ✅ Search results table initialized');
         return;
     }
     
     // ⭐⭐ מצב רגיל (Browse) - הצג עם TableManager
     const totalItems = pagination?.total || data.length;
-    console.log(`📊 Total items to display: ${totalItems}`);
 
     if (data.length === 0) {
-        console.log('   → No data to display');
         if (purchasesTable) {
             purchasesTable.setData([]);
         }
@@ -460,26 +434,20 @@ async function renderPurchasesRows(data, container, pagination = null, signal = 
     }
     
     const tableWrapperExists = document.querySelector('.table-wrapper[data-fixed-width="true"]');
-    console.log(`   tableWrapperExists: ${!!tableWrapperExists}`);
     
     if (!tableWrapperExists && purchasesTable) {
-        console.log('🗑️ TableManager DOM was deleted, resetting purchasesTable variable');
         purchasesTable = null;
         window.purchasesTable = null;
     }
 
     // ⭐⭐⭐ אתחול או עדכון טבלה
     if (!purchasesTable || !tableWrapperExists) {
-        console.log(`🆕 Initializing TableManager with ${totalItems} items`);
         await initPurchasesTable(data, totalItems, signal);
-        console.log('   ✅ TableManager initialized');
     } else {
-        console.log(`♻️ Updating TableManager with ${totalItems} items`);
         if (purchasesTable.config) {
             purchasesTable.config.totalItems = totalItems;
         }
         purchasesTable.setData(data);
-        console.log('   ✅ TableManager updated');
     }
 }
 
@@ -505,14 +473,12 @@ function formatPurchaseStatus(status) {
 async function handlePurchaseDoubleClick(purchase) {
     // תמיכה גם באובייקט וגם ב-ID ישיר
     const purchaseId = typeof purchase === 'object' ? (purchase.unicId || purchase.id) : purchase;
-    console.log('🖱️ Double-click on purchase:', purchaseId);
 
     try {
         // פתיחת כרטיס רכישה דרך FormHandler
         if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
             FormHandler.openForm('purchaseCard', null, purchaseId);
         } else {
-            console.warn('⚠️ FormHandler not found - opening edit form');
             if (typeof window.tableRenderer !== 'undefined' && window.tableRenderer.editItem) {
                 window.tableRenderer.editItem(purchaseId);
             } else {
@@ -534,4 +500,3 @@ window.purchasesTable = purchasesTable;
 
 window.purchaseSearch = purchaseSearch;
 
-console.log('✅ purchases-management.js v4.0.1 - Loaded successfully!');

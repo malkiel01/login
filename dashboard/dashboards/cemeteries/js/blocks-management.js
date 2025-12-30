@@ -31,7 +31,6 @@ let currentCemeteryName = null;
 // טעינת גושים (הפונקציה הראשית)
 // ===================================================================
 async function loadBlocks(cemeteryId = null, cemeteryName = null, forceReset = false) {
-    console.log('📋 Loading blocks - v1.2.0 (תוקן איפוס סינון)...');
 
     const signal = OperationManager.start('block');
     
@@ -39,29 +38,24 @@ async function loadBlocks(cemeteryId = null, cemeteryName = null, forceReset = f
     if (cemeteryId === null && cemeteryName === null && !forceReset) {
         // בדוק אם יש סינון קיים מהעבר
         if (window.currentCemeteryId !== null || currentCemeteryId !== null) {
-            console.log('🔄 Resetting filter - called from menu without params');
             currentCemeteryId = null;
             currentCemeteryName = null;
             window.currentCemeteryId = null;
             window.currentCemeteryName = null;
         }
-        console.log('🔍 Cemetery filter: None (showing all blocks)');
     } else if (forceReset) {
-        console.log('🔄 Force reset filter');
         currentCemeteryId = null;
         currentCemeteryName = null;
         window.currentCemeteryId = null;
         window.currentCemeteryName = null;
     } else {
         // יש cemeteryId - עדכן את הסינון
-        console.log('🔄 Setting filter:', { cemeteryId, cemeteryName });
         currentCemeteryId = cemeteryId;
         currentCemeteryName = cemeteryName;
         window.currentCemeteryId = cemeteryId;
         window.currentCemeteryName = cemeteryName;
     }
     
-    console.log('🔍 Final filter:', { cemeteryId: currentCemeteryId, cemeteryName: currentCemeteryName });
     
     window.currentCemeteryId = currentCemeteryId;
     window.currentCemeteryName = currentCemeteryName;
@@ -115,24 +109,20 @@ async function loadBlocks(cemeteryId = null, cemeteryName = null, forceReset = f
     await buildBlocksContainer(signal, cemeteryId, cemeteryName);
 
     if (OperationManager.shouldAbort('block')) {
-        console.log('⚠️ Block operation aborted');
         return;
     }
 
     // ⭐ תמיד השמד את החיפוש הקודם ובנה מחדש
     if (blockSearch && typeof blockSearch.destroy === 'function') {
-        console.log('🗑️ Destroying previous blockSearch instance...');
         blockSearch.destroy();
         blockSearch = null;
         window.blockSearch = null;
     }
     
     // אתחל את UniversalSearch מחדש תמיד
-    console.log('🆕 Creating fresh blockSearch instance...');
     await initBlocksSearch(signal, cemeteryId);
 
     if (OperationManager.shouldAbort('block')) {
-        console.log('⚠️ Block operation aborted');
         return;
     }
 
@@ -146,12 +136,10 @@ async function loadBlocks(cemeteryId = null, cemeteryName = null, forceReset = f
 // ⭐ פונקציה מעודכנת - בניית המבנה של גושים ב-main-container
 // ===================================================================
 async function buildBlocksContainer(signal, cemeteryId = null, cemeteryName = null) {
-    console.log('🏗️ Building blocks container...');
     
     let mainContainer = document.querySelector('.main-container');
     
     if (!mainContainer) {
-        console.log('⚠️ main-container not found, creating one...');
         const mainContent = document.querySelector('.main-content');
         mainContainer = document.createElement('div');
         mainContainer.className = 'main-container';
@@ -167,28 +155,23 @@ async function buildBlocksContainer(signal, cemeteryId = null, cemeteryName = nu
     // ⭐⭐⭐ טעינת כרטיס מלא של בית העלמין במקום indicator פשוט!
     let topSection = '';
     if (cemeteryId && cemeteryName) {
-        console.log('🎴 Creating full cemetery card...');
         
         // נסה ליצור את הכרטיס המלא
         if (typeof createCemeteryCard === 'function') {
             try {
                 topSection = await createCemeteryCard(cemeteryId, signal);
-                console.log('✅ Cemetery card created successfully');
             } catch (error) {
                 // ⭐ טפל ב-AbortError!
                 if (error.name === 'AbortError') {
-                    console.log('⚠️ Cemetery card loading aborted');
                     return; // עצור את הפונקציה
                 }
                 console.error('❌ Error creating cemetery card:', error);
             }
         } else {
-            console.warn('⚠️ createCemeteryCard function not found');
         }
         
         // אם לא הצלחנו ליצור כרטיס, נשתמש ב-fallback פשוט
         if (!topSection) {
-            console.log('⚠️ Using simple filter indicator as fallback');
             topSection = `
                 <div class="filter-indicator" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 20px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                     <div style="display: flex; align-items: center; gap: 10px;">
@@ -208,7 +191,6 @@ async function buildBlocksContainer(signal, cemeteryId = null, cemeteryName = nu
     
     // ⭐ בדיקה - אם הפעולה בוטלה, אל תמשיך!
     if (signal && signal.aborted) {
-        console.log('⚠️ Build blocks container aborted before innerHTML');
         return;
     }
 
@@ -239,7 +221,6 @@ async function buildBlocksContainer(signal, cemeteryId = null, cemeteryName = nu
         </div>
     `;
     
-    console.log('✅ Blocks container built');
 }
 
 // ===================================================================
@@ -260,18 +241,14 @@ async function initBlocksSearch(signal, cemeteryId = null) {
 
         callbacks: {
             onInit: () => {
-                console.log('✅ UniversalSearch initialized for blocks');
             },
             
             onSearch: (query, filters) => {
-                console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()), cemeteryId: currentCemeteryId });
             },
 
             onResults: (data) => {
-                console.log('📦 API returned:', data.pagination?.total || data.data.length, 'blocks');
 
                 if (window.currentType !== 'block') {
-                    console.log('⚠️ Type changed during search - aborting block results');
                     return;
                 }
                 
@@ -281,7 +258,6 @@ async function initBlocksSearch(signal, cemeteryId = null) {
                     currentBlocks = data.data;
                 } else {
                     currentBlocks = [...currentBlocks, ...data.data];
-                    console.log(`📦 Added page ${currentPage}, total now: ${currentBlocks.length}`);
                 }
                 
                 let filteredCount = currentBlocks.length;
@@ -291,7 +267,6 @@ async function initBlocksSearch(signal, cemeteryId = null) {
                         return String(blockCemeteryId) === String(currentCemeteryId);
                     });
                     
-                    console.log('⚠️ Client-side filter:', currentBlocks.length, '→', filteredData.length, 'blocks');
                     
                     currentBlocks = filteredData;
                     filteredCount = filteredData.length;
@@ -308,7 +283,6 @@ async function initBlocksSearch(signal, cemeteryId = null) {
                     }
                 }
                 
-                console.log('📊 Final count:', filteredCount);
             },
                     
             onError: (error) => {
@@ -317,14 +291,12 @@ async function initBlocksSearch(signal, cemeteryId = null) {
             },
 
             onEmpty: () => {
-                console.log('📭 No results');
             }
         }
     };
     
     // ⭐ אם יש סינון לפי בית עלמין, הוסף פרמטר ל-API
     if (cemeteryId) {
-        console.log('🎯 Adding cemeteryId filter to API request:', cemeteryId);
         config.additionalParams = { cemeteryId: cemeteryId };
     }
     
@@ -360,8 +332,6 @@ async function initBlocksTable(data, totalItems = null, signal) {
 
             // ⭐⭐⭐ בדיקה קריטית - אם עברנו לרשומה אחרת, לא להמשיך!
             if (window.currentType !== 'block') {
-                console.log('⚠️ Type changed during search - aborting block results');
-                console.log(`   Current type is now: ${window.currentType}`);
                 return; // ❌ עצור כאן!
             }
 
@@ -443,7 +413,6 @@ async function initBlocksTable(data, totalItems = null, signal) {
         } catch (error) {
             // בדיקה: אם זה ביטול מכוון - זה לא שגיאה
             if (error.name === 'AbortError') {
-                console.log('⚠️ Columns loading aborted');
                 return [];
             }
             console.error('Failed to load columns config:', error);
@@ -456,7 +425,6 @@ async function initBlocksTable(data, totalItems = null, signal) {
 
     // בדוק אם בוטל
     if (signal && signal.aborted) {
-        console.log('⚠️ Block table initialization aborted');
         return null;
     }
 
@@ -471,12 +439,10 @@ async function initBlocksTable(data, totalItems = null, signal) {
         filterable: true,
         
         onSort: (field, order) => {
-            console.log(`📊 Sorted by ${field} ${order}`);
             showToast(`ממוין לפי ${field} (${order === 'asc' ? 'עולה' : 'יורד'})`, 'info');
         },
         
         onFilter: (filters) => {
-            console.log('🔍 Active filters:', filters);
             const count = blocksTable.getFilteredData().length;
             showToast(`נמצאו ${count} תוצאות`, 'info');
         }
@@ -492,7 +458,6 @@ async function initBlocksTable(data, totalItems = null, signal) {
             
             if (scrollHeight - scrollTop - clientHeight < 100) {
                 if (!blockSearch.state.isLoading && blockSearch.state.currentPage < blockSearch.state.totalPages) {
-                    console.log('📥 Reached bottom, loading more data...');
                     
                     const nextPage = blockSearch.state.currentPage + 1;
                     blockSearch.state.currentPage = nextPage;
@@ -511,7 +476,6 @@ async function initBlocksTable(data, totalItems = null, signal) {
 // רינדור שורות הגושים - בדיוק כמו בבתי עלמין
 // ===================================================================
 function renderBlocksRows(data, container, pagination = null, signal = null) {
-    console.log(`📝 renderBlocksRows called with ${data.length} items`);
     
     // ⭐ סינון client-side לפי cemeteryId
     let filteredData = data;
@@ -520,13 +484,11 @@ function renderBlocksRows(data, container, pagination = null, signal = null) {
             block.cemeteryId === currentCemeteryId || 
             block.cemetery_id === currentCemeteryId
         );
-        console.log(`🎯 Client-side filtered: ${data.length} → ${filteredData.length} blocks`);
     }
     
     // ⭐ עדכן את totalItems להיות המספר המסונן!
     const totalItems = filteredData.length;
     
-    console.log(`📊 Total items to display: ${totalItems}`);
 
     if (filteredData.length === 0) {
         if (blocksTable) {
@@ -589,7 +551,6 @@ function renderBlocksRows(data, container, pagination = null, signal = null) {
     
     // ⭐ אם המשתנה קיים אבל ה-DOM נמחק - אפס את המשתנה!
     if (!tableWrapperExists && blocksTable) {
-        console.log('🗑️ TableManager DOM was deleted, resetting blocksTable variable');
         blocksTable = null;
         window.blocksTable = null;
     }
@@ -597,11 +558,9 @@ function renderBlocksRows(data, container, pagination = null, signal = null) {
     // עכשיו בדוק אם צריך לבנות מחדש
     if (!blocksTable || !tableWrapperExists) {
         // אין TableManager או שה-DOM שלו נמחק - בנה מחדש!
-        console.log(`🏗️ Creating new TableManager with ${totalItems} items`);
         initBlocksTable(filteredData, totalItems, signal);
     } else {
         // ⭐ עדכן גם את totalItems ב-TableManager!
-        console.log(`♻️ Updating TableManager with ${totalItems} items`);
         if (blocksTable.config) {
             blocksTable.config.totalItems = totalItems;
         }
@@ -639,7 +598,6 @@ async function loadBlockStats(signal, cemeteryId = null) {
         const result = await response.json();
         
         if (result.success && result.data) {
-            console.log('📊 Block stats:', result.data);
             
             // עדכון מונים בממשק אם קיימים
             if (document.getElementById('totalBlocks')) {
@@ -655,7 +613,6 @@ async function loadBlockStats(signal, cemeteryId = null) {
     } catch (error) {
         // ⭐ בדיקה: אם זה ביטול מכוון - זה לא שגיאה
         if (error.name === 'AbortError') {
-            console.log('⚠️ Block stats loading aborted - this is expected');
             return;
         }
         
@@ -746,7 +703,6 @@ async function refreshData() {
 // ===================================================================
 function checkScrollStatus() {
     if (!blocksTable) {
-        console.log('❌ Table not initialized');
         return;
     }
     
@@ -754,16 +710,9 @@ function checkScrollStatus() {
     const displayed = blocksTable.getDisplayedData().length;
     const remaining = total - displayed;
     
-    console.log('📊 Scroll Status:');
-    console.log(`   Total items: ${total}`);
-    console.log(`   Displayed: ${displayed}`);
-    console.log(`   Remaining: ${remaining}`);
-    console.log(`   Progress: ${Math.round((displayed / total) * 100)}%`);
     
     if (remaining > 0) {
-        console.log(`   🔽 Scroll down to load ${Math.min(blocksTable.config.itemsPerPage, remaining)} more items`);
     } else {
-        console.log('   ✅ All items loaded');
     }
 }
 
@@ -771,15 +720,12 @@ function checkScrollStatus() {
 // פונקציה לטיפול בדאבל-קליק על גוש
 // ===================================================================
 async function handleBlockDoubleClick(blockId, blockName) {
-    console.log('🖱️ Double-click on block:', blockName, blockId);
     
     try {
         // טעינת חלקות
-        console.log('📦 Loading plots for block:', blockName);
         if (typeof loadPlots === 'function') {
             loadPlots(blockId, blockName);
         } else {
-            console.warn('loadPlots function not found');
         }
         
     } catch (error) {

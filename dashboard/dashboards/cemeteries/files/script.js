@@ -649,18 +649,13 @@ function handleCanvasMouseUp() {
 }
 
 function findTextAtPosition(x, y) {
-    console.log('Looking for text at:', x, y);
-    console.log('Current page:', currentPageNum);
-    console.log('Text items:', textItems);
     
     for (let i = textItems.length - 1; i >= 0; i--) {
         const item = textItems[i];
         const itemPage = parseInt(item.page) || 1;
         
-        console.log(`Checking item ${i}: page=${itemPage}, currentPage=${currentPageNum}`);
         
         if (itemPage !== currentPageNum) {
-            console.log('  Skipping - wrong page');
             continue;
         }
         
@@ -698,17 +693,13 @@ function findTextAtPosition(x, y) {
         hitBoxTop = textY - fontSize * 1.2;  // מעל הטקסט (כולל ascenders)
         hitBoxBottom = textY + fontSize * 0.3;  // מתחת לטקסט (כולל descenders)
         
-        console.log(`  HitBox: left=${hitBoxLeft}, right=${hitBoxRight}, top=${hitBoxTop}, bottom=${hitBoxBottom}`);
-        console.log(`  Click: x=${x}, y=${y}`);
         
         if (x >= hitBoxLeft && x <= hitBoxRight &&
             y >= hitBoxTop && y <= hitBoxBottom) {
-            console.log('  ✅ HIT!');
             return item;
         }
     }
     
-    console.log('No text found');
     return null;
 }
 
@@ -856,7 +847,6 @@ async function loadFonts() {
             try {
                 await fontFace.load();
                 document.fonts.add(fontFace);
-                console.log(`✅ Loaded font: ${font.name}`);
             } catch (err) {
                 console.error(`❌ Failed to load font ${font.name}:`, err);
             }
@@ -1280,10 +1270,6 @@ processBtn.addEventListener('click', async () => {
     formData.append('allItems', JSON.stringify(allItems));  // ← הוסף את הסדר המלא
 
     // Debug
-    console.log('INDEX - Sending texts:', textItems);
-    console.log('INDEX - Sending images:', imageItems);
-    console.log('INDEX - Sending allItems:', allItems);
-    console.log('INDEX - JSON:', JSON.stringify(allItems, null, 2));
 
     processBtn.disabled = true;
     processBtn.textContent = 'מעבד...';

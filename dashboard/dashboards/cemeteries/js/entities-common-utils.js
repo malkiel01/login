@@ -13,7 +13,6 @@
  *   ✅ הוספת loadEntityStats
  */
 
-console.log('🚀 entities-common-utils.js v1.1.0 - Loading...');
 
 // ===================================================================
 // 1️⃣ הצגת הודעות Toast למשתמש
@@ -120,7 +119,6 @@ function formatEntityStatus(entityType, status) {
 // ===================================================================
 function checkEntityScrollStatus(tableInstance, entityName = 'Entity') {
     if (!tableInstance) {
-        console.log(`❌ ${entityName} table not initialized`);
         return;
     }
     
@@ -128,16 +126,9 @@ function checkEntityScrollStatus(tableInstance, entityName = 'Entity') {
     const displayed = tableInstance.getDisplayedData().length;
     const remaining = total - displayed;
     
-    console.log(`📊 ${entityName} Scroll Status:`);
-    console.log(`   Total items: ${total}`);
-    console.log(`   Displayed: ${displayed}`);
-    console.log(`   Remaining: ${remaining}`);
-    console.log(`   Progress: ${Math.round((displayed / total) * 100)}%`);
     
     if (remaining > 0) {
-        console.log(`   🔽 Scroll down to load more items`);
     } else {
-        console.log('   ✅ All items loaded');
     }
 }
 
@@ -151,7 +142,6 @@ async function deleteEntity(entityType, entityId) {
     }
     
     // fallback לשיטה הישנה
-    console.warn('⚠️ EntityManager not available, using legacy delete');
     return false;
 }
 
@@ -165,7 +155,6 @@ async function refreshEntityData(entityType) {
     }
     
     // fallback לשיטה הישנה
-    console.warn('⚠️ EntityManager not available, using legacy refresh');
 }
 
 // ===================================================================
@@ -178,7 +167,6 @@ async function loadEntityStats(entityType, signal, parentId = null) {
     }
     
     // fallback לשיטה הישנה
-    console.warn('⚠️ EntityLoader not available, using legacy stats loading');
 }
 
 // ===================================================================
@@ -193,4 +181,3 @@ window.deleteEntity = deleteEntity;
 window.refreshEntityData = refreshEntityData;
 window.loadEntityStats = loadEntityStats;
 
-console.log('✅ entities-common-utils.js v1.1.0 - Loaded successfully!');

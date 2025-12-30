@@ -86,7 +86,6 @@ async function createCemeteryCard(cemeteryId, signal) {
     } catch (error) {
         // ⭐ טפל ב-AbortError!
         if (error.name === 'AbortError') {
-            console.log('⚠️ Cemetery card loading aborted');
             return ''; // החזר string ריק
         }
         
@@ -411,7 +410,6 @@ async function createCustomerCard(customerId) {
         const data = await response.json();
         
         if (!data.success) {
-            console.warn('Failed to fetch customer data');
             return '';
         }
         
@@ -510,7 +508,6 @@ async function createCustomerCard(customerId) {
 }
 
 function printCustomerReport(customerId) {
-    console.log('📄 Printing customer report:', customerId);
     // TODO: implement print
 }
 
@@ -609,22 +606,18 @@ function managePlotRows(plotId) {
 }
 
 function openRow(rowId, rowName) {
-    console.log('Opening row from card:', rowId, rowName);
     // כאן אפשר להוסיף לוגיקה למעבר לשורה
 }
 
 function viewBlockMap(blockId) {
-    console.log('Viewing block map:', blockId);
     // TODO: implement map view
 }
 
 function printCemeteryReport(cemeteryId) {
-    console.log('Printing cemetery report:', cemeteryId);
     // TODO: implement print
 }
 
 function printAreaGraveReport(areaGraveId) {
-    console.log('Printing area grave report:', areaGraveId);
     // TODO: implement print
 }
 

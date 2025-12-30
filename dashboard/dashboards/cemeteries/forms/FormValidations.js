@@ -230,14 +230,12 @@ const FormValidations = {
     init: function(formElement) {
         // ✅ בדוק אם כבר אותחל - מנע אתחול כפול
         if (formElement.dataset.validationsInitialized === 'true') {
-            console.log('⚠️ FormValidations already initialized for', formElement.id);
             return;
         }
         
         const fields = formElement.querySelectorAll('[data-validations]');
         
         if (fields.length === 0) {
-            console.warn('⚠️ No fields with data-validations found in', formElement.id);
             return;
         }
         
@@ -269,7 +267,6 @@ const FormValidations = {
         
         // סמן שהאתחול הושלם
         formElement.dataset.validationsInitialized = 'true';
-        console.log(`✅ FormValidations initialized: ${fields.length} fields with validations`);
     }
 };
 
@@ -282,7 +279,6 @@ document.addEventListener('formReady', function(e) {
     if (form && !form.dataset.validationsInitialized) {
         FormValidations.init(form);
         form.dataset.validationsInitialized = 'true'; // מנע אתחול כפול
-        console.log('✅ FormValidations initialized via event for', e.detail.type);
     }
 });
 
@@ -299,7 +295,6 @@ document.addEventListener('formReady', function(e) {
                         requestAnimationFrame(() => {
                             FormValidations.init(form);
                             form.dataset.validationsInitialized = 'true';
-                            console.log('✅ FormValidations initialized via MutationObserver for', form.id);
                         });
                     }
                 }

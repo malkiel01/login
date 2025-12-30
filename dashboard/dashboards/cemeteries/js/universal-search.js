@@ -98,7 +98,6 @@ class UniversalSearch {
      * אתחול המערכת
      */
     init() {
-        console.log('🔍 UniversalSearch initializing...', this.config);
         
         // ולידציה
         if (!this.validate()) {
@@ -117,7 +116,6 @@ class UniversalSearch {
             this.config.callbacks.onInit(this);
         }
         
-        console.log('✅ UniversalSearch initialized successfully');
     }
     
     /**
@@ -427,7 +425,6 @@ class UniversalSearch {
         
         // ⭐ בטל בקשה קודמת אם קיימת
         if (this.abortController) {
-            console.log('🛑 ביטול בקשת חיפוש קודמת');
             this.abortController.abort();
             this.abortController = null;
         }
@@ -443,13 +440,11 @@ class UniversalSearch {
     async search() {
         // ⭐ אם כבר מחפשים, דלג
         if (this.state.isSearching) {
-            console.log('⚠️ חיפוש כבר רץ, מדלג...');
             return;
         }
         
         // ⭐ בטל בקשה קודמת אם קיימת
         if (this.abortController) {
-            console.log('🛑 ביטול בקשת חיפוש קודמת');
             this.abortController.abort();
         }
         
@@ -469,7 +464,6 @@ class UniversalSearch {
             // בניית payload
             const payload = this.buildSearchPayload();
             
-            console.log('🔎 Searching with payload:', payload);
             
             let response;
             
@@ -529,7 +523,6 @@ class UniversalSearch {
             
             const data = await response.json();
             
-            console.log('📦 Search results:', data);
             
             // ⭐ עדכן pagination state - כאן! אחרי fetch!
             if (data.pagination) {
@@ -567,7 +560,6 @@ class UniversalSearch {
         } catch (error) {
             // ⭐ אם זה AbortError, זה לא באמת שגיאה!
             if (error.name === 'AbortError') {
-                console.log('⚠️ חיפוש בוטל');
                 return;
             }
             
@@ -648,7 +640,6 @@ class UniversalSearch {
             }
         });
         
-        console.log('🎯 Active filters:', this.state.activeFilters);
         
         this.search();
     }
@@ -826,7 +817,6 @@ class UniversalSearch {
     addFilter(field, matchType, value, valueEnd = null) {
         const fieldConfig = this.config.searchableFields.find(f => f.name === field);
         if (!fieldConfig) {
-            console.warn(`Field ${field} not found in searchableFields`);
             return;
         }
         

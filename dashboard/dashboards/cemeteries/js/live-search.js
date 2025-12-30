@@ -203,4 +203,3 @@ class LiveSearch {
 // Export to global scope
 window.LiveSearch = LiveSearch;
 
-console.log('✅ LiveSearch class loaded successfully!');

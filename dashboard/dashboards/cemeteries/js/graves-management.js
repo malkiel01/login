@@ -11,7 +11,6 @@
  * - v1.5.4: 🐛 תיקון שתי בעיות קריטיות
  */
 
-console.log('🚀 graves-management.js v1.6.0 - Loading...');
 
 // ===================================================================
 // משתנים גלובליים
@@ -38,12 +37,10 @@ let gravesIsLoadingMore = false;
 // בניית המבנה
 // ===================================================================
 async function buildGravesContainer(signal, areaGraveId = null, areaGraveName = null) {
-    console.log('🏗️ Building area graves container...');
     
     let mainContainer = document.querySelector('.main-container');
     
     if (!mainContainer) {
-        console.log('⚠️ main-container not found, creating one...');
         const mainContent = document.querySelector('.main-content');
         mainContainer = document.createElement('div');
         mainContainer.className = 'main-container';
@@ -59,28 +56,23 @@ async function buildGravesContainer(signal, areaGraveId = null, areaGraveName = 
     // ⭐⭐⭐ טעינת כרטיס מלא במקום indicator פשוט!
     let topSection = '';
     if (areaGraveId && areaGraveName) {
-        console.log('🎴 Creating full areaGrave card...');
         
         // נסה ליצור את הכרטיס המלא
         if (typeof createAreaGraveCard === 'function') {
             try {
                 topSection = await createAreaGraveCard(areaGraveId, signal);
-                console.log('✅ AreaGrave card created successfully');
             } catch (error) {
                 // בדיקה: אם זה ביטול מכוון - זה לא שגיאה
                 if (error.name === 'AbortError') {
-                    console.log('⚠️ AreaGrave card loading aborted');
                     return;
                 }
                 console.error('❌ Error creating block card:', error);
             }
         } else {
-            console.warn('⚠️ createAreaGraveCard function not found');
         }
         
         // אם לא הצלחנו ליצור כרטיס, נשתמש ב-fallback פשוט
         if (!topSection) {
-            console.log('⚠️ Using simple filter indicator as fallback');
             topSection = `
                 <div class="filter-indicator" style="background: linear-gradient(135deg, #FC466B 0%, #3F5EFB 100%); color: white; padding: 12px 20px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                     <div style="display: flex; align-items: center; gap: 10px;">
@@ -100,7 +92,6 @@ async function buildGravesContainer(signal, areaGraveId = null, areaGraveName = 
 
     // ⭐ בדיקה - אם הפעולה בוטלה, אל תמשיך!
     if (signal && signal.aborted) {
-        console.log('⚠️ Build graves container aborted before innerHTML');
         return;
     }
     
@@ -129,14 +120,12 @@ async function buildGravesContainer(signal, areaGraveId = null, areaGraveName = 
         </div>
     `;
   
-    console.log('✅ Area graves container built');
 }
 
 // ===================================================================
 // אתחול UniversalSearch - עם Pagination!
 // ===================================================================
 async function initGravesSearch(signal, areaGraveId) {
-    console.log('🔍 אתחול חיפוש שורות קבר...');
     
     // ⭐ טוען searchableFields מהשרת
     let searchableFields = [];
@@ -199,12 +188,10 @@ async function initGravesSearch(signal, areaGraveId) {
         callbacks: {
             // ⭐ לפני חיפוש - נקה הכל והצג spinner
             onSearch: (query, filters) => {
-                console.log('🔍 מתחיל חיפוש:', query);
                 
                 // ⭐ מחק את TableManager הישן
                 const existingWrapper = document.querySelector('.table-wrapper[data-table-manager]');
                 if (existingWrapper) {
-                    console.log('🗑️ מוחק table-wrapper קיים');
                     existingWrapper.remove();
                 }
                 
@@ -240,7 +227,6 @@ async function initGravesSearch(signal, areaGraveId) {
             
             // ⭐ כשנתונים נטענו
             onDataLoaded: (response) => {
-                console.log('✅ נתונים נטענו:', response.data.length);
                 
                 // עדכון מונה כולל ב-TableManager
                 if (window.gravesTable && response.pagination) {
@@ -250,7 +236,6 @@ async function initGravesSearch(signal, areaGraveId) {
             
             // ⭐ כשמנקים חיפוש
             onClear: () => {
-                console.log('🧹 מנקה חיפוש...');
                 
                 gravesIsSearchMode = false;
                 gravesCurrentQuery = '';
@@ -390,7 +375,6 @@ async function initGravesTable(data, totalItems = null, signal) {
         } catch (error) {
             // בדיקה: אם זה ביטול מכוון - זה לא שגיאה
             if (error.name === 'AbortError') {
-                console.log('⚠️ Columns loading aborted');
                 return [];
             }
             console.error('Failed to load columns config:', error);
@@ -403,7 +387,6 @@ async function initGravesTable(data, totalItems = null, signal) {
 
     // בדוק אם בוטל
     if (signal && signal.aborted) {
-        console.log('⚠️ Grave table initialization aborted');
         return null;
     }
 
@@ -460,12 +443,10 @@ async function initGravesTable(data, totalItems = null, signal) {
     
 
         onSort: (field, order) => {
-            console.log(`📊 Sorted by ${field} ${order}`);
             showToast(`ממוין לפי ${field} (${order === 'asc' ? 'עולה' : 'יורד'})`, 'info');
         },
         
         onFilter: (filters) => {
-            console.log('🔍 Active filters:', filters);
             const count = gravesTable.getFilteredData().length;
             showToast(`נמצאו ${count} תוצאות`, 'info');
         }
@@ -499,10 +480,6 @@ function renderGravesRows(data, container, pagination = null, signal = null) {
     // ⭐ עדכן את totalItems מה-pagination (סה"כ במערכת, לא רק מה שנטען!)
     const totalItems = pagination?.totalAll || pagination?.total || filteredData.length;
     
-    console.log('🔍 [DEBUG renderGravesRows]');
-    console.log('  pagination:', pagination);
-    console.log('  totalItems calculated:', totalItems);
-    console.log('  filteredData.length:', filteredData.length);
 
     if (filteredData.length === 0) {
         if (gravesTable) {
@@ -565,17 +542,14 @@ function renderGravesRows(data, container, pagination = null, signal = null) {
     
     // ⭐ אם המשתנה קיים אבל ה-DOM נמחק - אפס את המשתנה!
     if (!tableWrapperExists && gravesTable) {
-        console.log('⚠️ TableManager DOM missing, resetting variable');
         gravesTable = null;
         window.gravesTable = null;
     }
     
     // עכשיו בדוק אם צריך לבנות מחדש
     if (!gravesTable || !tableWrapperExists) {
-        console.log('🆕 Creating new TableManager');
         initGravesTable(filteredData, totalItems, signal);
     } else {
-        console.log('♻️ Updating existing TableManager');
         if (gravesTable.config) {
             gravesTable.config.totalItems = totalItems;
         }
@@ -623,7 +597,6 @@ async function deleteGrave(graveId) {
 // ===================================================================
 function handleGraveDoubleClick(graveId, graveName) {
 // window.handleGraveDoubleClick = function(graveId, graveName) {
-    console.log('🖱️ Double-click on grave:', graveId, graveName);
     
     // פתיחת כרטיס הקבר החדש דרך FormHandler
     if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
@@ -648,4 +621,3 @@ window.graveSearch = graveSearch;
 
 window.loadGravesBrowseData = loadGravesBrowseData;
 
-console.log('✅ graves-management.js v1.6.0 - Loaded successfully! (No conflicts with area-graves)');

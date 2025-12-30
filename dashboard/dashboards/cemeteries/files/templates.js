@@ -125,7 +125,6 @@ async function openTestModal(templateId) {
         const response = await fetch(`get_templates.php?id=${templateId}`);
         const data = await response.json();
         
-        console.log('Loading template:', data);
         
         if (!data.success || !data.template) {
             alert('שגיאה בטעינת התבנית');
@@ -244,7 +243,6 @@ document.getElementById('generateTestBtn').addEventListener('click', async () =>
         formData.append('images', JSON.stringify(imagesOnly));
         formData.append('allItems', JSON.stringify(updatedItems));
         
-        console.log('Sending to server:', {
             texts: textsOnly.length,
             images: imagesOnly.length,
             allItems: updatedItems.length
@@ -497,7 +495,6 @@ async function loadFonts() {
             try {
                 await fontFace.load();
                 document.fonts.add(fontFace);
-                console.log(`✅ Loaded font: ${font.name}`);
             } catch (err) {
                 console.error(`❌ Failed to load font ${font.name}:`, err);
             }

@@ -22,11 +22,9 @@ window.SortableSections = {
     init: function(containerId, storagePrefix) {
         const container = document.getElementById(containerId);
         if (!container) {
-            console.warn('SortableSections: Container not found:', containerId);
             return;
         }
 
-        console.log('🔧 [SortableSections] אתחול:', containerId, storagePrefix);
 
         // אתחול כל הרכיבים
         this.initToggle(container, storagePrefix);
@@ -101,7 +99,6 @@ window.SortableSections = {
                 e.stopPropagation();
                 e.stopImmediatePropagation();
 
-                console.log('🔘 [Toggle] לחיצה על כפתור');
 
                 const section = btn.closest('.sortable-section');
                 if (section) {
@@ -123,7 +120,6 @@ window.SortableSections = {
                         }
                     }
                     localStorage.setItem(storageKey, JSON.stringify(collapsedSections));
-                    console.log('✅ [Toggle] סקשן', sectionId, section.classList.contains('collapsed') ? 'מצומצם' : 'מורחב');
                 }
             }
 
@@ -142,7 +138,6 @@ window.SortableSections = {
             }, { passive: false, capture: true });
         });
 
-        console.log('✅ [SortableSections] אתחול', buttons.length, 'כפתורי toggle');
     },
 
     /**
@@ -201,7 +196,6 @@ window.SortableSections = {
             } catch (e) {}
         }
 
-        console.log('✅ [SortableSections] SortableJS מאותחל');
     },
 
     /**
@@ -291,7 +285,6 @@ window.SortableSections = {
             });
         });
 
-        console.log('✅ [SortableSections] אתחול resize ל-', sections.length, 'סקשנים');
     },
 
     /**
@@ -313,4 +306,3 @@ window.toggleSection = function(btn, event) {
     SortableSections.toggleSection(btn, event);
 };
 
-console.log('📦 [SortableSections] קובץ נטען');

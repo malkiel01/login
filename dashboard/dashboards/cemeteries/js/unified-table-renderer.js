@@ -311,7 +311,6 @@ class UnifiedTableRenderer {
         const type = window.currentType || this.currentType;
         const parentId = window.currentParentId;
         
-        console.log('openAddModal - type:', type, 'parentId:', parentId);
 
         // לקוחות ורכישות לא צריכים הורה
         const typesWithoutParent = ['cemetery', 'payment', 'customer', 'purchase', 'residency', 'burial'];
@@ -322,7 +321,6 @@ class UnifiedTableRenderer {
         }
         
         if (typesWithoutParent.includes(type)) {
-            console.log('About to call FormHandler.openForm for burial');
             
             // בדוק אם FormHandler קיים
             if (typeof FormHandler === 'undefined') {
@@ -337,9 +335,7 @@ class UnifiedTableRenderer {
                 return;
             }
             
-            console.log('FormHandler exists, calling openForm...');
             FormHandler.openForm(type, null, null);
-            console.log('FormHandler.openForm was called');
             return;
         }
 
@@ -503,7 +499,6 @@ class UnifiedTableRenderer {
         const type = window.currentType || this.currentType;
         const parentId = window.currentParentId;
         
-        console.log('addItem - type:', type, 'parentId:', parentId);
 
         // לקוחות ורכישות לא צריכים הורה
         const typesWithoutParent = ['cemetery', 'payment', 'customer', 'purchase', 'residency', 'burial'];
@@ -521,12 +516,10 @@ class UnifiedTableRenderer {
             return;
         }
         
-        console.log('Opening form directly...');
         FormHandler.openForm(type, parentId, null);
     }
 
     async openParentSelectionDialog(type) {
-        console.log('Opening parent selection dialog for type:', type);
         
         const parentType = this.getParentType(type);
         
@@ -722,11 +715,6 @@ class UnifiedTableRenderer {
         // שלב 1: זיהוי הסוג - תחילה ננסה לפי ה-ID, ואז לפי currentType
         let type = this.detectTypeFromId(itemId) || window.currentType || this.currentType;
 
-        console.log('===============================================');
-        console.log('🔍 [editItem] START');
-        console.log('   Type detected:', type);
-        console.log('   Item ID:', itemId);
-        console.log('===============================================');
         
         if (!type) {
             console.error('❌ ERROR: No type defined!');
@@ -734,7 +722,6 @@ class UnifiedTableRenderer {
             return;
         }
         
-        console.log(`🔍 Detected type: ${type} for ID: ${itemId}`);
         
         try {
             const apiFile = this.getApiFile(type);
@@ -745,7 +732,6 @@ class UnifiedTableRenderer {
             }
 
             const url = `${apiFile}?action=get&id=${itemId}`;
-            console.log(`📡 [editItem] Fetching from: ${url}`);
             const response = await fetch(url);
             
             if (!response.ok) {
@@ -765,15 +751,8 @@ class UnifiedTableRenderer {
             
             const data = await response.json();
             
-            console.log('===============================================');
-            console.log('📦 [editItem] API Response:');
-            console.log('   Success:', data.success);
             if (data.data) {
-                console.log('   Returned unicId:', data.data.unicId);
-                console.log('   Returned customerName:', data.data.customerName);
-                console.log('   Full data:', data.data);
             }
-            console.log('===============================================');
             
             if (!data.success) {
                 console.error('❌ ERROR: API returned success=false');
@@ -790,14 +769,6 @@ class UnifiedTableRenderer {
             const parentId = this.extractParentId(item, type);
             const parentName = this.extractParentName(item, type);
             
-            console.log('===============================================');
-            console.log('📋 [editItem] Opening Form:');
-            console.log('   Type:', type);
-            console.log('   ParentId:', parentId);
-            console.log('   ItemId:', itemId);
-            console.log('   ParentName:', parentName);
-            console.log('   Item unicId:', item.unicId);
-            console.log('===============================================');
             
             if (typeof FormHandler?.openForm !== 'function') {
                 console.error('❌ ERROR: FormHandler.openForm is not available');
@@ -842,12 +813,10 @@ class UnifiedTableRenderer {
         // בדיקה לפי prefix
         for (const [prefix, type] of Object.entries(prefixMap)) {
             if (itemId.startsWith(prefix)) {
-                console.log(`✅ Detected type '${type}' from ID prefix '${prefix}'`);
                 return type;
             }
         }
         
-        console.warn(`⚠️ Could not detect type from ID: ${itemId}`);
         return null;
     }
 
@@ -1014,13 +983,11 @@ window.tableRenderer = new UnifiedTableRenderer();
  * בניית המבנה הבסיסי של היררכיה ב-main-container
  */
 function buildHierarchyContainer() {
-    console.log('🏗️ Building hierarchy container...');
     
     // מצא את main-container (צריך להיות קיים אחרי clear)
     let mainContainer = document.querySelector('.main-container');
     
     if (!mainContainer) {
-        console.log('⚠️ main-container not found, creating one...');
         const mainContent = document.querySelector('.main-content');
         mainContainer = document.createElement('div');
         mainContainer.className = 'main-container';
@@ -1055,7 +1022,6 @@ function buildHierarchyContainer() {
         </div>
     `;
     
-    console.log('✅ Hierarchy container built');
 }
 
 // ==========================================
@@ -1063,7 +1029,6 @@ function buildHierarchyContainer() {
 // ==========================================
 
 window.openCemetery = function(cemeteryId, cemeteryName) {
-    console.log('🏛️ Opening cemetery:', cemeteryId, cemeteryName);
     
     window.selectedItems.cemetery = { id: cemeteryId, name: cemeteryName };
     window.currentType = 'block';
@@ -1078,7 +1043,6 @@ window.openCemetery = function(cemeteryId, cemeteryName) {
 };
 
 window.openBlock = function(blockId, blockName) {
-    console.log('📦 Opening block:', blockId, blockName);
     
     window.selectedItems.block = { id: blockId, name: blockName };
     window.currentType = 'plot';
@@ -1093,7 +1057,6 @@ window.openBlock = function(blockId, blockName) {
 };
 
 window.openPlot = function(plotId, plotName) {
-    console.log('📋 Opening plot:', plotId, plotName);
     
     window.selectedItems.plot = { id: plotId, name: plotName };
     window.currentType = 'areaGrave';
@@ -1108,7 +1071,6 @@ window.openPlot = function(plotId, plotName) {
 };
 
 window.openAreaGrave = function(areaGraveId, areaGraveName) {
-    console.log('🏘️ Opening area grave:', areaGraveId, areaGraveName);
     
     window.selectedItems.areaGrave = { id: areaGraveId, name: areaGraveName };
     window.currentType = 'grave';
@@ -1123,7 +1085,6 @@ window.openAreaGrave = function(areaGraveId, areaGraveName) {
 };
 
 window.viewGraveDetails = function(graveId) {
-    console.log('⚰️ Viewing grave details:', graveId);
     // כאן אפשר להציג מודל או כרטיס עם פרטי הקבר
     alert('פרטי קבר: ' + graveId);
 };
@@ -1133,7 +1094,6 @@ window.viewGraveDetails = function(graveId) {
 // ==========================================
 
 window.loadBlocksForCemetery = async function(cemeteryId) {
-    console.log('📦 Loading blocks for cemetery:', cemeteryId);
     window.currentCemeteryId = cemeteryId;
     window.currentType = 'block';
     window.currentParentId = cemeteryId;
@@ -1147,7 +1107,6 @@ window.loadBlocksForCemetery = async function(cemeteryId) {
 };
 
 window.loadPlotsForBlock = async function(blockId) {
-    console.log('📋 Loading plots for block:', blockId);
     window.currentBlockId = blockId;
     window.currentType = 'plot';
     window.currentParentId = blockId;
@@ -1161,7 +1120,6 @@ window.loadPlotsForBlock = async function(blockId) {
 };
 
 window.loadAreaGravesForPlot = async function(plotId) {
-    console.log('🏘️ Loading area graves for plot:', plotId);
     window.currentPlotId = plotId;
     window.currentType = 'areaGrave';
     window.currentParentId = plotId;
@@ -1175,7 +1133,6 @@ window.loadAreaGravesForPlot = async function(plotId) {
 };
 
 window.loadGravesForAreaGrave = async function(areaGraveId) {
-    console.log('⚰️ Loading graves for area grave:', areaGraveId);
     window.currentAreaGraveId = areaGraveId;
     window.currentType = 'grave';
     window.currentParentId = areaGraveId;

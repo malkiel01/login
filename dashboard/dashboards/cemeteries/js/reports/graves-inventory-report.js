@@ -33,7 +33,6 @@ const GravesInventoryReport = (() => {
             reportConfig = config.gravesInventory;
             return reportConfig;
         } catch (error) {
-            console.warn('⚠️ שימוש בקונפיגורציה ברירת מחדל:', error.message);
             // קונפיגורציה ברירת מחדל - לא צריך קובץ חיצוני
             reportConfig = getDefaultConfig();
             return reportConfig;

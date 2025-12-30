@@ -13,7 +13,6 @@
  * - v1.4.0: תיקון קריטי - שמות ייחודיים לכל המשתנים הגלובליים
  */
 
-console.log('🚀 plots-management.js v2.0.0 - Loading...');
 
 // ===================================================================
 // משתנים גלובליים
@@ -40,12 +39,10 @@ let plotsIsLoadingMore = false;
 // ⭐ פונקציה מעודכנת - בניית המבנה של חלקות ב-main-container
 // ===================================================================
 async function buildPlotsContainer(signal, blockId = null, blockName = null) {
-    console.log('🏗️ Building plots container...');
     
     let mainContainer = document.querySelector('.main-container');
     
     if (!mainContainer) {
-        console.log('⚠️ main-container not found, creating one...');
         const mainContent = document.querySelector('.main-content');
         mainContainer = document.createElement('div');
         mainContainer.className = 'main-container';
@@ -61,28 +58,23 @@ async function buildPlotsContainer(signal, blockId = null, blockName = null) {
     // ⭐⭐⭐ טעינת כרטיס מלא של הגוש במקום indicator פשוט!
     let topSection = '';
     if (blockId && blockName) {
-        console.log('🎴 Creating full block card...');
         
         // נסה ליצור את הכרטיס המלא
         if (typeof createBlockCard === 'function') {
             try {
                 topSection = await createBlockCard(blockId, signal);
-                console.log('✅ Block card created successfully');
             } catch (error) {
                 // בדיקה: אם זה ביטול מכוון - זה לא שגיאה
                 if (error.name === 'AbortError') {
-                    console.log('⚠️ Block card loading aborted');
                     return;
                 }
                 console.error('❌ Error creating block card:', error);
             }
         } else {
-            console.warn('⚠️ createBlockCard function not found');
         }
         
         // אם לא הצלחנו ליצור כרטיס, נשתמש ב-fallback פשוט
         if (!topSection) {
-            console.log('⚠️ Using simple filter indicator as fallback');
             topSection = `
                 <div class="filter-indicator" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 20px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                     <div style="display: flex; align-items: center; gap: 10px;">
@@ -102,7 +94,6 @@ async function buildPlotsContainer(signal, blockId = null, blockName = null) {
 
     // ⭐ בדיקה - אם הפעולה בוטלה, אל תמשיך!
     if (signal && signal.aborted) {
-        console.log('⚠️ Build plots container aborted before innerHTML');
         return;
     }
     
@@ -133,7 +124,6 @@ async function buildPlotsContainer(signal, blockId = null, blockName = null) {
         </div>
     `;
     
-    console.log('✅ Plots container built');
 }
 
 // ===================================================================
@@ -210,20 +200,15 @@ async function initPlotsSearch2(signal, blockId = null) {
 
        callbacks: {
            onInit: () => {
-               console.log('✅ UniversalSearch initialized for plots');
            },
            
            onSearch: (query, filters) => {
-               console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()), blockId: plotsFilterBlockId });
            },
 
             onResults: (data) => {
-                console.log('📦 API returned:', data.pagination?.total || data.data.length, 'plots');
                 
                 // ⭐⭐⭐ בדיקה קריטית - אם עברנו לרשומה אחרת, לא להמשיך!
                 if (window.currentType !== 'plot') {
-                    console.log('⚠️ Type changed during search - aborting plot results');
-                    console.log(`   Current type is now: ${window.currentType}`);
                     return; // ❌ עצור כאן!
                 }
 
@@ -236,7 +221,6 @@ async function initPlotsSearch2(signal, blockId = null) {
                 } else {
                     // דפים נוספים - הוסף לקיימים
                     currentPlots = [...currentPlots, ...data.data];
-                    console.log(`📦 Added page ${currentPage}, total now: ${currentPlots.length}`);
                 }
                 
                 // ⭐ אם יש סינון - סנן את currentPlots!
@@ -247,7 +231,6 @@ async function initPlotsSearch2(signal, blockId = null) {
                         return String(plotBlockId) === String(plotsFilterBlockId);
                     });
                     
-                    console.log('⚠️ Client-side filter:', currentPlots.length, '→', filteredData.length, 'plots');
                     
                     // ⭐ עדכן את currentPlots
                     currentPlots = filteredData;
@@ -267,7 +250,6 @@ async function initPlotsSearch2(signal, blockId = null) {
                     }
                 }
                 
-                console.log('📊 Final count:', filteredCount);
             },
            
            onError: (error) => {
@@ -276,14 +258,12 @@ async function initPlotsSearch2(signal, blockId = null) {
            },
 
            onEmpty: () => {
-               console.log('📭 No results');
            }
        }
     };
     
     // ⭐ אם יש סינון לפי גוש, הוסף פרמטר ל-API
     if (blockId) {
-        console.log('🎯 Adding blockId filter to API request:', blockId);
         config.additionalParams = { blockId: blockId };
     }
     
@@ -309,18 +289,14 @@ async function initPlotsSearch(signal, blockId = null) {
 
         callbacks: {
             onInit: () => {
-                console.log('✅ UniversalSearch initialized for plots');
             },
             
             onSearch: (query, filters) => {
-                console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()), blockId: plotsFilterBlockId });
             },
 
             onResults: (data) => {
-                console.log('📦 API returned:', data.pagination?.total || data.data.length, 'plots');
                 
                 if (window.currentType !== 'plot') {
-                    console.log('⚠️ Type changed during search - aborting plot results');
                     return;
                 }
 
@@ -330,7 +306,6 @@ async function initPlotsSearch(signal, blockId = null) {
                     currentPlots = data.data;
                 } else {
                     currentPlots = [...currentPlots, ...data.data];
-                    console.log(`📦 Added page ${currentPage}, total now: ${currentPlots.length}`);
                 }
                 
                 let filteredCount = currentPlots.length;
@@ -340,7 +315,6 @@ async function initPlotsSearch(signal, blockId = null) {
                         return String(plotBlockId) === String(plotsFilterBlockId);
                     });
                     
-                    console.log('⚠️ Client-side filter:', currentPlots.length, '→', filteredData.length, 'plots');
                     
                     currentPlots = filteredData;
                     filteredCount = filteredData.length;
@@ -357,7 +331,6 @@ async function initPlotsSearch(signal, blockId = null) {
                     }
                 }
                 
-                console.log('📊 Final count:', filteredCount);
             },
             
             onError: (error) => {
@@ -366,14 +339,12 @@ async function initPlotsSearch(signal, blockId = null) {
             },
 
             onEmpty: () => {
-                console.log('📭 No results');
             }
         }
     };
     
     // ⭐ אם יש סינון לפי גוש, הוסף פרמטר ל-API
     if (blockId) {
-        console.log('🎯 Adding blockId filter to API request:', blockId);
         config.additionalParams = { blockId: blockId };
     }
     
@@ -485,7 +456,6 @@ async function initPlotsTable(data, totalItems = null, signal) {
         } catch (error) {
             // בדיקה: אם זה ביטול מכוון - זה לא שגיאה
             if (error.name === 'AbortError') {
-                console.log('⚠️ Columns loading aborted');
                 return [];
             }
             console.error('Failed to load columns config:', error);
@@ -498,7 +468,6 @@ async function initPlotsTable(data, totalItems = null, signal) {
 
     // בדוק אם בוטל
     if (signal && signal.aborted) {
-        console.log('⚠️ Block table initialization aborted');
         return null;
     }
 
@@ -514,12 +483,10 @@ async function initPlotsTable(data, totalItems = null, signal) {
         filterable: true,
         
         onSort: (field, order) => {
-            console.log(`📊 Sorted by ${field} ${order}`);
             showToast(`ממוין לפי ${field} (${order === 'asc' ? 'עולה' : 'יורד'})`, 'info');
         },
         
         onFilter: (filters) => {
-            console.log('🔍 Active filters:', filters);
             const count = plotsTable.getFilteredData().length;
             showToast(`נמצאו ${count} תוצאות`, 'info');
         }
@@ -535,7 +502,6 @@ async function initPlotsTable(data, totalItems = null, signal) {
             
             if (scrollHeight - scrollTop - clientHeight < 100) {
                 if (!plotSearch.state.isLoading && plotSearch.state.currentPage < plotSearch.state.totalPages) {
-                    console.log('📥 Reached bottom, loading more data...');
                     
                     const nextPage = plotSearch.state.currentPage + 1;
                     plotSearch.state.currentPage = nextPage;
@@ -554,7 +520,6 @@ async function initPlotsTable(data, totalItems = null, signal) {
 // רינדור שורות החלקות - עם הודעה מותאמת לגוש ריק
 // ===================================================================
 function renderPlotsRows(data, container, pagination = null, signal = null) {
-    console.log(`📝 renderPlotsRows called with ${data.length} items`);
     
     // ⭐ סינון client-side לפי blockId
     let filteredData = data;
@@ -563,13 +528,11 @@ function renderPlotsRows(data, container, pagination = null, signal = null) {
             plot.blockId === plotsFilterBlockId || 
             plot.block_id === plotsFilterBlockId
         );
-        console.log(`🎯 Client-side filtered: ${data.length} → ${filteredData.length} plots`);
     }
     
     // ⭐ עדכן את totalItems להיות המספר המסונן!
     const totalItems = filteredData.length;
     
-    console.log(`📊 Total items to display: ${totalItems}`);
 
     if (filteredData.length === 0) {
         if (plotsTable) {
@@ -632,7 +595,6 @@ function renderPlotsRows(data, container, pagination = null, signal = null) {
     
     // ⭐ אם המשתנה קיים אבל ה-DOM נמחק - אפס את המשתנה!
     if (!tableWrapperExists && plotsTable) {
-        console.log('🗑️ TableManager DOM was deleted, resetting plotsTable variable');
         plotsTable = null;
         window.plotsTable = null;
     }
@@ -640,11 +602,9 @@ function renderPlotsRows(data, container, pagination = null, signal = null) {
     // עכשיו בדוק אם צריך לבנות מחדש
     if (!plotsTable || !tableWrapperExists) {
         // אין TableManager או שה-DOM שלו נמחק - בנה מחדש!
-        console.log(`🏗️ Creating new TableManager with ${totalItems} items`);
         initPlotsTable(filteredData, totalItems, signal);
     } else {
         // ⭐ עדכן גם את totalItems ב-TableManager!
-        console.log(`♻️ Updating TableManager with ${totalItems} items`);
         if (plotsTable.config) {
             plotsTable.config.totalItems = totalItems;
         }
@@ -663,7 +623,6 @@ function renderPlotsRows(data, container, pagination = null, signal = null) {
 // ⭐ פונקציה מתוקנת - טיפול בדאבל-קליק על חלקה
 // ===================================================
 async function handlePlotDoubleClick(plotId, plotName) {
-    console.log('🖱️ Double-click on plot:', plotName, plotId);
     
     try {
         // // 1. יצירת והצגת כרטיס ✅
@@ -675,11 +634,9 @@ async function handlePlotDoubleClick(plotId, plotName) {
         // }
         
         // 2. טעינת אחוזות קבר (נכדים דרך השורות) ✅ שינוי!
-        console.log('🏘️ Loading area graves for plot:', plotName);
         if (typeof loadAreaGraves === 'function') {
             loadAreaGraves(plotId, plotName);
         } else {
-            console.warn('loadAreaGraves function not found');
         }
         
     } catch (error) {
@@ -704,4 +661,3 @@ window.plotSearch = plotSearch;
 
 window.loadPlotsBrowseData = loadPlotsBrowseData;
 
-console.log('✅ plots-management.js v2.0.0 - Loaded successfully!');

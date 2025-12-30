@@ -11,7 +11,6 @@ let filterByCountryId = null; // לסינון לפי מדינה
 
 // טעינת ערים - פונקציה ראשית
 async function loadCities(countryId = null) {
-    console.log('Loading cities...', countryId ? `for country: ${countryId}` : 'all');
 
     setActiveMenuItem('cityItem'); // ✅ הוסף
     
@@ -287,7 +286,6 @@ function displayCitiesInTable(cities) {
 
 // פתיחת טופס הוספת עיר
 function openAddCity(countryId = null) {
-    console.log('Opening add city form', countryId ? `with country: ${countryId}` : 'without country');
     
     window.currentType = 'city';
     window.currentParentId = countryId;
@@ -308,7 +306,6 @@ function openAddCity(countryId = null) {
 
 // עריכת עיר
 async function editCity(id) {
-    console.log('Editing city:', id);
     
     window.currentType = 'city';
     
@@ -560,4 +557,3 @@ function showToast(type, message) {
     }, 3000);
 }
 
-console.log('Cities Management Module Loaded');

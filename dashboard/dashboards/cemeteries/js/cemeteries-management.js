@@ -27,7 +27,6 @@ let editingCemeteryId = null;
 // טעינת בתי עלמין (הפונקציה הראשית)
 // ===================================================================
 async function loadCemeteries() {
-    console.log('📋 Loading cemeteries - v5.1.0 (תוקן קונפליקט שמות)...');
 
     // ⭐ התחל פעולה חדשה - זה יבטל אוטומטית כל פעולה קודמת!
     const signal = OperationManager.start('cemetery');
@@ -80,25 +79,21 @@ async function loadCemeteries() {
 
     // ⭐ בדיקה - אם השתנה currentType, עצור!
     if (OperationManager.shouldAbort('cemetery')) {
-        console.log('⚠️ Cemetery operation aborted');
         return;
     }
     
     // ⭐ תמיד השמד את החיפוש הקודם ובנה מחדש
     if (cemeterySearch && typeof cemeterySearch.destroy === 'function') {
-        console.log('🗑️ Destroying previous cemeterySearch instance...');
         cemeterySearch.destroy();
         cemeterySearch = null;
         window.cemeterySearch = null;
     }
 
     // אתחל את UniversalSearch מחדש תמיד
-    console.log('🆕 Creating fresh cemeterySearch instance...');
     await initCemeteriesSearch(signal);
     
     // ⭐ בדיקה נוספת
     if (OperationManager.shouldAbort('cemetery')) {
-        console.log('⚠️ Cemetery operation aborted');
         return;
     }
     
@@ -112,13 +107,11 @@ async function loadCemeteries() {
 // ⭐ פונקציה חדשה - בניית המבנה של בתי עלמין ב-main-container
 // ===================================================================
 function buildCemeteriesContainer() {
-    console.log('🏗️ Building cemeteries container...');
     
     // מצא את main-container (צריך להיות קיים אחרי clear)
     let mainContainer = document.querySelector('.main-container');
     
     if (!mainContainer) {
-        console.log('⚠️ main-container not found, creating one...');
         const mainContent = document.querySelector('.main-content');
         mainContainer = document.createElement('div');
         mainContainer.className = 'main-container';
@@ -157,7 +150,6 @@ function buildCemeteriesContainer() {
         </div>
     `;
     
-    console.log('✅ Cemeteries container built');
 }
 
 // ===================================================================
@@ -178,19 +170,15 @@ async function initCemeteriesSearch(signal) {
         
         callbacks: {
             onInit: () => {
-                console.log('✅ UniversalSearch initialized for cemeteries');
             },
             
             onSearch: (query, filters) => {
-                console.log('🔍 Searching:', { query, filters: Array.from(filters.entries()) });
             },
 
             onResults: (data) => {
-                console.log('📦 API returned:', data.pagination?.total || data.data.length, 'cemeteries');
           
                 // ⭐ בדיקה אוטומטית!
                 if (OperationManager.shouldAbort('cemetery')) {
-                    console.log('⚠️ Cemetery results aborted - type changed');
                     return;
                 }
                 
@@ -203,7 +191,6 @@ async function initCemeteriesSearch(signal) {
                 } else {
                     // דפים נוספים - הוסף לקיימים
                     currentCemeteries = [...currentCemeteries, ...data.data];
-                    console.log(`📦 Added page ${currentPage}, total now: ${currentCemeteries.length}`);
                 }
                 
                 // ⭐ אין סינון client-side - זו רמת השורש!
@@ -217,7 +204,6 @@ async function initCemeteriesSearch(signal) {
                     }
                 }
                 
-                console.log('📊 Final count:', filteredCount);
             },
             
             onError: (error) => {
@@ -226,7 +212,6 @@ async function initCemeteriesSearch(signal) {
             },
             
             onEmpty: () => {
-                console.log('📭 No results');
             }
         }
     });
@@ -329,7 +314,6 @@ async function initCemeteriesTable(data, totalItems = null, signal) {
         } catch (error) {
             // בדיקה: אם זה ביטול מכוון - זה לא שגיאה
             if (error.name === 'AbortError') {
-                console.log('⚠️ Columns loading aborted');
                 return [];
             }
             console.error('Failed to load columns config:', error);
@@ -342,7 +326,6 @@ async function initCemeteriesTable(data, totalItems = null, signal) {
 
     // בדוק אם בוטל
     if (signal && signal.aborted) {
-        console.log('⚠️ Cemetery table initialization aborted');
         return null;
     }
 
@@ -362,12 +345,10 @@ async function initCemeteriesTable(data, totalItems = null, signal) {
         filterable: true,
         
         onSort: (field, order) => {
-            console.log(`📊 Sorted by ${field} ${order}`);
             showToast(`ממוין לפי ${field} (${order === 'asc' ? 'עולה' : 'יורד'})`, 'info');
         },
         
         onFilter: (filters) => {
-            console.log('🔍 Active filters:', filters);
             const count = cemeteriesTable.getFilteredData().length;
             showToast(`נמצאו ${count} תוצאות`, 'info');
         }
@@ -383,7 +364,6 @@ async function initCemeteriesTable(data, totalItems = null, signal) {
             
             if (scrollHeight - scrollTop - clientHeight < 100) {
                 if (!cemeterySearch.state.isLoading && cemeterySearch.state.currentPage < cemeterySearch.state.totalPages) {
-                    console.log('📥 Reached bottom, loading more data...');
                     
                     const nextPage = cemeterySearch.state.currentPage + 1;
                     cemeterySearch.state.currentPage = nextPage;
@@ -430,7 +410,6 @@ function renderCemeteriesRows(data, container, pagination = null, signal = null)
     
     // ⭐ אם המשתנה קיים אבל ה-DOM נמחק - אפס את המשתנה!
     if (!tableWrapperExists && cemeteriesTable) {
-        console.log('🗑️ TableManager DOM was deleted, resetting cemeteriesTable variable');
         cemeteriesTable = null;
         window.cemeteriesTable = null;
     }
@@ -449,7 +428,6 @@ function renderCemeteriesRows(data, container, pagination = null, signal = null)
         if (cemeterySearch && cemeterySearch.state) {
             const allData = cemeterySearch.state.results || [];
             if (allData.length > data.length) {
-                console.log(`📦 UniversalSearch has ${allData.length} items, updating TableManager...`);
                 cemeteriesTable.setData(allData);
                 return;
             }
@@ -472,7 +450,6 @@ function formatDate(dateString) {
 // פונקציות CRUD
 // ===================================================================
 async function deleteCemetery(unicId) {
-    console.log('🗑️ Delete cemetery:', unicId);
     
     if (!confirm('האם אתה בטוח שברצונך למחוק את בית העלמין?')) {
         return;
@@ -527,12 +504,10 @@ async function loadCemeteryStats(signal) {
         const data = await response.json();
         
         if (data.success) {
-            console.log('Cemetery stats:', data.data);
         }
     } catch (error) {
         // ⭐ אם זה ביטול - זה לא שגיאה!
         if (error.name === 'AbortError') {
-            console.log('⚠️ Stats loading aborted - this is expected');
             return;
         }
         
@@ -591,7 +566,6 @@ async function refreshData() {
 // ===================================================================
 function checkScrollStatus() {
     if (!cemeteriesTable) {
-        console.log('❌ Table not initialized');
         return;
     }
     
@@ -599,16 +573,9 @@ function checkScrollStatus() {
     const displayed = cemeteriesTable.getDisplayedData().length;
     const remaining = total - displayed;
     
-    console.log('📊 Scroll Status:');
-    console.log(`   Total items: ${total}`);
-    console.log(`   Displayed: ${displayed}`);
-    console.log(`   Remaining: ${remaining}`);
-    console.log(`   Progress: ${Math.round((displayed / total) * 100)}%`);
     
     if (remaining > 0) {
-        console.log(`   🔽 Scroll down to load ${Math.min(cemeteriesTable.config.itemsPerPage, remaining)} more items`);
     } else {
-        console.log('   ✅ All items loaded');
     }
 }
 
@@ -616,15 +583,12 @@ function checkScrollStatus() {
 // פונקציה לטיפול בדאבל-קליק על בית עלמין
 // ===================================================
 async function handleCemeteryDoubleClick(unicId, cemeteryName) {
-    console.log('🖱️ Double-click on cemetery:', cemeteryName, unicId);
     
     try {
         // טעינת גושים
-        console.log('📦 Loading blocks for cemetery:', cemeteryName);
         if (typeof loadBlocks === 'function') {
             loadBlocks(unicId, cemeteryName);
         } else {
-            console.warn('loadBlocks function not found');
         }
     } catch (error) {
         console.error('❌ Error in handleCemeteryDoubleClick:', error);

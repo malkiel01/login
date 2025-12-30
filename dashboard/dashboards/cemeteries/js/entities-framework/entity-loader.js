@@ -12,7 +12,6 @@
  *   ✅ לוגים מפורטים ומובנים
  */
 
-console.log('🚀 entity-loader.js v1.0.0 - Loading...');
 
 // ===================================================================
 // מנהל טעינת נתונים גנרי
@@ -33,7 +32,6 @@ class EntityLoader {
             throw new Error(`❌ Unknown entity type: ${entityType}`);
         }
         
-        console.log(`📥 Loading browse data for ${entityType}...`);
         
         // איפוס state
         entityState.setState(entityType, {
@@ -69,9 +67,6 @@ class EntityLoader {
                     lastUpdated: new Date().toISOString()
                 });
                 
-                console.log(`✅ Loaded ${result.data.length} ${config.plural}`);
-                console.log(`   Page: ${result.pagination?.page || 1}/${result.pagination?.pages || 1}`);
-                console.log(`   Total items: ${result.pagination?.total || result.data.length}`);
                 
                 return {
                     success: true,
@@ -84,7 +79,6 @@ class EntityLoader {
             
         } catch (error) {
             if (error.name === 'AbortError') {
-                console.log(`⚠️ ${entityType} browse data loading aborted - this is expected`);
                 return { success: false, aborted: true };
             }
             
@@ -110,12 +104,10 @@ class EntityLoader {
         
         // בדיקות בסיסיות
         if (state.isLoadingMore) {
-            console.log(`⏳ ${entityType} is already loading more data`);
             return false;
         }
         
         if (state.currentPage >= state.totalPages) {
-            console.log(`📭 ${entityType} - no more data to load`);
             return false;
         }
         
@@ -156,7 +148,6 @@ class EntityLoader {
                 entityState.updatePagination(entityType, nextPage, state.totalPages);
                 
                 // לוג מפורט ומסודר
-                console.log(`
 ╔════════════════════════════════════════════════════════════════════
 ║ ${config.plural} - טעינה: ${loadCounter}
 ╠════════════════════════════════════════════════════════════════════
@@ -181,7 +172,6 @@ class EntityLoader {
                 return true;
                 
             } else {
-                console.log(`📭 No more ${config.plural} to load`);
                 entityState.setLoading(entityType, false);
                 return false;
             }
@@ -269,11 +259,9 @@ class EntityLoader {
         const statsConfig = config.statsConfig;
         
         if (!statsConfig || !statsConfig.elements) {
-            console.warn(`⚠️ No stats config for ${entityType}`);
             return { success: false };
         }
         
-        console.log(`📊 Loading stats for ${entityType}...`);
         
         try {
             // בניית URL
@@ -284,20 +272,16 @@ class EntityLoader {
                 apiUrl += `&${statsConfig.parentParam}=${parentId}`;
             }
             
-            console.log(`   📡 Fetching: ${apiUrl}`);
             
             // שליחת בקשה
             const response = await fetch(apiUrl, { signal });
             
-            console.log(`   📥 Response status: ${response.status}`);
             
             if (!response.ok) {
-                console.warn(`⚠️ API returned status ${response.status} for ${entityType} stats`);
                 return { success: false, error: `HTTP ${response.status}` };
             }
             
             const result = await response.json();
-            console.log(`   📦 Response data:`, result);
             
             if (result.success && result.stats) {
                 // עדכון ה-DOM
@@ -305,27 +289,22 @@ class EntityLoader {
                     const element = document.getElementById(elementId);
                     if (element && result.stats[statKey] !== undefined) {
                         element.textContent = result.stats[statKey];
-                        console.log(`   ✅ Updated #${elementId} = ${result.stats[statKey]}`);
                     }
                 });
                 
-                console.log(`✅ Stats loaded successfully for ${entityType}`);
                 return { success: true, stats: result.stats };
                 
             } else {
                 // לא שגיאה קריטית - אולי ה-API לא תומך בסטטיסטיקות
-                console.warn(`⚠️ Stats not available for ${entityType} (API returned: ${JSON.stringify(result)})`);
                 return { success: false, error: result.error || 'Stats not available' };
             }
             
         } catch (error) {
             if (error.name === 'AbortError') {
-                console.log(`⚠️ ${entityType} stats loading aborted`);
                 return { success: false, aborted: true };
             }
             
             // לא שגיאה קריטית - רק warning
-            console.warn(`⚠️ Could not load ${entityType} stats:`, error.message);
             return { success: false, error: error.message };
         }
     }
@@ -337,20 +316,17 @@ class EntityLoader {
      * @returns {Promise<void>}
      */
     static async refresh(entityType, parentId = null) {
-        console.log(`🔄 Refreshing ${entityType} data...`);
         
         const config = ENTITY_CONFIG[entityType];
         const state = entityState.getState(entityType);
         
         // אם יש instance של חיפוש - השתמש ב-refresh שלו
         if (state.searchInstance && typeof state.searchInstance.refresh === 'function') {
-            console.log(`   ✅ Using search instance refresh`);
             state.searchInstance.refresh();
             return;
         }
         
         // אחרת - טען מחדש באמצעות loadBrowseData
-        console.log(`   ✅ Loading fresh browse data`);
         const result = await this.loadBrowseData(entityType, null, parentId);
         
         if (result.success && result.data) {
@@ -377,7 +353,6 @@ class EntityLoader {
         }
         
         try {
-            console.log(`🗑️ Deleting ${entityType} with ID: ${entityId}`);
             
             // שליחת בקשת DELETE
             const response = await fetch(
@@ -399,7 +374,6 @@ class EntityLoader {
             // רענון הנתונים
             await this.refresh(entityType);
             
-            console.log(`✅ ${entityType} deleted successfully`);
             return true;
             
         } catch (error) {
@@ -424,4 +398,3 @@ window.genericLoadBrowseData = async (entityType, signal, parentId) => {
     return await EntityLoader.loadBrowseData(entityType, signal, parentId);
 };
 
-console.log('✅ entity-loader.js v1.0.0 - Loaded successfully!');

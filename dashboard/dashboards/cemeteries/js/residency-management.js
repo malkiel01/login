@@ -15,7 +15,6 @@ const RESIDENCY_TYPES = {
 
 // טעינת הגדרות תושבות - פונקציה ראשית
 async function loadResidencies() {
-    console.log('Loading residency settings...');
 
     setActiveMenuItem('residencyItem'); // ✅ הוסף
     
@@ -282,7 +281,6 @@ function displayResidenciesInTable(residencies) {
 
 // פתיחת טופס הוספת חוק תושבות
 function openAddResidency() {
-    console.log('Opening add residency form');
     
     window.currentType = 'residency';
     window.currentParentId = null;
@@ -298,7 +296,6 @@ function openAddResidency() {
 
 // עריכת הגדרת תושבות
 async function editResidency(id) {
-    console.log('Editing residency:', id);
     
     window.currentType = 'residency';
     
@@ -904,4 +901,3 @@ if (!document.querySelector('#residency-animations')) {
     document.head.appendChild(style);
 }
 
-console.log('Residency Management Module Loaded - Full Integration');

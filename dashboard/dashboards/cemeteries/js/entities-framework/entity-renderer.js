@@ -12,7 +12,6 @@
  *   ✅ תמיכה במצב חיפוש ו-Browse
  */
 
-console.log('🚀 entity-renderer.js v1.0.0 - Loading...');
 
 // ===================================================================
 // מנהל רינדור גנרי
@@ -32,14 +31,9 @@ class EntityRenderer {
         const config = ENTITY_CONFIG[entityType];
         const state = entityState.getState(entityType);
         
-        console.log(`📝 Rendering ${data.length} ${config.plural}...`);
-        console.log(`   Pagination:`, pagination);
-        console.log(`   Search mode: ${state.isSearchMode}`);
-        console.log(`   Table instance exists: ${!!state.tableInstance}`);
         
         // מצב חיפוש - רינדור פשוט
         if (state.isSearchMode && state.currentQuery) {
-            console.log('🔍 Rendering search results...');
             
             if (data.length === 0) {
                 this.renderEmptyState(container, config, 'search');
@@ -53,7 +47,6 @@ class EntityRenderer {
         
         // מצב Browse רגיל
         const totalItems = pagination?.total || data.length;
-        console.log(`📊 Total items to display: ${totalItems}`);
         
         // בדיקה אם אין נתונים
         if (data.length === 0) {
@@ -69,16 +62,13 @@ class EntityRenderer {
         
         // אם המשתנה קיים אבל ה-DOM נמחק - אפס!
         if (!tableWrapperExists && state.tableInstance) {
-            console.log('⚠️ TableManager DOM missing, resetting variable');
             entityState.setTableInstance(entityType, null);
         }
         
         // אתחול או עדכון טבלה
         if (!state.tableInstance || !tableWrapperExists) {
-            console.log(`🆕 Initializing TableManager with ${totalItems} items`);
             await this.initTable(entityType, data, totalItems, signal);
         } else {
-            console.log(`♻️ Updating TableManager with ${totalItems} items`);
             if (state.tableInstance.config) {
                 state.tableInstance.config.totalItems = totalItems;
             }
@@ -103,13 +93,11 @@ class EntityRenderer {
     static async buildContainer(entityType, signal = null, parentId = null, parentName = null) {
         const config = ENTITY_CONFIG[entityType];
         
-        console.log(`🏗️ Building ${config.plural} container...`);
         
         // מצא או צור main-container
         let mainContainer = document.querySelector('.main-container');
         
         if (!mainContainer) {
-            console.log('⚠️ main-container not found, creating one...');
             const mainContent = document.querySelector('.main-content');
             mainContainer = document.createElement('div');
             mainContainer.className = 'main-container';
@@ -146,7 +134,6 @@ class EntityRenderer {
             </div>
         `;
         
-        console.log(`✅ ${config.plural} container built`);
     }
 
    /**
@@ -160,7 +147,6 @@ class EntityRenderer {
     static async initTable(entityType, data, totalItems, signal = null) {
         const config = ENTITY_CONFIG[entityType];
         
-        console.log(`🆕 Initializing TableManager for ${entityType}...`);
         
         // המתן ל-DOM
         const tableBody = await this.waitForElement('#tableBody', 5000);
@@ -244,7 +230,7 @@ class EntityRenderer {
                     
                     return `
                         <div class="action-buttons" style="display: flex; gap: 8px; justify-content: center;">
-                            <button onclick="if(typeof window.tableRenderer !== 'undefined' && window.tableRenderer.editItem) { window.tableRenderer.editItem('${entityId}'); } else { console.warn('tableRenderer not available'); }" 
+                            <button onclick="if(typeof window.tableRenderer !== 'undefined' && window.tableRenderer.editItem) { window.tableRenderer.editItem('${entityId}'); }" 
                                     class="btn-edit" 
                                     title="ערוך"
                                     style="background: #3b82f6; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px;">
@@ -292,14 +278,12 @@ class EntityRenderer {
             },
             
             onSort: (field, order) => {
-                console.log(`📊 Sorted by ${field} ${order}`);
                 if (typeof showToast === 'function') {
                     showToast(`ממוין לפי ${field} (${order === 'asc' ? 'עולה' : 'יורד'})`, 'info');
                 }
             },
             
             onFilter: (filters) => {
-                console.log('🔍 Active filters:', filters);
                 const state = entityState.getState(entityType);
                 if (state.tableInstance) {
                     const count = state.tableInstance.getFilteredData().length;
@@ -313,7 +297,6 @@ class EntityRenderer {
         // שמור את ה-instance
         entityState.setTableInstance(entityType, tableManager);
         
-        console.log(`✅ TableManager initialized for ${entityType}`);
         return tableManager;
     }
 
@@ -416,7 +399,6 @@ class EntityRenderer {
      * @param {string} entityName - שם היישות
      */
     static handleDoubleClick(entityType, entityId, entityName) {
-        console.log(`🖱️ Double-click on ${entityType}:`, entityId, entityName);
         
         // מיפוי לשמות הפונקציות הספציפיות
         const handlers = {
@@ -432,10 +414,8 @@ class EntityRenderer {
         const handlerName = handlers[entityType];
         
         if (handlerName && typeof window[handlerName] === 'function') {
-            console.log(`✅ Calling ${handlerName}('${entityId}', '${entityName}')`);
             window[handlerName](entityId, entityName);
         } else {
-            console.warn(`⚠️ Handler ${handlerName} not found for ${entityType}`);
             // fallback - פתיחת כרטיס
             this.openCard(entityType, entityId);
         }
@@ -456,7 +436,6 @@ class EntityRenderer {
                 displayHierarchyCard(cardHtml);
             }
         } else {
-            console.warn(`⚠️ ${cardFunctionName} not found`);
         }
     }
 
@@ -575,4 +554,3 @@ class EntityRenderer {
 // ===================================================================
 window.EntityRenderer = EntityRenderer;
 
-console.log('✅ entity-renderer.js v1.0.0 - Loaded successfully!');

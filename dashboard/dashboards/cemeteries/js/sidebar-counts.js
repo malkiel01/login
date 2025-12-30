@@ -19,7 +19,6 @@
  * עדכון כל המונים ב-Sidebar
  */
 async function updateAllSidebarCounts() {
-    console.log('🔄 מעדכן מונים ב-Sidebar... (v4.1.0)');
     
     // הצג אנימציית Loading על כל המונים
     document.querySelectorAll('.hierarchy-count').forEach(el => {
@@ -63,7 +62,6 @@ async function updateAllSidebarCounts() {
         // 1️⃣2️⃣ ערים - ✅ cities-api.php
         await updateCitiesCount();
         
-        console.log('✅ כל המונים עודכנו בהצלחה! (v4.1.0)');
         
     } catch (error) {
         console.error('❌ שגיאה בעדכון מונים:', error);
@@ -95,7 +93,6 @@ async function updateCemeteriesCount() {
             updateCount('cemeteriesCount', data.pagination.total);
         }
     } catch (error) {
-        console.warn('Failed to load cemeteries count:', error);
         updateCount('cemeteriesCount', 0);
     }
 }
@@ -113,7 +110,6 @@ async function updateBlocksCount() {
             updateCount('blocksCount', data.pagination.total);
         }
     } catch (error) {
-        console.warn('Failed to load blocks count:', error);
         updateCount('blocksCount', 0);
     }
 }
@@ -131,7 +127,6 @@ async function updatePlotsCount() {
             updateCount('plotsCount', data.pagination.total);
         }
     } catch (error) {
-        console.warn('Failed to load plots count:', error);
         updateCount('plotsCount', 0);
     }
 }
@@ -149,7 +144,6 @@ async function updateAreaGravesCount() {
             updateCount('areaGravesCount', data.pagination.total);
         }
     } catch (error) {
-        console.warn('Failed to load area graves count:', error);
         updateCount('areaGravesCount', 0);
     }
 }
@@ -167,7 +161,6 @@ async function updateGravesCount() {
             updateCount('gravesCount', data.pagination.total);
         }
     } catch (error) {
-        console.warn('Failed to load graves count:', error);
         updateCount('gravesCount', 0);
     }
 }
@@ -188,7 +181,6 @@ async function updateCustomersCount() {
             updateCount('customersCount', total);
         }
     } catch (error) {
-        console.warn('Failed to load customers count:', error);
         updateCount('customersCount', 0);
     }
 }
@@ -206,7 +198,6 @@ async function updatePurchasesCount() {
             updateCount('purchasesCount', data.data.totals.total_purchases || 0);
         }
     } catch (error) {
-        console.warn('Failed to load purchases count:', error);
         updateCount('purchasesCount', 0);
     }
 }
@@ -225,7 +216,6 @@ async function updateBurialsCount() {
             updateCount('burialsCount', data.data.totals.total_burials || 0);
         }
     } catch (error) {
-        console.warn('Failed to load burials count:', error);
         updateCount('burialsCount', 0);
     }
 }
@@ -243,7 +233,6 @@ async function updatePaymentsCount() {
             updateCount('paymentsCount', data.pagination.totalAll || data.pagination.total || 0);
         }
     } catch (error) {
-        console.warn('Failed to load payments count:', error);
         updateCount('paymentsCount', 0);
     }
 }
@@ -261,7 +250,6 @@ async function updateResidencyCount() {
             updateCount('residencyCount', data.pagination.total || 0);
         }
     } catch (error) {
-        console.warn('Failed to load residency count:', error);
         updateCount('residencyCount', 0);
     }
 }
@@ -279,7 +267,6 @@ async function updateCountriesCount() {
             updateCount('countryCount', data.pagination.total || 0);
         }
     } catch (error) {
-        console.warn('Failed to load countries count:', error);
         updateCount('countryCount', 0);
     }
 }
@@ -297,7 +284,6 @@ async function updateCitiesCount() {
             updateCount('cityCount', data.pagination.total || 0);
         }
     } catch (error) {
-        console.warn('Failed to load cities count:', error);
         updateCount('cityCount', 0);
     }
 }
@@ -332,4 +318,3 @@ if (document.readyState === 'loading') {
     updateAllSidebarCounts();
 }
 
-console.log('✅ Sidebar Counts Updater initialized (v4.1.0 - Fixed Cemetery API)');

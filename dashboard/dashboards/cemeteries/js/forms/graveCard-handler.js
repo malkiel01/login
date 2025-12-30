@@ -21,12 +21,10 @@ const GraveCardHandler = {
      * @param {string} graveId - מזהה הקבר
      */
     init: function(graveId) {
-        console.log('🪦 [GraveCardHandler] אתחול עבור קבר:', graveId);
         
         // שמור נתונים מה-window (הוגדרו ב-PHP)
         if (window.graveCardData) {
             this.currentGrave = window.graveCardData;
-            console.log('📋 [GraveCardHandler] נתוני קבר:', this.currentGrave);
         }
     },
     
@@ -34,7 +32,6 @@ const GraveCardHandler = {
      * שמירת קבר - שינוי סטטוס מ-1 (פנוי) ל-4 (שמור)
      */
     saveGrave: async function() {
-        console.log('💾 [GraveCardHandler] שמירת קבר...');
         
         const graveId = this.currentGrave?.unicId || window.graveCardData?.unicId;
         
@@ -63,7 +60,6 @@ const GraveCardHandler = {
             const result = await response.json();
             
             if (result.success) {
-                console.log('✅ [GraveCardHandler] קבר נשמר בהצלחה');
                 alert('הקבר נשמר בהצלחה!');
                 
                 // סגור את הכרטיס
@@ -90,7 +86,6 @@ const GraveCardHandler = {
      * ביטול שמירת קבר - שינוי סטטוס מ-4 (שמור) ל-1 (פנוי)
      */
     cancelSavedGrave: async function() {
-        console.log('🚫 [GraveCardHandler] ביטול שמירת קבר...');
         
         const graveId = this.currentGrave?.unicId || window.graveCardData?.unicId;
         
@@ -119,7 +114,6 @@ const GraveCardHandler = {
             const result = await response.json();
             
             if (result.success) {
-                console.log('✅ [GraveCardHandler] שמירה בוטלה בהצלחה');
                 alert('שמירת הקבר בוטלה!\n\nהקבר חזר להיות פנוי.');
                 
                 // סגור את הכרטיס
@@ -146,7 +140,6 @@ const GraveCardHandler = {
      * פתיחת טופס רכישה חדשה עבור הקבר
      */
     openNewPurchase: function() {
-        console.log('🛒 [GraveCardHandler] פתיחת רכישה חדשה...');
         
         const graveId = this.currentGrave?.unicId || window.graveCardData?.unicId;
         
@@ -169,7 +162,6 @@ const GraveCardHandler = {
      * פתיחת טופס קבורה חדשה עבור הקבר
      */
     openNewBurial: function() {
-        console.log('⚰️ [GraveCardHandler] פתיחת קבורה חדשה...');
         
         const graveId = this.currentGrave?.unicId || window.graveCardData?.unicId;
         
@@ -193,7 +185,6 @@ const GraveCardHandler = {
      * @param {string} purchaseId - מזהה הרכישה
      */
     editPurchase: function(purchaseId) {
-        console.log('✏️ [GraveCardHandler] עריכת רכישה:', purchaseId);
         
         // סגור את כרטיס הקבר
         FormHandler.closeForm('graveCard');
@@ -209,7 +200,6 @@ const GraveCardHandler = {
      * @param {string} burialId - מזהה הקבורה
      */
     editBurial: function(burialId) {
-        console.log('✏️ [GraveCardHandler] עריכת קבורה:', burialId);
         
         // סגור את כרטיס הקבר
         FormHandler.closeForm('graveCard');
@@ -224,4 +214,3 @@ const GraveCardHandler = {
 // הוסף לחלון הגלובלי
 window.GraveCardHandler = GraveCardHandler;
 
-console.log('✅ [GraveCardHandler] מודול נטען בהצלחה');

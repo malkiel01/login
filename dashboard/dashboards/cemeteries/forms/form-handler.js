@@ -68,7 +68,6 @@ const FormHandler = {
 
     openForm: async function(type, parentId = null, itemId = null) {    
         
-        console.log('step 1 - openForm :: type: ',type, 'parentId: ',parentId, 'itemId: ',itemId );
         
         
         if (type === 'purchase' && !itemId) {
@@ -144,7 +143,6 @@ const FormHandler = {
                     if (form && window.FormValidations) {
                         // ✅ הטופס מוכן - אתחל וולידציות
                         FormValidations.init(form);
-                        console.log('✅ FormValidations initialized for', type);
                         
                         // שלח custom event שהטופס מוכן (למי שרוצה להאזין)
                         const event = new CustomEvent('formReady', { 
@@ -181,7 +179,6 @@ const FormHandler = {
                 case 'areaGrave':
                     // ⭐ אם זה עריכה אבל אין parentId - שלוף אותו מה-API
                     if (itemId && !parentId) {
-                        console.log('🔍 [areaGrave] מצב עריכה ללא parentId - שולף מה-API...');
                         try {
                             const response = await fetch(`${API_BASE}areaGraves-api.php?action=get&id=${itemId}`);
                             const result = await response.json();
@@ -189,12 +186,10 @@ const FormHandler = {
                             if (result.success && result.data) {
                                 // ⭐ שלוף את ה-lineId (זה ה-parentId!)
                                 parentId = result.data.lineId || result.data.line_id || result.data.rowId || result.data.row_id;
-                                console.log('✅ נמצא parentId מה-API:', parentId);
                                 
                                 // ⭐⭐⭐ עדכן את התצוגה בטופס!
                                 await this.updateParentDisplay(type, parentId);
                             } else {
-                                console.warn('⚠️ לא נמצא parentId ב-API response');
                             }
                         } catch (error) {
                             console.error('❌ שגיאה בשליפת parentId:', error);
@@ -208,7 +203,6 @@ const FormHandler = {
                         
                         if (parentId) {
                             this.handleAreaGraveForm(parentId);
-                            console.log('✅ handleAreaGraveForm called with parentId:', parentId);
                         } else {
                             console.error('❌ אין parentId! לא ניתן לאתחל מערכת קברים');
                             this.showMessage('שגיאה: לא נמצא מזהה השורה של אחוזת הקבר', 'error');
@@ -264,28 +258,22 @@ const FormHandler = {
     },
 
     loadAreaGraveWithGraves: async function(areaGraveId) {
-        console.log('📦 Loading area grave with graves:', areaGraveId);
         
         try {
             if (typeof window.validateGravesData === 'function') {
-                    console.log('🔍 Running graves validation...');
                     
                     if (!window.validateGravesData()) {
                         console.error('❌ Graves validation failed');
                         return false;
                     }
                     
-                    console.log('✅ Graves validation passed');
                     
                     // ⭐ תיקון: קרא gravesData אחרי ולידציה
                     const gravesDataInput = document.getElementById('gravesData');
                     if (gravesDataInput && gravesDataInput.value) {
-                        console.log('📥 Reading gravesData from hidden input after validation');
-                        console.log('📊 gravesData length:', gravesDataInput.value.length, 'chars');
                         
                         formData.set('gravesData', gravesDataInput.value);
                         
-                        console.log('✅ gravesData added to formData');
                     } else {
                         console.error('❌ gravesData input not found or empty!');
                         this.showMessage('שגיאה: נתוני הקברים לא נמצאו', 'error');
@@ -304,7 +292,6 @@ const FormHandler = {
     updateParentDisplay: async function(type, parentId) {
         if (!parentId) return;
         
-        console.log('🔄 מעדכן תצוגת הורה:', parentId);
         
         try {
             // שלוף את שם ההורה מה-API
@@ -324,21 +311,18 @@ const FormHandler = {
             const parentNameElement = document.getElementById('currentParentName');
             if (parentNameElement && parentName) {
                 parentNameElement.textContent = parentName;
-                console.log('✅ עודכן שם הורה:', parentName);
             }
             
             // עדכן hidden field אם יש
             const parentIdField = document.querySelector('input[name="parentId"]');
             if (parentIdField) {
                 parentIdField.value = parentId;
-                console.log('✅ עודכן parentId בשדה:', parentId);
             }
             
             // עדכן hidden field של lineId
             const lineIdField = document.querySelector('input[name="lineId"]');
             if (lineIdField) {
                 lineIdField.value = parentId;
-                console.log('✅ עודכן lineId בשדה:', parentId);
             }
             
         } catch (error) {
@@ -351,13 +335,11 @@ const FormHandler = {
      * מאתחל את כל הפונקציונליות של ניהול קברים באחוזה
      */
     handleAreaGraveForm: function(itemId) {
-        console.log('🪦 Initializing Area Grave Form...', 'itemId:', itemId);
         
         const self = this; // שמירת reference ל-FormHandler
         
         // חכה שה-fieldset יטען
         this.waitForElement('#graves-fieldset', (fieldset) => {
-            console.log('✅ Graves fieldset found');
             
             // קרא את הקונפיגורציה מה-data attribute
             if (!fieldset.dataset.gravesConfig) {
@@ -368,7 +350,6 @@ const FormHandler = {
             let config;
             try {
                 config = JSON.parse(fieldset.dataset.gravesConfig);
-                console.log('📋 Loaded config:', config);
             } catch (e) {
                 console.error('❌ Failed to parse graves config:', e);
                 return;
@@ -385,17 +366,14 @@ const FormHandler = {
                 areaGraveId: config.areaGraveId || null
             };
             
-            console.log('🔧 GRAVES_CONFIG initialized:', window.GRAVES_CONFIG);
             
             // =========================================
             // פונקציה: אתחול מערכת הקברים
             // =========================================
             function initGravesSystem() {
-                console.log('📋 Initializing graves system...');
                 
                 // אם זה מצב עריכה וקיימים קברים - טען אותם
                 if (window.GRAVES_CONFIG.isEdit && window.GRAVES_CONFIG.existing.length > 0) {
-                    console.log('📥 Loading', window.GRAVES_CONFIG.existing.length, 'existing graves');
                     
                     window.GRAVES_CONFIG.existing.forEach(function(grave) {
                         window.GRAVES_CONFIG.current.push({
@@ -409,10 +387,8 @@ const FormHandler = {
                         });
                     });
                     
-                    console.log('✅ Loaded existing graves:', window.GRAVES_CONFIG.current);
                 } else {
                     // אחוזת קבר חדשה - צור קבר ראשון
-                    console.log('➕ Creating first grave for new area');
                     window.GRAVES_CONFIG.current.push({
                         id: null,
                         graveNameHe: '',
@@ -434,24 +410,20 @@ const FormHandler = {
                 const btnAdd = document.getElementById('btnAddGrave');
                 if (btnAdd) {
                     btnAdd.onclick = addGrave;
-                    console.log('✅ Add button connected');
                 } else {
                     console.error('❌ Add button not found');
                 }
                 
-                console.log('✅ Graves system initialized successfully');
             }
             
             // =========================================
             // פונקציה: הוספת קבר חדש
             // =========================================
             function addGrave() {
-                console.log('➕ Adding new grave...');
                 
                 // בדיקת מגבלת מקסימום
                 if (window.GRAVES_CONFIG.current.length >= window.GRAVES_CONFIG.MAX) {
                     alert('ניתן להוסיף עד ' + window.GRAVES_CONFIG.MAX + ' קברים בלבד');
-                    console.warn('⚠️ Maximum graves reached');
                     return;
                 }
                 
@@ -466,7 +438,6 @@ const FormHandler = {
                     isExisting: false
                 });
                 
-                console.log('✅ Grave added. Total:', window.GRAVES_CONFIG.current.length);
                 
                 // רנדר מחדש
                 renderGraves();
@@ -477,33 +448,28 @@ const FormHandler = {
             // פונקציה: מחיקת קבר
             // =========================================
             function deleteGrave(idx) {
-                console.log('🗑️ Attempting to delete grave at index:', idx);
                 
                 const grave = window.GRAVES_CONFIG.current[idx];
                 
                 // בדיקות מניעה
                 if (idx === 0) {
                     alert('לא ניתן למחוק את הקבר הראשון');
-                    console.warn('⚠️ Cannot delete first grave');
                     return;
                 }
                 
                 // במצב עריכה - לא ניתן למחוק קבר שאינו פנוי
                 if (window.GRAVES_CONFIG.isEdit && grave.isExisting && grave.graveStatus !== 1) {
                     alert('לא ניתן למחוק קבר לא פנוי (סטטוס: ' + getStatusName(grave.graveStatus) + ')');
-                    console.warn('⚠️ Cannot delete non-available grave');
                     return;
                 }
                 
                 // אישור משתמש
                 if (!confirm('האם אתה בטוח שברצונך למחוק קבר זה?')) {
-                    console.log('❌ Deletion cancelled by user');
                     return;
                 }
                 
                 // מחיקה
                 window.GRAVES_CONFIG.current.splice(idx, 1);
-                console.log('✅ Grave deleted. Remaining:', window.GRAVES_CONFIG.current.length);
                 
                 // רנדר מחדש
                 renderGraves();
@@ -514,7 +480,6 @@ const FormHandler = {
             // פונקציה: רינדור טבלת הקברים
             // =========================================
             function renderGraves() {
-                console.log('🎨 Rendering graves table...');
                 
                 const tbody = document.getElementById('gravesBody');
                 if (!tbody) {
@@ -547,7 +512,6 @@ const FormHandler = {
                     inputName.onchange = (function(idx) {
                         return function() {
                             window.GRAVES_CONFIG.current[idx].graveNameHe = this.value;
-                            console.log('📝 Updated grave name at', idx, ':', this.value);
                         };
                     })(index);
                     tdName.appendChild(inputName);
@@ -564,7 +528,6 @@ const FormHandler = {
                     selectPlotType.onchange = (function(idx) {
                         return function() {
                             window.GRAVES_CONFIG.current[idx].plotType = parseInt(this.value);
-                            console.log('📝 Updated plot type at', idx, ':', this.value);
                         };
                     })(index);
                     tdPlotType.appendChild(selectPlotType);
@@ -595,7 +558,6 @@ const FormHandler = {
                     checkboxSmall.onchange = (function(idx) {
                         return function() {
                             window.GRAVES_CONFIG.current[idx].isSmallGrave = this.checked;
-                            console.log('📝 Updated small grave at', idx, ':', this.checked);
                         };
                     })(index);
                     tdSmall.appendChild(checkboxSmall);
@@ -611,7 +573,6 @@ const FormHandler = {
                     inputCost.onchange = (function(idx) {
                         return function() {
                             window.GRAVES_CONFIG.current[idx].constructionCost = this.value;
-                            console.log('📝 Updated construction cost at', idx, ':', this.value);
                         };
                     })(index);
                     tdCost.appendChild(inputCost);
@@ -644,7 +605,6 @@ const FormHandler = {
                     tbody.appendChild(tr);
                 });
                 
-                console.log('✅ Rendered', window.GRAVES_CONFIG.current.length, 'graves');
             }
             
             // =========================================
@@ -675,7 +635,6 @@ const FormHandler = {
                     }
                 }
                 
-                console.log('🔢 Counter updated:', currentCount + '/' + maxCount);
             }
             
             // =========================================
@@ -690,7 +649,6 @@ const FormHandler = {
             // פונקציה גלובלית: ולידציה לפני שמירה
             // =========================================
             window.validateGravesData2 = function() {
-                console.log('🔍 Validating graves data...');
                 
                 // בדיקה 1: חייב להיות לפחות קבר אחד
                 if (window.GRAVES_CONFIG.current.length === 0) {
@@ -729,13 +687,11 @@ const FormHandler = {
                 const hiddenInput = document.getElementById('gravesData');
                 if (hiddenInput) {
                     hiddenInput.value = JSON.stringify(window.GRAVES_CONFIG.current);
-                    console.log('✅ Graves data serialized:', hiddenInput.value);
                 } else {
                     console.error('❌ Hidden input #gravesData not found!');
                     return false;
                 }
                 
-                console.log('✅ Validation passed');
                 return true;
             };
 
@@ -746,12 +702,10 @@ const FormHandler = {
             // =========================================
 
             window.validateGravesData = function() {
-                console.log('🔍 Validating graves data...');
                 
                 // ========================================
                 // ⭐ תיקון חשוב: קרא ערכים מה-DOM תחילה!
                 // ========================================
-                console.log('📥 Reading values from DOM inputs...');
                 
                 const tbody = document.getElementById('gravesBody');
                 if (!tbody) {
@@ -764,7 +718,6 @@ const FormHandler = {
                 // עדכן את כל הערכים מה-DOM
                 rows.forEach(function(row, index) {
                     if (index >= window.GRAVES_CONFIG.current.length) {
-                        console.warn('⚠️ Row index', index, 'out of bounds');
                         return;
                     }
                     
@@ -772,33 +725,27 @@ const FormHandler = {
                     const nameInput = row.querySelector('input[type="text"]');
                     if (nameInput) {
                         window.GRAVES_CONFIG.current[index].graveNameHe = nameInput.value;
-                        console.log('📝 Row', index, 'name:', nameInput.value);
                     }
                     
                     // קרא סוג חלקה
                     const plotTypeSelect = row.querySelector('select');
                     if (plotTypeSelect) {
                         window.GRAVES_CONFIG.current[index].plotType = parseInt(plotTypeSelect.value);
-                        console.log('📝 Row', index, 'plotType:', plotTypeSelect.value);
                     }
                     
                     // קרא קבר קטן
                     const smallCheckbox = row.querySelector('input[type="checkbox"]');
                     if (smallCheckbox) {
                         window.GRAVES_CONFIG.current[index].isSmallGrave = smallCheckbox.checked;
-                        console.log('📝 Row', index, 'isSmallGrave:', smallCheckbox.checked);
                     }
                     
                     // קרא עלות
                     const costInput = row.querySelector('input[type="number"]');
                     if (costInput) {
                         window.GRAVES_CONFIG.current[index].constructionCost = costInput.value;
-                        console.log('📝 Row', index, 'cost:', costInput.value);
                     }
                 });
                 
-                console.log('✅ All values read from DOM');
-                console.log('📊 Current data:', window.GRAVES_CONFIG.current);
                 
                 // ========================================
                 // בדיקה 1: לפחות קבר אחד
@@ -861,13 +808,11 @@ const FormHandler = {
                 const hiddenInput = document.getElementById('gravesData');
                 if (hiddenInput) {
                     hiddenInput.value = JSON.stringify(window.GRAVES_CONFIG.current);
-                    console.log('✅ Graves data serialized:', hiddenInput.value);
                 } else {
                     console.error('❌ Hidden input #gravesData not found!');
                     return false;
                 }
                 
-                console.log('✅ Validation passed successfully');
                 return true;
             };
             
@@ -876,12 +821,10 @@ const FormHandler = {
             // =========================================
             initGravesSystem();
             
-            console.log('🎉 Area Grave Form initialized successfully');
         });
     },
 
     handleCustomerForm: function(itemId) {
-        console.log('👤 handleCustomerForm called with itemId:', itemId);
         
         // ======================================
         // אתחול משתנים גלובליים
@@ -895,10 +838,8 @@ const FormHandler = {
         if (window.SmartSelectManager && window.SmartSelectManager.instances) {
             delete window.SmartSelectManager.instances['countryId'];
             delete window.SmartSelectManager.instances['cityId'];
-            console.log('🗑️ SmartSelect instances cleared');
         }
         
-        console.log('✅ handleCustomerForm initialized with clean state');
     
         // ⭐ הסר event listeners ישנים מהשדות
         const oldCountryInput = document.getElementById('countryId');
@@ -914,24 +855,20 @@ const FormHandler = {
             oldCityInput.parentNode.replaceChild(newCityInput, oldCityInput);
         }
         
-        console.log('✅ Form initialized - all previous state cleared');
         
         // ======================================
         // פונקציות עזר לטיפול במדינות וערים
         // ======================================
 
         window.populateCountries = function() {
-            console.log('🌍 populateCountries called');
             
             if (!window.locationsData?.countries) {
-                console.warn('⚠️ Countries data not loaded yet');
                 return;
             }
             
             const countryInstance = window.SmartSelectManager?.instances['countryId'];
             
             if (!countryInstance) {
-                console.warn('⚠️ Country SmartSelect instance not found');
                 return;
             }
             
@@ -958,16 +895,13 @@ const FormHandler = {
             countryInstance.valueSpan.textContent = 'בחר מדינה...';
             countryInstance.hiddenInput.value = '';
             
-            console.log(`✅ Populated ${window.locationsData.countries.length} countries`);
         };
         
         window.loadCitiesForCountry = async function(countryId) {
-            console.log('🏙️ Loading cities for country:', countryId);
     
             const cityInstance = window.SmartSelectManager?.instances['cityId'];
             
             if (!cityInstance) {
-                console.warn('⚠️ City SmartSelect instance not found');
                 return;
             }
             
@@ -990,7 +924,6 @@ const FormHandler = {
                 }
                 
                 const cities = result.data || [];
-                console.log(`✅ Loaded ${cities.length} cities for country ${countryId}`);
                 
                 // נקה ומלא ערים
                 cityInstance.optionsContainer.innerHTML = '';
@@ -1021,7 +954,6 @@ const FormHandler = {
                 // ⭐ הסר ספינר
                 hideSelectSpinner('cityId');
                 
-                console.log('✅ Cities populated successfully');
                 
             } catch (error) {
                 console.error('❌ Error loading cities:', error);
@@ -1030,13 +962,11 @@ const FormHandler = {
 
         // ⭐ פונקציה מתוקנת: בחירת מדינה
         window.selectCountry = function(countryId) {
-            console.log('🎯 Selecting country:', countryId);
             
             const countryInput = document.getElementById('countryId');
             const countryInstance = window.SmartSelectManager?.instances['countryId'];
             
             if (!countryInput || !countryInstance) {
-                console.warn('⚠️ Country input or instance not found');
                 return;
             }
             
@@ -1046,7 +976,6 @@ const FormHandler = {
             );
             
             if (!selectedCountry) {
-                console.warn('⚠️ Country not found in data:', countryId);
                 return;
             }
             
@@ -1064,18 +993,15 @@ const FormHandler = {
                 }
             });
             
-            console.log('✅ Country selected manually:', selectedCountry.countryNameHe);
         };
 
         // ⭐ פונקציה מתוקנת: בחירת עיר
         window.selectCity = function(cityId) {
-            console.log('🎯 Selecting city:', cityId);
             
             const cityInput = document.getElementById('cityId');
             const cityInstance = window.SmartSelectManager?.instances['cityId'];
             
             if (!cityInput || !cityInstance) {
-                console.warn('⚠️ City input or instance not found');
                 return;
             }
             
@@ -1084,7 +1010,6 @@ const FormHandler = {
                 .find(opt => opt.dataset.value == cityId);
             
             if (!selectedCityOption) {
-                console.warn('⚠️ City option not found:', cityId);
                 return;
             }
             
@@ -1102,14 +1027,12 @@ const FormHandler = {
                 }
             });
             
-            console.log('✅ City selected manually:', selectedCityOption.textContent);
         };
         
         // ======================================
         // חישוב תושבות - רק ללקוח חדש
         // ======================================
         if (!itemId) {
-            console.log('➕ Setting up residency calculation for new customer');
             
             FormHandler.waitForElement('#customerFormModal form', (form) => {
                 const typeSelect = form.elements['typeId'];
@@ -1122,7 +1045,6 @@ const FormHandler = {
                     const countryId = countrySelect?.value;
                     const cityId = citySelect?.value;
                     
-                    console.log('🧮 Calculating residency:', { typeId, countryId, cityId });
                     
                     if (typeId == 2) {
                         updateResidencyField(3);
@@ -1157,7 +1079,6 @@ const FormHandler = {
                             3: '#fff3e0'
                         };
                         residentField.style.backgroundColor = colors[value] || '#f5f5f5';
-                        console.log('✅ Residency updated:', value);
                     }
                 }
                 
@@ -1174,7 +1095,6 @@ const FormHandler = {
         // ======================================
         (async function loadLocations() {
             try {
-                console.log('🌐 Starting to load countries from API...');
 
                 // ⭐ הוסף ספינר למדינות
                 const countryInput = document.getElementById('countryId');
@@ -1192,10 +1112,8 @@ const FormHandler = {
                 
                 window.locationsData.countries = countriesResult.data || [];
                 
-                console.log(`✅ Loaded ${window.locationsData.countries.length} countries`);
                 
                 if (!countryInput) {
-                    console.warn('⚠️ Country input not found yet, will retry...');
                     setTimeout(loadLocations, 500);
                     return;
                 }
@@ -1203,7 +1121,6 @@ const FormHandler = {
                 // אתחל SmartSelect
                 if (window.SmartSelectManager) {
                     SmartSelectManager.init();
-                    console.log('✅ SmartSelect initialized');
                 }
                 
                 // אכלס מדינות
@@ -1215,17 +1132,14 @@ const FormHandler = {
                 // הגדר listener לשינוי מדינה
                 countryInput.addEventListener('change', async function() {
                     const countryId = this.value;
-                    console.log('🌍 Country changed:', countryId);
                     await window.loadCitiesForCountry(countryId);
                 });
                 
-                console.log('✅ Country-City dependency set up');
                 
                 // ======================================
                 // אם זה עריכה - טען נתוני לקוח
                 // ======================================
                 if (itemId) {
-                    console.log('📋 Loading customer data for edit mode...');
                     
                     const form = document.querySelector('#customerFormModal form');
                     if (!form) {
@@ -1233,8 +1147,6 @@ const FormHandler = {
                         return;
                     }
                     
-                    console.log('📋 [BEFORE] firstName:', form.elements['firstName']?.value);
-                    console.log('📋 [BEFORE] lastName:', form.elements['lastName']?.value);
                     
                     const response = await fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?action=get&id=${itemId}`);
                     const result = await response.json();
@@ -1247,11 +1159,6 @@ const FormHandler = {
                     
                     const customer = result.data;
                     
-                    console.log('✅ [API returned] unicId:', customer.unicId);
-                    console.log('✅ [API returned] firstName:', customer.firstName);
-                    console.log('✅ [API returned] lastName:', customer.lastName);
-                    console.log('✅ [API returned] countryId:', customer.countryId);
-                    console.log('✅ [API returned] cityId:', customer.cityId);
                     
                     // מלא את כל השדות
                     Object.keys(customer).forEach(key => {
@@ -1312,18 +1219,15 @@ const FormHandler = {
      * @param {string} itemId - מזהה הקבר (unicId)
      */
     handleGraveCardForm: async function(itemId) {
-        console.log('🪦 [GraveCard] אתחול כרטיס קבר:', itemId);
         
         // ⭐⭐⭐ שלוף את נתוני הקבר מהשרת תחילה!
         let graveData = null;
         try {
-            console.log('🔍 שולף נתוני קבר מהשרת...');
             const response = await fetch(`${API_BASE}graves-api.php?action=get&id=${itemId}`);
             const result = await response.json();
             
             if (result.success && result.data) {
                 graveData = result.data;
-                console.log('✅ נתוני קבר נשלפו:', graveData);
             } else {
                 console.error('❌ לא הצלחנו לשלוף נתוני קבר');
             }
@@ -1333,7 +1237,6 @@ const FormHandler = {
         
         // חכה שהטופס יהיה מוכן
         this.waitForElement('#graveCardFormModal', (modal) => {
-            console.log('✅ [GraveCard] Modal נטען');
 
             // קרא נתונים מה-hidden fields
             const unicIdField = modal.querySelector('input[name="unicId"]');
@@ -1350,12 +1253,10 @@ const FormHandler = {
                 areaGraveId: graveData?.areaGraveId || graveData?.area_grave_id
             };
 
-            console.log('📋 [GraveCard] נתוני קבר:', currentGrave);
 
             // עדכן את hidden field של areaGraveId (אם לא קיים)
             let areaGraveIdField = modal.querySelector('input[name="areaGraveId"]');
             if (!areaGraveIdField && currentGrave.areaGraveId) {
-                console.log('⚙️ יוצר hidden field ל-areaGraveId');
                 areaGraveIdField = document.createElement('input');
                 areaGraveIdField.type = 'hidden';
                 areaGraveIdField.name = 'areaGraveId';
@@ -1370,17 +1271,14 @@ const FormHandler = {
             setupGraveCardButtons(modal, currentGrave);
 
             // אתחול סייר קבצים
-            console.log('🔵 [GraveCard] מנסה לאתחל סייר קבצים...');
             initFileExplorer(modal, currentGrave.unicId);
 
             // אתחול מציג תמונות הקבר
-            console.log('📷 [GraveCard] מאתחל מציג תמונות...');
             if (typeof GraveImageViewer !== 'undefined') {
                 GraveImageViewer.init(currentGrave.unicId);
             }
 
             // אתחול סקשנים ניתנים לגרירה (toggle, sortable, resize)
-            console.log('🔀 [GraveCard] מאתחל סקשנים...');
             initSortableSections('graveSortableSections', 'graveCard');
         });
 
@@ -1390,14 +1288,11 @@ const FormHandler = {
         function initSortableSections(containerId, storagePrefix) {
             // טען את הסקריפט אם לא נטען
             if (typeof SortableSections !== 'undefined') {
-                console.log('✅ [Sortable] SortableSections כבר קיים');
                 SortableSections.init(containerId, storagePrefix);
             } else {
-                console.log('📥 [Sortable] טוען sortable-sections.js...');
                 var script = document.createElement('script');
                 script.src = '/dashboard/dashboards/cemeteries/forms/sortable-sections.js?v=' + Date.now();
                 script.onload = function() {
-                    console.log('✅ [Sortable] סקריפט נטען');
                     if (typeof SortableSections !== 'undefined') {
                         SortableSections.init(containerId, storagePrefix);
                     } else {
@@ -1417,11 +1312,9 @@ const FormHandler = {
         function initFileExplorer(modal, unicId) {
             const explorerContainer = modal.querySelector('#graveExplorer');
             if (!explorerContainer) {
-                console.log('⚠️ [Explorer] Container לא נמצא');
                 return;
             }
 
-            console.log('📁 [Explorer] מאתחל סייר קבצים עבור:', unicId);
 
             // טען Font Awesome אם לא נטען
             if (!document.querySelector('link[href*="font-awesome"], link[href*="fontawesome"]')) {
@@ -1431,7 +1324,6 @@ const FormHandler = {
                 faLink.integrity = 'sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==';
                 faLink.crossOrigin = 'anonymous';
                 document.head.appendChild(faLink);
-                console.log('✅ [Explorer] Font Awesome נטען');
             }
 
             // טען CSS (עם cache-busting לוודא טעינה טרייה)
@@ -1449,14 +1341,12 @@ const FormHandler = {
             if (typeof FileExplorer !== 'undefined') {
                 // כבר נטען - אתחל ישירות
                 window.explorer = new FileExplorer('graveExplorer', unicId);
-                console.log('✅ [Explorer] סייר קבצים אותחל');
             } else {
                 // טען את הסקריפט
                 const script = document.createElement('script');
                 script.src = '/dashboard/dashboards/cemeteries/explorer/explorer.js?' + cacheBuster;
                 script.onload = () => {
                     window.explorer = new FileExplorer('graveExplorer', unicId);
-                    console.log('✅ [Explorer] סייר קבצים נטען ואותחל');
                 };
                 script.onerror = () => {
                     console.error('❌ [Explorer] שגיאה בטעינת explorer.js');
@@ -1477,7 +1367,6 @@ const FormHandler = {
             let buttonsHTML = '<button type="button" class="btn btn-secondary" onclick="FormHandler.closeForm(\'graveCard\')"><i class="fas fa-times"></i> סגור</button>';
 
             footer.innerHTML = buttonsHTML;
-            console.log('✅ [GraveCard] כפתורים עודכנו');
         }
         
         // ========================================
@@ -1588,17 +1477,14 @@ const FormHandler = {
      * @param {string} itemId - מזהה הלקוח (unicId)
      */
     handleCustomerCardForm: async function(itemId) {
-        console.log('👤 [CustomerCard] אתחול כרטיס לקוח:', itemId);
 
         // חכה שהטופס יהיה מוכן
         this.waitForElement('#customerCardFormModal', (modal) => {
-            console.log('✅ [CustomerCard] Modal נטען');
 
             // קרא unicId מה-hidden field
             const unicIdField = modal.querySelector('input[name="unicId"]');
             const customerId = unicIdField?.value || itemId;
 
-            console.log('📋 [CustomerCard] מזהה לקוח:', customerId);
 
             // עדכן כפתורים בפוטר - רק סגור
             const footer = modal.querySelector('.modal-footer');
@@ -1610,7 +1496,6 @@ const FormHandler = {
             initCustomerFileExplorer(modal, customerId);
 
             // אתחול סקשנים ניתנים לגרירה (toggle, sortable, resize)
-            console.log('🔀 [CustomerCard] מאתחל סקשנים...');
             initCustomerSortableSections('customerSortableSections', 'customerCard');
 
             // הגדרת handler גלובלי לכרטיס לקוח
@@ -1633,14 +1518,11 @@ const FormHandler = {
         // פונקציה לאתחול סקשנים ניתנים לגרירה
         function initCustomerSortableSections(containerId, storagePrefix) {
             if (typeof SortableSections !== 'undefined') {
-                console.log('✅ [CustomerSortable] SortableSections כבר קיים');
                 SortableSections.init(containerId, storagePrefix);
             } else {
-                console.log('📥 [CustomerSortable] טוען sortable-sections.js...');
                 var script = document.createElement('script');
                 script.src = '/dashboard/dashboards/cemeteries/forms/sortable-sections.js?v=' + Date.now();
                 script.onload = function() {
-                    console.log('✅ [CustomerSortable] סקריפט נטען');
                     if (typeof SortableSections !== 'undefined') {
                         SortableSections.init(containerId, storagePrefix);
                     }
@@ -1653,11 +1535,9 @@ const FormHandler = {
         function initCustomerFileExplorer(modal, unicId) {
             const explorerContainer = modal.querySelector('#customerExplorer');
             if (!explorerContainer) {
-                console.log('⚠️ [CustomerExplorer] Container לא נמצא');
                 return;
             }
 
-            console.log('📁 [CustomerExplorer] מאתחל סייר קבצים עבור:', unicId);
 
             // טען Font Awesome אם לא נטען
             if (!document.querySelector('link[href*="font-awesome"], link[href*="fontawesome"]')) {
@@ -1681,13 +1561,11 @@ const FormHandler = {
             // טען JS ואתחל
             if (typeof FileExplorer !== 'undefined') {
                 window.customerExplorer = new FileExplorer('customerExplorer', unicId, {});
-                console.log('✅ [CustomerExplorer] סייר קבצים אותחל');
             } else {
                 const script = document.createElement('script');
                 script.src = '/dashboard/dashboards/cemeteries/explorer/explorer.js?' + cacheBuster;
                 script.onload = () => {
                     window.customerExplorer = new FileExplorer('customerExplorer', unicId, {});
-                    console.log('✅ [CustomerExplorer] סייר קבצים נטען ואותחל');
                 };
                 script.onerror = () => {
                     console.error('❌ [CustomerExplorer] שגיאה בטעינת explorer.js');
@@ -1699,17 +1577,14 @@ const FormHandler = {
     },
 
     handlePurchaseCardForm: async function(itemId) {
-        console.log('🛒 [PurchaseCard] אתחול כרטיס רכישה:', itemId);
 
         // חכה שהטופס יהיה מוכן
         this.waitForElement('#purchaseCardFormModal', (modal) => {
-            console.log('✅ [PurchaseCard] Modal נטען');
 
             // קרא unicId מה-hidden field
             const unicIdField = modal.querySelector('input[name="unicId"]');
             const purchaseId = unicIdField?.value || itemId;
 
-            console.log('📋 [PurchaseCard] מזהה רכישה:', purchaseId);
 
             // עדכן כפתורים בפוטר - רק סגור
             const footer = modal.querySelector('.modal-footer');
@@ -1721,7 +1596,6 @@ const FormHandler = {
             initPurchaseFileExplorer(modal, purchaseId);
 
             // אתחול סקשנים ניתנים לגרירה (toggle, sortable, resize)
-            console.log('🔀 [PurchaseCard] מאתחל סקשנים...');
             initPurchaseSortableSections('purchaseSortableSections', 'purchaseCard');
 
             // הגדרת handler גלובלי לכרטיס רכישה
@@ -1749,14 +1623,11 @@ const FormHandler = {
         // פונקציה לאתחול סקשנים ניתנים לגרירה
         function initPurchaseSortableSections(containerId, storagePrefix) {
             if (typeof SortableSections !== 'undefined') {
-                console.log('✅ [PurchaseSortable] SortableSections כבר קיים');
                 SortableSections.init(containerId, storagePrefix);
             } else {
-                console.log('📥 [PurchaseSortable] טוען sortable-sections.js...');
                 var script = document.createElement('script');
                 script.src = '/dashboard/dashboards/cemeteries/forms/sortable-sections.js?v=' + Date.now();
                 script.onload = function() {
-                    console.log('✅ [PurchaseSortable] סקריפט נטען');
                     if (typeof SortableSections !== 'undefined') {
                         SortableSections.init(containerId, storagePrefix);
                     }
@@ -1769,11 +1640,9 @@ const FormHandler = {
         function initPurchaseFileExplorer(modal, unicId) {
             const explorerContainer = modal.querySelector('#purchaseExplorer');
             if (!explorerContainer) {
-                console.log('⚠️ [PurchaseExplorer] Container לא נמצא');
                 return;
             }
 
-            console.log('📁 [PurchaseExplorer] מאתחל סייר קבצים עבור:', unicId);
 
             // טען Font Awesome אם לא נטען
             if (!document.querySelector('link[href*="font-awesome"], link[href*="fontawesome"]')) {
@@ -1797,13 +1666,11 @@ const FormHandler = {
             // טען JS ואתחל
             if (typeof FileExplorer !== 'undefined') {
                 window.purchaseExplorer = new FileExplorer('purchaseExplorer', unicId, {});
-                console.log('✅ [PurchaseExplorer] סייר קבצים אותחל');
             } else {
                 const script = document.createElement('script');
                 script.src = '/dashboard/dashboards/cemeteries/explorer/explorer.js?' + cacheBuster;
                 script.onload = () => {
                     window.purchaseExplorer = new FileExplorer('purchaseExplorer', unicId, {});
-                    console.log('✅ [PurchaseExplorer] סייר קבצים נטען ואותחל');
                 };
                 script.onerror = () => {
                     console.error('❌ [PurchaseExplorer] שגיאה בטעינת explorer.js');
@@ -1815,17 +1682,14 @@ const FormHandler = {
     },
 
     handleBurialCardForm: async function(itemId) {
-        console.log('⚰️ [BurialCard] אתחול כרטיס קבורה:', itemId);
 
         // חכה שהטופס יהיה מוכן
         this.waitForElement('#burialCardFormModal', (modal) => {
-            console.log('✅ [BurialCard] Modal נטען');
 
             // קרא unicId מה-hidden field
             const unicIdField = modal.querySelector('input[name="unicId"]');
             const burialId = unicIdField?.value || itemId;
 
-            console.log('📋 [BurialCard] מזהה קבורה:', burialId);
 
             // עדכן כפתורים בפוטר - רק סגור
             const footer = modal.querySelector('.modal-footer');
@@ -1837,7 +1701,6 @@ const FormHandler = {
             initBurialFileExplorer(modal, burialId);
 
             // אתחול סקשנים ניתנים לגרירה (toggle, sortable, resize)
-            console.log('🔀 [BurialCard] מאתחל סקשנים...');
             initBurialSortableSections('burialSortableSections', 'burialCard');
 
             // הגדרת handler גלובלי לכרטיס קבורה
@@ -1860,14 +1723,11 @@ const FormHandler = {
         // פונקציה לאתחול סקשנים ניתנים לגרירה
         function initBurialSortableSections(containerId, storagePrefix) {
             if (typeof SortableSections !== 'undefined') {
-                console.log('✅ [BurialSortable] SortableSections כבר קיים');
                 SortableSections.init(containerId, storagePrefix);
             } else {
-                console.log('📥 [BurialSortable] טוען sortable-sections.js...');
                 var script = document.createElement('script');
                 script.src = '/dashboard/dashboards/cemeteries/forms/sortable-sections.js?v=' + Date.now();
                 script.onload = function() {
-                    console.log('✅ [BurialSortable] סקריפט נטען');
                     if (typeof SortableSections !== 'undefined') {
                         SortableSections.init(containerId, storagePrefix);
                     }
@@ -1880,11 +1740,9 @@ const FormHandler = {
         function initBurialFileExplorer(modal, unicId) {
             const explorerContainer = modal.querySelector('#burialExplorer');
             if (!explorerContainer) {
-                console.log('⚠️ [BurialExplorer] Container לא נמצא');
                 return;
             }
 
-            console.log('📁 [BurialExplorer] מאתחל סייר קבצים עבור:', unicId);
 
             // טען Font Awesome אם לא נטען
             if (!document.querySelector('link[href*="font-awesome"], link[href*="fontawesome"]')) {
@@ -1908,13 +1766,11 @@ const FormHandler = {
             // טען JS ואתחל
             if (typeof FileExplorer !== 'undefined') {
                 window.burialExplorer = new FileExplorer('burialExplorer', unicId, {});
-                console.log('✅ [BurialExplorer] סייר קבצים אותחל');
             } else {
                 const script = document.createElement('script');
                 script.src = '/dashboard/dashboards/cemeteries/explorer/explorer.js?' + cacheBuster;
                 script.onload = () => {
                     window.burialExplorer = new FileExplorer('burialExplorer', unicId, {});
-                    console.log('✅ [BurialExplorer] סייר קבצים נטען ואותחל');
                 };
                 script.onerror = () => {
                     console.error('❌ [BurialExplorer] שגיאה בטעינת explorer.js');
@@ -1926,17 +1782,14 @@ const FormHandler = {
     },
 
     handlePaymentCardForm: async function(itemId) {
-        console.log('💰 [PaymentCard] אתחול כרטיס תשלום:', itemId);
 
         // חכה שהטופס יהיה מוכן
         this.waitForElement('#paymentCardFormModal', (modal) => {
-            console.log('✅ [PaymentCard] Modal נטען');
 
             // קרא id מה-hidden field
             const idField = modal.querySelector('input[name="id"]');
             const paymentId = idField?.value || itemId;
 
-            console.log('📋 [PaymentCard] מזהה תשלום:', paymentId);
 
             // עדכן כפתורים בפוטר - רק סגור
             const footer = modal.querySelector('.modal-footer');
@@ -1948,7 +1801,6 @@ const FormHandler = {
             initPaymentFileExplorer(modal, 'payment_' + paymentId);
 
             // אתחול סקשנים ניתנים לגרירה (toggle, sortable, resize)
-            console.log('🔀 [PaymentCard] מאתחל סקשנים...');
             initPaymentSortableSections('paymentSortableSections', 'paymentCard');
 
             // הגדרת handler גלובלי לכרטיס תשלום
@@ -1963,14 +1815,11 @@ const FormHandler = {
         // פונקציה לאתחול סקשנים ניתנים לגרירה
         function initPaymentSortableSections(containerId, storagePrefix) {
             if (typeof SortableSections !== 'undefined') {
-                console.log('✅ [PaymentSortable] SortableSections כבר קיים');
                 SortableSections.init(containerId, storagePrefix);
             } else {
-                console.log('📥 [PaymentSortable] טוען sortable-sections.js...');
                 var script = document.createElement('script');
                 script.src = '/dashboard/dashboards/cemeteries/forms/sortable-sections.js?v=' + Date.now();
                 script.onload = function() {
-                    console.log('✅ [PaymentSortable] סקריפט נטען');
                     if (typeof SortableSections !== 'undefined') {
                         SortableSections.init(containerId, storagePrefix);
                     }
@@ -1983,11 +1832,9 @@ const FormHandler = {
         function initPaymentFileExplorer(modal, unicId) {
             const explorerContainer = modal.querySelector('#paymentExplorer');
             if (!explorerContainer) {
-                console.log('⚠️ [PaymentExplorer] Container לא נמצא');
                 return;
             }
 
-            console.log('📁 [PaymentExplorer] מאתחל סייר קבצים עבור:', unicId);
 
             // טען Font Awesome אם לא נטען
             if (!document.querySelector('link[href*="font-awesome"], link[href*="fontawesome"]')) {
@@ -2011,13 +1858,11 @@ const FormHandler = {
             // טען JS ואתחל
             if (typeof FileExplorer !== 'undefined') {
                 window.paymentExplorer = new FileExplorer('paymentExplorer', unicId, {});
-                console.log('✅ [PaymentExplorer] סייר קבצים אותחל');
             } else {
                 const script = document.createElement('script');
                 script.src = '/dashboard/dashboards/cemeteries/explorer/explorer.js?' + cacheBuster;
                 script.onload = () => {
                     window.paymentExplorer = new FileExplorer('paymentExplorer', unicId, {});
-                    console.log('✅ [PaymentExplorer] סייר קבצים נטען ואותחל');
                 };
                 script.onerror = () => {
                     console.error('❌ [PaymentExplorer] שגיאה בטעינת explorer.js');
@@ -2035,7 +1880,6 @@ const FormHandler = {
         const countryInstance = window.SmartSelectManager?.instances['countryId'];
 
         if (!countryInstance) {
-            console.warn('⚠️ Country SmartSelect not found');
             return;
         }
         
@@ -2073,7 +1917,6 @@ const FormHandler = {
             countryInstance.valueSpan.textContent = 'בחר מדינה...';
         }
         
-        console.log('✅ Populated', countries.length, 'countries');
     },
 
     /**
@@ -2084,7 +1927,6 @@ const FormHandler = {
         const cityInstance = window.SmartSelectManager?.instances['cityId'];
         
         if (!countryInput || !cityInstance) {
-            console.warn('⚠️ Country or City SmartSelect not found');
             return;
         }
         
@@ -2098,7 +1940,6 @@ const FormHandler = {
                 return;
             }
             
-            console.log('🏙️ Loading cities for country:', countryId);
             
             fetch(`/dashboard/dashboards/cemeteries/api/locations-api.php?action=getCities&countryId=${countryId}`)
                 .then(response => response.json())
@@ -2108,7 +1949,6 @@ const FormHandler = {
                     }
                     
                     const cities = result.data;
-                    console.log('✅ Loaded', cities.length, 'cities');
                     
                     // נקה אופציות
                     cityInstance.optionsContainer.innerHTML = '';
@@ -2166,7 +2006,6 @@ const FormHandler = {
             }, 100);
         }
         
-        console.log('✅ Country-City dependency set up');
     },
 
 
@@ -2190,7 +2029,6 @@ const FormHandler = {
         // ⭐⭐⭐ הוסף את זה כאן! ⭐⭐⭐
         // נקה SmartSelect instances ישנים
         if (window.SmartSelectManager?.instances?.clientId) {
-            console.log('🧹 מנקה SmartSelect instance ישן');
             delete window.SmartSelectManager.instances.clientId;
         }
 
@@ -2201,7 +2039,6 @@ const FormHandler = {
         
         // פונקציות placeholder להיררכיה
         window.filterHierarchy = function(level) {
-            console.log(`📍 filterHierarchy called with level: ${level}`);
             
             const clearSelect = (selectId) => {
                 const select = document.getElementById(selectId);
@@ -2276,10 +2113,8 @@ const FormHandler = {
         };
 
         window.populateBlocks = function() {
-            console.log('📦 populateBlocks called');
             
             if (!window.hierarchyData?.blocks) {
-                console.warn('⚠️ Blocks data not loaded yet');
                 return;
             }
             
@@ -2287,7 +2122,6 @@ const FormHandler = {
             const blockSelect = document.getElementById('blockSelect');
             
             if (!blockSelect || !cemeteryId) {
-                console.warn('⚠️ Block select or cemetery not found');
                 return;
             }
             
@@ -2300,7 +2134,6 @@ const FormHandler = {
                     block.cemetery == cemeteryId;
             });
             
-            console.log(`📦 Found ${relevantBlocks.length} blocks`);
             
             relevantBlocks.forEach(block => {
                 const option = document.createElement('option');
@@ -2314,15 +2147,12 @@ const FormHandler = {
                 blockSelect.appendChild(option);
             });
             
-            console.log('✅ Blocks populated successfully');
             window.toggleSelectState('blockSelect', true);
         };
 
         window.populatePlots = function() {
-            console.log('📊 populatePlots called');
             
             if (!window.hierarchyData?.plots) {
-                console.warn('⚠️ Plots data not loaded yet');
                 return;
             }
             
@@ -2330,7 +2160,6 @@ const FormHandler = {
             const plotSelect = document.getElementById('plotSelect');
             
             if (!plotSelect || !blockId) {
-                console.warn('⚠️ Plot select or block not found');
                 return;
             }
             
@@ -2342,7 +2171,6 @@ const FormHandler = {
                     plot.unicBlockId == blockId;
             });
             
-            console.log(`📊 Found ${relevantPlots.length} plots`);
             
             relevantPlots.forEach(plot => {
                 const option = document.createElement('option');
@@ -2356,15 +2184,12 @@ const FormHandler = {
                 plotSelect.appendChild(option);
             });
             
-            console.log('✅ Plots populated successfully');
             window.toggleSelectState('plotSelect', true);
         };
 
         window.populateRows = function() {
-            console.log('📏 populateRows called');
             
             if (!window.hierarchyData?.rows) {
-                console.warn('⚠️ Rows data not loaded yet');
                 return;
             }
             
@@ -2372,7 +2197,6 @@ const FormHandler = {
             const rowSelect = document.getElementById('rowSelect');
             
             if (!rowSelect || !plotId) {
-                console.warn('⚠️ Row select or plot not found');
                 return;
             }
             
@@ -2384,7 +2208,6 @@ const FormHandler = {
                     row.unicPlotId == plotId;
             });
             
-            console.log(`📏 Found ${relevantRows.length} rows`);
             
             relevantRows.forEach(row => {
                 const option = document.createElement('option');
@@ -2398,14 +2221,11 @@ const FormHandler = {
                 rowSelect.appendChild(option);
             });
             
-            console.log('✅ Rows populated successfully');
         };
 
         window.populateAreaGraves = function() {
-            console.log('🏘️ populateAreaGraves called');
             
             if (!window.hierarchyData?.areaGraves) {
-                console.warn('⚠️ AreaGraves data not loaded yet');
                 return;
             }
             
@@ -2413,7 +2233,6 @@ const FormHandler = {
             const areaGraveSelect = document.getElementById('areaGraveSelect');
             
             if (!areaGraveSelect || !rowId) {
-                console.warn('⚠️ AreaGrave select or row not found');
                 return;
             }
             
@@ -2427,7 +2246,6 @@ const FormHandler = {
                     ag.unicLineId == rowId;
             });
             
-            console.log(`🏘️ Found ${relevantAreaGraves.length} areaGraves`);
             
             relevantAreaGraves.forEach(ag => {
                 const option = document.createElement('option');
@@ -2441,14 +2259,11 @@ const FormHandler = {
                 areaGraveSelect.appendChild(option);
             });
             
-            console.log('✅ AreaGraves populated successfully');
         };
 
         window.populateGraves = function() {
-            console.log('⚰️ populateGraves called');
             
             if (!window.hierarchyData?.graves) {
-                console.warn('⚠️ Graves data not loaded yet');
                 return;
             }
             
@@ -2456,7 +2271,6 @@ const FormHandler = {
             const graveSelect = document.getElementById('graveSelect');
             
             if (!graveSelect || !areaGraveId) {
-                console.warn('⚠️ Grave select or areaGrave not found');
                 return;
             }
             
@@ -2468,7 +2282,6 @@ const FormHandler = {
                     grave.unicAreaGraveId == areaGraveId;
             });
             
-            console.log(`⚰️ Found ${relevantGraves.length} graves`);
             
             relevantGraves.forEach(grave => {
                 const option = document.createElement('option');
@@ -2482,17 +2295,14 @@ const FormHandler = {
                 graveSelect.appendChild(option);
             });
             
-            console.log('✅ Graves populated successfully');
         };
 
         // ⭐ פונקציה למילוי לקוחות ב-SmartSelect
         function populateCustomers(customers) {
-            console.log('👥 populateCustomers called with', customers.length, 'customers');
             
             const customerInstance = window.SmartSelectManager?.instances['clientId'];
             
             if (!customerInstance) {
-                console.warn('⚠️ Customer SmartSelect instance not found');
                 return;
             }
             
@@ -2535,7 +2345,6 @@ const FormHandler = {
                         name: `${firstName} ${lastName}`
                     };
                     
-                    console.log('👤 לקוח נבחר:', window.selectedCustomerData);
                     
                     if (window.selectedGraveData && window.updatePaymentParameters) {
                         window.updatePaymentParameters();
@@ -2555,24 +2364,20 @@ const FormHandler = {
                     displayText += ` - ${currentCustomer.phone || currentCustomer.phoneMobile}`;
                 }
                 customerInstance.valueSpan.textContent = displayText;
-                console.log('✅ עודכן תצוגת לקוח נוכחי:', displayText);
             } else {
                 customerInstance.valueSpan.textContent = 'בחר לקוח...';
                 customerInstance.hiddenInput.value = '';
             }
             
-            console.log(`✅ Populated ${customers.length} customers`);
         }
 
         // ⭐ פונקציה לבחירת לקוח (במצב עריכה)
         window.selectCustomer = function(customerId, customerName) {
-            console.log('🎯 Selecting customer:', customerId, customerName);
             
             const customerInput = document.getElementById('clientId');
             const customerInstance = window.SmartSelectManager?.instances['clientId'];
             
             if (!customerInput || !customerInstance) {
-                console.warn('⚠️ Customer input or instance not found');
                 return;
             }
             
@@ -2586,7 +2391,6 @@ const FormHandler = {
                 opt.classList.toggle('selected', opt.dataset.value == customerId);
             });
             
-            console.log('✅ Customer selected:', customerName);
         };
   
         // ===========================================================
@@ -3172,7 +2976,6 @@ const FormHandler = {
 
         (async function loadHierarchy() {
             try {
-                console.log('🌐 Starting to load full hierarchy from APIs...');
                 
                 showSelectSpinner('cemeterySelect');
                 
@@ -3196,10 +2999,8 @@ const FormHandler = {
                         
                         if (purchaseData.success && purchaseData.data?.graveId) {
                             currentGraveId = purchaseData.data.graveId;
-                            console.log('✅ [Purchase] נמצא graveId מ-API:', currentGraveId);
                         }
                     } catch (error) {
-                        console.warn('⚠️ Could not load current grave:', error);
                     }
                 }
                 
@@ -3239,17 +3040,10 @@ const FormHandler = {
                 window.hierarchyData.areaGraves = areaGravesResult.data || [];
                 window.hierarchyData.graves = gravesResult.data || [];
                 
-                console.log(`✅ Loaded ${window.hierarchyData.cemeteries.length} available cemeteries`);
-                console.log(`✅ Loaded ${window.hierarchyData.blocks.length} available blocks`);
-                console.log(`✅ Loaded ${window.hierarchyData.plots.length} available plots`);
-                console.log(`✅ Loaded ${window.hierarchyData.rows.length} available rows`);
-                console.log(`✅ Loaded ${window.hierarchyData.areaGraves.length} available areaGraves`);
-                console.log(`✅ Loaded ${window.hierarchyData.graves.length} available graves`);
                 
                 const cemeterySelect = document.getElementById('cemeterySelect');
                 
                 if (!cemeterySelect) {
-                    console.warn('⚠️ Cemetery select not found yet, will retry...');
                     setTimeout(loadHierarchy, 500);
                     return;
                 }
@@ -3260,7 +3054,6 @@ const FormHandler = {
                     const dataGraveId = fieldset.getAttribute('data-purchase-grave-id');
                     if (dataGraveId && dataGraveId.trim() !== '') {
                         currentGraveId = dataGraveId;
-                        console.log('✅ [Purchase] נמצא graveId מ-data attribute:', currentGraveId);
                     }
                 }
                 
@@ -3286,7 +3079,6 @@ const FormHandler = {
                     }
                 });
                 
-                console.log('✅ Full hierarchy loaded');
                 hideSelectSpinner('cemeterySelect');
 
                 // ✅ אם יש קבר נוכחי, טען את ההיררכיה
@@ -3326,7 +3118,6 @@ const FormHandler = {
                         document.getElementById('graveSelect').value = currentGrave.unicId;
                         window.toggleSelectState('graveSelect', true); // ← הוסף את זה!
                         
-                        console.log('✅ Current hierarchy selections loaded');
                     }
                 }
 
@@ -3337,16 +3128,13 @@ const FormHandler = {
         })();
 
         async function loadAvailableCustomers() {
-            console.log('👥 מתחיל לטעון לקוחות פנויים מה-API...');
             
             const clientSelect = document.getElementById('clientId');
             if (!clientSelect) {
-                console.warn('⚠️ clientId not ready yet, will retry via observer');
                 observeClientIdAndLoad();
                 return;
             }
             
-            console.log('🔄 הוספת ספינר ל-clientId');
             showSelectSpinner('clientId');
             
             try {
@@ -3357,7 +3145,6 @@ const FormHandler = {
                     const currentClientId = clientSelect.value;
                     if (currentClientId && currentClientId.trim() !== '') {
                         apiUrl += `&currentClientId=${currentClientId}`;
-                        console.log('🔍 מוסיף currentClientId ל-API:', currentClientId);
                     }
                 }
                 
@@ -3368,20 +3155,17 @@ const FormHandler = {
                     throw new Error(data.message || 'Failed to load customers');
                 }
 
-                console.log('✅ נטענו', data.data.length, 'לקוחות');
 
                 // במצב עריכה - סמן את הלקוח הנוכחי
                 if (window.isEditMode) {
                     const currentClientId = clientSelect.value;
                     
                     if (currentClientId && currentClientId.trim() !== '') {
-                        console.log('🔍 מחפש לקוח נוכחי:', currentClientId);
                         
                         const currentCustomer = data.data.find(c => c.unicId === currentClientId);
                         
                         if (currentCustomer) {
                             currentCustomer.is_current = true;
-                            console.log('✅ לקוח נוכחי נמצא:', currentCustomer.firstName, currentCustomer.lastName);
                             
                             // שמור מיד את selectedCustomerData
                             window.selectedCustomerData = {
@@ -3389,9 +3173,7 @@ const FormHandler = {
                                 resident: currentCustomer.resident || 3,
                                 name: `${currentCustomer.firstName} ${currentCustomer.lastName}`
                             };
-                            console.log('👤 לקוח נוכחי נשמר:', window.selectedCustomerData);
                         } else {
-                            console.warn('⚠️ לקוח נוכחי לא נמצא ברשימה:', currentClientId);
                         }
                     }
                 }
@@ -3399,20 +3181,16 @@ const FormHandler = {
                 // אתחל SmartSelect אם צריך
                 if (window.SmartSelectManager && !window.SmartSelectManager.instances['clientId']) {
                     window.SmartSelectManager.init('clientId');
-                    console.log('✅ SmartSelect initialized');
                 }
 
                 // אכלס לקוחות
                 populateCustomers(data.data);
 
-                console.log('✅ לקוחות נטענו בהצלחה');
                 
             } catch (error) {
                 console.error('❌ שגיאה בטעינת לקוחות:', error);
             } finally {
-                console.log('🔄 מסיר ספינר מ-clientId');
                 hideSelectSpinner('clientId');
-                console.log('✅ Spinner cleanup complete');
             }
         }
         loadAvailableCustomers();
@@ -3426,7 +3204,6 @@ const FormHandler = {
                 const clientSelect = document.getElementById('clientId');
                 
                 if (clientSelect) {
-                    console.log('✅ clientId appeared, loading customers now');
                     obs.disconnect();
                     loadAvailableCustomers();
                 }
@@ -3532,7 +3309,6 @@ const FormHandler = {
         // ⭐⭐⭐ הוסף את זה כאן! ⭐⭐⭐
         // נקה SmartSelect instances ישנים
         if (window.SmartSelectManager?.instances?.clientId) {
-            console.log('🧹 מנקה SmartSelect instance ישן (burial)');
             delete window.SmartSelectManager.instances.clientId;
         }
 
@@ -3541,7 +3317,6 @@ const FormHandler = {
         // ===========================================================
         
         window.filterHierarchy = function(level) {
-            console.log(`📍 filterHierarchy called with level: ${level}`);
             
             const clearSelect = (selectId) => {
                 const select = document.getElementById(selectId);
@@ -3556,7 +3331,6 @@ const FormHandler = {
                     const customerSelect = document.querySelector('[name="clientId"]');
                     if (customerSelect) {
                         customerSelect.value = '';
-                        console.log('🧹 לקוח אופס בגלל שינוי בהיררכיה');
                     }
                     window.selectedCustomerData = null;
                 }
@@ -3627,10 +3401,8 @@ const FormHandler = {
         };
 
         window.populateBlocks = function() {
-            console.log('📦 populateBlocks called');
             
             if (!window.hierarchyData?.blocks) {
-                console.warn('⚠️ Blocks data not loaded yet');
                 return;
             }
             
@@ -3638,7 +3410,6 @@ const FormHandler = {
             const blockSelect = document.getElementById('blockSelect');
             
             if (!blockSelect || !cemeteryId) {
-                console.warn('⚠️ Block select or cemetery not found');
                 return;
             }
             
@@ -3651,7 +3422,6 @@ const FormHandler = {
                     block.cemetery == cemeteryId;
             });
             
-            console.log(`📦 Found ${relevantBlocks.length} blocks`);
             
             relevantBlocks.forEach(block => {
                 const option = document.createElement('option');
@@ -3665,15 +3435,12 @@ const FormHandler = {
                 blockSelect.appendChild(option);
             });
             
-            console.log('✅ Blocks populated successfully');
             window.toggleSelectState('blockSelect', true);
         };
 
         window.populatePlots = function() {
-            console.log('📊 populatePlots called');
             
             if (!window.hierarchyData?.plots) {
-                console.warn('⚠️ Plots data not loaded yet');
                 return;
             }
             
@@ -3681,7 +3448,6 @@ const FormHandler = {
             const plotSelect = document.getElementById('plotSelect');
             
             if (!plotSelect || !blockId) {
-                console.warn('⚠️ Plot select or block not found');
                 return;
             }
             
@@ -3693,7 +3459,6 @@ const FormHandler = {
                     plot.unicBlockId == blockId;
             });
             
-            console.log(`📊 Found ${relevantPlots.length} plots`);
             
             relevantPlots.forEach(plot => {
                 const option = document.createElement('option');
@@ -3707,15 +3472,12 @@ const FormHandler = {
                 plotSelect.appendChild(option);
             });
             
-            console.log('✅ Plots populated successfully');
             window.toggleSelectState('plotSelect', true);
         };
 
         window.populateRows = function() {
-            console.log('📏 populateRows called');
             
             if (!window.hierarchyData?.rows) {
-                console.warn('⚠️ Rows data not loaded yet');
                 return;
             }
             
@@ -3723,7 +3485,6 @@ const FormHandler = {
             const rowSelect = document.getElementById('rowSelect');
             
             if (!rowSelect || !plotId) {
-                console.warn('⚠️ Row select or plot not found');
                 return;
             }
             
@@ -3735,7 +3496,6 @@ const FormHandler = {
                     row.unicPlotId == plotId;
             });
             
-            console.log(`📏 Found ${relevantRows.length} rows`);
             
             relevantRows.forEach(row => {
                 const option = document.createElement('option');
@@ -3749,14 +3509,11 @@ const FormHandler = {
                 rowSelect.appendChild(option);
             });
             
-            console.log('✅ Rows populated successfully');
         };
 
         window.populateAreaGraves = function() {
-            console.log('🏘️ populateAreaGraves called');
             
             if (!window.hierarchyData?.areaGraves) {
-                console.warn('⚠️ AreaGraves data not loaded yet');
                 return;
             }
             
@@ -3764,7 +3521,6 @@ const FormHandler = {
             const areaGraveSelect = document.getElementById('areaGraveSelect');
             
             if (!areaGraveSelect || !rowId) {
-                console.warn('⚠️ AreaGrave select or row not found');
                 return;
             }
             
@@ -3778,7 +3534,6 @@ const FormHandler = {
                     ag.unicLineId == rowId;
             });
             
-            console.log(`🏘️ Found ${relevantAreaGraves.length} areaGraves`);
             
             relevantAreaGraves.forEach(ag => {
                 const option = document.createElement('option');
@@ -3792,14 +3547,11 @@ const FormHandler = {
                 areaGraveSelect.appendChild(option);
             });
             
-            console.log('✅ AreaGraves populated successfully');
         };
 
         window.populateGraves = function() {
-            console.log('⚰️ populateGraves called');
             
             if (!window.hierarchyData?.graves) {
-                console.warn('⚠️ Graves data not loaded yet');
                 return;
             }
             
@@ -3807,7 +3559,6 @@ const FormHandler = {
             const graveSelect = document.getElementById('graveSelect');
             
             if (!graveSelect || !areaGraveId) {
-                console.warn('⚠️ Grave select or areaGrave not found');
                 return;
             }
             
@@ -3819,7 +3570,6 @@ const FormHandler = {
                     grave.unicAreaGraveId == areaGraveId;
             });
             
-            console.log(`⚰️ Found ${relevantGraves.length} graves`);
             
             relevantGraves.forEach(grave => {
                 const option = document.createElement('option');
@@ -3833,17 +3583,14 @@ const FormHandler = {
                 graveSelect.appendChild(option);
             });
             
-            console.log('✅ Graves populated successfully');
         };
 
         // ⭐ פונקציה למילוי לקוחות ב-SmartSelect (מתוקנת!)
         populateCustomersB = function(customers) {
-            console.log('👥 populateCustomers called with', customers.length, 'customers');
             
             const customerInstance = window.SmartSelectManager?.instances['clientId'];
             
             if (!customerInstance) {
-                console.warn('⚠️ Customer SmartSelect instance not found');
                 return;
             }
             
@@ -3881,7 +3628,6 @@ const FormHandler = {
                         name: `${customer.firstName} ${customer.lastName}`
                     };
                     
-                    console.log('👤 נפטר/ת נבחר/ה:', window.selectedCustomerData);
                     
                     // ⭐ בדוק אם ללקוח יש רכישה פעילה
                     try {
@@ -3897,14 +3643,12 @@ const FormHandler = {
                                 
                                 if (grave) {
                                     await fillGraveHierarchy(purchase.graveId);
-                                    console.log('✅ קבר מולא אוטומטית מרכישה:', purchase.graveId);
                                     showNotification('info', `קבר "${purchase.grave_name || ''}" מולא אוטומטית על פי הרכישה`);
                                 }
                             }
                         } else {
                             // ✅ אין רכישה - אפס את ההיררכיה (רק אם לא במצב עריכה)
                             if (!window.isEditMode) {
-                                console.log('ℹ️ ללקוח אין רכישה - מאפס היררכיה');
                                 clearGraveHierarchy();
                             }
                         }
@@ -3929,25 +3673,21 @@ const FormHandler = {
                     displayText += `${currentCustomer.numId && ' זיהוי ' + currentCustomer.numId}`;
                 }
                 customerInstance.valueSpan.textContent = displayText;
-                console.log('✅ עודכן תצוגת לקוח נוכחי (burial):', displayText);
             } else {
                 customerInstance.valueSpan.textContent = 'בחר נפטר/ת...';
                 customerInstance.hiddenInput.value = '';
             }
 
             
-            console.log(`✅ Populated ${customers.length} customers (burial)`);
         };
 
         // ⭐ פונקציה לבחירת לקוח (במצב עריכה)
         window.selectCustomer = function(customerId, customerName) {
-            console.log('🎯 Selecting customer:', customerId, customerName);
             
             const customerInput = document.getElementById('clientId');
             const customerInstance = window.SmartSelectManager?.instances['clientId'];
             
             if (!customerInput || !customerInstance) {
-                console.warn('⚠️ Customer input or instance not found');
                 return;
             }
             
@@ -3961,7 +3701,6 @@ const FormHandler = {
                 opt.classList.toggle('selected', opt.dataset.value == customerId);
             });
             
-            console.log('✅ Customer selected:', customerName);
         };
             
         // ===========================================================
@@ -3982,7 +3721,6 @@ const FormHandler = {
                 graveSelect.addEventListener('change', async function() {
                     const graveId = this.value;
                     
-                    console.log('🔵 GRAVE CHANGED:', graveId);
                     
                     if (!graveId) {
                         if (!window.isEditMode) {
@@ -3995,7 +3733,6 @@ const FormHandler = {
                     }
                     
                     const grave = window.hierarchyData.graves.find(g => g.unicId == graveId);
-                    console.log('🔵 FOUND GRAVE:', grave);
                     
                     if (!grave) return;
                     
@@ -4004,43 +3741,33 @@ const FormHandler = {
                         graveStatus: grave.graveStatus
                     };
                     
-                    console.log('🔵 GRAVE STATUS:', grave.graveStatus);
                     
                     // ✅ בדוק אם לקבר יש רכישה
                     try {
                         const url = `/dashboard/dashboards/cemeteries/api/purchases-api.php?action=getByGrave&graveId=${graveId}`;
-                        console.log('🔵 FETCHING:', url);
                         
                         const response = await fetch(url);
                         const data = await response.json();
                         
-                        console.log('🔵 API RESPONSE:', data);
                         
                         if (data.success && data.data) {
                             const purchase = data.data;
-                            console.log('🔵 PURCHASE FOUND:', purchase);
-                            console.log('🔵 CLIENT ID:', purchase.clientId);
                             
                             const customerSelect = document.querySelector('[name="clientId"]');
-                            console.log('🔵 CUSTOMER SELECT:', customerSelect);
                             
                             if (customerSelect && purchase.clientId) {
-                                console.log('🔵 CURRENT OPTIONS:', Array.from(customerSelect.options).map(o => ({value: o.value, text: o.textContent})));
                                 
                                 // בדוק אם הלקוח כבר ברשימה
                                 const existingOption = Array.from(customerSelect.options).find(
                                     opt => opt.value === purchase.clientId
                                 );
                                 
-                                console.log('🔵 EXISTING OPTION:', existingOption);
                                 
                                 if (existingOption) {
                                     // הלקוח קיים
                                     customerSelect.value = purchase.clientId;
-                                    console.log('✅ CUSTOMER SELECTED FROM LIST:', purchase.clientId);
                                 } else {
                                     // הלקוח לא קיים - הוסף אותו
-                                    console.log('⚠️ CUSTOMER NOT IN LIST, ADDING...');
                                     
                                     const newOption = document.createElement('option');
                                     newOption.value = purchase.clientId;
@@ -4048,7 +3775,6 @@ const FormHandler = {
                                     customerSelect.appendChild(newOption);
                                     
                                     customerSelect.value = purchase.clientId;
-                                    console.log('✅ CUSTOMER ADDED AND SELECTED:', purchase.clientId);
                                 }
                                 
                                 window.selectedCustomerData = {
@@ -4056,11 +3782,9 @@ const FormHandler = {
                                     name: purchase.customer_name || ''
                                 };
                                 
-                                console.log('✅ selectedCustomerData:', window.selectedCustomerData);
                                 showNotification('info', `הלקוח "${purchase.customer_name}" מולא אוטומטית`);
                             }
                         } else {
-                            console.log('ℹ️ NO PURCHASE FOR THIS GRAVE');
                             if (!window.isEditMode) {
                                 const customerSelect = document.querySelector('[name="clientId"]');
                                 if (customerSelect) customerSelect.value = '';
@@ -4076,7 +3800,6 @@ const FormHandler = {
 
         // ✅ פונקציה לאיפוס היררכיית קברים
         function clearGraveHierarchy() {
-            console.log('🧹 מאפס היררכיית קברים');
             
             document.getElementById('cemeterySelect').value = '';
             document.getElementById('blockSelect').innerHTML = '<option value="">-- בחר בית עלמין תחילה --</option>';
@@ -4202,7 +3925,6 @@ const FormHandler = {
 
         (async function loadHierarchy() {
             try {
-                console.log('🌐 Starting to load full hierarchy from APIs...');
                 
                 showSelectSpinner('cemeterySelect');
                 
@@ -4226,10 +3948,8 @@ const FormHandler = {
                         
                         if (burialData.success && burialData.data?.graveId) {
                             currentGraveId = burialData.data.graveId;
-                            console.log('✅ [Burial] נמצא graveId מ-API:', currentGraveId);
                         }
                     } catch (error) {
-                        console.warn('⚠️ Could not load current grave:', error);
                     }
                 }
                 
@@ -4273,7 +3993,6 @@ const FormHandler = {
                 const cemeterySelect = document.getElementById('cemeterySelect');
                 
                 if (!cemeterySelect) {
-                    console.warn('⚠️ Cemetery select not found yet, will retry...');
                     setTimeout(loadHierarchy, 500);
                     return;
                 }
@@ -4284,7 +4003,6 @@ const FormHandler = {
                     const dataGraveId = fieldset.getAttribute('data-burial-grave-id');
                     if (dataGraveId && dataGraveId.trim() !== '') {
                         currentGraveId = dataGraveId;
-                        console.log('✅ [Burial] נמצא graveId מ-data attribute:', currentGraveId);
                     }
                 }    
                 
@@ -4346,7 +4064,6 @@ const FormHandler = {
                         document.getElementById('graveSelect').value = currentGrave.unicId;
                         window.toggleSelectState('graveSelect', true);
                         
-                        console.log('✅ Current hierarchy selections loaded');
                     }
                 }
 
@@ -4357,7 +4074,6 @@ const FormHandler = {
 
         (async function loadAvailableCustomers() {
             try {
-                console.log('👥 מתחיל לטעון לקוחות מה-API...');
                 
                 // ✅ הוסף ספינר
                 showSelectSpinner('clientId');
@@ -4383,13 +4099,11 @@ const FormHandler = {
                     return;
                 }
                 
-                console.log(`✅ נטענו ${result.data.length} לקוחות`);
                 
                 // ⭐ המתן ל-SmartSelect
                 const customerInput = document.getElementById('clientId');
                 
                 if (!customerInput) {
-                    console.warn('⚠️ Customer input לא נמצא עדיין, ננסה שוב...');
                     setTimeout(loadAvailableCustomers, 500);
                     return;
                 }
@@ -4397,7 +4111,6 @@ const FormHandler = {
                 // ⭐ אתחל SmartSelect
                 if (window.SmartSelectManager) {
                     SmartSelectManager.init();
-                    console.log('✅ SmartSelect initialized for customers (burial)');
                 }
                 
                 // ⭐ אכלס לקוחות
@@ -4411,13 +4124,11 @@ const FormHandler = {
                         name: `${currentCustomer.firstName} ${currentCustomer.lastName}`
                     };
                     
-                    console.log('👤 לקוח נוכחי נבחר:', window.selectedCustomerData);
                 }
                 
                 // ✅ הסר ספינר
                 hideSelectSpinner('clientId');
                 
-                console.log('✅ לקוחות נטענו בהצלחה');
 
                 // ⭐ אם לא במצב עריכה - בדוק אם יש רכישה לקבר
                 if (!window.isEditMode) {
@@ -4441,9 +4152,7 @@ const FormHandler = {
                                         name: purchase.customer_name || ''
                                     };
                                     
-                                    console.log('✅ [Burial] לקוח מולא אוטומטית מרכישה:', purchase.customer_name);
                                 } else {
-                                    console.log('ℹ️ [Burial] לא נמצאה רכישה לקבר זה');
                                 }
                             }
                         } catch (error) {
@@ -4666,7 +4375,6 @@ const FormHandler = {
             const endpoint = apiEndpoints[type];
             
             if (!endpoint) {
-                console.warn(`⚠️ No specific API for type: ${type}, using cemetery-hierarchy`);
                 fetch(`${API_BASE}cemetery-hierarchy.php?action=get&type=${type}&id=${itemId}`)
                     .then(response => response.json())
                     .then(result => {
@@ -4729,7 +4437,6 @@ const FormHandler = {
     // הוסף את הפונקציות האלה בתוך const FormHandler = { ... }
     // למשל אחרי הפונקציה closeForm או בסוף ה-object לפני הסגירה שלו
     changeParent: async function(type, itemId, currentParentId) {
-        console.log('changeParent called:', type, itemId, currentParentId);
         
         // קבע מה סוג ההורה לפי סוג הפריט
         const parentTypeMap = {
@@ -4759,7 +4466,6 @@ const FormHandler = {
                 if (data.success && data.data) {
                     actualParentId = data.data.lineId;  // ה-lineId הנוכחי
                     filterByParentId = data.data.plot_id || data.data.plotId || currentParentId;  // ⭐ קודם כל נבדוק plot_id
-                    console.log('🔍 Area grave details:', { lineId: actualParentId, plotId: filterByParentId });
                 }
             } catch (error) {
                 console.error('Error fetching area grave details:', error);
@@ -5049,7 +4755,6 @@ const FormHandler = {
                 }
             }
             
-            console.log('🔍 Loading parent options from:', url);
             
             const response = await fetch(url);
             const data = await response.json();
@@ -5064,7 +4769,6 @@ const FormHandler = {
             select.innerHTML = '<option value="">-- בחר --</option>';
             
             if (data.success && data.data) {
-                console.log(`✅ Loaded ${data.data.length} ${parentType} options`);
                 
                 data.data.forEach(item => {
                     const option = document.createElement('option');
@@ -5227,24 +4931,19 @@ const FormHandler = {
             // שורות 3396-3427 (עם התיקון)
             if (type === 'areaGrave') {
                 if (typeof window.validateGravesData === 'function') {
-                    console.log('🔍 Running graves validation...');
                     
                     if (!window.validateGravesData()) {
                         console.error('❌ Graves validation failed');
                         return;
                     }
                     
-                    console.log('✅ Graves validation passed');
                     
                     // ⭐⭐⭐ זה החלק שחסר! ⭐⭐⭐
                     const gravesDataInput = document.getElementById('gravesData');
                     if (gravesDataInput && gravesDataInput.value) {
-                        console.log('📥 Reading gravesData from hidden input after validation');
-                        console.log('📊 gravesData length:', gravesDataInput.value.length, 'chars');
                         
                         formData.set('gravesData', gravesDataInput.value);
                         
-                        console.log('✅ gravesData added to formData');
                     } else {
                         console.error('❌ gravesData input not found or empty!');
                         this.showMessage('שגיאה: נתוני הקברים לא נמצאו', 'error');
@@ -5294,9 +4993,7 @@ const FormHandler = {
                     // ⭐ תיקון: אל תדרוס אם השדה כבר קיים!
                     if (!data[parentColumn] || data[parentColumn] === parentValue) {
                         data[parentColumn] = parentValue;
-                        console.log(`✅ Set ${parentColumn} = ${parentValue}`);
                     } else {
-                        console.log(`⚠️ Skipping - ${parentColumn} already has value: ${data[parentColumn]}`);
                     }
                     delete data.parentId;
                     delete data.parent_id;
@@ -5336,8 +5033,6 @@ const FormHandler = {
                 url += `&id=${unicId}`;
             }
 
-            console.log('📤 Sending data:', data);
-            console.log('🌐 URL:', url);
             
             const response = await fetch(url, {
                 method: isEdit ? 'PUT' : 'POST',
@@ -5425,7 +5120,6 @@ window.onGraveSelected = function(graveId) {
  * ⭐ גרסה מתוקנת - שולפת parentId לפני פתיחת הטופס
  */
 window.openGraveEdit = async function(graveId) {
-    console.log('📝 פותח עריכת אחוזת קבר עבור קבר:', graveId);
     
     // 1️⃣ קרא את ה-areaGraveId מה-hidden field
     const modal = document.getElementById('graveCardFormModal');
@@ -5443,11 +5137,9 @@ window.openGraveEdit = async function(graveId) {
     }
     
     const areaGraveId = areaGraveIdField.value;
-    console.log('✅ נמצא areaGraveId:', areaGraveId);
     
     // 2️⃣ ⭐ שלוף את ה-parentId מה-API לפני פתיחת הטופס!
     try {
-        console.log('🔍 שולף parentId לפני פתיחת הטופס...');
         
         const response = await fetch(`/dashboard/dashboards/cemeteries/api/areaGraves-api.php?action=get&id=${areaGraveId}`);
         const result = await response.json();
@@ -5457,9 +5149,7 @@ window.openGraveEdit = async function(graveId) {
         if (result.success && result.data) {
             // ⭐ שלוף את ה-lineId (ההורה)
             parentId = result.data.lineId || result.data.line_id || result.data.rowId || result.data.row_id;
-            console.log('✅ נמצא parentId:', parentId);
         } else {
-            console.warn('⚠️ לא הצלחנו לשלוף parentId מה-API');
         }
         
         // 3️⃣ סגור את כרטיס הקבר
@@ -5964,7 +5654,6 @@ window.showSelectSpinner = function(selectId) {
                   document.querySelector(`[name="${selectId}"]`);
     
     if (!input) {
-        console.warn(`⚠️ Select ${selectId} not found`);
         return;
     }
     
@@ -5977,13 +5666,11 @@ window.showSelectSpinner = function(selectId) {
         const valueSpan = smartWrapper.querySelector('.smart-select-value');
         
         if (!display) {
-            console.warn(`⚠️ SmartSelect display not found for ${selectId}`);
             return;
         }
         
         // בדוק אם כבר יש ספינר
         if (display.querySelector('.loading-spinner')) {
-            console.log(`⚠️ Spinner already exists for ${selectId}`);
             return;
         }
         
@@ -6017,7 +5704,6 @@ window.showSelectSpinner = function(selectId) {
         display.style.opacity = '0.7';
         display.style.cursor = 'not-allowed';
         
-        console.log(`🔄 SmartSelect spinner added to ${selectId}`);
         
     } else {
         // ⭐ זה select רגיל - הקוד המקורי
@@ -6033,7 +5719,6 @@ window.showSelectSpinner = function(selectId) {
         }
         
         if (wrapper.querySelector('.loading-spinner')) {
-            console.log(`⚠️ Spinner already exists for ${selectId}`);
             return;
         }
         
@@ -6047,7 +5732,6 @@ window.showSelectSpinner = function(selectId) {
         input.disabled = true;
         input.style.opacity = '0.7';
         
-        console.log(`🔄 Regular select spinner added to ${selectId}`);
     }
 };
 
@@ -6060,7 +5744,6 @@ window.hideSelectSpinner = function(selectId) {
                   document.querySelector(`[name="${selectId}"]`);
     
     if (!input) {
-        console.warn(`⚠️ Select ${selectId} not found`);
         return;
     }
     
@@ -6075,7 +5758,6 @@ window.hideSelectSpinner = function(selectId) {
         
         if (spinner) {
             spinner.remove();
-            console.log(`✅ SmartSelect spinner removed from ${selectId}`);
         }
         
         // שחזר טקסט מקורי
@@ -6101,7 +5783,6 @@ window.hideSelectSpinner = function(selectId) {
         
         if (spinner) {
             spinner.remove();
-            console.log(`✅ Regular select spinner removed from ${selectId}`);
         }
         
         input.disabled = false;
@@ -6183,7 +5864,6 @@ window.GraveImageViewer = {
 
         // טען תמונות
         this.loadImages();
-        console.log('📷 [GraveImageViewer] אותחל עבור:', unicId);
     },
 
     /**
@@ -6200,7 +5880,6 @@ window.GraveImageViewer = {
                 this.images = result.images || [];
                 this.currentIndex = 0;
                 this.updateDisplay();
-                console.log('📷 [GraveImageViewer] נטענו', this.images.length, 'תמונות');
             }
         } catch (error) {
             console.error('📷 [GraveImageViewer] שגיאה בטעינת תמונות:', error);
@@ -6297,7 +5976,6 @@ window.GraveImageViewer = {
             const result = await response.json();
 
             if (result.success) {
-                console.log('📷 [GraveImageViewer] תמונה הועלתה:', result.fileName);
                 // רענן רשימה והצג את החדשה
                 await this.loadImages();
                 this.currentIndex = 0; // התמונה החדשה תהיה ראשונה (ממוינת לפי תאריך)
@@ -6334,7 +6012,6 @@ window.GraveImageViewer = {
             const result = await response.json();
 
             if (result.success) {
-                console.log('📷 [GraveImageViewer] תמונה נמחקה:', currentImage.name);
                 // רענן רשימה
                 await this.loadImages();
                 // התאם אינדקס
@@ -6379,7 +6056,6 @@ window.GraveImageViewer = {
         lightbox.classList.add('active');
         document.body.style.overflow = 'hidden';
 
-        console.log('📷 [GraveImageViewer] נפתח lightbox לתמונה:', this.currentIndex + 1);
     },
 
     /**

@@ -10,7 +10,6 @@
  *   ✅ תמיכה ב-parent filtering
  */
 
-console.log('🚀 entity-state-manager.js v1.0.0 - Loading...');
 
 // ===================================================================
 // מנהל State מרכזי לכל היישויות
@@ -31,7 +30,6 @@ class EntityStateManager {
             this.states[entityType] = this.createInitialState(entityType);
         });
         
-        console.log(`✅ Initialized states for ${entityTypes.length} entity types`);
     }
 
     /**
@@ -73,7 +71,6 @@ class EntityStateManager {
      */
     getState(entityType) {
         if (!this.states[entityType]) {
-            console.warn(`⚠️ State not found for ${entityType}, creating new one`);
             this.states[entityType] = this.createInitialState(entityType);
         }
         return this.states[entityType];
@@ -98,7 +95,6 @@ class EntityStateManager {
      * איפוס state של יישות
      */
     resetState(entityType) {
-        console.log(`🔄 Resetting state for ${entityType}`);
         this.states[entityType] = this.createInitialState(entityType);
         this.syncToGlobalVars(entityType);
     }
@@ -206,7 +202,6 @@ class EntityStateManager {
         const config = ENTITY_CONFIG[entityType];
         
         if (!config.hasParent) {
-            console.warn(`⚠️ ${entityType} does not support parent context`);
             return;
         }
         
@@ -264,10 +259,8 @@ class EntityStateManager {
      * דאמפ של כל ה-states (לדיבאג)
      */
     dumpStates() {
-        console.log('📊 Entity States Dump:');
         Object.keys(this.states).forEach(entityType => {
             const state = this.states[entityType];
-            console.log(`\n${entityType}:`, {
                 dataCount: state.currentData.length,
                 page: `${state.currentPage}/${state.totalPages}`,
                 isSearchMode: state.isSearchMode,
@@ -284,4 +277,3 @@ class EntityStateManager {
 window.EntityStateManager = EntityStateManager;
 window.entityState = new EntityStateManager();
 
-console.log('✅ entity-state-manager.js v1.0.0 - Loaded successfully!');

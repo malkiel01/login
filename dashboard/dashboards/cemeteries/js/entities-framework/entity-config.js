@@ -13,7 +13,6 @@
  * - v1.0.0: גרסה ראשונית
  */
 
-console.log('🚀 entity-config.js v3.0.0 - Loading (Dynamic Mode)...');
 
 // ===================================================================
 // קונפיגורציה מרכזית - תיטען מה-API
@@ -32,7 +31,6 @@ const CONFIG_API_ENDPOINT = '/dashboard/dashboards/cemeteries/api/get-config.php
 async function loadEntityConfig(entityType) {
     try {
         const url = `${CONFIG_API_ENDPOINT}?type=${entityType}&section=entity`;
-        console.log(`📥 Loading config for ${entityType}...`);
         
         const response = await fetch(url);
         
@@ -46,7 +44,6 @@ async function loadEntityConfig(entityType) {
             throw new Error(result.error || 'Unknown error');
         }
         
-        console.log(`✅ Config loaded for ${entityType}:`, result.data);
         return result.data;
         
     } catch (error) {
@@ -59,9 +56,6 @@ async function loadEntityConfig(entityType) {
 // פונקציה לטעינת כל הקונפיגים
 // ===================================================================
 async function loadAllEntityConfigs() {
-    console.log('╔════════════════════════════════════════════════════════════════');
-    console.log('║ 📥 LOADING ENTITY CONFIGS FROM API');
-    console.log('╠════════════════════════════════════════════════════════════════');
     
     const startTime = performance.now();
     
@@ -84,15 +78,10 @@ async function loadAllEntityConfigs() {
     const successful = results.filter(r => r.success).length;
     const failed = results.filter(r => !r.success);
     
-    console.log('╠════════════════════════════════════════════════════════════════');
-    console.log(`║ ✅ Loaded: ${successful}/${ENTITY_TYPES.length} entities`);
-    console.log(`║ ⏱️ Time: ${duration}ms`);
     
     if (failed.length > 0) {
-        console.log(`║ ❌ Failed: ${failed.map(f => f.type).join(', ')}`);
     }
     
-    console.log('╚════════════════════════════════════════════════════════════════');
     
     // הפוך לגלובלי
     window.ENTITY_CONFIG = ENTITY_CONFIG;
@@ -122,7 +111,6 @@ async function ensureEntityConfig(entityType) {
 // ===================================================================
 function getEntityConfig(entityType) {
     if (!ENTITY_CONFIG[entityType]) {
-        console.warn(`⚠️ Config for '${entityType}' not loaded yet. Use ensureEntityConfig() for async loading.`);
         return null;
     }
     return ENTITY_CONFIG[entityType];
@@ -170,8 +158,6 @@ window.initEntityConfig = initEntityConfig;
 // טעינה אוטומטית בעת טעינת הקובץ
 // ===================================================================
 initEntityConfig().then(() => {
-    console.log('✅ entity-config.js v3.0.0 - Ready!');
-    console.log('📊 Configured entities:', Object.keys(ENTITY_CONFIG).join(', '));
     
     // שליחת אירוע שהקונפיג מוכן
     window.dispatchEvent(new CustomEvent('entityConfigReady', { 

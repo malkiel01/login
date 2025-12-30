@@ -716,7 +716,6 @@ class FileExplorer {
     copyItems() {
         this.clipboard = { paths: [...this.selectedItems], action: 'copy' };
         this.hideContextMenu();
-        console.log('📋 הועתקו:', this.clipboard.paths.length, 'פריטים');
     }
 
     cutItems() {
@@ -728,7 +727,6 @@ class FileExplorer {
                 item.classList.add('cut');
             }
         });
-        console.log('✂️ נגזרו:', this.clipboard.paths.length, 'פריטים');
     }
 
     async renameItem(path, currentName) {

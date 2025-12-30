@@ -7,7 +7,6 @@
  * סגירת כרטיס היררכיה וחזרה לרמה הקודמת
  */
 function closeHierarchyCard(level) {
-    console.log(`Closing hierarchy card: ${level}`);
     
     // הסרת הכרטיס מה-DOM
     const card = document.querySelector(`.hierarchy-card[data-level="${level}"]`);
@@ -268,4 +267,3 @@ window.closeHierarchyCard = closeHierarchyCard;
 window.displayHierarchyCard = displayHierarchyCard;
 window.clearAllHierarchyCards = clearAllHierarchyCards;
 
-console.log('Hierarchy Cards System loaded successfully!');

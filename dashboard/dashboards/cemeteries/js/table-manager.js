@@ -143,7 +143,6 @@ class TableManager {
         // ⭐ תיקון v2.0.1: חישוב אוטומטי של totalItems
         if (this.config.totalItems === null || this.config.totalItems === undefined || this.config.totalItems === 0) {
             this.config.totalItems = this.config.data.length;
-            console.log(`📊 totalItems auto-calculated: ${this.config.totalItems}`);
         }
         
         // אתחול סדר עמודות
@@ -168,8 +167,6 @@ class TableManager {
             this.initInfiniteScroll();
         }
         
-        console.log('✅ TableManager v2.0.1 initialized');
-        console.log('📊 Config:', {
             totalItems: this.config.totalItems,
             scrollLoadBatch: this.config.scrollLoadBatch,
             itemsPerPage: this.config.itemsPerPage,
@@ -186,14 +183,12 @@ class TableManager {
         } else {
             this.state.totalPages = Math.ceil(this.config.totalItems / this.config.itemsPerPage);
         }
-        console.log(`📄 Total pages: ${this.state.totalPages}`);
     }
     
     /**
      * בניית מבנה הטבלה
      */
     buildTable() {
-        console.log('🏗️ Building table structure...');
         
         let parent = this.elements.table.parentNode;
         
@@ -205,7 +200,6 @@ class TableManager {
             const styles = window.getComputedStyle(currentParent);
             
             if (currentParent.classList.contains('table-container')) {
-                console.log('🎯 Setting .table-container with custom dimensions');
                 currentParent.setAttribute('style', `
                     width: ${this.config.containerWidth} !important; 
                     padding: ${this.config.containerPadding} !important; 
@@ -220,7 +214,6 @@ class TableManager {
                 fixed.push('table-container');
             }
             else if (styles.overflow !== 'visible' || styles.overflowY !== 'visible' || styles.maxHeight !== 'none') {
-                console.log(`🔧 Fixing parent: ${currentParent.className || currentParent.tagName}`);
                 currentParent.style.cssText += `
                     overflow: visible !important;
                     max-height: none !important;
@@ -233,7 +226,6 @@ class TableManager {
         }
         
         if (fixed.length > 0) {
-            console.log('✅ Fixed overflow on:', fixed.join(', '));
         }
         
         // צור wrapper
@@ -344,7 +336,6 @@ class TableManager {
         // טען נתונים ראשוניים
         this.loadInitialData();
         
-        console.log('🎉 Table structure complete!');
     }
     
     /**
@@ -518,7 +509,6 @@ class TableManager {
         if (pageNum < 1 || pageNum > this.state.totalPages) return;
         
         this.state.currentPage = pageNum;
-        console.log(`📄 Moving to page ${pageNum}/${this.state.totalPages}`);
         
         // callback
         if (this.config.onPageChange) {
@@ -533,7 +523,6 @@ class TableManager {
      * שינוי כמות רשומות לעמוד
      */
     changeItemsPerPage(newAmount) {
-        console.log(`📊 Changing items per page to: ${newAmount}`);
         
         this.config.itemsPerPage = newAmount;
         this.state.currentPage = 1;
@@ -998,7 +987,6 @@ class TableManager {
             document.removeEventListener('mousemove', onMouseMove);
             document.removeEventListener('mouseup', onMouseUp);
             
-            console.log('📏 Updated Column Widths:', this.getColumnWidths());
         };
         
         this.elements.headerTable.addEventListener('mousedown', onMouseDown);
@@ -1020,7 +1008,6 @@ class TableManager {
             }
         });
         
-        console.log('📜 Infinite scroll initialized (batch size: ' + this.config.scrollLoadBatch + ')');
     }
     
     /**
@@ -1030,18 +1017,15 @@ class TableManager {
         const loadedItems = this.state.displayedData.length;
         const totalAvailable = this.state.filteredData.length;
         
-        console.log(`📊 Scroll load check: ${loadedItems}/${this.config.totalItems} (available: ${totalAvailable})`);
         
         // בדיקה 1: האם הגענו לסוף הנתונים הכולל?
         if (loadedItems >= this.config.totalItems) {
-            console.log('📭 All items loaded from server');
             this.state.hasMoreData = false;
             return;
         }
         
         // בדיקה 2: האם צריך לקרוא עוד נתונים מה-API?
         if (loadedItems >= totalAvailable) {
-            console.log('⚠️ Need to fetch more data from API');
             
             if (this.config.onLoadMore) {
                 this.state.isLoading = true;
@@ -1063,7 +1047,6 @@ class TableManager {
         
         // בדיקה 3: יש עוד נתונים ב-filteredData - טען אותם
         this.state.isLoading = true;
-        console.log('📥 Loading more data from memory...');
         
         this.showLoadingIndicator();
         
@@ -1081,7 +1064,6 @@ class TableManager {
         this.hideLoadingIndicator();
         
         this.state.isLoading = false;
-        console.log(`✅ Loaded ${nextBatch.length} more items (${this.state.displayedData.length}/${this.config.totalItems})`);
     }
     
     /**
@@ -1188,7 +1170,6 @@ class TableManager {
             this.updatePaginationFooter();
         }
         
-        console.log(`📊 Total items updated to: ${newTotal}`);
     }
 }
 

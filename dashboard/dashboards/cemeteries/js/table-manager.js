@@ -959,22 +959,25 @@ class TableManager {
         
         const onMouseMove = (e) => {
             if (!this.state.isResizing) return;
-            
+
             const diff = e.pageX - startX;
             const newWidth = Math.max(50, startWidth - diff);
             this.state.columnWidths[colIndex] = `${newWidth}px`;
-            
+
             const th = this.elements.headerTable.querySelector(`th[data-column-index="${colIndex}"]`);
             if (th) {
                 th.style.width = `${newWidth}px`;
                 th.style.minWidth = `${newWidth}px`;
             }
-            
+
             const col = this.elements.bodyTable.querySelector(`colgroup col:nth-child(${colIndex + 1})`);
             if (col) {
                 col.style.width = `${newWidth}px`;
                 col.style.minWidth = `${newWidth}px`;
             }
+
+            // ⭐ עדכון רוחב הטבלה הכולל - הטבלה תתרחב ולא תצמצם עמודות אחרות
+            this.updateTableWidth();
         };
         
         const onMouseUp = () => {
@@ -986,7 +989,37 @@ class TableManager {
         
         this.elements.headerTable.addEventListener('mousedown', onMouseDown);
     }
-    
+
+    /**
+     * ⭐ עדכון רוחב הטבלה הכולל
+     * מחשב את סכום כל רוחבי העמודות ומעדכן את רוחב שתי הטבלאות
+     */
+    updateTableWidth() {
+        // חישוב רוחב כולל מכותרות הטבלה בפועל
+        let totalWidth = 0;
+        const headerCells = this.elements.headerTable.querySelectorAll('th.tm-header-cell');
+
+        headerCells.forEach(th => {
+            totalWidth += th.offsetWidth;
+        });
+
+        // הוספת מרווח קטן למניעת חיתוך
+        totalWidth += 2;
+
+        // עדכון רוחב שתי הטבלאות
+        const widthStyle = `${totalWidth}px`;
+
+        if (this.elements.headerTable) {
+            this.elements.headerTable.style.width = widthStyle;
+            this.elements.headerTable.style.minWidth = widthStyle;
+        }
+
+        if (this.elements.bodyTable) {
+            this.elements.bodyTable.style.width = widthStyle;
+            this.elements.bodyTable.style.minWidth = widthStyle;
+        }
+    }
+
     /**
      * אתחול Infinite Scroll
      */

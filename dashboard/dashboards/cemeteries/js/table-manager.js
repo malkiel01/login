@@ -321,8 +321,12 @@ class TableManager {
         const tbody = document.createElement('tbody');
         bodyTable.appendChild(tbody);
         bodyContainer.appendChild(bodyTable);
-        
+
+        // ⭐ סרגל כלים מעל הטבלה
+        const toolbar = this.buildToolbar();
+
         // הרכבה
+        wrapper.appendChild(toolbar);
         wrapper.appendChild(headerContainer);
         wrapper.appendChild(bodyContainer);
 
@@ -464,10 +468,145 @@ class TableManager {
         
         footer.appendChild(infoDiv);
         footer.appendChild(controlsDiv);
-        
+
         return footer;
     }
-    
+
+    /**
+     * ⭐ בניית סרגל כלים מעל הטבלה
+     */
+    buildToolbar() {
+        const toolbar = document.createElement('div');
+        toolbar.className = 'table-toolbar';
+        toolbar.style.cssText = `
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            padding: 8px 16px !important;
+            background: #f9fafb !important;
+            border-bottom: 1px solid #e5e7eb !important;
+            flex-shrink: 0 !important;
+            direction: rtl !important;
+        `;
+
+        // צד ימין - ריק לעת עתה (אפשר להוסיף חיפוש וכו')
+        const rightSide = document.createElement('div');
+        rightSide.className = 'toolbar-right';
+
+        // צד שמאל - כפתורי פעולות
+        const leftSide = document.createElement('div');
+        leftSide.className = 'toolbar-left';
+        leftSide.style.cssText = `
+            display: flex !important;
+            gap: 8px !important;
+            align-items: center !important;
+        `;
+
+        // כפתור הדפסה
+        const printBtn = this.createToolbarButton('🖨️', 'הדפסה', () => this.handlePrint());
+
+        // כפתור יצוא לאקסל
+        const excelBtn = this.createToolbarButton('📊', 'יצוא לאקסל', () => this.handleExportExcel());
+
+        // כפתור יצוא ל-PDF
+        const pdfBtn = this.createToolbarButton('📄', 'יצוא ל-PDF', () => this.handleExportPDF());
+
+        leftSide.appendChild(printBtn);
+        leftSide.appendChild(excelBtn);
+        leftSide.appendChild(pdfBtn);
+
+        toolbar.appendChild(rightSide);
+        toolbar.appendChild(leftSide);
+
+        this.elements.toolbar = toolbar;
+
+        return toolbar;
+    }
+
+    /**
+     * יצירת כפתור לסרגל כלים
+     */
+    createToolbarButton(icon, title, onClick) {
+        const btn = document.createElement('button');
+        btn.className = 'toolbar-btn';
+        btn.innerHTML = icon;
+        btn.title = title;
+        btn.style.cssText = `
+            padding: 8px 12px !important;
+            border: 1px solid #d1d5db !important;
+            border-radius: 6px !important;
+            background: white !important;
+            cursor: pointer !important;
+            font-size: 16px !important;
+            transition: all 0.2s !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        `;
+        btn.onmouseover = () => {
+            btn.style.background = '#e5e7eb';
+            btn.style.borderColor = '#9ca3af';
+        };
+        btn.onmouseout = () => {
+            btn.style.background = 'white';
+            btn.style.borderColor = '#d1d5db';
+        };
+        btn.onclick = onClick;
+        return btn;
+    }
+
+    /**
+     * טיפול בהדפסה
+     */
+    handlePrint() {
+        window.print();
+    }
+
+    /**
+     * טיפול ביצוא לאקסל
+     */
+    handleExportExcel() {
+        const data = this.getFilteredData();
+        const columns = this.config.columns;
+
+        // יצירת CSV
+        let csv = '\ufeff'; // BOM for Hebrew support
+
+        // כותרות
+        csv += columns.map(col => `"${col.label}"`).join(',') + '\n';
+
+        // נתונים
+        data.forEach(row => {
+            csv += columns.map(col => {
+                let val = row[col.field] || '';
+                val = String(val).replace(/"/g, '""');
+                return `"${val}"`;
+            }).join(',') + '\n';
+        });
+
+        // הורדה
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `export_${new Date().toISOString().slice(0,10)}.csv`;
+        link.click();
+
+        if (typeof showToast === 'function') {
+            showToast('הקובץ יוצא בהצלחה', 'success');
+        }
+    }
+
+    /**
+     * טיפול ביצוא ל-PDF
+     */
+    handleExportPDF() {
+        // לעת עתה - הדפסה כ-PDF
+        if (typeof showToast === 'function') {
+            showToast('בחר "שמור כ-PDF" בחלון ההדפסה', 'info');
+        }
+        window.print();
+    }
+
     /**
      * יצירת כפתור pagination
      */

@@ -1023,23 +1023,31 @@ class TableManager {
 
     /**
      * ⭐ עדכון רוחב הטבלה הכולל
-     * מחשב את סכום כל רוחבי העמודות ומעדכן את רוחב שתי הטבלאות
+     * מחשב את סכום כל רוחבי העמודות מה-STATE (לא מהרינדור!)
      * הטבלה יכולה להתרחב - ה-fixedContainer מונע הרחבת הדף
      */
     updateTableWidth() {
-        // חישוב רוחב כולל מכותרות הטבלה בפועל
+        // ⭐ חישוב רוחב כולל מה-state.columnWidths - לא מ-offsetWidth!
+        // זה מבטיח שהרוחבים המוגדרים נשמרים ולא מושפעים מהדפדפן
         let totalWidth = 0;
-        const headerCells = this.elements.headerTable.querySelectorAll('th.tm-header-cell');
 
-        headerCells.forEach(th => {
-            totalWidth += th.offsetWidth;
+        this.state.columnOrder.forEach(colIndex => {
+            const w = this.state.columnWidths[colIndex];
+            if (typeof w === 'string' && w.endsWith('px')) {
+                totalWidth += parseInt(w);
+            } else if (typeof w === 'number') {
+                totalWidth += w;
+            } else {
+                // עמודות auto - קח את הרוחב בפועל מהרינדור
+                const th = this.elements.headerTable.querySelector(`th[data-column-index="${colIndex}"]`);
+                totalWidth += th ? th.offsetWidth : 100;
+            }
         });
 
         // הוספת מרווח קטן למניעת חיתוך
         totalWidth += 2;
 
-        // עדכון רוחב שתי הטבלאות - כולל min-width כדי שעמודות לא יתכווצו
-        // ה-fixedContainer עם overflow:hidden מונע הרחבת הדף
+        // עדכון רוחב שתי הטבלאות
         const widthStyle = `${totalWidth}px`;
 
         if (this.elements.headerTable) {

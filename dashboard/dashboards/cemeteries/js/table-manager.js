@@ -222,24 +222,27 @@ class TableManager {
         wrapper.setAttribute('data-table-manager', 'v2.1.0');  // ✅ עדכן גרסה
         wrapper.setAttribute('data-fixed-width', 'true');
         wrapper.setAttribute('style', `
-            display: flex !important; 
-            flex-direction: column !important; 
-            width: 100% !important; 
-            height: ${this.config.tableHeight} !important;        /* ✅ שימוש בפרמטר */
-            min-height: ${this.config.tableMinHeight} !important;  /* ✅ שימוש בפרמטר */
-            border: 1px solid #e5e7eb !important; 
-            border-radius: 8px !important; 
-            overflow: hidden !important; 
-            background: white !important; 
-            position: relative !important; 
+            display: flex !important;
+            flex-direction: column !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            height: ${this.config.tableHeight} !important;
+            min-height: ${this.config.tableMinHeight} !important;
+            border: 1px solid #e5e7eb !important;
+            border-radius: 8px !important;
+            overflow: hidden !important;
+            background: white !important;
+            position: relative !important;
             box-sizing: border-box !important;
         `.replace(/\s+/g, ' ').trim());
-        
+
         // קונטיינר כותרת
         const headerContainer = document.createElement('div');
         headerContainer.className = 'table-header-container';
         headerContainer.style.cssText = `
             flex-shrink: 0 !important;
+            min-width: 0 !important;
             overflow-x: auto !important;
             overflow-y: hidden !important;
             background: white !important;
@@ -247,12 +250,13 @@ class TableManager {
             position: relative !important;
             z-index: 100 !important;
         `;
-        
+
         // קונטיינר תוכן
         const bodyContainer = document.createElement('div');
         bodyContainer.className = 'table-body-container';
         bodyContainer.style.cssText = `
             flex: 1 !important;
+            min-width: 0 !important;
             overflow-x: auto !important;
             overflow-y: auto !important;
             position: relative !important;

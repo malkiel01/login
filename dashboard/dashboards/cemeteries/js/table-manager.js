@@ -1490,18 +1490,26 @@ class TableManager {
      * התאמת פילטר תאריך
      */
     matchDateFilter(cellValue, filter) {
+        // תאריך ברירת מחדל לתאריכים לא תקינים
+        const DEFAULT_DATE = new Date(1900, 0, 1); // 01.01.1900
+
         // DEBUG - הסר אחרי בדיקה
-        console.log('matchDateFilter:', { cellValue, filter });
+        console.log('matchDateFilter - Input:', {
+            cellValue,
+            cellValueType: typeof cellValue,
+            filter,
+            filterValue: filter?.value,
+            filterOperator: filter?.operator
+        });
 
-        // אם אין ערך בתא - לא מתאים
-        if (!cellValue) return false;
+        // אם אין ערך בתא או ערך לא תקין - נשתמש בתאריך ברירת מחדל
+        let cellDate = DEFAULT_DATE;
+        let usedDefault = false;
 
-        // אם אין ערך פילטר - התאמה (אין סינון)
-        if (!filter.value) return true;
-
-        // המרת תאריך התא
-        let cellDate;
-        if (typeof cellValue === 'string') {
+        if (!cellValue || cellValue === 'Invalid Date' || cellValue === 'NaN' || cellValue === '') {
+            usedDefault = true;
+            console.log('matchDateFilter - Using default date (empty/invalid cellValue)');
+        } else if (typeof cellValue === 'string') {
             // נסה לפרסר פורמטים שונים
             if (cellValue.includes('/')) {
                 // פורמט DD/MM/YYYY
@@ -1509,20 +1517,55 @@ class TableManager {
                 if (parts.length === 3) {
                     cellDate = new Date(parts[2], parts[1] - 1, parts[0]);
                 }
+            } else if (cellValue.includes('.')) {
+                // פורמט DD.MM.YYYY
+                const parts = cellValue.split('.');
+                if (parts.length === 3) {
+                    cellDate = new Date(parts[2], parts[1] - 1, parts[0]);
+                }
+            } else if (cellValue.includes('-')) {
+                // פורמט YYYY-MM-DD
+                cellDate = new Date(cellValue);
             } else {
+                // נסה פורמט כללי
                 cellDate = new Date(cellValue);
             }
+
+            // אם התאריך לא תקין - השתמש בברירת מחדל
+            if (!cellDate || isNaN(cellDate.getTime())) {
+                cellDate = DEFAULT_DATE;
+                usedDefault = true;
+                console.log('matchDateFilter - Using default date (parse failed)');
+            }
         } else if (cellValue instanceof Date) {
-            cellDate = cellValue;
+            if (isNaN(cellValue.getTime())) {
+                cellDate = DEFAULT_DATE;
+                usedDefault = true;
+            } else {
+                cellDate = cellValue;
+            }
         } else {
             cellDate = new Date(cellValue);
+            if (isNaN(cellDate.getTime())) {
+                cellDate = DEFAULT_DATE;
+                usedDefault = true;
+            }
         }
 
-        if (!cellDate || isNaN(cellDate.getTime())) return false;
+        console.log('matchDateFilter - Parsed cellDate:', {
+            cellDate: cellDate.toISOString(),
+            usedDefault
+        });
+
+        // אם אין ערך פילטר - התאמה (אין סינון)
+        if (!filter.value) return true;
 
         // המרת תאריך הפילטר
         const filterDate = new Date(filter.value);
-        if (isNaN(filterDate.getTime())) return true; // פילטר לא תקין - הצג הכל
+        if (isNaN(filterDate.getTime())) {
+            console.log('matchDateFilter - Filter date is invalid, returning true');
+            return true; // פילטר לא תקין - הצג הכל
+        }
 
         const filterDate2 = filter.value2 ? new Date(filter.value2) : null;
 
@@ -1534,30 +1577,49 @@ class TableManager {
         const filterDay = new Date(filterDate.getFullYear(), filterDate.getMonth(), filterDate.getDate());
         const filterDay2 = filterDate2 ? new Date(filterDate2.getFullYear(), filterDate2.getMonth(), filterDate2.getDate()) : null;
 
+        console.log('matchDateFilter - Comparison:', {
+            cellDay: cellDay.toISOString(),
+            filterDay: filterDay.toISOString(),
+            filterDay2: filterDay2?.toISOString(),
+            operator
+        });
+
+        let result;
         switch (operator) {
             case 'exact':
-                return cellDay.getTime() === filterDay.getTime();
+                result = cellDay.getTime() === filterDay.getTime();
+                break;
 
             case 'approximate':
                 // ±2.5 שנים
                 const yearsInMs = 2.5 * 365 * 24 * 60 * 60 * 1000;
                 const minDate = new Date(filterDay.getTime() - yearsInMs);
                 const maxDate = new Date(filterDay.getTime() + yearsInMs);
-                return cellDay >= minDate && cellDay <= maxDate;
+                result = cellDay >= minDate && cellDay <= maxDate;
+                break;
 
             case 'between':
-                if (!filterDay2) return true;
-                return cellDay >= filterDay && cellDay <= filterDay2;
+                if (!filterDay2) {
+                    result = true;
+                } else {
+                    result = cellDay >= filterDay && cellDay <= filterDay2;
+                }
+                break;
 
             case 'before':
-                return cellDay < filterDay;
+                result = cellDay < filterDay;
+                break;
 
             case 'after':
-                return cellDay > filterDay;
+                result = cellDay > filterDay;
+                break;
 
             default:
-                return cellDay.getTime() === filterDay.getTime();
+                result = cellDay.getTime() === filterDay.getTime();
         }
+
+        console.log('matchDateFilter - Result:', result);
+        return result;
     }
 
     /**

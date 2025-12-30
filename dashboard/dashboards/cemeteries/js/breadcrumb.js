@@ -40,6 +40,41 @@ const BreadcrumbManager = {
             name: 'קבר',
             icon: '⚰️',
             plural: 'קברים'
+        },
+        customer: {
+            name: 'לקוח',
+            icon: '👤',
+            plural: 'לקוחות'
+        },
+        purchase: {
+            name: 'רכישה',
+            icon: '🛒',
+            plural: 'רכישות'
+        },
+        burial: {
+            name: 'קבורה',
+            icon: '⚰️',
+            plural: 'קבורות'
+        },
+        payment: {
+            name: 'תשלום',
+            icon: '💰',
+            plural: 'תשלומים'
+        },
+        residency: {
+            name: 'הגדרת תושבות',
+            icon: '🏠',
+            plural: 'הגדרות תושבות'
+        },
+        country: {
+            name: 'מדינה',
+            icon: '🌍',
+            plural: 'מדינות'
+        },
+        city: {
+            name: 'עיר',
+            icon: '🏙️',
+            plural: 'ערים'
         }
     },
     
@@ -148,18 +183,37 @@ const BreadcrumbManager = {
      * Build path from selected items
      */
     _buildPathFromItems(items) {
-        const order = ['cemetery', 'block', 'plot', 'areaGrave', 'grave'];
+        // סדר היררכי לישויות עם parent
+        const hierarchyOrder = ['cemetery', 'block', 'plot', 'areaGrave', 'grave'];
+        // ישויות עצמאיות (ללא parent)
+        const standaloneTypes = ['customer', 'purchase', 'burial', 'payment', 'residency', 'country', 'city'];
+
         let firstFound = null;
         let lastFound = null;
-        
-        // מצא את הרמה הראשונה והאחרונה
-        for (let type of order) {
+
+        // בדוק קודם ישויות עצמאיות
+        for (let type of standaloneTypes) {
+            if (items[type] && this.hierarchy[type]) {
+                this.currentPath.push({
+                    type: 'level',
+                    levelType: type,
+                    name: this.hierarchy[type].plural,
+                    icon: this.hierarchy[type].icon,
+                    clickable: false
+                });
+                this.log(`📍 Standalone entity: ${type}`);
+                return;
+            }
+        }
+
+        // מצא את הרמה הראשונה והאחרונה בהיררכיה
+        for (let type of hierarchyOrder) {
             if (items[type]) {
                 if (!firstFound) firstFound = type;
                 lastFound = type;
             }
         }
-        
+
         if (!firstFound) {
             this.log('⚠️ No valid items found');
             return;

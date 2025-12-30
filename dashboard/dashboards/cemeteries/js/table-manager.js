@@ -1872,7 +1872,9 @@ class TableManager {
             font-weight: 500;
         `;
         applyBtn.onclick = () => {
+            console.log('Apply button clicked!', { colIndex, filterType });
             const success = this.applyFilterFromSubmenu(colIndex, content, filterType);
+            console.log('applyFilterFromSubmenu returned:', success);
             if (success !== false) {
                 parentMenu.remove();
                 submenu.remove();

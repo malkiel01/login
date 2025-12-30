@@ -152,38 +152,28 @@ class EntityManager {
     static updateUI(entityType, parentId = null, parentName = null) {
         const config = ENTITY_CONFIG[entityType];
         const state = entityState.getState(entityType);
-        
+
         // עדכון פריט תפריט אקטיבי
         if (typeof setActiveMenuItem === 'function') {
             const menuItemId = `${entityType}sItem`;
             setActiveMenuItem(menuItemId);
         }
-        
+
         // עדכון כפתור הוספה
         if (typeof updateAddButtonText === 'function') {
             updateAddButtonText();
         }
-        
+
         // עדכון breadcrumb
-        if (typeof updateBreadcrumb === 'function') {
-            const breadcrumbData = {};
-            
-            // הוספת parent אם יש
-            if (config.hasParent && parentId && parentName) {
-                const parentType = this.getParentType(config.parentParam);
-                if (parentType) {
-                    breadcrumbData[parentType] = { id: parentId, name: parentName };
-                }
+        if (typeof BreadcrumbManager !== 'undefined') {
+            // אם אין parent - זו רמה ראשית, השתמש ב-forceType
+            if (!parentId || !parentName) {
+                BreadcrumbManager.update(null, entityType);
+            } else {
+                // יש parent - בנה את ההיררכיה
+                const breadcrumbData = this.buildBreadcrumbHierarchy(entityType, parentId, parentName);
+                BreadcrumbManager.update(breadcrumbData, null);
             }
-            
-            // הוספת היישות הנוכחית
-            const displayName = (config.hasParent && parentName) 
-                ? `${config.plural} של ${parentName}`
-                : config.plural;
-            
-            breadcrumbData[entityType] = { name: displayName };
-            
-            updateBreadcrumb(breadcrumbData);
         }
         
         // עדכון כותרת החלון
@@ -248,11 +238,55 @@ class EntityManager {
      */
     static getParentType(parentParam) {
         const parentTypes = {
+            'cemeteryId': 'cemetery',
             'blockId': 'block',
             'plotId': 'plot',
-            'areaGraveId': 'areaGrave'
+            'areaGraveId': 'areaGrave',
+            'countryId': 'country'
         };
         return parentTypes[parentParam] || null;
+    }
+
+    /**
+     * בניית היררכיית breadcrumb מלאה
+     * @param {string} entityType - סוג היישות הנוכחית
+     * @param {string} parentId - מזהה ההורה
+     * @param {string} parentName - שם ההורה
+     * @returns {Object} נתוני breadcrumb
+     */
+    static buildBreadcrumbHierarchy(entityType, parentId, parentName) {
+        const config = ENTITY_CONFIG[entityType];
+        const breadcrumbData = {};
+
+        // קבל את סוג ההורה
+        const parentType = this.getParentType(config.parentParam);
+
+        if (parentType) {
+            // הוסף את ההורה הישיר
+            breadcrumbData[parentType] = {
+                id: parentId,
+                name: parentName
+            };
+
+            // בדוק אם יש היררכיה עמוקה יותר ב-selectedItems
+            if (window.selectedItems) {
+                const hierarchyOrder = ['cemetery', 'block', 'plot', 'areaGrave', 'grave'];
+                const parentIndex = hierarchyOrder.indexOf(parentType);
+
+                // הוסף את כל ההורים שמעל
+                for (let i = 0; i < parentIndex; i++) {
+                    const ancestorType = hierarchyOrder[i];
+                    if (window.selectedItems[ancestorType]) {
+                        breadcrumbData[ancestorType] = {
+                            id: window.selectedItems[ancestorType].id,
+                            name: window.selectedItems[ancestorType].name
+                        };
+                    }
+                }
+            }
+        }
+
+        return breadcrumbData;
     }
 
     /**

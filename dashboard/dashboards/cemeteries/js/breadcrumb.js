@@ -346,26 +346,41 @@ const BreadcrumbManager = {
      */
     navigateToLevel(levelType) {
         this.log(`🚶 Navigating to level: ${levelType}`);
-        
+
         // נקה את הבחירות מרמה זו ומטה
         if (window.selectedItems) {
             const order = ['cemetery', 'block', 'plot', 'areaGrave', 'grave'];
             const startIndex = order.indexOf(levelType);
-            
-            for (let i = startIndex; i < order.length; i++) {
-                delete window.selectedItems[order[i]];
+
+            if (startIndex >= 0) {
+                for (let i = startIndex; i < order.length; i++) {
+                    delete window.selectedItems[order[i]];
+                }
             }
         }
-        
-        // קרא לפונקציה המתאימה
+
+        // השתמש ב-EntityManager אם זמין
+        if (typeof EntityManager !== 'undefined') {
+            EntityManager.load(levelType);
+            return;
+        }
+
+        // fallback לפונקציות ישנות
         const functions = {
             cemetery: 'loadCemeteries',
             block: 'loadBlocks',
             plot: 'loadPlots',
             areaGrave: 'loadAreaGraves',
-            grave: 'loadGraves'
+            grave: 'loadGraves',
+            customer: 'loadCustomers',
+            purchase: 'loadPurchases',
+            burial: 'loadBurials',
+            payment: 'loadPayments',
+            residency: 'loadResidencies',
+            country: 'loadCountries',
+            city: 'loadCities'
         };
-        
+
         const funcName = functions[levelType];
         if (funcName && typeof window[funcName] === 'function') {
             this.log(`✓ Calling ${funcName}`);
@@ -402,24 +417,47 @@ const BreadcrumbManager = {
     },
     
     /**
-     * Open specific item
+     * Open specific item - navigate to its children
      */
     openItem(type, item) {
         this.log(`📂 Opening ${type}:`, item);
-        
-        const functions = {
-            cemetery: 'openCemetery',
-            block: 'openBlock',
-            plot: 'openPlot',
-            areaGrave: 'openAreaGrave',
-            grave: 'viewGraveDetails'
+
+        // שמור את הפריט ב-selectedItems
+        if (!window.selectedItems) {
+            window.selectedItems = {};
+        }
+        window.selectedItems[type] = { id: item.id, name: item.name };
+
+        // מצא את סוג הילדים של הפריט הזה
+        const childTypes = {
+            cemetery: 'block',
+            block: 'plot',
+            plot: 'areaGrave',
+            areaGrave: 'grave',
+            country: 'city'
         };
-        
-        const funcName = functions[type];
-        if (funcName && typeof window[funcName] === 'function') {
-            window[funcName](item.id, item.name);
+
+        const childType = childTypes[type];
+
+        if (childType && typeof EntityManager !== 'undefined') {
+            // טען את הילדים דרך EntityManager
+            EntityManager.load(childType, item.id, item.name);
         } else {
-            this.log(`⚠️ Function not found: ${funcName}`);
+            // fallback לפונקציות ישנות
+            const functions = {
+                cemetery: 'openCemetery',
+                block: 'openBlock',
+                plot: 'openPlot',
+                areaGrave: 'openAreaGrave',
+                grave: 'viewGraveDetails'
+            };
+
+            const funcName = functions[type];
+            if (funcName && typeof window[funcName] === 'function') {
+                window[funcName](item.id, item.name);
+            } else {
+                this.log(`⚠️ Function not found: ${funcName}`);
+            }
         }
     }
 };

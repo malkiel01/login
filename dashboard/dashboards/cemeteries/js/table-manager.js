@@ -513,9 +513,43 @@ class TableManager {
             direction: rtl !important;
         `;
 
-        // צד ימין - ריק לעת עתה (אפשר להוסיף חיפוש וכו')
+        // צד ימין - כפתור ניקוי מסננים (מוצג רק כשיש מסננים פעילים)
         const rightSide = document.createElement('div');
         rightSide.className = 'toolbar-right';
+        rightSide.style.cssText = `
+            display: flex !important;
+            gap: 8px !important;
+            align-items: center !important;
+        `;
+
+        // כפתור ניקוי כל המסננים
+        const clearFiltersBtn = document.createElement('button');
+        clearFiltersBtn.className = 'clear-filters-btn';
+        clearFiltersBtn.innerHTML = '✕ נקה מסננים';
+        clearFiltersBtn.style.cssText = `
+            display: none !important;
+            padding: 6px 14px !important;
+            background: #fef2f2 !important;
+            color: #dc2626 !important;
+            border: 1px solid #fecaca !important;
+            border-radius: 6px !important;
+            cursor: pointer !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            transition: all 0.2s !important;
+        `;
+        clearFiltersBtn.onmouseover = () => {
+            clearFiltersBtn.style.background = '#fee2e2';
+            clearFiltersBtn.style.borderColor = '#f87171';
+        };
+        clearFiltersBtn.onmouseout = () => {
+            clearFiltersBtn.style.background = '#fef2f2';
+            clearFiltersBtn.style.borderColor = '#fecaca';
+        };
+        clearFiltersBtn.onclick = () => this.clearAllFilters();
+
+        rightSide.appendChild(clearFiltersBtn);
+        this.elements.clearFiltersBtn = clearFiltersBtn;
 
         // צד שמאל - כפתורי פעולות
         const leftSide = document.createElement('div');
@@ -1607,6 +1641,7 @@ class TableManager {
                 case 'clear-filter':
                     this.state.filters.delete(colIndex);
                     this.loadInitialData();
+                    this.updateClearFiltersButton();
                     break;
             }
             
@@ -1762,6 +1797,7 @@ class TableManager {
         clearBtn.onclick = () => {
             this.state.filters.delete(colIndex);
             this.loadInitialData();
+            this.updateClearFiltersButton();
             dialog.remove();
             overlay.remove();
         };
@@ -1937,6 +1973,7 @@ class TableManager {
             if (filterData.selectedValues.length === 0) {
                 this.state.filters.delete(colIndex);
                 this.loadInitialData();
+                this.updateClearFiltersButton();
                 return;
             }
         } else {
@@ -1947,6 +1984,7 @@ class TableManager {
             if (!value && !value2) {
                 this.state.filters.delete(colIndex);
                 this.loadInitialData();
+                this.updateClearFiltersButton();
                 return;
             }
 
@@ -1962,6 +2000,7 @@ class TableManager {
         }
 
         this.loadInitialData();
+        this.updateClearFiltersButton();
     }
 
     /**
@@ -2196,6 +2235,31 @@ class TableManager {
     clearFilters() {
         this.state.filters.clear();
         this.loadInitialData();
+        this.updateClearFiltersButton();
+    }
+
+    /**
+     * ⭐ ניקוי כל המסננים (כפתור בסרגל כלים)
+     */
+    clearAllFilters() {
+        this.state.filters.clear();
+        this.loadInitialData();
+        this.updateClearFiltersButton();
+
+        if (typeof showToast === 'function') {
+            showToast('כל המסננים נוקו', 'success');
+        }
+    }
+
+    /**
+     * ⭐ עדכון נראות כפתור ניקוי מסננים
+     * מוצג רק כשיש מסנן אחד או יותר פעיל
+     */
+    updateClearFiltersButton() {
+        if (!this.elements.clearFiltersBtn) return;
+
+        const hasActiveFilters = this.state.filters.size > 0;
+        this.elements.clearFiltersBtn.style.display = hasActiveFilters ? 'inline-flex' : 'none';
     }
     
     clearSort() {

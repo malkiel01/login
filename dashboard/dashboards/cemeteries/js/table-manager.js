@@ -1400,6 +1400,9 @@ class TableManager {
      * ⭐ סינון נתונים - תומך בכל סוגי הפילטרים
      */
     filterData(data) {
+        console.log('filterData called - filters size:', this.state.filters.size);
+        console.log('filterData - all filters:', Array.from(this.state.filters.entries()));
+
         if (this.state.filters.size === 0) {
             return data;
         }
@@ -1413,6 +1416,8 @@ class TableManager {
                 const column = this.config.columns[colIndex];
                 const cellValue = row[column.field];
                 const filterType = filter.type || 'text';
+
+                console.log('filterData - processing filter:', { colIndex, filterType, filter, cellValue });
 
                 switch (filterType) {
                     case 'text':

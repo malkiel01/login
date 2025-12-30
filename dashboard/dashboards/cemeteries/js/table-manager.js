@@ -1363,28 +1363,141 @@ class TableManager {
     }
     
     /**
-     * סינון נתונים
+     * ⭐ סינון נתונים - תומך בכל סוגי הפילטרים
      */
     filterData(data) {
         if (this.state.filters.size === 0) {
             return data;
         }
-        
+
         return data.filter(row => {
             let matches = true;
-            
-            this.state.filters.forEach((filterValue, colIndex) => {
+
+            this.state.filters.forEach((filter, colIndex) => {
+                if (!matches) return; // כבר לא מתאים
+
                 const column = this.config.columns[colIndex];
-                const cellValue = String(row[column.field] || '').toLowerCase();
-                const filterLower = String(filterValue).toLowerCase();
-                
-                if (!cellValue.includes(filterLower)) {
-                    matches = false;
+                const cellValue = row[column.field];
+                const filterType = filter.type || 'text';
+
+                switch (filterType) {
+                    case 'text':
+                        matches = this.matchTextFilter(cellValue, filter);
+                        break;
+                    case 'number':
+                        matches = this.matchNumberFilter(cellValue, filter);
+                        break;
+                    case 'date':
+                        matches = this.matchDateFilter(cellValue, filter);
+                        break;
+                    case 'enum':
+                    case 'select':
+                        matches = this.matchEnumFilter(cellValue, filter);
+                        break;
+                    default:
+                        // תאימות לאחור - פילטר ישן (מחרוזת פשוטה)
+                        if (typeof filter === 'string') {
+                            const cellStr = String(cellValue || '').toLowerCase();
+                            matches = cellStr.includes(filter.toLowerCase());
+                        }
                 }
             });
-            
+
             return matches;
         });
+    }
+
+    /**
+     * התאמת פילטר טקסט
+     */
+    matchTextFilter(cellValue, filter) {
+        const cellStr = String(cellValue || '').toLowerCase();
+        const filterValue = String(filter.value || '').toLowerCase();
+
+        switch (filter.operator) {
+            case 'exact':
+                return cellStr === filterValue;
+            case 'contains':
+                return cellStr.includes(filterValue);
+            case 'starts':
+                return cellStr.startsWith(filterValue);
+            case 'ends':
+                return cellStr.endsWith(filterValue);
+            default:
+                return cellStr.includes(filterValue);
+        }
+    }
+
+    /**
+     * התאמת פילטר מספרי
+     */
+    matchNumberFilter(cellValue, filter) {
+        const num = parseFloat(cellValue);
+        const filterNum = parseFloat(filter.value);
+        const filterNum2 = parseFloat(filter.value2);
+
+        if (isNaN(num)) return false;
+
+        switch (filter.operator) {
+            case 'equals':
+                return num === filterNum;
+            case 'less':
+                return num < filterNum;
+            case 'greater':
+                return num > filterNum;
+            case 'between':
+                return num >= filterNum && num <= filterNum2;
+            default:
+                return num === filterNum;
+        }
+    }
+
+    /**
+     * התאמת פילטר תאריך
+     */
+    matchDateFilter(cellValue, filter) {
+        if (!cellValue) return false;
+
+        const cellDate = new Date(cellValue);
+        if (isNaN(cellDate.getTime())) return false;
+
+        const filterDate = new Date(filter.value);
+        const filterDate2 = filter.value2 ? new Date(filter.value2) : null;
+
+        switch (filter.operator) {
+            case 'exact':
+                return cellDate.toDateString() === filterDate.toDateString();
+
+            case 'approximate':
+                // ±2.5 שנים
+                const yearsInMs = 2.5 * 365 * 24 * 60 * 60 * 1000;
+                const minDate = new Date(filterDate.getTime() - yearsInMs);
+                const maxDate = new Date(filterDate.getTime() + yearsInMs);
+                return cellDate >= minDate && cellDate <= maxDate;
+
+            case 'between':
+                return cellDate >= filterDate && cellDate <= filterDate2;
+
+            case 'before':
+                return cellDate < filterDate;
+
+            case 'after':
+                return cellDate > filterDate;
+
+            default:
+                return cellDate.toDateString() === filterDate.toDateString();
+        }
+    }
+
+    /**
+     * התאמת פילטר enum (בחירה מרובה)
+     */
+    matchEnumFilter(cellValue, filter) {
+        if (!filter.selectedValues || filter.selectedValues.length === 0) {
+            return true;
+        }
+        const cellStr = String(cellValue || '');
+        return filter.selectedValues.includes(cellStr);
     }
     
     /**
@@ -1513,29 +1626,344 @@ class TableManager {
     }
     
     /**
-     * דיאלוג סינון
+     * ⭐ דיאלוג סינון מתקדם - לפי סוג השדה
+     * filterType: 'text' | 'number' | 'date' | 'enum'
      */
     showFilterDialog(colIndex) {
         const column = this.config.columns[colIndex];
-        const currentFilter = this.state.filters.get(colIndex) || '';
-        
-        const value = prompt(`סינון "${column.label}":`, currentFilter);
-        
-        if (value !== null) {
-            if (value.trim() === '') {
-                this.state.filters.delete(colIndex);
-            } else {
-                this.state.filters.set(colIndex, value);
-            }
-            
-            if (this.config.onFilter) {
-                this.config.onFilter(Array.from(this.state.filters.entries()));
-            }
-            
+        const filterType = column.filterType || 'text';
+
+        // סגור דיאלוגים קודמים
+        document.querySelectorAll('.tm-filter-dialog, .tm-filter-overlay').forEach(d => d.remove());
+
+        const dialog = document.createElement('div');
+        dialog.className = 'tm-filter-dialog';
+        dialog.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+            min-width: 320px;
+            max-width: 400px;
+            z-index: 2000;
+            direction: rtl;
+        `;
+
+        // Overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'tm-filter-overlay';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 1999;
+        `;
+        overlay.onclick = () => {
+            dialog.remove();
+            overlay.remove();
+        };
+
+        // כותרת
+        const header = document.createElement('div');
+        header.style.cssText = `
+            padding: 16px 20px;
+            border-bottom: 1px solid #e5e7eb;
+            font-weight: 600;
+            font-size: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        `;
+        header.innerHTML = `<span>סינון: ${column.label}</span>`;
+
+        const closeBtn = document.createElement('button');
+        closeBtn.innerHTML = '✕';
+        closeBtn.style.cssText = `
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: #6b7280;
+        `;
+        closeBtn.onclick = () => {
+            dialog.remove();
+            overlay.remove();
+        };
+        header.appendChild(closeBtn);
+        dialog.appendChild(header);
+
+        // תוכן לפי סוג הפילטר
+        const content = document.createElement('div');
+        content.style.cssText = `padding: 20px;`;
+
+        switch (filterType) {
+            case 'text':
+                this.buildTextFilterContent(content, colIndex, column);
+                break;
+            case 'number':
+                this.buildNumberFilterContent(content, colIndex, column);
+                break;
+            case 'date':
+                this.buildDateFilterContent(content, colIndex, column);
+                break;
+            case 'enum':
+            case 'select':
+                this.buildEnumFilterContent(content, colIndex, column);
+                break;
+            default:
+                this.buildTextFilterContent(content, colIndex, column);
+        }
+
+        dialog.appendChild(content);
+
+        // כפתורי פעולה
+        const actions = document.createElement('div');
+        actions.style.cssText = `
+            padding: 16px 20px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-start;
+        `;
+
+        const applyBtn = document.createElement('button');
+        applyBtn.textContent = 'החל סינון';
+        applyBtn.style.cssText = `
+            padding: 10px 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        `;
+        applyBtn.onclick = () => {
+            this.applyFilter(colIndex, dialog);
+            dialog.remove();
+            overlay.remove();
+        };
+
+        const clearBtn = document.createElement('button');
+        clearBtn.textContent = 'נקה';
+        clearBtn.style.cssText = `
+            padding: 10px 20px;
+            background: white;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            cursor: pointer;
+        `;
+        clearBtn.onclick = () => {
+            this.state.filters.delete(colIndex);
             this.loadInitialData();
+            dialog.remove();
+            overlay.remove();
+        };
+
+        actions.appendChild(applyBtn);
+        actions.appendChild(clearBtn);
+        dialog.appendChild(actions);
+
+        document.body.appendChild(overlay);
+        document.body.appendChild(dialog);
+    }
+
+    /**
+     * בניית תוכן פילטר טקסט
+     */
+    buildTextFilterContent(container, colIndex, column) {
+        const currentFilter = this.state.filters.get(colIndex) || {};
+
+        container.innerHTML = `
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 500;">סוג סינון:</label>
+                <select class="filter-operator" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+                    <option value="contains" ${currentFilter.operator === 'contains' ? 'selected' : ''}>מכיל</option>
+                    <option value="exact" ${currentFilter.operator === 'exact' ? 'selected' : ''}>ערך מדויק</option>
+                    <option value="starts" ${currentFilter.operator === 'starts' ? 'selected' : ''}>מתחיל ב</option>
+                    <option value="ends" ${currentFilter.operator === 'ends' ? 'selected' : ''}>מסתיים ב</option>
+                </select>
+            </div>
+            <div>
+                <label style="display: block; margin-bottom: 8px; font-weight: 500;">ערך:</label>
+                <input type="text" class="filter-value" value="${currentFilter.value || ''}"
+                    style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box;"
+                    placeholder="הזן ערך לסינון...">
+            </div>
+        `;
+    }
+
+    /**
+     * בניית תוכן פילטר מספרי
+     */
+    buildNumberFilterContent(container, colIndex, column) {
+        const currentFilter = this.state.filters.get(colIndex) || {};
+
+        container.innerHTML = `
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 500;">סוג סינון:</label>
+                <select class="filter-operator" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+                    <option value="equals" ${currentFilter.operator === 'equals' ? 'selected' : ''}>שווה ל</option>
+                    <option value="less" ${currentFilter.operator === 'less' ? 'selected' : ''}>קטן מ</option>
+                    <option value="greater" ${currentFilter.operator === 'greater' ? 'selected' : ''}>גדול מ</option>
+                    <option value="between" ${currentFilter.operator === 'between' ? 'selected' : ''}>בין ... לבין ...</option>
+                </select>
+            </div>
+            <div class="filter-value-container">
+                <label style="display: block; margin-bottom: 8px; font-weight: 500;">ערך:</label>
+                <input type="number" class="filter-value" value="${currentFilter.value || ''}"
+                    style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box;">
+            </div>
+            <div class="filter-value2-container" style="margin-top: 15px; display: ${currentFilter.operator === 'between' ? 'block' : 'none'};">
+                <label style="display: block; margin-bottom: 8px; font-weight: 500;">עד ערך:</label>
+                <input type="number" class="filter-value2" value="${currentFilter.value2 || ''}"
+                    style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box;">
+            </div>
+        `;
+
+        const operatorSelect = container.querySelector('.filter-operator');
+        const value2Container = container.querySelector('.filter-value2-container');
+        operatorSelect.onchange = () => {
+            value2Container.style.display = operatorSelect.value === 'between' ? 'block' : 'none';
+        };
+    }
+
+    /**
+     * בניית תוכן פילטר תאריך
+     */
+    buildDateFilterContent(container, colIndex, column) {
+        const currentFilter = this.state.filters.get(colIndex) || {};
+
+        container.innerHTML = `
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 500;">סוג סינון:</label>
+                <select class="filter-operator" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+                    <option value="exact" ${currentFilter.operator === 'exact' ? 'selected' : ''}>תאריך מדויק</option>
+                    <option value="approximate" ${currentFilter.operator === 'approximate' ? 'selected' : ''}>תאריך משוער (±2.5 שנים)</option>
+                    <option value="between" ${currentFilter.operator === 'between' ? 'selected' : ''}>בין תאריכים</option>
+                    <option value="before" ${currentFilter.operator === 'before' ? 'selected' : ''}>לפני תאריך</option>
+                    <option value="after" ${currentFilter.operator === 'after' ? 'selected' : ''}>אחרי תאריך</option>
+                </select>
+            </div>
+            <div class="filter-value-container">
+                <label style="display: block; margin-bottom: 8px; font-weight: 500;">תאריך:</label>
+                <input type="date" class="filter-value" value="${currentFilter.value || ''}"
+                    style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box;">
+            </div>
+            <div class="filter-value2-container" style="margin-top: 15px; display: ${currentFilter.operator === 'between' ? 'block' : 'none'};">
+                <label style="display: block; margin-bottom: 8px; font-weight: 500;">עד תאריך:</label>
+                <input type="date" class="filter-value2" value="${currentFilter.value2 || ''}"
+                    style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box;">
+            </div>
+        `;
+
+        const operatorSelect = container.querySelector('.filter-operator');
+        const value2Container = container.querySelector('.filter-value2-container');
+        operatorSelect.onchange = () => {
+            value2Container.style.display = operatorSelect.value === 'between' ? 'block' : 'none';
+        };
+    }
+
+    /**
+     * בניית תוכן פילטר enum (בחירה מרשימת ערכים ייחודיים)
+     */
+    buildEnumFilterContent(container, colIndex, column) {
+        const currentFilter = this.state.filters.get(colIndex) || { selectedValues: [] };
+        const field = column.field;
+
+        // איסוף ערכים ייחודיים מהנתונים
+        const uniqueValues = new Set();
+        this.config.data.forEach(row => {
+            const val = row[field];
+            if (val !== null && val !== undefined && val !== '') {
+                uniqueValues.add(String(val));
+            }
+        });
+
+        const sortedValues = Array.from(uniqueValues).sort((a, b) => a.localeCompare(b, 'he'));
+
+        let checkboxesHtml = '';
+        sortedValues.forEach(val => {
+            const isChecked = currentFilter.selectedValues && currentFilter.selectedValues.includes(val);
+            checkboxesHtml += `
+                <label style="display: flex; align-items: center; gap: 8px; padding: 8px 0; cursor: pointer; border-bottom: 1px solid #f3f4f6;">
+                    <input type="checkbox" class="enum-checkbox" value="${val}" ${isChecked ? 'checked' : ''}
+                        style="width: 18px; height: 18px;">
+                    <span>${val}</span>
+                </label>
+            `;
+        });
+
+        container.innerHTML = `
+            <div style="margin-bottom: 10px;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding-bottom: 10px; border-bottom: 2px solid #e5e7eb; font-weight: 600;">
+                    <input type="checkbox" class="select-all-enum" style="width: 18px; height: 18px;">
+                    <span>בחר הכל</span>
+                </label>
+            </div>
+            <div style="max-height: 250px; overflow-y: auto;">
+                ${checkboxesHtml || '<p style="color: #999; text-align: center;">אין ערכים זמינים</p>'}
+            </div>
+        `;
+
+        const selectAllCheckbox = container.querySelector('.select-all-enum');
+        const enumCheckboxes = container.querySelectorAll('.enum-checkbox');
+
+        if (selectAllCheckbox) {
+            selectAllCheckbox.onchange = () => {
+                enumCheckboxes.forEach(cb => cb.checked = selectAllCheckbox.checked);
+            };
         }
     }
-    
+
+    /**
+     * החלת הסינון
+     */
+    applyFilter(colIndex, dialog) {
+        const column = this.config.columns[colIndex];
+        const filterType = column.filterType || 'text';
+
+        let filterData = { type: filterType };
+
+        if (filterType === 'enum' || filterType === 'select') {
+            const checkboxes = dialog.querySelectorAll('.enum-checkbox:checked');
+            filterData.selectedValues = Array.from(checkboxes).map(cb => cb.value);
+            if (filterData.selectedValues.length === 0) {
+                this.state.filters.delete(colIndex);
+                this.loadInitialData();
+                return;
+            }
+        } else {
+            const operator = dialog.querySelector('.filter-operator')?.value;
+            const value = dialog.querySelector('.filter-value')?.value;
+            const value2 = dialog.querySelector('.filter-value2')?.value;
+
+            if (!value && !value2) {
+                this.state.filters.delete(colIndex);
+                this.loadInitialData();
+                return;
+            }
+
+            filterData.operator = operator;
+            filterData.value = value;
+            if (value2) filterData.value2 = value2;
+        }
+
+        this.state.filters.set(colIndex, filterData);
+
+        if (this.config.onFilter) {
+            this.config.onFilter(Array.from(this.state.filters.entries()));
+        }
+
+        this.loadInitialData();
+    }
+
     /**
      * קישור אירועי שינוי גודל
      */

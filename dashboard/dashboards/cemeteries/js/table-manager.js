@@ -1400,8 +1400,6 @@ class TableManager {
      * ⭐ סינון נתונים - תומך בכל סוגי הפילטרים
      */
     filterData(data) {
-        console.log('filterData called - filters size:', this.state.filters.size);
-        console.log('filterData - all filters:', Array.from(this.state.filters.entries()));
 
         if (this.state.filters.size === 0) {
             return data;
@@ -1417,7 +1415,6 @@ class TableManager {
                 const cellValue = row[column.field];
                 const filterType = filter.type || 'text';
 
-                console.log('filterData - processing filter:', { colIndex, filterType, filter, cellValue });
 
                 switch (filterType) {
                     case 'text':
@@ -1499,7 +1496,6 @@ class TableManager {
         const DEFAULT_DATE = new Date(1900, 0, 1); // 01.01.1900
 
         // DEBUG - הסר אחרי בדיקה
-        console.log('matchDateFilter - Input:', {
             cellValue,
             cellValueType: typeof cellValue,
             filter,
@@ -1513,7 +1509,6 @@ class TableManager {
 
         if (!cellValue || cellValue === 'Invalid Date' || cellValue === 'NaN' || cellValue === '') {
             usedDefault = true;
-            console.log('matchDateFilter - Using default date (empty/invalid cellValue)');
         } else if (typeof cellValue === 'string') {
             // נסה לפרסר פורמטים שונים
             if (cellValue.includes('/')) {
@@ -1540,7 +1535,6 @@ class TableManager {
             if (!cellDate || isNaN(cellDate.getTime())) {
                 cellDate = DEFAULT_DATE;
                 usedDefault = true;
-                console.log('matchDateFilter - Using default date (parse failed)');
             }
         } else if (cellValue instanceof Date) {
             if (isNaN(cellValue.getTime())) {
@@ -1557,7 +1551,6 @@ class TableManager {
             }
         }
 
-        console.log('matchDateFilter - Parsed cellDate:', {
             cellDate: cellDate.toISOString(),
             usedDefault
         });
@@ -1568,7 +1561,6 @@ class TableManager {
         // המרת תאריך הפילטר
         const filterDate = new Date(filter.value);
         if (isNaN(filterDate.getTime())) {
-            console.log('matchDateFilter - Filter date is invalid, returning true');
             return true; // פילטר לא תקין - הצג הכל
         }
 
@@ -1582,7 +1574,6 @@ class TableManager {
         const filterDay = new Date(filterDate.getFullYear(), filterDate.getMonth(), filterDate.getDate());
         const filterDay2 = filterDate2 ? new Date(filterDate2.getFullYear(), filterDate2.getMonth(), filterDate2.getDate()) : null;
 
-        console.log('matchDateFilter - Comparison:', {
             cellDay: cellDay.toISOString(),
             filterDay: filterDay.toISOString(),
             filterDay2: filterDay2?.toISOString(),
@@ -1623,7 +1614,6 @@ class TableManager {
                 result = cellDay.getTime() === filterDay.getTime();
         }
 
-        console.log('matchDateFilter - Result:', result);
         return result;
     }
 
@@ -1731,7 +1721,6 @@ class TableManager {
 
             // אם זה סינון - לא לסגור, להציג תפריט משנה
             if (action === 'filter') {
-                console.log('Filter menu item clicked!');
                 e.stopPropagation();
                 this.showFilterSubmenu(colIndex, item, menu);
                 return;
@@ -1788,12 +1777,10 @@ class TableManager {
      * ⭐ תפריט משנה לסינון
      */
     showFilterSubmenu(colIndex, parentItem, parentMenu) {
-        console.log('showFilterSubmenu called!', { colIndex });
 
         // אם כבר קיים סאבמניו לאותה עמודה - לא ליצור מחדש
         const existingSubmenu = document.querySelector('.tm-filter-submenu');
         if (existingSubmenu && existingSubmenu.dataset.colIndex === String(colIndex)) {
-            console.log('Submenu already exists, skipping recreation');
             return;
         }
 
@@ -1802,7 +1789,6 @@ class TableManager {
 
         const column = this.config.columns[colIndex];
         const filterType = column.filterType || 'text';
-        console.log('Filter type:', filterType);
         const currentFilter = this.state.filters.get(colIndex) || {};
 
         const submenu = document.createElement('div');
@@ -1860,13 +1846,11 @@ class TableManager {
                 default:
                     this.buildTextFilterContent(content, colIndex, column);
             }
-            console.log('Filter content built successfully');
         } catch (err) {
             console.error('Error building filter content:', err);
         }
 
         submenu.appendChild(content);
-        console.log('Submenu content appended');
 
         // כפתורי פעולה
         const actions = document.createElement('div');
@@ -1892,15 +1876,11 @@ class TableManager {
             position: relative;
             z-index: 9999;
         `;
-        console.log('Creating apply button...');
         applyBtn.addEventListener('mousedown', (e) => {
-            console.log('Apply button MOUSEDOWN!');
         });
         applyBtn.addEventListener('click', (e) => {
-            console.log('Apply button clicked!', { colIndex, filterType });
             e.stopPropagation();
             const success = this.applyFilterFromSubmenu(colIndex, content, filterType);
-            console.log('applyFilterFromSubmenu returned:', success);
             if (success !== false) {
                 parentMenu.remove();
                 submenu.remove();
@@ -1930,8 +1910,6 @@ class TableManager {
         submenu.appendChild(actions);
 
         document.body.appendChild(submenu);
-        console.log('Submenu appended to body!', submenu);
-        console.log('Submenu position:', submenu.getBoundingClientRect());
 
         // וודא שהתפריט לא יוצא מהמסך
         const submenuRect = submenu.getBoundingClientRect();
@@ -1951,7 +1929,6 @@ class TableManager {
         const column = this.config.columns[colIndex];
 
         // DEBUG
-        console.log('applyFilterFromSubmenu:', { colIndex, filterType });
 
         let filterData = { type: filterType };
 
@@ -1969,14 +1946,12 @@ class TableManager {
             filterData.operator = operator;
 
             // DEBUG
-            console.log('Date filter - operator:', operator);
 
             if (operator === 'between') {
                 const valueFrom = container.querySelector('.filter-value-from')?.value;
                 const valueTo = container.querySelector('.filter-value-to')?.value;
 
                 // DEBUG
-                console.log('Between dates:', { valueFrom, valueTo });
 
                 if (!valueFrom || !valueTo) {
                     if (typeof showToast === 'function') {
@@ -1991,7 +1966,6 @@ class TableManager {
                 const value = container.querySelector('.filter-value')?.value;
 
                 // DEBUG
-                console.log('Single date value:', value);
 
                 if (!value) {
                     this.state.filters.delete(colIndex);
@@ -2019,7 +1993,6 @@ class TableManager {
         }
 
         // DEBUG
-        console.log('Final filterData:', filterData);
 
         this.state.filters.set(colIndex, filterData);
 
@@ -2327,18 +2300,14 @@ class TableManager {
         };
 
         if (singleDateTrigger) {
-            console.log('Setting up single date trigger click handler');
             singleDateTrigger.onclick = (e) => {
-                console.log('Single date trigger clicked!');
                 e.stopPropagation();
                 this.showSingleDatePicker(container, currentFilter.value);
             };
         }
 
         if (dateRangeTrigger) {
-            console.log('Setting up date range trigger click handler');
             dateRangeTrigger.onclick = (e) => {
-                console.log('Date range trigger clicked!');
                 e.stopPropagation();
                 this.showDateRangePicker(container, currentFilter.value, currentFilter.value2);
             };
@@ -2368,19 +2337,16 @@ class TableManager {
      * ⭐ חלונית בחירת תאריך בודד - לוח שנה אחד
      */
     showSingleDatePicker(container, initialDate) {
-        console.log('showSingleDatePicker called!', { container, initialDate });
 
         // הסר picker קיים
         document.querySelectorAll('.tm-date-picker').forEach(p => p.remove());
 
         const trigger = container.querySelector('.single-date-trigger');
-        console.log('Single date trigger:', trigger);
         if (!trigger) {
             console.error('Single date trigger not found in container!');
             return;
         }
         const rect = trigger.getBoundingClientRect();
-        console.log('Trigger rect:', rect);
 
         const picker = document.createElement('div');
         picker.className = 'tm-date-picker';
@@ -2454,31 +2420,25 @@ class TableManager {
 
             // אירועי בחירת יום
             const dayElements = picker.querySelectorAll('.calendar-day:not(.empty)');
-            console.log('Found day elements:', dayElements.length);
             dayElements.forEach(dayEl => {
                 dayEl.onclick = (e) => {
-                    console.log('Day clicked!', dayEl.dataset.date);
                     e.stopPropagation();
                     const dateStr = dayEl.dataset.date;
                     selectedDate = new Date(dateStr);
-                    console.log('Selected date:', selectedDate);
                     renderPicker();
                 };
             });
 
             // כפתור ביטול
             picker.querySelector('.picker-cancel').onclick = () => {
-                console.log('Cancel clicked');
                 picker.remove();
             };
 
             // כפתור אישור - מפעיל את הסינון ישירות
             const confirmBtn = picker.querySelector('.picker-confirm');
             confirmBtn.onclick = () => {
-                console.log('Confirm clicked, selectedDate:', selectedDate);
                 if (selectedDate) {
                     const dateStr = self.formatDateISO(selectedDate);
-                    console.log('Setting filter value to:', dateStr);
 
                     // שמור את הערך
                     const filterInput = container.querySelector('.filter-value');
@@ -2492,7 +2452,6 @@ class TableManager {
                     const submenu = container.closest('.tm-filter-submenu');
                     const colIndex = submenu ? parseInt(submenu.dataset.colIndex) : null;
 
-                    console.log('Applying filter directly:', { colIndex, operator, dateStr });
 
                     if (colIndex !== null) {
                         // הפעל את הסינון ישירות
@@ -2510,20 +2469,17 @@ class TableManager {
                     }
 
                     picker.remove();
-                    console.log('Filter applied and picker closed');
                 }
             };
         };
 
         renderPicker();
         document.body.appendChild(picker);
-        console.log('Single date picker appended to body');
 
         // סגירה בלחיצה מחוץ לחלונית
         setTimeout(() => {
             const closePicker = (e) => {
                 if (!picker.contains(e.target) && !trigger.contains(e.target)) {
-                    console.log('Closing date picker (clicked outside)');
                     picker.remove();
                     document.removeEventListener('click', closePicker);
                 }
@@ -2704,7 +2660,6 @@ class TableManager {
                     const submenu = container.closest('.tm-filter-submenu');
                     const colIndex = submenu ? parseInt(submenu.dataset.colIndex) : null;
 
-                    console.log('Applying date range filter:', { colIndex, fromStr, toStr });
 
                     if (colIndex !== null) {
                         // הפעל את הסינון ישירות
@@ -2723,7 +2678,6 @@ class TableManager {
                     }
 
                     picker.remove();
-                    console.log('Date range filter applied and picker closed');
                 }
             };
         };

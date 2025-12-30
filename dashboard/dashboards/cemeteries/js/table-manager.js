@@ -2141,9 +2141,12 @@ class TableManager {
         let selectedTo = initialTo ? new Date(initialTo) : null;
 
         // חודשים מוצגים (ימין = מתאריך, שמאל = עד תאריך)
-        let rightMonth = selectedFrom ? new Date(selectedFrom) : new Date();
-        let leftMonth = new Date(rightMonth);
-        leftMonth.setMonth(leftMonth.getMonth() + 1);
+        // תמיד יום 1 למניעת גלישת ימים בין חודשים
+        const now = new Date();
+        let rightMonth = selectedFrom
+            ? new Date(selectedFrom.getFullYear(), selectedFrom.getMonth(), 1)
+            : new Date(now.getFullYear(), now.getMonth(), 1);
+        let leftMonth = new Date(rightMonth.getFullYear(), rightMonth.getMonth() + 1, 1);
 
         const self = this;
 
@@ -2210,22 +2213,20 @@ class TableManager {
                     const side = btn.closest('.calendar-panel').dataset.side;
 
                     if (side === 'from') {
-                        // הזזת לוח תאריך התחלה
-                        rightMonth.setMonth(rightMonth.getMonth() + dir);
+                        // הזזת לוח תאריך התחלה (יום 1 למניעת גלישת ימים)
+                        rightMonth = new Date(rightMonth.getFullYear(), rightMonth.getMonth() + dir, 1);
                         // אם הגיע לאותו חודש כמו סיום או אחריו - דחוף את הסיום קדימה
                         if (rightMonth.getFullYear() > leftMonth.getFullYear() ||
                             (rightMonth.getFullYear() === leftMonth.getFullYear() && rightMonth.getMonth() >= leftMonth.getMonth())) {
-                            leftMonth = new Date(rightMonth);
-                            leftMonth.setMonth(leftMonth.getMonth() + 1);
+                            leftMonth = new Date(rightMonth.getFullYear(), rightMonth.getMonth() + 1, 1);
                         }
                     } else {
-                        // הזזת לוח תאריך סיום
-                        leftMonth.setMonth(leftMonth.getMonth() + dir);
+                        // הזזת לוח תאריך סיום (יום 1 למניעת גלישת ימים)
+                        leftMonth = new Date(leftMonth.getFullYear(), leftMonth.getMonth() + dir, 1);
                         // אם הגיע לאותו חודש כמו התחלה או לפניו - דחוף את ההתחלה אחורה
                         if (leftMonth.getFullYear() < rightMonth.getFullYear() ||
                             (leftMonth.getFullYear() === rightMonth.getFullYear() && leftMonth.getMonth() <= rightMonth.getMonth())) {
-                            rightMonth = new Date(leftMonth);
-                            rightMonth.setMonth(rightMonth.getMonth() - 1);
+                            rightMonth = new Date(leftMonth.getFullYear(), leftMonth.getMonth() - 1, 1);
                         }
                     }
                     renderPicker();

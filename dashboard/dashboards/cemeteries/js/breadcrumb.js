@@ -232,7 +232,7 @@ const BreadcrumbManager = {
         
         // הוסף את הפריטים שנבחרו
         let pathStarted = false;
-        for (let type of order) {
+        for (let type of hierarchyOrder) {
             if (type === firstFound) pathStarted = true;
             
             if (pathStarted && items[type]) {

@@ -19,6 +19,7 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo DASHBOARD_NAME; ?></title>
+    <link rel="icon" href="data:,">
     
     <!-- CSS Files - כל הקבצים כולל החדשים -->
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/main.css">

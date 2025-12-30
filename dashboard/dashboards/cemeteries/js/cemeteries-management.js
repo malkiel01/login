@@ -78,6 +78,10 @@ async function viewCemetery(id) {
 
 // דאבל-קליק על שורת בית עלמין - מעבר לגושים
 async function handleCemeteryDoubleClick(cemetery) {
+    // 🔍 דיבאג - לראות מה יש באובייקט
+    console.log('🔍 handleCemeteryDoubleClick - cemetery object:', cemetery);
+    console.log('🔍 Available keys:', typeof cemetery === 'object' ? Object.keys(cemetery) : 'not an object');
+
     // תמיכה גם באובייקט וגם ב-ID ישיר
     const cemeteryId = typeof cemetery === 'object'
         ? (cemetery.unicId || cemetery.id)
@@ -90,11 +94,13 @@ async function handleCemeteryDoubleClick(cemetery) {
                     || cemetery.cemeteryName
                     || cemetery.name
                     || null;
+        console.log('🔍 Tried fields - cemeteryNameHe:', cemetery.cemeteryNameHe, 'cemeteryName:', cemetery.cemeteryName, 'name:', cemetery.name);
     }
     // fallback אם לא נמצא שם
     if (!cemeteryName) {
         cemeteryName = `בית עלמין #${cemeteryId}`;
     }
+    console.log('🔍 Final cemeteryName:', cemeteryName);
 
     // שמירה ב-selectedItems לניווט
     if (!window.selectedItems) {

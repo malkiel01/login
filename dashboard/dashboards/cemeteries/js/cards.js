@@ -31,6 +31,10 @@ async function createCemeteryCard(cemeteryId, signal) {
                             <svg class="icon-sm"><use xlink:href="#icon-edit"></use></svg>
                             עריכה
                         </button>
+                        <button class="info-card-btn" onclick="viewCemeteryMap('${cemetery.unicId}')">
+                            <svg class="icon-sm"><use xlink:href="#icon-map"></use></svg>
+                            מפה
+                        </button>
                         <button class="info-card-btn" onclick="printCemeteryReport(${cemetery.id})">
                             <svg class="icon-sm"><use xlink:href="#icon-print"></use></svg>
                             הדפסה
@@ -121,7 +125,7 @@ async function createBlockCard(blockId) {
                             <svg class="icon-sm"><use xlink:href="#icon-edit"></use></svg>
                             עריכה
                         </button>
-                        <button class="info-card-btn" onclick="viewBlockMap(${block.id})">
+                        <button class="info-card-btn" onclick="viewBlockMap('${block.unicId}')">
                             <svg class="icon-sm"><use xlink:href="#icon-map"></use></svg>
                             מפה
                         </button>
@@ -610,7 +614,21 @@ function openRow(rowId, rowName) {
 }
 
 function viewBlockMap(blockId) {
-    // TODO: implement map view
+    // Open map view for the block
+    const url = `map/index.php?type=block&id=${blockId}&mode=view`;
+    window.open(url, '_blank');
+}
+
+function viewCemeteryMap(cemeteryId) {
+    // Open map view for the cemetery
+    const url = `map/index.php?type=cemetery&id=${cemeteryId}&mode=view`;
+    window.open(url, '_blank');
+}
+
+function viewPlotMap(plotId) {
+    // Open map view for the plot
+    const url = `map/index.php?type=plot&id=${plotId}&mode=view`;
+    window.open(url, '_blank');
 }
 
 function printCemeteryReport(cemeteryId) {

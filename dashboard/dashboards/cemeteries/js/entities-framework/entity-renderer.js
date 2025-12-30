@@ -92,28 +92,40 @@ class EntityRenderer {
      */
     static async buildContainer(entityType, signal = null, parentId = null, parentName = null) {
         const config = ENTITY_CONFIG[entityType];
-        
-        
+
+        const mainContent = document.querySelector('.main-content');
+        if (!mainContent) return;
+
         // מצא או צור main-container
         let mainContainer = document.querySelector('.main-container');
-        
+
         if (!mainContainer) {
-            const mainContent = document.querySelector('.main-content');
             mainContainer = document.createElement('div');
             mainContainer.className = 'main-container';
-            
-            const actionBar = mainContent.querySelector('.action-bar');
-            if (actionBar) {
-                actionBar.insertAdjacentElement('afterend', mainContainer);
+
+            // הכנס אחרי entity-title-container או לפני table-container הקיים
+            const entityTitleContainer = mainContent.querySelector('.entity-title-container');
+            const existingTableContainer = mainContent.querySelector('.table-container');
+
+            if (entityTitleContainer) {
+                entityTitleContainer.insertAdjacentElement('afterend', mainContainer);
+            } else if (existingTableContainer) {
+                existingTableContainer.insertAdjacentElement('beforebegin', mainContainer);
             } else {
                 mainContent.appendChild(mainContainer);
             }
         }
-        
+
+        // הסר table-container ישן אם קיים מחוץ ל-main-container
+        const oldTableContainer = mainContent.querySelector(':scope > .table-container');
+        if (oldTableContainer) {
+            oldTableContainer.remove();
+        }
+
         // בנה את ה-HTML
         mainContainer.innerHTML = `
             <div id="${entityType}SearchSection" class="search-section"></div>
-            
+
             <div class="table-container">
                 <table id="mainTable" class="data-table">
                     <thead>
@@ -133,7 +145,7 @@ class EntityRenderer {
                 </table>
             </div>
         `;
-        
+
     }
 
    /**

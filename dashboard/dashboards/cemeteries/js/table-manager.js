@@ -1495,14 +1495,6 @@ class TableManager {
         // תאריך ברירת מחדל לתאריכים לא תקינים
         const DEFAULT_DATE = new Date(1900, 0, 1); // 01.01.1900
 
-        // DEBUG - הסר אחרי בדיקה
-            cellValue,
-            cellValueType: typeof cellValue,
-            filter,
-            filterValue: filter?.value,
-            filterOperator: filter?.operator
-        });
-
         // אם אין ערך בתא או ערך לא תקין - נשתמש בתאריך ברירת מחדל
         let cellDate = DEFAULT_DATE;
         let usedDefault = false;
@@ -1551,10 +1543,6 @@ class TableManager {
             }
         }
 
-            cellDate: cellDate.toISOString(),
-            usedDefault
-        });
-
         // אם אין ערך פילטר - התאמה (אין סינון)
         if (!filter.value) return true;
 
@@ -1573,12 +1561,6 @@ class TableManager {
         const cellDay = new Date(cellDate.getFullYear(), cellDate.getMonth(), cellDate.getDate());
         const filterDay = new Date(filterDate.getFullYear(), filterDate.getMonth(), filterDate.getDate());
         const filterDay2 = filterDate2 ? new Date(filterDate2.getFullYear(), filterDate2.getMonth(), filterDate2.getDate()) : null;
-
-            cellDay: cellDay.toISOString(),
-            filterDay: filterDay.toISOString(),
-            filterDay2: filterDay2?.toISOString(),
-            operator
-        });
 
         let result;
         switch (operator) {

@@ -67,15 +67,7 @@
     overflow-x: auto; /* גלילה אופקית לטבלאות */
 }
 
-/* Top Bar - Breadcrumb + Actions */
-.top-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-    gap: 1rem;
-}
-
+/* Breadcrumb */
 .breadcrumb {
     display: flex;
     gap: 0.5rem;
@@ -83,19 +75,23 @@
     font-size: 14px;
     color: #666;
     flex-wrap: wrap;
+    margin-bottom: 0.5rem;
 }
 
-.action-buttons {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-
-/* Entity Title - כותרת הרשומה */
+/* Entity Title + Actions - כותרת הרשומה וכפתורים */
 .entity-title-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 1.5rem;
     padding-bottom: 1rem;
     border-bottom: 1px solid #e2e8f0;
+    gap: 1rem;
+}
+
+.entity-title-text {
+    display: flex;
+    flex-direction: column;
 }
 
 .entity-title {
@@ -110,6 +106,12 @@
 
 .entity-title .entity-icon {
     font-size: 1.5rem;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
 }
 
 .entity-subtitle {
@@ -255,7 +257,7 @@
     }
 
     /* הסתר כפתורי פעולה במובייל */
-    .top-bar .action-buttons {
+    .entity-title-container .action-buttons {
         display: none;
     }
 

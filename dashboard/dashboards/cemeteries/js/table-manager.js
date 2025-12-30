@@ -2202,16 +2202,31 @@ class TableManager {
                 </div>
             `;
 
-            // אירועי ניווט חודשים
+            // אירועי ניווט חודשים - שומר שתמיד יהיה הבדל של חודש לפחות
             picker.querySelectorAll('.calendar-nav').forEach(btn => {
                 btn.onclick = (e) => {
                     e.stopPropagation();
                     const dir = parseInt(btn.dataset.dir);
                     const side = btn.closest('.calendar-panel').dataset.side;
+
                     if (side === 'from') {
+                        // הזזת לוח תאריך התחלה
                         rightMonth.setMonth(rightMonth.getMonth() + dir);
+                        // אם הגיע לאותו חודש כמו סיום או אחריו - דחוף את הסיום קדימה
+                        if (rightMonth.getFullYear() > leftMonth.getFullYear() ||
+                            (rightMonth.getFullYear() === leftMonth.getFullYear() && rightMonth.getMonth() >= leftMonth.getMonth())) {
+                            leftMonth = new Date(rightMonth);
+                            leftMonth.setMonth(leftMonth.getMonth() + 1);
+                        }
                     } else {
+                        // הזזת לוח תאריך סיום
                         leftMonth.setMonth(leftMonth.getMonth() + dir);
+                        // אם הגיע לאותו חודש כמו התחלה או לפניו - דחוף את ההתחלה אחורה
+                        if (leftMonth.getFullYear() < rightMonth.getFullYear() ||
+                            (leftMonth.getFullYear() === rightMonth.getFullYear() && leftMonth.getMonth() <= rightMonth.getMonth())) {
+                            rightMonth = new Date(leftMonth);
+                            rightMonth.setMonth(rightMonth.getMonth() - 1);
+                        }
                     }
                     renderPicker();
                 };

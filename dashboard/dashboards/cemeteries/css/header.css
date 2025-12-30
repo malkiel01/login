@@ -3,14 +3,14 @@
 .dashboard-header {
     background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
     color: white;
-    padding: 1rem 2rem;
+    padding: 1.5rem 2rem;
     box-shadow: var(--shadow-lg);
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     z-index: 1000;
-    height: 80px;
+    height: 160px;
     display: flex;
     align-items: center;
 }
@@ -51,21 +51,20 @@
 /* Hamburger Menu Button */
 .hamburger-menu {
     display: none;
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: var(--radius-md);
+    background: transparent;
+    border: none;
     padding: 0.5rem;
     cursor: pointer;
     transition: var(--transition);
 }
 
 .hamburger-menu:hover {
-    background: rgba(255, 255, 255, 0.3);
+    opacity: 0.8;
 }
 
 .hamburger-menu svg {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     fill: white;
 }
 

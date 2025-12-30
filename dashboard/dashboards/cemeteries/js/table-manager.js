@@ -2689,21 +2689,41 @@ class TableManager {
             // כפתור ביטול
             picker.querySelector('.picker-cancel').onclick = () => picker.remove();
 
-            // כפתור אישור
+            // כפתור אישור - מפעיל את הסינון ישירות
             const confirmBtn = picker.querySelector('.picker-confirm');
             confirmBtn.onclick = () => {
                 if (selectedFrom && selectedTo) {
                     const fromStr = self.formatDateISO(selectedFrom);
                     const toStr = self.formatDateISO(selectedTo);
 
+                    // שמור את הערכים
                     container.querySelector('.filter-value-from').value = fromStr;
                     container.querySelector('.filter-value-to').value = toStr;
 
-                    const rangeText = container.querySelector('.date-range-text');
-                    rangeText.textContent = self.formatDateHebrew(fromStr) + ' — ' + self.formatDateHebrew(toStr);
-                    rangeText.style.color = '#1f2937';
+                    // מצא את colIndex מה-submenu
+                    const submenu = container.closest('.tm-filter-submenu');
+                    const colIndex = submenu ? parseInt(submenu.dataset.colIndex) : null;
+
+                    console.log('Applying date range filter:', { colIndex, fromStr, toStr });
+
+                    if (colIndex !== null) {
+                        // הפעל את הסינון ישירות
+                        self.state.filters.set(colIndex, {
+                            type: 'date',
+                            operator: 'between',
+                            value: fromStr,
+                            value2: toStr
+                        });
+                        self.loadInitialData();
+                        self.updateClearFiltersButton();
+
+                        // סגור את כל התפריטים
+                        document.querySelectorAll('.tm-column-menu').forEach(m => m.remove());
+                        document.querySelectorAll('.tm-filter-submenu').forEach(m => m.remove());
+                    }
 
                     picker.remove();
+                    console.log('Date range filter applied and picker closed');
                 }
             };
         };

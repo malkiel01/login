@@ -215,18 +215,27 @@ class TableManager {
         
         if (fixed.length > 0) {
         }
-        
+
+        // ⭐ קונטיינר חיצוני קבוע - לוקח את רוחב ההורה בפיקסלים ולא משתנה!
+        const fixedContainer = document.createElement('div');
+        fixedContainer.className = 'table-fixed-container';
+        const parentWidth = parent.offsetWidth;
+        fixedContainer.style.cssText = `
+            width: ${parentWidth}px !important;
+            max-width: ${parentWidth}px !important;
+            overflow: hidden !important;
+            box-sizing: border-box !important;
+        `;
+
         // צור wrapper
         const wrapper = document.createElement('div');
         wrapper.className = 'table-wrapper';
-        wrapper.setAttribute('data-table-manager', 'v2.1.0');  // ✅ עדכן גרסה
+        wrapper.setAttribute('data-table-manager', 'v2.1.0');
         wrapper.setAttribute('data-fixed-width', 'true');
         wrapper.setAttribute('style', `
             display: flex !important;
             flex-direction: column !important;
             width: 100% !important;
-            max-width: 100% !important;
-            min-width: 0 !important;
             height: ${this.config.tableHeight} !important;
             min-height: ${this.config.tableMinHeight} !important;
             border: 1px solid #e5e7eb !important;
@@ -302,19 +311,23 @@ class TableManager {
         // הרכבה
         wrapper.appendChild(headerContainer);
         wrapper.appendChild(bodyContainer);
-        
+
         // ⭐ הוסף pagination footer אם מופעל
         if (this.config.showPagination) {
             const paginationFooter = this.buildPaginationFooter();
             wrapper.appendChild(paginationFooter);
             this.elements.paginationFooter = paginationFooter;
         }
-        
+
+        // ⭐ הכנס את ה-wrapper לתוך ה-fixedContainer
+        fixedContainer.appendChild(wrapper);
+
         // החלף את הטבלה המקורית
-        parent.insertBefore(wrapper, this.elements.table);
+        parent.insertBefore(fixedContainer, this.elements.table);
         this.elements.table.style.display = 'none';
-        
+
         // שמור references
+        this.elements.fixedContainer = fixedContainer;
         this.elements.wrapper = wrapper;
         this.elements.headerContainer = headerContainer;
         this.elements.bodyContainer = bodyContainer;

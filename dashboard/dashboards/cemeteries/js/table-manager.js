@@ -2453,42 +2453,56 @@ class TableManager {
             });
 
             // אירועי בחירת יום
-            picker.querySelectorAll('.calendar-day:not(.empty)').forEach(dayEl => {
+            const dayElements = picker.querySelectorAll('.calendar-day:not(.empty)');
+            console.log('Found day elements:', dayElements.length);
+            dayElements.forEach(dayEl => {
                 dayEl.onclick = (e) => {
+                    console.log('Day clicked!', dayEl.dataset.date);
                     e.stopPropagation();
                     const dateStr = dayEl.dataset.date;
                     selectedDate = new Date(dateStr);
+                    console.log('Selected date:', selectedDate);
                     renderPicker();
                 };
             });
 
             // כפתור ביטול
-            picker.querySelector('.picker-cancel').onclick = () => picker.remove();
+            picker.querySelector('.picker-cancel').onclick = () => {
+                console.log('Cancel clicked');
+                picker.remove();
+            };
 
             // כפתור אישור
             const confirmBtn = picker.querySelector('.picker-confirm');
             confirmBtn.onclick = () => {
+                console.log('Confirm clicked, selectedDate:', selectedDate);
                 if (selectedDate) {
                     const dateStr = self.formatDateISO(selectedDate);
+                    console.log('Setting filter value to:', dateStr);
 
-                    container.querySelector('.filter-value').value = dateStr;
+                    const filterInput = container.querySelector('.filter-value');
+                    console.log('Filter input element:', filterInput);
+                    filterInput.value = dateStr;
 
                     const dateText = container.querySelector('.single-date-text');
                     dateText.textContent = self.formatDateHebrew(dateStr);
                     dateText.style.color = '#1f2937';
 
                     picker.remove();
+                    console.log('Date picker closed, value saved');
                 }
             };
         };
 
         renderPicker();
         document.body.appendChild(picker);
+        console.log('Single date picker appended to body');
 
         // סגירה בלחיצה מחוץ לחלונית
         setTimeout(() => {
             const closePicker = (e) => {
                 if (!picker.contains(e.target) && !trigger.contains(e.target)) {
+                    console.log('Closing date picker (clicked outside)');
                     picker.remove();
                     document.removeEventListener('click', closePicker);
                 }

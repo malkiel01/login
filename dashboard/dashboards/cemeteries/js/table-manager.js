@@ -147,10 +147,16 @@ class TableManager {
         
         // אתחול סדר עמודות
         this.state.columnOrder = this.config.columns.map((col, index) => index);
-        
+
         // אתחול רוחב עמודות
         this.config.columns.forEach((col, index) => {
             this.state.columnWidths[index] = col.width || 'auto';
+        });
+
+        // ⭐ אתחול נראות עמודות (visible: true בברירת מחדל)
+        this.state.columnVisibility = {};
+        this.config.columns.forEach((col, index) => {
+            this.state.columnVisibility[index] = col.visible !== false; // ברירת מחדל: מוצג
         });
         
         // חישוב עמודים
@@ -281,9 +287,12 @@ class TableManager {
         headerTable.className = 'tm-table tm-header-table';
         headerTable.id = 'headerTable';
 
-        // ⭐ חישוב רוחב טבלה התחלתי מסכום רוחבי העמודות
+        // ⭐ חישוב רוחב טבלה התחלתי מסכום רוחבי העמודות (רק מוצגות)
         let initialWidth = 0;
         this.config.columns.forEach((col, index) => {
+            // ⭐ דלג על עמודות מוסתרות
+            if (!this.state.columnVisibility[index]) return;
+
             const w = this.state.columnWidths[index];
             if (typeof w === 'string' && w.endsWith('px')) {
                 initialWidth += parseInt(w);
@@ -502,6 +511,9 @@ class TableManager {
             align-items: center !important;
         `;
 
+        // כפתור בחירת עמודות
+        const columnsBtn = this.createToolbarButton('⚙️', 'הצג/הסתר עמודות', (e) => this.toggleColumnsMenu(e));
+
         // כפתור הדפסה
         const printBtn = this.createToolbarButton('🖨️', 'הדפסה', () => this.handlePrint());
 
@@ -511,6 +523,7 @@ class TableManager {
         // כפתור יצוא ל-PDF
         const pdfBtn = this.createToolbarButton('📄', 'יצוא ל-PDF', () => this.handleExportPDF());
 
+        leftSide.appendChild(columnsBtn);
         leftSide.appendChild(printBtn);
         leftSide.appendChild(excelBtn);
         leftSide.appendChild(pdfBtn);
@@ -605,6 +618,163 @@ class TableManager {
             showToast('בחר "שמור כ-PDF" בחלון ההדפסה', 'info');
         }
         window.print();
+    }
+
+    /**
+     * ⭐ פתיחת/סגירת תפריט עמודות
+     */
+    toggleColumnsMenu(e) {
+        e.stopPropagation();
+
+        // סגור תפריט קיים
+        const existingMenu = document.querySelector('.columns-visibility-menu');
+        if (existingMenu) {
+            existingMenu.remove();
+            return;
+        }
+
+        const btn = e.currentTarget;
+        const rect = btn.getBoundingClientRect();
+
+        const menu = document.createElement('div');
+        menu.className = 'columns-visibility-menu';
+        menu.style.cssText = `
+            position: fixed;
+            top: ${rect.bottom + 5}px;
+            left: ${rect.left}px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            min-width: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 1000;
+            direction: rtl;
+        `;
+
+        // כותרת
+        const header = document.createElement('div');
+        header.style.cssText = `
+            padding: 12px 16px;
+            font-weight: 600;
+            border-bottom: 1px solid #e5e7eb;
+            background: #f9fafb;
+        `;
+        header.textContent = 'הצג/הסתר עמודות';
+        menu.appendChild(header);
+
+        // רשימת עמודות
+        const list = document.createElement('div');
+        list.style.cssText = `padding: 8px 0;`;
+
+        this.config.columns.forEach((col, index) => {
+            const item = document.createElement('label');
+            item.style.cssText = `
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 8px 16px;
+                cursor: pointer;
+                transition: background 0.2s;
+            `;
+            item.onmouseover = () => item.style.background = '#f3f4f6';
+            item.onmouseout = () => item.style.background = 'transparent';
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = this.state.columnVisibility[index];
+            checkbox.style.cssText = `
+                width: 16px;
+                height: 16px;
+                cursor: pointer;
+            `;
+            checkbox.onchange = () => {
+                this.state.columnVisibility[index] = checkbox.checked;
+                this.refreshTable();
+            };
+
+            const label = document.createElement('span');
+            label.textContent = col.label;
+
+            item.appendChild(checkbox);
+            item.appendChild(label);
+            list.appendChild(item);
+        });
+
+        menu.appendChild(list);
+
+        // כפתורי פעולה
+        const actions = document.createElement('div');
+        actions.style.cssText = `
+            padding: 8px 16px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 8px;
+            justify-content: space-between;
+        `;
+
+        const showAllBtn = document.createElement('button');
+        showAllBtn.textContent = 'הצג הכל';
+        showAllBtn.style.cssText = `
+            padding: 6px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            font-size: 13px;
+        `;
+        showAllBtn.onclick = () => {
+            this.config.columns.forEach((_, index) => {
+                this.state.columnVisibility[index] = true;
+            });
+            menu.remove();
+            this.refreshTable();
+        };
+
+        const hideAllBtn = document.createElement('button');
+        hideAllBtn.textContent = 'הסתר הכל';
+        hideAllBtn.style.cssText = `
+            padding: 6px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            font-size: 13px;
+        `;
+        hideAllBtn.onclick = () => {
+            this.config.columns.forEach((_, index) => {
+                this.state.columnVisibility[index] = false;
+            });
+            menu.remove();
+            this.refreshTable();
+        };
+
+        actions.appendChild(showAllBtn);
+        actions.appendChild(hideAllBtn);
+        menu.appendChild(actions);
+
+        document.body.appendChild(menu);
+
+        // סגירה בלחיצה מחוץ לתפריט
+        setTimeout(() => {
+            document.addEventListener('click', function closeMenu(e) {
+                if (!menu.contains(e.target)) {
+                    menu.remove();
+                    document.removeEventListener('click', closeMenu);
+                }
+            });
+        }, 10);
+    }
+
+    /**
+     * ⭐ רענון הטבלה (לאחר שינוי נראות עמודות)
+     */
+    refreshTable() {
+        this.updateTableWidth();
+        this.renderHeaders();
+        this.syncColumnWidths();
+        this.renderRows();
     }
 
     /**
@@ -765,8 +935,11 @@ class TableManager {
     renderHeaders() {
         const headerRow = document.createElement('tr');
         headerRow.className = 'tm-header-row';
-        
+
         this.state.columnOrder.forEach(colIndex => {
+            // ⭐ דלג על עמודות מוסתרות
+            if (!this.state.columnVisibility[colIndex]) return;
+
             const column = this.config.columns[colIndex];
             const th = document.createElement('th');
             th.className = 'tm-header-cell';
@@ -824,25 +997,24 @@ class TableManager {
      * סנכרן רוחבי עמודות
      */
     syncColumnWidths() {
-        const bodyCols = this.elements.bodyTable.querySelectorAll('colgroup col');
-        
-        if (bodyCols.length === 0) {
-            const colgroup = document.createElement('colgroup');
-            this.state.columnOrder.forEach(colIndex => {
-                const col = document.createElement('col');
-                const width = this.state.columnWidths[colIndex];
-                col.style.width = width;
-                col.style.minWidth = width;
-                colgroup.appendChild(col);
-            });
-            this.elements.bodyTable.insertBefore(colgroup, this.elements.tbody);
-        } else {
-            bodyCols.forEach((col, index) => {
-                const width = this.state.columnWidths[index];
-                col.style.width = width;
-                col.style.minWidth = width;
-            });
+        // ⭐ מחק colgroup קיים ובנה מחדש (נדרש כשמשתנה נראות עמודות)
+        const existingColgroup = this.elements.bodyTable.querySelector('colgroup');
+        if (existingColgroup) {
+            existingColgroup.remove();
         }
+
+        const colgroup = document.createElement('colgroup');
+        this.state.columnOrder.forEach(colIndex => {
+            // ⭐ דלג על עמודות מוסתרות
+            if (!this.state.columnVisibility[colIndex]) return;
+
+            const col = document.createElement('col');
+            const width = this.state.columnWidths[colIndex];
+            col.style.width = width;
+            col.style.minWidth = width;
+            colgroup.appendChild(col);
+        });
+        this.elements.bodyTable.insertBefore(colgroup, this.elements.tbody);
     }
     
     /**
@@ -870,6 +1042,9 @@ class TableManager {
             }
             
             this.state.columnOrder.forEach(colIndex => {
+                // ⭐ דלג על עמודות מוסתרות
+                if (!this.state.columnVisibility[colIndex]) return;
+
                 const column = this.config.columns[colIndex];
                 const td = document.createElement('td');
                 td.className = 'tm-cell';
@@ -1171,6 +1346,9 @@ class TableManager {
         let totalWidth = 0;
 
         this.state.columnOrder.forEach(colIndex => {
+            // ⭐ דלג על עמודות מוסתרות
+            if (!this.state.columnVisibility[colIndex]) return;
+
             const w = this.state.columnWidths[colIndex];
             if (typeof w === 'string' && w.endsWith('px')) {
                 totalWidth += parseInt(w);

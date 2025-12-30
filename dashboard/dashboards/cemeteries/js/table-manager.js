@@ -1731,6 +1731,7 @@ class TableManager {
 
             // אם זה סינון - לא לסגור, להציג תפריט משנה
             if (action === 'filter') {
+                console.log('Filter menu item clicked!');
                 e.stopPropagation();
                 this.showFilterSubmenu(colIndex, item, menu);
                 return;
@@ -1787,11 +1788,14 @@ class TableManager {
      * ⭐ תפריט משנה לסינון
      */
     showFilterSubmenu(colIndex, parentItem, parentMenu) {
+        console.log('showFilterSubmenu called!', { colIndex });
+
         // הסר תפריט משנה קיים
         document.querySelectorAll('.tm-filter-submenu').forEach(m => m.remove());
 
         const column = this.config.columns[colIndex];
         const filterType = column.filterType || 'text';
+        console.log('Filter type:', filterType);
         const currentFilter = this.state.filters.get(colIndex) || {};
 
         const submenu = document.createElement('div');

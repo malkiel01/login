@@ -83,10 +83,18 @@ async function handleCemeteryDoubleClick(cemetery) {
         ? (cemetery.unicId || cemetery.id)
         : cemetery;
 
-    // קבלת השם - רק מהשדה הנכון cemeteryNameHe
-    const cemeteryName = typeof cemetery === 'object'
-        ? (cemetery.cemeteryNameHe || `בית עלמין #${cemeteryId}`)
-        : `בית עלמין #${cemeteryId}`;
+    // קבלת השם - בדיקת מספר שדות אפשריים
+    let cemeteryName = null;
+    if (typeof cemetery === 'object') {
+        cemeteryName = cemetery.cemeteryNameHe
+                    || cemetery.cemeteryName
+                    || cemetery.name
+                    || null;
+    }
+    // fallback אם לא נמצא שם
+    if (!cemeteryName) {
+        cemeteryName = `בית עלמין #${cemeteryId}`;
+    }
 
     // שמירה ב-selectedItems לניווט
     if (!window.selectedItems) {

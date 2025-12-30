@@ -92,10 +92,18 @@ async function handleBlockDoubleClick(block) {
         ? (block.unicId || block.id)
         : block;
 
-    // קבלת השם - רק מהשדה הנכון blockNameHe
-    const blockName = typeof block === 'object'
-        ? (block.blockNameHe || `גוש #${blockId}`)
-        : `גוש #${blockId}`;
+    // קבלת השם - בדיקת מספר שדות אפשריים
+    let blockName = null;
+    if (typeof block === 'object') {
+        blockName = block.blockNameHe
+                 || block.blockName
+                 || block.name
+                 || null;
+    }
+    // fallback אם לא נמצא שם
+    if (!blockName) {
+        blockName = `גוש #${blockId}`;
+    }
 
     // שמירה ב-selectedItems לניווט
     if (!window.selectedItems) {

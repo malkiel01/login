@@ -98,10 +98,18 @@ async function handlePlotDoubleClick(plot) {
         ? (plot.unicId || plot.id)
         : plot;
 
-    // קבלת השם - רק מהשדה הנכון plotNameHe
-    const plotName = typeof plot === 'object'
-        ? (plot.plotNameHe || `חלקה #${plotId}`)
-        : `חלקה #${plotId}`;
+    // קבלת השם - בדיקת מספר שדות אפשריים
+    let plotName = null;
+    if (typeof plot === 'object') {
+        plotName = plot.plotNameHe
+                || plot.plotName
+                || plot.name
+                || null;
+    }
+    // fallback אם לא נמצא שם
+    if (!plotName) {
+        plotName = `חלקה #${plotId}`;
+    }
 
     // שמירה ב-selectedItems לניווט
     if (!window.selectedItems) {

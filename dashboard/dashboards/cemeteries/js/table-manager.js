@@ -1582,17 +1582,21 @@ class TableManager {
         this.loadInitialData();
         this.renderHeaders();
     }
-    
+
     /**
-     * הצגת תפריט עמודה
+     * הצגת תפריט עמודה עם תפריט משנה לסינון
      */
     showColumnMenu(colIndex, button) {
         document.querySelectorAll('.tm-column-menu').forEach(m => m.remove());
-        
+        document.querySelectorAll('.tm-filter-submenu').forEach(m => m.remove());
+
         const column = this.config.columns[colIndex];
+        const filterType = column.filterType || 'text';
+        const hasFilter = this.state.filters.has(colIndex);
+
         const menu = document.createElement('div');
         menu.className = 'tm-column-menu';
-        
+
         menu.innerHTML = `
             <div class="tm-menu-item" data-action="sort-asc">
                 <span>▲</span> מיין עולה
@@ -1601,24 +1605,35 @@ class TableManager {
                 <span>▼</span> מיין יורד
             </div>
             <div class="tm-menu-divider"></div>
-            <div class="tm-menu-item" data-action="filter">
-                <span>🔍</span> סינון...
+            <div class="tm-menu-item tm-has-submenu" data-action="filter">
+                <span>🔍</span> סינון
+                <span style="margin-right: auto; margin-left: 0;">◀</span>
             </div>
-            <div class="tm-menu-item" data-action="clear-filter">
+            ${hasFilter ? `
+            <div class="tm-menu-item" data-action="clear-filter" style="color: #dc2626;">
                 <span>✕</span> נקה סינון
             </div>
+            ` : ''}
         `;
-        
+
         const rect = button.getBoundingClientRect();
         menu.style.top = `${rect.bottom + 5}px`;
         menu.style.right = `${window.innerWidth - rect.right}px`;
-        
+
+        // טיפול בפריטי תפריט
         menu.addEventListener('click', (e) => {
             const item = e.target.closest('.tm-menu-item');
             if (!item) return;
-            
+
             const action = item.dataset.action;
-            
+
+            // אם זה סינון - לא לסגור, להציג תפריט משנה
+            if (action === 'filter') {
+                e.stopPropagation();
+                this.showFilterSubmenu(colIndex, item, menu);
+                return;
+            }
+
             switch (action) {
                 case 'sort-asc':
                     this.state.sortColumn = colIndex;
@@ -1626,38 +1641,247 @@ class TableManager {
                     this.loadInitialData();
                     this.renderHeaders();
                     break;
-                    
+
                 case 'sort-desc':
                     this.state.sortColumn = colIndex;
                     this.state.sortOrder = 'desc';
                     this.loadInitialData();
                     this.renderHeaders();
                     break;
-                    
-                case 'filter':
-                    this.showFilterDialog(colIndex);
-                    break;
-                    
+
                 case 'clear-filter':
                     this.state.filters.delete(colIndex);
                     this.loadInitialData();
                     this.updateClearFiltersButton();
                     break;
             }
-            
+
             menu.remove();
+            document.querySelectorAll('.tm-filter-submenu').forEach(m => m.remove());
         });
-        
+
+        // פתיחת תפריט משנה ב-hover
+        const filterItem = menu.querySelector('[data-action="filter"]');
+        if (filterItem) {
+            filterItem.addEventListener('mouseenter', () => {
+                this.showFilterSubmenu(colIndex, filterItem, menu);
+            });
+        }
+
         document.body.appendChild(menu);
-        
+
         setTimeout(() => {
             document.addEventListener('click', function closeMenu(e) {
-                if (!menu.contains(e.target)) {
+                if (!menu.contains(e.target) && !e.target.closest('.tm-filter-submenu')) {
                     menu.remove();
+                    document.querySelectorAll('.tm-filter-submenu').forEach(m => m.remove());
                     document.removeEventListener('click', closeMenu);
                 }
             });
         }, 10);
+    }
+
+    /**
+     * ⭐ תפריט משנה לסינון
+     */
+    showFilterSubmenu(colIndex, parentItem, parentMenu) {
+        // הסר תפריט משנה קיים
+        document.querySelectorAll('.tm-filter-submenu').forEach(m => m.remove());
+
+        const column = this.config.columns[colIndex];
+        const filterType = column.filterType || 'text';
+        const currentFilter = this.state.filters.get(colIndex) || {};
+
+        const submenu = document.createElement('div');
+        submenu.className = 'tm-filter-submenu';
+
+        const parentRect = parentItem.getBoundingClientRect();
+        const menuRect = parentMenu.getBoundingClientRect();
+
+        submenu.style.cssText = `
+            position: fixed;
+            top: ${parentRect.top}px;
+            right: ${window.innerWidth - menuRect.left + 5}px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            min-width: 280px;
+            max-width: 350px;
+            z-index: 1001;
+            direction: rtl;
+        `;
+
+        // כותרת
+        const header = document.createElement('div');
+        header.style.cssText = `
+            padding: 12px 16px;
+            font-weight: 600;
+            border-bottom: 1px solid #e5e7eb;
+            background: #f9fafb;
+            border-radius: 8px 8px 0 0;
+        `;
+        header.textContent = `סינון: ${column.label}`;
+        submenu.appendChild(header);
+
+        // תוכן הסינון
+        const content = document.createElement('div');
+        content.style.cssText = `padding: 16px;`;
+
+        switch (filterType) {
+            case 'text':
+                this.buildTextFilterContent(content, colIndex, column);
+                break;
+            case 'number':
+                this.buildNumberFilterContent(content, colIndex, column);
+                break;
+            case 'date':
+                this.buildDateFilterContent(content, colIndex, column);
+                break;
+            case 'enum':
+            case 'select':
+                this.buildEnumFilterContent(content, colIndex, column);
+                break;
+            default:
+                this.buildTextFilterContent(content, colIndex, column);
+        }
+
+        submenu.appendChild(content);
+
+        // כפתורי פעולה
+        const actions = document.createElement('div');
+        actions.style.cssText = `
+            padding: 12px 16px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-start;
+        `;
+
+        const applyBtn = document.createElement('button');
+        applyBtn.textContent = 'החל';
+        applyBtn.style.cssText = `
+            padding: 8px 16px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        `;
+        applyBtn.onclick = () => {
+            const success = this.applyFilterFromSubmenu(colIndex, content, filterType);
+            if (success !== false) {
+                parentMenu.remove();
+                submenu.remove();
+            }
+        };
+
+        const clearBtn = document.createElement('button');
+        clearBtn.textContent = 'נקה';
+        clearBtn.style.cssText = `
+            padding: 8px 16px;
+            background: white;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            cursor: pointer;
+        `;
+        clearBtn.onclick = () => {
+            this.state.filters.delete(colIndex);
+            this.loadInitialData();
+            this.updateClearFiltersButton();
+            parentMenu.remove();
+            submenu.remove();
+        };
+
+        actions.appendChild(applyBtn);
+        actions.appendChild(clearBtn);
+        submenu.appendChild(actions);
+
+        document.body.appendChild(submenu);
+
+        // וודא שהתפריט לא יוצא מהמסך
+        const submenuRect = submenu.getBoundingClientRect();
+        if (submenuRect.left < 0) {
+            submenu.style.right = 'auto';
+            submenu.style.left = `${menuRect.right + 5}px`;
+        }
+        if (submenuRect.bottom > window.innerHeight) {
+            submenu.style.top = `${window.innerHeight - submenuRect.height - 10}px`;
+        }
+    }
+
+    /**
+     * ⭐ החלת סינון מתפריט משנה
+     */
+    applyFilterFromSubmenu(colIndex, container, filterType) {
+        const column = this.config.columns[colIndex];
+
+        let filterData = { type: filterType };
+
+        if (filterType === 'enum' || filterType === 'select') {
+            const checkboxes = container.querySelectorAll('.enum-checkbox:checked');
+            filterData.selectedValues = Array.from(checkboxes).map(cb => cb.value);
+            if (filterData.selectedValues.length === 0) {
+                this.state.filters.delete(colIndex);
+                this.loadInitialData();
+                this.updateClearFiltersButton();
+                return true;
+            }
+        } else if (filterType === 'date') {
+            const operator = container.querySelector('.filter-operator')?.value;
+            filterData.operator = operator;
+
+            if (operator === 'between') {
+                const valueFrom = container.querySelector('.filter-value-from')?.value;
+                const valueTo = container.querySelector('.filter-value-to')?.value;
+
+                if (!valueFrom || !valueTo) {
+                    if (typeof showToast === 'function') {
+                        showToast('יש לבחור את שני התאריכים', 'warning');
+                    }
+                    return false;
+                }
+
+                filterData.value = valueFrom;
+                filterData.value2 = valueTo;
+            } else {
+                const value = container.querySelector('.filter-value')?.value;
+                if (!value) {
+                    this.state.filters.delete(colIndex);
+                    this.loadInitialData();
+                    this.updateClearFiltersButton();
+                    return true;
+                }
+                filterData.value = value;
+            }
+        } else {
+            const operator = container.querySelector('.filter-operator')?.value;
+            const value = container.querySelector('.filter-value')?.value;
+            const value2 = container.querySelector('.filter-value2')?.value;
+
+            if (!value && !value2) {
+                this.state.filters.delete(colIndex);
+                this.loadInitialData();
+                this.updateClearFiltersButton();
+                return true;
+            }
+
+            filterData.operator = operator;
+            filterData.value = value;
+            if (value2) filterData.value2 = value2;
+        }
+
+        this.state.filters.set(colIndex, filterData);
+
+        if (this.config.onFilter) {
+            this.config.onFilter(Array.from(this.state.filters.entries()));
+        }
+
+        this.loadInitialData();
+        this.updateClearFiltersButton();
+        return true;
     }
     
     /**

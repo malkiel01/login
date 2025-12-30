@@ -407,12 +407,36 @@ class EntityRenderer {
     /**
      * טיפול בדאבל-קליק על שורה
      * @param {string} entityType - סוג היישות
-     * @param {Object} row - נתוני השורה
+     * @param {Object|string} rowOrId - נתוני השורה (מ-TableManager) או מזהה (מ-link onclick)
+     * @param {string|null} entityName - שם היישות (רק כאשר נקרא מ-link onclick)
      */
-    static handleDoubleClick(entityType, row) {
+    static handleDoubleClick(entityType, rowOrId, entityName = null) {
+        let row;
+
+        // בדיקה אם קיבלנו string (מ-link onclick) או object (מ-TableManager)
+        if (typeof rowOrId === 'string') {
+            // נקרא מ-link onclick עם (entityType, entityId, entityName)
+            const config = ENTITY_CONFIG[entityType];
+            const idField = this.getIdField(entityType);
+            const nameField = config?.nameField || `${entityType}NameHe`;
+
+            // בניית אובייקט row מלאכותי עם כל השדות האפשריים
+            row = {
+                [idField]: rowOrId,
+                unicId: rowOrId,
+                id: rowOrId,
+                [nameField]: entityName,
+                [`${entityType}Name`]: entityName,
+                [`${entityType}NameHe`]: entityName,
+                name: entityName
+            };
+        } else {
+            // נקרא מ-TableManager עם אובייקט מלא
+            row = rowOrId;
+        }
+
         const idField = this.getIdField(entityType);
         const entityId = row[idField] || row.id || row.unicId;
-        const entityName = row[`${entityType}Name`] || row[`${entityType}NameHe`] || row.name || '';
 
         // מיפוי לשמות הפונקציות הספציפיות
         const handlers = {

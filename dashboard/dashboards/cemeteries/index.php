@@ -123,7 +123,13 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
                         </button>
                     </div>
                 </div>
-                
+
+                <!-- Entity Title -->
+                <div class="entity-title-container" id="entityTitleContainer">
+                    <h1 class="entity-title" id="entityTitle"></h1>
+                    <span class="entity-subtitle" id="entitySubtitle"></span>
+                </div>
+
                 <!-- Table Container -->
                 <div class="table-container">
                     <div class="table-responsive">

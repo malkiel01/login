@@ -190,8 +190,57 @@ class EntityManager {
         const title = (config.hasParent && parentName)
             ? `${config.plural} - ${parentName}`
             : `ניהול ${config.plural} - מערכת בתי עלמין`;
-        
+
         document.title = title;
+
+        // עדכון כותרת הרשומה בדף
+        this.updateEntityTitle(entityType, parentName, config);
+    }
+
+    /**
+     * עדכון כותרת הרשומה בדף
+     * @param {string} entityType - סוג היישות
+     * @param {string|null} parentName - שם הורה
+     * @param {Object} config - קונפיג היישות
+     */
+    static updateEntityTitle(entityType, parentName, config) {
+        const titleElement = document.getElementById('entityTitle');
+        const subtitleElement = document.getElementById('entitySubtitle');
+
+        if (!titleElement) return;
+
+        // קבל אייקון מההיררכיה
+        const icons = {
+            'cemetery': '🏛️',
+            'block': '📦',
+            'plot': '📋',
+            'areaGrave': '🏘️',
+            'grave': '⚰️',
+            'customer': '👤',
+            'purchase': '🛒',
+            'burial': '⚰️',
+            'payment': '💰',
+            'residency': '🏠',
+            'country': '🌍',
+            'city': '🏙️'
+        };
+
+        const icon = icons[entityType] || '📋';
+        const entityPlural = config?.plural || entityType;
+
+        // כותרת ראשית
+        titleElement.innerHTML = `<span class="entity-icon">${icon}</span> ${entityPlural}`;
+
+        // כותרת משנית (אם יש parent)
+        if (subtitleElement) {
+            if (parentName) {
+                subtitleElement.textContent = `של ${parentName}`;
+                subtitleElement.style.display = 'inline';
+            } else {
+                subtitleElement.textContent = '';
+                subtitleElement.style.display = 'none';
+            }
+        }
     }
 
     /**

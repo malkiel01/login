@@ -92,6 +92,32 @@
     flex-wrap: wrap;
 }
 
+/* Entity Title - כותרת הרשומה */
+.entity-title-container {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.entity-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 0.25rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.entity-title .entity-icon {
+    font-size: 1.5rem;
+}
+
+.entity-subtitle {
+    font-size: 0.9rem;
+    color: #64748b;
+}
+
 /* Entity Items - תיקון תצוגה */
 .entity-item {
     background: white;

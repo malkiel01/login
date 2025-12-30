@@ -483,6 +483,14 @@ window.checkCustomersScrollStatus = () => EntityManager.checkScrollStatus('custo
 window.checkPurchasesScrollStatus = () => EntityManager.checkScrollStatus('purchase');
 window.checkBurialsScrollStatus = () => EntityManager.checkScrollStatus('burial');
 window.checkPaymentsScrollStatus = () => EntityManager.checkScrollStatus('payment');
+
+// Residency wrappers
+window.loadResidencies = () => EntityManager.load('residency');
+window.loadResidenciesBrowseData = (signal) => EntityLoader.loadBrowseData('residency', signal);
+window.appendMoreResidencies = () => EntityManager.appendMore('residency');
+window.deleteResidency = (id) => EntityManager.delete('residency', id);
+window.residenciesRefreshData = () => EntityManager.refresh('residency');
+window.checkResidenciesScrollStatus = () => EntityManager.checkScrollStatus('residency');
 window.checkPlotsScrollStatus = () => EntityManager.checkScrollStatus('plot');
 window.checkAreaGravesScrollStatus = () => EntityManager.checkScrollStatus('areaGrave');
 window.checkGravesScrollStatus = () => EntityManager.checkScrollStatus('grave');

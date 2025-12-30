@@ -1609,11 +1609,9 @@ class TableManager {
                 <span>🔍</span> סינון
                 <span style="margin-right: auto; margin-left: 0;">◀</span>
             </div>
-            ${hasFilter ? `
-            <div class="tm-menu-item" data-action="clear-filter" style="color: #dc2626;">
+            <div class="tm-menu-item" data-action="clear-filter" style="${hasFilter ? 'color: #dc2626;' : 'color: #9ca3af; pointer-events: none;'}">
                 <span>✕</span> נקה סינון
             </div>
-            ` : ''}
         `;
 
         const rect = button.getBoundingClientRect();

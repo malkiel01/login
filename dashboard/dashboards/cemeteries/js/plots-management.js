@@ -94,8 +94,19 @@ async function viewPlot(id) {
 
 // דאבל-קליק על שורת חלקה - מעבר לאחוזות קבר
 async function handlePlotDoubleClick(plot) {
-    const plotId = typeof plot === 'object' ? (plot.id || plot.unicId) : plot;
-    const plotName = typeof plot === 'object' ? plot.plotName : null;
+    const plotId = typeof plot === 'object'
+        ? (plot.unicId || plot.id)
+        : plot;
+
+    const plotName = typeof plot === 'object'
+        ? (plot.plotNameHe || plot.plotName || plot.name || `חלקה #${plotId}`)
+        : `חלקה #${plotId}`;
+
+    // שמירה ב-selectedItems לניווט
+    if (!window.selectedItems) {
+        window.selectedItems = {};
+    }
+    window.selectedItems.plot = { id: plotId, name: plotName };
 
     if (typeof loadAreaGraves === 'function') {
         loadAreaGraves(plotId, plotName);

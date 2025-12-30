@@ -1,7 +1,7 @@
 /**
- * Breadcrumb Modern Design
+ * Breadcrumb Design - ללא רקע
  * File: /dashboard/dashboards/cemeteries/css/breadcrumb.css
- * Updated: 2025-12-30 - עיצוב חדש ונקי
+ * Updated: 2025-12-30
  */
 
 /* Main Breadcrumb Container */
@@ -16,58 +16,48 @@
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
 }
 
-/* Breadcrumb Items */
+/* Breadcrumb Items - ללא רקע */
 .breadcrumb-item {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 8px 14px;
-    border-radius: 6px;
+    gap: 5px;
+    padding: 4px 0;
     transition: all 0.2s ease;
     position: relative;
     white-space: nowrap;
     text-decoration: none;
-    color: #475569;
+    color: #64748b;
     font-weight: 500;
     font-size: 14px;
+    background: none;
+    border: none;
 }
 
 /* Clickable Items */
 .breadcrumb-clickable {
     cursor: pointer;
-    background: #f1f5f9;
-    border: 1px solid #e2e8f0;
+    color: #667eea;
 }
 
 .breadcrumb-clickable:hover {
-    background: #667eea;
-    color: white;
-    border-color: #667eea;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.25);
+    color: #4f46e5;
+    text-decoration: underline;
 }
 
 .breadcrumb-clickable:hover .breadcrumb-icon {
     transform: scale(1.1);
 }
 
-.breadcrumb-clickable:active {
-    transform: translateY(0);
-}
-
 /* Current Item (not clickable) */
 .breadcrumb-current {
-    background: linear-gradient(135deg, #667eea 0%, #5a67d8 100%);
-    color: white;
+    color: #1e293b;
     font-weight: 600;
     cursor: default;
-    border: none;
-    box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
 }
 
 /* Icons */
 .breadcrumb-icon {
-    font-size: 15px;
+    font-size: 16px;
     display: inline-flex;
     align-items: center;
     transition: transform 0.2s ease;
@@ -85,8 +75,8 @@
 /* Separator between items */
 .breadcrumb-separator {
     color: #94a3b8;
-    font-size: 12px;
-    margin: 0 2px;
+    font-size: 14px;
+    margin: 0 6px;
     font-weight: 400;
     user-select: none;
     display: inline-flex;
@@ -97,20 +87,7 @@
 .breadcrumb-item:focus-visible {
     outline: 2px solid #667eea;
     outline-offset: 2px;
-}
-
-/* ===================================
-   Tablet Responsive (768px - 1024px)
-   =================================== */
-@media (max-width: 1024px) {
-    .breadcrumb {
-        gap: 3px;
-    }
-
-    .breadcrumb-item {
-        padding: 6px 12px;
-        font-size: 13px;
-    }
+    border-radius: 4px;
 }
 
 /* ===================================
@@ -118,13 +95,7 @@
    =================================== */
 @media (max-width: 768px) {
     .breadcrumb {
-        gap: 2px;
         font-size: 13px;
-    }
-
-    .breadcrumb-item {
-        padding: 6px 10px;
-        border-radius: 5px;
     }
 
     .breadcrumb-text {
@@ -136,7 +107,7 @@
     }
 
     .breadcrumb-separator {
-        font-size: 11px;
+        margin: 0 4px;
     }
 }
 
@@ -148,15 +119,11 @@
         font-size: 12px;
     }
 
-    .breadcrumb-item {
-        padding: 5px 8px;
-    }
-
     .breadcrumb-text {
         max-width: 80px;
     }
 
-    /* Hide middle items on very small screens, keep first and last */
+    /* Hide middle items on very small screens */
     .breadcrumb-item:not(:first-child):not(:last-child) {
         display: none;
     }

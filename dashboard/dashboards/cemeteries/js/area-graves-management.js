@@ -94,8 +94,19 @@ async function viewAreaGrave(id) {
 
 // דאבל-קליק על שורת אחוזת קבר - מעבר לקברים
 async function handleAreaGraveDoubleClick(areaGrave) {
-    const areaGraveId = typeof areaGrave === 'object' ? (areaGrave.id || areaGrave.unicId) : areaGrave;
-    const areaGraveName = typeof areaGrave === 'object' ? areaGrave.areaGraveName : null;
+    const areaGraveId = typeof areaGrave === 'object'
+        ? (areaGrave.unicId || areaGrave.id)
+        : areaGrave;
+
+    const areaGraveName = typeof areaGrave === 'object'
+        ? (areaGrave.areaGraveNameHe || areaGrave.areaGraveName || areaGrave.name || `אחוזת קבר #${areaGraveId}`)
+        : `אחוזת קבר #${areaGraveId}`;
+
+    // שמירה ב-selectedItems לניווט
+    if (!window.selectedItems) {
+        window.selectedItems = {};
+    }
+    window.selectedItems.areaGrave = { id: areaGraveId, name: areaGraveName };
 
     if (typeof loadGraves === 'function') {
         loadGraves(areaGraveId, areaGraveName);

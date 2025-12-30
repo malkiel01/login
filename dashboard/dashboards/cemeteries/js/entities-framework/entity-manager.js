@@ -49,7 +49,23 @@ class EntityManager {
         // עדכון context גלובלי
         window.currentType = entityType;
         window.currentParentId = parentId;
-        
+
+        // אתחול selectedItems אם לא קיים
+        if (!window.selectedItems) {
+            window.selectedItems = {};
+        }
+
+        // שמור את ההורה ב-selectedItems עבור ה-breadcrumb
+        if (parentId && parentName && config.hasParent) {
+            const parentType = this.getParentType(config.parentParam);
+            if (parentType) {
+                window.selectedItems[parentType] = {
+                    id: parentId,
+                    name: parentName
+                };
+            }
+        }
+
         if (window.tableRenderer) {
             window.tableRenderer.currentType = entityType;
         }

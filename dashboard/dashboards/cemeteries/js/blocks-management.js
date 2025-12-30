@@ -87,8 +87,21 @@ async function viewBlock(id) {
 
 // דאבל-קליק על שורת גוש - מעבר לחלקות
 async function handleBlockDoubleClick(block) {
-    const blockId = typeof block === 'object' ? (block.id || block.unicId) : block;
-    const blockName = typeof block === 'object' ? block.blockName : null;
+    // תמיכה גם באובייקט וגם ב-ID ישיר
+    const blockId = typeof block === 'object'
+        ? (block.unicId || block.id)
+        : block;
+
+    // קבלת השם מכל השדות האפשריים
+    const blockName = typeof block === 'object'
+        ? (block.blockNameHe || block.blockName || block.name || `גוש #${blockId}`)
+        : `גוש #${blockId}`;
+
+    // שמירה ב-selectedItems לניווט
+    if (!window.selectedItems) {
+        window.selectedItems = {};
+    }
+    window.selectedItems.block = { id: blockId, name: blockName };
 
     // מעבר לחלקות של הגוש
     if (typeof loadPlots === 'function') {

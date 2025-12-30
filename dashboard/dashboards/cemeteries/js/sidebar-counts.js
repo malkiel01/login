@@ -215,13 +215,13 @@ async function updatePurchasesCount() {
  * 8. קבורות
  * ✅ burials-api.php
  */
-async function updateBurialsCount() { 
+async function updateBurialsCount() {
     try {
         const response = await fetch('/dashboard/dashboards/cemeteries/api/burials-api.php?action=stats');
         const data = await response.json();
-        
-        if (data.success && data.data.totals) {
-            // סה"כ קבורות השנה
+
+        if (data.success && data.data && data.data.totals) {
+            // סה"כ קבורות פעילות
             updateCount('burialsCount', data.data.totals.total_burials || 0);
         }
     } catch (error) {

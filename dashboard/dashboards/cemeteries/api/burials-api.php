@@ -83,19 +83,20 @@ try {
                 LEFT JOIN graves_view gv ON b.graveId = gv.unicId
                 LEFT JOIN customers cust1 ON b.clientId = cust1.unicId
                 LEFT JOIN customers cust2 ON b.contactId = cust2.unicId
+                WHERE b.isActive = 1
             ";
 
             $params = [];
-            
-            // ✅ חיפוש - רק שדות קיימים!
+
+            // ✅ חיפוש - שימוש באליאסים הנכונים
             if ($query) {
                 $sql .= " AND (
-                    b.id LIKE :query1 OR 
+                    b.id LIKE :query1 OR
                     b.serialBurialId LIKE :query2 OR
-                    c.firstName LIKE :query3 OR 
-                    c.lastName LIKE :query4 OR
-                    c.numId LIKE :query5 OR
-                    g.graveNameHe LIKE :query6
+                    cust1.firstName LIKE :query3 OR
+                    cust1.lastName LIKE :query4 OR
+                    cust1.numId LIKE :query5 OR
+                    gv.graveNameHe LIKE :query6
                 )";
                 $searchTerm = "%$query%";
                 $params['query1'] = $searchTerm;
@@ -385,54 +386,54 @@ try {
         // סטטיסטיקות קבורות
         case 'stats':
             $stats = [];
-            
-            // סה"כ קבורות לפי סטטוס - ✅ תוקן ל-fetchAll
+
+            // סה"כ קבורות לפי סטטוס
             $stmt = $pdo->query("
                 SELECT burialStatus, COUNT(*) as count
-                FROM burials 
-                WHERE isActive = 1 
+                FROM burials
+                WHERE isActive = 1
                 GROUP BY burialStatus
             ");
             $stats['by_status'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
+
             // קבורות החודש
             $stmt = $pdo->query("
                 SELECT COUNT(*) as count
-                FROM burials 
-                WHERE isActive = 1 
+                FROM burials
+                WHERE isActive = 1
                 AND MONTH(dateBurial) = MONTH(CURRENT_DATE())
                 AND YEAR(dateBurial) = YEAR(CURRENT_DATE())
             ");
-            $stats['this_month'] = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
-            
+            $stats['this_month'] = $stmt->fetch(PDO::FETCH_ASSOC);
+
             // קבורות השנה
             $stmt = $pdo->query("
                 SELECT COUNT(*) as count
-                FROM burials 
-                WHERE isActive = 1 
+                FROM burials
+                WHERE isActive = 1
                 AND YEAR(dateBurial) = YEAR(CURRENT_DATE())
             ");
-            $stats['this_year'] = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
-            
+            $stats['this_year'] = $stmt->fetch(PDO::FETCH_ASSOC);
+
             // קבורות לפי סוגים
             $stmt = $pdo->query("
-                SELECT 
+                SELECT
                     SUM(CASE WHEN nationalInsuranceBurial = 'כן' THEN 1 ELSE 0 END) as national_insurance,
                     SUM(CASE WHEN deathAbroad = 'כן' THEN 1 ELSE 0 END) as abroad
-                FROM burials 
+                FROM burials
                 WHERE isActive = 1
             ");
             $stats['by_type'] = $stmt->fetch(PDO::FETCH_ASSOC);
 
             // סה"כ קבורות פעילות
             $stmt = $pdo->query("
-                SELECT 
+                SELECT
                     COUNT(*) as total_burials
-                FROM burials 
+                FROM burials
                 WHERE isActive = 1
             ");
             $stats['totals'] = $stmt->fetch(PDO::FETCH_ASSOC);
-            
+
             echo json_encode(['success' => true, 'data' => $stats]);
             break;
             

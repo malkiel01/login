@@ -1790,6 +1790,13 @@ class TableManager {
     showFilterSubmenu(colIndex, parentItem, parentMenu) {
         console.log('showFilterSubmenu called!', { colIndex });
 
+        // אם כבר קיים סאבמניו לאותה עמודה - לא ליצור מחדש
+        const existingSubmenu = document.querySelector('.tm-filter-submenu');
+        if (existingSubmenu && existingSubmenu.dataset.colIndex === String(colIndex)) {
+            console.log('Submenu already exists, skipping recreation');
+            return;
+        }
+
         // הסר תפריט משנה קיים
         document.querySelectorAll('.tm-filter-submenu').forEach(m => m.remove());
 
@@ -1800,6 +1807,7 @@ class TableManager {
 
         const submenu = document.createElement('div');
         submenu.className = 'tm-filter-submenu';
+        submenu.dataset.colIndex = colIndex;
 
         const parentRect = parentItem.getBoundingClientRect();
         const menuRect = parentMenu.getBoundingClientRect();

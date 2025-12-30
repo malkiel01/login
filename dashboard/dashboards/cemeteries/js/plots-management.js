@@ -1,16 +1,14 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/plots-management.js
- * Version: 2.0.0
- * Updated: 2025-11-19
+ * Version: 6.0.0
+ * Updated: 2025-12-30
  * Author: Malkiel
  * Change Summary:
- * - v2.0.0: 🔥 הוספת פונקציות חסרות בלבד - ללא שינוי מבנה קיים
- *   ✅ הוספת משתני pagination: plotsCurrentPage, plotsTotalPages, plotsIsLoadingMore
- *   ✅ הוספת משתני חיפוש: plotsIsSearchMode, plotsCurrentQuery, plotsSearchResults
- *   ✅ הוספת loadPlotsBrowseData() - טעינה ישירה מ-API
- *   ✅ הוספת appendMorePlots() - Infinite Scroll
- *   ✅ לוגים מפורטים כמו purchases/burials
- * - v1.4.0: תיקון קריטי - שמות ייחודיים לכל המשתנים הגלובליים
+ * - v6.0.0: מעבר לשיטה החדשה - EntityManager + UniversalSearch + TableManager
+ *   ✅ שימוש ב-EntityManager.load('plot', blockId)
+ *   ✅ תמיכה מלאה ב-UniversalSearch
+ *   ✅ תמיכה ב-Infinite Scroll
+ *   ✅ תמיכה בסינון לפי גוש (parent)
  */
 
 
@@ -22,642 +20,125 @@ let plotSearch = null;
 let plotsTable = null;
 let editingPlotId = null;
 
-let plotsIsSearchMode = false;      // האם אנחנו במצב חיפוש?
-let plotsCurrentQuery = '';         // מה החיפוש הנוכחי?
-let plotsSearchResults = [];        // תוצאות החיפוש
+let plotsIsSearchMode = false;
+let plotsCurrentQuery = '';
+let plotsSearchResults = [];
 
-// ⭐ שמירת ה-block context הנוכחי
-let plotsFilterBlockId = null;
-let plotsFilterBlockName = null;
-
-// ⭐ Infinite Scroll - מעקב אחרי עמוד נוכחי (שמות ייחודיים!)
 let plotsCurrentPage = 1;
 let plotsTotalPages = 1;
 let plotsIsLoadingMore = false;
 
-// ===================================================================
-// ⭐ פונקציה מעודכנת - בניית המבנה של חלקות ב-main-container
-// ===================================================================
-async function buildPlotsContainer(signal, blockId = null, blockName = null) {
-    
-    let mainContainer = document.querySelector('.main-container');
-    
-    if (!mainContainer) {
-        const mainContent = document.querySelector('.main-content');
-        mainContainer = document.createElement('div');
-        mainContainer.className = 'main-container';
-        
-        const actionBar = mainContent.querySelector('.action-bar');
-        if (actionBar) {
-            actionBar.insertAdjacentElement('afterend', mainContainer);
-        } else {
-            mainContent.appendChild(mainContainer);
-        }
-    }
-    
-    // ⭐⭐⭐ טעינת כרטיס מלא של הגוש במקום indicator פשוט!
-    let topSection = '';
-    if (blockId && blockName) {
-        
-        // נסה ליצור את הכרטיס המלא
-        if (typeof createBlockCard === 'function') {
-            try {
-                topSection = await createBlockCard(blockId, signal);
-            } catch (error) {
-                // בדיקה: אם זה ביטול מכוון - זה לא שגיאה
-                if (error.name === 'AbortError') {
-                    return;
-                }
-                console.error('❌ Error creating block card:', error);
-            }
-        } else {
-        }
-        
-        // אם לא הצלחנו ליצור כרטיס, נשתמש ב-fallback פשוט
-        if (!topSection) {
-            topSection = `
-                <div class="filter-indicator" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 20px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span style="font-size: 20px;">📦</span>
-                        <div>
-                            <div style="font-size: 12px; opacity: 0.9;">מציג חלקות עבור</div>
-                            <div style="font-size: 16px; font-weight: 600;">${blockName}</div>
-                        </div>
-                    </div>
-                    <button onclick="loadPlots(null, null, true)" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
-                        ✕ הצג הכל
-                    </button>
-                </div>
-            `;
-        }
-    }
+// שמירת ה-block context הנוכחי
+let plotsFilterBlockId = null;
+let plotsFilterBlockName = null;
 
-    // ⭐ בדיקה - אם הפעולה בוטלה, אל תמשיך!
-    if (signal && signal.aborted) {
-        return;
-    }
-    
-    mainContainer.innerHTML = `
-        ${topSection}
-        
-        <!-- סקשן חיפוש -->
-        <div id="plotSearchSection" class="search-section"></div>
-        
-        <!-- table-container עבור TableManager -->
-        <div class="table-container">
-            <table id="mainTable" class="data-table">
-                <thead>
-                    <tr id="tableHeaders">
-                        <th style="text-align: center;">טוען...</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody">
-                    <tr>
-                        <td style="text-align: center; padding: 40px;">
-                            <div class="spinner-border" role="status">
-                                <span class="visually-hidden">טוען חלקות...</span>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    `;
-    
+
+// ===================================================================
+// פונקציות עזר לתגיות סטטוס (Badge Renderers)
+// ===================================================================
+
+function getPlotStatusBadge(isActive) {
+    const active = isActive == 1;
+    const color = active ? '#10b981' : '#ef4444';
+    const label = active ? 'פעיל' : 'לא פעיל';
+    return `<span style="background: ${color}20; color: ${color}; padding: 4px 12px; border-radius: 20px; font-size: 12px;">${label}</span>`;
 }
 
-// ===================================================================
-// אתחול UniversalSearch - עם סינון משופר!
-// ===================================================================
-async function initPlotsSearch2(signal, blockId = null) {
-    const config = {
-        entityType: 'plot',
-        signal: signal,
-        apiEndpoint: '/dashboard/dashboards/cemeteries/api/plots-api.php',
-        action: 'list',
-        
-        searchableFields: [
-            {
-                name: 'plotNameHe',
-                label: 'שם חלקה (עברית)',
-                table: 'plots',
-                type: 'text',
-                matchType: ['exact', 'fuzzy', 'startsWith']
-            },
-            {
-                name: 'plotNameEn',
-                label: 'שם חלקה (אנגלית)',
-                table: 'plots',
-                type: 'text',
-                matchType: ['exact', 'fuzzy', 'startsWith']
-            },
-            {
-                name: 'plotCode',
-                label: 'קוד חלקה',
-                table: 'plots',
-                type: 'text',
-                matchType: ['exact', 'startsWith']
-            },
-            {
-                name: 'plotLocation',
-                label: 'מיקום חלקה',
-                table: 'plots',
-                type: 'text',
-                matchType: ['exact', 'startsWith']
-            },
-            {
-                name: 'blockNameHe',
-                label: 'גוש',
-                table: 'blocks',
-                type: 'text',
-                matchType: ['exact', 'fuzzy']
-            },
-            {
-                name: 'comments',
-                label: 'הערות',
-                table: 'plots',
-                type: 'text',
-                matchType: ['exact', 'fuzzy']
-            },
-            {
-                name: 'createDate',
-                label: 'תאריך יצירה',
-                table: 'plots',
-                type: 'date',
-                matchType: ['exact', 'before', 'after', 'between', 'today', 'thisWeek', 'thisMonth']
-            }
-        ],
-        
-        displayColumns: ['plotNameHe', 'plotCode', 'plotLocation', 'blockNameHe', 'comments', 'rows_count', 'createDate'],
-        
-        searchContainerSelector: '#plotSearchSection',
-        resultsContainerSelector: '#tableBody',
-        
-        placeholder: 'חיפוש חלקות לפי שם, קוד, מיקום...',
-        itemsPerPage: 999999,
-        
-        renderFunction: renderPlotsRows,
-
-       callbacks: {
-           onInit: () => {
-           },
-           
-           onSearch: (query, filters) => {
-           },
-
-            onResults: (data) => {
-                
-                // ⭐⭐⭐ בדיקה קריטית - אם עברנו לרשומה אחרת, לא להמשיך!
-                if (window.currentType !== 'plot') {
-                    return; // ❌ עצור כאן!
-                }
-
-                // ⭐ טיפול בדפים - מצטבר!
-                const currentPage = data.pagination?.page || 1;
-                
-                if (currentPage === 1) {
-                    // דף ראשון - התחל מחדש
-                    currentPlots = data.data;
-                } else {
-                    // דפים נוספים - הוסף לקיימים
-                    currentPlots = [...currentPlots, ...data.data];
-                }
-                
-                // ⭐ אם יש סינון - סנן את currentPlots!
-                let filteredCount = currentPlots.length;
-                if (plotsFilterBlockId && currentPlots.length > 0) {
-                    const filteredData = currentPlots.filter(plot => {
-                        const plotBlockId = plot.blockId || plot.block_id || plot.BlockId;
-                        return String(plotBlockId) === String(plotsFilterBlockId);
-                    });
-                    
-                    
-                    // ⭐ עדכן את currentPlots
-                    currentPlots = filteredData;
-                    filteredCount = filteredData.length;
-                    
-                    // ⭐ עדכן את pagination.total
-                    if (data.pagination) {
-                        data.pagination.total = filteredCount;
-                    }
-                }
-                
-                // ⭐⭐⭐ עדכן ישירות את plotSearch!
-                if (plotSearch && plotSearch.state) {
-                    plotSearch.state.totalResults = filteredCount;
-                    if (plotSearch.updateCounter) {
-                        plotSearch.updateCounter();
-                    }
-                }
-                
-            },
-           
-           onError: (error) => {
-               console.error('❌ Search error:', error);
-               showToast('שגיאה בחיפוש חלקות', 'error');
-           },
-
-           onEmpty: () => {
-           }
-       }
+function getPlotTypeBadge(plotType) {
+    const types = {
+        'regular': { label: 'רגיל', color: '#3b82f6' },
+        'family': { label: 'משפחתי', color: '#8b5cf6' },
+        'special': { label: 'מיוחד', color: '#f59e0b' }
     };
-    
-    // ⭐ אם יש סינון לפי גוש, הוסף פרמטר ל-API
-    if (blockId) {
-        config.additionalParams = { blockId: blockId };
-    }
-    
-    plotSearch = await window.initUniversalSearch(config);
-    
-    // ⭐ עדכן את window.plotSearch מיד!
-    window.plotSearch = plotSearch;
-    
-    return plotSearch;
-}
-async function initPlotsSearch(signal, blockId = null) {
-    const config = {
-        entityType: 'plot',
-        signal: signal,
-        action: 'list',
-        
-        searchContainerSelector: '#plotSearchSection',
-        resultsContainerSelector: '#tableBody',
-        
-        itemsPerPage: 999999,
-        
-        renderFunction: renderPlotsRows,
-
-        callbacks: {
-            onInit: () => {
-            },
-            
-            onSearch: (query, filters) => {
-            },
-
-            onResults: (data) => {
-                
-                if (window.currentType !== 'plot') {
-                    return;
-                }
-
-                const currentPage = data.pagination?.page || 1;
-                
-                if (currentPage === 1) {
-                    currentPlots = data.data;
-                } else {
-                    currentPlots = [...currentPlots, ...data.data];
-                }
-                
-                let filteredCount = currentPlots.length;
-                if (plotsFilterBlockId && currentPlots.length > 0) {
-                    const filteredData = currentPlots.filter(plot => {
-                        const plotBlockId = plot.blockId || plot.block_id || plot.BlockId;
-                        return String(plotBlockId) === String(plotsFilterBlockId);
-                    });
-                    
-                    
-                    currentPlots = filteredData;
-                    filteredCount = filteredData.length;
-                    
-                    if (data.pagination) {
-                        data.pagination.total = filteredCount;
-                    }
-                }
-                
-                if (plotSearch && plotSearch.state) {
-                    plotSearch.state.totalResults = filteredCount;
-                    if (plotSearch.updateCounter) {
-                        plotSearch.updateCounter();
-                    }
-                }
-                
-            },
-            
-            onError: (error) => {
-                console.error('❌ Search error:', error);
-                showToast('שגיאה בחיפוש חלקות', 'error');
-            },
-
-            onEmpty: () => {
-            }
-        }
-    };
-    
-    // ⭐ אם יש סינון לפי גוש, הוסף פרמטר ל-API
-    if (blockId) {
-        config.additionalParams = { blockId: blockId };
-    }
-    
-    plotSearch = await window.initUniversalSearch(config);
-    
-    window.plotSearch = plotSearch;
-    
-    return plotSearch;
+    const typeInfo = types[plotType] || { label: plotType || '-', color: '#6b7280' };
+    return `<span style="background: ${typeInfo.color}20; color: ${typeInfo.color}; padding: 4px 12px; border-radius: 20px; font-size: 12px;">${typeInfo.label}</span>`;
 }
 
-// ===================================================================
-// אתחול TableManager לחלקות
-// ===================================================================
-async function initPlotsTable(data, totalItems = null, signal) {
-    const actualTotalItems = totalItems !== null ? totalItems : data.length;
-    
-    // אם הטבלה כבר קיימת, רק עדכן נתונים
-    if (plotsTable) {
-        plotsTable.config.totalItems = actualTotalItems;
-        plotsTable.setData(data);
-        return plotsTable;
-    }
-
-    // טעינת העמודות מהשרת
-    async function loadColumnsFromConfig(entityType = 'plot', signal) {
-        try {
-            const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`, {
-                signal: signal
-            });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const result = await response.json();
-            
-            if (!result.success || !result.data) {
-                throw new Error(result.error || 'Failed to load columns config');
-            }
-            
-            // המרת הקונפיג מ-PHP לפורמט של TableManager
-            const columns = result.data.map(col => {
-                const column = {
-                    field: col.field,
-                    label: col.title,
-                    width: col.width || 'auto',
-                    sortable: col.sortable !== false,
-                    type: col.type || 'text'
-                };
-                
-                // טיפול בסוגי עמודות מיוחדות
-                switch(col.type) {
-                    case 'link':
-                        column.render = (plot) => {
-                            return `<a href="#" onclick="handlePlotDoubleClick('${plot.unicId}', '${plot.plotNameHe?.replace(/'/g, "\\'")}'); return false;" 
-                                    style="color: #2563eb; text-decoration: none; font-weight: 500;">
-                                ${plot.plotNameHe || '-'}
-                            </a>`;
-                        };
-                        break;
-                        
-                    case 'badge':
-                        column.render = (plot) => {
-                            const count = plot[column.field] || 0;
-                            return `<span style="background: #dbeafe; color: #1e40af; padding: 3px 10px; border-radius: 4px; font-size: 13px; font-weight: 600; display: inline-block;">${count}</span>`;
-                        };
-                        break;
-                        
-                    case 'status':
-                        column.render = (plot) => {
-                            const status = plot.statusPlot || plot.isActive;
-                            return status == 1 
-                                ? '<span class="status-badge status-active">פעיל</span>'
-                                : '<span class="status-badge status-inactive">לא פעיל</span>';
-                        };
-                        break;
-                        
-                    case 'date':
-                        column.render = (plot) => formatDate(plot[column.field]);
-                        break;
-                        
-                    case 'actions':
-                        column.render = (item) => `
-                            <button class="btn btn-sm btn-secondary" 
-                                    onclick="event.stopPropagation(); window.tableRenderer.editItem('${item.unicId}')" 
-                                    title="עריכה">
-                                <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
-                            </button>
-                            <button class="btn btn-sm btn-danger" 
-                                    onclick="event.stopPropagation(); deletePlot('${item.unicId}')" 
-                                    title="מחיקה">
-                                <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
-                            </button>
-                        `;
-                        break;
-                        
-                    default:
-                        // עמודת טקסט רגילה
-                        if (!column.render) {
-                            column.render = (item) => item[column.field] || '-';
-                        }
-                }
-                
-                return column;
-            });
-            
-            return columns;
-            
-        } catch (error) {
-            // בדיקה: אם זה ביטול מכוון - זה לא שגיאה
-            if (error.name === 'AbortError') {
-                return [];
-            }
-            console.error('Failed to load columns config:', error);
-            return [];
-        }
-    }
-      
-    // קודם טען את העמודות
-    const columns = await loadColumnsFromConfig('plot', signal);
-
-    // בדוק אם בוטל
-    if (signal && signal.aborted) {
-        return null;
-    }
-
-
-    plotsTable = new TableManager({
-        tableSelector: '#mainTable',        
-        totalItems: actualTotalItems,
-        columns: columns,
-        data: data,      
-        sortable: true,
-        resizable: true,
-        reorderable: false,
-        filterable: true,
-        
-        onSort: (field, order) => {
-            showToast(`ממוין לפי ${field} (${order === 'asc' ? 'עולה' : 'יורד'})`, 'info');
-        },
-        
-        onFilter: (filters) => {
-            const count = plotsTable.getFilteredData().length;
-            showToast(`נמצאו ${count} תוצאות`, 'info');
-        }
-    });
-
-    // ⭐ מאזין לגלילה - טען עוד דפים!
-    const bodyContainer = document.querySelector('.table-body-container');
-    if (bodyContainer && plotSearch) {
-        bodyContainer.addEventListener('scroll', async function() {
-            const scrollTop = this.scrollTop;
-            const scrollHeight = this.scrollHeight;
-            const clientHeight = this.clientHeight;
-            
-            if (scrollHeight - scrollTop - clientHeight < 100) {
-                if (!plotSearch.state.isLoading && plotSearch.state.currentPage < plotSearch.state.totalPages) {
-                    
-                    const nextPage = plotSearch.state.currentPage + 1;
-                    plotSearch.state.currentPage = nextPage;
-                    plotSearch.state.isLoading = true;
-                    await plotSearch.search();
-                }
-            }
-        });
-    }
-    
-    window.plotsTable = plotsTable;  
-    return plotsTable;
+function getAreaGravesCountBadge(count) {
+    const color = '#f59e0b';
+    return `<span style="background: ${color}20; color: ${color}; padding: 4px 12px; border-radius: 20px; font-size: 12px;">${count || 0}</span>`;
 }
 
-// ===================================================================
-// רינדור שורות החלקות - עם הודעה מותאמת לגוש ריק
-// ===================================================================
-function renderPlotsRows(data, container, pagination = null, signal = null) {
-    
-    // ⭐ סינון client-side לפי blockId
-    let filteredData = data;
-    if (plotsFilterBlockId) {
-        filteredData = data.filter(plot => 
-            plot.blockId === plotsFilterBlockId || 
-            plot.block_id === plotsFilterBlockId
-        );
-    }
-    
-    // ⭐ עדכן את totalItems להיות המספר המסונן!
-    const totalItems = filteredData.length;
-    
+function getBlockBadge(blockName) {
+    const color = '#3b82f6';
+    return `<span style="background: ${color}20; color: ${color}; padding: 4px 12px; border-radius: 20px; font-size: 12px;">${blockName || '-'}</span>`;
+}
 
-    if (filteredData.length === 0) {
-        if (plotsTable) {
-            plotsTable.setData([]);
-        }
-        
-        // ⭐⭐⭐ הודעה מותאמת לגוש ריק!
-        if (plotsFilterBlockId && plotsFilterBlockName) {
-            // נכנסנו לגוש ספציפי ואין חלקות
-            container.innerHTML = `
-                <tr>
-                    <td colspan="9" style="text-align: center; padding: 60px;">
-                        <div style="color: #6b7280;">
-                            <div style="font-size: 48px; margin-bottom: 16px;">📋</div>
-                            <div style="font-size: 20px; font-weight: 600; margin-bottom: 12px; color: #374151;">
-                                אין חלקות בגוש ${plotsFilterBlockName}
-                            </div>
-                            <div style="font-size: 14px; margin-bottom: 24px; color: #6b7280;">
-                                הגוש עדיין לא מכיל חלקות. תוכל להוסיף חלקה חדשה
-                            </div>
-                            <button 
-                                onclick="if(typeof FormHandler !== 'undefined' && FormHandler.openForm) { FormHandler.openForm('plot', '${plotsFilterBlockId}', null); } else { alert('FormHandler לא זמין'); }" 
-                                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                                       color: white; 
-                                       border: none; 
-                                       padding: 12px 24px; 
-                                       border-radius: 8px; 
-                                       font-size: 15px; 
-                                       font-weight: 600; 
-                                       cursor: pointer; 
-                                       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                                       transition: all 0.2s;"
-                                onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.15)';"
-                                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)';">
-                                ➕ הוסף חלקה ראשונה
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        } else {
-            // חיפוש כללי שלא מצא תוצאות
-            container.innerHTML = `
-                <tr>
-                    <td colspan="9" style="text-align: center; padding: 60px;">
-                        <div style="color: #9ca3af;">
-                            <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
-                            <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">לא נמצאו תוצאות</div>
-                            <div>נסה לשנות את מילות החיפוש או הפילטרים</div>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        }
-        return;
+
+// ===================================================================
+// פונקציות CRUD
+// ===================================================================
+
+function openAddPlot(blockId = null) {
+    window.currentType = 'plot';
+    window.currentParentId = blockId || plotsFilterBlockId;
+    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
+        FormHandler.openForm('plot', blockId || plotsFilterBlockId, null);
     }
-    
-    // ⭐ בדוק אם ה-DOM של TableManager קיים
-    const tableWrapperExists = document.querySelector('.table-wrapper[data-fixed-width="true"]');
-    
-    // ⭐ אם המשתנה קיים אבל ה-DOM נמחק - אפס את המשתנה!
-    if (!tableWrapperExists && plotsTable) {
-        plotsTable = null;
-        window.plotsTable = null;
+}
+
+async function editPlot(id) {
+    window.currentType = 'plot';
+    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
+        FormHandler.openForm('plot', null, id);
     }
-    
-    // עכשיו בדוק אם צריך לבנות מחדש
-    if (!plotsTable || !tableWrapperExists) {
-        // אין TableManager או שה-DOM שלו נמחק - בנה מחדש!
-        initPlotsTable(filteredData, totalItems, signal);
+}
+
+async function viewPlot(id) {
+    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
+        FormHandler.openForm('plotCard', null, id);
     } else {
-        // ⭐ עדכן גם את totalItems ב-TableManager!
-        if (plotsTable.config) {
-            plotsTable.config.totalItems = totalItems;
-        }
-        
-        plotsTable.setData(filteredData);
-    }
-    
-    // ⭐ עדכן את התצוגה של UniversalSearch
-    if (plotSearch) {
-        plotSearch.state.totalResults = totalItems;
-        plotSearch.updateCounter();
+        editPlot(id);
     }
 }
 
-// ===================================================
-// ⭐ פונקציה מתוקנת - טיפול בדאבל-קליק על חלקה
-// ===================================================
-async function handlePlotDoubleClick(plotId, plotName) {
-    
-    try {
-        // // 1. יצירת והצגת כרטיס ✅
-        // if (typeof createPlotCard === 'function') {
-        //     const cardHtml = await createPlotCard(plotId);
-        //     if (cardHtml && typeof displayHierarchyCard === 'function') {
-        //         displayHierarchyCard(cardHtml);
-        //     }
-        // }
-        
-        // 2. טעינת אחוזות קבר (נכדים דרך השורות) ✅ שינוי!
-        if (typeof loadAreaGraves === 'function') {
-            loadAreaGraves(plotId, plotName);
-        } else {
-        }
-        
-    } catch (error) {
-        console.error('❌ Error in handlePlotDoubleClick:', error);
-        showToast('שגיאה בטעינת פרטי החלקה', 'error');
+// דאבל-קליק על שורת חלקה - מעבר לאחוזות קבר
+async function handlePlotDoubleClick(plot) {
+    const plotId = typeof plot === 'object' ? (plot.id || plot.unicId) : plot;
+    const plotName = typeof plot === 'object' ? plot.plotName : null;
+
+    if (typeof loadAreaGraves === 'function') {
+        loadAreaGraves(plotId, plotName);
     }
 }
 
-window.handlePlotDoubleClick = handlePlotDoubleClick;
+
+// ===================================================================
+// פונקציות Render לעמודות מיוחדות
+// ===================================================================
+
+function renderPlotColumn(plot, column) {
+    switch(column.field) {
+        case 'isActive':
+            return getPlotStatusBadge(plot.isActive);
+        case 'plotType':
+            return getPlotTypeBadge(plot.plotType);
+        case 'areaGraves_count':
+            return getAreaGravesCountBadge(plot.areaGraves_count);
+        case 'blockName':
+            return getBlockBadge(plot.blockName);
+        default:
+            return null;
+    }
+}
+
 
 // ===================================================================
 // הפוך לגלובלי
 // ===================================================================
-
+window.plotSearch = plotSearch;
 window.plotsTable = plotsTable;
-
+window.currentPlots = currentPlots;
 window.plotsFilterBlockId = plotsFilterBlockId;
-
 window.plotsFilterBlockName = plotsFilterBlockName;
 
-window.plotSearch = plotSearch;
+window.getPlotStatusBadge = getPlotStatusBadge;
+window.getPlotTypeBadge = getPlotTypeBadge;
+window.getAreaGravesCountBadge = getAreaGravesCountBadge;
+window.getBlockBadge = getBlockBadge;
 
-window.loadPlotsBrowseData = loadPlotsBrowseData;
-
+window.openAddPlot = openAddPlot;
+window.editPlot = editPlot;
+window.viewPlot = viewPlot;
+window.handlePlotDoubleClick = handlePlotDoubleClick;
+window.renderPlotColumn = renderPlotColumn;

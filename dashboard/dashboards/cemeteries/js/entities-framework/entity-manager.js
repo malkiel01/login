@@ -433,6 +433,22 @@ window.EntityManager = EntityManager;
 // יצירת פונקציות wrapper ל-backward compatibility
 // ===================================================================
 
+// Cemetery wrappers
+window.loadCemeteries = () => EntityManager.load('cemetery');
+window.loadCemeteriesBrowseData = (signal) => EntityLoader.loadBrowseData('cemetery', signal);
+window.appendMoreCemeteries = () => EntityManager.appendMore('cemetery');
+window.deleteCemetery = (id) => EntityManager.delete('cemetery', id);
+window.cemeteriesRefreshData = () => EntityManager.refresh('cemetery');
+window.checkCemeteriesScrollStatus = () => EntityManager.checkScrollStatus('cemetery');
+
+// Block wrappers
+window.loadBlocks = (cemeteryId, cemeteryName, forceReset) => EntityManager.load('block', cemeteryId, cemeteryName, forceReset);
+window.loadBlocksBrowseData = (cemeteryId, signal) => EntityLoader.loadBrowseData('block', signal, cemeteryId);
+window.appendMoreBlocks = () => EntityManager.appendMore('block');
+window.deleteBlock = (id) => EntityManager.delete('block', id);
+window.blocksRefreshData = () => EntityManager.refresh('block');
+window.checkBlocksScrollStatus = () => EntityManager.checkScrollStatus('block');
+
 // פונקציות טעינה ראשיות
 window.loadCustomers = () => EntityManager.load('customer');
 window.loadPurchases = () => EntityManager.load('purchase');

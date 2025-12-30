@@ -1,16 +1,15 @@
 /*
  * File: dashboards/dashboard/cemeteries/assets/js/area-graves-management.js
- * Version: 1.5.4
- * Updated: 2025-11-16
+ * Version: 6.0.0
+ * Updated: 2025-12-30
  * Author: Malkiel
  * Change Summary:
- * - v1.5.4: 🐛 תיקון שתי בעיות קריטיות:
- *   - תיקון: שדה חיפוש מוסתר - הסרת style="display: none;"
- *   - תיקון: שכפול טבלה - הוספת await ל-initAreaGravesTable
- *   - הפיכת renderAreaGravesRows ל-async function
+ * - v6.0.0: מעבר לשיטה החדשה - EntityManager + UniversalSearch + TableManager
+ *   ✅ שימוש ב-EntityManager.load('areaGrave', plotId)
+ *   ✅ תמיכה מלאה ב-UniversalSearch
+ *   ✅ תמיכה ב-Infinite Scroll
+ *   ✅ תמיכה בסינון לפי חלקה (parent)
  */
-
-
 
 
 // ===================================================================
@@ -21,641 +20,125 @@ let areaGraveSearch = null;
 let areaGravesTable = null;
 let editingAreaGraveId = null;
 
-let areaGravesIsSearchMode = false;      // האם אנחנו במצב חיפוש?
-let areaGravesCurrentQuery = '';         // מה החיפוש הנוכחי?
-let areaGravesSearchResults = [];        // תוצאות החיפוש
+let areaGravesIsSearchMode = false;
+let areaGravesCurrentQuery = '';
+let areaGravesSearchResults = [];
 
-// ⭐ שמירת ה-plot context הנוכחי
-let areaGravesFilterPlotId = null;
-let areaGravesFilterPlotName = null;
-
-// ⭐ Infinite Scroll - מעקב אחרי עמוד נוכחי (שמות ייחודיים!)
 let areaGravesCurrentPage = 1;
 let areaGravesTotalPages = 1;
 let areaGravesIsLoadingMore = false;
 
-// ===================================================================
-// טעינת אחוזות קבר - פונקציה ראשית
-// ===================================================================
-// async function loadAreaGraves(plotId = null, plotName = null, forceReset = false) {
-//     console.log('📋 Loading area graves...');
-    
-//     const signal = OperationManager.start('areaGrave');  // ⭐ תוקן: areaGrave במקום area-grave
-    
-//     // ⭐ אם קוראים ללא פרמטרים (מהתפריט) - אפס את הסינון!
-//     if (plotId === null && plotName === null && !forceReset) {
-//         if (areaGravesFilterPlotId !== null) {
-//             console.log('🔄 Resetting filter - called from menu without params');
-//             areaGravesFilterPlotId = null;
-//             areaGravesFilterPlotName = null;
-//         }
-//         console.log('🔍 Plot filter: None (showing all area graves)');
-//     } else if (forceReset) {
-//         console.log('🔄 Force reset filter');
-//         areaGravesFilterPlotId = null;
-//         areaGravesFilterPlotName = null;
-//     } else {
-//         // יש plotId - עדכן את הסינון
-//         console.log('🔄 Setting filter:', { plotId, plotName });
-//         areaGravesFilterPlotId = plotId;
-//         areaGravesFilterPlotName = plotName;
-//     }
-    
-//     console.log('🔍 Final filter:', { plotId: areaGravesFilterPlotId, plotName: areaGravesFilterPlotName });
-    
-//     // עדכן את הסוג הנוכחי
-//     window.currentType = 'areaGrave';  // ⭐ תוקן
-//     window.currentParentId = plotId;
-    
-//     // ⭐ עדכן גם את tableRenderer.currentType!
-//     if (window.tableRenderer) {
-//         window.tableRenderer.currentType = 'areaGrave';  // ⭐ תוקן
-//     }
-    
-//     // ⭐ נקה - DashboardCleaner ימחק גם את TableManager!
-//     if (typeof DashboardCleaner !== 'undefined') {
-//         DashboardCleaner.clear({ targetLevel: 'areaGrave' });  // ⭐ תוקן
-//     } else if (typeof clearDashboard === 'function') {
-//         clearDashboard({ targetLevel: 'areaGrave' });  // ⭐ תוקן
-//     }
-    
-//     // נקה את כל הסידבר
-//     if (typeof clearAllSidebarSelections === 'function') {
-//         clearAllSidebarSelections();
-//     }
-    
-//     // עדכון פריט תפריט אקטיבי
-//     if (typeof setActiveMenuItem === 'function') {
-//         setActiveMenuItem('areaGravesItem');
-//     }
-    
-//     // עדכן את כפתור ההוספה
-//     if (typeof updateAddButtonText === 'function') {
-//         updateAddButtonText();
-//     }
-    
-//     // עדכן breadcrumb
-//     if (typeof updateBreadcrumb === 'function') {
-//         const breadcrumbData = { 
-//             areaGrave: { name: plotName ? `אחוזות קבר של ${plotName}` : 'אחוזות קבר' }
-//         };
-//         if (plotId && plotName) {
-//             breadcrumbData.plot = { id: plotId, name: plotName };
-//         }
-//         updateBreadcrumb(breadcrumbData);
-//     }
-    
-//     // עדכון כותרת החלון
-//     document.title = plotName ? `אחוזות קבר - ${plotName}` : 'ניהול אחוזות קבר - מערכת בתי עלמין';
-    
-//     // ⭐ בנה את המבנה החדש ב-main-container
-//     await buildAreaGravesContainer(signal, plotId, plotName);
-    
-//     if (OperationManager.shouldAbort('areaGrave')) {  // ⭐ תוקן
-//         console.log('⚠️ Area grave operation aborted');
-//         return;
-//     }
-    
-//     // ⭐ תמיד השמד את החיפוש הקודם ובנה מחדש
-//     if (areaGraveSearch && typeof areaGraveSearch.destroy === 'function') {
-//         console.log('🗑️ Destroying previous areaGraveSearch instance...');
-//         areaGraveSearch.destroy();
-//         areaGraveSearch = null;
-//         window.areaGraveSearch = null;
-//     }
-    
-//     // אתחל את UniversalSearch מחדש תמיד
-//     console.log('🆕 Creating fresh areaGraveSearch instance...');
-//     areaGraveSearch = await initAreaGravesSearch(signal, plotId);  // ⭐ תוקן: שמור את התוצאה!
-//     window.areaGraveSearch = areaGraveSearch;  // ⭐ תוקן: עדכן גם את window
-    
-//     if (OperationManager.shouldAbort('areaGrave')) {  // ⭐ תוקן
-//         console.log('⚠️ Area grave operation aborted');
-//         return;
-//     }
-    
-//     // ⭐ ודא שיש areaGraveSearch לפני שקוראים ל-search
-//     if (areaGraveSearch && typeof areaGraveSearch.search === 'function') {
-//         areaGraveSearch.search();
-//     } else {
-//         console.error('❌ areaGraveSearch is null or missing search method');
-//     }
-    
-//     console.log('✅ Area graves loaded successfully');
-// }
+// שמירת ה-plot context הנוכחי
+let areaGravesFilterPlotId = null;
+let areaGravesFilterPlotName = null;
+
 
 // ===================================================================
-// בניית המבנה
+// פונקציות עזר לתגיות סטטוס (Badge Renderers)
 // ===================================================================
-async function buildAreaGravesContainer(signal, plotId = null, plotName = null) {
-    
-    let mainContainer = document.querySelector('.main-container');
-    
-    if (!mainContainer) {
-        const mainContent = document.querySelector('.main-content');
-        mainContainer = document.createElement('div');
-        mainContainer.className = 'main-container';
-        
-        const actionBar = mainContent.querySelector('.action-bar');
-        if (actionBar) {
-            actionBar.insertAdjacentElement('afterend', mainContainer);
-        } else {
-            mainContent.appendChild(mainContainer);
-        }
-    }
 
-    // ⭐⭐⭐ טעינת כרטיס מלא במקום indicator פשוט!
-    let topSection = '';
-    if (plotId && plotName) {
-        
-        // נסה ליצור את הכרטיס המלא
-        if (typeof createPlotCard === 'function') {
-            try {
-                topSection = await createPlotCard(plotId, signal);
-            } catch (error) {
-                // בדיקה: אם זה ביטול מכוון - זה לא שגיאה
-                if (error.name === 'AbortError') {
-                    return;
-                }
-                console.error('❌ Error creating block card:', error);
-            }
-        } else {
-        }
-        
-        // אם לא הצלחנו ליצור כרטיס, נשתמש ב-fallback פשוט
-        if (!topSection) {
-            topSection = `
-                <div class="filter-indicator" style="background: linear-gradient(135deg, #FC466B 0%, #3F5EFB 100%); color: white; padding: 12px 20px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span style="font-size: 20px;">🏘️</span>
-                        <div>
-                            <div style="font-size: 12px; opacity: 0.9;">מציג אחוזות קבר עבור</div>
-                            <div style="font-size: 16px; font-weight: 600;">${plotName}</div>
-                        </div>
-                    </div>
-                    <button onclick="loadAreaGraves(null, null, true)" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
-                        ✕ הצג הכל
-                    </button>
-                </div>
-            `;
-        }
-    }
-
-    // ⭐ בדיקה - אם הפעולה בוטלה, אל תמשיך!
-    if (signal && signal.aborted) {
-        return;
-    }
-    
-    mainContainer.innerHTML = `
-        ${topSection}
-        
-        <div id="areaGraveSearchSection" class="search-section"></div>
-        
-        <div class="table-container">
-            <table id="mainTable" class="data-table">
-                <thead>
-                    <tr id="tableHeaders">
-                        <th style="text-align: center;">טוען...</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody">
-                    <tr>
-                        <td style="text-align: center; padding: 40px;">
-                            <div class="spinner-border" role="status">
-                                <span class="visually-hidden">טוען אחוזות קבר...</span>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    `;
-  
+function getAreaGraveStatusBadge(isActive) {
+    const active = isActive == 1;
+    const color = active ? '#10b981' : '#ef4444';
+    const label = active ? 'פעיל' : 'לא פעיל';
+    return `<span style="background: ${color}20; color: ${color}; padding: 4px 12px; border-radius: 20px; font-size: 12px;">${label}</span>`;
 }
 
-// ===================================================================
-// אתחול UniversalSearch - עם Pagination!
-// ===================================================================
-async function initAreaGravesSearch(signal, plotId = null) {
-    
-    const config = {
-        entityType: 'areaGrave',  // ⭐ תוקן: areaGrave במקום area-grave!
-        signal: signal,
-        action: 'list',
-        
-        searchContainerSelector: '#areaGraveSearchSection',
-        resultsContainerSelector: '#tableBody',
-
-        itemsPerPage: 999999,
-        apiLimit: 999999,  // ⭐ הוסף את זה!
-
-        renderFunction: renderAreaGravesRows,  // ⭐ תוקן: ישיר במקום wrapper!
-
-        callbacks: {
-            onInit: () => {
-            },
-            
-            onSearch: (query, filters) => {
-            },
-
-            onResults: (data) => {
-
-                // ⭐ בדיקה קריטית - אם עברנו לרשומה אחרת, לא להמשיך!
-                if (window.currentType !== 'areaGrave') {
-                    return;
-                }
-                
-                const currentPage = data.pagination?.page || 1;
-                
-                if (currentPage === 1) {
-                    currentAreaGraves = data.data;
-                } else {
-                    currentAreaGraves = [...currentAreaGraves, ...data.data];
-                }
-                
-                let filteredCount = currentAreaGraves.length;
-                if (areaGravesFilterPlotId && currentAreaGraves.length > 0) {
-                    const filteredData = currentAreaGraves.filter(areaGrave => {
-                        const areaGravePlotId = areaGrave.plotId || areaGrave.plot_id || areaGrave.PlotId;
-                        return String(areaGravePlotId) === String(areaGravesFilterPlotId);
-                    });
-                    
-                    
-                    currentAreaGraves = filteredData;
-                    filteredCount = filteredData.length;
-                    
-                    if (data.pagination) {
-                        data.pagination.total = filteredCount;
-                    }
-                }
-                
-                if (areaGraveSearch && areaGraveSearch.state) {
-                    areaGraveSearch.state.totalResults = filteredCount;
-                    if (areaGraveSearch.updateCounter) {
-                        areaGraveSearch.updateCounter();
-                    }
-                }
-                
-            },
-                    
-            onError: (error) => {
-                console.error('❌ Search error:', error);
-                showToast('שגיאה בחיפוש אחוזות קבר', 'error');
-            },
-
-            onEmpty: () => {
-            }
-        }
-    };
-    
-    // ⭐ אם יש סינון לפי חלקה, הוסף פרמטר ל-API (בחוץ!)
-    if (plotId) {
-        config.additionalParams = { plotId: plotId };
-    }
-    
-    areaGraveSearch = await window.initUniversalSearch(config);
-    
-    window.areaGraveSearch = areaGraveSearch;
-    
-    return areaGraveSearch;
-}
-
-// ===================================================================
-// אתחול TableManager - עם Scroll Loading!
-// ===================================================================
-async function initAreaGravesTable(data, totalItems = null, signal) {
-    const actualTotalItems = totalItems !== null ? totalItems : data.length;
-    
-    if (areaGravesTable) {
-        areaGravesTable.config.totalItems = actualTotalItems;
-        areaGravesTable.setData(data);
-        return areaGravesTable;
-    }
-
-    async function loadColumnsFromConfig(entityType = 'areaGrave', signal) {
-        try {
-            const response = await fetch(`/dashboard/dashboards/cemeteries/api/get-config.php?type=${entityType}&section=table_columns`, {
-                signal: signal
-            });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const result = await response.json();
-            
-            if (!result.success || !result.data) {
-                throw new Error(result.error || 'Failed to load columns config');
-            }
-
-            const columns = result.data.map(col => {
-                const column = {
-                    field: col.field,
-                    label: col.title,
-                    width: col.width,
-                    sortable: col.sortable !== false
-                };
-                
-                // טיפול בסוגים מיוחדים
-                switch(col.type) {
-                    case 'link':
-                        column.render = (areaGrave) => {
-                            return `<a href="#" onclick="handleAreaGraveDoubleClick('${areaGrave.unicId}', '${areaGrave.areaGraveNameHe?.replace(/'/g, "\\'")}'); return false;" 
-                                    style="color: #2563eb; text-decoration: none; font-weight: 500;">
-                                ${areaGrave.areaGraveNameHe}
-                            </a>`;
-                        };
-                        break;
-                        
-                    case 'coordinates':
-                        column.render = (areaGrave) => {
-                            const coords = areaGrave.coordinates || '-';
-                            return `<span style="font-family: monospace; font-size: 12px;">${coords}</span>`;
-                        };
-                        break;
-                        
-                    case 'graveType':
-                        column.render = (areaGrave) => {
-                            const typeName = getGraveTypeName(areaGrave.graveType);
-                            return `<span style="background: #e0e7ff; color: #4338ca; padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 500;">${typeName}</span>`;
-                        };
-                        break;
-                        
-                    case 'row':
-                        column.render = (areaGrave) => {
-                            const rowName = areaGrave.row_name || areaGrave.lineNameHe || '-';
-                            return `<span style="color: #6b7280;">📏 ${rowName}</span>`;
-                        };
-                        break;
-                        
-                    case 'badge':
-                        column.render = (areaGrave) => {
-                            const count = areaGrave[col.field] || 0;
-                            return `<span style="background: #dcfce7; color: #15803d; padding: 3px 10px; border-radius: 4px; font-size: 13px; font-weight: 600;">${count}</span>`;
-                        };
-                        break;
-                        
-                    case 'date':
-                        column.render = (areaGrave) => formatDate(areaGrave[col.field]);
-                        break;
-                        
-                    case 'actions':
-                        column.render = (item) => `
-                            <button class="btn btn-sm btn-secondary" 
-                                    onclick="event.stopPropagation(); window.tableRenderer.editItem('${item.unicId}')" 
-                                    title="עריכה">
-                                <svg class="icon"><use xlink:href="#icon-edit"></use></svg>
-                            </button>
-                            <button class="btn btn-sm btn-danger" 
-                                    onclick="event.stopPropagation(); deleteAreaGrave('${item.unicId}')" 
-                                    title="מחיקה">
-                                <svg class="icon"><use xlink:href="#icon-delete"></use></svg>
-                            </button>
-                        `;
-                        break;
-
-                    default:
-                        // עמודת טקסט רגילה
-                        if (!column.render) {
-                            column.render = (item) => item[column.field] || '-';
-                        }
-                }
-                
-                return column;
-            });
-            
-            return columns;
-        } catch (error) {
-            // בדיקה: אם זה ביטול מכוון - זה לא שגיאה
-            if (error.name === 'AbortError') {
-                return [];
-            }
-            console.error('Failed to load columns config:', error);
-            return [];
-        }
-    }
-
-    // קודם טען את העמודות
-    const columns = await loadColumnsFromConfig('areaGrave', signal);
-
-    // בדוק אם בוטל
-    if (signal && signal.aborted) {
-        return null;
-    }
-
-    areaGravesTable = new TableManager({
-        tableSelector: '#mainTable',   
-        columns: columns,
-        data: data,      
-        sortable: true,
-        resizable: true,
-        reorderable: false,
-        filterable: false,
-
-        tableHeight: 'calc(100vh - 650px)',  // גובה דינמי לפי מסך
-        tableMinHeight: '500px',
-
-        totalItems: actualTotalItems,        // ⭐ סה"כ רשומות במערכת (מה-pagination)
-        scrollLoadBatch: 100,                // ⭐ טען 100 שורות בכל גלילה (client-side)
-        itemsPerPage: 999999,                // ⭐ עמוד אחד גדול = כל הנתונים
-        scrollThreshold: 200,                // ⭐ התחל טעינה 200px לפני התחתית
-        showPagination: false,               // ⭐ ללא footer pagination
-
-        onLoadMore: async () => {
-            if (areaGravesIsSearchMode) {
-                // ⭐ חיפוש - טען דרך UniversalSearch
-                if (areaGraveSearch && typeof areaGraveSearch.loadNextPage === 'function') {
-                    if (areaGraveSearch.state.currentPage >= areaGraveSearch.state.totalPages) {
-                        areaGravesTable.state.hasMoreData = false;
-                        return;
-                    }
-                    await areaGraveSearch.loadNextPage();
-                }
-            } else {
-                // ⭐ Browse - טען ישירות
-                const success = await appendMoreAreaGraves();
-                if (!success) {
-                    areaGravesTable.state.hasMoreData = false;
-                }
-            }
-        },
-
-        renderFunction: (pageData) => {
-            // ⭐ זה לא ישמש - UniversalSearch ירנדר ישירות
-            return renderAreaGravesRows(pageData);
-        },
-    
-
-        onSort: (field, order) => {
-            showToast(`ממוין לפי ${field} (${order === 'asc' ? 'עולה' : 'יורד'})`, 'info');
-        },
-        
-        onFilter: (filters) => {
-            const count = areaGravesTable.getFilteredData().length;
-            showToast(`נמצאו ${count} תוצאות`, 'info');
-        }
-    });
-    
-    window.areaGravesTable = areaGravesTable;
-    
-    return areaGravesTable;
-}
-
-
-// ===================================================================
-// רינדור שורות - עם סינון client-side! (⭐⭐ כמו ב-blocks!)
-// ===================================================================
-
-/**
- * רינדור שורות טבלה - פונקציה מלאה עם כל הלוגיקה!
- * v1.3.2 - שוחזרה הפונקציה המקורית המלאה
- */
-function renderAreaGravesRows(data, container, pagination = null, signal = null) {
-    // ⭐⭐ סינון client-side לפי plotId
-    let filteredData = data;
-
-    if (!areaGravesIsSearchMode && areaGravesFilterPlotId) {
-        filteredData = data.filter(ag => {
-            const agPlotId = ag.plotId || ag.plot_id || ag.PlotId;
-            return String(agPlotId) === String(areaGravesFilterPlotId);
-        });
-    }
-    
-    // ⭐ עדכן את totalItems מה-pagination (סה"כ במערכת, לא רק מה שנטען!)
-    const totalItems = pagination?.totalAll || pagination?.total || filteredData.length;
-    
-
-    if (filteredData.length === 0) {
-        if (areaGravesTable) {
-            areaGravesTable.setData([]);
-        }
-        
-        // ⭐⭐⭐ הודעה מותאמת לחלקה ריקה!
-        if (areaGravesFilterPlotId && areaGravesFilterPlotName) {
-            // נכנסנו לחלקה ספציפית ואין אחוזות קבר
-            container.innerHTML = `
-                <tr>
-                    <td colspan="7" style="text-align: center; padding: 60px;">
-                        <div style="color: #6b7280;">
-                            <div style="font-size: 48px; margin-bottom: 16px;">🏘️</div>
-                            <div style="font-size: 20px; font-weight: 600; margin-bottom: 12px; color: #374151;">
-                                אין אחוזות קבר בחלקה ${areaGravesFilterPlotName}
-                            </div>
-                            <div style="font-size: 14px; margin-bottom: 24px; color: #6b7280;">
-                                החלקה עדיין לא מכילה אחוזות קבר. תוכל להוסיף אחוזת קבר חדשה
-                            </div>
-                            <button 
-                                onclick="if(typeof FormHandler !== 'undefined' && FormHandler.openForm) { FormHandler.openForm('areaGrave', '${areaGravesFilterPlotId}', null); } else { alert('FormHandler לא זמין'); }" 
-                                style="background: linear-gradient(135deg, #FC466B 0%, #3F5EFB 100%); 
-                                       color: white; 
-                                       border: none; 
-                                       padding: 12px 24px; 
-                                       border-radius: 8px; 
-                                       font-size: 15px; 
-                                       font-weight: 600; 
-                                       cursor: pointer; 
-                                       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                                       transition: all 0.2s;"
-                                onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.15)';"
-                                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.1)';">
-                                ➕ הוסף אחוזת קבר ראשונה
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        } else {
-            // חיפוש כללי שלא מצא תוצאות
-            container.innerHTML = `
-                <tr>
-                    <td colspan="7" style="text-align: center; padding: 60px;">
-                        <div style="color: #9ca3af;">
-                            <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
-                            <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">לא נמצאו תוצאות</div>
-                            <div>נסה לשנות את מילות החיפוש או הפילטרים</div>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        }
-        return;
-    }
-    
-    // ⭐ בדוק אם ה-DOM של TableManager קיים
-    const tableWrapperExists = document.querySelector('.table-wrapper[data-table-manager]');
-    
-    // ⭐ אם המשתנה קיים אבל ה-DOM נמחק - אפס את המשתנה!
-    if (!tableWrapperExists && areaGravesTable) {
-        areaGravesTable = null;
-        window.areaGravesTable = null;
-    }
-    
-    // עכשיו בדוק אם צריך לבנות מחדש
-    if (!areaGravesTable || !tableWrapperExists) {
-        initAreaGravesTable(filteredData, totalItems, signal);
-    } else {
-        if (areaGravesTable.config) {
-            areaGravesTable.config.totalItems = totalItems;
-        }
-        
-        areaGravesTable.setData(filteredData);
-    }
-    
-    // ⭐ עדכן את התצוגה של UniversalSearch
-    if (areaGraveSearch) {
-        areaGraveSearch.state.totalResults = totalItems;
-        areaGraveSearch.updateCounter();
-    }
-}
-
-// ===================================================================
-// פונקציית עזר לשם סוג קבר
-// ===================================================================
-function getGraveTypeName(type) {
+function getAreaGraveTypeBadge(areaGraveType) {
     const types = {
-        1: 'שדה',
-        2: 'רוויה',
-        3: 'סנהדרין'
+        'single': { label: 'יחיד', color: '#3b82f6' },
+        'double': { label: 'זוגי', color: '#8b5cf6' },
+        'family': { label: 'משפחתי', color: '#f59e0b' }
     };
-    return types[type] || 'לא מוגדר';
+    const typeInfo = types[areaGraveType] || { label: areaGraveType || '-', color: '#6b7280' };
+    return `<span style="background: ${typeInfo.color}20; color: ${typeInfo.color}; padding: 4px 12px; border-radius: 20px; font-size: 12px;">${typeInfo.label}</span>`;
 }
 
+function getGravesCountBadge(count) {
+    const color = '#8e2de2';
+    return `<span style="background: ${color}20; color: ${color}; padding: 4px 12px; border-radius: 20px; font-size: 12px;">${count || 0}</span>`;
+}
+
+function getPlotBadge(plotName) {
+    const color = '#10b981';
+    return `<span style="background: ${color}20; color: ${color}; padding: 4px 12px; border-radius: 20px; font-size: 12px;">${plotName || '-'}</span>`;
+}
+
+
 // ===================================================================
-// דאבל-קליק על אחוזת קבר
+// פונקציות CRUD
 // ===================================================================
 
-async function handleAreaGraveDoubleClick(areaGraveId, areaGraveName) {
-    
-    try {
-        if (typeof createAreaGraveCard === 'function') {
-            const cardHtml = await createAreaGraveCard(areaGraveId);
-            if (cardHtml && typeof displayHierarchyCard === 'function') {
-                displayHierarchyCard(cardHtml);
-            }
-        }
-        
-        if (typeof loadGraves === 'function') {
-            loadGraves(areaGraveId, areaGraveName);
-        } else {
-        }
-        
-    } catch (error) {
-        console.error('❌ Error in handleAreaGraveDoubleClick:', error);
-        showToast('שגיאה בטעינת פרטי אחוזת הקבר', 'error');
+function openAddAreaGrave(plotId = null) {
+    window.currentType = 'areaGrave';
+    window.currentParentId = plotId || areaGravesFilterPlotId;
+    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
+        FormHandler.openForm('areaGrave', plotId || areaGravesFilterPlotId, null);
+    }
+}
+
+async function editAreaGrave(id) {
+    window.currentType = 'areaGrave';
+    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
+        FormHandler.openForm('areaGrave', null, id);
+    }
+}
+
+async function viewAreaGrave(id) {
+    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
+        FormHandler.openForm('areaGraveCard', null, id);
+    } else {
+        editAreaGrave(id);
+    }
+}
+
+// דאבל-קליק על שורת אחוזת קבר - מעבר לקברים
+async function handleAreaGraveDoubleClick(areaGrave) {
+    const areaGraveId = typeof areaGrave === 'object' ? (areaGrave.id || areaGrave.unicId) : areaGrave;
+    const areaGraveName = typeof areaGrave === 'object' ? areaGrave.areaGraveName : null;
+
+    if (typeof loadGraves === 'function') {
+        loadGraves(areaGraveId, areaGraveName);
     }
 }
 
 
-window.handleAreaGraveDoubleClick = handleAreaGraveDoubleClick;
+// ===================================================================
+// פונקציות Render לעמודות מיוחדות
+// ===================================================================
+
+function renderAreaGraveColumn(areaGrave, column) {
+    switch(column.field) {
+        case 'isActive':
+            return getAreaGraveStatusBadge(areaGrave.isActive);
+        case 'areaGraveType':
+            return getAreaGraveTypeBadge(areaGrave.areaGraveType);
+        case 'graves_count':
+            return getGravesCountBadge(areaGrave.graves_count);
+        case 'plotName':
+            return getPlotBadge(areaGrave.plotName);
+        default:
+            return null;
+    }
+}
 
 
 // ===================================================================
 // הפוך לגלובלי
 // ===================================================================
-
-// window.loadAreaGraves = loadAreaGraves;
+window.areaGraveSearch = areaGraveSearch;
 window.areaGravesTable = areaGravesTable;
+window.currentAreaGraves = currentAreaGraves;
 window.areaGravesFilterPlotId = areaGravesFilterPlotId;
 window.areaGravesFilterPlotName = areaGravesFilterPlotName;
-window.areaGraveSearch = areaGraveSearch;
 
+window.getAreaGraveStatusBadge = getAreaGraveStatusBadge;
+window.getAreaGraveTypeBadge = getAreaGraveTypeBadge;
+window.getGravesCountBadge = getGravesCountBadge;
+window.getPlotBadge = getPlotBadge;
+
+window.openAddAreaGrave = openAddAreaGrave;
+window.editAreaGrave = editAreaGrave;
+window.viewAreaGrave = viewAreaGrave;
+window.handleAreaGraveDoubleClick = handleAreaGraveDoubleClick;
+window.renderAreaGraveColumn = renderAreaGraveColumn;

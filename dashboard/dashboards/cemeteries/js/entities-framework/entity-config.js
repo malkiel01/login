@@ -20,7 +20,7 @@
 let ENTITY_CONFIG = {};
 
 // רשימת הישויות שצריך לטעון
-const ENTITY_TYPES = ['plot', 'areaGrave', 'grave', 'customer', 'purchase', 'burial', 'payment', 'residency', 'country', 'city'];
+const ENTITY_TYPES = ['cemetery', 'block', 'plot', 'areaGrave', 'grave', 'customer', 'purchase', 'burial', 'payment', 'residency', 'country', 'city'];
 
 // נתיב ל-API
 const CONFIG_API_ENDPOINT = '/dashboard/dashboards/cemeteries/api/get-config.php';

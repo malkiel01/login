@@ -14,6 +14,8 @@ let currentUnicId = null;
 let drawingPolygon = false;
 let polygonPoints = [];
 let previewLine = null; // קו תצוגה מקדימה
+let boundaryClipPath = null; // גבול החיתוך
+let grayMask = null; // מסכה אפורה
 
 // יצירת המודל בטעינה
 document.addEventListener('DOMContentLoaded', function() {
@@ -714,14 +716,15 @@ function handleBackgroundUpload(event) {
                 selectable: true,
                 hasControls: true,
                 hasBorders: true,
-                lockRotation: false
+                lockRotation: false,
+                objectType: 'workObject' // סימון כאובייקט עבודה
             });
 
-            // שכבת רקע - מתחת לכל השאר
             canvas.add(img);
-            canvas.sendToBack(img);
             backgroundImage = img;
-            canvas.renderAll();
+
+            // סידור שכבות: המסכה והקו תמיד למעלה
+            reorderLayers();
 
             console.log('Background image added');
         });
@@ -730,6 +733,31 @@ function handleBackgroundUpload(event) {
 
     // ניקוי ה-input
     event.target.value = '';
+}
+
+/**
+ * סידור שכבות - המסכה תמיד למעלה
+ */
+function reorderLayers() {
+    if (!window.mapCanvas) return;
+
+    const canvas = window.mapCanvas;
+    const objects = canvas.getObjects();
+
+    // מצא את המסכה והקו
+    let mask = null;
+    let outline = null;
+
+    objects.forEach(obj => {
+        if (obj.objectType === 'grayMask') mask = obj;
+        if (obj.objectType === 'boundaryOutline') outline = obj;
+    });
+
+    // הבא אותם לחזית
+    if (mask) canvas.bringToFront(mask);
+    if (outline) canvas.bringToFront(outline);
+
+    canvas.renderAll();
 }
 
 /**
@@ -855,18 +883,59 @@ function finishPolygon() {
         }
     });
 
-    // יצירת הפוליגון הסופי
-    const polygon = new fabric.Polygon(polygonPoints, {
-        fill: 'rgba(59, 130, 246, 0.2)',
-        stroke: '#3b82f6',
-        strokeWidth: 3,
-        selectable: true,
-        hasControls: true,
-        objectType: 'boundary'
+    // הסרת גבול/מסכה קודמים אם קיימים
+    if (grayMask) {
+        window.mapCanvas.remove(grayMask);
+        grayMask = null;
+    }
+
+    const canvas = window.mapCanvas;
+    const canvasWidth = canvas.width;
+    const canvasHeight = canvas.height;
+
+    // יצירת ה-clipPath לשימוש עתידי
+    boundaryClipPath = new fabric.Polygon(polygonPoints.map(p => ({x: p.x, y: p.y})), {
+        absolutePositioned: true
     });
 
-    window.mapCanvas.add(polygon);
-    window.mapCanvas.renderAll();
+    // יצירת מסכה אפורה עם "חור" בצורת הפוליגון
+    // נשתמש ב-SVG path שמכסה את כל הקנבס ואז חותך את הפוליגון
+
+    // בניית נתיב SVG: מלבן גדול + פוליגון הפוך
+    let pathData = `M 0 0 L ${canvasWidth} 0 L ${canvasWidth} ${canvasHeight} L 0 ${canvasHeight} Z `;
+
+    // הוספת הפוליגון כ"חור" (בכיוון הפוך)
+    pathData += `M ${polygonPoints[0].x} ${polygonPoints[0].y} `;
+    for (let i = polygonPoints.length - 1; i >= 0; i--) {
+        pathData += `L ${polygonPoints[i].x} ${polygonPoints[i].y} `;
+    }
+    pathData += 'Z';
+
+    grayMask = new fabric.Path(pathData, {
+        fill: 'rgba(128, 128, 128, 0.7)',
+        selectable: false,
+        evented: false,
+        objectType: 'grayMask'
+    });
+
+    // קו גבול סביב האזור הפעיל
+    const boundaryOutline = new fabric.Polygon(polygonPoints, {
+        fill: 'transparent',
+        stroke: '#3b82f6',
+        strokeWidth: 3,
+        selectable: false,
+        evented: false,
+        objectType: 'boundaryOutline'
+    });
+
+    canvas.add(grayMask);
+    canvas.add(boundaryOutline);
+
+    // המסכה תמיד למעלה
+    canvas.bringToFront(grayMask);
+    canvas.bringToFront(boundaryOutline);
+
+    canvas.renderAll();
 
     // איפוס
     drawingPolygon = false;
@@ -874,7 +943,7 @@ function finishPolygon() {
     document.getElementById('drawPolygonBtn').classList.remove('active');
     document.getElementById('mapCanvas').style.cursor = 'default';
 
-    console.log('Polygon completed');
+    console.log('Boundary with mask completed');
 }
 
 /**
@@ -910,10 +979,19 @@ function clearPolygon() {
 
     const objects = window.mapCanvas.getObjects();
     objects.forEach(obj => {
-        if (obj.objectType === 'boundary' || obj.polygonPoint || obj.polygonLine) {
+        if (obj.objectType === 'boundary' ||
+            obj.objectType === 'grayMask' ||
+            obj.objectType === 'boundaryOutline' ||
+            obj.polygonPoint ||
+            obj.polygonLine) {
             window.mapCanvas.remove(obj);
         }
     });
+
+    // איפוס משתנים
+    boundaryClipPath = null;
+    grayMask = null;
+
     window.mapCanvas.renderAll();
 }
 
@@ -948,6 +1026,9 @@ function closeMapPopup() {
         isEditMode = false;
         drawingPolygon = false;
         polygonPoints = [];
+        previewLine = null;
+        boundaryClipPath = null;
+        grayMask = null;
         popup.remove();
     }
 }

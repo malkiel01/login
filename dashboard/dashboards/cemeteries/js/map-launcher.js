@@ -1,7 +1,18 @@
 /**
  * Map Launcher - מנהל פתיחת המפה
- * Version: 1.0.0
+ * Version: 2.0.0
+ * Features: Edit mode, Background image, Polygon drawing
  */
+
+// משתנים גלובליים
+let currentMapMode = 'view';
+let isEditMode = false;
+let currentZoom = 1;
+let backgroundImage = null;
+let currentEntityType = null;
+let currentUnicId = null;
+let drawingPolygon = false;
+let polygonPoints = [];
 
 // יצירת המודל בטעינה
 document.addEventListener('DOMContentLoaded', function() {
@@ -12,7 +23,6 @@ document.addEventListener('DOMContentLoaded', function() {
  * יצירת מודל בחירת ישות למפה
  */
 function createMapLauncherModal() {
-    // בדיקה אם המודל כבר קיים
     if (document.getElementById('mapLauncherModal')) return;
 
     const modalHTML = `
@@ -43,135 +53,104 @@ function createMapLauncherModal() {
                 </div>
             </div>
         </div>
-
-        <style>
-            .map-launcher-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.5);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 10000;
-            }
-
-            .map-launcher-modal {
-                background: white;
-                border-radius: 12px;
-                width: 400px;
-                max-width: 90%;
-                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-                direction: rtl;
-            }
-
-            .map-launcher-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 16px 20px;
-                border-bottom: 1px solid #e5e7eb;
-            }
-
-            .map-launcher-header h3 {
-                margin: 0;
-                font-size: 18px;
-                color: #1f2937;
-            }
-
-            .map-launcher-close {
-                background: none;
-                border: none;
-                font-size: 24px;
-                cursor: pointer;
-                color: #6b7280;
-                padding: 0;
-                line-height: 1;
-            }
-
-            .map-launcher-close:hover {
-                color: #1f2937;
-            }
-
-            .map-launcher-body {
-                padding: 20px;
-            }
-
-            .map-launcher-field {
-                margin-bottom: 16px;
-            }
-
-            .map-launcher-field label {
-                display: block;
-                margin-bottom: 6px;
-                font-weight: 500;
-                color: #374151;
-            }
-
-            .map-launcher-select,
-            .map-launcher-input {
-                width: 100%;
-                padding: 10px 12px;
-                border: 1px solid #d1d5db;
-                border-radius: 8px;
-                font-size: 14px;
-                direction: rtl;
-            }
-
-            .map-launcher-select:focus,
-            .map-launcher-input:focus {
-                outline: none;
-                border-color: #3b82f6;
-                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-            }
-
-            .map-launcher-footer {
-                display: flex;
-                justify-content: flex-start;
-                gap: 10px;
-                padding: 16px 20px;
-                border-top: 1px solid #e5e7eb;
-                background: #f9fafb;
-                border-radius: 0 0 12px 12px;
-            }
-
-            .map-launcher-footer .btn-primary {
-                background: #3b82f6;
-                color: white;
-                border: none;
-                padding: 10px 20px;
-                border-radius: 8px;
-                cursor: pointer;
-                font-weight: 500;
-            }
-
-            .map-launcher-footer .btn-primary:hover {
-                background: #2563eb;
-            }
-
-            .map-launcher-footer .btn-secondary {
-                background: white;
-                color: #374151;
-                border: 1px solid #d1d5db;
-                padding: 10px 20px;
-                border-radius: 8px;
-                cursor: pointer;
-            }
-
-            .map-launcher-footer .btn-secondary:hover {
-                background: #f3f4f6;
-            }
-        </style>
     `;
 
+    // הוספת סגנונות
+    const styles = document.createElement('style');
+    styles.id = 'mapLauncherStyles';
+    styles.textContent = `
+        .map-launcher-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+        .map-launcher-modal {
+            background: white;
+            border-radius: 12px;
+            width: 400px;
+            max-width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            direction: rtl;
+        }
+        .map-launcher-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .map-launcher-header h3 {
+            margin: 0;
+            font-size: 18px;
+            color: #1f2937;
+        }
+        .map-launcher-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #6b7280;
+        }
+        .map-launcher-body {
+            padding: 20px;
+        }
+        .map-launcher-field {
+            margin-bottom: 16px;
+        }
+        .map-launcher-field label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #374151;
+        }
+        .map-launcher-select,
+        .map-launcher-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            direction: rtl;
+        }
+        .map-launcher-footer {
+            display: flex;
+            justify-content: flex-start;
+            gap: 10px;
+            padding: 16px 20px;
+            border-top: 1px solid #e5e7eb;
+            background: #f9fafb;
+            border-radius: 0 0 12px 12px;
+        }
+        .map-launcher-footer .btn-primary {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .map-launcher-footer .btn-secondary {
+            background: white;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+    `;
+
+    document.head.appendChild(styles);
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 }
 
-/**
- * פתיחת מודל בחירת הישות
- */
 function openMapLauncher() {
     const modal = document.getElementById('mapLauncherModal');
     if (modal) {
@@ -180,22 +159,15 @@ function openMapLauncher() {
     }
 }
 
-/**
- * סגירת המודל
- */
 function closeMapLauncher() {
     const modal = document.getElementById('mapLauncherModal');
     if (modal) {
         modal.style.display = 'none';
-        // ניקוי השדות
         document.getElementById('mapUnicId').value = '';
         document.getElementById('mapEntityType').value = 'cemetery';
     }
 }
 
-/**
- * פתיחת המפה בפופאפ
- */
 function launchMap() {
     const entityType = document.getElementById('mapEntityType').value;
     const unicId = document.getElementById('mapUnicId').value.trim();
@@ -206,10 +178,7 @@ function launchMap() {
         return;
     }
 
-    // סגירת המודל
     closeMapLauncher();
-
-    // פתיחת המפה בפופאפ
     openMapPopup(entityType, unicId);
 }
 
@@ -217,11 +186,11 @@ function launchMap() {
  * פתיחת פופאפ המפה
  */
 function openMapPopup(entityType, unicId) {
-    // בדיקה אם כבר יש פופאפ פתוח
+    currentEntityType = entityType;
+    currentUnicId = unicId;
+
     let existingPopup = document.getElementById('mapPopupOverlay');
-    if (existingPopup) {
-        existingPopup.remove();
-    }
+    if (existingPopup) existingPopup.remove();
 
     const popupHTML = `
         <div id="mapPopupOverlay" class="map-popup-overlay">
@@ -229,6 +198,14 @@ function openMapPopup(entityType, unicId) {
                 <div class="map-popup-header">
                     <h3 id="mapPopupTitle">טוען מפה...</h3>
                     <div class="map-popup-controls">
+                        <!-- טוגל מצב עריכה -->
+                        <div class="edit-mode-toggle">
+                            <span class="toggle-label">מצב עריכה</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="editModeToggle" onchange="toggleEditMode(this.checked)">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
                         <button type="button" class="map-popup-btn" onclick="toggleMapFullscreen()" title="מסך מלא">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
@@ -247,8 +224,13 @@ function openMapPopup(entityType, unicId) {
                 </div>
             </div>
         </div>
+    `;
 
-        <style>
+    // הוספת סגנונות הפופאפ
+    if (!document.getElementById('mapPopupStyles')) {
+        const styles = document.createElement('style');
+        styles.id = 'mapPopupStyles';
+        styles.textContent = `
             .map-popup-overlay {
                 position: fixed;
                 top: 0;
@@ -261,7 +243,6 @@ function openMapPopup(entityType, unicId) {
                 justify-content: center;
                 z-index: 10001;
             }
-
             .map-popup-container {
                 background: white;
                 border-radius: 12px;
@@ -273,14 +254,12 @@ function openMapPopup(entityType, unicId) {
                 box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
                 overflow: hidden;
             }
-
             .map-popup-container.fullscreen {
                 width: 100%;
                 height: 100%;
                 max-width: none;
                 border-radius: 0;
             }
-
             .map-popup-header {
                 display: flex;
                 justify-content: space-between;
@@ -289,19 +268,67 @@ function openMapPopup(entityType, unicId) {
                 background: #1f2937;
                 color: white;
             }
-
             .map-popup-header h3 {
                 margin: 0;
                 font-size: 16px;
                 font-weight: 500;
             }
-
             .map-popup-controls {
                 display: flex;
                 align-items: center;
-                gap: 8px;
+                gap: 16px;
             }
-
+            .edit-mode-toggle {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 4px 12px;
+                background: rgba(255,255,255,0.1);
+                border-radius: 20px;
+            }
+            .toggle-label {
+                font-size: 13px;
+                color: #d1d5db;
+            }
+            .toggle-switch {
+                position: relative;
+                display: inline-block;
+                width: 44px;
+                height: 24px;
+            }
+            .toggle-switch input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
+            .toggle-slider {
+                position: absolute;
+                cursor: pointer;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: #4b5563;
+                transition: .3s;
+                border-radius: 24px;
+            }
+            .toggle-slider:before {
+                position: absolute;
+                content: "";
+                height: 18px;
+                width: 18px;
+                left: 3px;
+                bottom: 3px;
+                background-color: white;
+                transition: .3s;
+                border-radius: 50%;
+            }
+            .toggle-switch input:checked + .toggle-slider {
+                background-color: #3b82f6;
+            }
+            .toggle-switch input:checked + .toggle-slider:before {
+                transform: translateX(20px);
+            }
             .map-popup-btn {
                 background: rgba(255, 255, 255, 0.1);
                 border: none;
@@ -314,11 +341,9 @@ function openMapPopup(entityType, unicId) {
                 align-items: center;
                 justify-content: center;
             }
-
             .map-popup-btn:hover {
                 background: rgba(255, 255, 255, 0.2);
             }
-
             .map-popup-close {
                 background: none;
                 border: none;
@@ -328,24 +353,17 @@ function openMapPopup(entityType, unicId) {
                 padding: 0 8px;
                 line-height: 1;
             }
-
-            .map-popup-close:hover {
-                color: #f87171;
-            }
-
             .map-popup-body {
                 flex: 1;
                 overflow: hidden;
                 position: relative;
             }
-
             .map-container {
                 width: 100%;
                 height: 100%;
                 background: #f3f4f6;
                 position: relative;
             }
-
             .map-loading {
                 position: absolute;
                 top: 50%;
@@ -354,7 +372,6 @@ function openMapPopup(entityType, unicId) {
                 text-align: center;
                 color: #6b7280;
             }
-
             .map-spinner {
                 width: 40px;
                 height: 40px;
@@ -364,16 +381,106 @@ function openMapPopup(entityType, unicId) {
                 animation: spin 1s linear infinite;
                 margin: 0 auto 12px;
             }
-
             @keyframes spin {
                 to { transform: rotate(360deg); }
             }
-        </style>
-    `;
+
+            /* Toolbar Styles */
+            .map-toolbar {
+                display: flex;
+                gap: 16px;
+                padding: 10px 16px;
+                background: white;
+                border-bottom: 1px solid #e5e7eb;
+                align-items: center;
+                flex-wrap: wrap;
+            }
+            .map-toolbar-group {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                padding: 4px;
+                background: #f3f4f6;
+                border-radius: 8px;
+            }
+            .map-toolbar-group.edit-only {
+                display: none;
+            }
+            .map-container.edit-mode .map-toolbar-group.edit-only {
+                display: flex;
+            }
+            .map-tool-btn {
+                width: 36px;
+                height: 36px;
+                border: none;
+                background: transparent;
+                border-radius: 6px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #4b5563;
+                font-size: 18px;
+                font-weight: 600;
+            }
+            .map-tool-btn:hover {
+                background: #e5e7eb;
+            }
+            .map-tool-btn.active {
+                background: #3b82f6;
+                color: white;
+            }
+            .map-tool-btn:disabled {
+                opacity: 0.4;
+                cursor: not-allowed;
+            }
+            .map-zoom-level {
+                padding: 0 8px;
+                font-size: 13px;
+                color: #6b7280;
+                min-width: 50px;
+                text-align: center;
+            }
+            .map-canvas {
+                width: 100%;
+                height: calc(100% - 56px);
+                background: #e5e7eb;
+                position: relative;
+                overflow: hidden;
+            }
+            #fabricCanvas {
+                position: absolute;
+                top: 0;
+                left: 0;
+            }
+
+            /* File input hidden */
+            .hidden-file-input {
+                display: none;
+            }
+
+            /* Edit mode indicator */
+            .edit-mode-indicator {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                background: #3b82f6;
+                color: white;
+                padding: 6px 12px;
+                border-radius: 6px;
+                font-size: 12px;
+                font-weight: 500;
+                z-index: 100;
+                display: none;
+            }
+            .map-container.edit-mode .edit-mode-indicator {
+                display: block;
+            }
+        `;
+        document.head.appendChild(styles);
+    }
 
     document.body.insertAdjacentHTML('beforeend', popupHTML);
-
-    // טעינת נתוני הישות והמפה
     loadMapData(entityType, unicId);
 }
 
@@ -382,7 +489,6 @@ function openMapPopup(entityType, unicId) {
  */
 async function loadMapData(entityType, unicId) {
     try {
-        // קבלת פרטי הישות
         const response = await fetch(`api/cemetery-hierarchy.php?action=get&type=${entityType}&id=${unicId}`);
         const result = await response.json();
 
@@ -391,9 +497,6 @@ async function loadMapData(entityType, unicId) {
         }
 
         const entity = result.data;
-
-        // עדכון כותרת
-        const titleEl = document.getElementById('mapPopupTitle');
         const entityNames = {
             cemetery: 'בית עלמין',
             block: 'גוש',
@@ -401,9 +504,8 @@ async function loadMapData(entityType, unicId) {
             areaGrave: 'אחוזת קבר'
         };
         const entityName = entity.cemeteryNameHe || entity.blockNameHe || entity.plotNameHe || entity.areaGraveNameHe || unicId;
-        titleEl.textContent = `מפת ${entityNames[entityType]}: ${entityName}`;
+        document.getElementById('mapPopupTitle').textContent = `מפת ${entityNames[entityType]}: ${entityName}`;
 
-        // יצירת המפה
         initializeMap(entityType, unicId, entity);
 
     } catch (error) {
@@ -423,209 +525,417 @@ async function loadMapData(entityType, unicId) {
 function initializeMap(entityType, unicId, entity) {
     const container = document.getElementById('mapContainer');
 
-    // ניקוי הטעינה
     container.innerHTML = `
+        <!-- Toolbar -->
         <div class="map-toolbar">
-            <div class="map-toolbar-group">
-                <button class="map-tool-btn active" data-mode="view" onclick="setMapMode('view')" title="צפייה">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-                    </svg>
-                </button>
-                <button class="map-tool-btn" data-mode="draw" onclick="setMapMode('draw')" title="ציור פוליגון">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
-                    </svg>
-                </button>
-            </div>
+            <!-- כלי צפייה - תמיד מוצגים -->
             <div class="map-toolbar-group">
                 <button class="map-tool-btn" onclick="zoomMapIn()" title="הגדל">+</button>
                 <span id="mapZoomLevel" class="map-zoom-level">100%</span>
                 <button class="map-tool-btn" onclick="zoomMapOut()" title="הקטן">−</button>
             </div>
-            <div class="map-toolbar-group">
+
+            <!-- כלי עריכה - רק במצב עריכה -->
+            <div class="map-toolbar-group edit-only">
+                <button class="map-tool-btn" onclick="uploadBackgroundImage()" title="העלאת תמונת רקע">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                </button>
+                <button class="map-tool-btn" onclick="uploadPdfFile()" title="העלאת PDF">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="map-toolbar-group edit-only">
+                <button class="map-tool-btn" id="drawPolygonBtn" onclick="startDrawPolygon()" title="ציור גבולות">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/>
+                    </svg>
+                </button>
+                <button class="map-tool-btn" onclick="clearPolygon()" title="נקה גבולות">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="map-toolbar-group edit-only">
                 <button class="map-tool-btn" onclick="saveMapData()" title="שמור">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-                        <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+                        <polyline points="17 21 17 13 7 13 7 21"/>
+                        <polyline points="7 3 7 8 15 8"/>
                     </svg>
                 </button>
             </div>
         </div>
-        <div id="mapCanvas" class="map-canvas"></div>
+
+        <!-- Canvas Area -->
+        <div id="mapCanvas" class="map-canvas">
+            <div class="edit-mode-indicator">מצב עריכה פעיל</div>
+        </div>
+
+        <!-- Hidden file inputs -->
+        <input type="file" id="bgImageInput" class="hidden-file-input" accept="image/*,.pdf" onchange="handleBackgroundUpload(event)">
     `;
 
-    // הוספת סגנונות לטולבר
-    if (!document.getElementById('mapToolbarStyles')) {
-        const styles = document.createElement('style');
-        styles.id = 'mapToolbarStyles';
-        styles.textContent = `
-            .map-toolbar {
-                display: flex;
-                gap: 16px;
-                padding: 10px 16px;
-                background: white;
-                border-bottom: 1px solid #e5e7eb;
-                align-items: center;
-            }
-
-            .map-toolbar-group {
-                display: flex;
-                align-items: center;
-                gap: 4px;
-                padding: 4px;
-                background: #f3f4f6;
-                border-radius: 8px;
-            }
-
-            .map-tool-btn {
-                width: 36px;
-                height: 36px;
-                border: none;
-                background: transparent;
-                border-radius: 6px;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                color: #4b5563;
-                font-size: 18px;
-                font-weight: 600;
-            }
-
-            .map-tool-btn:hover {
-                background: #e5e7eb;
-            }
-
-            .map-tool-btn.active {
-                background: #3b82f6;
-                color: white;
-            }
-
-            .map-zoom-level {
-                padding: 0 8px;
-                font-size: 13px;
-                color: #6b7280;
-                min-width: 50px;
-                text-align: center;
-            }
-
-            .map-canvas {
-                width: 100%;
-                height: calc(100% - 56px);
-                background: #e5e7eb;
-                position: relative;
-                overflow: hidden;
-            }
-
-            #fabricCanvas {
-                position: absolute;
-                top: 0;
-                left: 0;
-            }
-        `;
-        document.head.appendChild(styles);
-    }
-
-    // יצירת Canvas עם Fabric.js (אם קיים) או canvas רגיל
     createMapCanvas(entityType, unicId, entity);
 }
 
 /**
- * יצירת ה-Canvas למפה
+ * יצירת ה-Canvas
  */
 function createMapCanvas(entityType, unicId, entity) {
     const canvasContainer = document.getElementById('mapCanvas');
     const width = canvasContainer.clientWidth;
-    const height = canvasContainer.clientHeight;
+    const height = canvasContainer.clientHeight - 40; // minus indicator height
 
-    // יצירת אלמנט canvas
     const canvasEl = document.createElement('canvas');
     canvasEl.id = 'fabricCanvas';
     canvasEl.width = width;
     canvasEl.height = height;
     canvasContainer.appendChild(canvasEl);
 
-    // בדיקה אם Fabric.js זמין
     if (typeof fabric !== 'undefined') {
         window.mapCanvas = new fabric.Canvas('fabricCanvas', {
-            backgroundColor: '#f9fafb',
+            backgroundColor: '#ffffff',
             selection: true
         });
 
-        // הוספת טקסט מרכזי
-        const text = new fabric.Text(`מפת ${entityType}: ${unicId}`, {
+        // הוספת טקסט התחלתי
+        const text = new fabric.Text('לחץ על "מצב עריכה" כדי להתחיל', {
             left: width / 2,
             top: height / 2,
-            fontSize: 24,
-            fill: '#6b7280',
+            fontSize: 20,
+            fill: '#9ca3af',
             originX: 'center',
-            originY: 'center'
+            originY: 'center',
+            selectable: false
         });
         window.mapCanvas.add(text);
 
-        console.log('Fabric.js canvas initialized');
-    } else {
-        // fallback - canvas רגיל
-        const ctx = canvasEl.getContext('2d');
-        ctx.fillStyle = '#f9fafb';
-        ctx.fillRect(0, 0, width, height);
-        ctx.fillStyle = '#6b7280';
-        ctx.font = '24px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText(`מפת ${entityType}: ${unicId}`, width / 2, height / 2);
+        // אירועי ציור פוליגון
+        window.mapCanvas.on('mouse:down', handleCanvasClick);
+        window.mapCanvas.on('mouse:move', handleCanvasMouseMove);
 
-        console.log('Regular canvas initialized (Fabric.js not found)');
+        console.log('Map canvas initialized');
+    } else {
+        console.error('Fabric.js not loaded!');
+        canvasContainer.innerHTML += '<p style="text-align:center; color:red; padding:20px;">שגיאה: Fabric.js לא נטען</p>';
     }
 }
 
 /**
- * סגירת פופאפ המפה
+ * טוגל מצב עריכה
+ */
+function toggleEditMode(enabled) {
+    isEditMode = enabled;
+    const container = document.getElementById('mapContainer');
+
+    if (enabled) {
+        container.classList.add('edit-mode');
+        // הסרת הטקסט ההתחלתי
+        if (window.mapCanvas) {
+            const objects = window.mapCanvas.getObjects('text');
+            objects.forEach(obj => {
+                if (obj.text === 'לחץ על "מצב עריכה" כדי להתחיל') {
+                    window.mapCanvas.remove(obj);
+                }
+            });
+            window.mapCanvas.renderAll();
+        }
+    } else {
+        container.classList.remove('edit-mode');
+        // ביטול ציור פוליגון אם פעיל
+        if (drawingPolygon) {
+            cancelPolygonDrawing();
+        }
+    }
+}
+
+/**
+ * העלאת תמונת רקע
+ */
+function uploadBackgroundImage() {
+    document.getElementById('bgImageInput').click();
+}
+
+/**
+ * העלאת PDF
+ */
+function uploadPdfFile() {
+    document.getElementById('bgImageInput').click();
+}
+
+/**
+ * טיפול בהעלאת קובץ רקע
+ */
+function handleBackgroundUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const isPdf = file.type === 'application/pdf';
+
+    if (isPdf) {
+        alert('תמיכה ב-PDF תתווסף בקרוב. כרגע ניתן להעלות תמונות בלבד.');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        fabric.Image.fromURL(e.target.result, function(img) {
+            // הסרת תמונת רקע קודמת
+            if (backgroundImage) {
+                window.mapCanvas.remove(backgroundImage);
+            }
+
+            // התאמת גודל התמונה ל-canvas
+            const canvas = window.mapCanvas;
+            const scale = Math.min(
+                (canvas.width * 0.9) / img.width,
+                (canvas.height * 0.9) / img.height
+            );
+
+            img.set({
+                left: canvas.width / 2,
+                top: canvas.height / 2,
+                originX: 'center',
+                originY: 'center',
+                scaleX: scale,
+                scaleY: scale,
+                selectable: true,
+                hasControls: true,
+                hasBorders: true,
+                lockRotation: false
+            });
+
+            // שכבת רקע - מתחת לכל השאר
+            canvas.add(img);
+            canvas.sendToBack(img);
+            backgroundImage = img;
+            canvas.renderAll();
+
+            console.log('Background image added');
+        });
+    };
+    reader.readAsDataURL(file);
+
+    // ניקוי ה-input
+    event.target.value = '';
+}
+
+/**
+ * התחלת ציור פוליגון
+ */
+function startDrawPolygon() {
+    if (!isEditMode) return;
+
+    drawingPolygon = true;
+    polygonPoints = [];
+
+    document.getElementById('drawPolygonBtn').classList.add('active');
+
+    // שינוי הסמן
+    const canvasContainer = document.getElementById('mapCanvas');
+    canvasContainer.style.cursor = 'crosshair';
+
+    console.log('Started polygon drawing');
+}
+
+/**
+ * טיפול בלחיצה על ה-Canvas
+ */
+function handleCanvasClick(options) {
+    if (!drawingPolygon || !isEditMode) return;
+
+    const pointer = window.mapCanvas.getPointer(options.e);
+    polygonPoints.push({ x: pointer.x, y: pointer.y });
+
+    // הוספת נקודה ויזואלית
+    const point = new fabric.Circle({
+        left: pointer.x,
+        top: pointer.y,
+        radius: 5,
+        fill: '#3b82f6',
+        stroke: '#1e40af',
+        strokeWidth: 2,
+        originX: 'center',
+        originY: 'center',
+        selectable: false,
+        polygonPoint: true
+    });
+    window.mapCanvas.add(point);
+
+    // אם יש לפחות 2 נקודות, צייר קו
+    if (polygonPoints.length >= 2) {
+        const lastIdx = polygonPoints.length - 1;
+        const line = new fabric.Line([
+            polygonPoints[lastIdx - 1].x,
+            polygonPoints[lastIdx - 1].y,
+            polygonPoints[lastIdx].x,
+            polygonPoints[lastIdx].y
+        ], {
+            stroke: '#3b82f6',
+            strokeWidth: 2,
+            selectable: false,
+            polygonLine: true
+        });
+        window.mapCanvas.add(line);
+    }
+
+    window.mapCanvas.renderAll();
+
+    // דאבל קליק לסיום
+    if (options.e.detail === 2 && polygonPoints.length >= 3) {
+        finishPolygon();
+    }
+}
+
+/**
+ * טיפול בתנועת עכבר
+ */
+function handleCanvasMouseMove(options) {
+    if (!drawingPolygon || polygonPoints.length === 0) return;
+
+    // כאן אפשר להוסיף קו זמני שעוקב אחרי העכבר
+}
+
+/**
+ * סיום ציור פוליגון
+ */
+function finishPolygon() {
+    if (polygonPoints.length < 3) {
+        alert('נדרשות לפחות 3 נקודות ליצירת גבול');
+        return;
+    }
+
+    // הסרת נקודות וקווים זמניים
+    const objects = window.mapCanvas.getObjects();
+    objects.forEach(obj => {
+        if (obj.polygonPoint || obj.polygonLine) {
+            window.mapCanvas.remove(obj);
+        }
+    });
+
+    // יצירת הפוליגון הסופי
+    const polygon = new fabric.Polygon(polygonPoints, {
+        fill: 'rgba(59, 130, 246, 0.2)',
+        stroke: '#3b82f6',
+        strokeWidth: 3,
+        selectable: true,
+        hasControls: true,
+        objectType: 'boundary'
+    });
+
+    window.mapCanvas.add(polygon);
+    window.mapCanvas.renderAll();
+
+    // איפוס
+    drawingPolygon = false;
+    polygonPoints = [];
+    document.getElementById('drawPolygonBtn').classList.remove('active');
+    document.getElementById('mapCanvas').style.cursor = 'default';
+
+    console.log('Polygon completed');
+}
+
+/**
+ * ביטול ציור פוליגון
+ */
+function cancelPolygonDrawing() {
+    // הסרת נקודות וקווים זמניים
+    const objects = window.mapCanvas.getObjects();
+    objects.forEach(obj => {
+        if (obj.polygonPoint || obj.polygonLine) {
+            window.mapCanvas.remove(obj);
+        }
+    });
+
+    drawingPolygon = false;
+    polygonPoints = [];
+    document.getElementById('drawPolygonBtn')?.classList.remove('active');
+    document.getElementById('mapCanvas').style.cursor = 'default';
+    window.mapCanvas?.renderAll();
+}
+
+/**
+ * ניקוי גבולות
+ */
+function clearPolygon() {
+    if (!window.mapCanvas) return;
+
+    const objects = window.mapCanvas.getObjects();
+    objects.forEach(obj => {
+        if (obj.objectType === 'boundary' || obj.polygonPoint || obj.polygonLine) {
+            window.mapCanvas.remove(obj);
+        }
+    });
+    window.mapCanvas.renderAll();
+}
+
+/**
+ * שמירת המפה
+ */
+function saveMapData() {
+    if (!window.mapCanvas) return;
+
+    const mapData = {
+        entityType: currentEntityType,
+        unicId: currentUnicId,
+        canvasJSON: window.mapCanvas.toJSON(['objectType', 'polygonPoint', 'polygonLine']),
+        zoom: currentZoom
+    };
+
+    console.log('Saving map data:', mapData);
+    alert('המפה נשמרה (בקונסול).\nשמירה לשרת תתווסף בהמשך.');
+}
+
+/**
+ * סגירת הפופאפ
  */
 function closeMapPopup() {
     const popup = document.getElementById('mapPopupOverlay');
     if (popup) {
-        // ניקוי Canvas
         if (window.mapCanvas) {
             window.mapCanvas.dispose();
             window.mapCanvas = null;
         }
+        backgroundImage = null;
+        isEditMode = false;
+        drawingPolygon = false;
+        polygonPoints = [];
         popup.remove();
     }
 }
 
 /**
- * מעבר למסך מלא
+ * מסך מלא
  */
 function toggleMapFullscreen() {
     const container = document.querySelector('.map-popup-container');
     if (container) {
         container.classList.toggle('fullscreen');
-
-        // עדכון גודל Canvas
         setTimeout(() => {
             if (window.mapCanvas) {
                 const canvasContainer = document.getElementById('mapCanvas');
                 window.mapCanvas.setWidth(canvasContainer.clientWidth);
-                window.mapCanvas.setHeight(canvasContainer.clientHeight);
+                window.mapCanvas.setHeight(canvasContainer.clientHeight - 40);
                 window.mapCanvas.renderAll();
             }
         }, 100);
     }
 }
 
-// פונקציות placeholder לטולבר
-let currentMapMode = 'view';
-let currentZoom = 1;
-
-function setMapMode(mode) {
-    currentMapMode = mode;
-    document.querySelectorAll('.map-tool-btn[data-mode]').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.mode === mode);
-    });
-    console.log('Map mode:', mode);
-}
-
+/**
+ * זום
+ */
 function zoomMapIn() {
     currentZoom = Math.min(currentZoom + 0.1, 3);
     updateZoomDisplay();
@@ -651,14 +961,21 @@ function updateZoomDisplay() {
     }
 }
 
-function saveMapData() {
-    alert('שמירת מפה - יופעל בהמשך');
-}
-
 // ESC לסגירה
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
-        closeMapPopup();
-        closeMapLauncher();
+        if (drawingPolygon) {
+            cancelPolygonDrawing();
+        } else {
+            closeMapPopup();
+            closeMapLauncher();
+        }
+    }
+});
+
+// דאבל קליק לסיום פוליגון
+document.addEventListener('dblclick', function(e) {
+    if (drawingPolygon && polygonPoints.length >= 3) {
+        finishPolygon();
     }
 });

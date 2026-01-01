@@ -13,6 +13,7 @@ let currentEntityType = null;
 let currentUnicId = null;
 let drawingPolygon = false;
 let polygonPoints = [];
+let previewLine = null; // קו תצוגה מקדימה
 
 // יצירת המודל בטעינה
 document.addEventListener('DOMContentLoaded', function() {
@@ -799,12 +800,36 @@ function handleCanvasClick(options) {
 }
 
 /**
- * טיפול בתנועת עכבר
+ * טיפול בתנועת עכבר - קו תצוגה מקדימה
  */
 function handleCanvasMouseMove(options) {
     if (!drawingPolygon || polygonPoints.length === 0) return;
 
-    // כאן אפשר להוסיף קו זמני שעוקב אחרי העכבר
+    const pointer = window.mapCanvas.getPointer(options.e);
+    const lastPoint = polygonPoints[polygonPoints.length - 1];
+
+    // הסרת קו התצוגה הקודם
+    if (previewLine) {
+        window.mapCanvas.remove(previewLine);
+    }
+
+    // יצירת קו תצוגה מקדימה מהנקודה האחרונה למיקום העכבר
+    previewLine = new fabric.Line([
+        lastPoint.x,
+        lastPoint.y,
+        pointer.x,
+        pointer.y
+    ], {
+        stroke: '#3b82f6',
+        strokeWidth: 2,
+        strokeDashArray: [5, 5], // קו מקווקו
+        selectable: false,
+        evented: false,
+        previewLine: true
+    });
+
+    window.mapCanvas.add(previewLine);
+    window.mapCanvas.renderAll();
 }
 
 /**
@@ -814,6 +839,12 @@ function finishPolygon() {
     if (polygonPoints.length < 3) {
         alert('נדרשות לפחות 3 נקודות ליצירת גבול');
         return;
+    }
+
+    // הסרת קו התצוגה המקדימה
+    if (previewLine) {
+        window.mapCanvas.remove(previewLine);
+        previewLine = null;
     }
 
     // הסרת נקודות וקווים זמניים
@@ -850,6 +881,12 @@ function finishPolygon() {
  * ביטול ציור פוליגון
  */
 function cancelPolygonDrawing() {
+    // הסרת קו התצוגה המקדימה
+    if (previewLine) {
+        window.mapCanvas.remove(previewLine);
+        previewLine = null;
+    }
+
     // הסרת נקודות וקווים זמניים
     const objects = window.mapCanvas.getObjects();
     objects.forEach(obj => {

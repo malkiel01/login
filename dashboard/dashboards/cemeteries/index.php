@@ -205,6 +205,10 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
 
     <script src="/dashboard/dashboards/cemeteries/js/reports/graves-inventory-report.js"></script>
 
+    <!-- 🗺️ מפה -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/map-launcher.js"></script>
+
     <!-- 7️⃣ אתחול -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {

@@ -186,11 +186,10 @@
             </div>
         </div>
         
-        <div class="management-item" style="margin-bottom: 10px; opacity: 0.5;">
-            <div class="hierarchy-header disabled">
+        <div class="management-item" style="margin-bottom: 10px;">
+            <div class="hierarchy-header" id="mapItem" onclick="openMapLauncher()">
                 <span class="hierarchy-icon">🗺️</span>
-                <span class="hierarchy-title">ניהול מפות</span>
-                <span class="badge" style="background: #fbbf24; color: #78350f; font-size: 10px; padding: 2px 6px; border-radius: 4px;">בקרוב</span>
+                <span class="hierarchy-title">מפת בית עלמין</span>
             </div>
         </div>
         

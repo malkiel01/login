@@ -35,9 +35,9 @@ return [
             'nationalInsuranceCode',
             // 'address',
             'coordinates',
-            'mapPolygon',
-            'mapBackgroundImage',
-            'mapSettings',
+            // 'mapPolygon',        // הוסף אחרי הרצת SQL migration
+            // 'mapBackgroundImage',
+            // 'mapSettings',
             // 'contactName',
             // 'contactPhoneName',
             'documents',
@@ -260,7 +260,7 @@ return [
             'blockLocation',
             'nationalInsuranceCode',
             'coordinates',
-            'mapPolygon',
+            // 'mapPolygon',  // הוסף אחרי הרצת SQL migration
             'comments',
             'documentsList',
             'cemeteryId',
@@ -474,7 +474,7 @@ return [
             'plotLocation',
             'nationalInsuranceCode',
             'coordinates',
-            'mapPolygon',
+            // 'mapPolygon',  // הוסף אחרי הרצת SQL migration
             'comments',
             'documentsList',
             'blockId',
@@ -977,7 +977,7 @@ return [
             'unicId',
             'areaGraveNameHe',
             'coordinates',
-            'mapPolygon',
+            // 'mapPolygon',  // הוסף אחרי הרצת SQL migration
             'gravesList',
             'graveType',
             'lineId',

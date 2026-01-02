@@ -725,7 +725,7 @@ function initializeMap(entityType, unicId, entity) {
             <!-- גרופ זום - תמיד מוצג -->
             <div class="map-toolbar-group">
                 <button class="map-tool-btn" onclick="zoomMapIn()" title="הגדל">+</button>
-                <span id="mapZoomLevel" class="map-zoom-level">100%</span>
+                <span id="mapZoomLevel" class="map-zoom-level" ondblclick="editZoomLevel()" title="דאבל קליק לעריכה ידנית">100%</span>
                 <button class="map-tool-btn" onclick="zoomMapOut()" title="הקטן">−</button>
             </div>
 
@@ -1810,6 +1810,58 @@ function updateZoomDisplay() {
     if (el) {
         el.textContent = Math.round(currentZoom * 100) + '%';
     }
+}
+
+/**
+ * עריכת אחוז זום ידנית
+ */
+function editZoomLevel() {
+    const el = document.getElementById('mapZoomLevel');
+    if (!el) return;
+
+    const currentValue = Math.round(currentZoom * 100);
+
+    // יצירת input במקום הטקסט
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.value = currentValue;
+    input.min = 30;
+    input.max = 300;
+    input.style.cssText = 'width: 50px; text-align: center; font-size: 13px; border: 1px solid #3b82f6; border-radius: 4px; padding: 2px;';
+
+    // החלפת התוכן
+    el.textContent = '';
+    el.appendChild(input);
+    input.focus();
+    input.select();
+
+    // טיפול באישור (Enter או יציאה מהשדה)
+    function applyZoom() {
+        let newZoom = parseInt(input.value) || 100;
+        // הגבלת טווח
+        newZoom = Math.max(30, Math.min(300, newZoom));
+        currentZoom = newZoom / 100;
+
+        // עדכון הקנבס
+        if (window.mapCanvas) {
+            window.mapCanvas.setZoom(currentZoom);
+            window.mapCanvas.renderAll();
+        }
+
+        // החזרת התצוגה הרגילה
+        el.textContent = newZoom + '%';
+    }
+
+    input.addEventListener('blur', applyZoom);
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            input.blur();
+        } else if (e.key === 'Escape') {
+            // ביטול - החזר לערך הקודם
+            el.textContent = currentValue + '%';
+        }
+    });
 }
 
 // קיצורי מקלדת

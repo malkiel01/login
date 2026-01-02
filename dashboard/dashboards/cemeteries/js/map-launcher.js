@@ -16,6 +16,8 @@ let polygonPoints = [];
 let previewLine = null; // קו תצוגה מקדימה
 let boundaryClipPath = null; // גבול החיתוך
 let grayMask = null; // מסכה אפורה
+let boundaryOutline = null; // קו הגבול
+let isBoundaryEditMode = false; // מצב עריכת גבול
 
 // יצירת המודל בטעינה
 document.addEventListener('DOMContentLoaded', function() {
@@ -561,7 +563,13 @@ function initializeMap(entityType, unicId, entity) {
                         <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/>
                     </svg>
                 </button>
-                <button class="map-tool-btn" onclick="clearPolygon()" title="נקה גבולות">
+                <button class="map-tool-btn" id="editBoundaryBtn" onclick="toggleBoundaryEdit()" title="עריכת/הזזת גבול" style="display:none;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                </button>
+                <button class="map-tool-btn" onclick="clearPolygon()" title="מחק גבולות">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="3 6 5 6 21 6"/>
                         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
@@ -919,7 +927,7 @@ function finishPolygon() {
     });
 
     // קו גבול סביב האזור הפעיל
-    const boundaryOutline = new fabric.Polygon(polygonPoints, {
+    boundaryOutline = new fabric.Polygon(polygonPoints, {
         fill: 'transparent',
         stroke: '#3b82f6',
         strokeWidth: 3,
@@ -942,6 +950,10 @@ function finishPolygon() {
     polygonPoints = [];
     document.getElementById('drawPolygonBtn').classList.remove('active');
     document.getElementById('mapCanvas').style.cursor = 'default';
+
+    // הצג כפתור עריכת גבול
+    const editBtn = document.getElementById('editBoundaryBtn');
+    if (editBtn) editBtn.style.display = 'flex';
 
     console.log('Boundary with mask completed');
 }
@@ -972,10 +984,116 @@ function cancelPolygonDrawing() {
 }
 
 /**
+ * הפעלה/כיבוי מצב עריכת גבול
+ */
+function toggleBoundaryEdit() {
+    if (!boundaryOutline || !grayMask) return;
+
+    isBoundaryEditMode = !isBoundaryEditMode;
+
+    const editBtn = document.getElementById('editBoundaryBtn');
+
+    if (isBoundaryEditMode) {
+        // הפעל מצב עריכה - אפשר להזיז את הגבול
+        editBtn.classList.add('active');
+
+        // הפוך את הגבול והמסכה לניתנים לבחירה והזזה
+        boundaryOutline.set({
+            selectable: true,
+            evented: true,
+            hasControls: true,
+            hasBorders: true,
+            lockRotation: true
+        });
+
+        grayMask.set({
+            selectable: true,
+            evented: true,
+            hasControls: false,
+            hasBorders: false
+        });
+
+        // קבץ את המסכה והגבול יחד להזזה משותפת
+        window.mapCanvas.setActiveObject(boundaryOutline);
+
+        // האזן לשינויים בגבול
+        boundaryOutline.on('moving', updateMaskPosition);
+        boundaryOutline.on('scaling', updateMaskPosition);
+
+        console.log('Boundary edit mode: ON');
+    } else {
+        // כבה מצב עריכה - נעל את הגבול
+        editBtn.classList.remove('active');
+
+        boundaryOutline.set({
+            selectable: false,
+            evented: false,
+            hasControls: false,
+            hasBorders: false
+        });
+
+        grayMask.set({
+            selectable: false,
+            evented: false
+        });
+
+        // הסר האזנה
+        boundaryOutline.off('moving', updateMaskPosition);
+        boundaryOutline.off('scaling', updateMaskPosition);
+
+        window.mapCanvas.discardActiveObject();
+
+        console.log('Boundary edit mode: OFF');
+    }
+
+    window.mapCanvas.renderAll();
+}
+
+/**
+ * עדכון מיקום המסכה בעת הזזת הגבול
+ */
+function updateMaskPosition() {
+    if (!boundaryOutline || !grayMask) return;
+
+    // קבל את הנקודות החדשות של הגבול
+    const matrix = boundaryOutline.calcTransformMatrix();
+    const points = boundaryOutline.points.map(p => {
+        const transformed = fabric.util.transformPoint(
+            { x: p.x - boundaryOutline.pathOffset.x, y: p.y - boundaryOutline.pathOffset.y },
+            matrix
+        );
+        return transformed;
+    });
+
+    // בנה מחדש את המסכה
+    const canvas = window.mapCanvas;
+    const canvasWidth = canvas.width;
+    const canvasHeight = canvas.height;
+
+    let pathData = `M 0 0 L ${canvasWidth} 0 L ${canvasWidth} ${canvasHeight} L 0 ${canvasHeight} Z `;
+    pathData += `M ${points[0].x} ${points[0].y} `;
+    for (let i = points.length - 1; i >= 0; i--) {
+        pathData += `L ${points[i].x} ${points[i].y} `;
+    }
+    pathData += 'Z';
+
+    // עדכן את נתיב המסכה
+    grayMask.set({ path: fabric.util.parsePath(pathData) });
+    canvas.renderAll();
+}
+
+/**
  * ניקוי גבולות
  */
 function clearPolygon() {
     if (!window.mapCanvas) return;
+
+    // כיבוי מצב עריכה אם פעיל
+    if (isBoundaryEditMode) {
+        isBoundaryEditMode = false;
+        const editBtn = document.getElementById('editBoundaryBtn');
+        if (editBtn) editBtn.classList.remove('active');
+    }
 
     const objects = window.mapCanvas.getObjects();
     objects.forEach(obj => {
@@ -991,6 +1109,11 @@ function clearPolygon() {
     // איפוס משתנים
     boundaryClipPath = null;
     grayMask = null;
+    boundaryOutline = null;
+
+    // הסתר כפתור עריכת גבול
+    const editBtn = document.getElementById('editBoundaryBtn');
+    if (editBtn) editBtn.style.display = 'none';
 
     window.mapCanvas.renderAll();
 }
@@ -1029,6 +1152,8 @@ function closeMapPopup() {
         previewLine = null;
         boundaryClipPath = null;
         grayMask = null;
+        boundaryOutline = null;
+        isBoundaryEditMode = false;
         popup.remove();
     }
 }

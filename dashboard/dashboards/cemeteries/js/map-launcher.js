@@ -879,15 +879,15 @@ function createMapCanvas(entityType, unicId, entity) {
         window.mapCanvas.on('mouse:down', handleCanvasClick);
         window.mapCanvas.on('mouse:move', handleCanvasMouseMove);
 
-        // אירועי גלילה/הזזה (panning)
+        // אירועי גלילה/הזזה (panning) - רק כשלא במצב עריכה
         let isPanning = false;
         let lastPosX = 0;
         let lastPosY = 0;
 
         window.mapCanvas.on('mouse:down', function(opt) {
             const evt = opt.e;
-            // גרירה על רקע ריק (לא על אובייקט) ולא במצב ציור פוליגון
-            if (!opt.target && !drawingPolygon && evt.button === 0) {
+            // גרירה על רקע ריק - רק כשלא במצב עריכה ולא במצב ציור פוליגון
+            if (!opt.target && !drawingPolygon && !isEditMode && evt.button === 0) {
                 isPanning = true;
                 lastPosX = evt.clientX;
                 lastPosY = evt.clientY;

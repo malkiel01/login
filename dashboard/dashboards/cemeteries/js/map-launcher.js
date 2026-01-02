@@ -447,6 +447,9 @@ function openMapPopup(entityType, unicId) {
                 opacity: 0.4;
                 cursor: not-allowed;
             }
+            .map-tool-btn.hidden-btn {
+                display: none !important;
+            }
             .map-zoom-level {
                 padding: 0 8px;
                 font-size: 13px;
@@ -736,13 +739,13 @@ function initializeMap(entityType, unicId, entity) {
                         <polyline points="21 15 16 10 5 21"/>
                     </svg>
                 </button>
-                <button class="map-tool-btn" id="editBackgroundBtn" onclick="toggleBackgroundEdit()" title="עריכת תמונת רקע" style="display:none;">
+                <button class="map-tool-btn hidden-btn" id="editBackgroundBtn" onclick="toggleBackgroundEdit()" title="עריכת תמונת רקע">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                     </svg>
                 </button>
-                <button class="map-tool-btn" id="deleteBackgroundBtn" onclick="deleteBackground()" title="הסר תמונת רקע" style="display:none;">
+                <button class="map-tool-btn hidden-btn" id="deleteBackgroundBtn" onclick="deleteBackground()" title="הסר תמונת רקע">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
                         <line x1="9" y1="9" x2="15" y2="15"/>
@@ -758,13 +761,13 @@ function initializeMap(entityType, unicId, entity) {
                         <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/>
                     </svg>
                 </button>
-                <button class="map-tool-btn" id="editBoundaryBtn" onclick="toggleBoundaryEdit()" title="עריכת גבול" style="display:none;">
+                <button class="map-tool-btn hidden-btn" id="editBoundaryBtn" onclick="toggleBoundaryEdit()" title="עריכת גבול">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                     </svg>
                 </button>
-                <button class="map-tool-btn" id="deleteBoundaryBtn" onclick="deleteBoundary()" title="הסר גבול" style="display:none;">
+                <button class="map-tool-btn hidden-btn" id="deleteBoundaryBtn" onclick="deleteBoundary()" title="הסר גבול">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/>
                         <line x1="9" y1="9" x2="15" y2="15"/>
@@ -987,23 +990,13 @@ function handleBackgroundUpload(event) {
             // הצג כפתורי עריכה ומחיקה של רקע
             const editBgBtn = document.getElementById('editBackgroundBtn');
             const deleteBgBtn = document.getElementById('deleteBackgroundBtn');
-            console.log('=== Background Image Added ===');
-            console.log('editBgBtn element:', editBgBtn);
-            console.log('deleteBgBtn element:', deleteBgBtn);
 
             if (editBgBtn) {
-                editBgBtn.style.display = 'inline-flex';
-                editBgBtn.classList.add('active');
-                console.log('editBgBtn is now visible and active');
-            } else {
-                console.error('ERROR: editBackgroundBtn not found!');
-                alert('שגיאה: כפתור עריכת רקע לא נמצא!');
+                editBgBtn.classList.remove('hidden-btn'); // הצג כפתור
+                editBgBtn.classList.add('active'); // מצב עריכה פעיל
             }
             if (deleteBgBtn) {
-                deleteBgBtn.style.display = 'inline-flex';
-                console.log('deleteBgBtn is now visible');
-            } else {
-                console.error('ERROR: deleteBackgroundBtn not found!');
+                deleteBgBtn.classList.remove('hidden-btn'); // הצג כפתור
             }
 
             // הפעל מצב עריכת רקע אוטומטית
@@ -1261,25 +1254,16 @@ function finishPolygon() {
     document.getElementById('drawPolygonBtn').classList.remove('active');
     document.getElementById('mapCanvas').style.cursor = 'default';
 
-    // הצג כפתורי עריכה ומחיקה של גבול
+    // הצג כפתורי עריכה ומחיקה של גבול (גבול לא במצב עריכה כברירת מחדל)
     const editBtn = document.getElementById('editBoundaryBtn');
     const deleteBtn = document.getElementById('deleteBoundaryBtn');
-    console.log('=== Boundary Created ===');
-    console.log('editBoundaryBtn element:', editBtn);
-    console.log('deleteBoundaryBtn element:', deleteBtn);
 
     if (editBtn) {
-        editBtn.style.display = 'inline-flex';
-        console.log('editBoundaryBtn is now visible');
-    } else {
-        console.error('ERROR: editBoundaryBtn not found!');
-        alert('שגיאה: כפתור עריכת גבול לא נמצא!');
+        editBtn.classList.remove('hidden-btn'); // הצג כפתור
+        // לא מוסיפים 'active' - גבול לא במצב עריכה כברירת מחדל
     }
     if (deleteBtn) {
-        deleteBtn.style.display = 'inline-flex';
-        console.log('deleteBoundaryBtn is now visible');
-    } else {
-        console.error('ERROR: deleteBoundaryBtn not found!');
+        deleteBtn.classList.remove('hidden-btn'); // הצג כפתור
     }
 
     saveCanvasState();
@@ -1470,8 +1454,11 @@ function deleteBackground() {
     // הסתר כפתורי עריכה ומחיקה של רקע
     const editBtn = document.getElementById('editBackgroundBtn');
     const deleteBtn = document.getElementById('deleteBackgroundBtn');
-    if (editBtn) editBtn.style.display = 'none';
-    if (deleteBtn) deleteBtn.style.display = 'none';
+    if (editBtn) {
+        editBtn.classList.add('hidden-btn');
+        editBtn.classList.remove('active');
+    }
+    if (deleteBtn) deleteBtn.classList.add('hidden-btn');
 
     window.mapCanvas.renderAll();
     saveCanvasState();
@@ -1510,8 +1497,11 @@ function deleteBoundary() {
     // הסתר כפתורי עריכה ומחיקה של גבול
     const editBtn = document.getElementById('editBoundaryBtn');
     const deleteBtn = document.getElementById('deleteBoundaryBtn');
-    if (editBtn) editBtn.style.display = 'none';
-    if (deleteBtn) deleteBtn.style.display = 'none';
+    if (editBtn) {
+        editBtn.classList.add('hidden-btn');
+        editBtn.classList.remove('active');
+    }
+    if (deleteBtn) deleteBtn.classList.add('hidden-btn');
 
     window.mapCanvas.renderAll();
     saveCanvasState();
@@ -2222,10 +2212,10 @@ async function renderPdfPageToCanvas(pageNum) {
                 const editBgBtn = document.getElementById('editBackgroundBtn');
                 const deleteBgBtn = document.getElementById('deleteBackgroundBtn');
                 if (editBgBtn) {
-                    editBgBtn.style.display = 'inline-flex';
-                    editBgBtn.classList.add('active'); // סמן כפתור עריכה כפעיל
+                    editBgBtn.classList.remove('hidden-btn');
+                    editBgBtn.classList.add('active'); // מצב עריכה פעיל
                 }
-                if (deleteBgBtn) deleteBgBtn.style.display = 'inline-flex';
+                if (deleteBgBtn) deleteBgBtn.classList.remove('hidden-btn');
 
                 // הפעל מצב עריכת רקע אוטומטית
                 isBackgroundEditMode = true;
@@ -2433,22 +2423,28 @@ function updateToolbarButtons() {
     const editBgBtn = document.getElementById('editBackgroundBtn');
     const deleteBgBtn = document.getElementById('deleteBackgroundBtn');
     if (backgroundImage) {
-        if (editBgBtn) editBgBtn.style.display = 'inline-flex';
-        if (deleteBgBtn) deleteBgBtn.style.display = 'inline-flex';
+        if (editBgBtn) editBgBtn.classList.remove('hidden-btn');
+        if (deleteBgBtn) deleteBgBtn.classList.remove('hidden-btn');
     } else {
-        if (editBgBtn) editBgBtn.style.display = 'none';
-        if (deleteBgBtn) deleteBgBtn.style.display = 'none';
+        if (editBgBtn) {
+            editBgBtn.classList.add('hidden-btn');
+            editBgBtn.classList.remove('active');
+        }
+        if (deleteBgBtn) deleteBgBtn.classList.add('hidden-btn');
     }
 
     // כפתורי גבול
     const editBoundaryBtn = document.getElementById('editBoundaryBtn');
     const deleteBoundaryBtn = document.getElementById('deleteBoundaryBtn');
     if (boundaryOutline) {
-        if (editBoundaryBtn) editBoundaryBtn.style.display = 'inline-flex';
-        if (deleteBoundaryBtn) deleteBoundaryBtn.style.display = 'inline-flex';
+        if (editBoundaryBtn) editBoundaryBtn.classList.remove('hidden-btn');
+        if (deleteBoundaryBtn) deleteBoundaryBtn.classList.remove('hidden-btn');
     } else {
-        if (editBoundaryBtn) editBoundaryBtn.style.display = 'none';
-        if (deleteBoundaryBtn) deleteBoundaryBtn.style.display = 'none';
+        if (editBoundaryBtn) {
+            editBoundaryBtn.classList.add('hidden-btn');
+            editBoundaryBtn.classList.remove('active');
+        }
+        if (deleteBoundaryBtn) deleteBoundaryBtn.classList.add('hidden-btn');
     }
 }
 

@@ -700,8 +700,15 @@ function createMapCanvas(entityType, unicId, entity) {
         window.mapCanvas.on('mouse:down', handleCanvasClick);
         window.mapCanvas.on('mouse:move', handleCanvasMouseMove);
 
-        // אירוע קליק ימני
-        canvasEl.addEventListener('contextmenu', handleCanvasRightClick);
+        // אירוע קליק ימני - חובה להוסיף למכל שFabric יוצר
+        // Fabric.js יוצר upper-canvas מעל ה-canvas הרגיל
+        const fabricWrapper = canvasContainer.querySelector('.canvas-container');
+        if (fabricWrapper) {
+            fabricWrapper.addEventListener('contextmenu', handleCanvasRightClick);
+        } else {
+            // fallback - אם אין עטיפה, נוסיף למכל הראשי
+            canvasContainer.addEventListener('contextmenu', handleCanvasRightClick);
+        }
 
         console.log('Map canvas initialized');
     } else {
@@ -1298,13 +1305,21 @@ let contextMenuPosition = { x: 0, y: 0 };
  */
 function handleCanvasRightClick(e) {
     e.preventDefault();
+    e.stopPropagation();
 
     if (!isEditMode || drawingPolygon) {
         hideContextMenu();
         return;
     }
 
-    const rect = e.target.getBoundingClientRect();
+    // קבל מיקום יחסית לקנבס באמצעות Fabric.js
+    if (!window.mapCanvas) return;
+
+    // מצא את ה-upper-canvas של Fabric
+    const upperCanvas = document.querySelector('.upper-canvas');
+    if (!upperCanvas) return;
+
+    const rect = upperCanvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
@@ -1316,6 +1331,8 @@ function handleCanvasRightClick(e) {
 
     // הצג תפריט מתאים
     showContextMenu(e.clientX, e.clientY, isInside);
+
+    return false;
 }
 
 /**

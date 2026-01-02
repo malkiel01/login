@@ -22,6 +22,11 @@ let isBackgroundEditMode = false; // מצב עריכת תמונת רקע
 let currentPdfContext = null; // 'background' או 'workObject' - לשימוש בבחירת עמוד PDF
 let currentPdfDoc = null; // מסמך PDF נוכחי
 
+// Undo/Redo
+let canvasHistory = []; // היסטוריית מצבים
+let historyIndex = -1; // אינדקס נוכחי בהיסטוריה
+const MAX_HISTORY = 30; // מקסימום מצבים לשמירה
+
 // יצירת המודל בטעינה
 document.addEventListener('DOMContentLoaded', function() {
     createMapLauncherModal();
@@ -449,6 +454,12 @@ function openMapPopup(entityType, unicId) {
                 min-width: 50px;
                 text-align: center;
             }
+            .toolbar-separator {
+                width: 1px;
+                height: 24px;
+                background: #e5e7eb;
+                margin: 0 4px;
+            }
             .map-canvas {
                 width: 100%;
                 height: calc(100% - 56px);
@@ -708,59 +719,75 @@ function initializeMap(entityType, unicId, entity) {
     container.innerHTML = `
         <!-- Toolbar -->
         <div class="map-toolbar">
-            <!-- כלי צפייה - תמיד מוצגים -->
+            <!-- גרופ זום - תמיד מוצג -->
             <div class="map-toolbar-group">
                 <button class="map-tool-btn" onclick="zoomMapIn()" title="הגדל">+</button>
                 <span id="mapZoomLevel" class="map-zoom-level">100%</span>
                 <button class="map-tool-btn" onclick="zoomMapOut()" title="הקטן">−</button>
             </div>
 
-            <!-- כלי עריכה - רק במצב עריכה -->
+            <!-- גרופ רקע וגבול - במצב עריכה -->
             <div class="map-toolbar-group edit-only">
-                <button class="map-tool-btn" onclick="uploadBackgroundImage()" title="העלאת תמונת רקע">
+                <!-- תמונת רקע -->
+                <button class="map-tool-btn" onclick="uploadBackgroundImage()" title="הוסף תמונת רקע / PDF">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
                         <circle cx="8.5" cy="8.5" r="1.5"/>
                         <polyline points="21 15 16 10 5 21"/>
                     </svg>
                 </button>
-                <button class="map-tool-btn" onclick="uploadPdfFile()" title="העלאת PDF">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                        <polyline points="14 2 14 8 20 8"/>
-                    </svg>
-                </button>
-            </div>
-
-            <div class="map-toolbar-group edit-only">
-                <button class="map-tool-btn" id="drawPolygonBtn" onclick="startDrawPolygon()" title="ציור גבולות">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/>
-                    </svg>
-                </button>
-                <button class="map-tool-btn" id="editBoundaryBtn" onclick="toggleBoundaryEdit()" title="עריכת/הזזת גבול" style="display:none;">
+                <button class="map-tool-btn" id="editBackgroundBtn" onclick="toggleBackgroundEdit()" title="עריכת תמונת רקע" style="display:none;">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                     </svg>
                 </button>
-                <button class="map-tool-btn" id="editBackgroundBtn" onclick="toggleBackgroundEdit()" title="עריכת/הזזת תמונת רקע" style="display:none;">
+                <button class="map-tool-btn" id="deleteBackgroundBtn" onclick="deleteBackground()" title="הסר תמונת רקע" style="display:none;">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                        <circle cx="8.5" cy="8.5" r="1.5"/>
-                        <polyline points="21 15 16 10 5 21"/>
+                        <line x1="9" y1="9" x2="15" y2="15"/>
+                        <line x1="15" y1="9" x2="9" y2="15"/>
                     </svg>
                 </button>
-                <button class="map-tool-btn" onclick="clearPolygon()" title="מחק גבולות">
+
+                <div class="toolbar-separator"></div>
+
+                <!-- גבול מפה -->
+                <button class="map-tool-btn" id="drawPolygonBtn" onclick="startDrawPolygon()" title="הגדר גבול מפה">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="3 6 5 6 21 6"/>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                        <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/>
+                    </svg>
+                </button>
+                <button class="map-tool-btn" id="editBoundaryBtn" onclick="toggleBoundaryEdit()" title="עריכת גבול" style="display:none;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                </button>
+                <button class="map-tool-btn" id="deleteBoundaryBtn" onclick="deleteBoundary()" title="הסר גבול" style="display:none;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/>
+                        <line x1="9" y1="9" x2="15" y2="15"/>
+                        <line x1="15" y1="9" x2="9" y2="15"/>
                     </svg>
                 </button>
             </div>
 
+            <!-- גרופ היסטוריה ושמירה - במצב עריכה -->
             <div class="map-toolbar-group edit-only">
-                <button class="map-tool-btn" onclick="saveMapData()" title="שמור">
+                <button class="map-tool-btn" id="undoBtn" onclick="undoCanvas()" title="בטל פעולה" disabled>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 7v6h6"/>
+                        <path d="M3 13a9 9 0 1 0 3-7.7L3 7"/>
+                    </svg>
+                </button>
+                <button class="map-tool-btn" id="redoBtn" onclick="redoCanvas()" title="בצע שוב" disabled>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 7v6h-6"/>
+                        <path d="M21 13a9 9 0 1 1-3-7.7L21 7"/>
+                    </svg>
+                </button>
+                <button class="map-tool-btn" onclick="saveMapData()" title="שמור מפה">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
                         <polyline points="17 21 17 13 7 13 7 21"/>
@@ -957,12 +984,15 @@ function handleBackgroundUpload(event) {
             canvas.add(img);
             backgroundImage = img;
 
-            // הצג כפתור עריכת רקע
+            // הצג כפתורי עריכה ומחיקה של רקע
             const editBgBtn = document.getElementById('editBackgroundBtn');
+            const deleteBgBtn = document.getElementById('deleteBackgroundBtn');
             if (editBgBtn) editBgBtn.style.display = 'inline-flex';
+            if (deleteBgBtn) deleteBgBtn.style.display = 'inline-flex';
 
             // סידור שכבות
             reorderLayers();
+            saveCanvasState();
 
             console.log('Background layer image added (locked)');
         });
@@ -1199,10 +1229,13 @@ function finishPolygon() {
     document.getElementById('drawPolygonBtn').classList.remove('active');
     document.getElementById('mapCanvas').style.cursor = 'default';
 
-    // הצג כפתור עריכת גבול
+    // הצג כפתורי עריכה ומחיקה של גבול
     const editBtn = document.getElementById('editBoundaryBtn');
-    if (editBtn) editBtn.style.display = 'flex';
+    const deleteBtn = document.getElementById('deleteBoundaryBtn');
+    if (editBtn) editBtn.style.display = 'inline-flex';
+    if (deleteBtn) deleteBtn.style.display = 'inline-flex';
 
+    saveCanvasState();
     console.log('Boundary with mask completed');
 }
 
@@ -1370,9 +1403,36 @@ function updateMaskPosition() {
 }
 
 /**
- * ניקוי גבולות
+ * מחיקת תמונת רקע
  */
-function clearPolygon() {
+function deleteBackground() {
+    if (!window.mapCanvas || !backgroundImage) return;
+
+    // כיבוי מצב עריכה אם פעיל
+    if (isBackgroundEditMode) {
+        isBackgroundEditMode = false;
+        const editBtn = document.getElementById('editBackgroundBtn');
+        if (editBtn) editBtn.classList.remove('active');
+    }
+
+    window.mapCanvas.remove(backgroundImage);
+    backgroundImage = null;
+
+    // הסתר כפתורי עריכה ומחיקה של רקע
+    const editBtn = document.getElementById('editBackgroundBtn');
+    const deleteBtn = document.getElementById('deleteBackgroundBtn');
+    if (editBtn) editBtn.style.display = 'none';
+    if (deleteBtn) deleteBtn.style.display = 'none';
+
+    window.mapCanvas.renderAll();
+    saveCanvasState();
+    console.log('Background deleted');
+}
+
+/**
+ * מחיקת גבול מפה
+ */
+function deleteBoundary() {
     if (!window.mapCanvas) return;
 
     // כיבוי מצב עריכה אם פעיל
@@ -1398,11 +1458,20 @@ function clearPolygon() {
     grayMask = null;
     boundaryOutline = null;
 
-    // הסתר כפתור עריכת גבול
+    // הסתר כפתורי עריכה ומחיקה של גבול
     const editBtn = document.getElementById('editBoundaryBtn');
+    const deleteBtn = document.getElementById('deleteBoundaryBtn');
     if (editBtn) editBtn.style.display = 'none';
+    if (deleteBtn) deleteBtn.style.display = 'none';
 
     window.mapCanvas.renderAll();
+    saveCanvasState();
+    console.log('Boundary deleted');
+}
+
+// Alias לתאימות אחורה
+function clearPolygon() {
+    deleteBoundary();
 }
 
 /**
@@ -1444,6 +1513,9 @@ function closeMapPopup() {
         isBackgroundEditMode = false;
         currentPdfContext = null;
         currentPdfDoc = null;
+        // איפוס היסטוריית undo/redo
+        canvasHistory = [];
+        historyIndex = -1;
         popup.remove();
     }
 }
@@ -1561,13 +1633,20 @@ function handleCanvasRightClick(e) {
 }
 
 /**
+ * בדיקה אם יש גבול מוגדר
+ */
+function hasBoundary() {
+    return boundaryOutline && boundaryOutline.points && boundaryOutline.points.length > 0;
+}
+
+/**
  * בדיקה אם נקודה נמצאת בתוך הגבול
  * משתמש באלגוריתם Ray Casting
  */
 function isPointInsideBoundary(x, y) {
-    // אם אין גבול מוגדר - הכל מותר
-    if (!boundaryOutline || !boundaryOutline.points) {
-        return true;
+    // אם אין גבול מוגדר - אסור להוסיף פריטים
+    if (!hasBoundary()) {
+        return false;
     }
 
     // קבל את הנקודות של הגבול (עם טרנספורמציות)
@@ -1604,12 +1683,21 @@ function showContextMenu(clientX, clientY, isInsideBoundary) {
 
     if (!menu || !content) return;
 
-    if (isInsideBoundary) {
+    // בדוק אם יש גבול כלל
+    if (!hasBoundary()) {
+        // אין גבול - הצג הודעה שצריך להגדיר גבול קודם
+        content.innerHTML = `
+            <div class="context-menu-item disabled">
+                <span class="context-menu-icon">⚠️</span>
+                <span>יש להגדיר גבול מפה תחילה</span>
+            </div>
+        `;
+    } else if (isInsideBoundary) {
         // תפריט רגיל - בתוך הגבול
         content.innerHTML = `
             <div class="context-menu-item" onclick="addImageFromMenu()">
                 <span class="context-menu-icon">🖼️</span>
-                <span>הוסף תמונה</span>
+                <span>הוסף תמונה / PDF</span>
             </div>
             <div class="context-menu-item" onclick="addTextFromMenu()">
                 <span class="context-menu-icon">📝</span>
@@ -1630,7 +1718,7 @@ function showContextMenu(clientX, clientY, isInsideBoundary) {
             </div>
         `;
     } else {
-        // תפריט אין כניסה - מחוץ לגבול
+        // מחוץ לגבול
         content.innerHTML = `
             <div class="context-menu-item disabled">
                 <span class="context-menu-icon no-entry-icon">🚫</span>
@@ -2074,9 +2162,11 @@ async function renderPdfPageToCanvas(pageNum) {
                 canvas.add(img);
                 backgroundImage = img;
 
-                // הצג כפתור עריכת רקע
+                // הצג כפתורי עריכה ומחיקה של רקע
                 const editBgBtn = document.getElementById('editBackgroundBtn');
+                const deleteBgBtn = document.getElementById('deleteBackgroundBtn');
                 if (editBgBtn) editBgBtn.style.display = 'inline-flex';
+                if (deleteBgBtn) deleteBgBtn.style.display = 'inline-flex';
 
                 console.log('PDF page added as background');
 
@@ -2128,4 +2218,131 @@ function closePdfSelector() {
     if (modal) {
         modal.style.display = 'none';
     }
+}
+
+// ==================== UNDO/REDO ====================
+
+/**
+ * שמירת מצב הקנבס להיסטוריה
+ */
+function saveCanvasState() {
+    if (!window.mapCanvas) return;
+
+    // מחק את ההיסטוריה העתידית אם חזרנו אחורה ועשינו שינוי
+    if (historyIndex < canvasHistory.length - 1) {
+        canvasHistory = canvasHistory.slice(0, historyIndex + 1);
+    }
+
+    // שמור את המצב הנוכחי
+    const state = JSON.stringify(window.mapCanvas.toJSON(['objectType', 'polygonPoint', 'polygonLine']));
+    canvasHistory.push(state);
+
+    // הגבל את גודל ההיסטוריה
+    if (canvasHistory.length > MAX_HISTORY) {
+        canvasHistory.shift();
+    } else {
+        historyIndex++;
+    }
+
+    updateUndoRedoButtons();
+}
+
+/**
+ * ביטול פעולה אחרונה
+ */
+function undoCanvas() {
+    if (!window.mapCanvas || historyIndex <= 0) return;
+
+    historyIndex--;
+    restoreCanvasState(canvasHistory[historyIndex]);
+}
+
+/**
+ * ביצוע שוב פעולה שבוטלה
+ */
+function redoCanvas() {
+    if (!window.mapCanvas || historyIndex >= canvasHistory.length - 1) return;
+
+    historyIndex++;
+    restoreCanvasState(canvasHistory[historyIndex]);
+}
+
+/**
+ * שחזור מצב קנבס
+ */
+function restoreCanvasState(state) {
+    if (!state) return;
+
+    window.mapCanvas.loadFromJSON(JSON.parse(state), function() {
+        // עדכן משתנים גלובליים לפי האובייקטים שנטענו
+        backgroundImage = null;
+        grayMask = null;
+        boundaryOutline = null;
+
+        window.mapCanvas.getObjects().forEach(obj => {
+            if (obj.objectType === 'backgroundLayer') {
+                backgroundImage = obj;
+            } else if (obj.objectType === 'grayMask') {
+                grayMask = obj;
+            } else if (obj.objectType === 'boundaryOutline') {
+                boundaryOutline = obj;
+            }
+        });
+
+        // עדכן מצב כפתורים
+        updateToolbarButtons();
+        window.mapCanvas.renderAll();
+        updateUndoRedoButtons();
+    });
+}
+
+/**
+ * עדכון מצב כפתורי undo/redo
+ */
+function updateUndoRedoButtons() {
+    const undoBtn = document.getElementById('undoBtn');
+    const redoBtn = document.getElementById('redoBtn');
+
+    if (undoBtn) {
+        undoBtn.disabled = historyIndex <= 0;
+    }
+    if (redoBtn) {
+        redoBtn.disabled = historyIndex >= canvasHistory.length - 1;
+    }
+}
+
+/**
+ * עדכון כפתורי הכלים לפי מצב הקנבס
+ */
+function updateToolbarButtons() {
+    // כפתורי רקע
+    const editBgBtn = document.getElementById('editBackgroundBtn');
+    const deleteBgBtn = document.getElementById('deleteBackgroundBtn');
+    if (backgroundImage) {
+        if (editBgBtn) editBgBtn.style.display = 'inline-flex';
+        if (deleteBgBtn) deleteBgBtn.style.display = 'inline-flex';
+    } else {
+        if (editBgBtn) editBgBtn.style.display = 'none';
+        if (deleteBgBtn) deleteBgBtn.style.display = 'none';
+    }
+
+    // כפתורי גבול
+    const editBoundaryBtn = document.getElementById('editBoundaryBtn');
+    const deleteBoundaryBtn = document.getElementById('deleteBoundaryBtn');
+    if (boundaryOutline) {
+        if (editBoundaryBtn) editBoundaryBtn.style.display = 'inline-flex';
+        if (deleteBoundaryBtn) deleteBoundaryBtn.style.display = 'inline-flex';
+    } else {
+        if (editBoundaryBtn) editBoundaryBtn.style.display = 'none';
+        if (deleteBoundaryBtn) deleteBoundaryBtn.style.display = 'none';
+    }
+}
+
+/**
+ * איפוס היסטוריה
+ */
+function resetHistory() {
+    canvasHistory = [];
+    historyIndex = -1;
+    updateUndoRedoButtons();
 }

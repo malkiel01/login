@@ -739,13 +739,10 @@ function initializeMap(entityType, unicId, entity) {
                         <polyline points="21 15 16 10 5 21"/>
                     </svg>
                 </button>
-                <button class="map-tool-btn hidden-btn" id="editBackgroundBtn" onclick="toggleBackgroundEdit()" title="עריכת תמונת רקע">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                    </svg>
+                <button class="map-tool-btn" id="editBackgroundBtn" onclick="toggleBackgroundEdit()" title="עריכת תמונת רקע">
+                    🔓
                 </button>
-                <button class="map-tool-btn hidden-btn" id="deleteBackgroundBtn" onclick="deleteBackground()" title="הסר תמונת רקע">
+                <button class="map-tool-btn" id="deleteBackgroundBtn" onclick="deleteBackground()" title="הסר תמונת רקע">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
                         <line x1="9" y1="9" x2="15" y2="15"/>
@@ -761,13 +758,10 @@ function initializeMap(entityType, unicId, entity) {
                         <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/>
                     </svg>
                 </button>
-                <button class="map-tool-btn hidden-btn" id="editBoundaryBtn" onclick="toggleBoundaryEdit()" title="עריכת גבול">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                    </svg>
+                <button class="map-tool-btn" id="editBoundaryBtn" onclick="toggleBoundaryEdit()" title="עריכת גבול">
+                    🔓
                 </button>
-                <button class="map-tool-btn hidden-btn" id="deleteBoundaryBtn" onclick="deleteBoundary()" title="הסר גבול">
+                <button class="map-tool-btn" id="deleteBoundaryBtn" onclick="deleteBoundary()" title="הסר גבול">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/>
                         <line x1="9" y1="9" x2="15" y2="15"/>

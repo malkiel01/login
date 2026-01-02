@@ -2166,6 +2166,10 @@ async function renderPdfPageToCanvas(pageNum) {
     console.log('renderPdfPageToCanvas called, currentPdfContext:', currentPdfContext);
     if (!currentPdfDoc || !window.mapCanvas) return;
 
+    // שמור את ה-context לפני הקריאה האסינכרונית!
+    const pdfContext = currentPdfContext;
+    console.log('Captured pdfContext:', pdfContext);
+
     try {
         const page = await currentPdfDoc.getPage(pageNum);
 
@@ -2190,8 +2194,9 @@ async function renderPdfPageToCanvas(pageNum) {
         // הוסף לקנבס הראשי
         fabric.Image.fromURL(dataUrl, function(img) {
             const canvas = window.mapCanvas;
+            console.log('Inside fabric callback, pdfContext:', pdfContext);
 
-            if (currentPdfContext === 'background') {
+            if (pdfContext === 'background') {
                 // הסרת תמונת רקע קודמת
                 if (backgroundImage) {
                     canvas.remove(backgroundImage);
@@ -2224,9 +2229,12 @@ async function renderPdfPageToCanvas(pageNum) {
                 // הצג כפתורי עריכה ומחיקה של רקע
                 const editBgBtn = document.getElementById('editBackgroundBtn');
                 const deleteBgBtn = document.getElementById('deleteBackgroundBtn');
+                console.log('PDF as background - setting edit button');
                 if (editBgBtn) {
                     editBgBtn.classList.remove('hidden-btn');
                     editBgBtn.classList.add('active'); // מצב עריכה פעיל
+                    editBgBtn.innerHTML = '🔓'; // מנעול פתוח = מצב עריכה
+                    console.log('Edit button set to active with 🔓');
                 }
                 if (deleteBgBtn) deleteBgBtn.classList.remove('hidden-btn');
 

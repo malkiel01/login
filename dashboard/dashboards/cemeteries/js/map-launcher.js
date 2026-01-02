@@ -19,6 +19,8 @@ let grayMask = null; // מסכה אפורה
 let boundaryOutline = null; // קו הגבול
 let isBoundaryEditMode = false; // מצב עריכת גבול
 let isBackgroundEditMode = false; // מצב עריכת תמונת רקע
+let currentPdfContext = null; // 'background' או 'workObject' - לשימוש בבחירת עמוד PDF
+let currentPdfDoc = null; // מסמך PDF נוכחי
 
 // יצירת המודל בטעינה
 document.addEventListener('DOMContentLoaded', function() {
@@ -535,6 +537,125 @@ function openMapPopup(entityType, unicId) {
                 color: #9ca3af;
                 font-size: 18px;
             }
+
+            /* PDF Page Selector */
+            .pdf-selector-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.6);
+                z-index: 10001;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .pdf-selector-modal {
+                background: white;
+                border-radius: 12px;
+                width: 90%;
+                max-width: 800px;
+                max-height: 80vh;
+                display: flex;
+                flex-direction: column;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            }
+            .pdf-selector-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 16px 20px;
+                border-bottom: 1px solid #e5e7eb;
+            }
+            .pdf-selector-header h3 {
+                margin: 0;
+                font-size: 18px;
+                color: #1f2937;
+            }
+            .pdf-selector-close {
+                background: none;
+                border: none;
+                font-size: 24px;
+                cursor: pointer;
+                color: #6b7280;
+                padding: 0;
+                width: 32px;
+                height: 32px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 6px;
+            }
+            .pdf-selector-close:hover {
+                background: #f3f4f6;
+                color: #1f2937;
+            }
+            .pdf-selector-info {
+                padding: 12px 20px;
+                background: #f9fafb;
+                display: flex;
+                justify-content: space-between;
+                font-size: 14px;
+                color: #6b7280;
+            }
+            .pdf-selector-pages {
+                padding: 20px;
+                overflow-y: auto;
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 16px;
+                flex: 1;
+            }
+            .pdf-page-thumb {
+                border: 2px solid #e5e7eb;
+                border-radius: 8px;
+                overflow: hidden;
+                cursor: pointer;
+                transition: all 0.2s;
+                background: white;
+            }
+            .pdf-page-thumb:hover {
+                border-color: #3b82f6;
+                box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+                transform: translateY(-2px);
+            }
+            .pdf-page-thumb canvas {
+                width: 100%;
+                display: block;
+            }
+            .pdf-page-number {
+                text-align: center;
+                padding: 8px;
+                font-size: 13px;
+                color: #374151;
+                background: #f9fafb;
+                border-top: 1px solid #e5e7eb;
+            }
+            .pdf-selector-footer {
+                padding: 16px 20px;
+                border-top: 1px solid #e5e7eb;
+                display: flex;
+                justify-content: flex-end;
+            }
+            .pdf-loading {
+                grid-column: 1 / -1;
+                text-align: center;
+                padding: 40px;
+                color: #6b7280;
+            }
+            .pdf-loading-spinner {
+                width: 40px;
+                height: 40px;
+                border: 3px solid #e5e7eb;
+                border-top-color: #3b82f6;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+                margin: 0 auto 12px;
+            }
+            @keyframes spin {
+                to { transform: rotate(360deg); }
+            }
         `;
         document.head.appendChild(styles);
     }
@@ -656,12 +777,32 @@ function initializeMap(entityType, unicId, entity) {
 
         <!-- Hidden file inputs -->
         <input type="file" id="bgImageInput" class="hidden-file-input" accept="image/*,.pdf" onchange="handleBackgroundUpload(event)">
-        <input type="file" id="addImageInput" class="hidden-file-input" accept="image/*" onchange="handleAddImage(event)">
+        <input type="file" id="addImageInput" class="hidden-file-input" accept="image/*,.pdf" onchange="handleAddImage(event)">
 
         <!-- Context Menu -->
         <div id="mapContextMenu" class="map-context-menu" style="display:none;">
             <div class="context-menu-content" id="contextMenuContent">
                 <!-- ימולא דינמית -->
+            </div>
+        </div>
+
+        <!-- PDF Page Selector Modal -->
+        <div id="pdfPageSelectorModal" class="pdf-selector-overlay" style="display:none;">
+            <div class="pdf-selector-modal">
+                <div class="pdf-selector-header">
+                    <h3>בחירת עמוד מ-PDF</h3>
+                    <button type="button" class="pdf-selector-close" onclick="closePdfSelector()">&times;</button>
+                </div>
+                <div class="pdf-selector-info">
+                    <span id="pdfFileName"></span>
+                    <span id="pdfPageCount"></span>
+                </div>
+                <div class="pdf-selector-pages" id="pdfPagesContainer">
+                    <!-- תמונות ממוזערות של העמודים -->
+                </div>
+                <div class="pdf-selector-footer">
+                    <button type="button" class="btn-secondary" onclick="closePdfSelector()">ביטול</button>
+                </div>
             </div>
         </div>
     `;
@@ -777,7 +918,9 @@ function handleBackgroundUpload(event) {
     const isPdf = file.type === 'application/pdf';
 
     if (isPdf) {
-        alert('תמיכה ב-PDF תתווסף בקרוב. כרגע ניתן להעלות תמונות בלבד.');
+        // טיפול בקובץ PDF
+        handlePdfUpload(file, 'background');
+        event.target.value = '';
         return;
     }
 
@@ -1299,6 +1442,8 @@ function closeMapPopup() {
         boundaryOutline = null;
         isBoundaryEditMode = false;
         isBackgroundEditMode = false;
+        currentPdfContext = null;
+        currentPdfDoc = null;
         popup.remove();
     }
 }
@@ -1529,6 +1674,15 @@ function handleAddImage(event) {
     const file = event.target.files[0];
     if (!file || !window.mapCanvas) return;
 
+    const isPdf = file.type === 'application/pdf';
+
+    if (isPdf) {
+        // טיפול בקובץ PDF
+        handlePdfUpload(file, 'workObject');
+        event.target.value = '';
+        return;
+    }
+
     const reader = new FileReader();
     reader.onload = function(e) {
         fabric.Image.fromURL(e.target.result, function(img) {
@@ -1645,4 +1799,231 @@ function addShapeFromMenu(shapeType) {
         window.mapCanvas.setActiveObject(shape);
         window.mapCanvas.renderAll();
     }
+}
+
+// ==================== PDF HANDLING ====================
+
+/**
+ * טיפול בהעלאת קובץ PDF
+ */
+async function handlePdfUpload(file, context) {
+    if (typeof pdfjsLib === 'undefined') {
+        alert('ספריית PDF.js לא נטענה. נסה לרענן את הדף.');
+        return;
+    }
+
+    currentPdfContext = context;
+
+    // הצג מודל בחירת עמוד
+    const modal = document.getElementById('pdfPageSelectorModal');
+    const container = document.getElementById('pdfPagesContainer');
+    const fileNameEl = document.getElementById('pdfFileName');
+    const pageCountEl = document.getElementById('pdfPageCount');
+
+    if (!modal || !container) return;
+
+    // הצג loading
+    fileNameEl.textContent = file.name;
+    pageCountEl.textContent = 'טוען...';
+    container.innerHTML = `
+        <div class="pdf-loading">
+            <div class="pdf-loading-spinner"></div>
+            <div>טוען PDF...</div>
+        </div>
+    `;
+    modal.style.display = 'flex';
+
+    try {
+        // טען את ה-PDF
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        currentPdfDoc = pdf;
+
+        const numPages = pdf.numPages;
+        pageCountEl.textContent = `${numPages} עמודים`;
+
+        // אם יש רק עמוד אחד - בחר אוטומטית
+        if (numPages === 1) {
+            closePdfSelector();
+            await renderPdfPageToCanvas(1);
+            return;
+        }
+
+        // רנדר תמונות ממוזערות לכל העמודים
+        container.innerHTML = '';
+
+        for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+            const thumbDiv = document.createElement('div');
+            thumbDiv.className = 'pdf-page-thumb';
+            thumbDiv.onclick = () => selectPdfPage(pageNum);
+
+            const canvas = document.createElement('canvas');
+            const pageNumDiv = document.createElement('div');
+            pageNumDiv.className = 'pdf-page-number';
+            pageNumDiv.textContent = `עמוד ${pageNum}`;
+
+            thumbDiv.appendChild(canvas);
+            thumbDiv.appendChild(pageNumDiv);
+            container.appendChild(thumbDiv);
+
+            // רנדר תמונה ממוזערת
+            renderPdfThumbnail(pdf, pageNum, canvas);
+        }
+
+    } catch (error) {
+        console.error('Error loading PDF:', error);
+        container.innerHTML = `
+            <div class="pdf-loading">
+                <div style="color: #dc2626;">שגיאה בטעינת PDF</div>
+                <div style="font-size: 12px; margin-top: 8px;">${error.message}</div>
+            </div>
+        `;
+    }
+}
+
+/**
+ * רנדור תמונה ממוזערת של עמוד PDF
+ */
+async function renderPdfThumbnail(pdf, pageNum, canvas) {
+    try {
+        const page = await pdf.getPage(pageNum);
+        const viewport = page.getViewport({ scale: 0.3 });
+
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+
+        const ctx = canvas.getContext('2d');
+        await page.render({
+            canvasContext: ctx,
+            viewport: viewport
+        }).promise;
+
+    } catch (error) {
+        console.error(`Error rendering thumbnail for page ${pageNum}:`, error);
+    }
+}
+
+/**
+ * בחירת עמוד PDF
+ */
+async function selectPdfPage(pageNum) {
+    closePdfSelector();
+    await renderPdfPageToCanvas(pageNum);
+}
+
+/**
+ * רנדור עמוד PDF כתמונה ל-canvas
+ */
+async function renderPdfPageToCanvas(pageNum) {
+    if (!currentPdfDoc || !window.mapCanvas) return;
+
+    try {
+        const page = await currentPdfDoc.getPage(pageNum);
+
+        // רנדור באיכות גבוהה
+        const scale = 2;
+        const viewport = page.getViewport({ scale });
+
+        // יצירת canvas זמני לרנדור
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = viewport.width;
+        tempCanvas.height = viewport.height;
+
+        const ctx = tempCanvas.getContext('2d');
+        await page.render({
+            canvasContext: ctx,
+            viewport: viewport
+        }).promise;
+
+        // המר ל-data URL
+        const dataUrl = tempCanvas.toDataURL('image/png');
+
+        // הוסף לקנבס הראשי
+        fabric.Image.fromURL(dataUrl, function(img) {
+            const canvas = window.mapCanvas;
+
+            if (currentPdfContext === 'background') {
+                // הסרת תמונת רקע קודמת
+                if (backgroundImage) {
+                    canvas.remove(backgroundImage);
+                }
+
+                // התאמת גודל התמונה
+                const imgScale = Math.min(
+                    (canvas.width * 0.9) / img.width,
+                    (canvas.height * 0.9) / img.height
+                );
+
+                img.set({
+                    left: canvas.width / 2,
+                    top: canvas.height / 2,
+                    originX: 'center',
+                    originY: 'center',
+                    scaleX: imgScale,
+                    scaleY: imgScale,
+                    selectable: false,
+                    evented: false,
+                    hasControls: true,
+                    hasBorders: true,
+                    lockRotation: false,
+                    objectType: 'backgroundLayer'
+                });
+
+                canvas.add(img);
+                backgroundImage = img;
+
+                // הצג כפתור עריכת רקע
+                const editBgBtn = document.getElementById('editBackgroundBtn');
+                if (editBgBtn) editBgBtn.style.display = 'inline-flex';
+
+                console.log('PDF page added as background');
+
+            } else {
+                // הוספה כאובייקט עבודה
+                const maxSize = 300;
+                let imgScale = 1;
+                if (img.width > maxSize || img.height > maxSize) {
+                    imgScale = maxSize / Math.max(img.width, img.height);
+                }
+
+                img.set({
+                    left: contextMenuPosition.x,
+                    top: contextMenuPosition.y,
+                    scaleX: imgScale,
+                    scaleY: imgScale,
+                    selectable: true,
+                    hasControls: true,
+                    hasBorders: true,
+                    objectType: 'workObject'
+                });
+
+                canvas.add(img);
+                canvas.setActiveObject(img);
+
+                console.log('PDF page added as work object');
+            }
+
+            reorderLayers();
+            canvas.renderAll();
+        });
+
+    } catch (error) {
+        console.error('Error rendering PDF page:', error);
+        alert('שגיאה ברנדור עמוד PDF');
+    }
+
+    // נקה
+    currentPdfDoc = null;
+    currentPdfContext = null;
+}
+
+/**
+ * סגירת מודל בחירת עמוד PDF
+ */
+function closePdfSelector() {
+    const modal = document.getElementById('pdfPageSelectorModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    currentPdfDoc = null;
 }

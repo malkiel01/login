@@ -886,8 +886,8 @@ function createMapCanvas(entityType, unicId, entity) {
 
         window.mapCanvas.on('mouse:down', function(opt) {
             const evt = opt.e;
-            // Alt + לחיצה שמאלית או לחיצה על גלגלת העכבר
-            if (evt.altKey || evt.button === 1) {
+            // גרירה על רקע ריק (לא על אובייקט) ולא במצב ציור פוליגון
+            if (!opt.target && !drawingPolygon && evt.button === 0) {
                 isPanning = true;
                 lastPosX = evt.clientX;
                 lastPosY = evt.clientY;

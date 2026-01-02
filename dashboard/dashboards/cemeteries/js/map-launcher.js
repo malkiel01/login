@@ -799,16 +799,16 @@ function handleBackgroundUpload(event) {
                 hasControls: true,
                 hasBorders: true,
                 lockRotation: false,
-                objectType: 'workObject' // סימון כאובייקט עבודה
+                objectType: 'backgroundLayer' // שכבה תחתונה - תמיד מתחת לאובייקטי עבודה
             });
 
             canvas.add(img);
             backgroundImage = img;
 
-            // סידור שכבות: המסכה והקו תמיד למעלה
+            // סידור שכבות
             reorderLayers();
 
-            console.log('Background image added');
+            console.log('Background layer image added');
         });
     };
     reader.readAsDataURL(file);
@@ -818,7 +818,10 @@ function handleBackgroundUpload(event) {
 }
 
 /**
- * סידור שכבות - המסכה תמיד למעלה
+ * סידור שכבות - סדר היררכי:
+ * 1. backgroundLayer - שכבה תחתונה (מהתפריט העליון)
+ * 2. workObject - אובייקטי עבודה (מקליק ימני)
+ * 3. grayMask + boundaryOutline - תמיד למעלה
  */
 function reorderLayers() {
     if (!window.mapCanvas) return;
@@ -826,16 +829,31 @@ function reorderLayers() {
     const canvas = window.mapCanvas;
     const objects = canvas.getObjects();
 
-    // מצא את המסכה והקו
+    // מיון אובייקטים לפי סוג
+    const backgroundLayers = [];
+    const workObjects = [];
     let mask = null;
     let outline = null;
 
     objects.forEach(obj => {
-        if (obj.objectType === 'grayMask') mask = obj;
-        if (obj.objectType === 'boundaryOutline') outline = obj;
+        if (obj.objectType === 'grayMask') {
+            mask = obj;
+        } else if (obj.objectType === 'boundaryOutline') {
+            outline = obj;
+        } else if (obj.objectType === 'backgroundLayer') {
+            backgroundLayers.push(obj);
+        } else if (obj.objectType === 'workObject') {
+            workObjects.push(obj);
+        }
     });
 
-    // הבא אותם לחזית
+    // סידור: שכבות רקע למטה
+    backgroundLayers.forEach(obj => canvas.sendToBack(obj));
+
+    // אובייקטי עבודה מעל שכבות הרקע
+    workObjects.forEach(obj => canvas.bringToFront(obj));
+
+    // מסכה וקו גבול תמיד למעלה
     if (mask) canvas.bringToFront(mask);
     if (outline) canvas.bringToFront(outline);
 

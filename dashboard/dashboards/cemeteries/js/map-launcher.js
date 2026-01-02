@@ -879,6 +879,18 @@ function createMapCanvas(entityType, unicId, entity) {
         window.mapCanvas.on('mouse:down', handleCanvasClick);
         window.mapCanvas.on('mouse:move', handleCanvasMouseMove);
 
+        // אירועי היסטוריה - שמירת מצב אחרי כל שינוי
+        window.mapCanvas.on('object:modified', function(e) {
+            // התעלם מאובייקטים זמניים של ציור פוליגון
+            if (e.target && !e.target.polygonPoint && !e.target.polygonLine && !e.target.previewLine) {
+                console.log('Object modified, saving state');
+                saveCanvasState();
+            }
+        });
+
+        // שמור מצב התחלתי
+        saveCanvasState();
+
         // אירוע קליק ימני - חובה להוסיף למכל שFabric יוצר
         // Fabric.js יוצר upper-canvas מעל ה-canvas הרגיל
         const fabricWrapper = canvasContainer.querySelector('.canvas-container');
@@ -1616,14 +1628,31 @@ function updateZoomDisplay() {
     }
 }
 
-// ESC לסגירה
+// קיצורי מקלדת
 document.addEventListener('keydown', function(e) {
+    // ESC לסגירה
     if (e.key === 'Escape') {
         if (drawingPolygon) {
             cancelPolygonDrawing();
         } else {
             closeMapPopup();
             closeMapLauncher();
+        }
+    }
+
+    // Ctrl+Z - ביטול פעולה
+    if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        if (isEditMode && window.mapCanvas) {
+            e.preventDefault();
+            undoCanvas();
+        }
+    }
+
+    // Ctrl+Y או Ctrl+Shift+Z - ביצוע שוב
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+        if (isEditMode && window.mapCanvas) {
+            e.preventDefault();
+            redoCanvas();
         }
     }
 });
@@ -1871,6 +1900,7 @@ function deleteContextMenuObject() {
 
     window.mapCanvas.remove(contextMenuTargetObject);
     window.mapCanvas.renderAll();
+    saveCanvasState();
 
     contextMenuTargetObject = null;
     console.log('Object deleted');
@@ -1887,6 +1917,7 @@ function bringObjectToFront() {
     window.mapCanvas.bringToFront(contextMenuTargetObject);
     reorderLayers(); // המסכה תמיד תישאר למעלה
     window.mapCanvas.renderAll();
+    saveCanvasState();
 
     contextMenuTargetObject = null;
 }
@@ -1902,6 +1933,7 @@ function sendObjectToBack() {
     window.mapCanvas.sendToBack(contextMenuTargetObject);
     reorderLayers(); // שכבת הרקע תישאר למטה
     window.mapCanvas.renderAll();
+    saveCanvasState();
 
     contextMenuTargetObject = null;
 }
@@ -1955,6 +1987,7 @@ function handleAddImage(event) {
             reorderLayers();
             window.mapCanvas.setActiveObject(img);
             window.mapCanvas.renderAll();
+            saveCanvasState();
         });
     };
     reader.readAsDataURL(file);
@@ -1986,6 +2019,7 @@ function addTextFromMenu() {
     window.mapCanvas.setActiveObject(text);
     text.enterEditing();
     window.mapCanvas.renderAll();
+    saveCanvasState();
 }
 
 /**
@@ -2045,6 +2079,7 @@ function addShapeFromMenu(shapeType) {
         reorderLayers();
         window.mapCanvas.setActiveObject(shape);
         window.mapCanvas.renderAll();
+        saveCanvasState();
     }
 }
 
@@ -2283,6 +2318,7 @@ async function renderPdfPageToCanvas(pageNum) {
 
             reorderLayers();
             canvas.renderAll();
+            saveCanvasState();
         });
 
     } catch (error) {

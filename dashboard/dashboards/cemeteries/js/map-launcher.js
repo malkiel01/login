@@ -1363,10 +1363,11 @@ function finishPolygon() {
     });
 
     // יצירת מסכה אפורה עם "חור" בצורת הפוליגון
-    // נשתמש ב-SVG path שמכסה את כל הקנבס ואז חותך את הפוליגון
+    // המסכה גדולה מאוד כדי לכסות גם בזמן zoom out
+    const maskSize = 10000; // גודל ענק שיכסה בכל מצב זום
 
-    // בניית נתיב SVG: מלבן גדול + פוליגון הפוך
-    let pathData = `M 0 0 L ${canvasWidth} 0 L ${canvasWidth} ${canvasHeight} L 0 ${canvasHeight} Z `;
+    // בניית נתיב SVG: מלבן גדול מאוד + פוליגון הפוך
+    let pathData = `M ${-maskSize} ${-maskSize} L ${canvasWidth + maskSize} ${-maskSize} L ${canvasWidth + maskSize} ${canvasHeight + maskSize} L ${-maskSize} ${canvasHeight + maskSize} Z `;
 
     // הוספת הפוליגון כ"חור" (בכיוון הפוך)
     pathData += `M ${polygonPoints[0].x} ${polygonPoints[0].y} `;
@@ -1583,8 +1584,9 @@ function updateMaskPosition() {
     const canvas = window.mapCanvas;
     const canvasWidth = canvas.width;
     const canvasHeight = canvas.height;
+    const maskSize = 10000; // גודל ענק שיכסה בכל מצב זום
 
-    let pathData = `M 0 0 L ${canvasWidth} 0 L ${canvasWidth} ${canvasHeight} L 0 ${canvasHeight} Z `;
+    let pathData = `M ${-maskSize} ${-maskSize} L ${canvasWidth + maskSize} ${-maskSize} L ${canvasWidth + maskSize} ${canvasHeight + maskSize} L ${-maskSize} ${canvasHeight + maskSize} Z `;
     pathData += `M ${points[0].x} ${points[0].y} `;
     for (let i = points.length - 1; i >= 0; i--) {
         pathData += `L ${points[i].x} ${points[i].y} `;

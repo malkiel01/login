@@ -984,17 +984,21 @@ function handleBackgroundUpload(event) {
             // הצג כפתורי עריכה ומחיקה של רקע
             const editBgBtn = document.getElementById('editBackgroundBtn');
             const deleteBgBtn = document.getElementById('deleteBackgroundBtn');
+            console.log('Background added, editBgBtn:', editBgBtn);
 
             if (editBgBtn) {
-                editBgBtn.classList.remove('hidden-btn'); // הצג כפתור
-                editBgBtn.classList.add('active'); // מצב עריכה פעיל
+                editBgBtn.classList.remove('hidden-btn');
+                editBgBtn.classList.add('active'); // מצב עריכה פעיל - כפתור לחוץ
+                editBgBtn.innerHTML = '🔓'; // מנעול פתוח = מצב עריכה
+                console.log('editBgBtn classes after add:', editBgBtn.className);
             }
             if (deleteBgBtn) {
-                deleteBgBtn.classList.remove('hidden-btn'); // הצג כפתור
+                deleteBgBtn.classList.remove('hidden-btn');
             }
 
             // הפעל מצב עריכת רקע אוטומטית
             isBackgroundEditMode = true;
+            console.log('isBackgroundEditMode set to true');
 
             // וודא שהמסכה נעולה
             if (grayMask) {
@@ -1302,6 +1306,7 @@ function toggleBoundaryEdit() {
     if (isBoundaryEditMode) {
         // הפעל מצב עריכה - אפשר להזיז את הגבול בלבד
         editBtn.classList.add('active');
+        editBtn.innerHTML = '🔓'; // מנעול פתוח = מצב עריכה
 
         // הפוך רק את הגבול לניתן לבחירה
         boundaryOutline.set({
@@ -1331,6 +1336,7 @@ function toggleBoundaryEdit() {
     } else {
         // כבה מצב עריכה - נעל הכל
         editBtn.classList.remove('active');
+        editBtn.innerHTML = '🔒'; // מנעול סגור = נעול
 
         // הסר האזנה
         boundaryOutline.off('moving', updateMaskPosition);
@@ -1351,15 +1357,23 @@ function toggleBoundaryEdit() {
  * הפעלה/כיבוי מצב עריכת תמונת רקע
  */
 function toggleBackgroundEdit() {
-    if (!backgroundImage) return;
+    console.log('toggleBackgroundEdit called, backgroundImage:', backgroundImage);
+    if (!backgroundImage) {
+        console.log('No background image, returning');
+        return;
+    }
 
     isBackgroundEditMode = !isBackgroundEditMode;
+    console.log('isBackgroundEditMode is now:', isBackgroundEditMode);
 
     const editBtn = document.getElementById('editBackgroundBtn');
+    console.log('editBtn element:', editBtn);
 
     if (isBackgroundEditMode) {
         // הפעל מצב עריכה - אפשר להזיז את תמונת הרקע
         editBtn.classList.add('active');
+        editBtn.innerHTML = '🔓'; // מנעול פתוח = מצב עריכה פעיל
+        console.log('Added active class, showing 🔓');
 
         backgroundImage.set({
             selectable: true,
@@ -1384,6 +1398,8 @@ function toggleBackgroundEdit() {
     } else {
         // כבה מצב עריכה - נעל הכל
         editBtn.classList.remove('active');
+        editBtn.innerHTML = '🔒'; // מנעול סגור = נעול
+        console.log('Removed active class, showing 🔒');
 
         window.mapCanvas.discardActiveObject();
 

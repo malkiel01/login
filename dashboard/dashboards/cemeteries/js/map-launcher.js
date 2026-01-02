@@ -1099,10 +1099,10 @@ function toggleBoundaryEdit() {
     const editBtn = document.getElementById('editBoundaryBtn');
 
     if (isBoundaryEditMode) {
-        // הפעל מצב עריכה - אפשר להזיז את הגבול
+        // הפעל מצב עריכה - אפשר להזיז את הגבול בלבד
         editBtn.classList.add('active');
 
-        // הפוך את הגבול והמסכה לניתנים לבחירה והזזה
+        // הפוך רק את הגבול לניתן לבחירה - המסכה תמיד נעולה
         boundaryOutline.set({
             selectable: true,
             evented: true,
@@ -1111,17 +1111,18 @@ function toggleBoundaryEdit() {
             lockRotation: true
         });
 
+        // המסכה האפורה תמיד נשארת נעולה - לא ניתנת לבחירה
         grayMask.set({
-            selectable: true,
-            evented: true,
+            selectable: false,
+            evented: false,
             hasControls: false,
             hasBorders: false
         });
 
-        // קבץ את המסכה והגבול יחד להזזה משותפת
+        // בחר את הגבול
         window.mapCanvas.setActiveObject(boundaryOutline);
 
-        // האזן לשינויים בגבול
+        // האזן לשינויים בגבול - המסכה תעודכן אוטומטית
         boundaryOutline.on('moving', updateMaskPosition);
         boundaryOutline.on('scaling', updateMaskPosition);
 
@@ -1135,11 +1136,6 @@ function toggleBoundaryEdit() {
             evented: false,
             hasControls: false,
             hasBorders: false
-        });
-
-        grayMask.set({
-            selectable: false,
-            evented: false
         });
 
         // הסר האזנה

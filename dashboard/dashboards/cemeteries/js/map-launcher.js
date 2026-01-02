@@ -973,12 +973,12 @@ function handleBackgroundUpload(event) {
                 originY: 'center',
                 scaleX: scale,
                 scaleY: scale,
-                selectable: false, // נעול כברירת מחדל
-                evented: false,
+                selectable: true, // מופעל אוטומטית במצב עריכה
+                evented: true,
                 hasControls: true,
                 hasBorders: true,
                 lockRotation: false,
-                objectType: 'backgroundLayer' // שכבה תחתונה - תמיד מתחת לאובייקטי עבודה
+                objectType: 'backgroundLayer'
             });
 
             canvas.add(img);
@@ -987,14 +987,33 @@ function handleBackgroundUpload(event) {
             // הצג כפתורי עריכה ומחיקה של רקע
             const editBgBtn = document.getElementById('editBackgroundBtn');
             const deleteBgBtn = document.getElementById('deleteBackgroundBtn');
-            if (editBgBtn) editBgBtn.style.display = 'inline-flex';
+            if (editBgBtn) {
+                editBgBtn.style.display = 'inline-flex';
+                editBgBtn.classList.add('active'); // סמן כפתור עריכה כפעיל
+            }
             if (deleteBgBtn) deleteBgBtn.style.display = 'inline-flex';
+
+            // הפעל מצב עריכת רקע אוטומטית
+            isBackgroundEditMode = true;
+
+            // וודא שהמסכה נעולה
+            if (grayMask) {
+                grayMask.set({
+                    selectable: false,
+                    evented: false,
+                    hasControls: false,
+                    hasBorders: false
+                });
+            }
+
+            // בחר את התמונה
+            canvas.setActiveObject(img);
 
             // סידור שכבות
             reorderLayers();
             saveCanvasState();
 
-            console.log('Background layer image added (locked)');
+            console.log('Background layer image added (edit mode)');
         });
     };
     reader.readAsDataURL(file);
@@ -2160,8 +2179,8 @@ async function renderPdfPageToCanvas(pageNum) {
                     originY: 'center',
                     scaleX: imgScale,
                     scaleY: imgScale,
-                    selectable: false,
-                    evented: false,
+                    selectable: true, // מופעל אוטומטית במצב עריכה
+                    evented: true,
                     hasControls: true,
                     hasBorders: true,
                     lockRotation: false,
@@ -2174,10 +2193,29 @@ async function renderPdfPageToCanvas(pageNum) {
                 // הצג כפתורי עריכה ומחיקה של רקע
                 const editBgBtn = document.getElementById('editBackgroundBtn');
                 const deleteBgBtn = document.getElementById('deleteBackgroundBtn');
-                if (editBgBtn) editBgBtn.style.display = 'inline-flex';
+                if (editBgBtn) {
+                    editBgBtn.style.display = 'inline-flex';
+                    editBgBtn.classList.add('active'); // סמן כפתור עריכה כפעיל
+                }
                 if (deleteBgBtn) deleteBgBtn.style.display = 'inline-flex';
 
-                console.log('PDF page added as background');
+                // הפעל מצב עריכת רקע אוטומטית
+                isBackgroundEditMode = true;
+
+                // וודא שהמסכה נעולה
+                if (grayMask) {
+                    grayMask.set({
+                        selectable: false,
+                        evented: false,
+                        hasControls: false,
+                        hasBorders: false
+                    });
+                }
+
+                // בחר את התמונה
+                canvas.setActiveObject(img);
+
+                console.log('PDF page added as background (edit mode)');
 
             } else {
                 // הוספה כאובייקט עבודה

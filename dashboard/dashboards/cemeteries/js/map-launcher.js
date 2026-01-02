@@ -902,9 +902,84 @@ function createMapCanvas(entityType, unicId, entity) {
         }
 
         console.log('Map canvas initialized');
+
+        // טען נתוני מפה שמורים מהשרת
+        loadSavedMapData(entityType, unicId);
     } else {
         console.error('Fabric.js not loaded!');
         canvasContainer.innerHTML += '<p style="text-align:center; color:red; padding:20px;">שגיאה: Fabric.js לא נטען</p>';
+    }
+}
+
+/**
+ * טעינת נתוני מפה שמורים מהשרת
+ */
+async function loadSavedMapData(entityType, unicId) {
+    try {
+        const response = await fetch(`api/cemetery-hierarchy.php?action=get_map&type=${entityType}&id=${unicId}`);
+        const result = await response.json();
+
+        if (!result.success) {
+            console.log('No saved map data found');
+            return;
+        }
+
+        if (!result.mapData || !result.mapData.canvasJSON) {
+            console.log('No canvas data in saved map');
+            return;
+        }
+
+        console.log('Loading saved map data...');
+
+        // טען את ה-canvas מה-JSON
+        window.mapCanvas.loadFromJSON(result.mapData.canvasJSON, function() {
+            // עדכן משתנים גלובליים לפי האובייקטים שנטענו
+            backgroundImage = null;
+            grayMask = null;
+            boundaryOutline = null;
+
+            window.mapCanvas.getObjects().forEach(obj => {
+                if (obj.objectType === 'backgroundLayer') {
+                    backgroundImage = obj;
+                } else if (obj.objectType === 'grayMask') {
+                    grayMask = obj;
+                } else if (obj.objectType === 'boundaryOutline') {
+                    boundaryOutline = obj;
+                }
+            });
+
+            // הסר את הטקסט ההתחלתי אם נטענו אובייקטים
+            const objects = window.mapCanvas.getObjects('text');
+            objects.forEach(obj => {
+                if (obj.text === 'לחץ על "מצב עריכה" כדי להתחיל') {
+                    window.mapCanvas.remove(obj);
+                }
+            });
+
+            // נעילת אובייקטי מערכת
+            lockSystemObjects();
+
+            // עדכן מצב כפתורים
+            updateToolbarButtons();
+
+            // החל זום אם נשמר
+            if (result.mapData.zoom) {
+                currentZoom = result.mapData.zoom;
+                window.mapCanvas.setZoom(currentZoom);
+                updateZoomDisplay();
+            }
+
+            window.mapCanvas.renderAll();
+
+            // איפוס ההיסטוריה ושמירת המצב הנוכחי כמצב התחלתי
+            resetHistory();
+            saveCanvasState();
+
+            console.log('Map data loaded successfully');
+        });
+
+    } catch (error) {
+        console.error('Error loading saved map data:', error);
     }
 }
 
@@ -1537,20 +1612,64 @@ function clearPolygon() {
 }
 
 /**
- * שמירת המפה
+ * שמירת המפה לשרת
  */
-function saveMapData() {
-    if (!window.mapCanvas) return;
+async function saveMapData() {
+    if (!window.mapCanvas || !currentEntityType || !currentUnicId) return;
 
-    const mapData = {
-        entityType: currentEntityType,
-        unicId: currentUnicId,
-        canvasJSON: window.mapCanvas.toJSON(['objectType', 'polygonPoint', 'polygonLine']),
-        zoom: currentZoom
-    };
+    const saveBtn = document.querySelector('.map-tool-btn[onclick="saveMapData()"]');
+    const originalContent = saveBtn ? saveBtn.innerHTML : '';
 
-    console.log('Saving map data:', mapData);
-    alert('המפה נשמרה (בקונסול).\nשמירה לשרת תתווסף בהמשך.');
+    try {
+        // הצג מצב שמירה
+        if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '⏳';
+        }
+
+        const mapData = {
+            canvasJSON: window.mapCanvas.toJSON(['objectType', 'polygonPoint', 'polygonLine']),
+            zoom: currentZoom,
+            savedAt: new Date().toISOString()
+        };
+
+        const response = await fetch(
+            `api/cemetery-hierarchy.php?action=save_map&type=${currentEntityType}&id=${currentUnicId}`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ mapData })
+            }
+        );
+
+        const result = await response.json();
+
+        if (!result.success) {
+            throw new Error(result.error || 'שגיאה בשמירת המפה');
+        }
+
+        // הצג הודעת הצלחה
+        if (saveBtn) {
+            saveBtn.innerHTML = '✓';
+            setTimeout(() => {
+                saveBtn.innerHTML = originalContent;
+                saveBtn.disabled = false;
+            }, 1500);
+        }
+
+        console.log('Map saved successfully');
+
+    } catch (error) {
+        console.error('Error saving map:', error);
+        alert('שגיאה בשמירת המפה: ' + error.message);
+
+        if (saveBtn) {
+            saveBtn.innerHTML = originalContent;
+            saveBtn.disabled = false;
+        }
+    }
 }
 
 /**

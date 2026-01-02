@@ -661,6 +661,71 @@ try {
             ]);
             break;
             
+        case 'save_map':
+            // שמירת נתוני מפה
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new Exception('שיטת בקשה לא תקינה');
+            }
+
+            $config = $manager->getConfig($type);
+            if (!$config || !$id) {
+                throw new Exception('פרמטרים חסרים');
+            }
+
+            $data = json_decode(file_get_contents('php://input'), true);
+            if (!$data || !isset($data['mapData'])) {
+                throw new Exception('נתוני מפה חסרים');
+            }
+
+            $table = $config['table'];
+            $primaryKey = $config['primaryKey'];
+
+            // שמירת נתוני המפה
+            $stmt = $pdo->prepare(
+                "UPDATE $table SET mapData = :mapData, updateDate = :updateDate
+                 WHERE $primaryKey = :id"
+            );
+            $stmt->execute([
+                'id' => $id,
+                'mapData' => json_encode($data['mapData']),
+                'updateDate' => date('Y-m-d H:i:s')
+            ]);
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'המפה נשמרה בהצלחה'
+            ]);
+            break;
+
+        case 'get_map':
+            // טעינת נתוני מפה
+            $config = $manager->getConfig($type);
+            if (!$config || !$id) {
+                throw new Exception('פרמטרים חסרים');
+            }
+
+            $table = $config['table'];
+            $primaryKey = $config['primaryKey'];
+
+            $stmt = $pdo->prepare("SELECT mapData FROM $table WHERE $primaryKey = :id AND isActive = 1");
+            $stmt->execute(['id' => $id]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$result) {
+                throw new Exception('הפריט לא נמצא');
+            }
+
+            $mapData = null;
+            if ($result['mapData']) {
+                $mapData = json_decode($result['mapData'], true);
+            }
+
+            echo json_encode([
+                'success' => true,
+                'mapData' => $mapData
+            ]);
+            break;
+
         case 'stats':
             // סטטיסטיקות כלליות
             $stats = [];

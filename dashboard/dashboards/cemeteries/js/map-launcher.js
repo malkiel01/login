@@ -2019,11 +2019,11 @@ async function renderPdfPageToCanvas(pageNum) {
 
 /**
  * סגירת מודל בחירת עמוד PDF
+ * לא מאפסים את currentPdfDoc כאן - זה נעשה אחרי הרנדור
  */
 function closePdfSelector() {
     const modal = document.getElementById('pdfPageSelectorModal');
     if (modal) {
         modal.style.display = 'none';
     }
-    currentPdfDoc = null;
 }

@@ -2053,12 +2053,14 @@ function addShapeFromMenu(shapeType) {
  * טיפול בהעלאת קובץ PDF
  */
 async function handlePdfUpload(file, context) {
+    console.log('handlePdfUpload called with context:', context);
     if (typeof pdfjsLib === 'undefined') {
         alert('ספריית PDF.js לא נטענה. נסה לרענן את הדף.');
         return;
     }
 
     currentPdfContext = context;
+    console.log('currentPdfContext set to:', currentPdfContext);
 
     // הצג מודל בחירת עמוד
     const modal = document.getElementById('pdfPageSelectorModal');
@@ -2161,6 +2163,7 @@ async function selectPdfPage(pageNum) {
  * רנדור עמוד PDF כתמונה ל-canvas
  */
 async function renderPdfPageToCanvas(pageNum) {
+    console.log('renderPdfPageToCanvas called, currentPdfContext:', currentPdfContext);
     if (!currentPdfDoc || !window.mapCanvas) return;
 
     try {

@@ -1542,10 +1542,19 @@ function handleCanvasRightClick(e) {
     // שמור מיקום להוספת אובייקטים
     contextMenuPosition = { x, y };
 
+    // בדוק אם לחצנו על אובייקט קיים
+    const clickedObject = window.mapCanvas.findTarget(e, false);
+
+    if (clickedObject && clickedObject.objectType === 'workObject') {
+        // לחצנו על אובייקט עבודה - הצג תפריט עם אפשרות מחיקה
+        showObjectContextMenu(e.clientX, e.clientY, clickedObject);
+        return false;
+    }
+
     // בדוק אם הנקודה בתוך הגבול
     const isInside = isPointInsideBoundary(x, y);
 
-    // הצג תפריט מתאים
+    // הצג תפריט הוספה רגיל
     showContextMenu(e.clientX, e.clientY, isInside);
 
     return false;
@@ -1657,6 +1666,99 @@ function hideContextMenu() {
     if (menu) {
         menu.style.display = 'none';
     }
+}
+
+// משתנה לשמירת האובייקט שנלחץ עליו
+let contextMenuTargetObject = null;
+
+/**
+ * הצגת תפריט קליק ימני לאובייקט (עם אפשרות מחיקה)
+ */
+function showObjectContextMenu(clientX, clientY, targetObject) {
+    const menu = document.getElementById('mapContextMenu');
+    const content = document.getElementById('contextMenuContent');
+
+    if (!menu || !content) return;
+
+    // שמור את האובייקט
+    contextMenuTargetObject = targetObject;
+
+    // תפריט עם אפשרות מחיקה
+    content.innerHTML = `
+        <div class="context-menu-item" onclick="deleteContextMenuObject()">
+            <span class="context-menu-icon">🗑️</span>
+            <span>מחק פריט</span>
+        </div>
+        <div class="context-menu-separator"></div>
+        <div class="context-menu-item" onclick="bringObjectToFront()">
+            <span class="context-menu-icon">⬆️</span>
+            <span>הבא לחזית</span>
+        </div>
+        <div class="context-menu-item" onclick="sendObjectToBack()">
+            <span class="context-menu-icon">⬇️</span>
+            <span>שלח לרקע</span>
+        </div>
+    `;
+
+    // מיקום התפריט
+    menu.style.position = 'fixed';
+    menu.style.left = clientX + 'px';
+    menu.style.top = clientY + 'px';
+    menu.style.display = 'block';
+
+    // בדיקה אם יוצא מהמסך
+    const menuRect = menu.getBoundingClientRect();
+    if (menuRect.right > window.innerWidth) {
+        menu.style.left = (clientX - menuRect.width) + 'px';
+    }
+    if (menuRect.bottom > window.innerHeight) {
+        menu.style.top = (clientY - menuRect.height) + 'px';
+    }
+}
+
+/**
+ * מחיקת האובייקט שנבחר בתפריט
+ */
+function deleteContextMenuObject() {
+    hideContextMenu();
+
+    if (!contextMenuTargetObject || !window.mapCanvas) return;
+
+    window.mapCanvas.remove(contextMenuTargetObject);
+    window.mapCanvas.renderAll();
+
+    contextMenuTargetObject = null;
+    console.log('Object deleted');
+}
+
+/**
+ * הבאת אובייקט לחזית (מעל אובייקטי עבודה אחרים)
+ */
+function bringObjectToFront() {
+    hideContextMenu();
+
+    if (!contextMenuTargetObject || !window.mapCanvas) return;
+
+    window.mapCanvas.bringToFront(contextMenuTargetObject);
+    reorderLayers(); // המסכה תמיד תישאר למעלה
+    window.mapCanvas.renderAll();
+
+    contextMenuTargetObject = null;
+}
+
+/**
+ * שליחת אובייקט לרקע (מתחת לאובייקטי עבודה אחרים, אבל מעל שכבת הרקע)
+ */
+function sendObjectToBack() {
+    hideContextMenu();
+
+    if (!contextMenuTargetObject || !window.mapCanvas) return;
+
+    window.mapCanvas.sendToBack(contextMenuTargetObject);
+    reorderLayers(); // שכבת הרקע תישאר למטה
+    window.mapCanvas.renderAll();
+
+    contextMenuTargetObject = null;
 }
 
 /**

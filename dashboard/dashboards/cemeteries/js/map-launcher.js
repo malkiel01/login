@@ -1414,15 +1414,23 @@ function showContextMenu(clientX, clientY, isInsideBoundary) {
         `;
     }
 
-    // מיקום התפריט
-    const popup = document.getElementById('mapPopupOverlay');
-    if (popup) {
-        const popupRect = popup.getBoundingClientRect();
-        menu.style.left = (clientX - popupRect.left) + 'px';
-        menu.style.top = (clientY - popupRect.top) + 'px';
-    }
+    // מיקום התפריט - שימוש ב-fixed position ליד הסמן
+    menu.style.position = 'fixed';
+    menu.style.left = clientX + 'px';
+    menu.style.top = clientY + 'px';
 
+    // וודא שהתפריט לא יוצא מהמסך
     menu.style.display = 'block';
+
+    // בדיקה אם התפריט יוצא מהמסך מימין
+    const menuRect = menu.getBoundingClientRect();
+    if (menuRect.right > window.innerWidth) {
+        menu.style.left = (clientX - menuRect.width) + 'px';
+    }
+    // בדיקה אם יוצא מלמטה
+    if (menuRect.bottom > window.innerHeight) {
+        menu.style.top = (clientY - menuRect.height) + 'px';
+    }
 }
 
 /**

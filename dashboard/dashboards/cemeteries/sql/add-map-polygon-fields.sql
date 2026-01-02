@@ -28,6 +28,13 @@ ADD COLUMN `mapSettings` JSON DEFAULT NULL
 COMMENT 'הגדרות מפה - גודל קנבס, זום התחלתי וכו';
 
 -- =====================================================
+-- 3.1 הוספת שדה mapCanvasData לטבלת cemeteries
+-- =====================================================
+ALTER TABLE `cemeteries`
+ADD COLUMN `mapCanvasData` LONGTEXT DEFAULT NULL
+COMMENT 'נתוני Canvas מלאים - Fabric.js JSON';
+
+-- =====================================================
 -- 4. הוספת שדה mapPolygon לטבלת blocks
 -- =====================================================
 ALTER TABLE `blocks`

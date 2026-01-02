@@ -181,7 +181,7 @@ function closeMapLauncher() {
     }
 }
 
-function launchMap() {
+async function launchMap() {
     const entityType = document.getElementById('mapEntityType').value;
     const unicId = document.getElementById('mapUnicId').value.trim();
 
@@ -191,8 +191,47 @@ function launchMap() {
         return;
     }
 
-    closeMapLauncher();
-    openMapPopup(entityType, unicId);
+    // בדיקת תקינות - האם הרשומה קיימת ופעילה
+    const launchBtn = document.querySelector('.map-launcher-footer .btn-primary');
+    const originalText = launchBtn ? launchBtn.textContent : '';
+
+    try {
+        if (launchBtn) {
+            launchBtn.disabled = true;
+            launchBtn.textContent = 'בודק...';
+        }
+
+        const response = await fetch(`api/cemetery-hierarchy.php?action=get&type=${entityType}&id=${unicId}`);
+        const result = await response.json();
+
+        if (!result.success) {
+            throw new Error(result.error || 'הרשומה לא נמצאה');
+        }
+
+        if (!result.data) {
+            throw new Error('הרשומה לא נמצאה במערכת');
+        }
+
+        // הרשומה קיימת ופעילה - פתח את המפה
+        closeMapLauncher();
+        openMapPopup(entityType, unicId);
+
+    } catch (error) {
+        const entityNames = {
+            cemetery: 'בית עלמין',
+            block: 'גוש',
+            plot: 'חלקה',
+            areaGrave: 'אחוזת קבר'
+        };
+        alert(`שגיאה: לא נמצאה רשומת ${entityNames[entityType]} פעילה עם מזהה "${unicId}"\n\n${error.message}`);
+        document.getElementById('mapUnicId').focus();
+        document.getElementById('mapUnicId').select();
+    } finally {
+        if (launchBtn) {
+            launchBtn.disabled = false;
+            launchBtn.textContent = originalText;
+        }
+    }
 }
 
 /**

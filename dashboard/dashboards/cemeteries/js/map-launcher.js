@@ -1278,7 +1278,7 @@ function toggleBoundaryEdit() {
         // הפעל מצב עריכה - אפשר להזיז את הגבול בלבד
         editBtn.classList.add('active');
 
-        // הפוך רק את הגבול לניתן לבחירה - המסכה תמיד נעולה
+        // הפוך רק את הגבול לניתן לבחירה
         boundaryOutline.set({
             selectable: true,
             evented: true,
@@ -1287,7 +1287,7 @@ function toggleBoundaryEdit() {
             lockRotation: true
         });
 
-        // המסכה האפורה תמיד נשארת נעולה - לא ניתנת לבחירה
+        // המסכה האפורה תמיד נשארת נעולה לחלוטין!
         grayMask.set({
             selectable: false,
             evented: false,
@@ -1304,21 +1304,17 @@ function toggleBoundaryEdit() {
 
         console.log('Boundary edit mode: ON');
     } else {
-        // כבה מצב עריכה - נעל את הגבול
+        // כבה מצב עריכה - נעל הכל
         editBtn.classList.remove('active');
-
-        boundaryOutline.set({
-            selectable: false,
-            evented: false,
-            hasControls: false,
-            hasBorders: false
-        });
 
         // הסר האזנה
         boundaryOutline.off('moving', updateMaskPosition);
         boundaryOutline.off('scaling', updateMaskPosition);
 
         window.mapCanvas.discardActiveObject();
+
+        // נעל את כל אובייקטי המערכת
+        lockSystemObjects();
 
         console.log('Boundary edit mode: OFF');
     }
@@ -1347,21 +1343,27 @@ function toggleBackgroundEdit() {
             hasBorders: true
         });
 
+        // וודא שהמסכה תמיד נעולה
+        if (grayMask) {
+            grayMask.set({
+                selectable: false,
+                evented: false,
+                hasControls: false,
+                hasBorders: false
+            });
+        }
+
         window.mapCanvas.setActiveObject(backgroundImage);
 
         console.log('Background edit mode: ON');
     } else {
-        // כבה מצב עריכה - נעל את תמונת הרקע
+        // כבה מצב עריכה - נעל הכל
         editBtn.classList.remove('active');
 
-        backgroundImage.set({
-            selectable: false,
-            evented: false,
-            hasControls: false,
-            hasBorders: false
-        });
-
         window.mapCanvas.discardActiveObject();
+
+        // נעל את כל אובייקטי המערכת
+        lockSystemObjects();
 
         console.log('Background edit mode: OFF');
     }
@@ -1617,10 +1619,17 @@ function handleCanvasRightClick(e) {
     // בדוק אם לחצנו על אובייקט קיים
     const clickedObject = window.mapCanvas.findTarget(e, false);
 
-    if (clickedObject && clickedObject.objectType === 'workObject') {
-        // לחצנו על אובייקט עבודה - הצג תפריט עם אפשרות מחיקה
-        showObjectContextMenu(e.clientX, e.clientY, clickedObject);
-        return false;
+    if (clickedObject) {
+        // התעלם מאובייקטי מערכת (מסכה, גבול, רקע) - תמיד מתייחסים אליהם כרקע
+        if (clickedObject.objectType === 'grayMask' ||
+            clickedObject.objectType === 'boundaryOutline' ||
+            clickedObject.objectType === 'backgroundLayer') {
+            // לא מציגים תפריט אובייקט - ממשיכים לתפריט הרגיל
+        } else if (clickedObject.objectType === 'workObject') {
+            // לחצנו על אובייקט עבודה - הצג תפריט עם אפשרות מחיקה
+            showObjectContextMenu(e.clientX, e.clientY, clickedObject);
+            return false;
+        }
     }
 
     // בדוק אם הנקודה בתוך הגבול
@@ -2289,11 +2298,50 @@ function restoreCanvasState(state) {
             }
         });
 
+        // נעילת אובייקטי מערכת - תמיד נעולים אחרי שחזור
+        lockSystemObjects();
+
         // עדכן מצב כפתורים
         updateToolbarButtons();
         window.mapCanvas.renderAll();
         updateUndoRedoButtons();
     });
+}
+
+/**
+ * נעילת אובייקטי מערכת (מסכה, גבול, רקע)
+ * המסכה תמיד נעולה. הגבול והרקע נעולים אלא אם הם במצב עריכה.
+ */
+function lockSystemObjects() {
+    // המסכה האפורה תמיד נעולה לחלוטין
+    if (grayMask) {
+        grayMask.set({
+            selectable: false,
+            evented: false,
+            hasControls: false,
+            hasBorders: false
+        });
+    }
+
+    // הגבול נעול אלא אם במצב עריכה
+    if (boundaryOutline && !isBoundaryEditMode) {
+        boundaryOutline.set({
+            selectable: false,
+            evented: false,
+            hasControls: false,
+            hasBorders: false
+        });
+    }
+
+    // תמונת רקע נעולה אלא אם במצב עריכה
+    if (backgroundImage && !isBackgroundEditMode) {
+        backgroundImage.set({
+            selectable: false,
+            evented: false,
+            hasControls: false,
+            hasBorders: false
+        });
+    }
 }
 
 /**

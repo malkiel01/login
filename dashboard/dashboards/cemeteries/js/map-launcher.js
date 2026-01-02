@@ -879,6 +879,69 @@ function createMapCanvas(entityType, unicId, entity) {
         window.mapCanvas.on('mouse:down', handleCanvasClick);
         window.mapCanvas.on('mouse:move', handleCanvasMouseMove);
 
+        // אירועי גלילה/הזזה (panning)
+        let isPanning = false;
+        let lastPosX = 0;
+        let lastPosY = 0;
+
+        window.mapCanvas.on('mouse:down', function(opt) {
+            const evt = opt.e;
+            // Alt + לחיצה שמאלית או לחיצה על גלגלת העכבר
+            if (evt.altKey || evt.button === 1) {
+                isPanning = true;
+                lastPosX = evt.clientX;
+                lastPosY = evt.clientY;
+                window.mapCanvas.selection = false;
+                window.mapCanvas.setCursor('grab');
+            }
+        });
+
+        window.mapCanvas.on('mouse:move', function(opt) {
+            if (isPanning) {
+                const evt = opt.e;
+                const deltaX = evt.clientX - lastPosX;
+                const deltaY = evt.clientY - lastPosY;
+
+                // הזז את הקנבס
+                const vpt = window.mapCanvas.viewportTransform;
+                vpt[4] += deltaX;
+                vpt[5] += deltaY;
+
+                window.mapCanvas.requestRenderAll();
+                lastPosX = evt.clientX;
+                lastPosY = evt.clientY;
+                window.mapCanvas.setCursor('grabbing');
+            }
+        });
+
+        window.mapCanvas.on('mouse:up', function(opt) {
+            if (isPanning) {
+                isPanning = false;
+                window.mapCanvas.selection = true;
+                window.mapCanvas.setCursor('default');
+            }
+        });
+
+        // זום עם גלגלת העכבר
+        window.mapCanvas.on('mouse:wheel', function(opt) {
+            const delta = opt.e.deltaY;
+            let zoom = window.mapCanvas.getZoom();
+            zoom *= 0.999 ** delta;
+
+            // הגבלת זום
+            if (zoom > 3) zoom = 3;
+            if (zoom < 0.3) zoom = 0.3;
+
+            // זום למיקום העכבר
+            window.mapCanvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
+
+            currentZoom = zoom;
+            updateZoomDisplay();
+
+            opt.e.preventDefault();
+            opt.e.stopPropagation();
+        });
+
         // אירועי היסטוריה - שמירת מצב אחרי כל שינוי
         window.mapCanvas.on('object:modified', function(e) {
             // התעלם מאובייקטים זמניים של ציור פוליגון

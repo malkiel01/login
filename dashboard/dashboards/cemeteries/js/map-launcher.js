@@ -18,6 +18,7 @@ let boundaryClipPath = null; // גבול החיתוך
 let grayMask = null; // מסכה אפורה
 let boundaryOutline = null; // קו הגבול
 let isBoundaryEditMode = false; // מצב עריכת גבול
+let isBackgroundEditMode = false; // מצב עריכת תמונת רקע
 
 // יצירת המודל בטעינה
 document.addEventListener('DOMContentLoaded', function() {
@@ -622,6 +623,13 @@ function initializeMap(entityType, unicId, entity) {
                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                     </svg>
                 </button>
+                <button class="map-tool-btn" id="editBackgroundBtn" onclick="toggleBackgroundEdit()" title="עריכת/הזזת תמונת רקע" style="display:none;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                </button>
                 <button class="map-tool-btn" onclick="clearPolygon()" title="מחק גבולות">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="3 6 5 6 21 6"/>
@@ -795,7 +803,8 @@ function handleBackgroundUpload(event) {
                 originY: 'center',
                 scaleX: scale,
                 scaleY: scale,
-                selectable: true,
+                selectable: false, // נעול כברירת מחדל
+                evented: false,
                 hasControls: true,
                 hasBorders: true,
                 lockRotation: false,
@@ -805,10 +814,14 @@ function handleBackgroundUpload(event) {
             canvas.add(img);
             backgroundImage = img;
 
+            // הצג כפתור עריכת רקע
+            const editBgBtn = document.getElementById('editBackgroundBtn');
+            if (editBgBtn) editBgBtn.style.display = 'inline-flex';
+
             // סידור שכבות
             reorderLayers();
 
-            console.log('Background layer image added');
+            console.log('Background layer image added (locked)');
         });
     };
     reader.readAsDataURL(file);
@@ -1142,6 +1155,49 @@ function toggleBoundaryEdit() {
 }
 
 /**
+ * הפעלה/כיבוי מצב עריכת תמונת רקע
+ */
+function toggleBackgroundEdit() {
+    if (!backgroundImage) return;
+
+    isBackgroundEditMode = !isBackgroundEditMode;
+
+    const editBtn = document.getElementById('editBackgroundBtn');
+
+    if (isBackgroundEditMode) {
+        // הפעל מצב עריכה - אפשר להזיז את תמונת הרקע
+        editBtn.classList.add('active');
+
+        backgroundImage.set({
+            selectable: true,
+            evented: true,
+            hasControls: true,
+            hasBorders: true
+        });
+
+        window.mapCanvas.setActiveObject(backgroundImage);
+
+        console.log('Background edit mode: ON');
+    } else {
+        // כבה מצב עריכה - נעל את תמונת הרקע
+        editBtn.classList.remove('active');
+
+        backgroundImage.set({
+            selectable: false,
+            evented: false,
+            hasControls: false,
+            hasBorders: false
+        });
+
+        window.mapCanvas.discardActiveObject();
+
+        console.log('Background edit mode: OFF');
+    }
+
+    window.mapCanvas.renderAll();
+}
+
+/**
  * עדכון מיקום המסכה בעת הזזת הגבול
  */
 function updateMaskPosition() {
@@ -1246,6 +1302,7 @@ function closeMapPopup() {
         grayMask = null;
         boundaryOutline = null;
         isBoundaryEditMode = false;
+        isBackgroundEditMode = false;
         popup.remove();
     }
 }

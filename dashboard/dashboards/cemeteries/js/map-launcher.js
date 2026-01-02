@@ -987,19 +987,23 @@ function handleBackgroundUpload(event) {
             // הצג כפתורי עריכה ומחיקה של רקע
             const editBgBtn = document.getElementById('editBackgroundBtn');
             const deleteBgBtn = document.getElementById('deleteBackgroundBtn');
-            console.log('Looking for buttons:', editBgBtn, deleteBgBtn);
+            console.log('=== Background Image Added ===');
+            console.log('editBgBtn element:', editBgBtn);
+            console.log('deleteBgBtn element:', deleteBgBtn);
+
             if (editBgBtn) {
                 editBgBtn.style.display = 'inline-flex';
-                editBgBtn.classList.add('active'); // סמן כפתור עריכה כפעיל
-                console.log('editBgBtn shown and active');
+                editBgBtn.classList.add('active');
+                console.log('editBgBtn is now visible and active');
             } else {
-                console.error('editBackgroundBtn not found!');
+                console.error('ERROR: editBackgroundBtn not found!');
+                alert('שגיאה: כפתור עריכת רקע לא נמצא!');
             }
             if (deleteBgBtn) {
                 deleteBgBtn.style.display = 'inline-flex';
-                console.log('deleteBgBtn shown');
+                console.log('deleteBgBtn is now visible');
             } else {
-                console.error('deleteBackgroundBtn not found!');
+                console.error('ERROR: deleteBackgroundBtn not found!');
             }
 
             // הפעל מצב עריכת רקע אוטומטית
@@ -1260,18 +1264,22 @@ function finishPolygon() {
     // הצג כפתורי עריכה ומחיקה של גבול
     const editBtn = document.getElementById('editBoundaryBtn');
     const deleteBtn = document.getElementById('deleteBoundaryBtn');
-    console.log('Looking for boundary buttons:', editBtn, deleteBtn);
+    console.log('=== Boundary Created ===');
+    console.log('editBoundaryBtn element:', editBtn);
+    console.log('deleteBoundaryBtn element:', deleteBtn);
+
     if (editBtn) {
         editBtn.style.display = 'inline-flex';
-        console.log('editBoundaryBtn shown');
+        console.log('editBoundaryBtn is now visible');
     } else {
-        console.error('editBoundaryBtn not found!');
+        console.error('ERROR: editBoundaryBtn not found!');
+        alert('שגיאה: כפתור עריכת גבול לא נמצא!');
     }
     if (deleteBtn) {
         deleteBtn.style.display = 'inline-flex';
-        console.log('deleteBoundaryBtn shown');
+        console.log('deleteBoundaryBtn is now visible');
     } else {
-        console.error('deleteBoundaryBtn not found!');
+        console.error('ERROR: deleteBoundaryBtn not found!');
     }
 
     saveCanvasState();

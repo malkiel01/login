@@ -987,11 +987,20 @@ function handleBackgroundUpload(event) {
             // הצג כפתורי עריכה ומחיקה של רקע
             const editBgBtn = document.getElementById('editBackgroundBtn');
             const deleteBgBtn = document.getElementById('deleteBackgroundBtn');
+            console.log('Looking for buttons:', editBgBtn, deleteBgBtn);
             if (editBgBtn) {
                 editBgBtn.style.display = 'inline-flex';
                 editBgBtn.classList.add('active'); // סמן כפתור עריכה כפעיל
+                console.log('editBgBtn shown and active');
+            } else {
+                console.error('editBackgroundBtn not found!');
             }
-            if (deleteBgBtn) deleteBgBtn.style.display = 'inline-flex';
+            if (deleteBgBtn) {
+                deleteBgBtn.style.display = 'inline-flex';
+                console.log('deleteBgBtn shown');
+            } else {
+                console.error('deleteBackgroundBtn not found!');
+            }
 
             // הפעל מצב עריכת רקע אוטומטית
             isBackgroundEditMode = true;
@@ -1251,8 +1260,19 @@ function finishPolygon() {
     // הצג כפתורי עריכה ומחיקה של גבול
     const editBtn = document.getElementById('editBoundaryBtn');
     const deleteBtn = document.getElementById('deleteBoundaryBtn');
-    if (editBtn) editBtn.style.display = 'inline-flex';
-    if (deleteBtn) deleteBtn.style.display = 'inline-flex';
+    console.log('Looking for boundary buttons:', editBtn, deleteBtn);
+    if (editBtn) {
+        editBtn.style.display = 'inline-flex';
+        console.log('editBoundaryBtn shown');
+    } else {
+        console.error('editBoundaryBtn not found!');
+    }
+    if (deleteBtn) {
+        deleteBtn.style.display = 'inline-flex';
+        console.log('deleteBoundaryBtn shown');
+    } else {
+        console.error('deleteBoundaryBtn not found!');
+    }
 
     saveCanvasState();
     console.log('Boundary with mask completed');

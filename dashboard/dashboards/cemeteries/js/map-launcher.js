@@ -481,6 +481,59 @@ function openMapPopup(entityType, unicId) {
             .map-container.edit-mode .edit-mode-indicator {
                 display: block;
             }
+
+            /* Context Menu */
+            .map-context-menu {
+                position: absolute;
+                background: white;
+                border-radius: 8px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+                z-index: 1000;
+                min-width: 180px;
+                overflow: hidden;
+                border: 1px solid #e5e7eb;
+            }
+            .context-menu-content {
+                padding: 4px 0;
+            }
+            .context-menu-item {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 10px 16px;
+                cursor: pointer;
+                transition: background 0.15s;
+                font-size: 14px;
+                color: #374151;
+            }
+            .context-menu-item:hover {
+                background: #f3f4f6;
+            }
+            .context-menu-item.disabled {
+                color: #9ca3af;
+                cursor: not-allowed;
+                background: #f9fafb;
+            }
+            .context-menu-item.disabled:hover {
+                background: #f9fafb;
+            }
+            .context-menu-icon {
+                width: 20px;
+                height: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 16px;
+            }
+            .context-menu-separator {
+                height: 1px;
+                background: #e5e7eb;
+                margin: 4px 0;
+            }
+            .no-entry-icon {
+                color: #9ca3af;
+                font-size: 18px;
+            }
         `;
         document.head.appendChild(styles);
     }
@@ -595,7 +648,18 @@ function initializeMap(entityType, unicId, entity) {
 
         <!-- Hidden file inputs -->
         <input type="file" id="bgImageInput" class="hidden-file-input" accept="image/*,.pdf" onchange="handleBackgroundUpload(event)">
+        <input type="file" id="addImageInput" class="hidden-file-input" accept="image/*" onchange="handleAddImage(event)">
+
+        <!-- Context Menu -->
+        <div id="mapContextMenu" class="map-context-menu" style="display:none;">
+            <div class="context-menu-content" id="contextMenuContent">
+                <!-- ימולא דינמית -->
+            </div>
+        </div>
     `;
+
+    // סגירת תפריט בלחיצה מחוץ
+    document.addEventListener('click', hideContextMenu);
 
     createMapCanvas(entityType, unicId, entity);
 }
@@ -635,6 +699,9 @@ function createMapCanvas(entityType, unicId, entity) {
         // אירועי ציור פוליגון
         window.mapCanvas.on('mouse:down', handleCanvasClick);
         window.mapCanvas.on('mouse:move', handleCanvasMouseMove);
+
+        // אירוע קליק ימני
+        canvasEl.addEventListener('contextmenu', handleCanvasRightClick);
 
         console.log('Map canvas initialized');
     } else {
@@ -1222,3 +1289,264 @@ document.addEventListener('dblclick', function(e) {
         finishPolygon();
     }
 });
+
+// משתנה לשמירת מיקום הקליק הימני
+let contextMenuPosition = { x: 0, y: 0 };
+
+/**
+ * טיפול בקליק ימני על הקנבס
+ */
+function handleCanvasRightClick(e) {
+    e.preventDefault();
+
+    if (!isEditMode || drawingPolygon) {
+        hideContextMenu();
+        return;
+    }
+
+    const rect = e.target.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    // שמור מיקום להוספת אובייקטים
+    contextMenuPosition = { x, y };
+
+    // בדוק אם הנקודה בתוך הגבול
+    const isInside = isPointInsideBoundary(x, y);
+
+    // הצג תפריט מתאים
+    showContextMenu(e.clientX, e.clientY, isInside);
+}
+
+/**
+ * בדיקה אם נקודה נמצאת בתוך הגבול
+ * משתמש באלגוריתם Ray Casting
+ */
+function isPointInsideBoundary(x, y) {
+    // אם אין גבול מוגדר - הכל מותר
+    if (!boundaryOutline || !boundaryOutline.points) {
+        return true;
+    }
+
+    // קבל את הנקודות של הגבול (עם טרנספורמציות)
+    const matrix = boundaryOutline.calcTransformMatrix();
+    const points = boundaryOutline.points.map(p => {
+        const transformed = fabric.util.transformPoint(
+            { x: p.x - boundaryOutline.pathOffset.x, y: p.y - boundaryOutline.pathOffset.y },
+            matrix
+        );
+        return transformed;
+    });
+
+    // אלגוריתם Ray Casting
+    let inside = false;
+    for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
+        const xi = points[i].x, yi = points[i].y;
+        const xj = points[j].x, yj = points[j].y;
+
+        const intersect = ((yi > y) !== (yj > y)) &&
+            (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+
+        if (intersect) inside = !inside;
+    }
+
+    return inside;
+}
+
+/**
+ * הצגת תפריט קליק ימני
+ */
+function showContextMenu(clientX, clientY, isInsideBoundary) {
+    const menu = document.getElementById('mapContextMenu');
+    const content = document.getElementById('contextMenuContent');
+
+    if (!menu || !content) return;
+
+    if (isInsideBoundary) {
+        // תפריט רגיל - בתוך הגבול
+        content.innerHTML = `
+            <div class="context-menu-item" onclick="addImageFromMenu()">
+                <span class="context-menu-icon">🖼️</span>
+                <span>הוסף תמונה</span>
+            </div>
+            <div class="context-menu-item" onclick="addTextFromMenu()">
+                <span class="context-menu-icon">📝</span>
+                <span>הוסף טקסט</span>
+            </div>
+            <div class="context-menu-separator"></div>
+            <div class="context-menu-item" onclick="addShapeFromMenu('rect')">
+                <span class="context-menu-icon">⬜</span>
+                <span>הוסף מלבן</span>
+            </div>
+            <div class="context-menu-item" onclick="addShapeFromMenu('circle')">
+                <span class="context-menu-icon">⭕</span>
+                <span>הוסף עיגול</span>
+            </div>
+            <div class="context-menu-item" onclick="addShapeFromMenu('line')">
+                <span class="context-menu-icon">📏</span>
+                <span>הוסף קו</span>
+            </div>
+        `;
+    } else {
+        // תפריט אין כניסה - מחוץ לגבול
+        content.innerHTML = `
+            <div class="context-menu-item disabled">
+                <span class="context-menu-icon no-entry-icon">🚫</span>
+                <span>לא ניתן להוסיף מחוץ לגבול</span>
+            </div>
+        `;
+    }
+
+    // מיקום התפריט
+    const popup = document.getElementById('mapPopupOverlay');
+    if (popup) {
+        const popupRect = popup.getBoundingClientRect();
+        menu.style.left = (clientX - popupRect.left) + 'px';
+        menu.style.top = (clientY - popupRect.top) + 'px';
+    }
+
+    menu.style.display = 'block';
+}
+
+/**
+ * הסתרת תפריט קליק ימני
+ */
+function hideContextMenu() {
+    const menu = document.getElementById('mapContextMenu');
+    if (menu) {
+        menu.style.display = 'none';
+    }
+}
+
+/**
+ * הוספת תמונה מהתפריט
+ */
+function addImageFromMenu() {
+    hideContextMenu();
+    document.getElementById('addImageInput').click();
+}
+
+/**
+ * טיפול בהוספת תמונה
+ */
+function handleAddImage(event) {
+    const file = event.target.files[0];
+    if (!file || !window.mapCanvas) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        fabric.Image.fromURL(e.target.result, function(img) {
+            // הקטנה אם התמונה גדולה מדי
+            const maxSize = 200;
+            let scale = 1;
+            if (img.width > maxSize || img.height > maxSize) {
+                scale = maxSize / Math.max(img.width, img.height);
+            }
+
+            img.set({
+                left: contextMenuPosition.x,
+                top: contextMenuPosition.y,
+                scaleX: scale,
+                scaleY: scale,
+                selectable: true,
+                hasControls: true,
+                hasBorders: true,
+                objectType: 'workObject'
+            });
+
+            window.mapCanvas.add(img);
+            reorderLayers();
+            window.mapCanvas.setActiveObject(img);
+            window.mapCanvas.renderAll();
+        });
+    };
+    reader.readAsDataURL(file);
+    event.target.value = '';
+}
+
+/**
+ * הוספת טקסט מהתפריט
+ */
+function addTextFromMenu() {
+    hideContextMenu();
+
+    if (!window.mapCanvas) return;
+
+    const text = new fabric.IText('טקסט חדש', {
+        left: contextMenuPosition.x,
+        top: contextMenuPosition.y,
+        fontSize: 18,
+        fill: '#374151',
+        fontFamily: 'Arial, sans-serif',
+        selectable: true,
+        hasControls: true,
+        hasBorders: true,
+        objectType: 'workObject'
+    });
+
+    window.mapCanvas.add(text);
+    reorderLayers();
+    window.mapCanvas.setActiveObject(text);
+    text.enterEditing();
+    window.mapCanvas.renderAll();
+}
+
+/**
+ * הוספת צורה מהתפריט
+ */
+function addShapeFromMenu(shapeType) {
+    hideContextMenu();
+
+    if (!window.mapCanvas) return;
+
+    let shape;
+
+    switch (shapeType) {
+        case 'rect':
+            shape = new fabric.Rect({
+                left: contextMenuPosition.x,
+                top: contextMenuPosition.y,
+                width: 100,
+                height: 60,
+                fill: 'rgba(59, 130, 246, 0.3)',
+                stroke: '#3b82f6',
+                strokeWidth: 2,
+                rx: 4,
+                ry: 4,
+                objectType: 'workObject'
+            });
+            break;
+
+        case 'circle':
+            shape = new fabric.Circle({
+                left: contextMenuPosition.x,
+                top: contextMenuPosition.y,
+                radius: 40,
+                fill: 'rgba(16, 185, 129, 0.3)',
+                stroke: '#10b981',
+                strokeWidth: 2,
+                objectType: 'workObject'
+            });
+            break;
+
+        case 'line':
+            shape = new fabric.Line([
+                contextMenuPosition.x,
+                contextMenuPosition.y,
+                contextMenuPosition.x + 100,
+                contextMenuPosition.y
+            ], {
+                stroke: '#6b7280',
+                strokeWidth: 3,
+                objectType: 'workObject'
+            });
+            break;
+    }
+
+    if (shape) {
+        window.mapCanvas.add(shape);
+        reorderLayers();
+        window.mapCanvas.setActiveObject(shape);
+        window.mapCanvas.renderAll();
+    }
+}

@@ -1174,12 +1174,9 @@ function loadParentBoundary() {
     });
 
     window.mapCanvas.add(parentBoundaryOutline);
-    window.mapCanvas.sendToBack(parentBoundaryOutline);
 
-    // העבר אחורה אבל לפני הרקע
-    if (backgroundImage) {
-        window.mapCanvas.sendToBack(backgroundImage);
-    }
+    // סידור שכבות נכון
+    reorderLayers();
 
     console.log('Parent boundary loaded');
 }
@@ -1322,8 +1319,10 @@ function handleBackgroundUpload(event) {
 /**
  * סידור שכבות - סדר היררכי:
  * 1. backgroundLayer - שכבה תחתונה (מהתפריט העליון)
- * 2. workObject - אובייקטי עבודה (מקליק ימני)
- * 3. grayMask + boundaryOutline - תמיד למעלה
+ * 2. parentBoundary - גבול ההורה (קו כתום מקווקו) - מעל הרקע
+ * 3. grayMask - מסכה אפורה מחוץ לגבול הילד
+ * 4. boundaryOutline - קו גבול הילד (אדום)
+ * 5. workObject - אובייקטי עבודה (מקליק ימני) - למעלה
  */
 function reorderLayers() {
     if (!window.mapCanvas) return;
@@ -1336,12 +1335,15 @@ function reorderLayers() {
     const workObjects = [];
     let mask = null;
     let outline = null;
+    let parentOutline = null;
 
     objects.forEach(obj => {
         if (obj.objectType === 'grayMask') {
             mask = obj;
         } else if (obj.objectType === 'boundaryOutline') {
             outline = obj;
+        } else if (obj.objectType === 'parentBoundary') {
+            parentOutline = obj;
         } else if (obj.objectType === 'backgroundLayer') {
             backgroundLayers.push(obj);
         } else if (obj.objectType === 'workObject') {
@@ -1352,12 +1354,17 @@ function reorderLayers() {
     // סידור: שכבות רקע למטה
     backgroundLayers.forEach(obj => canvas.sendToBack(obj));
 
-    // אובייקטי עבודה מעל שכבות הרקע
-    workObjects.forEach(obj => canvas.bringToFront(obj));
-
-    // מסכה וקו גבול תמיד למעלה
+    // מסכה אפורה מעל הרקע
     if (mask) canvas.bringToFront(mask);
+
+    // גבול ההורה מעל המסכה (כדי שיהיה נראה)
+    if (parentOutline) canvas.bringToFront(parentOutline);
+
+    // קו גבול הילד מעל גבול ההורה
     if (outline) canvas.bringToFront(outline);
+
+    // אובייקטי עבודה למעלה מכולם
+    workObjects.forEach(obj => canvas.bringToFront(obj));
 
     canvas.renderAll();
 }
@@ -1564,11 +1571,8 @@ function finishPolygon() {
     canvas.add(grayMask);
     canvas.add(boundaryOutline);
 
-    // המסכה תמיד למעלה
-    canvas.bringToFront(grayMask);
-    canvas.bringToFront(boundaryOutline);
-
-    canvas.renderAll();
+    // סידור שכבות נכון (כולל גבול ההורה)
+    reorderLayers();
 
     // איפוס
     drawingPolygon = false;

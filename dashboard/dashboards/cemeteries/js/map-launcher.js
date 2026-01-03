@@ -1553,6 +1553,7 @@ function finishPolygon() {
 
     grayMask = new fabric.Path(pathData, {
         fill: 'rgba(128, 128, 128, 0.7)',
+        fillRule: 'evenodd', // חשוב! זה מה שיוצר את ה"חור" בפוליגון
         selectable: false,
         evented: false,
         objectType: 'grayMask'

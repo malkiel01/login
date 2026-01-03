@@ -726,6 +726,84 @@ try {
             ]);
             break;
 
+        case 'get_parent_map':
+            // טעינת נתוני מפה של ההורה
+            $config = $manager->getConfig($type);
+            if (!$config || !$id) {
+                throw new Exception('פרמטרים חסרים');
+            }
+
+            // הגדרת היררכיית הורים
+            $parentTypes = [
+                'block' => ['parentKey' => 'cemeteryId', 'parentType' => 'cemetery', 'parentTable' => 'cemeteries'],
+                'plot' => ['parentKey' => 'blockId', 'parentType' => 'block', 'parentTable' => 'blocks']
+            ];
+
+            // בדיקה אם לסוג זה יש הורה
+            if (!isset($parentTypes[$type])) {
+                // cemetery הוא שורש - אין לו הורה
+                echo json_encode([
+                    'success' => true,
+                    'hasParent' => false,
+                    'parentMapData' => null
+                ]);
+                break;
+            }
+
+            $parentInfo = $parentTypes[$type];
+            $table = $config['table'];
+            $primaryKey = $config['primaryKey'];
+
+            // קבל את הרשומה הנוכחית כדי למצוא את ההורה
+            $stmt = $pdo->prepare("SELECT {$parentInfo['parentKey']} FROM $table WHERE $primaryKey = :id AND isActive = 1");
+            $stmt->execute(['id' => $id]);
+            $item = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$item) {
+                throw new Exception('הפריט לא נמצא');
+            }
+
+            $parentId = $item[$parentInfo['parentKey']];
+            if (!$parentId) {
+                throw new Exception('לא נמצא הורה לפריט זה');
+            }
+
+            // קבל את נתוני המפה של ההורה
+            $parentConfig = $manager->getConfig($parentInfo['parentType']);
+            $stmt = $pdo->prepare("SELECT mapData FROM {$parentInfo['parentTable']} WHERE {$parentConfig['primaryKey']} = :id AND isActive = 1");
+            $stmt->execute(['id' => $parentId]);
+            $parentResult = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$parentResult) {
+                throw new Exception('ההורה לא נמצא');
+            }
+
+            $parentMapData = null;
+            if ($parentResult['mapData']) {
+                $parentMapData = json_decode($parentResult['mapData'], true);
+            }
+
+            // בדיקה אם יש גבול מוגדר להורה
+            $hasBoundary = false;
+            if ($parentMapData && isset($parentMapData['canvasJSON']) && isset($parentMapData['canvasJSON']['objects'])) {
+                foreach ($parentMapData['canvasJSON']['objects'] as $obj) {
+                    if (isset($obj['objectType']) && $obj['objectType'] === 'boundaryOutline') {
+                        $hasBoundary = true;
+                        break;
+                    }
+                }
+            }
+
+            echo json_encode([
+                'success' => true,
+                'hasParent' => true,
+                'parentId' => $parentId,
+                'parentType' => $parentInfo['parentType'],
+                'parentMapData' => $parentMapData,
+                'parentHasBoundary' => $hasBoundary
+            ]);
+            break;
+
         case 'stats':
             // סטטיסטיקות כלליות
             $stats = [];

@@ -22,6 +22,10 @@ let isBackgroundEditMode = false; // מצב עריכת תמונת רקע
 let currentPdfContext = null; // 'background' או 'workObject' - לשימוש בבחירת עמוד PDF
 let currentPdfDoc = null; // מסמך PDF נוכחי
 
+// גבול הורה (לישויות בנים)
+let parentBoundaryPoints = null; // נקודות הגבול של ההורה
+let parentBoundaryOutline = null; // קו גבול ההורה (לתצוגה)
+
 // Undo/Redo
 let canvasHistory = []; // היסטוריית מצבים
 let historyIndex = -1; // אינדקס נוכחי בהיסטוריה
@@ -195,12 +199,25 @@ async function launchMap() {
     const launchBtn = document.querySelector('.map-launcher-footer .btn-primary');
     const originalText = launchBtn ? launchBtn.textContent : '';
 
+    const entityNames = {
+        cemetery: 'בית עלמין',
+        block: 'גוש',
+        plot: 'חלקה',
+        areaGrave: 'אחוזת קבר'
+    };
+
+    const parentNames = {
+        block: 'בית העלמין',
+        plot: 'הגוש'
+    };
+
     try {
         if (launchBtn) {
             launchBtn.disabled = true;
             launchBtn.textContent = 'בודק...';
         }
 
+        // בדיקה שהרשומה קיימת
         const response = await fetch(`api/cemetery-hierarchy.php?action=get&type=${entityType}&id=${unicId}`);
         const result = await response.json();
 
@@ -212,17 +229,33 @@ async function launchMap() {
             throw new Error('הרשומה לא נמצאה במערכת');
         }
 
+        // לישויות בנים - בדיקה שלהורה יש גבול מוגדר
+        if (entityType === 'block' || entityType === 'plot') {
+            const parentResponse = await fetch(`api/cemetery-hierarchy.php?action=get_parent_map&type=${entityType}&id=${unicId}`);
+            const parentResult = await parentResponse.json();
+
+            if (!parentResult.success) {
+                throw new Error(parentResult.error || 'שגיאה בטעינת נתוני ההורה');
+            }
+
+            if (parentResult.hasParent && !parentResult.parentHasBoundary) {
+                alert(`לא ניתן לפתוח מפה ל${entityNames[entityType]}.\n\nיש להגדיר קודם גבול מפה ל${parentNames[entityType]}.`);
+                return;
+            }
+
+            // שמור את נתוני ההורה לשימוש במפה
+            if (parentResult.parentMapData) {
+                window.parentMapData = parentResult.parentMapData;
+            }
+        } else {
+            window.parentMapData = null;
+        }
+
         // הרשומה קיימת ופעילה - פתח את המפה
         closeMapLauncher();
         openMapPopup(entityType, unicId);
 
     } catch (error) {
-        const entityNames = {
-            cemetery: 'בית עלמין',
-            block: 'גוש',
-            plot: 'חלקה',
-            areaGrave: 'אחוזת קבר'
-        };
         alert(`שגיאה: לא נמצאה רשומת ${entityNames[entityType]} פעילה עם מזהה "${unicId}"\n\n${error.message}`);
         document.getElementById('mapUnicId').focus();
         document.getElementById('mapUnicId').select();
@@ -1018,6 +1051,9 @@ function createMapCanvas(entityType, unicId, entity) {
  */
 async function loadSavedMapData(entityType, unicId) {
     try {
+        // טען גבול הורה אם קיים (לישויות בנים)
+        loadParentBoundary();
+
         const response = await fetch(`api/cemetery-hierarchy.php?action=get_map&type=${entityType}&id=${unicId}`);
         const result = await response.json();
 
@@ -1058,6 +1094,9 @@ async function loadSavedMapData(entityType, unicId) {
                 }
             });
 
+            // טען גבול הורה אחרי טעינת הנתונים
+            loadParentBoundary();
+
             // נעילת אובייקטי מערכת
             lockSystemObjects();
 
@@ -1083,6 +1122,66 @@ async function loadSavedMapData(entityType, unicId) {
     } catch (error) {
         console.error('Error loading saved map data:', error);
     }
+}
+
+/**
+ * טעינת גבול ההורה לתצוגה (לישויות בנים)
+ */
+function loadParentBoundary() {
+    // איפוס
+    parentBoundaryPoints = null;
+    if (parentBoundaryOutline) {
+        window.mapCanvas.remove(parentBoundaryOutline);
+        parentBoundaryOutline = null;
+    }
+
+    // בדיקה אם יש נתוני הורה
+    if (!window.parentMapData || !window.parentMapData.canvasJSON) {
+        return;
+    }
+
+    // מצא את גבול ההורה
+    const parentObjects = window.parentMapData.canvasJSON.objects || [];
+    let parentBoundary = null;
+
+    for (const obj of parentObjects) {
+        if (obj.objectType === 'boundaryOutline') {
+            parentBoundary = obj;
+            break;
+        }
+    }
+
+    if (!parentBoundary || !parentBoundary.points) {
+        return;
+    }
+
+    // שמור את נקודות הגבול לוולידציה
+    parentBoundaryPoints = parentBoundary.points.map(p => ({
+        x: p.x + (parentBoundary.left || 0),
+        y: p.y + (parentBoundary.top || 0)
+    }));
+
+    // יצירת קו גבול ההורה לתצוגה (צבע שונה - כתום)
+    parentBoundaryOutline = new fabric.Polygon(parentBoundaryPoints, {
+        fill: 'transparent',
+        stroke: '#f97316', // כתום
+        strokeWidth: 3,
+        strokeDashArray: [10, 5], // קו מקווקו
+        selectable: false,
+        evented: false,
+        objectType: 'parentBoundary',
+        excludeFromExport: true // לא לשמור במפת הבן
+    });
+
+    window.mapCanvas.add(parentBoundaryOutline);
+    window.mapCanvas.sendToBack(parentBoundaryOutline);
+
+    // העבר אחורה אבל לפני הרקע
+    if (backgroundImage) {
+        window.mapCanvas.sendToBack(backgroundImage);
+    }
+
+    console.log('Parent boundary loaded');
 }
 
 /**
@@ -1364,12 +1463,42 @@ function handleCanvasMouseMove(options) {
 }
 
 /**
+ * בדיקה אם נקודה נמצאת בתוך פוליגון
+ */
+function isPointInPolygon(point, polygon) {
+    if (!polygon || polygon.length < 3) return true; // אין פוליגון - כל נקודה תקינה
+
+    let inside = false;
+    const x = point.x, y = point.y;
+
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        const xi = polygon[i].x, yi = polygon[i].y;
+        const xj = polygon[j].x, yj = polygon[j].y;
+
+        if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+            inside = !inside;
+        }
+    }
+
+    return inside;
+}
+
+/**
  * סיום ציור פוליגון
  */
 function finishPolygon() {
     if (polygonPoints.length < 3) {
         alert('נדרשות לפחות 3 נקודות ליצירת גבול');
         return;
+    }
+
+    // בדיקה שכל הנקודות נמצאות בתוך גבול ההורה (אם קיים)
+    if (parentBoundaryPoints && parentBoundaryPoints.length > 0) {
+        const pointsOutside = polygonPoints.filter(p => !isPointInPolygon(p, parentBoundaryPoints));
+        if (pointsOutside.length > 0) {
+            alert(`לא ניתן ליצור גבול מחוץ לגבול ההורה.\n\n${pointsOutside.length} נקודות נמצאות מחוץ לגבול המותר (מסומן בכתום).`);
+            return;
+        }
     }
 
     // הסרת קו התצוגה המקדימה

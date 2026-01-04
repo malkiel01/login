@@ -935,6 +935,16 @@ async function loadMapData(entityType, unicId) {
 function initializeMap(entityType, unicId, entity) {
     const container = document.getElementById('mapContainer');
 
+    console.log('🔍 initializeMap() called:', {
+        entityType,
+        unicId,
+        container: container ? 'found' : 'NOT FOUND',
+        containerDimensions: container ? {
+            clientWidth: container.clientWidth,
+            clientHeight: container.clientHeight
+        } : null
+    });
+
     container.innerHTML = `
         <!-- Toolbar - will be rendered by Toolbar.js -->
         <div id="mapToolbarContainer"></div>
@@ -975,6 +985,16 @@ function initializeMap(entityType, unicId, entity) {
             </div>
         </div>
     `;
+
+    // Verify mapCanvas was created
+    const mapCanvasElement = document.getElementById('mapCanvas');
+    console.log('🔍 After innerHTML set - mapCanvas element:', mapCanvasElement ? {
+        found: true,
+        clientWidth: mapCanvasElement.clientWidth,
+        clientHeight: mapCanvasElement.clientHeight,
+        offsetWidth: mapCanvasElement.offsetWidth,
+        offsetHeight: mapCanvasElement.offsetHeight
+    } : 'NOT FOUND');
 
     // סגירת תפריט בלחיצה מחוץ
     document.addEventListener('click', hideContextMenu);

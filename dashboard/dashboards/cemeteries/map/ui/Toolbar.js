@@ -66,6 +66,35 @@ export class Toolbar {
 
         console.log('   [Toolbar] After innerHTML - childCount:', this.container.children.length);
 
+        // Check if CSS is applied
+        const toolbarDiv = this.container.querySelector('.map-toolbar');
+        if (toolbarDiv) {
+            const computedStyle = window.getComputedStyle(toolbarDiv);
+            console.log('   [Toolbar] CSS check for .map-toolbar:', {
+                display: computedStyle.display,
+                backgroundColor: computedStyle.backgroundColor,
+                padding: computedStyle.padding,
+                borderBottom: computedStyle.borderBottom
+            });
+
+            // Check toolbar groups
+            const groups = toolbarDiv.querySelectorAll('.map-toolbar-group');
+            console.log('   [Toolbar] Found', groups.length, 'toolbar groups');
+            groups.forEach((group, i) => {
+                const groupStyle = window.getComputedStyle(group);
+                console.log(`      Group ${i}:`, {
+                    display: groupStyle.display,
+                    hasEditOnly: group.classList.contains('edit-only')
+                });
+            });
+
+            // Check buttons
+            const buttons = toolbarDiv.querySelectorAll('.map-tool-btn');
+            console.log('   [Toolbar] Found', buttons.length, 'buttons');
+        } else {
+            console.error('❌ [Toolbar] .map-toolbar element not found after render!');
+        }
+
         if (this.container.children.length === 0) {
             console.error('❌ [Toolbar] innerHTML set but no children created!');
         } else {

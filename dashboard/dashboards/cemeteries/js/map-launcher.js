@@ -1,6 +1,6 @@
 /**
  * Map Launcher - מנהל פתיחת המפה
- * Version: 3.5.0 - Refactoring Steps 1-7: StateManager + EntitySelector + LauncherModal + Toolbar + ZoomControls + CanvasManager + PolygonDrawer
+ * Version: 3.6.0 - Refactoring Steps 1-8: StateManager + EntitySelector + LauncherModal + Toolbar + ZoomControls + CanvasManager + PolygonDrawer + BoundaryEditor
  * Features: Edit mode, Background image, Polygon drawing
  */
 
@@ -123,6 +123,20 @@
         console.log('✅ PolygonDrawer class loaded');
     } catch (error) {
         console.error('❌ Failed to load PolygonDrawer:', error);
+    }
+})();
+
+// ========================================
+// STEP 8/15: BoundaryEditor Integration
+// Load BoundaryEditor module for editing existing boundaries
+// ========================================
+(async function initBoundaryEditor() {
+    try {
+        const { BoundaryEditor } = await import('../map/editors/BoundaryEditor.js');
+        window.BoundaryEditorClass = BoundaryEditor;
+        console.log('✅ BoundaryEditor class loaded');
+    } catch (error) {
+        console.error('❌ Failed to load BoundaryEditor:', error);
     }
 })();
 
@@ -996,6 +1010,43 @@ function createMapCanvas(entityType, unicId, entity) {
         console.log('✅ PolygonDrawer initialized');
     }
 
+    // ========================================
+    // STEP 8/15: Initialize BoundaryEditor
+    // ========================================
+    if (window.BoundaryEditorClass && window.mapCanvas) {
+        window.mapBoundaryEditor = new window.BoundaryEditorClass(window.mapCanvas, {
+            parentBoundary: parentBoundaryPoints,
+            onUpdate: (newState) => {
+                // Update lastValidBoundaryState
+                lastValidBoundaryState = newState;
+                if (window.mapState) {
+                    window.mapState.canvas.boundary.lastValidState = newState;
+                }
+            },
+            onDelete: () => {
+                // Update global variables
+                boundaryClipPath = null;
+                grayMask = null;
+                boundaryOutline = null;
+                if (window.mapState) {
+                    window.mapState.canvas.boundary.clipPath = null;
+                    window.mapState.setGrayMask(null);
+                    window.mapState.setBoundaryOutline(null);
+                }
+                // Hide buttons
+                const editBtn = document.getElementById('editBoundaryBtn');
+                const deleteBtn = document.getElementById('deleteBoundaryBtn');
+                if (editBtn) {
+                    editBtn.classList.add('hidden-btn');
+                    editBtn.classList.remove('active');
+                }
+                if (deleteBtn) deleteBtn.classList.add('hidden-btn');
+                saveCanvasState();
+            }
+        });
+        console.log('✅ BoundaryEditor initialized');
+    }
+
     // Load saved map data
     loadSavedMapData(entityType, unicId);
 }
@@ -1852,6 +1903,10 @@ function cancelPolygonDrawing() {
 /**
  * הפעלה/כיבוי מצב עריכת גבול
  */
+/**
+ * הפעלה/כיבוי מצב עריכת גבול
+ * REFACTORED: משתמש ב-BoundaryEditor (Step 8/15)
+ */
 function toggleBoundaryEdit() {
     if (!boundaryOutline || !grayMask) return;
 
@@ -1863,60 +1918,58 @@ function toggleBoundaryEdit() {
     const editBtn = document.getElementById('editBoundaryBtn');
 
     if (isBoundaryEditMode) {
-        // הפעל מצב עריכה - אפשר להזיז את הגבול בלבד
+        // הפעל מצב עריכה
         editBtn.classList.add('active');
 
-        // שמור מצב התחלתי (למקרה של גרירה מחוץ לגבול הורה)
-        const newValidState = {
-            left: boundaryOutline.left,
-            top: boundaryOutline.top,
-            scaleX: boundaryOutline.scaleX,
-            scaleY: boundaryOutline.scaleY
-        };
-        lastValidBoundaryState = newValidState;
-        if (window.mapState) {
-            window.mapState.canvas.boundary.lastValidState = newValidState;
+        if (window.mapBoundaryEditor) {
+            window.mapBoundaryEditor.enableEditMode(boundaryOutline, grayMask, boundaryClipPath);
+        } else {
+            // Fallback to old implementation
+            const newValidState = {
+                left: boundaryOutline.left,
+                top: boundaryOutline.top,
+                scaleX: boundaryOutline.scaleX,
+                scaleY: boundaryOutline.scaleY
+            };
+            lastValidBoundaryState = newValidState;
+            if (window.mapState) {
+                window.mapState.canvas.boundary.lastValidState = newValidState;
+            }
+
+            boundaryOutline.set({
+                selectable: true,
+                evented: true,
+                hasControls: true,
+                hasBorders: true,
+                lockRotation: true
+            });
+
+            grayMask.set({
+                selectable: false,
+                evented: false,
+                hasControls: false,
+                hasBorders: false
+            });
+
+            window.mapCanvas.setActiveObject(boundaryOutline);
+            boundaryOutline.on('moving', updateMaskPosition);
+            boundaryOutline.on('scaling', updateMaskPosition);
+            console.log('Boundary edit mode: ON (fallback)');
         }
-
-        // הפוך רק את הגבול לניתן לבחירה
-        boundaryOutline.set({
-            selectable: true,
-            evented: true,
-            hasControls: true,
-            hasBorders: true,
-            lockRotation: true
-        });
-
-        // המסכה האפורה תמיד נשארת נעולה לחלוטין!
-        grayMask.set({
-            selectable: false,
-            evented: false,
-            hasControls: false,
-            hasBorders: false
-        });
-
-        // בחר את הגבול
-        window.mapCanvas.setActiveObject(boundaryOutline);
-
-        // האזן לשינויים בגבול - המסכה תעודכן אוטומטית
-        boundaryOutline.on('moving', updateMaskPosition);
-        boundaryOutline.on('scaling', updateMaskPosition);
-
-        console.log('Boundary edit mode: ON');
     } else {
-        // כבה מצב עריכה - נעל הכל
+        // כבה מצב עריכה
         editBtn.classList.remove('active');
 
-        // הסר האזנה
-        boundaryOutline.off('moving', updateMaskPosition);
-        boundaryOutline.off('scaling', updateMaskPosition);
-
-        window.mapCanvas.discardActiveObject();
-
-        // נעל את כל אובייקטי המערכת
-        lockSystemObjects();
-
-        console.log('Boundary edit mode: OFF');
+        if (window.mapBoundaryEditor) {
+            window.mapBoundaryEditor.disableEditMode();
+        } else {
+            // Fallback
+            boundaryOutline.off('moving', updateMaskPosition);
+            boundaryOutline.off('scaling', updateMaskPosition);
+            window.mapCanvas.discardActiveObject();
+            lockSystemObjects();
+            console.log('Boundary edit mode: OFF (fallback)');
+        }
     }
 
     window.mapCanvas.renderAll();
@@ -2086,6 +2139,7 @@ function deleteBackground() {
 
 /**
  * מחיקת גבול מפה
+ * REFACTORED: משתמש ב-BoundaryEditor (Step 8/15)
  */
 function deleteBoundary() {
     if (!window.mapCanvas) return;
@@ -2100,39 +2154,45 @@ function deleteBoundary() {
         if (editBtn) editBtn.classList.remove('active');
     }
 
-    const objects = window.mapCanvas.getObjects();
-    objects.forEach(obj => {
-        if (obj.objectType === 'boundary' ||
-            obj.objectType === 'grayMask' ||
-            obj.objectType === 'boundaryOutline' ||
-            obj.polygonPoint ||
-            obj.polygonLine) {
-            window.mapCanvas.remove(obj);
+    if (window.mapBoundaryEditor) {
+        window.mapBoundaryEditor.delete();
+        // onDelete callback will handle global variable updates
+    } else {
+        // Fallback to old implementation
+        const objects = window.mapCanvas.getObjects();
+        objects.forEach(obj => {
+            if (obj.objectType === 'boundary' ||
+                obj.objectType === 'grayMask' ||
+                obj.objectType === 'boundaryOutline' ||
+                obj.polygonPoint ||
+                obj.polygonLine) {
+                window.mapCanvas.remove(obj);
+            }
+        });
+
+        // איפוס משתנים
+        boundaryClipPath = null;
+        grayMask = null;
+        boundaryOutline = null;
+        if (window.mapState) {
+            window.mapState.canvas.boundary.clipPath = null;
+            window.mapState.setGrayMask(null);
+            window.mapState.setBoundaryOutline(null);
         }
-    });
 
-    // איפוס משתנים
-    boundaryClipPath = null;
-    grayMask = null;
-    boundaryOutline = null;
-    if (window.mapState) {
-        window.mapState.canvas.boundary.clipPath = null;
-        window.mapState.setGrayMask(null);
-        window.mapState.setBoundaryOutline(null);
+        // הסתר כפתורי עריכה ומחיקה של גבול
+        const editBtn = document.getElementById('editBoundaryBtn');
+        const deleteBtn = document.getElementById('deleteBoundaryBtn');
+        if (editBtn) {
+            editBtn.classList.add('hidden-btn');
+            editBtn.classList.remove('active');
+        }
+        if (deleteBtn) deleteBtn.classList.add('hidden-btn');
+
+        window.mapCanvas.renderAll();
+        saveCanvasState();
+        console.log('Boundary deleted (fallback)');
     }
-
-    // הסתר כפתורי עריכה ומחיקה של גבול
-    const editBtn = document.getElementById('editBoundaryBtn');
-    const deleteBtn = document.getElementById('deleteBoundaryBtn');
-    if (editBtn) {
-        editBtn.classList.add('hidden-btn');
-        editBtn.classList.remove('active');
-    }
-    if (deleteBtn) deleteBtn.classList.add('hidden-btn');
-
-    window.mapCanvas.renderAll();
-    saveCanvasState();
-    console.log('Boundary deleted');
 }
 
 // Alias לתאימות אחורה

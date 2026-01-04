@@ -1088,6 +1088,10 @@ function initializeMap(entityType, unicId, entity) {
                 background: #e5e7eb;
                 margin: 4px 0;
             }
+            /* Hidden file inputs */
+            .hidden-file-input {
+                display: none;
+            }
         `;
     document.head.appendChild(styles);
     console.log('✅ [CSS-2] mapLauncherStyles INJECTED (forced)');

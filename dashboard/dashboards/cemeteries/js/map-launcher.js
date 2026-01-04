@@ -1,6 +1,6 @@
 /**
  * Map Launcher - מנהל פתיחת המפה
- * Version: 3.3.0 - Refactoring Steps 1-5: StateManager + EntitySelector + LauncherModal + Toolbar + ZoomControls
+ * Version: 3.4.0 - Refactoring Steps 1-6: StateManager + EntitySelector + LauncherModal + Toolbar + ZoomControls + CanvasManager
  * Features: Edit mode, Background image, Polygon drawing
  */
 
@@ -95,6 +95,20 @@
         console.log('✅ ZoomControls class loaded');
     } catch (error) {
         console.error('❌ Failed to load ZoomControls:', error);
+    }
+})();
+
+// ========================================
+// STEP 6/15: CanvasManager Integration
+// Load CanvasManager module for canvas creation and management
+// ========================================
+(async function initCanvasManager() {
+    try {
+        const { CanvasManager } = await import('../map/core/CanvasManager.js');
+        window.CanvasManagerClass = CanvasManager;
+        console.log('✅ CanvasManager class loaded');
+    } catch (error) {
+        console.error('❌ Failed to load CanvasManager:', error);
     }
 })();
 
@@ -875,11 +889,93 @@ function initializeMap(entityType, unicId, entity) {
 
 /**
  * יצירת ה-Canvas
+ * REFACTORED: משתמש ב-CanvasManager (Step 6/15)
  */
 function createMapCanvas(entityType, unicId, entity) {
     const canvasContainer = document.getElementById('mapCanvas');
+
+    // ========================================
+    // STEP 6/15: Use CanvasManager to create canvas
+    // ========================================
+    if (window.CanvasManagerClass) {
+        try {
+            window.mapCanvasManager = new window.CanvasManagerClass(canvasContainer, {
+                canvasId: 'fabricCanvas',
+                backgroundColor: '#ffffff',
+                selection: true,
+                initialText: 'לחץ על "מצב עריכה" כדי להתחיל'
+            });
+
+            window.mapCanvas = window.mapCanvasManager.create();
+
+            // Attach event handlers
+            window.mapCanvasManager.attachEventHandlers({
+                onMouseDown: handleCanvasClick,
+                onMouseMove: handleCanvasMouseMove,
+                onObjectModified: (e) => {
+                    console.log('Object modified, saving state');
+                    saveCanvasState();
+                },
+                onContextMenu: handleCanvasRightClick,
+                onZoomChange: (zoom) => {
+                    // Update zoom controls if available (Step 5/15)
+                    if (window.mapZoomControls) {
+                        window.mapZoomControls.setZoom(zoom);
+                    } else {
+                        currentZoom = zoom;
+                        updateZoomDisplay();
+                    }
+                }
+            });
+
+            // שמור מצב התחלתי
+            saveCanvasState();
+
+            console.log('✅ Canvas created via CanvasManager');
+        } catch (error) {
+            console.error('❌ Failed to create canvas via CanvasManager:', error);
+            // Fallback to old implementation
+            createMapCanvasFallback(canvasContainer);
+        }
+    } else {
+        console.warn('⚠️ CanvasManager not loaded, using fallback');
+        createMapCanvasFallback(canvasContainer);
+    }
+
+    // ========================================
+    // STEP 5/15: Initialize ZoomControls
+    // ========================================
+    if (window.ZoomControlsClass && window.mapCanvas) {
+        window.mapZoomControls = new window.ZoomControlsClass(window.mapCanvas, {
+            min: 0.3,
+            max: 3,
+            step: 0.1,
+            onZoomChange: (zoom) => {
+                currentZoom = zoom; // Keep in sync for backwards compatibility
+                if (window.mapState) window.mapState.setZoom(zoom);
+                updateZoomDisplay();
+            }
+        });
+        console.log('✅ ZoomControls initialized');
+    }
+
+    // Load saved map data
+    loadSavedMapData(entityType, unicId);
+}
+
+/**
+ * Fallback: יצירת Canvas בשיטה הישנה
+ * Used when CanvasManager is not available
+ */
+function createMapCanvasFallback(canvasContainer) {
     const width = canvasContainer.clientWidth;
-    const height = canvasContainer.clientHeight - 40; // minus indicator height
+    const height = canvasContainer.clientHeight - 40;
+
+    if (typeof fabric === 'undefined') {
+        console.error('Fabric.js not loaded!');
+        canvasContainer.innerHTML += '<p style="text-align:center; color:red; padding:20px;">שגיאה: Fabric.js לא נטען</p>';
+        return;
+    }
 
     const canvasEl = document.createElement('canvas');
     canvasEl.id = 'fabricCanvas';
@@ -887,146 +983,34 @@ function createMapCanvas(entityType, unicId, entity) {
     canvasEl.height = height;
     canvasContainer.appendChild(canvasEl);
 
-    if (typeof fabric !== 'undefined') {
-        window.mapCanvas = new fabric.Canvas('fabricCanvas', {
-            backgroundColor: '#ffffff',
-            selection: true
-        });
+    window.mapCanvas = new fabric.Canvas('fabricCanvas', {
+        backgroundColor: '#ffffff',
+        selection: true
+    });
 
-        // הוספת טקסט התחלתי
-        const text = new fabric.Text('לחץ על "מצב עריכה" כדי להתחיל', {
-            left: width / 2,
-            top: height / 2,
-            fontSize: 20,
-            fill: '#9ca3af',
-            originX: 'center',
-            originY: 'center',
-            selectable: false
-        });
-        window.mapCanvas.add(text);
+    // הוספת טקסט התחלתי
+    const text = new fabric.Text('לחץ על "מצב עריכה" כדי להתחיל', {
+        left: width / 2,
+        top: height / 2,
+        fontSize: 20,
+        fill: '#9ca3af',
+        originX: 'center',
+        originY: 'center',
+        selectable: false
+    });
+    window.mapCanvas.add(text);
 
-        // אירועי ציור פוליגון
-        window.mapCanvas.on('mouse:down', handleCanvasClick);
-        window.mapCanvas.on('mouse:move', handleCanvasMouseMove);
-
-        // אירועי גלילה/הזזה (panning) - רק כשלא במצב עריכה
-        let isPanning = false;
-        let lastPosX = 0;
-        let lastPosY = 0;
-
-        window.mapCanvas.on('mouse:down', function(opt) {
-            const evt = opt.e;
-            // גרירה על רקע ריק - רק כשלא במצב עריכה ולא במצב ציור פוליגון
-            if (!opt.target && !drawingPolygon && !isEditMode && evt.button === 0) {
-                isPanning = true;
-                lastPosX = evt.clientX;
-                lastPosY = evt.clientY;
-                window.mapCanvas.selection = false;
-                window.mapCanvas.setCursor('grab');
-            }
-        });
-
-        window.mapCanvas.on('mouse:move', function(opt) {
-            if (isPanning) {
-                const evt = opt.e;
-                const deltaX = evt.clientX - lastPosX;
-                const deltaY = evt.clientY - lastPosY;
-
-                // הזז את הקנבס
-                const vpt = window.mapCanvas.viewportTransform;
-                vpt[4] += deltaX;
-                vpt[5] += deltaY;
-
-                window.mapCanvas.requestRenderAll();
-                lastPosX = evt.clientX;
-                lastPosY = evt.clientY;
-                window.mapCanvas.setCursor('grabbing');
-            }
-        });
-
-        window.mapCanvas.on('mouse:up', function(opt) {
-            if (isPanning) {
-                isPanning = false;
-                window.mapCanvas.selection = true;
-                window.mapCanvas.setCursor('default');
-            }
-        });
-
-        // זום עם גלגלת העכבר
-        window.mapCanvas.on('mouse:wheel', function(opt) {
-            const delta = opt.e.deltaY;
-            let zoom = window.mapCanvas.getZoom();
-            zoom *= 0.999 ** delta;
-
-            // הגבלת זום
-            if (zoom > 3) zoom = 3;
-            if (zoom < 0.3) zoom = 0.3;
-
-            // זום למיקום העכבר
-            window.mapCanvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
-
-            // Update zoom controls if available (Step 5/15)
-            if (window.mapZoomControls) {
-                window.mapZoomControls.setZoom(zoom);
-            } else {
-                currentZoom = zoom;
-                updateZoomDisplay();
-            }
-
-            opt.e.preventDefault();
-            opt.e.stopPropagation();
-        });
-
-        // אירועי היסטוריה - שמירת מצב אחרי כל שינוי
-        window.mapCanvas.on('object:modified', function(e) {
-            // התעלם מאובייקטים זמניים של ציור פוליגון
-            if (e.target && !e.target.polygonPoint && !e.target.polygonLine && !e.target.previewLine) {
-                console.log('Object modified, saving state');
-                saveCanvasState();
-            }
-        });
-
-        // שמור מצב התחלתי
-        saveCanvasState();
-
-        // אירוע קליק ימני - חובה להוסיף למכל שFabric יוצר
-        // Fabric.js יוצר upper-canvas מעל ה-canvas הרגיל
-        const fabricWrapper = canvasContainer.querySelector('.canvas-container');
-        if (fabricWrapper) {
-            fabricWrapper.addEventListener('contextmenu', handleCanvasRightClick);
-        } else {
-            // fallback - אם אין עטיפה, נוסיף למכל הראשי
-            canvasContainer.addEventListener('contextmenu', handleCanvasRightClick);
+    // אירועים בסיסיים
+    window.mapCanvas.on('mouse:down', handleCanvasClick);
+    window.mapCanvas.on('mouse:move', handleCanvasMouseMove);
+    window.mapCanvas.on('object:modified', function(e) {
+        if (e.target && !e.target.polygonPoint && !e.target.polygonLine && !e.target.previewLine) {
+            saveCanvasState();
         }
+    });
 
-        console.log('Map canvas initialized');
-
-        // טען נתוני מפה שמורים מהשרת
-        // ========================================
-        // STEP 5/15: Initialize ZoomControls
-        // Create zoom controls for the canvas
-        // ========================================
-        if (window.ZoomControlsClass) {
-            window.mapZoomControls = new window.ZoomControlsClass(window.mapCanvas, {
-                min: 0.3,
-                max: 3,
-                step: 0.1,
-                onZoomChange: (zoom) => {
-                    currentZoom = zoom; // Keep in sync for backwards compatibility
-                    if (window.mapState) window.mapState.setZoom(zoom);
-                    updateZoomDisplay();
-                }
-            });
-            console.log('✅ ZoomControls initialized');
-        } else {
-            console.warn('⚠️ ZoomControls class not loaded yet');
-        }
-
-        loadSavedMapData(entityType, unicId);
-    } else {
-        console.error('Fabric.js not loaded!');
-        canvasContainer.innerHTML += '<p style="text-align:center; color:red; padding:20px;">שגיאה: Fabric.js לא נטען</p>';
-    }
+    saveCanvasState();
+    console.log('Canvas created via fallback');
 }
 
 /**

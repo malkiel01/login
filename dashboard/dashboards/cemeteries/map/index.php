@@ -277,8 +277,43 @@ $config = $entityConfig[$entityType] ?? $entityConfig['cemetery'];
             }
         };
     </script>
-    <script src="js/cemetery-map.js"></script>
-    <script src="js/polygon-editor.js"></script>
-    <script src="js/context-menu.js"></script>
+
+    <!-- New Modular Architecture -->
+    <script type="module">
+        // Import all modules
+        import { EntityConfig } from './config/EntityConfig.js';
+        import { MapAPI, EntityAPI } from './api/MapAPI.js';
+        import { MapManager } from './core/MapManager.js';
+
+        // Initialize the map when page loads
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const config = window.MAP_CONFIG;
+
+                // Create map manager instance
+                const mapManager = new MapManager({
+                    entityType: config.entityType,
+                    entityId: config.entityId,
+                    mode: config.mode,
+                    canvasId: 'mapCanvas'
+                });
+
+                // Initialize and load the map
+                await mapManager.init();
+
+                // Make it globally accessible for debugging
+                window.mapManager = mapManager;
+
+                console.log('Map initialized successfully');
+            } catch (error) {
+                console.error('Failed to initialize map:', error);
+                document.getElementById('mapCanvas').innerHTML =
+                    '<div style="text-align:center; padding:50px; color:#dc2626;">' +
+                    '<p>שגיאה בטעינת המפה</p>' +
+                    '<p style="font-size:14px; margin-top:10px;">' + error.message + '</p>' +
+                    '</div>';
+            }
+        });
+    </script>
 </body>
 </html>

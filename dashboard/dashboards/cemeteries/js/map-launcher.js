@@ -1,7 +1,7 @@
 /**
  * Map Launcher - מנהל פתיחת המפה
- * Version: 3.10.0 - Refactoring Steps 1-12: StateManager + EntitySelector + LauncherModal + Toolbar + ZoomControls + CanvasManager + PolygonDrawer + BoundaryEditor + BackgroundEditor + HistoryManager + EditModeToggle + ContextMenu
- * Features: Edit mode, Background image, Polygon drawing, Undo/Redo, Context menu
+ * Version: 3.11.0 - Refactoring Steps 1-13: StateManager + EntitySelector + LauncherModal + Toolbar + ZoomControls + CanvasManager + PolygonDrawer + BoundaryEditor + BackgroundEditor + HistoryManager + EditModeToggle + ContextMenu + MapPopup
+ * Features: Edit mode, Background image, Polygon drawing, Undo/Redo, Context menu, Popup management
  */
 
 // ========================================
@@ -196,6 +196,20 @@
     }
 })();
 
+// ========================================
+// STEP 13/15: MapPopup Integration
+// Load MapPopup module for popup management
+// ========================================
+(async function initMapPopup() {
+    try {
+        const { MapPopup } = await import('../map/launcher/MapPopup.js');
+        window.MapPopupClass = MapPopup;
+        console.log('✅ MapPopup class loaded');
+    } catch (error) {
+        console.error('❌ Failed to load MapPopup:', error);
+    }
+})();
+
 // משתנים גלובליים (מועברים בהדרגה ל-mapState)
 let currentMapMode = 'view'; // ← Synced with mapState.mode
 let isEditMode = false; // ← Synced with mapState.isEditMode
@@ -371,6 +385,7 @@ async function launchMap() {
 
 /**
  * פתיחת פופאפ המפה
+ * Uses MapPopup if available, otherwise falls back to old implementation
  */
 function openMapPopup(entityType, unicId) {
     // Update StateManager
@@ -382,6 +397,27 @@ function openMapPopup(entityType, unicId) {
     currentEntityType = entityType;
     currentUnicId = unicId;
 
+    // Use MapPopup if available
+    if (window.MapPopupClass) {
+        if (!window.mapPopupInstance) {
+            window.mapPopupInstance = new window.MapPopupClass({
+                onMapInit: (entityType, unicId, entity) => {
+                    // Initialize the map after data is loaded
+                    initializeMap(entityType, unicId, entity);
+                },
+                onClose: () => {
+                    // Cleanup when popup closes
+                    cleanupMapState();
+                }
+            });
+        }
+
+        window.mapPopupInstance.open(entityType, unicId);
+        console.log('✅ Map popup opened via MapPopup');
+        return;
+    }
+
+    // Fallback: Old implementation
     let existingPopup = document.getElementById('mapPopupOverlay');
     if (existingPopup) existingPopup.remove();
 
@@ -2501,64 +2537,102 @@ async function saveMapData() {
 }
 
 /**
- * סגירת הפופאפ
+ * סגירת פופאפ המפה
+ * Uses MapPopup if available, otherwise falls back to old implementation
  */
 function closeMapPopup() {
+    // Use MapPopup if available
+    if (window.mapPopupInstance) {
+        window.mapPopupInstance.close();
+        console.log('✅ Map popup closed via MapPopup');
+        // Note: cleanup is called via onClose callback
+        return;
+    }
+
+    // Fallback: Old implementation
     const popup = document.getElementById('mapPopupOverlay');
     if (popup) {
-        if (window.mapCanvas) {
-            window.mapCanvas.dispose();
-            window.mapCanvas = null;
-        }
-        backgroundImage = null;
-        if (window.mapState) window.mapState.setBackgroundImage(null);
-        isEditMode = false;
-        if (window.mapState) {
-            window.mapState.isEditMode = false;
-        }
-        drawingPolygon = false;
-        polygonPoints = [];
-        previewLine = null;
-        if (window.mapState) {
-            window.mapState.polygon.isDrawing = false;
-            window.mapState.polygon.points = [];
-            window.mapState.polygon.previewLine = null;
-        }
-        boundaryClipPath = null;
-        grayMask = null;
-        boundaryOutline = null;
-        if (window.mapState) {
-            window.mapState.canvas.boundary.clipPath = null;
-            window.mapState.setGrayMask(null);
-            window.mapState.setBoundaryOutline(null);
-        }
-        isBoundaryEditMode = false;
-        isBackgroundEditMode = false;
-        if (window.mapState) {
-            window.mapState.canvas.boundary.isEditMode = false;
-            window.mapState.canvas.background.isEditMode = false;
-        }
-        currentPdfContext = null;
-        currentPdfDoc = null;
-        if (window.mapState) {
-            window.mapState.canvas.background.pdfContext = null;
-            window.mapState.canvas.background.pdfDoc = null;
-        }
-        // איפוס היסטוריית undo/redo
-        canvasHistory = [];
-        historyIndex = -1;
-        if (window.mapState) {
-            window.mapState.history.states = [];
-            window.mapState.history.currentIndex = -1;
-        }
+        cleanupMapState();
         popup.remove();
     }
 }
 
 /**
- * מסך מלא
+ * ניקוי state של המפה (helper function)
+ * REFACTORED: Extracted for use by MapPopup (Step 13/15)
+ */
+function cleanupMapState() {
+    // Dispose canvas
+    if (window.mapCanvas) {
+        window.mapCanvas.dispose();
+        window.mapCanvas = null;
+    }
+
+    // Clear all state variables
+    backgroundImage = null;
+    if (window.mapState) window.mapState.setBackgroundImage(null);
+
+    isEditMode = false;
+    if (window.mapState) {
+        window.mapState.isEditMode = false;
+    }
+
+    drawingPolygon = false;
+    polygonPoints = [];
+    previewLine = null;
+    if (window.mapState) {
+        window.mapState.polygon.isDrawing = false;
+        window.mapState.polygon.points = [];
+        window.mapState.polygon.previewLine = null;
+    }
+
+    boundaryClipPath = null;
+    grayMask = null;
+    boundaryOutline = null;
+    if (window.mapState) {
+        window.mapState.canvas.boundary.clipPath = null;
+        window.mapState.setGrayMask(null);
+        window.mapState.setBoundaryOutline(null);
+    }
+
+    isBoundaryEditMode = false;
+    isBackgroundEditMode = false;
+    if (window.mapState) {
+        window.mapState.canvas.boundary.isEditMode = false;
+        window.mapState.canvas.background.isEditMode = false;
+    }
+
+    currentPdfContext = null;
+    currentPdfDoc = null;
+    if (window.mapState) {
+        window.mapState.canvas.background.pdfContext = null;
+        window.mapState.canvas.background.pdfDoc = null;
+    }
+
+    // Reset undo/redo history
+    canvasHistory = [];
+    historyIndex = -1;
+    if (window.mapState) {
+        window.mapState.history.states = [];
+        window.mapState.history.currentIndex = -1;
+    }
+
+    console.log('🗑️ Map state cleaned up');
+}
+
+/**
+ * מעבר למצב מסך מלא / יציאה ממסך מלא
+ * Uses MapPopup if available, otherwise falls back to old implementation
  */
 function toggleMapFullscreen() {
+    // Use MapPopup if available
+    if (window.mapPopupInstance) {
+        window.mapPopupInstance.toggleFullscreen();
+        console.log('✅ Fullscreen toggled via MapPopup');
+        return;
+    }
+
+    // Fallback: Old implementation
     const container = document.querySelector('.map-popup-container');
     if (container) {
         container.classList.toggle('fullscreen');

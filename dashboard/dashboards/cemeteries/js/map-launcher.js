@@ -27,10 +27,10 @@
 // משתנים גלובליים (מועברים בהדרגה ל-mapState)
 let currentMapMode = 'view';
 let isEditMode = false;
-let currentZoom = 1; // ← Will be replaced by mapState.zoom
+let currentZoom = 1; // ← Synced with mapState.zoom
 let backgroundImage = null;
-let currentEntityType = null;
-let currentUnicId = null;
+let currentEntityType = null; // ← Synced with mapState.entityType
+let currentUnicId = null; // ← Synced with mapState.entityId
 let drawingPolygon = false;
 let polygonPoints = [];
 let previewLine = null; // קו תצוגה מקדימה
@@ -369,6 +369,12 @@ async function launchMap() {
  * פתיחת פופאפ המפה
  */
 function openMapPopup(entityType, unicId) {
+    // Update StateManager
+    if (window.mapState) {
+        window.mapState.setEntity(entityType, unicId);
+    }
+
+    // Keep old variables in sync for backwards compatibility
     currentEntityType = entityType;
     currentUnicId = unicId;
 
@@ -1998,7 +2004,10 @@ function clearPolygon() {
  * שמירת המפה לשרת
  */
 async function saveMapData() {
-    if (!window.mapCanvas || !currentEntityType || !currentUnicId) return;
+    // Get entity from StateManager or fallback to old variables
+    const entity = window.mapState?.getCurrentEntity() || { type: currentEntityType, id: currentUnicId };
+
+    if (!window.mapCanvas || !entity.type || !entity.id) return;
 
     const saveBtn = document.querySelector('.map-tool-btn[onclick="saveMapData()"]');
     const originalContent = saveBtn ? saveBtn.innerHTML : '';
@@ -2017,7 +2026,7 @@ async function saveMapData() {
         };
 
         const response = await fetch(
-            `api/cemetery-hierarchy.php?action=save_map&type=${currentEntityType}&id=${currentUnicId}`,
+            `api/cemetery-hierarchy.php?action=save_map&type=${entity.type}&id=${entity.id}`,
             {
                 method: 'POST',
                 headers: {

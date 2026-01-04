@@ -1,6 +1,6 @@
 /**
  * Map Launcher - מנהל פתיחת המפה
- * Version: 3.6.0 - Refactoring Steps 1-8: StateManager + EntitySelector + LauncherModal + Toolbar + ZoomControls + CanvasManager + PolygonDrawer + BoundaryEditor
+ * Version: 3.7.0 - Refactoring Steps 1-9: StateManager + EntitySelector + LauncherModal + Toolbar + ZoomControls + CanvasManager + PolygonDrawer + BoundaryEditor + BackgroundEditor
  * Features: Edit mode, Background image, Polygon drawing
  */
 
@@ -137,6 +137,20 @@
         console.log('✅ BoundaryEditor class loaded');
     } catch (error) {
         console.error('❌ Failed to load BoundaryEditor:', error);
+    }
+})();
+
+// ========================================
+// STEP 9/15: BackgroundEditor Integration
+// Load BackgroundEditor module for background image/PDF management
+// ========================================
+(async function initBackgroundEditor() {
+    try {
+        const { BackgroundEditor } = await import('../map/editors/BackgroundEditor.js');
+        window.BackgroundEditorClass = BackgroundEditor;
+        console.log('✅ BackgroundEditor class loaded');
+    } catch (error) {
+        console.error('❌ Failed to load BackgroundEditor:', error);
     }
 })();
 
@@ -1047,6 +1061,90 @@ function createMapCanvas(entityType, unicId, entity) {
         console.log('✅ BoundaryEditor initialized');
     }
 
+    // ========================================
+    // STEP 9/15: Initialize BackgroundEditor
+    // ========================================
+    if (window.BackgroundEditorClass && window.mapCanvas) {
+        window.mapBackgroundEditor = new window.BackgroundEditorClass(window.mapCanvas, {
+            onUpload: (img) => {
+                // Update global variable
+                backgroundImage = img;
+                if (window.mapState) window.mapState.setBackgroundImage(img);
+
+                // Show edit/delete buttons
+                const editBgBtn = document.getElementById('editBackgroundBtn');
+                const deleteBgBtn = document.getElementById('deleteBackgroundBtn');
+                if (editBgBtn) {
+                    editBgBtn.classList.remove('hidden-btn');
+                    editBgBtn.classList.add('active');
+                }
+                if (deleteBgBtn) {
+                    deleteBgBtn.classList.remove('hidden-btn');
+                }
+
+                // Update state
+                isBackgroundEditMode = true;
+                if (window.mapState) {
+                    window.mapState.canvas.background.isEditMode = true;
+                }
+
+                // Ensure mask is locked
+                if (grayMask) {
+                    window.mapBackgroundEditor.ensureMaskLocked(grayMask);
+                }
+
+                // Reorder layers and save
+                reorderLayers();
+                saveCanvasState();
+            },
+            onDelete: () => {
+                // Update global variable
+                backgroundImage = null;
+                if (window.mapState) window.mapState.setBackgroundImage(null);
+
+                // Hide buttons
+                const editBtn = document.getElementById('editBackgroundBtn');
+                const deleteBtn = document.getElementById('deleteBackgroundBtn');
+                if (editBtn) {
+                    editBtn.classList.add('hidden-btn');
+                    editBtn.classList.remove('active');
+                }
+                if (deleteBtn) deleteBtn.classList.add('hidden-btn');
+
+                // Update state
+                isBackgroundEditMode = false;
+                if (window.mapState) {
+                    window.mapState.canvas.background.isEditMode = false;
+                }
+
+                saveCanvasState();
+            },
+            onEditModeChange: (enabled) => {
+                // Update global state
+                isBackgroundEditMode = enabled;
+                if (window.mapState) {
+                    window.mapState.canvas.background.isEditMode = enabled;
+                }
+
+                // Update button UI
+                const editBtn = document.getElementById('editBackgroundBtn');
+                if (editBtn) {
+                    if (enabled) {
+                        editBtn.classList.add('active');
+                    } else {
+                        editBtn.classList.remove('active');
+                    }
+                }
+
+                // Ensure mask is locked
+                if (enabled && grayMask) {
+                    window.mapBackgroundEditor.ensureMaskLocked(grayMask);
+                }
+            }
+        });
+        console.log('✅ BackgroundEditor initialized');
+    }
+
     // Load saved map data
     loadSavedMapData(entityType, unicId);
 }
@@ -1303,8 +1401,9 @@ function uploadPdfFile() {
 
 /**
  * טיפול בהעלאת קובץ רקע
+ * REFACTORED: משתמש ב-BackgroundEditor (Step 9/15)
  */
-function handleBackgroundUpload(event) {
+async function handleBackgroundUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
 
@@ -1317,82 +1416,81 @@ function handleBackgroundUpload(event) {
         return;
     }
 
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        fabric.Image.fromURL(e.target.result, function(img) {
-            // הסרת תמונת רקע קודמת
-            if (backgroundImage) {
-                window.mapCanvas.remove(backgroundImage);
-            }
+    if (window.mapBackgroundEditor) {
+        try {
+            await window.mapBackgroundEditor.upload(file);
+            console.log('✅ Background uploaded via BackgroundEditor');
+        } catch (error) {
+            console.error('❌ Failed to upload background:', error);
+            alert('שגיאה בהעלאת תמונת הרקע');
+        }
+    } else {
+        // Fallback to old implementation
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            fabric.Image.fromURL(e.target.result, function(img) {
+                if (backgroundImage) {
+                    window.mapCanvas.remove(backgroundImage);
+                }
 
-            // התאמת גודל התמונה ל-canvas
-            const canvas = window.mapCanvas;
-            const scale = Math.min(
-                (canvas.width * 0.9) / img.width,
-                (canvas.height * 0.9) / img.height
-            );
+                const canvas = window.mapCanvas;
+                const scale = Math.min(
+                    (canvas.width * 0.9) / img.width,
+                    (canvas.height * 0.9) / img.height
+                );
 
-            img.set({
-                left: canvas.width / 2,
-                top: canvas.height / 2,
-                originX: 'center',
-                originY: 'center',
-                scaleX: scale,
-                scaleY: scale,
-                selectable: true, // מופעל אוטומטית במצב עריכה
-                evented: true,
-                hasControls: true,
-                hasBorders: true,
-                lockRotation: false,
-                objectType: 'backgroundLayer'
-            });
-
-            canvas.add(img);
-            backgroundImage = img;
-            if (window.mapState) window.mapState.setBackgroundImage(img);
-
-            // הצג כפתורי עריכה ומחיקה של רקע
-            const editBgBtn = document.getElementById('editBackgroundBtn');
-            const deleteBgBtn = document.getElementById('deleteBackgroundBtn');
-            console.log('Background added, editBgBtn:', editBgBtn);
-
-            if (editBgBtn) {
-                editBgBtn.classList.remove('hidden-btn');
-                editBgBtn.classList.add('active'); // מצב עריכה פעיל - כפתור לחוץ
-                console.log('editBgBtn classes after add:', editBgBtn.className);
-            }
-            if (deleteBgBtn) {
-                deleteBgBtn.classList.remove('hidden-btn');
-            }
-
-            // הפעל מצב עריכת רקע אוטומטית
-            isBackgroundEditMode = true;
-            if (window.mapState) {
-                window.mapState.canvas.background.isEditMode = true;
-            }
-            console.log('isBackgroundEditMode set to true');
-
-            // וודא שהמסכה נעולה
-            if (grayMask) {
-                grayMask.set({
-                    selectable: false,
-                    evented: false,
-                    hasControls: false,
-                    hasBorders: false
+                img.set({
+                    left: canvas.width / 2,
+                    top: canvas.height / 2,
+                    originX: 'center',
+                    originY: 'center',
+                    scaleX: scale,
+                    scaleY: scale,
+                    selectable: true,
+                    evented: true,
+                    hasControls: true,
+                    hasBorders: true,
+                    lockRotation: false,
+                    objectType: 'backgroundLayer'
                 });
-            }
 
-            // בחר את התמונה
-            canvas.setActiveObject(img);
+                canvas.add(img);
+                backgroundImage = img;
+                if (window.mapState) window.mapState.setBackgroundImage(img);
 
-            // סידור שכבות
-            reorderLayers();
-            saveCanvasState();
+                const editBgBtn = document.getElementById('editBackgroundBtn');
+                const deleteBgBtn = document.getElementById('deleteBackgroundBtn');
 
-            console.log('Background layer image added (edit mode)');
-        });
-    };
-    reader.readAsDataURL(file);
+                if (editBgBtn) {
+                    editBgBtn.classList.remove('hidden-btn');
+                    editBgBtn.classList.add('active');
+                }
+                if (deleteBgBtn) {
+                    deleteBgBtn.classList.remove('hidden-btn');
+                }
+
+                isBackgroundEditMode = true;
+                if (window.mapState) {
+                    window.mapState.canvas.background.isEditMode = true;
+                }
+
+                if (grayMask) {
+                    grayMask.set({
+                        selectable: false,
+                        evented: false,
+                        hasControls: false,
+                        hasBorders: false
+                    });
+                }
+
+                canvas.setActiveObject(img);
+                reorderLayers();
+                saveCanvasState();
+                console.log('Background layer image added (fallback)');
+            });
+        };
+        reader.readAsDataURL(file);
+    }
 
     // ניקוי ה-input
     event.target.value = '';
@@ -1977,62 +2075,60 @@ function toggleBoundaryEdit() {
 
 /**
  * הפעלה/כיבוי מצב עריכת תמונת רקע
+ * REFACTORED: משתמש ב-BackgroundEditor (Step 9/15)
  */
 function toggleBackgroundEdit() {
-    console.log('toggleBackgroundEdit called, backgroundImage:', backgroundImage);
     if (!backgroundImage) {
-        console.log('No background image, returning');
         return;
     }
 
     isBackgroundEditMode = !isBackgroundEditMode;
-    if (window.mapState) {
-        window.mapState.canvas.background.isEditMode = isBackgroundEditMode;
-    }
-    console.log('isBackgroundEditMode is now:', isBackgroundEditMode);
 
-    const editBtn = document.getElementById('editBackgroundBtn');
-    console.log('editBtn element:', editBtn);
-
-    if (isBackgroundEditMode) {
-        // הפעל מצב עריכה - אפשר להזיז את תמונת הרקע
-        editBtn.classList.add('active');
-        console.log('Added active class');
-
-        backgroundImage.set({
-            selectable: true,
-            evented: true,
-            hasControls: true,
-            hasBorders: true
-        });
-
-        // וודא שהמסכה תמיד נעולה
-        if (grayMask) {
-            grayMask.set({
-                selectable: false,
-                evented: false,
-                hasControls: false,
-                hasBorders: false
-            });
+    if (window.mapBackgroundEditor) {
+        if (isBackgroundEditMode) {
+            window.mapBackgroundEditor.enableEditMode();
+        } else {
+            window.mapBackgroundEditor.disableEditMode();
+            lockSystemObjects();
+        }
+    } else {
+        // Fallback to old implementation
+        if (window.mapState) {
+            window.mapState.canvas.background.isEditMode = isBackgroundEditMode;
         }
 
-        window.mapCanvas.setActiveObject(backgroundImage);
+        const editBtn = document.getElementById('editBackgroundBtn');
 
-        console.log('Background edit mode: ON');
-    } else {
-        // כבה מצב עריכה - נעל הכל
-        editBtn.classList.remove('active');
-        console.log('Removed active class');
+        if (isBackgroundEditMode) {
+            editBtn.classList.add('active');
 
-        window.mapCanvas.discardActiveObject();
+            backgroundImage.set({
+                selectable: true,
+                evented: true,
+                hasControls: true,
+                hasBorders: true
+            });
 
-        // נעל את כל אובייקטי המערכת
-        lockSystemObjects();
+            if (grayMask) {
+                grayMask.set({
+                    selectable: false,
+                    evented: false,
+                    hasControls: false,
+                    hasBorders: false
+                });
+            }
 
-        console.log('Background edit mode: OFF');
+            window.mapCanvas.setActiveObject(backgroundImage);
+            console.log('Background edit mode: ON (fallback)');
+        } else {
+            editBtn.classList.remove('active');
+            window.mapCanvas.discardActiveObject();
+            lockSystemObjects();
+            console.log('Background edit mode: OFF (fallback)');
+        }
+
+        window.mapCanvas.renderAll();
     }
-
-    window.mapCanvas.renderAll();
 }
 
 /**
@@ -2105,6 +2201,7 @@ function updateMaskPosition() {
 
 /**
  * מחיקת תמונת רקע
+ * REFACTORED: משתמש ב-BackgroundEditor (Step 9/15)
  */
 function deleteBackground() {
     if (!window.mapCanvas || !backgroundImage) return;
@@ -2119,22 +2216,27 @@ function deleteBackground() {
         if (editBtn) editBtn.classList.remove('active');
     }
 
-    window.mapCanvas.remove(backgroundImage);
-    backgroundImage = null;
-    if (window.mapState) window.mapState.setBackgroundImage(null);
+    if (window.mapBackgroundEditor) {
+        window.mapBackgroundEditor.delete();
+        // onDelete callback will handle global variable updates
+    } else {
+        // Fallback to old implementation
+        window.mapCanvas.remove(backgroundImage);
+        backgroundImage = null;
+        if (window.mapState) window.mapState.setBackgroundImage(null);
 
-    // הסתר כפתורי עריכה ומחיקה של רקע
-    const editBtn = document.getElementById('editBackgroundBtn');
-    const deleteBtn = document.getElementById('deleteBackgroundBtn');
-    if (editBtn) {
-        editBtn.classList.add('hidden-btn');
-        editBtn.classList.remove('active');
+        const editBtn = document.getElementById('editBackgroundBtn');
+        const deleteBtn = document.getElementById('deleteBackgroundBtn');
+        if (editBtn) {
+            editBtn.classList.add('hidden-btn');
+            editBtn.classList.remove('active');
+        }
+        if (deleteBtn) deleteBtn.classList.add('hidden-btn');
+
+        window.mapCanvas.renderAll();
+        saveCanvasState();
+        console.log('Background deleted (fallback)');
     }
-    if (deleteBtn) deleteBtn.classList.add('hidden-btn');
-
-    window.mapCanvas.renderAll();
-    saveCanvasState();
-    console.log('Background deleted');
 }
 
 /**

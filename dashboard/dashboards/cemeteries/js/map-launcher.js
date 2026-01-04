@@ -268,6 +268,27 @@ async function launchMap() {
         return;
     }
 
+    try {
+        // סגירת המודל
+        closeMapLauncher();
+
+        // פתיחת המפה בפופאפ
+        openMapPopup(entityType, unicId);
+
+    } catch (error) {
+        console.error('Error launching map:', error);
+        alert(`שגיאה בפתיחת המפה:\n${error.message}`);
+    }
+}
+
+/**
+ * פתיחת פופאפ המפה
+ */
+function openMapPopup(entityType, unicId) {
+    // מחיקת פופאפ קיים אם יש
+    let existingPopup = document.getElementById('mapPopupOverlay');
+    if (existingPopup) existingPopup.remove();
+
     const entityNames = {
         cemetery: 'בית עלמין',
         block: 'גוש',
@@ -275,16 +296,149 @@ async function launchMap() {
         areaGrave: 'אחוזת קבר'
     };
 
-    try {
-        // סגירת המודל
-        closeMapLauncher();
+    const popupHTML = `
+        <div id="mapPopupOverlay" class="map-popup-overlay">
+            <div class="map-popup-container">
+                <div class="map-popup-header">
+                    <h3 id="mapPopupTitle">מפת ${entityNames[entityType] || 'ישות'}</h3>
+                    <div class="map-popup-controls">
+                        <button type="button" class="map-popup-btn" onclick="toggleMapFullscreen()" title="מסך מלא">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+                            </svg>
+                        </button>
+                        <button type="button" class="map-popup-close" onclick="closeMapPopup()">&times;</button>
+                    </div>
+                </div>
+                <div class="map-popup-body">
+                    <iframe id="mapIframe"
+                            src="map/index.php?type=${entityType}&id=${unicId}&mode=edit"
+                            frameborder="0"
+                            style="width: 100%; height: 100%; border: none;">
+                    </iframe>
+                </div>
+            </div>
+        </div>
+    `;
 
-        // פתיחת המפה בדף ייעודי
-        const mapUrl = `map/index.php?type=${entityType}&id=${unicId}&mode=edit`;
-        window.location.href = mapUrl;
+    // הוספת סגנונות הפופאפ
+    if (!document.getElementById('mapPopupStyles')) {
+        const styles = document.createElement('style');
+        styles.id = 'mapPopupStyles';
+        styles.textContent = `
+            .map-popup-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.7);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10001;
+            }
+            .map-popup-container {
+                background: white;
+                border-radius: 12px;
+                width: 90%;
+                height: 85%;
+                max-width: 1400px;
+                display: flex;
+                flex-direction: column;
+                box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
+                overflow: hidden;
+            }
+            .map-popup-container.fullscreen {
+                width: 100%;
+                height: 100%;
+                max-width: none;
+                border-radius: 0;
+            }
+            .map-popup-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 12px 20px;
+                background: #1f2937;
+                color: white;
+                flex-shrink: 0;
+            }
+            .map-popup-header h3 {
+                margin: 0;
+                font-size: 16px;
+                font-weight: 500;
+            }
+            .map-popup-controls {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+            .map-popup-btn {
+                background: rgba(255, 255, 255, 0.1);
+                border: none;
+                color: white;
+                width: 32px;
+                height: 32px;
+                border-radius: 6px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: background 0.2s;
+            }
+            .map-popup-btn:hover {
+                background: rgba(255, 255, 255, 0.2);
+            }
+            .map-popup-close {
+                background: none;
+                border: none;
+                color: white;
+                font-size: 28px;
+                cursor: pointer;
+                width: 32px;
+                height: 32px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                line-height: 1;
+            }
+            .map-popup-close:hover {
+                color: #ef4444;
+            }
+            .map-popup-body {
+                flex: 1;
+                overflow: hidden;
+                background: #f3f4f6;
+            }
+        `;
+        document.head.appendChild(styles);
+    }
 
-    } catch (error) {
-        console.error('Error launching map:', error);
-        alert(`שגיאה בפתיחת המפה:\n${error.message}`);
+    document.body.insertAdjacentHTML('beforeend', popupHTML);
+
+    // מניעת גלילה ברקע
+    document.body.style.overflow = 'hidden';
+}
+
+/**
+ * סגירת פופאפ המפה
+ */
+function closeMapPopup() {
+    const popup = document.getElementById('mapPopupOverlay');
+    if (popup) {
+        popup.remove();
+    }
+    // החזרת גלילה
+    document.body.style.overflow = '';
+}
+
+/**
+ * מעבר למסך מלא / יציאה ממסך מלא
+ */
+function toggleMapFullscreen() {
+    const container = document.querySelector('.map-popup-container');
+    if (container) {
+        container.classList.toggle('fullscreen');
     }
 }

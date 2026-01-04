@@ -1638,8 +1638,13 @@ function finishPolygon() {
         objectType: 'grayMask'
     });
 
-    // קו גבול סביב האזור הפעיל
-    boundaryOutline = new fabric.Polygon(polygonPoints, {
+    // קו גבול סביב האזור הפעיל - עיגול נקודות לפיקסלים שלמים למניעת טשטוש
+    const roundedPoints = polygonPoints.map(p => ({
+        x: Math.round(p.x),
+        y: Math.round(p.y)
+    }));
+
+    boundaryOutline = new fabric.Polygon(roundedPoints, {
         fill: 'transparent',
         stroke: '#3b82f6',
         strokeWidth: 3,

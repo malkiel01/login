@@ -1,6 +1,6 @@
 /**
  * Map Launcher - מנהל פתיחת המפה
- * Version: 3.2.0 - Refactoring Steps 1-4: StateManager + EntitySelector + LauncherModal + Toolbar
+ * Version: 3.3.0 - Refactoring Steps 1-5: StateManager + EntitySelector + LauncherModal + Toolbar + ZoomControls
  * Features: Edit mode, Background image, Polygon drawing
  */
 
@@ -81,6 +81,20 @@
         console.log('✅ Toolbar class loaded');
     } catch (error) {
         console.error('❌ Failed to load Toolbar:', error);
+    }
+})();
+
+// ========================================
+// STEP 5/15: ZoomControls Integration
+// Load ZoomControls module for zoom functionality
+// ========================================
+(async function initZoomControls() {
+    try {
+        const { ZoomControls } = await import('../map/ui/ZoomControls.js');
+        window.ZoomControlsClass = ZoomControls;
+        console.log('✅ ZoomControls class loaded');
+    } catch (error) {
+        console.error('❌ Failed to load ZoomControls:', error);
     }
 })();
 
@@ -951,8 +965,13 @@ function createMapCanvas(entityType, unicId, entity) {
             // זום למיקום העכבר
             window.mapCanvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
 
-            currentZoom = zoom;
-            updateZoomDisplay();
+            // Update zoom controls if available (Step 5/15)
+            if (window.mapZoomControls) {
+                window.mapZoomControls.setZoom(zoom);
+            } else {
+                currentZoom = zoom;
+                updateZoomDisplay();
+            }
 
             opt.e.preventDefault();
             opt.e.stopPropagation();
@@ -983,6 +1002,26 @@ function createMapCanvas(entityType, unicId, entity) {
         console.log('Map canvas initialized');
 
         // טען נתוני מפה שמורים מהשרת
+        // ========================================
+        // STEP 5/15: Initialize ZoomControls
+        // Create zoom controls for the canvas
+        // ========================================
+        if (window.ZoomControlsClass) {
+            window.mapZoomControls = new window.ZoomControlsClass(window.mapCanvas, {
+                min: 0.3,
+                max: 3,
+                step: 0.1,
+                onZoomChange: (zoom) => {
+                    currentZoom = zoom; // Keep in sync for backwards compatibility
+                    if (window.mapState) window.mapState.setZoom(zoom);
+                    updateZoomDisplay();
+                }
+            });
+            console.log('✅ ZoomControls initialized');
+        } else {
+            console.warn('⚠️ ZoomControls class not loaded yet');
+        }
+
         loadSavedMapData(entityType, unicId);
     } else {
         console.error('Fabric.js not loaded!');
@@ -2073,29 +2112,43 @@ function toggleMapFullscreen() {
 /**
  * זום
  */
+/**
+ * הגדלת זום
+ * REFACTORED: משתמש ב-ZoomControls (Step 5/15)
+ */
 function zoomMapIn() {
-    // Using mapState instead of currentZoom
-    const newZoom = Math.min((window.mapState?.getZoom() || currentZoom) + 0.1, 3);
-    if (window.mapState) window.mapState.setZoom(newZoom);
-    currentZoom = newZoom; // Keep in sync for backwards compatibility
-
-    updateZoomDisplay();
-    if (window.mapCanvas) {
-        window.mapCanvas.setZoom(newZoom);
-        window.mapCanvas.renderAll();
+    if (window.mapZoomControls) {
+        window.mapZoomControls.zoomIn();
+    } else {
+        // Fallback to old implementation
+        const newZoom = Math.min((window.mapState?.getZoom() || currentZoom) + 0.1, 3);
+        if (window.mapState) window.mapState.setZoom(newZoom);
+        currentZoom = newZoom;
+        updateZoomDisplay();
+        if (window.mapCanvas) {
+            window.mapCanvas.setZoom(newZoom);
+            window.mapCanvas.renderAll();
+        }
     }
 }
 
+/**
+ * הקטנת זום
+ * REFACTORED: משתמש ב-ZoomControls (Step 5/15)
+ */
 function zoomMapOut() {
-    // Using mapState instead of currentZoom
-    const newZoom = Math.max((window.mapState?.getZoom() || currentZoom) - 0.1, 0.3);
-    if (window.mapState) window.mapState.setZoom(newZoom);
-    currentZoom = newZoom; // Keep in sync for backwards compatibility
-
-    updateZoomDisplay();
-    if (window.mapCanvas) {
-        window.mapCanvas.setZoom(newZoom);
-        window.mapCanvas.renderAll();
+    if (window.mapZoomControls) {
+        window.mapZoomControls.zoomOut();
+    } else {
+        // Fallback to old implementation
+        const newZoom = Math.max((window.mapState?.getZoom() || currentZoom) - 0.1, 0.3);
+        if (window.mapState) window.mapState.setZoom(newZoom);
+        currentZoom = newZoom;
+        updateZoomDisplay();
+        if (window.mapCanvas) {
+            window.mapCanvas.setZoom(newZoom);
+            window.mapCanvas.renderAll();
+        }
     }
 }
 
@@ -2114,54 +2167,53 @@ function updateZoomDisplay() {
 
 /**
  * עריכת אחוז זום ידנית
+ * REFACTORED: משתמש ב-ZoomControls (Step 5/15)
  */
 function editZoomLevel() {
     const el = document.getElementById('mapZoomLevel');
     if (!el) return;
 
-    const currentValue = Math.round(currentZoom * 100);
+    if (window.mapZoomControls) {
+        window.mapZoomControls.enableManualEdit(el);
+    } else {
+        // Fallback to old implementation
+        const currentValue = Math.round(currentZoom * 100);
 
-    // יצירת input במקום הטקסט
-    const input = document.createElement('input');
-    input.type = 'number';
-    input.value = currentValue;
-    input.min = 30;
-    input.max = 300;
-    input.style.cssText = 'width: 50px; text-align: center; font-size: 13px; border: 1px solid #3b82f6; border-radius: 4px; padding: 2px;';
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.value = currentValue;
+        input.min = 30;
+        input.max = 300;
+        input.style.cssText = 'width: 50px; text-align: center; font-size: 13px; border: 1px solid #3b82f6; border-radius: 4px; padding: 2px;';
 
-    // החלפת התוכן
-    el.textContent = '';
-    el.appendChild(input);
-    input.focus();
-    input.select();
+        el.textContent = '';
+        el.appendChild(input);
+        input.focus();
+        input.select();
 
-    // טיפול באישור (Enter או יציאה מהשדה)
-    function applyZoom() {
-        let newZoom = parseInt(input.value) || 100;
-        // הגבלת טווח
-        newZoom = Math.max(30, Math.min(300, newZoom));
-        currentZoom = newZoom / 100;
+        function applyZoom() {
+            let newZoom = parseInt(input.value) || 100;
+            newZoom = Math.max(30, Math.min(300, newZoom));
+            currentZoom = newZoom / 100;
 
-        // עדכון הקנבס
-        if (window.mapCanvas) {
-            window.mapCanvas.setZoom(currentZoom);
-            window.mapCanvas.renderAll();
+            if (window.mapCanvas) {
+                window.mapCanvas.setZoom(currentZoom);
+                window.mapCanvas.renderAll();
+            }
+
+            el.textContent = newZoom + '%';
         }
 
-        // החזרת התצוגה הרגילה
-        el.textContent = newZoom + '%';
+        input.addEventListener('blur', applyZoom);
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                input.blur();
+            } else if (e.key === 'Escape') {
+                el.textContent = currentValue + '%';
+            }
+        });
     }
-
-    input.addEventListener('blur', applyZoom);
-    input.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            input.blur();
-        } else if (e.key === 'Escape') {
-            // ביטול - החזר לערך הקודם
-            el.textContent = currentValue + '%';
-        }
-    });
 }
 
 // קיצורי מקלדת

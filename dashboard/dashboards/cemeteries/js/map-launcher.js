@@ -43,8 +43,8 @@ let currentPdfContext = null; // ← Synced with mapState.canvas.background.pdfC
 let currentPdfDoc = null; // ← Synced with mapState.canvas.background.pdfDoc
 
 // גבול הורה (לישויות בנים)
-let parentBoundaryPoints = null; // נקודות הגבול של ההורה
-let parentBoundaryOutline = null; // קו גבול ההורה (לתצוגה)
+let parentBoundaryPoints = null; // ← Synced with mapState.canvas.parent.points
+let parentBoundaryOutline = null; // ← Synced with mapState.canvas.parent.outline
 let lastValidBoundaryState = null; // מצב אחרון תקין של הגבול (לשחזור במקרה של גרירה מחוץ לגבול הורה)
 
 // Undo/Redo
@@ -1246,6 +1246,10 @@ function loadParentBoundary() {
         window.mapCanvas.remove(parentBoundaryOutline);
         parentBoundaryOutline = null;
     }
+    if (window.mapState) {
+        window.mapState.canvas.parent.points = null;
+        window.mapState.canvas.parent.outline = null;
+    }
 
     // בדיקה אם יש נתוני הורה
     if (!window.parentMapData || !window.parentMapData.canvasJSON) {
@@ -1268,13 +1272,17 @@ function loadParentBoundary() {
     }
 
     // שמור את נקודות הגבול לוולידציה
-    parentBoundaryPoints = parentBoundary.points.map(p => ({
+    const newParentPoints = parentBoundary.points.map(p => ({
         x: p.x + (parentBoundary.left || 0),
         y: p.y + (parentBoundary.top || 0)
     }));
+    parentBoundaryPoints = newParentPoints;
+    if (window.mapState) {
+        window.mapState.canvas.parent.points = newParentPoints;
+    }
 
     // יצירת קו גבול ההורה לתצוגה (צבע שונה - כתום)
-    parentBoundaryOutline = new fabric.Polygon(parentBoundaryPoints, {
+    const newParentOutline = new fabric.Polygon(parentBoundaryPoints, {
         fill: 'transparent',
         stroke: '#f97316', // כתום
         strokeWidth: 3,
@@ -1284,6 +1292,10 @@ function loadParentBoundary() {
         objectType: 'parentBoundary',
         excludeFromExport: true // לא לשמור במפת הבן
     });
+    parentBoundaryOutline = newParentOutline;
+    if (window.mapState) {
+        window.mapState.canvas.parent.outline = newParentOutline;
+    }
 
     window.mapCanvas.add(parentBoundaryOutline);
 

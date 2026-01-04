@@ -28,7 +28,7 @@
 let currentMapMode = 'view';
 let isEditMode = false;
 let currentZoom = 1; // ← Synced with mapState.zoom
-let backgroundImage = null;
+let backgroundImage = null; // ← Synced with mapState.canvas.background.image
 let currentEntityType = null; // ← Synced with mapState.entityType
 let currentUnicId = null; // ← Synced with mapState.entityId
 let drawingPolygon = false;
@@ -1177,12 +1177,14 @@ async function loadSavedMapData(entityType, unicId) {
         window.mapCanvas.loadFromJSON(result.mapData.canvasJSON, function() {
             // עדכן משתנים גלובליים לפי האובייקטים שנטענו
             backgroundImage = null;
+            if (window.mapState) window.mapState.setBackgroundImage(null);
             grayMask = null;
             boundaryOutline = null;
 
             window.mapCanvas.getObjects().forEach(obj => {
                 if (obj.objectType === 'backgroundLayer') {
                     backgroundImage = obj;
+                    if (window.mapState) window.mapState.setBackgroundImage(obj);
                 } else if (obj.objectType === 'grayMask') {
                     grayMask = obj;
                 } else if (obj.objectType === 'boundaryOutline') {
@@ -1375,6 +1377,7 @@ function handleBackgroundUpload(event) {
 
             canvas.add(img);
             backgroundImage = img;
+            if (window.mapState) window.mapState.setBackgroundImage(img);
 
             // הצג כפתורי עריכה ומחיקה של רקע
             const editBgBtn = document.getElementById('editBackgroundBtn');
@@ -1937,6 +1940,7 @@ function deleteBackground() {
 
     window.mapCanvas.remove(backgroundImage);
     backgroundImage = null;
+    if (window.mapState) window.mapState.setBackgroundImage(null);
 
     // הסתר כפתורי עריכה ומחיקה של רקע
     const editBtn = document.getElementById('editBackgroundBtn');
@@ -2075,6 +2079,7 @@ function closeMapPopup() {
             window.mapCanvas = null;
         }
         backgroundImage = null;
+        if (window.mapState) window.mapState.setBackgroundImage(null);
         isEditMode = false;
         drawingPolygon = false;
         polygonPoints = [];
@@ -2832,6 +2837,7 @@ async function renderPdfPageToCanvas(pageNum) {
 
                 canvas.add(img);
                 backgroundImage = img;
+                if (window.mapState) window.mapState.setBackgroundImage(img);
 
                 // הצג כפתורי עריכה ומחיקה של רקע
                 const editBgBtn = document.getElementById('editBackgroundBtn');
@@ -2969,12 +2975,14 @@ function restoreCanvasState(state) {
     window.mapCanvas.loadFromJSON(JSON.parse(state), function() {
         // עדכן משתנים גלובליים לפי האובייקטים שנטענו
         backgroundImage = null;
+        if (window.mapState) window.mapState.setBackgroundImage(null);
         grayMask = null;
         boundaryOutline = null;
 
         window.mapCanvas.getObjects().forEach(obj => {
             if (obj.objectType === 'backgroundLayer') {
                 backgroundImage = obj;
+                if (window.mapState) window.mapState.setBackgroundImage(obj);
             } else if (obj.objectType === 'grayMask') {
                 grayMask = obj;
             } else if (obj.objectType === 'boundaryOutline') {

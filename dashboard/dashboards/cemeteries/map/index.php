@@ -287,6 +287,8 @@ $config = $entityConfig[$entityType] ?? $entityConfig['cemetery'];
 
         // Initialize the map when page loads
         document.addEventListener('DOMContentLoaded', async () => {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+
             try {
                 const config = window.MAP_CONFIG;
 
@@ -298,20 +300,41 @@ $config = $entityConfig[$entityType] ?? $entityConfig['cemetery'];
                     canvasId: 'mapCanvas'
                 });
 
+                // Listen for initialization complete
+                mapManager.on('init:complete', () => {
+                    if (loadingOverlay) {
+                        loadingOverlay.style.display = 'none';
+                    }
+                    console.log('Map initialized successfully');
+                });
+
+                // Listen for initialization error
+                mapManager.on('init:error', (data) => {
+                    if (loadingOverlay) {
+                        loadingOverlay.innerHTML = `
+                            <div style="text-align:center; color:#dc2626;">
+                                <p>שגיאה בטעינת המפה</p>
+                                <p style="font-size:14px; margin-top:10px;">${data.error.message}</p>
+                            </div>
+                        `;
+                    }
+                });
+
                 // Initialize and load the map
                 await mapManager.init();
 
                 // Make it globally accessible for debugging
                 window.mapManager = mapManager;
 
-                console.log('Map initialized successfully');
             } catch (error) {
                 console.error('Failed to initialize map:', error);
-                document.getElementById('mapCanvas').innerHTML =
-                    '<div style="text-align:center; padding:50px; color:#dc2626;">' +
-                    '<p>שגיאה בטעינת המפה</p>' +
-                    '<p style="font-size:14px; margin-top:10px;">' + error.message + '</p>' +
-                    '</div>';
+                if (loadingOverlay) {
+                    loadingOverlay.innerHTML =
+                        '<div style="text-align:center; color:#dc2626;">' +
+                        '<p>שגיאה בטעינת המפה</p>' +
+                        '<p style="font-size:14px; margin-top:10px;">' + error.message + '</p>' +
+                        '</div>';
+                }
             }
         });
     </script>

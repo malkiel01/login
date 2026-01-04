@@ -25,8 +25,8 @@
 })();
 
 // משתנים גלובליים (מועברים בהדרגה ל-mapState)
-let currentMapMode = 'view';
-let isEditMode = false;
+let currentMapMode = 'view'; // ← Synced with mapState.mode
+let isEditMode = false; // ← Synced with mapState.isEditMode
 let currentZoom = 1; // ← Synced with mapState.zoom
 let backgroundImage = null; // ← Synced with mapState.canvas.background.image
 let currentEntityType = null; // ← Synced with mapState.entityType
@@ -45,7 +45,7 @@ let currentPdfDoc = null; // ← Synced with mapState.canvas.background.pdfDoc
 // גבול הורה (לישויות בנים)
 let parentBoundaryPoints = null; // ← Synced with mapState.canvas.parent.points
 let parentBoundaryOutline = null; // ← Synced with mapState.canvas.parent.outline
-let lastValidBoundaryState = null; // מצב אחרון תקין של הגבול (לשחזור במקרה של גרירה מחוץ לגבול הורה)
+let lastValidBoundaryState = null; // ← Synced with mapState.canvas.boundary.lastValidState
 
 // Undo/Redo
 let canvasHistory = []; // ← Synced with mapState.history.states
@@ -1310,6 +1310,9 @@ function loadParentBoundary() {
  */
 function toggleEditMode(enabled) {
     isEditMode = enabled;
+    if (window.mapState) {
+        window.mapState.isEditMode = enabled;
+    }
     const container = document.getElementById('mapContainer');
 
     if (enabled) {
@@ -1817,12 +1820,16 @@ function toggleBoundaryEdit() {
         editBtn.classList.add('active');
 
         // שמור מצב התחלתי (למקרה של גרירה מחוץ לגבול הורה)
-        lastValidBoundaryState = {
+        const newValidState = {
             left: boundaryOutline.left,
             top: boundaryOutline.top,
             scaleX: boundaryOutline.scaleX,
             scaleY: boundaryOutline.scaleY
         };
+        lastValidBoundaryState = newValidState;
+        if (window.mapState) {
+            window.mapState.canvas.boundary.lastValidState = newValidState;
+        }
 
         // הפוך רק את הגבול לניתן לבחירה
         boundaryOutline.set({
@@ -1963,12 +1970,16 @@ function updateMaskPosition() {
     }
 
     // שמור מצב תקין
-    lastValidBoundaryState = {
+    const newValidState = {
         left: boundaryOutline.left,
         top: boundaryOutline.top,
         scaleX: boundaryOutline.scaleX,
         scaleY: boundaryOutline.scaleY
     };
+    lastValidBoundaryState = newValidState;
+    if (window.mapState) {
+        window.mapState.canvas.boundary.lastValidState = newValidState;
+    }
 
     // בנה מחדש את המסכה
     const canvas = window.mapCanvas;
@@ -2159,6 +2170,9 @@ function closeMapPopup() {
         backgroundImage = null;
         if (window.mapState) window.mapState.setBackgroundImage(null);
         isEditMode = false;
+        if (window.mapState) {
+            window.mapState.isEditMode = false;
+        }
         drawingPolygon = false;
         polygonPoints = [];
         previewLine = null;

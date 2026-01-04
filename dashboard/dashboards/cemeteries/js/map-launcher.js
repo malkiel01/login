@@ -1,7 +1,7 @@
 /**
  * Map Launcher - מנהל פתיחת המפה
- * Version: 3.9.0 - Refactoring Steps 1-11: StateManager + EntitySelector + LauncherModal + Toolbar + ZoomControls + CanvasManager + PolygonDrawer + BoundaryEditor + BackgroundEditor + HistoryManager + EditModeToggle
- * Features: Edit mode, Background image, Polygon drawing, Undo/Redo
+ * Version: 3.10.0 - Refactoring Steps 1-12: StateManager + EntitySelector + LauncherModal + Toolbar + ZoomControls + CanvasManager + PolygonDrawer + BoundaryEditor + BackgroundEditor + HistoryManager + EditModeToggle + ContextMenu
+ * Features: Edit mode, Background image, Polygon drawing, Undo/Redo, Context menu
  */
 
 // ========================================
@@ -179,6 +179,20 @@
         console.log('✅ EditModeToggle class loaded');
     } catch (error) {
         console.error('❌ Failed to load EditModeToggle:', error);
+    }
+})();
+
+// ========================================
+// STEP 12/15: ContextMenu Integration
+// Load ContextMenu module for right-click context menu
+// ========================================
+(async function initContextMenu() {
+    try {
+        const { ContextMenu } = await import('../map/ui/ContextMenu.js');
+        window.ContextMenuClass = ContextMenu;
+        console.log('✅ ContextMenu class loaded');
+    } catch (error) {
+        console.error('❌ Failed to load ContextMenu:', error);
     }
 })();
 
@@ -1236,6 +1250,23 @@ function createMapCanvas(entityType, unicId, entity) {
         // Initialize (connect to DOM)
         window.mapEditModeToggle.init();
         console.log('✅ EditModeToggle initialized');
+    }
+
+    // ========================================
+    // STEP 12/15: Initialize ContextMenu
+    // ========================================
+    if (window.ContextMenuClass) {
+        window.mapContextMenu = new window.ContextMenuClass({
+            checkBoundary: hasBoundary,
+            onAction: (action, data) => {
+                // Handle all context menu actions
+                handleContextMenuAction(action, data);
+            }
+        });
+
+        // Initialize (connect to DOM)
+        window.mapContextMenu.init();
+        console.log('✅ ContextMenu initialized');
     }
 
     // Load saved map data
@@ -2782,9 +2813,18 @@ function isPointInsideBoundary(x, y) {
 }
 
 /**
- * הצגת תפריט קליק ימני
+ * הצגת תפריט הקשר כללי (canvas)
+ * Uses ContextMenu if available, otherwise falls back to old implementation
  */
 function showContextMenu(clientX, clientY, isInsideBoundary) {
+    // Use ContextMenu if available
+    if (window.mapContextMenu) {
+        window.mapContextMenu.showForCanvas(clientX, clientY, isInsideBoundary, contextMenuPosition);
+        console.log('✅ Context menu shown via ContextMenu');
+        return;
+    }
+
+    // Fallback: Old implementation
     const menu = document.getElementById('mapContextMenu');
     const content = document.getElementById('contextMenuContent');
 
@@ -2855,11 +2895,60 @@ function showContextMenu(clientX, clientY, isInsideBoundary) {
 
 /**
  * הסתרת תפריט קליק ימני
+ * Uses ContextMenu if available, otherwise falls back to old implementation
  */
 function hideContextMenu() {
+    // Use ContextMenu if available
+    if (window.mapContextMenu) {
+        window.mapContextMenu.hide();
+        return;
+    }
+
+    // Fallback: Old implementation
     const menu = document.getElementById('mapContextMenu');
     if (menu) {
         menu.style.display = 'none';
+    }
+}
+
+/**
+ * טיפול בפעולות של תפריט ההקשר
+ * REFACTORED: מרכז את כל הפעולות במקום אחד (Step 12/15)
+ */
+function handleContextMenuAction(action, data) {
+    console.log('Context menu action:', action, data);
+
+    switch (action) {
+        // Canvas actions (add items)
+        case 'addImage':
+            addImageFromMenu();
+            break;
+        case 'addText':
+            addTextFromMenu();
+            break;
+        case 'addRect':
+            addShapeFromMenu('rect');
+            break;
+        case 'addCircle':
+            addShapeFromMenu('circle');
+            break;
+        case 'addLine':
+            addShapeFromMenu('line');
+            break;
+
+        // Object actions
+        case 'deleteObject':
+            deleteContextMenuObject();
+            break;
+        case 'bringToFront':
+            bringObjectToFront();
+            break;
+        case 'sendToBack':
+            sendObjectToBack();
+            break;
+
+        default:
+            console.warn('Unknown context menu action:', action);
     }
 }
 
@@ -2868,8 +2957,18 @@ let contextMenuTargetObject = null;
 
 /**
  * הצגת תפריט קליק ימני לאובייקט (עם אפשרות מחיקה)
+ * Uses ContextMenu if available, otherwise falls back to old implementation
  */
 function showObjectContextMenu(clientX, clientY, targetObject) {
+    // Use ContextMenu if available
+    if (window.mapContextMenu) {
+        contextMenuTargetObject = targetObject;
+        window.mapContextMenu.showForObject(clientX, clientY, targetObject);
+        console.log('✅ Object context menu shown via ContextMenu');
+        return;
+    }
+
+    // Fallback: Old implementation
     const menu = document.getElementById('mapContextMenu');
     const content = document.getElementById('contextMenuContent');
 

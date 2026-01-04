@@ -2366,7 +2366,16 @@ function toggleBoundaryEdit() {
  * REFACTORED: משתמש ב-BackgroundEditor (Step 9/15)
  */
 function toggleBackgroundEdit() {
+    console.log('🖼️ [FUNC] toggleBackgroundEdit() called');
+    console.log('   [FUNC] window.mapBackgroundEditor:', window.mapBackgroundEditor ? '✅ Exists' : '❌ Missing');
+    console.log('   [FUNC] backgroundImage (local var):', backgroundImage ? '✅ Exists' : '❌ null');
+
     if (!backgroundImage) {
+        console.warn('❌ [FUNC] No background image - calling BackgroundEditor.enableEditMode()...');
+        // Try to use BackgroundEditor even if local backgroundImage is null
+        if (window.mapBackgroundEditor) {
+            window.mapBackgroundEditor.enableEditMode();
+        }
         return;
     }
 

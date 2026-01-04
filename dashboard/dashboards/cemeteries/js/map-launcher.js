@@ -228,7 +228,7 @@ async function loadEntitiesForType() {
 
     try {
         // קריאה ל-API לקבלת רשימת הישויות
-        const response = await fetch(`../api/map-api.php?action=listEntities&type=${entityType}`);
+        const response = await fetch(`api/map-api.php?action=listEntities&type=${entityType}`);
         const data = await response.json();
 
         if (data.success && data.entities) {

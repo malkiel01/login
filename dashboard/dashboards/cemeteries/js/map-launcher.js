@@ -1482,26 +1482,58 @@ function createMapCanvasFallback(canvasContainer) {
  */
 async function loadSavedMapData(entityType, unicId) {
     try {
+        console.log('');
+        console.log('═══════════════════════════════════════════════════════');
+        console.log('💾 [LOAD] loadSavedMapData() called');
+        console.log('═══════════════════════════════════════════════════════');
+        console.log('   [LOAD] entityType:', entityType);
+        console.log('   [LOAD] unicId:', unicId);
+
         // טען גבול הורה אם קיים (לישויות בנים)
         loadParentBoundary();
 
         const response = await fetch(`api/cemetery-hierarchy.php?action=get_map&type=${entityType}&id=${unicId}`);
+        console.log('   [LOAD] API response status:', response.status);
+
         const result = await response.json();
+        console.log('   [LOAD] API result.success:', result.success);
 
         if (!result.success) {
-            console.log('No saved map data found');
+            console.log('❌ [LOAD] No saved map data found');
+            console.log('═══════════════════════════════════════════════════════');
             return;
         }
+
+        console.log('   [LOAD] result.mapData:', result.mapData ? {
+            hasCanvasJSON: !!result.mapData.canvasJSON,
+            canvasJSONLength: result.mapData.canvasJSON ? result.mapData.canvasJSON.length : 0,
+            hasZoom: !!result.mapData.zoom,
+            zoom: result.mapData.zoom
+        } : 'null');
 
         if (!result.mapData || !result.mapData.canvasJSON) {
-            console.log('No canvas data in saved map');
+            console.log('❌ [LOAD] No canvas data in saved map');
+            console.log('═══════════════════════════════════════════════════════');
             return;
         }
 
-        console.log('Loading saved map data...');
+        console.log('✅ [LOAD] Loading saved map data...');
 
         // טען את ה-canvas מה-JSON
         window.mapCanvas.loadFromJSON(result.mapData.canvasJSON, function() {
+            console.log('   [LOAD] loadFromJSON callback - canvas loaded');
+
+            const allObjects = window.mapCanvas.getObjects();
+            console.log('   [LOAD] Total objects loaded:', allObjects.length);
+
+            // Count objects by type
+            const objectTypes = {};
+            allObjects.forEach(obj => {
+                const type = obj.objectType || obj.type || 'unknown';
+                objectTypes[type] = (objectTypes[type] || 0) + 1;
+            });
+            console.log('   [LOAD] Object types breakdown:', objectTypes);
+
             // עדכן משתנים גלובליים לפי האובייקטים שנטענו
             backgroundImage = null;
             if (window.mapState) window.mapState.setBackgroundImage(null);
@@ -1516,14 +1548,28 @@ async function loadSavedMapData(entityType, unicId) {
                 if (obj.objectType === 'backgroundLayer') {
                     backgroundImage = obj;
                     if (window.mapState) window.mapState.setBackgroundImage(obj);
+                    console.log('   [LOAD] Found backgroundLayer:', {
+                        width: obj.width,
+                        height: obj.height,
+                        scaleX: obj.scaleX,
+                        scaleY: obj.scaleY
+                    });
                 } else if (obj.objectType === 'grayMask') {
                     grayMask = obj;
                     if (window.mapState) window.mapState.setGrayMask(obj);
+                    console.log('   [LOAD] Found grayMask');
                 } else if (obj.objectType === 'boundaryOutline') {
                     boundaryOutline = obj;
                     if (window.mapState) window.mapState.setBoundaryOutline(obj);
+                    console.log('   [LOAD] Found boundaryOutline');
                 }
             });
+
+            // Update BackgroundEditor
+            if (window.mapBackgroundEditor && backgroundImage) {
+                window.mapBackgroundEditor.setBackgroundImage(backgroundImage);
+                console.log('   [LOAD] Updated BackgroundEditor with background image');
+            }
 
             // הסר את הטקסט ההתחלתי אם נטענו אובייקטים
             const objects = window.mapCanvas.getObjects('text');
@@ -1555,7 +1601,13 @@ async function loadSavedMapData(entityType, unicId) {
             resetHistory();
             saveCanvasState();
 
-            console.log('Map data loaded successfully');
+            console.log('✅ [LOAD] Map data loaded successfully');
+            console.log('   [LOAD] Final state:');
+            console.log('      backgroundImage:', backgroundImage ? '✅ Loaded' : '❌ null');
+            console.log('      grayMask:', grayMask ? '✅ Loaded' : '❌ null');
+            console.log('      boundaryOutline:', boundaryOutline ? '✅ Loaded' : '❌ null');
+            console.log('═══════════════════════════════════════════════════════');
+            console.log('');
         });
 
     } catch (error) {

@@ -47,12 +47,30 @@ export class Toolbar {
      * רינדור הטולבר
      */
     render() {
+        console.log('🔧 [Toolbar] render() called');
+        console.log('   [Toolbar] container:', this.container ? {
+            id: this.container.id,
+            exists: true,
+            childCount: this.container.children.length
+        } : '❌ null');
+
         if (!this.container) {
-            console.error('Toolbar container not found');
+            console.error('❌ [Toolbar] Container not found!');
             return;
         }
 
-        this.container.innerHTML = this.getToolbarHTML();
+        const html = this.getToolbarHTML();
+        console.log('   [Toolbar] Generated HTML length:', html.length, 'chars');
+
+        this.container.innerHTML = html;
+
+        console.log('   [Toolbar] After innerHTML - childCount:', this.container.children.length);
+
+        if (this.container.children.length === 0) {
+            console.error('❌ [Toolbar] innerHTML set but no children created!');
+        } else {
+            console.log('✅ [Toolbar] Rendered successfully with', this.container.children.length, 'children');
+        }
     }
 
     /**

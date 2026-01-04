@@ -39,8 +39,8 @@ let grayMask = null; // ← Synced with mapState.canvas.boundary.grayMask
 let boundaryOutline = null; // ← Synced with mapState.canvas.boundary.outline
 let isBoundaryEditMode = false; // ← Synced with mapState.canvas.boundary.isEditMode
 let isBackgroundEditMode = false; // ← Synced with mapState.canvas.background.isEditMode
-let currentPdfContext = null; // 'background' או 'workObject' - לשימוש בבחירת עמוד PDF
-let currentPdfDoc = null; // מסמך PDF נוכחי
+let currentPdfContext = null; // ← Synced with mapState.canvas.background.pdfContext
+let currentPdfDoc = null; // ← Synced with mapState.canvas.background.pdfDoc
 
 // גבול הורה (לישויות בנים)
 let parentBoundaryPoints = null; // נקודות הגבול של ההורה
@@ -2171,6 +2171,10 @@ function closeMapPopup() {
         }
         currentPdfContext = null;
         currentPdfDoc = null;
+        if (window.mapState) {
+            window.mapState.canvas.background.pdfContext = null;
+            window.mapState.canvas.background.pdfDoc = null;
+        }
         // איפוס היסטוריית undo/redo
         canvasHistory = [];
         historyIndex = -1;
@@ -2752,6 +2756,9 @@ async function handlePdfUpload(file, context) {
     }
 
     currentPdfContext = context;
+    if (window.mapState) {
+        window.mapState.canvas.background.pdfContext = context;
+    }
     console.log('currentPdfContext set to:', currentPdfContext);
 
     // הצג מודל בחירת עמוד
@@ -2778,6 +2785,9 @@ async function handlePdfUpload(file, context) {
         const arrayBuffer = await file.arrayBuffer();
         const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
         currentPdfDoc = pdf;
+        if (window.mapState) {
+            window.mapState.canvas.background.pdfDoc = pdf;
+        }
 
         const numPages = pdf.numPages;
         pageCountEl.textContent = `${numPages} עמודים`;
@@ -2989,6 +2999,10 @@ async function renderPdfPageToCanvas(pageNum) {
     // נקה
     currentPdfDoc = null;
     currentPdfContext = null;
+    if (window.mapState) {
+        window.mapState.canvas.background.pdfDoc = null;
+        window.mapState.canvas.background.pdfContext = null;
+    }
 }
 
 /**

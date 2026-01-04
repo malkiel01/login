@@ -936,11 +936,28 @@ async function loadMapData(entityType, unicId) {
  * אתחול המפה
  */
 function initializeMap(entityType, unicId, entity) {
-    // הזרקת CSS של toolbar, canvas, וכו' (אם לא קיים)
-    if (!document.getElementById('mapLauncherStyles')) {
-        const styles = document.createElement('style');
-        styles.id = 'mapLauncherStyles';
-        styles.textContent = `
+    console.log('');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('🎨 [CSS DEBUG] Checking mapLauncherStyles');
+    console.log('═══════════════════════════════════════════════════════');
+
+    const existingStyle = document.getElementById('mapLauncherStyles');
+    if (existingStyle) {
+        console.log('⚠️ [CSS] mapLauncherStyles ALREADY EXISTS!');
+        console.log('   [CSS] textContent length:', existingStyle.textContent.length);
+        console.log('   [CSS] First 200 chars:', existingStyle.textContent.substring(0, 200));
+        console.log('   [CSS] Contains ".map-toolbar":', existingStyle.textContent.includes('.map-toolbar'));
+        console.log('   [CSS] Contains "display: flex":', existingStyle.textContent.includes('display: flex'));
+
+        // FORCE DELETE OLD STYLE!
+        console.log('🗑️ [CSS] FORCING deletion of old mapLauncherStyles');
+        existingStyle.remove();
+    }
+
+    // הזרקת CSS של toolbar, canvas, וכו' (תמיד!)
+    const styles = document.createElement('style');
+    styles.id = 'mapLauncherStyles';
+    styles.textContent = `
             /* Toolbar Styles */
             .map-toolbar {
                 display: flex;
@@ -1072,9 +1089,27 @@ function initializeMap(entityType, unicId, entity) {
                 margin: 4px 0;
             }
         `;
-        document.head.appendChild(styles);
-        console.log('✅ [CSS-2] map-launcher Toolbar/Canvas CSS injected in initializeMap()');
-    }
+    document.head.appendChild(styles);
+    console.log('✅ [CSS-2] mapLauncherStyles INJECTED (forced)');
+    console.log('   [CSS-2] textContent length:', styles.textContent.length);
+    console.log('   [CSS-2] in document.head:', document.head.contains(styles));
+    console.log('   [CSS-2] can be found by ID:', !!document.getElementById('mapLauncherStyles'));
+
+    // Test if CSS is actually applied
+    setTimeout(() => {
+        const testDiv = document.createElement('div');
+        testDiv.className = 'map-toolbar';
+        document.body.appendChild(testDiv);
+        const computedStyle = window.getComputedStyle(testDiv);
+        console.log('🧪 [CSS TEST] Test div .map-toolbar styles:', {
+            display: computedStyle.display,
+            background: computedStyle.backgroundColor,
+            padding: computedStyle.padding
+        });
+        document.body.removeChild(testDiv);
+    }, 100);
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('');
 
     const container = document.getElementById('mapContainer');
 

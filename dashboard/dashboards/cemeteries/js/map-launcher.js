@@ -455,10 +455,10 @@ function openMapPopup(entityType, unicId) {
         </div>
     `;
 
-    // הוספת סגנונות הפופאפ
-    if (!document.getElementById('mapPopupStyles')) {
+    // הוספת סגנונות נוספים (toolbar, canvas, etc.)
+    if (!document.getElementById('mapLauncherStyles')) {
         const styles = document.createElement('style');
-        styles.id = 'mapPopupStyles';
+        styles.id = 'mapLauncherStyles';
         styles.textContent = `
             .map-popup-overlay {
                 position: fixed;
@@ -889,6 +889,7 @@ function openMapPopup(entityType, unicId) {
             }
         `;
         document.head.appendChild(styles);
+        console.log('✅ map-launcher CSS injected (toolbar, map-canvas, context menu, edit-mode styles)');
     }
 
     document.body.insertAdjacentHTML('beforeend', popupHTML);

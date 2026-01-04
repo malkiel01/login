@@ -389,6 +389,13 @@ export class MapPopup {
                 display: flex;
                 flex-direction: column;
             }
+            .map-canvas {
+                width: 100%;
+                flex: 1;
+                background: #e5e7eb;
+                position: relative;
+                overflow: hidden;
+            }
             .map-loading {
                 position: absolute;
                 top: 50%;
@@ -412,7 +419,7 @@ export class MapPopup {
         `;
 
         document.head.appendChild(styles);
-        console.log('✅ MapPopup CSS injected with flexbox layout');
+        console.log('✅ MapPopup CSS injected with flexbox layout (.map-container + .map-canvas with flex: 1)');
     }
 
     /**

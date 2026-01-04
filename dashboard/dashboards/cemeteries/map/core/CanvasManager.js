@@ -52,18 +52,32 @@ export class CanvasManager {
         }
 
         // חישוב גודל
+        const computedStyle = window.getComputedStyle(this.container);
         console.log('🔍 CanvasManager.create() - Container info:', {
             id: this.container.id,
             clientWidth: this.container.clientWidth,
             clientHeight: this.container.clientHeight,
             offsetWidth: this.container.offsetWidth,
-            offsetHeight: this.container.offsetHeight
+            offsetHeight: this.container.offsetHeight,
+            computedStyle: {
+                width: computedStyle.width,
+                height: computedStyle.height,
+                flex: computedStyle.flex,
+                display: computedStyle.display,
+                position: computedStyle.position
+            }
         });
 
         const width = this.container.clientWidth || 1400;
         const height = Math.max(100, this.container.clientHeight - 40); // minus indicator height, minimum 100px
 
-        console.log('📐 Calculated canvas size:', { width, height, usingFallback: this.container.clientWidth === 0 });
+        console.log('📐 Calculated canvas size:', {
+            width,
+            height,
+            usingFallback: this.container.clientWidth === 0,
+            containerActualHeight: this.container.clientHeight,
+            subtractedValue: 40
+        });
 
         // יצירת canvas element
         this.canvasElement = document.createElement('canvas');

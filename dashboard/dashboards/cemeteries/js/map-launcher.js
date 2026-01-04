@@ -989,12 +989,22 @@ function initializeMap(entityType, unicId, entity) {
 
     // Verify mapCanvas was created
     const mapCanvasElement = document.getElementById('mapCanvas');
-    console.log('🔍 After innerHTML set - mapCanvas element:', mapCanvasElement ? {
-        found: true,
+    const mapContainerElement = document.getElementById('mapContainer');
+
+    console.log('🔍 After innerHTML set - DOM structure:');
+    console.log('  mapContainer:', mapContainerElement ? {
+        clientWidth: mapContainerElement.clientWidth,
+        clientHeight: mapContainerElement.clientHeight,
+        display: window.getComputedStyle(mapContainerElement).display,
+        flexDirection: window.getComputedStyle(mapContainerElement).flexDirection
+    } : 'NOT FOUND');
+    console.log('  mapCanvas:', mapCanvasElement ? {
         clientWidth: mapCanvasElement.clientWidth,
         clientHeight: mapCanvasElement.clientHeight,
         offsetWidth: mapCanvasElement.offsetWidth,
-        offsetHeight: mapCanvasElement.offsetHeight
+        offsetHeight: mapCanvasElement.offsetHeight,
+        flex: window.getComputedStyle(mapCanvasElement).flex,
+        height: window.getComputedStyle(mapCanvasElement).height
     } : 'NOT FOUND');
 
     // סגירת תפריט בלחיצה מחוץ

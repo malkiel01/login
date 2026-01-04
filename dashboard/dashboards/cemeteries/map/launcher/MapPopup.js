@@ -97,6 +97,15 @@ export class MapPopup {
         // Store references
         this.overlay = document.getElementById('mapPopupOverlay');
         this.container = this.overlay.querySelector('.map-popup-container');
+
+        // Debug: Check initial container after creation
+        const initialMapContainer = document.getElementById('mapContainer');
+        console.log('🔍 MapPopup.createPopup() - Initial mapContainer after HTML insertion:', initialMapContainer ? {
+            clientWidth: initialMapContainer.clientWidth,
+            clientHeight: initialMapContainer.clientHeight,
+            display: window.getComputedStyle(initialMapContainer).display,
+            flexDirection: window.getComputedStyle(initialMapContainer).flexDirection
+        } : 'NOT FOUND');
     }
 
     /**
@@ -377,7 +386,8 @@ export class MapPopup {
             .map-container {
                 width: 100%;
                 height: 100%;
-                position: relative;
+                display: flex;
+                flex-direction: column;
             }
             .map-loading {
                 position: absolute;
@@ -402,6 +412,7 @@ export class MapPopup {
         `;
 
         document.head.appendChild(styles);
+        console.log('✅ MapPopup CSS injected with flexbox layout');
     }
 
     /**

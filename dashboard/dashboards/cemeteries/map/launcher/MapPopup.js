@@ -121,9 +121,20 @@ export class MapPopup {
 
             // Wait for DOM to be ready before initializing map
             // This ensures container dimensions are calculated correctly
+            console.log('⏳ Waiting 50ms for DOM to be ready...');
             await new Promise(resolve => setTimeout(resolve, 50));
 
+            // Check if container is ready
+            const mapContainer = document.getElementById('mapContainer');
+            console.log('🔍 MapPopup - Container dimensions after delay:', mapContainer ? {
+                clientWidth: mapContainer.clientWidth,
+                clientHeight: mapContainer.clientHeight,
+                offsetWidth: mapContainer.offsetWidth,
+                offsetHeight: mapContainer.offsetHeight
+            } : 'NOT FOUND');
+
             // Initialize map callback (will be handled by map-launcher)
+            console.log('🚀 Calling onMapInit callback...');
             if (this.options.onMapInit) {
                 this.options.onMapInit(entityType, unicId, entity);
             }

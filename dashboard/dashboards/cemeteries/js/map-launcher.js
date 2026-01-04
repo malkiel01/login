@@ -1014,10 +1014,21 @@ function initializeMap(entityType, unicId, entity) {
 function createMapCanvas(entityType, unicId, entity) {
     const canvasContainer = document.getElementById('mapCanvas');
 
+    console.log('🔍 createMapCanvas() called:', {
+        entityType,
+        unicId,
+        canvasContainer: canvasContainer ? 'found' : 'NOT FOUND',
+        containerDimensions: canvasContainer ? {
+            clientWidth: canvasContainer.clientWidth,
+            clientHeight: canvasContainer.clientHeight
+        } : null
+    });
+
     // ========================================
     // STEP 6/15: Use CanvasManager to create canvas
     // ========================================
     if (window.CanvasManagerClass) {
+        console.log('✅ Using CanvasManager');
         try {
             window.mapCanvasManager = new window.CanvasManagerClass(canvasContainer, {
                 canvasId: 'fabricCanvas',
@@ -1259,7 +1270,9 @@ function createMapCanvas(entityType, unicId, entity) {
     // ========================================
     // STEP 11/15: Initialize EditModeToggle
     // ========================================
+    console.log('🔍 Initializing EditModeToggle...');
     if (window.EditModeToggleClass) {
+        console.log('✅ EditModeToggleClass available');
         window.mapEditModeToggle = new window.EditModeToggleClass({
             canvas: window.mapCanvas,
             onToggle: (enabled) => {

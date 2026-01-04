@@ -52,8 +52,18 @@ export class CanvasManager {
         }
 
         // חישוב גודל
+        console.log('🔍 CanvasManager.create() - Container info:', {
+            id: this.container.id,
+            clientWidth: this.container.clientWidth,
+            clientHeight: this.container.clientHeight,
+            offsetWidth: this.container.offsetWidth,
+            offsetHeight: this.container.offsetHeight
+        });
+
         const width = this.container.clientWidth || 1400;
         const height = Math.max(100, this.container.clientHeight - 40); // minus indicator height, minimum 100px
+
+        console.log('📐 Calculated canvas size:', { width, height, usingFallback: this.container.clientWidth === 0 });
 
         // יצירת canvas element
         this.canvasElement = document.createElement('canvas');

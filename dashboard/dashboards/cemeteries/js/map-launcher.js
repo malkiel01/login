@@ -53,7 +53,8 @@ function createMapLauncherModal() {
                 <div class="map-launcher-body">
                     <div class="map-launcher-field">
                         <label for="mapEntityType">סוג ישות:</label>
-                        <select id="mapEntityType" class="map-launcher-select">
+                        <select id="mapEntityType" class="map-launcher-select" onchange="loadEntitiesForType()">
+                            <option value="">-- בחר סוג ישות --</option>
                             <option value="cemetery">בית עלמין</option>
                             <option value="block">גוש</option>
                             <option value="plot">חלקה</option>
@@ -61,8 +62,13 @@ function createMapLauncherModal() {
                         </select>
                     </div>
                     <div class="map-launcher-field">
-                        <label for="mapUnicId">מזהה ייחודי (unicId):</label>
-                        <input type="text" id="mapUnicId" class="map-launcher-input" placeholder="הזן unicId...">
+                        <label for="mapEntitySelect">בחר ישות:</label>
+                        <select id="mapEntitySelect" class="map-launcher-select" disabled>
+                            <option value="">-- תחילה בחר סוג ישות --</option>
+                        </select>
+                    </div>
+                    <div id="entityLoadingIndicator" class="map-launcher-loading" style="display: none;">
+                        טוען ישויות...
                     </div>
                 </div>
                 <div class="map-launcher-footer">
@@ -137,6 +143,18 @@ function createMapLauncherModal() {
             font-size: 14px;
             direction: rtl;
         }
+        .map-launcher-select:disabled {
+            background: #f3f4f6;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        .map-launcher-loading {
+            text-align: center;
+            color: #6b7280;
+            font-size: 14px;
+            padding: 10px;
+            font-style: italic;
+        }
         .map-launcher-footer {
             display: flex;
             justify-content: flex-start;
@@ -173,7 +191,7 @@ function openMapLauncher() {
     const modal = document.getElementById('mapLauncherModal');
     if (modal) {
         modal.style.display = 'flex';
-        document.getElementById('mapUnicId').focus();
+        document.getElementById('mapEntityType').focus();
     }
 }
 
@@ -181,18 +199,77 @@ function closeMapLauncher() {
     const modal = document.getElementById('mapLauncherModal');
     if (modal) {
         modal.style.display = 'none';
-        document.getElementById('mapUnicId').value = '';
-        document.getElementById('mapEntityType').value = 'cemetery';
+        document.getElementById('mapEntityType').value = '';
+        document.getElementById('mapEntitySelect').value = '';
+        document.getElementById('mapEntitySelect').disabled = true;
+        document.getElementById('mapEntitySelect').innerHTML = '<option value="">-- תחילה בחר סוג ישות --</option>';
+    }
+}
+
+/**
+ * טעינת רשימת ישויות לפי הסוג שנבחר
+ */
+async function loadEntitiesForType() {
+    const entityType = document.getElementById('mapEntityType').value;
+    const entitySelect = document.getElementById('mapEntitySelect');
+    const loadingIndicator = document.getElementById('entityLoadingIndicator');
+
+    // איפוס ה-select
+    entitySelect.innerHTML = '<option value="">-- בחר ישות --</option>';
+    entitySelect.disabled = true;
+
+    if (!entityType) {
+        entitySelect.innerHTML = '<option value="">-- תחילה בחר סוג ישות --</option>';
+        return;
+    }
+
+    // הצגת אינדיקטור טעינה
+    loadingIndicator.style.display = 'block';
+
+    try {
+        // קריאה ל-API לקבלת רשימת הישויות
+        const response = await fetch(`../api/map-api.php?action=listEntities&type=${entityType}`);
+        const data = await response.json();
+
+        if (data.success && data.entities) {
+            // מילוי ה-select עם הישויות
+            data.entities.forEach(entity => {
+                const option = document.createElement('option');
+                option.value = entity.unicId;
+                option.textContent = entity.name || entity.unicId;
+                entitySelect.appendChild(option);
+            });
+
+            entitySelect.disabled = false;
+
+            if (data.entities.length === 0) {
+                entitySelect.innerHTML = '<option value="">-- לא נמצאו ישויות --</option>';
+            }
+        } else {
+            throw new Error(data.error || 'שגיאה בטעינת הישויות');
+        }
+    } catch (error) {
+        console.error('Error loading entities:', error);
+        alert('שגיאה בטעינת רשימת הישויות: ' + error.message);
+        entitySelect.innerHTML = '<option value="">-- שגיאה בטעינה --</option>';
+    } finally {
+        loadingIndicator.style.display = 'none';
     }
 }
 
 async function launchMap() {
     const entityType = document.getElementById('mapEntityType').value;
-    const unicId = document.getElementById('mapUnicId').value.trim();
+    const unicId = document.getElementById('mapEntitySelect').value;
+
+    if (!entityType) {
+        alert('נא לבחור סוג ישות');
+        document.getElementById('mapEntityType').focus();
+        return;
+    }
 
     if (!unicId) {
-        alert('נא להזין מזהה ייחודי (unicId)');
-        document.getElementById('mapUnicId').focus();
+        alert('נא לבחור ישות מהרשימה');
+        document.getElementById('mapEntitySelect').focus();
         return;
     }
 

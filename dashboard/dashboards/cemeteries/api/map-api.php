@@ -69,9 +69,44 @@ try {
     $method = $_SERVER['REQUEST_METHOD'];
 
     // =====================================================
-    // GET - Load map data
+    // GET - Load map data OR list entities
     // =====================================================
     if ($method === 'GET') {
+        $action = $_GET['action'] ?? 'loadMap';
+
+        // -------------------------------------------------
+        // List entities by type
+        // -------------------------------------------------
+        if ($action === 'listEntities') {
+            $entityType = $_GET['type'] ?? null;
+
+            if (!$entityType) {
+                throw new Exception('Missing entity type');
+            }
+
+            $table = getTableName($entityType);
+            if (!$table) {
+                throw new Exception('Invalid entity type');
+            }
+
+            $nameField = getNameField($entityType);
+
+            // Get all active entities
+            $stmt = $pdo->prepare("SELECT unicId, {$nameField} as name FROM {$table} WHERE isActive = 1 ORDER BY {$nameField}");
+            $stmt->execute();
+            $entities = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            echo json_encode([
+                'success' => true,
+                'entities' => $entities,
+                'count' => count($entities)
+            ], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
+        // -------------------------------------------------
+        // Load map data (default action)
+        // -------------------------------------------------
         $entityType = $_GET['type'] ?? 'cemetery';
         $entityId = $_GET['id'] ?? null;
         $includeChildren = isset($_GET['children']);

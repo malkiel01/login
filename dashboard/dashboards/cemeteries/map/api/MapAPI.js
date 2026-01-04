@@ -252,6 +252,19 @@ export class MapAPI {
  */
 export class EntityAPI extends MapAPI {
     /**
+     * קבלת רשימת כל הישויות לפי סוג
+     * @param {string} entityType - סוג הישות (cemetery, block, plot, etc.)
+     * @returns {Promise<Array>} - מערך של ישויות עם {unicId, name}
+     */
+    async getEntitiesByType(entityType) {
+        const result = await this.get({
+            action: 'listEntities',
+            type: entityType
+        });
+        return result.entities || [];
+    }
+
+    /**
      * קבלת רשימת ישויות בנות
      * @param {string} parentType - סוג ישות ההורה
      * @param {string} parentId - מזהה ההורה

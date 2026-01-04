@@ -34,9 +34,9 @@ let currentUnicId = null; // ← Synced with mapState.entityId
 let drawingPolygon = false; // ← Synced with mapState.polygon.isDrawing
 let polygonPoints = []; // ← Synced with mapState.polygon.points
 let previewLine = null; // ← Synced with mapState.polygon.previewLine
-let boundaryClipPath = null; // גבול החיתוך
-let grayMask = null; // מסכה אפורה
-let boundaryOutline = null; // קו הגבול
+let boundaryClipPath = null; // ← Synced with mapState.canvas.boundary.clipPath
+let grayMask = null; // ← Synced with mapState.canvas.boundary.grayMask
+let boundaryOutline = null; // ← Synced with mapState.canvas.boundary.outline
 let isBoundaryEditMode = false; // מצב עריכת גבול
 let isBackgroundEditMode = false; // מצב עריכת תמונת רקע
 let currentPdfContext = null; // 'background' או 'workObject' - לשימוש בבחירת עמוד PDF
@@ -1180,6 +1180,10 @@ async function loadSavedMapData(entityType, unicId) {
             if (window.mapState) window.mapState.setBackgroundImage(null);
             grayMask = null;
             boundaryOutline = null;
+            if (window.mapState) {
+                window.mapState.setGrayMask(null);
+                window.mapState.setBoundaryOutline(null);
+            }
 
             window.mapCanvas.getObjects().forEach(obj => {
                 if (obj.objectType === 'backgroundLayer') {
@@ -1187,8 +1191,10 @@ async function loadSavedMapData(entityType, unicId) {
                     if (window.mapState) window.mapState.setBackgroundImage(obj);
                 } else if (obj.objectType === 'grayMask') {
                     grayMask = obj;
+                    if (window.mapState) window.mapState.setGrayMask(obj);
                 } else if (obj.objectType === 'boundaryOutline') {
                     boundaryOutline = obj;
+                    if (window.mapState) window.mapState.setBoundaryOutline(obj);
                 }
             });
 
@@ -1649,6 +1655,7 @@ function finishPolygon() {
     if (grayMask) {
         window.mapCanvas.remove(grayMask);
         grayMask = null;
+        if (window.mapState) window.mapState.setGrayMask(null);
     }
 
     const canvas = window.mapCanvas;
@@ -1656,9 +1663,13 @@ function finishPolygon() {
     const canvasHeight = canvas.height;
 
     // יצירת ה-clipPath לשימוש עתידי
-    boundaryClipPath = new fabric.Polygon(polygonPoints.map(p => ({x: p.x, y: p.y})), {
+    const newClipPath = new fabric.Polygon(polygonPoints.map(p => ({x: p.x, y: p.y})), {
         absolutePositioned: true
     });
+    boundaryClipPath = newClipPath;
+    if (window.mapState) {
+        window.mapState.canvas.boundary.clipPath = newClipPath;
+    }
 
     // יצירת מסכה אפורה עם "חור" בצורת הפוליגון
     // המסכה גדולה מאוד כדי לכסות גם בזמן zoom out
@@ -1674,7 +1685,7 @@ function finishPolygon() {
     }
     pathData += 'Z';
 
-    grayMask = new fabric.Path(pathData, {
+    const newGrayMask = new fabric.Path(pathData, {
         fill: 'rgba(128, 128, 128, 0.7)',
         stroke: null,
         strokeWidth: 0,
@@ -1682,6 +1693,10 @@ function finishPolygon() {
         evented: false,
         objectType: 'grayMask'
     });
+    grayMask = newGrayMask;
+    if (window.mapState) {
+        window.mapState.setGrayMask(newGrayMask);
+    }
 
     // קו גבול סביב האזור הפעיל - עיגול נקודות לפיקסלים שלמים למניעת טשטוש
     const roundedPoints = polygonPoints.map(p => ({
@@ -1689,7 +1704,7 @@ function finishPolygon() {
         y: Math.round(p.y)
     }));
 
-    boundaryOutline = new fabric.Polygon(roundedPoints, {
+    const newBoundaryOutline = new fabric.Polygon(roundedPoints, {
         fill: 'transparent',
         stroke: '#3b82f6',
         strokeWidth: 3,
@@ -1697,6 +1712,10 @@ function finishPolygon() {
         evented: false,
         objectType: 'boundaryOutline'
     });
+    boundaryOutline = newBoundaryOutline;
+    if (window.mapState) {
+        window.mapState.setBoundaryOutline(newBoundaryOutline);
+    }
 
     canvas.add(grayMask);
     canvas.add(boundaryOutline);
@@ -2011,6 +2030,11 @@ function deleteBoundary() {
     boundaryClipPath = null;
     grayMask = null;
     boundaryOutline = null;
+    if (window.mapState) {
+        window.mapState.canvas.boundary.clipPath = null;
+        window.mapState.setGrayMask(null);
+        window.mapState.setBoundaryOutline(null);
+    }
 
     // הסתר כפתורי עריכה ומחיקה של גבול
     const editBtn = document.getElementById('editBoundaryBtn');
@@ -2119,6 +2143,11 @@ function closeMapPopup() {
         boundaryClipPath = null;
         grayMask = null;
         boundaryOutline = null;
+        if (window.mapState) {
+            window.mapState.canvas.boundary.clipPath = null;
+            window.mapState.setGrayMask(null);
+            window.mapState.setBoundaryOutline(null);
+        }
         isBoundaryEditMode = false;
         isBackgroundEditMode = false;
         currentPdfContext = null;
@@ -3010,6 +3039,10 @@ function restoreCanvasState(state) {
         if (window.mapState) window.mapState.setBackgroundImage(null);
         grayMask = null;
         boundaryOutline = null;
+        if (window.mapState) {
+            window.mapState.setGrayMask(null);
+            window.mapState.setBoundaryOutline(null);
+        }
 
         window.mapCanvas.getObjects().forEach(obj => {
             if (obj.objectType === 'backgroundLayer') {
@@ -3017,8 +3050,10 @@ function restoreCanvasState(state) {
                 if (window.mapState) window.mapState.setBackgroundImage(obj);
             } else if (obj.objectType === 'grayMask') {
                 grayMask = obj;
+                if (window.mapState) window.mapState.setGrayMask(obj);
             } else if (obj.objectType === 'boundaryOutline') {
                 boundaryOutline = obj;
+                if (window.mapState) window.mapState.setBoundaryOutline(obj);
             }
         });
 

@@ -1,13 +1,33 @@
 /**
  * Map Launcher - מנהל פתיחת המפה
- * Version: 2.0.0
+ * Version: 3.0.0 - Refactoring Step 1/15: StateManager
  * Features: Edit mode, Background image, Polygon drawing
  */
 
-// משתנים גלובליים
+// ========================================
+// STEP 1/15: StateManager Integration
+// Load StateManager module and make it globally available
+// ========================================
+(async function initStateManager() {
+    try {
+        const { StateManager } = await import('../map/core/StateManager.js');
+        window.mapState = new StateManager();
+        console.log('✅ StateManager loaded');
+    } catch (error) {
+        console.error('❌ Failed to load StateManager:', error);
+        // Fallback: create simple state object
+        window.mapState = {
+            zoom: 1,
+            getZoom: function() { return this.zoom; },
+            setZoom: function(z) { this.zoom = z; }
+        };
+    }
+})();
+
+// משתנים גלובליים (מועברים בהדרגה ל-mapState)
 let currentMapMode = 'view';
 let isEditMode = false;
-let currentZoom = 1;
+let currentZoom = 1; // ← Will be replaced by mapState.zoom
 let backgroundImage = null;
 let currentEntityType = null;
 let currentUnicId = null;
@@ -2086,19 +2106,27 @@ function toggleMapFullscreen() {
  * זום
  */
 function zoomMapIn() {
-    currentZoom = Math.min(currentZoom + 0.1, 3);
+    // Using mapState instead of currentZoom
+    const newZoom = Math.min((window.mapState?.getZoom() || currentZoom) + 0.1, 3);
+    if (window.mapState) window.mapState.setZoom(newZoom);
+    currentZoom = newZoom; // Keep in sync for backwards compatibility
+
     updateZoomDisplay();
     if (window.mapCanvas) {
-        window.mapCanvas.setZoom(currentZoom);
+        window.mapCanvas.setZoom(newZoom);
         window.mapCanvas.renderAll();
     }
 }
 
 function zoomMapOut() {
-    currentZoom = Math.max(currentZoom - 0.1, 0.3);
+    // Using mapState instead of currentZoom
+    const newZoom = Math.max((window.mapState?.getZoom() || currentZoom) - 0.1, 0.3);
+    if (window.mapState) window.mapState.setZoom(newZoom);
+    currentZoom = newZoom; // Keep in sync for backwards compatibility
+
     updateZoomDisplay();
     if (window.mapCanvas) {
-        window.mapCanvas.setZoom(currentZoom);
+        window.mapCanvas.setZoom(newZoom);
         window.mapCanvas.renderAll();
     }
 }

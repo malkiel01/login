@@ -1554,7 +1554,6 @@ function finishPolygon() {
 
     grayMask = new fabric.Path(pathData, {
         fill: 'rgba(128, 128, 128, 0.7)',
-        fillRule: 'evenodd', // חשוב! זה מה שיוצר את ה"חור" בפוליגון
         selectable: false,
         evented: false,
         objectType: 'grayMask'
@@ -1805,10 +1804,7 @@ function updateMaskPosition() {
     pathData += 'Z';
 
     // עדכן את נתיב המסכה
-    grayMask.set({
-        path: fabric.util.parsePath(pathData),
-        fillRule: 'evenodd'
-    });
+    grayMask.set({ path: fabric.util.parsePath(pathData) });
     canvas.renderAll();
 }
 

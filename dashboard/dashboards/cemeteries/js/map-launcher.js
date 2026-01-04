@@ -31,9 +31,9 @@ let currentZoom = 1; // ← Synced with mapState.zoom
 let backgroundImage = null; // ← Synced with mapState.canvas.background.image
 let currentEntityType = null; // ← Synced with mapState.entityType
 let currentUnicId = null; // ← Synced with mapState.entityId
-let drawingPolygon = false;
-let polygonPoints = [];
-let previewLine = null; // קו תצוגה מקדימה
+let drawingPolygon = false; // ← Synced with mapState.polygon.isDrawing
+let polygonPoints = []; // ← Synced with mapState.polygon.points
+let previewLine = null; // ← Synced with mapState.polygon.previewLine
 let boundaryClipPath = null; // גבול החיתוך
 let grayMask = null; // מסכה אפורה
 let boundaryOutline = null; // קו הגבול
@@ -1484,6 +1484,10 @@ function startDrawPolygon() {
 
     drawingPolygon = true;
     polygonPoints = [];
+    if (window.mapState) {
+        window.mapState.polygon.isDrawing = true;
+        window.mapState.polygon.points = [];
+    }
 
     document.getElementById('drawPolygonBtn').classList.add('active');
 
@@ -1501,7 +1505,11 @@ function handleCanvasClick(options) {
     if (!drawingPolygon || !isEditMode) return;
 
     const pointer = window.mapCanvas.getPointer(options.e);
-    polygonPoints.push({ x: pointer.x, y: pointer.y });
+    const newPoint = { x: pointer.x, y: pointer.y };
+    polygonPoints.push(newPoint);
+    if (window.mapState) {
+        window.mapState.polygon.points.push(newPoint);
+    }
 
     // הוספת נקודה ויזואלית
     const point = new fabric.Circle({
@@ -1558,7 +1566,7 @@ function handleCanvasMouseMove(options) {
     }
 
     // יצירת קו תצוגה מקדימה מהנקודה האחרונה למיקום העכבר
-    previewLine = new fabric.Line([
+    const newPreviewLine = new fabric.Line([
         lastPoint.x,
         lastPoint.y,
         pointer.x,
@@ -1571,6 +1579,11 @@ function handleCanvasMouseMove(options) {
         evented: false,
         previewLine: true
     });
+
+    previewLine = newPreviewLine;
+    if (window.mapState) {
+        window.mapState.polygon.previewLine = newPreviewLine;
+    }
 
     window.mapCanvas.add(previewLine);
     window.mapCanvas.renderAll();
@@ -1619,6 +1632,9 @@ function finishPolygon() {
     if (previewLine) {
         window.mapCanvas.remove(previewLine);
         previewLine = null;
+        if (window.mapState) {
+            window.mapState.polygon.previewLine = null;
+        }
     }
 
     // הסרת נקודות וקווים זמניים
@@ -1694,6 +1710,10 @@ function finishPolygon() {
     // איפוס
     drawingPolygon = false;
     polygonPoints = [];
+    if (window.mapState) {
+        window.mapState.polygon.isDrawing = false;
+        window.mapState.polygon.points = [];
+    }
     document.getElementById('drawPolygonBtn').classList.remove('active');
     document.getElementById('mapCanvas').style.cursor = 'default';
 
@@ -1721,6 +1741,9 @@ function cancelPolygonDrawing() {
     if (previewLine) {
         window.mapCanvas.remove(previewLine);
         previewLine = null;
+        if (window.mapState) {
+            window.mapState.polygon.previewLine = null;
+        }
     }
 
     // הסרת נקודות וקווים זמניים
@@ -1733,6 +1756,10 @@ function cancelPolygonDrawing() {
 
     drawingPolygon = false;
     polygonPoints = [];
+    if (window.mapState) {
+        window.mapState.polygon.isDrawing = false;
+        window.mapState.polygon.points = [];
+    }
     document.getElementById('drawPolygonBtn')?.classList.remove('active');
     document.getElementById('mapCanvas').style.cursor = 'default';
     window.mapCanvas?.renderAll();
@@ -2084,6 +2111,11 @@ function closeMapPopup() {
         drawingPolygon = false;
         polygonPoints = [];
         previewLine = null;
+        if (window.mapState) {
+            window.mapState.polygon.isDrawing = false;
+            window.mapState.polygon.points = [];
+            window.mapState.polygon.previewLine = null;
+        }
         boundaryClipPath = null;
         grayMask = null;
         boundaryOutline = null;

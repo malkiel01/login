@@ -1,6 +1,6 @@
 /**
  * Map Launcher - מנהל פתיחת המפה
- * Version: 3.0.0 - Refactoring Step 1/15: StateManager
+ * Version: 3.0.0 - Refactoring Steps 1-2: StateManager + EntitySelector
  * Features: Edit mode, Background image, Polygon drawing
  */
 
@@ -21,6 +21,20 @@
             getZoom: function() { return this.zoom; },
             setZoom: function(z) { this.zoom = z; }
         };
+    }
+})();
+
+// ========================================
+// STEP 2/15: EntitySelector Integration
+// Load EntitySelector module for dynamic entity loading
+// ========================================
+(async function initEntitySelector() {
+    try {
+        const { EntitySelector } = await import('../map/launcher/EntitySelector.js');
+        window.entitySelector = new EntitySelector({ apiEndpoint: 'api/map-api.php' });
+        console.log('✅ EntitySelector loaded');
+    } catch (error) {
+        console.error('❌ Failed to load EntitySelector:', error);
     }
 })();
 
@@ -228,52 +242,29 @@ function closeMapLauncher() {
 
 /**
  * טעינת רשימת ישויות לפי הסוג שנבחר
+ * REFACTORED: משתמש ב-EntitySelector (Step 2/15)
  */
 async function loadEntitiesForType() {
     const entityType = document.getElementById('mapEntityType').value;
     const entitySelect = document.getElementById('mapEntitySelect');
     const loadingIndicator = document.getElementById('entityLoadingIndicator');
 
-    // איפוס ה-select
-    entitySelect.innerHTML = '<option value="">-- בחר ישות --</option>';
-    entitySelect.disabled = true;
-
-    if (!entityType) {
-        entitySelect.innerHTML = '<option value="">-- תחילה בחר סוג ישות --</option>';
+    // אם EntitySelector לא נטען עדיין, נמתין
+    if (!window.entitySelector) {
+        console.warn('EntitySelector not loaded yet, waiting...');
+        setTimeout(loadEntitiesForType, 100);
         return;
     }
 
-    // הצגת אינדיקטור טעינה
-    loadingIndicator.style.display = 'block';
-
     try {
-        // קריאה ל-API לקבלת רשימת הישויות
-        const response = await fetch(`api/map-api.php?action=listEntities&type=${entityType}`);
-        const data = await response.json();
-
-        if (data.success && data.entities) {
-            // מילוי ה-select עם הישויות
-            data.entities.forEach(entity => {
-                const option = document.createElement('option');
-                option.value = entity.unicId;
-                option.textContent = entity.name || entity.unicId;
-                entitySelect.appendChild(option);
-            });
-
-            entitySelect.disabled = false;
-
-            if (data.entities.length === 0) {
-                entitySelect.innerHTML = '<option value="">-- לא נמצאו ישויות --</option>';
-            }
-        } else {
-            throw new Error(data.error || 'שגיאה בטעינת הישויות');
-        }
+        await window.entitySelector.loadAndRender(
+            entityType,
+            entitySelect,
+            loadingIndicator
+        );
     } catch (error) {
         console.error('Error loading entities:', error);
         alert('שגיאה בטעינת רשימת הישויות: ' + error.message);
-        entitySelect.innerHTML = '<option value="">-- שגיאה בטעינה --</option>';
-    } finally {
-        loadingIndicator.style.display = 'none';
     }
 }
 

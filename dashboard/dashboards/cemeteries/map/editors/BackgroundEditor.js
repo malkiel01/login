@@ -100,6 +100,22 @@ export class BackgroundEditor {
     }
 
     /**
+     * עדכון תמונת הרקע
+     * @param {fabric.Image} imageObj
+     */
+    setBackgroundImage(imageObj) {
+        console.log('🖼️ [BackgroundEditor] setBackgroundImage() called with:', imageObj ? {
+            type: imageObj.type,
+            objectType: imageObj.objectType,
+            width: imageObj.width,
+            height: imageObj.height
+        } : 'null');
+
+        this.backgroundImage = imageObj;
+        console.log('   [BackgroundEditor] this.backgroundImage updated to:', this.backgroundImage ? '✅ Set' : '❌ null');
+    }
+
+    /**
      * הפעלת מצב עריכה
      */
     enableEditMode() {

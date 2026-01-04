@@ -25,6 +25,7 @@ let currentPdfDoc = null; // מסמך PDF נוכחי
 // גבול הורה (לישויות בנים)
 let parentBoundaryPoints = null; // נקודות הגבול של ההורה
 let parentBoundaryOutline = null; // קו גבול ההורה (לתצוגה)
+let lastValidBoundaryState = null; // מצב אחרון תקין של הגבול (לשחזור במקרה של גרירה מחוץ לגבול הורה)
 
 // Undo/Redo
 let canvasHistory = []; // היסטוריית מצבים
@@ -1575,6 +1576,9 @@ function finishPolygon() {
     // סידור שכבות נכון (כולל גבול ההורה)
     reorderLayers();
 
+    // נעילת אובייקטי מערכת - הגבול לא ניתן לעריכה עד שנלחץ על כפתור עריכה
+    lockSystemObjects();
+
     // איפוס
     drawingPolygon = false;
     polygonPoints = [];
@@ -1635,6 +1639,14 @@ function toggleBoundaryEdit() {
     if (isBoundaryEditMode) {
         // הפעל מצב עריכה - אפשר להזיז את הגבול בלבד
         editBtn.classList.add('active');
+
+        // שמור מצב התחלתי (למקרה של גרירה מחוץ לגבול הורה)
+        lastValidBoundaryState = {
+            left: boundaryOutline.left,
+            top: boundaryOutline.top,
+            scaleX: boundaryOutline.scaleX,
+            scaleY: boundaryOutline.scaleY
+        };
 
         // הפוך רק את הגבול לניתן לבחירה
         boundaryOutline.set({
@@ -1753,6 +1765,32 @@ function updateMaskPosition() {
         return transformed;
     });
 
+    // בדיקה אם הגבול יוצא מגבול ההורה (אם קיים)
+    if (parentBoundaryPoints && parentBoundaryPoints.length > 0) {
+        const pointsOutside = points.filter(p => !isPointInPolygon(p, parentBoundaryPoints));
+        if (pointsOutside.length > 0) {
+            // שחזר למצב האחרון התקין
+            if (lastValidBoundaryState) {
+                boundaryOutline.set({
+                    left: lastValidBoundaryState.left,
+                    top: lastValidBoundaryState.top,
+                    scaleX: lastValidBoundaryState.scaleX,
+                    scaleY: lastValidBoundaryState.scaleY
+                });
+                boundaryOutline.setCoords();
+            }
+            return;
+        }
+    }
+
+    // שמור מצב תקין
+    lastValidBoundaryState = {
+        left: boundaryOutline.left,
+        top: boundaryOutline.top,
+        scaleX: boundaryOutline.scaleX,
+        scaleY: boundaryOutline.scaleY
+    };
+
     // בנה מחדש את המסכה
     const canvas = window.mapCanvas;
     const canvasWidth = canvas.width;
@@ -1767,7 +1805,10 @@ function updateMaskPosition() {
     pathData += 'Z';
 
     // עדכן את נתיב המסכה
-    grayMask.set({ path: fabric.util.parsePath(pathData) });
+    grayMask.set({
+        path: fabric.util.parsePath(pathData),
+        fillRule: 'evenodd'
+    });
     canvas.renderAll();
 }
 

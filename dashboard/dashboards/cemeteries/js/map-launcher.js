@@ -936,6 +936,146 @@ async function loadMapData(entityType, unicId) {
  * אתחול המפה
  */
 function initializeMap(entityType, unicId, entity) {
+    // הזרקת CSS של toolbar, canvas, וכו' (אם לא קיים)
+    if (!document.getElementById('mapLauncherStyles')) {
+        const styles = document.createElement('style');
+        styles.id = 'mapLauncherStyles';
+        styles.textContent = `
+            /* Toolbar Styles */
+            .map-toolbar {
+                display: flex;
+                gap: 16px;
+                padding: 10px 16px;
+                background: white;
+                border-bottom: 1px solid #e5e7eb;
+                align-items: center;
+                flex-wrap: wrap;
+            }
+            .map-toolbar-group {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                padding: 4px;
+                background: #f3f4f6;
+                border-radius: 8px;
+            }
+            .map-toolbar-group.edit-only {
+                display: none;
+            }
+            .map-container.edit-mode .map-toolbar-group.edit-only {
+                display: flex;
+            }
+            .map-tool-btn {
+                width: 36px;
+                height: 36px;
+                border: none;
+                background: transparent;
+                border-radius: 6px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #4b5563;
+                font-size: 18px;
+                font-weight: 600;
+            }
+            .map-tool-btn:hover {
+                background: #e5e7eb;
+            }
+            .map-tool-btn.active {
+                background: #3b82f6;
+                color: white;
+            }
+            .map-tool-btn:disabled {
+                opacity: 0.4;
+                cursor: not-allowed;
+            }
+            .map-tool-btn.hidden-btn {
+                display: none !important;
+            }
+            .map-zoom-level {
+                padding: 0 8px;
+                font-size: 13px;
+                color: #6b7280;
+                min-width: 50px;
+                text-align: center;
+            }
+            .toolbar-separator {
+                width: 1px;
+                height: 24px;
+                background: #e5e7eb;
+                margin: 0 4px;
+            }
+            .map-canvas {
+                width: 100%;
+                flex: 1;
+                background: #e5e7eb;
+                position: relative;
+                overflow: hidden;
+            }
+            #fabricCanvas {
+                position: absolute;
+                top: 0;
+                left: 0;
+            }
+            .edit-mode-indicator {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                background: #3b82f6;
+                color: white;
+                padding: 6px 12px;
+                border-radius: 6px;
+                font-size: 12px;
+                font-weight: 500;
+                z-index: 100;
+                display: none;
+            }
+            .map-container.edit-mode .edit-mode-indicator {
+                display: block;
+            }
+            /* Context Menu */
+            .map-context-menu {
+                position: absolute;
+                background: white;
+                border-radius: 8px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+                z-index: 1000;
+                min-width: 180px;
+                overflow: hidden;
+                border: 1px solid #e5e7eb;
+            }
+            .context-menu-content {
+                padding: 4px 0;
+            }
+            .context-menu-item {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 10px 16px;
+                cursor: pointer;
+                transition: background 0.15s;
+                font-size: 14px;
+                color: #374151;
+            }
+            .context-menu-item:hover {
+                background: #f3f4f6;
+            }
+            .context-menu-item.disabled {
+                color: #9ca3af;
+                cursor: not-allowed;
+                background: #f9fafb;
+            }
+            .context-menu-separator {
+                height: 1px;
+                background: #e5e7eb;
+                margin: 4px 0;
+            }
+        `;
+        document.head.appendChild(styles);
+        console.log('✅ [CSS-2] map-launcher Toolbar/Canvas CSS injected in initializeMap()');
+    }
+
     const container = document.getElementById('mapContainer');
 
     console.log('🔍 initializeMap() called:', {

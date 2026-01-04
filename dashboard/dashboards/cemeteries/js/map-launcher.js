@@ -2568,6 +2568,16 @@ function cleanupMapState() {
         window.mapCanvas = null;
     }
 
+    // Clear all module instances
+    window.mapToolbar = null;
+    window.mapZoomControls = null;
+    window.mapPolygonDrawer = null;
+    window.mapBoundaryEditor = null;
+    window.mapBackgroundEditor = null;
+    window.mapHistoryManager = null;
+    window.mapEditModeToggle = null;
+    window.mapContextMenu = null;
+
     // Clear all state variables
     backgroundImage = null;
     if (window.mapState) window.mapState.setBackgroundImage(null);

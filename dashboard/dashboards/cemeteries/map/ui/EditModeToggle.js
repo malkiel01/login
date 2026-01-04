@@ -27,6 +27,7 @@ export class EditModeToggle {
         this.isEnabled = false;
         this.checkbox = null;
         this.container = null;
+        this.changeHandler = null;
     }
 
     /**
@@ -41,11 +42,18 @@ export class EditModeToggle {
             return false;
         }
 
-        // Listen to checkbox changes (if not already handled by onchange attribute)
-        // This allows programmatic control
-        this.checkbox.addEventListener('change', (e) => {
+        // Remove old listener if exists
+        if (this.changeHandler) {
+            this.checkbox.removeEventListener('change', this.changeHandler);
+        }
+
+        // Create new handler
+        this.changeHandler = (e) => {
             this.setEnabled(e.target.checked);
-        });
+        };
+
+        // Add listener
+        this.checkbox.addEventListener('change', this.changeHandler);
 
         console.log('✅ EditModeToggle initialized');
         return true;

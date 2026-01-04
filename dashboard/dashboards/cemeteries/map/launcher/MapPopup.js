@@ -1,8 +1,8 @@
 /**
- * MapPopup - àÙÔÕÜ äÕäÐä ÔÞäÔ
+ * MapPopup - ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
  * Version: 1.0.0
  *
- * Þ×ÜçÔ ÜàÙÔÕÜ äÕäÐä ÔÞäÔ - ÙæÙèÔ, ØâÙàÔ, áÒÙèÔ, ÞáÚ ÞÜÐ
+ * ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
  * Usage:
  *   const popup = new MapPopup({
  *     onOpen: (entityType, entityId) => {...},
@@ -27,7 +27,7 @@ export class MapPopup {
     }
 
     /**
-     * äêÙ×ê ÔäÕäÐä
+     * ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
      * @param {string} entityType - cemetery, block, plot, areaGrave
      * @param {string} unicId - ID of the entity
      */
@@ -50,7 +50,7 @@ export class MapPopup {
     }
 
     /**
-     * ÙæÙèê HTML éÜ ÔäÕäÐä
+     * ï¿½ï¿½ï¿½ï¿½ï¿½ HTML ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
      * @private
      */
     createPopup() {
@@ -58,17 +58,17 @@ export class MapPopup {
             <div id="mapPopupOverlay" class="map-popup-overlay">
                 <div class="map-popup-container">
                     <div class="map-popup-header">
-                        <h3 id="mapPopupTitle">ØÕâß ÞäÔ...</h3>
+                        <h3 id="mapPopupTitle">ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½...</h3>
                         <div class="map-popup-controls">
-                            <!-- ØÕÒÜ ÞæÑ âèÙÛÔ -->
+                            <!-- ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ -->
                             <div class="edit-mode-toggle">
-                                <span class="toggle-label">ÞæÑ âèÙÛÔ</span>
+                                <span class="toggle-label">ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½</span>
                                 <label class="toggle-switch">
-                                    <input type="checkbox" id="editModeToggle" onchange="toggleEditMode(this.checked)">
+                                    <input type="checkbox" id="editModeToggle">
                                     <span class="toggle-slider"></span>
                                 </label>
                             </div>
-                            <button type="button" class="map-popup-btn" onclick="toggleMapFullscreen()" title="ÞáÚ ÞÜÐ">
+                            <button type="button" class="map-popup-btn" onclick="toggleMapFullscreen()" title="ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
                                 </svg>
@@ -80,7 +80,7 @@ export class MapPopup {
                         <div id="mapContainer" class="map-container">
                             <div class="map-loading">
                                 <div class="map-spinner"></div>
-                                <p>ØÕâß ÞäÔ...</p>
+                                <p>ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½...</p>
                             </div>
                         </div>
                     </div>
@@ -100,7 +100,7 @@ export class MapPopup {
     }
 
     /**
-     * ØâÙàê àêÕàÙ ÔÞäÔ ÞÔ-API
+     * ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½-API
      * @param {string} entityType
      * @param {string} unicId
      * @private
@@ -111,7 +111,7 @@ export class MapPopup {
             const result = await response.json();
 
             if (!result.success) {
-                throw new Error(result.error || 'ÜÐ àÞæÐÔ ÙéÕê');
+                throw new Error(result.error || 'ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½');
             }
 
             const entity = result.data;
@@ -119,45 +119,49 @@ export class MapPopup {
             // Update title
             this.updateTitle(entityType, entity);
 
+            // Wait for DOM to be ready before initializing map
+            // This ensures container dimensions are calculated correctly
+            await new Promise(resolve => setTimeout(resolve, 50));
+
             // Initialize map callback (will be handled by map-launcher)
             if (this.options.onMapInit) {
                 this.options.onMapInit(entityType, unicId, entity);
             }
 
         } catch (error) {
-            console.error('éÒÙÐÔ ÑØâÙàê ÔÞäÔ:', error);
+            console.error('ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½:', error);
             this.showError(error.message);
         }
     }
 
     /**
-     * âÓÛÕß ÛÕêèê ÔäÕäÐä
+     * ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
      * @param {string} entityType
      * @param {object} entity
      * @private
      */
     updateTitle(entityType, entity) {
         const entityNames = {
-            cemetery: 'ÑÙê âÜÞÙß',
-            block: 'ÒÕé',
-            plot: '×ÜçÔ',
-            areaGrave: 'Ð×ÕÖê çÑè'
+            cemetery: 'ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½',
+            block: 'ï¿½ï¿½ï¿½',
+            plot: 'ï¿½ï¿½ï¿½ï¿½',
+            areaGrave: 'ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½'
         };
 
         const entityName = entity.cemeteryNameHe ||
                           entity.blockNameHe ||
                           entity.plotNameHe ||
                           entity.areaGraveNameHe ||
-                          'ÜÐ ÙÓÕâ';
+                          'ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½';
 
         const title = document.getElementById('mapPopupTitle');
         if (title) {
-            title.textContent = `Þäê ${entityNames[entityType]}: ${entityName}`;
+            title.textContent = `ï¿½ï¿½ï¿½ ${entityNames[entityType]}: ${entityName}`;
         }
     }
 
     /**
-     * ÔæÒê éÒÙÐÔ
+     * ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
      * @param {string} message
      * @private
      */
@@ -166,15 +170,15 @@ export class MapPopup {
         if (container) {
             container.innerHTML = `
                 <div class="map-loading">
-                    <p style="color: #dc2626;">éÒÙÐÔ: ${message}</p>
-                    <button onclick="closeMapPopup()" style="margin-top: 12px; padding: 8px 16px; cursor: pointer;">áÒÕè</button>
+                    <p style="color: #dc2626;">ï¿½ï¿½ï¿½ï¿½ï¿½: ${message}</p>
+                    <button onclick="closeMapPopup()" style="margin-top: 12px; padding: 8px 16px; cursor: pointer;">ï¿½ï¿½ï¿½ï¿½</button>
                 </div>
             `;
         }
     }
 
     /**
-     * áÒÙèê ÔäÕäÐä ÕàÙçÕÙ
+     * ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
      */
     close() {
         if (this.overlay) {
@@ -192,7 +196,7 @@ export class MapPopup {
     }
 
     /**
-     * ÞâÑè ÜÞæÑ ÞáÚ ÞÜÐ / ÙæÙÐÔ ÞÞáÚ ÞÜÐ
+     * ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ / ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
      */
     toggleFullscreen() {
         if (!this.container) return;
@@ -216,7 +220,7 @@ export class MapPopup {
     }
 
     /**
-     * ÔÖèçê áÒàÕàÕê CSS ÜÓã
+     * ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ CSS ï¿½ï¿½ï¿½
      * @private
      */
     injectStyles() {
@@ -393,7 +397,7 @@ export class MapPopup {
      * Debug info
      */
     debug() {
-        console.group('=ú MapPopup');
+        console.group('=ï¿½ MapPopup');
         console.log('Overlay:', this.overlay ? 'open' : 'closed');
         console.log('Fullscreen:', this.isFullscreen);
         console.groupEnd();

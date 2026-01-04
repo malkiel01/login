@@ -52,8 +52,8 @@ export class CanvasManager {
         }
 
         // חישוב גודל
-        const width = this.container.clientWidth;
-        const height = this.container.clientHeight - 40; // minus indicator height
+        const width = this.container.clientWidth || 1400;
+        const height = Math.max(100, this.container.clientHeight - 40); // minus indicator height, minimum 100px
 
         // יצירת canvas element
         this.canvasElement = document.createElement('canvas');

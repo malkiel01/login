@@ -290,7 +290,9 @@ $config = $entityConfig[$entityType] ?? $entityConfig['cemetery'];
             const loadingOverlay = document.getElementById('loadingOverlay');
 
             try {
+                console.log('🚀 Starting map initialization...');
                 const config = window.MAP_CONFIG;
+                console.log('📋 Config:', config);
 
                 // Create map manager instance
                 const mapManager = new MapManager({
@@ -300,39 +302,52 @@ $config = $entityConfig[$entityType] ?? $entityConfig['cemetery'];
                     canvasId: 'mapCanvas'
                 });
 
+                console.log('✅ MapManager created');
+
+                // Listen for all events for debugging
+                mapManager.on('loading:start', () => console.log('📥 Loading started...'));
+                mapManager.on('data:loaded', (data) => console.log('📊 Data loaded:', data));
+                mapManager.on('data:error', (data) => console.error('❌ Data error:', data.error));
+
                 // Listen for initialization complete
                 mapManager.on('init:complete', () => {
+                    console.log('✅ Map initialized successfully');
                     if (loadingOverlay) {
                         loadingOverlay.style.display = 'none';
                     }
-                    console.log('Map initialized successfully');
                 });
 
                 // Listen for initialization error
                 mapManager.on('init:error', (data) => {
+                    console.error('❌ Init error:', data.error);
                     if (loadingOverlay) {
                         loadingOverlay.innerHTML = `
-                            <div style="text-align:center; color:#dc2626;">
-                                <p>שגיאה בטעינת המפה</p>
-                                <p style="font-size:14px; margin-top:10px;">${data.error.message}</p>
+                            <div style="text-align:center; color:#dc2626; padding:20px;">
+                                <p style="font-size:18px; font-weight:bold;">שגיאה בטעינת המפה</p>
+                                <p style="font-size:14px; margin-top:10px; background:#fee; padding:10px; border-radius:8px; direction:ltr; text-align:left;">${data.error.message}</p>
+                                <p style="font-size:12px; margin-top:10px; color:#666;">בדוק את ה-Console לפרטים נוספים</p>
                             </div>
                         `;
                     }
                 });
 
+                console.log('🔧 Starting init()...');
                 // Initialize and load the map
                 await mapManager.init();
 
                 // Make it globally accessible for debugging
                 window.mapManager = mapManager;
+                console.log('🎉 All done!');
 
             } catch (error) {
-                console.error('Failed to initialize map:', error);
+                console.error('💥 Failed to initialize map:', error);
+                console.error('Stack:', error.stack);
                 if (loadingOverlay) {
                     loadingOverlay.innerHTML =
-                        '<div style="text-align:center; color:#dc2626;">' +
-                        '<p>שגיאה בטעינת המפה</p>' +
-                        '<p style="font-size:14px; margin-top:10px;">' + error.message + '</p>' +
+                        '<div style="text-align:center; color:#dc2626; padding:20px;">' +
+                        '<p style="font-size:18px; font-weight:bold;">שגיאה בטעינת המפה</p>' +
+                        '<p style="font-size:14px; margin-top:10px; background:#fee; padding:10px; border-radius:8px; direction:ltr; text-align:left;">' + error.message + '</p>' +
+                        '<p style="font-size:12px; margin-top:10px; color:#666;">בדוק את ה-Console לפרטים נוספים</p>' +
                         '</div>';
                 }
             }

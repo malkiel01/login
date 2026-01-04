@@ -65,9 +65,15 @@ export class BoundaryManager {
             showMask = true
         } = options;
 
+        // עיגול נקודות לפיקסלים שלמים למניעת טשטוש
+        const roundedPoints = points.map(p => ({
+            x: Math.round(p.x),
+            y: Math.round(p.y)
+        }));
+
         // יצירת קו תיאור הגבול
         if (showOutline) {
-            this.boundaryOutline = new fabric.Polygon(points, {
+            this.boundaryOutline = new fabric.Polygon(roundedPoints, {
                 fill: 'transparent',
                 stroke: color,
                 strokeWidth: 3,
@@ -81,20 +87,20 @@ export class BoundaryManager {
             this.canvas.add(this.boundaryOutline);
         }
 
-        // יצירת מסכת חיתוך
-        this.clipPath = new fabric.Polygon(points, {
+        // יצירת מסכת חיתוך (גם מעוגלת!)
+        this.clipPath = new fabric.Polygon(roundedPoints, {
             absolutePositioned: true,
             inverted: false
         });
 
-        // יצירת מסכה אפורה
+        // יצירת מסכה אפורה (מקבלת נקודות מעוגלות)
         if (showMask) {
-            this.createGrayMask(points);
+            this.createGrayMask(roundedPoints);
         }
 
-        // שמירת נקודות הגבול
+        // שמירת נקודות הגבול (כבר מעוגלות)
         this.boundary = {
-            points: points.map(p => ({ ...p })),
+            points: roundedPoints.map(p => ({ ...p })),
             name,
             color
         };
@@ -104,8 +110,11 @@ export class BoundaryManager {
 
     /**
      * יצירת מסכה אפורה מחוץ לגבול
+     * @param {Array} points - נקודות הגבול (כבר מעוגלות!)
      */
     createGrayMask(points) {
+        // הנקודות כבר מעוגלות ב-setBoundary()!
+
         // נרחיב את הגבולות של המסכה כדי לכסות את כל ה-viewport
         const canvasWidth = this.canvas.width * 10;
         const canvasHeight = this.canvas.height * 10;
@@ -122,13 +131,14 @@ export class BoundaryManager {
         const allPoints = [
             ...outerRect,
             { x: -canvasWidth, y: -canvasHeight }, // סגירת המלבן
-            ...points.slice().reverse(), // הפוליגון בכיוון הפוך
+            ...points.slice().reverse(), // הפוליגון בכיוון הפוך (כבר מעוגל!)
             points[points.length - 1] // סגירת הפוליגון
         ];
 
         this.grayMask = new fabric.Polygon(allPoints, {
             fill: 'rgba(0, 0, 0, 0.5)',
             stroke: null,
+            strokeWidth: 0,
             selectable: false,
             evented: false,
             objectCaching: false,

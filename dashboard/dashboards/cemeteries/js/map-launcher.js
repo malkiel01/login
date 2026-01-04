@@ -48,8 +48,8 @@ let parentBoundaryOutline = null; // ← Synced with mapState.canvas.parent.outl
 let lastValidBoundaryState = null; // מצב אחרון תקין של הגבול (לשחזור במקרה של גרירה מחוץ לגבול הורה)
 
 // Undo/Redo
-let canvasHistory = []; // היסטוריית מצבים
-let historyIndex = -1; // אינדקס נוכחי בהיסטוריה
+let canvasHistory = []; // ← Synced with mapState.history.states
+let historyIndex = -1; // ← Synced with mapState.history.currentIndex
 const MAX_HISTORY = 30; // מקסימום מצבים לשמירה
 
 // יצירת המודל בטעינה
@@ -2190,6 +2190,10 @@ function closeMapPopup() {
         // איפוס היסטוריית undo/redo
         canvasHistory = [];
         historyIndex = -1;
+        if (window.mapState) {
+            window.mapState.history.states = [];
+            window.mapState.history.currentIndex = -1;
+        }
         popup.remove();
     }
 }
@@ -3039,17 +3043,29 @@ function saveCanvasState() {
     // מחק את ההיסטוריה העתידית אם חזרנו אחורה ועשינו שינוי
     if (historyIndex < canvasHistory.length - 1) {
         canvasHistory = canvasHistory.slice(0, historyIndex + 1);
+        if (window.mapState) {
+            window.mapState.history.states = canvasHistory.slice();
+        }
     }
 
     // שמור את המצב הנוכחי
     const state = JSON.stringify(window.mapCanvas.toJSON(['objectType', 'polygonPoint', 'polygonLine']));
     canvasHistory.push(state);
+    if (window.mapState) {
+        window.mapState.history.states.push(state);
+    }
 
     // הגבל את גודל ההיסטוריה
     if (canvasHistory.length > MAX_HISTORY) {
         canvasHistory.shift();
+        if (window.mapState) {
+            window.mapState.history.states.shift();
+        }
     } else {
         historyIndex++;
+        if (window.mapState) {
+            window.mapState.history.currentIndex++;
+        }
     }
 
     updateUndoRedoButtons();
@@ -3062,6 +3078,9 @@ function undoCanvas() {
     if (!window.mapCanvas || historyIndex <= 0) return;
 
     historyIndex--;
+    if (window.mapState) {
+        window.mapState.history.currentIndex--;
+    }
     restoreCanvasState(canvasHistory[historyIndex]);
 }
 
@@ -3072,6 +3091,9 @@ function redoCanvas() {
     if (!window.mapCanvas || historyIndex >= canvasHistory.length - 1) return;
 
     historyIndex++;
+    if (window.mapState) {
+        window.mapState.history.currentIndex++;
+    }
     restoreCanvasState(canvasHistory[historyIndex]);
 }
 
@@ -3205,5 +3227,9 @@ function updateToolbarButtons() {
 function resetHistory() {
     canvasHistory = [];
     historyIndex = -1;
+    if (window.mapState) {
+        window.mapState.history.states = [];
+        window.mapState.history.currentIndex = -1;
+    }
     updateUndoRedoButtons();
 }

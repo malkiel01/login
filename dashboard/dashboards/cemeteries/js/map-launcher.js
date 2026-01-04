@@ -591,7 +591,8 @@ function openMapPopup(entityType, unicId) {
                 width: 100%;
                 height: 100%;
                 background: #f3f4f6;
-                position: relative;
+                display: flex;
+                flex-direction: column;
             }
             .map-loading {
                 position: absolute;
@@ -681,7 +682,7 @@ function openMapPopup(entityType, unicId) {
             }
             .map-canvas {
                 width: 100%;
-                height: calc(100% - 56px);
+                flex: 1;
                 background: #e5e7eb;
                 position: relative;
                 overflow: hidden;

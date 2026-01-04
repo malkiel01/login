@@ -58,17 +58,17 @@ export class MapPopup {
             <div id="mapPopupOverlay" class="map-popup-overlay">
                 <div class="map-popup-container">
                     <div class="map-popup-header">
-                        <h3 id="mapPopupTitle">���� ���...</h3>
+                        <h3 id="mapPopupTitle">טוען מפה...</h3>
                         <div class="map-popup-controls">
-                            <!-- ���� ��� ����� -->
+                            <!-- כפתור מצב עריכה -->
                             <div class="edit-mode-toggle">
-                                <span class="toggle-label">��� �����</span>
+                                <span class="toggle-label">מצב עריכה</span>
                                 <label class="toggle-switch">
                                     <input type="checkbox" id="editModeToggle">
                                     <span class="toggle-slider"></span>
                                 </label>
                             </div>
-                            <button type="button" class="map-popup-btn" onclick="toggleMapFullscreen()" title="��� ���">
+                            <button type="button" class="map-popup-btn" onclick="toggleMapFullscreen()" title="מסך מלא">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
                                 </svg>
@@ -80,7 +80,7 @@ export class MapPopup {
                         <div id="mapContainer" class="map-container">
                             <div class="map-loading">
                                 <div class="map-spinner"></div>
-                                <p>���� ���...</p>
+                                <p>טוען מפה...</p>
                             </div>
                         </div>
                     </div>
@@ -120,7 +120,7 @@ export class MapPopup {
             const result = await response.json();
 
             if (!result.success) {
-                throw new Error(result.error || '�� ����� ����');
+                throw new Error(result.error || 'לא נמצאה מפה');
             }
 
             const entity = result.data;
@@ -149,7 +149,7 @@ export class MapPopup {
             }
 
         } catch (error) {
-            console.error('����� ������ ����:', error);
+            console.error('שגיאה בטעינת מפה:', error);
             this.showError(error.message);
         }
     }
@@ -162,21 +162,21 @@ export class MapPopup {
      */
     updateTitle(entityType, entity) {
         const entityNames = {
-            cemetery: '��� �����',
-            block: '���',
-            plot: '����',
-            areaGrave: '����� ���'
+            cemetery: 'בית עלמין',
+            block: 'גוש',
+            plot: 'חלקה',
+            areaGrave: 'שטח קבר'
         };
 
         const entityName = entity.cemeteryNameHe ||
                           entity.blockNameHe ||
                           entity.plotNameHe ||
                           entity.areaGraveNameHe ||
-                          '�� ����';
+                          'לא ידוע';
 
         const title = document.getElementById('mapPopupTitle');
         if (title) {
-            title.textContent = `��� ${entityNames[entityType]}: ${entityName}`;
+            title.textContent = `מפת ${entityNames[entityType]}: ${entityName}`;
         }
     }
 
@@ -190,8 +190,8 @@ export class MapPopup {
         if (container) {
             container.innerHTML = `
                 <div class="map-loading">
-                    <p style="color: #dc2626;">�����: ${message}</p>
-                    <button onclick="closeMapPopup()" style="margin-top: 12px; padding: 8px 16px; cursor: pointer;">����</button>
+                    <p style="color: #dc2626;">שגיאה: ${message}</p>
+                    <button onclick="closeMapPopup()" style="margin-top: 12px; padding: 8px 16px; cursor: pointer;">סגור</button>
                 </div>
             `;
         }

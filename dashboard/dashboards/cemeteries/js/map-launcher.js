@@ -37,8 +37,8 @@ let previewLine = null; // ← Synced with mapState.polygon.previewLine
 let boundaryClipPath = null; // ← Synced with mapState.canvas.boundary.clipPath
 let grayMask = null; // ← Synced with mapState.canvas.boundary.grayMask
 let boundaryOutline = null; // ← Synced with mapState.canvas.boundary.outline
-let isBoundaryEditMode = false; // מצב עריכת גבול
-let isBackgroundEditMode = false; // מצב עריכת תמונת רקע
+let isBoundaryEditMode = false; // ← Synced with mapState.canvas.boundary.isEditMode
+let isBackgroundEditMode = false; // ← Synced with mapState.canvas.background.isEditMode
 let currentPdfContext = null; // 'background' או 'workObject' - לשימוש בבחירת עמוד PDF
 let currentPdfDoc = null; // מסמך PDF נוכחי
 
@@ -1401,6 +1401,9 @@ function handleBackgroundUpload(event) {
 
             // הפעל מצב עריכת רקע אוטומטית
             isBackgroundEditMode = true;
+            if (window.mapState) {
+                window.mapState.canvas.background.isEditMode = true;
+            }
             console.log('isBackgroundEditMode set to true');
 
             // וודא שהמסכה נעולה
@@ -1791,6 +1794,9 @@ function toggleBoundaryEdit() {
     if (!boundaryOutline || !grayMask) return;
 
     isBoundaryEditMode = !isBoundaryEditMode;
+    if (window.mapState) {
+        window.mapState.canvas.boundary.isEditMode = isBoundaryEditMode;
+    }
 
     const editBtn = document.getElementById('editBoundaryBtn');
 
@@ -1861,6 +1867,9 @@ function toggleBackgroundEdit() {
     }
 
     isBackgroundEditMode = !isBackgroundEditMode;
+    if (window.mapState) {
+        window.mapState.canvas.background.isEditMode = isBackgroundEditMode;
+    }
     console.log('isBackgroundEditMode is now:', isBackgroundEditMode);
 
     const editBtn = document.getElementById('editBackgroundBtn');
@@ -1980,6 +1989,9 @@ function deleteBackground() {
     // כיבוי מצב עריכה אם פעיל
     if (isBackgroundEditMode) {
         isBackgroundEditMode = false;
+        if (window.mapState) {
+            window.mapState.canvas.background.isEditMode = false;
+        }
         const editBtn = document.getElementById('editBackgroundBtn');
         if (editBtn) editBtn.classList.remove('active');
     }
@@ -2011,6 +2023,9 @@ function deleteBoundary() {
     // כיבוי מצב עריכה אם פעיל
     if (isBoundaryEditMode) {
         isBoundaryEditMode = false;
+        if (window.mapState) {
+            window.mapState.canvas.boundary.isEditMode = false;
+        }
         const editBtn = document.getElementById('editBoundaryBtn');
         if (editBtn) editBtn.classList.remove('active');
     }
@@ -2150,6 +2165,10 @@ function closeMapPopup() {
         }
         isBoundaryEditMode = false;
         isBackgroundEditMode = false;
+        if (window.mapState) {
+            window.mapState.canvas.boundary.isEditMode = false;
+            window.mapState.canvas.background.isEditMode = false;
+        }
         currentPdfContext = null;
         currentPdfDoc = null;
         // איפוס היסטוריית undo/redo
@@ -2913,6 +2932,9 @@ async function renderPdfPageToCanvas(pageNum) {
 
                 // הפעל מצב עריכת רקע אוטומטית
                 isBackgroundEditMode = true;
+                if (window.mapState) {
+                    window.mapState.canvas.background.isEditMode = true;
+                }
 
                 // וודא שהמסכה נעולה
                 if (grayMask) {

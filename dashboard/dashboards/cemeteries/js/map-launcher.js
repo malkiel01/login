@@ -1,6 +1,6 @@
 /**
  * Map Launcher - מנהל פתיחת המפה
- * Version: 3.8.0 - Refactoring Steps 1-10: StateManager + EntitySelector + LauncherModal + Toolbar + ZoomControls + CanvasManager + PolygonDrawer + BoundaryEditor + BackgroundEditor + HistoryManager
+ * Version: 3.9.0 - Refactoring Steps 1-11: StateManager + EntitySelector + LauncherModal + Toolbar + ZoomControls + CanvasManager + PolygonDrawer + BoundaryEditor + BackgroundEditor + HistoryManager + EditModeToggle
  * Features: Edit mode, Background image, Polygon drawing, Undo/Redo
  */
 
@@ -165,6 +165,20 @@
         console.log('✅ HistoryManager class loaded');
     } catch (error) {
         console.error('❌ Failed to load HistoryManager:', error);
+    }
+})();
+
+// ========================================
+// STEP 11/15: EditModeToggle Integration
+// Load EditModeToggle module for managing edit mode state
+// ========================================
+(async function initEditModeToggle() {
+    try {
+        const { EditModeToggle } = await import('../map/ui/EditModeToggle.js');
+        window.EditModeToggleClass = EditModeToggle;
+        console.log('✅ EditModeToggle class loaded');
+    } catch (error) {
+        console.error('❌ Failed to load EditModeToggle:', error);
     }
 })();
 
@@ -1192,6 +1206,38 @@ function createMapCanvas(entityType, unicId, entity) {
         console.log('✅ HistoryManager initialized');
     }
 
+    // ========================================
+    // STEP 11/15: Initialize EditModeToggle
+    // ========================================
+    if (window.EditModeToggleClass) {
+        window.mapEditModeToggle = new window.EditModeToggleClass({
+            canvas: window.mapCanvas,
+            onToggle: (enabled) => {
+                // Sync global variable
+                isEditMode = enabled;
+                if (window.mapState) {
+                    window.mapState.isEditMode = enabled;
+                }
+            },
+            onEnter: () => {
+                // Called when entering edit mode
+                console.log('Entered edit mode');
+            },
+            onExit: () => {
+                // Called when exiting edit mode
+                // ביטול ציור פוליגון אם פעיל
+                if (drawingPolygon) {
+                    cancelPolygonDrawing();
+                }
+                console.log('Exited edit mode');
+            }
+        });
+
+        // Initialize (connect to DOM)
+        window.mapEditModeToggle.init();
+        console.log('✅ EditModeToggle initialized');
+    }
+
     // Load saved map data
     loadSavedMapData(entityType, unicId);
 }
@@ -1403,8 +1449,18 @@ function loadParentBoundary() {
 
 /**
  * טוגל מצב עריכה
+ * Uses EditModeToggle if available, otherwise falls back to old implementation
+ * @param {boolean} enabled - האם להפעיל מצב עריכה
  */
 function toggleEditMode(enabled) {
+    // Use EditModeToggle if available
+    if (window.mapEditModeToggle) {
+        window.mapEditModeToggle.setEnabled(enabled);
+        console.log('✅ Edit mode toggled via EditModeToggle');
+        return;
+    }
+
+    // Fallback: Old implementation
     isEditMode = enabled;
     if (window.mapState) {
         window.mapState.isEditMode = enabled;

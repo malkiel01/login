@@ -1545,15 +1545,17 @@ function finishPolygon() {
     // בניית נתיב SVG: מלבן גדול מאוד + פוליגון הפוך
     let pathData = `M ${-maskSize} ${-maskSize} L ${canvasWidth + maskSize} ${-maskSize} L ${canvasWidth + maskSize} ${canvasHeight + maskSize} L ${-maskSize} ${canvasHeight + maskSize} Z `;
 
-    // הוספת הפוליגון כ"חור" (בכיוון הפוך)
-    pathData += `M ${polygonPoints[0].x} ${polygonPoints[0].y} `;
+    // הוספת הפוליגון כ"חור" (בכיוון הפוך) - עיגול לפיקסלים שלמים למניעת טשטוש
+    pathData += `M ${Math.round(polygonPoints[0].x)} ${Math.round(polygonPoints[0].y)} `;
     for (let i = polygonPoints.length - 1; i >= 0; i--) {
-        pathData += `L ${polygonPoints[i].x} ${polygonPoints[i].y} `;
+        pathData += `L ${Math.round(polygonPoints[i].x)} ${Math.round(polygonPoints[i].y)} `;
     }
     pathData += 'Z';
 
     grayMask = new fabric.Path(pathData, {
         fill: 'rgba(128, 128, 128, 0.7)',
+        stroke: null,
+        strokeWidth: 0,
         selectable: false,
         evented: false,
         objectType: 'grayMask'
@@ -1797,14 +1799,18 @@ function updateMaskPosition() {
     const maskSize = 10000; // גודל ענק שיכסה בכל מצב זום
 
     let pathData = `M ${-maskSize} ${-maskSize} L ${canvasWidth + maskSize} ${-maskSize} L ${canvasWidth + maskSize} ${canvasHeight + maskSize} L ${-maskSize} ${canvasHeight + maskSize} Z `;
-    pathData += `M ${points[0].x} ${points[0].y} `;
+    pathData += `M ${Math.round(points[0].x)} ${Math.round(points[0].y)} `;
     for (let i = points.length - 1; i >= 0; i--) {
-        pathData += `L ${points[i].x} ${points[i].y} `;
+        pathData += `L ${Math.round(points[i].x)} ${Math.round(points[i].y)} `;
     }
     pathData += 'Z';
 
     // עדכן את נתיב המסכה
-    grayMask.set({ path: fabric.util.parsePath(pathData) });
+    grayMask.set({
+        path: fabric.util.parsePath(pathData),
+        stroke: null,
+        strokeWidth: 0
+    });
     canvas.renderAll();
 }
 

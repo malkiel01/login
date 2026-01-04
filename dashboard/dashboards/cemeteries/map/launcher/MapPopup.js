@@ -419,7 +419,8 @@ export class MapPopup {
         `;
 
         document.head.appendChild(styles);
-        console.log('✅ MapPopup CSS injected with flexbox layout (.map-container + .map-canvas with flex: 1)');
+        console.log('✅ [CSS-1] MapPopup CSS injected - ID: mapPopupStyles');
+        console.log('   [CSS-1] Includes: .map-popup-overlay, .map-popup-container, .map-popup-header, .map-popup-body, .map-container (flex), .map-canvas (flex: 1), .map-loading');
     }
 
     /**

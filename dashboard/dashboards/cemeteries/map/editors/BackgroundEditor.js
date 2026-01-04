@@ -103,8 +103,45 @@ export class BackgroundEditor {
      * הפעלת מצב עריכה
      */
     enableEditMode() {
+        console.log('');
+        console.log('═══════════════════════════════════════════════════════');
+        console.log('🖼️ [BackgroundEditor] enableEditMode() called');
+        console.log('═══════════════════════════════════════════════════════');
+
+        // Debug: check all possible background sources
+        console.log('[DEBUG] Checking background image sources:');
+        console.log('  1. this.backgroundImage:', this.backgroundImage ? '✅ Exists' : '❌ null');
+        console.log('  2. canvas:', this.canvas ? this.canvas.getObjects().length + ' objects' : '❌ No canvas');
+
+        if (this.canvas) {
+            const allObjects = this.canvas.getObjects();
+            console.log('  3. Canvas objects breakdown:');
+            const objectTypes = {};
+            allObjects.forEach(obj => {
+                const type = obj.objectType || obj.type || 'unknown';
+                objectTypes[type] = (objectTypes[type] || 0) + 1;
+            });
+            console.log('     Object types:', objectTypes);
+
+            const bgObjects = allObjects.filter(obj => obj.objectType === 'backgroundLayer');
+            console.log('  4. backgroundLayer objects:', bgObjects.length);
+            if (bgObjects.length > 0) {
+                console.log('     First bg object:', {
+                    width: bgObjects[0].width,
+                    height: bgObjects[0].height,
+                    scaleX: bgObjects[0].scaleX,
+                    scaleY: bgObjects[0].scaleY,
+                    selectable: bgObjects[0].selectable
+                });
+            }
+        }
+
+        console.log('[RESULT] this.backgroundImage:', this.backgroundImage ? '✅ Found' : '❌ null');
+        console.log('═══════════════════════════════════════════════════════');
+        console.log('');
+
         if (!this.backgroundImage) {
-            console.warn('No background image to edit');
+            console.warn('❌ [BackgroundEditor] No background image to edit');
             return false;
         }
 

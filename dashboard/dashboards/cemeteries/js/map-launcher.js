@@ -889,7 +889,8 @@ function openMapPopup(entityType, unicId) {
             }
         `;
         document.head.appendChild(styles);
-        console.log('✅ map-launcher CSS injected (toolbar, map-canvas, context menu, edit-mode styles)');
+        console.log('✅ [CSS-2] map-launcher CSS injected - ID: mapLauncherStyles');
+        console.log('   [CSS-2] Includes: .map-toolbar, .map-toolbar-group, .map-tool-btn, .map-canvas (flex: 1), .edit-mode-indicator, .map-context-menu, .pdf-selector');
     }
 
     document.body.insertAdjacentHTML('beforeend', popupHTML);
@@ -992,21 +993,42 @@ function initializeMap(entityType, unicId, entity) {
     const mapCanvasElement = document.getElementById('mapCanvas');
     const mapContainerElement = document.getElementById('mapContainer');
 
-    console.log('🔍 After innerHTML set - DOM structure:');
-    console.log('  mapContainer:', mapContainerElement ? {
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('📊 [INIT] After innerHTML - DOM + CSS Audit:');
+    console.log('═══════════════════════════════════════════════════════');
+
+    // Check CSS loaded
+    const mapPopupStyles = document.getElementById('mapPopupStyles');
+    const mapLauncherStyles = document.getElementById('mapLauncherStyles');
+    console.log('[CSS] Loaded stylesheets:', {
+        mapPopupStyles: mapPopupStyles ? '✅ Loaded' : '❌ Missing',
+        mapLauncherStyles: mapLauncherStyles ? '✅ Loaded' : '❌ Missing'
+    });
+
+    // Check DOM elements
+    console.log('[DOM] mapContainer:', mapContainerElement ? {
         clientWidth: mapContainerElement.clientWidth,
         clientHeight: mapContainerElement.clientHeight,
         display: window.getComputedStyle(mapContainerElement).display,
         flexDirection: window.getComputedStyle(mapContainerElement).flexDirection
-    } : 'NOT FOUND');
-    console.log('  mapCanvas:', mapCanvasElement ? {
+    } : '❌ NOT FOUND');
+
+    console.log('[DOM] mapCanvas:', mapCanvasElement ? {
         clientWidth: mapCanvasElement.clientWidth,
         clientHeight: mapCanvasElement.clientHeight,
-        offsetWidth: mapCanvasElement.offsetWidth,
-        offsetHeight: mapCanvasElement.offsetHeight,
         flex: window.getComputedStyle(mapCanvasElement).flex,
-        height: window.getComputedStyle(mapCanvasElement).height
-    } : 'NOT FOUND');
+        height: window.getComputedStyle(mapCanvasElement).height,
+        background: window.getComputedStyle(mapCanvasElement).background
+    } : '❌ NOT FOUND');
+
+    // Check toolbar element
+    const toolbarElement = document.getElementById('mapToolbarContainer');
+    console.log('[DOM] mapToolbarContainer:', toolbarElement ? {
+        exists: true,
+        childCount: toolbarElement.children.length
+    } : '❌ NOT FOUND');
+
+    console.log('═══════════════════════════════════════════════════════');
 
     // סגירת תפריט בלחיצה מחוץ
     document.addEventListener('click', hideContextMenu);
@@ -1349,6 +1371,57 @@ function createMapCanvas(entityType, unicId, entity) {
         window.mapContextMenu.init();
         console.log('✅ ContextMenu initialized');
     }
+
+    // ========================================
+    // End of initialization - Global State Audit
+    // ========================================
+    console.log('');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('📊 [GLOBAL] Global State Audit - All Modules & Functions');
+    console.log('═══════════════════════════════════════════════════════');
+
+    console.log('[MODULE INSTANCES]');
+    console.log('  window.mapCanvas:', window.mapCanvas ? '✅ Exists' : '❌ Missing');
+    console.log('  window.mapCanvasManager:', window.mapCanvasManager ? '✅ Exists' : '❌ Missing');
+    console.log('  window.mapToolbar:', window.mapToolbar ? '✅ Exists' : '❌ Missing');
+    console.log('  window.mapZoomControls:', window.mapZoomControls ? '✅ Exists' : '❌ Missing');
+    console.log('  window.mapPolygonDrawer:', window.mapPolygonDrawer ? '✅ Exists' : '❌ Missing');
+    console.log('  window.mapBoundaryEditor:', window.mapBoundaryEditor ? '✅ Exists' : '❌ Missing');
+    console.log('  window.mapBackgroundEditor:', window.mapBackgroundEditor ? '✅ Exists' : '❌ Missing');
+    console.log('  window.mapHistoryManager:', window.mapHistoryManager ? '✅ Exists' : '❌ Missing');
+    console.log('  window.mapEditModeToggle:', window.mapEditModeToggle ? '✅ Exists' : '❌ Missing');
+    console.log('  window.mapContextMenu:', window.mapContextMenu ? '✅ Exists' : '❌ Missing');
+    console.log('  window.mapState:', window.mapState ? '✅ Exists' : '❌ Missing');
+
+    console.log('');
+    console.log('[GLOBAL FUNCTIONS - Map Operations]');
+    const globalFunctions = [
+        'uploadBackgroundImage', 'handleBackgroundUpload', 'toggleBackgroundEdit', 'deleteBackground',
+        'startDrawPolygon', 'toggleBoundaryEdit', 'deleteBoundary',
+        'zoomMapIn', 'zoomMapOut', 'editZoomLevel', 'undoCanvas', 'redoCanvas',
+        'handleCanvasClick', 'handleCanvasMouseMove', 'handleCanvasRightClick',
+        'toggleEditMode', 'saveCanvasState', 'handleContextMenuAction'
+    ];
+    globalFunctions.forEach(fn => {
+        console.log(`  ${fn}:`, typeof window[fn] === 'function' ? '✅ Function' : '❌ Missing');
+    });
+
+    console.log('');
+    console.log('[BACKGROUND IMAGE STATE]');
+    console.log('  backgroundImage (local var):', backgroundImage ? '✅ Exists' : '❌ null');
+    console.log('  window.mapState.backgroundImage:', window.mapState?.getBackgroundImage?.() ? '✅ Exists' : '❌ null');
+    if (window.mapCanvas) {
+        const bgObjects = window.mapCanvas.getObjects().filter(obj => obj.objectType === 'backgroundLayer');
+        console.log('  Canvas background objects:', bgObjects.length > 0 ? `✅ ${bgObjects.length} found` : '❌ None');
+    }
+
+    console.log('');
+    console.log('[EDIT MODE STATE]');
+    console.log('  isEditMode (local var):', isEditMode ? '✅ true' : '❌ false');
+    console.log('  mapContainer.classList:', document.getElementById('mapContainer')?.classList.contains('edit-mode') ? '✅ Has edit-mode class' : '❌ No edit-mode class');
+
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('');
 
     // Load saved map data
     loadSavedMapData(entityType, unicId);

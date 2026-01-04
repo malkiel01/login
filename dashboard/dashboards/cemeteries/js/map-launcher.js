@@ -272,8 +272,12 @@ async function launchMap() {
         // סגירת המודל
         closeMapLauncher();
 
-        // פתיחת המפה בפופאפ
-        openMapPopup(entityType, unicId);
+        // בינתיים פותח בטאב חדש לצורך debugging
+        const mapUrl = `map/index.php?type=${entityType}&id=${unicId}&mode=edit`;
+        window.open(mapUrl, '_blank');
+
+        // TODO: להחזיר לפופאפ אחרי debugging
+        // openMapPopup(entityType, unicId);
 
     } catch (error) {
         console.error('Error launching map:', error);

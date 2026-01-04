@@ -1,7 +1,7 @@
 /**
  * Map Launcher - מנהל פתיחת המפה
- * Version: 3.7.0 - Refactoring Steps 1-9: StateManager + EntitySelector + LauncherModal + Toolbar + ZoomControls + CanvasManager + PolygonDrawer + BoundaryEditor + BackgroundEditor
- * Features: Edit mode, Background image, Polygon drawing
+ * Version: 3.8.0 - Refactoring Steps 1-10: StateManager + EntitySelector + LauncherModal + Toolbar + ZoomControls + CanvasManager + PolygonDrawer + BoundaryEditor + BackgroundEditor + HistoryManager
+ * Features: Edit mode, Background image, Polygon drawing, Undo/Redo
  */
 
 // ========================================
@@ -151,6 +151,20 @@
         console.log('✅ BackgroundEditor class loaded');
     } catch (error) {
         console.error('❌ Failed to load BackgroundEditor:', error);
+    }
+})();
+
+// ========================================
+// STEP 10/15: HistoryManager Integration
+// Load HistoryManager module for undo/redo functionality
+// ========================================
+(async function initHistoryManager() {
+    try {
+        const { HistoryManager } = await import('../map/core/HistoryManager.js');
+        window.HistoryManagerClass = HistoryManager;
+        console.log('✅ HistoryManager class loaded');
+    } catch (error) {
+        console.error('❌ Failed to load HistoryManager:', error);
     }
 })();
 
@@ -1143,6 +1157,39 @@ function createMapCanvas(entityType, unicId, entity) {
             }
         });
         console.log('✅ BackgroundEditor initialized');
+    }
+
+    // ========================================
+    // STEP 10/15: Initialize HistoryManager
+    // ========================================
+    if (window.HistoryManagerClass && window.mapCanvas) {
+        window.mapHistoryManager = new window.HistoryManagerClass(window.mapCanvas, {
+            maxHistory: 30,
+            onChange: (state) => {
+                // Update undo/redo buttons when history changes
+                updateUndoRedoButtons();
+            },
+            onRestore: (restoredObjects) => {
+                // Update global variables after restoration
+                backgroundImage = restoredObjects.backgroundImage;
+                grayMask = restoredObjects.grayMask;
+                boundaryOutline = restoredObjects.boundaryOutline;
+
+                // Sync with mapState
+                if (window.mapState) {
+                    window.mapState.setBackgroundImage(restoredObjects.backgroundImage);
+                    window.mapState.setGrayMask(restoredObjects.grayMask);
+                    window.mapState.setBoundaryOutline(restoredObjects.boundaryOutline);
+                }
+
+                // Lock system objects after restoration
+                lockSystemObjects();
+
+                // Update toolbar buttons
+                updateToolbarButtons();
+            }
+        });
+        console.log('✅ HistoryManager initialized');
     }
 
     // Load saved map data
@@ -3278,10 +3325,19 @@ function closePdfSelector() {
 
 /**
  * שמירת מצב הקנבס להיסטוריה
+ * Uses HistoryManager if available, otherwise falls back to old implementation
  */
 function saveCanvasState() {
     if (!window.mapCanvas) return;
 
+    // Use HistoryManager if available
+    if (window.mapHistoryManager) {
+        window.mapHistoryManager.save();
+        console.log('✅ Canvas state saved via HistoryManager');
+        return;
+    }
+
+    // Fallback: Old implementation
     // מחק את ההיסטוריה העתידית אם חזרנו אחורה ועשינו שינוי
     if (historyIndex < canvasHistory.length - 1) {
         canvasHistory = canvasHistory.slice(0, historyIndex + 1);
@@ -3315,9 +3371,22 @@ function saveCanvasState() {
 
 /**
  * ביטול פעולה אחרונה
+ * Uses HistoryManager if available, otherwise falls back to old implementation
  */
 function undoCanvas() {
-    if (!window.mapCanvas || historyIndex <= 0) return;
+    if (!window.mapCanvas) return;
+
+    // Use HistoryManager if available
+    if (window.mapHistoryManager) {
+        const success = window.mapHistoryManager.undo();
+        if (success) {
+            console.log('✅ Undo via HistoryManager');
+        }
+        return;
+    }
+
+    // Fallback: Old implementation
+    if (historyIndex <= 0) return;
 
     historyIndex--;
     if (window.mapState) {
@@ -3328,9 +3397,22 @@ function undoCanvas() {
 
 /**
  * ביצוע שוב פעולה שבוטלה
+ * Uses HistoryManager if available, otherwise falls back to old implementation
  */
 function redoCanvas() {
-    if (!window.mapCanvas || historyIndex >= canvasHistory.length - 1) return;
+    if (!window.mapCanvas) return;
+
+    // Use HistoryManager if available
+    if (window.mapHistoryManager) {
+        const success = window.mapHistoryManager.redo();
+        if (success) {
+            console.log('✅ Redo via HistoryManager');
+        }
+        return;
+    }
+
+    // Fallback: Old implementation
+    if (historyIndex >= canvasHistory.length - 1) return;
 
     historyIndex++;
     if (window.mapState) {
@@ -3422,6 +3504,19 @@ function updateUndoRedoButtons() {
     const undoBtn = document.getElementById('undoBtn');
     const redoBtn = document.getElementById('redoBtn');
 
+    // Use HistoryManager if available
+    if (window.mapHistoryManager) {
+        const state = window.mapHistoryManager.getState();
+        if (undoBtn) {
+            undoBtn.disabled = !state.canUndo;
+        }
+        if (redoBtn) {
+            redoBtn.disabled = !state.canRedo;
+        }
+        return;
+    }
+
+    // Fallback: Old implementation
     if (undoBtn) {
         undoBtn.disabled = historyIndex <= 0;
     }

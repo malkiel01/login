@@ -3323,7 +3323,7 @@ function isPointInsideBoundary(x, y) {
 function showContextMenu(clientX, clientY, isInsideBoundary) {
     // Use ContextMenu if available
     if (window.mapContextMenu) {
-        window.mapContextMenu.showForCanvas(clientX, clientY, isInsideBoundary, contextMenuPosition);
+        window.mapContextMenu.showForEmpty(clientX, clientY, isInsideBoundary);
         console.log('✅ Context menu shown via ContextMenu');
         return;
     }

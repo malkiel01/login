@@ -3293,78 +3293,12 @@ function showContextMenu(clientX, clientY, isInsideBoundary) {
         return;
     }
 
-    // Fallback: Old implementation
-    const menu = document.getElementById('mapContextMenu');
-    const content = document.getElementById('contextMenuContent');
-
-    if (!menu || !content) return;
-
-    // בדוק אם יש גבול כלל
-    if (!hasBoundary()) {
-        // אין גבול - הצג הודעה שצריך להגדיר גבול קודם
-        content.innerHTML = `
-            <div class="context-menu-item disabled">
-                <span class="context-menu-icon">⚠️</span>
-                <span>יש להגדיר גבול מפה תחילה</span>
-            </div>
-        `;
-    } else if (isInsideBoundary) {
-        // תפריט רגיל - בתוך הגבול
-        content.innerHTML = `
-            <div class="context-menu-item" onclick="addImageFromMenu()">
-                <span class="context-menu-icon">🖼️</span>
-                <span>הוסף תמונה / PDF</span>
-            </div>
-            <div class="context-menu-item" onclick="addTextFromMenu()">
-                <span class="context-menu-icon">📝</span>
-                <span>הוסף טקסט</span>
-            </div>
-            <div class="context-menu-separator"></div>
-            <div class="context-menu-item" onclick="addShapeFromMenu('rect')">
-                <span class="context-menu-icon">⬜</span>
-                <span>הוסף מלבן</span>
-            </div>
-            <div class="context-menu-item" onclick="addShapeFromMenu('circle')">
-                <span class="context-menu-icon">⭕</span>
-                <span>הוסף עיגול</span>
-            </div>
-            <div class="context-menu-item" onclick="addShapeFromMenu('line')">
-                <span class="context-menu-icon">📏</span>
-                <span>הוסף קו</span>
-            </div>
-        `;
-    } else {
-        // מחוץ לגבול
-        content.innerHTML = `
-            <div class="context-menu-item disabled">
-                <span class="context-menu-icon no-entry-icon">🚫</span>
-                <span>לא ניתן להוסיף מחוץ לגבול</span>
-            </div>
-        `;
-    }
-
-    // מיקום התפריט - שימוש ב-fixed position ליד הסמן
-    menu.style.position = 'fixed';
-    menu.style.left = clientX + 'px';
-    menu.style.top = clientY + 'px';
-
-    // וודא שהתפריט לא יוצא מהמסך
-    menu.style.display = 'block';
-
-    // בדיקה אם התפריט יוצא מהמסך מימין
-    const menuRect = menu.getBoundingClientRect();
-    if (menuRect.right > window.innerWidth) {
-        menu.style.left = (clientX - menuRect.width) + 'px';
-    }
-    // בדיקה אם יוצא מלמטה
-    if (menuRect.bottom > window.innerHeight) {
-        menu.style.top = (clientY - menuRect.height) + 'px';
-    }
+    // Fallback: Should never happen (ContextMenu always loads)
+    console.error('❌ ContextMenu not available - this should not happen!');
 }
 
 /**
  * הסתרת תפריט קליק ימני
- * Uses ContextMenu if available, otherwise falls back to old implementation
  */
 function hideContextMenu() {
     // Use ContextMenu if available
@@ -3373,11 +3307,8 @@ function hideContextMenu() {
         return;
     }
 
-    // Fallback: Old implementation
-    const menu = document.getElementById('mapContextMenu');
-    if (menu) {
-        menu.style.display = 'none';
-    }
+    // Fallback: Should never happen
+    console.error('❌ ContextMenu not available for hide()');
 }
 
 /**

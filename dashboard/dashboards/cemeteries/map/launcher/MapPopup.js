@@ -463,7 +463,7 @@ export class MapPopup {
                 right: 0;
                 bottom: 0;
                 background: rgba(0,0,0,0.7);
-                z-index: 10001;
+                z-index: 10002;
                 display: flex;
                 align-items: center;
                 justify-content: center;

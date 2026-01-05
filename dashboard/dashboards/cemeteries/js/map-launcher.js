@@ -1970,11 +1970,6 @@ function deleteBoundary() {
     }
 }
 
-// Alias לתאימות אחורה
-function clearPolygon() {
-    deleteBoundary();
-}
-
 /**
  * שמירת המפה לשרת
  */

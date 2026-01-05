@@ -2969,36 +2969,8 @@ function saveCanvasState() {
         return;
     }
 
-    // Fallback: Old implementation
-    // מחק את ההיסטוריה העתידית אם חזרנו אחורה ועשינו שינוי
-    if (historyIndex < canvasHistory.length - 1) {
-        canvasHistory = canvasHistory.slice(0, historyIndex + 1);
-        if (window.mapState) {
-            window.mapState.history.states = canvasHistory.slice();
-        }
-    }
-
-    // שמור את המצב הנוכחי
-    const state = JSON.stringify(window.mapCanvas.toJSON(['objectType', 'polygonPoint', 'polygonLine']));
-    canvasHistory.push(state);
-    if (window.mapState) {
-        window.mapState.history.states.push(state);
-    }
-
-    // הגבל את גודל ההיסטוריה
-    if (canvasHistory.length > MAX_HISTORY) {
-        canvasHistory.shift();
-        if (window.mapState) {
-            window.mapState.history.states.shift();
-        }
-    } else {
-        historyIndex++;
-        if (window.mapState) {
-            window.mapState.history.currentIndex++;
-        }
-    }
-
-    updateUndoRedoButtons();
+    // Fallback: Should never happen (HistoryManager always loads)
+    console.error('❌ HistoryManager not available for save - this should not happen!');
 }
 
 /**
@@ -3017,14 +2989,8 @@ function undoCanvas() {
         return;
     }
 
-    // Fallback: Old implementation
-    if (historyIndex <= 0) return;
-
-    historyIndex--;
-    if (window.mapState) {
-        window.mapState.history.currentIndex--;
-    }
-    restoreCanvasState(canvasHistory[historyIndex]);
+    // Fallback: Should never happen (HistoryManager always loads)
+    console.error('❌ HistoryManager not available for undo - this should not happen!');
 }
 
 /**
@@ -3043,14 +3009,8 @@ function redoCanvas() {
         return;
     }
 
-    // Fallback: Old implementation
-    if (historyIndex >= canvasHistory.length - 1) return;
-
-    historyIndex++;
-    if (window.mapState) {
-        window.mapState.history.currentIndex++;
-    }
-    restoreCanvasState(canvasHistory[historyIndex]);
+    // Fallback: Should never happen (HistoryManager always loads)
+    console.error('❌ HistoryManager not available for redo - this should not happen!');
 }
 
 /**
@@ -3148,13 +3108,8 @@ function updateUndoRedoButtons() {
         return;
     }
 
-    // Fallback: Old implementation
-    if (undoBtn) {
-        undoBtn.disabled = historyIndex <= 0;
-    }
-    if (redoBtn) {
-        redoBtn.disabled = historyIndex >= canvasHistory.length - 1;
-    }
+    // Fallback: Should never happen (HistoryManager always loads)
+    console.error('❌ HistoryManager not available for button update - this should not happen!');
 }
 
 /**

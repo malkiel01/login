@@ -1427,32 +1427,8 @@ function toggleEditMode(enabled) {
         return;
     }
 
-    // Fallback: Old implementation
-    isEditMode = enabled;
-    if (window.mapState) {
-        window.mapState.isEditMode = enabled;
-    }
-    const container = document.getElementById('mapContainer');
-
-    if (enabled) {
-        container.classList.add('edit-mode');
-        // הסרת הטקסט ההתחלתי
-        if (window.mapCanvas) {
-            const objects = window.mapCanvas.getObjects('text');
-            objects.forEach(obj => {
-                if (obj.text === 'לחץ על "מצב עריכה" כדי להתחיל') {
-                    window.mapCanvas.remove(obj);
-                }
-            });
-            window.mapCanvas.renderAll();
-        }
-    } else {
-        container.classList.remove('edit-mode');
-        // ביטול ציור פוליגון אם פעיל
-        if (drawingPolygon) {
-            cancelPolygonDrawing();
-        }
-    }
+    // Fallback: Should never happen (EditModeToggle always loads)
+    console.error('❌ EditModeToggle not available - this should not happen!');
 }
 
 /**
@@ -2551,19 +2527,8 @@ function toggleMapFullscreen() {
         return;
     }
 
-    // Fallback: Old implementation
-    const container = document.querySelector('.map-popup-container');
-    if (container) {
-        container.classList.toggle('fullscreen');
-        setTimeout(() => {
-            if (window.mapCanvas) {
-                const canvasContainer = document.getElementById('mapCanvas');
-                window.mapCanvas.setWidth(canvasContainer.clientWidth);
-                window.mapCanvas.setHeight(canvasContainer.clientHeight - 40);
-                window.mapCanvas.renderAll();
-            }
-        }, 100);
-    }
+    // Fallback: Should never happen (MapPopup always loads)
+    console.error('❌ MapPopup not available for fullscreen toggle - this should not happen!');
 }
 
 /**
@@ -2577,15 +2542,8 @@ function zoomMapIn() {
     if (window.mapZoomControls) {
         window.mapZoomControls.zoomIn();
     } else {
-        // Fallback to old implementation
-        const newZoom = Math.min((window.mapState?.getZoom() || currentZoom) + 0.1, 3);
-        if (window.mapState) window.mapState.setZoom(newZoom);
-        currentZoom = newZoom;
-        updateZoomDisplay();
-        if (window.mapCanvas) {
-            window.mapCanvas.setZoom(newZoom);
-            window.mapCanvas.renderAll();
-        }
+        // Fallback: Should never happen (ZoomControls always loads)
+        console.error('❌ ZoomControls not available for zoom in - this should not happen!');
     }
 }
 
@@ -2597,15 +2555,8 @@ function zoomMapOut() {
     if (window.mapZoomControls) {
         window.mapZoomControls.zoomOut();
     } else {
-        // Fallback to old implementation
-        const newZoom = Math.max((window.mapState?.getZoom() || currentZoom) - 0.1, 0.3);
-        if (window.mapState) window.mapState.setZoom(newZoom);
-        currentZoom = newZoom;
-        updateZoomDisplay();
-        if (window.mapCanvas) {
-            window.mapCanvas.setZoom(newZoom);
-            window.mapCanvas.renderAll();
-        }
+        // Fallback: Should never happen (ZoomControls always loads)
+        console.error('❌ ZoomControls not available for zoom out - this should not happen!');
     }
 }
 

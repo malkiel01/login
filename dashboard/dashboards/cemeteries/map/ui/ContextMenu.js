@@ -1,15 +1,8 @@
 /**
- * ContextMenu - кдиЩШ зЬЩз ЩЮаЩ
+ * ContextMenu - ЧЄЧ¤ЧЁЧ™Ч Ч”Ч§Ч©ЧЁ (Right-click menu)
  * Version: 1.0.0
  *
- * ЮЧЬзФ ЬаЩФХЬ кдиЩШ Фзйи (context menu) СЮдФ
- * Usage:
- *   const contextMenu = new ContextMenu({
- *     menuId: 'mapContextMenu',
- *     onAction: (actionName, data) => {...}
- *   });
- *   contextMenu.showForCanvas(x, y, isInsideBoundary, canvasPos);
- *   contextMenu.showForObject(x, y, targetObject);
+ * ЧћЧ Ч”Чњ ЧЄЧ¤ЧЁЧ™Ч Ч§Ч•Ч ЧЧ§ЧЎЧ ЧўЧ‘Ч•ЧЁ Ч”ЧћЧ¤Ч”
  */
 
 export class ContextMenu {
@@ -18,100 +11,114 @@ export class ContextMenu {
             menuId: options.menuId || 'mapContextMenu',
             contentId: options.contentId || 'contextMenuContent',
             onAction: options.onAction || null,
-            checkBoundary: options.checkBoundary || null  // Function to check if has boundary
+            checkBoundary: options.checkBoundary || null
         };
 
         this.menu = null;
         this.content = null;
         this.currentTarget = null;
-        this.currentPosition = { x: 0, y: 0 };
+        this.currentPosition = null;
+
+        this.init();
     }
 
     /**
-     * РкЧХЬ ХФкЧСиХк Ь-DOM
+     * ЧђЧЄЧ—Ч•Чњ Ч”ЧЄЧ¤ЧЁЧ™Ч
      */
     init() {
+        // Ч¦Ч•ЧЁ ЧђЧњЧћЧ ЧЧ™Чќ ЧђЧќ ЧњЧђ Ч§Ч™Ч™ЧћЧ™Чќ
+        if (!document.getElementById(this.options.menuId)) {
+            this.createMenu();
+        }
+
         this.menu = document.getElementById(this.options.menuId);
         this.content = document.getElementById(this.options.contentId);
 
-        if (!this.menu || !this.content) {
-            console.warn('ContextMenu: menu or content element not found');
-            return false;
-        }
+        // Attach global click listener to hide menu
+        document.addEventListener('click', () => this.hide());
 
-        console.log(' ContextMenu initialized');
-        return true;
+        console.log(' ContextMenu initialized');
     }
 
     /**
-     * ФжТк кдиЩШ ЫЬЬЩ (canvas) - ЬФХбдк кЮХаФ, ШзбШ, жХиХк
+     * Ч™Ч¦Ч™ЧЁЧЄ HTML Ч©Чњ Ч”ЧЄЧ¤ЧЁЧ™Ч
+     */
+    createMenu() {
+        const menuHTML = `
+            <div id="${this.options.menuId}" class="map-context-menu">
+                <div id="${this.options.contentId}" class="context-menu-content"></div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', menuHTML);
+    }
+
+    /**
+     * Ч”Ч¦Ч’ЧЄ Ч”ЧЄЧ¤ЧЁЧ™Ч Ч‘ЧћЧ™Ч§Ч•Чќ ЧЁЧ™Ч§ (ЧњЧњЧђ ЧђЧ•Ч‘Ч™Ч™Ч§Ч)
      * @param {number} clientX - Mouse X position
      * @param {number} clientY - Mouse Y position
-     * @param {boolean} isInsideBoundary - ФРЭ ФзЬЩз ФЩФ СкХЪ ФТСХЬ
-     * @param {object} canvasPosition - {x, y} ЮЩзХЭ вЬ ФзаСб
+     * @param {boolean} isInsideBoundary - Ч”ЧђЧќ Ч‘ЧЄЧ•Чљ Ч”Ч’Ч‘Ч•Чњ
      */
-    showForCanvas(clientX, clientY, isInsideBoundary, canvasPosition) {
+    showForEmpty(clientX, clientY, isInsideBoundary) {
         if (!this.menu || !this.content) return;
 
-        // йЮХи ЮЩзХЭ ЬйЩЮХй СдвХЬХк
-        this.currentPosition = canvasPosition || { x: clientX, y: clientY };
         this.currentTarget = null;
+        this.currentPosition = { x: clientX, y: clientY };
 
-        // СУХз РЭ Щй ТСХЬ
+        // Ч‘Ч“Ч•Ч§ ЧђЧќ Ч™Ч© Ч’Ч‘Ч•Чњ
         const hasBoundary = this.options.checkBoundary ? this.options.checkBoundary() : true;
 
         if (!hasBoundary) {
-            // РЩЯ ТСХЬ - ФжТ ФХУвФ
+            // ЧђЧ™Чџ Ч’Ч‘Ч•Чњ - ЧЁЧ§ Ч”Ч•Ч“ЧўЧ”
             this.content.innerHTML = `
                 <div class="context-menu-item disabled">
-                    <span class="context-menu-icon"> </span>
-                    <span>Щй ЬФТУЩи ТСХЬ ЮдФ кЧЩЬФ</span>
+                    <span class="context-menu-icon">вљ </span>
+                    <span>Ч™Ч© ЧњЧ”Ч’Ч“Ч™ЧЁ Ч’Ч‘Ч•Чњ Ч§Ч•Ч“Чќ ЧњЧ¤Ч Ч™ Ч”Ч•ЧЎЧ¤Ч”</span>
                 </div>
             `;
         } else if (isInsideBoundary) {
-            // кдиЩШ иТЩЬ - СкХЪ ФТСХЬ
+            // Ч‘ЧЄЧ•Чљ Ч”Ч’Ч‘Ч•Чњ - ЧђЧ¤Ч©ЧЁ Ч”Ч•ЧЎЧ¤Ч”
             this.content.innerHTML = `
                 <div class="context-menu-item" data-action="addImage">
-                    <span class="context-menu-icon">=ј</span>
-                    <span>ФХбг кЮХаФ / PDF</span>
+                    <span class="context-menu-icon">рџ–јпёЏ</span>
+                    <span>Ч”Ч•ЧЎЧЈ ЧЄЧћЧ•Ч Ч” / PDF</span>
                 </div>
                 <div class="context-menu-item" data-action="addText">
-                    <span class="context-menu-icon">=Э</span>
-                    <span>ФХбг ШзбШ</span>
+                    <span class="context-menu-icon">рџ”¤</span>
+                    <span>Ч”Ч•ЧЎЧЈ ЧЧ§ЧЎЧ</span>
                 </div>
                 <div class="context-menu-separator"></div>
                 <div class="context-menu-item" data-action="addRect">
-                    <span class="context-menu-icon"></span>
-                    <span>ФХбг ЮЬСЯ</span>
+                    <span class="context-menu-icon">в—»</span>
+                    <span>Ч”Ч•ЧЎЧЈ ЧћЧњЧ‘Чџ</span>
                 </div>
                 <div class="context-menu-item" data-action="addCircle">
-                    <span class="context-menu-icon">U</span>
-                    <span>ФХбг вЩТХЬ</span>
+                    <span class="context-menu-icon">в—Ї</span>
+                    <span>Ч”Ч•ЧЎЧЈ ЧўЧ™Ч’Ч•Чњ</span>
                 </div>
                 <div class="context-menu-item" data-action="addLine">
-                    <span class="context-menu-icon">=П</span>
-                    <span>ФХбг зХ</span>
+                    <span class="context-menu-icon">рџ“Џ</span>
+                    <span>Ч”Ч•ЧЎЧЈ Ч§Ч•</span>
                 </div>
             `;
 
             // Attach event listeners
             this.attachActionListeners();
         } else {
-            // ЮЧХе ЬТСХЬ
+            // ЧћЧ—Ч•ЧҐ ЧњЧ’Ч‘Ч•Чњ
             this.content.innerHTML = `
                 <div class="context-menu-item disabled">
-                    <span class="context-menu-icon no-entry-icon">=«</span>
-                    <span>ЬР аЩкЯ ЬФХбЩг ЮЧХе ЬТСХЬ</span>
+                    <span class="context-menu-icon no-entry-icon">рџљ«</span>
+                    <span>ЧњЧђ Ч Ч™ЧЄЧџ ЧњЧ”Ч•ЧЎЧ™ЧЈ ЧћЧ—Ч•ЧҐ ЧњЧ’Ч‘Ч•Чњ</span>
                 </div>
             `;
         }
 
-        // ФжТ СвЮУФ аЫХаФ
+        // Ч”Ч¦Ч’ Ч‘ЧўЧћЧ“Ч” Ч”Ч Ч›Ч•Ч Ч”
         this.position(clientX, clientY);
     }
 
     /**
-     * ФжТк кдиЩШ ЬРХСЩЩзШ (вЭ РдйиХк ЮЧЩзФ, ФСРФ ЬЧЦЩк, йЬЩЧФ ЬРЧХи)
+     * Ч”Ч¦Ч’ЧЄ Ч”ЧЄЧ¤ЧЁЧ™Ч ЧўЧ‘Ч•ЧЁ ЧђЧ•Ч‘Ч™Ч™Ч§Ч (ЧўЧќ ЧђЧ•Ч¤Ч¦Ч™Ч•ЧЄ ЧћЧ—Ч™Ч§Ч”, Ч”ЧўЧ‘ЧЁЧ” ЧњЧ§Ч“ЧћЧ”, Ч”ЧўЧ‘ЧЁЧ” ЧњЧђЧ—Ч•ЧЁ)
      * @param {number} clientX - Mouse X position
      * @param {number} clientY - Mouse Y position
      * @param {object} targetObject - Fabric object
@@ -119,62 +126,62 @@ export class ContextMenu {
     showForObject(clientX, clientY, targetObject) {
         if (!this.menu || !this.content) return;
 
-        // йЮХи Рк ФРХСЩЩзШ
+        // Ч©ЧћЧ•ЧЁ ЧђЧЄ Ч”ЧђЧ•Ч‘Ч™Ч™Ч§Ч
         this.currentTarget = targetObject;
 
-        // кдиЩШ вЭ РдйиХЩХк РХСЩЩзШ
+        // ЧЄЧ¤ЧЁЧ™Ч ЧўЧќ ЧђЧ•Ч¤Ч¦Ч™Ч•ЧЄ ЧњЧђЧ•Ч‘Ч™Ч™Ч§Ч
         this.content.innerHTML = `
             <div class="context-menu-item" data-action="deleteObject">
-                <span class="context-menu-icon">=С</span>
-                <span>ЮЧз диЩШ</span>
+                <span class="context-menu-icon">рџ—‘пёЏ</span>
+                <span>ЧћЧ—Ч§ ЧђЧ•Ч‘Ч™Ч™Ч§Ч</span>
             </div>
             <div class="context-menu-separator"></div>
             <div class="context-menu-item" data-action="bringToFront">
-                <span class="context-menu-icon"></span>
-                <span>ФСР ЬЧЦЩк</span>
+                <span class="context-menu-icon">в¬†</span>
+                <span>Ч”ЧўЧ‘ЧЁ ЧњЧ§Ч“Ч™ЧћЧ”</span>
             </div>
             <div class="context-menu-item" data-action="sendToBack">
-                <span class="context-menu-icon"></span>
-                <span>йЬЧ Ьизв</span>
+                <span class="context-menu-icon">в¬‡</span>
+                <span>Ч”ЧўЧ‘ЧЁ ЧњЧђЧ—Ч•ЧЁ</span>
             </div>
         `;
 
         // Attach event listeners
         this.attachActionListeners();
 
-        // ФжТ СвЮУФ аЫХаФ
+        // Ч”Ч¦Ч’ Ч‘ЧўЧћЧ“Ч” Ч”Ч Ч›Ч•Ч Ч”
         this.position(clientX, clientY);
     }
 
     /**
-     * ЮЩзХЭ ФкдиЩШ СвЮУФ аЫХаФ (ЬЮаЩвк ЩжЩРФ ЮФЮбЪ)
+     * ЧћЧ™Ч§Ч•Чќ Ч”ЧЄЧ¤ЧЁЧ™Ч ЧњЧ™Ч“ Ч”ЧўЧ›Ч‘ЧЁ (ЧћЧЄЧђЧ™Чќ ЧњЧ’Ч‘Ч•ЧњЧ•ЧЄ Ч”ЧћЧЎЧљ)
      * @param {number} clientX
      * @param {number} clientY
      * @private
      */
     position(clientX, clientY) {
-        // ЮЩзХЭ ФкдиЩШ
+        // ЧћЧ™Ч§Ч•Чќ ЧЁЧђЧ©Ч•Ч Ч™
         this.menu.style.position = 'fixed';
         this.menu.style.left = clientX + 'px';
         this.menu.style.top = clientY + 'px';
         this.menu.style.display = 'block';
 
-        // СУЩзФ РЭ ФкдиЩШ ЩХжР ЮФЮбЪ
+        // Ч‘Ч“Ч™Ч§Ч” ЧђЧќ Ч”ЧЄЧ¤ЧЁЧ™Ч Ч—Ч•ЧЁЧ’ ЧћЧ”ЧћЧЎЧљ
         const menuRect = this.menu.getBoundingClientRect();
 
-        // ЩжЩРФ ЮЩЮЩЯ
+        // Ч”ЧЄЧђЧћЧ” Ч™ЧћЧ™Ч Ч”
         if (menuRect.right > window.innerWidth) {
             this.menu.style.left = (clientX - menuRect.width) + 'px';
         }
 
-        // ЩжЩРФ ЮЬЮШФ
+        // Ч”ЧЄЧђЧћЧ” ЧњЧћЧЧ”
         if (menuRect.bottom > window.innerHeight) {
             this.menu.style.top = (clientY - menuRect.height) + 'px';
         }
     }
 
     /**
-     * ФХбдк event listeners ЬдиЩШЩЭ
+     * Ч—Ч™Ч‘Ч•ЧЁ event listeners ЧњЧђЧ™Ч™ЧЧћЧ™Чќ
      * @private
      */
     attachActionListeners() {
@@ -197,7 +204,7 @@ export class ContextMenu {
     }
 
     /**
-     * Фбкик ФкдиЩШ
+     * Ч”ЧЎЧЄЧЁЧЄ Ч”ЧЄЧ¤ЧЁЧ™Ч
      */
     hide() {
         if (this.menu) {
@@ -207,28 +214,20 @@ export class ContextMenu {
     }
 
     /**
-     * зСЬк ЮЩзХЭ аХЫЧЩ
+     * Ч‘Ч“Ч™Ч§Ч” Ч”ЧђЧќ Ч”ЧЄЧ¤ЧЁЧ™Ч ЧћЧ•Ч¦Ч’
      */
-    getPosition() {
-        return this.currentPosition;
+    isVisible() {
+        return this.menu && this.menu.style.display === 'block';
     }
 
     /**
-     * зСЬк РХСЩЩзШ аХЫЧЩ
+     * Ч Ч™Ч§Ч•Ч™
      */
-    getTarget() {
-        return this.currentTarget;
-    }
-
-    /**
-     * Debug info
-     */
-    debug() {
-        console.group('=Л ContextMenu');
-        console.log('Menu:', this.menu ? 'found' : 'not found');
-        console.log('Content:', this.content ? 'found' : 'not found');
-        console.log('Current Target:', this.currentTarget);
-        console.log('Current Position:', this.currentPosition);
-        console.groupEnd();
+    destroy() {
+        if (this.menu) {
+            this.menu.remove();
+        }
+        this.menu = null;
+        this.content = null;
     }
 }

@@ -40,11 +40,16 @@ export class LauncherModal {
         const modalHTML = this.getModalHTML();
         const styles = this.getStyles();
 
-        // הוסף סגנונות
-        const styleElement = document.createElement('style');
-        styleElement.id = 'mapLauncherStyles';
-        styleElement.textContent = styles;
-        document.head.appendChild(styleElement);
+        // הוסף סגנונות (רק אם עדיין לא קיים)
+        if (!document.getElementById('mapLauncherModalStyles')) {
+            const styleElement = document.createElement('style');
+            styleElement.id = 'mapLauncherModalStyles';  // שם ייחודי למודל בלבד
+            styleElement.textContent = styles;
+            document.head.appendChild(styleElement);
+            console.log('✅ [LauncherModal] CSS injected with ID: mapLauncherModalStyles');
+        } else {
+            console.log('ℹ️ [LauncherModal] CSS already exists, skipping injection');
+        }
 
         // הוסף HTML
         document.body.insertAdjacentHTML('beforeend', modalHTML);

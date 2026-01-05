@@ -770,9 +770,6 @@ function createMapCanvas(entityType, unicId, entity) {
             }
         });
 
-        // שמור מצב התחלתי
-        saveCanvasState();
-
         console.log('✅ Canvas created via CanvasManager');
     } else {
         console.error('❌ CanvasManager not available - this should not happen!');

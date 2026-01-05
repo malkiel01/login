@@ -1653,53 +1653,21 @@ function createMapCanvas(entityType, unicId, entity) {
 }
 
 /**
- * Fallback: יצירת Canvas בשיטה הישנה
- * Used when CanvasManager is not available
+ * Fallback: יצירת Canvas - לא צריך להיקרא (CanvasManager תמיד זמין)
+ * מוצג רק הודעת שגיאה אם מגיעים לכאן
  */
 function createMapCanvasFallback(canvasContainer) {
-    const width = canvasContainer.clientWidth;
-    const height = canvasContainer.clientHeight - 40;
-
-    if (typeof fabric === 'undefined') {
-        console.error('Fabric.js not loaded!');
-        canvasContainer.innerHTML += '<p style="text-align:center; color:red; padding:20px;">שגיאה: Fabric.js לא נטען</p>';
-        return;
-    }
-
-    const canvasEl = document.createElement('canvas');
-    canvasEl.id = 'fabricCanvas';
-    canvasEl.width = width;
-    canvasEl.height = height;
-    canvasContainer.appendChild(canvasEl);
-
-    window.mapCanvas = new fabric.Canvas('fabricCanvas', {
-        backgroundColor: '#ffffff',
-        selection: true
-    });
-
-    // הוספת טקסט התחלתי
-    const text = new fabric.Text('לחץ על "מצב עריכה" כדי להתחיל', {
-        left: width / 2,
-        top: height / 2,
-        fontSize: 20,
-        fill: '#9ca3af',
-        originX: 'center',
-        originY: 'center',
-        selectable: false
-    });
-    window.mapCanvas.add(text);
-
-    // אירועים בסיסיים
-    window.mapCanvas.on('mouse:down', handleCanvasClick);
-    window.mapCanvas.on('mouse:move', handleCanvasMouseMove);
-    window.mapCanvas.on('object:modified', function(e) {
-        if (e.target && !e.target.polygonPoint && !e.target.polygonLine && !e.target.previewLine) {
-            saveCanvasState();
-        }
-    });
-
-    saveCanvasState();
-    console.log('Canvas created via fallback');
+    console.error('❌❌❌ FALLBACK CALLED - CanvasManager should always be available!');
+    canvasContainer.innerHTML = `
+        <div style="padding: 40px; text-align: center; color: #dc2626;">
+            <h3>שגיאה קריטית</h3>
+            <p>CanvasManager לא נטען כראוי.</p>
+            <p>אנא רענן את הדף ונסה שוב.</p>
+            <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px; cursor: pointer;">
+                רענן דף
+            </button>
+        </div>
+    `;
 }
 
 /**

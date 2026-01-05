@@ -1798,137 +1798,8 @@ function finishPolygon() {
         return;
     }
 
-    // Fallback to old implementation
-    if (polygonPoints.length < 3) {
-        alert('נדרשות לפחות 3 נקודות ליצירת גבול');
-        return;
-    }
-
-    // בדיקה שכל הנקודות נמצאות בתוך גבול ההורה (אם קיים)
-    if (parentBoundaryPoints && parentBoundaryPoints.length > 0) {
-        const pointsOutside = polygonPoints.filter(p => !isPointInPolygon(p, parentBoundaryPoints));
-        if (pointsOutside.length > 0) {
-            alert(`לא ניתן ליצור גבול מחוץ לגבול ההורה.\n\n${pointsOutside.length} נקודות נמצאות מחוץ לגבול המותר (מסומן בכתום).`);
-            return;
-        }
-    }
-
-    // הסרת קו התצוגה המקדימה
-    if (previewLine) {
-        window.mapCanvas.remove(previewLine);
-        previewLine = null;
-        if (window.mapState) {
-            window.mapState.polygon.previewLine = null;
-        }
-    }
-
-    // הסרת נקודות וקווים זמניים
-    const objects = window.mapCanvas.getObjects();
-    objects.forEach(obj => {
-        if (obj.polygonPoint || obj.polygonLine) {
-            window.mapCanvas.remove(obj);
-        }
-    });
-
-    // הסרת גבול/מסכה קודמים אם קיימים
-    if (grayMask) {
-        window.mapCanvas.remove(grayMask);
-        grayMask = null;
-        if (window.mapState) window.mapState.setGrayMask(null);
-    }
-
-    const canvas = window.mapCanvas;
-    const canvasWidth = canvas.width;
-    const canvasHeight = canvas.height;
-
-    // יצירת ה-clipPath לשימוש עתידי
-    const newClipPath = new fabric.Polygon(polygonPoints.map(p => ({x: p.x, y: p.y})), {
-        absolutePositioned: true
-    });
-    boundaryClipPath = newClipPath;
-    if (window.mapState) {
-        window.mapState.canvas.boundary.clipPath = newClipPath;
-    }
-
-    // יצירת מסכה אפורה עם "חור" בצורת הפוליגון
-    // המסכה גדולה מאוד כדי לכסות גם בזמן zoom out
-    const maskSize = 10000; // גודל ענק שיכסה בכל מצב זום
-
-    // בניית נתיב SVG: מלבן גדול מאוד + פוליגון הפוך
-    let pathData = `M ${-maskSize} ${-maskSize} L ${canvasWidth + maskSize} ${-maskSize} L ${canvasWidth + maskSize} ${canvasHeight + maskSize} L ${-maskSize} ${canvasHeight + maskSize} Z `;
-
-    // הוספת הפוליגון כ"חור" (בכיוון הפוך) - עיגול לפיקסלים שלמים למניעת טשטוש
-    pathData += `M ${Math.round(polygonPoints[0].x)} ${Math.round(polygonPoints[0].y)} `;
-    for (let i = polygonPoints.length - 1; i >= 0; i--) {
-        pathData += `L ${Math.round(polygonPoints[i].x)} ${Math.round(polygonPoints[i].y)} `;
-    }
-    pathData += 'Z';
-
-    const newGrayMask = new fabric.Path(pathData, {
-        fill: 'rgba(128, 128, 128, 0.7)',
-        stroke: null,
-        strokeWidth: 0,
-        selectable: false,
-        evented: false,
-        objectType: 'grayMask'
-    });
-    grayMask = newGrayMask;
-    if (window.mapState) {
-        window.mapState.setGrayMask(newGrayMask);
-    }
-
-    // קו גבול סביב האזור הפעיל - עיגול נקודות לפיקסלים שלמים למניעת טשטוש
-    const roundedPoints = polygonPoints.map(p => ({
-        x: Math.round(p.x),
-        y: Math.round(p.y)
-    }));
-
-    const newBoundaryOutline = new fabric.Polygon(roundedPoints, {
-        fill: 'transparent',
-        stroke: '#3b82f6',
-        strokeWidth: 3,
-        selectable: false,
-        evented: false,
-        objectType: 'boundaryOutline'
-    });
-    boundaryOutline = newBoundaryOutline;
-    if (window.mapState) {
-        window.mapState.setBoundaryOutline(newBoundaryOutline);
-    }
-
-    canvas.add(grayMask);
-    canvas.add(boundaryOutline);
-
-    // סידור שכבות נכון (כולל גבול ההורה)
-    reorderLayers();
-
-    // נעילת אובייקטי מערכת - הגבול לא ניתן לעריכה עד שנלחץ על כפתור עריכה
-    lockSystemObjects();
-
-    // איפוס
-    drawingPolygon = false;
-    polygonPoints = [];
-    if (window.mapState) {
-        window.mapState.polygon.isDrawing = false;
-        window.mapState.polygon.points = [];
-    }
-    document.getElementById('drawPolygonBtn').classList.remove('active');
-    document.getElementById('mapCanvas').style.cursor = 'default';
-
-    // הצג כפתורי עריכה ומחיקה של גבול (גבול לא במצב עריכה כברירת מחדל)
-    const editBtn = document.getElementById('editBoundaryBtn');
-    const deleteBtn = document.getElementById('deleteBoundaryBtn');
-
-    if (editBtn) {
-        editBtn.classList.remove('hidden-btn'); // הצג כפתור
-        // לא מוסיפים 'active' - גבול לא במצב עריכה כברירת מחדל
-    }
-    if (deleteBtn) {
-        deleteBtn.classList.remove('hidden-btn'); // הצג כפתור
-    }
-
-    saveCanvasState();
-    console.log('Boundary with mask completed');
+    // Fallback: Should never happen (PolygonDrawer always loads)
+    console.error('❌ PolygonDrawer not available for finishPolygon - this should not happen!');
 }
 
 /**
@@ -1942,31 +1813,8 @@ function cancelPolygonDrawing() {
         return;
     }
 
-    // Fallback to old implementation
-    if (previewLine) {
-        window.mapCanvas.remove(previewLine);
-        previewLine = null;
-        if (window.mapState) {
-            window.mapState.polygon.previewLine = null;
-        }
-    }
-
-    const objects = window.mapCanvas.getObjects();
-    objects.forEach(obj => {
-        if (obj.polygonPoint || obj.polygonLine) {
-            window.mapCanvas.remove(obj);
-        }
-    });
-
-    drawingPolygon = false;
-    polygonPoints = [];
-    if (window.mapState) {
-        window.mapState.polygon.isDrawing = false;
-        window.mapState.polygon.points = [];
-    }
-    document.getElementById('drawPolygonBtn')?.classList.remove('active');
-    document.getElementById('mapCanvas').style.cursor = 'default';
-    window.mapCanvas?.renderAll();
+    // Fallback: Should never happen (PolygonDrawer always loads)
+    console.error('❌ PolygonDrawer not available for cancelPolygonDrawing - this should not happen!');
 }
 
 /**

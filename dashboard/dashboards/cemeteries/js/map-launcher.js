@@ -2470,13 +2470,11 @@ function showObjectContextMenu(clientX, clientY, targetObject) {
  */
 function deleteContextMenuObject() {
     hideContextMenu();
-
     if (!contextMenuTargetObject || !window.mapCanvas) return;
 
     window.mapCanvas.remove(contextMenuTargetObject);
     window.mapCanvas.renderAll();
     saveCanvasState();
-
     contextMenuTargetObject = null;
     console.log('Object deleted');
 }
@@ -2486,14 +2484,12 @@ function deleteContextMenuObject() {
  */
 function bringObjectToFront() {
     hideContextMenu();
-
     if (!contextMenuTargetObject || !window.mapCanvas) return;
 
     window.mapCanvas.bringToFront(contextMenuTargetObject);
     reorderLayers(); // המסכה תמיד תישאר למעלה
     window.mapCanvas.renderAll();
     saveCanvasState();
-
     contextMenuTargetObject = null;
 }
 
@@ -2502,14 +2498,12 @@ function bringObjectToFront() {
  */
 function sendObjectToBack() {
     hideContextMenu();
-
     if (!contextMenuTargetObject || !window.mapCanvas) return;
 
     window.mapCanvas.sendToBack(contextMenuTargetObject);
     reorderLayers(); // שכבת הרקע תישאר למטה
     window.mapCanvas.renderAll();
     saveCanvasState();
-
     contextMenuTargetObject = null;
 }
 

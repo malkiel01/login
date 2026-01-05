@@ -2141,9 +2141,6 @@ function toggleMapFullscreen() {
 }
 
 /**
- * זום
- */
-/**
  * הגדלת זום
  * REFACTORED: משתמש ב-ZoomControls (Step 5/15)
  */

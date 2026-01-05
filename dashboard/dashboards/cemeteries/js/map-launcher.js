@@ -296,16 +296,26 @@ async function loadEntitiesForType() {
 }
 
 async function launchMap() {
+    console.log('');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('🚀 [LAUNCH] launchMap() called');
+    console.log('═══════════════════════════════════════════════════════');
+
     const entityType = document.getElementById('mapEntityType').value;
     const unicId = document.getElementById('mapEntitySelect').value;
 
+    console.log('   [LAUNCH] entityType:', entityType);
+    console.log('   [LAUNCH] unicId:', unicId);
+
     if (!entityType) {
+        console.log('❌ [LAUNCH] No entityType selected');
         alert('נא לבחור סוג ישות');
         document.getElementById('mapEntityType').focus();
         return;
     }
 
     if (!unicId) {
+        console.log('❌ [LAUNCH] No unicId selected');
         alert('נא לבחור ישות מהרשימה');
         document.getElementById('mapEntitySelect').focus();
         return;
@@ -368,10 +378,16 @@ async function launchMap() {
         }
 
         // הרשומה קיימת ופעילה - פתח את המפה
+        console.log('✅ [LAUNCH] Entity validation passed, closing launcher...');
         closeMapLauncher();
+        console.log('   [LAUNCH] Launcher closed, opening map popup...');
         openMapPopup(entityType, unicId);
+        console.log('✅ [LAUNCH] launchMap() completed successfully');
+        console.log('═══════════════════════════════════════════════════════');
+        console.log('');
 
     } catch (error) {
+        console.log('❌ [LAUNCH] Error:', error.message);
         alert(`שגיאה: לא נמצאה רשומת ${entityNames[entityType]} פעילה עם מזהה "${unicId}"\n\n${error.message}`);
         document.getElementById('mapUnicId').focus();
         document.getElementById('mapUnicId').select();
@@ -388,9 +404,19 @@ async function launchMap() {
  * Uses MapPopup if available, otherwise falls back to old implementation
  */
 function openMapPopup(entityType, unicId) {
+    console.log('');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('🔓 [OPEN] openMapPopup() called');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('   [OPEN] entityType:', entityType);
+    console.log('   [OPEN] unicId:', unicId);
+    console.log('   [OPEN] window.MapPopupClass exists:', !!window.MapPopupClass);
+    console.log('   [OPEN] window.mapPopupInstance exists:', !!window.mapPopupInstance);
+
     // Update StateManager
     if (window.mapState) {
         window.mapState.setEntity(entityType, unicId);
+        console.log('   [OPEN] Updated StateManager with entity');
     }
 
     // Keep old variables in sync for backwards compatibility
@@ -399,7 +425,10 @@ function openMapPopup(entityType, unicId) {
 
     // Use MapPopup if available
     if (window.MapPopupClass) {
+        console.log('   [OPEN] Using MapPopup class');
+
         if (!window.mapPopupInstance) {
+            console.log('   [OPEN] Creating new MapPopup instance...');
             window.mapPopupInstance = new window.MapPopupClass({
                 onMapInit: (entityType, unicId, entity) => {
                     // Initialize the map after data is loaded
@@ -410,10 +439,16 @@ function openMapPopup(entityType, unicId) {
                     cleanupMapState();
                 }
             });
+            console.log('   [OPEN] MapPopup instance created');
+        } else {
+            console.log('   [OPEN] Reusing existing MapPopup instance');
         }
 
+        console.log('   [OPEN] Calling mapPopupInstance.open()...');
         window.mapPopupInstance.open(entityType, unicId);
-        console.log('✅ Map popup opened via MapPopup');
+        console.log('✅ [OPEN] Map popup opened via MapPopup');
+        console.log('═══════════════════════════════════════════════════════');
+        console.log('');
         return;
     }
 
@@ -1704,6 +1739,19 @@ async function loadSavedMapData(entityType, unicId) {
 
             const allObjects = window.mapCanvas.getObjects();
             console.log('   [LOAD] Total objects loaded:', allObjects.length);
+
+            // Fix textBaseline for all text objects ('alphabetical' -> 'alphabetic')
+            let fixedTextObjects = 0;
+            allObjects.forEach(obj => {
+                if ((obj.type === 'text' || obj.type === 'i-text' || obj.type === 'textbox') && obj.textBaseline === 'alphabetical') {
+                    obj.set('textBaseline', 'alphabetic');
+                    fixedTextObjects++;
+                }
+            });
+            if (fixedTextObjects > 0) {
+                console.log(`   [LOAD] Fixed textBaseline for ${fixedTextObjects} text objects`);
+                window.mapCanvas.renderAll();
+            }
 
             // Count objects by type
             const objectTypes = {};

@@ -123,7 +123,7 @@ export class Toolbar {
             <!-- גרופ זום - תמיד מוצג -->
             <div class="map-toolbar-group">
                 <button class="map-tool-btn" data-action="zoom-in" title="הגדל">+</button>
-                <span id="mapZoomLevel" class="map-zoom-level" data-action="edit-zoom" title="דאבל קליק לעריכה ידנית">100%</span>
+                <span id="mapZoomLevel" class="map-zoom-level" title="דאבל קליק לעריכה ידנית">100%</span>
                 <button class="map-tool-btn" data-action="zoom-out" title="הקטן">−</button>
             </div>
         `;

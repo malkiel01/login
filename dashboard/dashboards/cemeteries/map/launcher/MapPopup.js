@@ -32,21 +32,39 @@ export class MapPopup {
      * @param {string} unicId - ID of the entity
      */
     async open(entityType, unicId) {
+        console.log('');
+        console.log('═══════════════════════════════════════════════════════');
+        console.log('🔓 [MapPopup.open] Starting...');
+        console.log('═══════════════════════════════════════════════════════');
+        console.log('   [MapPopup.open] entityType:', entityType);
+        console.log('   [MapPopup.open] unicId:', unicId);
+        console.log('   [MapPopup.open] this.overlay before close:', this.overlay ? 'EXISTS' : 'null');
+
         // Remove existing popup if exists
+        console.log('   [MapPopup.open] Calling this.close()...');
         this.close();
+        console.log('   [MapPopup.open] this.overlay after close:', this.overlay ? 'EXISTS' : 'null');
 
         // Create popup HTML
+        console.log('   [MapPopup.open] Calling createPopup()...');
         this.createPopup();
+        console.log('   [MapPopup.open] this.overlay after createPopup:', this.overlay ? 'EXISTS' : 'null');
+        console.log('   [MapPopup.open] Popup HTML created and inserted');
 
         // Load map data
+        console.log('   [MapPopup.open] Calling loadMapData()...');
         await this.loadMapData(entityType, unicId);
+        console.log('   [MapPopup.open] Map data loaded');
 
         // Callback
         if (this.options.onOpen) {
+            console.log('   [MapPopup.open] Calling onOpen callback...');
             this.options.onOpen(entityType, unicId);
         }
 
-        console.log(` MapPopup opened for ${entityType}:${unicId}`);
+        console.log('✅ [MapPopup.open] MapPopup opened for', entityType + ':' + unicId);
+        console.log('═══════════════════════════════════════════════════════');
+        console.log('');
     }
 
     /**

@@ -6,7 +6,97 @@
  */
 
 export class ContextMenu {
+    /**
+     * הזרקת CSS לעמוד (נקרא פעם אחת)
+     */
+    static injectCSS() {
+        // בדוק אם כבר הוזרק
+        if (document.getElementById('mapContextMenuStyles')) {
+            console.log('ℹ️ [ContextMenu] CSS already injected - skipping');
+            return;
+        }
+
+        console.log('🎨 [ContextMenu] Injecting CSS...');
+
+        const styles = document.createElement('style');
+        styles.id = 'mapContextMenuStyles';
+        styles.textContent = `
+            /* Context Menu */
+            .map-context-menu {
+                position: absolute;
+                background: white;
+                border-radius: 8px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+                z-index: 1000;
+                min-width: 180px;
+                overflow: hidden;
+                border: 1px solid #e5e7eb;
+            }
+            .context-menu-content {
+                padding: 4px 0;
+            }
+            .context-menu-item {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 10px 16px;
+                cursor: pointer;
+                transition: background 0.15s;
+                font-size: 14px;
+                color: #374151;
+            }
+            .context-menu-item:hover {
+                background: #f3f4f6;
+            }
+            .context-menu-item.disabled {
+                color: #9ca3af;
+                cursor: not-allowed;
+                background: #f9fafb;
+            }
+            .context-menu-separator {
+                height: 1px;
+                background: #e5e7eb;
+                margin: 4px 0;
+            }
+        `;
+
+        document.head.appendChild(styles);
+
+        console.log('✅ [ContextMenu] CSS injected successfully!');
+        console.log('   [ContextMenu] Style element ID: mapContextMenuStyles');
+        console.log('   [ContextMenu] CSS length:', styles.textContent.length, 'chars');
+        console.log('   [ContextMenu] In document.head:', document.head.contains(styles));
+
+        // Test CSS application
+        setTimeout(() => {
+            const testDiv = document.createElement('div');
+            testDiv.className = 'map-context-menu';
+            testDiv.style.position = 'absolute';
+            testDiv.style.visibility = 'hidden';
+            document.body.appendChild(testDiv);
+
+            const computedStyle = window.getComputedStyle(testDiv);
+            console.log('🧪 [ContextMenu] CSS TEST - .map-context-menu computed:', {
+                background: computedStyle.backgroundColor,
+                borderRadius: computedStyle.borderRadius,
+                boxShadow: computedStyle.boxShadow,
+                minWidth: computedStyle.minWidth
+            });
+
+            if (computedStyle.backgroundColor === 'rgb(255, 255, 255)' && computedStyle.borderRadius === '8px') {
+                console.log('✅ [ContextMenu] CSS TEST PASSED - styles applied correctly!');
+            } else {
+                console.error('❌ [ContextMenu] CSS TEST FAILED - styles not applied!');
+            }
+
+            document.body.removeChild(testDiv);
+        }, 50);
+    }
+
     constructor(options = {}) {
+        // הזרק CSS אם עדיין לא הוזרק
+        ContextMenu.injectCSS();
+
         this.options = {
             menuId: options.menuId || 'mapContextMenu',
             contentId: options.contentId || 'contextMenuContent',

@@ -13,7 +13,159 @@
  */
 
 export class Toolbar {
+    /**
+     * הזרקת CSS לעמוד (נקרא פעם אחת)
+     */
+    static injectCSS() {
+        // בדוק אם כבר הוזרק
+        if (document.getElementById('mapToolbarStyles')) {
+            console.log('ℹ️ [Toolbar] CSS already injected - skipping');
+            return;
+        }
+
+        console.log('🎨 [Toolbar] Injecting CSS...');
+
+        const styles = document.createElement('style');
+        styles.id = 'mapToolbarStyles';
+        styles.textContent = `
+            /* Toolbar Styles */
+            .map-toolbar {
+                display: flex;
+                gap: 16px;
+                padding: 10px 16px;
+                background: white;
+                border-bottom: 1px solid #e5e7eb;
+                align-items: center;
+                flex-wrap: wrap;
+            }
+            .map-toolbar-group {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                padding: 4px;
+                background: #f3f4f6;
+                border-radius: 8px;
+            }
+            .map-toolbar-group.edit-only {
+                display: none;
+            }
+            .map-container.edit-mode .map-toolbar-group.edit-only {
+                display: flex;
+            }
+            .map-tool-btn {
+                width: 36px;
+                height: 36px;
+                border: none;
+                background: transparent;
+                border-radius: 6px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #4b5563;
+                font-size: 18px;
+                font-weight: 600;
+            }
+            .map-tool-btn:hover {
+                background: #e5e7eb;
+            }
+            .map-tool-btn.active {
+                background: #3b82f6;
+                color: white;
+            }
+            .map-tool-btn:disabled {
+                opacity: 0.4;
+                cursor: not-allowed;
+            }
+            .map-tool-btn.hidden-btn {
+                display: none !important;
+            }
+            .map-zoom-level {
+                padding: 0 8px;
+                font-size: 13px;
+                color: #6b7280;
+                min-width: 50px;
+                text-align: center;
+            }
+            .toolbar-separator {
+                width: 1px;
+                height: 24px;
+                background: #e5e7eb;
+                margin: 0 4px;
+            }
+            /* Canvas Styles */
+            .map-canvas {
+                width: 100%;
+                flex: 1;
+                background: #e5e7eb;
+                position: relative;
+                overflow: hidden;
+            }
+            #fabricCanvas {
+                position: absolute;
+                top: 0;
+                left: 0;
+            }
+            /* Edit Mode Indicator */
+            .edit-mode-indicator {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                background: #3b82f6;
+                color: white;
+                padding: 6px 12px;
+                border-radius: 6px;
+                font-size: 12px;
+                font-weight: 500;
+                z-index: 100;
+                display: none;
+            }
+            .map-container.edit-mode .edit-mode-indicator {
+                display: block;
+            }
+            /* Hidden file inputs */
+            .hidden-file-input {
+                display: none;
+            }
+        `;
+
+        document.head.appendChild(styles);
+
+        console.log('✅ [Toolbar] CSS injected successfully!');
+        console.log('   [Toolbar] Style element ID: mapToolbarStyles');
+        console.log('   [Toolbar] CSS length:', styles.textContent.length, 'chars');
+        console.log('   [Toolbar] In document.head:', document.head.contains(styles));
+
+        // Test CSS application
+        setTimeout(() => {
+            const testDiv = document.createElement('div');
+            testDiv.className = 'map-toolbar';
+            testDiv.style.position = 'absolute';
+            testDiv.style.visibility = 'hidden';
+            document.body.appendChild(testDiv);
+
+            const computedStyle = window.getComputedStyle(testDiv);
+            console.log('🧪 [Toolbar] CSS TEST - .map-toolbar computed:', {
+                display: computedStyle.display,
+                backgroundColor: computedStyle.backgroundColor,
+                padding: computedStyle.padding,
+                borderBottom: computedStyle.borderBottom
+            });
+
+            if (computedStyle.display === 'flex' && computedStyle.backgroundColor === 'rgb(255, 255, 255)') {
+                console.log('✅ [Toolbar] CSS TEST PASSED - styles applied correctly!');
+            } else {
+                console.error('❌ [Toolbar] CSS TEST FAILED - styles not applied!');
+            }
+
+            document.body.removeChild(testDiv);
+        }, 50);
+    }
+
     constructor(containerElement, handlers = {}) {
+        // הזרק CSS אם עדיין לא הוזרק
+        Toolbar.injectCSS();
+
         this.container = containerElement;
         this.handlers = {
             // Zoom handlers

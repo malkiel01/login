@@ -1177,24 +1177,6 @@ function createMapCanvas(entityType, unicId, entity) {
 }
 
 /**
- * Fallback: יצירת Canvas - לא צריך להיקרא (CanvasManager תמיד זמין)
- * מוצג רק הודעת שגיאה אם מגיעים לכאן
- */
-function createMapCanvasFallback(canvasContainer) {
-    console.error('❌❌❌ FALLBACK CALLED - CanvasManager should always be available!');
-    canvasContainer.innerHTML = `
-        <div style="padding: 40px; text-align: center; color: #dc2626;">
-            <h3>שגיאה קריטית</h3>
-            <p>CanvasManager לא נטען כראוי.</p>
-            <p>אנא רענן את הדף ונסה שוב.</p>
-            <button onclick="location.reload()" style="margin-top: 20px; padding: 10px 20px; cursor: pointer;">
-                רענן דף
-            </button>
-        </div>
-    `;
-}
-
-/**
  * טעינת נתוני מפה שמורים מהשרת
  */
 async function loadSavedMapData(entityType, unicId) {
@@ -2077,12 +2059,8 @@ function closeMapPopup() {
         return;
     }
 
-    // Fallback: Old implementation
-    const popup = document.getElementById('mapPopupOverlay');
-    if (popup) {
-        cleanupMapState();
-        popup.remove();
-    }
+    // Fallback: Should never happen (MapPopup always loads)
+    console.error('❌ MapPopup not available for close - this should not happen!');
 }
 
 /**

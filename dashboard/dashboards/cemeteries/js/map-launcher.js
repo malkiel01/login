@@ -3304,11 +3304,8 @@ function hideContextMenu() {
     // Use ContextMenu if available
     if (window.mapContextMenu) {
         window.mapContextMenu.hide();
-        return;
     }
-
-    // Fallback: Should never happen
-    console.error('❌ ContextMenu not available for hide()');
+    // Silently ignore if ContextMenu not available (already cleaned up)
 }
 
 /**

@@ -10,7 +10,6 @@
     try {
         const { StateManager } = await import('../map/core/StateManager.js');
         window.mapState = new StateManager();
-        console.log('✅ StateManager loaded');
     } catch (error) {
         console.error('❌ Failed to load StateManager:', error);
         // Fallback: create simple state object
@@ -28,7 +27,6 @@
     try {
         const { EntitySelector } = await import('../map/launcher/EntitySelector.js');
         window.entitySelector = new EntitySelector({ apiEndpoint: 'api/map-api.php' });
-        console.log('✅ EntitySelector loaded');
     } catch (error) {
         console.error('❌ Failed to load EntitySelector:', error);
     }
@@ -58,7 +56,6 @@
             launchMap();
         });
 
-        console.log('✅ LauncherModal loaded');
     } catch (error) {
         console.error('❌ Failed to load LauncherModal:', error);
     }
@@ -70,7 +67,6 @@
     try {
         const { Toolbar } = await import('../map/ui/Toolbar.js');
         window.ToolbarClass = Toolbar;
-        console.log('✅ Toolbar class loaded');
     } catch (error) {
         console.error('❌ Failed to load Toolbar:', error);
     }
@@ -82,7 +78,6 @@
     try {
         const { ZoomControls } = await import('../map/ui/ZoomControls.js');
         window.ZoomControlsClass = ZoomControls;
-        console.log('✅ ZoomControls class loaded');
     } catch (error) {
         console.error('❌ Failed to load ZoomControls:', error);
     }
@@ -94,7 +89,6 @@
     try {
         const { CanvasManager } = await import('../map/core/CanvasManager.js');
         window.CanvasManagerClass = CanvasManager;
-        console.log('✅ CanvasManager class loaded');
     } catch (error) {
         console.error('❌ Failed to load CanvasManager:', error);
     }
@@ -106,7 +100,6 @@
     try {
         const { PolygonDrawer } = await import('../map/editors/PolygonDrawer.js');
         window.PolygonDrawerClass = PolygonDrawer;
-        console.log('✅ PolygonDrawer class loaded');
     } catch (error) {
         console.error('❌ Failed to load PolygonDrawer:', error);
     }
@@ -118,7 +111,6 @@
     try {
         const { BoundaryEditor } = await import('../map/editors/BoundaryEditor.js');
         window.BoundaryEditorClass = BoundaryEditor;
-        console.log('✅ BoundaryEditor class loaded');
     } catch (error) {
         console.error('❌ Failed to load BoundaryEditor:', error);
     }
@@ -130,7 +122,6 @@
     try {
         const { BackgroundEditor } = await import('../map/editors/BackgroundEditor.js');
         window.BackgroundEditorClass = BackgroundEditor;
-        console.log('✅ BackgroundEditor class loaded');
     } catch (error) {
         console.error('❌ Failed to load BackgroundEditor:', error);
     }
@@ -142,7 +133,6 @@
     try {
         const { HistoryManager } = await import('../map/core/HistoryManager.js');
         window.HistoryManagerClass = HistoryManager;
-        console.log('✅ HistoryManager class loaded');
     } catch (error) {
         console.error('❌ Failed to load HistoryManager:', error);
     }
@@ -154,7 +144,6 @@
     try {
         const { EditModeToggle } = await import('../map/ui/EditModeToggle.js');
         window.EditModeToggleClass = EditModeToggle;
-        console.log('✅ EditModeToggle class loaded');
     } catch (error) {
         console.error('❌ Failed to load EditModeToggle:', error);
     }
@@ -166,7 +155,6 @@
     try {
         const { ContextMenu } = await import('../map/ui/ContextMenu.js');
         window.ContextMenuClass = ContextMenu;
-        console.log('✅ ContextMenu class loaded');
     } catch (error) {
         console.error('❌ Failed to load ContextMenu:', error);
     }
@@ -178,7 +166,6 @@
     try {
         const { MapPopup } = await import('../map/launcher/MapPopup.js');
         window.MapPopupClass = MapPopup;
-        console.log('✅ MapPopup class loaded');
     } catch (error) {
         console.error('❌ Failed to load MapPopup:', error);
     }
@@ -470,16 +457,6 @@ function initializeMap(entityType, unicId, entity) {
 
     const container = document.getElementById('mapContainer');
 
-    console.log('🔍 initializeMap() called:', {
-        entityType,
-        unicId,
-        container: container ? 'found' : 'NOT FOUND',
-        containerDimensions: container ? {
-            clientWidth: container.clientWidth,
-            clientHeight: container.clientHeight
-        } : null
-    });
-
     container.innerHTML = `
         <!-- Toolbar - will be rendered by Toolbar.js -->
         <div id="mapToolbarContainer"></div>
@@ -556,16 +533,6 @@ function initializeMap(entityType, unicId, entity) {
  */
 function createMapCanvas(entityType, unicId, entity) {
     const canvasContainer = document.getElementById('mapCanvas');
-
-    console.log('🔍 createMapCanvas() called:', {
-        entityType,
-        unicId,
-        canvasContainer: canvasContainer ? 'found' : 'NOT FOUND',
-        containerDimensions: canvasContainer ? {
-            clientWidth: canvasContainer.clientWidth,
-            clientHeight: canvasContainer.clientHeight
-        } : null
-    });
 
     // STEP 6/15: Use CanvasManager to create canvas
     if (window.CanvasManagerClass) {
@@ -1162,9 +1129,6 @@ function reorderLayers() {
 
 /**
  * התחלת ציור פוליגון
- */
-/**
- * התחלת ציור פוליגון
  * REFACTORED: משתמש ב-PolygonDrawer (Step 7/15)
  */
 function startDrawPolygon() {
@@ -1181,18 +1145,6 @@ function startDrawPolygon() {
         document.getElementById('drawPolygonBtn').classList.add('active');
         document.getElementById('mapCanvas').style.cursor = 'crosshair';
         console.log('✅ Started polygon drawing via PolygonDrawer');
-    } else {
-        // Fallback
-        drawingPolygon = true;
-        polygonPoints = [];
-        if (window.mapState) {
-            window.mapState.polygon.isDrawing = true;
-            window.mapState.polygon.points = [];
-        }
-        document.getElementById('drawPolygonBtn').classList.add('active');
-        const canvasContainer = document.getElementById('mapCanvas');
-        canvasContainer.style.cursor = 'crosshair';
-        console.log('Started polygon drawing (fallback)');
     }
 }
 
@@ -1477,23 +1429,6 @@ function deleteBackground() {
     if (window.mapBackgroundEditor) {
         window.mapBackgroundEditor.delete();
         // onDelete callback will handle global variable updates
-    } else {
-        // Fallback to old implementation
-        window.mapCanvas.remove(backgroundImage);
-        backgroundImage = null;
-        if (window.mapState) window.mapState.setBackgroundImage(null);
-
-        const editBtn = document.getElementById('editBackgroundBtn');
-        const deleteBtn = document.getElementById('deleteBackgroundBtn');
-        if (editBtn) {
-            editBtn.classList.add('hidden-btn');
-            editBtn.classList.remove('active');
-        }
-        if (deleteBtn) deleteBtn.classList.add('hidden-btn');
-
-        window.mapCanvas.renderAll();
-        saveCanvasState();
-        console.log('Background deleted (fallback)');
     }
 }
 
@@ -1517,41 +1452,6 @@ function deleteBoundary() {
     if (window.mapBoundaryEditor) {
         window.mapBoundaryEditor.delete();
         // onDelete callback will handle global variable updates
-    } else {
-        // Fallback to old implementation
-        const objects = window.mapCanvas.getObjects();
-        objects.forEach(obj => {
-            if (obj.objectType === 'boundary' ||
-                obj.objectType === 'grayMask' ||
-                obj.objectType === 'boundaryOutline' ||
-                obj.polygonPoint ||
-                obj.polygonLine) {
-                window.mapCanvas.remove(obj);
-            }
-        });
-
-        // איפוס משתנים
-        boundaryClipPath = null;
-        grayMask = null;
-        boundaryOutline = null;
-        if (window.mapState) {
-            window.mapState.canvas.boundary.clipPath = null;
-            window.mapState.setGrayMask(null);
-            window.mapState.setBoundaryOutline(null);
-        }
-
-        // הסתר כפתורי עריכה ומחיקה של גבול
-        const editBtn = document.getElementById('editBoundaryBtn');
-        const deleteBtn = document.getElementById('deleteBoundaryBtn');
-        if (editBtn) {
-            editBtn.classList.add('hidden-btn');
-            editBtn.classList.remove('active');
-        }
-        if (deleteBtn) deleteBtn.classList.add('hidden-btn');
-
-        window.mapCanvas.renderAll();
-        saveCanvasState();
-        console.log('Boundary deleted (fallback)');
     }
 }
 
@@ -1755,12 +1655,6 @@ function updateZoomDisplay() {
     // REFACTORED: Use Toolbar.updateZoomDisplay() if available (Step 4/15)
     if (window.mapToolbar && typeof window.mapToolbar.updateZoomDisplay === 'function') {
         window.mapToolbar.updateZoomDisplay(currentZoom);
-    } else {
-        // Fallback to direct DOM manipulation
-        const el = document.getElementById('mapZoomLevel');
-        if (el) {
-            el.textContent = Math.round(currentZoom * 100) + '%';
-        }
     }
 }
 

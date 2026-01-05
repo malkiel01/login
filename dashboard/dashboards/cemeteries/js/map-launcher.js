@@ -3365,46 +3365,8 @@ function showObjectContextMenu(clientX, clientY, targetObject) {
         return;
     }
 
-    // Fallback: Old implementation
-    const menu = document.getElementById('mapContextMenu');
-    const content = document.getElementById('contextMenuContent');
-
-    if (!menu || !content) return;
-
-    // שמור את האובייקט
-    contextMenuTargetObject = targetObject;
-
-    // תפריט עם אפשרות מחיקה
-    content.innerHTML = `
-        <div class="context-menu-item" onclick="deleteContextMenuObject()">
-            <span class="context-menu-icon">🗑️</span>
-            <span>מחק פריט</span>
-        </div>
-        <div class="context-menu-separator"></div>
-        <div class="context-menu-item" onclick="bringObjectToFront()">
-            <span class="context-menu-icon">⬆️</span>
-            <span>הבא לחזית</span>
-        </div>
-        <div class="context-menu-item" onclick="sendObjectToBack()">
-            <span class="context-menu-icon">⬇️</span>
-            <span>שלח לרקע</span>
-        </div>
-    `;
-
-    // מיקום התפריט
-    menu.style.position = 'fixed';
-    menu.style.left = clientX + 'px';
-    menu.style.top = clientY + 'px';
-    menu.style.display = 'block';
-
-    // בדיקה אם יוצא מהמסך
-    const menuRect = menu.getBoundingClientRect();
-    if (menuRect.right > window.innerWidth) {
-        menu.style.left = (clientX - menuRect.width) + 'px';
-    }
-    if (menuRect.bottom > window.innerHeight) {
-        menu.style.top = (clientY - menuRect.height) + 'px';
-    }
+    // Fallback: Should never happen (ContextMenu always loads)
+    console.error('❌ ContextMenu not available for showForObject - this should not happen!');
 }
 
 /**

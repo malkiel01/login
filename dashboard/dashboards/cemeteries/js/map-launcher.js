@@ -1471,71 +1471,8 @@ async function handleBackgroundUpload(event) {
             alert('שגיאה בהעלאת תמונת הרקע');
         }
     } else {
-        // Fallback to old implementation
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            fabric.Image.fromURL(e.target.result, function(img) {
-                if (backgroundImage) {
-                    window.mapCanvas.remove(backgroundImage);
-                }
-
-                const canvas = window.mapCanvas;
-                const scale = Math.min(
-                    (canvas.width * 0.9) / img.width,
-                    (canvas.height * 0.9) / img.height
-                );
-
-                img.set({
-                    left: canvas.width / 2,
-                    top: canvas.height / 2,
-                    originX: 'center',
-                    originY: 'center',
-                    scaleX: scale,
-                    scaleY: scale,
-                    selectable: true,
-                    evented: true,
-                    hasControls: true,
-                    hasBorders: true,
-                    lockRotation: false,
-                    objectType: 'backgroundLayer'
-                });
-
-                canvas.add(img);
-                backgroundImage = img;
-                if (window.mapState) window.mapState.setBackgroundImage(img);
-
-                const editBgBtn = document.getElementById('editBackgroundBtn');
-                const deleteBgBtn = document.getElementById('deleteBackgroundBtn');
-
-                if (editBgBtn) {
-                    editBgBtn.classList.remove('hidden-btn');
-                    editBgBtn.classList.add('active');
-                }
-                if (deleteBgBtn) {
-                    deleteBgBtn.classList.remove('hidden-btn');
-                }
-
-                isBackgroundEditMode = true;
-                if (window.mapState) {
-                    window.mapState.canvas.background.isEditMode = true;
-                }
-
-                if (grayMask) {
-                    grayMask.set({
-                        selectable: false,
-                        evented: false,
-                        hasControls: false,
-                        hasBorders: false
-                    });
-                }
-
-                canvas.setActiveObject(img);
-                reorderLayers();
-                saveCanvasState();
-                console.log('Background layer image added (fallback)');
-            });
-        };
-        reader.readAsDataURL(file);
+        // Fallback: Should never happen (BackgroundEditor always loads)
+        console.error('❌ BackgroundEditor not available for upload - this should not happen!');
     }
 
     // ניקוי ה-input

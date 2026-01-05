@@ -1712,74 +1712,6 @@ function toggleBackgroundEdit() {
 }
 
 /**
- * עדכון מיקום המסכה בעת הזזת הגבול
- */
-function updateMaskPosition() {
-    if (!boundaryOutline || !grayMask) return;
-
-    // קבל את הנקודות החדשות של הגבול
-    const matrix = boundaryOutline.calcTransformMatrix();
-    const points = boundaryOutline.points.map(p => {
-        const transformed = fabric.util.transformPoint(
-            { x: p.x - boundaryOutline.pathOffset.x, y: p.y - boundaryOutline.pathOffset.y },
-            matrix
-        );
-        return transformed;
-    });
-
-    // בדיקה אם הגבול יוצא מגבול ההורה (אם קיים)
-    if (parentBoundaryPoints && parentBoundaryPoints.length > 0) {
-        const pointsOutside = points.filter(p => !isPointInPolygon(p, parentBoundaryPoints));
-        if (pointsOutside.length > 0) {
-            // שחזר למצב האחרון התקין
-            if (lastValidBoundaryState) {
-                boundaryOutline.set({
-                    left: lastValidBoundaryState.left,
-                    top: lastValidBoundaryState.top,
-                    scaleX: lastValidBoundaryState.scaleX,
-                    scaleY: lastValidBoundaryState.scaleY
-                });
-                boundaryOutline.setCoords();
-            }
-            return;
-        }
-    }
-
-    // שמור מצב תקין
-    const newValidState = {
-        left: boundaryOutline.left,
-        top: boundaryOutline.top,
-        scaleX: boundaryOutline.scaleX,
-        scaleY: boundaryOutline.scaleY
-    };
-    lastValidBoundaryState = newValidState;
-    if (window.mapState) {
-        window.mapState.canvas.boundary.lastValidState = newValidState;
-    }
-
-    // בנה מחדש את המסכה
-    const canvas = window.mapCanvas;
-    const canvasWidth = canvas.width;
-    const canvasHeight = canvas.height;
-    const maskSize = 10000; // גודל ענק שיכסה בכל מצב זום
-
-    let pathData = `M ${-maskSize} ${-maskSize} L ${canvasWidth + maskSize} ${-maskSize} L ${canvasWidth + maskSize} ${canvasHeight + maskSize} L ${-maskSize} ${canvasHeight + maskSize} Z `;
-    pathData += `M ${Math.round(points[0].x)} ${Math.round(points[0].y)} `;
-    for (let i = points.length - 1; i >= 0; i--) {
-        pathData += `L ${Math.round(points[i].x)} ${Math.round(points[i].y)} `;
-    }
-    pathData += 'Z';
-
-    // עדכן את נתיב המסכה
-    grayMask.set({
-        path: fabric.util.parsePath(pathData),
-        stroke: null,
-        strokeWidth: 0
-    });
-    canvas.renderAll();
-}
-
-/**
  * מחיקת תמונת רקע
  * REFACTORED: משתמש ב-BackgroundEditor (Step 9/15)
  */
@@ -2097,43 +2029,7 @@ function editZoomLevel() {
     if (window.mapZoomControls) {
         window.mapZoomControls.enableManualEdit(el);
     } else {
-        // Fallback to old implementation
-        const currentValue = Math.round(currentZoom * 100);
-
-        const input = document.createElement('input');
-        input.type = 'number';
-        input.value = currentValue;
-        input.min = 30;
-        input.max = 300;
-        input.style.cssText = 'width: 50px; text-align: center; font-size: 13px; border: 1px solid #3b82f6; border-radius: 4px; padding: 2px;';
-
-        el.textContent = '';
-        el.appendChild(input);
-        input.focus();
-        input.select();
-
-        function applyZoom() {
-            let newZoom = parseInt(input.value) || 100;
-            newZoom = Math.max(30, Math.min(300, newZoom));
-            currentZoom = newZoom / 100;
-
-            if (window.mapCanvas) {
-                window.mapCanvas.setZoom(currentZoom);
-                window.mapCanvas.renderAll();
-            }
-
-            el.textContent = newZoom + '%';
-        }
-
-        input.addEventListener('blur', applyZoom);
-        input.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                input.blur();
-            } else if (e.key === 'Escape') {
-                el.textContent = currentValue + '%';
-            }
-        });
+        console.error('❌ ZoomControls not available for manual edit - this should not happen!');
     }
 }
 

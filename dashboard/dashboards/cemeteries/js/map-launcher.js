@@ -2068,37 +2068,8 @@ function toggleBoundaryEdit() {
         if (window.mapBoundaryEditor) {
             window.mapBoundaryEditor.enableEditMode(boundaryOutline, grayMask, boundaryClipPath);
         } else {
-            // Fallback to old implementation
-            const newValidState = {
-                left: boundaryOutline.left,
-                top: boundaryOutline.top,
-                scaleX: boundaryOutline.scaleX,
-                scaleY: boundaryOutline.scaleY
-            };
-            lastValidBoundaryState = newValidState;
-            if (window.mapState) {
-                window.mapState.canvas.boundary.lastValidState = newValidState;
-            }
-
-            boundaryOutline.set({
-                selectable: true,
-                evented: true,
-                hasControls: true,
-                hasBorders: true,
-                lockRotation: true
-            });
-
-            grayMask.set({
-                selectable: false,
-                evented: false,
-                hasControls: false,
-                hasBorders: false
-            });
-
-            window.mapCanvas.setActiveObject(boundaryOutline);
-            boundaryOutline.on('moving', updateMaskPosition);
-            boundaryOutline.on('scaling', updateMaskPosition);
-            console.log('Boundary edit mode: ON (fallback)');
+            // Fallback: Should never happen (BoundaryEditor always loads)
+            console.error('❌ BoundaryEditor not available for enable - this should not happen!');
         }
     } else {
         // כבה מצב עריכה
@@ -2107,12 +2078,8 @@ function toggleBoundaryEdit() {
         if (window.mapBoundaryEditor) {
             window.mapBoundaryEditor.disableEditMode();
         } else {
-            // Fallback
-            boundaryOutline.off('moving', updateMaskPosition);
-            boundaryOutline.off('scaling', updateMaskPosition);
-            window.mapCanvas.discardActiveObject();
-            lockSystemObjects();
-            console.log('Boundary edit mode: OFF (fallback)');
+            // Fallback: Should never happen (BoundaryEditor always loads)
+            console.error('❌ BoundaryEditor not available for disable - this should not happen!');
         }
     }
 
@@ -2147,42 +2114,8 @@ function toggleBackgroundEdit() {
             lockSystemObjects();
         }
     } else {
-        // Fallback to old implementation
-        if (window.mapState) {
-            window.mapState.canvas.background.isEditMode = isBackgroundEditMode;
-        }
-
-        const editBtn = document.getElementById('editBackgroundBtn');
-
-        if (isBackgroundEditMode) {
-            editBtn.classList.add('active');
-
-            backgroundImage.set({
-                selectable: true,
-                evented: true,
-                hasControls: true,
-                hasBorders: true
-            });
-
-            if (grayMask) {
-                grayMask.set({
-                    selectable: false,
-                    evented: false,
-                    hasControls: false,
-                    hasBorders: false
-                });
-            }
-
-            window.mapCanvas.setActiveObject(backgroundImage);
-            console.log('Background edit mode: ON (fallback)');
-        } else {
-            editBtn.classList.remove('active');
-            window.mapCanvas.discardActiveObject();
-            lockSystemObjects();
-            console.log('Background edit mode: OFF (fallback)');
-        }
-
-        window.mapCanvas.renderAll();
+        // Fallback: Should never happen (BackgroundEditor always loads)
+        console.error('❌ BackgroundEditor not available for toggle - this should not happen!');
     }
 }
 

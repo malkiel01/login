@@ -4,10 +4,8 @@
  * Features: Edit mode, Background image, Polygon drawing, Undo/Redo, Context menu, Popup management
  */
 
-// ========================================
 // STEP 1/15: StateManager Integration
 // Load StateManager module and make it globally available
-// ========================================
 (async function initStateManager() {
     try {
         const { StateManager } = await import('../map/core/StateManager.js');
@@ -24,10 +22,8 @@
     }
 })();
 
-// ========================================
 // STEP 2/15: EntitySelector Integration
 // Load EntitySelector module for dynamic entity loading
-// ========================================
 (async function initEntitySelector() {
     try {
         const { EntitySelector } = await import('../map/launcher/EntitySelector.js');
@@ -38,10 +34,8 @@
     }
 })();
 
-// ========================================
 // STEP 3/15: LauncherModal Integration
 // Load LauncherModal module for modal UI
-// ========================================
 (async function initLauncherModal() {
     try {
         const { LauncherModal } = await import('../map/launcher/LauncherModal.js');
@@ -70,10 +64,8 @@
     }
 })();
 
-// ========================================
 // STEP 4/15: Toolbar Integration
 // Load Toolbar module for map toolbar UI
-// ========================================
 (async function initToolbar() {
     try {
         const { Toolbar } = await import('../map/ui/Toolbar.js');
@@ -84,10 +76,8 @@
     }
 })();
 
-// ========================================
 // STEP 5/15: ZoomControls Integration
 // Load ZoomControls module for zoom functionality
-// ========================================
 (async function initZoomControls() {
     try {
         const { ZoomControls } = await import('../map/ui/ZoomControls.js');
@@ -98,10 +88,8 @@
     }
 })();
 
-// ========================================
 // STEP 6/15: CanvasManager Integration
 // Load CanvasManager module for canvas creation and management
-// ========================================
 (async function initCanvasManager() {
     try {
         const { CanvasManager } = await import('../map/core/CanvasManager.js');
@@ -112,10 +100,8 @@
     }
 })();
 
-// ========================================
 // STEP 7/15: PolygonDrawer Integration
 // Load PolygonDrawer module for drawing polygon boundaries
-// ========================================
 (async function initPolygonDrawer() {
     try {
         const { PolygonDrawer } = await import('../map/editors/PolygonDrawer.js');
@@ -126,10 +112,8 @@
     }
 })();
 
-// ========================================
 // STEP 8/15: BoundaryEditor Integration
 // Load BoundaryEditor module for editing existing boundaries
-// ========================================
 (async function initBoundaryEditor() {
     try {
         const { BoundaryEditor } = await import('../map/editors/BoundaryEditor.js');
@@ -140,10 +124,8 @@
     }
 })();
 
-// ========================================
 // STEP 9/15: BackgroundEditor Integration
 // Load BackgroundEditor module for background image/PDF management
-// ========================================
 (async function initBackgroundEditor() {
     try {
         const { BackgroundEditor } = await import('../map/editors/BackgroundEditor.js');
@@ -154,10 +136,8 @@
     }
 })();
 
-// ========================================
 // STEP 10/15: HistoryManager Integration
 // Load HistoryManager module for undo/redo functionality
-// ========================================
 (async function initHistoryManager() {
     try {
         const { HistoryManager } = await import('../map/core/HistoryManager.js');
@@ -168,10 +148,8 @@
     }
 })();
 
-// ========================================
 // STEP 11/15: EditModeToggle Integration
 // Load EditModeToggle module for managing edit mode state
-// ========================================
 (async function initEditModeToggle() {
     try {
         const { EditModeToggle } = await import('../map/ui/EditModeToggle.js');
@@ -182,10 +160,8 @@
     }
 })();
 
-// ========================================
 // STEP 12/15: ContextMenu Integration
 // Load ContextMenu module for right-click context menu
-// ========================================
 (async function initContextMenu() {
     try {
         const { ContextMenu } = await import('../map/ui/ContextMenu.js');
@@ -196,10 +172,8 @@
     }
 })();
 
-// ========================================
 // STEP 13/15: MapPopup Integration
 // Load MapPopup module for popup management
-// ========================================
 (async function initMapPopup() {
     try {
         const { MapPopup } = await import('../map/launcher/MapPopup.js');
@@ -238,20 +212,15 @@ let canvasHistory = []; // ← Synced with mapState.history.states
 let historyIndex = -1; // ← Synced with mapState.history.currentIndex
 const MAX_HISTORY = 30; // מקסימום מצבים לשמירה
 
-// ========================================
 // GLOBAL WRAPPER FUNCTIONS (for backwards compatibility)
 // These functions are called from sidebar.php and maintain the old API
-// ========================================
 
 /**
  * פתיחת מודל בחירת ישות - נקרא מה-sidebar
  * REFACTORED: משתמש ב-LauncherModal (Step 3/15)
  */
 function openMapLauncher() {
-    console.log('');
-    console.log('═══════════════════════════════════════════════════════');
     console.log('🔓 [LAUNCHER] openMapLauncher() called from sidebar');
-    console.log('═══════════════════════════════════════════════════════');
     console.log('   [LAUNCHER] window.launcherModal exists:', !!window.launcherModal);
 
     if (window.launcherModal) {
@@ -261,9 +230,6 @@ function openMapLauncher() {
     } else {
         console.error('❌ [LAUNCHER] LauncherModal not loaded yet');
     }
-
-    console.log('═══════════════════════════════════════════════════════');
-    console.log('');
 }
 
 /**
@@ -310,10 +276,7 @@ async function loadEntitiesForType() {
 }
 
 async function launchMap() {
-    console.log('');
-    console.log('═══════════════════════════════════════════════════════');
     console.log('🚀 [LAUNCH] launchMap() called');
-    console.log('═══════════════════════════════════════════════════════');
 
     const entityType = document.getElementById('mapEntityType').value;
     const unicId = document.getElementById('mapEntitySelect').value;
@@ -397,8 +360,6 @@ async function launchMap() {
         console.log('   [LAUNCH] Launcher closed, opening map popup...');
         openMapPopup(entityType, unicId);
         console.log('✅ [LAUNCH] launchMap() completed successfully');
-        console.log('═══════════════════════════════════════════════════════');
-        console.log('');
 
     } catch (error) {
         console.log('❌ [LAUNCH] Error:', error.message);
@@ -418,10 +379,7 @@ async function launchMap() {
  * Uses MapPopup if available, otherwise falls back to old implementation
  */
 function openMapPopup(entityType, unicId) {
-    console.log('');
-    console.log('═══════════════════════════════════════════════════════');
     console.log('🔓 [OPEN] openMapPopup() called');
-    console.log('═══════════════════════════════════════════════════════');
     console.log('   [OPEN] entityType:', entityType);
     console.log('   [OPEN] unicId:', unicId);
     console.log('   [OPEN] window.MapPopupClass exists:', !!window.MapPopupClass);
@@ -461,8 +419,6 @@ function openMapPopup(entityType, unicId) {
         console.log('   [OPEN] Calling mapPopupInstance.open()...');
         window.mapPopupInstance.open(entityType, unicId);
         console.log('✅ [OPEN] Map popup opened via MapPopup');
-        console.log('═══════════════════════════════════════════════════════');
-        console.log('');
         return;
     }
 
@@ -509,10 +465,7 @@ async function loadMapData(entityType, unicId) {
  * אתחול המפה
  */
 function initializeMap(entityType, unicId, entity) {
-    console.log('');
-    console.log('═══════════════════════════════════════════════════════');
     console.log('🎨 [CSS DEBUG] Checking mapLauncherStyles');
-    console.log('═══════════════════════════════════════════════════════');
 
     const existingStyle = document.getElementById('mapLauncherStyles');
     if (existingStyle) {
@@ -685,8 +638,6 @@ function initializeMap(entityType, unicId, entity) {
         });
         document.body.removeChild(testDiv);
     }, 100);
-    console.log('═══════════════════════════════════════════════════════');
-    console.log('');
 
     const container = document.getElementById('mapContainer');
 
@@ -745,9 +696,7 @@ function initializeMap(entityType, unicId, entity) {
     const mapCanvasElement = document.getElementById('mapCanvas');
     const mapContainerElement = document.getElementById('mapContainer');
 
-    console.log('═══════════════════════════════════════════════════════');
     console.log('📊 [INIT] After innerHTML - DOM + CSS Audit:');
-    console.log('═══════════════════════════════════════════════════════');
 
     // Check CSS loaded
     const mapPopupStyles = document.getElementById('mapPopupStyles');
@@ -780,15 +729,11 @@ function initializeMap(entityType, unicId, entity) {
         childCount: toolbarElement.children.length
     } : '❌ NOT FOUND');
 
-    console.log('═══════════════════════════════════════════════════════');
-
     // סגירת תפריט בלחיצה מחוץ
     document.addEventListener('click', hideContextMenu);
 
-    // ========================================
     // STEP 4/15: Initialize Toolbar
     // Create toolbar using Toolbar.js module
-    // ========================================
     if (window.ToolbarClass) {
         const toolbarContainer = document.getElementById('mapToolbarContainer');
         window.mapToolbar = new window.ToolbarClass(toolbarContainer, {
@@ -830,58 +775,47 @@ function createMapCanvas(entityType, unicId, entity) {
         } : null
     });
 
-    // ========================================
     // STEP 6/15: Use CanvasManager to create canvas
-    // ========================================
     if (window.CanvasManagerClass) {
         console.log('✅ Using CanvasManager');
-        try {
-            window.mapCanvasManager = new window.CanvasManagerClass(canvasContainer, {
-                canvasId: 'fabricCanvas',
-                backgroundColor: '#ffffff',
-                selection: true,
-                initialText: 'לחץ על "מצב עריכה" כדי להתחיל'
-            });
+        window.mapCanvasManager = new window.CanvasManagerClass(canvasContainer, {
+            canvasId: 'fabricCanvas',
+            backgroundColor: '#ffffff',
+            selection: true,
+            initialText: 'לחץ על "מצב עריכה" כדי להתחיל'
+        });
 
-            window.mapCanvas = window.mapCanvasManager.create();
+        window.mapCanvas = window.mapCanvasManager.create();
 
-            // Attach event handlers
-            window.mapCanvasManager.attachEventHandlers({
-                onMouseDown: handleCanvasClick,
-                onMouseMove: handleCanvasMouseMove,
-                onObjectModified: (e) => {
-                    console.log('Object modified, saving state');
-                    saveCanvasState();
-                },
-                onContextMenu: handleCanvasRightClick,
-                onZoomChange: (zoom) => {
-                    // Update zoom controls if available (Step 5/15)
-                    if (window.mapZoomControls) {
-                        window.mapZoomControls.setZoom(zoom);
-                    } else {
-                        currentZoom = zoom;
-                        updateZoomDisplay();
-                    }
+        // Attach event handlers
+        window.mapCanvasManager.attachEventHandlers({
+            onMouseDown: handleCanvasClick,
+            onMouseMove: handleCanvasMouseMove,
+            onObjectModified: (e) => {
+                console.log('Object modified, saving state');
+                saveCanvasState();
+            },
+            onContextMenu: handleCanvasRightClick,
+            onZoomChange: (zoom) => {
+                // Update zoom controls if available (Step 5/15)
+                if (window.mapZoomControls) {
+                    window.mapZoomControls.setZoom(zoom);
+                } else {
+                    currentZoom = zoom;
+                    updateZoomDisplay();
                 }
-            });
+            }
+        });
 
-            // שמור מצב התחלתי
-            saveCanvasState();
+        // שמור מצב התחלתי
+        saveCanvasState();
 
-            console.log('✅ Canvas created via CanvasManager');
-        } catch (error) {
-            console.error('❌ Failed to create canvas via CanvasManager:', error);
-            // Fallback to old implementation
-            createMapCanvasFallback(canvasContainer);
-        }
+        console.log('✅ Canvas created via CanvasManager');
     } else {
-        console.warn('⚠️ CanvasManager not loaded, using fallback');
-        createMapCanvasFallback(canvasContainer);
+        console.error('❌ CanvasManager not available - this should not happen!');
     }
 
-    // ========================================
     // STEP 5/15: Initialize ZoomControls
-    // ========================================
     if (window.ZoomControlsClass && window.mapCanvas) {
         window.mapZoomControls = new window.ZoomControlsClass(window.mapCanvas, {
             min: 0.3,
@@ -896,9 +830,7 @@ function createMapCanvas(entityType, unicId, entity) {
         console.log('✅ ZoomControls initialized');
     }
 
-    // ========================================
     // STEP 7/15: Initialize PolygonDrawer
-    // ========================================
     if (window.PolygonDrawerClass && window.mapCanvas) {
         window.mapPolygonDrawer = new window.PolygonDrawerClass(window.mapCanvas, {
             color: '#3b82f6',
@@ -919,9 +851,7 @@ function createMapCanvas(entityType, unicId, entity) {
         console.log('✅ PolygonDrawer initialized');
     }
 
-    // ========================================
     // STEP 8/15: Initialize BoundaryEditor
-    // ========================================
     if (window.BoundaryEditorClass && window.mapCanvas) {
         window.mapBoundaryEditor = new window.BoundaryEditorClass(window.mapCanvas, {
             parentBoundary: parentBoundaryPoints,
@@ -956,9 +886,7 @@ function createMapCanvas(entityType, unicId, entity) {
         console.log('✅ BoundaryEditor initialized');
     }
 
-    // ========================================
     // STEP 9/15: Initialize BackgroundEditor
-    // ========================================
     if (window.BackgroundEditorClass && window.mapCanvas) {
         window.mapBackgroundEditor = new window.BackgroundEditorClass(window.mapCanvas, {
             onUpload: (img) => {
@@ -1040,9 +968,7 @@ function createMapCanvas(entityType, unicId, entity) {
         console.log('✅ BackgroundEditor initialized');
     }
 
-    // ========================================
     // STEP 10/15: Initialize HistoryManager
-    // ========================================
     if (window.HistoryManagerClass && window.mapCanvas) {
         window.mapHistoryManager = new window.HistoryManagerClass(window.mapCanvas, {
             maxHistory: 30,
@@ -1070,9 +996,7 @@ function createMapCanvas(entityType, unicId, entity) {
         console.log('✅ HistoryManager initialized');
     }
 
-    // ========================================
     // STEP 11/15: Initialize EditModeToggle
-    // ========================================
     console.log('🔍 Initializing EditModeToggle...');
     if (window.EditModeToggleClass) {
         console.log('✅ EditModeToggleClass available');
@@ -1104,9 +1028,7 @@ function createMapCanvas(entityType, unicId, entity) {
         console.log('✅ EditModeToggle initialized');
     }
 
-    // ========================================
     // STEP 12/15: Initialize ContextMenu
-    // ========================================
     if (window.ContextMenuClass) {
         window.mapContextMenu = new window.ContextMenuClass({
             checkBoundary: hasBoundary,
@@ -1121,13 +1043,8 @@ function createMapCanvas(entityType, unicId, entity) {
         console.log('✅ ContextMenu initialized');
     }
 
-    // ========================================
     // End of initialization - Global State Audit
-    // ========================================
-    console.log('');
-    console.log('═══════════════════════════════════════════════════════');
     console.log('📊 [GLOBAL] Global State Audit - All Modules & Functions');
-    console.log('═══════════════════════════════════════════════════════');
 
     console.log('[MODULE INSTANCES]');
     console.log('  window.mapCanvas:', window.mapCanvas ? '✅ Exists' : '❌ Missing');
@@ -1169,9 +1086,6 @@ function createMapCanvas(entityType, unicId, entity) {
     console.log('  isEditMode (local var):', isEditMode ? '✅ true' : '❌ false');
     console.log('  mapContainer.classList:', document.getElementById('mapContainer')?.classList.contains('edit-mode') ? '✅ Has edit-mode class' : '❌ No edit-mode class');
 
-    console.log('═══════════════════════════════════════════════════════');
-    console.log('');
-
     // Load saved map data
     loadSavedMapData(entityType, unicId);
 }
@@ -1181,10 +1095,7 @@ function createMapCanvas(entityType, unicId, entity) {
  */
 async function loadSavedMapData(entityType, unicId) {
     try {
-        console.log('');
-        console.log('═══════════════════════════════════════════════════════');
         console.log('💾 [LOAD] loadSavedMapData() called');
-        console.log('═══════════════════════════════════════════════════════');
         console.log('   [LOAD] entityType:', entityType);
         console.log('   [LOAD] unicId:', unicId);
 
@@ -1199,7 +1110,6 @@ async function loadSavedMapData(entityType, unicId) {
 
         if (!result.success) {
             console.log('❌ [LOAD] No saved map data found');
-            console.log('═══════════════════════════════════════════════════════');
             return;
         }
 
@@ -1212,7 +1122,6 @@ async function loadSavedMapData(entityType, unicId) {
 
         if (!result.mapData || !result.mapData.canvasJSON) {
             console.log('❌ [LOAD] No canvas data in saved map');
-            console.log('═══════════════════════════════════════════════════════');
             return;
         }
 
@@ -1318,8 +1227,6 @@ async function loadSavedMapData(entityType, unicId) {
             console.log('      backgroundImage:', backgroundImage ? '✅ Loaded' : '❌ null');
             console.log('      grayMask:', grayMask ? '✅ Loaded' : '❌ null');
             console.log('      boundaryOutline:', boundaryOutline ? '✅ Loaded' : '❌ null');
-            console.log('═══════════════════════════════════════════════════════');
-            console.log('');
         });
 
     } catch (error) {
@@ -2637,7 +2544,6 @@ function addShapeFromMenu(shapeType) {
     }
 }
 
-// ==================== PDF HANDLING ====================
 
 /**
  * טיפול בהעלאת קובץ PDF
@@ -2910,7 +2816,6 @@ function closePdfSelector() {
     }
 }
 
-// ==================== UNDO/REDO ====================
 
 /**
  * שמירת מצב הקנבס להיסטוריה

@@ -274,12 +274,22 @@ export class LauncherModal {
      * פתיחת המודל
      */
     open() {
+        console.log('   [LauncherModal.open] Called');
         const modal = document.getElementById(this.config.modalId);
+        console.log('   [LauncherModal.open] Modal element:', modal ? 'EXISTS' : 'NOT FOUND');
+
         if (modal) {
+            const currentDisplay = modal.style.display;
+            console.log('   [LauncherModal.open] Current display:', currentDisplay);
+
             modal.style.display = 'flex';
+            console.log('   [LauncherModal.open] Set display to: flex');
+
             setTimeout(() => {
                 document.getElementById('mapEntityType')?.focus();
             }, 100);
+        } else {
+            console.error('❌ [LauncherModal.open] Modal element #' + this.config.modalId + ' not found in DOM!');
         }
     }
 
@@ -287,10 +297,19 @@ export class LauncherModal {
      * סגירת המודל
      */
     close() {
+        console.log('   [LauncherModal.close] Called');
         const modal = document.getElementById(this.config.modalId);
+        console.log('   [LauncherModal.close] Modal element:', modal ? 'EXISTS' : 'NOT FOUND');
+
         if (modal) {
+            const currentDisplay = modal.style.display;
+            console.log('   [LauncherModal.close] Current display:', currentDisplay);
+
             modal.style.display = 'none';
+            console.log('   [LauncherModal.close] Set display to: none');
+
             this.reset();
+            console.log('   [LauncherModal.close] Modal reset completed');
         }
     }
 

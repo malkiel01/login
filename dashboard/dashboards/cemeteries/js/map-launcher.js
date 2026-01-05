@@ -248,11 +248,22 @@ const MAX_HISTORY = 30; // מקסימום מצבים לשמירה
  * REFACTORED: משתמש ב-LauncherModal (Step 3/15)
  */
 function openMapLauncher() {
+    console.log('');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('🔓 [LAUNCHER] openMapLauncher() called from sidebar');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('   [LAUNCHER] window.launcherModal exists:', !!window.launcherModal);
+
     if (window.launcherModal) {
+        console.log('   [LAUNCHER] Calling launcherModal.open()...');
         window.launcherModal.open();
+        console.log('✅ [LAUNCHER] Launcher modal opened');
     } else {
-        console.warn('LauncherModal not loaded yet');
+        console.error('❌ [LAUNCHER] LauncherModal not loaded yet');
     }
+
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('');
 }
 
 /**
@@ -260,8 +271,11 @@ function openMapLauncher() {
  * REFACTORED: משתמש ב-LauncherModal (Step 3/15)
  */
 function closeMapLauncher() {
+    console.log('🔒 [LAUNCHER] closeMapLauncher() called');
     if (window.launcherModal) {
+        console.log('   [LAUNCHER] Calling launcherModal.close()...');
         window.launcherModal.close();
+        console.log('✅ [LAUNCHER] Launcher modal closed');
     }
 }
 

@@ -282,10 +282,36 @@ export class LauncherModal {
             const currentDisplay = modal.style.display;
             console.log('   [LauncherModal.open] Current display:', currentDisplay);
 
+            // אם המודל כבר פתוח - לא לפתוח שוב (מונע double-click)
+            if (currentDisplay === 'flex') {
+                console.log('⚠️ [LauncherModal.open] Modal already open - ignoring duplicate open()');
+                return;
+            }
+
             modal.style.display = 'flex';
             console.log('   [LauncherModal.open] Set display to: flex');
 
+            // בדיקת visibility ומיקום
             setTimeout(() => {
+                const computedStyle = window.getComputedStyle(modal);
+                const rect = modal.getBoundingClientRect();
+                console.log('   [LauncherModal.open] Post-open verification:', {
+                    display: computedStyle.display,
+                    visibility: computedStyle.visibility,
+                    opacity: computedStyle.opacity,
+                    zIndex: computedStyle.zIndex,
+                    position: computedStyle.position,
+                    rect: {
+                        top: rect.top,
+                        left: rect.left,
+                        width: rect.width,
+                        height: rect.height,
+                        onScreen: rect.top >= 0 && rect.left >= 0 && rect.width > 0 && rect.height > 0
+                    },
+                    children: modal.children.length,
+                    innerHTML: modal.innerHTML.substring(0, 100) + '...'
+                });
+
                 document.getElementById('mapEntityType')?.focus();
             }, 100);
         } else {

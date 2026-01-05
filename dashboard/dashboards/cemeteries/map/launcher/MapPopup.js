@@ -104,6 +104,26 @@ export class MapPopup {
                     </div>
                 </div>
             </div>
+
+            <!-- PDF Page Selector Modal -->
+            <div id="pdfPageSelectorModal" class="pdf-selector-overlay" style="display:none;">
+                <div class="pdf-selector-modal">
+                    <div class="pdf-selector-header">
+                        <h3>בחירת עמוד מ-PDF</h3>
+                        <button type="button" class="pdf-selector-close" onclick="closePdfSelector()">&times;</button>
+                    </div>
+                    <div class="pdf-selector-info">
+                        <span id="pdfFileName"></span>
+                        <span id="pdfPageCount"></span>
+                    </div>
+                    <div class="pdf-selector-pages" id="pdfPagesContainer">
+                        <!-- תמונות ממוזערות של העמודים -->
+                    </div>
+                    <div class="pdf-selector-footer">
+                        <button type="button" class="btn-secondary" onclick="closePdfSelector()">ביטול</button>
+                    </div>
+                </div>
+            </div>
         `;
 
         // Add styles if not exist
@@ -434,11 +454,123 @@ export class MapPopup {
                 0% { transform: rotate(0deg); }
                 100% { transform: rotate(360deg); }
             }
+
+            /* PDF Page Selector */
+            .pdf-selector-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.7);
+                z-index: 10001;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .pdf-selector-modal {
+                background: white;
+                border-radius: 12px;
+                width: 90%;
+                max-width: 800px;
+                max-height: 80vh;
+                display: flex;
+                flex-direction: column;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            }
+            .pdf-selector-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 16px 20px;
+                border-bottom: 1px solid #e5e7eb;
+            }
+            .pdf-selector-header h3 {
+                margin: 0;
+                font-size: 18px;
+                color: #1f2937;
+            }
+            .pdf-selector-close {
+                background: none;
+                border: none;
+                font-size: 24px;
+                cursor: pointer;
+                color: #6b7280;
+                width: 32px;
+                height: 32px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 6px;
+            }
+            .pdf-selector-close:hover {
+                background: #f3f4f6;
+                color: #1f2937;
+            }
+            .pdf-selector-info {
+                padding: 12px 20px;
+                background: #f9fafb;
+                display: flex;
+                justify-content: space-between;
+                font-size: 14px;
+                color: #6b7280;
+            }
+            .pdf-selector-pages {
+                padding: 20px;
+                overflow-y: auto;
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 16px;
+                max-height: 50vh;
+            }
+            .pdf-page-thumbnail {
+                cursor: pointer;
+                border: 2px solid #e5e7eb;
+                border-radius: 8px;
+                overflow: hidden;
+                transition: all 0.2s;
+                background: white;
+            }
+            .pdf-page-thumbnail:hover {
+                border-color: #3b82f6;
+                box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+                transform: translateY(-2px);
+            }
+            .pdf-page-thumbnail canvas {
+                width: 100%;
+                display: block;
+            }
+            .pdf-page-number {
+                padding: 8px;
+                text-align: center;
+                font-size: 13px;
+                color: #374151;
+                background: #f9fafb;
+                border-top: 1px solid #e5e7eb;
+            }
+            .pdf-selector-footer {
+                padding: 16px 20px;
+                border-top: 1px solid #e5e7eb;
+                display: flex;
+                justify-content: flex-end;
+            }
+            .btn-secondary {
+                padding: 8px 16px;
+                background: #f3f4f6;
+                border: 1px solid #d1d5db;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 14px;
+                color: #374151;
+            }
+            .btn-secondary:hover {
+                background: #e5e7eb;
+            }
         `;
 
         document.head.appendChild(styles);
         console.log('✅ [CSS-1] MapPopup CSS injected - ID: mapPopupStyles');
-        console.log('   [CSS-1] Includes: .map-popup-overlay, .map-popup-container, .map-popup-header, .map-popup-body, .map-container (flex), .map-canvas (flex: 1), .map-loading');
+        console.log('   [CSS-1] Includes: .map-popup-overlay, .map-popup-container, .map-popup-header, .map-popup-body, .map-container (flex), .map-canvas (flex: 1), .map-loading, .pdf-selector');
     }
 
     /**

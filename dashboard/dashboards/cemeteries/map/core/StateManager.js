@@ -90,6 +90,49 @@ export class StateManager {
         this.entityId = id;
     }
 
+    // Edit Mode
+    setEditMode(enabled) {
+        this.isEditMode = enabled;
+    }
+    getEditMode() {
+        return this.isEditMode;
+    }
+
+    /**
+     * סנכרון state מהקנבס
+     * קורא את כל האובייקטים מהקנבס ומעדכן את ה-state בהתאם
+     */
+    syncFromCanvas() {
+        if (!this.canvas.instance) {
+            console.warn('Cannot sync: no canvas instance');
+            return;
+        }
+
+        const objects = this.canvas.instance.getObjects();
+
+        // איפוס ערכים
+        this.canvas.background.image = null;
+        this.canvas.boundary.outline = null;
+        this.canvas.boundary.grayMask = null;
+
+        // סריקת אובייקטים
+        objects.forEach(obj => {
+            if (obj.objectType === 'backgroundLayer') {
+                this.canvas.background.image = obj;
+            } else if (obj.objectType === 'boundaryOutline') {
+                this.canvas.boundary.outline = obj;
+            } else if (obj.objectType === 'grayMask') {
+                this.canvas.boundary.grayMask = obj;
+            }
+        });
+
+        console.log('🔄 StateManager synced from canvas:', {
+            hasBackground: this.hasBackgroundImage(),
+            hasBoundary: this.hasBoundary(),
+            totalObjects: objects.length
+        });
+    }
+
     // Reset
     reset() {
         this.zoom = 1;

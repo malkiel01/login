@@ -17,6 +17,7 @@
 export class HistoryManager {
     constructor(canvas, options = {}) {
         this.canvas = canvas;
+        this.stateManager = options.stateManager || null;  // NEW: StateManager integration
         this.options = {
             maxHistory: options.maxHistory || 30,
             onChange: options.onChange || null,      // Called when undo/redo state changes
@@ -125,6 +126,11 @@ export class HistoryManager {
                 }
             });
 
+            // Sync StateManager if available
+            if (this.stateManager && this.stateManager.syncFromCanvas) {
+                this.stateManager.syncFromCanvas();
+            }
+
             // רינדור
             this.canvas.renderAll();
 
@@ -136,7 +142,7 @@ export class HistoryManager {
                 this.options.onRestore(restoredObjects);
             }
 
-            console.log('✅ Canvas state restored');
+            console.log('✅ Canvas state restored' + (this.stateManager ? ' (StateManager synced)' : ''));
         });
     }
 
@@ -185,6 +191,14 @@ export class HistoryManager {
     setCanvas(canvas) {
         this.canvas = canvas;
         console.log('Canvas reference updated in HistoryManager');
+    }
+
+    /**
+     * הגדרת StateManager (לשימוש בסנכרון state)
+     */
+    setStateManager(stateManager) {
+        this.stateManager = stateManager;
+        console.log('StateManager reference added to HistoryManager');
     }
 
     /**

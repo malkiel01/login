@@ -1522,22 +1522,19 @@ function createMapCanvas(entityType, unicId, entity) {
     if (window.HistoryManagerClass && window.mapCanvas) {
         window.mapHistoryManager = new window.HistoryManagerClass(window.mapCanvas, {
             maxHistory: 30,
+            stateManager: window.mapState,  // STEP 14: Auto-sync StateManager on undo/redo
             onChange: (state) => {
                 // Update undo/redo buttons when history changes
                 updateUndoRedoButtons();
             },
             onRestore: (restoredObjects) => {
-                // Update global variables after restoration
+                // Update global variables after restoration (for backward compatibility)
                 backgroundImage = restoredObjects.backgroundImage;
                 grayMask = restoredObjects.grayMask;
                 boundaryOutline = restoredObjects.boundaryOutline;
 
-                // Sync with mapState
-                if (window.mapState) {
-                    window.mapState.setBackgroundImage(restoredObjects.backgroundImage);
-                    window.mapState.setGrayMask(restoredObjects.grayMask);
-                    window.mapState.setBoundaryOutline(restoredObjects.boundaryOutline);
-                }
+                // Note: StateManager is now auto-synced in HistoryManager.restore()
+                // No need for manual sync here anymore
 
                 // Lock system objects after restoration
                 lockSystemObjects();

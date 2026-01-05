@@ -1421,13 +1421,6 @@ function uploadBackgroundImage() {
 }
 
 /**
- * העלאת PDF
- */
-function uploadPdfFile() {
-    document.getElementById('bgImageInput').click();
-}
-
-/**
  * טיפול בהעלאת קובץ רקע
  * REFACTORED: משתמש ב-BackgroundEditor (Step 9/15)
  */

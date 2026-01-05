@@ -1643,53 +1643,8 @@ function handleCanvasClick(options) {
         return;
     }
 
-    // Fallback to old implementation
-
-    const pointer = window.mapCanvas.getPointer(options.e);
-    const newPoint = { x: pointer.x, y: pointer.y };
-    polygonPoints.push(newPoint);
-    if (window.mapState) {
-        window.mapState.polygon.points.push(newPoint);
-    }
-
-    // הוספת נקודה ויזואלית
-    const point = new fabric.Circle({
-        left: pointer.x,
-        top: pointer.y,
-        radius: 5,
-        fill: '#3b82f6',
-        stroke: '#1e40af',
-        strokeWidth: 2,
-        originX: 'center',
-        originY: 'center',
-        selectable: false,
-        polygonPoint: true
-    });
-    window.mapCanvas.add(point);
-
-    // אם יש לפחות 2 נקודות, צייר קו
-    if (polygonPoints.length >= 2) {
-        const lastIdx = polygonPoints.length - 1;
-        const line = new fabric.Line([
-            polygonPoints[lastIdx - 1].x,
-            polygonPoints[lastIdx - 1].y,
-            polygonPoints[lastIdx].x,
-            polygonPoints[lastIdx].y
-        ], {
-            stroke: '#3b82f6',
-            strokeWidth: 2,
-            selectable: false,
-            polygonLine: true
-        });
-        window.mapCanvas.add(line);
-    }
-
-    window.mapCanvas.renderAll();
-
-    // דאבל קליק לסיום
-    if (options.e.detail === 2 && polygonPoints.length >= 3) {
-        finishPolygon();
-    }
+    // Fallback: Should never happen (PolygonDrawer always loads)
+    console.error('❌ PolygonDrawer not available for handleCanvasClick - this should not happen!');
 }
 
 /**
@@ -1704,38 +1659,8 @@ function handleCanvasMouseMove(options) {
         return;
     }
 
-    // Fallback to old implementation
-
-    const pointer = window.mapCanvas.getPointer(options.e);
-    const lastPoint = polygonPoints[polygonPoints.length - 1];
-
-    // הסרת קו התצוגה הקודם
-    if (previewLine) {
-        window.mapCanvas.remove(previewLine);
-    }
-
-    // יצירת קו תצוגה מקדימה מהנקודה האחרונה למיקום העכבר
-    const newPreviewLine = new fabric.Line([
-        lastPoint.x,
-        lastPoint.y,
-        pointer.x,
-        pointer.y
-    ], {
-        stroke: '#3b82f6',
-        strokeWidth: 2,
-        strokeDashArray: [5, 5], // קו מקווקו
-        selectable: false,
-        evented: false,
-        previewLine: true
-    });
-
-    previewLine = newPreviewLine;
-    if (window.mapState) {
-        window.mapState.polygon.previewLine = newPreviewLine;
-    }
-
-    window.mapCanvas.add(previewLine);
-    window.mapCanvas.renderAll();
+    // Fallback: Should never happen (PolygonDrawer always loads)
+    console.error('❌ PolygonDrawer not available for handleCanvasMouseMove - this should not happen!');
 }
 
 /**

@@ -1279,7 +1279,16 @@ function toggleBoundaryEdit() {
 function toggleBackgroundEdit() {
     if (!backgroundImage) {
         // Try to use BackgroundEditor even if local backgroundImage is null
-        if (window.mapBackgroundEditor) {
+        if (window.mapBackgroundEditor && window.mapCanvas) {
+            // Find backgroundLayer in canvas
+            const bgLayer = window.mapCanvas.getObjects().find(obj => obj.objectType === 'backgroundLayer');
+            if (bgLayer) {
+                // Update BackgroundEditor with the image
+                window.mapBackgroundEditor.setBackgroundImage(bgLayer);
+                // Update global variable
+                backgroundImage = bgLayer;
+                if (window.mapState) window.mapState.setBackgroundImage(bgLayer);
+            }
             window.mapBackgroundEditor.enableEditMode();
         }
         return;

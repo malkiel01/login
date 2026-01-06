@@ -1289,7 +1289,15 @@ function toggleBackgroundEdit() {
                 backgroundImage = bgLayer;
                 if (window.mapState) window.mapState.setBackgroundImage(bgLayer);
             }
-            window.mapBackgroundEditor.enableEditMode();
+
+            // Toggle edit mode
+            isBackgroundEditMode = !isBackgroundEditMode;
+            if (isBackgroundEditMode) {
+                window.mapBackgroundEditor.enableEditMode();
+            } else {
+                window.mapBackgroundEditor.disableEditMode();
+                lockSystemObjects();
+            }
         }
         return;
     }

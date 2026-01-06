@@ -485,7 +485,6 @@ function initializeMap(entityType, unicId, entity) {
             onRedo: redoCanvas,
             onSave: saveMapData
         });
-        console.log('✅ Toolbar initialized');
     } else {
         console.warn('⚠️ Toolbar class not loaded yet');
     }
@@ -502,7 +501,6 @@ function createMapCanvas(entityType, unicId, entity) {
 
     // STEP 6/15: Use CanvasManager to create canvas
     if (window.CanvasManagerClass) {
-        console.log('✅ Using CanvasManager');
         window.mapCanvasManager = new window.CanvasManagerClass(canvasContainer, {
             canvasId: 'fabricCanvas',
             backgroundColor: '#ffffff',
@@ -530,8 +528,6 @@ function createMapCanvas(entityType, unicId, entity) {
                 }
             }
         });
-
-        console.log('✅ Canvas created via CanvasManager');
     } else {
         console.error('❌ CanvasManager not available - this should not happen!');
     }
@@ -548,7 +544,6 @@ function createMapCanvas(entityType, unicId, entity) {
                 updateZoomDisplay();
             }
         });
-        console.log('✅ ZoomControls initialized');
     }
 
     // STEP 7/15: Initialize PolygonDrawer
@@ -569,7 +564,6 @@ function createMapCanvas(entityType, unicId, entity) {
                 document.getElementById('mapCanvas').style.cursor = 'default';
             }
         });
-        console.log('✅ PolygonDrawer initialized');
     }
 
     // STEP 8/15: Initialize BoundaryEditor
@@ -604,7 +598,6 @@ function createMapCanvas(entityType, unicId, entity) {
                 saveCanvasState();
             }
         });
-        console.log('✅ BoundaryEditor initialized');
     }
 
     // STEP 9/15: Initialize BackgroundEditor
@@ -686,7 +679,6 @@ function createMapCanvas(entityType, unicId, entity) {
                 }
             }
         });
-        console.log('✅ BackgroundEditor initialized');
     }
 
     // STEP 10/15: Initialize HistoryManager
@@ -714,13 +706,10 @@ function createMapCanvas(entityType, unicId, entity) {
                 updateToolbarButtons();
             }
         });
-        console.log('✅ HistoryManager initialized');
     }
 
     // STEP 11/15: Initialize EditModeToggle
-    console.log('🔍 Initializing EditModeToggle...');
     if (window.EditModeToggleClass) {
-        console.log('✅ EditModeToggleClass available');
         window.mapEditModeToggle = new window.EditModeToggleClass({
             canvas: window.mapCanvas,
             onToggle: (enabled) => {
@@ -732,7 +721,6 @@ function createMapCanvas(entityType, unicId, entity) {
             },
             onEnter: () => {
                 // Called when entering edit mode
-                console.log('Entered edit mode');
             },
             onExit: () => {
                 // Called when exiting edit mode
@@ -740,13 +728,11 @@ function createMapCanvas(entityType, unicId, entity) {
                 if (drawingPolygon) {
                     cancelPolygonDrawing();
                 }
-                console.log('Exited edit mode');
             }
         });
 
         // Initialize (connect to DOM)
         window.mapEditModeToggle.init();
-        console.log('✅ EditModeToggle initialized');
     }
 
     // STEP 12/15: Initialize ContextMenu
@@ -761,7 +747,6 @@ function createMapCanvas(entityType, unicId, entity) {
 
         // Initialize (connect to DOM)
         window.mapContextMenu.init();
-        console.log('✅ ContextMenu initialized');
     }
 
     // Load saved map data
@@ -940,7 +925,6 @@ function toggleEditMode(enabled) {
     // Use EditModeToggle if available
     if (window.mapEditModeToggle) {
         window.mapEditModeToggle.setEnabled(enabled);
-        console.log('✅ Edit mode toggled via EditModeToggle');
         return;
     }
 
@@ -975,7 +959,6 @@ async function handleBackgroundUpload(event) {
     if (window.mapBackgroundEditor) {
         try {
             await window.mapBackgroundEditor.upload(file);
-            console.log('✅ Background uploaded via BackgroundEditor');
         } catch (error) {
             console.error('❌ Failed to upload background:', error);
             alert('שגיאה בהעלאת תמונת הרקע');
@@ -1059,7 +1042,6 @@ function startDrawPolygon() {
         }
         document.getElementById('drawPolygonBtn').classList.add('active');
         document.getElementById('mapCanvas').style.cursor = 'crosshair';
-        console.log('✅ Started polygon drawing via PolygonDrawer');
     }
 }
 
@@ -1436,7 +1418,6 @@ function closeMapPopup() {
     // Use MapPopup if available
     if (window.mapPopupInstance) {
         window.mapPopupInstance.close();
-        console.log('✅ Map popup closed via MapPopup');
         // Note: cleanup is called via onClose callback
         return;
     }
@@ -1526,7 +1507,6 @@ function toggleMapFullscreen() {
     // Use MapPopup if available
     if (window.mapPopupInstance) {
         window.mapPopupInstance.toggleFullscreen();
-        console.log('✅ Fullscreen toggled via MapPopup');
         return;
     }
 
@@ -1722,7 +1702,6 @@ function showContextMenu(clientX, clientY, isInsideBoundary) {
     // Use ContextMenu if available
     if (window.mapContextMenu) {
         window.mapContextMenu.showForEmpty(clientX, clientY, isInsideBoundary);
-        console.log('✅ Context menu shown via ContextMenu');
         return;
     }
 
@@ -1792,7 +1771,6 @@ function showObjectContextMenu(clientX, clientY, targetObject) {
     if (window.mapContextMenu) {
         contextMenuTargetObject = targetObject;
         window.mapContextMenu.showForObject(clientX, clientY, targetObject);
-        console.log('✅ Object context menu shown via ContextMenu');
         return;
     }
 
@@ -2258,7 +2236,6 @@ function saveCanvasState() {
     // Use HistoryManager if available
     if (window.mapHistoryManager) {
         window.mapHistoryManager.save();
-        console.log('✅ Canvas state saved via HistoryManager');
         return;
     }
 
@@ -2275,10 +2252,7 @@ function undoCanvas() {
 
     // Use HistoryManager if available
     if (window.mapHistoryManager) {
-        const success = window.mapHistoryManager.undo();
-        if (success) {
-            console.log('✅ Undo via HistoryManager');
-        }
+        window.mapHistoryManager.undo();
         return;
     }
 
@@ -2295,10 +2269,7 @@ function redoCanvas() {
 
     // Use HistoryManager if available
     if (window.mapHistoryManager) {
-        const success = window.mapHistoryManager.redo();
-        if (success) {
-            console.log('✅ Redo via HistoryManager');
-        }
+        window.mapHistoryManager.redo();
         return;
     }
 

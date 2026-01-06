@@ -207,13 +207,8 @@ const MAX_HISTORY = 30; // מקסימום מצבים לשמירה
  * REFACTORED: משתמש ב-LauncherModal (Step 3/15)
  */
 function openMapLauncher() {
-    console.log('🔓 [LAUNCHER] openMapLauncher() called from sidebar');
-    console.log('   [LAUNCHER] window.launcherModal exists:', !!window.launcherModal);
-
     if (window.launcherModal) {
-        console.log('   [LAUNCHER] Calling launcherModal.open()...');
         window.launcherModal.open();
-        console.log('✅ [LAUNCHER] Launcher modal opened');
     } else {
         console.error('❌ [LAUNCHER] LauncherModal not loaded yet');
     }
@@ -224,11 +219,8 @@ function openMapLauncher() {
  * REFACTORED: משתמש ב-LauncherModal (Step 3/15)
  */
 function closeMapLauncher() {
-    console.log('🔒 [LAUNCHER] closeMapLauncher() called');
     if (window.launcherModal) {
-        console.log('   [LAUNCHER] Calling launcherModal.close()...');
         window.launcherModal.close();
-        console.log('✅ [LAUNCHER] Launcher modal closed');
     }
 }
 
@@ -263,23 +255,16 @@ async function loadEntitiesForType() {
 }
 
 async function launchMap() {
-    console.log('🚀 [LAUNCH] launchMap() called');
-
     const entityType = document.getElementById('mapEntityType').value;
     const unicId = document.getElementById('mapEntitySelect').value;
 
-    console.log('   [LAUNCH] entityType:', entityType);
-    console.log('   [LAUNCH] unicId:', unicId);
-
     if (!entityType) {
-        console.log('❌ [LAUNCH] No entityType selected');
         alert('נא לבחור סוג ישות');
         document.getElementById('mapEntityType').focus();
         return;
     }
 
     if (!unicId) {
-        console.log('❌ [LAUNCH] No unicId selected');
         alert('נא לבחור ישות מהרשימה');
         document.getElementById('mapEntitySelect').focus();
         return;
@@ -342,14 +327,10 @@ async function launchMap() {
         }
 
         // הרשומה קיימת ופעילה - פתח את המפה
-        console.log('✅ [LAUNCH] Entity validation passed, closing launcher...');
         closeMapLauncher();
-        console.log('   [LAUNCH] Launcher closed, opening map popup...');
         openMapPopup(entityType, unicId);
-        console.log('✅ [LAUNCH] launchMap() completed successfully');
 
     } catch (error) {
-        console.log('❌ [LAUNCH] Error:', error.message);
         alert(`שגיאה: לא נמצאה רשומת ${entityNames[entityType]} פעילה עם מזהה "${unicId}"\n\n${error.message}`);
         document.getElementById('mapUnicId').focus();
         document.getElementById('mapUnicId').select();
@@ -366,16 +347,9 @@ async function launchMap() {
  * Uses MapPopup if available, otherwise falls back to old implementation
  */
 function openMapPopup(entityType, unicId) {
-    console.log('🔓 [OPEN] openMapPopup() called');
-    console.log('   [OPEN] entityType:', entityType);
-    console.log('   [OPEN] unicId:', unicId);
-    console.log('   [OPEN] window.MapPopupClass exists:', !!window.MapPopupClass);
-    console.log('   [OPEN] window.mapPopupInstance exists:', !!window.mapPopupInstance);
-
     // Update StateManager
     if (window.mapState) {
         window.mapState.setEntity(entityType, unicId);
-        console.log('   [OPEN] Updated StateManager with entity');
     }
 
     // Keep old variables in sync for backwards compatibility
@@ -384,10 +358,7 @@ function openMapPopup(entityType, unicId) {
 
     // Use MapPopup if available
     if (window.MapPopupClass) {
-        console.log('   [OPEN] Using MapPopup class');
-
         if (!window.mapPopupInstance) {
-            console.log('   [OPEN] Creating new MapPopup instance...');
             window.mapPopupInstance = new window.MapPopupClass({
                 onMapInit: (entityType, unicId, entity) => {
                     // Initialize the map after data is loaded
@@ -398,14 +369,9 @@ function openMapPopup(entityType, unicId) {
                     cleanupMapState();
                 }
             });
-            console.log('   [OPEN] MapPopup instance created');
-        } else {
-            console.log('   [OPEN] Reusing existing MapPopup instance');
         }
 
-        console.log('   [OPEN] Calling mapPopupInstance.open()...');
         window.mapPopupInstance.open(entityType, unicId);
-        console.log('✅ [OPEN] Map popup opened via MapPopup');
         return;
     }
 
@@ -551,7 +517,6 @@ function createMapCanvas(entityType, unicId, entity) {
             onMouseDown: handleCanvasClick,
             onMouseMove: handleCanvasMouseMove,
             onObjectModified: (e) => {
-                console.log('Object modified, saving state');
                 saveCanvasState();
             },
             onContextMenu: handleCanvasRightClick,
@@ -808,44 +773,19 @@ function createMapCanvas(entityType, unicId, entity) {
  */
 async function loadSavedMapData(entityType, unicId) {
     try {
-        console.log('💾 [LOAD] loadSavedMapData() called');
-        console.log('   [LOAD] entityType:', entityType);
-        console.log('   [LOAD] unicId:', unicId);
-
         // טען גבול הורה אם קיים (לישויות בנים)
         loadParentBoundary();
 
         const response = await fetch(`api/cemetery-hierarchy.php?action=get_map&type=${entityType}&id=${unicId}`);
-        console.log('   [LOAD] API response status:', response.status);
-
         const result = await response.json();
-        console.log('   [LOAD] API result.success:', result.success);
 
-        if (!result.success) {
-            console.log('❌ [LOAD] No saved map data found');
+        if (!result.success || !result.mapData || !result.mapData.canvasJSON) {
             return;
         }
-
-        console.log('   [LOAD] result.mapData:', result.mapData ? {
-            hasCanvasJSON: !!result.mapData.canvasJSON,
-            canvasJSONLength: result.mapData.canvasJSON ? result.mapData.canvasJSON.length : 0,
-            hasZoom: !!result.mapData.zoom,
-            zoom: result.mapData.zoom
-        } : 'null');
-
-        if (!result.mapData || !result.mapData.canvasJSON) {
-            console.log('❌ [LOAD] No canvas data in saved map');
-            return;
-        }
-
-        console.log('✅ [LOAD] Loading saved map data...');
 
         // טען את ה-canvas מה-JSON
         window.mapCanvas.loadFromJSON(result.mapData.canvasJSON, function() {
-            console.log('   [LOAD] loadFromJSON callback - canvas loaded');
-
             const allObjects = window.mapCanvas.getObjects();
-            console.log('   [LOAD] Total objects loaded:', allObjects.length);
 
             // Fix textBaseline for all text objects ('alphabetical' -> 'alphabetic')
             let fixedTextObjects = 0;
@@ -856,17 +796,8 @@ async function loadSavedMapData(entityType, unicId) {
                 }
             });
             if (fixedTextObjects > 0) {
-                console.log(`   [LOAD] Fixed textBaseline for ${fixedTextObjects} text objects`);
                 window.mapCanvas.renderAll();
             }
-
-            // Count objects by type
-            const objectTypes = {};
-            allObjects.forEach(obj => {
-                const type = obj.objectType || obj.type || 'unknown';
-                objectTypes[type] = (objectTypes[type] || 0) + 1;
-            });
-            console.log('   [LOAD] Object types breakdown:', objectTypes);
 
             // עדכן משתנים גלובליים לפי האובייקטים שנטענו
             backgroundImage = null;
@@ -882,27 +813,18 @@ async function loadSavedMapData(entityType, unicId) {
                 if (obj.objectType === 'backgroundLayer') {
                     backgroundImage = obj;
                     if (window.mapState) window.mapState.setBackgroundImage(obj);
-                    console.log('   [LOAD] Found backgroundLayer:', {
-                        width: obj.width,
-                        height: obj.height,
-                        scaleX: obj.scaleX,
-                        scaleY: obj.scaleY
-                    });
                 } else if (obj.objectType === 'grayMask') {
                     grayMask = obj;
                     if (window.mapState) window.mapState.setGrayMask(obj);
-                    console.log('   [LOAD] Found grayMask');
                 } else if (obj.objectType === 'boundaryOutline') {
                     boundaryOutline = obj;
                     if (window.mapState) window.mapState.setBoundaryOutline(obj);
-                    console.log('   [LOAD] Found boundaryOutline');
                 }
             });
 
             // Update BackgroundEditor
             if (window.mapBackgroundEditor && backgroundImage) {
                 window.mapBackgroundEditor.setBackgroundImage(backgroundImage);
-                console.log('   [LOAD] Updated BackgroundEditor with background image');
             }
 
             // הסר את הטקסט ההתחלתי אם נטענו אובייקטים
@@ -934,12 +856,6 @@ async function loadSavedMapData(entityType, unicId) {
             // איפוס ההיסטוריה ושמירת המצב הנוכחי כמצב התחלתי
             resetHistory();
             saveCanvasState();
-
-            console.log('✅ [LOAD] Map data loaded successfully');
-            console.log('   [LOAD] Final state:');
-            console.log('      backgroundImage:', backgroundImage ? '✅ Loaded' : '❌ null');
-            console.log('      grayMask:', grayMask ? '✅ Loaded' : '❌ null');
-            console.log('      boundaryOutline:', boundaryOutline ? '✅ Loaded' : '❌ null');
         });
 
     } catch (error) {
@@ -1013,7 +929,6 @@ function loadParentBoundary() {
     // סידור שכבות נכון
     reorderLayers();
 
-    console.log('Parent boundary loaded');
 }
 
 /**
@@ -1301,7 +1216,6 @@ function createBoundaryFromPoints(polygonPoints) {
     if (deleteBtn) deleteBtn.classList.remove('hidden-btn');
 
     saveCanvasState();
-    console.log('Boundary with mask completed');
 }
 
 /**
@@ -1381,12 +1295,7 @@ function toggleBoundaryEdit() {
  * REFACTORED: משתמש ב-BackgroundEditor (Step 9/15)
  */
 function toggleBackgroundEdit() {
-    console.log('🖼️ [FUNC] toggleBackgroundEdit() called');
-    console.log('   [FUNC] window.mapBackgroundEditor:', window.mapBackgroundEditor ? '✅ Exists' : '❌ Missing');
-    console.log('   [FUNC] backgroundImage (local var):', backgroundImage ? '✅ Exists' : '❌ null');
-
     if (!backgroundImage) {
-        console.warn('❌ [FUNC] No background image - calling BackgroundEditor.enableEditMode()...');
         // Try to use BackgroundEditor even if local backgroundImage is null
         if (window.mapBackgroundEditor) {
             window.mapBackgroundEditor.enableEditMode();
@@ -1837,8 +1746,6 @@ function hideContextMenu() {
  * REFACTORED: מרכז את כל הפעולות במקום אחד (Step 12/15)
  */
 function handleContextMenuAction(action, data) {
-    console.log('Context menu action:', action, data);
-
     switch (action) {
         // Canvas actions (add items)
         case 'addImage':
@@ -1904,7 +1811,6 @@ function deleteContextMenuObject() {
     window.mapCanvas.renderAll();
     saveCanvasState();
     contextMenuTargetObject = null;
-    console.log('Object deleted');
 }
 
 /**
@@ -2085,7 +1991,6 @@ function addShapeFromMenu(shapeType) {
  * טיפול בהעלאת קובץ PDF
  */
 async function handlePdfUpload(file, context) {
-    console.log('handlePdfUpload called with context:', context);
     if (typeof pdfjsLib === 'undefined') {
         alert('ספריית PDF.js לא נטענה. נסה לרענן את הדף.');
         return;
@@ -2095,7 +2000,6 @@ async function handlePdfUpload(file, context) {
     if (window.mapState) {
         window.mapState.canvas.background.pdfContext = context;
     }
-    console.log('currentPdfContext set to:', currentPdfContext);
 
     // הצג מודל בחירת עמוד
     const modal = document.getElementById('pdfPageSelectorModal');
@@ -2201,12 +2105,10 @@ async function selectPdfPage(pageNum) {
  * רנדור עמוד PDF כתמונה ל-canvas
  */
 async function renderPdfPageToCanvas(pageNum) {
-    console.log('renderPdfPageToCanvas called, currentPdfContext:', currentPdfContext);
     if (!currentPdfDoc || !window.mapCanvas) return;
 
     // שמור את ה-context לפני הקריאה האסינכרונית!
     const pdfContext = currentPdfContext;
-    console.log('Captured pdfContext:', pdfContext);
 
     try {
         const page = await currentPdfDoc.getPage(pageNum);
@@ -2232,7 +2134,6 @@ async function renderPdfPageToCanvas(pageNum) {
         // הוסף לקנבס הראשי
         fabric.Image.fromURL(dataUrl, function(img) {
             const canvas = window.mapCanvas;
-            console.log('Inside fabric callback, pdfContext:', pdfContext);
 
             if (pdfContext === 'background') {
                 // הסרת תמונת רקע קודמת
@@ -2268,11 +2169,9 @@ async function renderPdfPageToCanvas(pageNum) {
                 // הצג כפתורי עריכה ומחיקה של רקע
                 const editBgBtn = document.getElementById('editBackgroundBtn');
                 const deleteBgBtn = document.getElementById('deleteBackgroundBtn');
-                console.log('PDF as background - setting edit button');
                 if (editBgBtn) {
                     editBgBtn.classList.remove('hidden-btn');
                     editBgBtn.classList.add('active'); // מצב עריכה פעיל
-                    console.log('Edit button set to active');
                 }
                 if (deleteBgBtn) deleteBgBtn.classList.remove('hidden-btn');
 
@@ -2295,8 +2194,6 @@ async function renderPdfPageToCanvas(pageNum) {
                 // בחר את התמונה
                 canvas.setActiveObject(img);
 
-                console.log('PDF page added as background (edit mode)');
-
             } else {
                 // הוספה כאובייקט עבודה
                 const maxSize = 300;
@@ -2318,8 +2215,6 @@ async function renderPdfPageToCanvas(pageNum) {
 
                 canvas.add(img);
                 canvas.setActiveObject(img);
-
-                console.log('PDF page added as work object');
             }
 
             reorderLayers();

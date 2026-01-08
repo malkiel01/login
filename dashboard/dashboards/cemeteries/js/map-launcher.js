@@ -1271,7 +1271,23 @@ function toggleBackgroundEdit() {
  * REFACTORED: משתמש ב-BackgroundEditor (Step 9/15)
  */
 function deleteBackground() {
-    if (!window.mapCanvas || !backgroundImage) return;
+    if (!window.mapCanvas) return;
+
+    // Sync with canvas if needed (same pattern as toggleBackgroundEdit)
+    if (!backgroundImage && window.mapCanvas) {
+        const bgLayer = window.mapCanvas.getObjects().find(obj => obj.objectType === 'backgroundLayer');
+        if (bgLayer) {
+            backgroundImage = bgLayer;
+            if (window.mapState) window.mapState.setBackgroundImage(bgLayer);
+            if (window.mapBackgroundEditor && !window.mapBackgroundEditor.getImage()) {
+                window.mapBackgroundEditor.setBackgroundImage(bgLayer);
+            }
+        }
+    }
+
+    // Check if there's anything to delete
+    const hasBackground = backgroundImage || (window.mapBackgroundEditor && window.mapBackgroundEditor.getImage());
+    if (!hasBackground) return;
 
     // כיבוי מצב עריכה אם פעיל
     if (isBackgroundEditMode) {

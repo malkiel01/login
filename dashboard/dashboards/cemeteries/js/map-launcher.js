@@ -879,6 +879,49 @@ async function loadSavedMapData(entityType, unicId) {
 }
 
 /**
+ * חישוב קואורדינטות עולמיות מנתוני פוליגון שמור (JSON)
+ * מתחשב ב-pathOffset, left, top, scaleX, scaleY, angle
+ * @param {Object} polygonJSON - נתוני הפוליגון מה-JSON
+ * @returns {Array} - מערך נקודות בקואורדינטות עולמיות
+ */
+function calculateWorldPointsFromJSON(polygonJSON) {
+    if (!polygonJSON || !polygonJSON.points) return [];
+
+    const pathOffsetX = polygonJSON.pathOffset?.x || 0;
+    const pathOffsetY = polygonJSON.pathOffset?.y || 0;
+    const left = polygonJSON.left || 0;
+    const top = polygonJSON.top || 0;
+    const scaleX = polygonJSON.scaleX || 1;
+    const scaleY = polygonJSON.scaleY || 1;
+    const angle = polygonJSON.angle || 0;
+
+    // המרה לרדיאנים
+    const angleRad = (angle * Math.PI) / 180;
+    const cos = Math.cos(angleRad);
+    const sin = Math.sin(angleRad);
+
+    return polygonJSON.points.map(p => {
+        // 1. הזזה יחסית ל-pathOffset
+        let x = p.x - pathOffsetX;
+        let y = p.y - pathOffsetY;
+
+        // 2. סקאלה
+        x *= scaleX;
+        y *= scaleY;
+
+        // 3. סיבוב
+        const rotatedX = x * cos - y * sin;
+        const rotatedY = x * sin + y * cos;
+
+        // 4. הזזה למיקום הסופי
+        return {
+            x: rotatedX + left,
+            y: rotatedY + top
+        };
+    });
+}
+
+/**
  * טעינת גבול ההורה לתצוגה (לישויות בנים)
  */
 function loadParentBoundary() {
@@ -913,17 +956,8 @@ function loadParentBoundary() {
         return;
     }
 
-    // שמור את נקודות הגבול לוולידציה
-    // חישוב קואורדינטות עולמיות של נקודות ההורה
-    const pathOffsetX = parentBoundary.pathOffset?.x || 0;
-    const pathOffsetY = parentBoundary.pathOffset?.y || 0;
-    const left = parentBoundary.left || 0;
-    const top = parentBoundary.top || 0;
-
-    const newParentPoints = parentBoundary.points.map(p => ({
-        x: p.x - pathOffsetX + left,
-        y: p.y - pathOffsetY + top
-    }));
+    // חישוב קואורדינטות עולמיות של נקודות ההורה (כולל scale ו-rotation)
+    const newParentPoints = calculateWorldPointsFromJSON(parentBoundary);
     parentBoundaryPoints = newParentPoints;
     if (window.mapState) {
         window.mapState.canvas.parent.points = newParentPoints;
@@ -988,16 +1022,8 @@ function loadGrandparentBoundary() {
         return;
     }
 
-    // חישוב קואורדינטות עולמיות
-    const pathOffsetX = grandparentBoundary.pathOffset?.x || 0;
-    const pathOffsetY = grandparentBoundary.pathOffset?.y || 0;
-    const left = grandparentBoundary.left || 0;
-    const top = grandparentBoundary.top || 0;
-
-    grandparentBoundaryPoints = grandparentBoundary.points.map(p => ({
-        x: p.x - pathOffsetX + left,
-        y: p.y - pathOffsetY + top
-    }));
+    // חישוב קואורדינטות עולמיות (כולל scale ו-rotation)
+    grandparentBoundaryPoints = calculateWorldPointsFromJSON(grandparentBoundary);
 
     // יצירת קו גבול הסבא לתצוגה (סגול בהיר, קו מקווקו דק יותר)
     grandparentBoundaryOutline = new fabric.Polygon(grandparentBoundaryPoints, {

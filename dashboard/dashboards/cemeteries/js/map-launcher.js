@@ -573,6 +573,13 @@ function createMapCanvas(entityType, unicId, entity) {
                 }
                 saveCanvasState();
             },
+            onMaskChanged: (newMask) => {
+                // Update global reference
+                grayMask = newMask;
+                if (window.mapState) {
+                    window.mapState.setGrayMask(newMask);
+                }
+            },
             onClose: () => {
                 // Optionally turn off edit mode when panel is closed
             }
@@ -1127,7 +1134,7 @@ function createBoundaryFromPoints(polygonPoints) {
     pathData += 'Z';
 
     const newGrayMask = new fabric.Path(pathData, {
-        fill: 'rgba(128, 128, 128, 0.7)',
+        fill: 'rgba(128, 128, 128, 0.5)',
         stroke: null,
         strokeWidth: 0,
         selectable: false,

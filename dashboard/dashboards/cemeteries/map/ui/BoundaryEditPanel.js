@@ -28,6 +28,7 @@ export class BoundaryEditPanel extends FloatingPanel {
         this.canvas = canvas;
         this.panelOptions = {
             onPointsChanged: options.onPointsChanged || null,
+            onMaskChanged: options.onMaskChanged || null,
             onClose: options.onClose || null
         };
 
@@ -46,6 +47,7 @@ export class BoundaryEditPanel extends FloatingPanel {
         this.handleMarkerDragEnd = this.handleMarkerDragEnd.bind(this);
         this.handleCanvasMouseDown = this.handleCanvasMouseDown.bind(this);
         this.handleContextMenu = this.handleContextMenu.bind(this);
+        this.handleBoundaryTransform = this.handleBoundaryTransform.bind(this);
 
         BoundaryEditPanel.injectPanelCSS();
     }
@@ -293,6 +295,12 @@ export class BoundaryEditPanel extends FloatingPanel {
     lockBoundaryForPointEdit() {
         if (!this.boundaryOutline) return;
 
+        // Remove transform listeners
+        this.boundaryOutline.off('moving', this.handleBoundaryTransform);
+        this.boundaryOutline.off('scaling', this.handleBoundaryTransform);
+        this.boundaryOutline.off('rotating', this.handleBoundaryTransform);
+        this.boundaryOutline.off('modified', this.handleBoundaryTransform);
+
         this.boundaryOutline.set({
             selectable: false,
             evented: false,
@@ -316,7 +324,19 @@ export class BoundaryEditPanel extends FloatingPanel {
             transparentCorners: false
         });
 
+        // Listen for boundary transforms to update mask
+        this.boundaryOutline.on('moving', this.handleBoundaryTransform);
+        this.boundaryOutline.on('scaling', this.handleBoundaryTransform);
+        this.boundaryOutline.on('rotating', this.handleBoundaryTransform);
+        this.boundaryOutline.on('modified', this.handleBoundaryTransform);
+
         this.canvas.setActiveObject(this.boundaryOutline);
+    }
+
+    handleBoundaryTransform() {
+        this.updateGrayMask();
+        this.showPointMarkers(false); // Update indicator points positions
+        this.canvas.renderAll();
     }
 
     addPointEditListeners() {
@@ -546,10 +566,13 @@ export class BoundaryEditPanel extends FloatingPanel {
         if (!this.grayMask || !this.boundaryOutline) return;
 
         const points = this.getTransformedPoints();
+        if (points.length < 3) return;
+
         const canvasWidth = this.canvas.width;
         const canvasHeight = this.canvas.height;
         const maskSize = 10000;
 
+        // Build path data for mask with hole
         let pathData = `M ${-maskSize} ${-maskSize} L ${canvasWidth + maskSize} ${-maskSize} L ${canvasWidth + maskSize} ${canvasHeight + maskSize} L ${-maskSize} ${canvasHeight + maskSize} Z `;
         pathData += `M ${Math.round(points[0].x)} ${Math.round(points[0].y)} `;
         for (let i = points.length - 1; i >= 0; i--) {
@@ -557,11 +580,29 @@ export class BoundaryEditPanel extends FloatingPanel {
         }
         pathData += 'Z';
 
-        this.grayMask.set({
-            path: fabric.util.parsePath(pathData),
+        // Remove old mask and create new one (more reliable than updating path)
+        const oldMask = this.grayMask;
+        const newMask = new fabric.Path(pathData, {
+            fill: 'rgba(128, 128, 128, 0.5)',
             stroke: null,
-            strokeWidth: 0
+            strokeWidth: 0,
+            selectable: false,
+            evented: false,
+            objectType: 'grayMask'
         });
+
+        // Insert new mask at same position
+        const objects = this.canvas.getObjects();
+        const oldIndex = objects.indexOf(oldMask);
+        this.canvas.remove(oldMask);
+        this.canvas.insertAt(newMask, oldIndex >= 0 ? oldIndex : 0);
+
+        this.grayMask = newMask;
+
+        // Notify about mask change
+        if (this.panelOptions.onMaskChanged) {
+            this.panelOptions.onMaskChanged(newMask);
+        }
     }
 
     getTransformedPoints() {
@@ -620,6 +661,15 @@ export class BoundaryEditPanel extends FloatingPanel {
         this.hidePointMarkers();
         this.hideContextMenu();
         this.removePointEditListeners();
+
+        // Remove boundary transform listeners
+        if (this.boundaryOutline) {
+            this.boundaryOutline.off('moving', this.handleBoundaryTransform);
+            this.boundaryOutline.off('scaling', this.handleBoundaryTransform);
+            this.boundaryOutline.off('rotating', this.handleBoundaryTransform);
+            this.boundaryOutline.off('modified', this.handleBoundaryTransform);
+        }
+
         this.canvas.defaultCursor = 'default';
 
         if (this.panelOptions.onClose) {

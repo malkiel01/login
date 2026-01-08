@@ -1,8 +1,8 @@
 /**
  * BoundaryEditPanel - חלון נגרר לעריכת נקודות גבול
- * Version: 2.0.0
+ * Version: 2.1.0
  *
- * מבוסס על FloatingPanel - חלון צף שמאפשר הוספה והסרה של נקודות בגבול המפה
+ * מבוסס על FloatingPanel - חלון צף שמאפשר הוספה, הסרה וגרירה של נקודות בגבול המפה
  * Usage:
  *   const panel = new BoundaryEditPanel(canvas, {
  *     onPointsChanged: (points) => {...}
@@ -32,11 +32,15 @@ export class BoundaryEditPanel extends FloatingPanel {
 
         this.boundaryOutline = null;
         this.grayMask = null;
-        this.mode = null; // 'add' | 'remove' | null
+        this.mode = null; // 'add' | 'remove' | 'drag' | null
         this.pointMarkers = [];
+        this.draggedMarkerIndex = null;
+        this.pointsCountEl = null;
 
         // Bind methods
         this.handleCanvasClick = this.handleCanvasClick.bind(this);
+        this.handleMarkerDrag = this.handleMarkerDrag.bind(this);
+        this.handleMarkerDragEnd = this.handleMarkerDragEnd.bind(this);
 
         // Inject additional CSS
         BoundaryEditPanel.injectPanelCSS();
@@ -53,6 +57,10 @@ export class BoundaryEditPanel extends FloatingPanel {
         styles.textContent = `
             .boundary-point-marker {
                 pointer-events: auto !important;
+            }
+            .boundary-edit-panel .points-count-value {
+                font-weight: bold;
+                color: #3b82f6;
             }
         `;
         document.head.appendChild(styles);
@@ -83,7 +91,6 @@ export class BoundaryEditPanel extends FloatingPanel {
         super.show();
 
         this.updatePointsCount();
-        this.showPointMarkers();
 
         console.log('📐 BoundaryEditPanel shown');
     }
@@ -98,6 +105,15 @@ export class BoundaryEditPanel extends FloatingPanel {
         const info = FloatingPanel.createInfo('בחר מצב עריכה ולחץ על המפה');
         info.id = 'boundaryEditInfo';
         this.appendContent(info);
+
+        // Drag point button (new!)
+        const dragBtn = FloatingPanel.createButton({
+            icon: '✥',
+            text: 'הזז נקודה',
+            onClick: () => this.setMode('drag')
+        });
+        dragBtn.dataset.mode = 'drag';
+        this.appendContent(dragBtn);
 
         // Add point button
         const addBtn = FloatingPanel.createButton({
@@ -119,7 +135,10 @@ export class BoundaryEditPanel extends FloatingPanel {
         this.appendContent(removeBtn);
 
         // Points count footer
-        const footer = FloatingPanel.createFooter('נקודות: <span id="boundaryPointsCount">0</span>');
+        const footer = document.createElement('div');
+        footer.className = 'floating-panel-footer';
+        footer.innerHTML = 'נקודות: <span class="points-count-value">0</span>';
+        this.pointsCountEl = footer.querySelector('.points-count-value');
         this.appendContent(footer);
     }
 
@@ -130,6 +149,7 @@ export class BoundaryEditPanel extends FloatingPanel {
         this.mode = null;
         this.hidePointMarkers();
         this.removeCanvasListeners();
+        this.canvas.defaultCursor = 'default';
 
         if (this.panelOptions.onClose) {
             this.panelOptions.onClose();
@@ -167,7 +187,9 @@ export class BoundaryEditPanel extends FloatingPanel {
         // Update info text
         const info = content.querySelector('#boundaryEditInfo');
         if (info) {
-            if (this.mode === 'add') {
+            if (this.mode === 'drag') {
+                info.textContent = 'גרור נקודה כדי להזיז אותה';
+            } else if (this.mode === 'add') {
                 info.textContent = 'לחץ על קו הגבול להוספת נקודה';
             } else if (this.mode === 'remove') {
                 info.textContent = 'לחץ על נקודה כדי להסיר אותה';
@@ -177,7 +199,9 @@ export class BoundaryEditPanel extends FloatingPanel {
         }
 
         // Update cursor
-        if (this.mode === 'add') {
+        if (this.mode === 'drag') {
+            this.canvas.defaultCursor = 'grab';
+        } else if (this.mode === 'add') {
             this.canvas.defaultCursor = 'crosshair';
         } else if (this.mode === 'remove') {
             this.canvas.defaultCursor = 'pointer';
@@ -204,23 +228,39 @@ export class BoundaryEditPanel extends FloatingPanel {
         if (!this.boundaryOutline || !this.boundaryOutline.points) return;
 
         const points = this.getTransformedPoints();
+        const isDragMode = this.mode === 'drag';
 
         points.forEach((point, index) => {
+            let fillColor = '#3b82f6'; // default blue
+            if (this.mode === 'remove') {
+                fillColor = '#ef4444'; // red
+            } else if (this.mode === 'drag') {
+                fillColor = '#10b981'; // green
+            }
+
             const marker = new fabric.Circle({
                 left: point.x,
                 top: point.y,
-                radius: 8,
-                fill: this.mode === 'remove' ? '#ef4444' : '#3b82f6',
+                radius: isDragMode ? 10 : 8,
+                fill: fillColor,
                 stroke: 'white',
                 strokeWidth: 2,
                 originX: 'center',
                 originY: 'center',
-                selectable: false,
-                evented: false,
+                selectable: isDragMode,
+                evented: isDragMode,
+                hasControls: false,
+                hasBorders: false,
                 objectType: 'pointMarker',
                 pointIndex: index,
-                hoverCursor: this.mode === 'remove' ? 'pointer' : 'default'
+                hoverCursor: isDragMode ? 'grab' : (this.mode === 'remove' ? 'pointer' : 'default')
             });
+
+            // Add drag events for drag mode
+            if (isDragMode) {
+                marker.on('moving', () => this.handleMarkerDrag(marker));
+                marker.on('modified', () => this.handleMarkerDragEnd(marker));
+            }
 
             this.pointMarkers.push(marker);
             this.canvas.add(marker);
@@ -234,6 +274,8 @@ export class BoundaryEditPanel extends FloatingPanel {
      */
     hidePointMarkers() {
         this.pointMarkers.forEach(marker => {
+            marker.off('moving');
+            marker.off('modified');
             this.canvas.remove(marker);
         });
         this.pointMarkers = [];
@@ -241,10 +283,48 @@ export class BoundaryEditPanel extends FloatingPanel {
     }
 
     /**
+     * טיפול בגרירת סמן
+     */
+    handleMarkerDrag(marker) {
+        const index = marker.pointIndex;
+        if (index === undefined) return;
+
+        // Update the preview - show where the point will be
+        marker.set({ fill: '#f59e0b' }); // orange while dragging
+        this.canvas.renderAll();
+    }
+
+    /**
+     * סיום גרירת סמן
+     */
+    handleMarkerDragEnd(marker) {
+        const index = marker.pointIndex;
+        if (index === undefined) return;
+
+        // Get new position
+        const newPos = { x: marker.left, y: marker.top };
+
+        // Convert to local coordinates
+        const localPoint = this.globalToLocal(newPos);
+
+        // Update boundary points
+        const newPoints = [...this.boundaryOutline.points];
+        newPoints[index] = localPoint;
+
+        // Update polygon without recreating
+        this.updateBoundaryPoints(newPoints);
+
+        console.log(`✥ Moved point ${index} to (${Math.round(newPos.x)}, ${Math.round(newPos.y)})`);
+    }
+
+    /**
      * הוספת האזנה לcanvas
      */
     addCanvasListeners() {
-        this.canvas.on('mouse:down', this.handleCanvasClick);
+        this.removeCanvasListeners(); // Clean first
+        if (this.mode !== 'drag') {
+            this.canvas.on('mouse:down', this.handleCanvasClick);
+        }
     }
 
     /**
@@ -259,6 +339,7 @@ export class BoundaryEditPanel extends FloatingPanel {
      */
     handleCanvasClick(options) {
         if (!this.mode || !this.boundaryOutline) return;
+        if (this.mode === 'drag') return; // Drag is handled by fabric
 
         const pointer = this.canvas.getPointer(options.e);
 
@@ -480,9 +561,8 @@ export class BoundaryEditPanel extends FloatingPanel {
      * עדכון מונה נקודות
      */
     updatePointsCount() {
-        const countEl = document.getElementById('boundaryPointsCount');
-        if (countEl && this.boundaryOutline) {
-            countEl.textContent = this.boundaryOutline.points?.length || 0;
+        if (this.pointsCountEl && this.boundaryOutline) {
+            this.pointsCountEl.textContent = this.boundaryOutline.points?.length || 0;
         }
     }
 

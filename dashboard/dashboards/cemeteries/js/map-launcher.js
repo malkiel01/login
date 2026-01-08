@@ -1277,34 +1277,26 @@ function toggleBoundaryEdit() {
  * REFACTORED: משתמש ב-BackgroundEditor (Step 9/15)
  */
 function toggleBackgroundEdit() {
-    if (!backgroundImage) {
-        // Try to use BackgroundEditor even if local backgroundImage is null
-        if (window.mapBackgroundEditor && window.mapCanvas) {
-            // Find backgroundLayer in canvas
-            const bgLayer = window.mapCanvas.getObjects().find(obj => obj.objectType === 'backgroundLayer');
-            if (bgLayer) {
-                // Update BackgroundEditor with the image
-                window.mapBackgroundEditor.setBackgroundImage(bgLayer);
-                // Update global variable
+    // Always sync BackgroundEditor with current state (in case of undo/redo)
+    if (window.mapBackgroundEditor && window.mapCanvas) {
+        // Find current backgroundLayer in canvas
+        const bgLayer = window.mapCanvas.getObjects().find(obj => obj.objectType === 'backgroundLayer');
+
+        if (bgLayer) {
+            // Always update BackgroundEditor with current image
+            window.mapBackgroundEditor.setBackgroundImage(bgLayer);
+            // Sync global variable if needed
+            if (!backgroundImage) {
                 backgroundImage = bgLayer;
                 if (window.mapState) window.mapState.setBackgroundImage(bgLayer);
             }
-
-            // Toggle edit mode
-            isBackgroundEditMode = !isBackgroundEditMode;
-            if (isBackgroundEditMode) {
-                window.mapBackgroundEditor.enableEditMode();
-            } else {
-                window.mapBackgroundEditor.disableEditMode();
-                lockSystemObjects();
-            }
+        } else if (!backgroundImage) {
+            // No background image at all
+            return;
         }
-        return;
-    }
 
-    isBackgroundEditMode = !isBackgroundEditMode;
-
-    if (window.mapBackgroundEditor) {
+        // Toggle edit mode
+        isBackgroundEditMode = !isBackgroundEditMode;
         if (isBackgroundEditMode) {
             window.mapBackgroundEditor.enableEditMode();
         } else {

@@ -1225,28 +1225,22 @@ function toggleBoundaryEdit() {
  * REFACTORED: משתמש ב-BackgroundEditor (Step 9/15)
  */
 function toggleBackgroundEdit() {
-    if (!backgroundImage) {
-        // Try to use BackgroundEditor even if local backgroundImage is null
-        if (window.mapBackgroundEditor && window.mapCanvas) {
-            // Find backgroundLayer in canvas
-            const bgLayer = window.mapCanvas.getObjects().find(obj => obj.objectType === 'backgroundLayer');
-            if (bgLayer) {
-                // Update BackgroundEditor with the image
-                window.mapBackgroundEditor.setBackgroundImage(bgLayer);
-                // Update global variable
-                backgroundImage = bgLayer;
-                if (window.mapState) window.mapState.setBackgroundImage(bgLayer);
-            }
-
-            // Toggle edit mode
-            isBackgroundEditMode = !isBackgroundEditMode;
-            if (isBackgroundEditMode) {
-                window.mapBackgroundEditor.enableEditMode();
-            } else {
-                window.mapBackgroundEditor.disableEditMode();
-                lockSystemObjects();
-            }
+    // Ensure BackgroundEditor is synced with canvas before toggling
+    if (window.mapBackgroundEditor && window.mapCanvas) {
+        const bgLayer = window.mapCanvas.getObjects().find(obj => obj.objectType === 'backgroundLayer');
+        if (bgLayer && !window.mapBackgroundEditor.getImage()) {
+            // BackgroundEditor is out of sync - update it
+            window.mapBackgroundEditor.setBackgroundImage(bgLayer);
         }
+        // Also sync global variable if needed
+        if (bgLayer && !backgroundImage) {
+            backgroundImage = bgLayer;
+            if (window.mapState) window.mapState.setBackgroundImage(bgLayer);
+        }
+    }
+
+    // Check if there's a background to edit
+    if (!backgroundImage && (!window.mapBackgroundEditor || !window.mapBackgroundEditor.getImage())) {
         return;
     }
 
@@ -1259,9 +1253,16 @@ function toggleBackgroundEdit() {
             window.mapBackgroundEditor.disableEditMode();
             lockSystemObjects();
         }
-    } else {
-        // Fallback: Should never happen (BackgroundEditor always loads)
-        console.error('❌ BackgroundEditor not available for toggle - this should not happen!');
+    }
+
+    // Update button state
+    const editBtn = document.getElementById('editBackgroundBtn');
+    if (editBtn) {
+        if (isBackgroundEditMode) {
+            editBtn.classList.add('active');
+        } else {
+            editBtn.classList.remove('active');
+        }
     }
 }
 

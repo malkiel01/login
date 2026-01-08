@@ -1154,7 +1154,10 @@ function createBoundaryFromPoints(polygonPoints) {
         strokeWidth: 0,
         selectable: false,
         evented: false,
-        objectType: 'grayMask'
+        objectType: 'grayMask',
+        objectCaching: false,  // Disable caching for sharper rendering
+        strokeLineJoin: 'miter',
+        strokeLineCap: 'butt'
     });
     grayMask = newGrayMask;
     if (window.mapState) {
@@ -1173,7 +1176,10 @@ function createBoundaryFromPoints(polygonPoints) {
         strokeWidth: 3,
         selectable: false,
         evented: false,
-        objectType: 'boundaryOutline'
+        objectType: 'boundaryOutline',
+        objectCaching: false,  // Disable caching for sharper rendering
+        strokeLineJoin: 'miter',
+        strokeLineCap: 'butt'
     });
     boundaryOutline = newBoundaryOutline;
     if (window.mapState) {

@@ -36,6 +36,7 @@ export class BoundaryEditPanel extends FloatingPanel {
         this.pointMarkers = [];
         this.draggedMarkerIndex = null;
         this.pointsCountEl = null;
+        this.previewLines = []; // Preview lines during drag
 
         // Bind methods
         this.handleCanvasClick = this.handleCanvasClick.bind(this);
@@ -273,6 +274,9 @@ export class BoundaryEditPanel extends FloatingPanel {
      * הסתרת סמני נקודות
      */
     hidePointMarkers() {
+        // Hide drag preview if any
+        this.hideDragPreview();
+
         this.pointMarkers.forEach(marker => {
             marker.off('moving');
             marker.off('modified');
@@ -289,9 +293,56 @@ export class BoundaryEditPanel extends FloatingPanel {
         const index = marker.pointIndex;
         if (index === undefined) return;
 
-        // Update the preview - show where the point will be
+        // Update marker color
         marker.set({ fill: '#f59e0b' }); // orange while dragging
+
+        // Get current points and update the dragged one
+        const points = this.getTransformedPoints();
+        points[index] = { x: marker.left, y: marker.top };
+
+        // Show preview of the new boundary
+        this.showDragPreview(points);
+
         this.canvas.renderAll();
+    }
+
+    /**
+     * הצגת תצוגה מקדימה בזמן גרירה
+     */
+    showDragPreview(points) {
+        // Remove old preview lines
+        this.hideDragPreview();
+
+        // Create preview polygon (dashed lines)
+        for (let i = 0; i < points.length; i++) {
+            const p1 = points[i];
+            const p2 = points[(i + 1) % points.length];
+
+            const line = new fabric.Line([p1.x, p1.y, p2.x, p2.y], {
+                stroke: '#f59e0b', // orange
+                strokeWidth: 2,
+                strokeDashArray: [8, 4],
+                selectable: false,
+                evented: false,
+                objectType: 'dragPreviewLine'
+            });
+
+            this.previewLines.push(line);
+            this.canvas.add(line);
+        }
+
+        // Bring markers to front
+        this.pointMarkers.forEach(m => this.canvas.bringToFront(m));
+    }
+
+    /**
+     * הסתרת תצוגה מקדימה
+     */
+    hideDragPreview() {
+        this.previewLines.forEach(line => {
+            this.canvas.remove(line);
+        });
+        this.previewLines = [];
     }
 
     /**
@@ -300,6 +351,9 @@ export class BoundaryEditPanel extends FloatingPanel {
     handleMarkerDragEnd(marker) {
         const index = marker.pointIndex;
         if (index === undefined) return;
+
+        // Hide preview
+        this.hideDragPreview();
 
         // Get new position
         const newPos = { x: marker.left, y: marker.top };
@@ -311,7 +365,7 @@ export class BoundaryEditPanel extends FloatingPanel {
         const newPoints = [...this.boundaryOutline.points];
         newPoints[index] = localPoint;
 
-        // Update polygon without recreating
+        // Update polygon
         this.updateBoundaryPoints(newPoints);
 
         console.log(`✥ Moved point ${index} to (${Math.round(newPos.x)}, ${Math.round(newPos.y)})`);

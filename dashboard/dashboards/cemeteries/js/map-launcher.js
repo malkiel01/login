@@ -168,6 +168,16 @@
     }
 })();
 
+// טעינת PolygonClipper
+(async function initPolygonClipper() {
+    try {
+        const { PolygonClipper } = await import('../map/utils/PolygonClipper.js');
+        window.PolygonClipperClass = PolygonClipper;
+    } catch (error) {
+        console.error('❌ Failed to load PolygonClipper:', error);
+    }
+})();
+
 // משתנים גלובליים (מועברים בהדרגה ל-mapState)
 let currentMapMode = 'view'; // ← Synced with mapState.mode
 let isEditMode = false; // ← Synced with mapState.isEditMode
@@ -870,13 +880,24 @@ function loadParentBoundary() {
     }
 
     // שמור את נקודות הגבול לוולידציה
+    // חישוב קואורדינטות עולמיות של נקודות ההורה
+    const pathOffsetX = parentBoundary.pathOffset?.x || 0;
+    const pathOffsetY = parentBoundary.pathOffset?.y || 0;
+    const left = parentBoundary.left || 0;
+    const top = parentBoundary.top || 0;
+
     const newParentPoints = parentBoundary.points.map(p => ({
-        x: p.x + (parentBoundary.left || 0),
-        y: p.y + (parentBoundary.top || 0)
+        x: p.x - pathOffsetX + left,
+        y: p.y - pathOffsetY + top
     }));
     parentBoundaryPoints = newParentPoints;
     if (window.mapState) {
         window.mapState.canvas.parent.points = newParentPoints;
+    }
+
+    // עדכון BoundaryEditPanel עם גבול ההורה
+    if (window.mapBoundaryEditPanel) {
+        window.mapBoundaryEditPanel.setParentBoundary(newParentPoints);
     }
 
     // יצירת קו גבול ההורה לתצוגה (צבע שונה - כתום)
@@ -1098,6 +1119,21 @@ function createBoundaryFromPoints(polygonPoints) {
     if (!polygonPoints || polygonPoints.length < 3) {
         console.error('Not enough points to create boundary');
         return;
+    }
+
+    // חיתוך לפי גבול ההורה (אם קיים)
+    if (parentBoundaryPoints && parentBoundaryPoints.length >= 3 && window.PolygonClipperClass) {
+        if (window.PolygonClipperClass.needsClipping(polygonPoints, parentBoundaryPoints)) {
+            console.log('✂️ Clipping new boundary to parent...');
+            const clippedPoints = window.PolygonClipperClass.clip(polygonPoints, parentBoundaryPoints);
+
+            if (clippedPoints && clippedPoints.length >= 3) {
+                console.log(`✂️ Clipped: ${polygonPoints.length} points → ${clippedPoints.length} points`);
+                polygonPoints = clippedPoints;
+            } else {
+                console.warn('⚠️ Clipping resulted in invalid polygon, keeping original');
+            }
+        }
     }
 
     // הסרת גבול/מסכה קודמים אם קיימים

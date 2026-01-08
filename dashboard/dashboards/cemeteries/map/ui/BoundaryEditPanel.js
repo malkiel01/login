@@ -13,6 +13,7 @@
  */
 
 import { FloatingPanel } from './FloatingPanel.js';
+import { PolygonClipper } from '../utils/PolygonClipper.js';
 
 export class BoundaryEditPanel extends FloatingPanel {
     constructor(canvas, options = {}) {
@@ -31,6 +32,9 @@ export class BoundaryEditPanel extends FloatingPanel {
             onMaskChanged: options.onMaskChanged || null,
             onClose: options.onClose || null
         };
+
+        // גבול הורה לחיתוך (מגיע מ-mapState או parentBoundaryPoints)
+        this.parentBoundaryPoints = null;
 
         this.boundaryOutline = null;
         this.grayMask = null;
@@ -584,7 +588,8 @@ export class BoundaryEditPanel extends FloatingPanel {
     }
 
     updateBoundaryPoints(newPoints) {
-        const newPolygon = new fabric.Polygon(newPoints, {
+        // יצירת פוליגון חדש עם הנקודות
+        let polygon = new fabric.Polygon(newPoints, {
             fill: 'transparent',
             stroke: this.boundaryOutline.stroke || '#ef4444',
             strokeWidth: this.boundaryOutline.strokeWidth || 3,
@@ -596,16 +601,43 @@ export class BoundaryEditPanel extends FloatingPanel {
             lockRotation: false
         });
 
+        // קבל נקודות בקואורדינטות עולמיות
+        const matrix = polygon.calcTransformMatrix();
+        let worldPoints = polygon.points.map(p => {
+            return fabric.util.transformPoint(
+                { x: p.x - polygon.pathOffset.x, y: p.y - polygon.pathOffset.y },
+                matrix
+            );
+        });
+
+        // חיתוך לפי גבול ההורה
+        const clippedPoints = this.clipToParentBoundary(worldPoints);
+
+        // אם הנקודות השתנו, צור פוליגון חדש
+        if (clippedPoints.length !== worldPoints.length || clippedPoints !== worldPoints) {
+            polygon = new fabric.Polygon(clippedPoints, {
+                fill: 'transparent',
+                stroke: this.boundaryOutline.stroke || '#ef4444',
+                strokeWidth: this.boundaryOutline.strokeWidth || 3,
+                objectType: 'boundaryOutline',
+                selectable: !this.isPointEditMode,
+                evented: !this.isPointEditMode,
+                hasControls: !this.isPointEditMode,
+                hasBorders: !this.isPointEditMode,
+                lockRotation: false
+            });
+        }
+
         this.canvas.remove(this.boundaryOutline);
-        this.canvas.add(newPolygon);
-        this.boundaryOutline = newPolygon;
+        this.canvas.add(polygon);
+        this.boundaryOutline = polygon;
 
         this.updateGrayMask();
         this.showPointMarkers(this.isPointEditMode);
         this.updatePointsCount();
 
         if (this.panelOptions.onPointsChanged) {
-            this.panelOptions.onPointsChanged(newPoints, newPolygon);
+            this.panelOptions.onPointsChanged(clippedPoints, polygon);
         }
 
         this.canvas.renderAll();
@@ -657,6 +689,44 @@ export class BoundaryEditPanel extends FloatingPanel {
         if (this.panelOptions.onMaskChanged) {
             this.panelOptions.onMaskChanged(newMask);
         }
+    }
+
+    /**
+     * הגדרת גבול ההורה לחיתוך
+     * @param {Array} points - נקודות גבול ההורה [{x, y}, ...]
+     */
+    setParentBoundary(points) {
+        this.parentBoundaryPoints = points;
+    }
+
+    /**
+     * חיתוך הגבול לפי גבול ההורה
+     * @param {Array} points - נקודות הגבול [{x, y}, ...]
+     * @returns {Array} - נקודות חתוכות
+     */
+    clipToParentBoundary(points) {
+        if (!this.parentBoundaryPoints || this.parentBoundaryPoints.length < 3) {
+            return points;
+        }
+
+        // בדוק אם צריך לחתוך
+        if (!PolygonClipper.needsClipping(points, this.parentBoundaryPoints)) {
+            return points;
+        }
+
+        console.log('✂️ Clipping boundary to parent...');
+
+        // חתוך את הפוליגון
+        const clippedPoints = PolygonClipper.clip(points, this.parentBoundaryPoints);
+
+        if (clippedPoints.length < 3) {
+            console.warn('⚠️ Clipping resulted in invalid polygon, keeping original');
+            return points;
+        }
+
+        console.log(`✂️ Clipped: ${points.length} points → ${clippedPoints.length} points`);
+
+        return clippedPoints;
     }
 
     getTransformedPoints() {

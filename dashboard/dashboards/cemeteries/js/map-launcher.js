@@ -1273,15 +1273,21 @@ function toggleBackgroundEdit() {
 function deleteBackground() {
     if (!window.mapCanvas) return;
 
-    // Sync with canvas if needed (same pattern as toggleBackgroundEdit)
-    if (!backgroundImage && window.mapCanvas) {
+    // Always sync BackgroundEditor with canvas if it's out of sync
+    // (same pattern as toggleBackgroundEdit - check BackgroundEditor, not just global)
+    if (window.mapBackgroundEditor && !window.mapBackgroundEditor.getImage()) {
+        const bgLayer = window.mapCanvas.getObjects().find(obj => obj.objectType === 'backgroundLayer');
+        if (bgLayer) {
+            window.mapBackgroundEditor.setBackgroundImage(bgLayer);
+        }
+    }
+
+    // Also sync global variable if needed
+    if (!backgroundImage) {
         const bgLayer = window.mapCanvas.getObjects().find(obj => obj.objectType === 'backgroundLayer');
         if (bgLayer) {
             backgroundImage = bgLayer;
             if (window.mapState) window.mapState.setBackgroundImage(bgLayer);
-            if (window.mapBackgroundEditor && !window.mapBackgroundEditor.getImage()) {
-                window.mapBackgroundEditor.setBackgroundImage(bgLayer);
-            }
         }
     }
 

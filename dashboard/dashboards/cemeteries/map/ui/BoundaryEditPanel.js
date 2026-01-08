@@ -29,7 +29,9 @@ export class BoundaryEditPanel extends FloatingPanel {
         this.panelOptions = {
             onPointsChanged: options.onPointsChanged || null,
             onMaskChanged: options.onMaskChanged || null,
-            onClose: options.onClose || null
+            onClose: options.onClose || null,
+            // גבול הורה לחיתוך - מועבר כ-getter
+            get parentBoundary() { return options.parentBoundary; }
         };
 
         this.boundaryOutline = null;
@@ -328,7 +330,10 @@ export class BoundaryEditPanel extends FloatingPanel {
         if (!hasTransforms) return;
 
         // Get world-space positions of all points
-        const worldPoints = this.getTransformedPoints();
+        let worldPoints = this.getTransformedPoints();
+
+        // חיתוך לפי גבול הורה
+        worldPoints = this.clipToParentBoundary(worldPoints);
 
         // Create new polygon with these points at identity transform
         const newPolygon = new fabric.Polygon(worldPoints, {
@@ -584,6 +589,9 @@ export class BoundaryEditPanel extends FloatingPanel {
     }
 
     updateBoundaryPoints(newPoints) {
+        // חיתוך לפי גבול הורה
+        newPoints = this.clipToParentBoundary(newPoints);
+
         const newPolygon = new fabric.Polygon(newPoints, {
             fill: 'transparent',
             stroke: this.boundaryOutline.stroke || '#ef4444',
@@ -703,6 +711,26 @@ export class BoundaryEditPanel extends FloatingPanel {
         }
 
         return Math.sqrt((point.x - xx) ** 2 + (point.y - yy) ** 2);
+    }
+
+    /**
+     * חיתוך נקודות לפי גבול הורה
+     * יוצר נקודות עיגון חדשות כשהגבול יוצא מגבול ההורה
+     */
+    clipToParentBoundary(points) {
+        const parentBoundary = this.panelOptions.parentBoundary;
+        if (!parentBoundary || parentBoundary.length < 3) return points;
+        if (!window.PolygonClipperClass) return points;
+
+        const clipped = window.PolygonClipperClass.clip(points, parentBoundary);
+        if (clipped && clipped.length >= 3) {
+            if (clipped.length !== points.length) {
+                console.log('✂️ Boundary clipped to parent:', points.length, '→', clipped.length, 'points');
+            }
+            return clipped;
+        }
+
+        return points;
     }
 
     updatePointsCount() {

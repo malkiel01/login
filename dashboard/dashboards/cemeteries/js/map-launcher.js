@@ -168,6 +168,16 @@
     }
 })();
 
+// טעינת PolygonClipper - לחיתוך גבולות ילדים לפי גבול הורה
+(async function initPolygonClipper() {
+    try {
+        const { PolygonClipper } = await import('../map/utils/PolygonClipper.js');
+        window.PolygonClipperClass = PolygonClipper;
+    } catch (error) {
+        console.error('❌ Failed to load PolygonClipper:', error);
+    }
+})();
+
 // משתנים גלובליים (מועברים בהדרגה ל-mapState)
 let currentMapMode = 'view'; // ← Synced with mapState.mode
 let isEditMode = false; // ← Synced with mapState.isEditMode
@@ -582,6 +592,10 @@ function createMapCanvas(entityType, unicId, entity) {
             },
             onClose: () => {
                 // Optionally turn off edit mode when panel is closed
+            },
+            // גבול הורה לחיתוך - מועבר כ-getter לעדכון דינמי
+            get parentBoundary() {
+                return parentBoundaryPoints;
             }
         });
     }
@@ -1098,6 +1112,15 @@ function createBoundaryFromPoints(polygonPoints) {
     if (!polygonPoints || polygonPoints.length < 3) {
         console.error('Not enough points to create boundary');
         return;
+    }
+
+    // חיתוך לפי גבול הורה אם קיים
+    if (parentBoundaryPoints && parentBoundaryPoints.length >= 3 && window.PolygonClipperClass) {
+        const clippedPoints = window.PolygonClipperClass.clip(polygonPoints, parentBoundaryPoints);
+        if (clippedPoints && clippedPoints.length >= 3) {
+            console.log('✂️ Boundary clipped to parent:', polygonPoints.length, '→', clippedPoints.length, 'points');
+            polygonPoints = clippedPoints;
+        }
     }
 
     // הסרת גבול/מסכה קודמים אם קיימים

@@ -158,6 +158,16 @@
     }
 })();
 
+// טעינת BoundaryEditPanel
+(async function initBoundaryEditPanel() {
+    try {
+        const { BoundaryEditPanel } = await import('../map/ui/BoundaryEditPanel.js');
+        window.BoundaryEditPanelClass = BoundaryEditPanel;
+    } catch (error) {
+        console.error('❌ Failed to load BoundaryEditPanel:', error);
+    }
+})();
+
 // משתנים גלובליים (מועברים בהדרגה ל-mapState)
 let currentMapMode = 'view'; // ← Synced with mapState.mode
 let isEditMode = false; // ← Synced with mapState.isEditMode
@@ -543,7 +553,28 @@ function createMapCanvas(entityType, unicId, entity) {
                     editBtn.classList.remove('active');
                 }
                 if (deleteBtn) deleteBtn.classList.add('hidden-btn');
+                // Hide edit panel
+                if (window.mapBoundaryEditPanel) {
+                    window.mapBoundaryEditPanel.hide();
+                }
                 saveCanvasState();
+            }
+        });
+    }
+
+    // Initialize BoundaryEditPanel
+    if (window.BoundaryEditPanelClass && window.mapCanvas) {
+        window.mapBoundaryEditPanel = new window.BoundaryEditPanelClass(window.mapCanvas, {
+            onPointsChanged: (newPoints, newPolygon) => {
+                // Update global reference
+                boundaryOutline = newPolygon;
+                if (window.mapState) {
+                    window.mapState.setBoundaryOutline(newPolygon);
+                }
+                saveCanvasState();
+            },
+            onClose: () => {
+                // Optionally turn off edit mode when panel is closed
             }
         });
     }
@@ -1185,12 +1216,25 @@ function cancelPolygonDrawing() {
 
 /**
  * הפעלה/כיבוי מצב עריכת גבול
- */
-/**
- * הפעלה/כיבוי מצב עריכת גבול
  * REFACTORED: משתמש ב-BoundaryEditor (Step 8/15)
  */
 function toggleBoundaryEdit() {
+    // Sync with canvas if needed
+    if (!boundaryOutline && window.mapCanvas) {
+        const boundary = window.mapCanvas.getObjects().find(obj => obj.objectType === 'boundaryOutline');
+        if (boundary) {
+            boundaryOutline = boundary;
+            if (window.mapState) window.mapState.setBoundaryOutline(boundary);
+        }
+    }
+    if (!grayMask && window.mapCanvas) {
+        const mask = window.mapCanvas.getObjects().find(obj => obj.objectType === 'grayMask');
+        if (mask) {
+            grayMask = mask;
+            if (window.mapState) window.mapState.setGrayMask(mask);
+        }
+    }
+
     if (!boundaryOutline || !grayMask) return;
 
     isBoundaryEditMode = !isBoundaryEditMode;
@@ -1206,9 +1250,11 @@ function toggleBoundaryEdit() {
 
         if (window.mapBoundaryEditor) {
             window.mapBoundaryEditor.enableEditMode(boundaryOutline, grayMask, boundaryClipPath);
-        } else {
-            // Fallback: Should never happen (BoundaryEditor always loads)
-            console.error('❌ BoundaryEditor not available for enable - this should not happen!');
+        }
+
+        // הצג את פאנל עריכת הנקודות
+        if (window.mapBoundaryEditPanel) {
+            window.mapBoundaryEditPanel.show(boundaryOutline, grayMask);
         }
     } else {
         // כבה מצב עריכה
@@ -1216,9 +1262,11 @@ function toggleBoundaryEdit() {
 
         if (window.mapBoundaryEditor) {
             window.mapBoundaryEditor.disableEditMode();
-        } else {
-            // Fallback: Should never happen (BoundaryEditor always loads)
-            console.error('❌ BoundaryEditor not available for disable - this should not happen!');
+        }
+
+        // הסתר את פאנל עריכת הנקודות
+        if (window.mapBoundaryEditPanel) {
+            window.mapBoundaryEditPanel.hide();
         }
     }
 

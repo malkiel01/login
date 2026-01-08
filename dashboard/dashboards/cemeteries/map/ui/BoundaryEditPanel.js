@@ -365,6 +365,23 @@ export class BoundaryEditPanel extends FloatingPanel {
     unlockBoundaryForEdit() {
         if (!this.boundaryOutline) return;
 
+        // סנכרן הפניות מהקנבס - אולי נוצרו אובייקטים חדשים
+        const canvasBoundary = this.canvas.getObjects().find(obj => obj.objectType === 'boundaryOutline');
+        const canvasMask = this.canvas.getObjects().find(obj => obj.objectType === 'grayMask');
+
+        if (canvasBoundary && canvasBoundary !== this.boundaryOutline) {
+            // הסר listeners מהאובייקט הישן
+            this.boundaryOutline.off('moving', this.handleBoundaryTransform);
+            this.boundaryOutline.off('scaling', this.handleBoundaryTransform);
+            this.boundaryOutline.off('rotating', this.handleBoundaryTransform);
+            this.boundaryOutline.off('modified', this.handleBoundaryTransform);
+            this.boundaryOutline = canvasBoundary;
+        }
+
+        if (canvasMask) {
+            this.grayMask = canvasMask;
+        }
+
         this.boundaryOutline.set({
             selectable: true,
             evented: true,
@@ -387,6 +404,10 @@ export class BoundaryEditPanel extends FloatingPanel {
     }
 
     handleBoundaryTransform() {
+        // וודא שיש לנו את המסכה הנכונה
+        if (!this.grayMask || this.canvas.getObjects().indexOf(this.grayMask) === -1) {
+            this.grayMask = this.canvas.getObjects().find(obj => obj.objectType === 'grayMask');
+        }
         this.updateGrayMask();
         this.showPointMarkers(false); // Update indicator points positions
         this.canvas.renderAll();

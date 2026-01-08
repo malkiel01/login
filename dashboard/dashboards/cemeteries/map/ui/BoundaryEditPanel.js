@@ -319,20 +319,15 @@ export class BoundaryEditPanel extends FloatingPanel {
     /**
      * "אופה" את הטרנספורמציות (גודל, סיבוב, מיקום) לתוך הנקודות עצמן
      * כך שהפוליגון יחזור למצב identity transform
+     * תמיד מריץ כדי לתפוס גם שינויי מיקום (left/top)
      */
     bakeTransformsIntoPoints() {
         if (!this.boundaryOutline) return;
 
-        // Check if there are any transforms to bake
-        const hasTransforms =
-            this.boundaryOutline.scaleX !== 1 ||
-            this.boundaryOutline.scaleY !== 1 ||
-            this.boundaryOutline.angle !== 0;
-
-        if (!hasTransforms) return;
-
-        // Get world-space positions of all points
+        // Get world-space positions of all points (includes position, scale, rotation)
         const worldPoints = this.getTransformedPoints();
+
+        if (worldPoints.length < 3) return;
 
         // Create new polygon with these points at identity transform
         const newPolygon = new fabric.Polygon(worldPoints, {

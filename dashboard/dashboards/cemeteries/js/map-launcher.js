@@ -224,35 +224,6 @@ function closeMapLauncher() {
     }
 }
 
-/**
- * טעינת רשימת ישויות לפי הסוג שנבחר
- * REFACTORED: משתמש ב-EntitySelector (Step 2/15)
- * NOTE: This function is kept for backwards compatibility but is no longer used
- *       by the LauncherModal (which handles entity loading internally)
- */
-async function loadEntitiesForType() {
-    const entityType = document.getElementById('mapEntityType').value;
-    const entitySelect = document.getElementById('mapEntitySelect');
-    const loadingIndicator = document.getElementById('entityLoadingIndicator');
-
-    // אם EntitySelector לא נטען עדיין, נמתין
-    if (!window.entitySelector) {
-        console.warn('EntitySelector not loaded yet, waiting...');
-        setTimeout(loadEntitiesForType, 100);
-        return;
-    }
-
-    try {
-        await window.entitySelector.loadAndRender(
-            entityType,
-            entitySelect,
-            loadingIndicator
-        );
-    } catch (error) {
-        console.error('Error loading entities:', error);
-        alert('שגיאה בטעינת רשימת הישויות: ' + error.message);
-    }
-}
 
 async function launchMap() {
     const entityType = document.getElementById('mapEntityType').value;
@@ -372,11 +343,7 @@ function openMapPopup(entityType, unicId) {
         }
 
         window.mapPopupInstance.open(entityType, unicId);
-        return;
     }
-
-    // Fallback: Should never happen (MapPopup always loads)
-    console.error('❌ MapPopup not available - this should not happen!');
 }
 
 /**
@@ -485,8 +452,6 @@ function initializeMap(entityType, unicId, entity) {
             onRedo: redoCanvas,
             onSave: saveMapData
         });
-    } else {
-        console.warn('⚠️ Toolbar class not loaded yet');
     }
 
     createMapCanvas(entityType, unicId, entity);
@@ -528,8 +493,6 @@ function createMapCanvas(entityType, unicId, entity) {
                 }
             }
         });
-    } else {
-        console.error('❌ CanvasManager not available - this should not happen!');
     }
 
     // STEP 5/15: Initialize ZoomControls
@@ -925,11 +888,7 @@ function toggleEditMode(enabled) {
     // Use EditModeToggle if available
     if (window.mapEditModeToggle) {
         window.mapEditModeToggle.setEnabled(enabled);
-        return;
     }
-
-    // Fallback: Should never happen (EditModeToggle always loads)
-    console.error('❌ EditModeToggle not available - this should not happen!');
 }
 
 /**
@@ -963,9 +922,6 @@ async function handleBackgroundUpload(event) {
             console.error('❌ Failed to upload background:', error);
             alert('שגיאה בהעלאת תמונת הרקע');
         }
-    } else {
-        // Fallback: Should never happen (BackgroundEditor always loads)
-        console.error('❌ BackgroundEditor not available for upload - this should not happen!');
     }
 
     // ניקוי ה-input
@@ -1060,11 +1016,7 @@ function handleCanvasClick(options) {
 
     if (window.mapPolygonDrawer && window.mapPolygonDrawer.isActive()) {
         window.mapPolygonDrawer.handleClick(options);
-        return;
     }
-
-    // Fallback: Should never happen (PolygonDrawer always loads)
-    console.error('❌ PolygonDrawer not available for handleCanvasClick - this should not happen!');
 }
 
 /**
@@ -1076,11 +1028,7 @@ function handleCanvasMouseMove(options) {
 
     if (window.mapPolygonDrawer && window.mapPolygonDrawer.isActive()) {
         window.mapPolygonDrawer.handleMouseMove(options);
-        return;
     }
-
-    // Fallback: Should never happen (PolygonDrawer always loads)
-    console.error('❌ PolygonDrawer not available for handleCanvasMouseMove - this should not happen!');
 }
 
 /**
@@ -1220,11 +1168,7 @@ function finishPolygon() {
     if (window.mapPolygonDrawer && window.mapPolygonDrawer.isActive()) {
         const points = window.mapPolygonDrawer.finish();
         // finish() will call createBoundaryFromPoints via onFinish callback
-        return;
     }
-
-    // Fallback: Should never happen (PolygonDrawer always loads)
-    console.error('❌ PolygonDrawer not available for finishPolygon - this should not happen!');
 }
 
 /**
@@ -1235,11 +1179,7 @@ function cancelPolygonDrawing() {
     if (window.mapPolygonDrawer && window.mapPolygonDrawer.isActive()) {
         window.mapPolygonDrawer.cancel();
         // cancel() will call onCancel callback
-        return;
     }
-
-    // Fallback: Should never happen (PolygonDrawer always loads)
-    console.error('❌ PolygonDrawer not available for cancelPolygonDrawing - this should not happen!');
 }
 
 /**
@@ -1265,9 +1205,6 @@ function toggleBoundaryEdit() {
 
         if (window.mapBoundaryEditor) {
             window.mapBoundaryEditor.enableEditMode(boundaryOutline, grayMask, boundaryClipPath);
-        } else {
-            // Fallback: Should never happen (BoundaryEditor always loads)
-            console.error('❌ BoundaryEditor not available for enable - this should not happen!');
         }
     } else {
         // כבה מצב עריכה
@@ -1275,9 +1212,6 @@ function toggleBoundaryEdit() {
 
         if (window.mapBoundaryEditor) {
             window.mapBoundaryEditor.disableEditMode();
-        } else {
-            // Fallback: Should never happen (BoundaryEditor always loads)
-            console.error('❌ BoundaryEditor not available for disable - this should not happen!');
         }
     }
 
@@ -1315,9 +1249,6 @@ function toggleBackgroundEdit() {
             window.mapBackgroundEditor.disableEditMode();
             lockSystemObjects();
         }
-    } else {
-        // Fallback: Should never happen (BackgroundEditor always loads)
-        console.error('❌ BackgroundEditor not available for toggle - this should not happen!');
     }
 }
 
@@ -1440,11 +1371,7 @@ function closeMapPopup() {
     if (window.mapPopupInstance) {
         window.mapPopupInstance.close();
         // Note: cleanup is called via onClose callback
-        return;
     }
-
-    // Fallback: Should never happen (MapPopup always loads)
-    console.error('❌ MapPopup not available for close - this should not happen!');
 }
 
 /**
@@ -1528,11 +1455,7 @@ function toggleMapFullscreen() {
     // Use MapPopup if available
     if (window.mapPopupInstance) {
         window.mapPopupInstance.toggleFullscreen();
-        return;
     }
-
-    // Fallback: Should never happen (MapPopup always loads)
-    console.error('❌ MapPopup not available for fullscreen toggle - this should not happen!');
 }
 
 /**
@@ -1542,9 +1465,6 @@ function toggleMapFullscreen() {
 function zoomMapIn() {
     if (window.mapZoomControls) {
         window.mapZoomControls.zoomIn();
-    } else {
-        // Fallback: Should never happen (ZoomControls always loads)
-        console.error('❌ ZoomControls not available for zoom in - this should not happen!');
     }
 }
 
@@ -1555,9 +1475,6 @@ function zoomMapIn() {
 function zoomMapOut() {
     if (window.mapZoomControls) {
         window.mapZoomControls.zoomOut();
-    } else {
-        // Fallback: Should never happen (ZoomControls always loads)
-        console.error('❌ ZoomControls not available for zoom out - this should not happen!');
     }
 }
 
@@ -1723,11 +1640,7 @@ function showContextMenu(clientX, clientY, isInsideBoundary) {
     // Use ContextMenu if available
     if (window.mapContextMenu) {
         window.mapContextMenu.showForEmpty(clientX, clientY, isInsideBoundary);
-        return;
     }
-
-    // Fallback: Should never happen (ContextMenu always loads)
-    console.error('❌ ContextMenu not available - this should not happen!');
 }
 
 /**
@@ -1792,11 +1705,7 @@ function showObjectContextMenu(clientX, clientY, targetObject) {
     if (window.mapContextMenu) {
         contextMenuTargetObject = targetObject;
         window.mapContextMenu.showForObject(clientX, clientY, targetObject);
-        return;
     }
-
-    // Fallback: Should never happen (ContextMenu always loads)
-    console.error('❌ ContextMenu not available for showForObject - this should not happen!');
 }
 
 /**
@@ -2257,11 +2166,7 @@ function saveCanvasState() {
     // Use HistoryManager if available
     if (window.mapHistoryManager) {
         window.mapHistoryManager.save();
-        return;
     }
-
-    // Fallback: Should never happen (HistoryManager always loads)
-    console.error('❌ HistoryManager not available for save - this should not happen!');
 }
 
 /**
@@ -2274,11 +2179,7 @@ function undoCanvas() {
     // Use HistoryManager if available
     if (window.mapHistoryManager) {
         window.mapHistoryManager.undo();
-        return;
     }
-
-    // Fallback: Should never happen (HistoryManager always loads)
-    console.error('❌ HistoryManager not available for undo - this should not happen!');
 }
 
 /**
@@ -2291,11 +2192,7 @@ function redoCanvas() {
     // Use HistoryManager if available
     if (window.mapHistoryManager) {
         window.mapHistoryManager.redo();
-        return;
     }
-
-    // Fallback: Should never happen (HistoryManager always loads)
-    console.error('❌ HistoryManager not available for redo - this should not happen!');
 }
 
 /**
@@ -2390,11 +2287,7 @@ function updateUndoRedoButtons() {
         if (redoBtn) {
             redoBtn.disabled = !state.canRedo;
         }
-        return;
     }
-
-    // Fallback: Should never happen (HistoryManager always loads)
-    console.error('❌ HistoryManager not available for button update - this should not happen!');
 }
 
 /**

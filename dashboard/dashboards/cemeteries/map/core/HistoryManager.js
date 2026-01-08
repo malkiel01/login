@@ -27,6 +27,13 @@ export class HistoryManager {
 
         this.history = [];
         this.currentIndex = -1;
+
+        // אובייקטים שלא צריך לשמור בהיסטוריה
+        this.excludedObjectTypes = [
+            'parentBoundary',      // גבול הורה - לא של המפה הזו
+            'dragPreviewLine',     // קו תצוגה מקדימה בזמן גרירה
+            'pointMarker'          // נקודות עיגון - נוצרות דינמית
+        ];
     }
 
     /**
@@ -44,11 +51,25 @@ export class HistoryManager {
             this.history = this.history.slice(0, this.currentIndex + 1);
         }
 
+        // הסר זמנית אובייקטים שלא צריך לשמור
+        const excludedObjects = [];
+        this.canvas.getObjects().forEach(obj => {
+            if (this.excludedObjectTypes.includes(obj.objectType)) {
+                excludedObjects.push(obj);
+            }
+        });
+
+        // הסר מהקנבס (בלי renderAll)
+        excludedObjects.forEach(obj => this.canvas.remove(obj));
+
         // שמירת מצב נוכחי כ-JSON
         const state = JSON.stringify(
             this.canvas.toJSON(this.options.customProperties)
         );
         this.history.push(state);
+
+        // החזר את האובייקטים שהוסרו
+        excludedObjects.forEach(obj => this.canvas.add(obj));
 
         // הגבלת גודל ההיסטוריה
         if (this.history.length > this.options.maxHistory) {
@@ -106,6 +127,14 @@ export class HistoryManager {
     restore(state) {
         if (!state || !this.canvas) return;
 
+        // שמור אובייקטים שלא נשמרים בהיסטוריה לפני השחזור
+        const preservedObjects = [];
+        this.canvas.getObjects().forEach(obj => {
+            if (this.excludedObjectTypes.includes(obj.objectType)) {
+                preservedObjects.push(obj);
+            }
+        });
+
         this.canvas.loadFromJSON(JSON.parse(state), () => {
             // אחזור אובייקטים שנטענו
             const restoredObjects = {
@@ -124,6 +153,11 @@ export class HistoryManager {
                 } else if (obj.objectType === 'boundaryOutline') {
                     restoredObjects.boundaryOutline = obj;
                 }
+            });
+
+            // החזר אובייקטים ששמרנו (גבול הורה וכו')
+            preservedObjects.forEach(obj => {
+                this.canvas.add(obj);
             });
 
             // Sync StateManager if available

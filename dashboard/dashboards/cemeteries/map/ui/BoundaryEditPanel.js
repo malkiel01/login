@@ -632,7 +632,7 @@ export class BoundaryEditPanel extends FloatingPanel {
         // Remove old mask and create new one (more reliable than updating path)
         const oldMask = this.grayMask;
         const newMask = new fabric.Path(pathData, {
-            fill: 'rgba(120, 120, 120, 0.3)',
+            fill: 'rgba(100, 100, 100, 0.2)',
             stroke: null,
             strokeWidth: 0,
             selectable: false,
@@ -640,7 +640,8 @@ export class BoundaryEditPanel extends FloatingPanel {
             objectType: 'grayMask',
             // Ensure sharp edges
             strokeLineJoin: 'miter',
-            strokeLineCap: 'square'
+            strokeLineCap: 'square',
+            objectCaching: false
         });
 
         // Insert new mask at same position

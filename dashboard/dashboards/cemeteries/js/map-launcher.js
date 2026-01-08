@@ -1134,7 +1134,7 @@ function createBoundaryFromPoints(polygonPoints) {
     pathData += 'Z';
 
     const newGrayMask = new fabric.Path(pathData, {
-        fill: 'rgba(120, 120, 120, 0.3)',
+        fill: 'rgba(100, 100, 100, 0.2)',
         stroke: null,
         strokeWidth: 0,
         selectable: false,
@@ -1142,7 +1142,8 @@ function createBoundaryFromPoints(polygonPoints) {
         objectType: 'grayMask',
         // Ensure sharp edges
         strokeLineJoin: 'miter',
-        strokeLineCap: 'square'
+        strokeLineCap: 'square',
+        objectCaching: false
     });
     grayMask = newGrayMask;
     if (window.mapState) {

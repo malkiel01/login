@@ -980,6 +980,15 @@ function reorderLayers() {
 function startDrawPolygon() {
     if (!isEditMode) return;
 
+    // מניעת יצירת גבול נוסף אם כבר קיים (בדיקה גם בcanvas)
+    const existingBoundary = boundaryOutline ||
+        window.mapCanvas?.getObjects().find(obj => obj.objectType === 'boundaryOutline');
+
+    if (existingBoundary) {
+        alert('כבר קיים גבול מפה. יש למחוק את הגבול הקיים לפני יצירת חדש.');
+        return;
+    }
+
     if (window.mapPolygonDrawer) {
         window.mapPolygonDrawer.start();
         drawingPolygon = true;

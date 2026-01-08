@@ -199,6 +199,11 @@ let currentPdfDoc = null; // ← Synced with mapState.canvas.background.pdfDoc
 // גבול הורה (לישויות בנים)
 let parentBoundaryPoints = null; // ← Synced with mapState.canvas.parent.points
 let parentBoundaryOutline = null; // ← Synced with mapState.canvas.parent.outline
+
+// גבול סבא (לישויות נכדים)
+let grandparentBoundaryPoints = null;
+let grandparentBoundaryOutline = null;
+
 let lastValidBoundaryState = null; // ← Synced with mapState.canvas.boundary.lastValidState
 
 // Undo/Redo
@@ -297,8 +302,16 @@ async function launchMap() {
             if (parentResult.parentMapData) {
                 window.parentMapData = parentResult.parentMapData;
             }
+
+            // שמור את נתוני הסבא (אם קיימים)
+            if (parentResult.hasGrandparent && parentResult.grandparentMapData) {
+                window.grandparentMapData = parentResult.grandparentMapData;
+            } else {
+                window.grandparentMapData = null;
+            }
         } else {
             window.parentMapData = null;
+            window.grandparentMapData = null;
         }
 
         // הרשומה קיימת ופעילה - פתח את המפה
@@ -773,7 +786,8 @@ function createMapCanvas(entityType, unicId, entity) {
  */
 async function loadSavedMapData(entityType, unicId) {
     try {
-        // טען גבול הורה אם קיים (לישויות בנים)
+        // טען גבולות אבות אם קיימים (לישויות בנים/נכדים)
+        loadGrandparentBoundary();
         loadParentBoundary();
 
         const response = await fetch(`api/cemetery-hierarchy.php?action=get_map&type=${entityType}&id=${unicId}`);
@@ -835,7 +849,8 @@ async function loadSavedMapData(entityType, unicId) {
                 }
             });
 
-            // טען גבול הורה אחרי טעינת הנתונים
+            // טען גבולות אבות אחרי טעינת הנתונים
+            loadGrandparentBoundary();
             loadParentBoundary();
 
             // נעילת אובייקטי מערכת
@@ -943,6 +958,68 @@ function loadParentBoundary() {
 }
 
 /**
+ * טעינת גבול הסבא (אם קיים) - לתצוגה בלבד
+ */
+function loadGrandparentBoundary() {
+    // איפוס
+    grandparentBoundaryPoints = null;
+    if (grandparentBoundaryOutline) {
+        window.mapCanvas.remove(grandparentBoundaryOutline);
+        grandparentBoundaryOutline = null;
+    }
+
+    // בדיקה אם יש נתוני סבא
+    if (!window.grandparentMapData || !window.grandparentMapData.canvasJSON) {
+        return;
+    }
+
+    // מצא את גבול הסבא
+    const grandparentObjects = window.grandparentMapData.canvasJSON.objects || [];
+    let grandparentBoundary = null;
+
+    for (const obj of grandparentObjects) {
+        if (obj.objectType === 'boundaryOutline') {
+            grandparentBoundary = obj;
+            break;
+        }
+    }
+
+    if (!grandparentBoundary || !grandparentBoundary.points) {
+        return;
+    }
+
+    // חישוב קואורדינטות עולמיות
+    const pathOffsetX = grandparentBoundary.pathOffset?.x || 0;
+    const pathOffsetY = grandparentBoundary.pathOffset?.y || 0;
+    const left = grandparentBoundary.left || 0;
+    const top = grandparentBoundary.top || 0;
+
+    grandparentBoundaryPoints = grandparentBoundary.points.map(p => ({
+        x: p.x - pathOffsetX + left,
+        y: p.y - pathOffsetY + top
+    }));
+
+    // יצירת קו גבול הסבא לתצוגה (סגול בהיר, קו מקווקו דק יותר)
+    grandparentBoundaryOutline = new fabric.Polygon(grandparentBoundaryPoints, {
+        fill: 'transparent',
+        stroke: '#8b5cf6', // סגול
+        strokeWidth: 2,
+        strokeDashArray: [15, 8], // קו מקווקו ארוך יותר
+        selectable: false,
+        evented: false,
+        objectType: 'grandparentBoundary',
+        excludeFromExport: true
+    });
+
+    window.mapCanvas.add(grandparentBoundaryOutline);
+
+    // סידור שכבות נכון
+    reorderLayers();
+
+    console.log('👴 Grandparent boundary loaded');
+}
+
+/**
  * טוגל מצב עריכה
  * Uses EditModeToggle if available, otherwise falls back to old implementation
  * @param {boolean} enabled - האם להפעיל מצב עריכה
@@ -1003,8 +1080,10 @@ async function handleBackgroundUpload(event) {
  * 1. backgroundLayer - שכבה תחתונה (מהתפריט העליון)
  * 2. parentBoundary - גבול ההורה (קו כתום מקווקו) - מעל הרקע
  * 3. grayMask - מסכה אפורה מחוץ לגבול הילד
- * 4. boundaryOutline - קו גבול הילד (אדום)
- * 5. workObject - אובייקטי עבודה (מקליק ימני) - למעלה
+ * 4. grandparentBoundary - קו גבול הסבא (סגול)
+ * 5. parentBoundary - קו גבול ההורה (כתום)
+ * 6. boundaryOutline - קו גבול הילד (כחול)
+ * 7. workObject - אובייקטי עבודה (מקליק ימני) - למעלה
  */
 function reorderLayers() {
     if (!window.mapCanvas) return;
@@ -1018,6 +1097,7 @@ function reorderLayers() {
     let mask = null;
     let outline = null;
     let parentOutline = null;
+    let grandparentOutline = null;
 
     objects.forEach(obj => {
         if (obj.objectType === 'grayMask') {
@@ -1026,6 +1106,8 @@ function reorderLayers() {
             outline = obj;
         } else if (obj.objectType === 'parentBoundary') {
             parentOutline = obj;
+        } else if (obj.objectType === 'grandparentBoundary') {
+            grandparentOutline = obj;
         } else if (obj.objectType === 'backgroundLayer') {
             backgroundLayers.push(obj);
         } else if (obj.objectType === 'workObject') {
@@ -1039,7 +1121,10 @@ function reorderLayers() {
     // מסכה אפורה מעל הרקע
     if (mask) canvas.bringToFront(mask);
 
-    // גבול ההורה מעל המסכה (כדי שיהיה נראה)
+    // גבול הסבא מעל המסכה
+    if (grandparentOutline) canvas.bringToFront(grandparentOutline);
+
+    // גבול ההורה מעל גבול הסבא
     if (parentOutline) canvas.bringToFront(parentOutline);
 
     // קו גבול הילד מעל גבול ההורה

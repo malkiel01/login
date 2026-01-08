@@ -31,13 +31,15 @@ export class HistoryManager {
         // אובייקטים שלא צריך לשמור בהיסטוריה
         this.excludedObjectTypes = [
             'parentBoundary',      // גבול הורה - לא של המפה הזו
+            'grandparentBoundary', // גבול סבא - לא של המפה הזו
             'dragPreviewLine',     // קו תצוגה מקדימה בזמן גרירה
             'pointMarker'          // נקודות עיגון - נוצרות דינמית
         ];
 
         // אובייקטים שצריך לשמר בזמן restore (לא להרוס)
         this.preservedOnRestore = [
-            'parentBoundary'       // רק גבול ההורה - הוא לא חלק מהמפה הזו
+            'parentBoundary',       // גבול ההורה - הוא לא חלק מהמפה הזו
+            'grandparentBoundary'   // גבול הסבא - הוא לא חלק מהמפה הזו
         ];
     }
 

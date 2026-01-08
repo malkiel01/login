@@ -235,14 +235,15 @@ export class BoundaryEditPanel extends FloatingPanel {
 
         if (this.isPointEditMode) {
             // Point edit mode - points are interactive
+            // חשוב! קודם bake ואז יצירת נקודות
+            this.lockBoundaryForPointEdit();
             this.showPointMarkers(true);
             this.addPointEditListeners();
-            this.lockBoundaryForPointEdit();
         } else {
             // Boundary edit mode - show small indicator points, boundary is draggable/scalable
-            this.showPointMarkers(false);
             this.removePointEditListeners();
             this.unlockBoundaryForEdit();
+            this.showPointMarkers(false);
         }
 
         this.canvas.renderAll();

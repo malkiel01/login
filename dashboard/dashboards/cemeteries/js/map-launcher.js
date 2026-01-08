@@ -1032,6 +1032,12 @@ function reorderLayers() {
 function startDrawPolygon() {
     if (!isEditMode) return;
 
+    // Toggle: if already drawing, cancel
+    if (drawingPolygon) {
+        cancelPolygonDrawing();
+        return;
+    }
+
     if (window.mapPolygonDrawer) {
         window.mapPolygonDrawer.start();
         drawingPolygon = true;

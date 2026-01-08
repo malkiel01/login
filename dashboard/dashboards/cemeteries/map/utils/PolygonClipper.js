@@ -84,12 +84,12 @@ export class PolygonClipper {
      */
     static isInside(point, edgeStart, edgeEnd, isClipCCW) {
         const cross = this.crossProduct(edgeStart, edgeEnd, point);
-        // עבור CCW: פנימי = שמאל (cross > 0)
-        // עבור CW: פנימי = ימין (cross < 0)
+        // עבור CCW: פנימי = ימין (cross <= 0)
+        // עבור CW: פנימי = שמאל (cross >= 0)
         if (isClipCCW) {
-            return cross >= 0; // כולל על הקו
+            return cross <= 0;
         } else {
-            return cross <= 0; // כולל על הקו
+            return cross >= 0;
         }
     }
 

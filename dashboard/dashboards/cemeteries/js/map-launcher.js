@@ -695,6 +695,25 @@ function createMapCanvas(entityType, unicId, entity) {
                 // Note: StateManager is now auto-synced in HistoryManager.restore()
                 // No need for manual sync here anymore
 
+                // סנכרן את BoundaryEditPanel עם האובייקטים החדשים
+                if (window.mapBoundaryEditPanel && restoredObjects.boundaryOutline) {
+                    window.mapBoundaryEditPanel.boundaryOutline = restoredObjects.boundaryOutline;
+                    window.mapBoundaryEditPanel.grayMask = restoredObjects.grayMask;
+
+                    // אם הפאנל פתוח, צריך לחבר מחדש את ה-listeners ולעדכן נקודות
+                    if (window.mapBoundaryEditPanel.isVisible()) {
+                        if (window.mapBoundaryEditPanel.isPointEditMode) {
+                            // במצב עריכת נקודות - הצג נקודות חדשות
+                            window.mapBoundaryEditPanel.showPointMarkers(true);
+                        } else {
+                            // במצב עריכת גבול - חבר listeners והצג נקודות קטנות
+                            window.mapBoundaryEditPanel.unlockBoundaryForEdit();
+                            window.mapBoundaryEditPanel.showPointMarkers(false);
+                        }
+                        window.mapBoundaryEditPanel.updatePointsCount();
+                    }
+                }
+
                 // Lock system objects after restoration
                 lockSystemObjects();
 

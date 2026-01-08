@@ -301,12 +301,61 @@ export class BoundaryEditPanel extends FloatingPanel {
         this.boundaryOutline.off('rotating', this.handleBoundaryTransform);
         this.boundaryOutline.off('modified', this.handleBoundaryTransform);
 
+        // Bake transforms into points before point editing
+        this.bakeTransformsIntoPoints();
+
         this.boundaryOutline.set({
             selectable: false,
             evented: false,
             hasControls: false,
             hasBorders: false
         });
+    }
+
+    /**
+     * "אופה" את הטרנספורמציות (גודל, סיבוב, מיקום) לתוך הנקודות עצמן
+     * כך שהפוליגון יחזור למצב identity transform
+     */
+    bakeTransformsIntoPoints() {
+        if (!this.boundaryOutline) return;
+
+        // Check if there are any transforms to bake
+        const hasTransforms =
+            this.boundaryOutline.scaleX !== 1 ||
+            this.boundaryOutline.scaleY !== 1 ||
+            this.boundaryOutline.angle !== 0;
+
+        if (!hasTransforms) return;
+
+        // Get world-space positions of all points
+        const worldPoints = this.getTransformedPoints();
+
+        // Create new polygon with these points at identity transform
+        const newPolygon = new fabric.Polygon(worldPoints, {
+            fill: 'transparent',
+            stroke: this.boundaryOutline.stroke || '#ef4444',
+            strokeWidth: this.boundaryOutline.strokeWidth || 3,
+            objectType: 'boundaryOutline',
+            selectable: false,
+            evented: false,
+            hasControls: false,
+            hasBorders: false
+        });
+
+        // Replace old polygon
+        this.canvas.remove(this.boundaryOutline);
+        this.canvas.add(newPolygon);
+        this.boundaryOutline = newPolygon;
+
+        // Update mask
+        this.updateGrayMask();
+
+        // Notify about the change
+        if (this.panelOptions.onPointsChanged) {
+            this.panelOptions.onPointsChanged(worldPoints, newPolygon);
+        }
+
+        console.log('🔄 Baked transforms into points');
     }
 
     unlockBoundaryForEdit() {

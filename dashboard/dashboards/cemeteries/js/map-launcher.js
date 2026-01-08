@@ -168,16 +168,6 @@
     }
 })();
 
-// טעינת PolygonClipper
-(async function initPolygonClipper() {
-    try {
-        const { PolygonClipper } = await import('../map/utils/PolygonClipper.js');
-        window.PolygonClipperClass = PolygonClipper;
-    } catch (error) {
-        console.error('❌ Failed to load PolygonClipper:', error);
-    }
-})();
-
 // משתנים גלובליים (מועברים בהדרגה ל-mapState)
 let currentMapMode = 'view'; // ← Synced with mapState.mode
 let isEditMode = false; // ← Synced with mapState.isEditMode
@@ -592,10 +582,6 @@ function createMapCanvas(entityType, unicId, entity) {
             },
             onClose: () => {
                 // Optionally turn off edit mode when panel is closed
-            },
-            // גבול הורה לחיתוך - מתעדכן דינמית
-            get parentBoundary() {
-                return parentBoundaryPoints;
             }
         });
     }
@@ -1113,19 +1099,6 @@ function createBoundaryFromPoints(polygonPoints) {
         console.error('Not enough points to create boundary');
         return;
     }
-
-    // חיתוך לפי גבול הורה אם קיים
-    let finalPoints = polygonPoints;
-    if (parentBoundaryPoints && parentBoundaryPoints.length >= 3 && window.PolygonClipperClass) {
-        const clippedPoints = window.PolygonClipperClass.clip(polygonPoints, parentBoundaryPoints);
-        if (clippedPoints && clippedPoints.length >= 3) {
-            finalPoints = clippedPoints;
-            console.log('✂️ Boundary clipped to parent:', polygonPoints.length, '→', finalPoints.length, 'points');
-        } else {
-            console.warn('⚠️ Clipping resulted in invalid polygon, using original');
-        }
-    }
-    polygonPoints = finalPoints;
 
     // הסרת גבול/מסכה קודמים אם קיימים
     if (grayMask) {

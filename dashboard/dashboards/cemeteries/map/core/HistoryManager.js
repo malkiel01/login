@@ -34,6 +34,11 @@ export class HistoryManager {
             'dragPreviewLine',     // קו תצוגה מקדימה בזמן גרירה
             'pointMarker'          // נקודות עיגון - נוצרות דינמית
         ];
+
+        // אובייקטים שצריך לשמר בזמן restore (לא להרוס)
+        this.preservedOnRestore = [
+            'parentBoundary'       // רק גבול ההורה - הוא לא חלק מהמפה הזו
+        ];
     }
 
     /**
@@ -127,10 +132,11 @@ export class HistoryManager {
     restore(state) {
         if (!state || !this.canvas) return;
 
-        // שמור אובייקטים שלא נשמרים בהיסטוריה לפני השחזור
+        // שמור רק אובייקטים שצריך לשמר (גבול הורה בלבד)
+        // נקודות עיגון וקווי תצוגה מקדימה יימחקו ויווצרו מחדש
         const preservedObjects = [];
         this.canvas.getObjects().forEach(obj => {
-            if (this.excludedObjectTypes.includes(obj.objectType)) {
+            if (this.preservedOnRestore.includes(obj.objectType)) {
                 preservedObjects.push(obj);
             }
         });

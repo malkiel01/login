@@ -5,7 +5,6 @@
  */
 
 // STEP 1/15: StateManager Integration
-// Load StateManager module and make it globally available
 (async function initStateManager() {
     try {
         const { StateManager } = await import('../map/core/StateManager.js');
@@ -22,7 +21,6 @@
 })();
 
 // STEP 2/15: EntitySelector Integration
-// Load EntitySelector module for dynamic entity loading
 (async function initEntitySelector() {
     try {
         const { EntitySelector } = await import('../map/launcher/EntitySelector.js');
@@ -33,7 +31,6 @@
 })();
 
 // STEP 3/15: LauncherModal Integration
-// Load LauncherModal module for modal UI
 (async function initLauncherModal() {
     try {
         const { LauncherModal } = await import('../map/launcher/LauncherModal.js');
@@ -62,7 +59,6 @@
 })();
 
 // STEP 4/15: Toolbar Integration
-// Load Toolbar module for map toolbar UI
 (async function initToolbar() {
     try {
         const { Toolbar } = await import('../map/ui/Toolbar.js');
@@ -73,7 +69,6 @@
 })();
 
 // STEP 5/15: ZoomControls Integration
-// Load ZoomControls module for zoom functionality
 (async function initZoomControls() {
     try {
         const { ZoomControls } = await import('../map/ui/ZoomControls.js');
@@ -84,7 +79,6 @@
 })();
 
 // STEP 6/15: CanvasManager Integration
-// Load CanvasManager module for canvas creation and management
 (async function initCanvasManager() {
     try {
         const { CanvasManager } = await import('../map/core/CanvasManager.js');
@@ -95,7 +89,6 @@
 })();
 
 // STEP 7/15: PolygonDrawer Integration
-// Load PolygonDrawer module for drawing polygon boundaries
 (async function initPolygonDrawer() {
     try {
         const { PolygonDrawer } = await import('../map/editors/PolygonDrawer.js');
@@ -106,7 +99,6 @@
 })();
 
 // STEP 8/15: BoundaryEditor Integration
-// Load BoundaryEditor module for editing existing boundaries
 (async function initBoundaryEditor() {
     try {
         const { BoundaryEditor } = await import('../map/editors/BoundaryEditor.js');
@@ -117,7 +109,6 @@
 })();
 
 // STEP 9/15: BackgroundEditor Integration
-// Load BackgroundEditor module for background image/PDF management
 (async function initBackgroundEditor() {
     try {
         const { BackgroundEditor } = await import('../map/editors/BackgroundEditor.js');
@@ -128,7 +119,6 @@
 })();
 
 // STEP 10/15: HistoryManager Integration
-// Load HistoryManager module for undo/redo functionality
 (async function initHistoryManager() {
     try {
         const { HistoryManager } = await import('../map/core/HistoryManager.js');
@@ -139,7 +129,6 @@
 })();
 
 // STEP 11/15: EditModeToggle Integration
-// Load EditModeToggle module for managing edit mode state
 (async function initEditModeToggle() {
     try {
         const { EditModeToggle } = await import('../map/ui/EditModeToggle.js');
@@ -150,7 +139,6 @@
 })();
 
 // STEP 12/15: ContextMenu Integration
-// Load ContextMenu module for right-click context menu
 (async function initContextMenu() {
     try {
         const { ContextMenu } = await import('../map/ui/ContextMenu.js');
@@ -161,7 +149,6 @@
 })();
 
 // STEP 13/15: MapPopup Integration
-// Load MapPopup module for popup management
 (async function initMapPopup() {
     try {
         const { MapPopup } = await import('../map/launcher/MapPopup.js');
@@ -171,40 +158,35 @@
     }
 })();
 
-// משתנים גלובליים (מועברים בהדרגה ל-mapState)
-let currentMapMode = 'view'; // ← Synced with mapState.mode
-let isEditMode = false; // ← Synced with mapState.isEditMode
-let currentZoom = 1; // ← Synced with mapState.zoom
-let backgroundImage = null; // ← Synced with mapState.canvas.background.image
-let currentEntityType = null; // ← Synced with mapState.entityType
-let currentUnicId = null; // ← Synced with mapState.entityId
-let drawingPolygon = false; // ← Synced with mapState.polygon.isDrawing
-let polygonPoints = []; // ← Synced with mapState.polygon.points
-let previewLine = null; // ← Synced with mapState.polygon.previewLine
-let boundaryClipPath = null; // ← Synced with mapState.canvas.boundary.clipPath
-let grayMask = null; // ← Synced with mapState.canvas.boundary.grayMask
-let boundaryOutline = null; // ← Synced with mapState.canvas.boundary.outline
-let isBoundaryEditMode = false; // ← Synced with mapState.canvas.boundary.isEditMode
-let isBackgroundEditMode = false; // ← Synced with mapState.canvas.background.isEditMode
-let currentPdfContext = null; // ← Synced with mapState.canvas.background.pdfContext
-let currentPdfDoc = null; // ← Synced with mapState.canvas.background.pdfDoc
-
-// גבול הורה (לישויות בנים)
-let parentBoundaryPoints = null; // ← Synced with mapState.canvas.parent.points
-let parentBoundaryOutline = null; // ← Synced with mapState.canvas.parent.outline
-let lastValidBoundaryState = null; // ← Synced with mapState.canvas.boundary.lastValidState
-
-// Undo/Redo
-let canvasHistory = []; // ← Synced with mapState.history.states
-let historyIndex = -1; // ← Synced with mapState.history.currentIndex
-const MAX_HISTORY = 30; // מקסימום מצבים לשמירה
+// משתנים גלובליים (synced with mapState)
+let currentMapMode = 'view';
+let isEditMode = false;
+let currentZoom = 1;
+let backgroundImage = null;
+let currentEntityType = null;
+let currentUnicId = null;
+let drawingPolygon = false;
+let polygonPoints = [];
+let previewLine = null;
+let boundaryClipPath = null;
+let grayMask = null;
+let boundaryOutline = null;
+let isBoundaryEditMode = false;
+let isBackgroundEditMode = false;
+let currentPdfContext = null;
+let currentPdfDoc = null;
+let parentBoundaryPoints = null;
+let parentBoundaryOutline = null;
+let lastValidBoundaryState = null;
+let canvasHistory = [];
+let historyIndex = -1;
+const MAX_HISTORY = 30;
 
 // GLOBAL WRAPPER FUNCTIONS (for backwards compatibility)
 // These functions are called from sidebar.php and maintain the old API
 
 /**
  * פתיחת מודל בחירת ישות - נקרא מה-sidebar
- * REFACTORED: משתמש ב-LauncherModal (Step 3/15)
  */
 function openMapLauncher() {
     if (window.launcherModal) {
@@ -216,7 +198,6 @@ function openMapLauncher() {
 
 /**
  * סגירת מודל בחירת ישות
- * REFACTORED: משתמש ב-LauncherModal (Step 3/15)
  */
 function closeMapLauncher() {
     if (window.launcherModal) {
@@ -315,7 +296,6 @@ async function launchMap() {
 
 /**
  * פתיחת פופאפ המפה
- * Uses MapPopup if available, otherwise falls back to old implementation
  */
 function openMapPopup(entityType, unicId) {
     // Update StateManager
@@ -459,7 +439,6 @@ function initializeMap(entityType, unicId, entity) {
 
 /**
  * יצירת ה-Canvas
- * REFACTORED: משתמש ב-CanvasManager (Step 6/15)
  */
 function createMapCanvas(entityType, unicId, entity) {
     const canvasContainer = document.getElementById('mapCanvas');
@@ -881,7 +860,6 @@ function loadParentBoundary() {
 
 /**
  * טוגל מצב עריכה
- * Uses EditModeToggle if available, otherwise falls back to old implementation
  * @param {boolean} enabled - האם להפעיל מצב עריכה
  */
 function toggleEditMode(enabled) {
@@ -900,7 +878,6 @@ function uploadBackgroundImage() {
 
 /**
  * טיפול בהעלאת קובץ רקע
- * REFACTORED: משתמש ב-BackgroundEditor (Step 9/15)
  */
 async function handleBackgroundUpload(event) {
     const file = event.target.files[0];
@@ -983,7 +960,6 @@ function reorderLayers() {
 
 /**
  * התחלת ציור פוליגון
- * REFACTORED: משתמש ב-PolygonDrawer (Step 7/15)
  */
 function startDrawPolygon() {
     if (!isEditMode) return;
@@ -1009,7 +985,6 @@ function startDrawPolygon() {
 
 /**
  * טיפול בלחיצה על ה-Canvas
- * REFACTORED: משתמש ב-PolygonDrawer (Step 7/15)
  */
 function handleCanvasClick(options) {
     if (!drawingPolygon || !isEditMode) return;
@@ -1021,7 +996,6 @@ function handleCanvasClick(options) {
 
 /**
  * טיפול בתנועת עכבר - קו תצוגה מקדימה
- * REFACTORED: משתמש ב-PolygonDrawer (Step 7/15)
  */
 function handleCanvasMouseMove(options) {
     if (!drawingPolygon) return;
@@ -1054,8 +1028,6 @@ function isPointInPolygon(point, polygon) {
 
 /**
  * יצירת גבול ומסכה מנקודות פוליגון
- * Helper function called by PolygonDrawer.finish()
- * REFACTORED: Extracted from finishPolygon (Step 7/15)
  */
 function createBoundaryFromPoints(polygonPoints) {
     if (!polygonPoints || polygonPoints.length < 3) {
@@ -1162,7 +1134,6 @@ function createBoundaryFromPoints(polygonPoints) {
 
 /**
  * סיום ציור פוליגון
- * REFACTORED: משתמש ב-PolygonDrawer (Step 7/15)
  */
 function finishPolygon() {
     if (window.mapPolygonDrawer && window.mapPolygonDrawer.isActive()) {
@@ -1173,7 +1144,6 @@ function finishPolygon() {
 
 /**
  * ביטול ציור פוליגון
- * REFACTORED: משתמש ב-PolygonDrawer (Step 7/15)
  */
 function cancelPolygonDrawing() {
     if (window.mapPolygonDrawer && window.mapPolygonDrawer.isActive()) {
@@ -1184,10 +1154,6 @@ function cancelPolygonDrawing() {
 
 /**
  * הפעלה/כיבוי מצב עריכת גבול
- */
-/**
- * הפעלה/כיבוי מצב עריכת גבול
- * REFACTORED: משתמש ב-BoundaryEditor (Step 8/15)
  */
 function toggleBoundaryEdit() {
     if (!boundaryOutline || !grayMask) return;
@@ -1220,7 +1186,6 @@ function toggleBoundaryEdit() {
 
 /**
  * הפעלה/כיבוי מצב עריכת תמונת רקע
- * REFACTORED: משתמש ב-BackgroundEditor (Step 9/15)
  */
 function toggleBackgroundEdit() {
     // Always sync BackgroundEditor with current state (in case of undo/redo)
@@ -1254,7 +1219,6 @@ function toggleBackgroundEdit() {
 
 /**
  * מחיקת תמונת רקע
- * REFACTORED: משתמש ב-BackgroundEditor (Step 9/15)
  */
 function deleteBackground() {
     if (!window.mapCanvas || !backgroundImage) return;
@@ -1277,7 +1241,6 @@ function deleteBackground() {
 
 /**
  * מחיקת גבול מפה
- * REFACTORED: משתמש ב-BoundaryEditor (Step 8/15)
  */
 function deleteBoundary() {
     if (!window.mapCanvas) return;
@@ -1364,7 +1327,6 @@ async function saveMapData() {
 
 /**
  * סגירת פופאפ המפה
- * Uses MapPopup if available, otherwise falls back to old implementation
  */
 function closeMapPopup() {
     // Use MapPopup if available
@@ -1375,8 +1337,7 @@ function closeMapPopup() {
 }
 
 /**
- * ניקוי state של המפה (helper function)
- * REFACTORED: Extracted for use by MapPopup (Step 13/15)
+ * ניקוי state של המפה
  */
 function cleanupMapState() {
     // Dispose canvas
@@ -1449,7 +1410,6 @@ function cleanupMapState() {
 
 /**
  * מעבר למצב מסך מלא / יציאה ממסך מלא
- * Uses MapPopup if available, otherwise falls back to old implementation
  */
 function toggleMapFullscreen() {
     // Use MapPopup if available
@@ -1460,7 +1420,6 @@ function toggleMapFullscreen() {
 
 /**
  * הגדלת זום
- * REFACTORED: משתמש ב-ZoomControls (Step 5/15)
  */
 function zoomMapIn() {
     if (window.mapZoomControls) {
@@ -1470,7 +1429,6 @@ function zoomMapIn() {
 
 /**
  * הקטנת זום
- * REFACTORED: משתמש ב-ZoomControls (Step 5/15)
  */
 function zoomMapOut() {
     if (window.mapZoomControls) {
@@ -1479,7 +1437,6 @@ function zoomMapOut() {
 }
 
 function updateZoomDisplay() {
-    // REFACTORED: Use Toolbar.updateZoomDisplay() if available (Step 4/15)
     if (window.mapToolbar && typeof window.mapToolbar.updateZoomDisplay === 'function') {
         window.mapToolbar.updateZoomDisplay(currentZoom);
     }
@@ -1487,7 +1444,6 @@ function updateZoomDisplay() {
 
 /**
  * עריכת אחוז זום ידנית
- * REFACTORED: משתמש ב-ZoomControls (Step 5/15)
  */
 function editZoomLevel() {
     const el = document.getElementById('mapZoomLevel');
@@ -1634,7 +1590,6 @@ function isPointInsideBoundary(x, y) {
 
 /**
  * הצגת תפריט הקשר כללי (canvas)
- * Uses ContextMenu if available, otherwise falls back to old implementation
  */
 function showContextMenu(clientX, clientY, isInsideBoundary) {
     // Use ContextMenu if available
@@ -1656,7 +1611,6 @@ function hideContextMenu() {
 
 /**
  * טיפול בפעולות של תפריט ההקשר
- * REFACTORED: מרכז את כל הפעולות במקום אחד (Step 12/15)
  */
 function handleContextMenuAction(action, data) {
     switch (action) {
@@ -1697,8 +1651,7 @@ function handleContextMenuAction(action, data) {
 let contextMenuTargetObject = null;
 
 /**
- * הצגת תפריט קליק ימני לאובייקט (עם אפשרות מחיקה)
- * Uses ContextMenu if available, otherwise falls back to old implementation
+ * הצגת תפריט קליק ימני לאובייקט
  */
 function showObjectContextMenu(clientX, clientY, targetObject) {
     // Use ContextMenu if available
@@ -2158,7 +2111,6 @@ function closePdfSelector() {
 
 /**
  * שמירת מצב הקנבס להיסטוריה
- * Uses HistoryManager if available, otherwise falls back to old implementation
  */
 function saveCanvasState() {
     if (!window.mapCanvas) return;
@@ -2171,7 +2123,6 @@ function saveCanvasState() {
 
 /**
  * ביטול פעולה אחרונה
- * Uses HistoryManager if available, otherwise falls back to old implementation
  */
 function undoCanvas() {
     if (!window.mapCanvas) return;
@@ -2184,7 +2135,6 @@ function undoCanvas() {
 
 /**
  * ביצוע שוב פעולה שבוטלה
- * Uses HistoryManager if available, otherwise falls back to old implementation
  */
 function redoCanvas() {
     if (!window.mapCanvas) return;

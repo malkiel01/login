@@ -1637,6 +1637,12 @@ function handleCanvasRightClick(e) {
     e.preventDefault();
     e.stopPropagation();
 
+    // אם במצב עריכת נקודות של גבול - לא מציגים תפריט אייטמים
+    // התפריט להסרת נקודה יטופל ע"י BoundaryEditPanel
+    if (window.mapBoundaryEditPanel?.getState()?.isPointEditMode) {
+        return;
+    }
+
     if (!isEditMode || drawingPolygon) {
         hideContextMenu();
         return;

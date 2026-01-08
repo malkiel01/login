@@ -44,7 +44,8 @@ export class BoundaryEditPanel extends FloatingPanel {
         this.handleDoubleClick = this.handleDoubleClick.bind(this);
         this.handleMarkerDrag = this.handleMarkerDrag.bind(this);
         this.handleMarkerDragEnd = this.handleMarkerDragEnd.bind(this);
-        this.handlePointRightClick = this.handlePointRightClick.bind(this);
+        this.handleCanvasMouseDown = this.handleCanvasMouseDown.bind(this);
+        this.handleContextMenu = this.handleContextMenu.bind(this);
 
         BoundaryEditPanel.injectPanelCSS();
     }
@@ -270,11 +271,6 @@ export class BoundaryEditPanel extends FloatingPanel {
             if (interactive) {
                 marker.on('moving', () => this.handleMarkerDrag(marker));
                 marker.on('modified', () => this.handleMarkerDragEnd(marker));
-                marker.on('mousedown', (e) => {
-                    if (e.e.button === 2) {
-                        this.handlePointRightClick(e, index);
-                    }
-                });
             }
 
             this.pointMarkers.push(marker);
@@ -289,7 +285,6 @@ export class BoundaryEditPanel extends FloatingPanel {
         this.pointMarkers.forEach(marker => {
             marker.off('moving');
             marker.off('modified');
-            marker.off('mousedown');
             this.canvas.remove(marker);
         });
         this.pointMarkers = [];
@@ -326,17 +321,51 @@ export class BoundaryEditPanel extends FloatingPanel {
 
     addPointEditListeners() {
         this.canvas.on('mouse:dblclick', this.handleDoubleClick);
-        // Disable context menu on canvas
-        this.canvas.upperCanvasEl.addEventListener('contextmenu', this.preventContextMenu);
+        this.canvas.on('mouse:down', this.handleCanvasMouseDown);
+        // Handle right-click context menu
+        this.canvas.upperCanvasEl.addEventListener('contextmenu', this.handleContextMenu);
     }
 
     removePointEditListeners() {
         this.canvas.off('mouse:dblclick', this.handleDoubleClick);
-        this.canvas.upperCanvasEl?.removeEventListener('contextmenu', this.preventContextMenu);
+        this.canvas.off('mouse:down', this.handleCanvasMouseDown);
+        this.canvas.upperCanvasEl?.removeEventListener('contextmenu', this.handleContextMenu);
     }
 
-    preventContextMenu = (e) => {
+    handleContextMenu(e) {
         e.preventDefault();
+        e.stopPropagation();
+
+        if (!this.isPointEditMode) return;
+
+        // Find if we clicked on a point marker
+        const pointer = this.canvas.getPointer(e);
+        const clickedMarker = this.findMarkerAtPoint(pointer);
+
+        if (clickedMarker !== null) {
+            this.showContextMenu(e.clientX, e.clientY, clickedMarker);
+        }
+    }
+
+    handleCanvasMouseDown(options) {
+        // Close context menu on any click
+        if (this.contextMenu) {
+            this.hideContextMenu();
+        }
+    }
+
+    findMarkerAtPoint(pointer) {
+        for (let i = 0; i < this.pointMarkers.length; i++) {
+            const marker = this.pointMarkers[i];
+            const dist = Math.sqrt(
+                Math.pow(pointer.x - marker.left, 2) +
+                Math.pow(pointer.y - marker.top, 2)
+            );
+            if (dist <= marker.radius + 5) {
+                return marker.pointIndex;
+            }
+        }
+        return null;
     }
 
     handleDoubleClick(options) {
@@ -370,16 +399,9 @@ export class BoundaryEditPanel extends FloatingPanel {
         console.log(`➕ Added point at index ${insertIndex}`);
     }
 
-    handlePointRightClick(event, pointIndex) {
-        event.e.preventDefault();
-        event.e.stopPropagation();
-
-        this.selectedPointIndex = pointIndex;
-        this.showContextMenu(event.e.clientX, event.e.clientY);
-    }
-
-    showContextMenu(x, y) {
+    showContextMenu(x, y, pointIndex) {
         this.hideContextMenu();
+        this.selectedPointIndex = pointIndex;
 
         const container = this.canvas.wrapperEl?.parentElement || document.body;
         const containerRect = container.getBoundingClientRect();

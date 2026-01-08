@@ -409,8 +409,27 @@ export class BoundaryEditPanel extends FloatingPanel {
             this.grayMask = this.canvas.getObjects().find(obj => obj.objectType === 'grayMask');
         }
         this.updateGrayMask();
-        this.showPointMarkers(false); // Update indicator points positions
+        this.updatePointMarkersPositions(); // עדכון מיקום בלבד, לא יצירה מחדש
         this.canvas.renderAll();
+    }
+
+    /**
+     * עדכון מיקום הנקודות הקיימות (בלי ליצור מחדש)
+     */
+    updatePointMarkersPositions() {
+        if (!this.boundaryOutline || this.pointMarkers.length === 0) return;
+
+        const points = this.getTransformedPoints();
+
+        this.pointMarkers.forEach((marker, index) => {
+            if (index < points.length) {
+                marker.set({
+                    left: points[index].x,
+                    top: points[index].y
+                });
+                marker.setCoords();
+            }
+        });
     }
 
     addPointEditListeners() {

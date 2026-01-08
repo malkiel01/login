@@ -1023,15 +1023,11 @@ function handleCanvasClick(options) {
  * REFACTORED: משתמש ב-PolygonDrawer (Step 7/15)
  */
 function handleCanvasMouseMove(options) {
-    if (!drawingPolygon || polygonPoints.length === 0) return;
+    // Use PolygonDrawer's state instead of global polygonPoints
+    if (!window.mapPolygonDrawer || !window.mapPolygonDrawer.isActive()) return;
 
-    if (window.mapPolygonDrawer && window.mapPolygonDrawer.isActive()) {
-        window.mapPolygonDrawer.handleMouseMove(options);
-        return;
-    }
-
-    // Fallback: Should never happen (PolygonDrawer always loads)
-    console.error('❌ PolygonDrawer not available for handleCanvasMouseMove - this should not happen!');
+    // PolygonDrawer handles its own points check internally
+    window.mapPolygonDrawer.handleMouseMove(options);
 }
 
 /**

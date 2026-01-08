@@ -464,6 +464,7 @@ function initializeMap(entityType, unicId, entity) {
             onDeleteBoundary: deleteBoundary,
             onUndo: undoCanvas,
             onRedo: redoCanvas,
+            onResetMap: resetMap,
             onSave: saveMapData
         });
     } else {
@@ -2488,6 +2489,75 @@ function redoCanvas() {
 
     // Fallback: Should never happen (HistoryManager always loads)
     console.error('❌ HistoryManager not available for redo - this should not happen!');
+}
+
+/**
+ * איפוס מפה - מחיקת כל התוכן והתחלה מחדש
+ */
+function resetMap() {
+    if (!window.mapCanvas) return;
+
+    // אישור מהמשתמש
+    if (!confirm('האם אתה בטוח שברצונך לאפס את המפה?\n\nפעולה זו תמחק את כל התוכן (רקע, גבול, אובייקטים).\nניתן לבטל באמצעות כפתור ביטול לאחר האיפוס.')) {
+        return;
+    }
+
+    // שמור גבולות אבות (הם לא חלק מהמפה הזו)
+    const preservedObjects = [];
+    window.mapCanvas.getObjects().forEach(obj => {
+        if (obj.objectType === 'parentBoundary' || obj.objectType === 'grandparentBoundary') {
+            preservedObjects.push(obj);
+        }
+    });
+
+    // נקה את הקנבס
+    window.mapCanvas.clear();
+    window.mapCanvas.backgroundColor = '#f3f4f6';
+
+    // אפס משתנים גלובליים
+    backgroundImage = null;
+    grayMask = null;
+    boundaryOutline = null;
+    boundaryClipPath = null;
+
+    if (window.mapState) {
+        window.mapState.setBackgroundImage(null);
+        window.mapState.setGrayMask(null);
+        window.mapState.setBoundaryOutline(null);
+        window.mapState.canvas.boundary.clipPath = null;
+    }
+
+    // החזר גבולות אבות
+    preservedObjects.forEach(obj => {
+        window.mapCanvas.add(obj);
+    });
+
+    // סגור פאנלים פתוחים
+    if (window.mapBoundaryEditPanel) {
+        window.mapBoundaryEditPanel.hide();
+    }
+    if (window.mapBackgroundEditor) {
+        window.mapBackgroundEditor.hide();
+    }
+
+    // הסתר כפתורי עריכה
+    const editBgBtn = document.getElementById('editBackgroundBtn');
+    const deleteBgBtn = document.getElementById('deleteBackgroundBtn');
+    const editBoundaryBtn = document.getElementById('editBoundaryBtn');
+    const deleteBoundaryBtn = document.getElementById('deleteBoundaryBtn');
+
+    if (editBgBtn) editBgBtn.classList.add('hidden-btn');
+    if (deleteBgBtn) deleteBgBtn.classList.add('hidden-btn');
+    if (editBoundaryBtn) editBoundaryBtn.classList.add('hidden-btn');
+    if (deleteBoundaryBtn) deleteBoundaryBtn.classList.add('hidden-btn');
+
+    // שמור מצב להיסטוריה
+    saveCanvasState();
+
+    // רינדור
+    window.mapCanvas.renderAll();
+
+    console.log('🗑️ Map reset completed');
 }
 
 /**

@@ -1,8 +1,8 @@
 /**
  * BoundaryEditPanel - חלון נגרר לעריכת נקודות גבול
- * Version: 1.0.0
+ * Version: 2.0.0
  *
- * חלון צף שמאפשר הוספה והסרה של נקודות בגבול המפה
+ * מבוסס על FloatingPanel - חלון צף שמאפשר הוספה והסרה של נקודות בגבול המפה
  * Usage:
  *   const panel = new BoundaryEditPanel(canvas, {
  *     onPointsChanged: (points) => {...}
@@ -10,10 +10,22 @@
  *   panel.show(boundaryOutline);
  */
 
-export class BoundaryEditPanel {
+import { FloatingPanel } from './FloatingPanel.js';
+
+export class BoundaryEditPanel extends FloatingPanel {
     constructor(canvas, options = {}) {
+        // Initialize parent with panel options
+        super({
+            title: 'עריכת נקודות גבול',
+            width: 200,
+            position: { top: 80, right: 20 },
+            headerColor: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+            className: 'boundary-edit-panel',
+            onClose: () => this.onPanelClose()
+        });
+
         this.canvas = canvas;
-        this.options = {
+        this.panelOptions = {
             onPointsChanged: options.onPointsChanged || null,
             onClose: options.onClose || null
         };
@@ -22,124 +34,23 @@ export class BoundaryEditPanel {
         this.grayMask = null;
         this.mode = null; // 'add' | 'remove' | null
         this.pointMarkers = [];
-        this.panel = null;
-        this.isDragging = false;
-        this.dragOffset = { x: 0, y: 0 };
 
         // Bind methods
         this.handleCanvasClick = this.handleCanvasClick.bind(this);
-        this.handlePanelMouseDown = this.handlePanelMouseDown.bind(this);
-        this.handlePanelMouseMove = this.handlePanelMouseMove.bind(this);
-        this.handlePanelMouseUp = this.handlePanelMouseUp.bind(this);
+
+        // Inject additional CSS
+        BoundaryEditPanel.injectPanelCSS();
     }
 
     /**
-     * הזרקת CSS
+     * CSS נוסף ספציפי לפאנל הזה
      */
-    static injectCSS() {
+    static injectPanelCSS() {
         if (document.getElementById('boundaryEditPanelStyles')) return;
 
         const styles = document.createElement('style');
         styles.id = 'boundaryEditPanelStyles';
         styles.textContent = `
-            .boundary-edit-panel {
-                position: absolute;
-                top: 80px;
-                right: 20px;
-                width: 200px;
-                background: white;
-                border-radius: 12px;
-                box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-                z-index: 1000;
-                overflow: hidden;
-                font-family: inherit;
-            }
-            .boundary-edit-panel-header {
-                background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-                color: white;
-                padding: 12px 16px;
-                font-weight: 600;
-                font-size: 14px;
-                cursor: move;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                user-select: none;
-            }
-            .boundary-edit-panel-close {
-                background: rgba(255,255,255,0.2);
-                border: none;
-                color: white;
-                width: 24px;
-                height: 24px;
-                border-radius: 50%;
-                cursor: pointer;
-                font-size: 14px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-            .boundary-edit-panel-close:hover {
-                background: rgba(255,255,255,0.3);
-            }
-            .boundary-edit-panel-content {
-                padding: 16px;
-            }
-            .boundary-edit-panel-info {
-                font-size: 12px;
-                color: #6b7280;
-                margin-bottom: 12px;
-                line-height: 1.5;
-            }
-            .boundary-edit-btn {
-                width: 100%;
-                padding: 12px 16px;
-                margin-bottom: 8px;
-                border: 2px solid #e5e7eb;
-                background: white;
-                border-radius: 8px;
-                cursor: pointer;
-                font-size: 14px;
-                font-weight: 500;
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                transition: all 0.2s;
-                color: #374151;
-            }
-            .boundary-edit-btn:hover {
-                border-color: #3b82f6;
-                background: #eff6ff;
-            }
-            .boundary-edit-btn.active {
-                border-color: #3b82f6;
-                background: #3b82f6;
-                color: white;
-            }
-            .boundary-edit-btn-icon {
-                width: 28px;
-                height: 28px;
-                border-radius: 6px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 16px;
-            }
-            .boundary-edit-btn:not(.active) .boundary-edit-btn-icon {
-                background: #f3f4f6;
-            }
-            .boundary-edit-btn.active .boundary-edit-btn-icon {
-                background: rgba(255,255,255,0.2);
-            }
-            .boundary-edit-points-count {
-                background: #f3f4f6;
-                padding: 8px 12px;
-                border-radius: 6px;
-                font-size: 13px;
-                color: #4b5563;
-                text-align: center;
-                margin-top: 8px;
-            }
             .boundary-point-marker {
                 pointer-events: auto !important;
             }
@@ -156,18 +67,21 @@ export class BoundaryEditPanel {
             return;
         }
 
-        BoundaryEditPanel.injectCSS();
-
         this.boundaryOutline = boundaryOutline;
         this.grayMask = grayMask;
         this.mode = null;
 
-        // Create panel if not exists
-        if (!this.panel) {
-            this.createPanel();
+        // Set container to canvas parent
+        if (this.canvas.wrapperEl?.parentElement) {
+            this.setContainer(this.canvas.wrapperEl.parentElement);
         }
 
-        this.panel.style.display = 'block';
+        // Build content
+        this.buildContent();
+
+        // Show panel (parent method)
+        super.show();
+
         this.updatePointsCount();
         this.showPointMarkers();
 
@@ -175,67 +89,61 @@ export class BoundaryEditPanel {
     }
 
     /**
-     * הסתרת הפאנל
+     * בניית תוכן הפאנל
      */
-    hide() {
-        if (this.panel) {
-            this.panel.style.display = 'none';
-        }
+    buildContent() {
+        this.clearContent();
+
+        // Info text
+        const info = FloatingPanel.createInfo('בחר מצב עריכה ולחץ על המפה');
+        info.id = 'boundaryEditInfo';
+        this.appendContent(info);
+
+        // Add point button
+        const addBtn = FloatingPanel.createButton({
+            icon: '➕',
+            text: 'הוסף נקודה',
+            onClick: () => this.setMode('add')
+        });
+        addBtn.dataset.mode = 'add';
+        this.appendContent(addBtn);
+
+        // Remove point button
+        const removeBtn = FloatingPanel.createButton({
+            icon: '➖',
+            text: 'הסר נקודה',
+            danger: true,
+            onClick: () => this.setMode('remove')
+        });
+        removeBtn.dataset.mode = 'remove';
+        this.appendContent(removeBtn);
+
+        // Points count footer
+        const footer = FloatingPanel.createFooter('נקודות: <span id="boundaryPointsCount">0</span>');
+        this.appendContent(footer);
+    }
+
+    /**
+     * סגירת הפאנל
+     */
+    onPanelClose() {
         this.mode = null;
         this.hidePointMarkers();
         this.removeCanvasListeners();
 
-        if (this.options.onClose) {
-            this.options.onClose();
+        if (this.panelOptions.onClose) {
+            this.panelOptions.onClose();
         }
 
         console.log('📐 BoundaryEditPanel hidden');
     }
 
     /**
-     * יצירת הפאנל
+     * הסתרת הפאנל (override)
      */
-    createPanel() {
-        const container = this.canvas.wrapperEl?.parentElement || document.body;
-
-        this.panel = document.createElement('div');
-        this.panel.className = 'boundary-edit-panel';
-        this.panel.innerHTML = `
-            <div class="boundary-edit-panel-header">
-                <span>עריכת נקודות גבול</span>
-                <button class="boundary-edit-panel-close">✕</button>
-            </div>
-            <div class="boundary-edit-panel-content">
-                <div class="boundary-edit-panel-info">
-                    בחר מצב עריכה ולחץ על המפה
-                </div>
-                <button class="boundary-edit-btn" data-mode="add">
-                    <span class="boundary-edit-btn-icon">➕</span>
-                    <span>הוסף נקודה</span>
-                </button>
-                <button class="boundary-edit-btn" data-mode="remove">
-                    <span class="boundary-edit-btn-icon">➖</span>
-                    <span>הסר נקודה</span>
-                </button>
-                <div class="boundary-edit-points-count">
-                    נקודות: <span id="boundaryPointsCount">0</span>
-                </div>
-            </div>
-        `;
-
-        container.appendChild(this.panel);
-
-        // Event listeners
-        const header = this.panel.querySelector('.boundary-edit-panel-header');
-        header.addEventListener('mousedown', this.handlePanelMouseDown);
-
-        const closeBtn = this.panel.querySelector('.boundary-edit-panel-close');
-        closeBtn.addEventListener('click', () => this.hide());
-
-        const buttons = this.panel.querySelectorAll('.boundary-edit-btn');
-        buttons.forEach(btn => {
-            btn.addEventListener('click', () => this.setMode(btn.dataset.mode));
-        });
+    hide() {
+        super.hide();
+        this.onPanelClose();
     }
 
     /**
@@ -250,25 +158,34 @@ export class BoundaryEditPanel {
         }
 
         // Update buttons
-        const buttons = this.panel.querySelectorAll('.boundary-edit-btn');
+        const content = this.getContentElement();
+        const buttons = content.querySelectorAll('.floating-panel-btn');
         buttons.forEach(btn => {
             btn.classList.toggle('active', btn.dataset.mode === this.mode);
         });
 
         // Update info text
-        const info = this.panel.querySelector('.boundary-edit-panel-info');
+        const info = content.querySelector('#boundaryEditInfo');
+        if (info) {
+            if (this.mode === 'add') {
+                info.textContent = 'לחץ על קו הגבול להוספת נקודה';
+            } else if (this.mode === 'remove') {
+                info.textContent = 'לחץ על נקודה כדי להסיר אותה';
+            } else {
+                info.textContent = 'בחר מצב עריכה ולחץ על המפה';
+            }
+        }
+
+        // Update cursor
         if (this.mode === 'add') {
-            info.textContent = 'לחץ על קו הגבול להוספת נקודה';
             this.canvas.defaultCursor = 'crosshair';
         } else if (this.mode === 'remove') {
-            info.textContent = 'לחץ על נקודה כדי להסיר אותה';
             this.canvas.defaultCursor = 'pointer';
         } else {
-            info.textContent = 'בחר מצב עריכה ולחץ על המפה';
             this.canvas.defaultCursor = 'default';
         }
 
-        // Update markers visibility
+        // Update markers and listeners
         if (this.mode) {
             this.showPointMarkers();
             this.addCanvasListeners();
@@ -368,14 +285,14 @@ export class BoundaryEditPanel {
 
             const dist = this.pointToLineDistance(pointer, p1, p2);
 
-            if (dist < minDist && dist < 20) { // Max 20px from line
+            if (dist < minDist && dist < 20) {
                 minDist = dist;
                 insertIndex = i + 1;
             }
         }
 
         if (insertIndex === -1) {
-            return; // Not close enough to any line
+            return;
         }
 
         // Convert pointer to local coordinates
@@ -412,14 +329,14 @@ export class BoundaryEditPanel {
                 Math.pow(pointer.y - points[i].y, 2)
             );
 
-            if (dist < minDist && dist < 20) { // Max 20px from point
+            if (dist < minDist && dist < 20) {
                 minDist = dist;
                 removeIndex = i;
             }
         }
 
         if (removeIndex === -1) {
-            return; // Not close enough to any point
+            return;
         }
 
         // Remove point
@@ -436,10 +353,6 @@ export class BoundaryEditPanel {
      * עדכון נקודות הגבול
      */
     updateBoundaryPoints(newPoints) {
-        // Store current position
-        const currentLeft = this.boundaryOutline.left;
-        const currentTop = this.boundaryOutline.top;
-
         // Create new polygon with updated points
         const newPolygon = new fabric.Polygon(newPoints, {
             fill: 'transparent',
@@ -466,8 +379,8 @@ export class BoundaryEditPanel {
         this.updatePointsCount();
 
         // Callback
-        if (this.options.onPointsChanged) {
-            this.options.onPointsChanged(newPoints, newPolygon);
+        if (this.panelOptions.onPointsChanged) {
+            this.panelOptions.onPointsChanged(newPoints, newPolygon);
         }
 
         this.canvas.renderAll();
@@ -514,7 +427,7 @@ export class BoundaryEditPanel {
     }
 
     /**
-     * המרת קואורדינטות גלובליות לקואורדינטות מקומיות של הפוליגון
+     * המרת קואורדינטות גלובליות לקואורדינטות מקומיות
      */
     globalToLocal(point) {
         const matrix = this.boundaryOutline.calcTransformMatrix();
@@ -567,51 +480,10 @@ export class BoundaryEditPanel {
      * עדכון מונה נקודות
      */
     updatePointsCount() {
-        const countEl = this.panel?.querySelector('#boundaryPointsCount');
+        const countEl = document.getElementById('boundaryPointsCount');
         if (countEl && this.boundaryOutline) {
             countEl.textContent = this.boundaryOutline.points?.length || 0;
         }
-    }
-
-    /**
-     * Drag handlers for panel
-     */
-    handlePanelMouseDown(e) {
-        if (e.target.classList.contains('boundary-edit-panel-close')) return;
-
-        this.isDragging = true;
-        const rect = this.panel.getBoundingClientRect();
-        this.dragOffset = {
-            x: e.clientX - rect.left,
-            y: e.clientY - rect.top
-        };
-
-        document.addEventListener('mousemove', this.handlePanelMouseMove);
-        document.addEventListener('mouseup', this.handlePanelMouseUp);
-    }
-
-    handlePanelMouseMove(e) {
-        if (!this.isDragging) return;
-
-        const container = this.panel.parentElement;
-        const containerRect = container.getBoundingClientRect();
-
-        let newLeft = e.clientX - containerRect.left - this.dragOffset.x;
-        let newTop = e.clientY - containerRect.top - this.dragOffset.y;
-
-        // Keep within bounds
-        newLeft = Math.max(0, Math.min(newLeft, containerRect.width - this.panel.offsetWidth));
-        newTop = Math.max(0, Math.min(newTop, containerRect.height - this.panel.offsetHeight));
-
-        this.panel.style.left = newLeft + 'px';
-        this.panel.style.top = newTop + 'px';
-        this.panel.style.right = 'auto';
-    }
-
-    handlePanelMouseUp() {
-        this.isDragging = false;
-        document.removeEventListener('mousemove', this.handlePanelMouseMove);
-        document.removeEventListener('mouseup', this.handlePanelMouseUp);
     }
 
     /**
@@ -619,7 +491,7 @@ export class BoundaryEditPanel {
      */
     getState() {
         return {
-            isVisible: this.panel?.style.display !== 'none',
+            isVisible: this.isVisible(),
             mode: this.mode,
             pointsCount: this.boundaryOutline?.points?.length || 0
         };
@@ -630,7 +502,7 @@ export class BoundaryEditPanel {
      */
     debug() {
         console.group('📐 BoundaryEditPanel');
-        console.log('Visible:', this.panel?.style.display !== 'none');
+        console.log('Visible:', this.isVisible());
         console.log('Mode:', this.mode);
         console.log('Points:', this.boundaryOutline?.points?.length || 0);
         console.log('Markers:', this.pointMarkers.length);

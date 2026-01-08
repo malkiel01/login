@@ -4,8 +4,7 @@
  * Features: Edit mode, Background image, Polygon drawing, Undo/Redo, Context menu, Popup management
  */
 
-// STEP 1/15: StateManager Integration
-// Load StateManager module and make it globally available
+// טעינת StateManager
 (async function initStateManager() {
     try {
         const { StateManager } = await import('../map/core/StateManager.js');
@@ -21,8 +20,7 @@
     }
 })();
 
-// STEP 2/15: EntitySelector Integration
-// Load EntitySelector module for dynamic entity loading
+// טעינת EntitySelector
 (async function initEntitySelector() {
     try {
         const { EntitySelector } = await import('../map/launcher/EntitySelector.js');
@@ -32,8 +30,7 @@
     }
 })();
 
-// STEP 3/15: LauncherModal Integration
-// Load LauncherModal module for modal UI
+// טעינת LauncherModal
 (async function initLauncherModal() {
     try {
         const { LauncherModal } = await import('../map/launcher/LauncherModal.js');
@@ -61,8 +58,7 @@
     }
 })();
 
-// STEP 4/15: Toolbar Integration
-// Load Toolbar module for map toolbar UI
+// טעינת Toolbar
 (async function initToolbar() {
     try {
         const { Toolbar } = await import('../map/ui/Toolbar.js');
@@ -72,8 +68,7 @@
     }
 })();
 
-// STEP 5/15: ZoomControls Integration
-// Load ZoomControls module for zoom functionality
+// טעינת ZoomControls
 (async function initZoomControls() {
     try {
         const { ZoomControls } = await import('../map/ui/ZoomControls.js');
@@ -83,8 +78,7 @@
     }
 })();
 
-// STEP 6/15: CanvasManager Integration
-// Load CanvasManager module for canvas creation and management
+// טעינת CanvasManager
 (async function initCanvasManager() {
     try {
         const { CanvasManager } = await import('../map/core/CanvasManager.js');
@@ -94,8 +88,7 @@
     }
 })();
 
-// STEP 7/15: PolygonDrawer Integration
-// Load PolygonDrawer module for drawing polygon boundaries
+// טעינת PolygonDrawer
 (async function initPolygonDrawer() {
     try {
         const { PolygonDrawer } = await import('../map/editors/PolygonDrawer.js');
@@ -105,8 +98,7 @@
     }
 })();
 
-// STEP 8/15: BoundaryEditor Integration
-// Load BoundaryEditor module for editing existing boundaries
+// טעינת BoundaryEditor
 (async function initBoundaryEditor() {
     try {
         const { BoundaryEditor } = await import('../map/editors/BoundaryEditor.js');
@@ -116,8 +108,7 @@
     }
 })();
 
-// STEP 9/15: BackgroundEditor Integration
-// Load BackgroundEditor module for background image/PDF management
+// טעינת BackgroundEditor
 (async function initBackgroundEditor() {
     try {
         const { BackgroundEditor } = await import('../map/editors/BackgroundEditor.js');
@@ -127,8 +118,7 @@
     }
 })();
 
-// STEP 10/15: HistoryManager Integration
-// Load HistoryManager module for undo/redo functionality
+// טעינת HistoryManager
 (async function initHistoryManager() {
     try {
         const { HistoryManager } = await import('../map/core/HistoryManager.js');
@@ -138,8 +128,7 @@
     }
 })();
 
-// STEP 11/15: EditModeToggle Integration
-// Load EditModeToggle module for managing edit mode state
+// טעינת EditModeToggle
 (async function initEditModeToggle() {
     try {
         const { EditModeToggle } = await import('../map/ui/EditModeToggle.js');
@@ -149,8 +138,7 @@
     }
 })();
 
-// STEP 12/15: ContextMenu Integration
-// Load ContextMenu module for right-click context menu
+// טעינת ContextMenu
 (async function initContextMenu() {
     try {
         const { ContextMenu } = await import('../map/ui/ContextMenu.js');
@@ -160,8 +148,7 @@
     }
 })();
 
-// STEP 13/15: MapPopup Integration
-// Load MapPopup module for popup management
+// טעינת MapPopup
 (async function initMapPopup() {
     try {
         const { MapPopup } = await import('../map/launcher/MapPopup.js');
@@ -204,7 +191,6 @@ const MAX_HISTORY = 30; // מקסימום מצבים לשמירה
 
 /**
  * פתיחת מודל בחירת ישות - נקרא מה-sidebar
- * REFACTORED: משתמש ב-LauncherModal (Step 3/15)
  */
 function openMapLauncher() {
     if (window.launcherModal) {
@@ -216,41 +202,10 @@ function openMapLauncher() {
 
 /**
  * סגירת מודל בחירת ישות
- * REFACTORED: משתמש ב-LauncherModal (Step 3/15)
  */
 function closeMapLauncher() {
     if (window.launcherModal) {
         window.launcherModal.close();
-    }
-}
-
-/**
- * טעינת רשימת ישויות לפי הסוג שנבחר
- * REFACTORED: משתמש ב-EntitySelector (Step 2/15)
- * NOTE: This function is kept for backwards compatibility but is no longer used
- *       by the LauncherModal (which handles entity loading internally)
- */
-async function loadEntitiesForType() {
-    const entityType = document.getElementById('mapEntityType').value;
-    const entitySelect = document.getElementById('mapEntitySelect');
-    const loadingIndicator = document.getElementById('entityLoadingIndicator');
-
-    // אם EntitySelector לא נטען עדיין, נמתין
-    if (!window.entitySelector) {
-        console.warn('EntitySelector not loaded yet, waiting...');
-        setTimeout(loadEntitiesForType, 100);
-        return;
-    }
-
-    try {
-        await window.entitySelector.loadAndRender(
-            entityType,
-            entitySelect,
-            loadingIndicator
-        );
-    } catch (error) {
-        console.error('Error loading entities:', error);
-        alert('שגיאה בטעינת רשימת הישויות: ' + error.message);
     }
 }
 
@@ -356,27 +311,20 @@ function openMapPopup(entityType, unicId) {
     currentEntityType = entityType;
     currentUnicId = unicId;
 
-    // Use MapPopup if available
-    if (window.MapPopupClass) {
-        if (!window.mapPopupInstance) {
-            window.mapPopupInstance = new window.MapPopupClass({
-                onMapInit: (entityType, unicId, entity) => {
-                    // Initialize the map after data is loaded
-                    initializeMap(entityType, unicId, entity);
-                },
-                onClose: () => {
-                    // Cleanup when popup closes
-                    cleanupMapState();
-                }
-            });
-        }
+    if (!window.MapPopupClass) return;
 
-        window.mapPopupInstance.open(entityType, unicId);
-        return;
+    if (!window.mapPopupInstance) {
+        window.mapPopupInstance = new window.MapPopupClass({
+            onMapInit: (entityType, unicId, entity) => {
+                initializeMap(entityType, unicId, entity);
+            },
+            onClose: () => {
+                cleanupMapState();
+            }
+        });
     }
 
-    // Fallback: Should never happen (MapPopup always loads)
-    console.error('❌ MapPopup not available - this should not happen!');
+    window.mapPopupInstance.open(entityType, unicId);
 }
 
 /**
@@ -1432,15 +1380,9 @@ async function saveMapData() {
  * Uses MapPopup if available, otherwise falls back to old implementation
  */
 function closeMapPopup() {
-    // Use MapPopup if available
     if (window.mapPopupInstance) {
         window.mapPopupInstance.close();
-        // Note: cleanup is called via onClose callback
-        return;
     }
-
-    // Fallback: Should never happen (MapPopup always loads)
-    console.error('❌ MapPopup not available for close - this should not happen!');
 }
 
 /**
@@ -1518,17 +1460,11 @@ function cleanupMapState() {
 
 /**
  * מעבר למצב מסך מלא / יציאה ממסך מלא
- * Uses MapPopup if available, otherwise falls back to old implementation
  */
 function toggleMapFullscreen() {
-    // Use MapPopup if available
     if (window.mapPopupInstance) {
         window.mapPopupInstance.toggleFullscreen();
-        return;
     }
-
-    // Fallback: Should never happen (MapPopup always loads)
-    console.error('❌ MapPopup not available for fullscreen toggle - this should not happen!');
 }
 
 /**

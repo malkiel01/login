@@ -17,13 +17,7 @@ export class Toolbar {
      * הזרקת CSS לעמוד (נקרא פעם אחת)
      */
     static injectCSS() {
-        // בדוק אם כבר הוזרק
-        if (document.getElementById('mapToolbarStyles')) {
-            console.log('ℹ️ [Toolbar] CSS already injected - skipping');
-            return;
-        }
-
-        console.log('🎨 [Toolbar] Injecting CSS...');
+        if (document.getElementById('mapToolbarStyles')) return;
 
         const styles = document.createElement('style');
         styles.id = 'mapToolbarStyles';
@@ -130,36 +124,6 @@ export class Toolbar {
         `;
 
         document.head.appendChild(styles);
-
-        console.log('✅ [Toolbar] CSS injected successfully!');
-        console.log('   [Toolbar] Style element ID: mapToolbarStyles');
-        console.log('   [Toolbar] CSS length:', styles.textContent.length, 'chars');
-        console.log('   [Toolbar] In document.head:', document.head.contains(styles));
-
-        // Test CSS application
-        setTimeout(() => {
-            const testDiv = document.createElement('div');
-            testDiv.className = 'map-toolbar';
-            testDiv.style.position = 'absolute';
-            testDiv.style.visibility = 'hidden';
-            document.body.appendChild(testDiv);
-
-            const computedStyle = window.getComputedStyle(testDiv);
-            console.log('🧪 [Toolbar] CSS TEST - .map-toolbar computed:', {
-                display: computedStyle.display,
-                backgroundColor: computedStyle.backgroundColor,
-                padding: computedStyle.padding,
-                borderBottom: computedStyle.borderBottom
-            });
-
-            if (computedStyle.display === 'flex' && computedStyle.backgroundColor === 'rgb(255, 255, 255)') {
-                console.log('✅ [Toolbar] CSS TEST PASSED - styles applied correctly!');
-            } else {
-                console.error('❌ [Toolbar] CSS TEST FAILED - styles not applied!');
-            }
-
-            document.body.removeChild(testDiv);
-        }, 50);
     }
 
     constructor(containerElement, handlers = {}) {
@@ -199,59 +163,8 @@ export class Toolbar {
      * רינדור הטולבר
      */
     render() {
-        console.log('🔧 [Toolbar] render() called');
-        console.log('   [Toolbar] container:', this.container ? {
-            id: this.container.id,
-            exists: true,
-            childCount: this.container.children.length
-        } : '❌ null');
-
-        if (!this.container) {
-            console.error('❌ [Toolbar] Container not found!');
-            return;
-        }
-
-        const html = this.getToolbarHTML();
-        console.log('   [Toolbar] Generated HTML length:', html.length, 'chars');
-
-        this.container.innerHTML = html;
-
-        console.log('   [Toolbar] After innerHTML - childCount:', this.container.children.length);
-
-        // Check if CSS is applied
-        const toolbarDiv = this.container.querySelector('.map-toolbar');
-        if (toolbarDiv) {
-            const computedStyle = window.getComputedStyle(toolbarDiv);
-            console.log('   [Toolbar] CSS check for .map-toolbar:', {
-                display: computedStyle.display,
-                backgroundColor: computedStyle.backgroundColor,
-                padding: computedStyle.padding,
-                borderBottom: computedStyle.borderBottom
-            });
-
-            // Check toolbar groups
-            const groups = toolbarDiv.querySelectorAll('.map-toolbar-group');
-            console.log('   [Toolbar] Found', groups.length, 'toolbar groups');
-            groups.forEach((group, i) => {
-                const groupStyle = window.getComputedStyle(group);
-                console.log(`      Group ${i}:`, {
-                    display: groupStyle.display,
-                    hasEditOnly: group.classList.contains('edit-only')
-                });
-            });
-
-            // Check buttons
-            const buttons = toolbarDiv.querySelectorAll('.map-tool-btn');
-            console.log('   [Toolbar] Found', buttons.length, 'buttons');
-        } else {
-            console.error('❌ [Toolbar] .map-toolbar element not found after render!');
-        }
-
-        if (this.container.children.length === 0) {
-            console.error('❌ [Toolbar] innerHTML set but no children created!');
-        } else {
-            console.log('✅ [Toolbar] Rendered successfully with', this.container.children.length, 'children');
-        }
+        if (!this.container) return;
+        this.container.innerHTML = this.getToolbarHTML();
     }
 
     /**
@@ -469,7 +382,5 @@ export class Toolbar {
      */
     setEditMode(enabled) {
         // CSS class on container handles visibility of .edit-only groups
-        // This is just a helper if needed for additional logic
-        console.log('Toolbar edit mode:', enabled);
     }
 }

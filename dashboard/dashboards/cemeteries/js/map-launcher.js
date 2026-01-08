@@ -1135,6 +1135,7 @@ function createBoundaryFromPoints(polygonPoints) {
 
     const newGrayMask = new fabric.Path(pathData, {
         fill: 'rgba(100, 100, 100, 0.2)',
+        fillRule: 'evenodd',
         stroke: null,
         strokeWidth: 0,
         selectable: false,

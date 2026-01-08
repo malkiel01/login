@@ -1072,7 +1072,7 @@ function handleCanvasClick(options) {
  * REFACTORED: משתמש ב-PolygonDrawer (Step 7/15)
  */
 function handleCanvasMouseMove(options) {
-    if (!drawingPolygon || polygonPoints.length === 0) return;
+    if (!drawingPolygon) return;
 
     if (window.mapPolygonDrawer && window.mapPolygonDrawer.isActive()) {
         window.mapPolygonDrawer.handleMouseMove(options);

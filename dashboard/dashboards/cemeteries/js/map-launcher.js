@@ -1149,7 +1149,7 @@ function createBoundaryFromPoints(polygonPoints) {
     pathData += 'Z';
 
     const newGrayMask = new fabric.Path(pathData, {
-        fill: 'rgba(128, 128, 128, 0.7)',
+        fill: 'rgba(128, 128, 128, 0.3)',  // Lighter/softer gray mask
         stroke: null,
         strokeWidth: 0,
         selectable: false,

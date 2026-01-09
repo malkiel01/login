@@ -973,6 +973,7 @@ function loadParentBoundary() {
 
     // בדיקה אם יש נתוני הורה
     if (!window.parentMapData || !window.parentMapData.canvasJSON) {
+        console.log('🟠 loadParentBoundary: No parent map data');
         return;
     }
 
@@ -988,12 +989,28 @@ function loadParentBoundary() {
     }
 
     if (!parentBoundary || !parentBoundary.points) {
+        console.log('🟠 loadParentBoundary: No boundary found in parent data');
         return;
     }
+
+    console.log('🟠 PARENT boundary raw JSON:', JSON.stringify({
+        left: parentBoundary.left,
+        top: parentBoundary.top,
+        pathOffset: parentBoundary.pathOffset,
+        scaleX: parentBoundary.scaleX,
+        scaleY: parentBoundary.scaleY,
+        angle: parentBoundary.angle,
+        originX: parentBoundary.originX,
+        originY: parentBoundary.originY,
+        pointsCount: parentBoundary.points?.length,
+        firstPoint: parentBoundary.points?.[0]
+    }, null, 2));
 
     // חישוב קואורדינטות עולמיות של נקודות ההורה (כולל scale ו-rotation)
     const newParentPoints = calculateWorldPointsFromJSON(parentBoundary);
     parentBoundaryPoints = newParentPoints;
+
+    console.log('🟠 PARENT calculated world points - first:', newParentPoints[0], 'last:', newParentPoints[newParentPoints.length - 1]);
     if (window.mapState) {
         window.mapState.canvas.parent.points = newParentPoints;
     }
@@ -1039,6 +1056,7 @@ function loadGrandparentBoundary() {
 
     // בדיקה אם יש נתוני סבא
     if (!window.grandparentMapData || !window.grandparentMapData.canvasJSON) {
+        console.log('🟣 loadGrandparentBoundary: No grandparent map data');
         return;
     }
 
@@ -1054,11 +1072,27 @@ function loadGrandparentBoundary() {
     }
 
     if (!grandparentBoundary || !grandparentBoundary.points) {
+        console.log('🟣 loadGrandparentBoundary: No boundary found in grandparent data');
         return;
     }
 
+    console.log('🟣 GRANDPARENT boundary raw JSON:', JSON.stringify({
+        left: grandparentBoundary.left,
+        top: grandparentBoundary.top,
+        pathOffset: grandparentBoundary.pathOffset,
+        scaleX: grandparentBoundary.scaleX,
+        scaleY: grandparentBoundary.scaleY,
+        angle: grandparentBoundary.angle,
+        originX: grandparentBoundary.originX,
+        originY: grandparentBoundary.originY,
+        pointsCount: grandparentBoundary.points?.length,
+        firstPoint: grandparentBoundary.points?.[0]
+    }, null, 2));
+
     // חישוב קואורדינטות עולמיות (כולל scale ו-rotation)
     grandparentBoundaryPoints = calculateWorldPointsFromJSON(grandparentBoundary);
+
+    console.log('🟣 GRANDPARENT calculated world points - first:', grandparentBoundaryPoints[0], 'last:', grandparentBoundaryPoints[grandparentBoundaryPoints.length - 1]);
 
     // יצירת קו גבול הסבא לתצוגה (סגול בהיר, קו מקווקו דק יותר)
     grandparentBoundaryOutline = new fabric.Polygon(grandparentBoundaryPoints, {
@@ -1077,7 +1111,7 @@ function loadGrandparentBoundary() {
     // סידור שכבות נכון
     reorderLayers();
 
-    console.log('👴 Grandparent boundary loaded');
+    console.log('🟣 Grandparent boundary loaded and added to canvas');
 }
 
 /**

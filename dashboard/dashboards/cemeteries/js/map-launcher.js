@@ -973,6 +973,7 @@ function calculateWorldPointsFromJSON(polygonJSON) {
 
 /**
  * טעינת גבול ההורה לתצוגה (לישויות בנים)
+ * משתמש בנתונים המקוריים של הפוליגון כדי שיופיע באותו מקום
  */
 function loadParentBoundary() {
     // איפוס
@@ -1008,47 +1009,45 @@ function loadParentBoundary() {
         return;
     }
 
-    console.log('🟠 PARENT boundary raw JSON:', JSON.stringify({
+    console.log('🟠 PARENT boundary loading with EXACT stored properties:', {
         left: parentBoundary.left,
         top: parentBoundary.top,
-        pathOffset: parentBoundary.pathOffset,
-        scaleX: parentBoundary.scaleX,
-        scaleY: parentBoundary.scaleY,
-        angle: parentBoundary.angle,
-        originX: parentBoundary.originX,
-        originY: parentBoundary.originY,
-        pointsCount: parentBoundary.points?.length,
-        firstPoint: parentBoundary.points?.[0]
-    }, null, 2));
+        pointsCount: parentBoundary.points?.length
+    });
 
-    // חישוב קואורדינטות עולמיות של נקודות ההורה (כולל scale ו-rotation)
-    const newParentPoints = calculateWorldPointsFromJSON(parentBoundary);
-    parentBoundaryPoints = newParentPoints;
+    // יצירת הפוליגון עם כל המאפיינים המקוריים - בדיוק כמו שנשמר!
+    const newParentOutline = new fabric.Polygon(parentBoundary.points, {
+        left: parentBoundary.left,
+        top: parentBoundary.top,
+        scaleX: parentBoundary.scaleX || 1,
+        scaleY: parentBoundary.scaleY || 1,
+        angle: parentBoundary.angle || 0,
+        originX: parentBoundary.originX || 'left',
+        originY: parentBoundary.originY || 'top',
+        // שינוי רק הצבע והסגנון
+        fill: 'transparent',
+        stroke: '#f97316', // כתום
+        strokeWidth: 3,
+        strokeDashArray: [10, 5],
+        selectable: false,
+        evented: false,
+        objectType: 'parentBoundary',
+        excludeFromExport: true
+    });
 
-    console.log('🟠 PARENT calculated world points - first:', newParentPoints[0], 'last:', newParentPoints[newParentPoints.length - 1]);
+    parentBoundaryOutline = newParentOutline;
+
+    // חישוב נקודות עולמיות לשימוש בבדיקות (clipping וכו')
+    parentBoundaryPoints = calculateWorldPointsFromJSON(parentBoundary);
+
     if (window.mapState) {
-        window.mapState.canvas.parent.points = newParentPoints;
+        window.mapState.canvas.parent.points = parentBoundaryPoints;
+        window.mapState.canvas.parent.outline = newParentOutline;
     }
 
     // עדכון BoundaryEditPanel עם גבול ההורה
     if (window.mapBoundaryEditPanel) {
-        window.mapBoundaryEditPanel.setParentBoundary(newParentPoints);
-    }
-
-    // יצירת קו גבול ההורה לתצוגה (צבע שונה - כתום)
-    const newParentOutline = new fabric.Polygon(parentBoundaryPoints, {
-        fill: 'transparent',
-        stroke: '#f97316', // כתום
-        strokeWidth: 3,
-        strokeDashArray: [10, 5], // קו מקווקו
-        selectable: false,
-        evented: false,
-        objectType: 'parentBoundary',
-        excludeFromExport: true // לא לשמור במפת הבן
-    });
-    parentBoundaryOutline = newParentOutline;
-    if (window.mapState) {
-        window.mapState.canvas.parent.outline = newParentOutline;
+        window.mapBoundaryEditPanel.setParentBoundary(parentBoundaryPoints);
     }
 
     window.mapCanvas.add(parentBoundaryOutline);
@@ -1091,26 +1090,25 @@ function loadGrandparentBoundary() {
         return;
     }
 
-    console.log('🟣 GRANDPARENT boundary raw JSON:', JSON.stringify({
+    console.log('🟣 GRANDPARENT boundary loading with EXACT stored properties:', {
         left: grandparentBoundary.left,
         top: grandparentBoundary.top,
-        pathOffset: grandparentBoundary.pathOffset,
-        scaleX: grandparentBoundary.scaleX,
-        scaleY: grandparentBoundary.scaleY,
-        angle: grandparentBoundary.angle,
-        originX: grandparentBoundary.originX,
-        originY: grandparentBoundary.originY,
-        pointsCount: grandparentBoundary.points?.length,
-        firstPoint: grandparentBoundary.points?.[0]
-    }, null, 2));
+        pointsCount: grandparentBoundary.points?.length
+    });
 
-    // חישוב קואורדינטות עולמיות (כולל scale ו-rotation)
-    grandparentBoundaryPoints = calculateWorldPointsFromJSON(grandparentBoundary);
+    // שמירת הנקודות המקוריות לשימוש פנימי
+    grandparentBoundaryPoints = grandparentBoundary.points;
 
-    console.log('🟣 GRANDPARENT calculated world points - first:', grandparentBoundaryPoints[0], 'last:', grandparentBoundaryPoints[grandparentBoundaryPoints.length - 1]);
-
-    // יצירת קו גבול הסבא לתצוגה (סגול בהיר, קו מקווקו דק יותר)
-    grandparentBoundaryOutline = new fabric.Polygon(grandparentBoundaryPoints, {
+    // יצירת הפוליגון עם כל המאפיינים המקוריים - בדיוק כמו שנשמר!
+    grandparentBoundaryOutline = new fabric.Polygon(grandparentBoundary.points, {
+        left: grandparentBoundary.left,
+        top: grandparentBoundary.top,
+        scaleX: grandparentBoundary.scaleX || 1,
+        scaleY: grandparentBoundary.scaleY || 1,
+        angle: grandparentBoundary.angle || 0,
+        originX: grandparentBoundary.originX || 'left',
+        originY: grandparentBoundary.originY || 'top',
+        // שינוי רק הצבע והסגנון
         fill: 'transparent',
         stroke: '#8b5cf6', // סגול
         strokeWidth: 2,

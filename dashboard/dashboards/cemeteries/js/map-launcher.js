@@ -896,13 +896,44 @@ function calculateWorldPointsFromJSON(polygonJSON) {
     const scaleY = polygonJSON.scaleY || 1;
     const angle = polygonJSON.angle || 0;
 
+    // בדיקת origin - ברירת מחדל היא 'left', 'top'
+    const originX = polygonJSON.originX || 'left';
+    const originY = polygonJSON.originY || 'top';
+
+    console.log('📐 calculateWorldPointsFromJSON:', {
+        left, top,
+        pathOffset: { x: pathOffsetX, y: pathOffsetY },
+        scale: { x: scaleX, y: scaleY },
+        angle,
+        origin: { x: originX, y: originY },
+        pointsCount: polygonJSON.points.length
+    });
+
     // המרה לרדיאנים
     const angleRad = (angle * Math.PI) / 180;
     const cos = Math.cos(angleRad);
     const sin = Math.sin(angleRad);
 
-    return polygonJSON.points.map(p => {
-        // 1. הזזה יחסית ל-pathOffset
+    // חישוב מיקום המרכז בהתאם ל-origin
+    let centerX, centerY;
+    if (originX === 'center') {
+        centerX = left;
+    } else {
+        // originX === 'left' - left מתייחס לפינה השמאלית
+        centerX = left + pathOffsetX * scaleX;
+    }
+
+    if (originY === 'center') {
+        centerY = top;
+    } else {
+        // originY === 'top' - top מתייחס לפינה העליונה
+        centerY = top + pathOffsetY * scaleY;
+    }
+
+    console.log('📐 Calculated center:', { x: centerX, y: centerY });
+
+    const worldPoints = polygonJSON.points.map(p => {
+        // 1. הזזה יחסית ל-pathOffset (למרכז האובייקט)
         let x = p.x - pathOffsetX;
         let y = p.y - pathOffsetY;
 
@@ -914,12 +945,15 @@ function calculateWorldPointsFromJSON(polygonJSON) {
         const rotatedX = x * cos - y * sin;
         const rotatedY = x * sin + y * cos;
 
-        // 4. הזזה למיקום הסופי
+        // 4. הזזה למיקום הסופי (מהמרכז המחושב)
         return {
-            x: rotatedX + left,
-            y: rotatedY + top
+            x: rotatedX + centerX,
+            y: rotatedY + centerY
         };
     });
+
+    console.log('📐 First world point:', worldPoints[0]);
+    return worldPoints;
 }
 
 /**

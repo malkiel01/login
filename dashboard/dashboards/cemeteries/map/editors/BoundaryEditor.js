@@ -45,30 +45,46 @@ export class BoundaryEditor {
             return false;
         }
 
+        // סנכרון עם הקנבס - אולי האובייקטים נוצרו מחדש ע"י loadFromJSON
+        const canvasBoundary = this.canvas.getObjects().find(obj => obj.objectType === 'boundaryOutline');
+        const canvasMask = this.canvas.getObjects().find(obj => obj.objectType === 'grayMask');
+
+        // השתמש באובייקטים מהקנבס אם קיימים
+        const actualBoundary = canvasBoundary || boundaryOutline;
+        const actualMask = canvasMask || grayMask;
+
         this.isEditMode = true;
-        this.boundaryOutline = boundaryOutline;
-        this.grayMask = grayMask;
+        this.boundaryOutline = actualBoundary;
+        this.grayMask = actualMask;
         this.boundaryClipPath = clipPath;
 
         // שמור מצב התחלתי (למקרה של גרירה מחוץ לגבול הורה)
         this.lastValidState = {
-            left: boundaryOutline.left,
-            top: boundaryOutline.top,
-            scaleX: boundaryOutline.scaleX,
-            scaleY: boundaryOutline.scaleY
+            left: actualBoundary.left,
+            top: actualBoundary.top,
+            scaleX: actualBoundary.scaleX,
+            scaleY: actualBoundary.scaleY
         };
 
         // הפוך רק את הגבול לניתן לבחירה
-        boundaryOutline.set({
+        actualBoundary.set({
             selectable: true,
             evented: true,
             hasControls: true,
             hasBorders: true,
-            lockRotation: true
+            lockRotation: true,
+            cornerStyle: 'circle',
+            cornerSize: 12,
+            cornerColor: '#3b82f6',
+            transparentCorners: false
         });
 
+        // עדכון קואורדינטות הפקדים
+        actualBoundary.setCoords();
+        actualBoundary.dirty = true;
+
         // המסכה האפורה תמיד נשארת נעולה לחלוטין!
-        grayMask.set({
+        actualMask.set({
             selectable: false,
             evented: false,
             hasControls: false,
@@ -76,11 +92,11 @@ export class BoundaryEditor {
         });
 
         // בחר את הגבול
-        this.canvas.setActiveObject(boundaryOutline);
+        this.canvas.setActiveObject(actualBoundary);
 
         // האזן לשינויים בגבול - המסכה תעודכן אוטומטית
-        boundaryOutline.on('moving', this.handleMove);
-        boundaryOutline.on('scaling', this.handleScale);
+        actualBoundary.on('moving', this.handleMove);
+        actualBoundary.on('scaling', this.handleScale);
 
         this.canvas.renderAll();
         console.log('✅ Boundary edit mode: ON');

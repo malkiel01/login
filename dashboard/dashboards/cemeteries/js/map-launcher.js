@@ -1479,19 +1479,18 @@ function cancelPolygonDrawing() {
  * REFACTORED: משתמש ב-BoundaryEditor (Step 8/15)
  */
 function toggleBoundaryEdit() {
-    // Sync with canvas if needed
-    if (!boundaryOutline && window.mapCanvas) {
-        const boundary = window.mapCanvas.getObjects().find(obj => obj.objectType === 'boundaryOutline');
-        if (boundary) {
-            boundaryOutline = boundary;
-            if (window.mapState) window.mapState.setBoundaryOutline(boundary);
+    // Always sync with canvas - objects may have been recreated by loadFromJSON
+    if (window.mapCanvas) {
+        const canvasBoundary = window.mapCanvas.getObjects().find(obj => obj.objectType === 'boundaryOutline');
+        const canvasMask = window.mapCanvas.getObjects().find(obj => obj.objectType === 'grayMask');
+
+        if (canvasBoundary) {
+            boundaryOutline = canvasBoundary;
+            if (window.mapState) window.mapState.setBoundaryOutline(canvasBoundary);
         }
-    }
-    if (!grayMask && window.mapCanvas) {
-        const mask = window.mapCanvas.getObjects().find(obj => obj.objectType === 'grayMask');
-        if (mask) {
-            grayMask = mask;
-            if (window.mapState) window.mapState.setGrayMask(mask);
+        if (canvasMask) {
+            grayMask = canvasMask;
+            if (window.mapState) window.mapState.setGrayMask(canvasMask);
         }
     }
 

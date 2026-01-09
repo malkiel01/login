@@ -390,6 +390,10 @@ export class BoundaryEditPanel extends FloatingPanel {
             transparentCorners: false
         });
 
+        // עדכון קואורדינטות הפקדים - חיוני אחרי loadFromJSON!
+        this.boundaryOutline.setCoords();
+        this.boundaryOutline.dirty = true;
+
         // Listen for boundary transforms to update mask
         this.boundaryOutline.on('moving', this.handleBoundaryTransform);
         this.boundaryOutline.on('scaling', this.handleBoundaryTransform);

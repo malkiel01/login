@@ -900,14 +900,13 @@ function calculateWorldPointsFromJSON(polygonJSON) {
     const originX = polygonJSON.originX || 'left';
     const originY = polygonJSON.originY || 'top';
 
-    console.log('📐 calculateWorldPointsFromJSON:', {
-        left, top,
-        pathOffset: { x: pathOffsetX, y: pathOffsetY },
-        scale: { x: scaleX, y: scaleY },
-        angle,
-        origin: { x: originX, y: originY },
-        pointsCount: polygonJSON.points.length
-    });
+    console.log('📐 calculateWorldPointsFromJSON:',
+        'left:', left, 'top:', top,
+        'pathOffsetX:', pathOffsetX, 'pathOffsetY:', pathOffsetY,
+        'rawPathOffset:', JSON.stringify(polygonJSON.pathOffset),
+        'originX:', originX, 'originY:', originY,
+        'scale:', scaleX, scaleY
+    );
 
     // המרה לרדיאנים
     const angleRad = (angle * Math.PI) / 180;

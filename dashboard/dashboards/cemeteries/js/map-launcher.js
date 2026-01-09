@@ -888,13 +888,30 @@ async function loadSavedMapData(entityType, unicId) {
 function calculateWorldPointsFromJSON(polygonJSON) {
     if (!polygonJSON || !polygonJSON.points) return [];
 
-    const pathOffsetX = polygonJSON.pathOffset?.x || 0;
-    const pathOffsetY = polygonJSON.pathOffset?.y || 0;
+    const points = polygonJSON.points;
     const left = polygonJSON.left || 0;
     const top = polygonJSON.top || 0;
     const scaleX = polygonJSON.scaleX || 1;
     const scaleY = polygonJSON.scaleY || 1;
     const angle = polygonJSON.angle || 0;
+
+    // אם pathOffset לא קיים, נחשב אותו מהנקודות (מרכז ה-bounding box)
+    let pathOffsetX, pathOffsetY;
+    if (polygonJSON.pathOffset) {
+        pathOffsetX = polygonJSON.pathOffset.x || 0;
+        pathOffsetY = polygonJSON.pathOffset.y || 0;
+    } else {
+        // חישוב pathOffset מהנקודות - מרכז ה-bounding box
+        const xs = points.map(p => p.x);
+        const ys = points.map(p => p.y);
+        const minX = Math.min(...xs);
+        const maxX = Math.max(...xs);
+        const minY = Math.min(...ys);
+        const maxY = Math.max(...ys);
+        pathOffsetX = (minX + maxX) / 2;
+        pathOffsetY = (minY + maxY) / 2;
+        console.log('📐 Calculated pathOffset from points:', { x: pathOffsetX, y: pathOffsetY });
+    }
 
     // בדיקת origin - ברירת מחדל היא 'left', 'top'
     const originX = polygonJSON.originX || 'left';
@@ -903,7 +920,6 @@ function calculateWorldPointsFromJSON(polygonJSON) {
     console.log('📐 calculateWorldPointsFromJSON:',
         'left:', left, 'top:', top,
         'pathOffsetX:', pathOffsetX, 'pathOffsetY:', pathOffsetY,
-        'rawPathOffset:', JSON.stringify(polygonJSON.pathOffset),
         'originX:', originX, 'originY:', originY,
         'scale:', scaleX, scaleY
     );
@@ -1653,7 +1669,7 @@ async function saveMapData() {
         }
 
         const mapData = {
-            canvasJSON: window.mapCanvas.toJSON(['objectType', 'polygonPoint', 'polygonLine']),
+            canvasJSON: window.mapCanvas.toJSON(['objectType', 'polygonPoint', 'polygonLine', 'pathOffset']),
             zoom: currentZoom,
             savedAt: new Date().toISOString()
         };
@@ -2603,8 +2619,8 @@ function resetMap() {
     if (window.mapBoundaryEditPanel) {
         window.mapBoundaryEditPanel.hide();
     }
-    if (window.mapBackgroundEditor) {
-        window.mapBackgroundEditor.hide();
+    if (window.mapBackgroundEditor && window.mapBackgroundEditor.disableEditMode) {
+        window.mapBackgroundEditor.disableEditMode();
     }
 
     // הסתר כפתורי עריכה

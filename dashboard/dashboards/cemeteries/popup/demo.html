@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Popup Manager - Demo</title>
+
+    <!-- Popup Styles -->
+    <link rel="stylesheet" href="popup.css">
+
+    <!-- Popup Scripts -->
+    <script src="popup-manager.js"></script>
+    <script src="popup-api.js"></script>
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            margin: 0;
+        }
+
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 36px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 40px;
+            font-size: 18px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            color: #1e293b;
+            font-size: 24px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .demo-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .demo-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .demo-btn:active {
+            transform: translateY(0);
+        }
+
+        .demo-btn.secondary {
+            background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+
+        .demo-btn.secondary:hover {
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+        }
+
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .code-block .comment {
+            color: #94a3b8;
+        }
+
+        .code-block .keyword {
+            color: #c792ea;
+        }
+
+        .code-block .string {
+            color: #c3e88d;
+        }
+
+        .code-block .function {
+            color: #82aaff;
+        }
+
+        .info-box {
+            background: #eff6ff;
+            border-right: 4px solid #3b82f6;
+            padding: 15px 20px;
+            border-radius: 6px;
+            margin: 15px 0;
+            color: #1e40af;
+        }
+
+        .warning-box {
+            background: #fef3c7;
+            border-right: 4px solid #f59e0b;
+            padding: 15px 20px;
+            border-radius: 6px;
+            margin: 15px 0;
+            color: #92400e;
+        }
+
+        .features-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .feature-item {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+            border-right: 3px solid #667eea;
+        }
+
+        .feature-item strong {
+            color: #667eea;
+            display: block;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="demo-container">
+        <h1>🎯 Popup Manager - Demo & Documentation</h1>
+        <p class="subtitle">מודול פופ-אפ גנרי לחלוטין עם תקשורת דו-כיוונית</p>
+
+        <!-- Features -->
+        <div class="section">
+            <h2 class="section-title">✨ תכונות עיקריות</h2>
+            <div class="features-list">
+                <div class="feature-item">
+                    <strong>🪟 Container טהור</strong>
+                    לא קשור לתוכן - עובד עם כל דבר
+                </div>
+                <div class="feature-item">
+                    <strong>🔄 Hybrid</strong>
+                    תמיכה ב-iframe, HTML ישיר ו-AJAX
+                </div>
+                <div class="feature-item">
+                    <strong>📡 תקשורת דו-כיוונית</strong>
+                    postMessage + Custom Events
+                </div>
+                <div class="feature-item">
+                    <strong>🎨 Draggable & Resizable</strong>
+                    גרירה ושינוי גודל מלא
+                </div>
+                <div class="feature-item">
+                    <strong>🔽 Minimize</strong>
+                    מזעור לפס תחתון
+                </div>
+                <div class="feature-item">
+                    <strong>⛶ Maximize</strong>
+                    מסך מלא בתוך הדף
+                </div>
+                <div class="feature-item">
+                    <strong>↗ Detach</strong>
+                    העברה לחלון דפדפן נפרד
+                </div>
+                <div class="feature-item">
+                    <strong>🎯 Z-Index Smart</strong>
+                    ניהול אוטומטי של סדר חלונות
+                </div>
+            </div>
+        </div>
+
+        <!-- Demo Buttons -->
+        <div class="section">
+            <h2 class="section-title">🚀 דוגמאות שימוש</h2>
+
+            <h3 style="margin-top: 30px; color: #334155;">1. פופ-אפים בסיסיים</h3>
+            <div class="button-grid">
+                <button class="demo-btn" onclick="demo_iframe()">
+                    📄 iframe Popup
+                </button>
+                <button class="demo-btn" onclick="demo_html()">
+                    📝 HTML Popup
+                </button>
+                <button class="demo-btn" onclick="demo_ajax()">
+                    🌐 AJAX Popup
+                </button>
+                <button class="demo-btn" onclick="demo_custom()">
+                    ⚙️ Custom Config
+                </button>
+            </div>
+
+            <h3 style="margin-top: 30px; color: #334155;">2. פופ-אפים מתקדמים</h3>
+            <div class="button-grid">
+                <button class="demo-btn secondary" onclick="demo_multiple()">
+                    📚 Multiple Popups
+                </button>
+                <button class="demo-btn secondary" onclick="demo_interactive()">
+                    🎮 Interactive Content
+                </button>
+                <button class="demo-btn secondary" onclick="demo_form()">
+                    📋 Form Example
+                </button>
+                <button class="demo-btn secondary" onclick="demo_large()">
+                    📐 Large Content
+                </button>
+            </div>
+        </div>
+
+        <!-- Usage Examples -->
+        <div class="section">
+            <h2 class="section-title">📖 דוגמאות קוד</h2>
+
+            <h3 style="margin-top: 30px; color: #334155;">יצירת Popup עם iframe:</h3>
+            <div class="code-block">
+<span class="keyword">const</span> popup = <span class="function">PopupManager.create</span>({
+    <span class="string">type</span>: <span class="string">'iframe'</span>,
+    <span class="string">src</span>: <span class="string">'/path/to/content.php'</span>,
+    <span class="string">title</span>: <span class="string">'כותרת הפופ-אפ'</span>,
+    <span class="string">width</span>: 800,
+    <span class="string">height</span>: 600
+});
+            </div>
+
+            <h3 style="margin-top: 30px; color: #334155;">יצירת Popup עם HTML:</h3>
+            <div class="code-block">
+<span class="keyword">const</span> popup = <span class="function">PopupManager.create</span>({
+    <span class="string">type</span>: <span class="string">'html'</span>,
+    <span class="string">content</span>: <span class="string">'&lt;div&gt;התוכן שלך כאן&lt;/div&gt;'</span>,
+    <span class="string">title</span>: <span class="string">'HTML Content'</span>
+});
+            </div>
+
+            <h3 style="margin-top: 30px; color: #334155;">שימוש ב-PopupAPI מתוך התוכן:</h3>
+            <div class="code-block">
+<span class="comment">// בתוך התוכן (iframe או HTML):</span>
+
+<span class="comment">// שינוי כותרת</span>
+<span class="function">PopupAPI.setTitle</span>(<span class="string">'כותרת חדשה'</span>);
+
+<span class="comment">// שינוי גודל</span>
+<span class="function">PopupAPI.resize</span>(900, 700);
+
+<span class="comment">// מזעור/מקסום</span>
+<span class="function">PopupAPI.minimize</span>();
+<span class="function">PopupAPI.maximize</span>();
+
+<span class="comment">// סגירה</span>
+<span class="function">PopupAPI.close</span>();
+
+<span class="comment">// האזנה לאירועים</span>
+<span class="function">PopupAPI.on</span>(<span class="string">'minimized'</span>, () => {
+    console.log(<span class="string">'הפופ-אפ מוזער'</span>);
+});
+            </div>
+
+            <div class="info-box">
+                💡 <strong>טיפ:</strong> PopupAPI מזהה אוטומטית את ה-popup ID מה-URL ומתקשר עם הפופ-אפ המתאים.
+            </div>
+        </div>
+
+        <!-- API Reference -->
+        <div class="section">
+            <h2 class="section-title">📚 API Reference</h2>
+
+            <h3 style="margin-top: 30px; color: #334155;">PopupManager Methods:</h3>
+            <div class="code-block">
+<span class="function">PopupManager.create</span>(config)     <span class="comment">// יצירת popup חדש</span>
+<span class="function">PopupManager.get</span>(id)            <span class="comment">// קבלת popup לפי ID</span>
+<span class="function">PopupManager.close</span>(id)          <span class="comment">// סגירת popup</span>
+<span class="function">PopupManager.closeAll</span>()         <span class="comment">// סגירת כל הפופ-אפים</span>
+            </div>
+
+            <h3 style="margin-top: 30px; color: #334155;">Popup Instance Methods:</h3>
+            <div class="code-block">
+popup.<span class="function">minimize</span>()              <span class="comment">// מזעור</span>
+popup.<span class="function">maximize</span>()              <span class="comment">// מסך מלא</span>
+popup.<span class="function">restore</span>()               <span class="comment">// שחזור</span>
+popup.<span class="function">detach</span>()                <span class="comment">// ניתוק לחלון נפרד</span>
+popup.<span class="function">close</span>()                 <span class="comment">// סגירה</span>
+popup.<span class="function">setTitle</span>(title)         <span class="comment">// עדכון כותרת</span>
+popup.<span class="function">resize</span>(width, height)   <span class="comment">// שינוי גודל</span>
+            </div>
+
+            <h3 style="margin-top: 30px; color: #334155;">PopupAPI Methods (מתוך התוכן):</h3>
+            <div class="code-block">
+<span class="function">PopupAPI.setTitle</span>(title)
+<span class="function">PopupAPI.resize</span>(width, height)
+<span class="function">PopupAPI.minimize</span>()
+<span class="function">PopupAPI.maximize</span>()
+<span class="function">PopupAPI.restore</span>()
+<span class="function">PopupAPI.close</span>()
+<span class="function">PopupAPI.detach</span>()
+<span class="function">PopupAPI.on</span>(event, callback)
+<span class="function">PopupAPI.off</span>(event, callback)
+            </div>
+
+            <div class="warning-box">
+                ⚠️ <strong>חשוב:</strong> כדי ש-PopupAPI יעבוד, יש לכלול את popup-api.js בתוכן ולוודא שה-URL מכיל את popupId.
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ===========================================
+        // Demo Functions
+        // ===========================================
+
+        // 1. Popup עם iframe
+        function demo_iframe() {
+            PopupManager.create({
+                type: 'iframe',
+                src: 'demo-content.html',
+                title: '📄 iframe Popup Demo',
+                width: 700,
+                height: 500
+            });
+        }
+
+        // 2. Popup עם HTML ישיר
+        function demo_html() {
+            PopupManager.create({
+                type: 'html',
+                content: `
+                    <div style="padding: 40px; text-align: center;">
+                        <h2 style="color: #667eea; margin-bottom: 20px;">👋 שלום!</h2>
+                        <p style="color: #64748b; font-size: 16px; margin-bottom: 20px;">
+                            זהו תוכן HTML ישיר בתוך הפופ-אפ
+                        </p>
+                        <button onclick="alert('כפתור עובד!')" style="
+                            background: #667eea;
+                            color: white;
+                            border: none;
+                            padding: 10px 20px;
+                            border-radius: 6px;
+                            cursor: pointer;
+                            font-size: 14px;
+                        ">לחץ עלי!</button>
+                    </div>
+                `,
+                title: '📝 HTML Content Demo',
+                width: 500,
+                height: 400
+            });
+        }
+
+        // 3. Popup עם AJAX
+        function demo_ajax() {
+            PopupManager.create({
+                type: 'ajax',
+                url: 'demo-content.html',
+                title: '🌐 AJAX Content Demo',
+                width: 700,
+                height: 500
+            });
+        }
+
+        // 4. Popup מותאם
+        function demo_custom() {
+            PopupManager.create({
+                type: 'html',
+                content: `
+                    <div style="padding: 30px;">
+                        <h3 style="color: #667eea;">⚙️ קונפיגורציה מותאמת</h3>
+                        <ul style="color: #64748b; line-height: 2;">
+                            <li>גודל מינימלי: 300x200</li>
+                            <li>גודל מקסימלי: 1200x800</li>
+                            <li>ללא כפתור detach</li>
+                            <li>עם callback על סגירה</li>
+                        </ul>
+                    </div>
+                `,
+                title: '⚙️ Custom Config',
+                width: 600,
+                height: 400,
+                minWidth: 300,
+                minHeight: 200,
+                maxWidth: 1200,
+                maxHeight: 800,
+                controls: {
+                    minimize: true,
+                    maximize: true,
+                    detach: false,
+                    close: true
+                },
+                onClose: function(popup) {
+                    if (confirm('האם אתה בטוח שברצונך לסגור?')) {
+                        return true;
+                    }
+                    return false;
+                }
+            });
+        }
+
+        // 5. מספר פופ-אפים
+        function demo_multiple() {
+            for (let i = 1; i <= 3; i++) {
+                setTimeout(() => {
+                    PopupManager.create({
+                        type: 'html',
+                        content: `
+                            <div style="padding: 40px; text-align: center;">
+                                <h2 style="color: #667eea;">Popup #${i}</h2>
+                                <p style="color: #64748b;">לחץ על הפופ-אפ כדי להעלות אותו לחזית</p>
+                            </div>
+                        `,
+                        title: `Popup #${i}`,
+                        width: 400,
+                        height: 300,
+                        position: { x: 100 + (i * 50), y: 100 + (i * 50) }
+                    });
+                }, i * 200);
+            }
+        }
+
+        // 6. תוכן אינטראקטיבי
+        function demo_interactive() {
+            let counter = 0;
+            PopupManager.create({
+                type: 'html',
+                content: `
+                    <div style="padding: 40px; text-align: center;">
+                        <h2 style="color: #667eea;">🎮 Interactive Demo</h2>
+                        <p style="font-size: 48px; margin: 30px 0;" id="counter">0</p>
+                        <button onclick="updateCounter()" style="
+                            background: #667eea;
+                            color: white;
+                            border: none;
+                            padding: 12px 24px;
+                            border-radius: 8px;
+                            cursor: pointer;
+                            font-size: 16px;
+                            font-weight: 600;
+                        ">הוסף +1</button>
+                    </div>
+                    <script>
+                        let counter = 0;
+                        function updateCounter() {
+                            counter++;
+                            document.getElementById('counter').textContent = counter;
+                        }
+                    <\/script>
+                `,
+                title: '🎮 Interactive Content',
+                width: 500,
+                height: 400
+            });
+        }
+
+        // 7. טופס לדוגמה
+        function demo_form() {
+            PopupManager.create({
+                type: 'html',
+                content: `
+                    <div style="padding: 30px;">
+                        <h3 style="color: #667eea; margin-bottom: 20px;">📋 טופס לדוגמה</h3>
+                        <form onsubmit="handleSubmit(event)" style="display: flex; flex-direction: column; gap: 15px;">
+                            <input type="text" placeholder="שם" style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                            <input type="email" placeholder="אימייל" style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                            <textarea placeholder="הודעה" rows="4" style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; resize: vertical;"></textarea>
+                            <button type="submit" style="
+                                background: #667eea;
+                                color: white;
+                                border: none;
+                                padding: 12px;
+                                border-radius: 6px;
+                                cursor: pointer;
+                                font-size: 16px;
+                                font-weight: 600;
+                            ">שלח</button>
+                        </form>
+                    </div>
+                    <script>
+                        function handleSubmit(e) {
+                            e.preventDefault();
+                            alert('הטופס נשלח! (דמו בלבד)');
+                        }
+                    <\/script>
+                `,
+                title: '📋 Form Example',
+                width: 500,
+                height: 500
+            });
+        }
+
+        // 8. תוכן גדול
+        function demo_large() {
+            let content = '<div style="padding: 30px; line-height: 1.8; color: #334155;">';
+            content += '<h2 style="color: #667eea;">📐 תוכן ארוך לדוגמה</h2>';
+            for (let i = 1; i <= 50; i++) {
+                content += `<p>פסקה מספר ${i} - זהו תוכן לדוגמה עם גלילה. אפשר לשנות גודל ולגרור את הפופ-אפ.</p>`;
+            }
+            content += '</div>';
+
+            PopupManager.create({
+                type: 'html',
+                content: content,
+                title: '📐 Large Content Demo',
+                width: 700,
+                height: 600
+            });
+        }
+
+        // Info על טעינה
+        console.log('%c🎯 Popup Manager Demo Loaded!', 'color: #667eea; font-size: 16px; font-weight: bold;');
+        console.log('נסה את הפונקציות השונות כדי לראות את היכולות של המודול.');
+    </script>
+
+</body>
+</html>

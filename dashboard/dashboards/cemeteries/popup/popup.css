@@ -1,0 +1,517 @@
+/**
+ * Popup Manager CSS
+ * עיצוב גנרי לפופ-אפים
+ * @version 1.0.0
+ */
+
+/* ========================================
+   Container ראשי
+======================================== */
+
+.popup-container {
+    position: fixed;
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    opacity: 0;
+    transform: scale(0.95);
+}
+
+.popup-container.popup-visible {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* ========================================
+   Header
+======================================== */
+
+.popup-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: move;
+    user-select: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    min-height: 45px;
+}
+
+.popup-header:active {
+    cursor: grabbing;
+}
+
+.popup-title {
+    font-size: 16px;
+    font-weight: 600;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ========================================
+   כפתורי בקרה
+======================================== */
+
+.popup-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.popup-control-btn {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: bold;
+    line-height: 1;
+    transition: background 0.2s ease, transform 0.1s ease;
+    padding: 0;
+}
+
+.popup-control-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.05);
+}
+
+.popup-control-btn:active {
+    transform: scale(0.95);
+}
+
+.popup-close:hover {
+    background: #ef4444;
+}
+
+.popup-minimize:hover {
+    background: #f59e0b;
+}
+
+.popup-maximize:hover {
+    background: #10b981;
+}
+
+.popup-detach:hover {
+    background: #3b82f6;
+}
+
+/* ========================================
+   Content
+======================================== */
+
+.popup-content {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    background: #f9fafb;
+}
+
+.popup-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+}
+
+.popup-error {
+    padding: 20px;
+    text-align: center;
+    color: #ef4444;
+    font-size: 14px;
+}
+
+/* ========================================
+   Resize Handle
+======================================== */
+
+.popup-resize-handle {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 16px;
+    height: 16px;
+    cursor: nwse-resize;
+    z-index: 10;
+}
+
+.popup-resize-handle::before {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 12px;
+    height: 12px;
+    background: linear-gradient(
+        135deg,
+        transparent 0%,
+        transparent 50%,
+        #cbd5e1 50%,
+        #cbd5e1 55%,
+        transparent 55%,
+        transparent 60%,
+        #cbd5e1 60%,
+        #cbd5e1 65%,
+        transparent 65%,
+        transparent 70%,
+        #cbd5e1 70%,
+        #cbd5e1 75%,
+        transparent 75%
+    );
+}
+
+/* ========================================
+   מצבים - Dragging & Resizing
+======================================== */
+
+.popup-dragging {
+    transition: none !important;
+    user-select: none;
+}
+
+.popup-dragging * {
+    pointer-events: none;
+}
+
+.popup-resizing {
+    transition: none !important;
+    user-select: none;
+}
+
+.popup-resizing * {
+    pointer-events: none;
+}
+
+/* ========================================
+   מצב Maximized
+======================================== */
+
+.popup-maximized {
+    border-radius: 0 !important;
+    transition: all 0.3s ease !important;
+}
+
+.popup-maximized .popup-header {
+    border-radius: 0;
+}
+
+.popup-maximized .popup-resize-handle {
+    display: none;
+}
+
+/* ========================================
+   מצב Minimized
+======================================== */
+
+.popup-minimized {
+    display: none !important;
+}
+
+.popup-minimized-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 8px;
+    z-index: 9999;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.popup-minimized-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.popup-minimized-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.popup-minimized-title {
+    font-size: 14px;
+    font-weight: 500;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.popup-minimized-restore {
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: bold;
+    transition: background 0.2s ease;
+}
+
+.popup-minimized-restore:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* ========================================
+   אנימציות
+======================================== */
+
+@keyframes popup-appear {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes popup-minimize {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: scale(0.8) translateY(100vh);
+    }
+}
+
+@keyframes popup-restore {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.popup-container.popup-visible {
+    animation: popup-appear 0.3s ease;
+}
+
+/* ========================================
+   מצב Detached (חלון נפרד)
+======================================== */
+
+body.popup-detached-window {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #f9fafb;
+}
+
+body.popup-detached-window .popup-detached-content {
+    width: 100vw;
+    height: 100vh;
+    overflow: auto;
+}
+
+/* ========================================
+   Responsive
+======================================== */
+
+@media (max-width: 768px) {
+    .popup-container {
+        width: 100vw !important;
+        height: 100vh !important;
+        left: 0 !important;
+        top: 0 !important;
+        border-radius: 0;
+        max-width: none !important;
+        max-height: none !important;
+    }
+
+    .popup-header {
+        cursor: default;
+    }
+
+    .popup-resize-handle {
+        display: none;
+    }
+
+    .popup-minimized-container {
+        padding: 0 8px;
+    }
+
+    .popup-minimized-title {
+        max-width: 150px;
+    }
+}
+
+/* ========================================
+   תמיכה ב-RTL
+======================================== */
+
+[dir="rtl"] .popup-resize-handle {
+    right: auto;
+    left: 0;
+}
+
+[dir="rtl"] .popup-resize-handle::before {
+    right: auto;
+    left: 2px;
+    transform: scaleX(-1);
+}
+
+[dir="rtl"] .popup-minimized-container {
+    direction: rtl;
+}
+
+/* ========================================
+   Accessibility
+======================================== */
+
+.popup-control-btn:focus {
+    outline: 2px solid white;
+    outline-offset: 2px;
+}
+
+.popup-container:focus-within {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2), 0 0 0 3px rgba(102, 126, 234, 0.3);
+}
+
+/* ========================================
+   Dark Mode Support (אופציונלי)
+======================================== */
+
+@media (prefers-color-scheme: dark) {
+    .popup-container {
+        background: #1f2937;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .popup-content {
+        background: #111827;
+    }
+
+    .popup-minimized-container {
+        background: rgba(31, 41, 55, 0.95);
+        border-top-color: #374151;
+    }
+
+    .popup-error {
+        color: #fca5a5;
+    }
+}
+
+/* ========================================
+   Loading State
+======================================== */
+
+.popup-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.popup-loading::after {
+    content: '';
+    width: 40px;
+    height: 40px;
+    border: 4px solid #e5e7eb;
+    border-top-color: #667eea;
+    border-radius: 50%;
+    animation: popup-spin 0.8s linear infinite;
+    display: inline-block;
+}
+
+@keyframes popup-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ========================================
+   Custom Scrollbar
+======================================== */
+
+.popup-content::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.popup-content::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+.popup-content::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.popup-content::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* ========================================
+   Z-Index Management
+======================================== */
+
+.popup-container {
+    z-index: 10000; /* ברירת מחדל */
+}
+
+.popup-minimized-container {
+    z-index: 9999;
+}
+
+/* ========================================
+   Utility Classes
+======================================== */
+
+.popup-no-select {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+}
+
+.popup-hidden {
+    display: none !important;
+}
+
+.popup-fade-in {
+    animation: popup-appear 0.3s ease;
+}
+
+.popup-fade-out {
+    animation: popup-minimize 0.3s ease forwards;
+}

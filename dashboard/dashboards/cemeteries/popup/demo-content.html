@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Popup Content Demo</title>
+
+    <!-- טעינת PopupAPI -->
+    <script src="popup-api.js"></script>
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 30px;
+            margin: 0;
+            background: #f9fafb;
+            color: #334155;
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            margin-bottom: 30px;
+        }
+
+        .control-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #475569;
+        }
+
+        .control-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.2s ease, transform 0.1s ease;
+        }
+
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn.danger {
+            background: #ef4444;
+        }
+
+        .btn.danger:hover {
+            background: #dc2626;
+        }
+
+        .btn.warning {
+            background: #f59e0b;
+        }
+
+        .btn.warning:hover {
+            background: #d97706;
+        }
+
+        .info-box {
+            background: #eff6ff;
+            border-right: 4px solid #3b82f6;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+
+        .status-box {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-label {
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        .status-value {
+            color: #334155;
+            font-family: monospace;
+        }
+
+        .event-log {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .event-log .event {
+            padding: 4px 0;
+            border-bottom: 1px solid #334155;
+        }
+
+        .event-log .event:last-child {
+            border-bottom: none;
+        }
+
+        .event-log .timestamp {
+            color: #94a3b8;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🎮 PopupAPI Demo Content</h1>
+    <p class="subtitle">תוכן זה נטען בתוך popup ויכול לתקשר איתו דרך PopupAPI</p>
+
+    <div class="info-box">
+        💡 דף זה מדגים איך תוכן בתוך הפופ-אפ יכול לשלוט על הפופ-אפ עצמו.
+    </div>
+
+    <!-- Panel בקרה -->
+    <div class="control-panel">
+        <h3 style="margin-top: 0; color: #667eea;">🎛️ בקרת Popup</h3>
+
+        <div class="control-group">
+            <label>שינוי כותרת:</label>
+            <input type="text" id="titleInput" placeholder="כותרת חדשה" value="כותרת מעודכנת!">
+            <button class="btn" onclick="changeTitle()" style="margin-top: 10px;">עדכן כותרת</button>
+        </div>
+
+        <div class="control-group">
+            <label>שינוי גודל:</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <input type="number" id="widthInput" placeholder="רוחב" value="800">
+                <input type="number" id="heightInput" placeholder="גובה" value="600">
+            </div>
+            <button class="btn" onclick="changeSize()" style="margin-top: 10px;">שנה גודל</button>
+        </div>
+
+        <div class="button-group">
+            <button class="btn" onclick="PopupAPI.minimize()">🔽 מזעור</button>
+            <button class="btn" onclick="PopupAPI.maximize()">⛶ מסך מלא</button>
+            <button class="btn" onclick="PopupAPI.restore()">↻ שחזור</button>
+            <button class="btn warning" onclick="PopupAPI.detach()">↗ ניתוק</button>
+            <button class="btn danger" onclick="PopupAPI.close()">✕ סגירה</button>
+        </div>
+    </div>
+
+    <!-- מידע על הפופ-אפ -->
+    <div class="status-box">
+        <h3 style="margin-top: 0; color: #667eea;">📊 מידע על הפופ-אפ</h3>
+        <div class="status-item">
+            <span class="status-label">Popup ID:</span>
+            <span class="status-value" id="statusPopupId">-</span>
+        </div>
+        <div class="status-item">
+            <span class="status-label">בתוך iframe:</span>
+            <span class="status-value" id="statusInIframe">-</span>
+        </div>
+        <div class="status-item">
+            <span class="status-label">חלון מנותק:</span>
+            <span class="status-value" id="statusDetached">-</span>
+        </div>
+        <div class="status-item">
+            <span class="status-label">בתוך popup:</span>
+            <span class="status-value" id="statusInPopup">-</span>
+        </div>
+    </div>
+
+    <!-- לוג אירועים -->
+    <div>
+        <h3 style="color: #667eea;">📋 לוג אירועים</h3>
+        <div class="event-log" id="eventLog">
+            <div class="event">
+                <span class="timestamp">[00:00:00]</span>
+                <span>מחכה לאירועים...</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===========================================
+        // Functions
+        // ===========================================
+
+        function changeTitle() {
+            const title = document.getElementById('titleInput').value;
+            PopupAPI.setTitle(title);
+            logEvent(`שינוי כותרת: "${title}"`);
+        }
+
+        function changeSize() {
+            const width = parseInt(document.getElementById('widthInput').value);
+            const height = parseInt(document.getElementById('heightInput').value);
+            PopupAPI.resize(width, height);
+            logEvent(`שינוי גודל: ${width}x${height}`);
+        }
+
+        function logEvent(message) {
+            const log = document.getElementById('eventLog');
+            const time = new Date().toLocaleTimeString('he-IL');
+            const event = document.createElement('div');
+            event.className = 'event';
+            event.innerHTML = `<span class="timestamp">[${time}]</span><span>${message}</span>`;
+            log.insertBefore(event, log.firstChild);
+
+            // שמור רק 20 אירועים אחרונים
+            while (log.children.length > 20) {
+                log.removeChild(log.lastChild);
+            }
+        }
+
+        // ===========================================
+        // אתחול
+        // ===========================================
+
+        window.addEventListener('DOMContentLoaded', function() {
+            // הצגת מידע
+            const info = PopupAPI.getInfo();
+            document.getElementById('statusPopupId').textContent = info.popupId || 'לא זמין';
+            document.getElementById('statusInIframe').textContent = info.isInIframe ? 'כן' : 'לא';
+            document.getElementById('statusDetached').textContent = info.isDetached ? 'כן' : 'לא';
+            document.getElementById('statusInPopup').textContent = info.isInPopup ? 'כן' : 'לא';
+
+            logEvent('תוכן נטען בהצלחה');
+
+            // האזנה לאירועים מהפופ-אפ
+            PopupAPI.on('loaded', (data) => {
+                logEvent('אירוע: loaded');
+            });
+
+            PopupAPI.on('minimized', (data) => {
+                logEvent('אירוע: הפופ-אפ מוזער');
+            });
+
+            PopupAPI.on('maximized', (data) => {
+                logEvent('אירוע: הפופ-אפ במסך מלא');
+            });
+
+            PopupAPI.on('restored', (data) => {
+                logEvent('אירוע: הפופ-אפ שוחזר');
+            });
+
+            PopupAPI.on('closing', (data) => {
+                logEvent('אירוע: הפופ-אפ עומד להיסגר');
+            });
+
+            PopupAPI.on('detached', (data) => {
+                logEvent('אירוע: הפופ-אפ נותק לחלון נפרד');
+            });
+        });
+
+        // Log לקונסול
+        console.log('%c🎮 Demo Content Loaded', 'color: #667eea; font-size: 14px; font-weight: bold;');
+        console.log('PopupAPI Info:', PopupAPI.getInfo());
+    </script>
+
+</body>
+</html>

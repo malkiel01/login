@@ -290,39 +290,12 @@ $config = $entityConfig[$entityType] ?? $entityConfig['cemetery'];
 
     <!-- New Modular Architecture -->
     <script type="module">
+        // Static imports must be at the top
+        import { EntityConfig } from './config/EntityConfig.js';
+        import { MapAPI, EntityAPI } from './api/MapAPI.js';
+        import { MapManager } from './core/MapManager.js';
+
         console.log('📦 Module script starting...');
-
-        // Import modules with error handling
-        let EntityConfig, MapAPI, EntityAPI, MapManager;
-
-        try {
-            const entityConfigModule = await import('./config/EntityConfig.js');
-            EntityConfig = entityConfigModule.EntityConfig;
-            console.log('✅ EntityConfig imported');
-        } catch (e) {
-            console.error('❌ Failed to import EntityConfig:', e);
-            throw e;
-        }
-
-        try {
-            const mapApiModule = await import('./api/MapAPI.js');
-            MapAPI = mapApiModule.MapAPI;
-            EntityAPI = mapApiModule.EntityAPI;
-            console.log('✅ MapAPI imported');
-        } catch (e) {
-            console.error('❌ Failed to import MapAPI:', e);
-            throw e;
-        }
-
-        try {
-            const mapManagerModule = await import('./core/MapManager.js');
-            MapManager = mapManagerModule.MapManager;
-            console.log('✅ MapManager imported');
-        } catch (e) {
-            console.error('❌ Failed to import MapManager:', e);
-            throw e;
-        }
-
         console.log('✅ All modules imported successfully');
 
         // Initialize the map

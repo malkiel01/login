@@ -1,106 +1,16 @@
 /**
  * Map Launcher - מנהל פתיחת המפה (גרסה חדשה ונקייה)
- * Version: 5.1.0
+ * Version: 5.2.0
  *
  * קובץ זה מחליף את map-launcher-old.js (2,786 שורות)
- * משתמש במודולים מתיקיית map/
- *
- * תלויות:
+ * משתמש ב:
  * - map/launcher/EntitySelector.js - טעינת ישויות מה-API
  * - map/launcher/LauncherModal.js - מודל בחירת ישות
- * - map/index.php - דף המפה עצמו (צריך ?type=X&id=Y)
+ * - popup/popup-manager.js - מערכת הפופאפים
+ * - map/index.php - דף המפה עצמו
  */
 
-console.log('%c MAP LAUNCHER v5.1.0 ', 'background: #3b82f6; color: #fff; padding: 4px 8px; border-radius: 4px; font-weight: bold;');
-
-// ========================================
-// CSS לפופאפ
-// ========================================
-
-const popupStyles = `
-.map-popup-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.map-popup-container {
-    background: #fff;
-    border-radius: 12px;
-    width: 95%;
-    height: 90%;
-    max-width: 1400px;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    overflow: hidden;
-}
-
-.map-popup-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 20px;
-    background: linear-gradient(135deg, #1e40af, #3b82f6);
-    color: white;
-}
-
-.map-popup-header h3 {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 600;
-}
-
-.map-popup-controls {
-    display: flex;
-    gap: 8px;
-}
-
-.map-popup-btn {
-    background: rgba(255,255,255,0.2);
-    border: none;
-    color: white;
-    width: 32px;
-    height: 32px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.2s;
-}
-
-.map-popup-btn:hover {
-    background: rgba(255,255,255,0.3);
-}
-
-.map-popup-content {
-    flex: 1;
-    overflow: hidden;
-}
-
-.map-popup-content iframe {
-    width: 100%;
-    height: 100%;
-    border: none;
-}
-`;
-
-// הוסף CSS לדף
-if (!document.getElementById('mapPopupStyles')) {
-    const style = document.createElement('style');
-    style.id = 'mapPopupStyles';
-    style.textContent = popupStyles;
-    document.head.appendChild(style);
-}
+console.log('%c MAP LAUNCHER v5.2.0 ', 'background: #3b82f6; color: #fff; padding: 4px 8px; border-radius: 4px; font-weight: bold;');
 
 // ========================================
 // אתחול המודולים
@@ -108,19 +18,46 @@ if (!document.getElementById('mapPopupStyles')) {
 
 let entitySelector = null;
 let launcherModal = null;
-let currentPopup = null;
+let popupManagerLoaded = false;
+
+/**
+ * טעינת PopupManager
+ */
+async function loadPopupManager() {
+    if (popupManagerLoaded || window.PopupManager) {
+        return true;
+    }
+
+    return new Promise((resolve) => {
+        const script = document.createElement('script');
+        script.src = '/dashboard/dashboards/cemeteries/popup/popup-manager.js';
+        script.onload = () => {
+            popupManagerLoaded = true;
+            console.log('✅ PopupManager loaded');
+            resolve(true);
+        };
+        script.onerror = () => {
+            console.error('❌ Failed to load PopupManager');
+            resolve(false);
+        };
+        document.head.appendChild(script);
+    });
+}
 
 /**
  * טעינת המודולים בעת טעינת הדף
  */
 (async function initMapLauncher() {
     try {
-        // 1. טעינת EntitySelector
+        // 1. טעינת PopupManager
+        await loadPopupManager();
+
+        // 2. טעינת EntitySelector
         const { EntitySelector } = await import('../map/launcher/EntitySelector.js');
         entitySelector = new EntitySelector({ apiEndpoint: 'api/map-api.php' });
         console.log('✅ EntitySelector loaded');
 
-        // 2. טעינת LauncherModal
+        // 3. טעינת LauncherModal
         const { LauncherModal } = await import('../map/launcher/LauncherModal.js');
         launcherModal = new LauncherModal(entitySelector, {
             modalId: 'mapLauncherModal',
@@ -128,7 +65,7 @@ let currentPopup = null;
         });
         console.log('✅ LauncherModal loaded');
 
-        // 3. הגדרת callback לפתיחת המפה
+        // 4. הגדרת callback לפתיחת המפה
         launcherModal.onLaunch((entityType, entityId) => {
             openMapPopup(entityType, entityId);
         });
@@ -141,12 +78,9 @@ let currentPopup = null;
 })();
 
 // ========================================
-// פופאפ המפה
+// שמות ישויות בעברית
 // ========================================
 
-/**
- * שמות הישויות בעברית
- */
 const entityNames = {
     cemetery: 'בית עלמין',
     block: 'גוש',
@@ -154,8 +88,15 @@ const entityNames = {
     areaGrave: 'אחוזת קבר'
 };
 
+// ========================================
+// פתיחת מפה בפופאפ
+// ========================================
+
 /**
  * פתיחת פופאפ עם המפה
+ * @param {string} entityType - סוג הישות
+ * @param {string} entityId - מזהה הישות
+ * @param {string} mode - מצב (view/edit)
  */
 function openMapPopup(entityType, entityId, mode = 'view') {
     if (!entityType || !entityId) {
@@ -167,73 +108,59 @@ function openMapPopup(entityType, entityId, mode = 'view') {
     // סגירת מודל הבחירה
     closeMapLauncher();
 
-    // סגירת פופאפ קיים
-    closeMapPopup();
-
     // בניית URL
     const url = `map/index.php?type=${entityType}&id=${entityId}&mode=${mode}`;
+    const popupId = `map-${entityType}-${entityId}`;
+
     console.log(`🗺️ Opening map popup: ${url}`);
 
-    // יצירת הפופאפ
-    const overlay = document.createElement('div');
-    overlay.id = 'mapPopupOverlay';
-    overlay.className = 'map-popup-overlay';
-    overlay.innerHTML = `
-        <div class="map-popup-container">
-            <div class="map-popup-header">
-                <h3>מפת ${entityNames[entityType] || entityType}</h3>
-                <div class="map-popup-controls">
-                    <button class="map-popup-btn" onclick="openMapInNewTab()" title="פתח בלשונית חדשה">↗</button>
-                    <button class="map-popup-btn" onclick="closeMapPopup()" title="סגור">✕</button>
-                </div>
-            </div>
-            <div class="map-popup-content">
-                <iframe src="${url}" allow="fullscreen"></iframe>
-            </div>
-        </div>
-    `;
+    // בדיקה אם PopupManager נטען
+    if (!window.PopupManager) {
+        console.error('❌ PopupManager not loaded');
+        // fallback - פתח בלשונית חדשה
+        window.open(url, '_blank');
+        return;
+    }
 
-    // סגירה בלחיצה על הרקע
-    overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) {
-            closeMapPopup();
+    // פתיחת הפופאפ עם PopupManager
+    window.PopupManager.create({
+        id: popupId,
+        type: 'iframe',
+        src: url,
+        title: `מפת ${entityNames[entityType] || entityType}`,
+        width: Math.min(window.innerWidth * 0.95, 1400),
+        height: Math.min(window.innerHeight * 0.9, 900),
+        position: { x: 'center', y: 'center' },
+        draggable: true,
+        resizable: true,
+        controls: {
+            minimize: true,
+            maximize: true,
+            detach: true,
+            close: true
+        },
+        onClose: () => {
+            console.log('🗺️ Map popup closed');
         }
     });
-
-    // סגירה ב-Escape
-    document.addEventListener('keydown', handleEscKey);
-
-    document.body.appendChild(overlay);
-    currentPopup = { overlay, entityType, entityId, mode, url };
 }
 
 /**
- * סגירת פופאפ המפה
+ * סגירת פופאפ מפה לפי ID
  */
-function closeMapPopup() {
-    const overlay = document.getElementById('mapPopupOverlay');
-    if (overlay) {
-        overlay.remove();
-    }
-    document.removeEventListener('keydown', handleEscKey);
-    currentPopup = null;
-}
-
-/**
- * פתיחת המפה בלשונית חדשה
- */
-function openMapInNewTab() {
-    if (currentPopup) {
-        window.open(currentPopup.url, '_blank');
+function closeMapPopup(entityType, entityId) {
+    if (window.PopupManager) {
+        const popupId = `map-${entityType}-${entityId}`;
+        window.PopupManager.close(popupId);
     }
 }
 
 /**
- * טיפול במקש Escape
+ * סגירת כל פופאפי המפות
  */
-function handleEscKey(e) {
-    if (e.key === 'Escape') {
-        closeMapPopup();
+function closeAllMapPopups() {
+    if (window.PopupManager) {
+        window.PopupManager.closeAll();
     }
 }
 

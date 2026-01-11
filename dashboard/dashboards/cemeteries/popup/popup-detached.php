@@ -24,6 +24,9 @@ if (!$popupId) {
     <!-- Popup API -->
     <script src="/dashboard/dashboards/cemeteries/popup/popup-api.js"></script>
 
+    <!-- Dynamic Stylesheets (loaded from state) -->
+    <div id="dynamicStylesheets"></div>
+
     <style>
         * {
             margin: 0;
@@ -187,10 +190,30 @@ if (!$popupId) {
                 }
             }
 
+            // טעינת stylesheets
+            function loadStylesheets(stylesheets) {
+                if (!stylesheets || !Array.isArray(stylesheets) || stylesheets.length === 0) {
+                    return;
+                }
+
+                console.log('[Detached] Loading stylesheets:', stylesheets);
+
+                stylesheets.forEach(href => {
+                    const link = document.createElement('link');
+                    link.rel = 'stylesheet';
+                    link.href = href;
+                    document.head.appendChild(link);
+                    console.log('[Detached] Loaded stylesheet:', href);
+                });
+            }
+
             // טעינת תוכן
             function loadContent(state) {
                 const container = document.getElementById('detachedContent');
                 const titleElement = document.getElementById('detachedTitle');
+
+                // טען stylesheets
+                loadStylesheets(state.config.stylesheets);
 
                 // עדכון כותרת
                 titleElement.textContent = state.config.title || 'Popup Window';

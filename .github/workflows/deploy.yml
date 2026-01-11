@@ -5,7 +5,7 @@ on:
     branches:
       - main
       - revert-to-stable-map-launcher
-  workflow_dispatch:  # אפשרות להרצה ידנית מ-GitHub
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -19,11 +19,13 @@ jobs:
           username: mbeplusc
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
+          script_stop: true
+          debug: true
           script: |
+            echo "Starting deployment..."
             cd ~/public_html/form/login
             git fetch origin
             git checkout ${{ github.ref_name }}
             git pull origin ${{ github.ref_name }}
-            echo "Deployed branch: ${{ github.ref_name }}"
-            echo "Commit: ${{ github.sha }}"
-# Deploy test Sun Jan 11 21:18:49 IST 2026
+            echo "✅ Deployed branch: ${{ github.ref_name }}"
+            echo "✅ Commit: ${{ github.sha }}"

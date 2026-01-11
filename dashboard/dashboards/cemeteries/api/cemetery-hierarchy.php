@@ -661,6 +661,188 @@ try {
             ]);
             break;
             
+        case 'save_map':
+            // שמירת נתוני מפה
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new Exception('שיטת בקשה לא תקינה');
+            }
+
+            $config = $manager->getConfig($type);
+            if (!$config || !$id) {
+                throw new Exception('פרמטרים חסרים');
+            }
+
+            $data = json_decode(file_get_contents('php://input'), true);
+            if (!$data || !isset($data['mapData'])) {
+                throw new Exception('נתוני מפה חסרים');
+            }
+
+            $table = $config['table'];
+            $primaryKey = $config['primaryKey'];
+
+            // שמירת נתוני המפה
+            $stmt = $pdo->prepare(
+                "UPDATE $table SET mapData = :mapData, updateDate = :updateDate
+                 WHERE $primaryKey = :id"
+            );
+            $stmt->execute([
+                'id' => $id,
+                'mapData' => json_encode($data['mapData']),
+                'updateDate' => date('Y-m-d H:i:s')
+            ]);
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'המפה נשמרה בהצלחה'
+            ]);
+            break;
+
+        case 'get_map':
+            // טעינת נתוני מפה
+            $config = $manager->getConfig($type);
+            if (!$config || !$id) {
+                throw new Exception('פרמטרים חסרים');
+            }
+
+            $table = $config['table'];
+            $primaryKey = $config['primaryKey'];
+
+            $stmt = $pdo->prepare("SELECT mapData FROM $table WHERE $primaryKey = :id AND isActive = 1");
+            $stmt->execute(['id' => $id]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$result) {
+                throw new Exception('הפריט לא נמצא');
+            }
+
+            $mapData = null;
+            if ($result['mapData']) {
+                $mapData = json_decode($result['mapData'], true);
+            }
+
+            echo json_encode([
+                'success' => true,
+                'mapData' => $mapData
+            ]);
+            break;
+
+        case 'get_parent_map':
+            // טעינת נתוני מפה של ההורה והסבא
+            $config = $manager->getConfig($type);
+            if (!$config || !$id) {
+                throw new Exception('פרמטרים חסרים');
+            }
+
+            // הגדרת היררכיית הורים
+            $parentTypes = [
+                'block' => ['parentKey' => 'cemeteryId', 'parentType' => 'cemetery', 'parentTable' => 'cemeteries'],
+                'plot' => ['parentKey' => 'blockId', 'parentType' => 'block', 'parentTable' => 'blocks']
+            ];
+
+            // בדיקה אם לסוג זה יש הורה
+            if (!isset($parentTypes[$type])) {
+                // cemetery הוא שורש - אין לו הורה
+                echo json_encode([
+                    'success' => true,
+                    'hasParent' => false,
+                    'parentMapData' => null,
+                    'grandparentMapData' => null
+                ]);
+                break;
+            }
+
+            $parentInfo = $parentTypes[$type];
+            $table = $config['table'];
+            $primaryKey = $config['primaryKey'];
+
+            // קבל את הרשומה הנוכחית כדי למצוא את ההורה
+            $stmt = $pdo->prepare("SELECT {$parentInfo['parentKey']} FROM $table WHERE $primaryKey = :id AND isActive = 1");
+            $stmt->execute(['id' => $id]);
+            $item = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$item) {
+                throw new Exception('הפריט לא נמצא');
+            }
+
+            $parentId = $item[$parentInfo['parentKey']];
+            if (!$parentId) {
+                throw new Exception('לא נמצא הורה לפריט זה');
+            }
+
+            // קבל את נתוני המפה של ההורה
+            $parentConfig = $manager->getConfig($parentInfo['parentType']);
+            $stmt = $pdo->prepare("SELECT * FROM {$parentInfo['parentTable']} WHERE {$parentConfig['primaryKey']} = :id AND isActive = 1");
+            $stmt->execute(['id' => $parentId]);
+            $parentResult = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$parentResult) {
+                throw new Exception('ההורה לא נמצא');
+            }
+
+            $parentMapData = null;
+            if ($parentResult['mapData']) {
+                $parentMapData = json_decode($parentResult['mapData'], true);
+            }
+
+            // בדיקה אם יש גבול מוגדר להורה
+            $hasBoundary = false;
+            if ($parentMapData && isset($parentMapData['canvasJSON']) && isset($parentMapData['canvasJSON']['objects'])) {
+                foreach ($parentMapData['canvasJSON']['objects'] as $obj) {
+                    if (isset($obj['objectType']) && $obj['objectType'] === 'boundaryOutline') {
+                        $hasBoundary = true;
+                        break;
+                    }
+                }
+            }
+
+            // בדיקה אם להורה יש הורה (סבא)
+            $grandparentMapData = null;
+            $grandparentHasBoundary = false;
+            $grandparentType = null;
+            $grandparentId = null;
+
+            if (isset($parentTypes[$parentInfo['parentType']])) {
+                $grandparentInfo = $parentTypes[$parentInfo['parentType']];
+                $grandparentId = $parentResult[$grandparentInfo['parentKey']] ?? null;
+
+                if ($grandparentId) {
+                    $grandparentConfig = $manager->getConfig($grandparentInfo['parentType']);
+                    $stmt = $pdo->prepare("SELECT mapData FROM {$grandparentInfo['parentTable']} WHERE {$grandparentConfig['primaryKey']} = :id AND isActive = 1");
+                    $stmt->execute(['id' => $grandparentId]);
+                    $grandparentResult = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                    if ($grandparentResult && $grandparentResult['mapData']) {
+                        $grandparentMapData = json_decode($grandparentResult['mapData'], true);
+                        $grandparentType = $grandparentInfo['parentType'];
+
+                        // בדיקה אם יש גבול מוגדר לסבא
+                        if ($grandparentMapData && isset($grandparentMapData['canvasJSON']) && isset($grandparentMapData['canvasJSON']['objects'])) {
+                            foreach ($grandparentMapData['canvasJSON']['objects'] as $obj) {
+                                if (isset($obj['objectType']) && $obj['objectType'] === 'boundaryOutline') {
+                                    $grandparentHasBoundary = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            echo json_encode([
+                'success' => true,
+                'hasParent' => true,
+                'parentId' => $parentId,
+                'parentType' => $parentInfo['parentType'],
+                'parentMapData' => $parentMapData,
+                'parentHasBoundary' => $hasBoundary,
+                'hasGrandparent' => $grandparentMapData !== null,
+                'grandparentId' => $grandparentId,
+                'grandparentType' => $grandparentType,
+                'grandparentMapData' => $grandparentMapData,
+                'grandparentHasBoundary' => $grandparentHasBoundary
+            ]);
+            break;
+
         case 'stats':
             // סטטיסטיקות כלליות
             $stats = [];

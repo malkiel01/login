@@ -352,14 +352,10 @@
     position: fixed;
     top: var(--map-header-height);
     left: 0;
-    right: var(--map-sidebar-width);
+    right: 0;
     bottom: 0;
     background: var(--map-bg);
     overflow: hidden;
-}
-
-.map-sidebar.collapsed ~ .map-container {
-    right: 40px;
 }
 
 .canvas-wrapper {

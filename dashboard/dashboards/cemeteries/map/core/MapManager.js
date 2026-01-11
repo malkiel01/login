@@ -154,27 +154,44 @@ export class MapManager {
             this.state.entity = data.entity;
             this.state.children = data.children || [];
 
+            console.log('📦 Entity data:', data.entity);
+            console.log('📦 mapPolygon:', data.entity.mapPolygon);
+            console.log('📦 mapBackgroundImage:', data.entity.mapBackgroundImage);
+            console.log('📦 Children count:', this.state.children.length);
+
             // טעינת תמונת רקע
             if (data.entity.mapBackgroundImage) {
+                console.log('🖼️ Loading background...');
                 await this.background.loadBackground(data.entity.mapBackgroundImage);
+            } else {
+                console.log('⚠️ No background image');
             }
 
             // טעינת גבול הורה (אם זו לא ישות שורש)
             const parentType = this.entityConfig.getParentType(this.state.entityType);
             if (parentType && data.entity[this.entityConfig.get(this.state.entityType).parentField]) {
                 const parentId = data.entity[this.entityConfig.get(this.state.entityType).parentField];
+                console.log('🔲 Loading parent boundary...');
                 await this.boundary.loadParentBoundary(parentType, parentId);
             }
 
             // טעינת פוליגון הישות
             if (data.entity.mapPolygon) {
+                console.log('🔷 Loading entity polygon...');
                 this.loadEntityPolygon(data.entity.mapPolygon);
+            } else {
+                console.log('⚠️ No entity polygon');
             }
 
             // טעינת ישויות בנות
             if (this.state.children.length > 0) {
+                console.log('👶 Loading children polygons...');
                 this.loadChildrenPolygons(this.state.children);
+            } else {
+                console.log('⚠️ No children');
             }
+
+            console.log('🎨 Canvas objects count:', this.canvas.getObjects().length);
 
             // שמירת מצב התחלתי
             this.history.save();

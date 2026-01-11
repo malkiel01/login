@@ -12,25 +12,32 @@ class PopupManager {
     static cssLoaded = false;
 
     /**
-     * טוען את ה-CSS של הפופ-אפ (אם עדיין לא נטען)
+     * טוען את ה-CSS ו-JS של הפופ-אפ (אם עדיין לא נטענו)
      */
     static loadCSS() {
         const targetDoc = this.getTargetDocument();
+        const targetWindow = this.getTargetWindow();
 
-        // בדוק אם כבר נטען
-        if (targetDoc.getElementById('popup-manager-css')) {
-            return;
+        // טען CSS אם עדיין לא נטען
+        if (!targetDoc.getElementById('popup-manager-css')) {
+            const link = targetDoc.createElement('link');
+            link.id = 'popup-manager-css';
+            link.rel = 'stylesheet';
+            link.href = '/dashboard/dashboards/cemeteries/popup/popup.css';
+            targetDoc.head.appendChild(link);
+            console.log('✅ Popup CSS loaded');
         }
 
-        // צור link element
-        const link = targetDoc.createElement('link');
-        link.id = 'popup-manager-css';
-        link.rel = 'stylesheet';
-        link.href = '/dashboard/dashboards/cemeteries/popup/popup.css';
-        targetDoc.head.appendChild(link);
+        // טען PopupAPI אם עדיין לא נטען
+        if (!targetDoc.getElementById('popup-api-js') && !targetWindow.PopupAPI) {
+            const script = targetDoc.createElement('script');
+            script.id = 'popup-api-js';
+            script.src = '/dashboard/dashboards/cemeteries/popup/popup-api.js';
+            targetDoc.head.appendChild(script);
+            console.log('✅ Popup API loaded');
+        }
 
         this.cssLoaded = true;
-        console.log('✅ Popup CSS loaded');
     }
 
     /**

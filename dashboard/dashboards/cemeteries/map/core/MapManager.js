@@ -3,7 +3,7 @@
  * מחבר את כל המודולים ומנהל את המפה
  */
 
-import { EntityConfig, DEFAULT_MAP_SETTINGS } from '../config/EntityConfigSimple.js';
+import { EntityConfig, DEFAULT_MAP_SETTINGS } from '../config/EntityConfigV2.js';
 import { MapAPI, EntityAPI } from '../api/MapAPI.js';
 import { HistoryManager } from './HistoryManager.js';
 import { BoundaryManager } from './BoundaryManager.js';

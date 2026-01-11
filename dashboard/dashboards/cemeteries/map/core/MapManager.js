@@ -95,16 +95,15 @@ export class MapManager {
             throw new Error(`Canvas element with id '${this.options.canvasId}' not found`);
         }
 
-        const container = canvasElement.parentElement;
-        const containerRect = container.getBoundingClientRect();
+        // Calculate dimensions based on window size minus header
+        const headerHeight = 56; // var(--map-header-height)
 
-        console.log('🔍 Container dimensions:', containerRect.width, 'x', containerRect.height);
+        // Calculate dimensions from window, accounting for header
+        const width = window.innerWidth;
+        const height = window.innerHeight - headerHeight;
+
         console.log('🔍 Window size:', window.innerWidth, 'x', window.innerHeight);
-
-        // Use window size if container is 0
-        const width = containerRect.width || window.innerWidth;
-        const height = containerRect.height || (window.innerHeight - 56);
-
+        console.log('🔍 Header height:', headerHeight);
         console.log('🔍 Using dimensions:', width, 'x', height);
 
         this.canvas = new fabric.Canvas(canvasElement, {
@@ -113,7 +112,7 @@ export class MapManager {
             backgroundColor: DEFAULT_MAP_SETTINGS.backgroundColor,
             selection: this.state.mode === 'edit',
             preserveObjectStacking: true,
-            enableRetinaScaling: true
+            enableRetinaScaling: false // Disable retina scaling to avoid size issues
         });
 
         // Event listeners

@@ -288,14 +288,35 @@ $config = $entityConfig[$entityType] ?? $entityConfig['cemetery'];
         });
     </script>
 
-    <!-- New Modular Architecture -->
+    <!-- Test module loading one by one -->
     <script type="module">
-        // Static imports must be at the top
-        import { EntityConfig } from './config/EntityConfig.js';
-        import { MapAPI, EntityAPI } from './api/MapAPI.js';
-        import { MapManager } from './core/MapManager.js';
+        console.log('📦 Starting module imports...');
 
-        console.log('📦 Module script starting...');
+        async function loadModules() {
+            try {
+                console.log('⏳ Loading EntityConfig...');
+                const { EntityConfig } = await import('./config/EntityConfig.js');
+                console.log('✅ EntityConfig loaded');
+
+                console.log('⏳ Loading MapAPI...');
+                const { MapAPI, EntityAPI } = await import('./api/MapAPI.js');
+                console.log('✅ MapAPI loaded');
+
+                console.log('⏳ Loading MapManager...');
+                const { MapManager } = await import('./core/MapManager.js');
+                console.log('✅ MapManager loaded');
+
+                return { EntityConfig, MapAPI, EntityAPI, MapManager };
+            } catch (error) {
+                console.error('❌ Module loading failed:', error);
+                console.error('Stack:', error.stack);
+                throw error;
+            }
+        }
+
+        const modules = await loadModules();
+        const { MapManager } = modules;
+
         console.log('✅ All modules imported successfully');
 
         // Initialize the map

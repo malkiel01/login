@@ -305,23 +305,25 @@ $config = $entityConfig[$entityType] ?? $entityConfig['cemetery'];
             console.error('❌ Fetch failed:', fetchError);
         }
 
+        const cacheBust = Date.now(); // Force fresh load
+
         async function loadModules() {
             try {
                 // Test with simple module first
                 console.log('⏳ Loading test-module...');
-                const testMod = await import('./config/test-module.js');
+                const testMod = await import(`./config/test-module.js?v=${cacheBust}`);
                 console.log('✅ test-module loaded:', testMod.TEST_VALUE);
 
                 console.log('⏳ Loading EntityConfigSimple...');
-                const { EntityConfig } = await import('./config/EntityConfigSimple.js');
+                const { EntityConfig } = await import(`./config/EntityConfigSimple.js?v=${cacheBust}`);
                 console.log('✅ EntityConfigSimple loaded');
 
                 console.log('⏳ Loading MapAPI...');
-                const { MapAPI, EntityAPI } = await import('./api/MapAPI.js');
+                const { MapAPI, EntityAPI } = await import(`./api/MapAPI.js?v=${cacheBust}`);
                 console.log('✅ MapAPI loaded');
 
                 console.log('⏳ Loading MapManager...');
-                const { MapManager } = await import('./core/MapManager.js');
+                const { MapManager } = await import(`./core/MapManager.js?v=${cacheBust}`);
                 console.log('✅ MapManager loaded');
 
                 return { EntityConfig, MapAPI, EntityAPI, MapManager };

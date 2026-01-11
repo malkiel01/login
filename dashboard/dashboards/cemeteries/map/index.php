@@ -312,9 +312,9 @@ $config = $entityConfig[$entityType] ?? $entityConfig['cemetery'];
                 const testMod = await import('./config/test-module.js');
                 console.log('✅ test-module loaded:', testMod.TEST_VALUE);
 
-                console.log('⏳ Loading EntityConfig...');
-                const { EntityConfig } = await import('./config/EntityConfig.js');
-                console.log('✅ EntityConfig loaded');
+                console.log('⏳ Loading EntityConfigSimple...');
+                const { EntityConfig } = await import('./config/EntityConfigSimple.js');
+                console.log('✅ EntityConfigSimple loaded');
 
                 console.log('⏳ Loading MapAPI...');
                 const { MapAPI, EntityAPI } = await import('./api/MapAPI.js');

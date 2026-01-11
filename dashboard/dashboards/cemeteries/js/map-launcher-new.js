@@ -4,6 +4,8 @@
  * Description: Lightweight launcher that uses PopupManager to open the modular map system.
  */
 
+console.log('%c 🚀 MAP LAUNCHER NEW (v4.0.0) LOADED ', 'background: #22c55e; color: #fff; padding: 4px; border-radius: 4px; font-weight: bold; font-size: 14px;');
+
 // טעינת LauncherModal ו-EntitySelector
 (async function initLauncher() {
     try {

@@ -1,0 +1,28 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - main
+      - revert-to-stable-map-launcher
+  workflow_dispatch:  # אפשרות להרצה ידנית מ-GitHub
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to Server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: mbe-plus.com
+          username: mbeplusc
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            cd ~/public_html/form/login
+            git fetch origin
+            git checkout ${{ github.ref_name }}
+            git pull origin ${{ github.ref_name }}
+            echo "Deployed branch: ${{ github.ref_name }}"
+            echo "Commit: ${{ github.sha }}"

@@ -1,4 +1,5 @@
-// EntityConfig - Full version without problematic characters
+// EntityConfig - Minimal version
+console.log('EntityConfigSimple: Starting to parse...');
 
 export const CEMETERY_ENTITIES = {
     cemetery: {
@@ -6,13 +7,6 @@ export const CEMETERY_ENTITIES = {
         nameField: 'cemeteryNameHe',
         parentField: null,
         color: '#1976D2',
-        fillOpacity: 0.3,
-        strokeColor: '#0D47A1',
-        strokeWidth: 2,
-        icon: 'building',
-        labelHe: 'Cemetery',
-        labelEn: 'Cemetery',
-        minZoom: 0,
         hasChildren: true,
         childType: 'block'
     },
@@ -21,13 +15,6 @@ export const CEMETERY_ENTITIES = {
         nameField: 'blockNameHe',
         parentField: 'cemeteryId',
         color: '#388E3C',
-        fillOpacity: 0.3,
-        strokeColor: '#1B5E20',
-        strokeWidth: 2,
-        icon: 'box',
-        labelHe: 'Block',
-        labelEn: 'Block',
-        minZoom: 0.3,
         hasChildren: true,
         childType: 'plot'
     },
@@ -36,13 +23,6 @@ export const CEMETERY_ENTITIES = {
         nameField: 'plotNameHe',
         parentField: 'blockId',
         color: '#F57C00',
-        fillOpacity: 0.3,
-        strokeColor: '#E65100',
-        strokeWidth: 2,
-        icon: 'square',
-        labelHe: 'Plot',
-        labelEn: 'Plot',
-        minZoom: 0.6,
         hasChildren: true,
         childType: 'row'
     },
@@ -51,13 +31,6 @@ export const CEMETERY_ENTITIES = {
         nameField: 'lineNameHe',
         parentField: 'plotId',
         color: '#7B1FA2',
-        fillOpacity: 0.3,
-        strokeColor: '#4A148C',
-        strokeWidth: 2,
-        icon: 'line',
-        labelHe: 'Row',
-        labelEn: 'Row',
-        minZoom: 1.2,
         hasChildren: true,
         childType: 'areaGrave'
     },
@@ -66,81 +39,53 @@ export const CEMETERY_ENTITIES = {
         nameField: 'areaGraveNameHe',
         parentField: 'lineId',
         color: '#C2185B',
-        fillOpacity: 0.3,
-        strokeColor: '#880E4F',
-        strokeWidth: 2,
-        icon: 'home',
-        labelHe: 'Area Grave',
-        labelEn: 'Area Grave',
-        minZoom: 1.5,
         hasChildren: false,
         childType: null
     }
 };
 
-export const MAP_FIELDS = {
-    polygon: 'mapPolygon',
-    background: 'mapBackgroundImage',
-    settings: 'mapSettings',
-    canvasData: 'mapCanvasData'
-};
+console.log('EntityConfigSimple: CEMETERY_ENTITIES defined');
 
 export const DEFAULT_MAP_SETTINGS = {
     canvasWidth: 2000,
     canvasHeight: 1500,
     initialZoom: 1,
     minZoom: 0.1,
-    maxZoom: 5,
-    gridEnabled: false,
-    gridSize: 50,
-    gridColor: '#e0e0e0',
-    backgroundColor: '#f8f9fa'
+    maxZoom: 5
 };
 
-export const HISTORY_SETTINGS = {
-    maxStates: 30,
-    saveDebounce: 500
-};
+console.log('EntityConfigSimple: DEFAULT_MAP_SETTINGS defined');
 
 export class EntityConfig {
     constructor(entities = CEMETERY_ENTITIES) {
+        console.log('EntityConfig: constructor called');
         this.entities = entities;
-        this.hierarchy = this.buildHierarchy();
+        this._hierarchy = null;
+    }
+
+    get hierarchy() {
+        if (!this._hierarchy) {
+            this._hierarchy = this.buildHierarchy();
+        }
+        return this._hierarchy;
     }
 
     buildHierarchy() {
+        console.log('EntityConfig: buildHierarchy called');
         const hierarchy = new Map();
-        Object.entries(this.entities).forEach(([type, config]) => {
-            hierarchy.set(type, {
-                ...config,
-                type: type,
-                level: this.getLevel(type),
-                children: this.getChildrenTypes(type),
-                parents: this.getParentTypes(type)
-            });
-        });
-        return hierarchy;
-    }
-
-    getLevel(entityType) {
-        let level = 0;
-        let current = this.entities[entityType];
-        while (current && current.parentField) {
-            level++;
-            const parentType = this.getParentType(Object.keys(this.entities).find(
-                type => this.entities[type].childType === entityType
-            ));
-            current = this.entities[parentType];
+        for (const [type, config] of Object.entries(this.entities)) {
+            hierarchy.set(type, { ...config, type });
         }
-        return level;
+        return hierarchy;
     }
 
     getParentType(entityType) {
         const entity = this.entities[entityType];
         if (!entity || !entity.parentField) return null;
-        return Object.keys(this.entities).find(
-            type => this.entities[type].childType === entityType
-        );
+        for (const [type, config] of Object.entries(this.entities)) {
+            if (config.childType === entityType) return type;
+        }
+        return null;
     }
 
     getChildrenTypes(entityType) {
@@ -148,9 +93,9 @@ export class EntityConfig {
         if (!entity || !entity.hasChildren) return [];
         const children = [];
         let current = entity.childType;
-        while (current) {
+        while (current && this.entities[current]) {
             children.push(current);
-            current = this.entities[current]?.childType;
+            current = this.entities[current].childType;
         }
         return children;
     }
@@ -166,36 +111,26 @@ export class EntityConfig {
     }
 
     get(entityType) {
-        return this.hierarchy.get(entityType);
+        return this.hierarchy.get(entityType) || this.entities[entityType];
     }
 
     has(entityType) {
-        return this.hierarchy.has(entityType);
+        return entityType in this.entities;
     }
 
     getAllTypes() {
-        return Array.from(this.hierarchy.keys());
+        return Object.keys(this.entities);
     }
 
     getRootType() {
-        return this.getAllTypes().find(type => {
-            const entity = this.get(type);
-            return !entity.parentField;
-        });
+        return Object.keys(this.entities).find(type => !this.entities[type].parentField);
     }
 
     getLeafTypes() {
-        return this.getAllTypes().filter(type => {
-            const entity = this.get(type);
-            return !entity.hasChildren;
-        });
+        return Object.keys(this.entities).filter(type => !this.entities[type].hasChildren);
     }
 
     isParentOf(parentType, childType) {
-        const child = this.get(childType);
-        if (!child) return false;
-        const parentOfChild = this.getParentType(childType);
-        if (parentOfChild === parentType) return true;
         return this.getParentTypes(childType).includes(parentType);
     }
 
@@ -204,10 +139,12 @@ export class EntityConfig {
     }
 
     getMaxDepth() {
-        return Math.max(...this.getAllTypes().map(type => this.getLevel(type)));
+        return Object.keys(this.entities).length - 1;
     }
 }
 
+console.log('EntityConfigSimple: EntityConfig class defined');
+
 export const defaultEntityConfig = new EntityConfig(CEMETERY_ENTITIES);
 
-console.log('EntityConfigSimple loaded!');
+console.log('EntityConfigSimple: Module fully loaded!');

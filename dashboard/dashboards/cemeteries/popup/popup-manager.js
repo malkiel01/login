@@ -11,6 +11,36 @@ class PopupManager {
     static minimizedContainer = null;
 
     /**
+     * מחזיר את ה-document הנכון (top window אם בתוך iframe)
+     */
+    static getTargetDocument() {
+        try {
+            // אם אנחנו בתוך iframe, השתמש ב-top window
+            if (window.self !== window.top && window.top.document) {
+                return window.top.document;
+            }
+        } catch (e) {
+            // אם יש בעיית CORS, נשאר עם החלון הנוכחי
+            console.warn('Cannot access parent window, using current window');
+        }
+        return document;
+    }
+
+    /**
+     * מחזיר את ה-window הנכון (top window אם בתוך iframe)
+     */
+    static getTargetWindow() {
+        try {
+            if (window.self !== window.top && window.top) {
+                return window.top;
+            }
+        } catch (e) {
+            console.warn('Cannot access parent window, using current window');
+        }
+        return window;
+    }
+
+    /**
      * יצירת פופ-אפ חדש
      * @param {Object} config - קונפיגורציה
      * @returns {Popup} instance
@@ -74,9 +104,10 @@ class PopupManager {
      */
     static getMinimizedContainer() {
         if (!this.minimizedContainer) {
-            this.minimizedContainer = document.createElement('div');
+            const targetDoc = this.getTargetDocument();
+            this.minimizedContainer = targetDoc.createElement('div');
             this.minimizedContainer.className = 'popup-minimized-container';
-            document.body.appendChild(this.minimizedContainer);
+            targetDoc.body.appendChild(this.minimizedContainer);
         }
         return this.minimizedContainer;
     }
@@ -174,7 +205,9 @@ class Popup {
         this.elements.content = content;
         this.elements.resizeHandle = resizeHandle;
 
-        document.body.appendChild(container);
+        // הוסף לחלון הנכון (top window אם בתוך iframe)
+        const targetDoc = PopupManager.getTargetDocument();
+        targetDoc.body.appendChild(container);
 
         // אתחול אירועים
         this.initEvents();
@@ -344,8 +377,9 @@ class Popup {
             offsetY: e.clientY - rect.top
         };
 
-        document.addEventListener('mousemove', this.onDrag);
-        document.addEventListener('mouseup', this.stopDrag);
+        const targetDoc = PopupManager.getTargetDocument();
+        targetDoc.addEventListener('mousemove', this.onDrag);
+        targetDoc.addEventListener('mouseup', this.stopDrag);
 
         this.elements.container.classList.add('popup-dragging');
     }
@@ -364,8 +398,9 @@ class Popup {
 
     stopDrag = () => {
         this.dragData = null;
-        document.removeEventListener('mousemove', this.onDrag);
-        document.removeEventListener('mouseup', this.stopDrag);
+        const targetDoc = PopupManager.getTargetDocument();
+        targetDoc.removeEventListener('mousemove', this.onDrag);
+        targetDoc.removeEventListener('mouseup', this.stopDrag);
         this.elements.container.classList.remove('popup-dragging');
     }
 
@@ -387,8 +422,9 @@ class Popup {
             startHeight: rect.height
         };
 
-        document.addEventListener('mousemove', this.onResize);
-        document.addEventListener('mouseup', this.stopResize);
+        const targetDoc = PopupManager.getTargetDocument();
+        targetDoc.addEventListener('mousemove', this.onResize);
+        targetDoc.addEventListener('mouseup', this.stopResize);
 
         this.elements.container.classList.add('popup-resizing');
     }
@@ -417,8 +453,9 @@ class Popup {
 
     stopResize = () => {
         this.resizeData = null;
-        document.removeEventListener('mousemove', this.onResize);
-        document.removeEventListener('mouseup', this.stopResize);
+        const targetDoc = PopupManager.getTargetDocument();
+        targetDoc.removeEventListener('mousemove', this.onResize);
+        targetDoc.removeEventListener('mouseup', this.stopResize);
         this.elements.container.classList.remove('popup-resizing');
     }
 
@@ -427,15 +464,16 @@ class Popup {
      */
     position(x, y) {
         let left, top;
+        const targetWindow = PopupManager.getTargetWindow();
 
         if (x === 'center') {
-            left = (window.innerWidth - this.state.size.width) / 2;
+            left = (targetWindow.innerWidth - this.state.size.width) / 2;
         } else {
             left = x;
         }
 
         if (y === 'center') {
-            top = (window.innerHeight - this.state.size.height) / 2;
+            top = (targetWindow.innerHeight - this.state.size.height) / 2;
         } else {
             top = y;
         }

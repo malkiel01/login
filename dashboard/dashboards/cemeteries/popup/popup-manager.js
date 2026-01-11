@@ -399,7 +399,8 @@ class Popup {
 
         // האזנה להודעות מהתוכן (אם iframe)
         if (this.config.type === 'iframe') {
-            window.addEventListener('message', (e) => this.handleMessage(e));
+            const targetWindow = PopupManager.getTargetWindow();
+            targetWindow.addEventListener('message', (e) => this.handleMessage(e));
         }
     }
 

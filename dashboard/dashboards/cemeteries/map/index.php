@@ -281,89 +281,115 @@ $config = $entityConfig[$entityType] ?? $entityConfig['cemetery'];
     <!-- Debug: Check if page loads -->
     <script>
         console.log('📄 Map page loaded, MAP_CONFIG:', window.MAP_CONFIG);
+
+        // Catch module loading errors
+        window.addEventListener('error', function(e) {
+            console.error('🔴 Script error:', e.message, e.filename, e.lineno);
+        });
     </script>
 
     <!-- New Modular Architecture -->
     <script type="module">
         console.log('📦 Module script starting...');
 
-        // Import all modules
-        import { EntityConfig } from './config/EntityConfig.js';
-        console.log('✅ EntityConfig imported');
+        // Import modules with error handling
+        let EntityConfig, MapAPI, EntityAPI, MapManager;
 
-        import { MapAPI, EntityAPI } from './api/MapAPI.js';
-        console.log('✅ MapAPI imported');
+        try {
+            const entityConfigModule = await import('./config/EntityConfig.js');
+            EntityConfig = entityConfigModule.EntityConfig;
+            console.log('✅ EntityConfig imported');
+        } catch (e) {
+            console.error('❌ Failed to import EntityConfig:', e);
+            throw e;
+        }
 
-        import { MapManager } from './core/MapManager.js';
-        console.log('✅ MapManager imported');
+        try {
+            const mapApiModule = await import('./api/MapAPI.js');
+            MapAPI = mapApiModule.MapAPI;
+            EntityAPI = mapApiModule.EntityAPI;
+            console.log('✅ MapAPI imported');
+        } catch (e) {
+            console.error('❌ Failed to import MapAPI:', e);
+            throw e;
+        }
 
-        // Initialize the map when page loads
-        document.addEventListener('DOMContentLoaded', async () => {
-            const loadingOverlay = document.getElementById('loadingOverlay');
+        try {
+            const mapManagerModule = await import('./core/MapManager.js');
+            MapManager = mapManagerModule.MapManager;
+            console.log('✅ MapManager imported');
+        } catch (e) {
+            console.error('❌ Failed to import MapManager:', e);
+            throw e;
+        }
 
-            try {
-                console.log('🚀 Starting map initialization...');
-                const config = window.MAP_CONFIG;
-                console.log('📋 Config:', config);
+        console.log('✅ All modules imported successfully');
 
-                // Create map manager instance
-                const mapManager = new MapManager({
-                    entityType: config.entityType,
-                    entityId: config.entityId,
-                    mode: config.mode,
-                    canvasId: 'mapCanvas'
-                });
+        // Initialize the map
+        const loadingOverlay = document.getElementById('loadingOverlay');
 
-                console.log('✅ MapManager created');
+        try {
+            console.log('🚀 Starting map initialization...');
+            const config = window.MAP_CONFIG;
+            console.log('📋 Config:', config);
 
-                // Listen for all events for debugging
-                mapManager.on('loading:start', () => console.log('📥 Loading started...'));
-                mapManager.on('data:loaded', (data) => console.log('📊 Data loaded:', data));
-                mapManager.on('data:error', (data) => console.error('❌ Data error:', data.error));
+            // Create map manager instance
+            const mapManager = new MapManager({
+                entityType: config.entityType,
+                entityId: config.entityId,
+                mode: config.mode,
+                canvasId: 'mapCanvas'
+            });
 
-                // Listen for initialization complete
-                mapManager.on('init:complete', () => {
-                    console.log('✅ Map initialized successfully');
-                    if (loadingOverlay) {
-                        loadingOverlay.style.display = 'none';
-                    }
-                });
+            console.log('✅ MapManager created');
 
-                // Listen for initialization error
-                mapManager.on('init:error', (data) => {
-                    console.error('❌ Init error:', data.error);
-                    if (loadingOverlay) {
-                        loadingOverlay.innerHTML = `
-                            <div style="text-align:center; color:#dc2626; padding:20px;">
-                                <p style="font-size:18px; font-weight:bold;">שגיאה בטעינת המפה</p>
-                                <p style="font-size:14px; margin-top:10px; background:#fee; padding:10px; border-radius:8px; direction:ltr; text-align:left;">${data.error.message}</p>
-                                <p style="font-size:12px; margin-top:10px; color:#666;">בדוק את ה-Console לפרטים נוספים</p>
-                            </div>
-                        `;
-                    }
-                });
+            // Listen for all events for debugging
+            mapManager.on('loading:start', () => console.log('📥 Loading started...'));
+            mapManager.on('data:loaded', (data) => console.log('📊 Data loaded:', data));
+            mapManager.on('data:error', (data) => console.error('❌ Data error:', data.error));
 
-                console.log('🔧 Starting init()...');
-                // Initialize and load the map
-                await mapManager.init();
-
-                // Make it globally accessible for debugging
-                window.mapManager = mapManager;
-                console.log('🎉 All done!');
-
-            } catch (error) {
-                console.error('💥 Failed to initialize map:', error);
-                console.error('Stack:', error.stack);
+            // Listen for initialization complete
+            mapManager.on('init:complete', () => {
+                console.log('✅ Map initialized successfully');
                 if (loadingOverlay) {
-                    loadingOverlay.innerHTML =
-                        '<div style="text-align:center; color:#dc2626; padding:20px;">' +
-                        '<p style="font-size:18px; font-weight:bold;">שגיאה בטעינת המפה</p>' +
-                        '<p style="font-size:14px; margin-top:10px; background:#fee; padding:10px; border-radius:8px; direction:ltr; text-align:left;">' + error.message + '</p>' +
-                        '<p style="font-size:12px; margin-top:10px; color:#666;">בדוק את ה-Console לפרטים נוספים</p>' +
-                        '</div>';
+                    loadingOverlay.style.display = 'none';
                 }
+            });
+
+            // Listen for initialization error
+            mapManager.on('init:error', (data) => {
+                console.error('❌ Init error:', data.error);
+                if (loadingOverlay) {
+                    loadingOverlay.innerHTML = `
+                        <div style="text-align:center; color:#dc2626; padding:20px;">
+                            <p style="font-size:18px; font-weight:bold;">שגיאה בטעינת המפה</p>
+                            <p style="font-size:14px; margin-top:10px; background:#fee; padding:10px; border-radius:8px; direction:ltr; text-align:left;">${data.error.message}</p>
+                            <p style="font-size:12px; margin-top:10px; color:#666;">בדוק את ה-Console לפרטים נוספים</p>
+                        </div>
+                    `;
+                }
+            });
+
+            console.log('🔧 Starting init()...');
+            // Initialize and load the map
+            await mapManager.init();
+
+            // Make it globally accessible for debugging
+            window.mapManager = mapManager;
+            console.log('🎉 All done!');
+
+        } catch (error) {
+            console.error('💥 Failed to initialize map:', error);
+            console.error('Stack:', error.stack);
+            if (loadingOverlay) {
+                loadingOverlay.innerHTML =
+                    '<div style="text-align:center; color:#dc2626; padding:20px;">' +
+                    '<p style="font-size:18px; font-weight:bold;">שגיאה בטעינת המפה</p>' +
+                    '<p style="font-size:14px; margin-top:10px; background:#fee; padding:10px; border-radius:8px; direction:ltr; text-align:left;">' + error.message + '</p>' +
+                    '<p style="font-size:12px; margin-top:10px; color:#666;">בדוק את ה-Console לפרטים נוספים</p>' +
+                    '</div>';
             }
-        });
+        }
     </script>
 </body>
 </html>

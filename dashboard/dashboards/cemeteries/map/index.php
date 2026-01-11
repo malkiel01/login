@@ -72,7 +72,7 @@ $config = $entityConfig[$entityType] ?? $entityConfig['cemetery'];
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 
     <!-- Styles -->
-    <link rel="stylesheet" href="css/cemetery-map.css">
+    <link rel="stylesheet" href="css/cemetery-map.css?v=<?php echo time(); ?>">
 
     <!-- Dashboard Styles (for consistency) -->
     <link rel="stylesheet" href="../css/main.css">

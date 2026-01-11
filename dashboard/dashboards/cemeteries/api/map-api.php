@@ -130,14 +130,63 @@ try {
         }
 
         // Parse JSON fields - check both old (mapData) and new field names
+        $debugInfo = [];
+        $debugInfo['hasMapData'] = !empty($entity['mapData']);
+
         if (!empty($entity['mapData'])) {
             $mapData = json_decode($entity['mapData'], true);
+            $debugInfo['jsonDecodeSuccess'] = ($mapData !== null);
+            $debugInfo['hasCanvasJSON'] = isset($mapData['canvasJSON']);
+            $debugInfo['hasObjects'] = isset($mapData['canvasJSON']['objects']);
+
             if ($mapData) {
-                // Extract fields from mapData for backwards compatibility
-                $entity['mapPolygon'] = $mapData['boundary'] ?? $mapData['polygon'] ?? $mapData['mapPolygon'] ?? null;
-                $entity['mapBackgroundImage'] = $mapData['background'] ?? $mapData['backgroundImage'] ?? $mapData['mapBackgroundImage'] ?? null;
-                $entity['mapSettings'] = $mapData['settings'] ?? $mapData['mapSettings'] ?? null;
-                $entity['mapCanvasData'] = $mapData['canvas'] ?? $mapData['canvasData'] ?? null;
+                // Old format: data stored as canvasJSON with objects
+                if (isset($mapData['canvasJSON']['objects'])) {
+                    $debugInfo['objectsCount'] = count($mapData['canvasJSON']['objects']);
+                    $canvasObjects = $mapData['canvasJSON']['objects'];
+
+                    $debugInfo['objectTypes'] = [];
+                    foreach ($canvasObjects as $idx => $obj) {
+                        $objectType = $obj['objectType'] ?? '';
+                        $fabricType = $obj['type'] ?? '';
+                        $debugInfo['objectTypes'][] = "[$idx] objectType=$objectType, type=$fabricType";
+
+                        // Extract boundary polygon
+                        if ($objectType === 'boundaryOutline' || $objectType === 'polygon' || $fabricType === 'polygon') {
+                            $entity['mapPolygon'] = [
+                                'points' => $obj['points'] ?? [],
+                                'style' => [
+                                    'fillColor' => $obj['fill'] ?? '#1976D2',
+                                    'fillOpacity' => $obj['opacity'] ?? 0.3,
+                                    'strokeColor' => $obj['stroke'] ?? '#1976D2',
+                                    'strokeWidth' => $obj['strokeWidth'] ?? 2
+                                ]
+                            ];
+                        }
+
+                        // Extract background image (check for image type or backgroundLayer)
+                        if ($fabricType === 'image' || $objectType === 'backgroundImage' || $objectType === 'backgroundLayer') {
+                            $entity['mapBackgroundImage'] = [
+                                'path' => $obj['src'] ?? '',
+                                'width' => $obj['width'] ?? 800,
+                                'height' => $obj['height'] ?? 600,
+                                'scaleX' => $obj['scaleX'] ?? 1,
+                                'scaleY' => $obj['scaleY'] ?? 1,
+                                'left' => $obj['left'] ?? 0,
+                                'top' => $obj['top'] ?? 0
+                            ];
+                        }
+                    }
+
+                    // Also keep the raw canvas data
+                    $entity['mapCanvasData'] = $mapData['canvasJSON'];
+                } else {
+                    // New format: separate fields
+                    $entity['mapPolygon'] = $mapData['boundary'] ?? $mapData['polygon'] ?? $mapData['mapPolygon'] ?? null;
+                    $entity['mapBackgroundImage'] = $mapData['background'] ?? $mapData['backgroundImage'] ?? $mapData['mapBackgroundImage'] ?? null;
+                    $entity['mapSettings'] = $mapData['settings'] ?? $mapData['mapSettings'] ?? null;
+                    $entity['mapCanvasData'] = $mapData['canvas'] ?? $mapData['canvasData'] ?? null;
+                }
             }
         }
         // Also check direct fields if they exist
@@ -153,7 +202,8 @@ try {
 
         $response = [
             'success' => true,
-            'entity' => $entity
+            'entity' => $entity,
+            '_debug' => $debugInfo ?? []
         ];
 
         // Include children if requested

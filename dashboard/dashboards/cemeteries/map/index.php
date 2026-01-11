@@ -278,12 +278,24 @@ $config = $entityConfig[$entityType] ?? $entityConfig['cemetery'];
         };
     </script>
 
+    <!-- Debug: Check if page loads -->
+    <script>
+        console.log('📄 Map page loaded, MAP_CONFIG:', window.MAP_CONFIG);
+    </script>
+
     <!-- New Modular Architecture -->
     <script type="module">
+        console.log('📦 Module script starting...');
+
         // Import all modules
         import { EntityConfig } from './config/EntityConfig.js';
+        console.log('✅ EntityConfig imported');
+
         import { MapAPI, EntityAPI } from './api/MapAPI.js';
+        console.log('✅ MapAPI imported');
+
         import { MapManager } from './core/MapManager.js';
+        console.log('✅ MapManager imported');
 
         // Initialize the map when page loads
         document.addEventListener('DOMContentLoaded', async () => {

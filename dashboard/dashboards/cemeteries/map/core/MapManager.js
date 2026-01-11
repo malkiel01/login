@@ -168,7 +168,7 @@ export class MapManager {
             }
 
             // שמירת מצב התחלתי
-            this.history.saveState({ action: 'initial_load' });
+            this.history.save();
 
             this.trigger('data:loaded', { entity: data.entity, children: data.children });
 

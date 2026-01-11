@@ -331,33 +331,32 @@ async function launchMap() {
 }
 
 /**
- * פתיחת פופאפ המפה
- * Uses MapPopup if available, otherwise falls back to old implementation
+ * Uses PopupManager to open the new modular map
  */
 function openMapPopup(entityType, unicId) {
-    // Update StateManager
-    if (window.mapState) {
-        window.mapState.setEntity(entityType, unicId);
-    }
-
-    // Keep old variables in sync for backwards compatibility
-    currentEntityType = entityType;
-    currentUnicId = unicId;
-
-    if (!window.MapPopupClass) return;
-
-    if (!window.mapPopupInstance) {
-        window.mapPopupInstance = new window.MapPopupClass({
-            onMapInit: (entityType, unicId, entity) => {
-                initializeMap(entityType, unicId, entity);
-            },
-            onClose: () => {
-                cleanupMapState();
-            }
-        });
-    }
-
-    window.mapPopupInstance.open(entityType, unicId);
+    console.log('🔓 [OPEN] openMapPopup() called with PopupManager');
+    
+    // Construct the URL for the new map system
+    const mapUrl = `/dashboard/dashboards/cemeteries/map/index.php?type=${entityType}&id=${unicId}&mode=view`;
+    
+    // Create the popup
+    const popup = PopupManager.create({
+        id: `map-${entityType}-${unicId}`,
+        type: 'iframe',
+        src: mapUrl,
+        title: `מפת ${entityNames[entityType] || entityType}`,
+        width: '95%',
+        height: '90%',
+        position: { x: 'center', y: 'center' },
+        draggable: true,
+        resizable: true,
+        controls: {
+            minimize: true,
+            maximize: true,
+            detach: true,
+            close: true
+        }
+    });
 }
 
 /**

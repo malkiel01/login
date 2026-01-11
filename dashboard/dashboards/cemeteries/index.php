@@ -35,7 +35,11 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/universal-search.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/table-manager.css">
 
-    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/reports/graves-inventory-report.css">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/auth/css/style2.css">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/popup/popup.css">
+    
+    <!-- Scripts -->
+    <script src="/dashboard/dashboards/cemeteries/popup/popup-manager.js"></script>
 
 </head>
 <body>

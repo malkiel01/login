@@ -2,10 +2,11 @@
  * PopupManager - מנהל פופ-אפ גנרי לחלוטין
  * תומך ב-iframe וגם HTML ישיר
  * תקשורת דו-כיוונית עם התוכן
- * @version 1.0.0
+ * @version 1.0.1
  */
 
 class PopupManager {
+    static version = '1.0.1';
     static popups = new Map();
     static maxZIndex = 10000;
     static minimizedContainer = null;
@@ -17,6 +18,11 @@ class PopupManager {
     static loadCSS() {
         const targetDoc = this.getTargetDocument();
         const targetWindow = this.getTargetWindow();
+
+        // הדפס גירסה (רק פעם אחת)
+        if (!this.cssLoaded) {
+            console.log(`🎯 PopupManager v${this.version} initialized`);
+        }
 
         // טען CSS אם עדיין לא נטען
         if (!targetDoc.getElementById('popup-manager-css')) {
@@ -303,6 +309,12 @@ class Popup {
         const btn = targetDoc.createElement('button');
         btn.className = `popup-control-btn popup-${name}`;
         btn.textContent = icon;
+
+        // חשוב: עצור את ה-mousedown מלהתפשט ל-header (למנוע drag)
+        btn.onmousedown = (e) => {
+            e.stopPropagation();
+        };
+
         btn.onclick = (e) => {
             e.stopPropagation();
             onClick();
@@ -776,11 +788,19 @@ class Popup {
      * שליחת הודעה לתוכן
      */
     notifyContent(event, data = {}) {
+        // סנן window references מ-data (לא ניתן לשלוח window objects ב-postMessage)
+        const cleanData = {};
+        for (const key in data) {
+            if (key !== 'windowRef' && typeof data[key] !== 'function') {
+                cleanData[key] = data[key];
+            }
+        }
+
         const message = {
             type: 'popup-event',
             popupId: this.id,
             event,
-            data
+            data: cleanData
         };
 
         if (this.config.type === 'iframe' && this.elements.iframe) {
@@ -790,8 +810,8 @@ class Popup {
                 console.warn('Failed to send message to iframe:', e);
             }
         } else {
-            // HTML ישיר - שלח custom event
-            const customEvent = new CustomEvent(`popup-${event}`, { detail: message });
+            // HTML ישיר - שלח custom event (יכול להכיל references)
+            const customEvent = new CustomEvent(`popup-${event}`, { detail: { ...message, data } });
             this.elements.content.dispatchEvent(customEvent);
         }
     }

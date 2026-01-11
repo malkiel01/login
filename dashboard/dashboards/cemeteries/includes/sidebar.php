@@ -176,7 +176,16 @@
                 <span class="hierarchy-count" id="cityCount">0</span>
             </div>
         </div>
-        
+
+        <!-- Popup Manager Demo -->
+        <div class="management-item" style="margin-bottom: 10px;">
+            <div class="hierarchy-header" id="popupDemoItem" onclick="window.open('/dashboard/dashboards/cemeteries/popup/demo.html', '_blank')">
+                <span class="hierarchy-icon">🎯</span>
+                <span class="hierarchy-title">Popup Manager - Demo</span>
+                <span class="badge" style="background: #10b981; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px;">חדש</span>
+            </div>
+        </div>
+
         <!-- אופציות עתידיות -->
         <div class="management-item" style="margin-bottom: 10px; opacity: 0.5;">
             <div class="hierarchy-header disabled">

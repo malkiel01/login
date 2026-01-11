@@ -212,16 +212,8 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
         // הגדרת worker של PDF.js
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     </script>
-    <!-- OLD: map-launcher.js disabled for testing new system -->
-    <!-- <script src="/dashboard/dashboards/cemeteries/js/map-launcher-old.js"></script> -->
-
-    <!-- NEW: Simple launcher that uses map/index.php -->
-    <script>
-        function openMapLauncher() {
-            // Open map selection modal or go directly to map
-            window.open('map/index.php', '_blank');
-        }
-    </script>
+    <!-- Map Launcher - hybrid: orchestrates modular components from map/ folder -->
+    <script src="/dashboard/dashboards/cemeteries/js/map-launcher-old.js"></script>
 
     <!-- 7️⃣ אתחול -->
     <script>

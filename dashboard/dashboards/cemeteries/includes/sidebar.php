@@ -179,7 +179,7 @@
 
         <!-- Popup Manager Demo -->
         <div class="management-item" style="margin-bottom: 10px;">
-            <div class="hierarchy-header" id="popupDemoItem" onclick="window.open('/dashboard/dashboards/cemeteries/popup/demo.html', '_blank')">
+            <div class="hierarchy-header" id="popupDemoItem" onclick="handleSidebarClick('popupDemoItem', loadPopupDemo)">
                 <span class="hierarchy-icon">🎯</span>
                 <span class="hierarchy-title">Popup Manager - Demo</span>
                 <span class="badge" style="background: #10b981; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px;">חדש</span>

@@ -701,8 +701,41 @@ window.handleFormSubmit = function(event, type) {
     });
 };
 
+// טעינת Popup Manager Demo
+function loadPopupDemo() {
+    // עדכן את הסוג הנוכחי
+    window.currentType = 'popup-demo';
+
+    // נקה את האזור המרכזי
+    const mainContent = document.querySelector('.dashboard-main');
+    if (!mainContent) return;
+
+    // הצג iframe עם הדמו
+    mainContent.innerHTML = `
+        <div style="width: 100%; height: 100%; display: flex; flex-direction: column;">
+            <div style="padding: 20px; background: white; border-bottom: 2px solid #e5e7eb;">
+                <h2 style="margin: 0; color: #667eea; display: flex; align-items: center; gap: 10px;">
+                    <span>🎯</span>
+                    <span>Popup Manager - Demo & Documentation</span>
+                </h2>
+                <p style="margin: 10px 0 0 0; color: #64748b;">
+                    מודול פופ-אפ גנרי לחלוטין עם תקשורת דו-כיוונית
+                </p>
+            </div>
+            <iframe
+                src="/dashboard/dashboards/cemeteries/popup/demo.html"
+                style="flex: 1; border: none; width: 100%;"
+                frameborder="0">
+            </iframe>
+        </div>
+    `;
+
+    showSuccess('דמו טעון בהצלחה');
+}
+
 // הוסף את הפונקציה לייצוא
 window.refreshData = refreshData;
+window.loadPopupDemo = loadPopupDemo;
 
 // ייצוא פונקציות גלובליות
 window.initDashboard = initDashboard;

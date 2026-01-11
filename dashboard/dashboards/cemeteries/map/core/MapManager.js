@@ -98,9 +98,18 @@ export class MapManager {
         const container = canvasElement.parentElement;
         const containerRect = container.getBoundingClientRect();
 
+        console.log('🔍 Container dimensions:', containerRect.width, 'x', containerRect.height);
+        console.log('🔍 Window size:', window.innerWidth, 'x', window.innerHeight);
+
+        // Use window size if container is 0
+        const width = containerRect.width || window.innerWidth;
+        const height = containerRect.height || (window.innerHeight - 56);
+
+        console.log('🔍 Using dimensions:', width, 'x', height);
+
         this.canvas = new fabric.Canvas(canvasElement, {
-            width: containerRect.width,
-            height: containerRect.height,
+            width: width,
+            height: height,
             backgroundColor: DEFAULT_MAP_SETTINGS.backgroundColor,
             selection: this.state.mode === 'edit',
             preserveObjectStacking: true,

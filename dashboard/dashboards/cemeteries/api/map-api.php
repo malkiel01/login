@@ -129,14 +129,25 @@ try {
             throw new Exception('Entity not found');
         }
 
-        // Parse JSON fields
-        if (isset($entity['mapPolygon'])) {
+        // Parse JSON fields - check both old (mapData) and new field names
+        if (!empty($entity['mapData'])) {
+            $mapData = json_decode($entity['mapData'], true);
+            if ($mapData) {
+                // Extract fields from mapData for backwards compatibility
+                $entity['mapPolygon'] = $mapData['boundary'] ?? $mapData['polygon'] ?? $mapData['mapPolygon'] ?? null;
+                $entity['mapBackgroundImage'] = $mapData['background'] ?? $mapData['backgroundImage'] ?? $mapData['mapBackgroundImage'] ?? null;
+                $entity['mapSettings'] = $mapData['settings'] ?? $mapData['mapSettings'] ?? null;
+                $entity['mapCanvasData'] = $mapData['canvas'] ?? $mapData['canvasData'] ?? null;
+            }
+        }
+        // Also check direct fields if they exist
+        if (isset($entity['mapPolygon']) && is_string($entity['mapPolygon'])) {
             $entity['mapPolygon'] = json_decode($entity['mapPolygon'], true);
         }
-        if (isset($entity['mapBackgroundImage'])) {
+        if (isset($entity['mapBackgroundImage']) && is_string($entity['mapBackgroundImage'])) {
             $entity['mapBackgroundImage'] = json_decode($entity['mapBackgroundImage'], true);
         }
-        if (isset($entity['mapSettings'])) {
+        if (isset($entity['mapSettings']) && is_string($entity['mapSettings'])) {
             $entity['mapSettings'] = json_decode($entity['mapSettings'], true);
         }
 

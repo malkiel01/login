@@ -707,12 +707,18 @@ function loadPopupDemo() {
     window.currentType = 'popup-demo';
 
     // נקה את האזור המרכזי
-    const mainContent = document.querySelector('.dashboard-main');
-    if (!mainContent) return;
+    const mainContent = document.querySelector('.main-content');
+    if (!mainContent) {
+        console.error('❌ לא נמצא אלמנט main-content');
+        showError('שגיאה בטעינת הדמו');
+        return;
+    }
+
+    console.log('✅ נמצא אלמנט main-content, טוען דמו...');
 
     // הצג iframe עם הדמו
     mainContent.innerHTML = `
-        <div style="width: 100%; height: 100%; display: flex; flex-direction: column;">
+        <div style="width: 100%; height: calc(100vh - 120px); display: flex; flex-direction: column;">
             <div style="padding: 20px; background: white; border-bottom: 2px solid #e5e7eb;">
                 <h2 style="margin: 0; color: #667eea; display: flex; align-items: center; gap: 10px;">
                     <span>🎯</span>
@@ -724,7 +730,7 @@ function loadPopupDemo() {
             </div>
             <iframe
                 src="/dashboard/dashboards/cemeteries/popup/demo.html"
-                style="flex: 1; border: none; width: 100%;"
+                style="flex: 1; border: none; width: 100%; min-height: 600px;"
                 frameborder="0">
             </iframe>
         </div>

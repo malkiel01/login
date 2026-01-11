@@ -162,7 +162,8 @@ $config = $entityConfig[$entityType] ?? $entityConfig['cemetery'];
         </div>
     </header>
 
-    <!-- Sidebar - Entity List -->
+    <!-- Sidebar - Hidden for now -->
+    <!--
     <aside class="map-sidebar" id="sidebar">
         <div class="sidebar-header">
             <h3 id="sidebarTitle">רשימה</h3>
@@ -176,12 +177,11 @@ $config = $entityConfig[$entityType] ?? $entityConfig['cemetery'];
             <input type="text" id="sidebarSearch" placeholder="חיפוש...">
         </div>
         <div class="sidebar-list" id="sidebarList">
-            <!-- Items will be loaded dynamically -->
         </div>
         <div class="sidebar-stats" id="sidebarStats">
-            <!-- Statistics -->
         </div>
     </aside>
+    -->
 
     <!-- Main Canvas Container -->
     <main class="map-container" id="mapContainer">

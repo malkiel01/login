@@ -426,6 +426,77 @@ $config = $entityConfig[$entityType] ?? $entityConfig['cemetery'];
                 });
             }
 
+            // Context menu handling
+            const contextMenu = document.getElementById('contextMenu');
+            let contextMenuTarget = null;
+
+            mapManager.on('contextmenu', (data) => {
+                contextMenuTarget = data.target;
+
+                // Show/hide edit-only items based on mode
+                const editOnlyItems = contextMenu.querySelectorAll('.edit-only');
+                editOnlyItems.forEach(item => {
+                    item.style.display = data.isEditMode ? '' : 'none';
+                });
+
+                // Position and show context menu
+                contextMenu.style.left = data.x + 'px';
+                contextMenu.style.top = data.y + 'px';
+                contextMenu.style.display = 'block';
+            });
+
+            // Hide context menu on click outside
+            document.addEventListener('click', () => {
+                contextMenu.style.display = 'none';
+            });
+
+            // Handle context menu actions
+            contextMenu.querySelectorAll('li[data-action]').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const action = item.dataset.action;
+
+                    switch(action) {
+                        case 'viewCard':
+                            if (contextMenuTarget?.entityId) {
+                                console.log('View card:', contextMenuTarget.entityType, contextMenuTarget.entityId);
+                                // TODO: Open entity card
+                            }
+                            break;
+                        case 'zoomTo':
+                            if (contextMenuTarget) {
+                                mapManager.canvas.setActiveObject(contextMenuTarget);
+                                mapManager.canvas.zoomToPoint(
+                                    { x: contextMenuTarget.left, y: contextMenuTarget.top },
+                                    2
+                                );
+                            }
+                            break;
+                        case 'drillDown':
+                            if (contextMenuTarget?.entityId) {
+                                const url = `map/index.php?type=${contextMenuTarget.entityType}&id=${contextMenuTarget.entityId}&mode=${config.mode}`;
+                                window.location.href = url;
+                            }
+                            break;
+                        case 'editPolygon':
+                            if (contextMenuTarget) {
+                                contextMenuTarget.set({ selectable: true, evented: true });
+                                mapManager.canvas.setActiveObject(contextMenuTarget);
+                                mapManager.canvas.renderAll();
+                            }
+                            break;
+                        case 'deletePolygon':
+                            if (contextMenuTarget && confirm('האם למחוק את הפוליגון?')) {
+                                mapManager.canvas.remove(contextMenuTarget);
+                                mapManager.canvas.renderAll();
+                            }
+                            break;
+                    }
+
+                    contextMenu.style.display = 'none';
+                });
+            });
+
             console.log('🎉 All done!');
 
         } catch (error) {

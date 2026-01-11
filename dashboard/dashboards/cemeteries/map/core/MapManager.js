@@ -431,6 +431,32 @@ export class MapManager {
                 this.boundary.restoreValidState(opt.target);
             }
         });
+
+        // Right-click context menu
+        this.canvas.on('mouse:down', (opt) => {
+            if (opt.e.button === 2) { // Right click
+                opt.e.preventDefault();
+                opt.e.stopPropagation();
+
+                const pointer = this.canvas.getPointer(opt.e);
+                const target = opt.target;
+
+                // Trigger context menu event
+                this.trigger('contextmenu', {
+                    x: opt.e.clientX,
+                    y: opt.e.clientY,
+                    canvasX: pointer.x,
+                    canvasY: pointer.y,
+                    target: target,
+                    isEditMode: this.state.mode === 'edit'
+                });
+            }
+        });
+
+        // Prevent default context menu on canvas
+        this.canvas.wrapperEl.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+        });
     }
 
     /**

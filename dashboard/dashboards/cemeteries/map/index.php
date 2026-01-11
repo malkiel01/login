@@ -307,6 +307,11 @@ $config = $entityConfig[$entityType] ?? $entityConfig['cemetery'];
 
         async function loadModules() {
             try {
+                // Test with simple module first
+                console.log('⏳ Loading test-module...');
+                const testMod = await import('./config/test-module.js');
+                console.log('✅ test-module loaded:', testMod.TEST_VALUE);
+
                 console.log('⏳ Loading EntityConfig...');
                 const { EntityConfig } = await import('./config/EntityConfig.js');
                 console.log('✅ EntityConfig loaded');

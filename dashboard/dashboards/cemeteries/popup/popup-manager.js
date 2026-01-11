@@ -9,6 +9,29 @@ class PopupManager {
     static popups = new Map();
     static maxZIndex = 10000;
     static minimizedContainer = null;
+    static cssLoaded = false;
+
+    /**
+     * טוען את ה-CSS של הפופ-אפ (אם עדיין לא נטען)
+     */
+    static loadCSS() {
+        const targetDoc = this.getTargetDocument();
+
+        // בדוק אם כבר נטען
+        if (targetDoc.getElementById('popup-manager-css')) {
+            return;
+        }
+
+        // צור link element
+        const link = targetDoc.createElement('link');
+        link.id = 'popup-manager-css';
+        link.rel = 'stylesheet';
+        link.href = '/dashboard/dashboards/cemeteries/popup/popup.css';
+        targetDoc.head.appendChild(link);
+
+        this.cssLoaded = true;
+        console.log('✅ Popup CSS loaded');
+    }
 
     /**
      * מחזיר את ה-document הנכון (top window אם בתוך iframe)
@@ -46,6 +69,9 @@ class PopupManager {
      * @returns {Popup} instance
      */
     static create(config) {
+        // טען CSS אם עדיין לא נטען
+        this.loadCSS();
+
         // יצירת ID ייחודי אם לא סופק
         const id = config.id || `popup-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 

@@ -209,7 +209,10 @@ class Popup {
      * יצירת ה-DOM
      */
     render() {
-        const container = document.createElement('div');
+        // קבל את ה-document הנכון (top window אם בתוך iframe)
+        const targetDoc = PopupManager.getTargetDocument();
+
+        const container = targetDoc.createElement('div');
         container.className = 'popup-container';
         container.id = this.id;
         container.style.cssText = `
@@ -238,8 +241,7 @@ class Popup {
         this.elements.content = content;
         this.elements.resizeHandle = resizeHandle;
 
-        // הוסף לחלון הנכון (top window אם בתוך iframe)
-        const targetDoc = PopupManager.getTargetDocument();
+        // הוסף לחלון הנכון
         targetDoc.body.appendChild(container);
 
         // אתחול אירועים
@@ -253,14 +255,16 @@ class Popup {
      * יצירת Header
      */
     createHeader() {
-        const header = document.createElement('div');
+        const targetDoc = PopupManager.getTargetDocument();
+
+        const header = targetDoc.createElement('div');
         header.className = 'popup-header';
 
-        const title = document.createElement('span');
+        const title = targetDoc.createElement('span');
         title.className = 'popup-title';
         title.textContent = this.config.title;
 
-        const controls = document.createElement('div');
+        const controls = targetDoc.createElement('div');
         controls.className = 'popup-controls';
 
         // כפתורי בקרה
@@ -294,7 +298,9 @@ class Popup {
      * יצירת כפתור בקרה
      */
     createControlButton(name, icon, onClick) {
-        const btn = document.createElement('button');
+        const targetDoc = PopupManager.getTargetDocument();
+
+        const btn = targetDoc.createElement('button');
         btn.className = `popup-control-btn popup-${name}`;
         btn.textContent = icon;
         btn.onclick = (e) => {
@@ -308,11 +314,13 @@ class Popup {
      * יצירת Content
      */
     createContent() {
-        const content = document.createElement('div');
+        const targetDoc = PopupManager.getTargetDocument();
+
+        const content = targetDoc.createElement('div');
         content.className = 'popup-content';
 
         if (this.config.type === 'iframe') {
-            const iframe = document.createElement('iframe');
+            const iframe = targetDoc.createElement('iframe');
             iframe.className = 'popup-iframe';
 
             // העברת popup ID דרך URL
@@ -365,7 +373,9 @@ class Popup {
      * יצירת resize handle
      */
     createResizeHandle() {
-        const handle = document.createElement('div');
+        const targetDoc = PopupManager.getTargetDocument();
+
+        const handle = targetDoc.createElement('div');
         handle.className = 'popup-resize-handle';
         return handle;
     }
@@ -553,7 +563,8 @@ class Popup {
         this.elements.container.classList.remove('popup-maximized');
 
         // יצירת כרטיס ממוזער
-        const minimizedCard = document.createElement('div');
+        const targetDoc = PopupManager.getTargetDocument();
+        const minimizedCard = targetDoc.createElement('div');
         minimizedCard.className = 'popup-minimized-card';
         minimizedCard.innerHTML = `
             <span class="popup-minimized-title">${this.config.title}</span>

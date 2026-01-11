@@ -12,16 +12,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy to Server via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: mbe-plus.com
-          username: mbeplusc
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 22
-          script_stop: true
-          debug: true
-          script: |
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+          # Configure SSH to use compatible algorithms for Bluehost
+          cat >> ~/.ssh/config << EOF
+          Host mbe-plus.com
+            HostName mbe-plus.com
+            User mbeplusc
+            IdentityFile ~/.ssh/deploy_key
+            KexAlgorithms +diffie-hellman-group-exchange-sha256
+            StrictHostKeyChecking no
+          EOF
+          chmod 600 ~/.ssh/config
+
+      - name: Deploy to Server
+        run: |
+          ssh mbe-plus.com << 'ENDSSH'
             echo "Starting deployment..."
             cd ~/public_html/form/login
             git fetch origin
@@ -29,3 +39,4 @@ jobs:
             git pull origin ${{ github.ref_name }}
             echo "✅ Deployed branch: ${{ github.ref_name }}"
             echo "✅ Commit: ${{ github.sha }}"
+          ENDSSH

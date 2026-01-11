@@ -162,27 +162,6 @@ $config = $entityConfig[$entityType] ?? $entityConfig['cemetery'];
         </div>
     </header>
 
-    <!-- Sidebar - Hidden for now -->
-    <!--
-    <aside class="map-sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <h3 id="sidebarTitle">רשימה</h3>
-            <button class="btn-icon btn-sm" id="btnToggleSidebar">
-                <svg viewBox="0 0 24 24" width="18" height="18">
-                    <path fill="currentColor" d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
-                </svg>
-            </button>
-        </div>
-        <div class="sidebar-search">
-            <input type="text" id="sidebarSearch" placeholder="חיפוש...">
-        </div>
-        <div class="sidebar-list" id="sidebarList">
-        </div>
-        <div class="sidebar-stats" id="sidebarStats">
-        </div>
-    </aside>
-    -->
-
     <!-- Main Canvas Container -->
     <main class="map-container" id="mapContainer">
         <div class="canvas-wrapper" id="canvasWrapper">

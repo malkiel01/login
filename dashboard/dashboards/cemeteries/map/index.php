@@ -369,6 +369,63 @@ $config = $entityConfig[$entityType] ?? $entityConfig['cemetery'];
 
             // Make it globally accessible for debugging
             window.mapManager = mapManager;
+
+            // Connect button handlers
+            const btnZoomIn = document.getElementById('btnZoomIn');
+            const btnZoomOut = document.getElementById('btnZoomOut');
+            const btnZoomFit = document.getElementById('btnZoomFit');
+            const btnBack = document.getElementById('btnBack');
+            const btnEditMode = document.getElementById('btnEditMode');
+            const zoomLevelDisplay = document.getElementById('zoomLevel');
+
+            if (btnZoomIn) {
+                btnZoomIn.addEventListener('click', () => {
+                    const zoom = mapManager.canvas.getZoom() * 1.2;
+                    mapManager.canvas.setZoom(Math.min(zoom, 5));
+                    mapManager.canvas.renderAll();
+                    if (zoomLevelDisplay) zoomLevelDisplay.textContent = Math.round(zoom * 100) + '%';
+                });
+            }
+
+            if (btnZoomOut) {
+                btnZoomOut.addEventListener('click', () => {
+                    const zoom = mapManager.canvas.getZoom() / 1.2;
+                    mapManager.canvas.setZoom(Math.max(zoom, 0.1));
+                    mapManager.canvas.renderAll();
+                    if (zoomLevelDisplay) zoomLevelDisplay.textContent = Math.round(zoom * 100) + '%';
+                });
+            }
+
+            if (btnZoomFit) {
+                btnZoomFit.addEventListener('click', () => {
+                    mapManager.canvas.setZoom(1);
+                    mapManager.canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
+                    mapManager.canvas.renderAll();
+                    if (zoomLevelDisplay) zoomLevelDisplay.textContent = '100%';
+                });
+            }
+
+            if (btnBack) {
+                btnBack.addEventListener('click', () => {
+                    window.close();
+                    // If popup doesn't close, try parent
+                    if (window.opener) {
+                        window.close();
+                    } else {
+                        history.back();
+                    }
+                });
+            }
+
+            if (btnEditMode) {
+                btnEditMode.addEventListener('click', () => {
+                    // Redirect to edit mode
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('mode', 'edit');
+                    window.location.href = url.toString();
+                });
+            }
+
             console.log('🎉 All done!');
 
         } catch (error) {

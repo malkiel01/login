@@ -18,21 +18,26 @@ export class BackgroundManager {
      * @param {Object} backgroundData - נתוני תמונת הרקע
      */
     async loadBackground(backgroundData) {
-        if (!backgroundData || !backgroundData.path) {
+        // Support both old API format (path, left, top, scaleX, scaleY) and new (path, offsetX, offsetY, scale)
+        const imagePath = backgroundData?.path || backgroundData?.src;
+
+        if (!backgroundData || !imagePath) {
             this.clearBackground();
             return null;
         }
 
         try {
-            const image = await this.loadImageFromPath(backgroundData.path);
+            console.log('🖼️ Loading background from:', imagePath.substring(0, 100) + '...');
+            const image = await this.loadImageFromPath(imagePath);
 
             if (image) {
                 this.setBackground(image, {
                     width: backgroundData.width,
                     height: backgroundData.height,
-                    offsetX: backgroundData.offsetX || 0,
-                    offsetY: backgroundData.offsetY || 0,
-                    scale: backgroundData.scale || 1
+                    offsetX: backgroundData.offsetX ?? backgroundData.left ?? 0,
+                    offsetY: backgroundData.offsetY ?? backgroundData.top ?? 0,
+                    scaleX: backgroundData.scaleX ?? backgroundData.scale ?? 1,
+                    scaleY: backgroundData.scaleY ?? backgroundData.scale ?? 1
                 });
             }
 
@@ -73,33 +78,36 @@ export class BackgroundManager {
             height = null,
             offsetX = 0,
             offsetY = 0,
-            scale = 1
+            scaleX = 1,
+            scaleY = 1
         } = options;
 
         // הגדרות בסיסיות
         image.set({
             left: offsetX,
             top: offsetY,
+            scaleX: scaleX,
+            scaleY: scaleY,
             selectable: false,
             evented: false,
             objectCaching: false,
-            isBackground: true
+            isBackground: true,
+            originX: 'center',
+            originY: 'center'
         });
-
-        // התאמת גודל
-        if (width && height) {
-            image.scaleToWidth(width);
-            image.scaleToHeight(height);
-        }
-
-        // התאמת סקייל
-        if (scale !== 1) {
-            image.scale(scale);
-        }
 
         this.backgroundImage = image;
         this.canvas.add(image);
         this.sendToBack();
+
+        console.log('🖼️ Background set:', {
+            left: offsetX,
+            top: offsetY,
+            scaleX,
+            scaleY,
+            width: image.width,
+            height: image.height
+        });
 
         this.canvas.renderAll();
     }

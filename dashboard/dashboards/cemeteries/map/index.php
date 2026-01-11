@@ -292,6 +292,19 @@ $config = $entityConfig[$entityType] ?? $entityConfig['cemetery'];
     <script type="module">
         console.log('📦 Starting module imports...');
 
+        // First - test if file is accessible via fetch
+        console.log('🔍 Testing file accessibility...');
+        try {
+            const testFetch = await fetch('./config/EntityConfig.js');
+            console.log('📥 Fetch status:', testFetch.status, testFetch.statusText);
+            console.log('📥 Content-Type:', testFetch.headers.get('content-type'));
+            const text = await testFetch.text();
+            console.log('📥 File size:', text.length, 'chars');
+            console.log('📥 First 200 chars:', text.substring(0, 200));
+        } catch (fetchError) {
+            console.error('❌ Fetch failed:', fetchError);
+        }
+
         async function loadModules() {
             try {
                 console.log('⏳ Loading EntityConfig...');

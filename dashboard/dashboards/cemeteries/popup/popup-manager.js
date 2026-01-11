@@ -2,11 +2,11 @@
  * PopupManager - מנהל פופ-אפ גנרי לחלוטין
  * תומך ב-iframe וגם HTML ישיר
  * תקשורת דו-כיוונית עם התוכן
- * @version 1.1.0
+ * @version 1.0.1
  */
 
 class PopupManager {
-    static version = '1.1.0';
+    static version = '1.0.1';
     static popups = new Map();
     static maxZIndex = 10000;
     static minimizedContainer = null;
@@ -174,7 +174,6 @@ class Popup {
             position: { x: 'center', y: 'center' },
             draggable: true,
             resizable: true,
-            stylesheets: [], // מערך של URLs לקבצי CSS שיטענו ב-detached mode
             controls: {
                 minimize: true,
                 maximize: true,

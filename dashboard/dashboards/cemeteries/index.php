@@ -35,11 +35,7 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/universal-search.css">
     <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/table-manager.css">
 
-    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/auth/css/style2.css">
-    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/popup/popup.css">
-    
-    <!-- Scripts -->
-    <script src="/dashboard/dashboards/cemeteries/popup/popup-manager.js"></script>
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/css/reports/graves-inventory-report.css">
 
 </head>
 <body>
@@ -217,7 +213,7 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     </script>
     <!-- Step 1/15: StateManager integration -->
-    <script src="/dashboard/dashboards/cemeteries/js/map-launcher-new.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/map-launcher.js"></script>
 
     <!-- 7️⃣ אתחול -->
     <script>

@@ -209,6 +209,25 @@ $config = $entityConfig[$entityType] ?? $entityConfig['cemetery'];
                 </svg>
                 מחק פוליגון
             </li>
+            <hr class="menu-divider edit-only">
+            <li data-action="addChild" class="edit-only">
+                <svg viewBox="0 0 24 24" width="16" height="16">
+                    <path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                </svg>
+                הוסף ילד
+            </li>
+            <li data-action="editBackground" class="edit-only">
+                <svg viewBox="0 0 24 24" width="16" height="16">
+                    <path fill="currentColor" d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+                </svg>
+                ערוך תמונת רקע
+            </li>
+            <li data-action="deleteBackground" class="edit-only danger">
+                <svg viewBox="0 0 24 24" width="16" height="16">
+                    <path fill="currentColor" d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+                </svg>
+                מחק תמונת רקע
+            </li>
         </ul>
     </div>
 
@@ -426,6 +445,196 @@ $config = $entityConfig[$entityType] ?? $entityConfig['cemetery'];
                 });
             }
 
+            // Edit mode buttons
+            const btnSelect = document.getElementById('btnSelect');
+            const btnDraw = document.getElementById('btnDraw');
+            const btnEdit = document.getElementById('btnEdit');
+            const btnAddImage = document.getElementById('btnAddImage');
+            const btnSave = document.getElementById('btnSave');
+            const backgroundImageInput = document.getElementById('backgroundImageInput');
+
+            let currentTool = 'select';
+            let isDrawing = false;
+            let drawingPoints = [];
+
+            // Tool button helper
+            function setActiveTool(tool) {
+                currentTool = tool;
+                [btnSelect, btnDraw, btnEdit].forEach(btn => {
+                    if (btn) btn.classList.remove('active');
+                });
+                if (tool === 'select' && btnSelect) btnSelect.classList.add('active');
+                if (tool === 'draw' && btnDraw) btnDraw.classList.add('active');
+                if (tool === 'edit' && btnEdit) btnEdit.classList.add('active');
+
+                // Update canvas mode
+                mapManager.canvas.selection = (tool === 'select');
+                mapManager.canvas.defaultCursor = tool === 'draw' ? 'crosshair' : 'default';
+            }
+
+            if (btnSelect) {
+                btnSelect.addEventListener('click', () => setActiveTool('select'));
+            }
+
+            if (btnDraw) {
+                btnDraw.addEventListener('click', () => {
+                    setActiveTool('draw');
+                    isDrawing = false;
+                    drawingPoints = [];
+                });
+            }
+
+            if (btnEdit) {
+                btnEdit.addEventListener('click', () => {
+                    setActiveTool('edit');
+                    // Enable editing on polygons
+                    mapManager.canvas.getObjects().forEach(obj => {
+                        if (obj.type === 'polygon') {
+                            obj.set({ selectable: true, evented: true, hasControls: true });
+                        }
+                    });
+                    mapManager.canvas.renderAll();
+                });
+            }
+
+            // Add background image
+            if (btnAddImage && backgroundImageInput) {
+                btnAddImage.addEventListener('click', () => {
+                    backgroundImageInput.click();
+                });
+
+                backgroundImageInput.addEventListener('change', async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+
+                    try {
+                        console.log('📤 Uploading background image...');
+                        await mapManager.background.uploadImage(file, config.entityType, config.entityId);
+                        console.log('✅ Background uploaded');
+                    } catch (error) {
+                        console.error('❌ Upload failed:', error);
+                        alert('שגיאה בהעלאת התמונה: ' + error.message);
+                    }
+                    backgroundImageInput.value = '';
+                });
+            }
+
+            // Save button
+            if (btnSave) {
+                btnSave.addEventListener('click', async () => {
+                    try {
+                        btnSave.disabled = true;
+                        btnSave.textContent = 'שומר...';
+
+                        await mapManager.save();
+
+                        btnSave.textContent = 'נשמר!';
+                        setTimeout(() => {
+                            btnSave.disabled = false;
+                            btnSave.innerHTML = `
+                                <svg viewBox="0 0 24 24" width="18" height="18">
+                                    <path fill="currentColor" d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/>
+                                </svg>
+                                שמור
+                            `;
+                        }, 2000);
+                    } catch (error) {
+                        console.error('❌ Save failed:', error);
+                        alert('שגיאה בשמירה: ' + error.message);
+                        btnSave.disabled = false;
+                        btnSave.innerHTML = `
+                            <svg viewBox="0 0 24 24" width="18" height="18">
+                                <path fill="currentColor" d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/>
+                            </svg>
+                            שמור
+                        `;
+                    }
+                });
+            }
+
+            // Drawing polygon on canvas
+            if (config.mode === 'edit') {
+                mapManager.canvas.on('mouse:down', (opt) => {
+                    if (currentTool !== 'draw' || opt.e.button !== 0) return;
+
+                    const pointer = mapManager.canvas.getPointer(opt.e);
+
+                    if (!isDrawing) {
+                        // Start new polygon
+                        isDrawing = true;
+                        drawingPoints = [{ x: pointer.x, y: pointer.y }];
+                    } else {
+                        // Add point to polygon
+                        drawingPoints.push({ x: pointer.x, y: pointer.y });
+                    }
+
+                    // Draw preview points
+                    const circle = new fabric.Circle({
+                        left: pointer.x - 4,
+                        top: pointer.y - 4,
+                        radius: 4,
+                        fill: '#1976D2',
+                        stroke: '#fff',
+                        strokeWidth: 2,
+                        selectable: false,
+                        evented: false,
+                        isDrawingPoint: true
+                    });
+                    mapManager.canvas.add(circle);
+                });
+
+                mapManager.canvas.on('mouse:dblclick', () => {
+                    if (currentTool !== 'draw' || !isDrawing || drawingPoints.length < 3) return;
+
+                    // Remove preview points
+                    mapManager.canvas.getObjects().filter(o => o.isDrawingPoint).forEach(o => {
+                        mapManager.canvas.remove(o);
+                    });
+
+                    // Create polygon
+                    const polygon = new fabric.Polygon(drawingPoints, {
+                        fill: 'rgba(25, 118, 210, 0.3)',
+                        stroke: '#1976D2',
+                        strokeWidth: 2,
+                        selectable: true,
+                        evented: true,
+                        objectType: 'boundaryOutline',
+                        isEntityPolygon: true
+                    });
+
+                    mapManager.canvas.add(polygon);
+                    mapManager.canvas.renderAll();
+
+                    // Reset drawing state
+                    isDrawing = false;
+                    drawingPoints = [];
+                    setActiveTool('select');
+                });
+
+                // ESC to cancel drawing
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && isDrawing) {
+                        mapManager.canvas.getObjects().filter(o => o.isDrawingPoint).forEach(o => {
+                            mapManager.canvas.remove(o);
+                        });
+                        isDrawing = false;
+                        drawingPoints = [];
+                        setActiveTool('select');
+                    }
+                });
+
+                // Delete key to delete selected object
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Delete' || e.key === 'Backspace') {
+                        const activeObject = mapManager.canvas.getActiveObject();
+                        if (activeObject && !activeObject.isBackground) {
+                            mapManager.canvas.remove(activeObject);
+                            mapManager.canvas.renderAll();
+                        }
+                    }
+                });
+            }
+
             // Context menu handling
             const contextMenu = document.getElementById('contextMenu');
             let contextMenuTarget = null;
@@ -489,6 +698,37 @@ $config = $entityConfig[$entityType] ?? $entityConfig['cemetery'];
                             if (contextMenuTarget && confirm('האם למחוק את הפוליגון?')) {
                                 mapManager.canvas.remove(contextMenuTarget);
                                 mapManager.canvas.renderAll();
+                            }
+                            break;
+                        case 'addChild':
+                            // Get child type based on current entity type
+                            const childTypes = {
+                                'cemetery': 'block',
+                                'block': 'plot',
+                                'plot': 'row',
+                                'row': 'areaGrave'
+                            };
+                            const childType = childTypes[config.entityType];
+                            if (childType) {
+                                const childName = prompt(`הזן שם ל${childType === 'block' ? 'גוש' : childType === 'plot' ? 'חלקה' : childType === 'row' ? 'שורה' : 'אחוזת קבר'} חדש:`);
+                                if (childName) {
+                                    console.log('Creating new', childType, 'with name:', childName);
+                                    // TODO: Create child entity via API
+                                    alert('יצירת ילד חדש - בפיתוח');
+                                }
+                            }
+                            break;
+                        case 'editBackground':
+                            if (mapManager.background.hasBackground()) {
+                                mapManager.background.enterEditMode();
+                                alert('תמונת הרקע במצב עריכה. גרור ושנה גודל לפי הצורך.');
+                            } else {
+                                alert('אין תמונת רקע לעריכה');
+                            }
+                            break;
+                        case 'deleteBackground':
+                            if (mapManager.background.hasBackground() && confirm('האם למחוק את תמונת הרקע?')) {
+                                mapManager.background.deleteBackground(config.entityType, config.entityId);
                             }
                             break;
                     }

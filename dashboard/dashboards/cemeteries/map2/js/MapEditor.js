@@ -21,6 +21,15 @@ class MapEditor {
         this.previewLine = null;        // Preview line while drawing
         this.contextMenu = null;        // Context menu element
 
+        // Floating panels state
+        this.panels = {
+            textStyle: { visible: false, position: { x: 20, y: 100 } },
+            elementStyle: { visible: false, position: { x: 20, y: 100 } },
+            layers: { visible: false, position: { x: 20, y: 100 } }
+        };
+        this.draggedPanel = null;
+        this.dragOffset = { x: 0, y: 0 };
+
         // DOM elements
         this.elements = {};
 
@@ -91,7 +100,36 @@ class MapEditor {
             btnEditBackground: document.getElementById('btnEditBackground'),
             btnRemoveBackground: document.getElementById('btnRemoveBackground'),
 
-            closePdfModal: document.getElementById('closePdfModal')
+            closePdfModal: document.getElementById('closePdfModal'),
+
+            // Windows menu
+            btnWindowsMenu: document.getElementById('btnWindowsMenu'),
+            btnTextStylePanel: document.getElementById('btnTextStylePanel'),
+            btnElementStylePanel: document.getElementById('btnElementStylePanel'),
+            btnLayersPanel: document.getElementById('btnLayersPanel'),
+
+            // Floating panels
+            textStylePanel: document.getElementById('textStylePanel'),
+            elementStylePanel: document.getElementById('elementStylePanel'),
+            layersPanel: document.getElementById('layersPanel'),
+
+            // Text style controls
+            textControls: document.getElementById('textControls'),
+            textPanelMessage: document.getElementById('textPanelMessage'),
+            fontFamily: document.getElementById('fontFamily'),
+            fontSize: document.getElementById('fontSize'),
+            fontColor: document.getElementById('fontColor'),
+            letterSpacing: document.getElementById('letterSpacing'),
+
+            // Element style controls
+            elementControls: document.getElementById('elementControls'),
+            elementPanelMessage: document.getElementById('elementPanelMessage'),
+            strokeWidth: document.getElementById('strokeWidth'),
+            strokeColor: document.getElementById('strokeColor'),
+            strokeStyle: document.getElementById('strokeStyle'),
+
+            // Layers
+            layersList: document.getElementById('layersList')
         };
     }
 
@@ -188,6 +226,49 @@ class MapEditor {
                 this.handleBoundaryDoubleClick(opt);
             }
         });
+
+        // Windows menu
+        this.setupDropdownMenu('btnWindowsMenu', 'windowsMenu');
+
+        // Panel toggle buttons
+        this.elements.btnTextStylePanel.addEventListener('click', () => this.togglePanel('textStyle'));
+        this.elements.btnElementStylePanel.addEventListener('click', () => this.togglePanel('elementStyle'));
+        this.elements.btnLayersPanel.addEventListener('click', () => this.togglePanel('layers'));
+
+        // Panel close buttons
+        document.querySelectorAll('.floating-panel-close').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const panelName = btn.dataset.panel;
+                this.togglePanel(panelName);
+            });
+        });
+
+        // Panel dragging
+        document.querySelectorAll('.floating-panel-header').forEach(header => {
+            header.addEventListener('mousedown', (e) => this.startPanelDrag(e));
+        });
+        document.addEventListener('mousemove', (e) => this.handlePanelDrag(e));
+        document.addEventListener('mouseup', () => this.stopPanelDrag());
+
+        // Text style controls
+        this.elements.fontFamily.addEventListener('change', () => this.applyTextStyle());
+        this.elements.fontSize.addEventListener('input', () => this.applyTextStyle());
+        this.elements.fontColor.addEventListener('input', () => this.applyTextStyle());
+        this.elements.letterSpacing.addEventListener('input', () => this.applyTextStyle());
+
+        // Element style controls
+        this.elements.strokeWidth.addEventListener('input', () => this.applyElementStyle());
+        this.elements.strokeColor.addEventListener('input', () => this.applyElementStyle());
+        this.elements.strokeStyle.addEventListener('change', () => this.applyElementStyle());
+
+        // Canvas selection events for panels
+        this.canvas.on('selection:created', () => this.onSelectionChanged());
+        this.canvas.on('selection:updated', () => this.onSelectionChanged());
+        this.canvas.on('selection:cleared', () => this.onSelectionCleared());
+
+        // Update layers when objects added/removed
+        this.canvas.on('object:added', () => this.updateLayersPanel());
+        this.canvas.on('object:removed', () => this.updateLayersPanel());
     }
 
     /**
@@ -1679,6 +1760,367 @@ class MapEditor {
         if (type) {
             this.elements.statusBar.classList.add(type);
         }
+    }
+
+    // ============================================
+    // FLOATING PANELS
+    // ============================================
+
+    /**
+     * Toggle panel visibility
+     */
+    togglePanel(panelName) {
+        const panelMap = {
+            textStyle: this.elements.textStylePanel,
+            elementStyle: this.elements.elementStylePanel,
+            layers: this.elements.layersPanel
+        };
+        const btnMap = {
+            textStyle: this.elements.btnTextStylePanel,
+            elementStyle: this.elements.btnElementStylePanel,
+            layers: this.elements.btnLayersPanel
+        };
+
+        const panel = panelMap[panelName];
+        const btn = btnMap[panelName];
+        if (!panel) return;
+
+        this.panels[panelName].visible = !this.panels[panelName].visible;
+
+        if (this.panels[panelName].visible) {
+            panel.style.display = 'block';
+            panel.style.left = this.panels[panelName].position.x + 'px';
+            panel.style.top = this.panels[panelName].position.y + 'px';
+            btn.classList.add('checked');
+
+            // Update panel content
+            if (panelName === 'layers') {
+                this.updateLayersPanel();
+            } else {
+                this.onSelectionChanged();
+            }
+        } else {
+            panel.style.display = 'none';
+            btn.classList.remove('checked');
+        }
+
+        // Close dropdown
+        document.querySelectorAll('.dropdown.open').forEach(d => d.classList.remove('open'));
+    }
+
+    /**
+     * Start dragging a panel
+     */
+    startPanelDrag(e) {
+        const panel = e.target.closest('.floating-panel');
+        if (!panel) return;
+
+        this.draggedPanel = panel;
+        const rect = panel.getBoundingClientRect();
+        this.dragOffset = {
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top
+        };
+
+        panel.style.opacity = '0.9';
+    }
+
+    /**
+     * Handle panel dragging
+     */
+    handlePanelDrag(e) {
+        if (!this.draggedPanel) return;
+
+        const x = e.clientX - this.dragOffset.x;
+        const y = e.clientY - this.dragOffset.y;
+
+        // Keep panel within viewport
+        const maxX = window.innerWidth - this.draggedPanel.offsetWidth;
+        const maxY = window.innerHeight - this.draggedPanel.offsetHeight;
+
+        const boundedX = Math.max(0, Math.min(x, maxX));
+        const boundedY = Math.max(0, Math.min(y, maxY));
+
+        this.draggedPanel.style.left = boundedX + 'px';
+        this.draggedPanel.style.top = boundedY + 'px';
+
+        // Save position
+        const panelId = this.draggedPanel.id;
+        const panelName = panelId.replace('Panel', '');
+        if (this.panels[panelName]) {
+            this.panels[panelName].position = { x: boundedX, y: boundedY };
+        }
+    }
+
+    /**
+     * Stop dragging a panel
+     */
+    stopPanelDrag() {
+        if (this.draggedPanel) {
+            this.draggedPanel.style.opacity = '1';
+            this.draggedPanel = null;
+        }
+    }
+
+    /**
+     * Handle selection change for panels
+     */
+    onSelectionChanged() {
+        const activeObject = this.canvas.getActiveObject();
+
+        // Text style panel
+        if (this.panels.textStyle.visible) {
+            if (activeObject && activeObject.isMapElement && activeObject.elementType === 'text') {
+                this.elements.textPanelMessage.style.display = 'none';
+                this.elements.textControls.style.display = 'block';
+                this.loadTextStyles(activeObject);
+            } else {
+                this.elements.textPanelMessage.style.display = 'block';
+                this.elements.textControls.style.display = 'none';
+            }
+        }
+
+        // Element style panel
+        if (this.panels.elementStyle.visible) {
+            const isShape = activeObject && activeObject.isMapElement &&
+                ['line', 'circle', 'rect', 'freedraw'].includes(activeObject.elementType);
+            if (isShape) {
+                this.elements.elementPanelMessage.style.display = 'none';
+                this.elements.elementControls.style.display = 'block';
+                this.loadElementStyles(activeObject);
+            } else {
+                this.elements.elementPanelMessage.style.display = 'block';
+                this.elements.elementControls.style.display = 'none';
+            }
+        }
+
+        // Update layers panel selection
+        if (this.panels.layers.visible) {
+            this.updateLayersPanel();
+        }
+    }
+
+    /**
+     * Handle selection cleared
+     */
+    onSelectionCleared() {
+        // Hide controls in panels
+        if (this.panels.textStyle.visible) {
+            this.elements.textPanelMessage.style.display = 'block';
+            this.elements.textControls.style.display = 'none';
+        }
+        if (this.panels.elementStyle.visible) {
+            this.elements.elementPanelMessage.style.display = 'block';
+            this.elements.elementControls.style.display = 'none';
+        }
+        if (this.panels.layers.visible) {
+            this.updateLayersPanel();
+        }
+    }
+
+    /**
+     * Load text styles into panel controls
+     */
+    loadTextStyles(textObj) {
+        this.elements.fontFamily.value = textObj.fontFamily || 'Arial, sans-serif';
+        this.elements.fontSize.value = textObj.fontSize || 16;
+        this.elements.fontColor.value = textObj.fill || '#1e293b';
+        this.elements.letterSpacing.value = textObj.charSpacing ? textObj.charSpacing / 10 : 0;
+    }
+
+    /**
+     * Apply text styles from panel to selected text
+     */
+    applyTextStyle() {
+        const activeObject = this.canvas.getActiveObject();
+        if (!activeObject || activeObject.elementType !== 'text') return;
+
+        activeObject.set({
+            fontFamily: this.elements.fontFamily.value,
+            fontSize: parseInt(this.elements.fontSize.value),
+            fill: this.elements.fontColor.value,
+            charSpacing: parseFloat(this.elements.letterSpacing.value) * 10
+        });
+
+        this.canvas.renderAll();
+    }
+
+    /**
+     * Load element styles into panel controls
+     */
+    loadElementStyles(obj) {
+        this.elements.strokeWidth.value = obj.strokeWidth || 2;
+        this.elements.strokeColor.value = obj.stroke || '#3b82f6';
+
+        // Determine stroke style
+        if (obj.strokeDashArray) {
+            if (obj.strokeDashArray[0] === 1) {
+                this.elements.strokeStyle.value = 'dotted';
+            } else {
+                this.elements.strokeStyle.value = 'dashed';
+            }
+        } else {
+            this.elements.strokeStyle.value = 'solid';
+        }
+    }
+
+    /**
+     * Apply element styles from panel to selected element
+     */
+    applyElementStyle() {
+        const activeObject = this.canvas.getActiveObject();
+        if (!activeObject || !activeObject.isMapElement) return;
+
+        const strokeStyle = this.elements.strokeStyle.value;
+        let strokeDashArray = null;
+        if (strokeStyle === 'dashed') {
+            strokeDashArray = [8, 4];
+        } else if (strokeStyle === 'dotted') {
+            strokeDashArray = [1, 4];
+        }
+
+        activeObject.set({
+            strokeWidth: parseInt(this.elements.strokeWidth.value),
+            stroke: this.elements.strokeColor.value,
+            strokeDashArray: strokeDashArray
+        });
+
+        this.canvas.renderAll();
+    }
+
+    /**
+     * Update layers panel
+     */
+    updateLayersPanel() {
+        if (!this.panels.layers.visible) return;
+
+        const objects = this.canvas.getObjects().filter(obj =>
+            obj.isMapElement && !obj.isBoundary && !obj.isGrayMask && !obj.isBackgroundImage && !obj.isAnchorPoint
+        );
+
+        if (objects.length === 0) {
+            this.elements.layersList.innerHTML = '<div class="panel-message">אין שכבות</div>';
+            return;
+        }
+
+        const activeObject = this.canvas.getActiveObject();
+
+        const icons = {
+            text: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>',
+            line: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+            circle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>',
+            rect: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/></svg>',
+            freedraw: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17c3-3 6-7 9-7s6 4 9 7"/></svg>'
+        };
+
+        const typeNames = {
+            text: 'טקסט',
+            line: 'קו',
+            circle: 'עיגול',
+            rect: 'מלבן',
+            freedraw: 'ציור חופשי'
+        };
+
+        // Reverse to show top layers first
+        const reversedObjects = [...objects].reverse();
+
+        this.elements.layersList.innerHTML = reversedObjects.map((obj, index) => {
+            const isSelected = obj === activeObject;
+            const type = obj.elementType || 'unknown';
+            const icon = icons[type] || icons.rect;
+            const typeName = typeNames[type] || type;
+            const name = obj.text ? `${typeName}: ${obj.text.substring(0, 15)}` : typeName;
+
+            return `
+                <div class="layer-item ${isSelected ? 'selected' : ''}"
+                     data-index="${objects.length - 1 - index}"
+                     draggable="true">
+                    <div class="layer-icon">${icon}</div>
+                    <span class="layer-name">${name}</span>
+                    <div class="layer-drag-handle">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                        </svg>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        // Add click to select
+        this.elements.layersList.querySelectorAll('.layer-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const index = parseInt(item.dataset.index);
+                const obj = objects[index];
+                if (obj) {
+                    this.canvas.setActiveObject(obj);
+                    this.canvas.renderAll();
+                }
+            });
+        });
+
+        // Add drag and drop for reordering
+        this.setupLayerDragAndDrop(objects);
+    }
+
+    /**
+     * Setup drag and drop for layer reordering
+     */
+    setupLayerDragAndDrop(objects) {
+        const items = this.elements.layersList.querySelectorAll('.layer-item');
+        let draggedItem = null;
+
+        items.forEach(item => {
+            item.addEventListener('dragstart', (e) => {
+                draggedItem = item;
+                item.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+
+            item.addEventListener('dragend', () => {
+                item.classList.remove('dragging');
+                items.forEach(i => i.classList.remove('drag-over'));
+                draggedItem = null;
+            });
+
+            item.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                if (item !== draggedItem) {
+                    item.classList.add('drag-over');
+                }
+            });
+
+            item.addEventListener('dragleave', () => {
+                item.classList.remove('drag-over');
+            });
+
+            item.addEventListener('drop', (e) => {
+                e.preventDefault();
+                item.classList.remove('drag-over');
+
+                if (!draggedItem || item === draggedItem) return;
+
+                const fromIndex = parseInt(draggedItem.dataset.index);
+                const toIndex = parseInt(item.dataset.index);
+
+                const fromObj = objects[fromIndex];
+                const toObj = objects[toIndex];
+
+                if (fromObj && toObj) {
+                    // Swap z-index
+                    const fromZIndex = this.canvas.getObjects().indexOf(fromObj);
+                    const toZIndex = this.canvas.getObjects().indexOf(toObj);
+
+                    if (fromZIndex < toZIndex) {
+                        fromObj.moveTo(toZIndex);
+                    } else {
+                        fromObj.moveTo(toZIndex);
+                    }
+
+                    this.canvas.renderAll();
+                    this.updateLayersPanel();
+                }
+            });
+        });
     }
 
     // ============================================

@@ -3089,6 +3089,7 @@ class MapEditor {
      * Toggle child dropdown menu
      */
     toggleChildDropdown(childId) {
+        const btn = this.elements.childrenList.querySelector(`.child-dropdown-btn[data-id="${childId}"]`);
         const menu = this.elements.childrenList.querySelector(`.child-dropdown-menu[data-id="${childId}"]`);
         const wasOpen = menu.classList.contains('open');
 
@@ -3097,6 +3098,23 @@ class MapEditor {
 
         // Toggle this one
         if (!wasOpen) {
+            // Calculate position using fixed positioning
+            const btnRect = btn.getBoundingClientRect();
+            const menuHeight = 120; // Approximate menu height
+            const viewportHeight = window.innerHeight;
+
+            // Position horizontally aligned with button
+            menu.style.left = `${btnRect.left}px`;
+
+            // Check if menu would go below viewport
+            if (btnRect.bottom + menuHeight > viewportHeight) {
+                // Position above the button
+                menu.style.top = `${btnRect.top - menuHeight}px`;
+            } else {
+                // Position below the button
+                menu.style.top = `${btnRect.bottom + 4}px`;
+            }
+
             menu.classList.add('open');
         }
     }

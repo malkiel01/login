@@ -321,6 +321,8 @@ class MapEditor {
         // Recreate boundary with new points (Fabric.js requires this for proper update)
         const oldBoundary = this.boundary;
         const boundaryProps = {
+            left: oldBoundary.left,
+            top: oldBoundary.top,
             fill: oldBoundary.fill,
             stroke: oldBoundary.stroke,
             strokeWidth: oldBoundary.strokeWidth,
@@ -928,6 +930,8 @@ class MapEditor {
         // Recreate boundary with new points (Fabric.js requires this for proper update)
         const oldBoundary = this.boundary;
         const boundaryProps = {
+            left: oldBoundary.left,
+            top: oldBoundary.top,
             fill: oldBoundary.fill,
             stroke: oldBoundary.stroke,
             strokeWidth: oldBoundary.strokeWidth,

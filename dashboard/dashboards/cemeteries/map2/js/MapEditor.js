@@ -322,17 +322,14 @@ class MapEditor {
 
         // Find the closest edge
         const points = this.boundary.points;
-        const offset = {
-            x: this.boundary.left + this.boundary.width / 2,
-            y: this.boundary.top + this.boundary.height / 2
-        };
+        const pathOffset = this.boundary.pathOffset || { x: 0, y: 0 };
 
         let closestEdgeIndex = -1;
         let minDistance = Infinity;
 
         for (let i = 0; i < points.length; i++) {
-            const p1 = { x: points[i].x + offset.x, y: points[i].y + offset.y };
-            const p2 = { x: points[(i + 1) % points.length].x + offset.x, y: points[(i + 1) % points.length].y + offset.y };
+            const p1 = { x: this.boundary.left + points[i].x - pathOffset.x, y: this.boundary.top + points[i].y - pathOffset.y };
+            const p2 = { x: this.boundary.left + points[(i + 1) % points.length].x - pathOffset.x, y: this.boundary.top + points[(i + 1) % points.length].y - pathOffset.y };
 
             const dist = this.pointToLineDistance(clickPoint, p1, p2);
             if (dist < minDistance) {
@@ -667,10 +664,11 @@ class MapEditor {
     updateGrayMask() {
         if (!this.boundary) return;
 
-        // Get current boundary points
+        // Get current boundary points using pathOffset
+        const pathOffset = this.boundary.pathOffset || { x: 0, y: 0 };
         this.boundaryPoints = this.boundary.points.map(p => ({
-            x: p.x + this.boundary.left + this.boundary.width / 2,
-            y: p.y + this.boundary.top + this.boundary.height / 2
+            x: this.boundary.left + p.x - pathOffset.x,
+            y: this.boundary.top + p.y - pathOffset.y
         }));
 
         // Recreate mask
@@ -703,15 +701,13 @@ class MapEditor {
         if (!this.boundary) return;
 
         const points = this.boundary.points;
-        // Fabric.js polygon points are relative to the center of the bounding box
-        const offset = {
-            x: this.boundary.left + this.boundary.width / 2,
-            y: this.boundary.top + this.boundary.height / 2
-        };
+        // Fabric.js polygon uses pathOffset for point coordinates
+        const pathOffset = this.boundary.pathOffset || { x: 0, y: 0 };
 
         points.forEach((point, index) => {
-            const absX = point.x + offset.x;
-            const absY = point.y + offset.y;
+            // Absolute position = polygon position + point - pathOffset
+            const absX = this.boundary.left + point.x - pathOffset.x;
+            const absY = this.boundary.top + point.y - pathOffset.y;
 
             const circle = new fabric.Circle({
                 left: absX,
@@ -743,16 +739,13 @@ class MapEditor {
 
     onAnchorPointMove(circle) {
         const index = circle.pointIndex;
-        // Fabric.js polygon points are relative to the center of the bounding box
-        const offset = {
-            x: this.boundary.left + this.boundary.width / 2,
-            y: this.boundary.top + this.boundary.height / 2
-        };
+        // Fabric.js polygon uses pathOffset for point coordinates
+        const pathOffset = this.boundary.pathOffset || { x: 0, y: 0 };
 
-        // Update boundary point
+        // Update boundary point (reverse of showAnchorPoints calculation)
         this.boundary.points[index] = {
-            x: circle.left - offset.x,
-            y: circle.top - offset.y
+            x: circle.left - this.boundary.left + pathOffset.x,
+            y: circle.top - this.boundary.top + pathOffset.y
         };
 
         // Update boundary path

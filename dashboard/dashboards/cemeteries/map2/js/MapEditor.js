@@ -231,7 +231,24 @@ class MapEditor {
      * Handle right-click on anchor point
      */
     handleRightClick(opt) {
-        const target = opt.target;
+        // Try to get target from event, or find it manually
+        let target = opt.target;
+
+        // If no target in event, try to find object at pointer position
+        if (!target) {
+            const pointer = this.canvas.getPointer(opt.e);
+            // Find anchor point at this position
+            for (const anchor of this.anchorPoints) {
+                const dx = pointer.x - anchor.left;
+                const dy = pointer.y - anchor.top;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance <= anchor.radius + 5) {
+                    target = anchor;
+                    break;
+                }
+            }
+        }
+
         if (!target || !target.isAnchorPoint) return;
 
         opt.e.preventDefault();
@@ -737,6 +754,7 @@ class MapEditor {
                 originX: 'center',
                 originY: 'center',
                 selectable: true,
+                evented: true,
                 hasControls: false,
                 hasBorders: false,
                 isAnchorPoint: true,

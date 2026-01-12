@@ -857,6 +857,27 @@ body {
     border-color: #3b82f6;
 }
 
+.child-item.editing {
+    background: #f0fdf4;
+    border-color: #22c55e;
+}
+
+.child-item.editing.selected {
+    background: #dcfce7;
+    border-color: #16a34a;
+}
+
+/* Editing badge */
+.editing-badge {
+    font-size: 10px;
+    padding: 2px 6px;
+    background: #22c55e;
+    color: white;
+    border-radius: 4px;
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
 /* Status dot */
 .child-item .status-dot {
     width: 8px;
@@ -956,6 +977,24 @@ body {
 
 .child-dropdown-item.danger:hover {
     background: #fef2f2;
+}
+
+.child-dropdown-item.active {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.child-dropdown-item.active:hover {
+    background: #bbf7d0;
+}
+
+.child-dropdown-item:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.child-dropdown-item:disabled:hover {
+    background: none;
 }
 
 .child-dropdown-item svg {

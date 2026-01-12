@@ -3037,11 +3037,19 @@ class MapEditor {
         this.elements.childrenEmpty.style.display = 'none';
 
         const list = this.elements.childrenList;
-        list.innerHTML = this.childrenPanel.children.map(child => `
-            <div class="child-item ${child.id === this.childrenPanel.selectedChild?.id ? 'selected' : ''}"
+        const isEditing = this.childrenPanel.isEditingChildBoundary;
+        const editingChildId = isEditing ? this.childrenPanel.selectedChild?.id : null;
+
+        list.innerHTML = this.childrenPanel.children.map(child => {
+            const isSelected = child.id === this.childrenPanel.selectedChild?.id;
+            const isBeingEdited = child.id === editingChildId;
+
+            return `
+            <div class="child-item ${isSelected ? 'selected' : ''} ${isBeingEdited ? 'editing' : ''}"
                  data-id="${child.id}">
                 <span class="status-dot ${child.hasPolygon ? 'has-polygon' : 'no-polygon'}"></span>
                 <span class="child-name">${child.name}</span>
+                ${isBeingEdited ? '<span class="editing-badge">עריכה</span>' : ''}
                 <div class="child-dropdown">
                     <button class="child-dropdown-btn" data-id="${child.id}" title="אפשרויות">
                         <svg viewBox="0 0 24 24" width="16" height="16">
@@ -3057,13 +3065,13 @@ class MapEditor {
                                 הוספת גבול
                             </button>
                         ` : `
-                            <button class="child-dropdown-item" data-action="edit" data-id="${child.id}">
+                            <button class="child-dropdown-item ${isBeingEdited ? 'active' : ''}" data-action="edit" data-id="${child.id}">
                                 <svg viewBox="0 0 24 24" width="14" height="14">
                                     <path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
                                 </svg>
-                                עריכת גבול
+                                ${isBeingEdited ? 'סיום עריכה' : 'עריכת גבול'}
                             </button>
-                            <button class="child-dropdown-item danger" data-action="delete" data-id="${child.id}">
+                            <button class="child-dropdown-item danger" data-action="delete" data-id="${child.id}" ${isBeingEdited ? 'disabled' : ''}>
                                 <svg viewBox="0 0 24 24" width="14" height="14">
                                     <path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
                                 </svg>
@@ -3073,7 +3081,7 @@ class MapEditor {
                     </div>
                 </div>
             </div>
-        `).join('');
+        `}).join('');
 
         // Add click handlers for child items (selecting)
         list.querySelectorAll('.child-item').forEach(item => {
@@ -3162,7 +3170,12 @@ class MapEditor {
                 this.startDrawingChildBoundary();
                 break;
             case 'edit':
-                this.startEditingChildBoundary();
+                // Toggle editing mode
+                if (this.childrenPanel.isEditingChildBoundary && this.childrenPanel.selectedChild?.id === childId) {
+                    this.stopEditingChildBoundary();
+                } else {
+                    this.startEditingChildBoundary();
+                }
                 break;
             case 'delete':
                 this.deleteChildBoundary();
@@ -3215,6 +3228,7 @@ class MapEditor {
                     opacity: isSelected ? 1 : 0.5,
                     selectable: false,
                     evented: false,
+                    objectCaching: false,
                     isChildBoundary: true,
                     childId: child.id
                 });
@@ -3421,7 +3435,8 @@ class MapEditor {
             hasBorders: true,
             borderColor: '#22c55e',
             borderDashArray: [5, 5],
-            hoverCursor: 'move'
+            hoverCursor: 'move',
+            objectCaching: false
         });
 
         // Handle polygon movement - update anchor points
@@ -3430,6 +3445,9 @@ class MapEditor {
 
         // Show anchor points
         this.showChildAnchorPoints(polygon);
+
+        // Update children list to show editing indicator
+        this.renderChildrenList();
 
         this.setStatus('לחץ לבחירה וגרירה. גרור נקודות עיגון. דאבל-קליק להוספה. Escape לסיום.', 'editing');
     }
@@ -3502,6 +3520,9 @@ class MapEditor {
         this.childrenPanel.editingPolygon = null;
         this.canvas.discardActiveObject();
         this.canvas.renderAll();
+
+        // Update children list to remove editing indicator
+        this.renderChildrenList();
 
         this.setStatus('עריכת גבול הילד הסתיימה');
     }
@@ -3717,6 +3738,7 @@ class MapEditor {
             borderColor: '#22c55e',
             borderDashArray: [5, 5],
             hoverCursor: 'move',
+            objectCaching: false,
             isChildBoundary: true,
             childId: oldPolygon.childId
         };
@@ -3775,6 +3797,7 @@ class MapEditor {
             borderColor: '#22c55e',
             borderDashArray: [5, 5],
             hoverCursor: 'move',
+            objectCaching: false,
             isChildBoundary: true,
             childId: oldPolygon.childId
         };

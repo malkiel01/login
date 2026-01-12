@@ -228,7 +228,10 @@ class MapEditor {
         this.elements.btnZoomOut.addEventListener('click', () => this.zoomOut());
         this.elements.btnZoomFit.addEventListener('click', () => this.zoomFit());
 
-        // Mouse wheel zoom
+        // Double-click on zoom display to enter manual zoom
+        this.elements.zoomDisplay.addEventListener('dblclick', () => this.showZoomInput());
+
+        // Mouse wheel pan
         this.canvas.on('mouse:wheel', (opt) => this.handleMouseWheel(opt));
 
         // Edit mode toggle
@@ -916,6 +919,64 @@ class MapEditor {
     updateZoomDisplay() {
         const zoom = Math.round(this.canvas.getZoom() * 100);
         this.elements.zoomDisplay.textContent = `${zoom}%`;
+    }
+
+    showZoomInput() {
+        const currentZoom = Math.round(this.canvas.getZoom() * 100);
+        const zoomDisplay = this.elements.zoomDisplay;
+
+        // Create input element
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.value = currentZoom;
+        input.min = 10;
+        input.max = 500;
+        input.style.cssText = `
+            width: 50px;
+            padding: 2px 4px;
+            border: 1px solid #3b82f6;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 12px;
+            outline: none;
+        `;
+
+        // Save original content
+        const originalText = zoomDisplay.textContent;
+
+        // Replace text with input
+        zoomDisplay.textContent = '';
+        zoomDisplay.appendChild(input);
+        input.focus();
+        input.select();
+
+        // Apply zoom function
+        const applyZoom = () => {
+            let value = parseInt(input.value, 10);
+            if (isNaN(value)) value = currentZoom;
+
+            // Clamp between 10% and 500%
+            value = Math.max(10, Math.min(500, value));
+
+            // Apply zoom
+            this.canvas.setZoom(value / 100);
+
+            // Restore display
+            zoomDisplay.textContent = `${value}%`;
+        };
+
+        // Event listeners
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                applyZoom();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                zoomDisplay.textContent = originalText;
+            }
+        });
+
+        input.addEventListener('blur', applyZoom);
     }
 
     // ============================================

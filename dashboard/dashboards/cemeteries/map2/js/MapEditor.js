@@ -3548,16 +3548,17 @@ class MapEditor {
             const circle = new fabric.Circle({
                 left: transformed.x,
                 top: transformed.y,
-                radius: 6,
-                fill: '#22c55e',
-                stroke: '#16a34a',
+                radius: 5,
+                fill: '#3b82f6',
+                stroke: '#fff',
                 strokeWidth: 2,
                 originX: 'center',
                 originY: 'center',
                 selectable: true,
+                evented: true,
                 hasBorders: false,
                 hasControls: false,
-                hoverCursor: 'pointer',
+                hoverCursor: 'move',
                 isChildAnchorPoint: true,
                 pointIndex: index,
                 shadow: new fabric.Shadow({
@@ -3604,19 +3605,31 @@ class MapEditor {
      */
     onChildAnchorPointMove(circle, polygon) {
         const index = circle.pointIndex;
-        const newPoint = { x: circle.left, y: circle.top };
+        let screenPoint = { x: circle.left, y: circle.top };
 
         // Check if new position is inside parent boundary
-        if (!this.isPointInsideParentBoundary(newPoint)) {
+        if (!this.isPointInsideParentBoundary(screenPoint)) {
             // Find closest point inside parent boundary
-            const constrainedPoint = this.constrainPointToParentBoundary(newPoint);
+            const constrainedPoint = this.constrainPointToParentBoundary(screenPoint);
             circle.set({ left: constrainedPoint.x, top: constrainedPoint.y });
-            newPoint.x = constrainedPoint.x;
-            newPoint.y = constrainedPoint.y;
+            screenPoint = constrainedPoint;
         }
 
-        // Update polygon point
-        polygon.points[index] = { x: newPoint.x, y: newPoint.y };
+        // Get pathOffset for the polygon
+        const pathOffset = polygon.pathOffset || { x: 0, y: 0 };
+
+        // Get inverse transformation matrix to convert screen coords back to polygon coords
+        const matrix = polygon.calcTransformMatrix();
+        const invertedMatrix = fabric.util.invertTransform(matrix);
+
+        // Transform anchor point position back to polygon coordinate space
+        const transformed = fabric.util.transformPoint(screenPoint, invertedMatrix);
+
+        // Update polygon point in polygon coordinate space
+        polygon.points[index] = {
+            x: transformed.x + pathOffset.x,
+            y: transformed.y + pathOffset.y
+        };
         polygon.set({ dirty: true });
 
         this.canvas.renderAll();

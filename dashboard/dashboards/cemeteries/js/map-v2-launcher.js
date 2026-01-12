@@ -304,8 +304,8 @@
         const url = `/dashboard/dashboards/cemeteries/map2/index.php?type=${entityType}&id=${entityId}&name=${encodeURIComponent(entityName)}`;
 
         // Open in popup using PopupManager if available
-        if (window.PopupManager) {
-            PopupManager.open({
+        if (window.PopupManager && window.PopupManager.create) {
+            window.PopupManager.create({
                 id: `map-v2-${entityType}-${entityId}`,
                 title: `עורך מפות - ${entityName}`,
                 url: url,

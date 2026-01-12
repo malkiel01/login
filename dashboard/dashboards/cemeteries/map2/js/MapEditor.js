@@ -3119,9 +3119,11 @@ class MapEditor {
      */
     async loadChildren() {
         const isPanelVisible = this.panels.children.visible;
+        console.log('[MapEditor] loadChildren called - panel visible:', isPanelVisible);
 
         // Check if parent has boundary
         if (!this.boundary) {
+            console.log('[MapEditor] loadChildren - no boundary, skipping');
             if (isPanelVisible) {
                 this.showChildrenNoParentBoundary();
             }
@@ -3131,6 +3133,7 @@ class MapEditor {
         // Check if this entity type can have children
         const childType = this.getChildType(this.config.entityType);
         if (!childType) {
+            console.log('[MapEditor] loadChildren - no child type for:', this.config.entityType);
             if (isPanelVisible) {
                 this.showChildrenEmpty('לסוג ישות זה אין ילדים');
             }
@@ -3139,6 +3142,7 @@ class MapEditor {
 
         // If children are already loaded, just render without re-fetching
         if (this.childrenPanel.children.length > 0) {
+            console.log('[MapEditor] loadChildren - using cached children:', this.childrenPanel.children.length);
             if (isPanelVisible) {
                 this.renderChildrenList();
             }
@@ -3152,8 +3156,10 @@ class MapEditor {
 
         try {
             const url = `${this.config.apiBase}map-data.php?action=getChildren&parentType=${this.config.entityType}&parentId=${this.config.entityId}`;
+            console.log('[MapEditor] loadChildren - fetching from:', url);
             const response = await fetch(url);
             const data = await response.json();
+            console.log('[MapEditor] loadChildren - API response:', data);
 
             if (data.success) {
                 this.childrenPanel.children = data.children.map(child => ({
@@ -3163,6 +3169,8 @@ class MapEditor {
                     hasPolygon: child.hasPolygon,
                     polygon: child.polygon
                 }));
+
+                console.log('[MapEditor] loadChildren - loaded children:', this.childrenPanel.children.length);
 
                 if (this.childrenPanel.children.length === 0) {
                     if (isPanelVisible) {
@@ -3179,7 +3187,7 @@ class MapEditor {
                 throw new Error(data.error || 'שגיאה בטעינה');
             }
         } catch (error) {
-            console.error('Error loading children:', error);
+            console.error('[MapEditor] Error loading children:', error);
             if (isPanelVisible) {
                 this.showChildrenEmpty('שגיאה בטעינת ילדים: ' + error.message);
             }
@@ -3404,18 +3412,20 @@ class MapEditor {
         this.clearChildBoundaries();
 
         const selectedId = this.childrenPanel.selectedChild?.id;
+        const childrenWithPolygons = this.childrenPanel.children.filter(c => c.hasPolygon && c.polygon);
 
-        this.childrenPanel.children
-            .filter(c => c.hasPolygon && c.polygon)
-            .forEach(child => {
+        console.log('[MapEditor] renderChildBoundaries - children with polygons:', childrenWithPolygons.length);
+
+        childrenWithPolygons.forEach(child => {
                 const isSelected = child.id === selectedId;
                 const points = child.polygon.points || child.polygon;
 
                 const polygon = new fabric.Polygon(points, {
-                    fill: isSelected ? 'rgba(59, 130, 246, 0.25)' : 'rgba(59, 130, 246, 0.1)',
-                    stroke: '#3b82f6',
-                    strokeWidth: isSelected ? 2 : 1,
-                    opacity: isSelected ? 1 : 0.5,
+                    // More visible styling - solid stroke with light fill
+                    fill: isSelected ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.15)',
+                    stroke: isSelected ? '#2563eb' : '#3b82f6',
+                    strokeWidth: isSelected ? 3 : 2,
+                    opacity: 1,  // Full opacity - transparency is in fill color
                     selectable: false,
                     evented: true,  // Enable events for double-click selection
                     objectCaching: false,
@@ -3459,9 +3469,10 @@ class MapEditor {
         Object.entries(this.childrenPanel.childBoundaries).forEach(([id, polygon]) => {
             const isSelected = id === childId;
             polygon.set({
-                fill: isSelected ? 'rgba(59, 130, 246, 0.25)' : 'rgba(59, 130, 246, 0.1)',
-                strokeWidth: isSelected ? 2 : 1,
-                opacity: isSelected ? 1 : 0.5
+                fill: isSelected ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.15)',
+                stroke: isSelected ? '#2563eb' : '#3b82f6',
+                strokeWidth: isSelected ? 3 : 2,
+                opacity: 1
             });
         });
 

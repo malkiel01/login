@@ -1354,8 +1354,9 @@ class MapEditor {
             y: transformed.y + pathOffset.y
         };
 
-        // Update boundary path
-        this.boundary.set({ dirty: true });
+        // Recalculate polygon dimensions and bounding box
+        this.boundary._setPositionDimensions({});
+        this.boundary.setCoords();
 
         // Update gray mask
         this.updateGrayMask();
@@ -3722,7 +3723,10 @@ class MapEditor {
             x: transformed.x + pathOffset.x,
             y: transformed.y + pathOffset.y
         };
-        polygon.set({ dirty: true });
+
+        // Recalculate polygon dimensions and bounding box
+        polygon._setPositionDimensions({});
+        polygon.setCoords();
 
         this.canvas.renderAll();
     }

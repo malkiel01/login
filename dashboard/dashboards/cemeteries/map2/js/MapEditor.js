@@ -1364,9 +1364,8 @@ class MapEditor {
             y: transformed.y + pathOffset.y
         };
 
-        // Recalculate polygon dimensions and bounding box
-        this.boundary._setPositionDimensions({});
-        this.boundary.setCoords();
+        // Mark polygon as dirty to trigger re-render (without repositioning)
+        this.boundary.set({ dirty: true });
 
         // Update gray mask
         this.updateGrayMask();
@@ -3886,9 +3885,8 @@ class MapEditor {
             y: transformed.y + pathOffset.y
         };
 
-        // Recalculate polygon dimensions and bounding box
-        polygon._setPositionDimensions({});
-        polygon.setCoords();
+        // Mark polygon as dirty to trigger re-render (without repositioning)
+        polygon.set({ dirty: true });
 
         this.canvas.renderAll();
     }

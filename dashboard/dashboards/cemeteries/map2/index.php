@@ -206,12 +206,10 @@ $entityName = $_GET['name'] ?? '';
 
     <!-- Dock Zones -->
     <div class="dock-zone dock-zone-left" id="dockZoneLeft">
-        <div class="dock-tabs" id="dockTabsLeft"></div>
-        <div class="dock-content" id="dockContentLeft"></div>
+        <div class="dock-panels" id="dockPanelsLeft"></div>
     </div>
     <div class="dock-zone dock-zone-right" id="dockZoneRight">
-        <div class="dock-tabs" id="dockTabsRight"></div>
-        <div class="dock-content" id="dockContentRight"></div>
+        <div class="dock-panels" id="dockPanelsRight"></div>
     </div>
 
     <!-- Floating Panels -->

@@ -666,102 +666,102 @@ body {
     border-radius: 10px 0 0 10px;
 }
 
-/* Dock tabs */
-.dock-tabs {
+/* Dock accordion panels */
+.dock-panels {
     display: flex;
-    background: #f8fafc;
+    flex-direction: column;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.dock-panel-item {
     border-bottom: 1px solid #e2e8f0;
-    min-height: 40px;
-    overflow-x: auto;
 }
 
-.dock-tabs:empty {
-    display: none;
+.dock-panel-item:last-child {
+    border-bottom: none;
 }
 
-.dock-tab {
+.dock-panel-header {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 10px 14px;
-    background: transparent;
-    border: none;
-    border-bottom: 2px solid transparent;
-    color: #64748b;
-    font-size: 13px;
+    gap: 8px;
+    padding: 10px 12px;
+    background: #f8fafc;
     cursor: pointer;
-    white-space: nowrap;
+    user-select: none;
     transition: all 0.15s;
 }
 
-.dock-tab:hover {
+.dock-panel-header:hover {
     background: #f1f5f9;
-    color: #1e293b;
 }
 
-.dock-tab.active {
-    background: #fff;
-    color: #1e293b;
-    border-bottom-color: #3b82f6;
-}
-
-.dock-tab-icon {
+.dock-panel-toggle {
     width: 16px;
     height: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    color: #64748b;
+    transition: transform 0.2s;
+    flex-shrink: 0;
 }
 
-.dock-tab-icon svg {
+.dock-panel-item.collapsed .dock-panel-toggle {
+    transform: rotate(-90deg);
+}
+
+.dock-panel-icon {
+    width: 16px;
+    height: 16px;
+    color: #64748b;
+    flex-shrink: 0;
+}
+
+.dock-panel-icon svg {
     width: 14px;
     height: 14px;
 }
 
-.dock-tab-title {
+.dock-panel-title {
+    flex: 1;
     font-size: 12px;
-    font-weight: 500;
+    font-weight: 600;
+    color: #1e293b;
 }
 
-.dock-tab-undock {
-    width: 18px;
-    height: 18px;
+.dock-panel-undock {
+    width: 20px;
+    height: 20px;
     background: none;
     border: none;
     color: #94a3b8;
     font-size: 14px;
     cursor: pointer;
-    border-radius: 3px;
+    border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-right: -4px;
     opacity: 0;
     transition: all 0.15s;
 }
 
-.dock-tab:hover .dock-tab-undock {
+.dock-panel-header:hover .dock-panel-undock {
     opacity: 1;
 }
 
-.dock-tab-undock:hover {
+.dock-panel-undock:hover {
     background: #fee2e2;
     color: #ef4444;
 }
 
-/* Dock content */
-.dock-content {
-    flex: 1;
-    overflow-y: auto;
+.dock-panel-content {
     padding: 12px;
+    background: #fff;
+    overflow: hidden;
+    transition: max-height 0.2s ease;
 }
 
-.dock-content .panel-content {
+.dock-panel-item.collapsed .dock-panel-content {
     display: none;
-}
-
-.dock-content .panel-content.active {
-    display: block;
 }
 
 /* Dock indicator - shown when dragging panel near edge */

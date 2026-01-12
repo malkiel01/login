@@ -158,10 +158,8 @@ class MapEditor {
             // Dock zones
             dockZoneLeft: document.getElementById('dockZoneLeft'),
             dockZoneRight: document.getElementById('dockZoneRight'),
-            dockTabsLeft: document.getElementById('dockTabsLeft'),
-            dockTabsRight: document.getElementById('dockTabsRight'),
-            dockContentLeft: document.getElementById('dockContentLeft'),
-            dockContentRight: document.getElementById('dockContentRight')
+            dockPanelsLeft: document.getElementById('dockPanelsLeft'),
+            dockPanelsRight: document.getElementById('dockPanelsRight')
         };
     }
 
@@ -2044,51 +2042,59 @@ class MapEditor {
     }
 
     /**
-     * Update dock zone UI (tabs and content)
+     * Update dock zone UI (accordion panels)
      */
     updateDockZone(side) {
         const zone = this.dockZones[side];
         const zoneElement = this.elements[`dockZone${side.charAt(0).toUpperCase() + side.slice(1)}`];
-        const tabsElement = this.elements[`dockTabs${side.charAt(0).toUpperCase() + side.slice(1)}`];
-        const contentElement = this.elements[`dockContent${side.charAt(0).toUpperCase() + side.slice(1)}`];
+        const panelsContainer = this.elements[`dockPanels${side.charAt(0).toUpperCase() + side.slice(1)}`];
 
-        if (!zoneElement || !tabsElement || !contentElement) return;
+        if (!zoneElement || !panelsContainer) return;
 
         // Show/hide zone based on whether it has panels
         if (zone.panels.length === 0) {
             zoneElement.classList.remove('active');
-            tabsElement.innerHTML = '';
-            contentElement.innerHTML = '';
+            panelsContainer.innerHTML = '';
             return;
         }
 
         zoneElement.classList.add('active');
 
-        // Render tabs
-        tabsElement.innerHTML = zone.panels.map(panelName => {
+        // Render accordion panels
+        panelsContainer.innerHTML = zone.panels.map(panelName => {
             const meta = this.panelMeta[panelName];
-            const isActive = zone.activeTab === panelName;
+            const isCollapsed = zone.collapsed && zone.collapsed[panelName];
             return `
-                <div class="dock-tab ${isActive ? 'active' : ''}" data-panel="${panelName}">
-                    <span class="dock-tab-icon">${meta.icon}</span>
-                    <span class="dock-tab-title">${meta.title}</span>
-                    <button class="dock-tab-undock" data-panel="${panelName}" title="שחרר פאנל">×</button>
+                <div class="dock-panel-item ${isCollapsed ? 'collapsed' : ''}" data-panel="${panelName}">
+                    <div class="dock-panel-header" data-panel="${panelName}">
+                        <svg class="dock-panel-toggle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                        <span class="dock-panel-icon">${meta.icon}</span>
+                        <span class="dock-panel-title">${meta.title}</span>
+                        <button class="dock-panel-undock" data-panel="${panelName}" title="שחרר פאנל">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="dock-panel-content" data-panel="${panelName}"></div>
                 </div>
             `;
         }).join('');
 
-        // Add tab click handlers
-        tabsElement.querySelectorAll('.dock-tab').forEach(tab => {
-            tab.addEventListener('click', (e) => {
-                if (!e.target.classList.contains('dock-tab-undock')) {
-                    const panelName = tab.dataset.panel;
-                    this.switchDockTab(side, panelName);
+        // Add header click handlers (toggle collapse)
+        panelsContainer.querySelectorAll('.dock-panel-header').forEach(header => {
+            header.addEventListener('click', (e) => {
+                if (!e.target.closest('.dock-panel-undock')) {
+                    const panelName = header.dataset.panel;
+                    this.toggleDockPanelCollapse(side, panelName);
                 }
             });
         });
 
         // Add undock button handlers
-        tabsElement.querySelectorAll('.dock-tab-undock').forEach(btn => {
+        panelsContainer.querySelectorAll('.dock-panel-undock').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const panelName = btn.dataset.panel;
@@ -2096,34 +2102,186 @@ class MapEditor {
             });
         });
 
-        // Render active content
-        this.renderDockContent(side);
+        // Render content for all panels (non-collapsed ones will be visible)
+        this.renderAllDockPanelContents(side);
     }
 
     /**
-     * Render content for active dock tab
+     * Toggle collapse state of a docked panel
      */
-    renderDockContent(side) {
-        const zone = this.dockZones[side];
-        const contentElement = this.elements[`dockContent${side.charAt(0).toUpperCase() + side.slice(1)}`];
+    toggleDockPanelCollapse(side, panelName) {
+        if (!this.dockZones[side].collapsed) {
+            this.dockZones[side].collapsed = {};
+        }
 
-        if (!contentElement || !zone.activeTab) {
-            contentElement.innerHTML = '';
+        this.dockZones[side].collapsed[panelName] = !this.dockZones[side].collapsed[panelName];
+
+        const panelsContainer = this.elements[`dockPanels${side.charAt(0).toUpperCase() + side.slice(1)}`];
+        const panelItem = panelsContainer.querySelector(`.dock-panel-item[data-panel="${panelName}"]`);
+
+        if (panelItem) {
+            panelItem.classList.toggle('collapsed', this.dockZones[side].collapsed[panelName]);
+        }
+    }
+
+    /**
+     * Render content for all docked panels
+     */
+    renderAllDockPanelContents(side) {
+        const zone = this.dockZones[side];
+        const panelsContainer = this.elements[`dockPanels${side.charAt(0).toUpperCase() + side.slice(1)}`];
+
+        zone.panels.forEach(panelName => {
+            const contentElement = panelsContainer.querySelector(`.dock-panel-content[data-panel="${panelName}"]`);
+            if (!contentElement) return;
+
+            // Get the panel body content
+            const panelElement = this.elements[`${panelName}Panel`];
+            if (!panelElement) return;
+
+            const panelBody = panelElement.querySelector('.floating-panel-body');
+            if (panelBody) {
+                // Clone the content
+                contentElement.innerHTML = panelBody.innerHTML;
+
+                // Re-attach event listeners for the cloned controls
+                this.attachDockContentListeners(panelName, contentElement);
+
+                // Update content based on selection
+                if (panelName === 'layers') {
+                    this.updateDockedLayersPanelContent(contentElement);
+                } else {
+                    this.updateDockedPanelContentElement(panelName, contentElement);
+                }
+            }
+        });
+    }
+
+    /**
+     * Update content for a specific docked panel element
+     */
+    updateDockedPanelContentElement(panelName, contentElement) {
+        const activeObject = this.canvas.getActiveObject();
+
+        if (panelName === 'textStyle') {
+            const controls = contentElement.querySelector('#textControls') || contentElement.querySelector('.panel-controls');
+            const message = contentElement.querySelector('#textPanelMessage') || contentElement.querySelector('.panel-message');
+
+            if (activeObject && activeObject.isMapElement && activeObject.elementType === 'text') {
+                if (message) message.style.display = 'none';
+                if (controls) {
+                    controls.style.display = 'block';
+                    // Load values
+                    const fontFamily = contentElement.querySelector('#fontFamily');
+                    const fontSize = contentElement.querySelector('#fontSize');
+                    const fontColor = contentElement.querySelector('#fontColor');
+                    const letterSpacing = contentElement.querySelector('#letterSpacing');
+
+                    if (fontFamily) fontFamily.value = activeObject.fontFamily || 'Arial, sans-serif';
+                    if (fontSize) fontSize.value = activeObject.fontSize || 16;
+                    if (fontColor) fontColor.value = activeObject.fill || '#1e293b';
+                    if (letterSpacing) letterSpacing.value = activeObject.charSpacing ? activeObject.charSpacing / 10 : 0;
+                }
+            } else {
+                if (message) message.style.display = 'block';
+                if (controls) controls.style.display = 'none';
+            }
+        } else if (panelName === 'elementStyle') {
+            const controls = contentElement.querySelector('#elementControls') || contentElement.querySelector('.panel-controls');
+            const message = contentElement.querySelector('#elementPanelMessage') || contentElement.querySelector('.panel-message');
+
+            const isShape = activeObject && activeObject.isMapElement &&
+                ['line', 'circle', 'rect', 'freedraw'].includes(activeObject.elementType);
+
+            if (isShape) {
+                if (message) message.style.display = 'none';
+                if (controls) {
+                    controls.style.display = 'block';
+                    // Load values
+                    const strokeWidth = contentElement.querySelector('#strokeWidth');
+                    const strokeColor = contentElement.querySelector('#strokeColor');
+                    const strokeStyle = contentElement.querySelector('#strokeStyle');
+
+                    if (strokeWidth) strokeWidth.value = activeObject.strokeWidth || 2;
+                    if (strokeColor) strokeColor.value = activeObject.stroke || '#3b82f6';
+                    if (strokeStyle) {
+                        if (activeObject.strokeDashArray) {
+                            strokeStyle.value = activeObject.strokeDashArray[0] === 1 ? 'dotted' : 'dashed';
+                        } else {
+                            strokeStyle.value = 'solid';
+                        }
+                    }
+                }
+            } else {
+                if (message) message.style.display = 'block';
+                if (controls) controls.style.display = 'none';
+            }
+        }
+    }
+
+    /**
+     * Update layers panel content element
+     */
+    updateDockedLayersPanelContent(contentElement) {
+        const layersList = contentElement.querySelector('#layersList') || contentElement.querySelector('.layers-list');
+        if (!layersList) return;
+
+        const objects = this.canvas.getObjects().filter(obj =>
+            obj.isMapElement && !obj.isBoundary && !obj.isGrayMask && !obj.isBackgroundImage && !obj.isAnchorPoint
+        );
+
+        if (objects.length === 0) {
+            layersList.innerHTML = '<div class="panel-message">אין שכבות</div>';
             return;
         }
 
-        // Get the panel body content
-        const panelElement = this.elements[`${zone.activeTab}Panel`];
-        if (!panelElement) return;
+        const activeObject = this.canvas.getActiveObject();
 
-        const panelBody = panelElement.querySelector('.floating-panel-body');
-        if (panelBody) {
-            // Clone the content
-            contentElement.innerHTML = panelBody.innerHTML;
+        const icons = {
+            text: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>',
+            line: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+            circle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>',
+            rect: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/></svg>',
+            freedraw: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17c3-3 6-7 9-7s6 4 9 7"/></svg>'
+        };
 
-            // Re-attach event listeners for the cloned controls
-            this.attachDockContentListeners(zone.activeTab, contentElement);
-        }
+        const typeNames = {
+            text: 'טקסט',
+            line: 'קו',
+            circle: 'עיגול',
+            rect: 'מלבן',
+            freedraw: 'ציור חופשי'
+        };
+
+        const reversedObjects = [...objects].reverse();
+
+        layersList.innerHTML = reversedObjects.map((obj, index) => {
+            const isSelected = obj === activeObject;
+            const type = obj.elementType || 'unknown';
+            const icon = icons[type] || icons.rect;
+            const typeName = typeNames[type] || type;
+            const name = obj.text ? `${typeName}: ${obj.text.substring(0, 15)}` : typeName;
+
+            return `
+                <div class="layer-item ${isSelected ? 'selected' : ''}"
+                     data-index="${objects.length - 1 - index}">
+                    <div class="layer-icon">${icon}</div>
+                    <span class="layer-name">${name}</span>
+                </div>
+            `;
+        }).join('');
+
+        // Add click handlers
+        layersList.querySelectorAll('.layer-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const index = parseInt(item.dataset.index);
+                const obj = objects[index];
+                if (obj) {
+                    this.canvas.setActiveObject(obj);
+                    this.canvas.renderAll();
+                }
+            });
+        });
     }
 
     /**
@@ -2203,162 +2361,39 @@ class MapEditor {
     }
 
     /**
-     * Switch active tab in dock zone
-     */
-    switchDockTab(side, panelName) {
-        if (!this.dockZones[side].panels.includes(panelName)) return;
-
-        this.dockZones[side].activeTab = panelName;
-
-        // Update tab visuals
-        const tabsElement = this.elements[`dockTabs${side.charAt(0).toUpperCase() + side.slice(1)}`];
-        tabsElement.querySelectorAll('.dock-tab').forEach(tab => {
-            tab.classList.toggle('active', tab.dataset.panel === panelName);
-        });
-
-        // Render new content
-        this.renderDockContent(side);
-
-        // Update panel content based on selection
-        if (panelName === 'layers') {
-            this.updateDockedLayersPanel(side);
-        } else {
-            this.updateDockedPanelContent(side);
-        }
-    }
-
-    /**
-     * Update docked panel content based on selection
+     * Update all docked panels content (accordion mode)
      */
     updateDockedPanelContent(side) {
         const zone = this.dockZones[side];
-        if (!zone.activeTab) return;
+        if (zone.panels.length === 0) return;
 
-        const contentElement = this.elements[`dockContent${side.charAt(0).toUpperCase() + side.slice(1)}`];
-        const activeObject = this.canvas.getActiveObject();
+        const panelsContainer = this.elements[`dockPanels${side.charAt(0).toUpperCase() + side.slice(1)}`];
+        if (!panelsContainer) return;
 
-        if (zone.activeTab === 'textStyle') {
-            const controls = contentElement.querySelector('#textControls') || contentElement.querySelector('.panel-controls');
-            const message = contentElement.querySelector('#textPanelMessage') || contentElement.querySelector('.panel-message');
+        // Update each panel's content
+        zone.panels.forEach(panelName => {
+            const contentElement = panelsContainer.querySelector(`.dock-panel-content[data-panel="${panelName}"]`);
+            if (!contentElement) return;
 
-            if (activeObject && activeObject.isMapElement && activeObject.elementType === 'text') {
-                if (message) message.style.display = 'none';
-                if (controls) {
-                    controls.style.display = 'block';
-                    // Load values
-                    const fontFamily = contentElement.querySelector('#fontFamily');
-                    const fontSize = contentElement.querySelector('#fontSize');
-                    const fontColor = contentElement.querySelector('#fontColor');
-                    const letterSpacing = contentElement.querySelector('#letterSpacing');
-
-                    if (fontFamily) fontFamily.value = activeObject.fontFamily || 'Arial, sans-serif';
-                    if (fontSize) fontSize.value = activeObject.fontSize || 16;
-                    if (fontColor) fontColor.value = activeObject.fill || '#1e293b';
-                    if (letterSpacing) letterSpacing.value = activeObject.charSpacing ? activeObject.charSpacing / 10 : 0;
-                }
+            if (panelName === 'layers') {
+                this.updateDockedLayersPanelContent(contentElement);
             } else {
-                if (message) message.style.display = 'block';
-                if (controls) controls.style.display = 'none';
+                this.updateDockedPanelContentElement(panelName, contentElement);
             }
-        } else if (zone.activeTab === 'elementStyle') {
-            const controls = contentElement.querySelector('#elementControls') || contentElement.querySelector('.panel-controls');
-            const message = contentElement.querySelector('#elementPanelMessage') || contentElement.querySelector('.panel-message');
-
-            const isShape = activeObject && activeObject.isMapElement &&
-                ['line', 'circle', 'rect', 'freedraw'].includes(activeObject.elementType);
-
-            if (isShape) {
-                if (message) message.style.display = 'none';
-                if (controls) {
-                    controls.style.display = 'block';
-                    // Load values
-                    const strokeWidth = contentElement.querySelector('#strokeWidth');
-                    const strokeColor = contentElement.querySelector('#strokeColor');
-                    const strokeStyle = contentElement.querySelector('#strokeStyle');
-
-                    if (strokeWidth) strokeWidth.value = activeObject.strokeWidth || 2;
-                    if (strokeColor) strokeColor.value = activeObject.stroke || '#3b82f6';
-                    if (strokeStyle) {
-                        if (activeObject.strokeDashArray) {
-                            strokeStyle.value = activeObject.strokeDashArray[0] === 1 ? 'dotted' : 'dashed';
-                        } else {
-                            strokeStyle.value = 'solid';
-                        }
-                    }
-                }
-            } else {
-                if (message) message.style.display = 'block';
-                if (controls) controls.style.display = 'none';
-            }
-        }
+        });
     }
 
     /**
-     * Update docked layers panel
+     * Update docked layers panel (accordion mode)
      */
     updateDockedLayersPanel(side) {
-        const contentElement = this.elements[`dockContent${side.charAt(0).toUpperCase() + side.slice(1)}`];
-        if (!contentElement) return;
+        const panelsContainer = this.elements[`dockPanels${side.charAt(0).toUpperCase() + side.slice(1)}`];
+        if (!panelsContainer) return;
 
-        const layersList = contentElement.querySelector('#layersList') || contentElement.querySelector('.layers-list');
-        if (!layersList) return;
-
-        const objects = this.canvas.getObjects().filter(obj =>
-            obj.isMapElement && !obj.isBoundary && !obj.isGrayMask && !obj.isBackgroundImage && !obj.isAnchorPoint
-        );
-
-        if (objects.length === 0) {
-            layersList.innerHTML = '<div class="panel-message">אין שכבות</div>';
-            return;
+        const contentElement = panelsContainer.querySelector('.dock-panel-content[data-panel="layers"]');
+        if (contentElement) {
+            this.updateDockedLayersPanelContent(contentElement);
         }
-
-        const activeObject = this.canvas.getActiveObject();
-
-        const icons = {
-            text: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>',
-            line: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>',
-            circle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>',
-            rect: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/></svg>',
-            freedraw: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17c3-3 6-7 9-7s6 4 9 7"/></svg>'
-        };
-
-        const typeNames = {
-            text: 'טקסט',
-            line: 'קו',
-            circle: 'עיגול',
-            rect: 'מלבן',
-            freedraw: 'ציור חופשי'
-        };
-
-        const reversedObjects = [...objects].reverse();
-
-        layersList.innerHTML = reversedObjects.map((obj, index) => {
-            const isSelected = obj === activeObject;
-            const type = obj.elementType || 'unknown';
-            const icon = icons[type] || icons.rect;
-            const typeName = typeNames[type] || type;
-            const name = obj.text ? `${typeName}: ${obj.text.substring(0, 15)}` : typeName;
-
-            return `
-                <div class="layer-item ${isSelected ? 'selected' : ''}"
-                     data-index="${objects.length - 1 - index}">
-                    <div class="layer-icon">${icon}</div>
-                    <span class="layer-name">${name}</span>
-                </div>
-            `;
-        }).join('');
-
-        // Add click handlers
-        layersList.querySelectorAll('.layer-item').forEach(item => {
-            item.addEventListener('click', () => {
-                const index = parseInt(item.dataset.index);
-                const obj = objects[index];
-                if (obj) {
-                    this.canvas.setActiveObject(obj);
-                    this.canvas.renderAll();
-                }
-            });
-        });
     }
 
     /**
@@ -2410,14 +2445,10 @@ class MapEditor {
             this.updateLayersPanel();
         }
 
-        // Update docked panels
+        // Update docked panels (accordion mode - update all panels)
         ['left', 'right'].forEach(side => {
-            if (this.dockZones[side].panels.length > 0 && this.dockZones[side].activeTab) {
-                if (this.dockZones[side].activeTab === 'layers') {
-                    this.updateDockedLayersPanel(side);
-                } else {
-                    this.updateDockedPanelContent(side);
-                }
+            if (this.dockZones[side].panels.length > 0) {
+                this.updateDockedPanelContent(side);
             }
         });
     }
@@ -2439,14 +2470,10 @@ class MapEditor {
             this.updateLayersPanel();
         }
 
-        // Update docked panels
+        // Update docked panels (accordion mode - update all panels)
         ['left', 'right'].forEach(side => {
-            if (this.dockZones[side].panels.length > 0 && this.dockZones[side].activeTab) {
-                if (this.dockZones[side].activeTab === 'layers') {
-                    this.updateDockedLayersPanel(side);
-                } else {
-                    this.updateDockedPanelContent(side);
-                }
+            if (this.dockZones[side].panels.length > 0) {
+                this.updateDockedPanelContent(side);
             }
         });
     }

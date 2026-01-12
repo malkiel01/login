@@ -1839,6 +1839,11 @@ class MapEditor {
             this.canvas.bringToFront(point);
         });
 
+        // Child anchor points should be on top of everything
+        this.childrenPanel.childAnchorPoints.forEach(point => {
+            this.canvas.bringToFront(point);
+        });
+
         this.canvas.renderAll();
     }
 

@@ -3421,11 +3421,11 @@ class MapEditor {
                 const points = child.polygon.points || child.polygon;
 
                 const polygon = new fabric.Polygon(points, {
-                    // More visible styling - solid stroke with light fill
-                    fill: isSelected ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.15)',
-                    stroke: isSelected ? '#2563eb' : '#3b82f6',
-                    strokeWidth: isSelected ? 3 : 2,
-                    opacity: 1,  // Full opacity - transparency is in fill color
+                    // Hollow boundary - same stroke width as parent
+                    fill: 'transparent',
+                    stroke: isSelected ? '#1d4ed8' : '#3b82f6',
+                    strokeWidth: 3,
+                    opacity: isSelected ? 1 : 0.6,
                     selectable: false,
                     evented: true,  // Enable events for double-click selection
                     objectCaching: false,
@@ -3469,10 +3469,10 @@ class MapEditor {
         Object.entries(this.childrenPanel.childBoundaries).forEach(([id, polygon]) => {
             const isSelected = id === childId;
             polygon.set({
-                fill: isSelected ? 'rgba(59, 130, 246, 0.3)' : 'rgba(59, 130, 246, 0.15)',
-                stroke: isSelected ? '#2563eb' : '#3b82f6',
-                strokeWidth: isSelected ? 3 : 2,
-                opacity: 1
+                fill: 'transparent',
+                stroke: isSelected ? '#1d4ed8' : '#3b82f6',
+                strokeWidth: 3,
+                opacity: isSelected ? 1 : 0.6
             });
         });
 

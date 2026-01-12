@@ -1406,10 +1406,67 @@ class MapEditor {
 
     /**
      * Handle boundary modification complete
+     * Bakes transformation into points after scale/rotate
      */
     onBoundaryModified() {
+        // Check if boundary was scaled or rotated (not just moved)
+        const wasTransformed = this.boundary.scaleX !== 1 || this.boundary.scaleY !== 1 || this.boundary.angle !== 0;
+
+        if (wasTransformed) {
+            // Bake transformation into points
+            const matrix = this.boundary.calcTransformMatrix();
+            const pathOffset = this.boundary.pathOffset || { x: 0, y: 0 };
+
+            // Convert all points to absolute coordinates
+            const absolutePoints = this.boundary.points.map(p => {
+                return fabric.util.transformPoint(
+                    { x: p.x - pathOffset.x, y: p.y - pathOffset.y },
+                    matrix
+                );
+            });
+
+            // Recreate boundary with absolute points (no transformation)
+            const oldBoundary = this.boundary;
+            this.boundary = new fabric.Polygon(absolutePoints, {
+                fill: oldBoundary.fill,
+                stroke: oldBoundary.stroke,
+                strokeWidth: oldBoundary.strokeWidth,
+                selectable: true,
+                evented: true,
+                hasControls: true,
+                hasBorders: true,
+                borderColor: '#2563eb',
+                borderScaleFactor: 1.5,
+                borderDashArray: [6, 4],
+                cornerColor: '#3b82f6',
+                cornerStrokeColor: '#fff',
+                cornerStyle: 'circle',
+                cornerSize: 10,
+                transparentCorners: false,
+                hoverCursor: 'move',
+                objectCaching: false,
+                isBoundary: true
+            });
+
+            this.boundary.on('moving', () => this.onBoundaryMove());
+            this.boundary.on('scaling', () => this.onBoundaryTransform());
+            this.boundary.on('rotating', () => this.onBoundaryTransform());
+            this.boundary.on('modified', () => this.onBoundaryModified());
+
+            // Replace in canvas
+            this.canvas.remove(oldBoundary);
+            this.canvas.add(this.boundary);
+
+            // Update boundaryPoints for gray mask
+            this.boundaryPoints = absolutePoints;
+
+            // Select the new boundary
+            this.canvas.setActiveObject(this.boundary);
+        }
+
         this.updateGrayMask();
         this.showAnchorPoints();
+        this.reorderLayers();
         this.canvas.renderAll();
     }
 
@@ -3597,12 +3654,72 @@ class MapEditor {
 
     /**
      * Handle child boundary polygon modification complete
+     * Bakes transformation into points after scale/rotate
      */
     onChildBoundaryModified() {
         const polygon = this.childrenPanel.editingPolygon;
         if (!polygon) return;
 
-        this.showChildAnchorPoints(polygon);
+        // Check if polygon was scaled or rotated (not just moved)
+        const wasTransformed = polygon.scaleX !== 1 || polygon.scaleY !== 1 || polygon.angle !== 0;
+
+        if (wasTransformed) {
+            // Bake transformation into points
+            const matrix = polygon.calcTransformMatrix();
+            const pathOffset = polygon.pathOffset || { x: 0, y: 0 };
+
+            // Convert all points to absolute coordinates
+            const absolutePoints = polygon.points.map(p => {
+                return fabric.util.transformPoint(
+                    { x: p.x - pathOffset.x, y: p.y - pathOffset.y },
+                    matrix
+                );
+            });
+
+            // Recreate polygon with absolute points (no transformation)
+            const oldPolygon = polygon;
+            const newPolygon = new fabric.Polygon(absolutePoints, {
+                fill: oldPolygon.fill,
+                stroke: oldPolygon.stroke,
+                strokeWidth: oldPolygon.strokeWidth,
+                selectable: true,
+                evented: true,
+                hasControls: true,
+                hasBorders: true,
+                borderColor: '#2563eb',
+                borderScaleFactor: 1.5,
+                borderDashArray: [6, 4],
+                cornerColor: '#3b82f6',
+                cornerStrokeColor: '#fff',
+                cornerStyle: 'circle',
+                cornerSize: 10,
+                transparentCorners: false,
+                hoverCursor: 'move',
+                objectCaching: false,
+                perPixelTargetFind: true,
+                isChildBoundary: true,
+                childId: oldPolygon.childId
+            });
+
+            newPolygon.on('moving', () => this.onChildBoundaryMove());
+            newPolygon.on('scaling', () => this.onChildBoundaryTransform());
+            newPolygon.on('rotating', () => this.onChildBoundaryTransform());
+            newPolygon.on('modified', () => this.onChildBoundaryModified());
+
+            // Replace in canvas and state
+            this.canvas.remove(oldPolygon);
+            this.canvas.add(newPolygon);
+
+            const childId = oldPolygon.childId;
+            this.childrenPanel.childBoundaries[childId] = newPolygon;
+            this.childrenPanel.editingPolygon = newPolygon;
+
+            // Select the new polygon
+            this.canvas.setActiveObject(newPolygon);
+        }
+
+        this.showChildAnchorPoints(this.childrenPanel.editingPolygon);
+        this.reorderLayers();
         this.canvas.renderAll();
     }
 

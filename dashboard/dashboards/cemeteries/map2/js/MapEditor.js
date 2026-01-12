@@ -3297,54 +3297,37 @@ class MapEditor {
         // Get the items to display
         const items = showDescendants ? this.childrenPanel.descendants : this.childrenPanel.children;
 
-        // Render items with appropriate styling for hierarchy
-        list.innerHTML = items.map(child => {
-            const isSelected = child.id === this.childrenPanel.selectedChild?.id;
-            const isBeingEdited = child.id === editingChildId;
-            const levelClass = `level-${child.type}`;
-            const typeBadge = showDescendants && child.level > 1
-                ? `<span class="child-type-badge type-${child.type}">${this.getChildTypeName(child.type)}</span>`
-                : '';
+        // Build HTML based on mode
+        let html = '';
 
-            return `
-            <div class="child-item ${isSelected ? 'selected' : ''} ${isBeingEdited ? 'editing' : ''} ${levelClass}"
-                 data-id="${child.id}" data-type="${child.type}">
-                <span class="status-dot ${child.hasPolygon ? 'has-polygon' : 'no-polygon'}"></span>
-                <span class="child-name">${child.name}</span>
-                ${typeBadge}
-                ${isBeingEdited ? '<span class="editing-badge">עריכה</span>' : ''}
-                <div class="child-dropdown">
-                    <button class="child-dropdown-btn" data-id="${child.id}" data-type="${child.type}" title="אפשרויות">
-                        <svg viewBox="0 0 24 24" width="16" height="16">
-                            <path fill="currentColor" d="M7 10l5 5 5-5z"/>
-                        </svg>
-                    </button>
-                    <div class="child-dropdown-menu" data-id="${child.id}">
-                        ${!child.hasPolygon ? `
-                            <button class="child-dropdown-item" data-action="add" data-id="${child.id}" data-type="${child.type}">
-                                <svg viewBox="0 0 24 24" width="14" height="14">
-                                    <path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-                                </svg>
-                                הוספת גבול
-                            </button>
-                        ` : `
-                            <button class="child-dropdown-item ${isBeingEdited ? 'active' : ''}" data-action="edit" data-id="${child.id}" data-type="${child.type}">
-                                <svg viewBox="0 0 24 24" width="14" height="14">
-                                    <path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-                                </svg>
-                                ${isBeingEdited ? 'סיום עריכה' : 'עריכת גבול'}
-                            </button>
-                            <button class="child-dropdown-item danger" data-action="delete" data-id="${child.id}" data-type="${child.type}" ${isBeingEdited ? 'disabled' : ''}>
-                                <svg viewBox="0 0 24 24" width="14" height="14">
-                                    <path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-                                </svg>
-                                הסרת גבול
-                            </button>
-                        `}
-                    </div>
-                </div>
-            </div>
-        `}).join('');
+        if (showDescendants) {
+            // Hierarchical view - group by parent
+            const level1Items = items.filter(i => i.level === 1);
+
+            level1Items.forEach(parent => {
+                // Render parent item
+                html += this.renderChildItem(parent, editingChildId, false);
+
+                // Find and render children of this parent
+                const children = items.filter(i => i.level === 2 && i.parentId === parent.id);
+                children.forEach(child => {
+                    html += this.renderChildItem(child, editingChildId, true);
+
+                    // Find and render grandchildren (level 3)
+                    const grandchildren = items.filter(i => i.level === 3 && i.parentId === child.id);
+                    grandchildren.forEach(grandchild => {
+                        html += this.renderChildItem(grandchild, editingChildId, true);
+                    });
+                });
+            });
+        } else {
+            // Flat view - just children
+            items.forEach(child => {
+                html += this.renderChildItem(child, editingChildId, false);
+            });
+        }
+
+        list.innerHTML = html;
 
         // Add click handlers for child items (selecting)
         list.querySelectorAll('.child-item').forEach(item => {
@@ -3377,6 +3360,58 @@ class MapEditor {
 
         // Close dropdowns when clicking outside
         document.addEventListener('click', () => this.closeAllChildDropdowns());
+    }
+
+    /**
+     * Render a single child item HTML
+     */
+    renderChildItem(child, editingChildId, showTypeBadge) {
+        const isSelected = child.id === this.childrenPanel.selectedChild?.id;
+        const isBeingEdited = child.id === editingChildId;
+        const levelClass = `level-${child.type}`;
+        const typeBadge = showTypeBadge
+            ? `<span class="child-type-badge type-${child.type}">${this.getChildTypeName(child.type)}</span>`
+            : '';
+
+        return `
+        <div class="child-item ${isSelected ? 'selected' : ''} ${isBeingEdited ? 'editing' : ''} ${levelClass}"
+             data-id="${child.id}" data-type="${child.type}">
+            <span class="status-dot ${child.hasPolygon ? 'has-polygon' : 'no-polygon'}"></span>
+            <span class="child-name">${child.name}</span>
+            ${typeBadge}
+            ${isBeingEdited ? '<span class="editing-badge">עריכה</span>' : ''}
+            <div class="child-dropdown">
+                <button class="child-dropdown-btn" data-id="${child.id}" data-type="${child.type}" title="אפשרויות">
+                    <svg viewBox="0 0 24 24" width="16" height="16">
+                        <path fill="currentColor" d="M7 10l5 5 5-5z"/>
+                    </svg>
+                </button>
+                <div class="child-dropdown-menu" data-id="${child.id}">
+                    ${!child.hasPolygon ? `
+                        <button class="child-dropdown-item" data-action="add" data-id="${child.id}" data-type="${child.type}">
+                            <svg viewBox="0 0 24 24" width="14" height="14">
+                                <path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                            </svg>
+                            הוספת גבול
+                        </button>
+                    ` : `
+                        <button class="child-dropdown-item ${isBeingEdited ? 'active' : ''}" data-action="edit" data-id="${child.id}" data-type="${child.type}">
+                            <svg viewBox="0 0 24 24" width="14" height="14">
+                                <path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                            </svg>
+                            ${isBeingEdited ? 'סיום עריכה' : 'עריכת גבול'}
+                        </button>
+                        <button class="child-dropdown-item danger" data-action="delete" data-id="${child.id}" data-type="${child.type}" ${isBeingEdited ? 'disabled' : ''}>
+                            <svg viewBox="0 0 24 24" width="14" height="14">
+                                <path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                            </svg>
+                            הסרת גבול
+                        </button>
+                    `}
+                </div>
+            </div>
+        </div>
+        `;
     }
 
     /**

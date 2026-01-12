@@ -291,10 +291,7 @@ class MapEditor {
         this.elements.btnLayersPanel.addEventListener('click', () => this.togglePanel('layers'));
         this.elements.btnChildrenPanel.addEventListener('click', () => this.togglePanel('children'));
 
-        // Children panel control buttons
-        this.elements.btnDrawChildBoundary.addEventListener('click', () => this.startDrawingChildBoundary());
-        this.elements.btnEditChildBoundary.addEventListener('click', () => this.startEditingChildBoundary());
-        this.elements.btnDeleteChildBoundary.addEventListener('click', () => this.deleteChildBoundary());
+        // Children panel control buttons are handled via dropdown menus in renderChildrenList()
 
         // Panel close buttons
         document.querySelectorAll('.floating-panel-close').forEach(btn => {

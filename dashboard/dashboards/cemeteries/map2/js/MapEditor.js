@@ -718,10 +718,25 @@ class MapEditor {
         // Close dropdown
         document.querySelectorAll('.dropdown.open').forEach(d => d.classList.remove('open'));
 
+        // Make boundary selectable and draggable
+        this.boundary.set({
+            selectable: true,
+            evented: true,
+            hasControls: false,
+            hasBorders: true,
+            borderColor: '#3b82f6',
+            borderDashArray: [5, 5],
+            hoverCursor: 'move'
+        });
+
+        // Handle boundary movement
+        this.boundary.on('moving', () => this.onBoundaryMove());
+        this.boundary.on('modified', () => this.onBoundaryModified());
+
         // Show anchor points
         this.showAnchorPoints();
 
-        this.setStatus('גרור נקודות עיגון לעריכה. Delete למחיקת נקודה. Escape לסיום.', 'editing');
+        this.setStatus('לחץ על הגבול לבחירה וגרירה. גרור נקודות עיגון לעריכה. Escape לסיום.', 'editing');
         this.updateUIState();
     }
 
@@ -806,6 +821,28 @@ class MapEditor {
         this.canvas.renderAll();
     }
 
+    /**
+     * Handle boundary movement - update gray mask and anchor points
+     */
+    onBoundaryMove() {
+        // Update gray mask to follow boundary
+        this.updateGrayMask();
+
+        // Update anchor points positions
+        this.showAnchorPoints();
+
+        this.canvas.renderAll();
+    }
+
+    /**
+     * Handle boundary modification complete
+     */
+    onBoundaryModified() {
+        this.updateGrayMask();
+        this.showAnchorPoints();
+        this.canvas.renderAll();
+    }
+
     clearAnchorPoints() {
         this.anchorPoints.forEach(circle => {
             circle.off('moving');
@@ -866,6 +903,17 @@ class MapEditor {
     stopEditingBoundary() {
         this.isEditingBoundary = false;
         this.elements.canvasContainer.classList.remove('editing-mode');
+
+        // Reset boundary to non-selectable
+        if (this.boundary) {
+            this.boundary.off('moving');
+            this.boundary.off('modified');
+            this.boundary.set({
+                selectable: false,
+                evented: false,
+                hasBorders: false
+            });
+        }
 
         this.clearAnchorPoints();
         this.canvas.discardActiveObject();

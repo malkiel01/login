@@ -3665,6 +3665,10 @@ class MapEditor {
         const polygon = this.childrenPanel.editingPolygon;
         if (!polygon) return;
 
+        // Immediately deselect any active object (including the boundary)
+        this.canvas.discardActiveObject();
+        this.canvas.renderAll();
+
         const pointer = this.canvas.getPointer(opt.e);
         const clickPoint = { x: pointer.x, y: pointer.y };
 
@@ -3695,7 +3699,6 @@ class MapEditor {
 
         // Only add point if click is close to an edge (within 20 pixels)
         if (minDistance < 20 && closestEdgeIndex !== -1) {
-            this.canvas.discardActiveObject();
             this.addChildAnchorPoint(closestEdgeIndex);
         }
     }

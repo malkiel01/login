@@ -42,11 +42,25 @@ ADD COLUMN `mapPolygon` JSON DEFAULT NULL
 COMMENT 'נתוני פוליגון של הגוש במפה';
 
 -- =====================================================
+-- 4.1 הוספת שדה mapCanvasData לטבלת blocks
+-- =====================================================
+ALTER TABLE `blocks`
+ADD COLUMN `mapCanvasData` LONGTEXT DEFAULT NULL
+COMMENT 'נתוני Canvas מלאים - Fabric.js JSON';
+
+-- =====================================================
 -- 5. הוספת שדה mapPolygon לטבלת plots
 -- =====================================================
 ALTER TABLE `plots`
 ADD COLUMN `mapPolygon` JSON DEFAULT NULL
 COMMENT 'נתוני פוליגון של החלקה במפה';
+
+-- =====================================================
+-- 5.1 הוספת שדה mapCanvasData לטבלת plots
+-- =====================================================
+ALTER TABLE `plots`
+ADD COLUMN `mapCanvasData` LONGTEXT DEFAULT NULL
+COMMENT 'נתוני Canvas מלאים - Fabric.js JSON';
 
 -- =====================================================
 -- 6. הוספת שדה mapPolygon לטבלת areaGraves
@@ -56,6 +70,13 @@ ADD COLUMN `mapPolygon` JSON DEFAULT NULL
 COMMENT 'נתוני פוליגון של אחוזת הקבר במפה';
 
 -- =====================================================
+-- 6.1 הוספת שדה mapCanvasData לטבלת areaGraves
+-- =====================================================
+ALTER TABLE `areaGraves`
+ADD COLUMN `mapCanvasData` LONGTEXT DEFAULT NULL
+COMMENT 'נתוני Canvas מלאים - Fabric.js JSON';
+
+-- =====================================================
 -- אימות השינויים
 -- =====================================================
 -- בדיקה שהשדות נוספו בהצלחה:
@@ -63,28 +84,28 @@ COMMENT 'נתוני פוליגון של אחוזת הקבר במפה';
 SELECT 'cemeteries' as table_name, COLUMN_NAME, COLUMN_TYPE
 FROM INFORMATION_SCHEMA.COLUMNS
 WHERE TABLE_NAME = 'cemeteries'
-AND COLUMN_NAME IN ('mapPolygon', 'mapBackgroundImage', 'mapSettings')
+AND COLUMN_NAME IN ('mapPolygon', 'mapBackgroundImage', 'mapSettings', 'mapCanvasData')
 
 UNION ALL
 
 SELECT 'blocks' as table_name, COLUMN_NAME, COLUMN_TYPE
 FROM INFORMATION_SCHEMA.COLUMNS
 WHERE TABLE_NAME = 'blocks'
-AND COLUMN_NAME = 'mapPolygon'
+AND COLUMN_NAME IN ('mapPolygon', 'mapCanvasData')
 
 UNION ALL
 
 SELECT 'plots' as table_name, COLUMN_NAME, COLUMN_TYPE
 FROM INFORMATION_SCHEMA.COLUMNS
 WHERE TABLE_NAME = 'plots'
-AND COLUMN_NAME = 'mapPolygon'
+AND COLUMN_NAME IN ('mapPolygon', 'mapCanvasData')
 
 UNION ALL
 
 SELECT 'areaGraves' as table_name, COLUMN_NAME, COLUMN_TYPE
 FROM INFORMATION_SCHEMA.COLUMNS
 WHERE TABLE_NAME = 'areaGraves'
-AND COLUMN_NAME = 'mapPolygon';
+AND COLUMN_NAME IN ('mapPolygon', 'mapCanvasData');
 
 -- =====================================================
 -- מבנה ה-JSON הצפוי לכל שדה:

@@ -2133,18 +2133,33 @@ class MapEditor {
         try {
             this.setStatus('טוען נתוני מפה...');
 
-            const response = await fetch(`${this.config.apiBase}map-data.php?action=load&type=${this.config.entityType}&id=${this.config.entityId}`);
+            const url = `${this.config.apiBase}map-data.php?action=load&type=${this.config.entityType}&id=${this.config.entityId}`;
+            console.log('Loading map data from:', url);
+
+            const response = await fetch(url);
+            console.log('Response status:', response.status);
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('API Error Response:', errorText);
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
+            }
+
             const data = await response.json();
+            console.log('Loaded data:', data);
 
             if (data.success && data.mapData) {
                 this.restoreMapData(data.mapData);
                 this.setStatus('נתוני המפה נטענו', 'success');
+            } else if (data.warning) {
+                console.warn('API Warning:', data.warning);
+                this.setStatus(data.warning || 'אין נתוני מפה קיימים');
             } else {
                 this.setStatus('אין נתוני מפה קיימים');
             }
         } catch (error) {
             console.error('Error loading map data:', error);
-            this.setStatus('שגיאה בטעינת נתוני מפה');
+            this.setStatus('שגיאה בטעינת נתוני מפה: ' + error.message);
         }
     }
 

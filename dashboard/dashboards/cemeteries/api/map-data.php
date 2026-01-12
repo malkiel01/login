@@ -5,6 +5,15 @@
  */
 
 header('Content-Type: application/json; charset=utf-8');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
+
+// Handle preflight
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
 
 require_once dirname(__DIR__) . '/config.php';
 
@@ -16,6 +25,14 @@ $entityTables = [
     'row' => ['table' => 'rows', 'idField' => 'unicId'],
     'areaGrave' => ['table' => 'areaGraves', 'idField' => 'unicId']
 ];
+
+// Get database connection
+try {
+    $pdo = getDBConnection();
+} catch(PDOException $e) {
+    http_response_code(500);
+    die(json_encode(['success' => false, 'error' => 'Database connection failed: ' . $e->getMessage()]));
+}
 
 try {
     // Handle both GET and POST
@@ -72,28 +89,74 @@ try {
 function loadMapData($table, $idField, $id) {
     global $pdo;
 
-    $sql = "SELECT mapData FROM {$table} WHERE {$idField} = :id LIMIT 1";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute(['id' => $id]);
+    try {
+        // Build column list based on table
+        // cemeteries has additional columns: mapBackgroundImage, mapSettings
+        if ($table === 'cemeteries') {
+            $columns = 'mapCanvasData, mapPolygon, mapBackgroundImage, mapSettings';
+        } else {
+            $columns = 'mapCanvasData, mapPolygon';
+        }
 
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        $sql = "SELECT {$columns} FROM {$table} WHERE {$idField} = :id LIMIT 1";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute(['id' => $id]);
 
-    if (!$row) {
-        return [
-            'success' => false,
-            'error' => 'רשומה לא נמצאה'
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$row) {
+            // Check if record exists
+            $checkSql = "SELECT {$idField} FROM {$table} WHERE {$idField} = :id LIMIT 1";
+            $checkStmt = $pdo->prepare($checkSql);
+            $checkStmt->execute(['id' => $id]);
+
+            if (!$checkStmt->fetch()) {
+                return [
+                    'success' => false,
+                    'error' => 'רשומה לא נמצאה: ' . $id
+                ];
+            }
+
+            // Record exists but no map data columns
+            return [
+                'success' => true,
+                'mapData' => null
+            ];
+        }
+
+        $mapData = null;
+        if (isset($row['mapCanvasData']) && $row['mapCanvasData']) {
+            $mapData = json_decode($row['mapCanvasData'], true);
+        }
+
+        // Build result
+        $result = [
+            'success' => true,
+            'mapData' => $mapData
         ];
-    }
 
-    $mapData = null;
-    if ($row['mapData']) {
-        $mapData = json_decode($row['mapData'], true);
-    }
+        if (isset($row['mapPolygon']) && $row['mapPolygon']) {
+            $result['mapPolygon'] = json_decode($row['mapPolygon'], true);
+        }
+        if (isset($row['mapBackgroundImage']) && $row['mapBackgroundImage']) {
+            $result['mapBackgroundImage'] = json_decode($row['mapBackgroundImage'], true);
+        }
+        if (isset($row['mapSettings']) && $row['mapSettings']) {
+            $result['mapSettings'] = json_decode($row['mapSettings'], true);
+        }
 
-    return [
-        'success' => true,
-        'mapData' => $mapData
-    ];
+        return $result;
+    } catch (PDOException $e) {
+        // If column doesn't exist, try simpler query
+        if (strpos($e->getMessage(), 'Unknown column') !== false) {
+            return [
+                'success' => true,
+                'mapData' => null,
+                'warning' => 'עמודות מפה לא קיימות בטבלה - יש להריץ את סקריפט ההעברה'
+            ];
+        }
+        throw $e;
+    }
 }
 
 /**
@@ -105,20 +168,33 @@ function saveMapData($table, $idField, $id, $mapData) {
     // Convert map data to JSON
     $mapDataJson = json_encode($mapData, JSON_UNESCAPED_UNICODE);
 
-    // Update record
-    $sql = "UPDATE {$table} SET mapData = :mapData, updateDate = NOW() WHERE {$idField} = :id";
-    $stmt = $pdo->prepare($sql);
-    $result = $stmt->execute([
-        'mapData' => $mapDataJson,
-        'id' => $id
-    ]);
+    // First check if record exists
+    $checkSql = "SELECT {$idField} FROM {$table} WHERE {$idField} = :id LIMIT 1";
+    $checkStmt = $pdo->prepare($checkSql);
+    $checkStmt->execute(['id' => $id]);
+
+    if (!$checkStmt->fetch()) {
+        throw new Exception('רשומה לא נמצאה: ' . $id);
+    }
+
+    // Update mapCanvasData column
+    try {
+        $sql = "UPDATE {$table} SET mapCanvasData = :mapCanvasData WHERE {$idField} = :id";
+        $stmt = $pdo->prepare($sql);
+        $result = $stmt->execute([
+            'mapCanvasData' => $mapDataJson,
+            'id' => $id
+        ]);
+    } catch (PDOException $e) {
+        // If mapCanvasData column doesn't exist
+        if (strpos($e->getMessage(), 'mapCanvasData') !== false || strpos($e->getMessage(), 'Unknown column') !== false) {
+            throw new Exception('עמודת mapCanvasData לא קיימת בטבלה - יש להריץ את סקריפט ההעברה: sql/add-map-polygon-fields.sql');
+        }
+        throw $e;
+    }
 
     if (!$result) {
         throw new Exception('שגיאה בשמירת נתוני מפה');
-    }
-
-    if ($stmt->rowCount() === 0) {
-        throw new Exception('רשומה לא נמצאה או לא עודכנה');
     }
 
     return [

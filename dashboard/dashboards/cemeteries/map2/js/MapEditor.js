@@ -279,6 +279,8 @@ class MapEditor {
         this.canvas.on('mouse:dblclick', (opt) => {
             if (this.isEditingBoundary && !this.isDrawingBoundary) {
                 this.handleBoundaryDoubleClick(opt);
+            } else if (this.childrenPanel.isEditingChildBoundary) {
+                this.handleChildBoundaryDoubleClick(opt);
             }
         });
 
@@ -374,7 +376,7 @@ class MapEditor {
         const canvasX = (x - vpt[4]) / zoom;
         const canvasY = (y - vpt[5]) / zoom;
 
-        // Find anchor point at this position (only when editing boundary)
+        // Find anchor point at this position (when editing boundary or child boundary)
         if (this.isEditingBoundary) {
             let anchorTarget = null;
             for (const anchor of this.anchorPoints) {
@@ -390,6 +392,26 @@ class MapEditor {
             // If clicked on anchor point, show anchor menu
             if (anchorTarget && anchorTarget.isAnchorPoint) {
                 this.showAnchorContextMenu(e.clientX, e.clientY, anchorTarget);
+                return;
+            }
+        }
+
+        // Find child anchor point at this position (when editing child boundary)
+        if (this.childrenPanel.isEditingChildBoundary) {
+            let childAnchorTarget = null;
+            for (const anchor of this.childrenPanel.childAnchorPoints) {
+                const dx = canvasX - anchor.left;
+                const dy = canvasY - anchor.top;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance <= anchor.radius + 5) {
+                    childAnchorTarget = anchor;
+                    break;
+                }
+            }
+
+            // If clicked on child anchor point, show anchor menu
+            if (childAnchorTarget && childAnchorTarget.isChildAnchorPoint) {
+                this.showChildAnchorContextMenu(e.clientX, e.clientY, childAnchorTarget);
                 return;
             }
         }
@@ -3389,6 +3411,7 @@ class MapEditor {
         if (!polygon) return;
 
         this.childrenPanel.isEditingChildBoundary = true;
+        this.childrenPanel.editingPolygon = polygon;
 
         // Make polygon selectable and draggable
         polygon.set({
@@ -3401,10 +3424,36 @@ class MapEditor {
             hoverCursor: 'move'
         });
 
+        // Handle polygon movement - update anchor points
+        polygon.on('moving', () => this.onChildBoundaryMove());
+        polygon.on('modified', () => this.onChildBoundaryModified());
+
         // Show anchor points
         this.showChildAnchorPoints(polygon);
 
-        this.setStatus('גרור נקודות עיגון לעריכה. Escape לסיום.', 'editing');
+        this.setStatus('לחץ לבחירה וגרירה. גרור נקודות עיגון. דאבל-קליק להוספה. Escape לסיום.', 'editing');
+    }
+
+    /**
+     * Handle child boundary polygon move - update anchor points
+     */
+    onChildBoundaryMove() {
+        const polygon = this.childrenPanel.editingPolygon;
+        if (!polygon) return;
+
+        // Update anchor points to follow the polygon
+        this.showChildAnchorPoints(polygon);
+    }
+
+    /**
+     * Handle child boundary polygon modification complete
+     */
+    onChildBoundaryModified() {
+        const polygon = this.childrenPanel.editingPolygon;
+        if (!polygon) return;
+
+        this.showChildAnchorPoints(polygon);
+        this.canvas.renderAll();
     }
 
     /**
@@ -3414,9 +3463,13 @@ class MapEditor {
         if (!this.childrenPanel.isEditingChildBoundary) return;
 
         const child = this.childrenPanel.selectedChild;
-        const polygon = this.childrenPanel.childBoundaries[child?.id];
+        const polygon = this.childrenPanel.editingPolygon;
 
         if (polygon) {
+            // Remove event handlers
+            polygon.off('moving');
+            polygon.off('modified');
+
             // Get updated points from polygon
             const updatedPoints = polygon.points.map(p => ({ x: p.x, y: p.y }));
 
@@ -3446,6 +3499,7 @@ class MapEditor {
         this.clearChildAnchorPoints();
 
         this.childrenPanel.isEditingChildBoundary = false;
+        this.childrenPanel.editingPolygon = null;
         this.canvas.discardActiveObject();
         this.canvas.renderAll();
 
@@ -3459,11 +3513,20 @@ class MapEditor {
         this.clearChildAnchorPoints();
 
         const points = polygon.points;
+        // Use transformation matrix for correct absolute coordinates
+        const matrix = polygon.calcTransformMatrix();
+        const pathOffset = polygon.pathOffset || { x: 0, y: 0 };
 
         points.forEach((point, index) => {
+            // Transform point using polygon's matrix
+            const transformed = fabric.util.transformPoint(
+                { x: point.x - pathOffset.x, y: point.y - pathOffset.y },
+                matrix
+            );
+
             const circle = new fabric.Circle({
-                left: point.x,
-                top: point.y,
+                left: transformed.x,
+                top: transformed.y,
                 radius: 6,
                 fill: '#22c55e',
                 stroke: '#16a34a',
@@ -3475,7 +3538,13 @@ class MapEditor {
                 hasControls: false,
                 hoverCursor: 'pointer',
                 isChildAnchorPoint: true,
-                pointIndex: index
+                pointIndex: index,
+                shadow: new fabric.Shadow({
+                    color: 'rgba(0,0,0,0.3)',
+                    blur: 3,
+                    offsetX: 0,
+                    offsetY: 1
+                })
             });
 
             circle.on('moving', () => this.onChildAnchorPointMove(circle, polygon));
@@ -3528,6 +3597,206 @@ class MapEditor {
      */
     onChildAnchorPointModified() {
         this.canvas.renderAll();
+    }
+
+    /**
+     * Handle double-click on child boundary edge to add anchor point
+     */
+    handleChildBoundaryDoubleClick(opt) {
+        const polygon = this.childrenPanel.editingPolygon;
+        if (!polygon) return;
+
+        const pointer = this.canvas.getPointer(opt.e);
+        const clickPoint = { x: pointer.x, y: pointer.y };
+
+        // Find the closest edge
+        const points = polygon.points;
+        const matrix = polygon.calcTransformMatrix();
+        const pathOffset = polygon.pathOffset || { x: 0, y: 0 };
+
+        let closestEdgeIndex = -1;
+        let minDistance = Infinity;
+
+        for (let i = 0; i < points.length; i++) {
+            const t1 = fabric.util.transformPoint(
+                { x: points[i].x - pathOffset.x, y: points[i].y - pathOffset.y },
+                matrix
+            );
+            const t2 = fabric.util.transformPoint(
+                { x: points[(i + 1) % points.length].x - pathOffset.x, y: points[(i + 1) % points.length].y - pathOffset.y },
+                matrix
+            );
+
+            const dist = this.pointToLineDistance(clickPoint, t1, t2);
+            if (dist < minDistance) {
+                minDistance = dist;
+                closestEdgeIndex = i;
+            }
+        }
+
+        // Only add point if click is close to an edge (within 20 pixels)
+        if (minDistance < 20 && closestEdgeIndex !== -1) {
+            this.canvas.discardActiveObject();
+            this.addChildAnchorPoint(closestEdgeIndex);
+        }
+    }
+
+    /**
+     * Show context menu for child anchor point
+     */
+    showChildAnchorContextMenu(clientX, clientY, anchor) {
+        this.hideContextMenu();
+
+        const menu = document.createElement('div');
+        menu.className = 'context-menu';
+        menu.innerHTML = `
+            <div class="context-menu-item" data-action="remove-child-anchor">
+                <svg viewBox="0 0 24 24" width="16" height="16">
+                    <path fill="currentColor" d="M19 13H5v-2h14v2z"/>
+                </svg>
+                <span>הסר נקודת עיגון</span>
+            </div>
+        `;
+        menu.style.left = `${clientX}px`;
+        menu.style.top = `${clientY}px`;
+
+        document.body.appendChild(menu);
+        this.contextMenu = menu;
+
+        menu.querySelector('[data-action="remove-child-anchor"]').addEventListener('click', () => {
+            this.removeChildAnchorPoint(anchor);
+            this.hideContextMenu();
+        });
+
+        // Close menu on click outside
+        setTimeout(() => {
+            document.addEventListener('click', () => this.hideContextMenu(), { once: true });
+        }, 0);
+    }
+
+    /**
+     * Add anchor point to child boundary
+     */
+    addChildAnchorPoint(afterIndex) {
+        const polygon = this.childrenPanel.editingPolygon;
+        if (!polygon) return;
+
+        const points = polygon.points;
+        const nextIndex = (afterIndex + 1) % points.length;
+
+        const p1 = points[afterIndex];
+        const p2 = points[nextIndex];
+
+        const newPoint = {
+            x: (p1.x + p2.x) / 2,
+            y: (p1.y + p2.y) / 2
+        };
+
+        // Check if new point is inside parent boundary
+        if (!this.isPointInsideParentBoundary(newPoint)) {
+            this.setStatus('לא ניתן להוסיף נקודה מחוץ לגבול ההורה');
+            return;
+        }
+
+        // Create new points array
+        const newPoints = [...points];
+        newPoints.splice(afterIndex + 1, 0, newPoint);
+
+        // Recreate polygon with new points
+        const oldPolygon = polygon;
+        const polygonProps = {
+            left: oldPolygon.left,
+            top: oldPolygon.top,
+            fill: oldPolygon.fill,
+            stroke: oldPolygon.stroke,
+            strokeWidth: oldPolygon.strokeWidth,
+            selectable: true,
+            evented: true,
+            hasControls: false,
+            hasBorders: true,
+            borderColor: '#22c55e',
+            borderDashArray: [5, 5],
+            hoverCursor: 'move',
+            isChildBoundary: true,
+            childId: oldPolygon.childId
+        };
+
+        const newPolygon = new fabric.Polygon(newPoints, polygonProps);
+        newPolygon.on('moving', () => this.onChildBoundaryMove());
+        newPolygon.on('modified', () => this.onChildBoundaryModified());
+
+        // Replace in canvas and state
+        this.canvas.remove(oldPolygon);
+        this.canvas.add(newPolygon);
+
+        const childId = oldPolygon.childId;
+        this.childrenPanel.childBoundaries[childId] = newPolygon;
+        this.childrenPanel.editingPolygon = newPolygon;
+
+        // Refresh anchor points
+        this.showChildAnchorPoints(newPolygon);
+        this.reorderLayers();
+        this.canvas.renderAll();
+
+        this.setStatus('נקודה חדשה נוספה', 'editing');
+    }
+
+    /**
+     * Remove anchor point from child boundary
+     */
+    removeChildAnchorPoint(anchor) {
+        const polygon = this.childrenPanel.editingPolygon;
+        if (!polygon) return;
+
+        const index = anchor.pointIndex;
+        const points = polygon.points;
+
+        // Must have at least 3 points
+        if (points.length <= 3) {
+            this.setStatus('לא ניתן להסיר - נדרשות לפחות 3 נקודות');
+            return;
+        }
+
+        // Create new points array without the removed point
+        const newPoints = points.filter((_, i) => i !== index);
+
+        // Recreate polygon
+        const oldPolygon = polygon;
+        const polygonProps = {
+            left: oldPolygon.left,
+            top: oldPolygon.top,
+            fill: oldPolygon.fill,
+            stroke: oldPolygon.stroke,
+            strokeWidth: oldPolygon.strokeWidth,
+            selectable: true,
+            evented: true,
+            hasControls: false,
+            hasBorders: true,
+            borderColor: '#22c55e',
+            borderDashArray: [5, 5],
+            hoverCursor: 'move',
+            isChildBoundary: true,
+            childId: oldPolygon.childId
+        };
+
+        const newPolygon = new fabric.Polygon(newPoints, polygonProps);
+        newPolygon.on('moving', () => this.onChildBoundaryMove());
+        newPolygon.on('modified', () => this.onChildBoundaryModified());
+
+        // Replace in canvas and state
+        this.canvas.remove(oldPolygon);
+        this.canvas.add(newPolygon);
+
+        const childId = oldPolygon.childId;
+        this.childrenPanel.childBoundaries[childId] = newPolygon;
+        this.childrenPanel.editingPolygon = newPolygon;
+
+        // Refresh anchor points
+        this.showChildAnchorPoints(newPolygon);
+        this.reorderLayers();
+        this.canvas.renderAll();
+
+        this.setStatus(`נקודה ${index + 1} נמחקה`, 'editing');
     }
 
     /**

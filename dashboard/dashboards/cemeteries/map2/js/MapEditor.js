@@ -315,8 +315,42 @@ class MapEditor {
         const index = anchorPoint.pointIndex;
 
         // Remove point from boundary
-        this.boundary.points.splice(index, 1);
-        this.boundary.set({ dirty: true });
+        const newPoints = [...this.boundary.points];
+        newPoints.splice(index, 1);
+
+        // Recreate boundary with new points (Fabric.js requires this for proper update)
+        const oldBoundary = this.boundary;
+        const boundaryProps = {
+            fill: oldBoundary.fill,
+            stroke: oldBoundary.stroke,
+            strokeWidth: oldBoundary.strokeWidth,
+            selectable: oldBoundary.selectable,
+            evented: oldBoundary.evented,
+            hasControls: oldBoundary.hasControls,
+            hasBorders: oldBoundary.hasBorders,
+            borderColor: oldBoundary.borderColor,
+            borderDashArray: oldBoundary.borderDashArray,
+            hoverCursor: oldBoundary.hoverCursor,
+            objectCaching: false,
+            isBoundary: true
+        };
+
+        // Remove old boundary
+        this.canvas.remove(oldBoundary);
+
+        // Create new boundary with updated points
+        this.boundary = new fabric.Polygon(newPoints, boundaryProps);
+
+        // Re-attach event handlers if in editing mode
+        if (this.isEditingBoundary) {
+            this.boundary.on('moving', () => this.onBoundaryMove());
+            this.boundary.on('modified', () => this.onBoundaryModified());
+        }
+
+        this.canvas.add(this.boundary);
+
+        // Update boundaryPoints for gray mask
+        this.boundaryPoints = newPoints;
 
         // Refresh anchor points
         this.showAnchorPoints();
@@ -324,6 +358,10 @@ class MapEditor {
         // Update gray mask
         this.updateGrayMask();
 
+        // Reorder layers
+        this.reorderLayers();
+
+        this.canvas.renderAll();
         this.setStatus(`נקודה ${index + 1} נמחקה`, 'editing');
     }
 
@@ -364,6 +402,8 @@ class MapEditor {
 
         // Only add point if click is close to an edge (within 20 pixels)
         if (minDistance < 20 && closestEdgeIndex !== -1) {
+            // Deselect boundary to prevent selection on double-click
+            this.canvas.discardActiveObject();
             this.addAnchorPoint(closestEdgeIndex);
         }
     }
@@ -855,24 +895,8 @@ class MapEditor {
         const activeObject = this.canvas.getActiveObject();
         if (!activeObject || !activeObject.isAnchorPoint) return;
 
-        if (this.boundary.points.length <= 3) {
-            alert('לא ניתן למחוק - גבול חייב להכיל לפחות 3 נקודות');
-            return;
-        }
-
-        const index = activeObject.pointIndex;
-
-        // Remove point from boundary
-        this.boundary.points.splice(index, 1);
-        this.boundary.set({ dirty: true });
-
-        // Refresh anchor points
-        this.showAnchorPoints();
-
-        // Update gray mask
-        this.updateGrayMask();
-
-        this.setStatus(`נקודה ${index + 1} נמחקה`, 'editing');
+        // Use the same method as context menu removal
+        this.removeAnchorPointByObject(activeObject);
     }
 
     addAnchorPoint(afterIndex) {
@@ -887,8 +911,43 @@ class MapEditor {
             y: (p1.y + p2.y) / 2
         };
 
-        points.splice(afterIndex + 1, 0, newPoint);
-        this.boundary.set({ dirty: true });
+        // Create new points array with the new point
+        const newPoints = [...points];
+        newPoints.splice(afterIndex + 1, 0, newPoint);
+
+        // Recreate boundary with new points (Fabric.js requires this for proper update)
+        const oldBoundary = this.boundary;
+        const boundaryProps = {
+            fill: oldBoundary.fill,
+            stroke: oldBoundary.stroke,
+            strokeWidth: oldBoundary.strokeWidth,
+            selectable: oldBoundary.selectable,
+            evented: oldBoundary.evented,
+            hasControls: oldBoundary.hasControls,
+            hasBorders: oldBoundary.hasBorders,
+            borderColor: oldBoundary.borderColor,
+            borderDashArray: oldBoundary.borderDashArray,
+            hoverCursor: oldBoundary.hoverCursor,
+            objectCaching: false,
+            isBoundary: true
+        };
+
+        // Remove old boundary
+        this.canvas.remove(oldBoundary);
+
+        // Create new boundary with updated points
+        this.boundary = new fabric.Polygon(newPoints, boundaryProps);
+
+        // Re-attach event handlers if in editing mode
+        if (this.isEditingBoundary) {
+            this.boundary.on('moving', () => this.onBoundaryMove());
+            this.boundary.on('modified', () => this.onBoundaryModified());
+        }
+
+        this.canvas.add(this.boundary);
+
+        // Update boundaryPoints for gray mask
+        this.boundaryPoints = newPoints;
 
         // Refresh anchor points
         this.showAnchorPoints();
@@ -896,6 +955,10 @@ class MapEditor {
         // Update gray mask
         this.updateGrayMask();
 
+        // Reorder layers
+        this.reorderLayers();
+
+        this.canvas.renderAll();
         this.setStatus(`נקודה חדשה נוספה`, 'editing');
     }
 

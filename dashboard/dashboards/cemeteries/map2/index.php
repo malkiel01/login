@@ -179,6 +179,16 @@ $entityName = $_GET['name'] ?? '';
                                     <path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                                 </svg>
                             </button>
+                            <div class="dropdown-divider"></div>
+                            <button class="dropdown-item" id="btnChildrenPanel" data-panel="children">
+                                <svg viewBox="0 0 24 24" width="16" height="16">
+                                    <path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                                </svg>
+                                <span>ילדים</span>
+                                <svg class="check-icon" viewBox="0 0 24 24" width="14" height="14" style="margin-right: auto; display: none;">
+                                    <path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                            </button>
                         </div>
                     </div>
 
@@ -289,6 +299,63 @@ $entityName = $_GET['name'] ?? '';
         <div class="floating-panel-body">
             <div class="layers-list" id="layersList">
                 <div class="panel-message">אין שכבות</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Children Panel -->
+    <div class="floating-panel" id="childrenPanel" style="display: none;">
+        <div class="floating-panel-header">
+            <span class="floating-panel-title">ילדים</span>
+            <button class="floating-panel-close" data-panel="children">&times;</button>
+        </div>
+        <div class="floating-panel-body">
+            <!-- Message when no parent boundary -->
+            <div class="panel-message" id="childrenNoParentBoundary">
+                יש להגדיר גבול מפה לפני הוספת גבולות ילדים
+            </div>
+
+            <!-- Loading indicator -->
+            <div class="panel-message" id="childrenLoading" style="display: none;">
+                <span class="loading-spinner"></span> טוען...
+            </div>
+
+            <!-- Children list -->
+            <div id="childrenListContainer" style="display: none;">
+                <div class="children-list" id="childrenList"></div>
+
+                <!-- Controls for selected child -->
+                <div id="childrenControls" class="panel-controls" style="display: none;">
+                    <div class="selected-child-info">
+                        <span class="label">נבחר:</span>
+                        <span id="selectedChildName">-</span>
+                    </div>
+                    <div class="control-buttons">
+                        <button id="btnDrawChildBoundary" class="btn btn-primary btn-sm">
+                            <svg viewBox="0 0 24 24" width="14" height="14">
+                                <path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                            </svg>
+                            צייר גבול
+                        </button>
+                        <button id="btnEditChildBoundary" class="btn btn-secondary btn-sm" style="display: none;">
+                            <svg viewBox="0 0 24 24" width="14" height="14">
+                                <path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                            </svg>
+                            ערוך
+                        </button>
+                        <button id="btnDeleteChildBoundary" class="btn btn-danger btn-sm" style="display: none;">
+                            <svg viewBox="0 0 24 24" width="14" height="14">
+                                <path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                            </svg>
+                            מחק
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- No children message -->
+            <div class="panel-message" id="childrenEmpty" style="display: none;">
+                אין ילדים להצגה
             </div>
         </div>
     </div>

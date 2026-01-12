@@ -25,10 +25,20 @@ class MapEditor {
         this.panels = {
             textStyle: { visible: false, position: { x: 20, y: 100 }, docked: false, dockSide: null },
             elementStyle: { visible: false, position: { x: 20, y: 100 }, docked: false, dockSide: null },
-            layers: { visible: false, position: { x: 20, y: 100 }, docked: false, dockSide: null }
+            layers: { visible: false, position: { x: 20, y: 100 }, docked: false, dockSide: null },
+            children: { visible: false, position: { x: 20, y: 100 }, docked: false, dockSide: null }
         };
         this.draggedPanel = null;
         this.dragOffset = { x: 0, y: 0 };
+
+        // Children panel state
+        this.childrenPanel = {
+            children: [],              // List of child entities from DB
+            selectedChild: null,       // Currently selected child {id, name, type, hasPolygon, polygon}
+            childBoundaries: {},       // Map of childId → fabric.Polygon
+            isDrawingChildBoundary: false,
+            childBoundaryPoints: []    // Points while drawing child boundary
+        };
 
         // Dock zones state
         this.dockZones = {
@@ -51,6 +61,10 @@ class MapEditor {
             layers: {
                 title: 'שכבות',
                 icon: '<svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M11.99 18.54l-7.37-5.73L3 14.07l9 7 9-7-1.63-1.27-7.38 5.74zM12 16l7.36-5.73L21 9l-9-7-9 7 1.63 1.27L12 16z"/></svg>'
+            },
+            children: {
+                title: 'ילדים',
+                icon: '<svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>'
             }
         };
 
@@ -131,11 +145,25 @@ class MapEditor {
             btnTextStylePanel: document.getElementById('btnTextStylePanel'),
             btnElementStylePanel: document.getElementById('btnElementStylePanel'),
             btnLayersPanel: document.getElementById('btnLayersPanel'),
+            btnChildrenPanel: document.getElementById('btnChildrenPanel'),
 
             // Floating panels
             textStylePanel: document.getElementById('textStylePanel'),
             elementStylePanel: document.getElementById('elementStylePanel'),
             layersPanel: document.getElementById('layersPanel'),
+            childrenPanel: document.getElementById('childrenPanel'),
+
+            // Children panel controls
+            childrenNoParentBoundary: document.getElementById('childrenNoParentBoundary'),
+            childrenLoading: document.getElementById('childrenLoading'),
+            childrenListContainer: document.getElementById('childrenListContainer'),
+            childrenList: document.getElementById('childrenList'),
+            childrenControls: document.getElementById('childrenControls'),
+            selectedChildName: document.getElementById('selectedChildName'),
+            btnDrawChildBoundary: document.getElementById('btnDrawChildBoundary'),
+            btnEditChildBoundary: document.getElementById('btnEditChildBoundary'),
+            btnDeleteChildBoundary: document.getElementById('btnDeleteChildBoundary'),
+            childrenEmpty: document.getElementById('childrenEmpty'),
 
             // Text style controls
             textControls: document.getElementById('textControls'),
@@ -264,6 +292,12 @@ class MapEditor {
         this.elements.btnTextStylePanel.addEventListener('click', () => this.togglePanel('textStyle'));
         this.elements.btnElementStylePanel.addEventListener('click', () => this.togglePanel('elementStyle'));
         this.elements.btnLayersPanel.addEventListener('click', () => this.togglePanel('layers'));
+        this.elements.btnChildrenPanel.addEventListener('click', () => this.togglePanel('children'));
+
+        // Children panel control buttons
+        this.elements.btnDrawChildBoundary.addEventListener('click', () => this.startDrawingChildBoundary());
+        this.elements.btnEditChildBoundary.addEventListener('click', () => this.startEditingChildBoundary());
+        this.elements.btnDeleteChildBoundary.addEventListener('click', () => this.deleteChildBoundary());
 
         // Panel close buttons
         document.querySelectorAll('.floating-panel-close').forEach(btn => {
@@ -772,7 +806,9 @@ class MapEditor {
     handleKeyDown(e) {
         // Escape - cancel current action
         if (e.key === 'Escape') {
-            if (this.canvas.isDrawingMode) {
+            if (this.childrenPanel.isDrawingChildBoundary) {
+                this.cancelDrawingChildBoundary();
+            } else if (this.canvas.isDrawingMode) {
                 this.stopFreeDrawing();
             } else if (this.isDrawingBoundary) {
                 this.cancelDrawingBoundary();
@@ -896,6 +932,12 @@ class MapEditor {
     }
 
     handleCanvasClick(opt) {
+        // Handle child boundary drawing first
+        if (this.childrenPanel.isDrawingChildBoundary) {
+            this.handleChildBoundaryClick(opt);
+            return;
+        }
+
         if (!this.isDrawingBoundary) return;
 
         const pointer = this.canvas.getPointer(opt.e);
@@ -961,6 +1003,12 @@ class MapEditor {
     }
 
     handleCanvasDoubleClick() {
+        // Handle child boundary drawing first
+        if (this.childrenPanel.isDrawingChildBoundary) {
+            this.finishDrawingChildBoundary();
+            return;
+        }
+
         if (!this.isDrawingBoundary) return;
 
         if (this.boundaryPoints.length < 3) {
@@ -1342,6 +1390,14 @@ class MapEditor {
                 evented: false,
                 hasBorders: false
             });
+
+            // Sync boundaryPoints with edited boundary
+            this.boundaryPoints = this.boundary.points.map(p => ({ x: p.x, y: p.y }));
+
+            // Validate child boundaries are still contained
+            if (!this.canModifyParentBoundary(this.boundaryPoints)) {
+                this.setStatus('אזהרה: ייתכן שגבולות ילדים יצאו מחוץ לגבול ההורה!', 'error');
+            }
         }
 
         this.clearAnchorPoints();
@@ -1503,6 +1559,12 @@ class MapEditor {
 
     removeBoundary() {
         if (!this.boundary) return;
+
+        // Check if children have boundaries
+        if (!this.canDeleteParentBoundary()) {
+            alert('לא ניתן להסיר את הגבול - יש ילדים עם גבולות מוגדרים.\nיש למחוק קודם את גבולות הילדים.');
+            return;
+        }
 
         if (!confirm('האם להסיר את הגבול?')) return;
 
@@ -1732,10 +1794,15 @@ class MapEditor {
     // ============================================
 
     reorderLayers() {
-        // Order: background -> boundary -> gray mask -> anchor points
+        // Order: background -> child boundaries -> boundary -> gray mask -> anchor points
         if (this.backgroundImage) {
             this.canvas.sendToBack(this.backgroundImage);
         }
+
+        // Child boundaries should be above background but below parent boundary
+        Object.values(this.childrenPanel.childBoundaries).forEach(polygon => {
+            this.canvas.bringToFront(polygon);
+        });
 
         if (this.boundary) {
             this.canvas.bringToFront(this.boundary);
@@ -1803,12 +1870,14 @@ class MapEditor {
         const panelMap = {
             textStyle: this.elements.textStylePanel,
             elementStyle: this.elements.elementStylePanel,
-            layers: this.elements.layersPanel
+            layers: this.elements.layersPanel,
+            children: this.elements.childrenPanel
         };
         const btnMap = {
             textStyle: this.elements.btnTextStylePanel,
             elementStyle: this.elements.btnElementStylePanel,
-            layers: this.elements.btnLayersPanel
+            layers: this.elements.btnLayersPanel,
+            children: this.elements.btnChildrenPanel
         };
 
         const panel = panelMap[panelName];
@@ -1836,6 +1905,8 @@ class MapEditor {
             // Update panel content
             if (panelName === 'layers') {
                 this.updateLayersPanel();
+            } else if (panelName === 'children') {
+                this.loadChildren();
             } else {
                 this.onSelectionChanged();
             }
@@ -2829,6 +2900,563 @@ class MapEditor {
         }
 
         return mapData;
+    }
+
+    // ============================================
+    // CHILDREN PANEL
+    // ============================================
+
+    /**
+     * Get child entity type based on parent type
+     */
+    getChildType(parentType) {
+        const childTypeMap = {
+            'cemetery': 'block',
+            'block': 'plot',
+            'plot': 'areaGrave'
+        };
+        return childTypeMap[parentType] || null;
+    }
+
+    /**
+     * Get display name for child type
+     */
+    getChildTypeName(childType) {
+        const typeNames = {
+            'block': 'גושים',
+            'plot': 'חלקות',
+            'areaGrave': 'אחוזות קבר'
+        };
+        return typeNames[childType] || childType;
+    }
+
+    /**
+     * Load children from API
+     */
+    async loadChildren() {
+        // Check if parent has boundary
+        if (!this.boundary) {
+            this.showChildrenNoParentBoundary();
+            return;
+        }
+
+        // Check if this entity type can have children
+        const childType = this.getChildType(this.config.entityType);
+        if (!childType) {
+            this.showChildrenEmpty('לסוג ישות זה אין ילדים');
+            return;
+        }
+
+        this.showChildrenLoading();
+
+        try {
+            const url = `${this.config.apiBase}map-data.php?action=getChildren&parentType=${this.config.entityType}&parentId=${this.config.entityId}`;
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (data.success) {
+                this.childrenPanel.children = data.children.map(child => ({
+                    id: child.id,
+                    name: child.name || child.id,
+                    type: child.type,
+                    hasPolygon: child.hasPolygon,
+                    polygon: child.polygon
+                }));
+
+                if (this.childrenPanel.children.length === 0) {
+                    this.showChildrenEmpty(`אין ${this.getChildTypeName(childType)}`);
+                } else {
+                    this.renderChildrenList();
+                    this.renderChildBoundaries();
+                }
+            } else {
+                throw new Error(data.error || 'שגיאה בטעינה');
+            }
+        } catch (error) {
+            console.error('Error loading children:', error);
+            this.showChildrenEmpty('שגיאה בטעינת ילדים: ' + error.message);
+        }
+    }
+
+    /**
+     * Show message when parent has no boundary
+     */
+    showChildrenNoParentBoundary() {
+        this.elements.childrenNoParentBoundary.style.display = 'block';
+        this.elements.childrenLoading.style.display = 'none';
+        this.elements.childrenListContainer.style.display = 'none';
+        this.elements.childrenControls.style.display = 'none';
+        this.elements.childrenEmpty.style.display = 'none';
+    }
+
+    /**
+     * Show loading indicator
+     */
+    showChildrenLoading() {
+        this.elements.childrenNoParentBoundary.style.display = 'none';
+        this.elements.childrenLoading.style.display = 'flex';
+        this.elements.childrenListContainer.style.display = 'none';
+        this.elements.childrenControls.style.display = 'none';
+        this.elements.childrenEmpty.style.display = 'none';
+    }
+
+    /**
+     * Show empty message
+     */
+    showChildrenEmpty(message = 'אין ילדים') {
+        this.elements.childrenNoParentBoundary.style.display = 'none';
+        this.elements.childrenLoading.style.display = 'none';
+        this.elements.childrenListContainer.style.display = 'none';
+        this.elements.childrenControls.style.display = 'none';
+        this.elements.childrenEmpty.style.display = 'block';
+        this.elements.childrenEmpty.textContent = message;
+    }
+
+    /**
+     * Render children list
+     */
+    renderChildrenList() {
+        this.elements.childrenNoParentBoundary.style.display = 'none';
+        this.elements.childrenLoading.style.display = 'none';
+        this.elements.childrenListContainer.style.display = 'block';
+        this.elements.childrenEmpty.style.display = 'none';
+
+        const list = this.elements.childrenList;
+        list.innerHTML = this.childrenPanel.children.map(child => `
+            <div class="child-item ${child.id === this.childrenPanel.selectedChild?.id ? 'selected' : ''}"
+                 data-id="${child.id}">
+                <span class="status-dot ${child.hasPolygon ? 'has-polygon' : 'no-polygon'}"></span>
+                <span class="child-name">${child.name}</span>
+            </div>
+        `).join('');
+
+        // Add click handlers
+        list.querySelectorAll('.child-item').forEach(item => {
+            item.addEventListener('click', () => this.selectChild(item.dataset.id));
+        });
+
+        // Update controls visibility
+        this.updateChildControls();
+    }
+
+    /**
+     * Select a child entity
+     */
+    selectChild(childId) {
+        const child = this.childrenPanel.children.find(c => c.id === childId);
+        this.childrenPanel.selectedChild = child;
+
+        // Update list UI
+        this.elements.childrenList.querySelectorAll('.child-item').forEach(item => {
+            item.classList.toggle('selected', item.dataset.id === childId);
+        });
+
+        // Update controls
+        this.updateChildControls();
+
+        // Highlight boundary on canvas
+        this.highlightChildBoundary(childId);
+    }
+
+    /**
+     * Update child controls based on selection
+     */
+    updateChildControls() {
+        const selected = this.childrenPanel.selectedChild;
+
+        if (selected) {
+            this.elements.childrenControls.style.display = 'block';
+            this.elements.selectedChildName.textContent = selected.name;
+
+            // Show/hide buttons based on whether child has polygon
+            this.elements.btnDrawChildBoundary.style.display = selected.hasPolygon ? 'none' : 'inline-flex';
+            this.elements.btnEditChildBoundary.style.display = selected.hasPolygon ? 'inline-flex' : 'none';
+            this.elements.btnDeleteChildBoundary.style.display = selected.hasPolygon ? 'inline-flex' : 'none';
+        } else {
+            this.elements.childrenControls.style.display = 'none';
+        }
+    }
+
+    /**
+     * Render all child boundaries on canvas
+     */
+    renderChildBoundaries() {
+        // Clear existing
+        this.clearChildBoundaries();
+
+        const selectedId = this.childrenPanel.selectedChild?.id;
+
+        this.childrenPanel.children
+            .filter(c => c.hasPolygon && c.polygon)
+            .forEach(child => {
+                const isSelected = child.id === selectedId;
+                const points = child.polygon.points || child.polygon;
+
+                const polygon = new fabric.Polygon(points, {
+                    fill: isSelected ? 'rgba(59, 130, 246, 0.25)' : 'rgba(59, 130, 246, 0.1)',
+                    stroke: '#3b82f6',
+                    strokeWidth: isSelected ? 2 : 1,
+                    opacity: isSelected ? 1 : 0.5,
+                    selectable: false,
+                    evented: false,
+                    isChildBoundary: true,
+                    childId: child.id
+                });
+
+                this.canvas.add(polygon);
+                this.childrenPanel.childBoundaries[child.id] = polygon;
+            });
+
+        this.reorderLayers();
+        this.canvas.renderAll();
+    }
+
+    /**
+     * Clear all child boundaries from canvas
+     */
+    clearChildBoundaries() {
+        Object.values(this.childrenPanel.childBoundaries).forEach(polygon => {
+            this.canvas.remove(polygon);
+        });
+        this.childrenPanel.childBoundaries = {};
+    }
+
+    /**
+     * Highlight a specific child boundary
+     */
+    highlightChildBoundary(childId) {
+        // Update all boundary styles
+        Object.entries(this.childrenPanel.childBoundaries).forEach(([id, polygon]) => {
+            const isSelected = id === childId;
+            polygon.set({
+                fill: isSelected ? 'rgba(59, 130, 246, 0.25)' : 'rgba(59, 130, 246, 0.1)',
+                strokeWidth: isSelected ? 2 : 1,
+                opacity: isSelected ? 1 : 0.5
+            });
+        });
+
+        this.canvas.renderAll();
+    }
+
+    /**
+     * Start drawing a child boundary
+     */
+    startDrawingChildBoundary() {
+        if (!this.childrenPanel.selectedChild) {
+            this.setStatus('יש לבחור ילד תחילה');
+            return;
+        }
+
+        if (!this.boundary) {
+            this.setStatus('יש להגדיר גבול מפה תחילה');
+            return;
+        }
+
+        this.childrenPanel.isDrawingChildBoundary = true;
+        this.childrenPanel.childBoundaryPoints = [];
+
+        // Change cursor
+        this.canvas.defaultCursor = 'crosshair';
+
+        this.setStatus('לחץ להוספת נקודות. לחיצה כפולה לסיום.');
+    }
+
+    /**
+     * Handle canvas click while drawing child boundary
+     */
+    handleChildBoundaryClick(e) {
+        if (!this.childrenPanel.isDrawingChildBoundary) return false;
+
+        const pointer = this.canvas.getPointer(e.e);
+        const point = { x: pointer.x, y: pointer.y };
+
+        // Validate point is inside parent boundary
+        if (!this.isPointInsideParentBoundary(point)) {
+            this.setStatus('הנקודה חייבת להיות בתוך גבול ההורה!');
+            return true; // Handled but invalid
+        }
+
+        this.childrenPanel.childBoundaryPoints.push(point);
+
+        // Draw temporary marker
+        const marker = new fabric.Circle({
+            left: point.x - 4,
+            top: point.y - 4,
+            radius: 4,
+            fill: '#22c55e',
+            stroke: '#16a34a',
+            strokeWidth: 1,
+            selectable: false,
+            evented: false,
+            isChildBoundaryMarker: true
+        });
+        this.canvas.add(marker);
+
+        // Draw preview line if we have at least 2 points
+        if (this.childrenPanel.childBoundaryPoints.length >= 2) {
+            const points = this.childrenPanel.childBoundaryPoints;
+            const lastTwo = [points[points.length - 2], points[points.length - 1]];
+
+            const line = new fabric.Line(
+                [lastTwo[0].x, lastTwo[0].y, lastTwo[1].x, lastTwo[1].y],
+                {
+                    stroke: '#22c55e',
+                    strokeWidth: 2,
+                    selectable: false,
+                    evented: false,
+                    isChildBoundaryLine: true
+                }
+            );
+            this.canvas.add(line);
+        }
+
+        this.canvas.renderAll();
+        this.setStatus(`נוספו ${this.childrenPanel.childBoundaryPoints.length} נקודות. לחיצה כפולה לסיום.`);
+
+        return true; // Handled
+    }
+
+    /**
+     * Finish drawing child boundary (on double-click)
+     */
+    async finishDrawingChildBoundary() {
+        if (!this.childrenPanel.isDrawingChildBoundary) return;
+
+        const points = this.childrenPanel.childBoundaryPoints;
+
+        if (points.length < 3) {
+            this.setStatus('נדרשות לפחות 3 נקודות לגבול');
+            return;
+        }
+
+        // Validate all points are inside parent
+        if (!this.validateChildBoundary(points)) {
+            this.setStatus('כל נקודות הגבול חייבות להיות בתוך גבול ההורה!');
+            return;
+        }
+
+        // Clear temporary markers and lines
+        this.canvas.getObjects().filter(obj =>
+            obj.isChildBoundaryMarker || obj.isChildBoundaryLine
+        ).forEach(obj => this.canvas.remove(obj));
+
+        // Save to server
+        const child = this.childrenPanel.selectedChild;
+        const polygon = { points: points };
+
+        try {
+            await this.saveChildPolygon(child.id, polygon);
+
+            // Update local state
+            child.hasPolygon = true;
+            child.polygon = polygon;
+
+            // Re-render
+            this.renderChildrenList();
+            this.renderChildBoundaries();
+
+            this.setStatus('גבול הילד נשמר בהצלחה!', 'success');
+        } catch (error) {
+            console.error('Error saving child polygon:', error);
+            this.setStatus('שגיאה בשמירת גבול: ' + error.message);
+        } finally {
+            // Reset state
+            this.childrenPanel.isDrawingChildBoundary = false;
+            this.childrenPanel.childBoundaryPoints = [];
+            this.canvas.defaultCursor = 'default';
+        }
+    }
+
+    /**
+     * Cancel drawing child boundary
+     */
+    cancelDrawingChildBoundary() {
+        // Clear temporary markers and lines
+        this.canvas.getObjects().filter(obj =>
+            obj.isChildBoundaryMarker || obj.isChildBoundaryLine
+        ).forEach(obj => this.canvas.remove(obj));
+
+        this.childrenPanel.isDrawingChildBoundary = false;
+        this.childrenPanel.childBoundaryPoints = [];
+        this.canvas.defaultCursor = 'default';
+
+        this.setStatus('ציור גבול בוטל');
+        this.canvas.renderAll();
+    }
+
+    /**
+     * Start editing child boundary
+     */
+    startEditingChildBoundary() {
+        const child = this.childrenPanel.selectedChild;
+        if (!child || !child.hasPolygon) return;
+
+        // For now, delete and redraw
+        // In the future, could implement anchor point editing like parent boundary
+        if (confirm('לערוך את הגבול? הגבול הנוכחי יימחק ותוכל לצייר מחדש.')) {
+            // Remove from canvas
+            const polygon = this.childrenPanel.childBoundaries[child.id];
+            if (polygon) {
+                this.canvas.remove(polygon);
+                delete this.childrenPanel.childBoundaries[child.id];
+            }
+
+            // Update state
+            child.hasPolygon = false;
+            child.polygon = null;
+
+            // Update UI and start drawing
+            this.renderChildrenList();
+            this.startDrawingChildBoundary();
+        }
+    }
+
+    /**
+     * Save child polygon to server
+     */
+    async saveChildPolygon(childId, polygon) {
+        const child = this.childrenPanel.children.find(c => c.id === childId);
+        if (!child) throw new Error('ילד לא נמצא');
+
+        const response = await fetch(`${this.config.apiBase}map-data.php`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'saveChildPolygon',
+                childType: child.type,
+                childId: childId,
+                polygon: polygon
+            })
+        });
+
+        const result = await response.json();
+
+        if (!result.success) {
+            throw new Error(result.error || 'שגיאה בשמירה');
+        }
+
+        return result;
+    }
+
+    /**
+     * Delete child boundary
+     */
+    async deleteChildBoundary() {
+        const child = this.childrenPanel.selectedChild;
+        if (!child || !child.hasPolygon) return;
+
+        if (!confirm(`למחוק את גבול "${child.name}"?`)) return;
+
+        try {
+            const response = await fetch(`${this.config.apiBase}map-data.php`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'deleteChildPolygon',
+                    childType: child.type,
+                    childId: child.id
+                })
+            });
+
+            const result = await response.json();
+
+            if (!result.success) {
+                throw new Error(result.error || 'שגיאה במחיקה');
+            }
+
+            // Remove from canvas
+            const polygon = this.childrenPanel.childBoundaries[child.id];
+            if (polygon) {
+                this.canvas.remove(polygon);
+                delete this.childrenPanel.childBoundaries[child.id];
+            }
+
+            // Update state
+            child.hasPolygon = false;
+            child.polygon = null;
+
+            // Update UI
+            this.renderChildrenList();
+            this.updateChildControls();
+            this.canvas.renderAll();
+
+            this.setStatus('הגבול נמחק בהצלחה', 'success');
+        } catch (error) {
+            console.error('Error deleting child polygon:', error);
+            this.setStatus('שגיאה במחיקת גבול: ' + error.message);
+        }
+    }
+
+    /**
+     * Check if a point is inside the parent boundary
+     */
+    isPointInsideParentBoundary(point) {
+        if (!this.boundary || !this.boundaryPoints || this.boundaryPoints.length < 3) {
+            return false;
+        }
+        return this.isPointInPolygonPoints(point, this.boundaryPoints);
+    }
+
+    /**
+     * Point-in-polygon test using ray casting algorithm
+     */
+    isPointInPolygonPoints(point, polygonPoints) {
+        let inside = false;
+        const x = point.x;
+        const y = point.y;
+        const n = polygonPoints.length;
+
+        for (let i = 0, j = n - 1; i < n; j = i++) {
+            const xi = polygonPoints[i].x;
+            const yi = polygonPoints[i].y;
+            const xj = polygonPoints[j].x;
+            const yj = polygonPoints[j].y;
+
+            if (((yi > y) !== (yj > y)) &&
+                (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+                inside = !inside;
+            }
+        }
+
+        return inside;
+    }
+
+    /**
+     * Validate that all points of a child boundary are inside parent
+     */
+    validateChildBoundary(points) {
+        return points.every(point => this.isPointInsideParentBoundary(point));
+    }
+
+    /**
+     * Check if parent boundary can be modified to new points
+     * (without leaving any child boundaries outside)
+     */
+    canModifyParentBoundary(newPoints) {
+        const childrenWithBoundaries = this.childrenPanel.children.filter(c => c.hasPolygon && c.polygon);
+
+        if (childrenWithBoundaries.length === 0) return true;
+
+        // Check each child's boundary points are inside new parent boundary
+        for (const child of childrenWithBoundaries) {
+            const childPoints = child.polygon.points || child.polygon;
+
+            for (const point of childPoints) {
+                if (!this.isPointInPolygonPoints(point, newPoints)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if parent boundary can be deleted
+     */
+    canDeleteParentBoundary() {
+        const childrenWithBoundaries = this.childrenPanel.children.filter(c => c.hasPolygon);
+        return childrenWithBoundaries.length === 0;
     }
 }
 

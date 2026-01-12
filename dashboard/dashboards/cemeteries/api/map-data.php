@@ -19,11 +19,18 @@ require_once dirname(__DIR__) . '/config.php';
 
 // Entity type to table mapping
 $entityTables = [
-    'cemetery' => ['table' => 'cemeteries', 'idField' => 'unicId'],
-    'block' => ['table' => 'blocks', 'idField' => 'unicId'],
-    'plot' => ['table' => 'plots', 'idField' => 'unicId'],
-    'row' => ['table' => 'rows', 'idField' => 'unicId'],
-    'areaGrave' => ['table' => 'areaGraves', 'idField' => 'unicId']
+    'cemetery' => ['table' => 'cemeteries', 'idField' => 'unicId', 'nameField' => 'cemeteryNameHe'],
+    'block' => ['table' => 'blocks', 'idField' => 'unicId', 'nameField' => 'blockNameHe'],
+    'plot' => ['table' => 'plots', 'idField' => 'unicId', 'nameField' => 'plotNameHe'],
+    'row' => ['table' => 'rows', 'idField' => 'unicId', 'nameField' => 'lineNameHe'],
+    'areaGrave' => ['table' => 'areaGraves', 'idField' => 'unicId', 'nameField' => 'areaGraveNameHe']
+];
+
+// Parent-child relationships
+$childTypeMap = [
+    'cemetery' => ['childType' => 'block', 'foreignKey' => 'cemeteryId'],
+    'block' => ['childType' => 'plot', 'foreignKey' => 'blockId'],
+    'plot' => ['childType' => 'areaGrave', 'foreignKey' => 'plotId']  // Skip rows - they don't have map boundaries
 ];
 
 // Get database connection
@@ -40,34 +47,70 @@ try {
         $action = $_GET['action'] ?? '';
         $type = $_GET['type'] ?? '';
         $id = $_GET['id'] ?? '';
+        $parentType = $_GET['parentType'] ?? '';
+        $parentId = $_GET['parentId'] ?? '';
     } else {
         $input = json_decode(file_get_contents('php://input'), true);
         $action = $input['action'] ?? '';
         $type = $input['type'] ?? '';
         $id = $input['id'] ?? '';
         $mapData = $input['mapData'] ?? null;
+        $childType = $input['childType'] ?? '';
+        $childId = $input['childId'] ?? '';
+        $polygon = $input['polygon'] ?? null;
     }
-
-    // Validate entity type
-    if (!isset($entityTables[$type])) {
-        throw new Exception('סוג ישות לא חוקי: ' . $type);
-    }
-
-    $tableConfig = $entityTables[$type];
-    $table = $tableConfig['table'];
-    $idField = $tableConfig['idField'];
 
     switch ($action) {
         case 'load':
-            $result = loadMapData($table, $idField, $id);
+            // Validate entity type
+            if (!isset($entityTables[$type])) {
+                throw new Exception('סוג ישות לא חוקי: ' . $type);
+            }
+            $tableConfig = $entityTables[$type];
+            $result = loadMapData($tableConfig['table'], $tableConfig['idField'], $id);
             echo json_encode($result);
             break;
 
         case 'save':
+            // Validate entity type
+            if (!isset($entityTables[$type])) {
+                throw new Exception('סוג ישות לא חוקי: ' . $type);
+            }
             if (!$mapData) {
                 throw new Exception('חסרים נתוני מפה');
             }
-            $result = saveMapData($table, $idField, $id, $mapData);
+            $tableConfig = $entityTables[$type];
+            $result = saveMapData($tableConfig['table'], $tableConfig['idField'], $id, $mapData);
+            echo json_encode($result);
+            break;
+
+        case 'getChildren':
+            // Get children of a parent entity
+            if (!isset($childTypeMap[$parentType])) {
+                throw new Exception('סוג הורה לא חוקי או אין לו ילדים: ' . $parentType);
+            }
+            $result = getChildren($parentType, $parentId);
+            echo json_encode($result);
+            break;
+
+        case 'saveChildPolygon':
+            // Save polygon for a child entity
+            if (!isset($entityTables[$childType])) {
+                throw new Exception('סוג ישות ילד לא חוקי: ' . $childType);
+            }
+            if (!$polygon) {
+                throw new Exception('חסרים נתוני פוליגון');
+            }
+            $result = saveChildPolygon($childType, $childId, $polygon);
+            echo json_encode($result);
+            break;
+
+        case 'deleteChildPolygon':
+            // Delete polygon for a child entity
+            if (!isset($entityTables[$childType])) {
+                throw new Exception('סוג ישות ילד לא חוקי: ' . $childType);
+            }
+            $result = deleteChildPolygon($childType, $childId);
             echo json_encode($result);
             break;
 
@@ -200,5 +243,163 @@ function saveMapData($table, $idField, $id, $mapData) {
     return [
         'success' => true,
         'message' => 'נתוני המפה נשמרו בהצלחה'
+    ];
+}
+
+/**
+ * Get children of a parent entity with their polygon data
+ */
+function getChildren($parentType, $parentId) {
+    global $pdo, $entityTables, $childTypeMap;
+
+    $childConfig = $childTypeMap[$parentType];
+    $childType = $childConfig['childType'];
+    $foreignKey = $childConfig['foreignKey'];
+
+    $childTableConfig = $entityTables[$childType];
+    $table = $childTableConfig['table'];
+    $idField = $childTableConfig['idField'];
+    $nameField = $childTableConfig['nameField'];
+
+    try {
+        $sql = "SELECT {$idField} as id, {$nameField} as name, mapPolygon
+                FROM {$table}
+                WHERE {$foreignKey} = :parentId
+                AND isActive = 1
+                ORDER BY {$nameField}";
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute(['parentId' => $parentId]);
+
+        $children = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $children[] = [
+                'id' => $row['id'],
+                'name' => $row['name'] ?? $row['id'],
+                'type' => $childType,
+                'hasPolygon' => !empty($row['mapPolygon']),
+                'polygon' => $row['mapPolygon'] ? json_decode($row['mapPolygon'], true) : null
+            ];
+        }
+
+        return [
+            'success' => true,
+            'children' => $children,
+            'childType' => $childType,
+            'count' => count($children)
+        ];
+    } catch (PDOException $e) {
+        // If mapPolygon column doesn't exist, try without it
+        if (strpos($e->getMessage(), 'Unknown column') !== false) {
+            $sql = "SELECT {$idField} as id, {$nameField} as name
+                    FROM {$table}
+                    WHERE {$foreignKey} = :parentId
+                    AND isActive = 1
+                    ORDER BY {$nameField}";
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute(['parentId' => $parentId]);
+
+            $children = [];
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $children[] = [
+                    'id' => $row['id'],
+                    'name' => $row['name'] ?? $row['id'],
+                    'type' => $childType,
+                    'hasPolygon' => false,
+                    'polygon' => null
+                ];
+            }
+
+            return [
+                'success' => true,
+                'children' => $children,
+                'childType' => $childType,
+                'count' => count($children),
+                'warning' => 'עמודת mapPolygon לא קיימת - יש להריץ את סקריפט ההעברה'
+            ];
+        }
+        throw $e;
+    }
+}
+
+/**
+ * Save polygon data for a child entity
+ */
+function saveChildPolygon($childType, $childId, $polygon) {
+    global $pdo, $entityTables;
+
+    $tableConfig = $entityTables[$childType];
+    $table = $tableConfig['table'];
+    $idField = $tableConfig['idField'];
+
+    // Convert polygon to JSON
+    $polygonJson = json_encode($polygon, JSON_UNESCAPED_UNICODE);
+
+    // Check if record exists
+    $checkSql = "SELECT {$idField} FROM {$table} WHERE {$idField} = :id LIMIT 1";
+    $checkStmt = $pdo->prepare($checkSql);
+    $checkStmt->execute(['id' => $childId]);
+
+    if (!$checkStmt->fetch()) {
+        throw new Exception('רשומת ילד לא נמצאה: ' . $childId);
+    }
+
+    // Update mapPolygon
+    try {
+        $sql = "UPDATE {$table} SET mapPolygon = :polygon WHERE {$idField} = :id";
+        $stmt = $pdo->prepare($sql);
+        $result = $stmt->execute([
+            'polygon' => $polygonJson,
+            'id' => $childId
+        ]);
+    } catch (PDOException $e) {
+        if (strpos($e->getMessage(), 'mapPolygon') !== false || strpos($e->getMessage(), 'Unknown column') !== false) {
+            throw new Exception('עמודת mapPolygon לא קיימת בטבלה - יש להריץ את סקריפט ההעברה: sql/add-map-polygon-fields.sql');
+        }
+        throw $e;
+    }
+
+    if (!$result) {
+        throw new Exception('שגיאה בשמירת פוליגון');
+    }
+
+    return [
+        'success' => true,
+        'message' => 'הפוליגון נשמר בהצלחה'
+    ];
+}
+
+/**
+ * Delete polygon data for a child entity
+ */
+function deleteChildPolygon($childType, $childId) {
+    global $pdo, $entityTables;
+
+    $tableConfig = $entityTables[$childType];
+    $table = $tableConfig['table'];
+    $idField = $tableConfig['idField'];
+
+    // Check if record exists
+    $checkSql = "SELECT {$idField} FROM {$table} WHERE {$idField} = :id LIMIT 1";
+    $checkStmt = $pdo->prepare($checkSql);
+    $checkStmt->execute(['id' => $childId]);
+
+    if (!$checkStmt->fetch()) {
+        throw new Exception('רשומת ילד לא נמצאה: ' . $childId);
+    }
+
+    // Set mapPolygon to NULL
+    $sql = "UPDATE {$table} SET mapPolygon = NULL WHERE {$idField} = :id";
+    $stmt = $pdo->prepare($sql);
+    $result = $stmt->execute(['id' => $childId]);
+
+    if (!$result) {
+        throw new Exception('שגיאה במחיקת פוליגון');
+    }
+
+    return [
+        'success' => true,
+        'message' => 'הפוליגון נמחק בהצלחה'
     ];
 }

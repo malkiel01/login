@@ -2992,6 +2992,9 @@ class MapEditor {
             this.canvas.add(this.boundary);
 
             this.createGrayMask();
+
+            // Load children boundaries automatically
+            this.loadChildren();
         }
 
         // Restore background image
@@ -3115,20 +3118,37 @@ class MapEditor {
      * Load children from API
      */
     async loadChildren() {
+        const isPanelVisible = this.panels.children.visible;
+
         // Check if parent has boundary
         if (!this.boundary) {
-            this.showChildrenNoParentBoundary();
+            if (isPanelVisible) {
+                this.showChildrenNoParentBoundary();
+            }
             return;
         }
 
         // Check if this entity type can have children
         const childType = this.getChildType(this.config.entityType);
         if (!childType) {
-            this.showChildrenEmpty('לסוג ישות זה אין ילדים');
+            if (isPanelVisible) {
+                this.showChildrenEmpty('לסוג ישות זה אין ילדים');
+            }
             return;
         }
 
-        this.showChildrenLoading();
+        // If children are already loaded, just render without re-fetching
+        if (this.childrenPanel.children.length > 0) {
+            if (isPanelVisible) {
+                this.renderChildrenList();
+            }
+            this.renderChildBoundaries();
+            return;
+        }
+
+        if (isPanelVisible) {
+            this.showChildrenLoading();
+        }
 
         try {
             const url = `${this.config.apiBase}map-data.php?action=getChildren&parentType=${this.config.entityType}&parentId=${this.config.entityId}`;
@@ -3145,9 +3165,14 @@ class MapEditor {
                 }));
 
                 if (this.childrenPanel.children.length === 0) {
-                    this.showChildrenEmpty(`אין ${this.getChildTypeName(childType)}`);
+                    if (isPanelVisible) {
+                        this.showChildrenEmpty(`אין ${this.getChildTypeName(childType)}`);
+                    }
                 } else {
-                    this.renderChildrenList();
+                    if (isPanelVisible) {
+                        this.renderChildrenList();
+                    }
+                    // Always render boundaries on canvas
                     this.renderChildBoundaries();
                 }
             } else {
@@ -3155,7 +3180,9 @@ class MapEditor {
             }
         } catch (error) {
             console.error('Error loading children:', error);
-            this.showChildrenEmpty('שגיאה בטעינת ילדים: ' + error.message);
+            if (isPanelVisible) {
+                this.showChildrenEmpty('שגיאה בטעינת ילדים: ' + error.message);
+            }
         }
     }
 
@@ -3390,10 +3417,20 @@ class MapEditor {
                     strokeWidth: isSelected ? 2 : 1,
                     opacity: isSelected ? 1 : 0.5,
                     selectable: false,
-                    evented: false,
+                    evented: true,  // Enable events for double-click selection
                     objectCaching: false,
                     isChildBoundary: true,
-                    childId: child.id
+                    childId: child.id,
+                    hoverCursor: 'pointer'
+                });
+
+                // Add double-click handler to select child
+                polygon.on('mousedblclick', () => {
+                    this.selectChild(child.id);
+                    // Open children panel if not visible
+                    if (!this.panels.children.visible) {
+                        this.togglePanel('children');
+                    }
                 });
 
                 this.canvas.add(polygon);

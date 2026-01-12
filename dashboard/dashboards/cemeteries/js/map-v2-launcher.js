@@ -301,16 +301,26 @@
         const entityName = entitySelect.options[entitySelect.selectedIndex].text;
 
         // Build URL
-        const url = `/dashboard/dashboards/cemeteries/map2/index.php?type=${entityType}&id=${entityId}&name=${encodeURIComponent(entityName)}`;
+        const url = `map2/index.php?type=${entityType}&id=${entityId}&name=${encodeURIComponent(entityName)}`;
 
         // Open in popup using PopupManager if available
         if (window.PopupManager && window.PopupManager.create) {
             window.PopupManager.create({
                 id: `map-v2-${entityType}-${entityId}`,
+                type: 'iframe',
+                src: url,
                 title: `עורך מפות - ${entityName}`,
-                url: url,
-                width: '90%',
-                height: '90%'
+                width: Math.min(window.innerWidth * 0.95, 1400),
+                height: Math.min(window.innerHeight * 0.9, 900),
+                position: { x: 'center', y: 'center' },
+                draggable: true,
+                resizable: true,
+                controls: {
+                    minimize: true,
+                    maximize: true,
+                    detach: true,
+                    close: true
+                }
             });
         } else {
             // Fallback - open in new window

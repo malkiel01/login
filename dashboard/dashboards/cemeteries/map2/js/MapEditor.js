@@ -712,7 +712,7 @@ class MapEditor {
         ];
 
         this.grayMask = new fabric.Polygon(allPoints, {
-            fill: 'rgba(0, 0, 0, 0.6)',
+            fill: 'rgba(0, 0, 0, 0.15)',
             selectable: false,
             evented: false,
             objectCaching: false,

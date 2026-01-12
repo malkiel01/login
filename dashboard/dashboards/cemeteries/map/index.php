@@ -486,13 +486,24 @@ $config = $entityConfig[$entityType] ?? $entityConfig['cemetery'];
 
             if (btnEdit) {
                 btnEdit.addEventListener('click', () => {
-                    setActiveTool('edit');
-                    // Enable editing on polygons
-                    mapManager.canvas.getObjects().forEach(obj => {
-                        if (obj.type === 'polygon') {
-                            obj.set({ selectable: true, evented: true, hasControls: true });
+                    if (currentTool === 'edit') {
+                        // Already in edit mode - exit
+                        setActiveTool('select');
+                        mapManager.boundary.exitEditMode();
+                        mapManager.boundary.exitVertexEditMode();
+                        mapManager.background.exitEditMode();
+                    } else {
+                        setActiveTool('edit');
+                        // Enable boundary editing if there's a boundary
+                        if (mapManager.boundary.boundaryOutline) {
+                            // Use vertex editing mode for precise control
+                            mapManager.boundary.enterVertexEditMode();
                         }
-                    });
+                        // Also enable background editing if there's a background
+                        if (mapManager.background.hasBackground()) {
+                            mapManager.background.enterEditMode();
+                        }
+                    }
                     mapManager.canvas.renderAll();
                 });
             }
@@ -508,12 +519,12 @@ $config = $entityConfig[$entityType] ?? $entityConfig['cemetery'];
                     if (!file) return;
 
                     try {
-                        console.log('📤 Uploading background image...');
-                        await mapManager.background.uploadImage(file, config.entityType, config.entityId);
-                        console.log('✅ Background uploaded');
+                        console.log('📤 Loading background image locally...');
+                        await mapManager.background.uploadImage(file);
+                        console.log('✅ Background image loaded');
                     } catch (error) {
                         console.error('❌ Upload failed:', error);
-                        alert('שגיאה בהעלאת התמונה: ' + error.message);
+                        alert('שגיאה בטעינת התמונה: ' + error.message);
                     }
                     backgroundImageInput.value = '';
                 });

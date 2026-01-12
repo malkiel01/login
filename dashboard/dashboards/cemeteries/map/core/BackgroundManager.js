@@ -113,13 +113,11 @@ export class BackgroundManager {
     }
 
     /**
-     * העלאת תמונה חדשה מקובץ
+     * העלאת תמונה חדשה מקובץ - תצוגה מקומית (ללא שרת)
      * @param {File} file - קובץ התמונה
-     * @param {string} entityType - סוג הישות
-     * @param {string} entityId - מזהה הישות
-     * @returns {Promise<Object>}
+     * @returns {Promise<fabric.Image>}
      */
-    async uploadImage(file, entityType, entityId) {
+    async uploadImage(file) {
         try {
             // בדיקת סוג הקובץ
             if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
@@ -128,19 +126,66 @@ export class BackgroundManager {
 
             // טיפול ב-PDF
             if (file.type === 'application/pdf') {
-                return await this.uploadPDF(file, entityType, entityId);
+                return await this.uploadPDF(file);
             }
 
-            // העלאה לשרת
-            const result = await this.mapAPI.uploadBackground(entityType, entityId, file);
+            // קריאה מקומית באמצעות FileReader (ללא שרת!)
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
 
-            // טעינת התמונה שהועלתה
-            if (result.path) {
-                const image = await this.loadImageFromPath(result.path);
-                this.setBackground(image, result);
-            }
+                reader.onload = (e) => {
+                    fabric.Image.fromURL(e.target.result, (img) => {
+                        if (!img) {
+                            reject(new Error('Failed to load image'));
+                            return;
+                        }
 
-            return result;
+                        // הסרת תמונת רקע קודמת
+                        this.clearBackground();
+
+                        // התאמת גודל התמונה ל-canvas
+                        const maxWidth = this.canvas.width * 0.9;
+                        const maxHeight = this.canvas.height * 0.9;
+                        const scale = Math.min(maxWidth / img.width, maxHeight / img.height);
+
+                        img.set({
+                            left: this.canvas.width / 2,
+                            top: this.canvas.height / 2,
+                            originX: 'center',
+                            originY: 'center',
+                            scaleX: scale,
+                            scaleY: scale,
+                            selectable: true,
+                            evented: true,
+                            hasControls: true,
+                            hasBorders: true,
+                            lockRotation: false,
+                            objectCaching: false,
+                            isBackground: true,
+                            objectType: 'backgroundLayer'
+                        });
+
+                        this.backgroundImage = img;
+                        this.canvas.add(img);
+                        this.sendToBack();
+
+                        // הפעל מצב עריכה אוטומטית
+                        this.isEditMode = true;
+                        this.canvas.setActiveObject(img);
+                        this.canvas.renderAll();
+
+                        console.log('✅ Background image uploaded locally');
+                        resolve(img);
+                    }, { crossOrigin: 'anonymous' });
+                };
+
+                reader.onerror = (error) => {
+                    console.error('Error reading file:', error);
+                    reject(error);
+                };
+
+                reader.readAsDataURL(file);
+            });
         } catch (error) {
             console.error('Error uploading image:', error);
             throw error;
@@ -148,13 +193,11 @@ export class BackgroundManager {
     }
 
     /**
-     * העלאת PDF
+     * העלאת PDF - תצוגה מקומית (ללא שרת)
      * @param {File} file - קובץ ה-PDF
-     * @param {string} entityType - סוג הישות
-     * @param {string} entityId - מזהה הישות
-     * @returns {Promise<Object>}
+     * @returns {Promise<fabric.Image>}
      */
-    async uploadPDF(file, entityType, entityId) {
+    async uploadPDF(file) {
         try {
             // טעינת PDF.js (אם לא נטען)
             if (typeof pdfjsLib === 'undefined') {
@@ -176,19 +219,52 @@ export class BackgroundManager {
                         const pageNumber = await this.selectPDFPage(pdf.numPages);
 
                         if (pageNumber) {
-                            const imageData = await this.renderPDFPage(pdf, pageNumber);
-                            const result = await this.mapAPI.uploadBackground(
-                                entityType,
-                                entityId,
-                                this.dataURLtoFile(imageData, 'pdf-page.png')
-                            );
+                            const imageDataURL = await this.renderPDFPage(pdf, pageNumber);
 
-                            if (result.path) {
-                                const image = await this.loadImageFromPath(result.path);
-                                this.setBackground(image, result);
-                            }
+                            // טעינה מקומית מ-DataURL (ללא שרת!)
+                            fabric.Image.fromURL(imageDataURL, (img) => {
+                                if (!img) {
+                                    reject(new Error('Failed to load PDF page as image'));
+                                    return;
+                                }
 
-                            resolve(result);
+                                // הסרת תמונת רקע קודמת
+                                this.clearBackground();
+
+                                // התאמת גודל התמונה ל-canvas
+                                const maxWidth = this.canvas.width * 0.9;
+                                const maxHeight = this.canvas.height * 0.9;
+                                const scale = Math.min(maxWidth / img.width, maxHeight / img.height);
+
+                                img.set({
+                                    left: this.canvas.width / 2,
+                                    top: this.canvas.height / 2,
+                                    originX: 'center',
+                                    originY: 'center',
+                                    scaleX: scale,
+                                    scaleY: scale,
+                                    selectable: true,
+                                    evented: true,
+                                    hasControls: true,
+                                    hasBorders: true,
+                                    lockRotation: false,
+                                    objectCaching: false,
+                                    isBackground: true,
+                                    objectType: 'backgroundLayer'
+                                });
+
+                                this.backgroundImage = img;
+                                this.canvas.add(img);
+                                this.sendToBack();
+
+                                // הפעל מצב עריכה אוטומטית
+                                this.isEditMode = true;
+                                this.canvas.setActiveObject(img);
+                                this.canvas.renderAll();
+
+                                console.log('✅ PDF page uploaded locally');
+                                resolve(img);
+                            }, { crossOrigin: 'anonymous' });
                         } else {
                             reject(new Error('לא נבחר עמוד'));
                         }

@@ -12,7 +12,9 @@ export class BoundaryManager {
         this.grayMask = null;              // המסכה האפורה
         this.clipPath = null;              // מסכת חיתוך
         this.isEditMode = false;           // האם במצב עריכת גבול
+        this.isVertexEditMode = false;     // האם במצב עריכת נקודות
         this.lastValidState = null;        // מצב אחרון תקין
+        this.editPoints = [];              // נקודות עריכה (עיגולים)
     }
 
     /**
@@ -317,20 +319,67 @@ export class BoundaryManager {
         this.isEditMode = true;
 
         if (this.boundaryOutline) {
+            // שמירת מצב התחלתי
+            this.lastValidState = {
+                left: this.boundaryOutline.left,
+                top: this.boundaryOutline.top,
+                scaleX: this.boundaryOutline.scaleX,
+                scaleY: this.boundaryOutline.scaleY
+            };
+
             this.boundaryOutline.set({
                 selectable: true,
                 evented: true,
                 hasControls: true,
                 hasBorders: true,
                 lockRotation: true,
-                lockScalingX: true,
-                lockScalingY: true
+                cornerStyle: 'circle',
+                cornerSize: 12,
+                cornerColor: '#3b82f6',
+                transparentCorners: false
             });
+
+            // האזנה להזזה ושינוי גודל - עדכון המסכה
+            this.boundaryOutline.on('moving', () => this.updateGrayMaskFromBoundary());
+            this.boundaryOutline.on('scaling', () => this.updateGrayMaskFromBoundary());
 
             this.canvas.setActiveObject(this.boundaryOutline);
         }
 
         this.canvas.renderAll();
+    }
+
+    /**
+     * עדכון המסכה האפורה לפי מיקום הגבול הנוכחי
+     */
+    updateGrayMaskFromBoundary() {
+        if (!this.boundaryOutline || !this.grayMask) return;
+
+        // קבלת הנקודות החדשות של הגבול לפי הטרנספורמציה
+        const matrix = this.boundaryOutline.calcTransformMatrix();
+        const points = this.boundaryOutline.points.map(p => {
+            const transformed = fabric.util.transformPoint(
+                { x: p.x - this.boundaryOutline.pathOffset.x, y: p.y - this.boundaryOutline.pathOffset.y },
+                matrix
+            );
+            return { x: Math.round(transformed.x), y: Math.round(transformed.y) };
+        });
+
+        // שמירת מצב תקין
+        this.lastValidState = {
+            left: this.boundaryOutline.left,
+            top: this.boundaryOutline.top,
+            scaleX: this.boundaryOutline.scaleX,
+            scaleY: this.boundaryOutline.scaleY
+        };
+
+        // עדכון נתוני הגבול
+        this.boundary.points = points;
+
+        // בנייה מחדש של המסכה האפורה
+        this.canvas.remove(this.grayMask);
+        this.createGrayMask(points);
+        this.reorderLayers();
     }
 
     /**
@@ -340,6 +389,10 @@ export class BoundaryManager {
         this.isEditMode = false;
 
         if (this.boundaryOutline) {
+            // הסרת האזנות
+            this.boundaryOutline.off('moving');
+            this.boundaryOutline.off('scaling');
+
             this.boundaryOutline.set({
                 selectable: false,
                 evented: false,
@@ -385,6 +438,8 @@ export class BoundaryManager {
      * ניקוי הגבול
      */
     clearBoundary() {
+        this.clearEditPoints();
+
         if (this.boundaryOutline) {
             this.canvas.remove(this.boundaryOutline);
             this.boundaryOutline = null;
@@ -400,10 +455,210 @@ export class BoundaryManager {
         this.lastValidState = null;
     }
 
+    // =====================================================
+    // Vertex Editing Mode - עריכת נקודות עוגן
+    // =====================================================
+
+    /**
+     * כניסה למצב עריכת נקודות (vertex editing)
+     */
+    enterVertexEditMode() {
+        if (!this.boundaryOutline) return false;
+
+        this.isVertexEditMode = true;
+
+        // הסתר controls רגילים
+        this.boundaryOutline.set({
+            selectable: false,
+            evented: false,
+            hasControls: false,
+            hasBorders: false
+        });
+
+        // הצג נקודות עריכה
+        this.showEditPoints();
+        this.canvas.renderAll();
+
+        console.log('✅ Vertex edit mode: ON');
+        return true;
+    }
+
+    /**
+     * יציאה ממצב עריכת נקודות
+     */
+    exitVertexEditMode() {
+        this.isVertexEditMode = false;
+        this.clearEditPoints();
+
+        if (this.boundaryOutline) {
+            this.boundaryOutline.set({
+                selectable: false,
+                evented: false
+            });
+        }
+
+        this.canvas.renderAll();
+        console.log('✅ Vertex edit mode: OFF');
+    }
+
+    /**
+     * הצגת נקודות עריכה על הפוליגון
+     */
+    showEditPoints() {
+        this.clearEditPoints();
+
+        if (!this.boundaryOutline || !this.boundaryOutline.points) return;
+
+        const points = this.boundaryOutline.points;
+        const matrix = this.boundaryOutline.calcTransformMatrix();
+
+        points.forEach((point, index) => {
+            // טרנספורמציה לקואורדינטות canvas
+            const transformed = fabric.util.transformPoint(
+                { x: point.x - this.boundaryOutline.pathOffset.x, y: point.y - this.boundaryOutline.pathOffset.y },
+                matrix
+            );
+
+            const circle = new fabric.Circle({
+                left: transformed.x,
+                top: transformed.y,
+                radius: 8,
+                fill: '#ffffff',
+                stroke: '#3b82f6',
+                strokeWidth: 2,
+                selectable: true,
+                hasControls: false,
+                hasBorders: false,
+                originX: 'center',
+                originY: 'center',
+                isEditPoint: true,
+                pointIndex: index,
+                hoverCursor: 'move'
+            });
+
+            // האזנה לגרירה
+            circle.on('moving', () => this.onEditPointMove(circle));
+            circle.on('modified', () => this.onEditPointModified());
+
+            this.editPoints.push(circle);
+            this.canvas.add(circle);
+        });
+
+        this.canvas.renderAll();
+    }
+
+    /**
+     * ניקוי נקודות העריכה
+     */
+    clearEditPoints() {
+        this.editPoints.forEach(point => {
+            point.off('moving');
+            point.off('modified');
+            this.canvas.remove(point);
+        });
+        this.editPoints = [];
+    }
+
+    /**
+     * טיפול בהזזת נקודת עריכה
+     */
+    onEditPointMove(circle) {
+        const index = circle.pointIndex;
+        const matrix = this.boundaryOutline.calcTransformMatrix();
+        const invertedMatrix = fabric.util.invertTransform(matrix);
+
+        // טרנספורמציה מקואורדינטות canvas לקואורדינטות polygon
+        const transformed = fabric.util.transformPoint(
+            { x: circle.left, y: circle.top },
+            invertedMatrix
+        );
+
+        // עדכון הנקודה בפוליגון
+        this.boundaryOutline.points[index] = {
+            x: transformed.x + this.boundaryOutline.pathOffset.x,
+            y: transformed.y + this.boundaryOutline.pathOffset.y
+        };
+
+        // עדכון המסכה
+        this.updateGrayMaskFromBoundary();
+        this.canvas.renderAll();
+    }
+
+    /**
+     * טיפול בסיום הזזת נקודה
+     */
+    onEditPointModified() {
+        if (this.boundaryOutline) {
+            this.boundaryOutline.setCoords();
+        }
+        this.canvas.renderAll();
+    }
+
+    /**
+     * הוספת נקודה לפוליגון
+     * @param {number} afterIndex - אינדקס הנקודה שאחריה תתווסף הנקודה החדשה
+     */
+    addPoint(afterIndex) {
+        if (!this.boundaryOutline || !this.boundaryOutline.points) return;
+
+        const points = this.boundaryOutline.points;
+        const nextIndex = (afterIndex + 1) % points.length;
+
+        // חישוב נקודת האמצע בין שתי הנקודות
+        const p1 = points[afterIndex];
+        const p2 = points[nextIndex];
+        const newPoint = {
+            x: (p1.x + p2.x) / 2,
+            y: (p1.y + p2.y) / 2
+        };
+
+        // הוספת הנקודה
+        points.splice(afterIndex + 1, 0, newPoint);
+        this.boundaryOutline.set({ points: [...points] });
+
+        // עדכון נתוני הגבול
+        this.updateGrayMaskFromBoundary();
+
+        // רענון נקודות העריכה
+        this.showEditPoints();
+
+        console.log(`✅ Added point at index ${afterIndex + 1}`);
+    }
+
+    /**
+     * הסרת נקודה מהפוליגון
+     * @param {number} index - אינדקס הנקודה להסרה
+     */
+    removePoint(index) {
+        if (!this.boundaryOutline || !this.boundaryOutline.points) return;
+
+        const points = this.boundaryOutline.points;
+
+        // פוליגון חייב להכיל לפחות 3 נקודות
+        if (points.length <= 3) {
+            console.warn('פוליגון חייב להכיל לפחות 3 נקודות');
+            return false;
+        }
+
+        // הסרת הנקודה
+        points.splice(index, 1);
+        this.boundaryOutline.set({ points: [...points] });
+
+        // עדכון נתוני הגבול
+        this.updateGrayMaskFromBoundary();
+
+        // רענון נקודות העריכה
+        this.showEditPoints();
+
+        console.log(`✅ Removed point at index ${index}`);
+        return true;
+    }
+
     /**
      * השמדת המנהל
      */
     destroy() {
+        this.clearEditPoints();
         this.clearBoundary();
         this.canvas = null;
         this.mapAPI = null;

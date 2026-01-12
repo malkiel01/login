@@ -243,7 +243,87 @@ try {
     }
 
     // =====================================================
-    // POST - Save/Update operations
+    // POST - Handle file uploads first (before JSON parsing)
+    // =====================================================
+    if ($method === 'POST' && isset($_FILES['backgroundImage'])) {
+        $entityType = $_POST['entityType'] ?? null;
+        $entityId = $_POST['entityId'] ?? null;
+
+        if (!$entityType || !$entityId) {
+            throw new Exception('Missing required parameters');
+        }
+
+        $file = $_FILES['backgroundImage'];
+
+        // Validate file
+        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (!in_array($file['type'], $allowedTypes)) {
+            throw new Exception('Invalid file type. Allowed: JPG, PNG, GIF, WEBP');
+        }
+
+        $maxSize = 10 * 1024 * 1024; // 10MB
+        if ($file['size'] > $maxSize) {
+            throw new Exception('File too large. Maximum size: 10MB');
+        }
+
+        // Create upload directory
+        $uploadDir = dirname(__DIR__) . '/uploads/maps/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        // Generate unique filename
+        $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $filename = $entityType . '_' . $entityId . '_' . time() . '.' . $extension;
+        $filepath = $uploadDir . $filename;
+
+        // Move uploaded file
+        if (!move_uploaded_file($file['tmp_name'], $filepath)) {
+            throw new Exception('Failed to upload file');
+        }
+
+        // Get image dimensions
+        $imageInfo = getimagesize($filepath);
+        $width = $imageInfo[0] ?? 800;
+        $height = $imageInfo[1] ?? 600;
+
+        // Build relative path for frontend
+        $relativePath = '../uploads/maps/' . $filename;
+
+        // Save to database
+        $table = getTableName($entityType);
+        if (!$table) {
+            unlink($filepath);
+            throw new Exception('Invalid entity type');
+        }
+
+        $backgroundData = [
+            'path' => $relativePath,
+            'width' => $width,
+            'height' => $height,
+            'offsetX' => 0,
+            'offsetY' => 0,
+            'scale' => 1
+        ];
+
+        $stmt = $pdo->prepare("UPDATE {$table} SET mapBackgroundImage = :bg, updateDate = NOW() WHERE unicId = :id");
+        $result = $stmt->execute([
+            ':bg' => json_encode($backgroundData, JSON_UNESCAPED_UNICODE),
+            ':id' => $entityId
+        ]);
+
+        echo json_encode([
+            'success' => true,
+            'path' => $relativePath,
+            'width' => $width,
+            'height' => $height,
+            'message' => 'Background uploaded successfully'
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    // =====================================================
+    // POST - Save/Update operations (JSON body)
     // =====================================================
     if ($method === 'POST') {
         $input = json_decode(file_get_contents('php://input'), true);
@@ -453,77 +533,6 @@ try {
             default:
                 throw new Exception('Invalid action');
         }
-        exit;
-    }
-
-    // =====================================================
-    // Handle file upload for background image
-    // =====================================================
-    if ($method === 'POST' && isset($_FILES['backgroundImage'])) {
-        $entityType = $_POST['entityType'] ?? null;
-        $entityId = $_POST['entityId'] ?? null;
-
-        if (!$entityType || !$entityId) {
-            throw new Exception('Missing required parameters');
-        }
-
-        $file = $_FILES['backgroundImage'];
-
-        // Validate file
-        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        if (!in_array($file['type'], $allowedTypes)) {
-            throw new Exception('Invalid file type. Allowed: JPG, PNG, GIF, WEBP');
-        }
-
-        $maxSize = 10 * 1024 * 1024; // 10MB
-        if ($file['size'] > $maxSize) {
-            throw new Exception('File too large. Maximum size: 10MB');
-        }
-
-        // Create upload directory
-        $uploadDir = dirname(__DIR__) . '/uploads/maps/';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
-        }
-
-        // Generate unique filename
-        $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
-        $filename = $entityType . '_' . $entityId . '_' . time() . '.' . $extension;
-        $filepath = $uploadDir . $filename;
-
-        // Move uploaded file
-        if (!move_uploaded_file($file['tmp_name'], $filepath)) {
-            throw new Exception('Failed to upload file');
-        }
-
-        // Get image dimensions
-        list($width, $height) = getimagesize($filepath);
-
-        // Build response
-        $imageData = [
-            'path' => '/dashboard/dashboards/cemeteries/uploads/maps/' . $filename,
-            'width' => $width,
-            'height' => $height,
-            'scale' => 1,
-            'offsetX' => 0,
-            'offsetY' => 0
-        ];
-
-        // Update database
-        $table = getTableName($entityType);
-        if ($table) {
-            $stmt = $pdo->prepare("UPDATE {$table} SET mapBackgroundImage = :bg, updateDate = NOW() WHERE unicId = :id");
-            $stmt->execute([
-                ':bg' => json_encode($imageData, JSON_UNESCAPED_UNICODE),
-                ':id' => $entityId
-            ]);
-        }
-
-        echo json_encode([
-            'success' => true,
-            'message' => 'Background image uploaded successfully',
-            'data' => $imageData
-        ], JSON_UNESCAPED_UNICODE);
         exit;
     }
 

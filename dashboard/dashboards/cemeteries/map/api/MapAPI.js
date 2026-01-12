@@ -116,10 +116,10 @@ export class MapAPI {
      */
     async uploadBackground(entityType, entityId, file, settings = {}) {
         const formData = new FormData();
-        formData.append('action', 'uploadBackground');
+        // Note: No action needed - PHP detects file upload via $_FILES['backgroundImage']
         formData.append('entityType', entityType);
         formData.append('entityId', entityId);
-        formData.append('file', file);
+        formData.append('backgroundImage', file);
         formData.append('settings', JSON.stringify(settings));
 
         try {

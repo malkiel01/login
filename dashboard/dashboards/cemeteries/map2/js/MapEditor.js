@@ -3582,12 +3582,21 @@ class MapEditor {
      * Clear child anchor points
      */
     clearChildAnchorPoints() {
-        this.childrenPanel.childAnchorPoints.forEach(circle => {
+        // Remove all anchor points from canvas
+        while (this.childrenPanel.childAnchorPoints.length > 0) {
+            const circle = this.childrenPanel.childAnchorPoints.pop();
             circle.off('moving');
             circle.off('modified');
             this.canvas.remove(circle);
+        }
+
+        // Also find and remove any orphaned child anchor points on the canvas
+        const orphanedAnchors = this.canvas.getObjects().filter(obj => obj.isChildAnchorPoint);
+        orphanedAnchors.forEach(anchor => {
+            anchor.off('moving');
+            anchor.off('modified');
+            this.canvas.remove(anchor);
         });
-        this.childrenPanel.childAnchorPoints = [];
     }
 
     /**

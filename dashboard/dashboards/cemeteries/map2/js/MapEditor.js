@@ -320,18 +320,26 @@ class MapEditor {
         const pointer = this.canvas.getPointer(opt.e);
         const clickPoint = { x: pointer.x, y: pointer.y };
 
-        // Find the closest edge
+        // Find the closest edge using transformation matrix
         const points = this.boundary.points;
+        const matrix = this.boundary.calcTransformMatrix();
         const pathOffset = this.boundary.pathOffset || { x: 0, y: 0 };
 
         let closestEdgeIndex = -1;
         let minDistance = Infinity;
 
         for (let i = 0; i < points.length; i++) {
-            const p1 = { x: this.boundary.left + points[i].x - pathOffset.x, y: this.boundary.top + points[i].y - pathOffset.y };
-            const p2 = { x: this.boundary.left + points[(i + 1) % points.length].x - pathOffset.x, y: this.boundary.top + points[(i + 1) % points.length].y - pathOffset.y };
+            // Transform points to absolute coordinates
+            const t1 = fabric.util.transformPoint(
+                { x: points[i].x - pathOffset.x, y: points[i].y - pathOffset.y },
+                matrix
+            );
+            const t2 = fabric.util.transformPoint(
+                { x: points[(i + 1) % points.length].x - pathOffset.x, y: points[(i + 1) % points.length].y - pathOffset.y },
+                matrix
+            );
 
-            const dist = this.pointToLineDistance(clickPoint, p1, p2);
+            const dist = this.pointToLineDistance(clickPoint, t1, t2);
             if (dist < minDistance) {
                 minDistance = dist;
                 closestEdgeIndex = i;
@@ -664,12 +672,17 @@ class MapEditor {
     updateGrayMask() {
         if (!this.boundary) return;
 
-        // Get current boundary points using pathOffset
+        // Get current boundary points using transformation matrix
+        const matrix = this.boundary.calcTransformMatrix();
         const pathOffset = this.boundary.pathOffset || { x: 0, y: 0 };
-        this.boundaryPoints = this.boundary.points.map(p => ({
-            x: this.boundary.left + p.x - pathOffset.x,
-            y: this.boundary.top + p.y - pathOffset.y
-        }));
+
+        this.boundaryPoints = this.boundary.points.map(p => {
+            const transformed = fabric.util.transformPoint(
+                { x: p.x - pathOffset.x, y: p.y - pathOffset.y },
+                matrix
+            );
+            return { x: transformed.x, y: transformed.y };
+        });
 
         // Recreate mask
         this.createGrayMask();
@@ -701,13 +714,18 @@ class MapEditor {
         if (!this.boundary) return;
 
         const points = this.boundary.points;
-        // Fabric.js polygon uses pathOffset for point coordinates
+        // Use Fabric.js transformation matrix to get correct absolute coordinates
+        const matrix = this.boundary.calcTransformMatrix();
         const pathOffset = this.boundary.pathOffset || { x: 0, y: 0 };
 
         points.forEach((point, index) => {
-            // Absolute position = polygon position + point - pathOffset
-            const absX = this.boundary.left + point.x - pathOffset.x;
-            const absY = this.boundary.top + point.y - pathOffset.y;
+            // Transform point using polygon's matrix
+            const transformed = fabric.util.transformPoint(
+                { x: point.x - pathOffset.x, y: point.y - pathOffset.y },
+                matrix
+            );
+            const absX = transformed.x;
+            const absY = transformed.y;
 
             const circle = new fabric.Circle({
                 left: absX,
@@ -739,13 +757,22 @@ class MapEditor {
 
     onAnchorPointMove(circle) {
         const index = circle.pointIndex;
-        // Fabric.js polygon uses pathOffset for point coordinates
         const pathOffset = this.boundary.pathOffset || { x: 0, y: 0 };
 
-        // Update boundary point (reverse of showAnchorPoints calculation)
+        // Get inverse transformation matrix to convert screen coords back to polygon coords
+        const matrix = this.boundary.calcTransformMatrix();
+        const invertedMatrix = fabric.util.invertTransform(matrix);
+
+        // Transform anchor point position back to polygon coordinate space
+        const transformed = fabric.util.transformPoint(
+            { x: circle.left, y: circle.top },
+            invertedMatrix
+        );
+
+        // Update boundary point
         this.boundary.points[index] = {
-            x: circle.left - this.boundary.left + pathOffset.x,
-            y: circle.top - this.boundary.top + pathOffset.y
+            x: transformed.x + pathOffset.x,
+            y: transformed.y + pathOffset.y
         };
 
         // Update boundary path

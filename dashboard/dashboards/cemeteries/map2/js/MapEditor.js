@@ -891,13 +891,23 @@ class MapEditor {
     }
 
     handleMouseWheel(opt) {
-        const delta = opt.e.deltaY;
-        let zoom = this.canvas.getZoom();
-        zoom *= 0.999 ** delta;
-        zoom = Math.min(Math.max(zoom, 0.1), 5);
+        // Pan the canvas instead of zooming
+        const e = opt.e;
+        const vpt = this.canvas.viewportTransform;
 
-        this.canvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
-        this.updateZoomDisplay();
+        // Use deltaY for vertical scroll, deltaX for horizontal scroll
+        // Shift+wheel can be used for horizontal scrolling on mice without horizontal wheel
+        if (e.shiftKey) {
+            // Horizontal pan when holding shift
+            vpt[4] -= e.deltaY;
+        } else {
+            // Normal scroll: vertical pan with deltaY, horizontal with deltaX
+            vpt[4] -= e.deltaX || 0;  // Horizontal pan
+            vpt[5] -= e.deltaY;        // Vertical pan
+        }
+
+        this.canvas.setViewportTransform(vpt);
+        this.canvas.renderAll();
 
         opt.e.preventDefault();
         opt.e.stopPropagation();

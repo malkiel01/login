@@ -300,8 +300,8 @@
         const entityId = entitySelect.value;
         const entityName = entitySelect.options[entitySelect.selectedIndex].text;
 
-        // Build URL
-        const url = `map2/index.php?type=${entityType}&id=${entityId}&name=${encodeURIComponent(entityName)}`;
+        // Build URL (absolute path)
+        const url = `/dashboard/dashboards/cemeteries/map2/index.php?type=${entityType}&id=${entityId}&name=${encodeURIComponent(entityName)}`;
 
         // Open in popup using PopupManager if available
         if (window.PopupManager && window.PopupManager.create) {

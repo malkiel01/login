@@ -19,6 +19,7 @@ class MapEditor {
         this.backgroundImage = null;    // Background image object
         this.anchorPoints = [];         // Anchor point circles for editing
         this.previewLine = null;        // Preview line while drawing
+        this.contextMenu = null;        // Context menu element
 
         // DOM elements
         this.elements = {};
@@ -105,7 +106,7 @@ class MapEditor {
         this.canvas = new fabric.Canvas('mapCanvas', {
             width: width,
             height: height,
-            backgroundColor: '#2a2a4a',
+            backgroundColor: '#f8fafc',
             selection: false
         });
 
@@ -173,6 +174,27 @@ class MapEditor {
 
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => this.handleKeyDown(e));
+
+        // Right-click context menu
+        this.canvas.on('mouse:down', (opt) => {
+            if (opt.e.button === 2 && this.isEditingBoundary) {
+                this.handleRightClick(opt);
+            }
+        });
+
+        // Prevent default context menu on canvas
+        this.elements.canvasContainer.addEventListener('contextmenu', (e) => {
+            if (this.isEditingBoundary) {
+                e.preventDefault();
+            }
+        });
+
+        // Double-click on boundary edge to add anchor point
+        this.canvas.on('mouse:dblclick', (opt) => {
+            if (this.isEditingBoundary && !this.isDrawingBoundary) {
+                this.handleBoundaryDoubleClick(opt);
+            }
+        });
     }
 
     /**
@@ -199,6 +221,166 @@ class MapEditor {
         if (!e.target.closest('.dropdown')) {
             document.querySelectorAll('.dropdown.open').forEach(d => d.classList.remove('open'));
         }
+        // Close context menu on click outside
+        if (this.contextMenu && !e.target.closest('.context-menu')) {
+            this.hideContextMenu();
+        }
+    }
+
+    /**
+     * Handle right-click on anchor point
+     */
+    handleRightClick(opt) {
+        const target = opt.target;
+        if (!target || !target.isAnchorPoint) return;
+
+        opt.e.preventDefault();
+        this.showContextMenu(opt.e.clientX, opt.e.clientY, target);
+    }
+
+    /**
+     * Show context menu
+     */
+    showContextMenu(x, y, anchorPoint) {
+        this.hideContextMenu();
+
+        this.contextMenu = document.createElement('div');
+        this.contextMenu.className = 'context-menu';
+        this.contextMenu.innerHTML = `
+            <button class="context-menu-item danger" data-action="remove">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                </svg>
+                הסר נקודת עיגון
+            </button>
+        `;
+
+        // Position the menu
+        this.contextMenu.style.left = `${x}px`;
+        this.contextMenu.style.top = `${y}px`;
+
+        // Add click handler
+        this.contextMenu.querySelector('[data-action="remove"]').addEventListener('click', () => {
+            this.removeAnchorPointByObject(anchorPoint);
+            this.hideContextMenu();
+        });
+
+        document.body.appendChild(this.contextMenu);
+
+        // Adjust position if menu goes off screen
+        const rect = this.contextMenu.getBoundingClientRect();
+        if (rect.right > window.innerWidth) {
+            this.contextMenu.style.left = `${x - rect.width}px`;
+        }
+        if (rect.bottom > window.innerHeight) {
+            this.contextMenu.style.top = `${y - rect.height}px`;
+        }
+    }
+
+    /**
+     * Hide context menu
+     */
+    hideContextMenu() {
+        if (this.contextMenu) {
+            this.contextMenu.remove();
+            this.contextMenu = null;
+        }
+    }
+
+    /**
+     * Remove anchor point by object reference
+     */
+    removeAnchorPointByObject(anchorPoint) {
+        if (this.boundary.points.length <= 3) {
+            alert('לא ניתן למחוק - גבול חייב להכיל לפחות 3 נקודות');
+            return;
+        }
+
+        const index = anchorPoint.pointIndex;
+
+        // Remove point from boundary
+        this.boundary.points.splice(index, 1);
+        this.boundary.set({ dirty: true });
+
+        // Refresh anchor points
+        this.showAnchorPoints();
+
+        // Update gray mask
+        this.updateGrayMask();
+
+        this.setStatus(`נקודה ${index + 1} נמחקה`, 'editing');
+    }
+
+    /**
+     * Handle double-click on boundary edge to add anchor point
+     */
+    handleBoundaryDoubleClick(opt) {
+        if (!this.boundary) return;
+
+        const pointer = this.canvas.getPointer(opt.e);
+        const clickPoint = { x: pointer.x, y: pointer.y };
+
+        // Find the closest edge
+        const points = this.boundary.points;
+        const offset = {
+            x: this.boundary.left + this.boundary.width / 2,
+            y: this.boundary.top + this.boundary.height / 2
+        };
+
+        let closestEdgeIndex = -1;
+        let minDistance = Infinity;
+
+        for (let i = 0; i < points.length; i++) {
+            const p1 = { x: points[i].x + offset.x, y: points[i].y + offset.y };
+            const p2 = { x: points[(i + 1) % points.length].x + offset.x, y: points[(i + 1) % points.length].y + offset.y };
+
+            const dist = this.pointToLineDistance(clickPoint, p1, p2);
+            if (dist < minDistance) {
+                minDistance = dist;
+                closestEdgeIndex = i;
+            }
+        }
+
+        // Only add point if click is close to an edge (within 20 pixels)
+        if (minDistance < 20 && closestEdgeIndex !== -1) {
+            this.addAnchorPoint(closestEdgeIndex);
+        }
+    }
+
+    /**
+     * Calculate distance from point to line segment
+     */
+    pointToLineDistance(point, lineStart, lineEnd) {
+        const A = point.x - lineStart.x;
+        const B = point.y - lineStart.y;
+        const C = lineEnd.x - lineStart.x;
+        const D = lineEnd.y - lineStart.y;
+
+        const dot = A * C + B * D;
+        const lenSq = C * C + D * D;
+        let param = -1;
+
+        if (lenSq !== 0) {
+            param = dot / lenSq;
+        }
+
+        let xx, yy;
+
+        if (param < 0) {
+            xx = lineStart.x;
+            yy = lineStart.y;
+        } else if (param > 1) {
+            xx = lineEnd.x;
+            yy = lineEnd.y;
+        } else {
+            xx = lineStart.x + param * C;
+            yy = lineStart.y + param * D;
+        }
+
+        const dx = point.x - xx;
+        const dy = point.y - yy;
+
+        return Math.sqrt(dx * dx + dy * dy);
     }
 
     /**
@@ -521,9 +703,10 @@ class MapEditor {
         if (!this.boundary) return;
 
         const points = this.boundary.points;
+        // Fabric.js polygon points are relative to the center of the bounding box
         const offset = {
-            x: this.boundary.left,
-            y: this.boundary.top
+            x: this.boundary.left + this.boundary.width / 2,
+            y: this.boundary.top + this.boundary.height / 2
         };
 
         points.forEach((point, index) => {
@@ -560,9 +743,10 @@ class MapEditor {
 
     onAnchorPointMove(circle) {
         const index = circle.pointIndex;
+        // Fabric.js polygon points are relative to the center of the bounding box
         const offset = {
-            x: this.boundary.left,
-            y: this.boundary.top
+            x: this.boundary.left + this.boundary.width / 2,
+            y: this.boundary.top + this.boundary.height / 2
         };
 
         // Update boundary point

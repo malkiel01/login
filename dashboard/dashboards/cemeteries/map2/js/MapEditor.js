@@ -155,16 +155,11 @@ class MapEditor {
             layersPanel: document.getElementById('layersPanel'),
             childrenPanel: document.getElementById('childrenPanel'),
 
-            // Children panel controls
+            // Children panel elements
             childrenNoParentBoundary: document.getElementById('childrenNoParentBoundary'),
             childrenLoading: document.getElementById('childrenLoading'),
             childrenListContainer: document.getElementById('childrenListContainer'),
             childrenList: document.getElementById('childrenList'),
-            childrenControls: document.getElementById('childrenControls'),
-            selectedChildName: document.getElementById('selectedChildName'),
-            btnDrawChildBoundary: document.getElementById('btnDrawChildBoundary'),
-            btnEditChildBoundary: document.getElementById('btnEditChildBoundary'),
-            btnDeleteChildBoundary: document.getElementById('btnDeleteChildBoundary'),
             childrenEmpty: document.getElementById('childrenEmpty'),
 
             // Text style controls
@@ -2989,7 +2984,6 @@ class MapEditor {
         this.elements.childrenNoParentBoundary.style.display = 'block';
         this.elements.childrenLoading.style.display = 'none';
         this.elements.childrenListContainer.style.display = 'none';
-        this.elements.childrenControls.style.display = 'none';
         this.elements.childrenEmpty.style.display = 'none';
     }
 
@@ -3000,7 +2994,6 @@ class MapEditor {
         this.elements.childrenNoParentBoundary.style.display = 'none';
         this.elements.childrenLoading.style.display = 'flex';
         this.elements.childrenListContainer.style.display = 'none';
-        this.elements.childrenControls.style.display = 'none';
         this.elements.childrenEmpty.style.display = 'none';
     }
 
@@ -3011,7 +3004,6 @@ class MapEditor {
         this.elements.childrenNoParentBoundary.style.display = 'none';
         this.elements.childrenLoading.style.display = 'none';
         this.elements.childrenListContainer.style.display = 'none';
-        this.elements.childrenControls.style.display = 'none';
         this.elements.childrenEmpty.style.display = 'block';
         this.elements.childrenEmpty.textContent = message;
     }
@@ -3031,16 +3023,114 @@ class MapEditor {
                  data-id="${child.id}">
                 <span class="status-dot ${child.hasPolygon ? 'has-polygon' : 'no-polygon'}"></span>
                 <span class="child-name">${child.name}</span>
+                <div class="child-dropdown">
+                    <button class="child-dropdown-btn" data-id="${child.id}" title="אפשרויות">
+                        <svg viewBox="0 0 24 24" width="16" height="16">
+                            <path fill="currentColor" d="M7 10l5 5 5-5z"/>
+                        </svg>
+                    </button>
+                    <div class="child-dropdown-menu" data-id="${child.id}">
+                        ${!child.hasPolygon ? `
+                            <button class="child-dropdown-item" data-action="add" data-id="${child.id}">
+                                <svg viewBox="0 0 24 24" width="14" height="14">
+                                    <path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                                </svg>
+                                הוספת גבול
+                            </button>
+                        ` : `
+                            <button class="child-dropdown-item" data-action="edit" data-id="${child.id}">
+                                <svg viewBox="0 0 24 24" width="14" height="14">
+                                    <path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                                </svg>
+                                עריכת גבול
+                            </button>
+                            <button class="child-dropdown-item danger" data-action="delete" data-id="${child.id}">
+                                <svg viewBox="0 0 24 24" width="14" height="14">
+                                    <path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                                </svg>
+                                הסרת גבול
+                            </button>
+                        `}
+                    </div>
+                </div>
             </div>
         `).join('');
 
-        // Add click handlers
+        // Add click handlers for child items (selecting)
         list.querySelectorAll('.child-item').forEach(item => {
-            item.addEventListener('click', () => this.selectChild(item.dataset.id));
+            item.addEventListener('click', (e) => {
+                // Don't select when clicking dropdown
+                if (e.target.closest('.child-dropdown')) return;
+                this.selectChild(item.dataset.id);
+            });
         });
 
-        // Update controls visibility
-        this.updateChildControls();
+        // Add click handlers for dropdown buttons
+        list.querySelectorAll('.child-dropdown-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.toggleChildDropdown(btn.dataset.id);
+            });
+        });
+
+        // Add click handlers for dropdown items
+        list.querySelectorAll('.child-dropdown-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const action = item.dataset.action;
+                const childId = item.dataset.id;
+                this.closeAllChildDropdowns();
+                this.handleChildAction(action, childId);
+            });
+        });
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', () => this.closeAllChildDropdowns());
+    }
+
+    /**
+     * Toggle child dropdown menu
+     */
+    toggleChildDropdown(childId) {
+        const menu = this.elements.childrenList.querySelector(`.child-dropdown-menu[data-id="${childId}"]`);
+        const wasOpen = menu.classList.contains('open');
+
+        // Close all dropdowns first
+        this.closeAllChildDropdowns();
+
+        // Toggle this one
+        if (!wasOpen) {
+            menu.classList.add('open');
+        }
+    }
+
+    /**
+     * Close all child dropdown menus
+     */
+    closeAllChildDropdowns() {
+        this.elements.childrenList.querySelectorAll('.child-dropdown-menu').forEach(menu => {
+            menu.classList.remove('open');
+        });
+    }
+
+    /**
+     * Handle child action from dropdown
+     */
+    handleChildAction(action, childId) {
+        // First select the child
+        this.selectChild(childId);
+
+        switch (action) {
+            case 'add':
+                this.startDrawingChildBoundary();
+                break;
+            case 'edit':
+                this.startEditingChildBoundary();
+                break;
+            case 'delete':
+                this.deleteChildBoundary();
+                break;
+        }
     }
 
     /**
@@ -3055,30 +3145,15 @@ class MapEditor {
             item.classList.toggle('selected', item.dataset.id === childId);
         });
 
-        // Update controls
-        this.updateChildControls();
-
         // Highlight boundary on canvas
         this.highlightChildBoundary(childId);
     }
 
     /**
-     * Update child controls based on selection
+     * Update child controls based on selection (deprecated - now using dropdowns)
      */
     updateChildControls() {
-        const selected = this.childrenPanel.selectedChild;
-
-        if (selected) {
-            this.elements.childrenControls.style.display = 'block';
-            this.elements.selectedChildName.textContent = selected.name;
-
-            // Show/hide buttons based on whether child has polygon
-            this.elements.btnDrawChildBoundary.style.display = selected.hasPolygon ? 'none' : 'inline-flex';
-            this.elements.btnEditChildBoundary.style.display = selected.hasPolygon ? 'inline-flex' : 'none';
-            this.elements.btnDeleteChildBoundary.style.display = selected.hasPolygon ? 'inline-flex' : 'none';
-        } else {
-            this.elements.childrenControls.style.display = 'none';
-        }
+        // No longer needed - dropdowns handle their own visibility per child item
     }
 
     /**

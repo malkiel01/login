@@ -177,11 +177,9 @@ class MapEditor {
 
         // Right-click context menu on canvas container
         this.elements.canvasContainer.addEventListener('contextmenu', (e) => {
-            if (this.isEditingBoundary) {
-                e.preventDefault();
-                e.stopPropagation();
-                this.handleRightClick(e);
-            }
+            e.preventDefault();
+            e.stopPropagation();
+            this.handleRightClick(e);
         });
 
         // Double-click on boundary edge to add anchor point
@@ -223,7 +221,7 @@ class MapEditor {
     }
 
     /**
-     * Handle right-click on anchor point
+     * Handle right-click on canvas
      */
     handleRightClick(e) {
         // Get canvas pointer from browser event
@@ -237,28 +235,84 @@ class MapEditor {
         const canvasX = (x - vpt[4]) / zoom;
         const canvasY = (y - vpt[5]) / zoom;
 
-        // Find anchor point at this position
-        let anchorTarget = null;
-        for (const anchor of this.anchorPoints) {
-            const dx = canvasX - anchor.left;
-            const dy = canvasY - anchor.top;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            if (distance <= anchor.radius + 5) {
-                anchorTarget = anchor;
-                break;
+        // Find anchor point at this position (only when editing boundary)
+        if (this.isEditingBoundary) {
+            let anchorTarget = null;
+            for (const anchor of this.anchorPoints) {
+                const dx = canvasX - anchor.left;
+                const dy = canvasY - anchor.top;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance <= anchor.radius + 5) {
+                    anchorTarget = anchor;
+                    break;
+                }
+            }
+
+            // If clicked on anchor point, show anchor menu
+            if (anchorTarget && anchorTarget.isAnchorPoint) {
+                this.showAnchorContextMenu(e.clientX, e.clientY, anchorTarget);
+                return;
             }
         }
 
-        // If clicked on anchor point, show anchor menu
-        if (anchorTarget && anchorTarget.isAnchorPoint) {
-            this.showAnchorContextMenu(e.clientX, e.clientY, anchorTarget);
+        // Check if boundary exists
+        if (!this.boundary) {
+            // No boundary yet - show "not allowed" feedback
+            this.showNotAllowedFeedback(e.clientX, e.clientY);
             return;
         }
 
         // Check if clicked inside boundary
-        if (this.boundary && this.isPointInsideBoundary(canvasX, canvasY)) {
+        if (this.isPointInsideBoundary(canvasX, canvasY)) {
             this.showShapeContextMenu(e.clientX, e.clientY, canvasX, canvasY);
+        } else {
+            // Outside boundary - show "not allowed" feedback
+            this.showNotAllowedFeedback(e.clientX, e.clientY);
         }
+    }
+
+    /**
+     * Show "not allowed" visual feedback
+     */
+    showNotAllowedFeedback(x, y) {
+        // Create temporary "not allowed" indicator
+        const indicator = document.createElement('div');
+        indicator.className = 'not-allowed-indicator';
+        indicator.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+            </svg>
+        `;
+        indicator.style.cssText = `
+            position: fixed;
+            left: ${x - 16}px;
+            top: ${y - 16}px;
+            width: 32px;
+            height: 32px;
+            color: #ef4444;
+            pointer-events: none;
+            z-index: 9999;
+            animation: notAllowedFade 0.5s ease-out forwards;
+        `;
+
+        // Add animation style if not exists
+        if (!document.getElementById('not-allowed-animation')) {
+            const style = document.createElement('style');
+            style.id = 'not-allowed-animation';
+            style.textContent = `
+                @keyframes notAllowedFade {
+                    0% { opacity: 1; transform: scale(1); }
+                    100% { opacity: 0; transform: scale(1.5); }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        document.body.appendChild(indicator);
+
+        // Remove after animation
+        setTimeout(() => indicator.remove(), 500);
     }
 
     /**

@@ -333,21 +333,21 @@ $entityName = $_GET['name'] ?? '';
                     <div class="control-buttons">
                         <button id="btnDrawChildBoundary" class="btn btn-primary btn-sm">
                             <svg viewBox="0 0 24 24" width="14" height="14">
-                                <path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                                <path fill="currentColor" d="M17.5 12c0 1.93-1.57 3.5-3.5 3.5S10.5 13.93 10.5 12s1.57-3.5 3.5-3.5c.24 0 .47.02.7.07L16.91 6.86C15.86 6.32 14.67 6 13.4 6c-3.56 0-6.45 2.89-6.45 6.45S9.84 18.9 13.4 18.9 19.85 16.01 19.85 12.45c0-.61-.09-1.2-.24-1.76l-1.52 1.52c.05.23.07.46.07.7 0 1.93-1.57 3.5-3.5 3.5zM21.89 4.64l-1.41-1.41-7.17 7.17-2.83-2.83-1.41 1.41 4.24 4.24z"/>
                             </svg>
-                            צייר גבול
+                            הוספת גבול
                         </button>
                         <button id="btnEditChildBoundary" class="btn btn-secondary btn-sm" style="display: none;">
                             <svg viewBox="0 0 24 24" width="14" height="14">
                                 <path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
                             </svg>
-                            ערוך
+                            עריכת גבול
                         </button>
                         <button id="btnDeleteChildBoundary" class="btn btn-danger btn-sm" style="display: none;">
                             <svg viewBox="0 0 24 24" width="14" height="14">
                                 <path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
                             </svg>
-                            מחק
+                            הסרת גבול
                         </button>
                     </div>
                 </div>

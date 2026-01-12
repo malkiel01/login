@@ -37,7 +37,9 @@ class MapEditor {
             selectedChild: null,       // Currently selected child {id, name, type, hasPolygon, polygon}
             childBoundaries: {},       // Map of childId → fabric.Polygon
             isDrawingChildBoundary: false,
-            childBoundaryPoints: []    // Points while drawing child boundary
+            childBoundaryPoints: [],   // Points while drawing child boundary
+            isEditingChildBoundary: false,
+            childAnchorPoints: []      // Anchor points while editing child boundary
         };
 
         // Dock zones state
@@ -808,6 +810,8 @@ class MapEditor {
         if (e.key === 'Escape') {
             if (this.childrenPanel.isDrawingChildBoundary) {
                 this.cancelDrawingChildBoundary();
+            } else if (this.childrenPanel.isEditingChildBoundary) {
+                this.stopEditingChildBoundary();
             } else if (this.canvas.isDrawingMode) {
                 this.stopFreeDrawing();
             } else if (this.isDrawingBoundary) {
@@ -3291,24 +3295,220 @@ class MapEditor {
         const child = this.childrenPanel.selectedChild;
         if (!child || !child.hasPolygon) return;
 
-        // For now, delete and redraw
-        // In the future, could implement anchor point editing like parent boundary
-        if (confirm('לערוך את הגבול? הגבול הנוכחי יימחק ותוכל לצייר מחדש.')) {
-            // Remove from canvas
-            const polygon = this.childrenPanel.childBoundaries[child.id];
-            if (polygon) {
-                this.canvas.remove(polygon);
-                delete this.childrenPanel.childBoundaries[child.id];
+        const polygon = this.childrenPanel.childBoundaries[child.id];
+        if (!polygon) return;
+
+        this.childrenPanel.isEditingChildBoundary = true;
+
+        // Make polygon selectable and draggable
+        polygon.set({
+            selectable: true,
+            evented: true,
+            hasControls: false,
+            hasBorders: true,
+            borderColor: '#22c55e',
+            borderDashArray: [5, 5],
+            hoverCursor: 'move'
+        });
+
+        // Show anchor points
+        this.showChildAnchorPoints(polygon);
+
+        this.setStatus('גרור נקודות עיגון לעריכה. Escape לסיום.', 'editing');
+    }
+
+    /**
+     * Stop editing child boundary
+     */
+    async stopEditingChildBoundary() {
+        if (!this.childrenPanel.isEditingChildBoundary) return;
+
+        const child = this.childrenPanel.selectedChild;
+        const polygon = this.childrenPanel.childBoundaries[child?.id];
+
+        if (polygon) {
+            // Get updated points from polygon
+            const updatedPoints = polygon.points.map(p => ({ x: p.x, y: p.y }));
+
+            // Reset polygon to non-selectable
+            polygon.set({
+                selectable: false,
+                evented: false,
+                hasBorders: false
+            });
+
+            // Update child data
+            if (child) {
+                child.polygon = { points: updatedPoints };
+
+                // Save to server
+                try {
+                    await this.saveChildPolygon(child.id, child.polygon);
+                    this.setStatus('גבול הילד נשמר בהצלחה', 'success');
+                } catch (error) {
+                    console.error('Error saving child boundary:', error);
+                    this.setStatus('שגיאה בשמירת גבול: ' + error.message);
+                }
             }
-
-            // Update state
-            child.hasPolygon = false;
-            child.polygon = null;
-
-            // Update UI and start drawing
-            this.renderChildrenList();
-            this.startDrawingChildBoundary();
         }
+
+        // Clear anchor points
+        this.clearChildAnchorPoints();
+
+        this.childrenPanel.isEditingChildBoundary = false;
+        this.canvas.discardActiveObject();
+        this.canvas.renderAll();
+
+        this.setStatus('עריכת גבול הילד הסתיימה');
+    }
+
+    /**
+     * Show anchor points for child boundary editing
+     */
+    showChildAnchorPoints(polygon) {
+        this.clearChildAnchorPoints();
+
+        const points = polygon.points;
+
+        points.forEach((point, index) => {
+            const circle = new fabric.Circle({
+                left: point.x,
+                top: point.y,
+                radius: 6,
+                fill: '#22c55e',
+                stroke: '#16a34a',
+                strokeWidth: 2,
+                originX: 'center',
+                originY: 'center',
+                selectable: true,
+                hasBorders: false,
+                hasControls: false,
+                hoverCursor: 'pointer',
+                isChildAnchorPoint: true,
+                pointIndex: index
+            });
+
+            circle.on('moving', () => this.onChildAnchorPointMove(circle, polygon));
+            circle.on('modified', () => this.onChildAnchorPointModified());
+
+            this.canvas.add(circle);
+            this.childrenPanel.childAnchorPoints.push(circle);
+        });
+
+        this.canvas.renderAll();
+    }
+
+    /**
+     * Clear child anchor points
+     */
+    clearChildAnchorPoints() {
+        this.childrenPanel.childAnchorPoints.forEach(circle => {
+            circle.off('moving');
+            circle.off('modified');
+            this.canvas.remove(circle);
+        });
+        this.childrenPanel.childAnchorPoints = [];
+    }
+
+    /**
+     * Handle child anchor point movement - constrain to parent boundary
+     */
+    onChildAnchorPointMove(circle, polygon) {
+        const index = circle.pointIndex;
+        const newPoint = { x: circle.left, y: circle.top };
+
+        // Check if new position is inside parent boundary
+        if (!this.isPointInsideParentBoundary(newPoint)) {
+            // Find closest point inside parent boundary
+            const constrainedPoint = this.constrainPointToParentBoundary(newPoint);
+            circle.set({ left: constrainedPoint.x, top: constrainedPoint.y });
+            newPoint.x = constrainedPoint.x;
+            newPoint.y = constrainedPoint.y;
+        }
+
+        // Update polygon point
+        polygon.points[index] = { x: newPoint.x, y: newPoint.y };
+        polygon.set({ dirty: true });
+
+        this.canvas.renderAll();
+    }
+
+    /**
+     * Handle child anchor point modification complete
+     */
+    onChildAnchorPointModified() {
+        this.canvas.renderAll();
+    }
+
+    /**
+     * Constrain a point to be inside parent boundary
+     */
+    constrainPointToParentBoundary(point) {
+        if (!this.boundaryPoints || this.boundaryPoints.length < 3) {
+            return point;
+        }
+
+        // If point is inside, return as-is
+        if (this.isPointInsideParentBoundary(point)) {
+            return point;
+        }
+
+        // Find closest point on parent boundary edges
+        let closestPoint = point;
+        let minDist = Infinity;
+
+        for (let i = 0; i < this.boundaryPoints.length; i++) {
+            const p1 = this.boundaryPoints[i];
+            const p2 = this.boundaryPoints[(i + 1) % this.boundaryPoints.length];
+
+            const closest = this.closestPointOnSegment(point, p1, p2);
+            const dist = Math.hypot(closest.x - point.x, closest.y - point.y);
+
+            if (dist < minDist) {
+                minDist = dist;
+                closestPoint = closest;
+            }
+        }
+
+        // Move slightly inside
+        const center = this.getPolygonCenter(this.boundaryPoints);
+        const dx = center.x - closestPoint.x;
+        const dy = center.y - closestPoint.y;
+        const len = Math.hypot(dx, dy);
+        if (len > 0) {
+            closestPoint.x += (dx / len) * 5;
+            closestPoint.y += (dy / len) * 5;
+        }
+
+        return closestPoint;
+    }
+
+    /**
+     * Get closest point on a line segment
+     */
+    closestPointOnSegment(point, segStart, segEnd) {
+        const dx = segEnd.x - segStart.x;
+        const dy = segEnd.y - segStart.y;
+        const lenSq = dx * dx + dy * dy;
+
+        if (lenSq === 0) return { x: segStart.x, y: segStart.y };
+
+        let t = ((point.x - segStart.x) * dx + (point.y - segStart.y) * dy) / lenSq;
+        t = Math.max(0, Math.min(1, t));
+
+        return {
+            x: segStart.x + t * dx,
+            y: segStart.y + t * dy
+        };
+    }
+
+    /**
+     * Get center of polygon
+     */
+    getPolygonCenter(points) {
+        let cx = 0, cy = 0;
+        points.forEach(p => { cx += p.x; cy += p.y; });
+        return { x: cx / points.length, y: cy / points.length };
     }
 
     /**

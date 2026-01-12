@@ -830,9 +830,9 @@ body {
    CHILDREN PANEL
    ============================================ */
 
-/* Children list */
+/* Children list - max 5 items visible (~180px) */
 .children-list {
-    max-height: 200px;
+    max-height: 180px;
     overflow-y: auto;
     margin-bottom: 12px;
 }

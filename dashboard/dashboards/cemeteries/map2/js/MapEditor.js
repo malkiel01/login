@@ -3809,10 +3809,7 @@ class MapEditor {
         this.childrenPanel.childBoundaries[childId] = newPolygon;
         this.childrenPanel.editingPolygon = newPolygon;
 
-        // Select the new polygon
-        this.canvas.setActiveObject(newPolygon);
-
-        // Refresh anchor points
+        // Refresh anchor points (don't select polygon - let user interact with anchors)
         this.showChildAnchorPoints(newPolygon);
         this.reorderLayers();
         this.canvas.renderAll();
@@ -3881,10 +3878,7 @@ class MapEditor {
         this.childrenPanel.childBoundaries[childId] = newPolygon;
         this.childrenPanel.editingPolygon = newPolygon;
 
-        // Select the new polygon
-        this.canvas.setActiveObject(newPolygon);
-
-        // Refresh anchor points
+        // Refresh anchor points (don't select polygon - let user interact with anchors)
         this.showChildAnchorPoints(newPolygon);
         this.reorderLayers();
         this.canvas.renderAll();

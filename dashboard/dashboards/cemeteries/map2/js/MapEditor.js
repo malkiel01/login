@@ -3534,21 +3534,29 @@ class MapEditor {
         this.childrenPanel.isEditingChildBoundary = true;
         this.childrenPanel.editingPolygon = polygon;
 
-        // Make polygon selectable and draggable
+        // Make polygon selectable and draggable with resize/rotate controls
         polygon.set({
             selectable: true,
             evented: true,
-            hasControls: false,
+            hasControls: true,
             hasBorders: true,
-            borderColor: '#22c55e',
-            borderDashArray: [5, 5],
+            borderColor: '#2563eb',
+            borderScaleFactor: 1.5,
+            borderDashArray: [6, 4],
+            cornerColor: '#3b82f6',
+            cornerStrokeColor: '#fff',
+            cornerStyle: 'circle',
+            cornerSize: 10,
+            transparentCorners: false,
             hoverCursor: 'move',
             objectCaching: false,
             perPixelTargetFind: true
         });
 
-        // Handle polygon movement - update anchor points
+        // Handle polygon movement, scaling, and rotation - update anchor points
         polygon.on('moving', () => this.onChildBoundaryMove());
+        polygon.on('scaling', () => this.onChildBoundaryTransform());
+        polygon.on('rotating', () => this.onChildBoundaryTransform());
         polygon.on('modified', () => this.onChildBoundaryModified());
 
         // Show anchor points
@@ -3573,6 +3581,18 @@ class MapEditor {
 
         // Update anchor points to follow the polygon
         this.showChildAnchorPoints(polygon);
+    }
+
+    /**
+     * Handle child boundary scaling or rotation - update anchor points
+     */
+    onChildBoundaryTransform() {
+        const polygon = this.childrenPanel.editingPolygon;
+        if (!polygon) return;
+
+        // Update anchor points to follow the polygon
+        this.showChildAnchorPoints(polygon);
+        this.canvas.renderAll();
     }
 
     /**
@@ -3894,10 +3914,16 @@ class MapEditor {
             strokeWidth: oldPolygon.strokeWidth,
             selectable: true,
             evented: true,
-            hasControls: false,
+            hasControls: true,
             hasBorders: true,
-            borderColor: '#22c55e',
-            borderDashArray: [5, 5],
+            borderColor: '#2563eb',
+            borderScaleFactor: 1.5,
+            borderDashArray: [6, 4],
+            cornerColor: '#3b82f6',
+            cornerStrokeColor: '#fff',
+            cornerStyle: 'circle',
+            cornerSize: 10,
+            transparentCorners: false,
             hoverCursor: 'move',
             objectCaching: false,
             perPixelTargetFind: true,
@@ -3907,6 +3933,8 @@ class MapEditor {
 
         const newPolygon = new fabric.Polygon(absolutePoints, polygonProps);
         newPolygon.on('moving', () => this.onChildBoundaryMove());
+        newPolygon.on('scaling', () => this.onChildBoundaryTransform());
+        newPolygon.on('rotating', () => this.onChildBoundaryTransform());
         newPolygon.on('modified', () => this.onChildBoundaryModified());
 
         // Replace in canvas and state
@@ -3963,10 +3991,16 @@ class MapEditor {
             strokeWidth: oldPolygon.strokeWidth,
             selectable: true,
             evented: true,
-            hasControls: false,
+            hasControls: true,
             hasBorders: true,
-            borderColor: '#22c55e',
-            borderDashArray: [5, 5],
+            borderColor: '#2563eb',
+            borderScaleFactor: 1.5,
+            borderDashArray: [6, 4],
+            cornerColor: '#3b82f6',
+            cornerStrokeColor: '#fff',
+            cornerStyle: 'circle',
+            cornerSize: 10,
+            transparentCorners: false,
             hoverCursor: 'move',
             objectCaching: false,
             perPixelTargetFind: true,
@@ -3976,6 +4010,8 @@ class MapEditor {
 
         const newPolygon = new fabric.Polygon(absolutePoints, polygonProps);
         newPolygon.on('moving', () => this.onChildBoundaryMove());
+        newPolygon.on('scaling', () => this.onChildBoundaryTransform());
+        newPolygon.on('rotating', () => this.onChildBoundaryTransform());
         newPolygon.on('modified', () => this.onChildBoundaryModified());
 
         // Replace in canvas and state

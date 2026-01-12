@@ -175,17 +175,12 @@ class MapEditor {
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => this.handleKeyDown(e));
 
-        // Right-click context menu
-        this.canvas.on('mouse:down', (opt) => {
-            if (opt.e.button === 2 && this.isEditingBoundary) {
-                this.handleRightClick(opt);
-            }
-        });
-
-        // Prevent default context menu on canvas
+        // Right-click context menu on canvas container
         this.elements.canvasContainer.addEventListener('contextmenu', (e) => {
             if (this.isEditingBoundary) {
                 e.preventDefault();
+                e.stopPropagation();
+                this.handleRightClick(e);
             }
         });
 
@@ -230,29 +225,33 @@ class MapEditor {
     /**
      * Handle right-click on anchor point
      */
-    handleRightClick(opt) {
-        // Try to get target from event, or find it manually
-        let target = opt.target;
+    handleRightClick(e) {
+        // Get canvas pointer from browser event
+        const rect = this.canvas.upperCanvasEl.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
 
-        // If no target in event, try to find object at pointer position
-        if (!target) {
-            const pointer = this.canvas.getPointer(opt.e);
-            // Find anchor point at this position
-            for (const anchor of this.anchorPoints) {
-                const dx = pointer.x - anchor.left;
-                const dy = pointer.y - anchor.top;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                if (distance <= anchor.radius + 5) {
-                    target = anchor;
-                    break;
-                }
+        // Account for canvas zoom and pan
+        const zoom = this.canvas.getZoom();
+        const vpt = this.canvas.viewportTransform;
+        const canvasX = (x - vpt[4]) / zoom;
+        const canvasY = (y - vpt[5]) / zoom;
+
+        // Find anchor point at this position
+        let target = null;
+        for (const anchor of this.anchorPoints) {
+            const dx = canvasX - anchor.left;
+            const dy = canvasY - anchor.top;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance <= anchor.radius + 5) {
+                target = anchor;
+                break;
             }
         }
 
         if (!target || !target.isAnchorPoint) return;
 
-        opt.e.preventDefault();
-        this.showContextMenu(opt.e.clientX, opt.e.clientY, target);
+        this.showContextMenu(e.clientX, e.clientY, target);
     }
 
     /**

@@ -23,12 +23,36 @@ class MapEditor {
 
         // Floating panels state
         this.panels = {
-            textStyle: { visible: false, position: { x: 20, y: 100 } },
-            elementStyle: { visible: false, position: { x: 20, y: 100 } },
-            layers: { visible: false, position: { x: 20, y: 100 } }
+            textStyle: { visible: false, position: { x: 20, y: 100 }, docked: false, dockSide: null },
+            elementStyle: { visible: false, position: { x: 20, y: 100 }, docked: false, dockSide: null },
+            layers: { visible: false, position: { x: 20, y: 100 }, docked: false, dockSide: null }
         };
         this.draggedPanel = null;
         this.dragOffset = { x: 0, y: 0 };
+
+        // Dock zones state
+        this.dockZones = {
+            left: { panels: [], activeTab: null },
+            right: { panels: [], activeTab: null }
+        };
+        this.activeDockIndicator = null;
+        this.dockPreview = null;
+
+        // Panel metadata for tabs
+        this.panelMeta = {
+            textStyle: {
+                title: 'עיצוב כתב',
+                icon: '<svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M9.93 13.5h4.14L12 7.98 9.93 13.5zM20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-4.05 16.5l-1.14-3H9.17l-1.12 3H5.96l5.11-13h1.86l5.11 13h-2.09z"/></svg>'
+            },
+            elementStyle: {
+                title: 'עיצוב אלמנטים',
+                icon: '<svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8z"/></svg>'
+            },
+            layers: {
+                title: 'שכבות',
+                icon: '<svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M11.99 18.54l-7.37-5.73L3 14.07l9 7 9-7-1.63-1.27-7.38 5.74zM12 16l7.36-5.73L21 9l-9-7-9 7 1.63 1.27L12 16z"/></svg>'
+            }
+        };
 
         // DOM elements
         this.elements = {};
@@ -129,7 +153,15 @@ class MapEditor {
             strokeStyle: document.getElementById('strokeStyle'),
 
             // Layers
-            layersList: document.getElementById('layersList')
+            layersList: document.getElementById('layersList'),
+
+            // Dock zones
+            dockZoneLeft: document.getElementById('dockZoneLeft'),
+            dockZoneRight: document.getElementById('dockZoneRight'),
+            dockTabsLeft: document.getElementById('dockTabsLeft'),
+            dockTabsRight: document.getElementById('dockTabsRight'),
+            dockContentLeft: document.getElementById('dockContentLeft'),
+            dockContentRight: document.getElementById('dockContentRight')
         };
     }
 
@@ -1785,12 +1817,22 @@ class MapEditor {
         const btn = btnMap[panelName];
         if (!panel) return;
 
-        this.panels[panelName].visible = !this.panels[panelName].visible;
+        const panelState = this.panels[panelName];
 
-        if (this.panels[panelName].visible) {
+        // If panel is docked, undock it instead of toggling
+        if (panelState.docked) {
+            this.undockPanel(panelName);
+            // Close dropdown
+            document.querySelectorAll('.dropdown.open').forEach(d => d.classList.remove('open'));
+            return;
+        }
+
+        panelState.visible = !panelState.visible;
+
+        if (panelState.visible) {
             panel.style.display = 'block';
-            panel.style.left = this.panels[panelName].position.x + 'px';
-            panel.style.top = this.panels[panelName].position.y + 'px';
+            panel.style.left = panelState.position.x + 'px';
+            panel.style.top = panelState.position.y + 'px';
             btn.classList.add('checked');
 
             // Update panel content
@@ -1850,6 +1892,19 @@ class MapEditor {
         if (this.panels[panelName]) {
             this.panels[panelName].position = { x: boundedX, y: boundedY };
         }
+
+        // Check for docking proximity
+        const DOCK_THRESHOLD = 40;
+        const nearLeft = e.clientX < DOCK_THRESHOLD;
+        const nearRight = e.clientX > window.innerWidth - DOCK_THRESHOLD;
+
+        if (nearLeft) {
+            this.showDockIndicator('left');
+        } else if (nearRight) {
+            this.showDockIndicator('right');
+        } else {
+            this.hideDockIndicator();
+        }
     }
 
     /**
@@ -1857,9 +1912,465 @@ class MapEditor {
      */
     stopPanelDrag() {
         if (this.draggedPanel) {
+            const panelId = this.draggedPanel.id;
+            const panelName = panelId.replace('Panel', '');
+
+            // Check if should dock
+            if (this.activeDockIndicator) {
+                this.dockPanel(panelName, this.activeDockIndicator);
+            }
+
             this.draggedPanel.style.opacity = '1';
             this.draggedPanel = null;
+            this.hideDockIndicator();
         }
+    }
+
+    // ============================================
+    // DOCKING SYSTEM
+    // ============================================
+
+    /**
+     * Show dock indicator when panel is near edge
+     */
+    showDockIndicator(side) {
+        if (this.activeDockIndicator === side) return;
+
+        this.hideDockIndicator();
+        this.activeDockIndicator = side;
+
+        // Create indicator
+        const indicator = document.createElement('div');
+        indicator.className = `dock-indicator dock-indicator-${side}`;
+        indicator.id = 'dockIndicator';
+        document.body.appendChild(indicator);
+
+        // Create preview area
+        const preview = document.createElement('div');
+        preview.className = `dock-preview dock-preview-${side}`;
+        preview.id = 'dockPreview';
+        document.body.appendChild(preview);
+    }
+
+    /**
+     * Hide dock indicator
+     */
+    hideDockIndicator() {
+        this.activeDockIndicator = null;
+
+        const indicator = document.getElementById('dockIndicator');
+        if (indicator) indicator.remove();
+
+        const preview = document.getElementById('dockPreview');
+        if (preview) preview.remove();
+    }
+
+    /**
+     * Dock a panel to a side
+     */
+    dockPanel(panelName, side) {
+        const panel = this.panels[panelName];
+        if (!panel || panel.docked) return;
+
+        // Update panel state
+        panel.docked = true;
+        panel.dockSide = side;
+
+        // Add to dock zone
+        this.dockZones[side].panels.push(panelName);
+
+        // If this is the first panel, set it as active
+        if (this.dockZones[side].panels.length === 1) {
+            this.dockZones[side].activeTab = panelName;
+        }
+
+        // Hide the floating panel
+        const panelElement = this.elements[`${panelName}Panel`];
+        if (panelElement) {
+            panelElement.classList.add('docked');
+        }
+
+        // Update dock zone UI
+        this.updateDockZone(side);
+
+        // Update menu button state
+        this.updatePanelMenuState(panelName);
+
+        this.setStatus(`פאנל "${this.panelMeta[panelName].title}" הוצמד`);
+    }
+
+    /**
+     * Undock a panel from dock zone
+     */
+    undockPanel(panelName) {
+        const panel = this.panels[panelName];
+        if (!panel || !panel.docked) return;
+
+        const side = panel.dockSide;
+
+        // Update panel state
+        panel.docked = false;
+        panel.dockSide = null;
+
+        // Remove from dock zone
+        const zoneIndex = this.dockZones[side].panels.indexOf(panelName);
+        if (zoneIndex > -1) {
+            this.dockZones[side].panels.splice(zoneIndex, 1);
+        }
+
+        // Update active tab if needed
+        if (this.dockZones[side].activeTab === panelName) {
+            this.dockZones[side].activeTab = this.dockZones[side].panels[0] || null;
+        }
+
+        // Show the floating panel
+        const panelElement = this.elements[`${panelName}Panel`];
+        if (panelElement) {
+            panelElement.classList.remove('docked');
+            // Position it somewhere reasonable
+            panel.position = { x: 100, y: 100 };
+            panelElement.style.left = panel.position.x + 'px';
+            panelElement.style.top = panel.position.y + 'px';
+            panelElement.style.display = 'block';
+        }
+
+        // Update dock zone UI
+        this.updateDockZone(side);
+
+        // Update menu button state
+        this.updatePanelMenuState(panelName);
+
+        this.setStatus(`פאנל "${this.panelMeta[panelName].title}" שוחרר`);
+    }
+
+    /**
+     * Update dock zone UI (tabs and content)
+     */
+    updateDockZone(side) {
+        const zone = this.dockZones[side];
+        const zoneElement = this.elements[`dockZone${side.charAt(0).toUpperCase() + side.slice(1)}`];
+        const tabsElement = this.elements[`dockTabs${side.charAt(0).toUpperCase() + side.slice(1)}`];
+        const contentElement = this.elements[`dockContent${side.charAt(0).toUpperCase() + side.slice(1)}`];
+
+        if (!zoneElement || !tabsElement || !contentElement) return;
+
+        // Show/hide zone based on whether it has panels
+        if (zone.panels.length === 0) {
+            zoneElement.classList.remove('active');
+            tabsElement.innerHTML = '';
+            contentElement.innerHTML = '';
+            return;
+        }
+
+        zoneElement.classList.add('active');
+
+        // Render tabs
+        tabsElement.innerHTML = zone.panels.map(panelName => {
+            const meta = this.panelMeta[panelName];
+            const isActive = zone.activeTab === panelName;
+            return `
+                <div class="dock-tab ${isActive ? 'active' : ''}" data-panel="${panelName}">
+                    <span class="dock-tab-icon">${meta.icon}</span>
+                    <span class="dock-tab-title">${meta.title}</span>
+                    <button class="dock-tab-undock" data-panel="${panelName}" title="שחרר פאנל">×</button>
+                </div>
+            `;
+        }).join('');
+
+        // Add tab click handlers
+        tabsElement.querySelectorAll('.dock-tab').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                if (!e.target.classList.contains('dock-tab-undock')) {
+                    const panelName = tab.dataset.panel;
+                    this.switchDockTab(side, panelName);
+                }
+            });
+        });
+
+        // Add undock button handlers
+        tabsElement.querySelectorAll('.dock-tab-undock').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const panelName = btn.dataset.panel;
+                this.undockPanel(panelName);
+            });
+        });
+
+        // Render active content
+        this.renderDockContent(side);
+    }
+
+    /**
+     * Render content for active dock tab
+     */
+    renderDockContent(side) {
+        const zone = this.dockZones[side];
+        const contentElement = this.elements[`dockContent${side.charAt(0).toUpperCase() + side.slice(1)}`];
+
+        if (!contentElement || !zone.activeTab) {
+            contentElement.innerHTML = '';
+            return;
+        }
+
+        // Get the panel body content
+        const panelElement = this.elements[`${zone.activeTab}Panel`];
+        if (!panelElement) return;
+
+        const panelBody = panelElement.querySelector('.floating-panel-body');
+        if (panelBody) {
+            // Clone the content
+            contentElement.innerHTML = panelBody.innerHTML;
+
+            // Re-attach event listeners for the cloned controls
+            this.attachDockContentListeners(zone.activeTab, contentElement);
+        }
+    }
+
+    /**
+     * Attach event listeners to docked panel content
+     */
+    attachDockContentListeners(panelName, contentElement) {
+        if (panelName === 'textStyle') {
+            const fontFamily = contentElement.querySelector('#fontFamily');
+            const fontSize = contentElement.querySelector('#fontSize');
+            const fontColor = contentElement.querySelector('#fontColor');
+            const letterSpacing = contentElement.querySelector('#letterSpacing');
+
+            if (fontFamily) fontFamily.addEventListener('change', () => this.applyTextStyleFromDock(contentElement));
+            if (fontSize) fontSize.addEventListener('input', () => this.applyTextStyleFromDock(contentElement));
+            if (fontColor) fontColor.addEventListener('input', () => this.applyTextStyleFromDock(contentElement));
+            if (letterSpacing) letterSpacing.addEventListener('input', () => this.applyTextStyleFromDock(contentElement));
+        } else if (panelName === 'elementStyle') {
+            const strokeWidth = contentElement.querySelector('#strokeWidth');
+            const strokeColor = contentElement.querySelector('#strokeColor');
+            const strokeStyle = contentElement.querySelector('#strokeStyle');
+
+            if (strokeWidth) strokeWidth.addEventListener('input', () => this.applyElementStyleFromDock(contentElement));
+            if (strokeColor) strokeColor.addEventListener('input', () => this.applyElementStyleFromDock(contentElement));
+            if (strokeStyle) strokeStyle.addEventListener('change', () => this.applyElementStyleFromDock(contentElement));
+        }
+        // layers panel doesn't need special listeners - it updates automatically
+    }
+
+    /**
+     * Apply text style from dock panel controls
+     */
+    applyTextStyleFromDock(contentElement) {
+        const activeObject = this.canvas.getActiveObject();
+        if (!activeObject || activeObject.elementType !== 'text') return;
+
+        const fontFamily = contentElement.querySelector('#fontFamily');
+        const fontSize = contentElement.querySelector('#fontSize');
+        const fontColor = contentElement.querySelector('#fontColor');
+        const letterSpacing = contentElement.querySelector('#letterSpacing');
+
+        activeObject.set({
+            fontFamily: fontFamily?.value || 'Arial, sans-serif',
+            fontSize: parseInt(fontSize?.value || 16),
+            fill: fontColor?.value || '#1e293b',
+            charSpacing: parseFloat(letterSpacing?.value || 0) * 10
+        });
+
+        this.canvas.renderAll();
+    }
+
+    /**
+     * Apply element style from dock panel controls
+     */
+    applyElementStyleFromDock(contentElement) {
+        const activeObject = this.canvas.getActiveObject();
+        if (!activeObject || !activeObject.isMapElement) return;
+
+        const strokeWidth = contentElement.querySelector('#strokeWidth');
+        const strokeColor = contentElement.querySelector('#strokeColor');
+        const strokeStyle = contentElement.querySelector('#strokeStyle');
+
+        let strokeDashArray = null;
+        const style = strokeStyle?.value;
+        if (style === 'dashed') {
+            strokeDashArray = [8, 4];
+        } else if (style === 'dotted') {
+            strokeDashArray = [1, 4];
+        }
+
+        activeObject.set({
+            strokeWidth: parseInt(strokeWidth?.value || 2),
+            stroke: strokeColor?.value || '#3b82f6',
+            strokeDashArray: strokeDashArray
+        });
+
+        this.canvas.renderAll();
+    }
+
+    /**
+     * Switch active tab in dock zone
+     */
+    switchDockTab(side, panelName) {
+        if (!this.dockZones[side].panels.includes(panelName)) return;
+
+        this.dockZones[side].activeTab = panelName;
+
+        // Update tab visuals
+        const tabsElement = this.elements[`dockTabs${side.charAt(0).toUpperCase() + side.slice(1)}`];
+        tabsElement.querySelectorAll('.dock-tab').forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.panel === panelName);
+        });
+
+        // Render new content
+        this.renderDockContent(side);
+
+        // Update panel content based on selection
+        if (panelName === 'layers') {
+            this.updateDockedLayersPanel(side);
+        } else {
+            this.updateDockedPanelContent(side);
+        }
+    }
+
+    /**
+     * Update docked panel content based on selection
+     */
+    updateDockedPanelContent(side) {
+        const zone = this.dockZones[side];
+        if (!zone.activeTab) return;
+
+        const contentElement = this.elements[`dockContent${side.charAt(0).toUpperCase() + side.slice(1)}`];
+        const activeObject = this.canvas.getActiveObject();
+
+        if (zone.activeTab === 'textStyle') {
+            const controls = contentElement.querySelector('#textControls') || contentElement.querySelector('.panel-controls');
+            const message = contentElement.querySelector('#textPanelMessage') || contentElement.querySelector('.panel-message');
+
+            if (activeObject && activeObject.isMapElement && activeObject.elementType === 'text') {
+                if (message) message.style.display = 'none';
+                if (controls) {
+                    controls.style.display = 'block';
+                    // Load values
+                    const fontFamily = contentElement.querySelector('#fontFamily');
+                    const fontSize = contentElement.querySelector('#fontSize');
+                    const fontColor = contentElement.querySelector('#fontColor');
+                    const letterSpacing = contentElement.querySelector('#letterSpacing');
+
+                    if (fontFamily) fontFamily.value = activeObject.fontFamily || 'Arial, sans-serif';
+                    if (fontSize) fontSize.value = activeObject.fontSize || 16;
+                    if (fontColor) fontColor.value = activeObject.fill || '#1e293b';
+                    if (letterSpacing) letterSpacing.value = activeObject.charSpacing ? activeObject.charSpacing / 10 : 0;
+                }
+            } else {
+                if (message) message.style.display = 'block';
+                if (controls) controls.style.display = 'none';
+            }
+        } else if (zone.activeTab === 'elementStyle') {
+            const controls = contentElement.querySelector('#elementControls') || contentElement.querySelector('.panel-controls');
+            const message = contentElement.querySelector('#elementPanelMessage') || contentElement.querySelector('.panel-message');
+
+            const isShape = activeObject && activeObject.isMapElement &&
+                ['line', 'circle', 'rect', 'freedraw'].includes(activeObject.elementType);
+
+            if (isShape) {
+                if (message) message.style.display = 'none';
+                if (controls) {
+                    controls.style.display = 'block';
+                    // Load values
+                    const strokeWidth = contentElement.querySelector('#strokeWidth');
+                    const strokeColor = contentElement.querySelector('#strokeColor');
+                    const strokeStyle = contentElement.querySelector('#strokeStyle');
+
+                    if (strokeWidth) strokeWidth.value = activeObject.strokeWidth || 2;
+                    if (strokeColor) strokeColor.value = activeObject.stroke || '#3b82f6';
+                    if (strokeStyle) {
+                        if (activeObject.strokeDashArray) {
+                            strokeStyle.value = activeObject.strokeDashArray[0] === 1 ? 'dotted' : 'dashed';
+                        } else {
+                            strokeStyle.value = 'solid';
+                        }
+                    }
+                }
+            } else {
+                if (message) message.style.display = 'block';
+                if (controls) controls.style.display = 'none';
+            }
+        }
+    }
+
+    /**
+     * Update docked layers panel
+     */
+    updateDockedLayersPanel(side) {
+        const contentElement = this.elements[`dockContent${side.charAt(0).toUpperCase() + side.slice(1)}`];
+        if (!contentElement) return;
+
+        const layersList = contentElement.querySelector('#layersList') || contentElement.querySelector('.layers-list');
+        if (!layersList) return;
+
+        const objects = this.canvas.getObjects().filter(obj =>
+            obj.isMapElement && !obj.isBoundary && !obj.isGrayMask && !obj.isBackgroundImage && !obj.isAnchorPoint
+        );
+
+        if (objects.length === 0) {
+            layersList.innerHTML = '<div class="panel-message">אין שכבות</div>';
+            return;
+        }
+
+        const activeObject = this.canvas.getActiveObject();
+
+        const icons = {
+            text: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>',
+            line: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+            circle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>',
+            rect: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/></svg>',
+            freedraw: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17c3-3 6-7 9-7s6 4 9 7"/></svg>'
+        };
+
+        const typeNames = {
+            text: 'טקסט',
+            line: 'קו',
+            circle: 'עיגול',
+            rect: 'מלבן',
+            freedraw: 'ציור חופשי'
+        };
+
+        const reversedObjects = [...objects].reverse();
+
+        layersList.innerHTML = reversedObjects.map((obj, index) => {
+            const isSelected = obj === activeObject;
+            const type = obj.elementType || 'unknown';
+            const icon = icons[type] || icons.rect;
+            const typeName = typeNames[type] || type;
+            const name = obj.text ? `${typeName}: ${obj.text.substring(0, 15)}` : typeName;
+
+            return `
+                <div class="layer-item ${isSelected ? 'selected' : ''}"
+                     data-index="${objects.length - 1 - index}">
+                    <div class="layer-icon">${icon}</div>
+                    <span class="layer-name">${name}</span>
+                </div>
+            `;
+        }).join('');
+
+        // Add click handlers
+        layersList.querySelectorAll('.layer-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const index = parseInt(item.dataset.index);
+                const obj = objects[index];
+                if (obj) {
+                    this.canvas.setActiveObject(obj);
+                    this.canvas.renderAll();
+                }
+            });
+        });
+    }
+
+    /**
+     * Update panel menu button state (checked/unchecked)
+     */
+    updatePanelMenuState(panelName) {
+        const btn = this.elements[`btn${panelName.charAt(0).toUpperCase() + panelName.slice(1)}Panel`];
+        if (!btn) return;
+
+        const panel = this.panels[panelName];
+        const isActive = panel.visible || panel.docked;
+        btn.classList.toggle('checked', isActive);
     }
 
     /**
@@ -1868,8 +2379,8 @@ class MapEditor {
     onSelectionChanged() {
         const activeObject = this.canvas.getActiveObject();
 
-        // Text style panel
-        if (this.panels.textStyle.visible) {
+        // Text style panel (floating)
+        if (this.panels.textStyle.visible && !this.panels.textStyle.docked) {
             if (activeObject && activeObject.isMapElement && activeObject.elementType === 'text') {
                 this.elements.textPanelMessage.style.display = 'none';
                 this.elements.textControls.style.display = 'block';
@@ -1880,8 +2391,8 @@ class MapEditor {
             }
         }
 
-        // Element style panel
-        if (this.panels.elementStyle.visible) {
+        // Element style panel (floating)
+        if (this.panels.elementStyle.visible && !this.panels.elementStyle.docked) {
             const isShape = activeObject && activeObject.isMapElement &&
                 ['line', 'circle', 'rect', 'freedraw'].includes(activeObject.elementType);
             if (isShape) {
@@ -1894,28 +2405,50 @@ class MapEditor {
             }
         }
 
-        // Update layers panel selection
-        if (this.panels.layers.visible) {
+        // Update layers panel selection (floating)
+        if (this.panels.layers.visible && !this.panels.layers.docked) {
             this.updateLayersPanel();
         }
+
+        // Update docked panels
+        ['left', 'right'].forEach(side => {
+            if (this.dockZones[side].panels.length > 0 && this.dockZones[side].activeTab) {
+                if (this.dockZones[side].activeTab === 'layers') {
+                    this.updateDockedLayersPanel(side);
+                } else {
+                    this.updateDockedPanelContent(side);
+                }
+            }
+        });
     }
 
     /**
      * Handle selection cleared
      */
     onSelectionCleared() {
-        // Hide controls in panels
-        if (this.panels.textStyle.visible) {
+        // Hide controls in floating panels
+        if (this.panels.textStyle.visible && !this.panels.textStyle.docked) {
             this.elements.textPanelMessage.style.display = 'block';
             this.elements.textControls.style.display = 'none';
         }
-        if (this.panels.elementStyle.visible) {
+        if (this.panels.elementStyle.visible && !this.panels.elementStyle.docked) {
             this.elements.elementPanelMessage.style.display = 'block';
             this.elements.elementControls.style.display = 'none';
         }
-        if (this.panels.layers.visible) {
+        if (this.panels.layers.visible && !this.panels.layers.docked) {
             this.updateLayersPanel();
         }
+
+        // Update docked panels
+        ['left', 'right'].forEach(side => {
+            if (this.dockZones[side].panels.length > 0 && this.dockZones[side].activeTab) {
+                if (this.dockZones[side].activeTab === 'layers') {
+                    this.updateDockedLayersPanel(side);
+                } else {
+                    this.updateDockedPanelContent(side);
+                }
+            }
+        });
     }
 
     /**

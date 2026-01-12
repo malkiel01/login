@@ -1251,6 +1251,11 @@ class MapEditor {
             circle.on('moving', () => this.onAnchorPointMove(circle));
             circle.on('modified', () => this.onAnchorPointModified());
 
+            // Prevent boundary selection when clicking anchor point
+            circle.on('mousedown', () => {
+                this.canvas.setActiveObject(circle);
+            });
+
             this.anchorPoints.push(circle);
             this.canvas.add(circle);
         });
@@ -3576,6 +3581,12 @@ class MapEditor {
 
             circle.on('moving', () => this.onChildAnchorPointMove(circle, polygon));
             circle.on('modified', () => this.onChildAnchorPointModified());
+
+            // Prevent polygon selection when clicking anchor point
+            circle.on('mousedown', () => {
+                // Keep only anchor point selected, not the polygon
+                this.canvas.setActiveObject(circle);
+            });
 
             this.canvas.add(circle);
             this.childrenPanel.childAnchorPoints.push(circle);

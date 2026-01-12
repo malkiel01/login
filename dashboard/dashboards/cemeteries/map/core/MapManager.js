@@ -34,6 +34,7 @@ export class MapManager {
             mode: this.options.mode,
             isLoading: false,
             isEditMode: false,
+            isVertexEditMode: false,
             currentZoom: 1,
             entity: null,
             children: []
@@ -46,6 +47,9 @@ export class MapManager {
         this.history = null;
         this.boundary = null;
         this.background = null;
+
+        // Entity edit points (for vertex editing)
+        this.entityEditPoints = [];
 
         // Event handlers
         this.eventHandlers = new Map();
@@ -522,9 +526,204 @@ export class MapManager {
     }
 
     /**
+     * קבלת הפוליגון של הישות הנוכחית
+     */
+    getEntityPolygon() {
+        return this.canvas.getObjects().find(obj => obj.isEntityPolygon);
+    }
+
+    /**
+     * כניסה למצב עריכת נקודות על פוליגון הישות
+     */
+    enterEntityVertexEditMode() {
+        const polygon = this.getEntityPolygon();
+        if (!polygon) {
+            console.warn('⚠️ No entity polygon to edit');
+            return false;
+        }
+
+        this.state.isVertexEditMode = true;
+        this.entityEditPoints = [];
+
+        // הסתר controls רגילים
+        polygon.set({
+            selectable: false,
+            evented: false,
+            hasControls: false,
+            hasBorders: false
+        });
+
+        // הצג נקודות עריכה
+        this.showEntityEditPoints(polygon);
+        this.canvas.renderAll();
+
+        console.log('✅ Entity vertex edit mode: ON');
+        return true;
+    }
+
+    /**
+     * יציאה ממצב עריכת נקודות על פוליגון הישות
+     */
+    exitEntityVertexEditMode() {
+        this.state.isVertexEditMode = false;
+        this.clearEntityEditPoints();
+
+        const polygon = this.getEntityPolygon();
+        if (polygon) {
+            polygon.set({
+                selectable: this.state.isEditMode,
+                evented: this.state.isEditMode
+            });
+        }
+
+        this.canvas.renderAll();
+        console.log('✅ Entity vertex edit mode: OFF');
+    }
+
+    /**
+     * הצגת נקודות עריכה על פוליגון הישות
+     */
+    showEntityEditPoints(polygon) {
+        this.clearEntityEditPoints();
+
+        if (!polygon || !polygon.points) return;
+
+        const points = polygon.points;
+        const matrix = polygon.calcTransformMatrix();
+
+        points.forEach((point, index) => {
+            // טרנספורמציה לקואורדינטות canvas
+            const transformed = fabric.util.transformPoint(
+                { x: point.x - polygon.pathOffset.x, y: point.y - polygon.pathOffset.y },
+                matrix
+            );
+
+            const circle = new fabric.Circle({
+                left: transformed.x,
+                top: transformed.y,
+                radius: 8,
+                fill: '#ffffff',
+                stroke: '#1976D2',
+                strokeWidth: 2,
+                selectable: true,
+                hasControls: false,
+                hasBorders: false,
+                originX: 'center',
+                originY: 'center',
+                isEntityEditPoint: true,
+                pointIndex: index,
+                hoverCursor: 'move'
+            });
+
+            // האזנה לגרירה
+            circle.on('moving', () => this.onEntityEditPointMove(circle, polygon));
+            circle.on('modified', () => this.onEntityEditPointModified(polygon));
+
+            this.entityEditPoints.push(circle);
+            this.canvas.add(circle);
+        });
+
+        this.canvas.renderAll();
+    }
+
+    /**
+     * ניקוי נקודות העריכה של הישות
+     */
+    clearEntityEditPoints() {
+        if (!this.entityEditPoints) return;
+
+        this.entityEditPoints.forEach(point => {
+            point.off('moving');
+            point.off('modified');
+            this.canvas.remove(point);
+        });
+        this.entityEditPoints = [];
+    }
+
+    /**
+     * טיפול בהזזת נקודת עריכה של ישות
+     */
+    onEntityEditPointMove(circle, polygon) {
+        const index = circle.pointIndex;
+        const matrix = polygon.calcTransformMatrix();
+        const invertedMatrix = fabric.util.invertTransform(matrix);
+
+        // טרנספורמציה מקואורדינטות canvas לקואורדינטות polygon
+        const transformed = fabric.util.transformPoint(
+            { x: circle.left, y: circle.top },
+            invertedMatrix
+        );
+
+        // עדכון הנקודה בפוליגון
+        polygon.points[index] = {
+            x: transformed.x + polygon.pathOffset.x,
+            y: transformed.y + polygon.pathOffset.y
+        };
+
+        this.canvas.renderAll();
+    }
+
+    /**
+     * טיפול בסיום הזזת נקודה
+     */
+    onEntityEditPointModified(polygon) {
+        if (polygon) {
+            polygon.setCoords();
+        }
+        this.canvas.renderAll();
+    }
+
+    /**
+     * הוספת נקודה לפוליגון הישות
+     */
+    addEntityPoint(afterIndex) {
+        const polygon = this.getEntityPolygon();
+        if (!polygon || !polygon.points) return;
+
+        const points = polygon.points;
+        const nextIndex = (afterIndex + 1) % points.length;
+
+        const p1 = points[afterIndex];
+        const p2 = points[nextIndex];
+        const newPoint = {
+            x: (p1.x + p2.x) / 2,
+            y: (p1.y + p2.y) / 2
+        };
+
+        points.splice(afterIndex + 1, 0, newPoint);
+        polygon.set({ points: [...points] });
+
+        this.showEntityEditPoints(polygon);
+        console.log(`✅ Added entity point at index ${afterIndex + 1}`);
+    }
+
+    /**
+     * הסרת נקודה מפוליגון הישות
+     */
+    removeEntityPoint(index) {
+        const polygon = this.getEntityPolygon();
+        if (!polygon || !polygon.points) return false;
+
+        const points = polygon.points;
+
+        if (points.length <= 3) {
+            console.warn('פוליגון חייב להכיל לפחות 3 נקודות');
+            return false;
+        }
+
+        points.splice(index, 1);
+        polygon.set({ points: [...points] });
+
+        this.showEntityEditPoints(polygon);
+        console.log(`✅ Removed entity point at index ${index}`);
+        return true;
+    }
+
+    /**
      * השמדת המנהל
      */
     destroy() {
+        this.clearEntityEditPoints();
         if (this.history) this.history.destroy();
         if (this.boundary) this.boundary.destroy();
         if (this.background) this.background.destroy();

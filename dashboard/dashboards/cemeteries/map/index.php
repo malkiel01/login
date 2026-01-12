@@ -489,15 +489,18 @@ $config = $entityConfig[$entityType] ?? $entityConfig['cemetery'];
                     if (currentTool === 'edit') {
                         // Already in edit mode - exit
                         setActiveTool('select');
-                        mapManager.boundary.exitEditMode();
-                        mapManager.boundary.exitVertexEditMode();
+                        // Exit entity polygon vertex editing
+                        mapManager.exitEntityVertexEditMode();
+                        // Exit background editing
                         mapManager.background.exitEditMode();
                     } else {
                         setActiveTool('edit');
-                        // Enable boundary editing if there's a boundary
-                        if (mapManager.boundary.boundaryOutline) {
-                            // Use vertex editing mode for precise control
-                            mapManager.boundary.enterVertexEditMode();
+                        // Enable entity polygon vertex editing
+                        const polygon = mapManager.getEntityPolygon();
+                        if (polygon) {
+                            mapManager.enterEntityVertexEditMode();
+                        } else {
+                            console.warn('⚠️ No entity polygon to edit');
                         }
                         // Also enable background editing if there's a background
                         if (mapManager.background.hasBackground()) {

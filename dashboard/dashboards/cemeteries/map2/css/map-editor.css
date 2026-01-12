@@ -201,6 +201,16 @@ body {
     cursor: not-allowed;
 }
 
+.dropdown-item.active {
+    background: #3b82f6;
+    color: #fff;
+}
+
+.dropdown-item.active:hover {
+    background: #2563eb;
+    color: #fff;
+}
+
 /* Save button */
 .btn-save {
     display: flex;

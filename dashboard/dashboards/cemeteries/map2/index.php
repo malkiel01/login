@@ -310,6 +310,15 @@ $entityName = $_GET['name'] ?? '';
             <button class="floating-panel-close" data-panel="children">&times;</button>
         </div>
         <div class="floating-panel-body">
+            <!-- Toggle for showing descendants -->
+            <div class="children-toggle-container" id="childrenToggleContainer" style="display: none;">
+                <label class="children-toggle">
+                    <input type="checkbox" id="showDescendantsToggle">
+                    <span class="toggle-slider"></span>
+                </label>
+                <span class="toggle-label">הצג צאצאים</span>
+            </div>
+
             <!-- Message when no parent boundary -->
             <div class="panel-message" id="childrenNoParentBoundary">
                 יש להגדיר גבול מפה לפני הוספת גבולות ילדים

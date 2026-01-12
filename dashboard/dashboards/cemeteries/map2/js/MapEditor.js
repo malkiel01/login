@@ -39,7 +39,14 @@ class MapEditor {
             isDrawingChildBoundary: false,
             childBoundaryPoints: [],   // Points while drawing child boundary
             isEditingChildBoundary: false,
-            childAnchorPoints: []      // Anchor points while editing child boundary
+            childAnchorPoints: [],     // Anchor points while editing child boundary
+            showDescendants: false,    // Toggle for showing all descendants (grandchildren, etc.)
+            descendants: [],           // All descendants when showDescendants is true
+            levelColors: {             // Colors for different hierarchy levels
+                block: '#3b82f6',      // Blue
+                plot: '#22c55e',       // Green
+                areaGrave: '#a855f7'   // Purple
+            }
         };
 
         // Dock zones state
@@ -156,6 +163,8 @@ class MapEditor {
             childrenPanel: document.getElementById('childrenPanel'),
 
             // Children panel elements
+            childrenToggleContainer: document.getElementById('childrenToggleContainer'),
+            showDescendantsToggle: document.getElementById('showDescendantsToggle'),
             childrenNoParentBoundary: document.getElementById('childrenNoParentBoundary'),
             childrenLoading: document.getElementById('childrenLoading'),
             childrenListContainer: document.getElementById('childrenListContainer'),
@@ -297,6 +306,15 @@ class MapEditor {
         this.elements.btnChildrenPanel.addEventListener('click', () => this.togglePanel('children'));
 
         // Children panel control buttons are handled via dropdown menus in renderChildrenList()
+
+        // Descendants toggle
+        this.elements.showDescendantsToggle.addEventListener('change', (e) => {
+            this.childrenPanel.showDescendants = e.target.checked;
+            // Clear cached data to force refresh
+            this.childrenPanel.children = [];
+            this.childrenPanel.descendants = [];
+            this.loadChildren();
+        });
 
         // Panel close buttons
         document.querySelectorAll('.floating-panel-close').forEach(btn => {
@@ -3119,7 +3137,8 @@ class MapEditor {
      */
     async loadChildren() {
         const isPanelVisible = this.panels.children.visible;
-        console.log('[MapEditor] loadChildren called - panel visible:', isPanelVisible);
+        const showDescendants = this.childrenPanel.showDescendants;
+        console.log('[MapEditor] loadChildren called - panel visible:', isPanelVisible, 'showDescendants:', showDescendants);
 
         // Check if parent has boundary
         if (!this.boundary) {
@@ -3140,8 +3159,24 @@ class MapEditor {
             return;
         }
 
-        // If children are already loaded, just render without re-fetching
-        if (this.childrenPanel.children.length > 0) {
+        // Check if this entity can have grandchildren (for showing the toggle)
+        const grandchildType = this.getChildType(childType);
+        if (isPanelVisible && grandchildType) {
+            this.elements.childrenToggleContainer.style.display = 'flex';
+        } else if (isPanelVisible) {
+            this.elements.childrenToggleContainer.style.display = 'none';
+        }
+
+        // If children/descendants are already loaded, just render without re-fetching
+        if (showDescendants && this.childrenPanel.descendants.length > 0) {
+            console.log('[MapEditor] loadChildren - using cached descendants:', this.childrenPanel.descendants.length);
+            if (isPanelVisible) {
+                this.renderChildrenList();
+            }
+            this.renderChildBoundaries();
+            return;
+        }
+        if (!showDescendants && this.childrenPanel.children.length > 0) {
             console.log('[MapEditor] loadChildren - using cached children:', this.childrenPanel.children.length);
             if (isPanelVisible) {
                 this.renderChildrenList();
@@ -3155,24 +3190,44 @@ class MapEditor {
         }
 
         try {
-            const url = `${this.config.apiBase}map-data.php?action=getChildren&parentType=${this.config.entityType}&parentId=${this.config.entityId}`;
+            // Use different API action based on toggle
+            const action = showDescendants ? 'getDescendants' : 'getChildren';
+            const url = `${this.config.apiBase}map-data.php?action=${action}&parentType=${this.config.entityType}&parentId=${this.config.entityId}`;
             console.log('[MapEditor] loadChildren - fetching from:', url);
             const response = await fetch(url);
             const data = await response.json();
             console.log('[MapEditor] loadChildren - API response:', data);
 
             if (data.success) {
-                this.childrenPanel.children = data.children.map(child => ({
-                    id: child.id,
-                    name: child.name || child.id,
-                    type: child.type,
-                    hasPolygon: child.hasPolygon,
-                    polygon: child.polygon
-                }));
+                if (showDescendants) {
+                    // Store descendants with level info
+                    this.childrenPanel.descendants = data.descendants.map(d => ({
+                        id: d.id,
+                        name: d.name || d.id,
+                        type: d.type,
+                        hasPolygon: d.hasPolygon,
+                        polygon: d.polygon,
+                        level: d.level,
+                        parentId: d.parentId,
+                        parentType: d.parentType
+                    }));
+                    // Also populate children for backward compatibility
+                    this.childrenPanel.children = this.childrenPanel.descendants.filter(d => d.level === 1);
+                    console.log('[MapEditor] loadChildren - loaded descendants:', this.childrenPanel.descendants.length);
+                } else {
+                    this.childrenPanel.children = data.children.map(child => ({
+                        id: child.id,
+                        name: child.name || child.id,
+                        type: child.type,
+                        hasPolygon: child.hasPolygon,
+                        polygon: child.polygon,
+                        level: 1
+                    }));
+                    console.log('[MapEditor] loadChildren - loaded children:', this.childrenPanel.children.length);
+                }
 
-                console.log('[MapEditor] loadChildren - loaded children:', this.childrenPanel.children.length);
-
-                if (this.childrenPanel.children.length === 0) {
+                const items = showDescendants ? this.childrenPanel.descendants : this.childrenPanel.children;
+                if (items.length === 0) {
                     if (isPanelVisible) {
                         this.showChildrenEmpty(`אין ${this.getChildTypeName(childType)}`);
                     }
@@ -3237,39 +3292,49 @@ class MapEditor {
         const list = this.elements.childrenList;
         const isEditing = this.childrenPanel.isEditingChildBoundary;
         const editingChildId = isEditing ? this.childrenPanel.selectedChild?.id : null;
+        const showDescendants = this.childrenPanel.showDescendants;
 
-        list.innerHTML = this.childrenPanel.children.map(child => {
+        // Get the items to display
+        const items = showDescendants ? this.childrenPanel.descendants : this.childrenPanel.children;
+
+        // Render items with appropriate styling for hierarchy
+        list.innerHTML = items.map(child => {
             const isSelected = child.id === this.childrenPanel.selectedChild?.id;
             const isBeingEdited = child.id === editingChildId;
+            const levelClass = `level-${child.type}`;
+            const typeBadge = showDescendants && child.level > 1
+                ? `<span class="child-type-badge type-${child.type}">${this.getChildTypeName(child.type)}</span>`
+                : '';
 
             return `
-            <div class="child-item ${isSelected ? 'selected' : ''} ${isBeingEdited ? 'editing' : ''}"
-                 data-id="${child.id}">
+            <div class="child-item ${isSelected ? 'selected' : ''} ${isBeingEdited ? 'editing' : ''} ${levelClass}"
+                 data-id="${child.id}" data-type="${child.type}">
                 <span class="status-dot ${child.hasPolygon ? 'has-polygon' : 'no-polygon'}"></span>
                 <span class="child-name">${child.name}</span>
+                ${typeBadge}
                 ${isBeingEdited ? '<span class="editing-badge">עריכה</span>' : ''}
                 <div class="child-dropdown">
-                    <button class="child-dropdown-btn" data-id="${child.id}" title="אפשרויות">
+                    <button class="child-dropdown-btn" data-id="${child.id}" data-type="${child.type}" title="אפשרויות">
                         <svg viewBox="0 0 24 24" width="16" height="16">
                             <path fill="currentColor" d="M7 10l5 5 5-5z"/>
                         </svg>
                     </button>
                     <div class="child-dropdown-menu" data-id="${child.id}">
                         ${!child.hasPolygon ? `
-                            <button class="child-dropdown-item" data-action="add" data-id="${child.id}">
+                            <button class="child-dropdown-item" data-action="add" data-id="${child.id}" data-type="${child.type}">
                                 <svg viewBox="0 0 24 24" width="14" height="14">
                                     <path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
                                 </svg>
                                 הוספת גבול
                             </button>
                         ` : `
-                            <button class="child-dropdown-item ${isBeingEdited ? 'active' : ''}" data-action="edit" data-id="${child.id}">
+                            <button class="child-dropdown-item ${isBeingEdited ? 'active' : ''}" data-action="edit" data-id="${child.id}" data-type="${child.type}">
                                 <svg viewBox="0 0 24 24" width="14" height="14">
                                     <path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
                                 </svg>
                                 ${isBeingEdited ? 'סיום עריכה' : 'עריכת גבול'}
                             </button>
-                            <button class="child-dropdown-item danger" data-action="delete" data-id="${child.id}" ${isBeingEdited ? 'disabled' : ''}>
+                            <button class="child-dropdown-item danger" data-action="delete" data-id="${child.id}" data-type="${child.type}" ${isBeingEdited ? 'disabled' : ''}>
                                 <svg viewBox="0 0 24 24" width="14" height="14">
                                     <path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
                                 </svg>
@@ -3286,7 +3351,7 @@ class MapEditor {
             item.addEventListener('click', (e) => {
                 // Don't select when clicking dropdown
                 if (e.target.closest('.child-dropdown')) return;
-                this.selectChild(item.dataset.id);
+                this.selectChild(item.dataset.id, item.dataset.type);
             });
         });
 
@@ -3304,8 +3369,9 @@ class MapEditor {
                 e.stopPropagation();
                 const action = item.dataset.action;
                 const childId = item.dataset.id;
+                const childType = item.dataset.type;
                 this.closeAllChildDropdowns();
-                this.handleChildAction(action, childId);
+                this.handleChildAction(action, childId, childType);
             });
         });
 
@@ -3359,9 +3425,9 @@ class MapEditor {
     /**
      * Handle child action from dropdown
      */
-    handleChildAction(action, childId) {
+    handleChildAction(action, childId, childType) {
         // First select the child
-        this.selectChild(childId);
+        this.selectChild(childId, childType);
 
         switch (action) {
             case 'add':
@@ -3384,8 +3450,12 @@ class MapEditor {
     /**
      * Select a child entity
      */
-    selectChild(childId) {
-        const child = this.childrenPanel.children.find(c => c.id === childId);
+    selectChild(childId, childType) {
+        // Find child in children or descendants
+        let child = this.childrenPanel.children.find(c => c.id === childId);
+        if (!child && this.childrenPanel.showDescendants) {
+            child = this.childrenPanel.descendants.find(c => c.id === childId);
+        }
         this.childrenPanel.selectedChild = child;
 
         // Update list UI
@@ -3412,43 +3482,74 @@ class MapEditor {
         this.clearChildBoundaries();
 
         const selectedId = this.childrenPanel.selectedChild?.id;
-        const childrenWithPolygons = this.childrenPanel.children.filter(c => c.hasPolygon && c.polygon);
+        const showDescendants = this.childrenPanel.showDescendants;
 
-        console.log('[MapEditor] renderChildBoundaries - children with polygons:', childrenWithPolygons.length);
+        // Get items to render - descendants if toggle is on, otherwise just children
+        const items = showDescendants ? this.childrenPanel.descendants : this.childrenPanel.children;
+        const itemsWithPolygons = items.filter(c => c.hasPolygon && c.polygon);
 
-        childrenWithPolygons.forEach(child => {
-                const isSelected = child.id === selectedId;
-                const points = child.polygon.points || child.polygon;
+        console.log('[MapEditor] renderChildBoundaries - items with polygons:', itemsWithPolygons.length);
 
-                const polygon = new fabric.Polygon(points, {
-                    // Hollow boundary - same stroke width as parent
-                    fill: 'transparent',
-                    stroke: isSelected ? '#1d4ed8' : '#3b82f6',
-                    strokeWidth: 3,
-                    opacity: isSelected ? 1 : 0.6,
-                    selectable: false,
-                    evented: true,  // Enable events for double-click selection
-                    objectCaching: false,
-                    isChildBoundary: true,
-                    childId: child.id,
-                    hoverCursor: 'pointer'
-                });
+        itemsWithPolygons.forEach(child => {
+            const isSelected = child.id === selectedId;
+            const points = child.polygon.points || child.polygon;
 
-                // Add double-click handler to select child
-                polygon.on('mousedblclick', () => {
-                    this.selectChild(child.id);
-                    // Open children panel if not visible
-                    if (!this.panels.children.visible) {
-                        this.togglePanel('children');
-                    }
-                });
+            // Get color based on entity type
+            const baseColor = this.childrenPanel.levelColors[child.type] || '#3b82f6';
+            // Darken color for selected state
+            const selectedColor = this.darkenColor(baseColor, 0.3);
 
-                this.canvas.add(polygon);
-                this.childrenPanel.childBoundaries[child.id] = polygon;
+            const polygon = new fabric.Polygon(points, {
+                // Hollow boundary - same stroke width as parent
+                fill: 'transparent',
+                stroke: isSelected ? selectedColor : baseColor,
+                strokeWidth: 3,
+                opacity: isSelected ? 1 : 0.6,
+                selectable: false,
+                evented: true,  // Enable events for double-click selection
+                objectCaching: false,
+                isChildBoundary: true,
+                childId: child.id,
+                childType: child.type,
+                hoverCursor: 'pointer'
             });
+
+            // Add double-click handler to select child
+            polygon.on('mousedblclick', () => {
+                this.selectChild(child.id, child.type);
+                // Open children panel if not visible
+                if (!this.panels.children.visible) {
+                    this.togglePanel('children');
+                }
+            });
+
+            this.canvas.add(polygon);
+            this.childrenPanel.childBoundaries[child.id] = polygon;
+        });
 
         this.reorderLayers();
         this.canvas.renderAll();
+    }
+
+    /**
+     * Darken a hex color by a percentage
+     */
+    darkenColor(hex, percent) {
+        // Remove # if present
+        hex = hex.replace('#', '');
+
+        // Parse RGB
+        let r = parseInt(hex.substring(0, 2), 16);
+        let g = parseInt(hex.substring(2, 4), 16);
+        let b = parseInt(hex.substring(4, 6), 16);
+
+        // Darken
+        r = Math.floor(r * (1 - percent));
+        g = Math.floor(g * (1 - percent));
+        b = Math.floor(b * (1 - percent));
+
+        // Convert back to hex
+        return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
     }
 
     /**
@@ -3468,9 +3569,13 @@ class MapEditor {
         // Update all boundary styles
         Object.entries(this.childrenPanel.childBoundaries).forEach(([id, polygon]) => {
             const isSelected = id === childId;
+            const childType = polygon.childType || 'block';
+            const baseColor = this.childrenPanel.levelColors[childType] || '#3b82f6';
+            const selectedColor = this.darkenColor(baseColor, 0.3);
+
             polygon.set({
                 fill: 'transparent',
-                stroke: isSelected ? '#1d4ed8' : '#3b82f6',
+                stroke: isSelected ? selectedColor : baseColor,
                 strokeWidth: 3,
                 opacity: isSelected ? 1 : 0.6
             });

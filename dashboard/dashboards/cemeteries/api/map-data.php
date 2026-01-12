@@ -93,6 +93,15 @@ try {
             echo json_encode($result);
             break;
 
+        case 'getDescendants':
+            // Get all descendants recursively (children, grandchildren, etc.)
+            if (!isset($childTypeMap[$parentType])) {
+                throw new Exception('סוג הורה לא חוקי או אין לו צאצאים: ' . $parentType);
+            }
+            $result = getDescendants($parentType, $parentId);
+            echo json_encode($result);
+            break;
+
         case 'saveChildPolygon':
             // Save polygon for a child entity
             if (!isset($entityTables[$childType])) {
@@ -401,5 +410,140 @@ function deleteChildPolygon($childType, $childId) {
     return [
         'success' => true,
         'message' => 'הפוליגון נמחק בהצלחה'
+    ];
+}
+
+/**
+ * Get all descendants recursively
+ */
+function getDescendants($parentType, $parentId) {
+    global $pdo, $entityTables, $childTypeMap;
+
+    $descendants = [];
+    $levels = [];
+
+    // Get direct children first
+    $childrenResult = getChildren($parentType, $parentId);
+    if (!$childrenResult['success']) {
+        return $childrenResult;
+    }
+
+    $children = $childrenResult['children'];
+    $childType = $childrenResult['childType'];
+
+    // Add children to descendants with level info
+    foreach ($children as $child) {
+        $child['level'] = 1;
+        $child['parentId'] = $parentId;
+        $child['parentType'] = $parentType;
+        $descendants[] = $child;
+    }
+
+    if (!isset($levels[$childType])) {
+        $levels[$childType] = 1;
+    }
+
+    // Check if child type can have its own children (grandchildren)
+    if (isset($childTypeMap[$childType])) {
+        $grandchildType = $childTypeMap[$childType]['childType'];
+        $grandchildForeignKey = $childTypeMap[$childType]['foreignKey'];
+        $grandchildTableConfig = $entityTables[$grandchildType];
+
+        // Fetch all grandchildren for all children that have polygon
+        // (We fetch all grandchildren regardless of whether parent has polygon)
+        $childIds = array_map(function($c) { return $c['id']; }, $children);
+
+        if (!empty($childIds)) {
+            try {
+                $placeholders = implode(',', array_fill(0, count($childIds), '?'));
+                $table = $grandchildTableConfig['table'];
+                $idField = $grandchildTableConfig['idField'];
+                $nameField = $grandchildTableConfig['nameField'];
+
+                $sql = "SELECT {$idField} as id, {$nameField} as name, mapPolygon, {$grandchildForeignKey} as parentId
+                        FROM {$table}
+                        WHERE {$grandchildForeignKey} IN ({$placeholders})
+                        AND isActive = 1
+                        ORDER BY {$nameField}";
+
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute($childIds);
+
+                while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                    $descendants[] = [
+                        'id' => $row['id'],
+                        'name' => $row['name'] ?? $row['id'],
+                        'type' => $grandchildType,
+                        'hasPolygon' => !empty($row['mapPolygon']),
+                        'polygon' => $row['mapPolygon'] ? json_decode($row['mapPolygon'], true) : null,
+                        'level' => 2,
+                        'parentId' => $row['parentId'],
+                        'parentType' => $childType
+                    ];
+                }
+
+                if (!isset($levels[$grandchildType])) {
+                    $levels[$grandchildType] = 2;
+                }
+
+                // Check for great-grandchildren (level 3)
+                if (isset($childTypeMap[$grandchildType])) {
+                    $greatGrandchildType = $childTypeMap[$grandchildType]['childType'];
+                    $greatGrandchildForeignKey = $childTypeMap[$grandchildType]['foreignKey'];
+                    $greatGrandchildTableConfig = $entityTables[$greatGrandchildType];
+
+                    // Get IDs of all grandchildren
+                    $grandchildIds = array_map(function($d) use ($grandchildType) {
+                        return $d['type'] === $grandchildType ? $d['id'] : null;
+                    }, $descendants);
+                    $grandchildIds = array_filter($grandchildIds);
+
+                    if (!empty($grandchildIds)) {
+                        $placeholders = implode(',', array_fill(0, count($grandchildIds), '?'));
+                        $table = $greatGrandchildTableConfig['table'];
+                        $idField = $greatGrandchildTableConfig['idField'];
+                        $nameField = $greatGrandchildTableConfig['nameField'];
+
+                        $sql = "SELECT {$idField} as id, {$nameField} as name, mapPolygon, {$greatGrandchildForeignKey} as parentId
+                                FROM {$table}
+                                WHERE {$greatGrandchildForeignKey} IN ({$placeholders})
+                                AND isActive = 1
+                                ORDER BY {$nameField}";
+
+                        $stmt = $pdo->prepare($sql);
+                        $stmt->execute(array_values($grandchildIds));
+
+                        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                            $descendants[] = [
+                                'id' => $row['id'],
+                                'name' => $row['name'] ?? $row['id'],
+                                'type' => $greatGrandchildType,
+                                'hasPolygon' => !empty($row['mapPolygon']),
+                                'polygon' => $row['mapPolygon'] ? json_decode($row['mapPolygon'], true) : null,
+                                'level' => 3,
+                                'parentId' => $row['parentId'],
+                                'parentType' => $grandchildType
+                            ];
+                        }
+
+                        if (!isset($levels[$greatGrandchildType])) {
+                            $levels[$greatGrandchildType] = 3;
+                        }
+                    }
+                }
+            } catch (PDOException $e) {
+                // If mapPolygon column doesn't exist, continue without polygon data
+                if (strpos($e->getMessage(), 'Unknown column') === false) {
+                    throw $e;
+                }
+            }
+        }
+    }
+
+    return [
+        'success' => true,
+        'descendants' => $descendants,
+        'levels' => $levels,
+        'count' => count($descendants)
     ];
 }

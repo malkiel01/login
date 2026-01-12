@@ -719,6 +719,8 @@ class MapEditor {
         // Re-attach event handlers if in editing mode
         if (this.isEditingBoundary) {
             this.boundary.on('moving', () => this.onBoundaryMove());
+            this.boundary.on('scaling', () => this.onBoundaryTransform());
+            this.boundary.on('rotating', () => this.onBoundaryTransform());
             this.boundary.on('modified', () => this.onBoundaryModified());
         }
 
@@ -1253,19 +1255,26 @@ class MapEditor {
         // Close dropdown
         document.querySelectorAll('.dropdown.open').forEach(d => d.classList.remove('open'));
 
-        // Make boundary selectable and draggable
+        // Make boundary selectable and draggable with resize/rotate controls
         this.boundary.set({
             selectable: true,
             evented: true,
-            hasControls: false,
+            hasControls: true,
             hasBorders: true,
             borderColor: '#3b82f6',
             borderDashArray: [5, 5],
+            cornerColor: '#3b82f6',
+            cornerStrokeColor: '#fff',
+            cornerStyle: 'circle',
+            cornerSize: 10,
+            transparentCorners: false,
             hoverCursor: 'move'
         });
 
-        // Handle boundary movement
+        // Handle boundary movement, scaling, and rotation
         this.boundary.on('moving', () => this.onBoundaryMove());
+        this.boundary.on('scaling', () => this.onBoundaryTransform());
+        this.boundary.on('rotating', () => this.onBoundaryTransform());
         this.boundary.on('modified', () => this.onBoundaryModified());
 
         // Show anchor points
@@ -1382,6 +1391,19 @@ class MapEditor {
     }
 
     /**
+     * Handle boundary scaling or rotation - update gray mask and anchor points
+     */
+    onBoundaryTransform() {
+        // Update gray mask to follow boundary
+        this.updateGrayMask();
+
+        // Update anchor points positions
+        this.showAnchorPoints();
+
+        this.canvas.renderAll();
+    }
+
+    /**
      * Handle boundary modification complete
      */
     onBoundaryModified() {
@@ -1451,6 +1473,8 @@ class MapEditor {
         // Re-attach event handlers if in editing mode
         if (this.isEditingBoundary) {
             this.boundary.on('moving', () => this.onBoundaryMove());
+            this.boundary.on('scaling', () => this.onBoundaryTransform());
+            this.boundary.on('rotating', () => this.onBoundaryTransform());
             this.boundary.on('modified', () => this.onBoundaryModified());
         }
 

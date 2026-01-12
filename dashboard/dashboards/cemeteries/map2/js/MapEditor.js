@@ -813,9 +813,9 @@ class MapEditor {
             const circle = new fabric.Circle({
                 left: absX,
                 top: absY,
-                radius: 8,
-                fill: '#fff',
-                stroke: '#3b82f6',
+                radius: 5,
+                fill: '#3b82f6',
+                stroke: '#fff',
                 strokeWidth: 2,
                 originX: 'center',
                 originY: 'center',
@@ -825,7 +825,13 @@ class MapEditor {
                 hasBorders: false,
                 isAnchorPoint: true,
                 pointIndex: index,
-                hoverCursor: 'move'
+                hoverCursor: 'move',
+                shadow: new fabric.Shadow({
+                    color: 'rgba(0,0,0,0.3)',
+                    blur: 3,
+                    offsetX: 0,
+                    offsetY: 1
+                })
             });
 
             // Handle dragging

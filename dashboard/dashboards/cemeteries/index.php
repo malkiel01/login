@@ -216,6 +216,9 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <script src="/dashboard/dashboards/cemeteries/js/map-launcher.js"></script>
     <!-- OLD: map-launcher-old.js (2,786 lines) kept as backup -->
 
+    <!-- Map v2 Launcher -->
+    <script src="/dashboard/dashboards/cemeteries/js/map-v2-launcher.js"></script>
+
     <!-- 7️⃣ אתחול -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {

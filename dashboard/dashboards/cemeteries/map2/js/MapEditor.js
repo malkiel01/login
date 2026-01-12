@@ -3741,31 +3741,46 @@ class MapEditor {
         if (!polygon) return;
 
         const points = polygon.points;
+        const matrix = polygon.calcTransformMatrix();
+        const pathOffset = polygon.pathOffset || { x: 0, y: 0 };
         const nextIndex = (afterIndex + 1) % points.length;
 
-        const p1 = points[afterIndex];
-        const p2 = points[nextIndex];
+        // Transform the two edge points to absolute coordinates
+        const p1Abs = fabric.util.transformPoint(
+            { x: points[afterIndex].x - pathOffset.x, y: points[afterIndex].y - pathOffset.y },
+            matrix
+        );
+        const p2Abs = fabric.util.transformPoint(
+            { x: points[nextIndex].x - pathOffset.x, y: points[nextIndex].y - pathOffset.y },
+            matrix
+        );
 
-        const newPoint = {
-            x: (p1.x + p2.x) / 2,
-            y: (p1.y + p2.y) / 2
+        // Calculate midpoint in absolute coordinates
+        const newPointAbs = {
+            x: (p1Abs.x + p2Abs.x) / 2,
+            y: (p1Abs.y + p2Abs.y) / 2
         };
 
         // Check if new point is inside parent boundary
-        if (!this.isPointInsideParentBoundary(newPoint)) {
+        if (!this.isPointInsideParentBoundary(newPointAbs)) {
             this.setStatus('לא ניתן להוסיף נקודה מחוץ לגבול ההורה');
             return;
         }
 
-        // Create new points array
-        const newPoints = [...points];
-        newPoints.splice(afterIndex + 1, 0, newPoint);
+        // Convert all existing points to absolute coordinates
+        const absolutePoints = points.map(p => {
+            return fabric.util.transformPoint(
+                { x: p.x - pathOffset.x, y: p.y - pathOffset.y },
+                matrix
+            );
+        });
 
-        // Recreate polygon with new points
+        // Insert new point
+        absolutePoints.splice(afterIndex + 1, 0, newPointAbs);
+
+        // Recreate polygon with absolute points (no transformation needed)
         const oldPolygon = polygon;
         const polygonProps = {
-            left: oldPolygon.left,
-            top: oldPolygon.top,
             fill: oldPolygon.fill,
             stroke: oldPolygon.stroke,
             strokeWidth: oldPolygon.strokeWidth,
@@ -3777,11 +3792,12 @@ class MapEditor {
             borderDashArray: [5, 5],
             hoverCursor: 'move',
             objectCaching: false,
+            perPixelTargetFind: true,
             isChildBoundary: true,
             childId: oldPolygon.childId
         };
 
-        const newPolygon = new fabric.Polygon(newPoints, polygonProps);
+        const newPolygon = new fabric.Polygon(absolutePoints, polygonProps);
         newPolygon.on('moving', () => this.onChildBoundaryMove());
         newPolygon.on('modified', () => this.onChildBoundaryModified());
 
@@ -3792,6 +3808,9 @@ class MapEditor {
         const childId = oldPolygon.childId;
         this.childrenPanel.childBoundaries[childId] = newPolygon;
         this.childrenPanel.editingPolygon = newPolygon;
+
+        // Select the new polygon
+        this.canvas.setActiveObject(newPolygon);
 
         // Refresh anchor points
         this.showChildAnchorPoints(newPolygon);
@@ -3817,14 +3836,23 @@ class MapEditor {
             return;
         }
 
-        // Create new points array without the removed point
-        const newPoints = points.filter((_, i) => i !== index);
+        // Get transformation data
+        const matrix = polygon.calcTransformMatrix();
+        const pathOffset = polygon.pathOffset || { x: 0, y: 0 };
 
-        // Recreate polygon
+        // Convert all points to absolute coordinates, excluding the removed point
+        const absolutePoints = points
+            .filter((_, i) => i !== index)
+            .map(p => {
+                return fabric.util.transformPoint(
+                    { x: p.x - pathOffset.x, y: p.y - pathOffset.y },
+                    matrix
+                );
+            });
+
+        // Recreate polygon with absolute points
         const oldPolygon = polygon;
         const polygonProps = {
-            left: oldPolygon.left,
-            top: oldPolygon.top,
             fill: oldPolygon.fill,
             stroke: oldPolygon.stroke,
             strokeWidth: oldPolygon.strokeWidth,
@@ -3836,11 +3864,12 @@ class MapEditor {
             borderDashArray: [5, 5],
             hoverCursor: 'move',
             objectCaching: false,
+            perPixelTargetFind: true,
             isChildBoundary: true,
             childId: oldPolygon.childId
         };
 
-        const newPolygon = new fabric.Polygon(newPoints, polygonProps);
+        const newPolygon = new fabric.Polygon(absolutePoints, polygonProps);
         newPolygon.on('moving', () => this.onChildBoundaryMove());
         newPolygon.on('modified', () => this.onChildBoundaryModified());
 
@@ -3851,6 +3880,9 @@ class MapEditor {
         const childId = oldPolygon.childId;
         this.childrenPanel.childBoundaries[childId] = newPolygon;
         this.childrenPanel.editingPolygon = newPolygon;
+
+        // Select the new polygon
+        this.canvas.setActiveObject(newPolygon);
 
         // Refresh anchor points
         this.showChildAnchorPoints(newPolygon);

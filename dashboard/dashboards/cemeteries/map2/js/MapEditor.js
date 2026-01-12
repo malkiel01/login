@@ -150,7 +150,7 @@ class MapEditor {
 
         // Boundary actions
         this.elements.btnAddBoundary.addEventListener('click', () => this.startDrawingBoundary());
-        this.elements.btnEditBoundary.addEventListener('click', () => this.startEditingBoundary());
+        this.elements.btnEditBoundary.addEventListener('click', () => this.toggleEditingBoundary());
         this.elements.btnRemoveBoundary.addEventListener('click', () => this.removeBoundary());
 
         // Background actions
@@ -747,6 +747,16 @@ class MapEditor {
     // ============================================
     // BOUNDARY - EDITING
     // ============================================
+
+    toggleEditingBoundary() {
+        if (!this.boundary) return;
+
+        if (this.isEditingBoundary) {
+            this.stopEditingBoundary();
+        } else {
+            this.startEditingBoundary();
+        }
+    }
 
     startEditingBoundary() {
         if (!this.boundary) return;

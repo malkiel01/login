@@ -3436,7 +3436,8 @@ class MapEditor {
             borderColor: '#22c55e',
             borderDashArray: [5, 5],
             hoverCursor: 'move',
-            objectCaching: false
+            objectCaching: false,
+            perPixelTargetFind: true
         });
 
         // Handle polygon movement - update anchor points
@@ -3445,6 +3446,10 @@ class MapEditor {
 
         // Show anchor points
         this.showChildAnchorPoints(polygon);
+
+        // Automatically select the polygon so it can be dragged immediately
+        this.canvas.setActiveObject(polygon);
+        this.canvas.renderAll();
 
         // Update children list to show editing indicator
         this.renderChildrenList();

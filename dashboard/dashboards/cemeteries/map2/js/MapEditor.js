@@ -238,26 +238,54 @@ class MapEditor {
         const canvasY = (y - vpt[5]) / zoom;
 
         // Find anchor point at this position
-        let target = null;
+        let anchorTarget = null;
         for (const anchor of this.anchorPoints) {
             const dx = canvasX - anchor.left;
             const dy = canvasY - anchor.top;
             const distance = Math.sqrt(dx * dx + dy * dy);
             if (distance <= anchor.radius + 5) {
-                target = anchor;
+                anchorTarget = anchor;
                 break;
             }
         }
 
-        if (!target || !target.isAnchorPoint) return;
+        // If clicked on anchor point, show anchor menu
+        if (anchorTarget && anchorTarget.isAnchorPoint) {
+            this.showAnchorContextMenu(e.clientX, e.clientY, anchorTarget);
+            return;
+        }
 
-        this.showContextMenu(e.clientX, e.clientY, target);
+        // Check if clicked inside boundary
+        if (this.boundary && this.isPointInsideBoundary(canvasX, canvasY)) {
+            this.showShapeContextMenu(e.clientX, e.clientY, canvasX, canvasY);
+        }
     }
 
     /**
-     * Show context menu
+     * Check if a point is inside the boundary polygon
      */
-    showContextMenu(x, y, anchorPoint) {
+    isPointInsideBoundary(x, y) {
+        if (!this.boundary) return false;
+
+        const points = this.boundaryPoints;
+        if (!points || points.length < 3) return false;
+
+        let inside = false;
+        for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
+            const xi = points[i].x, yi = points[i].y;
+            const xj = points[j].x, yj = points[j].y;
+
+            if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+                inside = !inside;
+            }
+        }
+        return inside;
+    }
+
+    /**
+     * Show anchor point context menu
+     */
+    showAnchorContextMenu(x, y, anchorPoint) {
         this.hideContextMenu();
 
         this.contextMenu = document.createElement('div');
@@ -282,8 +310,84 @@ class MapEditor {
         });
 
         document.body.appendChild(this.contextMenu);
+        this.adjustContextMenuPosition(x, y);
+    }
 
-        // Adjust position if menu goes off screen
+    /**
+     * Show shape context menu for adding elements
+     */
+    showShapeContextMenu(screenX, screenY, canvasX, canvasY) {
+        this.hideContextMenu();
+
+        this.contextMenu = document.createElement('div');
+        this.contextMenu.className = 'context-menu';
+        this.contextMenu.innerHTML = `
+            <button class="context-menu-item" data-action="add-text">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 7V4h16v3M9 20h6M12 4v16"/>
+                </svg>
+                הוסף טקסט
+            </button>
+            <button class="context-menu-item" data-action="add-line">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="5" y1="19" x2="19" y2="5"/>
+                </svg>
+                הוסף קו
+            </button>
+            <button class="context-menu-item" data-action="add-circle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="9"/>
+                </svg>
+                הוסף עיגול
+            </button>
+            <button class="context-menu-item" data-action="add-rect">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                </svg>
+                הוסף מלבן
+            </button>
+            <button class="context-menu-item" data-action="add-freedraw">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 17c3-3 6-7 9-7s6 4 9 7"/>
+                </svg>
+                קו חופשי
+            </button>
+        `;
+
+        // Position the menu
+        this.contextMenu.style.left = `${screenX}px`;
+        this.contextMenu.style.top = `${screenY}px`;
+
+        // Add click handlers
+        this.contextMenu.querySelector('[data-action="add-text"]').addEventListener('click', () => {
+            this.addTextElement(canvasX, canvasY);
+            this.hideContextMenu();
+        });
+        this.contextMenu.querySelector('[data-action="add-line"]').addEventListener('click', () => {
+            this.addLineElement(canvasX, canvasY);
+            this.hideContextMenu();
+        });
+        this.contextMenu.querySelector('[data-action="add-circle"]').addEventListener('click', () => {
+            this.addCircleElement(canvasX, canvasY);
+            this.hideContextMenu();
+        });
+        this.contextMenu.querySelector('[data-action="add-rect"]').addEventListener('click', () => {
+            this.addRectElement(canvasX, canvasY);
+            this.hideContextMenu();
+        });
+        this.contextMenu.querySelector('[data-action="add-freedraw"]').addEventListener('click', () => {
+            this.startFreeDrawing();
+            this.hideContextMenu();
+        });
+
+        document.body.appendChild(this.contextMenu);
+        this.adjustContextMenuPosition(screenX, screenY);
+    }
+
+    /**
+     * Adjust context menu position if it goes off screen
+     */
+    adjustContextMenuPosition(x, y) {
         const rect = this.contextMenu.getBoundingClientRect();
         if (rect.right > window.innerWidth) {
             this.contextMenu.style.left = `${x - rect.width}px`;
@@ -452,7 +556,9 @@ class MapEditor {
     handleKeyDown(e) {
         // Escape - cancel current action
         if (e.key === 'Escape') {
-            if (this.isDrawingBoundary) {
+            if (this.canvas.isDrawingMode) {
+                this.stopFreeDrawing();
+            } else if (this.isDrawingBoundary) {
                 this.cancelDrawingBoundary();
             } else if (this.isEditingBoundary) {
                 this.stopEditingBoundary();
@@ -461,9 +567,34 @@ class MapEditor {
             }
         }
 
-        // Delete - remove selected anchor point
-        if (e.key === 'Delete' && this.isEditingBoundary) {
-            this.removeSelectedAnchorPoint();
+        // Delete - remove selected object
+        if (e.key === 'Delete') {
+            if (this.isEditingBoundary) {
+                this.removeSelectedAnchorPoint();
+            } else {
+                this.deleteSelectedElement();
+            }
+        }
+    }
+
+    /**
+     * Delete selected map element
+     */
+    deleteSelectedElement() {
+        const activeObject = this.canvas.getActiveObject();
+        if (!activeObject) return;
+
+        // Don't delete boundary, mask, background, or anchor points
+        if (activeObject.isBoundary || activeObject.isGrayMask ||
+            activeObject.isBackgroundImage || activeObject.isAnchorPoint) {
+            return;
+        }
+
+        // Only delete map elements
+        if (activeObject.isMapElement) {
+            this.canvas.remove(activeObject);
+            this.canvas.renderAll();
+            this.setStatus('אלמנט נמחק');
         }
     }
 
@@ -1003,6 +1134,147 @@ class MapEditor {
 
         this.updateUIState();
         this.setStatus('עריכת הגבול הסתיימה');
+    }
+
+    // ============================================
+    // MAP ELEMENTS - ADD SHAPES
+    // ============================================
+
+    /**
+     * Add text element at position
+     */
+    addTextElement(x, y) {
+        const text = new fabric.IText('טקסט', {
+            left: x,
+            top: y,
+            fontSize: 16,
+            fontFamily: 'Arial, sans-serif',
+            fill: '#1e293b',
+            direction: 'rtl',
+            textAlign: 'right',
+            selectable: true,
+            evented: true,
+            isMapElement: true,
+            elementType: 'text'
+        });
+
+        this.canvas.add(text);
+        this.canvas.setActiveObject(text);
+        text.enterEditing();
+        text.selectAll();
+        this.canvas.renderAll();
+        this.setStatus('נוסף טקסט - לחץ פעמיים לעריכה', 'editing');
+    }
+
+    /**
+     * Add line element at position
+     */
+    addLineElement(x, y) {
+        const line = new fabric.Line([x, y, x + 100, y], {
+            stroke: '#3b82f6',
+            strokeWidth: 2,
+            selectable: true,
+            evented: true,
+            hasControls: true,
+            isMapElement: true,
+            elementType: 'line'
+        });
+
+        this.canvas.add(line);
+        this.canvas.setActiveObject(line);
+        this.canvas.renderAll();
+        this.setStatus('נוסף קו - גרור את הקצוות לשינוי', 'editing');
+    }
+
+    /**
+     * Add circle element at position
+     */
+    addCircleElement(x, y) {
+        const circle = new fabric.Circle({
+            left: x,
+            top: y,
+            radius: 30,
+            fill: 'transparent',
+            stroke: '#3b82f6',
+            strokeWidth: 2,
+            originX: 'center',
+            originY: 'center',
+            selectable: true,
+            evented: true,
+            isMapElement: true,
+            elementType: 'circle'
+        });
+
+        this.canvas.add(circle);
+        this.canvas.setActiveObject(circle);
+        this.canvas.renderAll();
+        this.setStatus('נוסף עיגול', 'editing');
+    }
+
+    /**
+     * Add rectangle element at position
+     */
+    addRectElement(x, y) {
+        const rect = new fabric.Rect({
+            left: x,
+            top: y,
+            width: 80,
+            height: 50,
+            fill: 'transparent',
+            stroke: '#3b82f6',
+            strokeWidth: 2,
+            originX: 'center',
+            originY: 'center',
+            selectable: true,
+            evented: true,
+            isMapElement: true,
+            elementType: 'rect'
+        });
+
+        this.canvas.add(rect);
+        this.canvas.setActiveObject(rect);
+        this.canvas.renderAll();
+        this.setStatus('נוסף מלבן', 'editing');
+    }
+
+    /**
+     * Start free drawing mode
+     */
+    startFreeDrawing() {
+        this.canvas.isDrawingMode = true;
+        this.canvas.freeDrawingBrush.color = '#3b82f6';
+        this.canvas.freeDrawingBrush.width = 2;
+
+        this.setStatus('מצב ציור חופשי - צייר עם העכבר. לחץ Escape לסיום.', 'drawing');
+
+        // Listen for path created to mark it as map element
+        const pathCreatedHandler = (e) => {
+            if (e.path) {
+                e.path.set({
+                    isMapElement: true,
+                    elementType: 'freedraw'
+                });
+            }
+        };
+        this.canvas.on('path:created', pathCreatedHandler);
+
+        // Store handler for cleanup
+        this._freeDrawPathHandler = pathCreatedHandler;
+    }
+
+    /**
+     * Stop free drawing mode
+     */
+    stopFreeDrawing() {
+        this.canvas.isDrawingMode = false;
+
+        // Remove path created handler
+        if (this._freeDrawPathHandler) {
+            this.canvas.off('path:created', this._freeDrawPathHandler);
+            this._freeDrawPathHandler = null;
+        }
+
+        this.setStatus('ציור חופשי הסתיים', 'editing');
     }
 
     // ============================================

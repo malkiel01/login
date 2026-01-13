@@ -4818,18 +4818,25 @@ class MapEditor {
             ? this.childrenPanel.selectedChild.id
             : null;
 
+        // Get items to find plot polygon data
+        const items = this.childrenPanel.showDescendants
+            ? this.childrenPanel.descendants
+            : this.childrenPanel.children;
+
         // Iterate through all plots with areaGraves
         Object.entries(this.areaGraveState.allPlotsAreaGraves).forEach(([plotId, areaGraves]) => {
             if (!areaGraves || areaGraves.length === 0) return;
 
-            // Get the plot boundary
-            const plotBoundary = this.childrenPanel.childBoundaries[plotId];
-            if (!plotBoundary) {
-                console.warn(`No boundary found for plot ${plotId}`);
+            // Find the plot data with polygon points
+            const plotData = items.find(item => item.id === plotId && item.type === 'plot');
+            if (!plotData || !plotData.polygon) {
+                console.warn(`No polygon data found for plot ${plotId}`);
                 return;
             }
 
-            const plotBounds = plotBoundary.getBoundingRect();
+            // Calculate bounding box directly from polygon points
+            const points = plotData.polygon.points || plotData.polygon;
+            const plotBounds = this.calculateBoundingBox(points);
             const isSelectedPlot = plotId === selectedPlotId;
 
             // Create rectangles for each areaGrave
@@ -4866,15 +4873,12 @@ class MapEditor {
 
         if (!this.areaGraveState.areaGraves.length) return;
 
-        // Get the plot boundary for positioning
-        const plotBoundary = this.getPlotBoundaryForAreaGraves();
-        if (!plotBoundary) {
-            console.warn('No plot boundary found for areaGrave rectangles');
+        // Get plot bounds from polygon points
+        const plotBounds = this.getPlotBoundsForAreaGraves();
+        if (!plotBounds) {
+            console.warn('No plot bounds found for areaGrave rectangles');
             return;
         }
-
-        // Get plot bounds
-        const plotBounds = plotBoundary.getBoundingRect();
 
         // Create rectangles for each areaGrave
         this.areaGraveState.areaGraves.forEach((areaGrave, index) => {
@@ -4889,6 +4893,33 @@ class MapEditor {
     }
 
     /**
+     * Calculate bounding box from polygon points
+     * Returns {left, top, width, height}
+     */
+    calculateBoundingBox(points) {
+        if (!points || points.length === 0) {
+            return { left: 0, top: 0, width: 0, height: 0 };
+        }
+
+        let minX = Infinity, minY = Infinity;
+        let maxX = -Infinity, maxY = -Infinity;
+
+        points.forEach(point => {
+            if (point.x < minX) minX = point.x;
+            if (point.y < minY) minY = point.y;
+            if (point.x > maxX) maxX = point.x;
+            if (point.y > maxY) maxY = point.y;
+        });
+
+        return {
+            left: minX,
+            top: minY,
+            width: maxX - minX,
+            height: maxY - minY
+        };
+    }
+
+    /**
      * Get plot boundary for areaGrave positioning
      */
     getPlotBoundaryForAreaGraves() {
@@ -4900,6 +4931,37 @@ class MapEditor {
         // Otherwise, look for selected child boundary
         if (this.childrenPanel.selectedChild) {
             return this.childrenPanel.childBoundaries[this.childrenPanel.selectedChild.id];
+        }
+
+        return null;
+    }
+
+    /**
+     * Get plot bounding box for areaGrave positioning
+     * Returns {left, top, width, height} calculated from polygon points
+     */
+    getPlotBoundsForAreaGraves() {
+        // If we're viewing a plot, use its boundary points
+        if (this.config.entityType === 'plot' && this.boundary) {
+            // Get points from the fabric polygon
+            const points = this.boundary.points;
+            return this.calculateBoundingBox(points);
+        }
+
+        // Otherwise, look for selected child's polygon data
+        if (this.childrenPanel.selectedChild?.type === 'plot') {
+            const items = this.childrenPanel.showDescendants
+                ? this.childrenPanel.descendants
+                : this.childrenPanel.children;
+
+            const plotData = items.find(item =>
+                item.id === this.childrenPanel.selectedChild.id && item.type === 'plot'
+            );
+
+            if (plotData?.polygon) {
+                const points = plotData.polygon.points || plotData.polygon;
+                return this.calculateBoundingBox(points);
+            }
         }
 
         return null;

@@ -3098,7 +3098,9 @@ class MapEditor {
             this.elements.btnSave.disabled = true;
             this.setStatus('שומר...');
 
+            console.log('[MapEditor] saveMapData - preparing data...');
             const mapData = this.getMapData();
+            console.log('[MapEditor] saveMapData - data prepared, sending to server...');
 
             const response = await fetch(`${this.config.apiBase}map-data.php`, {
                 method: 'POST',
@@ -3111,7 +3113,9 @@ class MapEditor {
                 })
             });
 
+            console.log('[MapEditor] saveMapData - response received, status:', response.status);
             const result = await response.json();
+            console.log('[MapEditor] saveMapData - result:', result);
 
             if (result.success) {
                 this.setStatus('נשמר בהצלחה!', 'success');
@@ -3139,8 +3143,11 @@ class MapEditor {
 
         // Background data
         if (this.backgroundImage) {
+            console.log('[MapEditor] getMapData - converting background to dataURL...');
+            const bgDataUrl = this.backgroundImage.toDataURL();
+            console.log('[MapEditor] getMapData - background dataURL length:', bgDataUrl.length);
             mapData.background = {
-                src: this.backgroundImage.toDataURL(),
+                src: bgDataUrl,
                 left: this.backgroundImage.left,
                 top: this.backgroundImage.top,
                 scaleX: this.backgroundImage.scaleX,

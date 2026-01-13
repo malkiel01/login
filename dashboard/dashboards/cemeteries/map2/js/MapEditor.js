@@ -2064,15 +2064,10 @@ class MapEditor {
     // ============================================
 
     reorderLayers() {
-        // Order: background -> child boundaries -> boundary -> gray mask -> anchor points
+        // Order: background -> boundary -> gray mask -> child boundaries -> anchor points
         if (this.backgroundImage) {
             this.canvas.sendToBack(this.backgroundImage);
         }
-
-        // Child boundaries should be above background but below parent boundary
-        Object.values(this.childrenPanel.childBoundaries).forEach(polygon => {
-            this.canvas.bringToFront(polygon);
-        });
 
         if (this.boundary) {
             this.canvas.bringToFront(this.boundary);
@@ -2081,6 +2076,11 @@ class MapEditor {
         if (this.grayMask) {
             this.canvas.bringToFront(this.grayMask);
         }
+
+        // Child boundaries should be ABOVE gray mask so they're visible
+        Object.values(this.childrenPanel.childBoundaries).forEach(polygon => {
+            this.canvas.bringToFront(polygon);
+        });
 
         this.anchorPoints.forEach(point => {
             this.canvas.bringToFront(point);

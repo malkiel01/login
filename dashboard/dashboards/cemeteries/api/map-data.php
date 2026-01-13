@@ -50,10 +50,21 @@ try {
         $parentType = $_GET['parentType'] ?? '';
         $parentId = $_GET['parentId'] ?? '';
     } else {
-        $input = json_decode(file_get_contents('php://input'), true);
-        $action = $input['action'] ?? '';
-        $type = $input['type'] ?? '';
-        $id = $input['id'] ?? '';
+        // Check if this is a file upload (multipart/form-data) or JSON
+        $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
+        if (strpos($contentType, 'multipart/form-data') !== false) {
+            // File upload - read from $_POST
+            $action = $_POST['action'] ?? '';
+            $type = $_POST['type'] ?? '';
+            $id = $_POST['id'] ?? '';
+            $input = $_POST;
+        } else {
+            // JSON data
+            $input = json_decode(file_get_contents('php://input'), true);
+            $action = $input['action'] ?? '';
+            $type = $input['type'] ?? '';
+            $id = $input['id'] ?? '';
+        }
         $mapData = $input['mapData'] ?? null;
         $childType = $input['childType'] ?? '';
         $childId = $input['childId'] ?? '';
@@ -141,6 +152,23 @@ try {
                 throw new Exception('חסרים נתונים');
             }
             $result = saveAreaGravePosition($areaGraveId, $position);
+            echo json_encode($result);
+            break;
+
+        case 'uploadBackgroundImage':
+            // Handle file upload for background images
+            // This uses multipart/form-data, so we read from $_POST and $_FILES
+            $entityType = $_POST['entityType'] ?? '';
+            $entityId = $_POST['entityId'] ?? '';
+
+            if (!$entityType || !$entityId) {
+                throw new Exception('חסרים פרטי ישות');
+            }
+            if (!isset($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
+                throw new Exception('שגיאה בהעלאת הקובץ');
+            }
+
+            $result = uploadBackgroundImage($entityType, $entityId, $_FILES['image']);
             echo json_encode($result);
             break;
 
@@ -819,5 +847,62 @@ function saveAreaGravePosition($areaGraveId, $position) {
         'success' => true,
         'message' => 'המיקום נשמר בהצלחה',
         'position' => $validPosition
+    ];
+}
+
+/**
+ * Upload background image for map editor
+ * Stores the image file on the server and returns the URL path
+ */
+function uploadBackgroundImage($entityType, $entityId, $file) {
+    global $entityTables;
+
+    // Validate entity type
+    if (!isset($entityTables[$entityType])) {
+        throw new Exception('סוג ישות לא חוקי: ' . $entityType);
+    }
+
+    // Validate file type
+    $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+    $mimeType = finfo_file($finfo, $file['tmp_name']);
+    finfo_close($finfo);
+
+    if (!in_array($mimeType, $allowedTypes)) {
+        throw new Exception('סוג קובץ לא נתמך. יש להעלות תמונה (JPEG, PNG, GIF, WebP)');
+    }
+
+    // Create uploads directory if not exists
+    $uploadsDir = dirname(__DIR__) . '/map2/uploads/backgrounds';
+    if (!is_dir($uploadsDir)) {
+        if (!mkdir($uploadsDir, 0755, true)) {
+            throw new Exception('שגיאה ביצירת תיקיית ההעלאות');
+        }
+    }
+
+    // Generate unique filename
+    $extension = match($mimeType) {
+        'image/jpeg' => 'jpg',
+        'image/png' => 'png',
+        'image/gif' => 'gif',
+        'image/webp' => 'webp',
+        default => 'jpg'
+    };
+    $filename = "{$entityType}_{$entityId}_" . time() . ".{$extension}";
+    $filepath = $uploadsDir . '/' . $filename;
+
+    // Move uploaded file
+    if (!move_uploaded_file($file['tmp_name'], $filepath)) {
+        throw new Exception('שגיאה בשמירת הקובץ');
+    }
+
+    // Return relative URL path (from map2 directory)
+    $relativePath = "uploads/backgrounds/{$filename}";
+
+    return [
+        'success' => true,
+        'message' => 'התמונה הועלתה בהצלחה',
+        'imagePath' => $relativePath,
+        'fullUrl' => $relativePath
     ];
 }

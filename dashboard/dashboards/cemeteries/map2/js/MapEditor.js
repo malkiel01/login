@@ -17,6 +17,7 @@ class MapEditor {
         this.boundaryPoints = [];       // Points array while drawing
         this.grayMask = null;           // Gray mask outside boundary
         this.backgroundImage = null;    // Background image object
+        this.backgroundImageServerPath = null; // Server path for background image (preserves full quality)
         this.anchorPoints = [];         // Anchor point circles for editing
         this.previewLine = null;        // Preview line while drawing
         this.contextMenu = null;        // Context menu element
@@ -1852,16 +1853,41 @@ class MapEditor {
         this.elements.fileInput.value = '';
     }
 
-    handleImageFile(file) {
-        const reader = new FileReader();
+    async handleImageFile(file) {
+        this.setStatus('מעלה תמונה...');
 
-        reader.onload = (e) => {
-            fabric.Image.fromURL(e.target.result, (img) => {
-                this.setBackgroundImage(img);
+        try {
+            // Upload the original file to the server (preserves full quality)
+            const formData = new FormData();
+            formData.append('action', 'uploadBackgroundImage');
+            formData.append('entityType', this.config.entityType);
+            formData.append('entityId', this.config.entityId);
+            formData.append('image', file);
+
+            const response = await fetch(`${this.config.apiBase}map-data.php`, {
+                method: 'POST',
+                body: formData
             });
-        };
 
-        reader.readAsDataURL(file);
+            const result = await response.json();
+
+            if (!result.success) {
+                throw new Error(result.error || 'שגיאה בהעלאת התמונה');
+            }
+
+            // Load the image from the server path
+            const serverPath = result.imagePath;
+            const fullUrl = `${this.config.apiBase.replace('api/', '')}map2/${serverPath}`;
+
+            fabric.Image.fromURL(fullUrl, (img) => {
+                this.setBackgroundImage(img, serverPath);
+            }, { crossOrigin: 'anonymous' });
+
+        } catch (error) {
+            console.error('Error uploading image:', error);
+            this.setStatus('שגיאה בהעלאת התמונה', 'error');
+            alert('שגיאה בהעלאת התמונה: ' + error.message);
+        }
     }
 
     async handlePdfFile(file) {
@@ -1939,7 +1965,7 @@ class MapEditor {
         this.elements.pdfModal.style.display = 'none';
     }
 
-    setBackgroundImage(img) {
+    setBackgroundImage(img, serverPath = null) {
         // Remove existing background
         if (this.backgroundImage) {
             this.canvas.remove(this.backgroundImage);
@@ -1961,6 +1987,9 @@ class MapEditor {
             evented: false,
             isBackgroundImage: true
         });
+
+        // Store server path for saving (preserves full quality)
+        this.backgroundImageServerPath = serverPath;
 
         this.backgroundImage = img;
         this.canvas.add(img);
@@ -2016,6 +2045,7 @@ class MapEditor {
 
         this.canvas.remove(this.backgroundImage);
         this.backgroundImage = null;
+        this.backgroundImageServerPath = null;
 
         this.canvas.renderAll();
         this.updateUIState();
@@ -3064,8 +3094,23 @@ class MapEditor {
         }
 
         // Restore background image
-        if (mapData.background && mapData.background.src) {
-            fabric.Image.fromURL(mapData.background.src, (img) => {
+        if (mapData.background && (mapData.background.serverPath || mapData.background.src)) {
+            // Determine the image source URL
+            let imageSrc;
+            let serverPath = null;
+
+            if (mapData.background.serverPath) {
+                // Server path (preferred - full quality)
+                serverPath = mapData.background.serverPath;
+                imageSrc = `${this.config.apiBase.replace('api/', '')}map2/${serverPath}`;
+                console.log('[MapEditor] Loading background from server path:', imageSrc);
+            } else {
+                // Base64 data URL (legacy/fallback)
+                imageSrc = mapData.background.src;
+                console.log('[MapEditor] Loading background from base64 (legacy)');
+            }
+
+            fabric.Image.fromURL(imageSrc, (img) => {
                 img.set({
                     left: mapData.background.left || this.canvas.width / 2,
                     top: mapData.background.top || this.canvas.height / 2,
@@ -3080,9 +3125,10 @@ class MapEditor {
                 });
 
                 this.backgroundImage = img;
+                this.backgroundImageServerPath = serverPath;
                 this.canvas.add(img);
                 this.reorderLayers();
-            });
+            }, { crossOrigin: 'anonymous' });
         }
 
         this.updateUIState();
@@ -3141,19 +3187,27 @@ class MapEditor {
             };
         }
 
-        // Background data - compress to reasonable size
+        // Background data - use server path if available (preserves full quality)
         if (this.backgroundImage) {
-            console.log('[MapEditor] getMapData - compressing background image...');
-            const bgDataUrl = this.compressBackgroundImage(this.backgroundImage);
-            console.log('[MapEditor] getMapData - compressed dataURL length:', bgDataUrl.length);
             mapData.background = {
-                src: bgDataUrl,
                 left: this.backgroundImage.left,
                 top: this.backgroundImage.top,
                 scaleX: this.backgroundImage.scaleX,
                 scaleY: this.backgroundImage.scaleY,
                 angle: this.backgroundImage.angle || 0
             };
+
+            if (this.backgroundImageServerPath) {
+                // Use server path (preferred - full quality)
+                mapData.background.serverPath = this.backgroundImageServerPath;
+                console.log('[MapEditor] getMapData - using server path:', this.backgroundImageServerPath);
+            } else {
+                // Fallback: compress and embed as base64 (for backwards compatibility)
+                console.log('[MapEditor] getMapData - no server path, compressing image...');
+                const bgDataUrl = this.compressBackgroundImage(this.backgroundImage);
+                console.log('[MapEditor] getMapData - compressed dataURL length:', bgDataUrl.length);
+                mapData.background.src = bgDataUrl;
+            }
         }
 
         return mapData;

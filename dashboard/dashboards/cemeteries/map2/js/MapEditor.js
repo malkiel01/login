@@ -4628,7 +4628,7 @@ class MapEditor {
         try {
             this.setStatus('טוען אחוזות קבר...');
 
-            const response = await fetch(`${this.apiBase}map-data.php?action=getAreaGravesWithDetails&plotId=${plotId}`);
+            const response = await fetch(`${this.config.apiBase}map-data.php?action=getAreaGravesWithDetails&plotId=${plotId}`);
             const data = await response.json();
 
             if (!data.success) {
@@ -4974,7 +4974,7 @@ class MapEditor {
         const position = this.convertToPlotCoordinates(rect, plotBounds);
 
         try {
-            const response = await fetch(`${this.apiBase}map-data.php`, {
+            const response = await fetch(`${this.config.apiBase}map-data.php`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

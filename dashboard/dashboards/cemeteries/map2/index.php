@@ -140,67 +140,6 @@ $entityName = $_GET['name'] ?? '';
                         </div>
                     </div>
 
-                    <!-- Windows menu -->
-                    <div class="dropdown">
-                        <button class="btn-dropdown" id="btnWindowsMenu">
-                            <svg viewBox="0 0 24 24" width="18" height="18">
-                                <path fill="currentColor" d="M4 4h7v7H4V4zm9 0h7v7h-7V4zm-9 9h7v7H4v-7zm9 0h7v7h-7v-7z"/>
-                            </svg>
-                            <span>חלונות</span>
-                            <svg class="arrow" viewBox="0 0 24 24" width="16" height="16">
-                                <path fill="currentColor" d="M7 10l5 5 5-5z"/>
-                            </svg>
-                        </button>
-                        <div class="dropdown-menu" id="windowsMenu">
-                            <button class="dropdown-item" id="btnTextStylePanel" data-panel="textStyle">
-                                <svg viewBox="0 0 24 24" width="16" height="16">
-                                    <path fill="currentColor" d="M9.93 13.5h4.14L12 7.98 9.93 13.5zM20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-4.05 16.5l-1.14-3H9.17l-1.12 3H5.96l5.11-13h1.86l5.11 13h-2.09z"/>
-                                </svg>
-                                <span>עיצוב כתב</span>
-                                <svg class="check-icon" viewBox="0 0 24 24" width="14" height="14" style="margin-right: auto; display: none;">
-                                    <path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                                </svg>
-                            </button>
-                            <button class="dropdown-item" id="btnElementStylePanel" data-panel="elementStyle">
-                                <svg viewBox="0 0 24 24" width="16" height="16">
-                                    <path fill="currentColor" d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
-                                </svg>
-                                <span>עיצוב אלמנטים</span>
-                                <svg class="check-icon" viewBox="0 0 24 24" width="14" height="14" style="margin-right: auto; display: none;">
-                                    <path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                                </svg>
-                            </button>
-                            <button class="dropdown-item" id="btnLayersPanel" data-panel="layers">
-                                <svg viewBox="0 0 24 24" width="16" height="16">
-                                    <path fill="currentColor" d="M11.99 18.54l-7.37-5.73L3 14.07l9 7 9-7-1.63-1.27-7.38 5.74zM12 16l7.36-5.73L21 9l-9-7-9 7 1.63 1.27L12 16z"/>
-                                </svg>
-                                <span>שכבות</span>
-                                <svg class="check-icon" viewBox="0 0 24 24" width="14" height="14" style="margin-right: auto; display: none;">
-                                    <path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                                </svg>
-                            </button>
-                            <div class="dropdown-divider"></div>
-                            <button class="dropdown-item" id="btnChildrenPanel" data-panel="children">
-                                <svg viewBox="0 0 24 24" width="16" height="16">
-                                    <path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
-                                </svg>
-                                <span>ילדים</span>
-                                <svg class="check-icon" viewBox="0 0 24 24" width="14" height="14" style="margin-right: auto; display: none;">
-                                    <path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                                </svg>
-                            </button>
-                            <button class="dropdown-item" id="btnAreaGravePanel" data-panel="areaGrave">
-                                <svg viewBox="0 0 24 24" width="16" height="16">
-                                    <path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2z"/>
-                                </svg>
-                                <span>פרטי אחוזת קבר</span>
-                                <svg class="check-icon" viewBox="0 0 24 24" width="14" height="14" style="margin-right: auto; display: none;">
-                                    <path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-
                     <!-- Save button -->
                     <button class="btn-save" id="btnSave">
                         <svg viewBox="0 0 24 24" width="18" height="18">
@@ -208,6 +147,69 @@ $entityName = $_GET['name'] ?? '';
                         </svg>
                         שמור
                     </button>
+                </div>
+
+                <!-- Windows menu (always visible) -->
+                <div class="dropdown" id="windowsMenuDropdown">
+                    <button class="btn-dropdown" id="btnWindowsMenu">
+                        <svg viewBox="0 0 24 24" width="18" height="18">
+                            <path fill="currentColor" d="M4 4h7v7H4V4zm9 0h7v7h-7V4zm-9 9h7v7H4v-7zm9 0h7v7h-7v-7z"/>
+                        </svg>
+                        <span>חלונות</span>
+                        <svg class="arrow" viewBox="0 0 24 24" width="16" height="16">
+                            <path fill="currentColor" d="M7 10l5 5 5-5z"/>
+                        </svg>
+                    </button>
+                    <div class="dropdown-menu" id="windowsMenu">
+                        <!-- Edit mode only items -->
+                        <button class="dropdown-item edit-mode-only" id="btnTextStylePanel" data-panel="textStyle">
+                            <svg viewBox="0 0 24 24" width="16" height="16">
+                                <path fill="currentColor" d="M9.93 13.5h4.14L12 7.98 9.93 13.5zM20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-4.05 16.5l-1.14-3H9.17l-1.12 3H5.96l5.11-13h1.86l5.11 13h-2.09z"/>
+                            </svg>
+                            <span>עיצוב כתב</span>
+                            <svg class="check-icon" viewBox="0 0 24 24" width="14" height="14" style="margin-right: auto; display: none;">
+                                <path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                            </svg>
+                        </button>
+                        <button class="dropdown-item edit-mode-only" id="btnElementStylePanel" data-panel="elementStyle">
+                            <svg viewBox="0 0 24 24" width="16" height="16">
+                                <path fill="currentColor" d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+                            </svg>
+                            <span>עיצוב אלמנטים</span>
+                            <svg class="check-icon" viewBox="0 0 24 24" width="14" height="14" style="margin-right: auto; display: none;">
+                                <path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                            </svg>
+                        </button>
+                        <button class="dropdown-item edit-mode-only" id="btnLayersPanel" data-panel="layers">
+                            <svg viewBox="0 0 24 24" width="16" height="16">
+                                <path fill="currentColor" d="M11.99 18.54l-7.37-5.73L3 14.07l9 7 9-7-1.63-1.27-7.38 5.74zM12 16l7.36-5.73L21 9l-9-7-9 7 1.63 1.27L12 16z"/>
+                            </svg>
+                            <span>שכבות</span>
+                            <svg class="check-icon" viewBox="0 0 24 24" width="14" height="14" style="margin-right: auto; display: none;">
+                                <path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                            </svg>
+                        </button>
+                        <div class="dropdown-divider edit-mode-only"></div>
+                        <!-- Always visible items -->
+                        <button class="dropdown-item" id="btnChildrenPanel" data-panel="children">
+                            <svg viewBox="0 0 24 24" width="16" height="16">
+                                <path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                            </svg>
+                            <span>ילדים</span>
+                            <svg class="check-icon" viewBox="0 0 24 24" width="14" height="14" style="margin-right: auto; display: none;">
+                                <path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                            </svg>
+                        </button>
+                        <button class="dropdown-item" id="btnAreaGravePanel" data-panel="areaGrave">
+                            <svg viewBox="0 0 24 24" width="16" height="16">
+                                <path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2z"/>
+                            </svg>
+                            <span>פרטי אחוזת קבר</span>
+                            <svg class="check-icon" viewBox="0 0 24 24" width="14" height="14" style="margin-right: auto; display: none;">
+                                <path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

@@ -155,6 +155,9 @@ class MapEditor {
         // Update UI state
         this.updateUIState();
 
+        // Hide edit-mode-only Windows menu items (not in edit mode initially)
+        this.updateWindowsMenuItems();
+
         console.log('MapEditor v2 ready!');
         this.setStatus('מוכן');
     }
@@ -1170,11 +1173,24 @@ class MapEditor {
             if (this.isEditingBackground) this.toggleBackgroundEditing();
         }
 
+        // Update Windows menu - show/hide edit-mode-only items
+        this.updateWindowsMenuItems();
+
         // Update layer visibility based on edit mode and zoom
         this.updateLayerVisibility();
 
         this.updateUIState();
         this.setStatus(this.isEditMode ? 'מצב עריכה פעיל' : 'מצב צפייה');
+    }
+
+    /**
+     * Update Windows menu visibility based on edit mode
+     */
+    updateWindowsMenuItems() {
+        const editOnlyItems = document.querySelectorAll('#windowsMenu .edit-mode-only');
+        editOnlyItems.forEach(item => {
+            item.style.display = this.isEditMode ? '' : 'none';
+        });
     }
 
     // ============================================

@@ -4909,7 +4909,7 @@ class MapEditor {
      * Get position for an areaGrave rectangle
      */
     getAreaGravePosition(areaGrave, plotBounds, index) {
-        // If areaGrave has saved position, use it (check both position and mapPolygon fields)
+        // If areaGrave has saved position, use it directly (absolute canvas coordinates)
         const savedPosition = areaGrave.position || areaGrave.mapPolygon;
         if (savedPosition) {
             try {
@@ -4917,22 +4917,38 @@ class MapEditor {
                     ? JSON.parse(savedPosition)
                     : savedPosition;
 
-                // Convert from bottom-right origin to canvas coordinates
-                return this.convertFromPlotCoordinates(saved, plotBounds);
+                // Use absolute coordinates directly (no conversion)
+                return {
+                    x: saved.x,
+                    y: saved.y,
+                    width: saved.width || this.areaGraveState.defaultWidth,
+                    height: saved.height || this.areaGraveState.defaultHeight,
+                    angle: saved.angle || 0
+                };
             } catch (e) {
                 console.warn('Invalid position data for areaGrave:', areaGrave.id);
             }
         }
 
-        // Default: position in center, offset by index to avoid overlap
-        const offsetX = (index % 10) * (this.areaGraveState.defaultWidth + 2);
-        const offsetY = Math.floor(index / 10) * (this.areaGraveState.defaultHeight + 2);
+        // Default: position inside plot, grid layout
+        const cols = 5;
+        const spacing = 2;
+        const rectWidth = this.areaGraveState.defaultWidth;
+        const rectHeight = this.areaGraveState.defaultHeight;
+
+        const col = index % cols;
+        const row = Math.floor(index / cols);
+
+        // Start from top-left corner of plot, with some padding
+        const padding = 10;
+        const x = plotBounds.left + padding + col * (rectWidth + spacing);
+        const y = plotBounds.top + padding + row * (rectHeight + spacing);
 
         return {
-            x: plotBounds.left + plotBounds.width / 2 - offsetX,
-            y: plotBounds.top + plotBounds.height / 2 - offsetY,
-            width: this.areaGraveState.defaultWidth,
-            height: this.areaGraveState.defaultHeight,
+            x: x,
+            y: y,
+            width: rectWidth,
+            height: rectHeight,
             angle: 0
         };
     }
@@ -5107,22 +5123,18 @@ class MapEditor {
 
         // Get rectangle for position info
         const rect = this.areaGraveState.rectangles[selected.id];
-        const plotBoundary = this.getPlotBoundaryForAreaGraves();
 
         // Update basic info
         if (nameEl) nameEl.textContent = selected.name || selected.id;
         if (rowEl) rowEl.textContent = selected.rowName || '-';
 
-        // Update position info
-        if (rect && plotBoundary) {
-            const plotBounds = plotBoundary.getBoundingRect();
-            const coords = this.convertToPlotCoordinates(rect, plotBounds);
-
-            if (posXEl) posXEl.value = coords.x;
-            if (posYEl) posYEl.value = coords.y;
-            if (widthEl) widthEl.value = coords.width;
-            if (heightEl) heightEl.value = coords.height;
-            if (angleEl) angleEl.value = coords.angle;
+        // Update position info (absolute canvas coordinates)
+        if (rect) {
+            if (posXEl) posXEl.value = Math.round(rect.left);
+            if (posYEl) posYEl.value = Math.round(rect.top);
+            if (widthEl) widthEl.value = Math.round(rect.width * rect.scaleX);
+            if (heightEl) heightEl.value = Math.round(rect.height * rect.scaleY);
+            if (angleEl) angleEl.value = Math.round(rect.angle);
         }
 
         // Update graves list
@@ -5168,11 +5180,15 @@ class MapEditor {
      * Save areaGrave position to server
      */
     async saveAreaGravePosition(areaGraveId, rect) {
-        const plotBoundary = this.getPlotBoundaryForAreaGraves();
-        if (!plotBoundary) return;
-
-        const plotBounds = plotBoundary.getBoundingRect();
-        const position = this.convertToPlotCoordinates(rect, plotBounds);
+        // Save absolute canvas coordinates directly
+        const position = {
+            type: 'rectangle',
+            x: Math.round(rect.left),
+            y: Math.round(rect.top),
+            width: Math.round(rect.width * rect.scaleX),
+            height: Math.round(rect.height * rect.scaleY),
+            angle: Math.round(rect.angle)
+        };
 
         try {
             const response = await fetch(`${this.config.apiBase}map-data.php`, {
@@ -5213,22 +5229,13 @@ class MapEditor {
         const rect = this.areaGraveState.rectangles[selected.id];
         if (!rect) return;
 
-        const plotBoundary = this.getPlotBoundaryForAreaGraves();
-        if (!plotBoundary) return;
-
-        const plotBounds = plotBoundary.getBoundingRect();
         const numValue = parseFloat(value) || 0;
 
-        // Get current position
-        const currentPos = this.convertToPlotCoordinates(rect, plotBounds);
-        currentPos[field] = numValue;
-
-        // Convert back to canvas coordinates
-        const canvasPos = this.convertFromPlotCoordinates(currentPos, plotBounds);
-
-        // Update rectangle
-        if (field === 'x' || field === 'y') {
-            rect.set({ left: canvasPos.x, top: canvasPos.y });
+        // Update rectangle with absolute canvas coordinates
+        if (field === 'x') {
+            rect.set({ left: numValue });
+        } else if (field === 'y') {
+            rect.set({ top: numValue });
         } else if (field === 'width') {
             rect.set({ width: numValue, scaleX: 1 });
         } else if (field === 'height') {

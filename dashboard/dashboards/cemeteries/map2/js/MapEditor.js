@@ -3551,6 +3551,9 @@ class MapEditor {
 
             // Add double-click handler to select child
             polygon.on('mousedblclick', () => {
+                // Skip selection if currently drawing a child boundary
+                if (this.childrenPanel.isDrawingChildBoundary) return;
+
                 this.selectChild(child.id, child.type);
                 // Open children panel if not visible
                 if (!this.panels.children.visible) {

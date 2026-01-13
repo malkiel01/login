@@ -189,6 +189,15 @@ $entityName = $_GET['name'] ?? '';
                                     <path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                                 </svg>
                             </button>
+                            <button class="dropdown-item" id="btnAreaGravePanel" data-panel="areaGrave">
+                                <svg viewBox="0 0 24 24" width="16" height="16">
+                                    <path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2z"/>
+                                </svg>
+                                <span>פרטי אחוזת קבר</span>
+                                <svg class="check-icon" viewBox="0 0 24 24" width="14" height="14" style="margin-right: auto; display: none;">
+                                    <path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                </svg>
+                            </button>
                         </div>
                     </div>
 
@@ -337,6 +346,66 @@ $entityName = $_GET['name'] ?? '';
             <!-- No children message -->
             <div class="panel-message" id="childrenEmpty" style="display: none;">
                 אין ילדים להצגה
+            </div>
+        </div>
+    </div>
+
+    <!-- AreaGrave Details Panel -->
+    <div class="floating-panel floating-panel-wide" id="areaGravePanel" style="display: none;">
+        <div class="floating-panel-header">
+            <span class="floating-panel-title">פרטי אחוזת קבר</span>
+            <button class="floating-panel-close" data-panel="areaGrave">&times;</button>
+        </div>
+        <div class="floating-panel-body">
+            <!-- No selection message -->
+            <div class="panel-message" id="areaGraveNoSelection">
+                לחץ פעמיים על מלבן אחוזת קבר לצפייה בפרטים
+            </div>
+
+            <!-- AreaGrave details content -->
+            <div id="areaGraveContent" style="display: none;">
+                <!-- Header info -->
+                <div class="areagrave-header">
+                    <div class="areagrave-title">
+                        <span class="areagrave-name" id="areaGraveName">-</span>
+                        <span class="areagrave-row" id="areaGraveRow">-</span>
+                    </div>
+                </div>
+
+                <!-- Position controls -->
+                <div class="areagrave-position-section">
+                    <h4 class="section-title">מיקום וגודל</h4>
+                    <div class="position-controls">
+                        <div class="position-field">
+                            <label>X</label>
+                            <input type="number" id="areaGraveX" step="1">
+                        </div>
+                        <div class="position-field">
+                            <label>Y</label>
+                            <input type="number" id="areaGraveY" step="1">
+                        </div>
+                        <div class="position-field">
+                            <label>רוחב</label>
+                            <input type="number" id="areaGraveWidth" min="1" step="1">
+                        </div>
+                        <div class="position-field">
+                            <label>גובה</label>
+                            <input type="number" id="areaGraveHeight" min="1" step="1">
+                        </div>
+                        <div class="position-field">
+                            <label>זווית</label>
+                            <input type="number" id="areaGraveAngle" min="0" max="360" step="1">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Graves list -->
+                <div class="areagrave-graves-section">
+                    <h4 class="section-title">רשימת קברים</h4>
+                    <div class="graves-list" id="areaGraveGravesList">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
             </div>
         </div>
     </div>

@@ -26,7 +26,8 @@ class MapEditor {
             textStyle: { visible: false, position: { x: 20, y: 100 }, docked: false, dockSide: null },
             elementStyle: { visible: false, position: { x: 20, y: 100 }, docked: false, dockSide: null },
             layers: { visible: false, position: { x: 20, y: 100 }, docked: false, dockSide: null },
-            children: { visible: false, position: { x: 20, y: 100 }, docked: false, dockSide: null }
+            children: { visible: false, position: { x: 20, y: 100 }, docked: false, dockSide: null },
+            areaGrave: { visible: false, position: { x: 20, y: 100 }, docked: false, dockSide: null }
         };
         this.draggedPanel = null;
         this.dragOffset = { x: 0, y: 0 };
@@ -46,6 +47,22 @@ class MapEditor {
                 block: '#3b82f6',      // Blue
                 plot: '#22c55e',       // Green
                 areaGrave: '#a855f7'   // Purple
+            }
+        };
+
+        // AreaGrave rectangles state
+        this.areaGraveState = {
+            areaGraves: [],            // List of areaGraves with their data
+            rectangles: {},            // Map of areaGraveId → fabric.Rect
+            selectedAreaGrave: null,   // Currently selected areaGrave
+            currentPlotId: null,       // Current plot ID for which rectangles are shown
+            defaultWidth: 9,
+            defaultHeight: 12,
+            statusColors: {
+                1: '#22c55e',          // פנוי - green
+                2: '#3b82f6',          // נרכש - blue
+                3: '#f59e0b',          // שמור - orange
+                4: '#6b7280'           // קבור - gray
             }
         };
 
@@ -74,6 +91,10 @@ class MapEditor {
             children: {
                 title: 'ילדים',
                 icon: '<svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>'
+            },
+            areaGrave: {
+                title: 'פרטי אחוזת קבר',
+                icon: '<svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2z"/></svg>'
             }
         };
 
@@ -98,6 +119,9 @@ class MapEditor {
 
         // Setup event listeners
         this.setupEventListeners();
+
+        // Setup areaGrave panel listeners
+        this.setupAreaGravePanelListeners();
 
         // Load existing map data if entity is selected
         if (this.config.entityId) {
@@ -155,12 +179,14 @@ class MapEditor {
             btnElementStylePanel: document.getElementById('btnElementStylePanel'),
             btnLayersPanel: document.getElementById('btnLayersPanel'),
             btnChildrenPanel: document.getElementById('btnChildrenPanel'),
+            btnAreaGravePanel: document.getElementById('btnAreaGravePanel'),
 
             // Floating panels
             textStylePanel: document.getElementById('textStylePanel'),
             elementStylePanel: document.getElementById('elementStylePanel'),
             layersPanel: document.getElementById('layersPanel'),
             childrenPanel: document.getElementById('childrenPanel'),
+            areaGravePanel: document.getElementById('areaGravePanel'),
 
             // Children panel elements
             childrenToggleContainer: document.getElementById('childrenToggleContainer'),
@@ -170,6 +196,18 @@ class MapEditor {
             childrenListContainer: document.getElementById('childrenListContainer'),
             childrenList: document.getElementById('childrenList'),
             childrenEmpty: document.getElementById('childrenEmpty'),
+
+            // AreaGrave panel elements
+            areaGraveNoSelection: document.getElementById('areaGraveNoSelection'),
+            areaGraveContent: document.getElementById('areaGraveContent'),
+            areaGraveName: document.getElementById('areaGraveName'),
+            areaGraveRow: document.getElementById('areaGraveRow'),
+            areaGraveX: document.getElementById('areaGraveX'),
+            areaGraveY: document.getElementById('areaGraveY'),
+            areaGraveWidth: document.getElementById('areaGraveWidth'),
+            areaGraveHeight: document.getElementById('areaGraveHeight'),
+            areaGraveAngle: document.getElementById('areaGraveAngle'),
+            areaGraveGravesList: document.getElementById('areaGraveGravesList'),
 
             // Text style controls
             textControls: document.getElementById('textControls'),
@@ -304,6 +342,7 @@ class MapEditor {
         this.elements.btnElementStylePanel.addEventListener('click', () => this.togglePanel('elementStyle'));
         this.elements.btnLayersPanel.addEventListener('click', () => this.togglePanel('layers'));
         this.elements.btnChildrenPanel.addEventListener('click', () => this.togglePanel('children'));
+        this.elements.btnAreaGravePanel?.addEventListener('click', () => this.togglePanel('areaGrave'));
 
         // Children panel control buttons are handled via dropdown menus in renderChildrenList()
 
@@ -2070,13 +2109,15 @@ class MapEditor {
             textStyle: this.elements.textStylePanel,
             elementStyle: this.elements.elementStylePanel,
             layers: this.elements.layersPanel,
-            children: this.elements.childrenPanel
+            children: this.elements.childrenPanel,
+            areaGrave: this.elements.areaGravePanel
         };
         const btnMap = {
             textStyle: this.elements.btnTextStylePanel,
             elementStyle: this.elements.btnElementStylePanel,
             layers: this.elements.btnLayersPanel,
-            children: this.elements.btnChildrenPanel
+            children: this.elements.btnChildrenPanel,
+            areaGrave: this.elements.btnAreaGravePanel
         };
 
         const panel = panelMap[panelName];
@@ -2106,6 +2147,8 @@ class MapEditor {
                 this.updateLayersPanel();
             } else if (panelName === 'children') {
                 this.loadChildren();
+            } else if (panelName === 'areaGrave') {
+                this.updateAreaGravePanel();
             } else {
                 this.onSelectionChanged();
             }
@@ -3013,6 +3056,11 @@ class MapEditor {
 
             // Load children boundaries automatically
             this.loadChildren();
+
+            // Load areaGraves if this is a plot
+            if (this.entityType === 'plot') {
+                this.loadAreaGravesForPlot(this.entityId);
+            }
         }
 
         // Restore background image
@@ -3500,6 +3548,14 @@ class MapEditor {
 
         // Highlight boundary on canvas
         this.highlightChildBoundary(childId);
+
+        // Load areaGraves if selecting a plot with boundary
+        if (child && child.type === 'plot' && child.hasPolygon) {
+            this.loadAreaGravesForPlot(childId);
+        } else {
+            // Clear areaGraves if not a plot
+            this.clearAreaGraveRectangles();
+        }
     }
 
     /**
@@ -4557,6 +4613,454 @@ class MapEditor {
     canDeleteParentBoundary() {
         const childrenWithBoundaries = this.childrenPanel.children.filter(c => c.hasPolygon);
         return childrenWithBoundaries.length === 0;
+    }
+
+    // ==========================================
+    // AreaGrave Rectangles Functions
+    // ==========================================
+
+    /**
+     * Load areaGraves for a specific plot
+     */
+    async loadAreaGravesForPlot(plotId) {
+        if (!plotId) return;
+
+        try {
+            this.setStatus('טוען אחוזות קבר...');
+
+            const response = await fetch(`${this.apiBase}map-data.php?action=getAreaGravesWithDetails&plotId=${plotId}`);
+            const data = await response.json();
+
+            if (!data.success) {
+                throw new Error(data.error || 'שגיאה בטעינת נתונים');
+            }
+
+            this.areaGraveState.areaGraves = data.areaGraves || [];
+            this.areaGraveState.currentPlotId = plotId;
+
+            // Render the rectangles on canvas
+            this.renderAreaGraveRectangles();
+
+            this.setStatus(`נטענו ${this.areaGraveState.areaGraves.length} אחוזות קבר`, 'success');
+        } catch (error) {
+            console.error('Error loading areaGraves:', error);
+            this.setStatus('שגיאה בטעינת אחוזות קבר: ' + error.message);
+        }
+    }
+
+    /**
+     * Clear areaGrave rectangles from canvas
+     */
+    clearAreaGraveRectangles() {
+        Object.values(this.areaGraveState.rectangles).forEach(rect => {
+            this.canvas.remove(rect);
+        });
+        this.areaGraveState.rectangles = {};
+        this.areaGraveState.selectedAreaGrave = null;
+    }
+
+    /**
+     * Render areaGrave rectangles on canvas
+     */
+    renderAreaGraveRectangles() {
+        // Clear existing rectangles
+        this.clearAreaGraveRectangles();
+
+        if (!this.areaGraveState.areaGraves.length) return;
+
+        // Get the plot boundary for positioning
+        const plotBoundary = this.getPlotBoundaryForAreaGraves();
+        if (!plotBoundary) {
+            console.warn('No plot boundary found for areaGrave rectangles');
+            return;
+        }
+
+        // Get plot bounds
+        const plotBounds = plotBoundary.getBoundingRect();
+
+        // Create rectangles for each areaGrave
+        this.areaGraveState.areaGraves.forEach((areaGrave, index) => {
+            const position = this.getAreaGravePosition(areaGrave, plotBounds, index);
+            const rect = this.createAreaGraveRectangle(areaGrave, position);
+
+            this.canvas.add(rect);
+            this.areaGraveState.rectangles[areaGrave.id] = rect;
+        });
+
+        this.canvas.renderAll();
+    }
+
+    /**
+     * Get plot boundary for areaGrave positioning
+     */
+    getPlotBoundaryForAreaGraves() {
+        // If we're viewing a plot, use its boundary
+        if (this.entityType === 'plot' && this.boundary) {
+            return this.boundary;
+        }
+
+        // Otherwise, look for selected child boundary
+        if (this.childrenPanel.selectedChild) {
+            return this.childrenPanel.childBoundaries[this.childrenPanel.selectedChild.id];
+        }
+
+        return null;
+    }
+
+    /**
+     * Get position for an areaGrave rectangle
+     */
+    getAreaGravePosition(areaGrave, plotBounds, index) {
+        // If areaGrave has saved position, use it (check both position and mapPolygon fields)
+        const savedPosition = areaGrave.position || areaGrave.mapPolygon;
+        if (savedPosition) {
+            try {
+                const saved = typeof savedPosition === 'string'
+                    ? JSON.parse(savedPosition)
+                    : savedPosition;
+
+                // Convert from bottom-right origin to canvas coordinates
+                return this.convertFromPlotCoordinates(saved, plotBounds);
+            } catch (e) {
+                console.warn('Invalid position data for areaGrave:', areaGrave.id);
+            }
+        }
+
+        // Default: position in center, offset by index to avoid overlap
+        const offsetX = (index % 10) * (this.areaGraveState.defaultWidth + 2);
+        const offsetY = Math.floor(index / 10) * (this.areaGraveState.defaultHeight + 2);
+
+        return {
+            x: plotBounds.left + plotBounds.width / 2 - offsetX,
+            y: plotBounds.top + plotBounds.height / 2 - offsetY,
+            width: this.areaGraveState.defaultWidth,
+            height: this.areaGraveState.defaultHeight,
+            angle: 0
+        };
+    }
+
+    /**
+     * Convert from plot coordinates (0,0 at bottom-right) to canvas coordinates
+     */
+    convertFromPlotCoordinates(saved, plotBounds) {
+        // Plot coordinate system: 0,0 is at bottom-right corner
+        // X increases to the left, Y increases upward
+        const canvasX = plotBounds.left + plotBounds.width - saved.x - (saved.width || this.areaGraveState.defaultWidth);
+        const canvasY = plotBounds.top + plotBounds.height - saved.y - (saved.height || this.areaGraveState.defaultHeight);
+
+        return {
+            x: canvasX,
+            y: canvasY,
+            width: saved.width || this.areaGraveState.defaultWidth,
+            height: saved.height || this.areaGraveState.defaultHeight,
+            angle: saved.angle || 0
+        };
+    }
+
+    /**
+     * Convert from canvas coordinates to plot coordinates (0,0 at bottom-right)
+     */
+    convertToPlotCoordinates(rect, plotBounds) {
+        const canvasX = rect.left;
+        const canvasY = rect.top;
+        const width = rect.width * rect.scaleX;
+        const height = rect.height * rect.scaleY;
+
+        // Convert to bottom-right origin system
+        const plotX = plotBounds.left + plotBounds.width - canvasX - width;
+        const plotY = plotBounds.top + plotBounds.height - canvasY - height;
+
+        return {
+            x: Math.round(plotX * 100) / 100,
+            y: Math.round(plotY * 100) / 100,
+            width: Math.round(width),
+            height: Math.round(height),
+            angle: Math.round(rect.angle)
+        };
+    }
+
+    /**
+     * Create a fabric.Rect for an areaGrave
+     */
+    createAreaGraveRectangle(areaGrave, position) {
+        // Determine fill color based on status
+        const status = this.getAreaGraveStatus(areaGrave);
+        const fillColor = this.areaGraveState.statusColors[status] || '#94a3b8';
+
+        const rect = new fabric.Rect({
+            left: position.x,
+            top: position.y,
+            width: position.width,
+            height: position.height,
+            angle: position.angle,
+            fill: fillColor,
+            stroke: '#1e293b',
+            strokeWidth: 1,
+            originX: 'left',
+            originY: 'top',
+            // Custom properties
+            isAreaGrave: true,
+            areaGraveId: areaGrave.id,
+            areaGraveData: areaGrave,
+            // Interaction settings
+            selectable: true,
+            hasControls: true,
+            hasBorders: true,
+            lockScalingFlip: true,
+            cornerColor: '#3b82f6',
+            cornerSize: 8,
+            transparentCorners: false,
+            cornerStyle: 'circle'
+        });
+
+        // Add event handlers
+        rect.on('selected', () => this.onAreaGraveSelected(areaGrave));
+        rect.on('modified', () => this.onAreaGraveModified(rect, areaGrave));
+        rect.on('mousedblclick', () => this.onAreaGraveDoubleClick(areaGrave));
+
+        return rect;
+    }
+
+    /**
+     * Get the primary status of an areaGrave based on its graves
+     */
+    getAreaGraveStatus(areaGrave) {
+        if (!areaGrave.graves || areaGrave.graves.length === 0) {
+            return 1; // פנוי
+        }
+
+        // Priority: קבור (4) > שמור (3) > נרכש (2) > פנוי (1)
+        const statuses = areaGrave.graves.map(g => g.status || 1);
+        return Math.max(...statuses);
+    }
+
+    /**
+     * Handle areaGrave rectangle selection
+     */
+    onAreaGraveSelected(areaGrave) {
+        this.areaGraveState.selectedAreaGrave = areaGrave;
+        this.updateAreaGravePanel();
+
+        // Show panel if not visible
+        if (!this.panels.areaGrave.visible) {
+            this.togglePanel('areaGrave');
+        }
+    }
+
+    /**
+     * Handle areaGrave rectangle modification (move/resize/rotate)
+     */
+    onAreaGraveModified(rect, areaGrave) {
+        // Update panel with new position
+        this.updateAreaGravePanel();
+
+        // Auto-save position
+        this.saveAreaGravePosition(areaGrave.id, rect);
+    }
+
+    /**
+     * Handle double-click on areaGrave rectangle
+     */
+    onAreaGraveDoubleClick(areaGrave) {
+        this.areaGraveState.selectedAreaGrave = areaGrave;
+
+        // Open panel if not visible
+        if (!this.panels.areaGrave.visible) {
+            this.togglePanel('areaGrave');
+        } else {
+            this.updateAreaGravePanel();
+        }
+    }
+
+    /**
+     * Update the areaGrave details panel
+     */
+    updateAreaGravePanel() {
+        const panel = this.elements.areaGravePanel;
+        if (!panel) return;
+
+        const selected = this.areaGraveState.selectedAreaGrave;
+
+        // Get panel elements
+        const nameEl = panel.querySelector('#areaGraveName');
+        const rowEl = panel.querySelector('#areaGraveRow');
+        const posXEl = panel.querySelector('#areaGraveX');
+        const posYEl = panel.querySelector('#areaGraveY');
+        const widthEl = panel.querySelector('#areaGraveWidth');
+        const heightEl = panel.querySelector('#areaGraveHeight');
+        const angleEl = panel.querySelector('#areaGraveAngle');
+        const gravesListEl = panel.querySelector('#areaGraveGravesList');
+        const noSelectionEl = panel.querySelector('#areaGraveNoSelection');
+        const detailsEl = panel.querySelector('#areaGraveContent');
+
+        if (!selected) {
+            // No selection
+            if (noSelectionEl) noSelectionEl.style.display = 'block';
+            if (detailsEl) detailsEl.style.display = 'none';
+            return;
+        }
+
+        // Show details
+        if (noSelectionEl) noSelectionEl.style.display = 'none';
+        if (detailsEl) detailsEl.style.display = 'block';
+
+        // Get rectangle for position info
+        const rect = this.areaGraveState.rectangles[selected.id];
+        const plotBoundary = this.getPlotBoundaryForAreaGraves();
+
+        // Update basic info
+        if (nameEl) nameEl.textContent = selected.name || selected.id;
+        if (rowEl) rowEl.textContent = selected.rowName || '-';
+
+        // Update position info
+        if (rect && plotBoundary) {
+            const plotBounds = plotBoundary.getBoundingRect();
+            const coords = this.convertToPlotCoordinates(rect, plotBounds);
+
+            if (posXEl) posXEl.value = coords.x;
+            if (posYEl) posYEl.value = coords.y;
+            if (widthEl) widthEl.value = coords.width;
+            if (heightEl) heightEl.value = coords.height;
+            if (angleEl) angleEl.value = coords.angle;
+        }
+
+        // Update graves list
+        if (gravesListEl) {
+            this.renderGravesList(gravesListEl, selected.graves || []);
+        }
+    }
+
+    /**
+     * Render the list of graves in the panel
+     */
+    renderGravesList(container, graves) {
+        if (!graves.length) {
+            container.innerHTML = '<div class="graves-empty">אין קברים באחוזה זו</div>';
+            return;
+        }
+
+        const statusLabels = {
+            1: 'פנוי',
+            2: 'נרכש',
+            3: 'שמור',
+            4: 'קבור'
+        };
+
+        container.innerHTML = graves.map(grave => {
+            const customerName = grave.customer?.name || '';
+            const customerType = grave.customer?.type || '';
+            const isBuried = grave.status === 4 || customerType === 'קבור';
+
+            return `
+                <div class="grave-item">
+                    <div class="grave-info">
+                        <span class="grave-number">קבר ${grave.name || grave.id}</span>
+                        <span class="grave-status status-${grave.status || 1}">${statusLabels[grave.status || 1]}</span>
+                    </div>
+                    ${customerName ? `<div class="grave-customer">${isBuried ? 'נפטר: ' : ''}${customerName}</div>` : ''}
+                </div>
+            `;
+        }).join('');
+    }
+
+    /**
+     * Save areaGrave position to server
+     */
+    async saveAreaGravePosition(areaGraveId, rect) {
+        const plotBoundary = this.getPlotBoundaryForAreaGraves();
+        if (!plotBoundary) return;
+
+        const plotBounds = plotBoundary.getBoundingRect();
+        const position = this.convertToPlotCoordinates(rect, plotBounds);
+
+        try {
+            const response = await fetch(`${this.apiBase}map-data.php`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'saveAreaGravePosition',
+                    areaGraveId: areaGraveId,
+                    position: position
+                })
+            });
+
+            const data = await response.json();
+            if (!data.success) {
+                throw new Error(data.error || 'שגיאה בשמירה');
+            }
+
+            // Update local data
+            const areaGrave = this.areaGraveState.areaGraves.find(ag => ag.id === areaGraveId);
+            if (areaGrave) {
+                areaGrave.mapPolygon = position;
+            }
+
+            this.setStatus('מיקום נשמר', 'success');
+        } catch (error) {
+            console.error('Error saving areaGrave position:', error);
+            this.setStatus('שגיאה בשמירת מיקום: ' + error.message);
+        }
+    }
+
+    /**
+     * Handle position input changes from panel
+     */
+    onAreaGravePositionChange(field, value) {
+        const selected = this.areaGraveState.selectedAreaGrave;
+        if (!selected) return;
+
+        const rect = this.areaGraveState.rectangles[selected.id];
+        if (!rect) return;
+
+        const plotBoundary = this.getPlotBoundaryForAreaGraves();
+        if (!plotBoundary) return;
+
+        const plotBounds = plotBoundary.getBoundingRect();
+        const numValue = parseFloat(value) || 0;
+
+        // Get current position
+        const currentPos = this.convertToPlotCoordinates(rect, plotBounds);
+        currentPos[field] = numValue;
+
+        // Convert back to canvas coordinates
+        const canvasPos = this.convertFromPlotCoordinates(currentPos, plotBounds);
+
+        // Update rectangle
+        if (field === 'x' || field === 'y') {
+            rect.set({ left: canvasPos.x, top: canvasPos.y });
+        } else if (field === 'width') {
+            rect.set({ width: numValue, scaleX: 1 });
+        } else if (field === 'height') {
+            rect.set({ height: numValue, scaleY: 1 });
+        } else if (field === 'angle') {
+            rect.set({ angle: numValue });
+        }
+
+        rect.setCoords();
+        this.canvas.renderAll();
+
+        // Save position
+        this.saveAreaGravePosition(selected.id, rect);
+    }
+
+    /**
+     * Setup event listeners for areaGrave panel inputs
+     */
+    setupAreaGravePanelListeners() {
+        const panel = this.elements.areaGravePanel;
+        if (!panel) return;
+
+        const inputs = ['X', 'Y', 'Width', 'Height', 'Angle'];
+        const fields = ['x', 'y', 'width', 'height', 'angle'];
+
+        inputs.forEach((inputSuffix, idx) => {
+            const input = panel.querySelector(`#areaGrave${inputSuffix}`);
+            if (input) {
+                input.addEventListener('change', (e) => {
+                    this.onAreaGravePositionChange(fields[idx], e.target.value);
+                });
+            }
+        });
     }
 }
 

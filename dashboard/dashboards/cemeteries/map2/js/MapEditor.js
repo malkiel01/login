@@ -4411,7 +4411,11 @@ class MapEditor {
      * Save child polygon to server
      */
     async saveChildPolygon(childId, polygon) {
-        const child = this.childrenPanel.children.find(c => c.id === childId);
+        // Search in both children and descendants arrays
+        let child = this.childrenPanel.children.find(c => c.id === childId);
+        if (!child && this.childrenPanel.descendants) {
+            child = this.childrenPanel.descendants.find(c => c.id === childId);
+        }
         if (!child) throw new Error('ילד לא נמצא');
 
         const response = await fetch(`${this.config.apiBase}map-data.php`, {

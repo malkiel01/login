@@ -3141,11 +3141,11 @@ class MapEditor {
             };
         }
 
-        // Background data
+        // Background data - compress to reasonable size
         if (this.backgroundImage) {
-            console.log('[MapEditor] getMapData - converting background to dataURL...');
-            const bgDataUrl = this.backgroundImage.toDataURL();
-            console.log('[MapEditor] getMapData - background dataURL length:', bgDataUrl.length);
+            console.log('[MapEditor] getMapData - compressing background image...');
+            const bgDataUrl = this.compressBackgroundImage(this.backgroundImage);
+            console.log('[MapEditor] getMapData - compressed dataURL length:', bgDataUrl.length);
             mapData.background = {
                 src: bgDataUrl,
                 left: this.backgroundImage.left,
@@ -3157,6 +3157,45 @@ class MapEditor {
         }
 
         return mapData;
+    }
+
+    /**
+     * Compress background image to reasonable size for storage
+     * Max dimension: 2000px, JPEG quality: 0.7
+     */
+    compressBackgroundImage(fabricImg) {
+        const MAX_DIMENSION = 2000;
+        const JPEG_QUALITY = 0.7;
+
+        // Get original dimensions
+        const origWidth = fabricImg.width;
+        const origHeight = fabricImg.height;
+
+        // Calculate scale factor
+        let scale = 1;
+        if (origWidth > MAX_DIMENSION || origHeight > MAX_DIMENSION) {
+            scale = Math.min(MAX_DIMENSION / origWidth, MAX_DIMENSION / origHeight);
+        }
+
+        const newWidth = Math.round(origWidth * scale);
+        const newHeight = Math.round(origHeight * scale);
+
+        // Create canvas for compression
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = newWidth;
+        tempCanvas.height = newHeight;
+        const ctx = tempCanvas.getContext('2d');
+
+        // Draw the image scaled
+        const imgElement = fabricImg.getElement();
+        ctx.drawImage(imgElement, 0, 0, newWidth, newHeight);
+
+        // Convert to JPEG with compression
+        const compressedDataUrl = tempCanvas.toDataURL('image/jpeg', JPEG_QUALITY);
+
+        console.log(`[MapEditor] Image compressed: ${origWidth}x${origHeight} -> ${newWidth}x${newHeight}`);
+
+        return compressedDataUrl;
     }
 
     // ============================================

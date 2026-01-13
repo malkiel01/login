@@ -76,6 +76,28 @@ class MapEditor {
         this.activeDockIndicator = null;
         this.dockPreview = null;
 
+        // Level of Detail (LOD) - zoom thresholds for showing different layers
+        // When NOT in edit mode, layers are shown/hidden based on zoom level
+        this.lodConfig = {
+            enabled: true,
+            thresholds: {
+                // Cemetery boundary is always visible (threshold 0)
+                boundary: 0,
+                // Block boundaries visible at zoom >= 40%
+                block: 0.4,
+                // Plot boundaries visible at zoom >= 70%
+                plot: 0.7,
+                // AreaGrave rectangles visible at zoom >= 100%
+                areaGrave: 1.0
+            },
+            // Current visibility state
+            visibility: {
+                blocks: true,
+                plots: true,
+                areaGraves: true
+            }
+        };
+
         // Panel metadata for tabs
         this.panelMeta = {
             textStyle: {
@@ -981,6 +1003,97 @@ class MapEditor {
     updateZoomDisplay() {
         const zoom = Math.round(this.canvas.getZoom() * 100);
         this.elements.zoomDisplay.textContent = `${zoom}%`;
+
+        // Update layer visibility based on zoom (LOD)
+        this.updateLayerVisibility();
+    }
+
+    /**
+     * Update layer visibility based on zoom level (Level of Detail)
+     * In non-edit mode, hides layers that are too small to be useful
+     */
+    updateLayerVisibility() {
+        // Skip LOD in edit mode - show everything
+        if (this.isEditMode || !this.lodConfig.enabled) {
+            this.setAllLayersVisible(true);
+            return;
+        }
+
+        const zoom = this.canvas.getZoom();
+        const thresholds = this.lodConfig.thresholds;
+
+        // Calculate new visibility states
+        const showBlocks = zoom >= thresholds.block;
+        const showPlots = zoom >= thresholds.plot;
+        const showAreaGraves = zoom >= thresholds.areaGrave;
+
+        // Only update if visibility changed
+        if (showBlocks !== this.lodConfig.visibility.blocks) {
+            this.lodConfig.visibility.blocks = showBlocks;
+            this.setBlockBoundariesVisible(showBlocks);
+        }
+
+        if (showPlots !== this.lodConfig.visibility.plots) {
+            this.lodConfig.visibility.plots = showPlots;
+            this.setPlotBoundariesVisible(showPlots);
+        }
+
+        if (showAreaGraves !== this.lodConfig.visibility.areaGraves) {
+            this.lodConfig.visibility.areaGraves = showAreaGraves;
+            this.setAreaGraveRectanglesVisible(showAreaGraves);
+        }
+    }
+
+    /**
+     * Set all layers visible (used in edit mode)
+     */
+    setAllLayersVisible(visible) {
+        if (this.lodConfig.visibility.blocks !== visible) {
+            this.lodConfig.visibility.blocks = visible;
+            this.setBlockBoundariesVisible(visible);
+        }
+        if (this.lodConfig.visibility.plots !== visible) {
+            this.lodConfig.visibility.plots = visible;
+            this.setPlotBoundariesVisible(visible);
+        }
+        if (this.lodConfig.visibility.areaGraves !== visible) {
+            this.lodConfig.visibility.areaGraves = visible;
+            this.setAreaGraveRectanglesVisible(visible);
+        }
+    }
+
+    /**
+     * Set visibility for block boundaries
+     */
+    setBlockBoundariesVisible(visible) {
+        Object.values(this.childrenPanel.childBoundaries).forEach(polygon => {
+            if (polygon.childType === 'block') {
+                polygon.visible = visible;
+            }
+        });
+        this.canvas.renderAll();
+    }
+
+    /**
+     * Set visibility for plot boundaries
+     */
+    setPlotBoundariesVisible(visible) {
+        Object.values(this.childrenPanel.childBoundaries).forEach(polygon => {
+            if (polygon.childType === 'plot') {
+                polygon.visible = visible;
+            }
+        });
+        this.canvas.renderAll();
+    }
+
+    /**
+     * Set visibility for areaGrave rectangles
+     */
+    setAreaGraveRectanglesVisible(visible) {
+        Object.values(this.areaGraveState.rectangles).forEach(rect => {
+            rect.visible = visible;
+        });
+        this.canvas.renderAll();
     }
 
     showZoomInput() {
@@ -1023,8 +1136,8 @@ class MapEditor {
             // Apply zoom
             this.canvas.setZoom(value / 100);
 
-            // Restore display
-            zoomDisplay.textContent = `${value}%`;
+            // Update display and layer visibility
+            this.updateZoomDisplay();
         };
 
         // Event listeners
@@ -1056,6 +1169,9 @@ class MapEditor {
             if (this.isEditingBoundary) this.stopEditingBoundary();
             if (this.isEditingBackground) this.toggleBackgroundEditing();
         }
+
+        // Update layer visibility based on edit mode and zoom
+        this.updateLayerVisibility();
 
         this.updateUIState();
         this.setStatus(this.isEditMode ? 'מצב עריכה פעיל' : 'מצב צפייה');
@@ -3736,6 +3852,9 @@ class MapEditor {
 
         this.reorderLayers();
         this.canvas.renderAll();
+
+        // Apply LOD visibility based on current zoom
+        this.updateLayerVisibility();
     }
 
     /**
@@ -4851,6 +4970,9 @@ class MapEditor {
 
         this.reorderLayers();
         this.canvas.renderAll();
+
+        // Apply LOD visibility based on current zoom
+        this.updateLayerVisibility();
     }
 
     /**

@@ -53,7 +53,8 @@ class MapEditor {
 
         // AreaGrave rectangles state
         this.areaGraveState = {
-            areaGraves: [],            // List of areaGraves with their data
+            areaGraves: [],            // List of areaGraves with their data (for selected plot)
+            allPlotsAreaGraves: {},    // Map of plotId → areaGraves array (for all plots)
             rectangles: {},            // Map of areaGraveId → fabric.Rect
             selectedAreaGrave: null,   // Currently selected areaGrave
             currentPlotId: null,       // Current plot ID for which rectangles are shown
@@ -2064,7 +2065,7 @@ class MapEditor {
     // ============================================
 
     reorderLayers() {
-        // Order: background -> boundary -> gray mask -> child boundaries -> anchor points
+        // Order: background -> boundary -> gray mask -> child boundaries -> areaGrave rectangles -> anchor points
         if (this.backgroundImage) {
             this.canvas.sendToBack(this.backgroundImage);
         }
@@ -2080,6 +2081,11 @@ class MapEditor {
         // Child boundaries should be ABOVE gray mask so they're visible
         Object.values(this.childrenPanel.childBoundaries).forEach(polygon => {
             this.canvas.bringToFront(polygon);
+        });
+
+        // AreaGrave rectangles should be above child boundaries
+        Object.values(this.areaGraveState.rectangles).forEach(rect => {
+            this.canvas.bringToFront(rect);
         });
 
         this.anchorPoints.forEach(point => {
@@ -3393,6 +3399,8 @@ class MapEditor {
                     }
                     // Always render boundaries on canvas
                     this.renderChildBoundaries();
+                    // Load areaGraves for all plots with boundaries
+                    this.loadAllPlotsAreaGraves();
                 }
             } else {
                 throw new Error(data.error || 'שגיאה בטעינה');
@@ -3657,12 +3665,9 @@ class MapEditor {
         // Highlight boundary on canvas
         this.highlightChildBoundary(childId);
 
-        // Load areaGraves if selecting a plot with boundary
-        if (child && child.type === 'plot' && child.hasPolygon) {
-            this.loadAreaGravesForPlot(childId);
-        } else {
-            // Clear areaGraves if not a plot
-            this.clearAreaGraveRectangles();
+        // Re-render all areaGraves to update which plot's rectangles are highlighted
+        if (Object.keys(this.areaGraveState.allPlotsAreaGraves).length > 0) {
+            this.renderAllPlotsAreaGraves();
         }
     }
 
@@ -4757,6 +4762,91 @@ class MapEditor {
     }
 
     /**
+     * Load areaGraves for ALL plots that have boundaries
+     * Called after loading children/descendants
+     */
+    async loadAllPlotsAreaGraves() {
+        // Get all plots with boundaries from children or descendants
+        const items = this.childrenPanel.showDescendants
+            ? this.childrenPanel.descendants
+            : this.childrenPanel.children;
+
+        const plotsWithBoundaries = items.filter(item =>
+            item.type === 'plot' && item.hasPolygon && item.polygon
+        );
+
+        if (plotsWithBoundaries.length === 0) {
+            console.log('[MapEditor] No plots with boundaries to load areaGraves for');
+            return;
+        }
+
+        console.log('[MapEditor] Loading areaGraves for', plotsWithBoundaries.length, 'plots');
+
+        // Clear existing
+        this.areaGraveState.allPlotsAreaGraves = {};
+
+        // Load areaGraves for each plot in parallel
+        const loadPromises = plotsWithBoundaries.map(async (plot) => {
+            try {
+                const response = await fetch(
+                    `${this.config.apiBase}map-data.php?action=getAreaGravesWithDetails&plotId=${plot.id}`
+                );
+                const data = await response.json();
+
+                if (data.success && data.areaGraves) {
+                    this.areaGraveState.allPlotsAreaGraves[plot.id] = data.areaGraves;
+                }
+            } catch (error) {
+                console.error(`Error loading areaGraves for plot ${plot.id}:`, error);
+            }
+        });
+
+        await Promise.all(loadPromises);
+
+        // Render all areaGraves
+        this.renderAllPlotsAreaGraves();
+    }
+
+    /**
+     * Render areaGraves for ALL plots on canvas
+     */
+    renderAllPlotsAreaGraves() {
+        // Clear existing rectangles
+        this.clearAreaGraveRectangles();
+
+        const selectedPlotId = this.childrenPanel.selectedChild?.type === 'plot'
+            ? this.childrenPanel.selectedChild.id
+            : null;
+
+        // Iterate through all plots with areaGraves
+        Object.entries(this.areaGraveState.allPlotsAreaGraves).forEach(([plotId, areaGraves]) => {
+            if (!areaGraves || areaGraves.length === 0) return;
+
+            // Get the plot boundary
+            const plotBoundary = this.childrenPanel.childBoundaries[plotId];
+            if (!plotBoundary) {
+                console.warn(`No boundary found for plot ${plotId}`);
+                return;
+            }
+
+            const plotBounds = plotBoundary.getBoundingRect();
+            const isSelectedPlot = plotId === selectedPlotId;
+
+            // Create rectangles for each areaGrave
+            areaGraves.forEach((areaGrave, index) => {
+                const position = this.getAreaGravePosition(areaGrave, plotBounds, index);
+                const rect = this.createAreaGraveRectangle(areaGrave, position, !isSelectedPlot);
+
+                this.canvas.add(rect);
+                this.areaGraveState.rectangles[areaGrave.id] = rect;
+            });
+        });
+
+        this.reorderLayers();
+        this.canvas.renderAll();
+    }
+
+    /**
      * Clear areaGrave rectangles from canvas
      */
     clearAreaGraveRectangles() {
@@ -4890,7 +4980,7 @@ class MapEditor {
     /**
      * Create a fabric.Rect for an areaGrave
      */
-    createAreaGraveRectangle(areaGrave, position) {
+    createAreaGraveRectangle(areaGrave, position, dimmed = false) {
         // Determine fill color based on status
         const status = this.getAreaGraveStatus(areaGrave);
         const fillColor = this.areaGraveState.statusColors[status] || '#94a3b8';
@@ -4904,16 +4994,19 @@ class MapEditor {
             fill: fillColor,
             stroke: '#1e293b',
             strokeWidth: 1,
+            opacity: dimmed ? 0.4 : 1,  // Dim rectangles for non-selected plots
             originX: 'left',
             originY: 'top',
             // Custom properties
             isAreaGrave: true,
             areaGraveId: areaGrave.id,
             areaGraveData: areaGrave,
+            isDimmed: dimmed,
             // Interaction settings
-            selectable: true,
-            hasControls: true,
-            hasBorders: true,
+            selectable: !dimmed,  // Only selected plot's rectangles are selectable
+            hasControls: !dimmed,
+            hasBorders: !dimmed,
+            evented: true,  // Allow double-click even when dimmed
             lockScalingFlip: true,
             cornerColor: '#3b82f6',
             cornerSize: 8,

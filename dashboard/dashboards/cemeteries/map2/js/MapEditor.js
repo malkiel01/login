@@ -3214,12 +3214,13 @@ class MapEditor {
 
             this.createGrayMask();
 
-            // Load children boundaries automatically
-            this.loadChildren();
+            // Load ALL descendants automatically for LOD display
+            // This loads blocks, plots, and areaGraves in one call
+            this.loadDescendantsForDisplay();
 
             // Load areaGraves if this is a plot
-            if (this.entityType === 'plot') {
-                this.loadAreaGravesForPlot(this.entityId);
+            if (this.config.entityType === 'plot') {
+                this.loadAreaGravesForPlot(this.config.entityId);
             }
         }
 
@@ -3408,6 +3409,64 @@ class MapEditor {
             'areaGrave': 'אחוזות קבר'
         };
         return typeNames[childType] || childType;
+    }
+
+    /**
+     * Load all descendants for automatic display (LOD system)
+     * This is called when the map loads to show all levels based on zoom
+     */
+    async loadDescendantsForDisplay() {
+        // Check if parent has boundary
+        if (!this.boundary) {
+            console.log('[MapEditor] loadDescendantsForDisplay - no boundary, skipping');
+            return;
+        }
+
+        // Check if this entity type can have children
+        const childType = this.getChildType(this.config.entityType);
+        if (!childType) {
+            console.log('[MapEditor] loadDescendantsForDisplay - no child type for:', this.config.entityType);
+            return;
+        }
+
+        try {
+            // Always load descendants (all levels) for display
+            const url = `${this.config.apiBase}map-data.php?action=getDescendants&parentType=${this.config.entityType}&parentId=${this.config.entityId}`;
+            console.log('[MapEditor] loadDescendantsForDisplay - fetching from:', url);
+
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (data.success) {
+                // Store descendants
+                this.childrenPanel.descendants = data.descendants.map(d => ({
+                    id: d.id,
+                    name: d.name || d.id,
+                    type: d.type,
+                    hasPolygon: d.hasPolygon,
+                    polygon: d.polygon,
+                    level: d.level,
+                    parentId: d.parentId,
+                    parentType: d.parentType
+                }));
+
+                // Also populate children for backward compatibility
+                this.childrenPanel.children = this.childrenPanel.descendants.filter(d => d.level === 1);
+
+                // Enable showDescendants for rendering
+                this.childrenPanel.showDescendants = true;
+
+                console.log('[MapEditor] loadDescendantsForDisplay - loaded:', this.childrenPanel.descendants.length, 'descendants');
+
+                // Render all boundaries on canvas
+                this.renderChildBoundaries();
+
+                // Load areaGraves for all plots
+                this.loadAllPlotsAreaGraves();
+            }
+        } catch (error) {
+            console.error('[MapEditor] Error loading descendants for display:', error);
+        }
     }
 
     /**

@@ -1243,24 +1243,27 @@ class MapEditor {
         const canvasWidth = this.canvas.width * 10;
         const canvasHeight = this.canvas.height * 10;
 
-        // Create outer rectangle
-        const outerRect = [
-            { x: -canvasWidth, y: -canvasHeight },
-            { x: canvasWidth * 2, y: -canvasHeight },
-            { x: canvasWidth * 2, y: canvasHeight * 2 },
-            { x: -canvasWidth, y: canvasHeight * 2 }
-        ];
+        // Build SVG path with outer rectangle (clockwise) and inner boundary (counter-clockwise)
+        // This creates a "hole" using the evenodd fill rule
 
-        // Merge points: outer rectangle + inner polygon (reversed)
-        const allPoints = [
-            ...outerRect,
-            { x: -canvasWidth, y: -canvasHeight }, // Close outer rect
-            ...this.boundaryPoints.slice().reverse(),
-            this.boundaryPoints[this.boundaryPoints.length - 1]
-        ];
+        // Outer rectangle path (clockwise)
+        let pathData = `M ${-canvasWidth} ${-canvasHeight} `;
+        pathData += `L ${canvasWidth * 2} ${-canvasHeight} `;
+        pathData += `L ${canvasWidth * 2} ${canvasHeight * 2} `;
+        pathData += `L ${-canvasWidth} ${canvasHeight * 2} `;
+        pathData += `Z `;
 
-        this.grayMask = new fabric.Polygon(allPoints, {
+        // Inner boundary path (counter-clockwise to create hole)
+        const reversedPoints = this.boundaryPoints.slice().reverse();
+        pathData += `M ${reversedPoints[0].x} ${reversedPoints[0].y} `;
+        for (let i = 1; i < reversedPoints.length; i++) {
+            pathData += `L ${reversedPoints[i].x} ${reversedPoints[i].y} `;
+        }
+        pathData += `Z`;
+
+        this.grayMask = new fabric.Path(pathData, {
             fill: 'rgba(0, 0, 0, 0.35)',
+            fillRule: 'evenodd',
             selectable: false,
             evented: false,
             objectCaching: false,

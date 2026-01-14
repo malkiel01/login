@@ -56,6 +56,7 @@ class MapEditor {
             areaGraves: [],            // List of areaGraves with their data (for selected plot)
             allPlotsAreaGraves: {},    // Map of plotId → areaGraves array (for all plots)
             rectangles: {},            // Map of areaGraveId → fabric.Rect
+            graveTextObjects: [],      // Array of fabric text objects for graves (visible at high zoom)
             selectedAreaGrave: null,   // Currently selected areaGrave
             currentPlotId: null,       // Current plot ID for which rectangles are shown
             defaultWidth: 9,
@@ -88,13 +89,16 @@ class MapEditor {
                 // Plot boundaries visible at zoom >= 70%
                 plot: 0.7,
                 // AreaGrave rectangles visible at zoom >= 100%
-                areaGrave: 1.0
+                areaGrave: 1.0,
+                // Graves inside areaGraves visible at zoom >= 500%
+                graves: 5.0
             },
             // Current visibility state
             visibility: {
                 blocks: true,
                 plots: true,
-                areaGraves: true
+                areaGraves: true,
+                graves: true
             }
         };
 
@@ -1029,6 +1033,7 @@ class MapEditor {
         const showBlocks = zoom >= thresholds.block;
         const showPlots = zoom >= thresholds.plot;
         const showAreaGraves = zoom >= thresholds.areaGrave;
+        const showGraves = zoom >= thresholds.graves;
 
         // Only update if visibility changed
         if (showBlocks !== this.lodConfig.visibility.blocks) {
@@ -1044,6 +1049,11 @@ class MapEditor {
         if (showAreaGraves !== this.lodConfig.visibility.areaGraves) {
             this.lodConfig.visibility.areaGraves = showAreaGraves;
             this.setAreaGraveRectanglesVisible(showAreaGraves);
+        }
+
+        if (showGraves !== this.lodConfig.visibility.graves) {
+            this.lodConfig.visibility.graves = showGraves;
+            this.setGravesVisible(showGraves);
         }
     }
 
@@ -1062,6 +1072,10 @@ class MapEditor {
         if (this.lodConfig.visibility.areaGraves !== visible) {
             this.lodConfig.visibility.areaGraves = visible;
             this.setAreaGraveRectanglesVisible(visible);
+        }
+        if (this.lodConfig.visibility.graves !== visible) {
+            this.lodConfig.visibility.graves = visible;
+            this.setGravesVisible(visible);
         }
     }
 
@@ -1097,6 +1111,142 @@ class MapEditor {
             rect.visible = visible;
         });
         this.canvas.renderAll();
+    }
+
+    /**
+     * Set visibility for graves inside areaGraves
+     */
+    setGravesVisible(visible) {
+        if (visible) {
+            // Render graves if not already rendered
+            if (this.areaGraveState.graveTextObjects.length === 0) {
+                this.renderGravesInAreaGraves();
+            } else {
+                // Just make them visible
+                this.areaGraveState.graveTextObjects.forEach(obj => {
+                    obj.visible = true;
+                });
+                this.canvas.renderAll();
+            }
+        } else {
+            // Hide graves
+            this.areaGraveState.graveTextObjects.forEach(obj => {
+                obj.visible = false;
+            });
+            this.canvas.renderAll();
+        }
+    }
+
+    /**
+     * Render graves inside each areaGrave rectangle
+     */
+    renderGravesInAreaGraves() {
+        // Clear existing grave text objects
+        this.clearGraves();
+
+        // Iterate through all plots' areaGraves
+        Object.values(this.areaGraveState.allPlotsAreaGraves).forEach(areaGraves => {
+            areaGraves.forEach(areaGrave => {
+                // Get the rectangle for this areaGrave
+                const rect = this.areaGraveState.rectangles[areaGrave.id];
+                if (!rect || !rect.visible) return;
+
+                // Get graves for this areaGrave
+                const graves = areaGrave.graves || [];
+                if (graves.length === 0) return;
+
+                // Calculate layout for graves inside the rectangle
+                this.renderGravesInRectangle(rect, graves);
+            });
+        });
+
+        this.canvas.renderAll();
+    }
+
+    /**
+     * Render graves inside a specific areaGrave rectangle
+     */
+    renderGravesInRectangle(rect, graves) {
+        const rectLeft = rect.left - (rect.width * rect.scaleX) / 2;
+        const rectTop = rect.top - (rect.height * rect.scaleY) / 2;
+        const rectWidth = rect.width * rect.scaleX;
+        const rectHeight = rect.height * rect.scaleY;
+
+        // Group graves by row (location field contains row info)
+        const gravesByRow = {};
+        graves.forEach(grave => {
+            const row = grave.location || 'default';
+            if (!gravesByRow[row]) {
+                gravesByRow[row] = [];
+            }
+            gravesByRow[row].push(grave);
+        });
+
+        const rows = Object.keys(gravesByRow);
+        const numRows = rows.length;
+
+        // Calculate spacing
+        const rowHeight = rectHeight / (numRows + 1);
+        const padding = 2;
+
+        rows.forEach((rowName, rowIndex) => {
+            const rowGraves = gravesByRow[rowName];
+            const numGravesInRow = rowGraves.length;
+            const graveWidth = (rectWidth - padding * 2) / numGravesInRow;
+
+            rowGraves.forEach((grave, graveIndex) => {
+                // Calculate position for this grave
+                const x = rectLeft + padding + (graveIndex * graveWidth) + (graveWidth / 2);
+                const y = rectTop + ((rowIndex + 1) * rowHeight);
+
+                // Create text for grave
+                const graveText = this.createGraveText(grave, x, y);
+                this.canvas.add(graveText);
+                this.areaGraveState.graveTextObjects.push(graveText);
+            });
+        });
+    }
+
+    /**
+     * Create text object for a grave
+     */
+    createGraveText(grave, x, y) {
+        // Build text content
+        let text = `${grave.name}\n`;
+        text += `${grave.statusLabel}\n`;
+
+        if (grave.customer) {
+            text += `${grave.customer.type}: ${grave.customer.name}`;
+        }
+
+        const textObj = new fabric.Text(text, {
+            left: x,
+            top: y,
+            fontSize: 8,
+            fill: '#1f2937',
+            textAlign: 'center',
+            originX: 'center',
+            originY: 'center',
+            selectable: false,
+            evented: false,
+            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+            padding: 2
+        });
+
+        // Store grave data
+        textObj.graveData = grave;
+
+        return textObj;
+    }
+
+    /**
+     * Clear all grave text objects from canvas
+     */
+    clearGraves() {
+        this.areaGraveState.graveTextObjects.forEach(obj => {
+            this.canvas.remove(obj);
+        });
+        this.areaGraveState.graveTextObjects = [];
     }
 
     showZoomInput() {
@@ -5059,6 +5209,9 @@ class MapEditor {
         });
         this.areaGraveState.rectangles = {};
         this.areaGraveState.selectedAreaGrave = null;
+
+        // Also clear graves when clearing rectangles
+        this.clearGraves();
     }
 
     /**

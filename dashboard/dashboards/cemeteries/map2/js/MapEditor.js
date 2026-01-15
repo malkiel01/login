@@ -968,7 +968,7 @@ class MapEditor {
 
     zoomIn() {
         const zoom = this.canvas.getZoom() * 1.2;
-        this.canvas.setZoom(Math.min(zoom, 5));
+        this.canvas.setZoom(Math.min(zoom, 20));
         this.updateZoomDisplay();
     }
 
@@ -1117,6 +1117,8 @@ class MapEditor {
      * Set visibility for graves inside areaGraves
      */
     setGravesVisible(visible) {
+        console.log('setGravesVisible called:', visible, 'current objects:', this.areaGraveState.graveTextObjects.length);
+
         if (visible) {
             // Render graves if not already rendered
             if (this.areaGraveState.graveTextObjects.length === 0) {
@@ -1144,22 +1146,34 @@ class MapEditor {
         // Clear existing grave text objects
         this.clearGraves();
 
+        console.log('renderGravesInAreaGraves called, allPlotsAreaGraves:',
+            Object.keys(this.areaGraveState.allPlotsAreaGraves).length, 'plots');
+
         // Iterate through all plots' areaGraves
         Object.values(this.areaGraveState.allPlotsAreaGraves).forEach(areaGraves => {
             areaGraves.forEach(areaGrave => {
                 // Get the rectangle for this areaGrave
                 const rect = this.areaGraveState.rectangles[areaGrave.id];
-                if (!rect || !rect.visible) return;
+                if (!rect) {
+                    console.log('No rect for areaGrave:', areaGrave.id);
+                    return;
+                }
 
                 // Get graves for this areaGrave
                 const graves = areaGrave.graves || [];
-                if (graves.length === 0) return;
+                if (graves.length === 0) {
+                    console.log('No graves for areaGrave:', areaGrave.id);
+                    return;
+                }
+
+                console.log('Rendering', graves.length, 'graves for areaGrave:', areaGrave.id);
 
                 // Calculate layout for graves inside the rectangle
                 this.renderGravesInRectangle(rect, graves);
             });
         });
 
+        console.log('Total grave text objects:', this.areaGraveState.graveTextObjects.length);
         this.canvas.renderAll();
     }
 
@@ -1258,7 +1272,7 @@ class MapEditor {
         input.type = 'number';
         input.value = currentZoom;
         input.min = 10;
-        input.max = 500;
+        input.max = 2000;
         input.style.cssText = `
             width: 50px;
             padding: 2px 4px;
@@ -1283,8 +1297,8 @@ class MapEditor {
             let value = parseInt(input.value, 10);
             if (isNaN(value)) value = currentZoom;
 
-            // Clamp between 10% and 500%
-            value = Math.max(10, Math.min(500, value));
+            // Clamp between 10% and 2000%
+            value = Math.max(10, Math.min(2000, value));
 
             // Apply zoom
             this.canvas.setZoom(value / 100);

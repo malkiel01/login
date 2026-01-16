@@ -1163,41 +1163,46 @@ class MapEditor {
     }
 
     /**
-     * Render label text at the top of an areaGrave rectangle
+     * Render label text inside areaGrave rectangle
+     * Text stays inside, rotates with rectangle
      */
     renderAreaGraveLabel(rect, areaGrave) {
-        // Get rectangle width (accounting for scale)
+        // Get rectangle dimensions (accounting for scale)
         const rectWidth = rect.width * (rect.scaleX || 1);
+        const rectHeight = rect.height * (rect.scaleY || 1);
+        const angle = rect.angle || 0;
 
-        // Calculate text position at top of rectangle
-        // rect uses originX/Y 'left'/'top', so left/top is the corner
-        const x = rect.left + rectWidth / 2;
-        const y = rect.top + 2; // Small padding from top
+        // Calculate center of rectangle
+        // rect uses originX/Y 'left'/'top', so we need to find center
+        const centerX = rect.left + rectWidth / 2;
+        const centerY = rect.top + rectHeight / 2;
 
         // Build label text: "שורה X קבר X"
         const rowName = areaGrave.rowName || '';
         const graveName = areaGrave.name || '';
-        const text = `שורה ${rowName} קבר ${graveName}`;
+        const text = `שורה ${rowName}\nקבר ${graveName}`;
 
-        // Calculate font size based on rectangle width (adaptive)
-        // Smaller rectangles get smaller text
-        const fontSize = Math.max(1, Math.min(3, rectWidth / 12));
+        // Calculate font size to fit inside rectangle
+        // Use smaller dimension to ensure text fits
+        const minDimension = Math.min(rectWidth, rectHeight);
+        const fontSize = Math.max(1, minDimension / 8);
 
         const textObj = new fabric.Text(text, {
-            left: x,
-            top: y,
+            left: centerX,
+            top: centerY,
             fontSize: fontSize,
-            fill: '#1f2937',
+            fill: '#ffffff',
             textAlign: 'center',
             originX: 'center',
-            originY: 'top',
+            originY: 'center',
+            angle: angle,  // Rotate with the rectangle
             selectable: false,
             evented: false
-            // No backgroundColor - text without white background
         });
 
         // Store areaGrave data reference
         textObj.areaGraveData = areaGrave;
+        textObj.linkedRect = rect;  // Link to rectangle for updates
 
         // Add to canvas and track
         this.canvas.add(textObj);
@@ -5449,8 +5454,43 @@ class MapEditor {
         // Update panel with new position
         this.updateAreaGravePanel();
 
+        // Update linked text label position/rotation
+        this.updateAreaGraveLabelPosition(rect);
+
         // Auto-save position
         this.saveAreaGravePosition(areaGrave.id, rect);
+    }
+
+    /**
+     * Update the label text position when rectangle is modified
+     */
+    updateAreaGraveLabelPosition(rect) {
+        // Find the linked text object
+        const textObj = this.areaGraveState.graveTextObjects.find(t => t.linkedRect === rect);
+        if (!textObj) return;
+
+        // Get rectangle dimensions
+        const rectWidth = rect.width * (rect.scaleX || 1);
+        const rectHeight = rect.height * (rect.scaleY || 1);
+
+        // Calculate new center position
+        const centerX = rect.left + rectWidth / 2;
+        const centerY = rect.top + rectHeight / 2;
+
+        // Update text position and angle
+        textObj.set({
+            left: centerX,
+            top: centerY,
+            angle: rect.angle || 0
+        });
+
+        // Update font size if rectangle size changed
+        const minDimension = Math.min(rectWidth, rectHeight);
+        const fontSize = Math.max(1, minDimension / 8);
+        textObj.set({ fontSize: fontSize });
+
+        textObj.setCoords();
+        this.canvas.renderAll();
     }
 
     /**

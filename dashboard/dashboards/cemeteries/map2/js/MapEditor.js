@@ -1172,10 +1172,8 @@ class MapEditor {
         const rectHeight = rect.height * (rect.scaleY || 1);
         const angle = rect.angle || 0;
 
-        // Calculate center of rectangle
-        // rect uses originX/Y 'left'/'top', so we need to find center
-        const centerX = rect.left + rectWidth / 2;
-        const centerY = rect.top + rectHeight / 2;
+        // Get actual center point of rectangle (works with rotation)
+        const center = rect.getCenterPoint();
 
         // Build label text: "שורה X קבר X"
         const rowName = areaGrave.rowName || '';
@@ -1185,11 +1183,11 @@ class MapEditor {
         // Calculate font size to fit inside rectangle
         // Use smaller dimension to ensure text fits
         const minDimension = Math.min(rectWidth, rectHeight);
-        const fontSize = Math.max(1, minDimension / 8);
+        const fontSize = Math.max(1, minDimension / 6);
 
         const textObj = new fabric.Text(text, {
-            left: centerX,
-            top: centerY,
+            left: center.x,
+            top: center.y,
             fontSize: fontSize,
             fill: '#ffffff',
             textAlign: 'center',
@@ -5473,20 +5471,19 @@ class MapEditor {
         const rectWidth = rect.width * (rect.scaleX || 1);
         const rectHeight = rect.height * (rect.scaleY || 1);
 
-        // Calculate new center position
-        const centerX = rect.left + rectWidth / 2;
-        const centerY = rect.top + rectHeight / 2;
+        // Get actual center point (works with rotation)
+        const center = rect.getCenterPoint();
 
         // Update text position and angle
         textObj.set({
-            left: centerX,
-            top: centerY,
+            left: center.x,
+            top: center.y,
             angle: rect.angle || 0
         });
 
         // Update font size if rectangle size changed
         const minDimension = Math.min(rectWidth, rectHeight);
-        const fontSize = Math.max(1, minDimension / 8);
+        const fontSize = Math.max(1, minDimension / 6);
         textObj.set({ fontSize: fontSize });
 
         textObj.setCoords();

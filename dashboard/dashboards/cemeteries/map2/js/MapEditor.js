@@ -968,7 +968,7 @@ class MapEditor {
 
     zoomIn() {
         const zoom = this.canvas.getZoom() * 1.2;
-        this.canvas.setZoom(Math.min(zoom, 20));
+        this.canvas.setZoom(Math.min(zoom, 40));
         this.updateZoomDisplay();
     }
 
@@ -1140,117 +1140,68 @@ class MapEditor {
     }
 
     /**
-     * Render graves inside each areaGrave rectangle
+     * Render label text inside each areaGrave rectangle
+     * Shows "שורה X קבר X" at the top of each areaGrave
      */
     renderGravesInAreaGraves() {
-        // Clear existing grave text objects
+        // Clear existing text objects
         this.clearGraves();
-
-        console.log('renderGravesInAreaGraves called, allPlotsAreaGraves:',
-            Object.keys(this.areaGraveState.allPlotsAreaGraves).length, 'plots');
 
         // Iterate through all plots' areaGraves
         Object.values(this.areaGraveState.allPlotsAreaGraves).forEach(areaGraves => {
             areaGraves.forEach(areaGrave => {
                 // Get the rectangle for this areaGrave
                 const rect = this.areaGraveState.rectangles[areaGrave.id];
-                if (!rect) {
-                    console.log('No rect for areaGrave:', areaGrave.id);
-                    return;
-                }
+                if (!rect) return;
 
-                // Get graves for this areaGrave
-                const graves = areaGrave.graves || [];
-                if (graves.length === 0) {
-                    console.log('No graves for areaGrave:', areaGrave.id);
-                    return;
-                }
-
-                console.log('Rendering', graves.length, 'graves for areaGrave:', areaGrave.id);
-
-                // Calculate layout for graves inside the rectangle
-                this.renderGravesInRectangle(rect, graves);
+                // Create label text at the top of the rectangle
+                this.renderAreaGraveLabel(rect, areaGrave);
             });
         });
 
-        console.log('Total grave text objects:', this.areaGraveState.graveTextObjects.length);
         this.canvas.renderAll();
     }
 
     /**
-     * Render graves inside a specific areaGrave rectangle
+     * Render label text at the top of an areaGrave rectangle
      */
-    renderGravesInRectangle(rect, graves) {
-        const rectLeft = rect.left - (rect.width * rect.scaleX) / 2;
-        const rectTop = rect.top - (rect.height * rect.scaleY) / 2;
-        const rectWidth = rect.width * rect.scaleX;
-        const rectHeight = rect.height * rect.scaleY;
+    renderAreaGraveLabel(rect, areaGrave) {
+        // Get rectangle width (accounting for scale)
+        const rectWidth = rect.width * (rect.scaleX || 1);
 
-        // Group graves by row (location field contains row info)
-        const gravesByRow = {};
-        graves.forEach(grave => {
-            const row = grave.location || 'default';
-            if (!gravesByRow[row]) {
-                gravesByRow[row] = [];
-            }
-            gravesByRow[row].push(grave);
-        });
+        // Calculate text position at top of rectangle
+        // rect uses originX/Y 'left'/'top', so left/top is the corner
+        const x = rect.left + rectWidth / 2;
+        const y = rect.top + 2; // Small padding from top
 
-        const rows = Object.keys(gravesByRow);
-        const numRows = rows.length;
+        // Build label text: "שורה X קבר X"
+        const rowName = areaGrave.rowName || '';
+        const graveName = areaGrave.name || '';
+        const text = `שורה ${rowName} קבר ${graveName}`;
 
-        // Calculate spacing
-        const rowHeight = rectHeight / (numRows + 1);
-        const padding = 2;
-
-        rows.forEach((rowName, rowIndex) => {
-            const rowGraves = gravesByRow[rowName];
-            const numGravesInRow = rowGraves.length;
-            const graveWidth = (rectWidth - padding * 2) / numGravesInRow;
-
-            rowGraves.forEach((grave, graveIndex) => {
-                // Calculate position for this grave
-                const x = rectLeft + padding + (graveIndex * graveWidth) + (graveWidth / 2);
-                const y = rectTop + ((rowIndex + 1) * rowHeight);
-
-                // Create text for grave
-                const graveText = this.createGraveText(grave, x, y);
-                this.canvas.add(graveText);
-                this.areaGraveState.graveTextObjects.push(graveText);
-            });
-        });
-    }
-
-    /**
-     * Create text object for a grave
-     */
-    createGraveText(grave, x, y) {
-        // Build text content
-        let text = `${grave.name}\n`;
-        text += `${grave.statusLabel}\n`;
-
-        if (grave.customer) {
-            text += `${grave.customer.type}: ${grave.customer.name}`;
-        }
+        // Calculate font size based on rectangle width (adaptive)
+        // Smaller rectangles get smaller text
+        const fontSize = Math.max(1, Math.min(3, rectWidth / 12));
 
         const textObj = new fabric.Text(text, {
             left: x,
             top: y,
-            fontSize: 8,
+            fontSize: fontSize,
             fill: '#1f2937',
             textAlign: 'center',
             originX: 'center',
-            originY: 'center',
+            originY: 'top',
             selectable: false,
-            evented: false,
-            backgroundColor: 'rgba(255, 255, 255, 0.8)',
-            padding: 2
+            evented: false
+            // No backgroundColor - text without white background
         });
 
-        // Store grave data
-        textObj.graveData = grave;
+        // Store areaGrave data reference
+        textObj.areaGraveData = areaGrave;
 
-        return textObj;
+        // Add to canvas and track
+        this.canvas.add(textObj);
+        this.areaGraveState.graveTextObjects.push(textObj);
     }
 
     /**
@@ -1272,7 +1223,7 @@ class MapEditor {
         input.type = 'number';
         input.value = currentZoom;
         input.min = 10;
-        input.max = 2000;
+        input.max = 4000;
         input.style.cssText = `
             width: 50px;
             padding: 2px 4px;
@@ -1297,8 +1248,8 @@ class MapEditor {
             let value = parseInt(input.value, 10);
             if (isNaN(value)) value = currentZoom;
 
-            // Clamp between 10% and 2000%
-            value = Math.max(10, Math.min(2000, value));
+            // Clamp between 10% and 4000%
+            value = Math.max(10, Math.min(4000, value));
 
             // Apply zoom
             this.canvas.setZoom(value / 100);
@@ -5436,6 +5387,7 @@ class MapEditor {
             fill: fillColor,
             stroke: '#1e293b',
             strokeWidth: 1,
+            strokeUniform: true,  // Keep stroke width consistent regardless of zoom
             opacity: dimmed ? 0.4 : 1,  // Dim rectangles for non-selected plots
             originX: 'left',
             originY: 'top',

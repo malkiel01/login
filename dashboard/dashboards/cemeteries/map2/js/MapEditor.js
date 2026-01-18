@@ -1239,13 +1239,13 @@ class MapEditor {
                 evented: false
             });
 
-            // Build label text: "שורה X קבר X"
+            // Build label text: "שורה X קבר Y" (single line by default)
             const rowName = areaGrave.rowName || '';
             const graveName = grave.name || '';
 
             // Check zoom level for extended info (800%+)
             const zoom = this.canvas.getZoom();
-            let text = `שורה ${rowName}\nקבר ${graveName}`;
+            let text = `שורה ${rowName} קבר ${graveName}`;  // Single line default
 
             if (zoom >= 8.0) {
                 // Add customer name or "פנוי" at high zoom
@@ -1260,15 +1260,24 @@ class MapEditor {
             // Calculate optimal font size that fits within the grave rectangle
             const { fontSize, finalText } = this.calculateOptimalFontSize(text, graveWidth, graveHeight);
 
-            // Create text object
+            // Calculate top-right position with padding (for text placement)
+            const textPadding = graveWidth * 0.05;
+            const textOffsetX = (graveWidth / 2) - textPadding;
+            const textOffsetY = -(graveHeight / 2) + textPadding;
+            const rotatedTextOffsetX = textOffsetX * Math.cos(angleRad) - textOffsetY * Math.sin(angleRad);
+            const rotatedTextOffsetY = textOffsetX * Math.sin(angleRad) + textOffsetY * Math.cos(angleRad);
+            const textX = graveCenterX + rotatedTextOffsetX;
+            const textY = graveCenterY + rotatedTextOffsetY;
+
+            // Create text object - aligned to right, at top
             const textObj = new fabric.Text(finalText, {
-                left: graveCenterX,
-                top: graveCenterY,
+                left: textX,
+                top: textY,
                 fontSize: fontSize,
                 fill: '#ffffff',
-                textAlign: 'center',
-                originX: 'center',
-                originY: 'center',
+                textAlign: 'right',
+                originX: 'right',
+                originY: 'top',
                 angle: angle,
                 selectable: false,
                 evented: false
@@ -5773,12 +5782,24 @@ class MapEditor {
                 const originalText = textObj.originalText || textObj.text;
                 const { fontSize, finalText } = this.calculateOptimalFontSize(originalText, graveWidth, graveHeight);
 
+                // Calculate top-right position with padding
+                const textPadding = graveWidth * 0.05;
+                const textOffsetX = (graveWidth / 2) - textPadding;
+                const textOffsetY = -(graveHeight / 2) + textPadding;
+                const rotatedTextOffsetX = textOffsetX * Math.cos(angleRad) - textOffsetY * Math.sin(angleRad);
+                const rotatedTextOffsetY = textOffsetX * Math.sin(angleRad) + textOffsetY * Math.cos(angleRad);
+                const textX = graveCenterX + rotatedTextOffsetX;
+                const textY = graveCenterY + rotatedTextOffsetY;
+
                 textObj.set({
-                    left: graveCenterX,
-                    top: graveCenterY,
+                    left: textX,
+                    top: textY,
                     angle: angle,
                     fontSize: fontSize,
-                    text: finalText
+                    text: finalText,
+                    textAlign: 'right',
+                    originX: 'right',
+                    originY: 'top'
                 });
                 textObj.setCoords();
             }
@@ -5887,12 +5908,24 @@ class MapEditor {
                 const originalText = textObj.originalText || textObj.text;
                 const { fontSize, finalText } = this.calculateOptimalFontSize(originalText, graveWidth, graveHeight);
 
+                // Calculate top-right position with padding
+                const textPadding = graveWidth * 0.05;
+                const textOffsetX = (graveWidth / 2) - textPadding;
+                const textOffsetY = -(graveHeight / 2) + textPadding;
+                const rotatedTextOffsetX = textOffsetX * Math.cos(angleRad) - textOffsetY * Math.sin(angleRad);
+                const rotatedTextOffsetY = textOffsetX * Math.sin(angleRad) + textOffsetY * Math.cos(angleRad);
+                const textX = graveCenterX + rotatedTextOffsetX;
+                const textY = graveCenterY + rotatedTextOffsetY;
+
                 textObj.set({
-                    left: graveCenterX,
-                    top: graveCenterY,
+                    left: textX,
+                    top: textY,
                     angle: angle,
                     fontSize: fontSize,
-                    text: finalText
+                    text: finalText,
+                    textAlign: 'right',
+                    originX: 'right',
+                    originY: 'top'
                 });
                 textObj.setCoords();
             }

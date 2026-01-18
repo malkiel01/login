@@ -59,7 +59,7 @@ class MapEditor {
             graveTextObjects: [],      // Array of fabric text objects for graves (visible at high zoom)
             selectedAreaGrave: null,   // Currently selected areaGrave
             currentPlotId: null,       // Current plot ID for which rectangles are shown
-            defaultWidth: 18,
+            defaultWidth: 28,
             defaultHeight: 12,
             graveRectangles: [],       // Array of fabric.Rect for individual graves inside areaGraves
             statusColors: {

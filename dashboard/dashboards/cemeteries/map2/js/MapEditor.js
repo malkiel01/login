@@ -5973,9 +5973,11 @@ class MapEditor {
         const linkedCustomerTexts = this.areaGraveState.graveTextObjects.filter(t => t.linkedRect && t.linkedRect.linkedAreaGrave?.areaGraveId === areaGraveId && t.isCustomerText);
 
         console.log('[updateAreaGraveGraves] areaGraveId:', areaGraveId, 'graves:', graves.length, 'linkedRects:', linkedGraveRects.length, 'titleTexts:', linkedTitleTexts.length, 'customerTexts:', linkedCustomerTexts.length);
+        console.log('[updateAreaGraveGraves] rect position - left:', rect.left, 'top:', rect.top, 'width:', rectWidth, 'height:', rectHeight);
 
         // Use fabric.js getCenterPoint() for accurate center with rotation
         const center = rect.getCenterPoint();
+        console.log('[updateAreaGraveGraves] rect center:', center.x, center.y);
         const centerX = center.x;
         const centerY = center.y;
         const angleRad = (angle * Math.PI) / 180;

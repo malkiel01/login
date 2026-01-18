@@ -10,6 +10,7 @@
 
 .popup-container {
     position: fixed;
+    direction: inherit;
     background: #ffffff;
     border-radius: 8px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);

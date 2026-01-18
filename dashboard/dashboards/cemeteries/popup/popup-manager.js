@@ -29,7 +29,7 @@ class PopupManager {
             const link = targetDoc.createElement('link');
             link.id = 'popup-manager-css';
             link.rel = 'stylesheet';
-            link.href = '/dashboard/dashboards/cemeteries/popup/popup.css';
+            link.href = '/dashboard/dashboards/cemeteries/popup/popup.css?v=' + Date.now();
             targetDoc.head.appendChild(link);
             console.log('✅ Popup CSS loaded');
         }

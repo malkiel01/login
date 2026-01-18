@@ -5916,22 +5916,35 @@ class MapEditor {
      */
     saveAreaGravePositionFromAbsolute(areaGraveId, rect, absolutePos) {
         const position = {
-            x: absolutePos.left,
-            y: absolutePos.top,
-            width: absolutePos.width,
-            height: absolutePos.height,
-            angle: absolutePos.angle
+            type: 'rectangle',
+            x: Math.round(absolutePos.left),
+            y: Math.round(absolutePos.top),
+            width: Math.round(absolutePos.width),
+            height: Math.round(absolutePos.height),
+            angle: Math.round(absolutePos.angle)
         };
 
-        // Save to server
-        fetch(`${this.apiBase}map-data.php?action=saveAreaGravePosition`, {
+        // Save to server (use this.config.apiBase, not this.apiBase)
+        fetch(`${this.config.apiBase}map-data.php`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
+                action: 'saveAreaGravePosition',
                 areaGraveId: areaGraveId,
                 position: position
             })
-        }).catch(err => console.error('Failed to save areaGrave position:', err));
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                // Update local data
+                const areaGrave = this.areaGraveState.areaGraves.find(ag => ag.id === areaGraveId);
+                if (areaGrave) {
+                    areaGrave.mapPolygon = position;
+                }
+            }
+        })
+        .catch(err => console.error('Failed to save areaGrave position:', err));
     }
 
     /**

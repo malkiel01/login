@@ -1260,8 +1260,8 @@ class MapEditor {
             // Calculate optimal font size that fits within the grave rectangle
             const { fontSize, finalText } = this.calculateOptimalFontSize(text, graveWidth, graveHeight);
 
-            // Calculate top-right position with padding (for text placement)
-            const textPadding = graveWidth * 0.05;
+            // Calculate top-right position with minimal padding (for text placement)
+            const textPadding = graveWidth * 0.02;
             const textOffsetX = (graveWidth / 2) - textPadding;
             const textOffsetY = -(graveHeight / 2) + textPadding;
             const rotatedTextOffsetX = textOffsetX * Math.cos(angleRad) - textOffsetY * Math.sin(angleRad);
@@ -1303,16 +1303,16 @@ class MapEditor {
 
     /**
      * Calculate optimal font size that fits text within given dimensions
-     * Priority: 1) Break long lines, 2) Reduce font size
+     * Smart breaking: only break "שורה X קבר Y" into "שורה X" and "קבר Y"
      * @param {string} text - The text to fit
      * @param {number} maxWidth - Maximum width available
      * @param {number} maxHeight - Maximum height available
      * @returns {{fontSize: number, finalText: string}}
      */
     calculateOptimalFontSize(text, maxWidth, maxHeight) {
-        // Add padding (10% on each side)
-        const availableWidth = maxWidth * 0.8;
-        const availableHeight = maxHeight * 0.85;
+        // Add padding
+        const availableWidth = maxWidth * 0.9;
+        const availableHeight = maxHeight * 0.9;
 
         // Start with initial font size based on dimensions
         let fontSize = Math.min(maxWidth, maxHeight) / 4;
@@ -1321,26 +1321,29 @@ class MapEditor {
 
         fontSize = Math.min(fontSize, maxFontSize);
 
-        // Process text - try to break long lines
-        let finalText = this.wrapTextToFit(text, availableWidth, fontSize);
-
         // Create temporary text object to measure dimensions
-        const tempText = new fabric.Text(finalText, {
+        const tempText = new fabric.Text(text, {
             fontSize: fontSize,
             fontFamily: 'David, Arial, sans-serif'
         });
 
+        // First, try with original text (single line for "שורה X קבר Y")
+        let finalText = text;
         let textWidth = tempText.width;
         let textHeight = tempText.height;
+
+        // If text doesn't fit, try smart break (only for first line)
+        if (textWidth > availableWidth) {
+            finalText = this.smartBreakText(text);
+            tempText.set({ text: finalText });
+            textWidth = tempText.width;
+            textHeight = tempText.height;
+        }
 
         // Reduce font size until text fits or minimum reached
         while ((textWidth > availableWidth || textHeight > availableHeight) && fontSize > minFontSize) {
             fontSize = Math.max(minFontSize, fontSize * 0.85);
-
-            // Re-wrap text with new font size
-            finalText = this.wrapTextToFit(text, availableWidth, fontSize);
-
-            tempText.set({ text: finalText, fontSize: fontSize });
+            tempText.set({ fontSize: fontSize });
             textWidth = tempText.width;
             textHeight = tempText.height;
         }
@@ -1349,48 +1352,26 @@ class MapEditor {
     }
 
     /**
-     * Wrap text to fit within specified width
+     * Smart text breaking - only break at valid points
+     * "שורה X קבר Y" -> "שורה X\nקבר Y"
      * @param {string} text - Original text
-     * @param {number} maxWidth - Maximum width
-     * @param {number} fontSize - Current font size
-     * @returns {string} - Text with line breaks added
+     * @returns {string} - Text with smart line break
      */
-    wrapTextToFit(text, maxWidth, fontSize) {
+    smartBreakText(text) {
         const lines = text.split('\n');
-        const wrappedLines = [];
 
-        // Approximate character width (Hebrew characters are roughly square)
-        const charWidth = fontSize * 0.6;
-        const maxCharsPerLine = Math.floor(maxWidth / charWidth);
-
-        lines.forEach(line => {
-            if (line.length <= maxCharsPerLine) {
-                wrappedLines.push(line);
-            } else {
-                // Need to break this line
-                const words = line.split(' ');
-                let currentLine = '';
-
-                words.forEach(word => {
-                    const testLine = currentLine ? `${currentLine} ${word}` : word;
-                    if (testLine.length <= maxCharsPerLine) {
-                        currentLine = testLine;
-                    } else {
-                        if (currentLine) {
-                            wrappedLines.push(currentLine);
-                        }
-                        // If single word is too long, just add it (will be scaled down)
-                        currentLine = word;
-                    }
-                });
-
-                if (currentLine) {
-                    wrappedLines.push(currentLine);
-                }
+        // Process first line - check if it's "שורה X קבר Y" format
+        if (lines[0] && lines[0].includes('שורה') && lines[0].includes('קבר')) {
+            // Find the position of "קבר" and break before it
+            const keверIndex = lines[0].indexOf(' קבר');
+            if (keверIndex > 0) {
+                const part1 = lines[0].substring(0, keверIndex);
+                const part2 = lines[0].substring(keверIndex + 1); // +1 to skip the space
+                lines[0] = part1 + '\n' + part2;
             }
-        });
+        }
 
-        return wrappedLines.join('\n');
+        return lines.join('\n');
     }
 
     /**

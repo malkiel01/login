@@ -5400,8 +5400,8 @@ class MapEditor {
             angle: position.angle,
             fill: fillColor,
             stroke: '#1e293b',
-            strokeWidth: 1,
-            strokeUniform: true,  // Keep stroke width consistent regardless of zoom
+            strokeWidth: 0.5,
+            strokeUniform: true,  // Keep stroke width consistent regardless of zoom - v2
             opacity: dimmed ? 0.4 : 1,  // Dim rectangles for non-selected plots
             originX: 'left',
             originY: 'top',

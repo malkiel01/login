@@ -3151,6 +3151,11 @@ class MapEditor {
                 this.updateDockedPanelContent(side);
             }
         });
+
+        // Update areaGrave panel for multi-selection
+        if (this.panels.areaGrave.visible) {
+            this.updateAreaGravePanel();
+        }
     }
 
     /**
@@ -5839,6 +5844,68 @@ class MapEditor {
         const noSelectionEl = panel.querySelector('#areaGraveNoSelection');
         const detailsEl = panel.querySelector('#areaGraveContent');
 
+        // Check for multi-selection
+        const activeObject = this.canvas.getActiveObject();
+        const isMultiSelect = activeObject && activeObject.type === 'activeSelection';
+        const selectedAreaGraves = isMultiSelect
+            ? activeObject.getObjects().filter(obj => obj.isAreaGrave)
+            : [];
+
+        if (isMultiSelect && selectedAreaGraves.length > 1) {
+            // Multi-selection mode
+            if (noSelectionEl) noSelectionEl.style.display = 'none';
+            if (detailsEl) detailsEl.style.display = 'block';
+
+            // Show multi-select info
+            if (nameEl) nameEl.textContent = `${selectedAreaGraves.length} אחוזות נבחרו`;
+            if (rowEl) rowEl.textContent = '-';
+
+            // Disable position inputs (X, Y)
+            if (posXEl) {
+                posXEl.value = '';
+                posXEl.disabled = true;
+                posXEl.placeholder = '-';
+            }
+            if (posYEl) {
+                posYEl.value = '';
+                posYEl.disabled = true;
+                posYEl.placeholder = '-';
+            }
+
+            // Get common values for width, height, angle
+            const widths = selectedAreaGraves.map(r => Math.round(r.width * (r.scaleX || 1)));
+            const heights = selectedAreaGraves.map(r => Math.round(r.height * (r.scaleY || 1)));
+            const angles = selectedAreaGraves.map(r => Math.round(r.angle || 0));
+
+            const commonWidth = widths.every(w => w === widths[0]) ? widths[0] : null;
+            const commonHeight = heights.every(h => h === heights[0]) ? heights[0] : null;
+            const commonAngle = angles.every(a => a === angles[0]) ? angles[0] : null;
+
+            if (widthEl) {
+                widthEl.value = commonWidth !== null ? commonWidth : '';
+                widthEl.disabled = false;
+                widthEl.placeholder = commonWidth === null ? 'מעורב' : '';
+            }
+            if (heightEl) {
+                heightEl.value = commonHeight !== null ? commonHeight : '';
+                heightEl.disabled = false;
+                heightEl.placeholder = commonHeight === null ? 'מעורב' : '';
+            }
+            if (angleEl) {
+                angleEl.value = commonAngle !== null ? commonAngle : '';
+                angleEl.disabled = false;
+                angleEl.placeholder = commonAngle === null ? 'מעורב' : '';
+            }
+
+            // Hide graves list in multi-select
+            if (gravesListEl) {
+                gravesListEl.innerHTML = '<div class="graves-empty">בחירה מרובה - לא ניתן להציג רשימת קברים</div>';
+            }
+
+            return;
+        }
+
+        // Single selection or no selection
         if (!selected) {
             // No selection
             if (noSelectionEl) noSelectionEl.style.display = 'block';
@@ -5856,6 +5923,13 @@ class MapEditor {
         // Update basic info
         if (nameEl) nameEl.textContent = selected.name || selected.id;
         if (rowEl) rowEl.textContent = selected.rowName || '-';
+
+        // Enable all inputs for single selection
+        if (posXEl) posXEl.disabled = false;
+        if (posYEl) posYEl.disabled = false;
+        if (widthEl) widthEl.disabled = false;
+        if (heightEl) heightEl.disabled = false;
+        if (angleEl) angleEl.disabled = false;
 
         // Update position info (absolute canvas coordinates)
         if (rect) {
@@ -5952,13 +6026,45 @@ class MapEditor {
      * Handle position input changes from panel
      */
     onAreaGravePositionChange(field, value) {
+        const numValue = parseFloat(value) || 0;
+
+        // Check for multi-selection
+        const activeObject = this.canvas.getActiveObject();
+        const isMultiSelect = activeObject && activeObject.type === 'activeSelection';
+
+        if (isMultiSelect) {
+            // Multi-selection mode - only width, height, angle can be changed
+            if (field === 'x' || field === 'y') return; // Position disabled in multi-select
+
+            const selectedRects = activeObject.getObjects().filter(obj => obj.isAreaGrave);
+
+            selectedRects.forEach(rect => {
+                if (field === 'width') {
+                    rect.set({ width: numValue, scaleX: 1 });
+                } else if (field === 'height') {
+                    rect.set({ height: numValue, scaleY: 1 });
+                } else if (field === 'angle') {
+                    rect.set({ angle: numValue });
+                }
+                rect.setCoords();
+
+                // Update grave labels
+                if (rect.areaGraveData) {
+                    this.updateAreaGraveGraves(rect, rect.areaGraveData);
+                    this.saveAreaGravePosition(rect.areaGraveData.id, rect);
+                }
+            });
+
+            this.canvas.renderAll();
+            return;
+        }
+
+        // Single selection mode
         const selected = this.areaGraveState.selectedAreaGrave;
         if (!selected) return;
 
         const rect = this.areaGraveState.rectangles[selected.id];
         if (!rect) return;
-
-        const numValue = parseFloat(value) || 0;
 
         // Update rectangle with absolute canvas coordinates
         if (field === 'x') {
@@ -5974,6 +6080,10 @@ class MapEditor {
         }
 
         rect.setCoords();
+
+        // Update grave labels
+        this.updateAreaGraveGraves(rect, selected);
+
         this.canvas.renderAll();
 
         // Save position

@@ -2383,6 +2383,16 @@ class MapEditor {
             this.canvas.bringToFront(rect);
         });
 
+        // Grave rectangles should be above areaGrave rectangles
+        this.areaGraveState.graveRectangles.forEach(rect => {
+            this.canvas.bringToFront(rect);
+        });
+
+        // Grave texts should be on top of grave rectangles
+        this.areaGraveState.graveTextObjects.forEach(text => {
+            this.canvas.bringToFront(text);
+        });
+
         this.anchorPoints.forEach(point => {
             this.canvas.bringToFront(point);
         });
@@ -5206,10 +5216,11 @@ class MapEditor {
             });
         });
 
-        this.reorderLayers();
-
         // Always render graves inside areaGraves (not dependent on zoom)
         this.renderGravesInAreaGraves();
+
+        // Reorder layers AFTER adding graves
+        this.reorderLayers();
 
         this.canvas.renderAll();
 

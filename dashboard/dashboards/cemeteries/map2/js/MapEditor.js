@@ -978,14 +978,18 @@ class MapEditor {
     // ============================================
 
     zoomIn() {
-        const zoom = this.canvas.getZoom() * 1.2;
-        this.canvas.setZoom(Math.min(zoom, 40));
+        const newZoom = Math.min(this.canvas.getZoom() * 1.2, 40);
+        // Zoom towards center of canvas
+        const center = new fabric.Point(this.canvas.width / 2, this.canvas.height / 2);
+        this.canvas.zoomToPoint(center, newZoom);
         this.updateZoomDisplay();
     }
 
     zoomOut() {
-        const zoom = this.canvas.getZoom() / 1.2;
-        this.canvas.setZoom(Math.max(zoom, 0.1));
+        const newZoom = Math.max(this.canvas.getZoom() / 1.2, 0.1);
+        // Zoom towards center of canvas
+        const center = new fabric.Point(this.canvas.width / 2, this.canvas.height / 2);
+        this.canvas.zoomToPoint(center, newZoom);
         this.updateZoomDisplay();
     }
 

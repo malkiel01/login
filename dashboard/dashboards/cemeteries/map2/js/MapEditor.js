@@ -1201,20 +1201,31 @@ class MapEditor {
         const graveWidth = rectWidth / numGraves;
         const graveHeight = rectHeight;
 
-        // Get the top-left corner of the areaGrave (accounting for rotation)
-        const areaGraveLeft = rect.left;
-        const areaGraveTop = rect.top;
+        // Use fabric.js getCenterPoint() for accurate center with rotation
+        const center = rect.getCenterPoint();
+        const centerX = center.x;
+        const centerY = center.y;
+        const angleRad = (angle * Math.PI) / 180;
 
         // Create rectangle and text for each grave
         graves.forEach((grave, index) => {
-            // Calculate position for this grave rectangle
-            const graveLeft = areaGraveLeft + (index * graveWidth);
-            const graveTop = areaGraveTop;
+            // Calculate offset from center for this grave (in local coordinates)
+            // Graves are arranged horizontally, each taking 1/numGraves of the width
+            const localOffsetX = (index - (numGraves - 1) / 2) * graveWidth;
+            const localOffsetY = 0;  // Centered vertically
 
-            // Create grave rectangle
+            // Rotate offset around center
+            const rotatedOffsetX = localOffsetX * Math.cos(angleRad) - localOffsetY * Math.sin(angleRad);
+            const rotatedOffsetY = localOffsetX * Math.sin(angleRad) + localOffsetY * Math.cos(angleRad);
+
+            // Calculate grave center position
+            const graveCenterX = centerX + rotatedOffsetX;
+            const graveCenterY = centerY + rotatedOffsetY;
+
+            // Create grave rectangle (using center origin for proper rotation)
             const graveRect = new fabric.Rect({
-                left: graveLeft,
-                top: graveTop,
+                left: graveCenterX,
+                top: graveCenterY,
                 width: graveWidth,
                 height: graveHeight,
                 fill: 'transparent',
@@ -1222,15 +1233,11 @@ class MapEditor {
                 strokeWidth: 0.3,
                 strokeUniform: true,
                 angle: angle,
-                originX: 'left',
-                originY: 'top',
+                originX: 'center',
+                originY: 'center',
                 selectable: false,
                 evented: false
             });
-
-            // Calculate center of this grave rectangle for text
-            const graveCenterX = graveLeft + graveWidth / 2;
-            const graveCenterY = graveTop + graveHeight / 2;
 
             // Build label text: "שורה X קבר X"
             const rowName = areaGrave.rowName || '';
@@ -5640,36 +5647,34 @@ class MapEditor {
 
         // Update each grave rectangle and its text
         graves.forEach((grave, index) => {
-            const localGraveLeft = index * graveWidth;
-            const localGraveCenterX = localGraveLeft + graveWidth / 2;
-            const localGraveCenterY = graveHeight / 2;
+            // Calculate offset from center for this grave (in local coordinates)
+            const localOffsetX = (index - (numGraves - 1) / 2) * graveWidth;
+            const localOffsetY = 0;
 
-            const offsetX = localGraveCenterX - rectWidth / 2;
-            const offsetY = localGraveCenterY - rectHeight / 2;
+            // Rotate offset around center
+            const rotatedOffsetX = localOffsetX * Math.cos(angleRad) - localOffsetY * Math.sin(angleRad);
+            const rotatedOffsetY = localOffsetX * Math.sin(angleRad) + localOffsetY * Math.cos(angleRad);
 
-            const rotatedOffsetX = offsetX * Math.cos(angleRad) - offsetY * Math.sin(angleRad);
-            const rotatedOffsetY = offsetX * Math.sin(angleRad) + offsetY * Math.cos(angleRad);
-
+            // Calculate grave center position
             const graveCenterX = centerX + rotatedOffsetX;
             const graveCenterY = centerY + rotatedOffsetY;
 
+            // Update grave rectangle (using center origin)
             const graveRect = linkedGraveRects[index];
             if (graveRect) {
-                const graveOffsetX = localGraveLeft - rectWidth / 2;
-                const graveOffsetY = -rectHeight / 2;
-                const rotatedGraveX = graveOffsetX * Math.cos(angleRad) - graveOffsetY * Math.sin(angleRad);
-                const rotatedGraveY = graveOffsetX * Math.sin(angleRad) + graveOffsetY * Math.cos(angleRad);
-
                 graveRect.set({
-                    left: centerX + rotatedGraveX,
-                    top: centerY + rotatedGraveY,
+                    left: graveCenterX,
+                    top: graveCenterY,
                     width: graveWidth,
                     height: graveHeight,
-                    angle: angle
+                    angle: angle,
+                    originX: 'center',
+                    originY: 'center'
                 });
                 graveRect.setCoords();
             }
 
+            // Update text position
             const textObj = linkedTexts[index];
             if (textObj) {
                 const minDimension = Math.min(graveWidth, graveHeight);
@@ -5745,47 +5750,38 @@ class MapEditor {
         const linkedGraveRects = this.areaGraveState.graveRectangles.filter(r => r.linkedAreaGrave === rect);
         const linkedTexts = this.areaGraveState.graveTextObjects.filter(t => t.linkedRect && t.linkedRect.linkedAreaGrave === rect);
 
-        // Get the areaGrave position (top-left with rotation origin)
-        const areaGraveLeft = rect.left;
-        const areaGraveTop = rect.top;
-
-        // Calculate rotation point (center of areaGrave)
-        const centerX = areaGraveLeft + rectWidth / 2;
-        const centerY = areaGraveTop + rectHeight / 2;
+        // Use fabric.js getCenterPoint() for accurate center with rotation
+        const center = rect.getCenterPoint();
+        const centerX = center.x;
+        const centerY = center.y;
         const angleRad = (angle * Math.PI) / 180;
 
         // Update each grave rectangle and its text
         graves.forEach((grave, index) => {
-            // Calculate position for this grave (before rotation)
-            const localGraveLeft = index * graveWidth;
-            const localGraveCenterX = localGraveLeft + graveWidth / 2;
-            const localGraveCenterY = graveHeight / 2;
+            // Calculate offset from center for this grave (in local coordinates)
+            // Graves are arranged horizontally, each taking 1/numGraves of the width
+            const localOffsetX = (index - (numGraves - 1) / 2) * graveWidth;
+            const localOffsetY = 0;  // Centered vertically
 
-            // Rotate around center of areaGrave
-            const offsetX = localGraveCenterX - rectWidth / 2;
-            const offsetY = localGraveCenterY - rectHeight / 2;
+            // Rotate offset around center
+            const rotatedOffsetX = localOffsetX * Math.cos(angleRad) - localOffsetY * Math.sin(angleRad);
+            const rotatedOffsetY = localOffsetX * Math.sin(angleRad) + localOffsetY * Math.cos(angleRad);
 
-            const rotatedOffsetX = offsetX * Math.cos(angleRad) - offsetY * Math.sin(angleRad);
-            const rotatedOffsetY = offsetX * Math.sin(angleRad) + offsetY * Math.cos(angleRad);
-
+            // Calculate grave center position
             const graveCenterX = centerX + rotatedOffsetX;
             const graveCenterY = centerY + rotatedOffsetY;
 
-            // Update grave rectangle position
+            // Update grave rectangle position (using center origin)
             const graveRect = linkedGraveRects[index];
             if (graveRect) {
-                // Calculate top-left of grave rect after rotation
-                const graveOffsetX = localGraveLeft - rectWidth / 2;
-                const graveOffsetY = -rectHeight / 2;
-                const rotatedGraveX = graveOffsetX * Math.cos(angleRad) - graveOffsetY * Math.sin(angleRad);
-                const rotatedGraveY = graveOffsetX * Math.sin(angleRad) + graveOffsetY * Math.cos(angleRad);
-
                 graveRect.set({
-                    left: centerX + rotatedGraveX,
-                    top: centerY + rotatedGraveY,
+                    left: graveCenterX,
+                    top: graveCenterY,
                     width: graveWidth,
                     height: graveHeight,
-                    angle: angle
+                    angle: angle,
+                    originX: 'center',
+                    originY: 'center'
                 });
                 graveRect.setCoords();
             }

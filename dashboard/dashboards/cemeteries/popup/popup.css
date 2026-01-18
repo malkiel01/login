@@ -136,32 +136,24 @@
 }
 
 /* ========================================
-   Resize Handles - שתי פינות תחתונות
+   Resize Handle - פינה ימנית תחתונה
 ======================================== */
 
 .popup-resize-handle {
     position: absolute;
     bottom: 0;
+    right: 0;
     width: 16px;
     height: 16px;
-    z-index: 10;
-    border: 2px solid red; /* DEBUG */
-}
-
-.popup-resize-handle-right {
-    right: 0;
     cursor: nwse-resize;
-}
-
-.popup-resize-handle-left {
-    left: 0;
-    cursor: nesw-resize;
+    z-index: 10;
 }
 
 .popup-resize-handle::before {
     content: '';
     position: absolute;
     bottom: 2px;
+    right: 2px;
     width: 12px;
     height: 12px;
     background: linear-gradient(
@@ -180,15 +172,6 @@
         #cbd5e1 75%,
         transparent 75%
     );
-}
-
-.popup-resize-handle-right::before {
-    right: 2px;
-}
-
-.popup-resize-handle-left::before {
-    left: 2px;
-    transform: scaleX(-1);
 }
 
 /* ========================================

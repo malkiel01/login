@@ -240,7 +240,6 @@ class Popup {
         container.appendChild(content);
         if (this.config.resizable) {
             container.appendChild(resizeHandles.right);
-            container.appendChild(resizeHandles.left);
         }
 
         this.elements.container = container;
@@ -408,10 +407,9 @@ class Popup {
             this.elements.header.addEventListener('mousedown', (e) => this.startDrag(e));
         }
 
-        // Resizing - שתי ידיות
+        // Resizing - ידית ימין בלבד
         if (this.config.resizable) {
             this.elements.resizeHandles.right.addEventListener('mousedown', (e) => this.startResize(e, 'right'));
-            this.elements.resizeHandles.left.addEventListener('mousedown', (e) => this.startResize(e, 'left'));
         }
 
         // Focus (העלאת z-index)

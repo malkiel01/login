@@ -1286,9 +1286,9 @@ class MapEditor {
             this.areaGraveState.graveRectangles.push(graveRect);
             this.areaGraveState.graveTextObjects.push(titleObj);
 
-            // Check zoom level for customer name (800%+)
+            // Check zoom level for customer name (250%+)
             const zoom = this.canvas.getZoom();
-            if (zoom >= 8.0) {
+            if (zoom >= 2.5) {
                 const status = grave.status || 1;
                 let customerText = '';
                 if (status === 1) {

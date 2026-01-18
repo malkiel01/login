@@ -59,8 +59,9 @@ class MapEditor {
             graveTextObjects: [],      // Array of fabric text objects for graves (visible at high zoom)
             selectedAreaGrave: null,   // Currently selected areaGrave
             currentPlotId: null,       // Current plot ID for which rectangles are shown
-            defaultWidth: 9,
+            defaultWidth: 18,
             defaultHeight: 12,
+            graveRectangles: [],       // Array of fabric.Rect for individual graves inside areaGraves
             statusColors: {
                 1: '#22c55e',          // פנוי - green
                 2: '#3b82f6',          // נרכש - blue
@@ -1163,69 +1164,107 @@ class MapEditor {
     }
 
     /**
-     * Render label text inside areaGrave rectangle
-     * Text stays inside, rotates with rectangle
+     * Render individual grave rectangles inside areaGrave
+     * Each grave gets its own rectangle with label
      */
     renderAreaGraveLabel(rect, areaGrave) {
-        // Get rectangle dimensions (accounting for scale)
+        const graves = areaGrave.graves || [];
+        const numGraves = graves.length || 1;
+
+        // Get areaGrave rectangle dimensions
         const rectWidth = rect.width * (rect.scaleX || 1);
         const rectHeight = rect.height * (rect.scaleY || 1);
         const angle = rect.angle || 0;
 
-        // Get actual center point of rectangle (works with rotation)
-        const center = rect.getCenterPoint();
+        // Calculate width for each grave rectangle
+        const graveWidth = rectWidth / numGraves;
+        const graveHeight = rectHeight;
 
-        // Build label text: "שורה X קבר X"
-        const rowName = areaGrave.rowName || '';
-        const graveName = areaGrave.name || '';
-        const text = `שורה ${rowName}\nקבר ${graveName}`;
+        // Get the top-left corner of the areaGrave (accounting for rotation)
+        const areaGraveLeft = rect.left;
+        const areaGraveTop = rect.top;
 
-        // Calculate font size to fit inside rectangle
-        // Use smaller dimension to ensure text fits
-        const minDimension = Math.min(rectWidth, rectHeight);
-        const fontSize = Math.max(1, minDimension / 6);
+        // Create rectangle and text for each grave
+        graves.forEach((grave, index) => {
+            // Calculate position for this grave rectangle
+            const graveLeft = areaGraveLeft + (index * graveWidth);
+            const graveTop = areaGraveTop;
 
-        console.log('DEBUG renderAreaGraveLabel:', {
-            rectWidth,
-            rectHeight,
-            angle,
-            centerX: center.x,
-            centerY: center.y,
-            text,
-            minDimension,
-            fontSize
+            // Create grave rectangle
+            const graveRect = new fabric.Rect({
+                left: graveLeft,
+                top: graveTop,
+                width: graveWidth,
+                height: graveHeight,
+                fill: 'transparent',
+                stroke: '#ffffff',
+                strokeWidth: 0.3,
+                strokeUniform: true,
+                angle: angle,
+                originX: 'left',
+                originY: 'top',
+                selectable: false,
+                evented: false
+            });
+
+            // Calculate center of this grave rectangle for text
+            const graveCenterX = graveLeft + graveWidth / 2;
+            const graveCenterY = graveTop + graveHeight / 2;
+
+            // Build label text: "שורה X קבר X"
+            const rowName = areaGrave.rowName || '';
+            const graveName = grave.name || '';
+            const text = `שורה ${rowName}\nקבר ${graveName}`;
+
+            // Calculate font size based on grave rectangle size
+            const minDimension = Math.min(graveWidth, graveHeight);
+            const fontSize = Math.max(1, minDimension / 6);
+
+            // Create text object
+            const textObj = new fabric.Text(text, {
+                left: graveCenterX,
+                top: graveCenterY,
+                fontSize: fontSize,
+                fill: '#ffffff',
+                textAlign: 'center',
+                originX: 'center',
+                originY: 'center',
+                angle: angle,
+                selectable: false,
+                evented: false
+            });
+
+            // Store references
+            graveRect.graveData = grave;
+            graveRect.linkedAreaGrave = rect;
+            textObj.graveData = grave;
+            textObj.linkedRect = graveRect;
+
+            // Add to canvas
+            this.canvas.add(graveRect);
+            this.canvas.add(textObj);
+
+            // Track objects
+            this.areaGraveState.graveRectangles.push(graveRect);
+            this.areaGraveState.graveTextObjects.push(textObj);
         });
-
-        const textObj = new fabric.Text(text, {
-            left: center.x,
-            top: center.y,
-            fontSize: fontSize,
-            fill: '#ffffff',
-            textAlign: 'center',
-            originX: 'center',
-            originY: 'center',
-            angle: angle,  // Rotate with the rectangle
-            selectable: false,
-            evented: false
-        });
-
-        // Store areaGrave data reference
-        textObj.areaGraveData = areaGrave;
-        textObj.linkedRect = rect;  // Link to rectangle for updates
-
-        // Add to canvas and track
-        this.canvas.add(textObj);
-        this.areaGraveState.graveTextObjects.push(textObj);
     }
 
     /**
-     * Clear all grave text objects from canvas
+     * Clear all grave rectangles and text objects from canvas
      */
     clearGraves() {
+        // Clear text objects
         this.areaGraveState.graveTextObjects.forEach(obj => {
             this.canvas.remove(obj);
         });
         this.areaGraveState.graveTextObjects = [];
+
+        // Clear grave rectangles
+        this.areaGraveState.graveRectangles.forEach(obj => {
+            this.canvas.remove(obj);
+        });
+        this.areaGraveState.graveRectangles = [];
     }
 
     showZoomInput() {

@@ -1279,6 +1279,7 @@ class MapEditor {
             graveRect.linkedAreaGrave = rect;
             textObj.graveData = grave;
             textObj.linkedRect = graveRect;
+            textObj.originalText = text;  // Store original text for dynamic re-wrapping
 
             // Add to canvas
             this.canvas.add(graveRect);
@@ -5768,9 +5769,9 @@ class MapEditor {
             // Update text position and size
             const textObj = linkedTexts[index];
             if (textObj) {
-                // Recalculate optimal font size for new dimensions
-                const currentText = textObj.text;
-                const { fontSize, finalText } = this.calculateOptimalFontSize(currentText, graveWidth, graveHeight);
+                // Use original text for dynamic re-wrapping based on new dimensions
+                const originalText = textObj.originalText || textObj.text;
+                const { fontSize, finalText } = this.calculateOptimalFontSize(originalText, graveWidth, graveHeight);
 
                 textObj.set({
                     left: graveCenterX,
@@ -5882,9 +5883,9 @@ class MapEditor {
             // Update text position and size
             const textObj = linkedTexts[index];
             if (textObj) {
-                // Recalculate optimal font size for new dimensions
-                const currentText = textObj.text;
-                const { fontSize, finalText } = this.calculateOptimalFontSize(currentText, graveWidth, graveHeight);
+                // Use original text for dynamic re-wrapping based on new dimensions
+                const originalText = textObj.originalText || textObj.text;
+                const { fontSize, finalText } = this.calculateOptimalFontSize(originalText, graveWidth, graveHeight);
 
                 textObj.set({
                     left: graveCenterX,

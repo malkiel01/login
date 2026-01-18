@@ -5997,6 +5997,7 @@ class MapEditor {
 
             // Update grave rectangle position (using center origin)
             const graveRect = linkedGraveRects[index];
+            console.log('[updateAreaGraveGraves] index:', index, 'graveRect:', graveRect, 'visible:', graveRect?.visible, 'opacity:', graveRect?.opacity);
             if (graveRect) {
                 graveRect.set({
                     left: graveCenterX,
@@ -6005,14 +6006,17 @@ class MapEditor {
                     height: graveHeight,
                     angle: angle,
                     originX: 'center',
-                    originY: 'center'
+                    originY: 'center',
+                    visible: true
                 });
                 graveRect.setCoords();
+                console.log('[updateAreaGraveGraves] graveRect updated - left:', graveCenterX, 'top:', graveCenterY, 'width:', graveWidth, 'height:', graveHeight);
             }
 
             // Update title text position and size
             const textPadding = graveWidth * 0.02;
             const titleObj = linkedTitleTexts[index];
+            console.log('[updateAreaGraveGraves] titleObj:', titleObj, 'visible:', titleObj?.visible);
             if (titleObj) {
                 const originalText = titleObj.originalText || titleObj.text;
                 const { fontSize: titleFontSize, finalText: finalTitleText } = this.calculateOptimalFontSize(originalText, graveWidth, graveHeight * 0.6);
@@ -6033,12 +6037,15 @@ class MapEditor {
                     text: finalTitleText,
                     textAlign: 'right',
                     originX: 'right',
-                    originY: 'top'
+                    originY: 'top',
+                    visible: true
                 });
                 titleObj.setCoords();
+                console.log('[updateAreaGraveGraves] titleObj updated');
 
                 // Update customer text if exists
                 const customerObj = linkedCustomerTexts[index];
+                console.log('[updateAreaGraveGraves] customerObj:', customerObj, 'visible:', customerObj?.visible);
                 if (customerObj) {
                     const customerOriginalText = customerObj.originalText || customerObj.text;
                     const targetFontSize = titleFontSize * 1.4;
@@ -6060,14 +6067,17 @@ class MapEditor {
                         text: finalCustomerText,
                         textAlign: 'center',
                         originX: 'center',
-                        originY: 'bottom'
+                        originY: 'bottom',
+                        visible: true
                     });
                     customerObj.setCoords();
+                    console.log('[updateAreaGraveGraves] customerObj updated');
                 }
             }
         });
 
         this.canvas.renderAll();
+        console.log('[updateAreaGraveGraves] DONE - canvas.renderAll() called');
     }
 
     /**

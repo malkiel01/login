@@ -6321,9 +6321,10 @@ class MapEditor {
                 }
                 rect.setCoords();
 
-                // Update grave labels
+                // Update grave labels using absolute position (important for multi-selection)
                 if (rect.areaGraveData) {
-                    this.updateAreaGraveGraves(rect, rect.areaGraveData);
+                    const absolutePos = this.getAbsolutePosition(rect, activeObject);
+                    this.updateAreaGraveGravesAtPosition(rect, rect.areaGraveData, absolutePos);
                     this.saveAreaGravePosition(rect.areaGraveData.id, rect);
                 }
             });

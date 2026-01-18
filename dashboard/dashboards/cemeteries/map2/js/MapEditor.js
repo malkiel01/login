@@ -6325,7 +6325,8 @@ class MapEditor {
                 if (rect.areaGraveData) {
                     const absolutePos = this.getAbsolutePosition(rect, activeObject);
                     this.updateAreaGraveGravesAtPosition(rect, rect.areaGraveData, absolutePos);
-                    this.saveAreaGravePosition(rect.areaGraveData.id, rect);
+                    // Save using absolute position (rect coordinates are relative to group)
+                    this.saveAreaGravePositionFromAbsolute(rect.areaGraveData.id, rect, absolutePos);
                 }
             });
 

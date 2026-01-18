@@ -1300,7 +1300,7 @@ class MapEditor {
                 if (customerText) {
                     // Calculate font size for customer name - slightly larger than title
                     const { fontSize: baseFontSize, finalText: finalCustomerText } = this.calculateOptimalFontSize(customerText, graveWidth, graveHeight * 0.4);
-                    const customerFontSize = Math.max(baseFontSize, titleFontSize * 1.15);
+                    const customerFontSize = Math.max(baseFontSize, titleFontSize * 1.3);
 
                     // Calculate bottom-center position
                     const customerOffsetX = 0;  // Center

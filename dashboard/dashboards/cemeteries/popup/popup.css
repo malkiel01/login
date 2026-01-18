@@ -379,16 +379,7 @@ body.popup-detached-window .popup-detached-content {
    תמיכה ב-RTL
 ======================================== */
 
-[dir="rtl"] .popup-resize-handle {
-    right: auto;
-    left: 0;
-}
-
-[dir="rtl"] .popup-resize-handle::before {
-    right: auto;
-    left: 2px;
-    transform: scaleX(-1);
-}
+/* Resize handle נשאר בימין תחתון גם ב-RTL */
 
 [dir="rtl"] .popup-minimized-container {
     direction: rtl;

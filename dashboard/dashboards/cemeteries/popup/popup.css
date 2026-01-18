@@ -10,7 +10,6 @@
 
 .popup-container {
     position: fixed;
-    direction: ltr;
     background: #ffffff;
     border-radius: 8px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
@@ -55,8 +54,6 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    direction: rtl;
-    text-align: right;
 }
 
 /* ========================================
@@ -143,10 +140,8 @@
 
 .popup-resize-handle {
     position: absolute;
-    direction: ltr;
     bottom: 0;
-    right: 0 !important;
-    left: auto !important;
+    inset-inline-start: 0;
     width: 16px;
     height: 16px;
     cursor: nwse-resize;
@@ -157,7 +152,7 @@
     content: '';
     position: absolute;
     bottom: 2px;
-    right: 2px;
+    inset-inline-start: 2px;
     width: 12px;
     height: 12px;
     background: linear-gradient(

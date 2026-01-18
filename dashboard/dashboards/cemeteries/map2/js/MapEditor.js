@@ -5811,10 +5811,11 @@ class MapEditor {
         const graveWidth = rectWidth / numGraves;
         const graveHeight = rectHeight;
 
-        // Find all grave rectangles and texts linked to this areaGrave
-        const linkedGraveRects = this.areaGraveState.graveRectangles.filter(r => r.linkedAreaGrave === rect);
-        const linkedTitleTexts = this.areaGraveState.graveTextObjects.filter(t => t.linkedRect && t.linkedRect.linkedAreaGrave === rect && !t.isCustomerText);
-        const linkedCustomerTexts = this.areaGraveState.graveTextObjects.filter(t => t.linkedRect && t.linkedRect.linkedAreaGrave === rect && t.isCustomerText);
+        // Find all grave rectangles and texts linked to this areaGrave (compare by ID, not reference)
+        const areaGraveId = rect.areaGraveId;
+        const linkedGraveRects = this.areaGraveState.graveRectangles.filter(r => r.linkedAreaGrave?.areaGraveId === areaGraveId);
+        const linkedTitleTexts = this.areaGraveState.graveTextObjects.filter(t => t.linkedRect && t.linkedRect.linkedAreaGrave?.areaGraveId === areaGraveId && !t.isCustomerText);
+        const linkedCustomerTexts = this.areaGraveState.graveTextObjects.filter(t => t.linkedRect && t.linkedRect.linkedAreaGrave?.areaGraveId === areaGraveId && t.isCustomerText);
 
         // Calculate center of areaGrave
         const centerX = absolutePos.left + rectWidth / 2;
@@ -5963,14 +5964,15 @@ class MapEditor {
         const graveWidth = rectWidth / numGraves;
         const graveHeight = rectHeight;
 
-        // Find all grave rectangles and texts linked to this areaGrave
-        const linkedGraveRects = this.areaGraveState.graveRectangles.filter(r => r.linkedAreaGrave === rect);
+        // Find all grave rectangles and texts linked to this areaGrave (compare by ID, not reference)
+        const areaGraveId = rect.areaGraveId;
+        const linkedGraveRects = this.areaGraveState.graveRectangles.filter(r => r.linkedAreaGrave?.areaGraveId === areaGraveId);
         // Filter only title texts (not customer texts)
-        const linkedTitleTexts = this.areaGraveState.graveTextObjects.filter(t => t.linkedRect && t.linkedRect.linkedAreaGrave === rect && !t.isCustomerText);
+        const linkedTitleTexts = this.areaGraveState.graveTextObjects.filter(t => t.linkedRect && t.linkedRect.linkedAreaGrave?.areaGraveId === areaGraveId && !t.isCustomerText);
         // Filter only customer texts
-        const linkedCustomerTexts = this.areaGraveState.graveTextObjects.filter(t => t.linkedRect && t.linkedRect.linkedAreaGrave === rect && t.isCustomerText);
+        const linkedCustomerTexts = this.areaGraveState.graveTextObjects.filter(t => t.linkedRect && t.linkedRect.linkedAreaGrave?.areaGraveId === areaGraveId && t.isCustomerText);
 
-        console.log('[updateAreaGraveGraves] graves:', graves.length, 'linkedRects:', linkedGraveRects.length, 'titleTexts:', linkedTitleTexts.length, 'customerTexts:', linkedCustomerTexts.length);
+        console.log('[updateAreaGraveGraves] areaGraveId:', areaGraveId, 'graves:', graves.length, 'linkedRects:', linkedGraveRects.length, 'titleTexts:', linkedTitleTexts.length, 'customerTexts:', linkedCustomerTexts.length);
 
         // Use fabric.js getCenterPoint() for accurate center with rotation
         const center = rect.getCenterPoint();
@@ -6339,13 +6341,6 @@ class MapEditor {
         }
 
         rect.setCoords();
-
-        // Debug: check linkage
-        console.log('[onAreaGravePositionChange] selected.id:', selected.id, 'selected.graves:', selected.graves?.length);
-        console.log('[onAreaGravePositionChange] rect:', rect, 'rect.areaGraveData:', rect.areaGraveData);
-        console.log('[onAreaGravePositionChange] graveRectangles count:', this.areaGraveState.graveRectangles.length);
-        const linkedRects = this.areaGraveState.graveRectangles.filter(r => r.linkedAreaGrave === rect);
-        console.log('[onAreaGravePositionChange] linkedRects found:', linkedRects.length);
 
         // Update grave labels
         this.updateAreaGraveGraves(rect, selected);

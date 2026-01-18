@@ -1116,25 +1116,20 @@ class MapEditor {
 
     /**
      * Set visibility for graves inside areaGraves
+     * Note: Graves are now ALWAYS visible regardless of zoom level
      */
     setGravesVisible(visible) {
-        console.log('setGravesVisible called:', visible, 'current objects:', this.areaGraveState.graveTextObjects.length);
-
-        if (visible) {
-            // Render graves if not already rendered
-            if (this.areaGraveState.graveTextObjects.length === 0) {
-                this.renderGravesInAreaGraves();
-            } else {
-                // Just make them visible
-                this.areaGraveState.graveTextObjects.forEach(obj => {
-                    obj.visible = true;
-                });
-                this.canvas.renderAll();
-            }
+        // Always show graves - ignore the visible parameter
+        // Graves should always be displayed per user requirement
+        if (this.areaGraveState.graveTextObjects.length === 0) {
+            this.renderGravesInAreaGraves();
         } else {
-            // Hide graves
+            // Ensure all grave objects are visible
             this.areaGraveState.graveTextObjects.forEach(obj => {
-                obj.visible = false;
+                obj.visible = true;
+            });
+            this.areaGraveState.graveRectangles.forEach(obj => {
+                obj.visible = true;
             });
             this.canvas.renderAll();
         }
@@ -5212,6 +5207,10 @@ class MapEditor {
         });
 
         this.reorderLayers();
+
+        // Always render graves inside areaGraves (not dependent on zoom)
+        this.renderGravesInAreaGraves();
+
         this.canvas.renderAll();
 
         // Apply LOD visibility based on current zoom
@@ -5464,6 +5463,9 @@ class MapEditor {
         // Add event handlers
         rect.on('selected', () => this.onAreaGraveSelected(areaGrave));
         rect.on('modified', () => this.onAreaGraveModified(rect, areaGrave));
+        rect.on('moving', () => this.updateAreaGraveGraves(rect, areaGrave));
+        rect.on('scaling', () => this.updateAreaGraveGraves(rect, areaGrave));
+        rect.on('rotating', () => this.updateAreaGraveGraves(rect, areaGrave));
         rect.on('mousedblclick', () => this.onAreaGraveDoubleClick(areaGrave));
 
         return rect;
@@ -5502,41 +5504,94 @@ class MapEditor {
         // Update panel with new position
         this.updateAreaGravePanel();
 
-        // Update linked text label position/rotation
-        this.updateAreaGraveLabelPosition(rect);
+        // Update all linked grave rectangles and labels
+        this.updateAreaGraveGraves(rect, areaGrave);
 
         // Auto-save position
         this.saveAreaGravePosition(areaGrave.id, rect);
     }
 
     /**
-     * Update the label text position when rectangle is modified
+     * Update all grave rectangles and labels when areaGrave is modified
      */
-    updateAreaGraveLabelPosition(rect) {
-        // Find the linked text object
-        const textObj = this.areaGraveState.graveTextObjects.find(t => t.linkedRect === rect);
-        if (!textObj) return;
+    updateAreaGraveGraves(rect, areaGrave) {
+        const graves = areaGrave.graves || [];
+        const numGraves = graves.length || 1;
 
-        // Get rectangle dimensions
+        // Get areaGrave rectangle dimensions
         const rectWidth = rect.width * (rect.scaleX || 1);
         const rectHeight = rect.height * (rect.scaleY || 1);
+        const angle = rect.angle || 0;
 
-        // Get actual center point (works with rotation)
-        const center = rect.getCenterPoint();
+        // Calculate width for each grave
+        const graveWidth = rectWidth / numGraves;
+        const graveHeight = rectHeight;
 
-        // Update text position and angle
-        textObj.set({
-            left: center.x,
-            top: center.y,
-            angle: rect.angle || 0
+        // Find all grave rectangles and texts linked to this areaGrave
+        const linkedGraveRects = this.areaGraveState.graveRectangles.filter(r => r.linkedAreaGrave === rect);
+        const linkedTexts = this.areaGraveState.graveTextObjects.filter(t => t.linkedRect && t.linkedRect.linkedAreaGrave === rect);
+
+        // Get the areaGrave position (top-left with rotation origin)
+        const areaGraveLeft = rect.left;
+        const areaGraveTop = rect.top;
+
+        // Calculate rotation point (center of areaGrave)
+        const centerX = areaGraveLeft + rectWidth / 2;
+        const centerY = areaGraveTop + rectHeight / 2;
+        const angleRad = (angle * Math.PI) / 180;
+
+        // Update each grave rectangle and its text
+        graves.forEach((grave, index) => {
+            // Calculate position for this grave (before rotation)
+            const localGraveLeft = index * graveWidth;
+            const localGraveCenterX = localGraveLeft + graveWidth / 2;
+            const localGraveCenterY = graveHeight / 2;
+
+            // Rotate around center of areaGrave
+            const offsetX = localGraveCenterX - rectWidth / 2;
+            const offsetY = localGraveCenterY - rectHeight / 2;
+
+            const rotatedOffsetX = offsetX * Math.cos(angleRad) - offsetY * Math.sin(angleRad);
+            const rotatedOffsetY = offsetX * Math.sin(angleRad) + offsetY * Math.cos(angleRad);
+
+            const graveCenterX = centerX + rotatedOffsetX;
+            const graveCenterY = centerY + rotatedOffsetY;
+
+            // Update grave rectangle position
+            const graveRect = linkedGraveRects[index];
+            if (graveRect) {
+                // Calculate top-left of grave rect after rotation
+                const graveOffsetX = localGraveLeft - rectWidth / 2;
+                const graveOffsetY = -rectHeight / 2;
+                const rotatedGraveX = graveOffsetX * Math.cos(angleRad) - graveOffsetY * Math.sin(angleRad);
+                const rotatedGraveY = graveOffsetX * Math.sin(angleRad) + graveOffsetY * Math.cos(angleRad);
+
+                graveRect.set({
+                    left: centerX + rotatedGraveX,
+                    top: centerY + rotatedGraveY,
+                    width: graveWidth,
+                    height: graveHeight,
+                    angle: angle
+                });
+                graveRect.setCoords();
+            }
+
+            // Update text position
+            const textObj = linkedTexts[index];
+            if (textObj) {
+                const minDimension = Math.min(graveWidth, graveHeight);
+                const fontSize = Math.max(1, minDimension / 6);
+
+                textObj.set({
+                    left: graveCenterX,
+                    top: graveCenterY,
+                    angle: angle,
+                    fontSize: fontSize
+                });
+                textObj.setCoords();
+            }
         });
 
-        // Update font size if rectangle size changed
-        const minDimension = Math.min(rectWidth, rectHeight);
-        const fontSize = Math.max(1, minDimension / 6);
-        textObj.set({ fontSize: fontSize });
-
-        textObj.setCoords();
         this.canvas.renderAll();
     }
 

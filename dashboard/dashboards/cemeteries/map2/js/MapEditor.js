@@ -1274,6 +1274,7 @@ class MapEditor {
                 left: textX,
                 top: textY,
                 fontSize: fontSize,
+                fontFamily: 'David, Arial, sans-serif',
                 fill: '#ffffff',
                 textAlign: 'right',
                 originX: 'right',
@@ -1326,7 +1327,7 @@ class MapEditor {
         // Create temporary text object to measure dimensions
         const tempText = new fabric.Text(finalText, {
             fontSize: fontSize,
-            fontFamily: 'Arial'
+            fontFamily: 'David, Arial, sans-serif'
         });
 
         let textWidth = tempText.width;
@@ -5796,6 +5797,7 @@ class MapEditor {
                     top: textY,
                     angle: angle,
                     fontSize: fontSize,
+                    fontFamily: 'David, Arial, sans-serif',
                     text: finalText,
                     textAlign: 'right',
                     originX: 'right',
@@ -5922,6 +5924,7 @@ class MapEditor {
                     top: textY,
                     angle: angle,
                     fontSize: fontSize,
+                    fontFamily: 'David, Arial, sans-serif',
                     text: finalText,
                     textAlign: 'right',
                     originX: 'right',

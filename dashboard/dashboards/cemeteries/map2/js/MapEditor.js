@@ -1239,41 +1239,28 @@ class MapEditor {
                 evented: false
             });
 
-            // Build label text: "שורה X קבר Y" (single line by default)
+            // Build title text: "שורה X קבר Y" (single line by default)
             const rowName = areaGrave.rowName || '';
             const graveName = grave.name || '';
+            let titleText = `שורה ${rowName} קבר ${graveName}`;
 
-            // Check zoom level for extended info (800%+)
-            const zoom = this.canvas.getZoom();
-            let text = `שורה ${rowName} קבר ${graveName}`;  // Single line default
+            // Calculate optimal font size for title
+            const { fontSize: titleFontSize, finalText: finalTitleText } = this.calculateOptimalFontSize(titleText, graveWidth, graveHeight * 0.6);
 
-            if (zoom >= 8.0) {
-                // Add customer name or "פנוי" at high zoom
-                const status = grave.status || 1;
-                if (status === 1) {
-                    text += '\nפנוי';
-                } else if (grave.customer?.name) {
-                    text += `\n${grave.customer.name}`;
-                }
-            }
-
-            // Calculate optimal font size that fits within the grave rectangle
-            const { fontSize, finalText } = this.calculateOptimalFontSize(text, graveWidth, graveHeight);
-
-            // Calculate top-right position with minimal padding (for text placement)
+            // Calculate top-right position with minimal padding (for title placement)
             const textPadding = graveWidth * 0.02;
-            const textOffsetX = (graveWidth / 2) - textPadding;
-            const textOffsetY = -(graveHeight / 2) + textPadding;
-            const rotatedTextOffsetX = textOffsetX * Math.cos(angleRad) - textOffsetY * Math.sin(angleRad);
-            const rotatedTextOffsetY = textOffsetX * Math.sin(angleRad) + textOffsetY * Math.cos(angleRad);
-            const textX = graveCenterX + rotatedTextOffsetX;
-            const textY = graveCenterY + rotatedTextOffsetY;
+            const titleOffsetX = (graveWidth / 2) - textPadding;
+            const titleOffsetY = -(graveHeight / 2) + textPadding;
+            const rotatedTitleOffsetX = titleOffsetX * Math.cos(angleRad) - titleOffsetY * Math.sin(angleRad);
+            const rotatedTitleOffsetY = titleOffsetX * Math.sin(angleRad) + titleOffsetY * Math.cos(angleRad);
+            const titleX = graveCenterX + rotatedTitleOffsetX;
+            const titleY = graveCenterY + rotatedTitleOffsetY;
 
-            // Create text object - aligned to right, at top
-            const textObj = new fabric.Text(finalText, {
-                left: textX,
-                top: textY,
-                fontSize: fontSize,
+            // Create title text object - aligned to right, at top
+            const titleObj = new fabric.Text(finalTitleText, {
+                left: titleX,
+                top: titleY,
+                fontSize: titleFontSize,
                 fontFamily: 'David, Arial, sans-serif',
                 fill: '#ffffff',
                 textAlign: 'right',
@@ -1287,17 +1274,64 @@ class MapEditor {
             // Store references
             graveRect.graveData = grave;
             graveRect.linkedAreaGrave = rect;
-            textObj.graveData = grave;
-            textObj.linkedRect = graveRect;
-            textObj.originalText = text;  // Store original text for dynamic re-wrapping
+            titleObj.graveData = grave;
+            titleObj.linkedRect = graveRect;
+            titleObj.originalText = titleText;
 
             // Add to canvas
             this.canvas.add(graveRect);
-            this.canvas.add(textObj);
+            this.canvas.add(titleObj);
 
             // Track objects
             this.areaGraveState.graveRectangles.push(graveRect);
-            this.areaGraveState.graveTextObjects.push(textObj);
+            this.areaGraveState.graveTextObjects.push(titleObj);
+
+            // Check zoom level for customer name (800%+)
+            const zoom = this.canvas.getZoom();
+            if (zoom >= 8.0) {
+                const status = grave.status || 1;
+                let customerText = '';
+                if (status === 1) {
+                    customerText = 'פנוי';
+                } else if (grave.customer?.name) {
+                    customerText = grave.customer.name;
+                }
+
+                if (customerText) {
+                    // Calculate font size for customer name
+                    const { fontSize: customerFontSize, finalText: finalCustomerText } = this.calculateOptimalFontSize(customerText, graveWidth, graveHeight * 0.35);
+
+                    // Calculate bottom-center position
+                    const customerOffsetX = 0;  // Center
+                    const customerOffsetY = (graveHeight / 2) - textPadding;
+                    const rotatedCustomerOffsetX = customerOffsetX * Math.cos(angleRad) - customerOffsetY * Math.sin(angleRad);
+                    const rotatedCustomerOffsetY = customerOffsetX * Math.sin(angleRad) + customerOffsetY * Math.cos(angleRad);
+                    const customerX = graveCenterX + rotatedCustomerOffsetX;
+                    const customerY = graveCenterY + rotatedCustomerOffsetY;
+
+                    // Create customer text object - centered, at bottom
+                    const customerObj = new fabric.Text(finalCustomerText, {
+                        left: customerX,
+                        top: customerY,
+                        fontSize: customerFontSize,
+                        fontFamily: 'David, Arial, sans-serif',
+                        fill: '#ffffff',
+                        textAlign: 'center',
+                        originX: 'center',
+                        originY: 'bottom',
+                        angle: angle,
+                        selectable: false,
+                        evented: false
+                    });
+
+                    customerObj.graveData = grave;
+                    customerObj.linkedRect = graveRect;
+                    customerObj.isCustomerText = true;
+
+                    this.canvas.add(customerObj);
+                    this.areaGraveState.graveTextObjects.push(customerObj);
+                }
+            }
         });
     }
 

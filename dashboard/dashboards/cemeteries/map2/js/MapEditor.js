@@ -5970,6 +5970,8 @@ class MapEditor {
         // Filter only customer texts
         const linkedCustomerTexts = this.areaGraveState.graveTextObjects.filter(t => t.linkedRect && t.linkedRect.linkedAreaGrave === rect && t.isCustomerText);
 
+        console.log('[updateAreaGraveGraves] graves:', graves.length, 'linkedRects:', linkedGraveRects.length, 'titleTexts:', linkedTitleTexts.length, 'customerTexts:', linkedCustomerTexts.length);
+
         // Use fabric.js getCenterPoint() for accurate center with rotation
         const center = rect.getCenterPoint();
         const centerX = center.x;

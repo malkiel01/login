@@ -1257,12 +1257,11 @@ class MapEditor {
                 }
             }
 
-            // Calculate font size based on grave rectangle size
-            const minDimension = Math.min(graveWidth, graveHeight);
-            const fontSize = Math.max(1, minDimension / 6);
+            // Calculate optimal font size that fits within the grave rectangle
+            const { fontSize, finalText } = this.calculateOptimalFontSize(text, graveWidth, graveHeight);
 
             // Create text object
-            const textObj = new fabric.Text(text, {
+            const textObj = new fabric.Text(finalText, {
                 left: graveCenterX,
                 top: graveCenterY,
                 fontSize: fontSize,
@@ -1289,6 +1288,98 @@ class MapEditor {
             this.areaGraveState.graveRectangles.push(graveRect);
             this.areaGraveState.graveTextObjects.push(textObj);
         });
+    }
+
+    /**
+     * Calculate optimal font size that fits text within given dimensions
+     * Priority: 1) Break long lines, 2) Reduce font size
+     * @param {string} text - The text to fit
+     * @param {number} maxWidth - Maximum width available
+     * @param {number} maxHeight - Maximum height available
+     * @returns {{fontSize: number, finalText: string}}
+     */
+    calculateOptimalFontSize(text, maxWidth, maxHeight) {
+        // Add padding (10% on each side)
+        const availableWidth = maxWidth * 0.8;
+        const availableHeight = maxHeight * 0.85;
+
+        // Start with initial font size based on dimensions
+        let fontSize = Math.min(maxWidth, maxHeight) / 4;
+        const minFontSize = 1;
+        const maxFontSize = Math.min(maxWidth, maxHeight) / 3;
+
+        fontSize = Math.min(fontSize, maxFontSize);
+
+        // Process text - try to break long lines
+        let finalText = this.wrapTextToFit(text, availableWidth, fontSize);
+
+        // Create temporary text object to measure dimensions
+        const tempText = new fabric.Text(finalText, {
+            fontSize: fontSize,
+            fontFamily: 'Arial'
+        });
+
+        let textWidth = tempText.width;
+        let textHeight = tempText.height;
+
+        // Reduce font size until text fits or minimum reached
+        while ((textWidth > availableWidth || textHeight > availableHeight) && fontSize > minFontSize) {
+            fontSize = Math.max(minFontSize, fontSize * 0.85);
+
+            // Re-wrap text with new font size
+            finalText = this.wrapTextToFit(text, availableWidth, fontSize);
+
+            tempText.set({ text: finalText, fontSize: fontSize });
+            textWidth = tempText.width;
+            textHeight = tempText.height;
+        }
+
+        return { fontSize: Math.max(minFontSize, fontSize), finalText };
+    }
+
+    /**
+     * Wrap text to fit within specified width
+     * @param {string} text - Original text
+     * @param {number} maxWidth - Maximum width
+     * @param {number} fontSize - Current font size
+     * @returns {string} - Text with line breaks added
+     */
+    wrapTextToFit(text, maxWidth, fontSize) {
+        const lines = text.split('\n');
+        const wrappedLines = [];
+
+        // Approximate character width (Hebrew characters are roughly square)
+        const charWidth = fontSize * 0.6;
+        const maxCharsPerLine = Math.floor(maxWidth / charWidth);
+
+        lines.forEach(line => {
+            if (line.length <= maxCharsPerLine) {
+                wrappedLines.push(line);
+            } else {
+                // Need to break this line
+                const words = line.split(' ');
+                let currentLine = '';
+
+                words.forEach(word => {
+                    const testLine = currentLine ? `${currentLine} ${word}` : word;
+                    if (testLine.length <= maxCharsPerLine) {
+                        currentLine = testLine;
+                    } else {
+                        if (currentLine) {
+                            wrappedLines.push(currentLine);
+                        }
+                        // If single word is too long, just add it (will be scaled down)
+                        currentLine = word;
+                    }
+                });
+
+                if (currentLine) {
+                    wrappedLines.push(currentLine);
+                }
+            }
+        });
+
+        return wrappedLines.join('\n');
     }
 
     /**
@@ -5674,17 +5765,19 @@ class MapEditor {
                 graveRect.setCoords();
             }
 
-            // Update text position
+            // Update text position and size
             const textObj = linkedTexts[index];
             if (textObj) {
-                const minDimension = Math.min(graveWidth, graveHeight);
-                const fontSize = Math.max(1, minDimension / 6);
+                // Recalculate optimal font size for new dimensions
+                const currentText = textObj.text;
+                const { fontSize, finalText } = this.calculateOptimalFontSize(currentText, graveWidth, graveHeight);
 
                 textObj.set({
                     left: graveCenterX,
                     top: graveCenterY,
                     angle: angle,
-                    fontSize: fontSize
+                    fontSize: fontSize,
+                    text: finalText
                 });
                 textObj.setCoords();
             }
@@ -5786,17 +5879,19 @@ class MapEditor {
                 graveRect.setCoords();
             }
 
-            // Update text position
+            // Update text position and size
             const textObj = linkedTexts[index];
             if (textObj) {
-                const minDimension = Math.min(graveWidth, graveHeight);
-                const fontSize = Math.max(1, minDimension / 6);
+                // Recalculate optimal font size for new dimensions
+                const currentText = textObj.text;
+                const { fontSize, finalText } = this.calculateOptimalFontSize(currentText, graveWidth, graveHeight);
 
                 textObj.set({
                     left: graveCenterX,
                     top: graveCenterY,
                     angle: angle,
-                    fontSize: fontSize
+                    fontSize: fontSize,
+                    text: finalText
                 });
                 textObj.setCoords();
             }

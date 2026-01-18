@@ -1185,6 +1185,17 @@ class MapEditor {
         const minDimension = Math.min(rectWidth, rectHeight);
         const fontSize = Math.max(1, minDimension / 6);
 
+        console.log('DEBUG renderAreaGraveLabel:', {
+            rectWidth,
+            rectHeight,
+            angle,
+            centerX: center.x,
+            centerY: center.y,
+            text,
+            minDimension,
+            fontSize
+        });
+
         const textObj = new fabric.Text(text, {
             left: center.x,
             top: center.y,

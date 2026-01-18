@@ -6340,6 +6340,13 @@ class MapEditor {
 
         rect.setCoords();
 
+        // Debug: check linkage
+        console.log('[onAreaGravePositionChange] selected.id:', selected.id, 'selected.graves:', selected.graves?.length);
+        console.log('[onAreaGravePositionChange] rect:', rect, 'rect.areaGraveData:', rect.areaGraveData);
+        console.log('[onAreaGravePositionChange] graveRectangles count:', this.areaGraveState.graveRectangles.length);
+        const linkedRects = this.areaGraveState.graveRectangles.filter(r => r.linkedAreaGrave === rect);
+        console.log('[onAreaGravePositionChange] linkedRects found:', linkedRects.length);
+
         // Update grave labels
         this.updateAreaGraveGraves(rect, selected);
 

@@ -1295,12 +1295,16 @@ class MapEditor {
                     customerText = 'פנוי';
                 } else if (grave.customer?.name) {
                     customerText = grave.customer.name;
+                    // Add ז״ל suffix for deceased (status 4)
+                    if (status === 4) {
+                        customerText += ' ז״ל';
+                    }
                 }
 
                 if (customerText) {
                     // Calculate font size for customer name - slightly larger than title
                     const { fontSize: baseFontSize, finalText: finalCustomerText } = this.calculateOptimalFontSize(customerText, graveWidth, graveHeight * 0.4);
-                    const customerFontSize = Math.max(baseFontSize, titleFontSize * 1.3);
+                    const customerFontSize = Math.max(baseFontSize, titleFontSize * 1.4);
 
                     // Calculate bottom-center position
                     const customerOffsetX = 0;  // Center

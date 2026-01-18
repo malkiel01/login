@@ -1302,9 +1302,10 @@ class MapEditor {
                 }
 
                 if (customerText) {
-                    // Calculate font size for customer name - slightly larger than title
-                    const { fontSize: baseFontSize, finalText: finalCustomerText } = this.calculateOptimalFontSize(customerText, graveWidth, graveHeight * 0.4);
-                    const customerFontSize = Math.max(baseFontSize, titleFontSize * 1.4);
+                    // Calculate font size for customer name
+                    const targetFontSize = titleFontSize * 1.4;
+                    const { fontSize: fittedFontSize, finalText: finalCustomerText } = this.calculateCustomerFontSize(customerText, graveWidth, graveHeight * 0.4, targetFontSize);
+                    const customerFontSize = fittedFontSize;
 
                     // Calculate bottom-center position
                     const customerOffsetX = 0;  // Center
@@ -1411,6 +1412,57 @@ class MapEditor {
         }
 
         return lines.join('\n');
+    }
+
+    /**
+     * Calculate font size for customer name with word wrapping
+     * @param {string} text - Customer name text
+     * @param {number} maxWidth - Maximum width available
+     * @param {number} maxHeight - Maximum height available
+     * @param {number} targetFontSize - Target font size to start with
+     * @returns {{fontSize: number, finalText: string}}
+     */
+    calculateCustomerFontSize(text, maxWidth, maxHeight, targetFontSize) {
+        const availableWidth = maxWidth * 0.9;
+        const availableHeight = maxHeight * 0.9;
+        const minFontSize = 1;
+
+        let fontSize = targetFontSize;
+        let finalText = text;
+
+        // Create temporary text object to measure dimensions
+        const tempText = new fabric.Text(text, {
+            fontSize: fontSize,
+            fontFamily: 'David, Arial, sans-serif'
+        });
+
+        let textWidth = tempText.width;
+        let textHeight = tempText.height;
+
+        // If text doesn't fit width, try breaking into lines at spaces
+        if (textWidth > availableWidth) {
+            const words = text.split(' ');
+            if (words.length > 1) {
+                // Try to break at middle
+                const midPoint = Math.ceil(words.length / 2);
+                const line1 = words.slice(0, midPoint).join(' ');
+                const line2 = words.slice(midPoint).join(' ');
+                finalText = line1 + '\n' + line2;
+                tempText.set({ text: finalText });
+                textWidth = tempText.width;
+                textHeight = tempText.height;
+            }
+        }
+
+        // Reduce font size until text fits or minimum reached
+        while ((textWidth > availableWidth || textHeight > availableHeight) && fontSize > minFontSize) {
+            fontSize = Math.max(minFontSize, fontSize * 0.85);
+            tempText.set({ fontSize: fontSize });
+            textWidth = tempText.width;
+            textHeight = tempText.height;
+        }
+
+        return { fontSize: Math.max(minFontSize, fontSize), finalText };
     }
 
     /**

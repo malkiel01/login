@@ -1298,8 +1298,9 @@ class MapEditor {
                 }
 
                 if (customerText) {
-                    // Calculate font size for customer name
-                    const { fontSize: customerFontSize, finalText: finalCustomerText } = this.calculateOptimalFontSize(customerText, graveWidth, graveHeight * 0.35);
+                    // Calculate font size for customer name - slightly larger than title
+                    const { fontSize: baseFontSize, finalText: finalCustomerText } = this.calculateOptimalFontSize(customerText, graveWidth, graveHeight * 0.4);
+                    const customerFontSize = Math.max(baseFontSize, titleFontSize * 1.15);
 
                     // Calculate bottom-center position
                     const customerOffsetX = 0;  // Center

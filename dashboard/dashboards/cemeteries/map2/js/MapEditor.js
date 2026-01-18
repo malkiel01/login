@@ -92,14 +92,17 @@ class MapEditor {
                 // AreaGrave rectangles visible at zoom >= 100%
                 areaGrave: 1.0,
                 // Graves inside areaGraves visible at zoom >= 500%
-                graves: 5.0
+                graves: 5.0,
+                // Customer info visible at zoom >= 800%
+                customerInfo: 8.0
             },
             // Current visibility state
             visibility: {
                 blocks: true,
                 plots: true,
                 areaGraves: true,
-                graves: true
+                graves: true,
+                customerInfo: false
             }
         };
 
@@ -1056,6 +1059,14 @@ class MapEditor {
             this.lodConfig.visibility.graves = showGraves;
             this.setGravesVisible(showGraves);
         }
+
+        // Check for customer info threshold (800%)
+        const showCustomerInfo = zoom >= thresholds.customerInfo;
+        if (showCustomerInfo !== this.lodConfig.visibility.customerInfo) {
+            this.lodConfig.visibility.customerInfo = showCustomerInfo;
+            // Re-render grave labels to update text content
+            this.renderGravesInAreaGraves();
+        }
     }
 
     /**
@@ -1077,6 +1088,14 @@ class MapEditor {
         if (this.lodConfig.visibility.graves !== visible) {
             this.lodConfig.visibility.graves = visible;
             this.setGravesVisible(visible);
+        }
+
+        // Check customer info based on current zoom (even in edit mode)
+        const zoom = this.canvas.getZoom();
+        const showCustomerInfo = zoom >= this.lodConfig.thresholds.customerInfo;
+        if (showCustomerInfo !== this.lodConfig.visibility.customerInfo) {
+            this.lodConfig.visibility.customerInfo = showCustomerInfo;
+            this.renderGravesInAreaGraves();
         }
     }
 
@@ -1209,7 +1228,20 @@ class MapEditor {
             // Build label text: "שורה X קבר X"
             const rowName = areaGrave.rowName || '';
             const graveName = grave.name || '';
-            const text = `שורה ${rowName}\nקבר ${graveName}`;
+
+            // Check zoom level for extended info (800%+)
+            const zoom = this.canvas.getZoom();
+            let text = `שורה ${rowName}\nקבר ${graveName}`;
+
+            if (zoom >= 8.0) {
+                // Add customer name or "פנוי" at high zoom
+                const status = grave.status || 1;
+                if (status === 1) {
+                    text += '\nפנוי';
+                } else if (grave.customer?.name) {
+                    text += `\n${grave.customer.name}`;
+                }
+            }
 
             // Calculate font size based on grave rectangle size
             const minDimension = Math.min(graveWidth, graveHeight);

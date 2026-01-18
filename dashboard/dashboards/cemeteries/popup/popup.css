@@ -136,24 +136,31 @@
 }
 
 /* ========================================
-   Resize Handle
+   Resize Handles - שתי פינות תחתונות
 ======================================== */
 
 .popup-resize-handle {
     position: absolute;
     bottom: 0;
-    inset-inline-start: 0;
     width: 16px;
     height: 16px;
-    cursor: nwse-resize;
     z-index: 10;
+}
+
+.popup-resize-handle-right {
+    right: 0;
+    cursor: nwse-resize;
+}
+
+.popup-resize-handle-left {
+    left: 0;
+    cursor: nesw-resize;
 }
 
 .popup-resize-handle::before {
     content: '';
     position: absolute;
     bottom: 2px;
-    inset-inline-start: 2px;
     width: 12px;
     height: 12px;
     background: linear-gradient(
@@ -172,6 +179,15 @@
         #cbd5e1 75%,
         transparent 75%
     );
+}
+
+.popup-resize-handle-right::before {
+    right: 2px;
+}
+
+.popup-resize-handle-left::before {
+    left: 2px;
+    transform: scaleX(-1);
 }
 
 /* ========================================

@@ -204,7 +204,7 @@ class Popup {
             header: null,
             content: null,
             iframe: null,
-            resizeHandle: null
+            resizeHandles: null
         };
 
         this.dragData = null;
@@ -233,19 +233,20 @@ class Popup {
         // Content
         const content = this.createContent();
 
-        // Resize handle
-        const resizeHandle = this.createResizeHandle();
+        // Resize handles - שתי פינות
+        const resizeHandles = this.createResizeHandles();
 
         container.appendChild(header);
         container.appendChild(content);
         if (this.config.resizable) {
-            container.appendChild(resizeHandle);
+            container.appendChild(resizeHandles.right);
+            container.appendChild(resizeHandles.left);
         }
 
         this.elements.container = container;
         this.elements.header = header;
         this.elements.content = content;
-        this.elements.resizeHandle = resizeHandle;
+        this.elements.resizeHandles = resizeHandles;
 
         // הוסף לחלון הנכון
         targetDoc.body.appendChild(container);
@@ -382,14 +383,20 @@ class Popup {
     }
 
     /**
-     * יצירת resize handle
+     * יצירת resize handles - שתי פינות תחתונות
      */
-    createResizeHandle() {
+    createResizeHandles() {
         const targetDoc = PopupManager.getTargetDocument();
 
-        const handle = targetDoc.createElement('div');
-        handle.className = 'popup-resize-handle';
-        return handle;
+        const handleRight = targetDoc.createElement('div');
+        handleRight.className = 'popup-resize-handle popup-resize-handle-right';
+        handleRight.dataset.side = 'right';
+
+        const handleLeft = targetDoc.createElement('div');
+        handleLeft.className = 'popup-resize-handle popup-resize-handle-left';
+        handleLeft.dataset.side = 'left';
+
+        return { right: handleRight, left: handleLeft };
     }
 
     /**
@@ -401,9 +408,10 @@ class Popup {
             this.elements.header.addEventListener('mousedown', (e) => this.startDrag(e));
         }
 
-        // Resizing
+        // Resizing - שתי ידיות
         if (this.config.resizable) {
-            this.elements.resizeHandle.addEventListener('mousedown', (e) => this.startResize(e));
+            this.elements.resizeHandles.right.addEventListener('mousedown', (e) => this.startResize(e, 'right'));
+            this.elements.resizeHandles.left.addEventListener('mousedown', (e) => this.startResize(e, 'left'));
         }
 
         // Focus (העלאת z-index)
@@ -462,8 +470,10 @@ class Popup {
 
     /**
      * התחלת שינוי גודל
+     * @param {MouseEvent} e
+     * @param {string} side - 'right' או 'left'
      */
-    startResize(e) {
+    startResize(e, side) {
         if (this.state.mode === 'maximized') return;
 
         e.preventDefault();
@@ -472,10 +482,12 @@ class Popup {
 
         const rect = this.elements.container.getBoundingClientRect();
         this.resizeData = {
+            side: side,
             startX: e.clientX,
             startY: e.clientY,
             startWidth: rect.width,
-            startHeight: rect.height
+            startHeight: rect.height,
+            startLeft: rect.left
         };
 
         const targetDoc = PopupManager.getTargetDocument();
@@ -491,18 +503,42 @@ class Popup {
         const deltaX = e.clientX - this.resizeData.startX;
         const deltaY = e.clientY - this.resizeData.startY;
 
-        let newWidth = this.resizeData.startWidth + deltaX;
+        let newWidth, newLeft;
+
+        if (this.resizeData.side === 'right') {
+            // ידית ימין - הרחבה ימינה
+            newWidth = this.resizeData.startWidth + deltaX;
+            newLeft = this.resizeData.startLeft;
+        } else {
+            // ידית שמאל - הרחבה שמאלה (החלון זז שמאלה)
+            newWidth = this.resizeData.startWidth - deltaX;
+            newLeft = this.resizeData.startLeft + deltaX;
+        }
+
         let newHeight = this.resizeData.startHeight + deltaY;
 
-        // אילוצים
-        newWidth = Math.max(this.config.minWidth, newWidth);
-        newHeight = Math.max(this.config.minHeight, newHeight);
+        // אילוצים - רוחב
+        if (newWidth < this.config.minWidth) {
+            if (this.resizeData.side === 'left') {
+                newLeft = this.resizeData.startLeft + (this.resizeData.startWidth - this.config.minWidth);
+            }
+            newWidth = this.config.minWidth;
+        }
+        if (this.config.maxWidth && newWidth > this.config.maxWidth) {
+            if (this.resizeData.side === 'left') {
+                newLeft = this.resizeData.startLeft - (this.config.maxWidth - this.resizeData.startWidth);
+            }
+            newWidth = this.config.maxWidth;
+        }
 
-        if (this.config.maxWidth) newWidth = Math.min(this.config.maxWidth, newWidth);
+        // אילוצים - גובה
+        newHeight = Math.max(this.config.minHeight, newHeight);
         if (this.config.maxHeight) newHeight = Math.min(this.config.maxHeight, newHeight);
 
+        // עדכון גודל ומיקום
         this.elements.container.style.width = `${newWidth}px`;
         this.elements.container.style.height = `${newHeight}px`;
+        this.elements.container.style.left = `${newLeft}px`;
 
         this.state.size = { width: newWidth, height: newHeight };
     }

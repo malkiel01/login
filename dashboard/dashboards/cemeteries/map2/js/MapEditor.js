@@ -282,7 +282,8 @@ class MapEditor {
             width: width,
             height: height,
             backgroundColor: '#f8fafc',
-            selection: false
+            selection: true,  // Enable multi-selection
+            preserveObjectStacking: true  // Keep objects in their layer order during selection
         });
 
         // Handle resize
@@ -424,6 +425,12 @@ class MapEditor {
         // Update layers when objects added/removed
         this.canvas.on('object:added', () => this.updateLayersPanel());
         this.canvas.on('object:removed', () => this.updateLayersPanel());
+
+        // Handle multi-selection movement/modification for areaGraves
+        this.canvas.on('object:moving', (e) => this.onCanvasObjectMoving(e));
+        this.canvas.on('object:scaling', (e) => this.onCanvasObjectMoving(e));
+        this.canvas.on('object:rotating', (e) => this.onCanvasObjectMoving(e));
+        this.canvas.on('object:modified', (e) => this.onCanvasObjectModified(e));
     }
 
     /**
@@ -5538,6 +5545,165 @@ class MapEditor {
         if (!this.panels.areaGrave.visible) {
             this.togglePanel('areaGrave');
         }
+    }
+
+    /**
+     * Handle canvas object moving (supports multi-selection)
+     */
+    onCanvasObjectMoving(e) {
+        const target = e.target;
+
+        // Check if it's a multi-selection (ActiveSelection)
+        if (target.type === 'activeSelection') {
+            // Update all areaGrave objects in the selection
+            target.getObjects().forEach(obj => {
+                if (obj.isAreaGrave && obj.areaGraveData) {
+                    // Calculate absolute position for object in group
+                    const absolutePos = this.getAbsolutePosition(obj, target);
+                    this.updateAreaGraveGravesAtPosition(obj, obj.areaGraveData, absolutePos);
+                }
+            });
+        }
+        // Single areaGrave objects are handled by their own 'moving' event
+    }
+
+    /**
+     * Handle canvas object modified (supports multi-selection)
+     */
+    onCanvasObjectModified(e) {
+        const target = e.target;
+
+        // Check if it's a multi-selection (ActiveSelection)
+        if (target.type === 'activeSelection') {
+            // Save positions for all areaGrave objects in the selection
+            target.getObjects().forEach(obj => {
+                if (obj.isAreaGrave && obj.areaGraveData) {
+                    const absolutePos = this.getAbsolutePosition(obj, target);
+                    this.updateAreaGraveGravesAtPosition(obj, obj.areaGraveData, absolutePos);
+                    this.saveAreaGravePositionFromAbsolute(obj.areaGraveData.id, obj, absolutePos);
+                }
+            });
+        }
+        // Single areaGrave objects are handled by their own 'modified' event
+    }
+
+    /**
+     * Get absolute position of an object within an ActiveSelection
+     */
+    getAbsolutePosition(obj, group) {
+        const groupCenter = group.getCenterPoint();
+        const objCenter = obj.getCenterPoint();
+
+        // Object position is relative to group center
+        const cos = Math.cos(fabric.util.degreesToRadians(group.angle || 0));
+        const sin = Math.sin(fabric.util.degreesToRadians(group.angle || 0));
+
+        const rotatedX = objCenter.x * cos - objCenter.y * sin;
+        const rotatedY = objCenter.x * sin + objCenter.y * cos;
+
+        return {
+            left: groupCenter.x + rotatedX - (obj.width * (obj.scaleX || 1)) / 2,
+            top: groupCenter.y + rotatedY - (obj.height * (obj.scaleY || 1)) / 2,
+            width: obj.width * (obj.scaleX || 1),
+            height: obj.height * (obj.scaleY || 1),
+            angle: (obj.angle || 0) + (group.angle || 0)
+        };
+    }
+
+    /**
+     * Update grave labels at specific absolute position (for multi-select)
+     */
+    updateAreaGraveGravesAtPosition(rect, areaGrave, absolutePos) {
+        const graves = areaGrave.graves || [];
+        const numGraves = graves.length || 1;
+
+        const rectWidth = absolutePos.width;
+        const rectHeight = absolutePos.height;
+        const angle = absolutePos.angle;
+
+        const graveWidth = rectWidth / numGraves;
+        const graveHeight = rectHeight;
+
+        // Find all grave rectangles and texts linked to this areaGrave
+        const linkedGraveRects = this.areaGraveState.graveRectangles.filter(r => r.linkedAreaGrave === rect);
+        const linkedTexts = this.areaGraveState.graveTextObjects.filter(t => t.linkedRect && t.linkedRect.linkedAreaGrave === rect);
+
+        // Calculate center of areaGrave
+        const centerX = absolutePos.left + rectWidth / 2;
+        const centerY = absolutePos.top + rectHeight / 2;
+        const angleRad = (angle * Math.PI) / 180;
+
+        // Update each grave rectangle and its text
+        graves.forEach((grave, index) => {
+            const localGraveLeft = index * graveWidth;
+            const localGraveCenterX = localGraveLeft + graveWidth / 2;
+            const localGraveCenterY = graveHeight / 2;
+
+            const offsetX = localGraveCenterX - rectWidth / 2;
+            const offsetY = localGraveCenterY - rectHeight / 2;
+
+            const rotatedOffsetX = offsetX * Math.cos(angleRad) - offsetY * Math.sin(angleRad);
+            const rotatedOffsetY = offsetX * Math.sin(angleRad) + offsetY * Math.cos(angleRad);
+
+            const graveCenterX = centerX + rotatedOffsetX;
+            const graveCenterY = centerY + rotatedOffsetY;
+
+            const graveRect = linkedGraveRects[index];
+            if (graveRect) {
+                const graveOffsetX = localGraveLeft - rectWidth / 2;
+                const graveOffsetY = -rectHeight / 2;
+                const rotatedGraveX = graveOffsetX * Math.cos(angleRad) - graveOffsetY * Math.sin(angleRad);
+                const rotatedGraveY = graveOffsetX * Math.sin(angleRad) + graveOffsetY * Math.cos(angleRad);
+
+                graveRect.set({
+                    left: centerX + rotatedGraveX,
+                    top: centerY + rotatedGraveY,
+                    width: graveWidth,
+                    height: graveHeight,
+                    angle: angle
+                });
+                graveRect.setCoords();
+            }
+
+            const textObj = linkedTexts[index];
+            if (textObj) {
+                const minDimension = Math.min(graveWidth, graveHeight);
+                const fontSize = Math.max(1, minDimension / 6);
+
+                textObj.set({
+                    left: graveCenterX,
+                    top: graveCenterY,
+                    angle: angle,
+                    fontSize: fontSize
+                });
+                textObj.setCoords();
+            }
+        });
+
+        this.canvas.renderAll();
+    }
+
+    /**
+     * Save areaGrave position from absolute coordinates (for multi-select)
+     */
+    saveAreaGravePositionFromAbsolute(areaGraveId, rect, absolutePos) {
+        const position = {
+            x: absolutePos.left,
+            y: absolutePos.top,
+            width: absolutePos.width,
+            height: absolutePos.height,
+            angle: absolutePos.angle
+        };
+
+        // Save to server
+        fetch(`${this.apiBase}map-data.php?action=saveAreaGravePosition`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                areaGraveId: areaGraveId,
+                position: position
+            })
+        }).catch(err => console.error('Failed to save areaGrave position:', err));
     }
 
     /**

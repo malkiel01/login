@@ -145,6 +145,7 @@
     width: 16px;
     height: 16px;
     z-index: 10;
+    border: 2px solid red; /* DEBUG */
 }
 
 .popup-resize-handle-right {

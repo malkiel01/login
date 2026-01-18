@@ -93,8 +93,8 @@ class MapEditor {
                 areaGrave: 1.0,
                 // Graves inside areaGraves visible at zoom >= 500%
                 graves: 5.0,
-                // Customer info visible at zoom >= 800%
-                customerInfo: 8.0
+                // Customer info visible at zoom >= 250%
+                customerInfo: 2.5
             },
             // Current visibility state
             visibility: {
@@ -1333,6 +1333,7 @@ class MapEditor {
                     customerObj.graveData = grave;
                     customerObj.linkedRect = graveRect;
                     customerObj.isCustomerText = true;
+                    customerObj.originalText = customerText;
 
                     this.canvas.add(customerObj);
                     this.areaGraveState.graveTextObjects.push(customerObj);
@@ -5812,7 +5813,8 @@ class MapEditor {
 
         // Find all grave rectangles and texts linked to this areaGrave
         const linkedGraveRects = this.areaGraveState.graveRectangles.filter(r => r.linkedAreaGrave === rect);
-        const linkedTexts = this.areaGraveState.graveTextObjects.filter(t => t.linkedRect && t.linkedRect.linkedAreaGrave === rect);
+        const linkedTitleTexts = this.areaGraveState.graveTextObjects.filter(t => t.linkedRect && t.linkedRect.linkedAreaGrave === rect && !t.isCustomerText);
+        const linkedCustomerTexts = this.areaGraveState.graveTextObjects.filter(t => t.linkedRect && t.linkedRect.linkedAreaGrave === rect && t.isCustomerText);
 
         // Calculate center of areaGrave
         const centerX = absolutePos.left + rectWidth / 2;
@@ -5848,34 +5850,60 @@ class MapEditor {
                 graveRect.setCoords();
             }
 
-            // Update text position and size
-            const textObj = linkedTexts[index];
-            if (textObj) {
-                // Use original text for dynamic re-wrapping based on new dimensions
-                const originalText = textObj.originalText || textObj.text;
-                const { fontSize, finalText } = this.calculateOptimalFontSize(originalText, graveWidth, graveHeight);
+            // Update title text position and size
+            const textPadding = graveWidth * 0.02;
+            const titleObj = linkedTitleTexts[index];
+            if (titleObj) {
+                const originalText = titleObj.originalText || titleObj.text;
+                const { fontSize: titleFontSize, finalText: finalTitleText } = this.calculateOptimalFontSize(originalText, graveWidth, graveHeight * 0.6);
 
-                // Calculate top-right position with padding
-                const textPadding = graveWidth * 0.05;
-                const textOffsetX = (graveWidth / 2) - textPadding;
-                const textOffsetY = -(graveHeight / 2) + textPadding;
-                const rotatedTextOffsetX = textOffsetX * Math.cos(angleRad) - textOffsetY * Math.sin(angleRad);
-                const rotatedTextOffsetY = textOffsetX * Math.sin(angleRad) + textOffsetY * Math.cos(angleRad);
-                const textX = graveCenterX + rotatedTextOffsetX;
-                const textY = graveCenterY + rotatedTextOffsetY;
+                const titleOffsetX = (graveWidth / 2) - textPadding;
+                const titleOffsetY = -(graveHeight / 2) + textPadding;
+                const rotatedTitleOffsetX = titleOffsetX * Math.cos(angleRad) - titleOffsetY * Math.sin(angleRad);
+                const rotatedTitleOffsetY = titleOffsetX * Math.sin(angleRad) + titleOffsetY * Math.cos(angleRad);
+                const titleX = graveCenterX + rotatedTitleOffsetX;
+                const titleY = graveCenterY + rotatedTitleOffsetY;
 
-                textObj.set({
-                    left: textX,
-                    top: textY,
+                titleObj.set({
+                    left: titleX,
+                    top: titleY,
                     angle: angle,
-                    fontSize: fontSize,
+                    fontSize: titleFontSize,
                     fontFamily: 'David, Arial, sans-serif',
-                    text: finalText,
+                    text: finalTitleText,
                     textAlign: 'right',
                     originX: 'right',
                     originY: 'top'
                 });
-                textObj.setCoords();
+                titleObj.setCoords();
+
+                // Update customer text if exists
+                const customerObj = linkedCustomerTexts[index];
+                if (customerObj) {
+                    const customerOriginalText = customerObj.originalText || customerObj.text;
+                    const targetFontSize = titleFontSize * 1.4;
+                    const { fontSize: customerFontSize, finalText: finalCustomerText } = this.calculateCustomerFontSize(customerOriginalText, graveWidth, graveHeight * 0.4, targetFontSize);
+
+                    const customerOffsetX = 0;
+                    const customerOffsetY = (graveHeight / 2) - textPadding;
+                    const rotatedCustomerOffsetX = customerOffsetX * Math.cos(angleRad) - customerOffsetY * Math.sin(angleRad);
+                    const rotatedCustomerOffsetY = customerOffsetX * Math.sin(angleRad) + customerOffsetY * Math.cos(angleRad);
+                    const customerX = graveCenterX + rotatedCustomerOffsetX;
+                    const customerY = graveCenterY + rotatedCustomerOffsetY;
+
+                    customerObj.set({
+                        left: customerX,
+                        top: customerY,
+                        angle: angle,
+                        fontSize: customerFontSize,
+                        fontFamily: 'David, Arial, sans-serif',
+                        text: finalCustomerText,
+                        textAlign: 'center',
+                        originX: 'center',
+                        originY: 'bottom'
+                    });
+                    customerObj.setCoords();
+                }
             }
         });
 
@@ -5937,7 +5965,10 @@ class MapEditor {
 
         // Find all grave rectangles and texts linked to this areaGrave
         const linkedGraveRects = this.areaGraveState.graveRectangles.filter(r => r.linkedAreaGrave === rect);
-        const linkedTexts = this.areaGraveState.graveTextObjects.filter(t => t.linkedRect && t.linkedRect.linkedAreaGrave === rect);
+        // Filter only title texts (not customer texts)
+        const linkedTitleTexts = this.areaGraveState.graveTextObjects.filter(t => t.linkedRect && t.linkedRect.linkedAreaGrave === rect && !t.isCustomerText);
+        // Filter only customer texts
+        const linkedCustomerTexts = this.areaGraveState.graveTextObjects.filter(t => t.linkedRect && t.linkedRect.linkedAreaGrave === rect && t.isCustomerText);
 
         // Use fabric.js getCenterPoint() for accurate center with rotation
         const center = rect.getCenterPoint();
@@ -5975,34 +6006,60 @@ class MapEditor {
                 graveRect.setCoords();
             }
 
-            // Update text position and size
-            const textObj = linkedTexts[index];
-            if (textObj) {
-                // Use original text for dynamic re-wrapping based on new dimensions
-                const originalText = textObj.originalText || textObj.text;
-                const { fontSize, finalText } = this.calculateOptimalFontSize(originalText, graveWidth, graveHeight);
+            // Update title text position and size
+            const textPadding = graveWidth * 0.02;
+            const titleObj = linkedTitleTexts[index];
+            if (titleObj) {
+                const originalText = titleObj.originalText || titleObj.text;
+                const { fontSize: titleFontSize, finalText: finalTitleText } = this.calculateOptimalFontSize(originalText, graveWidth, graveHeight * 0.6);
 
-                // Calculate top-right position with padding
-                const textPadding = graveWidth * 0.05;
-                const textOffsetX = (graveWidth / 2) - textPadding;
-                const textOffsetY = -(graveHeight / 2) + textPadding;
-                const rotatedTextOffsetX = textOffsetX * Math.cos(angleRad) - textOffsetY * Math.sin(angleRad);
-                const rotatedTextOffsetY = textOffsetX * Math.sin(angleRad) + textOffsetY * Math.cos(angleRad);
-                const textX = graveCenterX + rotatedTextOffsetX;
-                const textY = graveCenterY + rotatedTextOffsetY;
+                const titleOffsetX = (graveWidth / 2) - textPadding;
+                const titleOffsetY = -(graveHeight / 2) + textPadding;
+                const rotatedTitleOffsetX = titleOffsetX * Math.cos(angleRad) - titleOffsetY * Math.sin(angleRad);
+                const rotatedTitleOffsetY = titleOffsetX * Math.sin(angleRad) + titleOffsetY * Math.cos(angleRad);
+                const titleX = graveCenterX + rotatedTitleOffsetX;
+                const titleY = graveCenterY + rotatedTitleOffsetY;
 
-                textObj.set({
-                    left: textX,
-                    top: textY,
+                titleObj.set({
+                    left: titleX,
+                    top: titleY,
                     angle: angle,
-                    fontSize: fontSize,
+                    fontSize: titleFontSize,
                     fontFamily: 'David, Arial, sans-serif',
-                    text: finalText,
+                    text: finalTitleText,
                     textAlign: 'right',
                     originX: 'right',
                     originY: 'top'
                 });
-                textObj.setCoords();
+                titleObj.setCoords();
+
+                // Update customer text if exists
+                const customerObj = linkedCustomerTexts[index];
+                if (customerObj) {
+                    const customerOriginalText = customerObj.originalText || customerObj.text;
+                    const targetFontSize = titleFontSize * 1.4;
+                    const { fontSize: customerFontSize, finalText: finalCustomerText } = this.calculateCustomerFontSize(customerOriginalText, graveWidth, graveHeight * 0.4, targetFontSize);
+
+                    const customerOffsetX = 0;
+                    const customerOffsetY = (graveHeight / 2) - textPadding;
+                    const rotatedCustomerOffsetX = customerOffsetX * Math.cos(angleRad) - customerOffsetY * Math.sin(angleRad);
+                    const rotatedCustomerOffsetY = customerOffsetX * Math.sin(angleRad) + customerOffsetY * Math.cos(angleRad);
+                    const customerX = graveCenterX + rotatedCustomerOffsetX;
+                    const customerY = graveCenterY + rotatedCustomerOffsetY;
+
+                    customerObj.set({
+                        left: customerX,
+                        top: customerY,
+                        angle: angle,
+                        fontSize: customerFontSize,
+                        fontFamily: 'David, Arial, sans-serif',
+                        text: finalCustomerText,
+                        textAlign: 'center',
+                        originX: 'center',
+                        originY: 'bottom'
+                    });
+                    customerObj.setCoords();
+                }
             }
         });
 

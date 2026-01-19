@@ -341,6 +341,45 @@ try {
             $stmt->execute($params);
             echo json_encode(['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
             break;
+        case 'countAvailable':
+            // ספירת קברים פנויים לפי שורה (lineId)
+            $lineId = $_GET['lineId'] ?? null;
+            $formType = $_GET['type'] ?? 'purchase';
+
+            if (!$lineId) {
+                throw new Exception('מזהה שורה חסר');
+            }
+
+            // קבע את סטטוס הקברים המותרים
+            if ($formType === 'burial') {
+                // לקבורה: פנויים (1) + נרכשו (2)
+                $allowedStatuses = '(1, 2)';
+            } else {
+                // לרכישה: רק פנויים (1)
+                $allowedStatuses = '(1)';
+            }
+
+            // ספור קברים פנויים בכל אחוזות הקבר של השורה
+            $sql = "
+                SELECT COUNT(*)
+                FROM graves g
+                INNER JOIN areaGraves ag ON g.areaGraveId = ag.unicId
+                WHERE ag.lineId = :lineId
+                AND ag.isActive = 1
+                AND g.isActive = 1
+                AND g.graveStatus IN $allowedStatuses
+            ";
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute(['lineId' => $lineId]);
+            $count = $stmt->fetchColumn();
+
+            echo json_encode([
+                'success' => true,
+                'count' => (int)$count
+            ]);
+            break;
+
         case 'getDetails':
             // קבלת פרטי קבר מלאים כולל רכישה וקבורה
             if (!$id) {

@@ -650,8 +650,12 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                 if (result.success && result.data) {
                     hierarchyCache[config.cache] = result.data;
 
+                    // עבור שורות - סנן רק את אלה עם קברים פנויים
+                    if (level === 'plot') {
+                        await filterRowsWithAvailableGraves(result.data, nextSelect);
+                    }
                     // עבור אחוזות קבר - סנן רק את אלה עם קברים פנויים
-                    if (level === 'row') {
+                    else if (level === 'row') {
                         await filterAreaGravesWithAvailableGraves(result.data, nextSelect, selectedValue);
                     } else {
                         nextSelect.innerHTML = '<option value="">-- בחר --</option>';
@@ -669,43 +673,100 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             }
         }
 
-        // סינון אחוזות קבר - רק אלה שיש להן קברים פנויים
-        async function filterAreaGravesWithAvailableGraves(areaGraves, selectElement, lineId) {
-            selectElement.innerHTML = '<option value="">-- בחר אחוזת קבר --</option>';
+        // סינון שורות - רק אלה שיש להן קברים פנויים (קריאות מקבילות)
+        async function filterRowsWithAvailableGraves(rows, selectElement) {
+            selectElement.innerHTML = '<option value="">טוען שורות...</option>';
+            selectElement.disabled = true;
 
-            let hasAvailable = false;
-
-            for (const areaGrave of areaGraves) {
-                // בדוק כמה קברים פנויים יש באחוזת קבר זו
-                try {
-                    const response = await fetch(`/dashboard/dashboards/cemeteries/api/graves-api.php?action=available&type=purchase&areaGraveId=${areaGrave.unicId}`);
-                    const result = await response.json();
-
-                    const availableCount = result.success ? (result.data?.length || 0) : 0;
-
-                    const option = document.createElement('option');
-                    option.value = areaGrave.unicId;
-
-                    if (availableCount > 0) {
-                        option.textContent = `${areaGrave.areaGraveNameHe || '-'} (${availableCount} פנויים)`;
-                        hasAvailable = true;
-                    } else {
-                        option.textContent = `${areaGrave.areaGraveNameHe || '-'} (אין פנויים)`;
-                        option.disabled = true;
-                        option.style.color = '#94a3b8';
-                    }
-
-                    selectElement.appendChild(option);
-                } catch (e) {
-                    console.error('Error checking area grave availability:', e);
-                }
+            if (rows.length === 0) {
+                selectElement.innerHTML = '<option value="">אין שורות בחלקה זו</option>';
+                return;
             }
 
-            selectElement.disabled = !hasAvailable && areaGraves.length > 0;
+            // קריאות מקבילות לכל השורות
+            const results = await Promise.all(
+                rows.map(async (row) => {
+                    try {
+                        const response = await fetch(`/dashboard/dashboards/cemeteries/api/graves-api.php?action=countAvailable&type=purchase&lineId=${row.unicId}`);
+                        const result = await response.json();
+                        return {
+                            row,
+                            availableCount: result.success ? (result.count || 0) : 0
+                        };
+                    } catch (e) {
+                        console.error('Error checking row availability:', e);
+                        return { row, availableCount: 0 };
+                    }
+                })
+            );
+
+            // בניית ה-options - רק שורות עם קברים פנויים
+            selectElement.innerHTML = '<option value="">-- בחר שורה --</option>';
+            let hasAvailable = false;
+
+            results.forEach(({ row, availableCount }) => {
+                // רק שורות עם קברים פנויים יופיעו
+                if (availableCount > 0) {
+                    const option = document.createElement('option');
+                    option.value = row.unicId;
+                    option.textContent = `${row.lineNameHe || '-'} (${availableCount} פנויים)`;
+                    selectElement.appendChild(option);
+                    hasAvailable = true;
+                }
+            });
+
+            selectElement.disabled = !hasAvailable;
+
+            if (!hasAvailable) {
+                selectElement.innerHTML = '<option value="">אין קברים פנויים בחלקה זו</option>';
+            }
+        }
+
+        // סינון אחוזות קבר - רק אלה שיש להן קברים פנויים (קריאות מקבילות)
+        async function filterAreaGravesWithAvailableGraves(areaGraves, selectElement, lineId) {
+            selectElement.innerHTML = '<option value="">טוען אחוזות קבר...</option>';
+            selectElement.disabled = true;
 
             if (areaGraves.length === 0) {
                 selectElement.innerHTML = '<option value="">אין אחוזות קבר בשורה זו</option>';
-            } else if (!hasAvailable) {
+                return;
+            }
+
+            // קריאות מקבילות לכל אחוזות הקבר
+            const results = await Promise.all(
+                areaGraves.map(async (areaGrave) => {
+                    try {
+                        const response = await fetch(`/dashboard/dashboards/cemeteries/api/graves-api.php?action=available&type=purchase&areaGraveId=${areaGrave.unicId}`);
+                        const result = await response.json();
+                        return {
+                            areaGrave,
+                            availableCount: result.success ? (result.data?.length || 0) : 0
+                        };
+                    } catch (e) {
+                        console.error('Error checking area grave availability:', e);
+                        return { areaGrave, availableCount: 0 };
+                    }
+                })
+            );
+
+            // בניית ה-options - רק אחוזות קבר עם קברים פנויים
+            selectElement.innerHTML = '<option value="">-- בחר אחוזת קבר --</option>';
+            let hasAvailable = false;
+
+            results.forEach(({ areaGrave, availableCount }) => {
+                // רק אחוזות קבר עם קברים פנויים יופיעו
+                if (availableCount > 0) {
+                    const option = document.createElement('option');
+                    option.value = areaGrave.unicId;
+                    option.textContent = `${areaGrave.areaGraveNameHe || '-'} (${availableCount} פנויים)`;
+                    selectElement.appendChild(option);
+                    hasAvailable = true;
+                }
+            });
+
+            selectElement.disabled = !hasAvailable;
+
+            if (!hasAvailable) {
                 selectElement.innerHTML = '<option value="">אין קברים פנויים בשורה זו</option>';
             }
         }

@@ -510,7 +510,23 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             // האזנה לשינוי מדינה
             document.getElementById('countryId').addEventListener('change', function() {
                 loadCities(this.value);
+                calculateResidency(); // חישוב תושבות בשינוי מדינה
             });
+
+            // האזנה לשינוי עיר
+            document.getElementById('cityId').addEventListener('change', function() {
+                calculateResidency(); // חישוב תושבות בשינוי עיר
+            });
+
+            // האזנה לשינוי סוג זיהוי
+            document.getElementById('typeId').addEventListener('change', function() {
+                calculateResidency(); // חישוב תושבות בשינוי סוג זיהוי
+            });
+
+            // חישוב תושבות ראשוני
+            if (isEditMode) {
+                calculateResidency();
+            }
         });
 
         // Toggle section
@@ -580,9 +596,47 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                 }
 
                 citySelect.disabled = false;
+
+                // חישוב תושבות אחרי טעינת ערים
+                calculateResidency();
             } catch (error) {
                 console.error('Error loading cities:', error);
                 citySelect.innerHTML = '<option value="">שגיאה בטעינה</option>';
+            }
+        }
+
+        // חישוב תושבות בזמן אמת
+        async function calculateResidency() {
+            const typeId = document.getElementById('typeId').value;
+            const countryId = document.getElementById('countryId').value;
+            const cityId = document.getElementById('cityId').value;
+            const residentSelect = document.getElementById('resident');
+
+            // בניית URL עם פרמטרים
+            let url = `/dashboard/dashboards/cemeteries/api/calculate-residency.php?typeId=${typeId}`;
+            if (countryId) url += `&countryId=${countryId}`;
+            if (cityId) url += `&cityId=${cityId}`;
+
+            try {
+                const response = await fetch(url);
+                const result = await response.json();
+
+                if (result.success) {
+                    residentSelect.value = result.residency;
+
+                    // אינדיקציה ויזואלית
+                    const colors = {
+                        1: '#10b981', // ירושלים - ירוק
+                        2: '#f59e0b', // חוץ - כתום
+                        3: '#ef4444'  // חו"ל - אדום
+                    };
+                    residentSelect.style.borderColor = colors[result.residency] || '#e2e8f0';
+                    residentSelect.style.backgroundColor = (colors[result.residency] || '#e2e8f0') + '20';
+
+                    console.log('תושבות מחושבת:', result.label, result.reason || '');
+                }
+            } catch (error) {
+                console.error('Error calculating residency:', error);
             }
         }
 

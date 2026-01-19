@@ -467,6 +467,11 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             graves: []
         };
 
+        // נתוני לקוח וקבר לחישוב תשלומים
+        let selectedCustomerData = null;
+        let selectedGraveData = null;
+        let purchasePayments = [];
+
         document.addEventListener('DOMContentLoaded', function() {
             if (typeof PopupAPI !== 'undefined') {
                 PopupAPI.setTitle('<?= addslashes($pageTitle) ?>');
@@ -474,6 +479,15 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
             loadCustomers();
             loadCemeteries();
+
+            // האזנה לשינוי לקוח
+            document.getElementById('clientId').addEventListener('change', onCustomerSelected);
+
+            // האזנה לשינוי קבר
+            document.getElementById('graveSelect').addEventListener('change', onGraveSelected);
+
+            // האזנה לשינוי סטטוס רוכש
+            document.getElementById('buyer_status')?.addEventListener('change', tryCalculatePayments);
         });
 
         function toggleSection(btn) {
@@ -523,9 +537,74 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                     if (select.options.length === 1 && !isEditMode) {
                         select.innerHTML = '<option value="">אין לקוחות פעילים לרכישה</option>';
                     }
+
+                    // אם במצב עריכה - טען נתוני לקוח נבחר
+                    if (isEditMode && purchaseClientId) {
+                        const selectedCustomer = result.data.find(c => c.unicId === purchaseClientId);
+                        if (selectedCustomer) {
+                            selectedCustomerData = {
+                                unicId: selectedCustomer.unicId,
+                                resident: parseInt(selectedCustomer.resident) || 3,
+                                name: `${selectedCustomer.firstName} ${selectedCustomer.lastName}`
+                            };
+                        }
+                    }
                 }
             } catch (error) {
                 console.error('Error loading customers:', error);
+            }
+        }
+
+        // טיפול בבחירת לקוח
+        async function onCustomerSelected() {
+            const customerId = document.getElementById('clientId').value;
+            if (!customerId) {
+                selectedCustomerData = null;
+                return;
+            }
+
+            try {
+                const response = await fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?action=get&id=${customerId}`);
+                const result = await response.json();
+
+                if (result.success && result.data) {
+                    selectedCustomerData = {
+                        unicId: result.data.unicId,
+                        resident: parseInt(result.data.resident) || 3,
+                        name: `${result.data.firstName} ${result.data.lastName}`
+                    };
+                    console.log('Selected customer:', selectedCustomerData);
+                    tryCalculatePayments();
+                }
+            } catch (error) {
+                console.error('Error loading customer details:', error);
+            }
+        }
+
+        // טיפול בבחירת קבר
+        async function onGraveSelected() {
+            const graveId = document.getElementById('graveSelect').value;
+            if (!graveId) {
+                selectedGraveData = null;
+                return;
+            }
+
+            try {
+                const response = await fetch(`/dashboard/dashboards/cemeteries/api/graves-api.php?action=get&id=${graveId}`);
+                const result = await response.json();
+
+                if (result.success && result.data) {
+                    selectedGraveData = {
+                        unicId: result.data.unicId,
+                        plotType: parseInt(result.data.plotType) || 1,
+                        graveType: parseInt(result.data.graveType) || 1,
+                        name: result.data.graveNameHe
+                    };
+                    console.log('Selected grave:', selectedGraveData);
+                    tryCalculatePayments();
+                }
+            } catch (error) {
+                console.error('Error loading grave details:', error);
             }
         }
 
@@ -566,6 +645,15 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
                 if (result.success && result.data) {
                     const grave = result.data;
+
+                    // שמירת נתוני קבר לחישוב תשלומים
+                    selectedGraveData = {
+                        unicId: grave.unicId,
+                        plotType: parseInt(grave.plotType) || 1,
+                        graveType: parseInt(grave.graveType) || 1,
+                        name: grave.graveNameHe
+                    };
+
                     // בניית היררכיה מהקבר
                     if (grave.cemeteryId) {
                         document.getElementById('cemeterySelect').value = grave.cemeteryId;
@@ -588,6 +676,9 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                         await filterHierarchy('areaGrave');
                     }
                     document.getElementById('graveSelect').value = graveId;
+
+                    // טעינת תשלומים קיימים במצב עריכה
+                    loadExistingPayments();
                 }
             } catch (error) {
                 console.error('Error loading grave hierarchy:', error);
@@ -771,9 +862,251 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             }
         }
 
-        // פתיחת מנהל תשלומים
-        function openPaymentsManager() {
-            alert('מנהל תשלומים יתווסף בהמשך');
+        // ניסיון לחשב תשלומים אוטומטית
+        async function tryCalculatePayments() {
+            if (isEditMode) return;
+            if (!selectedGraveData || !selectedCustomerData) return;
+
+            try {
+                const response = await fetch('/dashboard/dashboards/cemeteries/api/payments-api.php?action=getMatching', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        plotType: selectedGraveData.plotType,
+                        graveType: selectedGraveData.graveType,
+                        resident: selectedCustomerData.resident,
+                        buyerStatus: document.getElementById('buyer_status')?.value || 1
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.payments) {
+                    purchasePayments = [];
+                    const mandatoryPayments = data.payments.filter(p => p.mandatory);
+
+                    mandatoryPayments.forEach(payment => {
+                        purchasePayments.push({
+                            paymentType: payment.priceDefinition || 1,
+                            paymentAmount: parseFloat(payment.price) || 0,
+                            customPaymentType: payment.name,
+                            paymentDate: '',
+                            isPaymentComplete: false,
+                            mandatory: true
+                        });
+                    });
+
+                    displayPaymentsSummary();
+                    updateTotalPrice();
+                }
+            } catch (error) {
+                console.error('Error calculating payments:', error);
+            }
+        }
+
+        // פתיחת מנהל תשלומים חכם
+        async function openPaymentsManager() {
+            if (!selectedCustomerData) {
+                showAlert('יש לבחור לקוח תחילה', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/dashboard/dashboards/cemeteries/api/payments-api.php?action=getMatching', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        plotType: selectedGraveData?.plotType || 1,
+                        graveType: selectedGraveData?.graveType || 1,
+                        resident: selectedCustomerData.resident,
+                        buyerStatus: document.getElementById('buyer_status')?.value || 1
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    openPaymentsModal(data.payments || []);
+                } else {
+                    showAlert('שגיאה בטעינת הגדרות תשלום', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading payments:', error);
+                showAlert('שגיאה בטעינת התשלומים', 'error');
+            }
+        }
+
+        // פתיחת מודל תשלומים
+        function openPaymentsModal(availablePayments) {
+            const mandatoryPayments = availablePayments.filter(p => p.mandatory);
+            const optionalPayments = availablePayments.filter(p => !p.mandatory);
+
+            const modal = document.createElement('div');
+            modal.id = 'paymentsModal';
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0,0,0,0.5); z-index: 10000;
+                display: flex; align-items: center; justify-content: center;
+            `;
+
+            modal.innerHTML = `
+                <div style="background: white; border-radius: 12px; width: 90%; max-width: 600px; max-height: 80vh; overflow: auto; direction: rtl;">
+                    <div style="padding: 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="margin: 0; color: #1e293b;">מנהל תשלומים חכם</h3>
+                        <button onclick="closePaymentsModal()" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+                    </div>
+
+                    <div style="padding: 20px;">
+                        <div style="background: #f1f5f9; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 13px;">
+                            <strong>פרמטרים:</strong>
+                            תושבות: ${getResidentLabel(selectedCustomerData?.resident)} |
+                            סוג חלקה: ${getPlotTypeLabel(selectedGraveData?.plotType)} |
+                            סוג קבר: ${getGraveTypeLabel(selectedGraveData?.graveType)}
+                        </div>
+
+                        ${mandatoryPayments.length > 0 ? `
+                            <h4 style="color: #dc2626; margin-bottom: 10px;">תשלומי חובה</h4>
+                            <div style="margin-bottom: 20px;">
+                                ${mandatoryPayments.map((p, i) => `
+                                    <label style="display: flex; align-items: center; padding: 10px; background: #fef2f2; border-radius: 8px; margin-bottom: 8px;">
+                                        <input type="checkbox" checked disabled data-mandatory="true" data-price="${p.price}" data-name="${p.name}" data-type="${p.priceDefinition}" style="margin-left: 10px;">
+                                        <span style="flex: 1;">${p.name}</span>
+                                        <strong style="color: #dc2626;">₪${parseFloat(p.price).toLocaleString()}</strong>
+                                    </label>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+
+                        ${optionalPayments.length > 0 ? `
+                            <h4 style="color: #059669; margin-bottom: 10px;">תשלומים אופציונליים</h4>
+                            <div style="margin-bottom: 20px;">
+                                ${optionalPayments.map((p, i) => `
+                                    <label style="display: flex; align-items: center; padding: 10px; background: #f0fdf4; border-radius: 8px; margin-bottom: 8px; cursor: pointer;">
+                                        <input type="checkbox" class="optional-payment" data-price="${p.price}" data-name="${p.name}" data-type="${p.priceDefinition}" style="margin-left: 10px;">
+                                        <span style="flex: 1;">${p.name}</span>
+                                        <strong style="color: #059669;">₪${parseFloat(p.price).toLocaleString()}</strong>
+                                    </label>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+
+                        <div style="background: #1e293b; color: white; padding: 15px; border-radius: 8px; text-align: center; margin-top: 20px;">
+                            <div style="font-size: 14px; margin-bottom: 5px;">סה"כ לתשלום</div>
+                            <div id="modalTotalPrice" style="font-size: 28px; font-weight: bold;">₪0</div>
+                        </div>
+                    </div>
+
+                    <div style="padding: 20px; border-top: 1px solid #e2e8f0; display: flex; gap: 10px; justify-content: flex-end;">
+                        <button onclick="closePaymentsModal()" style="padding: 10px 20px; background: #e2e8f0; border: none; border-radius: 8px; cursor: pointer;">ביטול</button>
+                        <button onclick="applyPayments()" style="padding: 10px 20px; background: #059669; color: white; border: none; border-radius: 8px; cursor: pointer;">אשר תשלומים</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            // עדכון סה"כ בשינוי בחירה
+            modal.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                cb.addEventListener('change', updateModalTotal);
+            });
+            updateModalTotal();
+        }
+
+        function closePaymentsModal() {
+            document.getElementById('paymentsModal')?.remove();
+        }
+
+        function updateModalTotal() {
+            const modal = document.getElementById('paymentsModal');
+            if (!modal) return;
+
+            let total = 0;
+            modal.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
+                total += parseFloat(cb.dataset.price) || 0;
+            });
+
+            document.getElementById('modalTotalPrice').textContent = `₪${total.toLocaleString()}`;
+        }
+
+        function applyPayments() {
+            const modal = document.getElementById('paymentsModal');
+            if (!modal) return;
+
+            purchasePayments = [];
+            modal.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
+                purchasePayments.push({
+                    paymentType: parseInt(cb.dataset.type) || 1,
+                    paymentAmount: parseFloat(cb.dataset.price) || 0,
+                    customPaymentType: cb.dataset.name,
+                    paymentDate: '',
+                    isPaymentComplete: false,
+                    mandatory: cb.dataset.mandatory === 'true'
+                });
+            });
+
+            displayPaymentsSummary();
+            updateTotalPrice();
+            closePaymentsModal();
+            showAlert('התשלומים נשמרו בהצלחה', 'success');
+        }
+
+        function displayPaymentsSummary() {
+            const container = document.getElementById('paymentsDisplay');
+            if (!container || purchasePayments.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; color: #94a3b8;">
+                        <i class="fas fa-coins" style="font-size: 24px; margin-bottom: 10px;"></i>
+                        <div>פירוט תשלומים יופיע כאן</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = purchasePayments.map(p => `
+                <div style="display: flex; justify-content: space-between; padding: 8px 12px; background: ${p.mandatory ? '#fef2f2' : '#f0fdf4'}; border-radius: 6px; margin-bottom: 6px;">
+                    <span>${p.customPaymentType}</span>
+                    <strong style="color: ${p.mandatory ? '#dc2626' : '#059669'};">₪${parseFloat(p.paymentAmount).toLocaleString()}</strong>
+                </div>
+            `).join('');
+
+            document.getElementById('paymentsList').value = JSON.stringify(purchasePayments);
+        }
+
+        function updateTotalPrice() {
+            const total = purchasePayments.reduce((sum, p) => sum + (parseFloat(p.paymentAmount) || 0), 0);
+            document.getElementById('price').value = total;
+            document.getElementById('totalPriceDisplay').textContent = `₪${total.toLocaleString()}`;
+        }
+
+        function getResidentLabel(val) {
+            const labels = { 1: 'תושב העיר', 2: 'תושב חוץ לעיר', 3: 'תושב חו"ל' };
+            return labels[val] || 'לא ידוע';
+        }
+
+        function getPlotTypeLabel(val) {
+            const labels = { 1: 'פטורה', 2: 'חריגה', 3: 'סגורה' };
+            return labels[val] || 'לא ידוע';
+        }
+
+        function getGraveTypeLabel(val) {
+            const labels = { 1: 'שדה', 2: 'רוויה', 3: 'סנהדרין' };
+            return labels[val] || 'לא ידוע';
+        }
+
+        // טעינת תשלומים קיימים במצב עריכה
+        function loadExistingPayments() {
+            if (!isEditMode) return;
+
+            try {
+                const paymentsListValue = document.getElementById('paymentsList').value;
+                if (paymentsListValue && paymentsListValue !== '[]') {
+                    purchasePayments = JSON.parse(paymentsListValue);
+                    displayPaymentsSummary();
+                    updateTotalPrice();
+                }
+            } catch (error) {
+                console.error('Error loading existing payments:', error);
+            }
         }
 
         // שליחת הטופס

@@ -69,7 +69,7 @@ const FormHandler = {
     openForm: async function(type, parentId = null, itemId = null) {
 
         // 🆕 ניתוב טפסים לשיטה החדשה (iframe popup)
-        const iframeFormTypes = ['customer', 'purchase', 'burial'];
+        const iframeFormTypes = ['customer', 'purchase', 'burial', 'payment'];
 
         if (iframeFormTypes.includes(type)) {
             if (typeof PopupManager !== 'undefined') {
@@ -94,6 +94,13 @@ const FormHandler = {
                         titleEdit: 'עריכת קבורה',
                         width: 1000,
                         height: 800
+                    },
+                    payment: {
+                        file: 'paymentForm-iframe.php',
+                        titleNew: 'הגדרת תשלום חדש',
+                        titleEdit: 'עריכת הגדרת תשלום',
+                        width: 800,
+                        height: 600
                     }
                 };
 

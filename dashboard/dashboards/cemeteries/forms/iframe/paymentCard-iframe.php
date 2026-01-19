@@ -203,7 +203,20 @@ $serialId = htmlspecialchars($payment['serialPaymentId'] ?? $payment['unicId']);
             if (typeof PopupAPI !== 'undefined') PopupAPI.setTitle('כרטיס תשלום #<?= addslashes($serialId) ?>');
         });
         function toggleSection(btn) { btn.closest('.sortable-section').classList.toggle('collapsed'); }
-        function editPayment(id) { if (window.parent && window.parent.FormHandler) window.parent.FormHandler.openForm('payment', null, id); }
+        function editPayment(id) {
+            if (window.parent && window.parent.PopupManager) {
+                window.parent.PopupManager.create({
+                    id: 'paymentForm-' + id,
+                    type: 'iframe',
+                    src: '/dashboard/dashboards/cemeteries/forms/iframe/paymentForm-iframe.php?itemId=' + id,
+                    title: 'עריכת הגדרת תשלום',
+                    width: 800,
+                    height: 600
+                });
+            } else if (window.parent && window.parent.FormHandler) {
+                window.parent.FormHandler.openForm('payment', null, id);
+            }
+        }
     </script>
 </body>
 </html>

@@ -90,7 +90,16 @@ function getPriceDefinitionBadge(type) {
 function openAddPayment() {
     window.currentType = 'payment';
     window.currentParentId = null;
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
+    if (typeof PopupManager !== 'undefined') {
+        PopupManager.create({
+            id: 'paymentForm-new-' + Date.now(),
+            type: 'iframe',
+            src: '/dashboard/dashboards/cemeteries/forms/iframe/paymentForm-iframe.php',
+            title: 'הגדרת תשלום חדש',
+            width: 800,
+            height: 600
+        });
+    } else if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
         FormHandler.openForm('payment', null, null);
     }
 }
@@ -98,7 +107,16 @@ function openAddPayment() {
 // עריכת תשלום
 async function editPayment(id) {
     window.currentType = 'payment';
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
+    if (typeof PopupManager !== 'undefined') {
+        PopupManager.create({
+            id: 'paymentForm-' + id,
+            type: 'iframe',
+            src: '/dashboard/dashboards/cemeteries/forms/iframe/paymentForm-iframe.php?itemId=' + id,
+            title: 'עריכת הגדרת תשלום',
+            width: 800,
+            height: 600
+        });
+    } else if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
         FormHandler.openForm('payment', null, id);
     }
 }

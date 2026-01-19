@@ -104,9 +104,7 @@ async function viewPurchase(id) {
 
 // דאבל-קליק על שורת רכישה - פתיחת כרטיס
 async function handlePurchaseDoubleClick(purchase) {
-    console.log('🔍 DEBUG purchase object:', purchase);
-    const purchaseId = typeof purchase === 'object' ? (purchase.id || purchase.unicId) : purchase;
-    console.log('🔍 DEBUG purchaseId extracted:', purchaseId);
+    const purchaseId = typeof purchase === 'object' ? purchase.unicId : purchase;
 
     if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
         FormHandler.openForm('purchaseCard', null, purchaseId);

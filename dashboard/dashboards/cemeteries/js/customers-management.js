@@ -61,7 +61,10 @@ function getPurchasesCountBadge(count) {
 // ===================================================================
 
 function openAddCustomer() {
+    console.log('🆕 openAddCustomer called - NEW VERSION');
+    console.log('PopupManager exists:', typeof PopupManager !== 'undefined');
     if (typeof PopupManager !== 'undefined') {
+        console.log('Opening iframe: /dashboard/dashboards/cemeteries/forms/iframe/customerForm-iframe.php');
         PopupManager.create({
             id: 'customerForm-new-' + Date.now(),
             type: 'iframe',
@@ -70,11 +73,16 @@ function openAddCustomer() {
             width: 900,
             height: 700
         });
+    } else {
+        console.error('❌ PopupManager not found!');
     }
 }
 
 async function editCustomer(id) {
+    console.log('✏️ editCustomer called - NEW VERSION, id:', id);
+    console.log('PopupManager exists:', typeof PopupManager !== 'undefined');
     if (typeof PopupManager !== 'undefined') {
+        console.log('Opening iframe: /dashboard/dashboards/cemeteries/forms/iframe/customerForm-iframe.php?itemId=' + id);
         PopupManager.create({
             id: 'customerForm-' + id,
             type: 'iframe',
@@ -83,6 +91,8 @@ async function editCustomer(id) {
             width: 900,
             height: 700
         });
+    } else {
+        console.error('❌ PopupManager not found!');
     }
 }
 

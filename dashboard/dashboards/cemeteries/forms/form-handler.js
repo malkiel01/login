@@ -66,10 +66,36 @@ const FormHandler = {
         this.openForm(childType, selectedParentId, null);
     },
 
-    openForm: async function(type, parentId = null, itemId = null) {    
-        
-        
-        
+    openForm: async function(type, parentId = null, itemId = null) {
+
+        // 🆕 ניתוב טפסי לקוח לשיטה החדשה (iframe popup)
+        if (type === 'customer') {
+            if (typeof PopupManager !== 'undefined') {
+                const popupConfig = {
+                    type: 'iframe',
+                    width: 900,
+                    height: 700
+                };
+
+                if (itemId) {
+                    // עריכה
+                    popupConfig.id = 'customerForm-' + itemId;
+                    popupConfig.src = '/dashboard/dashboards/cemeteries/forms/iframe/customerForm-iframe.php?itemId=' + itemId;
+                    popupConfig.title = 'עריכת לקוח';
+                } else {
+                    // הוספה
+                    popupConfig.id = 'customerForm-new-' + Date.now();
+                    popupConfig.src = '/dashboard/dashboards/cemeteries/forms/iframe/customerForm-iframe.php';
+                    popupConfig.title = 'הוספת לקוח חדש';
+                }
+
+                PopupManager.create(popupConfig);
+                return;
+            } else {
+                console.error('❌ PopupManager not found for customer form!');
+            }
+        }
+
         if (type === 'purchase' && !itemId) {
             window.isEditMode = false;
             window.purchasePayments = [];

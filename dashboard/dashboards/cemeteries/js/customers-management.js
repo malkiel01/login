@@ -85,7 +85,7 @@ async function viewCustomer(id) {
 
 // דאבל-קליק על שורת לקוח - פתיחת כרטיס
 async function handleCustomerDoubleClick(customer) {
-    const customerId = typeof customer === 'object' ? (customer.id || customer.unicId) : customer;
+    const customerId = typeof customer === 'object' ? customer.unicId : customer;
 
     if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
         FormHandler.openForm('customerCard', null, customerId);

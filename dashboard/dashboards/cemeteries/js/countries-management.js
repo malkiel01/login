@@ -78,7 +78,7 @@ async function viewCountry(id) {
 
 // דאבל-קליק על שורת מדינה
 async function handleCountryDoubleClick(country) {
-    const countryId = typeof country === 'object' ? (country.id || country.unicId) : country;
+    const countryId = typeof country === 'object' ? country.unicId : country;
 
     if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
         FormHandler.openForm('countryCard', null, countryId);

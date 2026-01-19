@@ -94,7 +94,7 @@ async function viewResidency(id) {
 
 // דאבל-קליק על שורת הגדרת תושבות
 async function handleResidencyDoubleClick(residency) {
-    const residencyId = typeof residency === 'object' ? (residency.id || residency.unicId) : residency;
+    const residencyId = typeof residency === 'object' ? residency.unicId : residency;
 
     if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
         FormHandler.openForm('residencyCard', null, residencyId);

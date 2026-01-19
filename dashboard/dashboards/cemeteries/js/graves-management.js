@@ -92,7 +92,7 @@ async function viewGrave(id) {
 
 // דאבל-קליק על שורת קבר - פתיחת כרטיס
 async function handleGraveDoubleClick(grave) {
-    const graveId = typeof grave === 'object' ? (grave.id || grave.unicId) : grave;
+    const graveId = typeof grave === 'object' ? grave.unicId : grave;
 
     if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
         FormHandler.openForm('graveCard', null, graveId);

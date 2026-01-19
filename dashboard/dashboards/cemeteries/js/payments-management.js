@@ -114,7 +114,7 @@ async function viewPayment(id) {
 
 // דאבל-קליק על שורת תשלום
 async function handlePaymentDoubleClick(payment) {
-    const paymentId = typeof payment === 'object' ? (payment.id || payment.unicId) : payment;
+    const paymentId = typeof payment === 'object' ? payment.unicId : payment;
 
     if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
         FormHandler.openForm('paymentCard', null, paymentId);

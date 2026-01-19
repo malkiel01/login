@@ -80,7 +80,7 @@ async function viewCity(id) {
 
 // דאבל-קליק על שורת עיר
 async function handleCityDoubleClick(city) {
-    const cityId = typeof city === 'object' ? (city.id || city.unicId) : city;
+    const cityId = typeof city === 'object' ? city.unicId : city;
 
     if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
         FormHandler.openForm('cityCard', null, cityId);

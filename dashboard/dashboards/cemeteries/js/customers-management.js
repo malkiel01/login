@@ -76,7 +76,18 @@ async function editCustomer(id) {
 }
 
 async function viewCustomer(id) {
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
+    // שימוש ב-PopupManager (iframe) במקום FormHandler
+    if (typeof PopupManager !== 'undefined') {
+        PopupManager.create({
+            id: 'customerCard-' + id,
+            type: 'iframe',
+            src: '/dashboard/dashboards/cemeteries/popup/customerCard-popup.php?itemId=' + id,
+            title: 'כרטיס לקוח',
+            width: 1000,
+            height: 700
+        });
+    } else if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
+        // fallback לשיטה הישנה
         FormHandler.openForm('customerCard', null, id);
     } else {
         editCustomer(id);
@@ -86,10 +97,7 @@ async function viewCustomer(id) {
 // דאבל-קליק על שורת לקוח - פתיחת כרטיס
 async function handleCustomerDoubleClick(customer) {
     const customerId = typeof customer === 'object' ? customer.unicId : customer;
-
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('customerCard', null, customerId);
-    }
+    viewCustomer(customerId);
 }
 
 

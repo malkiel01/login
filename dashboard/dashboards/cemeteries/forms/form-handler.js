@@ -96,13 +96,19 @@ const FormHandler = {
             }
         
             const html = await response.text();
-            
+
+            // 🔍 DEBUG - הצג את ה-HTML שחוזר מהשרת
+            console.log('📄 Form HTML received for type:', type);
+            console.log('📄 HTML length:', html.length);
+            console.log('📄 HTML first 500 chars:', html.substring(0, 500));
+            console.log('📄 Looking for modal ID:', '#' + type + 'FormModal');
+
             // בדוק מה יש ב-HTML
             if (html.includes('error') || html.includes('Error')) {
-                // console.log('⚠️ Error found in HTML');
+                console.log('⚠️ Error found in HTML');
                 const errorMatch = html.match(/error[^<]*/gi);
                 if (errorMatch) {
-                    // console.log('Error text found:', errorMatch);
+                    console.log('Error text found:', errorMatch);
                 }
             }
 

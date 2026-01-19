@@ -41,7 +41,7 @@ $typeIdOptions = [1 => 'ת.ז.', 2 => 'דרכון', 3 => 'אלמוני', 4 => '�
 $genderOptions = ['' => '-- בחר --', 1 => 'זכר', 2 => 'נקבה'];
 $maritalOptions = ['' => '-- בחר --', 1 => 'רווק/ה', 2 => 'נשוי/אה', 3 => 'אלמן/ה', 4 => 'גרוש/ה'];
 $statusOptions = [1 => 'פעיל', 2 => 'רוכש', 3 => 'נפטר'];
-$residentOptions = [1 => 'ירושלים והסביבה', 2 => 'תושב חוץ', 3 => 'תושב חו״ל'];
+$residentOptions = [1 => 'תושב העיר', 2 => 'תושב חוץ לעיר', 3 => 'תושב חו״ל'];
 $associationOptions = [1 => 'ישראל', 2 => 'כהן', 3 => 'לוי'];
 
 function renderSelect($name, $options, $value = '', $required = false, $disabled = false) {
@@ -493,6 +493,9 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
     </div>
 
     <script>
+        // ========== VERSION 2.0 - <?= date('Y-m-d H:i:s') ?> ==========
+        console.log('%c🔥 CUSTOMER FORM VERSION 2.0 LOADED 🔥', 'background: #ff0000; color: white; font-size: 20px; padding: 10px;');
+
         const isEditMode = <?= $isEditMode ? 'true' : 'false' ?>;
         const customerId = '<?= addslashes($itemId ?? '') ?>';
         const customerCountryId = '<?= addslashes($customer['countryId'] ?? '') ?>';
@@ -607,37 +610,74 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
         // חישוב תושבות בזמן אמת
         async function calculateResidency() {
-            const typeId = document.getElementById('typeId').value;
-            const countryId = document.getElementById('countryId').value;
-            const cityId = document.getElementById('cityId').value;
-            const residentSelect = document.getElementById('resident');
-
-            // בניית URL עם פרמטרים
-            let url = `/dashboard/dashboards/cemeteries/api/calculate-residency.php?typeId=${typeId}`;
-            if (countryId) url += `&countryId=${countryId}`;
-            if (cityId) url += `&cityId=${cityId}`;
+            console.log('=== calculateResidency START ===');
 
             try {
-                const response = await fetch(url);
-                const result = await response.json();
+                const typeId = document.getElementById('typeId')?.value || '1';
+                const countryId = document.getElementById('countryId')?.value || '';
+                const cityId = document.getElementById('cityId')?.value || '';
+                const residentSelect = document.getElementById('resident');
 
-                if (result.success) {
-                    residentSelect.value = result.residency;
+                console.log('Inputs:', { typeId, countryId, cityId });
 
-                    // אינדיקציה ויזואלית
-                    const colors = {
-                        1: '#10b981', // ירושלים - ירוק
-                        2: '#f59e0b', // חוץ - כתום
-                        3: '#ef4444'  // חו"ל - אדום
-                    };
-                    residentSelect.style.borderColor = colors[result.residency] || '#e2e8f0';
-                    residentSelect.style.backgroundColor = (colors[result.residency] || '#e2e8f0') + '20';
-
-                    console.log('תושבות מחושבת:', result.label, result.reason || '');
+                if (!residentSelect) {
+                    console.error('CRITICAL: Resident select not found!');
+                    return;
                 }
+
+                // שמור את המצב הנוכחי של השדה
+                const parentElement = residentSelect.parentElement;
+                console.log('Parent element:', parentElement);
+                console.log('Select display:', window.getComputedStyle(residentSelect).display);
+                console.log('Select visibility:', window.getComputedStyle(residentSelect).visibility);
+
+                // בניית URL עם פרמטרים
+                let url = `/dashboard/dashboards/cemeteries/api/calculate-residency.php?typeId=${typeId}`;
+                if (countryId) url += `&countryId=${countryId}`;
+                if (cityId) url += `&cityId=${cityId}`;
+
+                console.log('Fetching URL:', url);
+
+                const response = await fetch(url);
+                const text = await response.text();
+                console.log('Raw response:', text);
+
+                let result;
+                try {
+                    result = JSON.parse(text);
+                } catch (parseError) {
+                    console.error('JSON parse error:', parseError);
+                    return;
+                }
+
+                console.log('Parsed result:', result);
+
+                if (result.success && result.residency) {
+                    const newValue = String(result.residency);
+                    console.log('Will set value to:', newValue);
+                    console.log('Available options:', Array.from(residentSelect.options).map(o => o.value));
+
+                    // בדיקה שהשדה עדיין קיים ונראה
+                    console.log('Before set - display:', window.getComputedStyle(residentSelect).display);
+
+                    // הגדרת הערך
+                    residentSelect.value = newValue;
+
+                    // בדיקה אחרי הגדרת הערך
+                    console.log('After set - value:', residentSelect.value);
+                    console.log('After set - display:', window.getComputedStyle(residentSelect).display);
+                    console.log('After set - visibility:', window.getComputedStyle(residentSelect).visibility);
+                    console.log('After set - offsetHeight:', residentSelect.offsetHeight);
+
+                    console.log('תושבות:', result.label, '| סיבה:', result.reason);
+                }
+
             } catch (error) {
-                console.error('Error calculating residency:', error);
+                console.error('calculateResidency ERROR:', error);
+                console.error('Stack:', error.stack);
             }
+
+            console.log('=== calculateResidency END ===');
         }
 
         // שליחת הטופס

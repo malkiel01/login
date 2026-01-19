@@ -3,12 +3,22 @@
  * API לחישוב תושבות בזמן אמת
  *
  * לוגיקה:
- * - סוג זיהוי דרכון (2) או אלמוני (3) = תמיד חו"ל (3)
- * - סוג זיהוי ת.ז. (1) או תינוק (4) = לפי טבלת תושבות
+ * 1. בדיקת סוג זיהוי:
+ *    - דרכון (2) או אלמוני (3) = תמיד חו"ל (3)
+ *    - ת.ז. (1) או תינוק (4) = ממשיך לבדיקות הבאות
+ *
+ * 2. בדיקת מדינה:
+ *    - אם למדינה יש הגדרת תושבות = תושב חוץ לעיר (2)
+ *
+ * 3. בדיקת עיר:
+ *    - אם לעיר יש הגדרת תושבות = תושב העיר (1)
+ *    - אחרת נשאר תושב חוץ לעיר (2)
+ *
+ * 4. ברירת מחדל (ללא הגדרות) = חו"ל (3)
  *
  * תושבות:
- * 1 = ירושלים והסביבה
- * 2 = תושב חוץ (ישראל)
+ * 1 = תושב העיר (ירושלים והסביבה)
+ * 2 = תושב חוץ לעיר
  * 3 = תושב חו"ל
  */
 
@@ -22,9 +32,10 @@ try {
 
     // ברירת מחדל: חו"ל
     $residency = 3;
-    $residencyLabel = 'תושב חו״ל';
+    $reason = 'ברירת מחדל';
 
-    // סוג זיהוי דרכון (2) או אלמוני (3) = תמיד חו"ל
+    // שלב 1: בדיקת סוג זיהוי
+    // דרכון (2) או אלמוני (3) = תמיד חו"ל
     if ($typeId == 2 || $typeId == 3) {
         echo json_encode([
             'success' => true,
@@ -35,62 +46,51 @@ try {
         exit;
     }
 
-    // סוג זיהוי ת.ז. (1) או תינוק (4) = לפי טבלת תושבות
-    if ($countryId || $cityId) {
+    // שלב 2+3: סוג זיהוי ת.ז. (1) או תינוק (4) - בדיקה לפי מדינה ועיר
+    if ($countryId) {
         $conn = getDBConnection();
 
-        // חפש בטבלת הגדרות תושבות
-        // קודם לפי עיר ספציפית, אחר כך לפי מדינה
-        if ($cityId) {
-            $stmt = $conn->prepare("
-                SELECT residencyType
-                FROM residency_settings
-                WHERE cityId = :cityId AND isActive = 1
-                LIMIT 1
-            ");
-            $stmt->execute(['cityId' => $cityId]);
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        // שלב 2: בדיקת מדינה - האם למדינה יש הגדרת תושבות?
+        $stmt = $conn->prepare("
+            SELECT residencyType
+            FROM residency_settings
+            WHERE countryId = :countryId AND cityId IS NULL AND isActive = 1
+            LIMIT 1
+        ");
+        $stmt->execute(['countryId' => $countryId]);
+        $countryResult = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if ($result) {
-                $residency = (int)$result['residencyType'];
+        if ($countryResult) {
+            // למדינה יש הגדרת תושבות = תושב חוץ לעיר (2)
+            $residency = 2;
+            $reason = 'למדינה יש הגדרת תושבות';
+
+            // שלב 3: בדיקת עיר - האם לעיר יש הגדרת תושבות?
+            if ($cityId) {
+                $stmt = $conn->prepare("
+                    SELECT residencyType
+                    FROM residency_settings
+                    WHERE cityId = :cityId AND isActive = 1
+                    LIMIT 1
+                ");
+                $stmt->execute(['cityId' => $cityId]);
+                $cityResult = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if ($cityResult) {
+                    // לעיר יש הגדרת תושבות = תושב העיר (1)
+                    $residency = 1;
+                    $reason = 'לעיר יש הגדרת תושבות';
+                }
+                // אחרת נשאר תושב חוץ לעיר (2)
             }
         }
-
-        // אם לא נמצא לפי עיר, חפש לפי מדינה
-        if ($residency == 3 && $countryId) {
-            $stmt = $conn->prepare("
-                SELECT residencyType
-                FROM residency_settings
-                WHERE countryId = :countryId AND cityId IS NULL AND isActive = 1
-                LIMIT 1
-            ");
-            $stmt->execute(['countryId' => $countryId]);
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if ($result) {
-                $residency = (int)$result['residencyType'];
-            }
-        }
-
-        // אם עדיין לא נמצא - בדוק אם ישראל
-        if ($residency == 3 && $countryId) {
-            $stmt = $conn->prepare("
-                SELECT countryNameHe FROM countries WHERE unicId = :countryId
-            ");
-            $stmt->execute(['countryId' => $countryId]);
-            $country = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if ($country && $country['countryNameHe'] == 'ישראל') {
-                // ישראל ללא הגדרה ספציפית = תושב חוץ
-                $residency = 2;
-            }
-        }
+        // אם למדינה אין הגדרת תושבות = חו"ל (3)
     }
 
     // תרגום לתווית
     $labels = [
-        1 => 'ירושלים והסביבה',
-        2 => 'תושב חוץ',
+        1 => 'תושב העיר',
+        2 => 'תושב חוץ לעיר',
         3 => 'תושב חו״ל'
     ];
     $residencyLabel = $labels[$residency] ?? 'תושב חו״ל';
@@ -98,7 +98,8 @@ try {
     echo json_encode([
         'success' => true,
         'residency' => $residency,
-        'label' => $residencyLabel
+        'label' => $residencyLabel,
+        'reason' => $reason
     ]);
 
 } catch (Exception $e) {

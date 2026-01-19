@@ -572,6 +572,11 @@
                 return $this->renderCheckbox($field);
             }
 
+            // טיפול ב-custom_html - החזר ישירות בלי wrapper
+            if ($field['type'] === 'custom_html') {
+                return $field['html'];
+            }
+
 
             $html = '<div class="form-group ' . $field['class'] . '">';
             $html .= '<label for="' . $field['name'] . '">';

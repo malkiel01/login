@@ -19,10 +19,6 @@ require_once dirname(__DIR__) . '/config.php';
 $itemId = $_GET['itemId'] ?? $_GET['id'] ?? null;
 $formType = 'purchaseCard';
 
-// DEBUG
-error_log("purchaseCard-form.php - itemId: " . var_export($itemId, true));
-error_log("purchaseCard-form.php - GET: " . json_encode($_GET));
-
 if (!$itemId) {
     die('<div class="error-message">שגיאה: מזהה רכישה חסר. GET=' . htmlspecialchars(json_encode($_GET)) . '</div>');
 }
@@ -33,8 +29,8 @@ try {
     // שליפת נתוני הרכישה עם פרטי קבר
     $stmt = $conn->prepare("
         SELECT p.*,
-            g.unicId as graveUnicId, g.graveNameHe, g.graveStatus, g.graveType, g.graveSize,
-            g.gravePrice, g.graveDirection, g.comment as graveComment,
+            g.unicId as graveUnicId, g.graveNameHe, g.graveStatus, g.plotType, g.isSmallGrave,
+            g.constructionCost, g.graveLocation, g.comments as graveComment,
             agv.cemeteryNameHe, agv.blockNameHe, agv.plotNameHe, agv.lineNameHe, agv.areaGraveNameHe,
             agv.unicId as areaGraveUnicId
         FROM purchases p
@@ -102,8 +98,8 @@ $buyerStatusNames = [1 => 'רוכש לעצמו', 2 => 'רוכש לאחר'];
 // סטטוסים קבר
 $graveStatusNames = [1 => 'פנוי', 2 => 'תפוס', 3 => 'שמור', 4 => 'לא פעיל'];
 $graveStatusColors = [1 => '#10b981', 2 => '#ef4444', 3 => '#f59e0b', 4 => '#64748b'];
-$graveTypeNames = [1 => 'יחיד', 2 => 'זוגי', 3 => 'משפחתי', 4 => 'סנהדרין'];
-$graveDirectionNames = [1 => 'צפון', 2 => 'דרום', 3 => 'מזרח', 4 => 'מערב'];
+$plotTypeNames = [1 => 'פטורה', 2 => 'חריגה', 3 => 'סגורה'];
+$graveLocationNames = [1 => 'עליון', 2 => 'תחתון', 3 => 'אמצעי'];
 
 // מיקום הקבר
 $graveLocation = [];
@@ -463,12 +459,12 @@ $allSectionsHTML .= '
                     <div style="font-weight: 600; color: #5b21b6;">' . htmlspecialchars($purchase['lineNameHe'] ?? '-') . '</div>
                 </div>
                 <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #c4b5fd;">
-                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">סוג קבר</div>
-                    <div style="font-weight: 600; color: #5b21b6;">' . ($graveTypeNames[$purchase['graveType'] ?? 1] ?? '-') . '</div>
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">סוג חלקה</div>
+                    <div style="font-weight: 600; color: #5b21b6;">' . ($plotTypeNames[$purchase['plotType'] ?? 1] ?? '-') . '</div>
                 </div>
                 <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #c4b5fd;">
-                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">כיוון</div>
-                    <div style="font-weight: 600; color: #5b21b6;">' . ($graveDirectionNames[$purchase['graveDirection'] ?? 0] ?? '-') . '</div>
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">מיקום בשורה</div>
+                    <div style="font-weight: 600; color: #5b21b6;">' . ($graveLocationNames[$purchase['graveLocation'] ?? 0] ?? '-') . '</div>
                 </div>
             </div>
             <div style="margin-top: 15px;">

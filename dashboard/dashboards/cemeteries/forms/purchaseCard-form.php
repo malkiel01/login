@@ -19,8 +19,12 @@ require_once dirname(__DIR__) . '/config.php';
 $itemId = $_GET['itemId'] ?? $_GET['id'] ?? null;
 $formType = 'purchaseCard';
 
+// DEBUG
+error_log("purchaseCard-form.php - itemId: " . var_export($itemId, true));
+error_log("purchaseCard-form.php - GET: " . json_encode($_GET));
+
 if (!$itemId) {
-    die('<div class="error-message">שגיאה: מזהה רכישה חסר</div>');
+    die('<div class="error-message">שגיאה: מזהה רכישה חסר. GET=' . htmlspecialchars(json_encode($_GET)) . '</div>');
 }
 
 try {
@@ -42,7 +46,8 @@ try {
     $purchase = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$purchase) {
-        die('<div class="error-message">שגיאה: הרכישה לא נמצאה</div>');
+        error_log("purchaseCard-form.php - Purchase NOT FOUND for unicId: $itemId");
+        die('<div class="error-message">שגיאה: הרכישה לא נמצאה (unicId=' . htmlspecialchars($itemId) . ')</div>');
     }
 
     // שליפת קבורה משויכת (אם קיימת)

@@ -104,7 +104,19 @@ async function viewPurchase(id) {
 
 // דאבל-קליק על שורת רכישה - פתיחת כרטיס
 async function handlePurchaseDoubleClick(purchase) {
-    const purchaseId = typeof purchase === 'object' ? purchase.unicId : purchase;
+    // תמיכה במספר פורמטים אפשריים של ID
+    let purchaseId;
+    if (typeof purchase === 'object') {
+        purchaseId = purchase.unicId || purchase.unic_id || purchase.id;
+        console.log('🛒 Purchase double-click:', { unicId: purchase.unicId, id: purchase.id, resolved: purchaseId });
+    } else {
+        purchaseId = purchase;
+    }
+
+    if (!purchaseId) {
+        console.error('❌ Purchase ID not found in object:', purchase);
+        return;
+    }
 
     if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
         FormHandler.openForm('purchaseCard', null, purchaseId);

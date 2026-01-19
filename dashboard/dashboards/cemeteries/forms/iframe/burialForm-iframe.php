@@ -503,7 +503,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             btn.closest('.sortable-section').classList.toggle('collapsed');
         }
 
-        // טעינת לקוחות (סטטוס נפטר)
+        // טעינת לקוחות - לא לקוחות שכבר נפטרו (סטטוס 3)
         async function loadCustomers() {
             try {
                 const response = await fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=list');
@@ -513,15 +513,42 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                     const select = document.getElementById('clientId');
                     select.innerHTML = '<option value="">-- בחר נפטר/ת --</option>';
 
+                    // סטטוסים: 1=פעיל, 2=רוכש, 3=נפטר (כבר נקבר)
+                    const statusLabels = { 1: 'פעיל', 2: 'רוכש', 3: 'נפטר' };
+
                     result.data.forEach(customer => {
+                        const status = parseInt(customer.statusCustomer) || 1;
+
+                        // במצב עריכה - הצג את הלקוח הנוכחי גם אם הסטטוס השתנה
+                        // במצב חדש - לא להציג לקוחות עם סטטוס 3 (כבר נקברו)
+                        if (!isEditMode && status === 3) {
+                            return; // דלג על לקוחות שכבר נקברו
+                        }
+
                         const option = document.createElement('option');
                         option.value = customer.unicId;
-                        option.textContent = `${customer.firstName} ${customer.lastName} (${customer.numId || '-'})`;
+
+                        // הוסף אינדיקציה לסטטוס
+                        let displayText = `${customer.firstName} ${customer.lastName} (${customer.numId || '-'})`;
+                        if (status === 3) {
+                            displayText += ' [כבר נקבר/ה]';
+                            option.style.color = '#dc2626';
+                        } else if (status === 2) {
+                            displayText += ' [יש רכישה]';
+                            option.style.color = '#059669'; // ירוק - מוכן לקבורה
+                        }
+                        option.textContent = displayText;
+
                         if (customer.unicId === burialClientId) {
                             option.selected = true;
                         }
                         select.appendChild(option);
                     });
+
+                    // בדיקה אם יש לקוחות זמינים
+                    if (select.options.length === 1 && !isEditMode) {
+                        select.innerHTML = '<option value="">אין לקוחות זמינים לקבורה</option>';
+                    }
                 }
             } catch (error) {
                 console.error('Error loading customers:', error);

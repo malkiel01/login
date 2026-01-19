@@ -480,7 +480,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             btn.closest('.sortable-section').classList.toggle('collapsed');
         }
 
-        // טעינת לקוחות
+        // טעינת לקוחות - רק לקוחות פעילים (סטטוס 1)
         async function loadCustomers() {
             try {
                 const response = await fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=list');
@@ -490,15 +490,39 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                     const select = document.getElementById('clientId');
                     select.innerHTML = '<option value="">-- בחר לקוח --</option>';
 
+                    // סטטוסים: 1=פעיל, 2=רוכש (כבר רכש), 3=נפטר
+                    const statusLabels = { 1: 'פעיל', 2: 'רוכש', 3: 'נפטר' };
+
                     result.data.forEach(customer => {
+                        const status = parseInt(customer.statusCustomer) || 1;
+
+                        // במצב עריכה - הצג את הלקוח הנוכחי גם אם הסטטוס השתנה
+                        // במצב חדש - הצג רק לקוחות פעילים (סטטוס 1)
+                        if (!isEditMode && status !== 1) {
+                            return; // דלג על לקוחות שכבר רכשו או נפטרו
+                        }
+
                         const option = document.createElement('option');
                         option.value = customer.unicId;
-                        option.textContent = `${customer.firstName} ${customer.lastName} (${customer.numId || '-'})`;
+
+                        // הוסף אינדיקציה לסטטוס
+                        let displayText = `${customer.firstName} ${customer.lastName} (${customer.numId || '-'})`;
+                        if (status !== 1) {
+                            displayText += ` [${statusLabels[status] || 'לא ידוע'}]`;
+                            option.style.color = status === 3 ? '#dc2626' : '#f59e0b';
+                        }
+                        option.textContent = displayText;
+
                         if (customer.unicId === purchaseClientId) {
                             option.selected = true;
                         }
                         select.appendChild(option);
                     });
+
+                    // בדיקה אם יש לקוחות זמינים
+                    if (select.options.length === 1 && !isEditMode) {
+                        select.innerHTML = '<option value="">אין לקוחות פעילים לרכישה</option>';
+                    }
                 }
             } catch (error) {
                 console.error('Error loading customers:', error);

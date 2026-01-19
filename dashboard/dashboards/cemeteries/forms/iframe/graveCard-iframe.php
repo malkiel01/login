@@ -103,6 +103,7 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>כרטיס קבר - <?= htmlspecialchars($grave['graveNameHe'] ?? 'קבר') ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/explorer/explorer.css">
     <script src="/dashboard/dashboards/cemeteries/popup/popup-api.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -240,14 +241,43 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
                 <button type="button" class="section-toggle-btn" onclick="toggleSection(this)"><i class="fas fa-chevron-down"></i></button>
                 <span class="section-title"><i class="fas fa-folder-open"></i> מסמכים</span>
             </div>
-            <div class="section-content"><div class="empty-state"><i class="fas fa-folder-open"></i>סייר קבצים יטען בהמשך</div></div>
+            <div class="section-content">
+                <div id="graveExplorer" style="min-height: 300px;">
+                    <div style="text-align: center; color: #94a3b8; padding: 40px;">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 32px; margin-bottom: 10px; display: block;"></i>
+                        <span>טוען סייר קבצים...</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
+        const graveId = '<?= addslashes($itemId ?? '') ?>';
+
         document.addEventListener('DOMContentLoaded', function() {
             if (typeof PopupAPI !== 'undefined') PopupAPI.setTitle('כרטיס קבר - <?= addslashes($grave['graveNameHe'] ?? 'קבר') ?>');
+            initFileExplorer();
         });
+
+        function initFileExplorer() {
+            if (!graveId) return;
+            const script = document.createElement('script');
+            script.src = '/dashboard/dashboards/cemeteries/explorer/explorer.js?v=' + Date.now();
+            script.onload = function() {
+                if (typeof FileExplorer !== 'undefined') {
+                    window.graveExplorer = new FileExplorer('graveExplorer', graveId, {});
+                    window.explorer = window.graveExplorer;
+                } else {
+                    document.getElementById('graveExplorer').innerHTML = '<div style="text-align: center; color: #ef4444; padding: 40px;"><i class="fas fa-exclamation-triangle" style="font-size: 32px; margin-bottom: 10px; display: block;"></i><span>שגיאה בטעינת סייר הקבצים</span></div>';
+                }
+            };
+            script.onerror = function() {
+                document.getElementById('graveExplorer').innerHTML = '<div style="text-align: center; color: #ef4444; padding: 40px;"><i class="fas fa-exclamation-triangle" style="font-size: 32px; margin-bottom: 10px; display: block;"></i><span>שגיאה בטעינת סייר הקבצים</span></div>';
+            };
+            document.head.appendChild(script);
+        }
+
         function toggleSection(btn) { btn.closest('.sortable-section').classList.toggle('collapsed'); }
         function editGrave(id) { if (window.parent && window.parent.FormHandler) window.parent.FormHandler.openForm('grave', null, id); }
         function viewPurchase(id) {

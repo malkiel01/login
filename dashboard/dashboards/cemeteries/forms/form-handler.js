@@ -68,31 +68,54 @@ const FormHandler = {
 
     openForm: async function(type, parentId = null, itemId = null) {
 
-        // 🆕 ניתוב טפסי לקוח לשיטה החדשה (iframe popup)
-        if (type === 'customer') {
+        // 🆕 ניתוב טפסים לשיטה החדשה (iframe popup)
+        const iframeFormTypes = ['customer', 'purchase', 'burial'];
+
+        if (iframeFormTypes.includes(type)) {
             if (typeof PopupManager !== 'undefined') {
-                const popupConfig = {
-                    type: 'iframe',
-                    width: 900,
-                    height: 700
+                const formConfigs = {
+                    customer: {
+                        file: 'customerForm-iframe.php',
+                        titleNew: 'הוספת לקוח חדש',
+                        titleEdit: 'עריכת לקוח',
+                        width: 900,
+                        height: 700
+                    },
+                    purchase: {
+                        file: 'purchaseForm-iframe.php',
+                        titleNew: 'רכישה חדשה',
+                        titleEdit: 'עריכת רכישה',
+                        width: 1000,
+                        height: 800
+                    },
+                    burial: {
+                        file: 'burialForm-iframe.php',
+                        titleNew: 'קבורה חדשה',
+                        titleEdit: 'עריכת קבורה',
+                        width: 1000,
+                        height: 800
+                    }
                 };
 
-                if (itemId) {
-                    // עריכה
-                    popupConfig.id = 'customerForm-' + itemId;
-                    popupConfig.src = '/dashboard/dashboards/cemeteries/forms/iframe/customerForm-iframe.php?itemId=' + itemId;
-                    popupConfig.title = 'עריכת לקוח';
-                } else {
-                    // הוספה
-                    popupConfig.id = 'customerForm-new-' + Date.now();
-                    popupConfig.src = '/dashboard/dashboards/cemeteries/forms/iframe/customerForm-iframe.php';
-                    popupConfig.title = 'הוספת לקוח חדש';
-                }
+                const config = formConfigs[type];
+                let src = `/dashboard/dashboards/cemeteries/forms/iframe/${config.file}`;
+                const params = [];
 
-                PopupManager.create(popupConfig);
+                if (itemId) params.push(`itemId=${itemId}`);
+                if (parentId) params.push(`parentId=${parentId}`);
+                if (params.length > 0) src += '?' + params.join('&');
+
+                PopupManager.create({
+                    id: `${type}Form-${itemId || 'new-' + Date.now()}`,
+                    type: 'iframe',
+                    src: src,
+                    title: itemId ? config.titleEdit : config.titleNew,
+                    width: config.width,
+                    height: config.height
+                });
                 return;
             } else {
-                console.error('❌ PopupManager not found for customer form!');
+                console.error(`❌ PopupManager not found for ${type} form!`);
             }
         }
 

@@ -1,10 +1,10 @@
 <?php
 /*
- * File: dashboard/dashboards/cemeteries/forms/iframe/customer-form-iframe.php
+ * File: dashboard/dashboards/cemeteries/forms/iframe/purchaseForm-iframe.php
  * Version: 1.0.0
  * Updated: 2026-01-19
  * Author: Malkiel
- * Description: טופס לקוח (יצירה/עריכה) - דף עצמאי לטעינה ב-iframe
+ * Description: טופס רכישה (יצירה/עריכה) - דף עצמאי לטעינה ב-iframe
  */
 
 error_reporting(E_ALL);
@@ -14,35 +14,41 @@ header('Content-Type: text/html; charset=utf-8');
 require_once dirname(dirname(__DIR__)) . '/config.php';
 
 $itemId = $_GET['itemId'] ?? $_GET['id'] ?? null;
+$parentId = $_GET['parentId'] ?? $_GET['parent_id'] ?? $_GET['graveId'] ?? null;
 $popupId = $_GET['popupId'] ?? null;
 $isEditMode = !empty($itemId);
 
-$customer = null;
+$purchase = null;
 
 if ($isEditMode) {
     try {
         $conn = getDBConnection();
-        $stmt = $conn->prepare("SELECT * FROM customers WHERE unicId = ? AND isActive = 1");
+        $stmt = $conn->prepare("
+            SELECT p.*,
+                   c.firstName as customerFirstName,
+                   c.lastName as customerLastName,
+                   g.graveNumber
+            FROM purchases p
+            LEFT JOIN customers c ON p.clientId = c.unicId
+            LEFT JOIN graves g ON p.graveId = g.unicId
+            WHERE p.unicId = ? AND p.isActive = 1
+        ");
         $stmt->execute([$itemId]);
-        $customer = $stmt->fetch(PDO::FETCH_ASSOC);
+        $purchase = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$customer) {
-            die('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"></head><body style="font-family: Arial; padding: 20px; color: #ef4444;">שגיאה: הלקוח לא נמצא</body></html>');
+        if (!$purchase) {
+            die('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"></head><body style="font-family: Arial; padding: 20px; color: #ef4444;">שגיאה: הרכישה לא נמצאה</body></html>');
         }
     } catch (Exception $e) {
         die('<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"></head><body style="font-family: Arial; padding: 20px; color: #ef4444;">שגיאה: ' . htmlspecialchars($e->getMessage()) . '</body></html>');
     }
 }
 
-$pageTitle = $isEditMode ? 'עריכת לקוח - ' . htmlspecialchars($customer['firstName'] . ' ' . $customer['lastName']) : 'הוספת לקוח חדש';
+$pageTitle = $isEditMode ? 'עריכת רכישה #' . ($purchase['serialPurchaseId'] ?? $itemId) : 'רכישה חדשה';
 
 // מיפויים
-$typeIdOptions = [1 => 'ת.ז.', 2 => 'דרכון', 3 => 'אלמוני', 4 => 'תינוק'];
-$genderOptions = ['' => '-- בחר --', 1 => 'זכר', 2 => 'נקבה'];
-$maritalOptions = ['' => '-- בחר --', 1 => 'רווק/ה', 2 => 'נשוי/אה', 3 => 'אלמן/ה', 4 => 'גרוש/ה'];
-$statusOptions = [1 => 'פעיל', 2 => 'רוכש', 3 => 'נפטר'];
-$residentOptions = [1 => 'ירושלים והסביבה', 2 => 'תושב חוץ', 3 => 'תושב חו״ל'];
-$associationOptions = [1 => 'ישראל', 2 => 'כהן', 3 => 'לוי'];
+$buyerStatusOptions = [1 => 'רוכש לעצמו', 2 => 'רוכש לאחר'];
+$purchaseStatusOptions = [1 => 'פתוח', 2 => 'שולם', 3 => 'סגור', 4 => 'בוטל'];
 
 function renderSelect($name, $options, $value = '', $required = false, $disabled = false) {
     $req = $required ? 'required' : '';
@@ -75,7 +81,6 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
         }
 
         .form-container { max-width: 100%; }
-
         .sortable-sections { display: flex; flex-direction: column; gap: 15px; }
         .sortable-section {
             background: white;
@@ -162,12 +167,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             border-color: #3b82f6;
             box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
         }
-        .form-control:disabled {
-            background: #f1f5f9;
-            cursor: not-allowed;
-        }
-        .form-control.error { border-color: #ef4444; }
-
+        .form-control:disabled { background: #f1f5f9; cursor: not-allowed; }
         textarea.form-control { resize: vertical; min-height: 80px; }
 
         .btn {
@@ -187,6 +187,8 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
         .btn-primary:disabled { background: #94a3b8; cursor: not-allowed; }
         .btn-secondary { background: #64748b; color: white; }
         .btn-secondary:hover { background: #475569; }
+        .btn-info { background: #0891b2; color: white; }
+        .btn-info:hover { background: #0e7490; }
 
         .form-actions {
             display: flex;
@@ -209,10 +211,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
         .loading-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(255,255,255,0.8);
             display: none;
             align-items: center;
@@ -221,8 +220,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
         }
         .loading-overlay.show { display: flex; }
         .loading-spinner {
-            width: 40px;
-            height: 40px;
+            width: 40px; height: 40px;
             border: 3px solid #e2e8f0;
             border-top-color: #3b82f6;
             border-radius: 50%;
@@ -230,50 +228,23 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* Smart Select Styles */
-        .smart-select-container { position: relative; }
-        .smart-select-display {
-            padding: 10px 12px;
-            border: 1px solid #e2e8f0;
+        .price-display {
+            font-size: 24px;
+            font-weight: bold;
+            color: #059669;
+            text-align: center;
+            padding: 15px;
+            background: #ecfdf5;
             border-radius: 8px;
-            background: white;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            margin-bottom: 15px;
         }
-        .smart-select-display:hover { border-color: #94a3b8; }
-        .smart-select-dropdown {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid #e2e8f0;
+
+        .payments-list {
+            background: #f8fafc;
             border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            z-index: 100;
-            display: none;
-            max-height: 250px;
-            overflow-y: auto;
+            padding: 15px;
+            min-height: 80px;
         }
-        .smart-select-dropdown.open { display: block; }
-        .smart-select-search {
-            padding: 10px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        .smart-select-search input {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-        }
-        .smart-select-option {
-            padding: 10px 12px;
-            cursor: pointer;
-        }
-        .smart-select-option:hover { background: #f1f5f9; }
-        .smart-select-option.selected { background: #dbeafe; color: #1d4ed8; }
     </style>
 </head>
 <body>
@@ -284,165 +255,153 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
     <div class="form-container">
         <div id="alertBox" class="alert"></div>
 
-        <form id="customerForm" novalidate>
-            <input type="hidden" name="unicId" value="<?= htmlspecialchars($customer['unicId'] ?? '') ?>">
+        <form id="purchaseForm" novalidate>
+            <input type="hidden" name="unicId" value="<?= htmlspecialchars($purchase['unicId'] ?? '') ?>">
 
             <div class="sortable-sections">
-                <!-- סקשן 1: פרטים אישיים -->
-                <div class="sortable-section" data-section="personal">
+                <!-- סקשן 1: פרטי לקוח -->
+                <div class="sortable-section" data-section="customer">
                     <div class="section-drag-handle" style="background: linear-gradient(135deg, #dbeafe, #bfdbfe);">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>
                         </button>
                         <span class="section-title" style="color: #1e40af;">
-                            <i class="fas fa-user"></i> פרטים אישיים
+                            <i class="fas fa-user"></i> פרטי לקוח
                         </span>
                     </div>
                     <div class="section-content" style="background: linear-gradient(135deg, #eff6ff, #dbeafe);">
                         <div class="form-grid">
-                            <div class="form-group">
-                                <label>סוג זיהוי</label>
-                                <?= renderSelect('typeId', $typeIdOptions, $customer['typeId'] ?? 1) ?>
+                            <div class="form-group span-2">
+                                <label>לקוח <span class="required">*</span></label>
+                                <select name="clientId" id="clientId" class="form-control" required>
+                                    <option value="">טוען לקוחות...</option>
+                                </select>
                             </div>
                             <div class="form-group">
-                                <label>מספר זיהוי <span class="required">*</span></label>
-                                <input type="text" name="numId" class="form-control" required
-                                    value="<?= htmlspecialchars($customer['numId'] ?? '') ?>">
-                            </div>
-                            <div class="form-group">
-                                <label>שם פרטי <span class="required">*</span></label>
-                                <input type="text" name="firstName" class="form-control" required
-                                    value="<?= htmlspecialchars($customer['firstName'] ?? '') ?>">
-                            </div>
-                            <div class="form-group">
-                                <label>שם משפחה <span class="required">*</span></label>
-                                <input type="text" name="lastName" class="form-control" required
-                                    value="<?= htmlspecialchars($customer['lastName'] ?? '') ?>">
-                            </div>
-                            <div class="form-group">
-                                <label>כינוי</label>
-                                <input type="text" name="nom" class="form-control"
-                                    value="<?= htmlspecialchars($customer['nom'] ?? '') ?>">
-                            </div>
-                            <div class="form-group">
-                                <label>מגדר</label>
-                                <?= renderSelect('gender', $genderOptions, $customer['gender'] ?? '') ?>
-                            </div>
-                            <div class="form-group">
-                                <label>תאריך לידה</label>
-                                <input type="date" name="dateBirth" class="form-control"
-                                    value="<?= htmlspecialchars($customer['dateBirth'] ?? '') ?>">
-                            </div>
-                            <div class="form-group">
-                                <label>מצב משפחתי</label>
-                                <?= renderSelect('maritalStatus', $maritalOptions, $customer['maritalStatus'] ?? '') ?>
-                            </div>
-                            <div class="form-group">
-                                <label>שם האב</label>
-                                <input type="text" name="nameFather" class="form-control"
-                                    value="<?= htmlspecialchars($customer['nameFather'] ?? '') ?>">
-                            </div>
-                            <div class="form-group">
-                                <label>שם האם</label>
-                                <input type="text" name="nameMother" class="form-control"
-                                    value="<?= htmlspecialchars($customer['nameMother'] ?? '') ?>">
+                                <label>סטטוס רוכש</label>
+                                <?= renderSelect('buyer_status', $buyerStatusOptions, $purchase['buyer_status'] ?? 1) ?>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- סקשן 2: כתובת -->
-                <div class="sortable-section" data-section="address">
+                <!-- סקשן 2: בחירת קבר -->
+                <div class="sortable-section" data-section="grave">
                     <div class="section-drag-handle" style="background: linear-gradient(135deg, #dcfce7, #bbf7d0);">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>
                         </button>
                         <span class="section-title" style="color: #166534;">
-                            <i class="fas fa-map-marker-alt"></i> כתובת
+                            <i class="fas fa-cross"></i> בחירת קבר
                         </span>
                     </div>
                     <div class="section-content" style="background: linear-gradient(135deg, #f0fdf4, #dcfce7);">
                         <div class="form-grid">
                             <div class="form-group">
-                                <label>מדינה</label>
-                                <select name="countryId" id="countryId" class="form-control">
-                                    <option value="">טוען מדינות...</option>
+                                <label>בית עלמין</label>
+                                <select id="cemeterySelect" class="form-control" onchange="filterHierarchy('cemetery')">
+                                    <option value="">טוען...</option>
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label>עיר</label>
-                                <select name="cityId" id="cityId" class="form-control" disabled>
-                                    <option value="">בחר קודם מדינה...</option>
+                                <label>גוש</label>
+                                <select id="blockSelect" class="form-control" onchange="filterHierarchy('block')" disabled>
+                                    <option value="">בחר בית עלמין תחילה</option>
                                 </select>
                             </div>
-                            <div class="form-group span-2">
-                                <label>כתובת מלאה</label>
-                                <input type="text" name="address" class="form-control"
-                                    placeholder="רחוב, מספר בית"
-                                    value="<?= htmlspecialchars($customer['address'] ?? '') ?>">
+                            <div class="form-group">
+                                <label>חלקה</label>
+                                <select id="plotSelect" class="form-control" onchange="filterHierarchy('plot')" disabled>
+                                    <option value="">בחר גוש תחילה</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>שורה</label>
+                                <select id="rowSelect" class="form-control" onchange="filterHierarchy('row')" disabled>
+                                    <option value="">בחר חלקה תחילה</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>אחוזת קבר</label>
+                                <select id="areaGraveSelect" class="form-control" onchange="filterHierarchy('areaGrave')" disabled>
+                                    <option value="">בחר שורה תחילה</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>קבר <span class="required">*</span></label>
+                                <select name="graveId" id="graveSelect" class="form-control" required disabled>
+                                    <option value="">בחר אחוזת קבר תחילה</option>
+                                </select>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- סקשן 3: פרטי התקשרות -->
-                <div class="sortable-section" data-section="contact">
+                <!-- סקשן 3: תשלומים -->
+                <div class="sortable-section" data-section="payments">
                     <div class="section-drag-handle" style="background: linear-gradient(135deg, #fef3c7, #fde68a);">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>
                         </button>
                         <span class="section-title" style="color: #92400e;">
-                            <i class="fas fa-phone"></i> פרטי התקשרות
+                            <i class="fas fa-shekel-sign"></i> תשלומים
                         </span>
                     </div>
                     <div class="section-content" style="background: linear-gradient(135deg, #fffbeb, #fef3c7);">
+                        <div class="price-display">
+                            <span>סה"כ לתשלום: </span>
+                            <span id="totalPriceDisplay">₪<?= number_format($purchase['price'] ?? 0, 2) ?></span>
+                        </div>
+                        <input type="hidden" name="price" id="price" value="<?= $purchase['price'] ?? 0 ?>">
+
                         <div class="form-grid">
                             <div class="form-group">
-                                <label>טלפון</label>
-                                <input type="tel" name="phone" class="form-control"
-                                    value="<?= htmlspecialchars($customer['phone'] ?? '') ?>">
+                                <label>מספר תשלומים</label>
+                                <input type="number" name="numOfPayments" class="form-control" min="1"
+                                    value="<?= htmlspecialchars($purchase['numOfPayments'] ?? 1) ?>">
                             </div>
                             <div class="form-group">
-                                <label>טלפון נייד</label>
-                                <input type="tel" name="phoneMobile" class="form-control"
-                                    value="<?= htmlspecialchars($customer['phoneMobile'] ?? '') ?>">
+                                <label>תאריך סיום תשלומים</label>
+                                <input type="date" name="PaymentEndDate" class="form-control"
+                                    value="<?= htmlspecialchars($purchase['PaymentEndDate'] ?? '') ?>">
                             </div>
                         </div>
+
+                        <div style="margin-top: 15px;">
+                            <button type="button" class="btn btn-info" onclick="openPaymentsManager()">
+                                <i class="fas fa-calculator"></i> חשב תשלומים אוטומטית
+                            </button>
+                        </div>
+
+                        <div class="payments-list" style="margin-top: 15px;">
+                            <div id="paymentsDisplay" style="text-align: center; color: #94a3b8;">
+                                <i class="fas fa-coins" style="font-size: 24px; margin-bottom: 10px;"></i>
+                                <div>פירוט תשלומים יופיע כאן</div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="paymentsList" id="paymentsList" value="<?= htmlspecialchars($purchase['paymentsList'] ?? '[]') ?>">
                     </div>
                 </div>
 
-                <!-- סקשן 4: פרטים נוספים -->
-                <div class="sortable-section" data-section="additional">
+                <!-- סקשן 4: סטטוס והערות -->
+                <div class="sortable-section" data-section="status">
                     <div class="section-drag-handle" style="background: linear-gradient(135deg, #ede9fe, #c4b5fd);">
                         <button type="button" class="section-toggle-btn" onclick="toggleSection(this)">
                             <i class="fas fa-chevron-down"></i>
                         </button>
                         <span class="section-title" style="color: #5b21b6;">
-                            <i class="fas fa-info-circle"></i> פרטים נוספים
+                            <i class="fas fa-info-circle"></i> סטטוס והערות
                         </span>
                     </div>
                     <div class="section-content" style="background: linear-gradient(135deg, #f5f3ff, #ede9fe);">
                         <div class="form-grid">
                             <div class="form-group">
-                                <label>סטטוס לקוח</label>
-                                <?= renderSelect('statusCustomer', $statusOptions, $customer['statusCustomer'] ?? 1) ?>
-                            </div>
-                            <div class="form-group">
-                                <label>תושבות (מחושב אוטומטית)</label>
-                                <?= renderSelect('resident', $residentOptions, $customer['resident'] ?? 3, false, true) ?>
-                            </div>
-                            <div class="form-group">
-                                <label>שיוך</label>
-                                <?= renderSelect('association', $associationOptions, $customer['association'] ?? 1) ?>
-                            </div>
-                            <div class="form-group">
-                                <label>בן/בת זוג</label>
-                                <input type="text" name="spouse" class="form-control"
-                                    value="<?= htmlspecialchars($customer['spouse'] ?? '') ?>">
+                                <label>סטטוס רכישה</label>
+                                <?= renderSelect('purchaseStatus', $purchaseStatusOptions, $purchase['purchaseStatus'] ?? 1) ?>
                             </div>
                             <div class="form-group span-2">
                                 <label>הערות</label>
-                                <textarea name="comment" class="form-control" rows="3"><?= htmlspecialchars($customer['comment'] ?? '') ?></textarea>
+                                <textarea name="comment" class="form-control" rows="3"><?= htmlspecialchars($purchase['comment'] ?? '') ?></textarea>
                             </div>
                         </div>
                     </div>
@@ -463,7 +422,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                         <div id="documentsContainer">
                             <div class="documents-toolbar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                                 <span style="color: #64748b; font-size: 13px;">
-                                    <i class="fas fa-info-circle"></i> ניהול מסמכים של הלקוח
+                                    <i class="fas fa-info-circle"></i> ניהול מסמכים של הרכישה
                                 </span>
                                 <button type="button" class="btn btn-primary" style="padding: 8px 16px; font-size: 13px;" onclick="uploadDocument()">
                                     <i class="fas fa-upload"></i> העלאת מסמך
@@ -486,7 +445,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                     <i class="fas fa-times"></i> ביטול
                 </button>
                 <button type="submit" class="btn btn-primary" id="submitBtn">
-                    <i class="fas fa-save"></i> <?= $isEditMode ? 'עדכן לקוח' : 'צור לקוח' ?>
+                    <i class="fas fa-save"></i> <?= $isEditMode ? 'עדכן רכישה' : 'צור רכישה' ?>
                 </button>
             </div>
         </form>
@@ -494,112 +453,199 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
     <script>
         const isEditMode = <?= $isEditMode ? 'true' : 'false' ?>;
-        const customerId = '<?= addslashes($itemId ?? '') ?>';
-        const customerCountryId = '<?= addslashes($customer['countryId'] ?? '') ?>';
-        const customerCityId = '<?= addslashes($customer['cityId'] ?? '') ?>';
+        const purchaseId = '<?= addslashes($itemId ?? '') ?>';
+        const purchaseClientId = '<?= addslashes($purchase['clientId'] ?? '') ?>';
+        const purchaseGraveId = '<?= addslashes($parentId ?? $purchase['graveId'] ?? '') ?>';
+
+        // מטמון היררכיה
+        let hierarchyCache = {
+            cemeteries: [],
+            blocks: [],
+            plots: [],
+            rows: [],
+            areaGraves: [],
+            graves: []
+        };
 
         document.addEventListener('DOMContentLoaded', function() {
-            // עדכון כותרת הפופאפ
             if (typeof PopupAPI !== 'undefined') {
                 PopupAPI.setTitle('<?= addslashes($pageTitle) ?>');
             }
 
-            // טעינת מדינות
-            loadCountries();
-
-            // האזנה לשינוי מדינה
-            document.getElementById('countryId').addEventListener('change', function() {
-                loadCities(this.value);
-            });
+            loadCustomers();
+            loadCemeteries();
         });
 
-        // Toggle section
         function toggleSection(btn) {
             btn.closest('.sortable-section').classList.toggle('collapsed');
         }
 
-        // טעינת מדינות
-        async function loadCountries() {
+        // טעינת לקוחות
+        async function loadCustomers() {
             try {
-                const response = await fetch('/dashboard/dashboards/cemeteries/api/countries-api.php?action=list');
+                const response = await fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=list');
                 const result = await response.json();
 
                 if (result.success && result.data) {
-                    const select = document.getElementById('countryId');
-                    select.innerHTML = '<option value="">-- בחר מדינה --</option>';
+                    const select = document.getElementById('clientId');
+                    select.innerHTML = '<option value="">-- בחר לקוח --</option>';
 
-                    result.data.forEach(country => {
+                    result.data.forEach(customer => {
                         const option = document.createElement('option');
-                        option.value = country.unicId;
-                        option.textContent = country.countryNameHe || country.name;
-                        if (country.unicId === customerCountryId) {
+                        option.value = customer.unicId;
+                        option.textContent = `${customer.firstName} ${customer.lastName} (${customer.numId || '-'})`;
+                        if (customer.unicId === purchaseClientId) {
                             option.selected = true;
                         }
                         select.appendChild(option);
                     });
+                }
+            } catch (error) {
+                console.error('Error loading customers:', error);
+            }
+        }
 
-                    // אם יש מדינה נבחרת, טען ערים
-                    if (customerCountryId) {
-                        loadCities(customerCountryId);
+        // טעינת בתי עלמין
+        async function loadCemeteries() {
+            try {
+                const response = await fetch('/dashboard/dashboards/cemeteries/api/cemeteries-api.php?action=list');
+                const result = await response.json();
+
+                if (result.success && result.data) {
+                    hierarchyCache.cemeteries = result.data;
+                    const select = document.getElementById('cemeterySelect');
+                    select.innerHTML = '<option value="">-- בחר בית עלמין --</option>';
+
+                    result.data.forEach(item => {
+                        const option = document.createElement('option');
+                        option.value = item.unicId;
+                        option.textContent = item.cemeteryNameHe;
+                        select.appendChild(option);
+                    });
+                    select.disabled = false;
+
+                    // אם יש קבר נבחר, טען את ההיררכיה
+                    if (purchaseGraveId) {
+                        loadGraveHierarchy(purchaseGraveId);
                     }
                 }
             } catch (error) {
-                console.error('Error loading countries:', error);
+                console.error('Error loading cemeteries:', error);
             }
         }
 
-        // טעינת ערים
-        async function loadCities(countryId) {
-            const citySelect = document.getElementById('cityId');
-
-            if (!countryId) {
-                citySelect.innerHTML = '<option value="">בחר קודם מדינה...</option>';
-                citySelect.disabled = true;
-                return;
-            }
-
-            citySelect.innerHTML = '<option value="">טוען ערים...</option>';
-            citySelect.disabled = true;
-
+        // טעינת היררכיה לפי קבר
+        async function loadGraveHierarchy(graveId) {
             try {
-                const response = await fetch(`/dashboard/dashboards/cemeteries/api/cities-api.php?action=list&countryId=${countryId}`);
+                const response = await fetch(`/dashboard/dashboards/cemeteries/api/graves-api.php?action=get&id=${graveId}`);
                 const result = await response.json();
 
-                citySelect.innerHTML = '<option value="">-- בחר עיר --</option>';
+                if (result.success && result.data) {
+                    const grave = result.data;
+                    // בניית היררכיה מהקבר
+                    if (grave.cemeteryId) {
+                        document.getElementById('cemeterySelect').value = grave.cemeteryId;
+                        await filterHierarchy('cemetery');
+                    }
+                    if (grave.blockId) {
+                        document.getElementById('blockSelect').value = grave.blockId;
+                        await filterHierarchy('block');
+                    }
+                    if (grave.plotId) {
+                        document.getElementById('plotSelect').value = grave.plotId;
+                        await filterHierarchy('plot');
+                    }
+                    if (grave.lineId) {
+                        document.getElementById('rowSelect').value = grave.lineId;
+                        await filterHierarchy('row');
+                    }
+                    if (grave.areaGraveId) {
+                        document.getElementById('areaGraveSelect').value = grave.areaGraveId;
+                        await filterHierarchy('areaGrave');
+                    }
+                    document.getElementById('graveSelect').value = graveId;
+                }
+            } catch (error) {
+                console.error('Error loading grave hierarchy:', error);
+            }
+        }
+
+        // סינון היררכיה
+        async function filterHierarchy(level) {
+            const selects = {
+                cemetery: { next: 'blockSelect', api: 'blocks-api.php', param: 'cemeteryId', cache: 'blocks', nameField: 'blockNameHe' },
+                block: { next: 'plotSelect', api: 'plots-api.php', param: 'blockId', cache: 'plots', nameField: 'plotNameHe' },
+                plot: { next: 'rowSelect', api: 'rows-api.php', param: 'plotId', cache: 'rows', nameField: 'lineNameHe' },
+                row: { next: 'areaGraveSelect', api: 'areaGraves-api.php', param: 'lineId', cache: 'areaGraves', nameField: 'areaGraveNameHe' },
+                areaGrave: { next: 'graveSelect', api: 'graves-api.php', param: 'areaGraveId', cache: 'graves', nameField: 'graveNumber' }
+            };
+
+            const config = selects[level];
+            if (!config) return;
+
+            const currentSelect = document.getElementById(level === 'cemetery' ? 'cemeterySelect' : level + 'Select');
+            const selectedValue = currentSelect.value;
+            const nextSelect = document.getElementById(config.next);
+
+            // איפוס הרשימה הבאה
+            nextSelect.innerHTML = '<option value="">טוען...</option>';
+            nextSelect.disabled = true;
+
+            // איפוס כל הרשימות אחרי הבאה
+            const levels = ['cemetery', 'block', 'plot', 'row', 'areaGrave'];
+            const currentIndex = levels.indexOf(level);
+            for (let i = currentIndex + 2; i < levels.length; i++) {
+                const selectId = levels[i] + 'Select';
+                const sel = document.getElementById(selectId);
+                if (sel) {
+                    sel.innerHTML = '<option value="">--</option>';
+                    sel.disabled = true;
+                }
+            }
+            document.getElementById('graveSelect').innerHTML = '<option value="">--</option>';
+            document.getElementById('graveSelect').disabled = true;
+
+            if (!selectedValue) return;
+
+            try {
+                const response = await fetch(`/dashboard/dashboards/cemeteries/api/${config.api}?action=list&${config.param}=${selectedValue}`);
+                const result = await response.json();
 
                 if (result.success && result.data) {
-                    result.data.forEach(city => {
-                        const option = document.createElement('option');
-                        option.value = city.unicId;
-                        option.textContent = city.cityNameHe || city.name;
-                        if (city.unicId === customerCityId) {
-                            option.selected = true;
-                        }
-                        citySelect.appendChild(option);
-                    });
-                }
+                    hierarchyCache[config.cache] = result.data;
+                    nextSelect.innerHTML = '<option value="">-- בחר --</option>';
 
-                citySelect.disabled = false;
+                    result.data.forEach(item => {
+                        const option = document.createElement('option');
+                        option.value = item.unicId;
+                        option.textContent = item[config.nameField] || item.name || '-';
+                        nextSelect.appendChild(option);
+                    });
+
+                    nextSelect.disabled = false;
+                }
             } catch (error) {
-                console.error('Error loading cities:', error);
-                citySelect.innerHTML = '<option value="">שגיאה בטעינה</option>';
+                console.error('Error filtering hierarchy:', error);
             }
+        }
+
+        // פתיחת מנהל תשלומים
+        function openPaymentsManager() {
+            alert('מנהל תשלומים יתווסף בהמשך');
         }
 
         // שליחת הטופס
-        document.getElementById('customerForm').addEventListener('submit', async function(e) {
+        document.getElementById('purchaseForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
-            // ולידציה
-            const firstName = this.querySelector('[name="firstName"]').value.trim();
-            const lastName = this.querySelector('[name="lastName"]').value.trim();
+            const clientId = this.querySelector('[name="clientId"]').value;
+            const graveId = this.querySelector('[name="graveId"]').value;
 
-            if (!firstName || !lastName) {
-                showAlert('שם פרטי ושם משפחה הם שדות חובה', 'error');
+            if (!clientId || !graveId) {
+                showAlert('יש לבחור לקוח וקבר', 'error');
                 return;
             }
 
-            // איסוף נתונים
             const formData = new FormData(this);
             const data = {};
             formData.forEach((value, key) => {
@@ -608,13 +654,12 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                 }
             });
 
-            // הצגת טעינה
             showLoading(true);
             document.getElementById('submitBtn').disabled = true;
 
             try {
                 const action = isEditMode ? 'update' : 'create';
-                const url = `/dashboard/dashboards/cemeteries/api/customers-api.php?action=${action}${isEditMode ? '&id=' + customerId : ''}`;
+                const url = `/dashboard/dashboards/cemeteries/api/purchases-api.php?action=${action}${isEditMode ? '&id=' + purchaseId : ''}`;
 
                 const response = await fetch(url, {
                     method: 'POST',
@@ -627,22 +672,15 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                 if (result.success) {
                     showAlert(result.message || 'הפעולה בוצעה בהצלחה', 'success');
 
-                    // רענון הטבלה בחלון ההורה
                     if (window.parent) {
                         if (window.parent.EntityManager) {
-                            window.parent.EntityManager.refresh('customer');
-                        }
-                        if (window.parent.refreshTable) {
-                            window.parent.refreshTable();
+                            window.parent.EntityManager.refresh('purchase');
                         }
                     }
 
-                    // סגירת הפופאפ אחרי 1.5 שניות
-                    setTimeout(() => {
-                        closeForm();
-                    }, 1500);
+                    setTimeout(() => closeForm(), 1500);
                 } else {
-                    throw new Error(result.error || result.message || 'שגיאה בשמירה');
+                    throw new Error(result.error || 'שגיאה בשמירה');
                 }
             } catch (error) {
                 showAlert(error.message, 'error');
@@ -652,38 +690,25 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             }
         });
 
-        // הצגת הודעה
         function showAlert(message, type) {
             const alertBox = document.getElementById('alertBox');
             alertBox.textContent = message;
             alertBox.className = `alert alert-${type} show`;
-
             if (type === 'success') {
-                setTimeout(() => {
-                    alertBox.classList.remove('show');
-                }, 3000);
+                setTimeout(() => alertBox.classList.remove('show'), 3000);
             }
         }
 
-        // הצגת/הסתרת טעינה
         function showLoading(show) {
             document.getElementById('loadingOverlay').classList.toggle('show', show);
         }
 
-        // סגירת הטופס
         function closeForm() {
             if (typeof PopupAPI !== 'undefined') {
                 PopupAPI.close();
-            } else if (window.parent && window.parent.PopupManager) {
-                // נסה לסגור את הפופאפ הנוכחי
-                const popupId = new URLSearchParams(window.location.search).get('popupId');
-                if (popupId) {
-                    window.parent.PopupManager.close(popupId);
-                }
             }
         }
 
-        // העלאת מסמך (placeholder)
         function uploadDocument() {
             alert('פונקציית העלאת מסמכים תתווסף בהמשך');
         }

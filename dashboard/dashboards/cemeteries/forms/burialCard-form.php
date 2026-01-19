@@ -335,9 +335,64 @@ $allSectionsHTML .= '
 </div>
 ';
 
-// === סקשן 2: פרטי הנפטר ===
+// === סקשן 2: פרטי רכישה (רק אם יש רכישה) ===
+if ($burial['purchaseUnicId']) {
+    $purchaseStatus = $purchaseStatusNames[$burial['purchaseStatus'] ?? 1] ?? '-';
+    $allSectionsHTML .= '
+<!-- סקשן 2: פרטי רכישה -->
+<div class="sortable-section" data-section="purchase">
+    <div class="section-drag-handle">
+        <button type="button" class="section-toggle-btn" title="צמצם/הרחב">
+            <i class="fas fa-chevron-down"></i>
+        </button>
+        <span class="section-title"><i class="fas fa-shopping-cart"></i> פרטי רכישה</span>
+    </div>
+    <div class="section-content">
+        <fieldset class="form-section" style="border: none; border-radius: 0 0 10px 10px; padding: 20px; margin: 0; background: linear-gradient(135deg, #f0fdf4, #dcfce7);">
+            <legend style="padding: 0 15px; font-weight: bold; color: #166534; font-size: 16px;">
+                <i class="fas fa-shopping-cart"></i> רכישה #' . htmlspecialchars($burial['serialPurchaseId'] ?? '-') . '
+            </legend>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bbf7d0;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">מספר רכישה</div>
+                    <div style="font-weight: 600; color: #166534;">' . htmlspecialchars($burial['serialPurchaseId'] ?? '-') . '</div>
+                </div>
+                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bbf7d0;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">סטטוס</div>
+                    <div style="font-weight: 600; color: #166534;">' . $purchaseStatus . '</div>
+                </div>
+                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bbf7d0;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">תאריך פתיחה</div>
+                    <div style="font-weight: 600; color: #166534;">' . formatHebrewDate($burial['purchaseDateOpening']) . '</div>
+                </div>
+                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bbf7d0;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">סכום</div>
+                    <div style="font-weight: 700; color: #166534; font-size: 18px;">' . formatPrice($burial['purchasePrice']) . '</div>
+                </div>
+                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bbf7d0;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">מספר תשלומים</div>
+                    <div style="font-weight: 600; color: #166534;">' . htmlspecialchars($burial['numOfPayments'] ?? '1') . '</div>
+                </div>
+                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bbf7d0;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">רוכש</div>
+                    <div style="font-weight: 600; color: #166534;">' . htmlspecialchars($burial['purchaserFullNameHe'] ?? '-') . '</div>
+                </div>
+            </div>
+            <div style="margin-top: 15px;">
+                <button type="button" class="btn btn-sm btn-success" onclick="BurialCardHandler.viewPurchase(\'' . $burial['purchaseUnicId'] . '\')">
+                    <i class="fas fa-eye"></i> צפה בכרטיס רכישה
+                </button>
+            </div>
+        </fieldset>
+    </div>
+    <div class="section-resize-handle"></div>
+</div>
+';
+}
+
+// === סקשן 3: פרטי הנפטר (לקוח) ===
 $allSectionsHTML .= '
-<!-- סקשן 2: פרטי הנפטר -->
+<!-- סקשן 3: פרטי הנפטר -->
 <div class="sortable-section" data-section="deceased">
     <div class="section-drag-handle">
         <button type="button" class="section-toggle-btn" title="צמצם/הרחב">
@@ -385,72 +440,6 @@ $allSectionsHTML .= '
                     <i class="fas fa-eye"></i> צפה בכרטיס לקוח
                 </button>
             </div>
-        </fieldset>
-    </div>
-    <div class="section-resize-handle"></div>
-</div>
-';
-
-// === סקשן 3: פרטי רכישה ===
-$allSectionsHTML .= '
-<!-- סקשן 3: פרטי רכישה -->
-<div class="sortable-section" data-section="purchase">
-    <div class="section-drag-handle">
-        <button type="button" class="section-toggle-btn" title="צמצם/הרחב">
-            <i class="fas fa-chevron-down"></i>
-        </button>
-        <span class="section-title"><i class="fas fa-shopping-cart"></i> פרטי רכישה</span>
-    </div>
-    <div class="section-content">
-        <fieldset class="form-section" style="border: none; border-radius: 0 0 10px 10px; padding: 20px; margin: 0; background: linear-gradient(135deg, #f0fdf4, #dcfce7);">
-            <legend style="padding: 0 15px; font-weight: bold; color: #166534; font-size: 16px;">
-                <i class="fas fa-shopping-cart"></i> רכישה
-            </legend>';
-
-if ($burial['purchaseUnicId']) {
-    $purchaseStatus = $purchaseStatusNames[$burial['purchaseStatus'] ?? 1] ?? '-';
-    $allSectionsHTML .= '
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
-                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bbf7d0;">
-                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">מספר רכישה</div>
-                    <div style="font-weight: 600; color: #166534;">' . htmlspecialchars($burial['serialPurchaseId'] ?? '-') . '</div>
-                </div>
-                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bbf7d0;">
-                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">סטטוס</div>
-                    <div style="font-weight: 600; color: #166534;">' . $purchaseStatus . '</div>
-                </div>
-                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bbf7d0;">
-                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">תאריך פתיחה</div>
-                    <div style="font-weight: 600; color: #166534;">' . formatHebrewDate($burial['purchaseDateOpening']) . '</div>
-                </div>
-                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bbf7d0;">
-                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">סכום</div>
-                    <div style="font-weight: 700; color: #166534; font-size: 18px;">' . formatPrice($burial['purchasePrice']) . '</div>
-                </div>
-                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bbf7d0;">
-                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">מספר תשלומים</div>
-                    <div style="font-weight: 600; color: #166534;">' . htmlspecialchars($burial['numOfPayments'] ?? '1') . '</div>
-                </div>
-                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bbf7d0;">
-                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">רוכש</div>
-                    <div style="font-weight: 600; color: #166534;">' . htmlspecialchars($burial['purchaserFullNameHe'] ?? '-') . '</div>
-                </div>
-            </div>
-            <div style="margin-top: 15px;">
-                <button type="button" class="btn btn-sm btn-success" onclick="BurialCardHandler.viewPurchase(\'' . $burial['purchaseUnicId'] . '\')">
-                    <i class="fas fa-eye"></i> צפה בכרטיס רכישה
-                </button>
-            </div>';
-} else {
-    $allSectionsHTML .= '
-            <div style="text-align: center; padding: 30px; color: #166534;">
-                <i class="fas fa-inbox" style="font-size: 32px; margin-bottom: 10px; display: block; opacity: 0.5;"></i>
-                <div style="font-size: 16px; font-weight: 500;">אין רכישה משויכת לקבורה זו</div>
-                <div style="font-size: 13px; color: #64748b; margin-top: 5px;">הקבורה בוצעה ללא רכישה מקדימה</div>
-            </div>';
-}
-
-$allSectionsHTML .= '
         </fieldset>
     </div>
     <div class="section-resize-handle"></div>

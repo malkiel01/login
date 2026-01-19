@@ -63,6 +63,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $pageTitle ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/explorer/explorer.css">
     <script src="/dashboard/dashboards/cemeteries/popup/popup-api.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -460,20 +461,10 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                         </span>
                     </div>
                     <div class="section-content" style="background: linear-gradient(135deg, #fdf2f8, #fce7f3);">
-                        <div id="documentsContainer">
-                            <div class="documents-toolbar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                                <span style="color: #64748b; font-size: 13px;">
-                                    <i class="fas fa-info-circle"></i> ניהול מסמכים של הלקוח
-                                </span>
-                                <button type="button" class="btn btn-primary" style="padding: 8px 16px; font-size: 13px;" onclick="uploadDocument()">
-                                    <i class="fas fa-upload"></i> העלאת מסמך
-                                </button>
-                            </div>
-                            <div id="documentsList" class="documents-list" style="min-height: 100px; border: 2px dashed #e2e8f0; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                                <div style="text-align: center; color: #94a3b8; padding: 20px;">
-                                    <i class="fas fa-folder-open" style="font-size: 32px; margin-bottom: 10px; display: block;"></i>
-                                    <span>סייר קבצים יטען בהמשך</span>
-                                </div>
+                        <div id="customerExplorer" style="min-height: 300px;">
+                            <div style="text-align: center; color: #94a3b8; padding: 40px;">
+                                <i class="fas fa-spinner fa-spin" style="font-size: 32px; margin-bottom: 10px; display: block;"></i>
+                                <span>טוען סייר קבצים...</span>
                             </div>
                         </div>
                     </div>
@@ -529,8 +520,44 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             // חישוב תושבות ראשוני
             if (isEditMode) {
                 calculateResidency();
+                // טעינת סייר מסמכים
+                initFileExplorer();
             }
         });
+
+        // אתחול סייר מסמכים
+        function initFileExplorer() {
+            if (!customerId) return;
+
+            // טעינת explorer.js דינמית
+            const script = document.createElement('script');
+            script.src = '/dashboard/dashboards/cemeteries/explorer/explorer.js?v=' + Date.now();
+            script.onload = function() {
+                if (typeof FileExplorer !== 'undefined') {
+                    window.customerExplorer = new FileExplorer('customerExplorer', customerId, {});
+                    // הגדרת window.explorer לשימוש בכפתורי הסייר הפנימיים
+                    window.explorer = window.customerExplorer;
+                } else {
+                    console.error('FileExplorer class not found');
+                    document.getElementById('customerExplorer').innerHTML = `
+                        <div style="text-align: center; color: #ef4444; padding: 40px;">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 32px; margin-bottom: 10px; display: block;"></i>
+                            <span>שגיאה בטעינת סייר הקבצים</span>
+                        </div>
+                    `;
+                }
+            };
+            script.onerror = function() {
+                console.error('Failed to load explorer.js');
+                document.getElementById('customerExplorer').innerHTML = `
+                    <div style="text-align: center; color: #ef4444; padding: 40px;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 32px; margin-bottom: 10px; display: block;"></i>
+                        <span>שגיאה בטעינת סייר הקבצים</span>
+                    </div>
+                `;
+            };
+            document.head.appendChild(script);
+        }
 
         // Toggle section
         function toggleSection(btn) {
@@ -775,11 +802,6 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                     window.parent.PopupManager.close(popupId);
                 }
             }
-        }
-
-        // העלאת מסמך (placeholder)
-        function uploadDocument() {
-            alert('פונקציית העלאת מסמכים תתווסף בהמשך');
         }
     </script>
 </body>

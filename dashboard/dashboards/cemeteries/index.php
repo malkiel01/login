@@ -192,11 +192,11 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <script src="/dashboard/dashboards/cemeteries/js/blocks-management.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/plots-management.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/area-graves-management.js"></script>
-    <script src="/dashboard/dashboards/cemeteries/js/graves-management.js"></script>
-    <script src="/dashboard/dashboards/cemeteries/js/customers-management.js"></script>
-    <script src="/dashboard/dashboards/cemeteries/js/purchases-management.js"></script>
-    <script src="/dashboard/dashboards/cemeteries/js/burials-management.js"></script>
-    <script src="/dashboard/dashboards/cemeteries/js/payments-management.js"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/graves-management.js?v=2"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/customers-management.js?v=2"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/purchases-management.js?v=2"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/burials-management.js?v=2"></script>
+    <script src="/dashboard/dashboards/cemeteries/js/payments-management.js?v=2"></script>
     <script src="/dashboard/dashboards/cemeteries/js/residency-management.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/countries-management.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/cities-management.js"></script>

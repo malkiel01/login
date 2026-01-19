@@ -1,17 +1,17 @@
 <?php
 /*
- * File: dashboard/dashboards/cemeteries/popup/customerCard-popup.php
+ * File: dashboard/dashboards/cemeteries/forms/customerCard-iframe.php
  * Version: 1.0.0
  * Updated: 2026-01-19
  * Author: Malkiel
- * Description: כרטיס לקוח בפופאפ iframe - דף עצמאי
+ * Description: כרטיס לקוח - דף עצמאי לטעינה ב-iframe (פופאפ גנרי)
  */
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 header('Content-Type: text/html; charset=utf-8');
 
-require_once dirname(__DIR__) . '/config.php';
+require_once dirname(dirname(__DIR__)) . '/config.php';
 
 // === קבלת פרמטרים ===
 $itemId = $_GET['itemId'] ?? $_GET['id'] ?? null;
@@ -120,12 +120,7 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
     <script src="/dashboard/dashboards/cemeteries/popup/popup-api.js"></script>
 
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #f1f5f9;
@@ -133,13 +128,7 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
             padding: 20px;
             direction: rtl;
         }
-
-        .sortable-sections {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
+        .sortable-sections { display: flex; flex-direction: column; gap: 15px; }
         .sortable-section {
             background: white;
             border-radius: 12px;
@@ -147,11 +136,7 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
             transition: all 0.2s;
             overflow: hidden;
         }
-
-        .sortable-section:hover {
-            border-color: #94a3b8;
-        }
-
+        .sortable-section:hover { border-color: #94a3b8; }
         .section-drag-handle {
             height: 32px;
             background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
@@ -162,7 +147,6 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
             border-bottom: 1px solid #cbd5e1;
             position: relative;
         }
-
         .section-drag-handle::before {
             content: "";
             width: 40px;
@@ -170,7 +154,6 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
             background: #94a3b8;
             border-radius: 2px;
         }
-
         .section-toggle-btn {
             position: absolute;
             left: 10px;
@@ -188,11 +171,7 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
             color: #64748b;
             font-size: 12px;
         }
-
-        .section-toggle-btn:hover {
-            background: rgba(100, 116, 139, 0.4);
-        }
-
+        .section-toggle-btn:hover { background: rgba(100, 116, 139, 0.4); }
         .section-title {
             position: absolute;
             right: 15px;
@@ -202,42 +181,23 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
             font-weight: 600;
             color: #64748b;
         }
-
-        .section-content {
-            padding: 20px;
-        }
-
-        .sortable-section.collapsed .section-content {
-            display: none;
-        }
-
-        .sortable-section.collapsed .section-toggle-btn i {
-            transform: rotate(-90deg);
-        }
+        .section-content { padding: 20px; }
+        .sortable-section.collapsed .section-content { display: none; }
+        .sortable-section.collapsed .section-toggle-btn i { transform: rotate(-90deg); }
 
         .info-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 12px;
         }
-
         .info-card {
             background: #f8fafc;
             padding: 12px;
             border-radius: 8px;
             border: 1px solid #e2e8f0;
         }
-
-        .info-card .label {
-            font-size: 11px;
-            color: #64748b;
-            margin-bottom: 4px;
-        }
-
-        .info-card .value {
-            font-weight: 600;
-            color: #334155;
-        }
+        .info-card .label { font-size: 11px; color: #64748b; margin-bottom: 4px; }
+        .info-card .value { font-weight: 600; color: #334155; }
 
         .status-badge {
             display: inline-block;
@@ -246,7 +206,6 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
             font-size: 12px;
             color: white;
         }
-
         .btn {
             display: inline-flex;
             align-items: center;
@@ -259,26 +218,14 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
             font-weight: 500;
             transition: all 0.2s;
         }
-
-        .btn-primary {
-            background: #3b82f6;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #2563eb;
-        }
-
+        .btn-primary { background: #3b82f6; color: white; }
+        .btn-primary:hover { background: #2563eb; }
         .btn-outline {
             background: transparent;
             border: 1px solid #cbd5e1;
             color: #64748b;
         }
-
-        .btn-outline:hover {
-            background: #f1f5f9;
-            border-color: #94a3b8;
-        }
+        .btn-outline:hover { background: #f1f5f9; border-color: #94a3b8; }
 
         .purchase-card, .burial-card {
             background: #f8fafc;
@@ -287,18 +234,13 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
             padding: 12px;
             margin-bottom: 10px;
         }
-
-        .purchase-card:last-child, .burial-card:last-child {
-            margin-bottom: 0;
-        }
-
+        .purchase-card:last-child, .burial-card:last-child { margin-bottom: 0; }
         .card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 10px;
         }
-
         .card-details {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -306,32 +248,24 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
             font-size: 12px;
             color: #64748b;
         }
-
         .empty-state {
             text-align: center;
             padding: 30px;
             color: #94a3b8;
         }
-
         .empty-state i {
             font-size: 32px;
             margin-bottom: 10px;
             display: block;
             opacity: 0.5;
         }
-
         .header-title {
             display: flex;
             align-items: center;
             gap: 10px;
             margin-bottom: 15px;
         }
-
-        .header-title h2 {
-            margin: 0;
-            font-size: 18px;
-            color: #1e293b;
-        }
+        .header-title h2 { margin: 0; font-size: 18px; color: #1e293b; }
     </style>
 </head>
 <body>
@@ -352,38 +286,14 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
                 </div>
 
                 <div class="info-grid">
-                    <div class="info-card">
-                        <div class="label">ת.ז.</div>
-                        <div class="value"><?= htmlspecialchars($customer['numId'] ?? '-') ?></div>
-                    </div>
-                    <div class="info-card">
-                        <div class="label">מגדר</div>
-                        <div class="value"><?= $genderName ?></div>
-                    </div>
-                    <div class="info-card">
-                        <div class="label">תאריך לידה</div>
-                        <div class="value"><?= formatHebrewDate($customer['dateBirth']) ?></div>
-                    </div>
-                    <div class="info-card">
-                        <div class="label">שם האב</div>
-                        <div class="value"><?= htmlspecialchars($customer['nameFather'] ?? '-') ?></div>
-                    </div>
-                    <div class="info-card">
-                        <div class="label">שם האם</div>
-                        <div class="value"><?= htmlspecialchars($customer['nameMother'] ?? '-') ?></div>
-                    </div>
-                    <div class="info-card">
-                        <div class="label">טלפון</div>
-                        <div class="value"><?= formatPhone($customer['phone']) ?></div>
-                    </div>
-                    <div class="info-card">
-                        <div class="label">טלפון נייד</div>
-                        <div class="value"><?= formatPhone($customer['phoneMobile']) ?></div>
-                    </div>
-                    <div class="info-card">
-                        <div class="label">כתובת</div>
-                        <div class="value"><?= htmlspecialchars($customer['address'] ?? '-') ?></div>
-                    </div>
+                    <div class="info-card"><div class="label">ת.ז.</div><div class="value"><?= htmlspecialchars($customer['numId'] ?? '-') ?></div></div>
+                    <div class="info-card"><div class="label">מגדר</div><div class="value"><?= $genderName ?></div></div>
+                    <div class="info-card"><div class="label">תאריך לידה</div><div class="value"><?= formatHebrewDate($customer['dateBirth']) ?></div></div>
+                    <div class="info-card"><div class="label">שם האב</div><div class="value"><?= htmlspecialchars($customer['nameFather'] ?? '-') ?></div></div>
+                    <div class="info-card"><div class="label">שם האם</div><div class="value"><?= htmlspecialchars($customer['nameMother'] ?? '-') ?></div></div>
+                    <div class="info-card"><div class="label">טלפון</div><div class="value"><?= formatPhone($customer['phone']) ?></div></div>
+                    <div class="info-card"><div class="label">טלפון נייד</div><div class="value"><?= formatPhone($customer['phoneMobile']) ?></div></div>
+                    <div class="info-card"><div class="label">כתובת</div><div class="value"><?= htmlspecialchars($customer['address'] ?? '-') ?></div></div>
                 </div>
 
                 <div style="margin-top: 15px;">
@@ -529,7 +439,7 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
                 window.parent.PopupManager.create({
                     id: 'purchaseCard-' + id,
                     type: 'iframe',
-                    src: '/dashboard/dashboards/cemeteries/popup/purchaseCard-popup.php?itemId=' + id,
+                    src: '/dashboard/dashboards/cemeteries/forms/iframe/purchaseCard-iframe.php?itemId=' + id,
                     title: 'כרטיס רכישה',
                     width: 1200,
                     height: 700
@@ -544,7 +454,7 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
                 window.parent.PopupManager.create({
                     id: 'burialCard-' + id,
                     type: 'iframe',
-                    src: '/dashboard/dashboards/cemeteries/popup/burialCard-popup.php?itemId=' + id,
+                    src: '/dashboard/dashboards/cemeteries/forms/iframe/burialCard-iframe.php?itemId=' + id,
                     title: 'כרטיס קבורה',
                     width: 1200,
                     height: 700

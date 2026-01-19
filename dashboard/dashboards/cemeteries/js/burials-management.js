@@ -85,7 +85,18 @@ async function editBurial(id) {
 }
 
 async function viewBurial(id) {
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
+    // שימוש ב-PopupManager (iframe) במקום FormHandler
+    if (typeof PopupManager !== 'undefined') {
+        PopupManager.create({
+            id: 'burialCard-' + id,
+            type: 'iframe',
+            src: '/dashboard/dashboards/cemeteries/forms/iframe/burialCard-iframe.php?itemId=' + id,
+            title: 'כרטיס קבורה',
+            width: 1200,
+            height: 700
+        });
+    } else if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
+        // fallback לשיטה הישנה
         FormHandler.openForm('burialCard', null, id);
     } else {
         editBurial(id);
@@ -95,10 +106,7 @@ async function viewBurial(id) {
 // דאבל-קליק על שורת קבורה - פתיחת כרטיס
 async function handleBurialDoubleClick(burial) {
     const burialId = typeof burial === 'object' ? burial.unicId : burial;
-
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('burialCard', null, burialId);
-    }
+    viewBurial(burialId);
 }
 
 

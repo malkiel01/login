@@ -83,7 +83,18 @@ async function editGrave(id) {
 }
 
 async function viewGrave(id) {
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
+    // שימוש ב-PopupManager (iframe) במקום FormHandler
+    if (typeof PopupManager !== 'undefined') {
+        PopupManager.create({
+            id: 'graveCard-' + id,
+            type: 'iframe',
+            src: '/dashboard/dashboards/cemeteries/forms/iframe/graveCard-iframe.php?itemId=' + id,
+            title: 'כרטיס קבר',
+            width: 1200,
+            height: 700
+        });
+    } else if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
+        // fallback לשיטה הישנה
         FormHandler.openForm('graveCard', null, id);
     } else {
         editGrave(id);
@@ -93,10 +104,7 @@ async function viewGrave(id) {
 // דאבל-קליק על שורת קבר - פתיחת כרטיס
 async function handleGraveDoubleClick(grave) {
     const graveId = typeof grave === 'object' ? grave.unicId : grave;
-
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('graveCard', null, graveId);
-    }
+    viewGrave(graveId);
 }
 
 

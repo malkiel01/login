@@ -95,7 +95,18 @@ async function editPurchase(id) {
 }
 
 async function viewPurchase(id) {
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
+    // שימוש ב-PopupManager (iframe) במקום FormHandler
+    if (typeof PopupManager !== 'undefined') {
+        PopupManager.create({
+            id: 'purchaseCard-' + id,
+            type: 'iframe',
+            src: '/dashboard/dashboards/cemeteries/forms/iframe/purchaseCard-iframe.php?itemId=' + id,
+            title: 'כרטיס רכישה',
+            width: 1200,
+            height: 700
+        });
+    } else if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
+        // fallback לשיטה הישנה
         FormHandler.openForm('purchaseCard', null, id);
     } else {
         editPurchase(id);
@@ -104,19 +115,8 @@ async function viewPurchase(id) {
 
 // דאבל-קליק על שורת רכישה - פתיחת כרטיס
 async function handlePurchaseDoubleClick(purchase) {
-    // תמיכה במספר פורמטים אפשריים של ID
-    let purchaseId;
-    if (typeof purchase === 'object') {
-        purchaseId = purchase.unicId || purchase.unic_id || purchase.id;
-        console.log('🛒 Purchase double-click:', { unicId: purchase.unicId, id: purchase.id, resolved: purchaseId });
-    } else {
-        purchaseId = purchase;
-    }
-
-    if (!purchaseId) {
-        console.error('❌ Purchase ID not found in object:', purchase);
-        return;
-    }
+    const purchaseId = typeof purchase === 'object' ? purchase.unicId : purchase;
+    viewPurchase(purchaseId);
 
     if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
         FormHandler.openForm('purchaseCard', null, purchaseId);

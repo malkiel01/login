@@ -105,7 +105,18 @@ async function editPayment(id) {
 
 // צפייה בתשלום - פתיחת כרטיס תשלום
 async function viewPayment(id) {
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
+    // שימוש ב-PopupManager (iframe) במקום FormHandler
+    if (typeof PopupManager !== 'undefined') {
+        PopupManager.create({
+            id: 'paymentCard-' + id,
+            type: 'iframe',
+            src: '/dashboard/dashboards/cemeteries/forms/iframe/paymentCard-iframe.php?itemId=' + id,
+            title: 'כרטיס תשלום',
+            width: 1000,
+            height: 700
+        });
+    } else if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
+        // fallback לשיטה הישנה
         FormHandler.openForm('paymentCard', null, id);
     } else {
         editPayment(id);
@@ -115,10 +126,7 @@ async function viewPayment(id) {
 // דאבל-קליק על שורת תשלום
 async function handlePaymentDoubleClick(payment) {
     const paymentId = typeof payment === 'object' ? payment.unicId : payment;
-
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('paymentCard', null, paymentId);
-    }
+    viewPayment(paymentId);
 }
 
 

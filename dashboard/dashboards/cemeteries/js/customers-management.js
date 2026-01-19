@@ -81,7 +81,7 @@ async function viewCustomer(id) {
         PopupManager.create({
             id: 'customerCard-' + id,
             type: 'iframe',
-            src: '/dashboard/dashboards/cemeteries/popup/customerCard-popup.php?itemId=' + id,
+            src: '/dashboard/dashboards/cemeteries/forms/iframe/customerCard-iframe.php?itemId=' + id,
             title: 'כרטיס לקוח',
             width: 1000,
             height: 700

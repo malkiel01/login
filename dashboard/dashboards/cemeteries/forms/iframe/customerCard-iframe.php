@@ -115,6 +115,7 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/explorer/explorer.css">
 
     <!-- Popup API -->
     <script src="/dashboard/dashboards/cemeteries/popup/popup-api.js"></script>
@@ -403,10 +404,10 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
                 <span class="section-title"><i class="fas fa-folder-open"></i> מסמכים</span>
             </div>
             <div class="section-content">
-                <div id="customerExplorer" data-unic-id="<?= htmlspecialchars($customer['unicId']) ?>" data-entity-type="customer">
-                    <div class="empty-state">
-                        <i class="fas fa-folder-open"></i>
-                        סייר קבצים יטען בהמשך
+                <div id="customerExplorer" style="min-height: 300px;">
+                    <div style="text-align: center; color: #94a3b8; padding: 40px;">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 32px; margin-bottom: 10px; display: block;"></i>
+                        <span>טוען סייר קבצים...</span>
                     </div>
                 </div>
             </div>
@@ -414,12 +415,34 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
     </div>
 
     <script>
+        const customerId = '<?= addslashes($itemId ?? '') ?>';
+
         // עדכון כותרת הפופאפ
         document.addEventListener('DOMContentLoaded', function() {
             if (typeof PopupAPI !== 'undefined') {
                 PopupAPI.setTitle('כרטיס לקוח - <?= addslashes($fullName) ?>');
             }
+            // טעינת סייר מסמכים
+            initFileExplorer();
         });
+
+        function initFileExplorer() {
+            if (!customerId) return;
+            const script = document.createElement('script');
+            script.src = '/dashboard/dashboards/cemeteries/explorer/explorer.js?v=' + Date.now();
+            script.onload = function() {
+                if (typeof FileExplorer !== 'undefined') {
+                    window.customerExplorer = new FileExplorer('customerExplorer', customerId, {});
+                    window.explorer = window.customerExplorer;
+                } else {
+                    document.getElementById('customerExplorer').innerHTML = '<div style="text-align: center; color: #ef4444; padding: 40px;"><i class="fas fa-exclamation-triangle" style="font-size: 32px; margin-bottom: 10px; display: block;"></i><span>שגיאה בטעינת סייר הקבצים</span></div>';
+                }
+            };
+            script.onerror = function() {
+                document.getElementById('customerExplorer').innerHTML = '<div style="text-align: center; color: #ef4444; padding: 40px;"><i class="fas fa-exclamation-triangle" style="font-size: 32px; margin-bottom: 10px; display: block;"></i><span>שגיאה בטעינת סייר הקבצים</span></div>';
+            };
+            document.head.appendChild(script);
+        }
 
         // Toggle section
         function toggleSection(btn) {

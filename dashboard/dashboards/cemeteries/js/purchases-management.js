@@ -117,10 +117,6 @@ async function viewPurchase(id) {
 async function handlePurchaseDoubleClick(purchase) {
     const purchaseId = typeof purchase === 'object' ? purchase.unicId : purchase;
     viewPurchase(purchaseId);
-
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('purchaseCard', null, purchaseId);
-    }
 }
 
 

@@ -26,17 +26,14 @@ if (!$itemId) {
 try {
     $conn = getDBConnection();
 
-    // שליפת נתוני הרכישה עם פרטי קבר ולקוח
+    // שליפת נתוני הרכישה עם פרטי קבר
     $stmt = $conn->prepare("
         SELECT p.*,
-            c.firstName, c.lastName, c.fullNameHe as clientFullNameHe,
-            c.numId as clientNumId, c.phone as clientPhone, c.phoneMobile as clientPhoneMobile,
-            c.dateBirth as clientDateBirth, c.nameFather as clientNameFather, c.nameMother as clientNameMother,
-            c.address as clientAddress, c.statusCustomer,
-            g.graveNameHe, g.graveStatus,
-            agv.cemeteryNameHe, agv.blockNameHe, agv.plotNameHe, agv.lineNameHe, agv.areaGraveNameHe
+            g.unicId as graveUnicId, g.graveNameHe, g.graveStatus, g.graveType, g.graveSize,
+            g.gravePrice, g.graveDirection, g.comment as graveComment,
+            agv.cemeteryNameHe, agv.blockNameHe, agv.plotNameHe, agv.lineNameHe, agv.areaGraveNameHe,
+            agv.unicId as areaGraveUnicId
         FROM purchases p
-        LEFT JOIN customers c ON p.clientId = c.unicId
         LEFT JOIN graves g ON p.graveId = g.unicId
         LEFT JOIN areaGraves_view agv ON g.areaGraveId = agv.unicId
         WHERE p.unicId = :id AND p.isActive = 1
@@ -88,17 +85,20 @@ function formatPhone($phone) {
 // יצירת FormBuilder
 $formBuilder = new FormBuilder('purchaseCard', $itemId, null);
 
-// סטטוסים
+// סטטוסים רכישה
 $purchaseStatusNames = [1 => 'פתוח', 2 => 'שולם', 3 => 'סגור', 4 => 'בוטל'];
 $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#ef4444'];
 $currentStatus = $purchase['purchaseStatus'] ?? 1;
 $statusName = $purchaseStatusNames[$currentStatus] ?? 'לא ידוע';
 $statusColor = $purchaseStatusColors[$currentStatus] ?? '#64748b';
 
-$customerStatusNames = [1 => 'פעיל', 2 => 'רוכש', 3 => 'נפטר'];
 $buyerStatusNames = [1 => 'רוכש לעצמו', 2 => 'רוכש לאחר'];
 
-$clientName = htmlspecialchars($purchase['clientFullNameHe'] ?? ($purchase['firstName'] . ' ' . $purchase['lastName']) ?? 'לא ידוע');
+// סטטוסים קבר
+$graveStatusNames = [1 => 'פנוי', 2 => 'תפוס', 3 => 'שמור', 4 => 'לא פעיל'];
+$graveStatusColors = [1 => '#10b981', 2 => '#ef4444', 3 => '#f59e0b', 4 => '#64748b'];
+$graveTypeNames = [1 => 'יחיד', 2 => 'זוגי', 3 => 'משפחתי', 4 => 'סנהדרין'];
+$graveDirectionNames = [1 => 'צפון', 2 => 'דרום', 3 => 'מזרח', 4 => 'מערב'];
 
 // מיקום הקבר
 $graveLocation = [];
@@ -416,55 +416,59 @@ $allSectionsHTML .= '
 </div>
 ';
 
-// === סקשן 2: פרטי לקוח ===
+// === סקשן 2: פרטי הקבר ===
+$graveStatus = $purchase['graveStatus'] ?? 1;
+$graveStatusName = $graveStatusNames[$graveStatus] ?? 'לא ידוע';
+$graveStatusColor = $graveStatusColors[$graveStatus] ?? '#64748b';
+
 $allSectionsHTML .= '
-<!-- סקשן 2: פרטי לקוח -->
-<div class="sortable-section" data-section="customer">
+<!-- סקשן 2: פרטי הקבר -->
+<div class="sortable-section" data-section="grave">
     <div class="section-drag-handle">
         <button type="button" class="section-toggle-btn" title="צמצם/הרחב">
             <i class="fas fa-chevron-down"></i>
         </button>
-        <span class="section-title"><i class="fas fa-user"></i> פרטי לקוח</span>
+        <span class="section-title"><i class="fas fa-monument"></i> פרטי הקבר</span>
     </div>
     <div class="section-content">
-        <fieldset class="form-section" style="border: none; border-radius: 0 0 10px 10px; padding: 20px; margin: 0; background: linear-gradient(135deg, #eff6ff, #dbeafe);">
-            <legend style="padding: 0 15px; font-weight: bold; color: #1e40af; font-size: 16px; display: flex; align-items: center; gap: 10px;">
-                <i class="fas fa-user"></i> ' . $clientName . '
-                <span style="background: #3b82f6; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px;">' . ($customerStatusNames[$purchase['statusCustomer'] ?? 1] ?? '-') . '</span>
+        <fieldset class="form-section" style="border: none; border-radius: 0 0 10px 10px; padding: 20px; margin: 0; background: linear-gradient(135deg, #f5f3ff, #ede9fe);">
+            <legend style="padding: 0 15px; font-weight: bold; color: #5b21b6; font-size: 16px; display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-monument"></i> ' . htmlspecialchars($purchase['graveNameHe'] ?? 'קבר') . '
+                <span style="background: ' . $graveStatusColor . '; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px;">' . $graveStatusName . '</span>
             </legend>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
-                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bfdbfe;">
-                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">ת.ז.</div>
-                    <div style="font-weight: 600; color: #1e40af;">' . htmlspecialchars($purchase['clientNumId'] ?? '-') . '</div>
+                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #c4b5fd; grid-column: span 2;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">מיקום מלא</div>
+                    <div style="font-weight: 600; color: #5b21b6;">' . $graveLocationStr . '</div>
                 </div>
-                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bfdbfe;">
-                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">תאריך לידה</div>
-                    <div style="font-weight: 600; color: #1e40af;">' . formatHebrewDate($purchase['clientDateBirth']) . '</div>
+                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #c4b5fd;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">בית עלמין</div>
+                    <div style="font-weight: 600; color: #5b21b6;">' . htmlspecialchars($purchase['cemeteryNameHe'] ?? '-') . '</div>
                 </div>
-                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bfdbfe;">
-                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">שם האב</div>
-                    <div style="font-weight: 600; color: #1e40af;">' . htmlspecialchars($purchase['clientNameFather'] ?? '-') . '</div>
+                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #c4b5fd;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">גוש</div>
+                    <div style="font-weight: 600; color: #5b21b6;">' . htmlspecialchars($purchase['blockNameHe'] ?? '-') . '</div>
                 </div>
-                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bfdbfe;">
-                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">שם האם</div>
-                    <div style="font-weight: 600; color: #1e40af;">' . htmlspecialchars($purchase['clientNameMother'] ?? '-') . '</div>
+                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #c4b5fd;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">חלקה</div>
+                    <div style="font-weight: 600; color: #5b21b6;">' . htmlspecialchars($purchase['plotNameHe'] ?? '-') . '</div>
                 </div>
-                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bfdbfe;">
-                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">טלפון</div>
-                    <div style="font-weight: 600; color: #1e40af;">' . formatPhone($purchase['clientPhone']) . '</div>
+                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #c4b5fd;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">שורה</div>
+                    <div style="font-weight: 600; color: #5b21b6;">' . htmlspecialchars($purchase['lineNameHe'] ?? '-') . '</div>
                 </div>
-                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bfdbfe;">
-                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">טלפון נייד</div>
-                    <div style="font-weight: 600; color: #1e40af;">' . formatPhone($purchase['clientPhoneMobile']) . '</div>
+                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #c4b5fd;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">סוג קבר</div>
+                    <div style="font-weight: 600; color: #5b21b6;">' . ($graveTypeNames[$purchase['graveType'] ?? 1] ?? '-') . '</div>
                 </div>
-                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #bfdbfe; grid-column: span 2;">
-                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">כתובת</div>
-                    <div style="font-weight: 600; color: #1e40af;">' . htmlspecialchars($purchase['clientAddress'] ?? '-') . '</div>
+                <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #c4b5fd;">
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">כיוון</div>
+                    <div style="font-weight: 600; color: #5b21b6;">' . ($graveDirectionNames[$purchase['graveDirection'] ?? 0] ?? '-') . '</div>
                 </div>
             </div>
             <div style="margin-top: 15px;">
-                <button type="button" class="btn btn-sm btn-primary" onclick="PurchaseCardHandler.viewCustomer(\'' . $purchase['clientId'] . '\')">
-                    <i class="fas fa-eye"></i> צפה בכרטיס לקוח
+                <button type="button" class="btn btn-sm btn-purple" style="background: #7c3aed; border-color: #7c3aed; color: white;" onclick="PurchaseCardHandler.viewGrave(\'' . $purchase['graveUnicId'] . '\')">
+                    <i class="fas fa-eye"></i> צפה בכרטיס קבר
                 </button>
             </div>
         </fieldset>

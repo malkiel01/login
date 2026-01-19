@@ -38,7 +38,7 @@ try {
         LEFT JOIN blocks b ON p.blockId = b.unicId
         LEFT JOIN plots pl ON p.plotId = pl.unicId
         LEFT JOIN rows r ON p.lineId = r.unicId
-        WHERE p.id = :id AND p.isActive = 1
+        WHERE p.unicId = :id AND p.isActive = 1
     ");
     $stmt->execute(['id' => $itemId]);
     $payment = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -282,7 +282,7 @@ $allSectionsHTML = '
     <div class="section-content">
         <fieldset class="form-section" style="border: none; border-radius: 0 0 10px 10px; padding: 20px; margin: 0; background: linear-gradient(135deg, #ecfdf5, #d1fae5);">
             <legend style="padding: 0 15px; font-weight: bold; color: #065f46; font-size: 16px; display: flex; align-items: center; gap: 10px;">
-                <i class="fas fa-money-bill-wave"></i> הגדרת תשלום #' . htmlspecialchars($payment['id']) . '
+                <i class="fas fa-money-bill-wave"></i> הגדרת תשלום #' . htmlspecialchars($payment['serialPaymentId'] ?? $payment['unicId']) . '
                 <span style="background: ' . $plotTypeColor . '; color: white; padding: 4px 10px; border-radius: 12px; font-size: 12px;">' . $plotTypeName . '</span>
             </legend>
 
@@ -339,7 +339,7 @@ $allSectionsHTML = '
             </div>
 
             <div style="margin-top: 15px;">
-                <button type="button" class="btn btn-sm btn-success" onclick="PaymentCardHandler.editPayment(' . $payment['id'] . ')">
+                <button type="button" class="btn btn-sm btn-success" onclick="PaymentCardHandler.editPayment(\'' . $payment['unicId'] . '\')">
                     <i class="fas fa-edit"></i> ערוך תשלום
                 </button>
             </div>
@@ -350,7 +350,7 @@ $allSectionsHTML = '
 ';
 
 // === סקשן 2: מסמכים ===
-$explorerUnicId = 'payment_' . $payment['id'];
+$explorerUnicId = $payment['unicId'];
 $allSectionsHTML .= '
 <!-- סקשן 2: מסמכים -->
 <div class="sortable-section" data-section="documents">
@@ -382,8 +382,8 @@ $allSectionsHTML .= '
 
 $formBuilder->addCustomHTML($allSectionsHTML);
 
-$formBuilder->addField('id', '', 'hidden', [
-    'value' => $payment['id']
+$formBuilder->addField('unicId', '', 'hidden', [
+    'value' => $payment['unicId']
 ]);
 
 echo $formBuilder->renderModal();

@@ -94,6 +94,7 @@ $serialId = htmlspecialchars($payment['serialPaymentId'] ?? $payment['unicId']);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>כרטיס תשלום #<?= $serialId ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/dashboard/dashboards/cemeteries/explorer/explorer.css">
     <script src="/dashboard/dashboards/cemeteries/popup/popup-api.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -190,18 +191,42 @@ $serialId = htmlspecialchars($payment['serialPaymentId'] ?? $payment['unicId']);
                 <span class="section-title"><i class="fas fa-folder-open"></i> מסמכים</span>
             </div>
             <div class="section-content">
-                <div class="empty-state">
-                    <i class="fas fa-folder-open"></i>
-                    סייר קבצים יטען בהמשך
+                <div id="paymentExplorer" style="min-height: 200px;">
+                    <div style="text-align: center; padding: 40px; color: #64748b;">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 24px; margin-bottom: 10px; display: block;"></i>
+                        טוען סייר קבצים...
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
+        const paymentId = '<?= addslashes($itemId ?? '') ?>';
+
         document.addEventListener('DOMContentLoaded', function() {
             if (typeof PopupAPI !== 'undefined') PopupAPI.setTitle('כרטיס תשלום #<?= addslashes($serialId) ?>');
+            initFileExplorer();
         });
+
+        function initFileExplorer() {
+            if (!paymentId) return;
+            const script = document.createElement('script');
+            script.src = '/dashboard/dashboards/cemeteries/explorer/explorer.js?v=' + Date.now();
+            script.onload = function() {
+                if (typeof FileExplorer !== 'undefined') {
+                    window.paymentExplorer = new FileExplorer('paymentExplorer', paymentId, {});
+                    window.explorer = window.paymentExplorer;
+                } else {
+                    document.getElementById('paymentExplorer').innerHTML = '<div style="text-align: center; color: #ef4444; padding: 40px;"><i class="fas fa-exclamation-triangle" style="font-size: 24px; margin-bottom: 10px; display: block;"></i>שגיאה בטעינת סייר הקבצים</div>';
+                }
+            };
+            script.onerror = function() {
+                document.getElementById('paymentExplorer').innerHTML = '<div style="text-align: center; color: #ef4444; padding: 40px;"><i class="fas fa-exclamation-triangle" style="font-size: 24px; margin-bottom: 10px; display: block;"></i>שגיאה בטעינת סייר הקבצים</div>';
+            };
+            document.head.appendChild(script);
+        }
+
         function toggleSection(btn) { btn.closest('.sortable-section').classList.toggle('collapsed'); }
         function editPayment(id) {
             if (window.parent && window.parent.PopupManager) {

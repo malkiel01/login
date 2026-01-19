@@ -61,17 +61,28 @@ function getPurchasesCountBadge(count) {
 // ===================================================================
 
 function openAddCustomer() {
-    window.currentType = 'customer';
-    window.currentParentId = null;
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('customer', null, null);
+    if (typeof PopupManager !== 'undefined') {
+        PopupManager.create({
+            id: 'customerForm-new-' + Date.now(),
+            type: 'iframe',
+            src: '/dashboard/dashboards/cemeteries/forms/iframe/customerForm-iframe.php',
+            title: 'הוספת לקוח חדש',
+            width: 900,
+            height: 700
+        });
     }
 }
 
 async function editCustomer(id) {
-    window.currentType = 'customer';
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('customer', null, id);
+    if (typeof PopupManager !== 'undefined') {
+        PopupManager.create({
+            id: 'customerForm-' + id,
+            type: 'iframe',
+            src: '/dashboard/dashboards/cemeteries/forms/iframe/customerForm-iframe.php?itemId=' + id,
+            title: 'עריכת לקוח',
+            width: 900,
+            height: 700
+        });
     }
 }
 

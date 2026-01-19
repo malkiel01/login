@@ -429,8 +429,15 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
 
         // פונקציות פעולה - שליחה לחלון ההורה
         function editCustomer(id) {
-            if (window.parent && window.parent.FormHandler) {
-                window.parent.FormHandler.openForm('customer', null, id);
+            if (window.parent && window.parent.PopupManager) {
+                window.parent.PopupManager.create({
+                    id: 'customerForm-' + id,
+                    type: 'iframe',
+                    src: '/dashboard/dashboards/cemeteries/forms/iframe/customerForm-iframe.php?itemId=' + id,
+                    title: 'עריכת לקוח',
+                    width: 900,
+                    height: 700
+                });
             }
         }
 

@@ -645,14 +645,14 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             }
         }
 
-        // סינון היררכיה
+        // סינון היררכיה - עם סינון לפי קברים פנויים/נרכשו
         async function filterHierarchy(level) {
             const selects = {
                 cemetery: { next: 'blockSelect', api: 'blocks-api.php', param: 'cemeteryId', nameField: 'blockNameHe' },
                 block: { next: 'plotSelect', api: 'plots-api.php', param: 'blockId', nameField: 'plotNameHe' },
                 plot: { next: 'rowSelect', api: 'rows-api.php', param: 'plotId', nameField: 'lineNameHe' },
                 row: { next: 'areaGraveSelect', api: 'areaGraves-api.php', param: 'lineId', nameField: 'areaGraveNameHe' },
-                areaGrave: { next: 'graveSelect', api: 'graves-api.php', param: 'areaGraveId', nameField: 'graveNumber' }
+                areaGrave: { next: 'graveSelect', api: 'graves-api.php', param: 'areaGraveId', nameField: 'graveNameHe' }
             };
 
             const config = selects[level];
@@ -681,23 +681,80 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             if (!selectedValue) return;
 
             try {
-                const response = await fetch(`/dashboard/dashboards/cemeteries/api/${config.api}?action=list&${config.param}=${selectedValue}`);
+                let url;
+
+                // עבור קברים - השתמש ב-available action לסינון לפי סטטוס
+                // לקבורה: פנויים (1) + נרכשו (2) - לא קבורים (3)
+                if (level === 'areaGrave') {
+                    url = `/dashboard/dashboards/cemeteries/api/${config.api}?action=available&type=burial&${config.param}=${selectedValue}`;
+                    if (isEditMode && burialGraveId) {
+                        url += `&currentGraveId=${burialGraveId}`;
+                    }
+                } else {
+                    url = `/dashboard/dashboards/cemeteries/api/${config.api}?action=list&${config.param}=${selectedValue}`;
+                }
+
+                const response = await fetch(url);
                 const result = await response.json();
 
                 if (result.success && result.data) {
-                    nextSelect.innerHTML = '<option value="">-- בחר --</option>';
-
-                    result.data.forEach(item => {
-                        const option = document.createElement('option');
-                        option.value = item.unicId;
-                        option.textContent = item[config.nameField] || item.name || '-';
-                        nextSelect.appendChild(option);
-                    });
-
-                    nextSelect.disabled = false;
+                    // עבור אחוזות קבר - סנן רק את אלה עם קברים זמינים
+                    if (level === 'row') {
+                        await filterAreaGravesWithAvailableGraves(result.data, nextSelect, selectedValue);
+                    } else {
+                        nextSelect.innerHTML = '<option value="">-- בחר --</option>';
+                        result.data.forEach(item => {
+                            const option = document.createElement('option');
+                            option.value = item.unicId;
+                            option.textContent = item[config.nameField] || item.name || '-';
+                            nextSelect.appendChild(option);
+                        });
+                        nextSelect.disabled = false;
+                    }
                 }
             } catch (error) {
                 console.error('Error filtering hierarchy:', error);
+            }
+        }
+
+        // סינון אחוזות קבר - רק אלה שיש להן קברים זמינים לקבורה
+        async function filterAreaGravesWithAvailableGraves(areaGraves, selectElement, lineId) {
+            selectElement.innerHTML = '<option value="">-- בחר אחוזת קבר --</option>';
+
+            let hasAvailable = false;
+
+            for (const areaGrave of areaGraves) {
+                try {
+                    // לקבורה: פנויים (1) + נרכשו (2)
+                    const response = await fetch(`/dashboard/dashboards/cemeteries/api/graves-api.php?action=available&type=burial&areaGraveId=${areaGrave.unicId}`);
+                    const result = await response.json();
+
+                    const availableCount = result.success ? (result.data?.length || 0) : 0;
+
+                    const option = document.createElement('option');
+                    option.value = areaGrave.unicId;
+
+                    if (availableCount > 0) {
+                        option.textContent = `${areaGrave.areaGraveNameHe || '-'} (${availableCount} זמינים)`;
+                        hasAvailable = true;
+                    } else {
+                        option.textContent = `${areaGrave.areaGraveNameHe || '-'} (אין זמינים)`;
+                        option.disabled = true;
+                        option.style.color = '#94a3b8';
+                    }
+
+                    selectElement.appendChild(option);
+                } catch (e) {
+                    console.error('Error checking area grave availability:', e);
+                }
+            }
+
+            selectElement.disabled = !hasAvailable && areaGraves.length > 0;
+
+            if (areaGraves.length === 0) {
+                selectElement.innerHTML = '<option value="">אין אחוזות קבר בשורה זו</option>';
+            } else if (!hasAvailable) {
+                selectElement.innerHTML = '<option value="">אין קברים זמינים בשורה זו</option>';
             }
         }
 

@@ -94,7 +94,7 @@ async function viewBurial(id) {
 
 // דאבל-קליק על שורת קבורה - פתיחת כרטיס
 async function handleBurialDoubleClick(burial) {
-    const burialId = typeof burial === 'object' ? (burial.id || burial.unicId) : burial;
+    const burialId = typeof burial === 'object' ? burial.unicId : burial;
 
     if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
         FormHandler.openForm('burialCard', null, burialId);

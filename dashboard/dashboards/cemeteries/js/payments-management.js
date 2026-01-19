@@ -105,7 +105,6 @@ async function editPayment(id) {
 
 // צפייה בתשלום - פתיחת כרטיס תשלום
 async function viewPayment(id) {
-    // שימוש ב-PopupManager (iframe) במקום FormHandler
     if (typeof PopupManager !== 'undefined') {
         PopupManager.create({
             id: 'paymentCard-' + id,
@@ -115,11 +114,6 @@ async function viewPayment(id) {
             width: 1000,
             height: 700
         });
-    } else if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        // fallback לשיטה הישנה
-        FormHandler.openForm('paymentCard', null, id);
-    } else {
-        editPayment(id);
     }
 }
 

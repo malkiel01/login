@@ -76,7 +76,6 @@ async function editCustomer(id) {
 }
 
 async function viewCustomer(id) {
-    // שימוש ב-PopupManager (iframe) במקום FormHandler
     if (typeof PopupManager !== 'undefined') {
         PopupManager.create({
             id: 'customerCard-' + id,
@@ -86,11 +85,6 @@ async function viewCustomer(id) {
             width: 1000,
             height: 700
         });
-    } else if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        // fallback לשיטה הישנה
-        FormHandler.openForm('customerCard', null, id);
-    } else {
-        editCustomer(id);
     }
 }
 

@@ -95,7 +95,6 @@ async function editPurchase(id) {
 }
 
 async function viewPurchase(id) {
-    // שימוש ב-PopupManager (iframe) במקום FormHandler
     if (typeof PopupManager !== 'undefined') {
         PopupManager.create({
             id: 'purchaseCard-' + id,
@@ -105,11 +104,6 @@ async function viewPurchase(id) {
             width: 1200,
             height: 700
         });
-    } else if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        // fallback לשיטה הישנה
-        FormHandler.openForm('purchaseCard', null, id);
-    } else {
-        editPurchase(id);
     }
 }
 

@@ -85,7 +85,6 @@ async function editBurial(id) {
 }
 
 async function viewBurial(id) {
-    // שימוש ב-PopupManager (iframe) במקום FormHandler
     if (typeof PopupManager !== 'undefined') {
         PopupManager.create({
             id: 'burialCard-' + id,
@@ -95,11 +94,6 @@ async function viewBurial(id) {
             width: 1200,
             height: 700
         });
-    } else if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        // fallback לשיטה הישנה
-        FormHandler.openForm('burialCard', null, id);
-    } else {
-        editBurial(id);
     }
 }
 

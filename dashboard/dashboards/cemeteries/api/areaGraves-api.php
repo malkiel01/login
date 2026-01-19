@@ -120,7 +120,8 @@ try {
         // =====================================================
         case 'list':
             $plotId = $postData['plotId'] ?? $_GET['plotId'] ?? null;
-            $rowId = $postData['rowId'] ?? $_GET['rowId'] ?? null;
+            // תמיכה גם ב-rowId וגם ב-lineId (לתאימות)
+            $rowId = $postData['rowId'] ?? $_GET['rowId'] ?? $postData['lineId'] ?? $_GET['lineId'] ?? null;
 
             // ⭐ הוסף את זה!
             error_log("DEBUG areaGraves-api.php - plotId received: " . ($plotId ?? 'NULL'));

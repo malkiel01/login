@@ -574,8 +574,6 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
         // טיפול בבחירת לקוח
         async function onCustomerSelected() {
-            console.log('🔵 [DEBUG] onCustomerSelected called - v2');
-
             const customerId = document.getElementById('clientId').value;
             if (!customerId) {
                 selectedCustomerData = null;
@@ -586,13 +584,9 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                 const response = await fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?action=get&id=${customerId}`);
                 const result = await response.json();
 
-                console.log('🔵 [DEBUG] Customer data from API:', result.data);
-
                 if (result.success && result.data) {
                     // חישוב תושבות בזמן אמת לפי מדינה ועיר
                     let calculatedResident = parseInt(result.data.resident) || 3;
-
-                    console.log('🔵 [DEBUG] Customer countryId:', result.data.countryId, 'cityId:', result.data.cityId);
 
                     if (result.data.countryId || result.data.cityId) {
                         try {
@@ -601,21 +595,15 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                                 countryId: result.data.countryId || '',
                                 cityId: result.data.cityId || ''
                             });
-                            console.log('🔵 [DEBUG] Calling calculate-residency with:', residencyParams.toString());
-
                             const residencyResponse = await fetch(`/dashboard/dashboards/cemeteries/api/calculate-residency.php?${residencyParams}`);
                             const residencyResult = await residencyResponse.json();
-
-                            console.log('🔵 [DEBUG] Residency API response:', residencyResult);
 
                             if (residencyResult.success) {
                                 calculatedResident = residencyResult.residency;
                             }
                         } catch (e) {
-                            console.error('🔴 [DEBUG] Error calculating residency:', e);
+                            console.error('Error calculating residency:', e);
                         }
-                    } else {
-                        console.log('🟡 [DEBUG] No countryId or cityId - using stored resident:', calculatedResident);
                     }
 
                     selectedCustomerData = {
@@ -623,11 +611,10 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                         resident: calculatedResident,
                         name: `${result.data.firstName} ${result.data.lastName}`
                     };
-                    console.log('🟢 [DEBUG] Final selectedCustomerData:', selectedCustomerData);
                     tryCalculatePayments();
                 }
             } catch (error) {
-                console.error('🔴 [DEBUG] Error loading customer details:', error);
+                console.error('Error loading customer details:', error);
             }
         }
 

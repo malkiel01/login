@@ -164,22 +164,25 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <script src="/dashboard/dashboards/cemeteries/js/table-manager.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/universal-search-init.js"></script>
 
-    <!-- 2️⃣ מערכת טפסים -->
+    <!-- 2️⃣ מערכת פופאפים -->
+    <script src="/dashboard/dashboards/cemeteries/popup/popup-manager.js"></script>
+
+    <!-- 3️⃣ מערכת טפסים -->
     <script src="/dashboard/dashboards/cemeteries/forms/FormValidations.js"></script>
     <script src="/dashboard/dashboards/cemeteries/forms/payment-display-manager.js"></script>
     <script src="/dashboard/dashboards/cemeteries/forms/form-handler.js"></script>
 
-    <!-- 3️⃣ כרטיסים -->
+    <!-- 4️⃣ כרטיסים -->
     <script src="/dashboard/dashboards/cemeteries/js/hierarchy-cards.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/cards.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/responsive.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/unified-table-renderer.js"></script>
 
-    <!-- 4️⃣ OperationManager ו-Utilities (קריטי - לפני המערכת החדשה!) -->
+    <!-- 5️⃣ OperationManager ו-Utilities (קריטי - לפני המערכת החדשה!) -->
     <script src="/dashboard/dashboards/cemeteries/js/operation-manager.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/entities-common-utils.js"></script>
 
-    <!-- 5️⃣ 🆕 המערכת החדשה - Entity Framework (אחרי הכל!) -->
+    <!-- 6️⃣ 🆕 המערכת החדשה - Entity Framework (אחרי הכל!) -->
     <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-config.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-state-manager.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-loader.js"></script>
@@ -187,7 +190,7 @@ $paymentTypesConfig = require $_SERVER['DOCUMENT_ROOT'] . '/dashboard/dashboards
     <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-manager.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/entities-framework/entity-initializer.js"></script>
 
-    <!-- 6️⃣ הקבצים הישנים (יישארו כ-fallback) -->
+    <!-- 7️⃣ הקבצים הישנים (יישארו כ-fallback) -->
     <script src="/dashboard/dashboards/cemeteries/js/cemeteries-management.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/blocks-management.js"></script>
     <script src="/dashboard/dashboards/cemeteries/js/plots-management.js"></script>

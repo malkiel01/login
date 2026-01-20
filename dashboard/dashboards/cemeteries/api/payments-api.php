@@ -508,11 +508,16 @@ try {
             
         // עדכון תשלום
         case 'update':
+            $data = json_decode(file_get_contents('php://input'), true);
+
+            // קבל id מה-query string או מה-body
+            if (!$id && isset($data['id'])) {
+                $id = $data['id'];
+            }
+
             if (!$id) {
                 throw new Exception('Payment ID is required');
             }
-            
-            $data = json_decode(file_get_contents('php://input'), true);
             
             // בניית השאילתה
             $fields = [

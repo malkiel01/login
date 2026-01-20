@@ -479,7 +479,12 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                     }
                 });
 
-                const response = await fetch('/dashboard/dashboards/cemeteries/api/payments-api.php?action=' + (isEditMode ? 'update' : 'create'), {
+                let url = '/dashboard/dashboards/cemeteries/api/payments-api.php?action=' + (isEditMode ? 'update' : 'create');
+                if (isEditMode) {
+                    url += '&id=<?= $itemId ?>';
+                }
+
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

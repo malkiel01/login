@@ -834,7 +834,7 @@ class UnifiedTableRenderer {
         'customer': '/dashboard/dashboards/cemeteries/api/customers-api.php',
         'purchase': '/dashboard/dashboards/cemeteries/api/purchases-api.php',
         'burial': '/dashboard/dashboards/cemeteries/api/burials-api.php',
-        'residency': '/dashboard/dashboards/cemeteries/api/residencies-api.php',
+        'residency': '/dashboard/dashboards/cemeteries/api/residency-api.php',
         'payment': '/dashboard/dashboards/cemeteries/api/payments-api.php'
     };
     

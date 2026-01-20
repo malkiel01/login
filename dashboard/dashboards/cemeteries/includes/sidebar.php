@@ -134,10 +134,9 @@
         
         <!-- דוח קברים -->
         <div class="management-item" style="margin-bottom: 10px;">
-            <div class="hierarchy-header" id="paymentsItem" onclick="GravesInventoryReport.open()">
+            <div class="hierarchy-header" id="gravesReportItem" onclick="handleSidebarClick('gravesReportItem', function() { GravesInventoryReport.open(); })">
                 <span class="hierarchy-icon">📊</span>
                 <span class="hierarchy-title">דוח יתרות קברים</span>
-                <span class="hierarchy-count" id="paymentsCount">0</span>
             </div>
         </div>  
 

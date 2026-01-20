@@ -147,34 +147,34 @@ function saveResidency() {
                 'residencyName' => $data['residencyName'],
                 'countryId' => $data['countryId'] ?? null,
                 'cityId' => $data['cityId'] ?? null,
-                'residencyType' => $data['residencyType'],
+                'residencyType' => (int)$data['residencyType'],
                 'description' => $data['description'] ?? null,
                 'countryNameHe' => $data['countryNameHe'] ?? null,
                 'cityNameHe' => $data['cityNameHe'] ?? null
             ];
-            
+
             $stmt->execute($params);
-            
+
             echo json_encode(['success' => true, 'message' => 'הגדרת התושבות עודכנה בהצלחה']);
-            
+
         } else {
             // הוספה חדשה
             $unicId = 'RES' . uniqid();
-            
-            $sql = "INSERT INTO residency_settings 
-                    (unicId, residencyName, countryId, cityId, residencyType, description, 
+
+            $sql = "INSERT INTO residency_settings
+                    (unicId, residencyName, countryId, cityId, residencyType, description,
                      countryNameHe, cityNameHe, createDate, updateDate, isActive)
-                    VALUES 
+                    VALUES
                     (:unicId, :residencyName, :countryId, :cityId, :residencyType, :description,
                      :countryNameHe, :cityNameHe, NOW(), NOW(), 1)";
-            
+
             $stmt = $pdo->prepare($sql);
             $params = [
                 'unicId' => $unicId,
                 'residencyName' => $data['residencyName'],
                 'countryId' => $data['countryId'] ?? null,
                 'cityId' => $data['cityId'] ?? null,
-                'residencyType' => $data['residencyType'],
+                'residencyType' => (int)$data['residencyType'],
                 'description' => $data['description'] ?? null,
                 'countryNameHe' => $data['countryNameHe'] ?? null,
                 'cityNameHe' => $data['cityNameHe'] ?? null

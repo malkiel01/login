@@ -25,6 +25,33 @@
 header('Content-Type: application/json; charset=utf-8');
 require_once dirname(__DIR__) . '/config.php';
 
+/**
+ * המרת ערך תושבות (טקסט או מספר) למספר
+ * תמיכה בערכים ישנים (טקסט) וחדשים (מספרי)
+ */
+function convertResidencyType($value) {
+    // טיפול בערכים ריקים
+    if ($value === null || $value === '') {
+        return 3;
+    }
+
+    // המרה למחרוזת ונקיון
+    $value = trim((string)$value);
+
+    // בדיקת ערכים מספריים (כמספר או כמחרוזת)
+    if ($value === '1' || $value === 1 || (int)$value === 1) return 1;
+    if ($value === '2' || $value === 2 || (int)$value === 2) return 2;
+    if ($value === '3' || $value === 3 || (int)$value === 3) return 3;
+
+    // תמיכה בערכים טקסטואליים ישנים
+    if ($value === 'jerusalem_area') return 1;
+    if ($value === 'israel') return 2;
+    if ($value === 'abroad') return 3;
+
+    // ברירת מחדל
+    return 3;
+}
+
 try {
     $typeId = isset($_GET['typeId']) ? (int)$_GET['typeId'] : 1;
     $countryId = $_GET['countryId'] ?? null;
@@ -63,7 +90,7 @@ try {
 
             if ($cityResult) {
                 // לעיר יש הגדרת תושבות - השתמש בערך מהטבלה
-                $residency = (int)$cityResult['residencyType'];
+                $residency = convertResidencyType($cityResult['residencyType']);
                 $reason = 'הגדרת תושבות לפי עיר';
             }
         }
@@ -81,7 +108,7 @@ try {
 
             if ($countryResult) {
                 // למדינה יש הגדרת תושבות - השתמש בערך מהטבלה
-                $residency = (int)$countryResult['residencyType'];
+                $residency = convertResidencyType($countryResult['residencyType']);
                 $reason = 'הגדרת תושבות לפי מדינה';
             }
         }

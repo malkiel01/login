@@ -26,10 +26,6 @@ try {
 $action = $_GET['action'] ?? '';
 $id = $_GET['id'] ?? null;
 
-// קבלת הפעולה
-$action = $_GET['action'] ?? '';
-$id = $_GET['id'] ?? null;
-
 try {
     switch ($action) {
         // רשימת כל התשלומים

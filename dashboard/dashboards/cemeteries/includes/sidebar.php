@@ -151,7 +151,7 @@
 
         <!-- תושבויות -->
         <div class="management-item" style="margin-bottom: 10px;">
-            <div class="hierarchy-header" id="residencyItem" onclick="handleSidebarClick('residencyItem', loadResidencies)">
+            <div class="hierarchy-header" id="residencyItem" onclick="handleSidebarClick('residencyItem', function() { if(typeof loadResidencies === 'function') loadResidencies(); })">
                 <span class="hierarchy-icon">🏠</span>
                 <span class="hierarchy-title">הגדרות תושבות</span>
                 <span class="hierarchy-count" id="residencyCount">0</span>
@@ -160,7 +160,7 @@
 
         <!-- מדינות -->
         <div class="management-item" style="margin-bottom: 10px;">
-            <div class="hierarchy-header" id="countriesItem" onclick="handleSidebarClick('countriesItem', loadCountries)">
+            <div class="hierarchy-header" id="countriesItem" onclick="handleSidebarClick('countriesItem', function() { if(typeof loadCountries === 'function') loadCountries(); })">
                 <span class="hierarchy-icon">🌍</span>
                 <span class="hierarchy-title">ניהול מדינות</span>
                 <span class="hierarchy-count" id="countryCount">0</span>
@@ -169,7 +169,7 @@
 
         <!-- ערים -->
         <div class="management-item" style="margin-bottom: 10px;">
-            <div class="hierarchy-header" id="citiesItem" onclick="handleSidebarClick('citiesItem', loadCities)">
+            <div class="hierarchy-header" id="citiesItem" onclick="handleSidebarClick('citiesItem', function() { if(typeof loadCities === 'function') loadCities(); })">
                 <span class="hierarchy-icon">🏙️</span>
                 <span class="hierarchy-title">ניהול ערים</span>
                 <span class="hierarchy-count" id="cityCount">0</span>

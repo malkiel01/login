@@ -973,10 +973,29 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             }
         }
 
+        // סוגי תשלומים אופציונליים
+        const PAYMENT_TYPES = {
+            2: { name: 'שירותי לוויה', icon: '🕯️' },
+            4: { name: 'אגרת מצבה', icon: '🪦' },
+            5: { name: 'בדיקת עומק', icon: '📏' },
+            6: { name: 'פירוק מצבה', icon: '🔨' },
+            7: { name: 'הובלה מנתב״ג', icon: '✈️' },
+            8: { name: 'טהרה', icon: '💧' },
+            9: { name: 'תכריכים', icon: '🏳️' },
+            10: { name: 'החלפת שם', icon: '✏️' },
+            99: { name: 'אחר', icon: '📝' }
+        };
+
         // פתיחת מודל תשלומים
         function openPaymentsModal(availablePayments) {
+            // איפוס תשלומים מותאמים
+            customPayments = [];
+
             const mandatoryPayments = availablePayments.filter(p => p.mandatory);
             const optionalPayments = availablePayments.filter(p => !p.mandatory);
+
+            // מצא אילו סוגים כבר קיימים
+            const existingTypes = new Set(availablePayments.map(p => parseInt(p.priceDefinition)));
 
             const modal = document.createElement('div');
             modal.id = 'paymentsModal';
@@ -1002,7 +1021,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                         </div>
 
                         ${mandatoryPayments.length > 0 ? `
-                            <h4 style="color: #dc2626; margin-bottom: 10px;">תשלומי חובה</h4>
+                            <h4 style="color: #dc2626; margin-bottom: 10px;">🔒 תשלומי חובה</h4>
                             <div style="margin-bottom: 20px;">
                                 ${mandatoryPayments.map((p, i) => `
                                     <label style="display: flex; align-items: center; padding: 10px; background: #fef2f2; border-radius: 8px; margin-bottom: 8px;">
@@ -1015,7 +1034,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                         ` : ''}
 
                         ${optionalPayments.length > 0 ? `
-                            <h4 style="color: #059669; margin-bottom: 10px;">תשלומים אופציונליים</h4>
+                            <h4 style="color: #059669; margin-bottom: 10px;">✓ תשלומים אופציונליים (מחירון)</h4>
                             <div style="margin-bottom: 20px;">
                                 ${optionalPayments.map((p, i) => `
                                     <label style="display: flex; align-items: center; padding: 10px; background: #f0fdf4; border-radius: 8px; margin-bottom: 8px; cursor: pointer;">
@@ -1026,6 +1045,32 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                                 `).join('')}
                             </div>
                         ` : ''}
+
+                        <!-- הוספת תשלום ידני -->
+                        <h4 style="color: #3b82f6; margin-bottom: 10px;">➕ הוסף תשלום</h4>
+                        <div style="background: #eff6ff; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                            <div style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
+                                <div style="flex: 1; min-width: 150px;">
+                                    <label style="display: block; font-size: 12px; color: #64748b; margin-bottom: 4px;">סוג תשלום</label>
+                                    <select id="addPaymentType" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                                        <option value="">-- בחר סוג --</option>
+                                        ${Object.entries(PAYMENT_TYPES).map(([id, type]) => `
+                                            <option value="${id}">${type.icon} ${type.name}</option>
+                                        `).join('')}
+                                    </select>
+                                </div>
+                                <div style="width: 120px;">
+                                    <label style="display: block; font-size: 12px; color: #64748b; margin-bottom: 4px;">מחיר (₪)</label>
+                                    <input type="number" id="addPaymentPrice" min="0" step="1" placeholder="0"
+                                        style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                                </div>
+                                <button type="button" onclick="addCustomPayment()"
+                                    style="padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; white-space: nowrap;">
+                                    <i class="fas fa-plus"></i> הוסף
+                                </button>
+                            </div>
+                            <div id="customPaymentsList" style="margin-top: 10px;"></div>
+                        </div>
 
                         <div style="background: #1e293b; color: white; padding: 15px; border-radius: 8px; text-align: center; margin-top: 20px;">
                             <div style="font-size: 14px; margin-bottom: 5px;">סה"כ לתשלום</div>
@@ -1049,8 +1094,82 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             updateModalTotal();
         }
 
+        // רשימת תשלומים מותאמים אישית
+        let customPayments = [];
+
+        // הוספת תשלום מותאם אישית
+        function addCustomPayment() {
+            const typeSelect = document.getElementById('addPaymentType');
+            const priceInput = document.getElementById('addPaymentPrice');
+
+            const typeId = typeSelect.value;
+            const price = parseFloat(priceInput.value) || 0;
+
+            if (!typeId) {
+                alert('יש לבחור סוג תשלום');
+                return;
+            }
+            if (price <= 0) {
+                alert('יש להזין מחיר תקין');
+                return;
+            }
+
+            const typeName = PAYMENT_TYPES[typeId]?.name || 'תשלום';
+            const typeIcon = PAYMENT_TYPES[typeId]?.icon || '💰';
+
+            customPayments.push({
+                type: typeId,
+                name: typeName,
+                icon: typeIcon,
+                price: price
+            });
+
+            // עדכון התצוגה
+            renderCustomPayments();
+            updateModalTotal();
+
+            // איפוס השדות
+            typeSelect.value = '';
+            priceInput.value = '';
+        }
+
+        // הסרת תשלום מותאם אישית
+        function removeCustomPayment(index) {
+            customPayments.splice(index, 1);
+            renderCustomPayments();
+            updateModalTotal();
+        }
+
+        // רינדור תשלומים מותאמים אישית
+        function renderCustomPayments() {
+            const container = document.getElementById('customPaymentsList');
+            if (!container) return;
+
+            if (customPayments.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = customPayments.map((p, i) => `
+                <div style="display: flex; align-items: center; padding: 8px; background: white; border-radius: 6px; margin-top: 8px;">
+                    <input type="checkbox" checked class="custom-payment" data-index="${i}" data-price="${p.price}" data-name="${p.name}" data-type="${p.type}" style="margin-left: 10px;">
+                    <span style="flex: 1;">${p.icon} ${p.name}</span>
+                    <strong style="color: #3b82f6; margin-left: 10px;">₪${p.price.toLocaleString()}</strong>
+                    <button type="button" onclick="removeCustomPayment(${i})" style="background: #fee2e2; color: #dc2626; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; margin-right: 8px;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+
+            // הוספת מאזינים
+            container.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                cb.addEventListener('change', updateModalTotal);
+            });
+        }
+
         function closePaymentsModal() {
             document.getElementById('paymentsModal')?.remove();
+            customPayments = []; // איפוס תשלומים מותאמים
         }
 
         function updateModalTotal() {

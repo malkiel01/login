@@ -1054,9 +1054,11 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                                     <label style="display: block; font-size: 12px; color: #64748b; margin-bottom: 4px;">סוג תשלום</label>
                                     <select id="addPaymentType" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
                                         <option value="">-- בחר סוג --</option>
-                                        ${Object.entries(PAYMENT_TYPES).map(([id, type]) => `
-                                            <option value="${id}">${type.icon} ${type.name}</option>
-                                        `).join('')}
+                                        ${Object.entries(PAYMENT_TYPES)
+                                            .filter(([id]) => !existingTypes.has(parseInt(id)))
+                                            .map(([id, type]) => `
+                                                <option value="${id}">${type.icon} ${type.name}</option>
+                                            `).join('')}
                                     </select>
                                 </div>
                                 <div style="width: 120px;">

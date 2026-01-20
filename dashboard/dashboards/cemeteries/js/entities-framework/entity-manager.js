@@ -160,6 +160,29 @@ class EntityManager {
     }
 
     /**
+     * מיפוי סוג ישות ל-ID של פריט התפריט בסיידבר
+     * @param {string} entityType - סוג היישות
+     * @returns {string} - ID של פריט התפריט
+     */
+    static getMenuItemId(entityType) {
+        const menuItemMap = {
+            'cemetery': 'cemeteriesItem',
+            'block': 'blocksItem',
+            'plot': 'plotsItem',
+            'areaGrave': 'areaGravesItem',
+            'grave': 'gravesItem',
+            'customer': 'customersItem',
+            'purchase': 'purchasesItem',
+            'burial': 'burialsItem',
+            'payment': 'paymentsItem',
+            'residency': 'residencyItem',
+            'country': 'countriesItem',
+            'city': 'citiesItem'
+        };
+        return menuItemMap[entityType] || `${entityType}sItem`;
+    }
+
+    /**
      * עדכון UI
      * @param {string} entityType - סוג היישות
      * @param {string|null} parentId - מזהה הורה
@@ -171,7 +194,7 @@ class EntityManager {
 
         // עדכון פריט תפריט אקטיבי
         if (typeof setActiveMenuItem === 'function') {
-            const menuItemId = `${entityType}sItem`;
+            const menuItemId = this.getMenuItemId(entityType);
             setActiveMenuItem(menuItemId);
         }
 

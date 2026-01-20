@@ -213,23 +213,23 @@ try {
                 AND (p.startPayment IS NULL OR p.startPayment <= CURDATE())
                 AND (
                     -- תושבות
-                    (p.resident = :resident2 OR p.resident = -1) AND
+                    (p.resident = :resident2 OR p.resident = -1 OR p.resident IS NULL) AND
                     -- סוג חלקה
-                    (p.plotType = :plotType2 OR p.plotType = -1) AND
+                    (p.plotType = :plotType2 OR p.plotType = -1 OR p.plotType IS NULL) AND
                     -- סוג קבר
-                    (p.graveType = :graveType2 OR p.graveType = -1) AND
+                    (p.graveType = :graveType2 OR p.graveType = -1 OR p.graveType IS NULL) AND
                     -- סטטוס רוכש
                     (p.buyerStatus = :buyerStatus2 OR p.buyerStatus = -1 OR p.buyerStatus IS NULL) AND
                     -- מיקום - היררכי
                     (
                         -- אם מוגדרת שורה ספציפית
-                        (p.lineId = :lineId2 AND p.lineId != '-1') OR
+                        (p.lineId = :lineId2 AND p.lineId != '-1' AND p.lineId IS NOT NULL) OR
                         -- אם מוגדרת חלקה ספציפית (וכולל את כל השורות שלה)
-                        (p.plotId = :plotId2 AND p.lineId = '-1' AND p.plotId != '-1') OR
+                        (p.plotId = :plotId2 AND (p.lineId = '-1' OR p.lineId IS NULL) AND p.plotId != '-1' AND p.plotId IS NOT NULL) OR
                         -- אם מוגדר גוש ספציפי (וכולל את כל החלקות שלו)
-                        (p.blockId = :blockId2 AND p.plotId = '-1' AND p.blockId != '-1') OR
+                        (p.blockId = :blockId2 AND (p.plotId = '-1' OR p.plotId IS NULL) AND p.blockId != '-1' AND p.blockId IS NOT NULL) OR
                         -- אם מוגדר בית עלמין ספציפי (וכולל את כל הגושים שלו)
-                        (p.cemeteryId = :cemeteryId2 AND p.blockId = '-1' AND p.cemeteryId != '-1') OR
+                        (p.cemeteryId = :cemeteryId2 AND (p.blockId = '-1' OR p.blockId IS NULL) AND p.cemeteryId != '-1' AND p.cemeteryId IS NOT NULL) OR
                         -- או שזה חוק כללי לכולם
                         (p.cemeteryId = '-1' OR p.cemeteryId IS NULL)
                     )
@@ -348,15 +348,15 @@ try {
                     FROM payments p
                     WHERE p.isActive = 1
                     AND (p.startPayment IS NULL OR p.startPayment <= CURDATE())
-                    AND (p.resident = :resident OR p.resident = -1)
-                    AND (p.plotType = :plotType OR p.plotType = -1)
-                    AND (p.graveType = :graveType OR p.graveType = -1)
+                    AND (p.resident = :resident OR p.resident = -1 OR p.resident IS NULL)
+                    AND (p.plotType = :plotType OR p.plotType = -1 OR p.plotType IS NULL)
+                    AND (p.graveType = :graveType OR p.graveType = -1 OR p.graveType IS NULL)
                     AND (p.buyerStatus = :buyerStatus OR p.buyerStatus = -1 OR p.buyerStatus IS NULL)
                     AND (
-                        (p.lineId = :lineId AND p.lineId != '-1') OR
-                        (p.plotId = :plotId AND p.lineId = '-1' AND p.plotId != '-1') OR
-                        (p.blockId = :blockId AND p.plotId = '-1' AND p.blockId != '-1') OR
-                        (p.cemeteryId = :cemeteryId AND p.blockId = '-1' AND p.cemeteryId != '-1') OR
+                        (p.lineId = :lineId AND p.lineId != '-1' AND p.lineId IS NOT NULL) OR
+                        (p.plotId = :plotId AND (p.lineId = '-1' OR p.lineId IS NULL) AND p.plotId != '-1' AND p.plotId IS NOT NULL) OR
+                        (p.blockId = :blockId AND (p.plotId = '-1' OR p.plotId IS NULL) AND p.blockId != '-1' AND p.blockId IS NOT NULL) OR
+                        (p.cemeteryId = :cemeteryId AND (p.blockId = '-1' OR p.blockId IS NULL) AND p.cemeteryId != '-1' AND p.cemeteryId IS NOT NULL) OR
                         (p.cemeteryId = '-1' OR p.cemeteryId IS NULL)
                     )
                     ORDER BY 

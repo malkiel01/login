@@ -468,16 +468,23 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             try {
                 const formData = new FormData(this);
 
-                // Convert -1 values to null for database
-                ['plotType', 'graveType', 'resident', 'buyerStatus', 'cemeteryId', 'blockId', 'plotId', 'lineId'].forEach(field => {
-                    if (formData.get(field) === '-1') {
-                        formData.set(field, '');
+                // Convert FormData to JSON object
+                const data = {};
+                formData.forEach((value, key) => {
+                    // Convert -1 values to null for database
+                    if (value === '-1') {
+                        data[key] = null;
+                    } else {
+                        data[key] = value;
                     }
                 });
 
                 const response = await fetch('/dashboard/dashboards/cemeteries/api/payments-api.php?action=' + (isEditMode ? 'update' : 'create'), {
                     method: 'POST',
-                    body: formData
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
                 });
 
                 const result = await response.json();

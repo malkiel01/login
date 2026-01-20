@@ -69,7 +69,7 @@ const FormHandler = {
     openForm: async function(type, parentId = null, itemId = null) {
 
         // 🆕 ניתוב טפסים לשיטה החדשה (iframe popup)
-        const iframeFormTypes = ['customer', 'purchase', 'burial', 'payment'];
+        const iframeFormTypes = ['customer', 'purchase', 'burial', 'payment', 'residency', 'grave'];
 
         if (iframeFormTypes.includes(type)) {
             if (typeof PopupManager !== 'undefined') {
@@ -101,6 +101,20 @@ const FormHandler = {
                         titleEdit: 'עריכת הגדרת תשלום',
                         width: 800,
                         height: 600
+                    },
+                    residency: {
+                        file: 'residencyForm-iframe.php',
+                        titleNew: 'הוספת חוק תושבות',
+                        titleEdit: 'עריכת חוק תושבות',
+                        width: 800,
+                        height: 600
+                    },
+                    grave: {
+                        file: 'graveForm-iframe.php',
+                        titleNew: 'הוספת קבר חדש',
+                        titleEdit: 'עריכת קבר',
+                        width: 900,
+                        height: 700
                     }
                 };
 

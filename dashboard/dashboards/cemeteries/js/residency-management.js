@@ -33,9 +33,9 @@ let residenciesIsLoadingMore = false;
 // קונפיגורציה של סוגי תושבות
 // ===================================================================
 const RESIDENCY_TYPES = {
-    'jerusalem_area': 'תושבי ירושלים והסביבה',
-    'israel': 'תושבי ישראל',
-    'abroad': 'תושבי חו״ל'
+    1: 'תושב העיר',
+    2: 'תושב חוץ לעיר',
+    3: 'תושב חו״ל'
 };
 
 
@@ -45,9 +45,9 @@ const RESIDENCY_TYPES = {
 
 function getResidencyTypeBadge(type) {
     const types = {
-        'jerusalem_area': { label: 'ירושלים והסביבה', color: '#667eea' },
-        'israel': { label: 'ישראל', color: '#3b82f6' },
-        'abroad': { label: 'חו״ל', color: '#f59e0b' }
+        1: { label: 'תושב העיר', color: '#10b981' },
+        2: { label: 'תושב חוץ לעיר', color: '#3b82f6' },
+        3: { label: 'תושב חו״ל', color: '#f59e0b' }
     };
 
     const typeInfo = types[type] || { label: type || '-', color: '#999' };
@@ -70,7 +70,17 @@ function getResidencyStatusBadge(isActive) {
 function openAddResidency() {
     window.currentType = 'residency';
     window.currentParentId = null;
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
+
+    if (typeof PopupManager !== 'undefined') {
+        PopupManager.create({
+            id: 'residencyForm-new-' + Date.now(),
+            type: 'iframe',
+            src: '/dashboard/dashboards/cemeteries/forms/iframe/residencyForm-iframe.php',
+            title: 'הוספת חוק תושבות',
+            width: 800,
+            height: 600
+        });
+    } else if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
         FormHandler.openForm('residency', null, null);
     }
 }
@@ -78,15 +88,32 @@ function openAddResidency() {
 // עריכת הגדרת תושבות
 async function editResidency(id) {
     window.currentType = 'residency';
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
+
+    if (typeof PopupManager !== 'undefined') {
+        PopupManager.create({
+            id: 'residencyForm-' + id,
+            type: 'iframe',
+            src: '/dashboard/dashboards/cemeteries/forms/iframe/residencyForm-iframe.php?itemId=' + id,
+            title: 'עריכת חוק תושבות',
+            width: 800,
+            height: 600
+        });
+    } else if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
         FormHandler.openForm('residency', null, id);
     }
 }
 
 // צפייה בהגדרת תושבות - פתיחת כרטיס
 async function viewResidency(id) {
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('residencyCard', null, id);
+    if (typeof PopupManager !== 'undefined') {
+        PopupManager.create({
+            id: 'residencyCard-' + id,
+            type: 'iframe',
+            src: '/dashboard/dashboards/cemeteries/forms/iframe/residencyCard-iframe.php?itemId=' + id,
+            title: 'כרטיס חוק תושבות',
+            width: 900,
+            height: 600
+        });
     } else {
         editResidency(id);
     }
@@ -95,10 +122,7 @@ async function viewResidency(id) {
 // דאבל-קליק על שורת הגדרת תושבות
 async function handleResidencyDoubleClick(residency) {
     const residencyId = typeof residency === 'object' ? residency.unicId : residency;
-
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
-        FormHandler.openForm('residencyCard', null, residencyId);
-    }
+    viewResidency(residencyId);
 }
 
 

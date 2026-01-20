@@ -70,14 +70,38 @@ function getAreaGraveBadge(areaGraveName) {
 function openAddGrave(areaGraveId = null) {
     window.currentType = 'grave';
     window.currentParentId = areaGraveId || gravesFilterAreaGraveId;
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
+
+    if (typeof PopupManager !== 'undefined') {
+        let src = '/dashboard/dashboards/cemeteries/forms/iframe/graveForm-iframe.php';
+        const parentId = areaGraveId || gravesFilterAreaGraveId;
+        if (parentId) src += '?parentId=' + parentId;
+
+        PopupManager.create({
+            id: 'graveForm-new-' + Date.now(),
+            type: 'iframe',
+            src: src,
+            title: 'הוספת קבר חדש',
+            width: 900,
+            height: 700
+        });
+    } else if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
         FormHandler.openForm('grave', areaGraveId || gravesFilterAreaGraveId, null);
     }
 }
 
 async function editGrave(id) {
     window.currentType = 'grave';
-    if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
+
+    if (typeof PopupManager !== 'undefined') {
+        PopupManager.create({
+            id: 'graveForm-' + id,
+            type: 'iframe',
+            src: '/dashboard/dashboards/cemeteries/forms/iframe/graveForm-iframe.php?itemId=' + id,
+            title: 'עריכת קבר',
+            width: 900,
+            height: 700
+        });
+    } else if (typeof FormHandler !== 'undefined' && FormHandler.openForm) {
         FormHandler.openForm('grave', null, id);
     }
 }

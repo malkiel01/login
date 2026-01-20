@@ -279,7 +279,20 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
         }
 
         function toggleSection(btn) { btn.closest('.sortable-section').classList.toggle('collapsed'); }
-        function editGrave(id) { if (window.parent && window.parent.FormHandler) window.parent.FormHandler.openForm('grave', null, id); }
+        function editGrave(id) {
+            if (window.parent && window.parent.PopupManager) {
+                window.parent.PopupManager.create({
+                    id: 'graveForm-' + id,
+                    type: 'iframe',
+                    src: '/dashboard/dashboards/cemeteries/forms/iframe/graveForm-iframe.php?itemId=' + id,
+                    title: 'עריכת קבר',
+                    width: 900,
+                    height: 700
+                });
+            } else if (window.parent && window.parent.FormHandler) {
+                window.parent.FormHandler.openForm('grave', null, id);
+            }
+        }
         function viewPurchase(id) {
             if (window.parent && window.parent.PopupManager) {
                 window.parent.PopupManager.create({ id: 'purchaseCard-' + id, type: 'iframe', src: '/dashboard/dashboards/cemeteries/forms/iframe/purchaseCard-iframe.php?itemId=' + id, title: 'כרטיס רכישה', width: 1200, height: 700 });

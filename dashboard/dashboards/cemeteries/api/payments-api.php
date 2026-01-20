@@ -523,7 +523,7 @@ try {
             $fields = [
                 'plotType', 'graveType', 'resident', 'buyerStatus', 'price',
                 'priceDefinition', 'cemeteryId', 'blockId', 'plotId', 'lineId',
-                'startPayment'
+                'startPayment', 'mandatory'
             ];
             
             $updateFields = ['updateDate = :updateDate'];

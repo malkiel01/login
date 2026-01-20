@@ -245,9 +245,11 @@ async function updateResidencyCount() {
     try {
         const response = await fetch('/dashboard/dashboards/cemeteries/api/residency-api.php?action=list&limit=1');
         const data = await response.json();
-        
-        if (data.success && data.pagination) {
-            updateCount('residencyCount', data.pagination.total || 0);
+
+        if (data.success) {
+            // תמיכה בשני פורמטים: pagination.total או total ישירות
+            const total = data.pagination?.total ?? data.total ?? 0;
+            updateCount('residencyCount', total);
         }
     } catch (error) {
         updateCount('residencyCount', 0);

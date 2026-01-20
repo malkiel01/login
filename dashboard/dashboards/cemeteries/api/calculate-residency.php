@@ -47,44 +47,45 @@ try {
     }
 
     // שלב 2+3: סוג זיהוי ת.ז. (1) או תינוק (4) - בדיקה לפי מדינה ועיר
-    if ($countryId) {
+    if ($countryId || $cityId) {
         $conn = getDBConnection();
 
-        // שלב 2: בדיקת מדינה - האם למדינה יש הגדרת תושבות?
-        $stmt = $conn->prepare("
-            SELECT residencyType
-            FROM residency_settings
-            WHERE countryId = :countryId AND cityId IS NULL AND isActive = 1
-            LIMIT 1
-        ");
-        $stmt->execute(['countryId' => $countryId]);
-        $countryResult = $stmt->fetch(PDO::FETCH_ASSOC);
+        // שלב 3: בדיקת עיר קודם (ספציפי יותר)
+        if ($cityId) {
+            $stmt = $conn->prepare("
+                SELECT residencyType
+                FROM residency_settings
+                WHERE cityId = :cityId AND isActive = 1
+                LIMIT 1
+            ");
+            $stmt->execute(['cityId' => $cityId]);
+            $cityResult = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($countryResult) {
-            // למדינה יש הגדרת תושבות = תושב חוץ לעיר (2)
-            $residency = 2;
-            $reason = 'למדינה יש הגדרת תושבות';
-
-            // שלב 3: בדיקת עיר - האם לעיר יש הגדרת תושבות?
-            if ($cityId) {
-                $stmt = $conn->prepare("
-                    SELECT residencyType
-                    FROM residency_settings
-                    WHERE cityId = :cityId AND isActive = 1
-                    LIMIT 1
-                ");
-                $stmt->execute(['cityId' => $cityId]);
-                $cityResult = $stmt->fetch(PDO::FETCH_ASSOC);
-
-                if ($cityResult) {
-                    // לעיר יש הגדרת תושבות = תושב העיר (1)
-                    $residency = 1;
-                    $reason = 'לעיר יש הגדרת תושבות';
-                }
-                // אחרת נשאר תושב חוץ לעיר (2)
+            if ($cityResult) {
+                // לעיר יש הגדרת תושבות - השתמש בערך מהטבלה
+                $residency = (int)$cityResult['residencyType'];
+                $reason = 'הגדרת תושבות לפי עיר';
             }
         }
-        // אם למדינה אין הגדרת תושבות = חו"ל (3)
+
+        // שלב 2: בדיקת מדינה (רק אם לא נמצא לעיר)
+        if ($residency == 3 && $countryId) {
+            $stmt = $conn->prepare("
+                SELECT residencyType
+                FROM residency_settings
+                WHERE countryId = :countryId AND (cityId IS NULL OR cityId = '') AND isActive = 1
+                LIMIT 1
+            ");
+            $stmt->execute(['countryId' => $countryId]);
+            $countryResult = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($countryResult) {
+                // למדינה יש הגדרת תושבות - השתמש בערך מהטבלה
+                $residency = (int)$countryResult['residencyType'];
+                $reason = 'הגדרת תושבות לפי מדינה';
+            }
+        }
+        // אם אין הגדרות = חו"ל (3)
     }
 
     // תרגום לתווית

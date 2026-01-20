@@ -94,11 +94,23 @@
     }
 
     /**
-     * המרת סוג תושבות מטקסט למספר
-     * @param string $residencyType
+     * המרת סוג תושבות למספר
+     * תומך גם בערכים מספריים וגם בטקסטואליים (לאחור תאימות)
+     * @param mixed $residencyType
      * @return int
      */
     function mapResidencyTypeToValue($residencyType) {
+        // אם כבר מספר - החזר אותו
+        if (is_numeric($residencyType)) {
+            $type = (int)$residencyType;
+            // וודא שהערך בטווח תקין (1-3)
+            if ($type >= 1 && $type <= 3) {
+                return $type;
+            }
+            return 3; // ברירת מחדל - חו"ל
+        }
+
+        // תמיכה בערכים טקסטואליים ישנים
         switch($residencyType) {
             case 'jerusalem_area':
                 return 1; // תושב העיר (ירושלים והסביבה)

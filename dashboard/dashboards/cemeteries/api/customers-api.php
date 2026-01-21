@@ -423,18 +423,18 @@
                 $currentSpouse = $_GET['currentSpouse'] ?? ''; // unicId של בן הזוג הנוכחי (תמיד להציג)
                 $limit = isset($_GET['limit']) ? min((int)$_GET['limit'], 100) : 50;
 
-                $sql = "SELECT unicId, firstName, lastName, numId, maritalStatus
+                $sql = "SELECT unicId, firstName, lastName, numId, maritalStatus, spouse
                         FROM customers
                         WHERE isActive = 1";
                 $params = [];
 
-                // תנאי בסיס: רק רווקים (1) או ללא מצב משפחתי (NULL)
+                // תנאי בסיס: רק לקוחות ללא בן זוג מקושר (spouse ריק)
                 // או בן הזוג הנוכחי (תמיד להציג)
                 if ($currentSpouse) {
-                    $sql .= " AND (maritalStatus IS NULL OR maritalStatus = '' OR maritalStatus = '1' OR unicId = :currentSpouse)";
+                    $sql .= " AND ((spouse IS NULL OR spouse = '') OR unicId = :currentSpouse)";
                     $params['currentSpouse'] = $currentSpouse;
                 } else {
-                    $sql .= " AND (maritalStatus IS NULL OR maritalStatus = '' OR maritalStatus = '1')";
+                    $sql .= " AND (spouse IS NULL OR spouse = '')";
                 }
 
                 // הסר את הלקוח הנוכחי

@@ -507,3 +507,41 @@ body.popup-detached-window .popup-detached-content {
 .popup-fade-out {
     animation: popup-minimize 0.3s ease forwards;
 }
+
+/* ========================================
+   Mobile Responsive
+======================================== */
+
+@media screen and (max-width: 768px) {
+    /* הסתר כפתורי מסך מלא ופתיחה בלשונית חדשה במובייל */
+    .popup-maximize,
+    .popup-detach {
+        display: none !important;
+    }
+
+    /* פופאפ תמיד במסך מלא במובייל */
+    .popup-container {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        max-width: none !important;
+        max-height: none !important;
+        border-radius: 0 !important;
+        transform: none !important;
+    }
+
+    /* הסתר ידית שינוי גודל במובייל */
+    .popup-resize-handle {
+        display: none !important;
+    }
+
+    /* כותרת פופאפ במובייל */
+    .popup-header {
+        border-radius: 0;
+        cursor: default !important;
+    }
+}

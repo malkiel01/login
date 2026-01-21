@@ -797,6 +797,17 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                 isLoadingHierarchyFromCustomer = true;
             }
 
+            // השבתת כל השדות והצגת סימן טעינה
+            const hierarchySelects = ['cemeterySelect', 'blockSelect', 'plotSelect', 'rowSelect', 'areaGraveSelect', 'graveSelect'];
+            hierarchySelects.forEach(id => {
+                const select = document.getElementById(id);
+                select.disabled = true;
+                // לא מנקים את cemeterySelect כי האופציות שלו כבר טעונות
+                if (id !== 'cemeterySelect') {
+                    select.innerHTML = '<option value="">טוען...</option>';
+                }
+            });
+
             try {
                 // שימוש ב-getDetails כדי לקבל את כל ההיררכיה (cemeteryId, blockId, plotId, lineId)
                 const response = await fetch(`/dashboard/dashboards/cemeteries/api/graves-api.php?action=getDetails&id=${graveId}`);
@@ -859,6 +870,10 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             } catch (error) {
                 console.error('Error loading grave hierarchy:', error);
             } finally {
+                // הפעלת כל השדות מחדש
+                hierarchySelects.forEach(id => {
+                    document.getElementById(id).disabled = false;
+                });
                 // שחרר את הדגל בסיום
                 if (!updateCustomer) {
                     isLoadingHierarchyFromCustomer = false;
@@ -901,20 +916,32 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
                     // טען את הלקוח מהרכישה - רק אם updateCustomer=true
                     if (updateCustomer && purchase.clientId) {
-                        const customerResponse = await fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?action=get&id=${purchase.clientId}`);
-                        const customerResult = await customerResponse.json();
+                        // הצגת סימן טעינה בשדה הלקוח
+                        const customerDisplayText = document.getElementById('customerDisplayText');
+                        const customerBtn = document.getElementById('selectCustomerBtn');
+                        customerDisplayText.textContent = 'טוען...';
+                        if (customerBtn) customerBtn.disabled = true;
 
-                        if (customerResult.success && customerResult.data) {
-                            const customer = customerResult.data;
-                            document.getElementById('clientId').value = customer.unicId;
+                        try {
+                            const customerResponse = await fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?action=get&id=${purchase.clientId}`);
+                            const customerResult = await customerResponse.json();
 
-                            const status = parseInt(customer.statusCustomer) || 1;
-                            let statusText = '';
-                            if (status === 2) statusText = ' [יש רכישה]';
-                            document.getElementById('customerDisplayText').textContent =
-                                `${customer.firstName} ${customer.lastName} (${customer.numId || '-'})${statusText}`;
+                            if (customerResult.success && customerResult.data) {
+                                const customer = customerResult.data;
+                                document.getElementById('clientId').value = customer.unicId;
 
-                            console.log('Auto-filled customer from purchase:', customer.unicId);
+                                const status = parseInt(customer.statusCustomer) || 1;
+                                let statusText = '';
+                                if (status === 2) statusText = ' [יש רכישה]';
+                                customerDisplayText.textContent =
+                                    `${customer.firstName} ${customer.lastName} (${customer.numId || '-'})${statusText}`;
+
+                                console.log('Auto-filled customer from purchase:', customer.unicId);
+                            } else {
+                                customerDisplayText.textContent = '-- בחר נפטר/ת --';
+                            }
+                        } finally {
+                            if (customerBtn) customerBtn.disabled = false;
                         }
                     } else if (!updateCustomer) {
                         console.log('Skipping customer update (came from customer selection)');

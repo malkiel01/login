@@ -862,14 +862,64 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             }
         });
 
+        // חיפוש fuzzy - מאפשר דילוגים על תווים
+        function fuzzyMatch(text, search) {
+            if (!search) return true;
+            if (!text) return false;
+
+            text = text.toLowerCase();
+            search = search.toLowerCase();
+
+            // בדיקה רגילה קודם
+            if (text.includes(search)) return true;
+
+            // fuzzy: כל תו בחיפוש צריך להופיע בטקסט בסדר
+            let textIndex = 0;
+            for (let i = 0; i < search.length; i++) {
+                const char = search[i];
+                // דלג על רווחים בחיפוש
+                if (char === ' ') continue;
+
+                // חפש את התו הבא בטקסט
+                const foundIndex = text.indexOf(char, textIndex);
+                if (foundIndex === -1) return false;
+                textIndex = foundIndex + 1;
+            }
+            return true;
+        }
+
         // סינון אפשרויות בחיפוש
         function filterSpouseOptions() {
-            const searchTerm = document.getElementById('spouseSearch').value.toLowerCase();
+            const searchTerm = document.getElementById('spouseSearch').value.trim();
+
+            if (!searchTerm) {
+                renderSpouseOptions(allAvailableSpouses);
+                return;
+            }
+
             const filtered = allAvailableSpouses.filter(spouse => {
-                const fullName = `${spouse.firstName || ''} ${spouse.lastName || ''}`.toLowerCase();
-                const numId = (spouse.numId || '').toLowerCase();
-                return fullName.includes(searchTerm) || numId.includes(searchTerm);
+                const firstName = spouse.firstName || '';
+                const lastName = spouse.lastName || '';
+                const numId = spouse.numId || '';
+
+                // חיפוש לפי מספר זיהוי
+                if (fuzzyMatch(numId, searchTerm)) return true;
+
+                // חיפוש לפי שם פרטי בלבד
+                if (fuzzyMatch(firstName, searchTerm)) return true;
+
+                // חיפוש לפי שם משפחה בלבד
+                if (fuzzyMatch(lastName, searchTerm)) return true;
+
+                // חיפוש לפי שם פרטי + משפחה
+                if (fuzzyMatch(`${firstName} ${lastName}`, searchTerm)) return true;
+
+                // חיפוש לפי שם משפחה + פרטי
+                if (fuzzyMatch(`${lastName} ${firstName}`, searchTerm)) return true;
+
+                return false;
             });
+
             renderSpouseOptions(filtered);
         }
 

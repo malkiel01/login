@@ -40,7 +40,7 @@ try {
                    b.blockNameHe,
                    c.cemeteryNameHe
             FROM areaGraves ag
-            LEFT JOIN `lines` r ON ag.lineId = r.unicId
+            LEFT JOIN `rows` r ON ag.lineId = r.unicId
             LEFT JOIN plots p ON r.plotId = p.unicId
             LEFT JOIN blocks b ON p.blockId = b.unicId
             LEFT JOIN cemeteries c ON b.cemeteryId = c.unicId
@@ -80,7 +80,7 @@ try {
                 p.plotNameHe,
                 b.blockNameHe,
                 c.cemeteryNameHe
-            FROM `lines` r
+            FROM `rows` r
             LEFT JOIN plots p ON r.plotId = p.unicId
             LEFT JOIN blocks b ON p.blockId = b.unicId
             LEFT JOIN cemeteries c ON b.cemeteryId = c.unicId
@@ -93,7 +93,7 @@ try {
         if ($hierarchyPath && $hierarchyPath['plotId']) {
             $stmt = $conn->prepare("
                 SELECT unicId, lineNameHe, serialNumber
-                FROM `lines`
+                FROM `rows`
                 WHERE plotId = ? AND isActive = 1
                 ORDER BY serialNumber, lineNameHe
             ");

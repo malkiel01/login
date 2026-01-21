@@ -90,9 +90,10 @@ try {
         $graves = $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // טען היררכיה אם יש parentId - ואמת שהוא קיים בטבלת rows
+    // טען היררכיה אם יש parentId - בדוק אם זה row או plot
     $validatedLineId = null;
     if ($parentId) {
+        // נסה קודם כשורה (row_xxx)
         $stmt = $conn->prepare("
             SELECT
                 r.unicId,
@@ -112,23 +113,48 @@ try {
         $stmt->execute([$parentId]);
         $hierarchyPath = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // אם נמצא - ה-parentId תקין
+        // אם נמצא כשורה - ה-parentId תקין
         if ($hierarchyPath) {
             $validatedLineId = $parentId;
             $selectedCemeteryId = $hierarchyPath['cemeteryId'];
             $selectedBlockId = $hierarchyPath['blockId'];
             $selectedPlotId = $hierarchyPath['plotId'];
+        } else {
+            // אם לא נמצא כשורה, נסה כחלקה (plot_xxx)
+            $stmt = $conn->prepare("
+                SELECT
+                    p.unicId as plotId,
+                    p.plotNameHe,
+                    p.blockId,
+                    b.blockNameHe,
+                    b.cemeteryId,
+                    c.cemeteryNameHe
+                FROM plots p
+                LEFT JOIN blocks b ON p.blockId = b.unicId
+                LEFT JOIN cemeteries c ON b.cemeteryId = c.unicId
+                WHERE p.unicId = ? AND p.isActive = 1
+            ");
+            $stmt->execute([$parentId]);
+            $plotHierarchy = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($plotHierarchy) {
+                // מצאנו חלקה - מלא את ההיררכיה
+                $selectedCemeteryId = $plotHierarchy['cemeteryId'];
+                $selectedBlockId = $plotHierarchy['blockId'];
+                $selectedPlotId = $plotHierarchy['plotId'];
+                $hierarchyPath = $plotHierarchy; // לטעינת השורות
+            }
         }
 
-        // טען שורות מאותה חלקה
-        if ($hierarchyPath && $hierarchyPath['plotId']) {
+        // טען שורות מאותה חלקה (אם יש חלקה נבחרת)
+        if ($selectedPlotId) {
             $stmt = $conn->prepare("
                 SELECT unicId, lineNameHe, serialNumber
                 FROM `rows`
                 WHERE plotId = ? AND isActive = 1
                 ORDER BY serialNumber, lineNameHe
             ");
-            $stmt->execute([$hierarchyPath['plotId']]);
+            $stmt->execute([$selectedPlotId]);
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $rows[$row['unicId']] = $row['lineNameHe'] ?: "שורה {$row['serialNumber']}";
             }

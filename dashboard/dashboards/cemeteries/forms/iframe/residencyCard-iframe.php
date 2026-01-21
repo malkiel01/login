@@ -366,5 +366,14 @@ $locationStr = implode(' - ', $locationParts) ?: 'כל המיקומים';
             }
         }
     </script>
+    <!-- סקריפט לגרירת סקשנים -->
+    <script src="/dashboard/dashboards/cemeteries/forms/sortable-sections.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof SortableSections !== 'undefined') {
+                SortableSections.init('residencySortableSections', 'residencyCard');
+            }
+        });
+    </script>
 </body>
 </html>

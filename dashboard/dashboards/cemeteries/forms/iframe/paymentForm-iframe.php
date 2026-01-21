@@ -233,7 +233,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
         <form id="paymentForm" method="POST">
             <input type="hidden" name="id" value="<?= htmlspecialchars($itemId ?? '') ?>">
 
-            <div class="sortable-sections">
+            <div class="sortable-sections" id="paymentFormSortableSections">
                 <!-- סקשן 1: הגדרת תשלום -->
                 <div class="sortable-section" data-section="payment-info">
                     <div class="section-drag-handle" style="background: linear-gradient(135deg, #dbeafe, #bfdbfe);">
@@ -530,6 +530,15 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                 window.parent.loadData();
             }
         }
+    </script>
+    <!-- סקריפט לגרירת סקשנים -->
+    <script src="/dashboard/dashboards/cemeteries/forms/sortable-sections.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof SortableSections !== 'undefined') {
+                SortableSections.init('paymentFormSortableSections', 'paymentForm');
+            }
+        });
     </script>
 </body>
 </html>

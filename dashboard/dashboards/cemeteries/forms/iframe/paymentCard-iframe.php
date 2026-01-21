@@ -136,7 +136,7 @@ $serialId = htmlspecialchars($payment['serialPaymentId'] ?? $payment['unicId']);
     </style>
 </head>
 <body>
-    <div class="sortable-sections">
+    <div class="sortable-sections" id="paymentCardSortableSections">
         <!-- פרטי התשלום -->
         <div class="sortable-section section-payment">
             <div class="section-drag-handle" style="background: linear-gradient(135deg, #dcfce7, #bbf7d0);">
@@ -242,6 +242,15 @@ $serialId = htmlspecialchars($payment['serialPaymentId'] ?? $payment['unicId']);
                 window.parent.FormHandler.openForm('payment', null, id);
             }
         }
+    </script>
+    <!-- סקריפט לגרירת סקשנים -->
+    <script src="/dashboard/dashboards/cemeteries/forms/sortable-sections.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof SortableSections !== 'undefined') {
+                SortableSections.init('paymentCardSortableSections', 'paymentCard');
+            }
+        });
     </script>
 </body>
 </html>

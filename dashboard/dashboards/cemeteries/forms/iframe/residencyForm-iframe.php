@@ -285,7 +285,7 @@ $citiesJson = json_encode($allCities);
         <form id="residencyForm" novalidate>
             <input type="hidden" name="unicId" value="<?= htmlspecialchars($residency['unicId'] ?? '') ?>">
 
-            <div class="sortable-sections">
+            <div class="sortable-sections" id="residencyFormSortableSections">
                 <!-- סקשן 1: פרטי חוק התושבות -->
                 <div class="sortable-section" data-section="details">
                     <div class="section-drag-handle" style="background: linear-gradient(135deg, #dbeafe, #bfdbfe);">
@@ -551,6 +551,15 @@ $citiesJson = json_encode($allCities);
                 PopupAPI.close();
             }
         }
+    </script>
+    <!-- סקריפט לגרירת סקשנים -->
+    <script src="/dashboard/dashboards/cemeteries/forms/sortable-sections.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof SortableSections !== 'undefined') {
+                SortableSections.init('residencyFormSortableSections', 'residencyForm');
+            }
+        });
     </script>
 </body>
 </html>

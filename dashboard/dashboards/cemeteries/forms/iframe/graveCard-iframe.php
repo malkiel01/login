@@ -140,7 +140,7 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
     </style>
 </head>
 <body>
-    <div class="sortable-sections">
+    <div class="sortable-sections" id="graveCardSortableSections">
         <!-- פרטי הקבר -->
         <div class="sortable-section section-grave">
             <div class="section-drag-handle" style="background: linear-gradient(135deg, #ede9fe, #c4b5fd);">
@@ -303,6 +303,15 @@ $purchaseStatusColors = [1 => '#3b82f6', 2 => '#10b981', 3 => '#64748b', 4 => '#
                 window.parent.PopupManager.create({ id: 'burialCard-' + id, type: 'iframe', src: '/dashboard/dashboards/cemeteries/forms/iframe/burialCard-iframe.php?itemId=' + id, title: 'כרטיס קבורה', width: 1200, height: 700 });
             } else if (window.parent && window.parent.FormHandler) window.parent.FormHandler.openForm('burialCard', null, id);
         }
+    </script>
+    <!-- סקריפט לגרירת סקשנים -->
+    <script src="/dashboard/dashboards/cemeteries/forms/sortable-sections.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof SortableSections !== 'undefined') {
+                SortableSections.init('graveCardSortableSections', 'graveCard');
+            }
+        });
     </script>
 </body>
 </html>

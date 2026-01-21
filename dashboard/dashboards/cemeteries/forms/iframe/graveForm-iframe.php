@@ -281,7 +281,7 @@ $graveLocations = [
     <form id="graveForm">
         <input type="hidden" name="unicId" value="<?= htmlspecialchars($grave['unicId'] ?? '') ?>">
 
-        <div class="sortable-sections">
+        <div class="sortable-sections" id="graveSortableSections">
             <!-- פרטי הקבר -->
             <div class="sortable-section section-grave">
                 <div class="section-drag-handle">
@@ -551,6 +551,15 @@ $graveLocations = [
                 showAlert('error', 'שגיאה בתקשורת עם השרת');
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = originalText;
+            }
+        });
+    </script>
+    <!-- סקריפט לגרירת סקשנים -->
+    <script src="/dashboard/dashboards/cemeteries/forms/sortable-sections.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof SortableSections !== 'undefined') {
+                SortableSections.init('graveSortableSections', 'graveForm');
             }
         });
     </script>

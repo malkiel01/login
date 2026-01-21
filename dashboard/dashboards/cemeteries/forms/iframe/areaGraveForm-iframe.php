@@ -573,7 +573,7 @@ $gravesJson = json_encode($graves, JSON_UNESCAPED_UNICODE);
             <input type="hidden" name="unicId" value="<?= htmlspecialchars($areaGrave['unicId'] ?? '') ?>">
             <input type="hidden" name="lineId" id="lineId" value="<?= htmlspecialchars($validatedLineId ?? $areaGrave['lineId'] ?? '') ?>">
 
-            <div class="sortable-sections">
+            <div class="sortable-sections" id="areaGraveSortableSections">
                 <!-- סקשן 1: פרטי אחוזת קבר -->
                 <div class="sortable-section" data-section="details">
                     <div class="section-drag-handle" style="background: linear-gradient(135deg, #dbeafe, #bfdbfe);">
@@ -1292,6 +1292,17 @@ $gravesJson = json_encode($graves, JSON_UNESCAPED_UNICODE);
                 showAlert('שגיאה ביצירת השורה', 'error');
             }
         }
+    </script>
+
+    <!-- סקריפט לגרירת סקשנים -->
+    <script src="/dashboard/dashboards/cemeteries/forms/sortable-sections.js"></script>
+    <script>
+        // אתחול גרירת סקשנים
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof SortableSections !== 'undefined') {
+                SortableSections.init('areaGraveSortableSections', 'areaGraveForm');
+            }
+        });
     </script>
 
     <!-- מודאל הוספת שורה -->

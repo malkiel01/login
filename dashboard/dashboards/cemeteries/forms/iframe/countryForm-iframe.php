@@ -216,7 +216,7 @@ $pageTitle = $isEditMode ? 'עריכת מדינה' : 'הוספת מדינה חד
         <form id="countryForm" novalidate>
             <input type="hidden" name="unicId" value="<?= htmlspecialchars($country['unicId'] ?? '') ?>">
 
-            <div class="sortable-sections">
+            <div class="sortable-sections" id="countryFormSortableSections">
                 <!-- סקשן: פרטי המדינה -->
                 <div class="sortable-section" data-section="details">
                     <div class="section-drag-handle" style="background: linear-gradient(135deg, #dbeafe, #bfdbfe);">
@@ -358,6 +358,15 @@ $pageTitle = $isEditMode ? 'עריכת מדינה' : 'הוספת מדינה חד
                 PopupAPI.close();
             }
         }
+    </script>
+    <!-- סקריפט לגרירת סקשנים -->
+    <script src="/dashboard/dashboards/cemeteries/forms/sortable-sections.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof SortableSections !== 'undefined') {
+                SortableSections.init('countryFormSortableSections', 'countryForm');
+            }
+        });
     </script>
 </body>
 </html>

@@ -298,7 +298,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
         <form id="burialForm" novalidate>
             <input type="hidden" name="unicId" value="<?= htmlspecialchars($burial['unicId'] ?? '') ?>">
 
-            <div class="sortable-sections">
+            <div class="sortable-sections" id="burialFormSortableSections">
                 <!-- סקשן 1: פרטי נפטר -->
                 <div class="sortable-section" data-section="deceased">
                     <div class="section-drag-handle" style="background: linear-gradient(135deg, #fee2e2, #fecaca);">
@@ -1399,6 +1399,15 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
         function uploadDocument() {
             alert('פונקציית העלאת מסמכים תתווסף בהמשך');
         }
+    </script>
+    <!-- סקריפט לגרירת סקשנים -->
+    <script src="/dashboard/dashboards/cemeteries/forms/sortable-sections.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof SortableSections !== 'undefined') {
+                SortableSections.init('burialFormSortableSections', 'burialForm');
+            }
+        });
     </script>
 </body>
 </html>

@@ -291,7 +291,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
         <form id="customerForm" novalidate>
             <input type="hidden" name="unicId" value="<?= htmlspecialchars($customer['unicId'] ?? '') ?>">
 
-            <div class="sortable-sections">
+            <div class="sortable-sections" id="customerFormSortableSections">
                 <!-- סקשן 1: פרטים אישיים -->
                 <div class="sortable-section" data-section="personal">
                     <div class="section-drag-handle" style="background: linear-gradient(135deg, #dbeafe, #bfdbfe);">
@@ -1063,6 +1063,15 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                 }
             }
         }
+    </script>
+    <!-- סקריפט לגרירת סקשנים -->
+    <script src="/dashboard/dashboards/cemeteries/forms/sortable-sections.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof SortableSections !== 'undefined') {
+                SortableSections.init('customerFormSortableSections', 'customerForm');
+            }
+        });
     </script>
 </body>
 </html>

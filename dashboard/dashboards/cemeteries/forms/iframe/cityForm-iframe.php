@@ -244,7 +244,7 @@ $pageTitle = $isEditMode ? 'עריכת עיר' : 'הוספת עיר חדשה';
         <form id="cityForm" novalidate>
             <input type="hidden" name="unicId" value="<?= htmlspecialchars($city['unicId'] ?? '') ?>">
 
-            <div class="sortable-sections">
+            <div class="sortable-sections" id="cityFormSortableSections">
                 <!-- סקשן: פרטי העיר -->
                 <div class="sortable-section" data-section="details">
                     <div class="section-drag-handle" style="background: linear-gradient(135deg, #dcfce7, #bbf7d0);">
@@ -410,6 +410,15 @@ $pageTitle = $isEditMode ? 'עריכת עיר' : 'הוספת עיר חדשה';
                 PopupAPI.close();
             }
         }
+    </script>
+    <!-- סקריפט לגרירת סקשנים -->
+    <script src="/dashboard/dashboards/cemeteries/forms/sortable-sections.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof SortableSections !== 'undefined') {
+                SortableSections.init('cityFormSortableSections', 'cityForm');
+            }
+        });
     </script>
 </body>
 </html>

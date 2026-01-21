@@ -351,7 +351,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
         <form id="purchaseForm" novalidate>
             <input type="hidden" name="unicId" value="<?= htmlspecialchars($purchase['unicId'] ?? '') ?>">
 
-            <div class="sortable-sections">
+            <div class="sortable-sections" id="purchaseFormSortableSections">
                 <!-- סקשן 1: פרטי לקוח -->
                 <div class="sortable-section" data-section="customer">
                     <div class="section-drag-handle" style="background: linear-gradient(135deg, #dbeafe, #bfdbfe);">
@@ -1774,6 +1774,15 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             };
             document.head.appendChild(script);
         }
+    </script>
+    <!-- סקריפט לגרירת סקשנים -->
+    <script src="/dashboard/dashboards/cemeteries/forms/sortable-sections.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof SortableSections !== 'undefined') {
+                SortableSections.init('purchaseFormSortableSections', 'purchaseForm');
+            }
+        });
     </script>
 </body>
 </html>

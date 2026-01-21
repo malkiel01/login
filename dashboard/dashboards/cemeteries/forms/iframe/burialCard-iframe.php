@@ -138,7 +138,7 @@ $genderName = $genderNames[$burial['deceasedGender'] ?? ''] ?? '-';
     </style>
 </head>
 <body>
-    <div class="sortable-sections">
+    <div class="sortable-sections" id="burialCardSortableSections">
         <!-- פרטי קבורה -->
         <div class="sortable-section section-burial">
             <div class="section-drag-handle" style="background: linear-gradient(135deg, #fef3c7, #fde68a);">
@@ -291,6 +291,15 @@ $genderName = $genderNames[$burial['deceasedGender'] ?? ''] ?? '-';
                 window.parent.PopupManager.create({ id: 'purchaseCard-' + id, type: 'iframe', src: '/dashboard/dashboards/cemeteries/forms/iframe/purchaseCard-iframe.php?itemId=' + id, title: 'כרטיס רכישה', width: 1200, height: 700 });
             } else if (window.parent && window.parent.FormHandler) window.parent.FormHandler.openForm('purchaseCard', null, id);
         }
+    </script>
+    <!-- סקריפט לגרירת סקשנים -->
+    <script src="/dashboard/dashboards/cemeteries/forms/sortable-sections.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof SortableSections !== 'undefined') {
+                SortableSections.init('burialCardSortableSections', 'burialCard');
+            }
+        });
     </script>
 </body>
 </html>

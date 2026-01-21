@@ -132,7 +132,7 @@ $graveStatusColor = $graveStatusColors[$graveStatus] ?? '#64748b';
     </style>
 </head>
 <body>
-    <div class="sortable-sections">
+    <div class="sortable-sections" id="purchaseCardSortableSections">
         <!-- פרטי רכישה -->
         <div class="sortable-section section-purchase">
             <div class="section-drag-handle" style="background: linear-gradient(135deg, #dcfce7, #bbf7d0);">
@@ -263,6 +263,15 @@ $graveStatusColor = $graveStatusColors[$graveStatus] ?? '#64748b';
             } else if (window.parent && window.parent.FormHandler) window.parent.FormHandler.openForm('burialCard', null, id);
         }
         function addBurial(purchaseId, graveId) { if (window.parent && window.parent.FormHandler) window.parent.FormHandler.openForm('burial', null, null); }
+    </script>
+    <!-- סקריפט לגרירת סקשנים -->
+    <script src="/dashboard/dashboards/cemeteries/forms/sortable-sections.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof SortableSections !== 'undefined') {
+                SortableSections.init('purchaseCardSortableSections', 'purchaseCard');
+            }
+        });
     </script>
 </body>
 </html>

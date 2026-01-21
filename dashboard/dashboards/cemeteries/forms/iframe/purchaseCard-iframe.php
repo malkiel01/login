@@ -71,7 +71,7 @@ $currentStatus = $purchase['purchaseStatus'] ?? 1;
 $statusName = $purchaseStatusNames[$currentStatus] ?? 'לא ידוע';
 $statusColor = $purchaseStatusColors[$currentStatus] ?? '#64748b';
 
-$buyerStatusNames = [1 => 'רוכש לעצמו', 2 => 'רוכש לאחר'];
+$buyerStatusNames = [1 => 'רכישה בחיים', 2 => 'רכישה לאחר פטירה'];
 
 $graveStatusNames = [1 => 'פנוי', 2 => 'תפוס', 3 => 'שמור', 4 => 'לא פעיל'];
 $graveStatusColors = [1 => '#10b981', 2 => '#ef4444', 3 => '#f59e0b', 4 => '#64748b'];

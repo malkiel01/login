@@ -1993,10 +1993,10 @@ return [
                     ['value' => 3, 'label' => 'שולם']
                 ]
             ],
-            ['name' => 'buyerStatus', 'label' => 'סוג רוכש', 'type' => 'select', 'matchType' => ['exact'],
+            ['name' => 'buyerStatus', 'label' => 'סוג רכישה', 'type' => 'select', 'matchType' => ['exact'],
                 'options' => [
-                    ['value' => 1, 'label' => 'רוכש לעצמו'],
-                    ['value' => 2, 'label' => 'רוכש לאחר']
+                    ['value' => 1, 'label' => 'רכישה בחיים'],
+                    ['value' => 2, 'label' => 'רכישה לאחר פטירה']
                 ]
             ],
             ['name' => 'cemeteryNameHe', 'label' => 'בית עלמין', 'type' => 'text', 'matchType' => ['exact', 'fuzzy']],
@@ -2013,8 +2013,8 @@ return [
         ],
         
         'buyerStatuses' => [
-            1 => ['text' => 'רוכש לעצמו', 'color' => '#10b981', 'class' => 'badge-success'],
-            2 => ['text' => 'רוכש לאחר', 'color' => '#3b82f6', 'class' => 'badge-info']
+            1 => ['text' => 'רכישה בחיים', 'color' => '#10b981', 'class' => 'badge-success'],
+            2 => ['text' => 'רכישה לאחר פטירה', 'color' => '#3b82f6', 'class' => 'badge-info']
         ],
         
         'api' => [

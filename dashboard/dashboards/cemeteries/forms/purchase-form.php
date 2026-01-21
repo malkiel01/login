@@ -47,10 +47,10 @@ $formType = basename(__FILE__, '.php'); // מזהה אוטומטי של סוג �
     $formBuilder->addCustomHTML('<div style="margin-bottom: 15px;">' . $smartCustomer->render() . '</div>');
 
     // הוספת שדה סטטוס רוכש
-    $formBuilder->addField('buyer_status', 'סטטוס רוכש', 'select', [
+    $formBuilder->addField('buyer_status', 'סוג רכישה', 'select', [
         'options' => [
-            1 => 'רוכש לעצמו',
-            2 => 'רוכש לאחר'
+            1 => 'רכישה בחיים',
+            2 => 'רכישה לאחר פטירה'
         ],
         'value' => $purchase['buyer_status'] ?? 1
     ]);

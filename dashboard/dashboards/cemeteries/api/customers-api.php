@@ -447,12 +447,27 @@
             // הוספת לקוח חדש
             case 'create':
                 $data = json_decode(file_get_contents('php://input'), true);
-                
+
                 // ולידציה
                 if (empty($data['firstName']) || empty($data['lastName'])) {
                     throw new Exception('שם פרטי ושם משפחה הם שדות חובה');
                 }
-                
+
+                // ולידציה של מצב משפחתי ובן/בת זוג
+                $maritalStatus = $data['maritalStatus'] ?? null;
+                $spouse = $data['spouse'] ?? null;
+                if ($spouse === '') $spouse = null;
+
+                // נשוי (2) - חייב בן זוג
+                if ($maritalStatus == 2 && empty($spouse)) {
+                    throw new Exception('כאשר מצב משפחתי הוא "נשוי/אה", יש לבחור בן/בת זוג');
+                }
+
+                // ריק או רווק (1) - אסור בן זוג
+                if ((empty($maritalStatus) || $maritalStatus == 1) && !empty($spouse)) {
+                    throw new Exception('לא ניתן לקשר בן/בת זוג למצב משפחתי ריק או רווק');
+                }
+
                 // בדיקת כפל תעודת זהות
                 if (!empty($data['numId'])) {
                     $stmt = $pdo->prepare("SELECT unicId FROM customers WHERE numId = :numId AND isActive = 1");
@@ -510,9 +525,32 @@
                 
                 $stmt = $pdo->prepare($sql);
                 $stmt->execute($params);
-                
+
                 $clientId = $pdo->lastInsertId();
-                
+
+                // ===== עדכון דו-כיווני של בן/בת זוג =====
+                if (!empty($data['spouse'])) {
+                    // קבע את מצב משפחתי לבן הזוג לפי המצב של הלקוח הנוכחי
+                    // אלמן (3) או גרוש (4) - העתק את אותו מצב לבן הזוג
+                    // אחרת - נשוי (2)
+                    $currentMaritalStatus = $data['maritalStatus'] ?? 2;
+                    $spouseMaritalStatus = in_array($currentMaritalStatus, [3, 4]) ? $currentMaritalStatus : 2;
+
+                    $updateSpouseStmt = $pdo->prepare("
+                        UPDATE customers
+                        SET maritalStatus = :maritalStatus,
+                            spouse = :currentCustomerId,
+                            updateDate = :updateDate
+                        WHERE unicId = :spouseId AND isActive = 1
+                    ");
+                    $updateSpouseStmt->execute([
+                        'maritalStatus' => $spouseMaritalStatus,
+                        'currentCustomerId' => $data['unicId'],
+                        'spouseId' => $data['spouse'],
+                        'updateDate' => date('Y-m-d H:i:s')
+                    ]);
+                }
+
                 echo json_encode([
                     'success' => true,
                     'message' => 'הלקוח נוסף בהצלחה',
@@ -525,14 +563,29 @@
                 if (!$id) {
                     throw new Exception('Customer ID is required');
                 }
-                
+
                 $data = json_decode(file_get_contents('php://input'), true);
-                
+
                 // ולידציה
                 if (empty($data['firstName']) || empty($data['lastName'])) {
                     throw new Exception('שם פרטי ושם משפחה הם שדות חובה');
                 }
-                
+
+                // ולידציה של מצב משפחתי ובן/בת זוג
+                $maritalStatus = $data['maritalStatus'] ?? null;
+                $spouse = $data['spouse'] ?? null;
+                if ($spouse === '') $spouse = null;
+
+                // נשוי (2) - חייב בן זוג
+                if ($maritalStatus == 2 && empty($spouse)) {
+                    throw new Exception('כאשר מצב משפחתי הוא "נשוי/אה", יש לבחור בן/בת זוג');
+                }
+
+                // ריק או רווק (1) - אסור בן זוג
+                if ((empty($maritalStatus) || $maritalStatus == 1) && !empty($spouse)) {
+                    throw new Exception('לא ניתן לקשר בן/בת זוג למצב משפחתי ריק או רווק');
+                }
+
                 // בדיקת כפל תעודת זהות - רק אם השתנה
                 if (!empty($data['numId'])) {
                     // קודם בדוק מה היה המספר הקודם
@@ -582,12 +635,65 @@
                 if (empty($updateFields)) {
                     throw new Exception('No fields to update');
                 }
-                
+
+                // ===== בדיקת בן/בת זוג קודמים לפני עדכון =====
+                $getOldSpouseStmt = $pdo->prepare("SELECT spouse FROM customers WHERE unicId = :id");
+                $getOldSpouseStmt->execute(['id' => $id]);
+                $oldSpouse = $getOldSpouseStmt->fetchColumn();
+
                 $sql = "UPDATE customers SET " . implode(', ', $updateFields) . " WHERE unicId = :id";
-                
+
                 $stmt = $pdo->prepare($sql);
                 $stmt->execute($params);
-                
+
+                // ===== עדכון דו-כיווני של בן/בת זוג =====
+
+                $newSpouse = $data['spouse'] ?? null;
+                // טיפול במחרוזת ריקה כ-null
+                if ($newSpouse === '') $newSpouse = null;
+
+                // אם בן/בת הזוג השתנה
+                if ($oldSpouse !== $newSpouse) {
+                    // 1. אם היה בן/בת זוג קודם - הסר את הקישור ההפוך ואפס מצב משפחתי
+                    if (!empty($oldSpouse)) {
+                        $removeOldLinkStmt = $pdo->prepare("
+                            UPDATE customers
+                            SET spouse = NULL,
+                                maritalStatus = NULL,
+                                updateDate = :updateDate
+                            WHERE unicId = :oldSpouseId AND spouse = :currentId AND isActive = 1
+                        ");
+                        $removeOldLinkStmt->execute([
+                            'oldSpouseId' => $oldSpouse,
+                            'currentId' => $id,
+                            'updateDate' => date('Y-m-d H:i:s')
+                        ]);
+                    }
+
+                    // 2. אם יש בן/בת זוג חדש - צור קישור הפוך
+                    if (!empty($newSpouse)) {
+                        // קבע את מצב משפחתי לבן הזוג לפי המצב של הלקוח הנוכחי
+                        // אלמן (3) או גרוש (4) - העתק את אותו מצב לבן הזוג
+                        // אחרת - נשוי (2)
+                        $currentMaritalStatus = $data['maritalStatus'] ?? 2;
+                        $spouseMaritalStatus = in_array($currentMaritalStatus, [3, 4]) ? $currentMaritalStatus : 2;
+
+                        $createNewLinkStmt = $pdo->prepare("
+                            UPDATE customers
+                            SET maritalStatus = :maritalStatus,
+                                spouse = :currentCustomerId,
+                                updateDate = :updateDate
+                            WHERE unicId = :spouseId AND isActive = 1
+                        ");
+                        $createNewLinkStmt->execute([
+                            'maritalStatus' => $spouseMaritalStatus,
+                            'currentCustomerId' => $id,
+                            'spouseId' => $newSpouse,
+                            'updateDate' => date('Y-m-d H:i:s')
+                        ]);
+                    }
+                }
+
                 echo json_encode([
                     'success' => true,
                     'message' => 'הלקוח עודכן בהצלחה'

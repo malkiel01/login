@@ -438,8 +438,22 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                             </div>
                             <div class="form-group">
                                 <label>בן/בת זוג</label>
-                                <input type="text" name="spouse" class="form-control"
-                                    value="<?= htmlspecialchars($customer['spouse'] ?? '') ?>">
+                                <div class="smart-select-container" id="spouseSelectContainer">
+                                    <input type="hidden" name="spouse" id="spouseId" value="<?= htmlspecialchars($customer['spouse'] ?? '') ?>">
+                                    <div class="smart-select-display" id="spouseDisplay" onclick="toggleSpouseDropdown()">
+                                        <span id="spouseDisplayText">טוען...</span>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </div>
+                                    <div class="smart-select-dropdown" id="spouseDropdown">
+                                        <div class="smart-select-search">
+                                            <input type="text" id="spouseSearch" placeholder="חיפוש לפי שם..." oninput="filterSpouseOptions()">
+                                        </div>
+                                        <div class="smart-select-option" data-value="" onclick="selectSpouse('', 'ללא בן/בת זוג')">
+                                            <span style="color: #94a3b8;">ללא בן/בת זוג</span>
+                                        </div>
+                                        <div id="spouseOptions"></div>
+                                    </div>
+                                </div>
                             </div>
                             <div class="form-group span-2">
                                 <label>הערות</label>
@@ -491,6 +505,11 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
         const customerId = '<?= addslashes($itemId ?? '') ?>';
         const customerCountryId = '<?= addslashes($customer['countryId'] ?? '') ?>';
         const customerCityId = '<?= addslashes($customer['cityId'] ?? '') ?>';
+        const currentSpouseId = '<?= addslashes($customer['spouse'] ?? '') ?>';
+
+        // משתנים גלובליים לבחירת בן/בת זוג
+        let allAvailableSpouses = [];
+        let selectedSpouseId = currentSpouseId;
 
         document.addEventListener('DOMContentLoaded', function() {
             // עדכון כותרת הפופאפ
@@ -501,6 +520,9 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             // טעינת מדינות
             loadCountries();
 
+            // טעינת אפשרויות בן/בת זוג
+            loadSpouseOptions();
+
             // האזנה לשינוי מדינה
             document.getElementById('countryId').addEventListener('change', function() {
                 loadCities(this.value);
@@ -510,6 +532,11 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             // האזנה לשינוי עיר
             document.getElementById('cityId').addEventListener('change', function() {
                 calculateResidency(); // חישוב תושבות בשינוי עיר
+            });
+
+            // האזנה לשינוי מצב משפחתי
+            document.getElementById('maritalStatus').addEventListener('change', function() {
+                handleMaritalStatusChange(this.value);
             });
 
             // האזנה לשינוי סוג זיהוי
@@ -707,6 +734,159 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             console.log('=== calculateResidency END ===');
         }
 
+        // ========== בחירת בן/בת זוג ==========
+
+        /**
+         * טיפול בשינוי מצב משפחתי - מקושר לשדה בן/בת זוג
+         * כללים:
+         * - ריק או רווק (1): לא ניתן לקשר בן זוג
+         * - נשוי (2): חובה לקשר בן זוג
+         * - אלמן (3) או גרוש (4): רשות לקשר בן זוג
+         */
+        function handleMaritalStatusChange(status) {
+            const spouseContainer = document.getElementById('spouseSelectContainer');
+            const spouseDisplay = document.getElementById('spouseDisplay');
+            const spouseLabel = spouseContainer.closest('.form-group').querySelector('label');
+
+            if (status === '' || status === '1') {
+                // ריק או רווק - לא ניתן לקשר בן זוג
+                spouseContainer.style.opacity = '0.5';
+                spouseContainer.style.pointerEvents = 'none';
+                spouseDisplay.style.cursor = 'not-allowed';
+                spouseLabel.innerHTML = 'בן/בת זוג <span style="color: #94a3b8; font-size: 11px;">(לא זמין)</span>';
+
+                // נקה את הבחירה אם יש
+                if (selectedSpouseId) {
+                    selectSpouse('', 'ללא בן/בת זוג');
+                }
+            } else if (status === '2') {
+                // נשוי - חובה לקשר בן זוג
+                spouseContainer.style.opacity = '1';
+                spouseContainer.style.pointerEvents = 'auto';
+                spouseDisplay.style.cursor = 'pointer';
+                spouseLabel.innerHTML = 'בן/בת זוג <span class="required">*</span>';
+            } else if (status === '3' || status === '4') {
+                // אלמן או גרוש - רשות לקשר בן זוג
+                spouseContainer.style.opacity = '1';
+                spouseContainer.style.pointerEvents = 'auto';
+                spouseDisplay.style.cursor = 'pointer';
+                spouseLabel.innerHTML = 'בן/בת זוג <span style="color: #94a3b8; font-size: 11px;">(אופציונלי)</span>';
+            }
+        }
+
+        // טעינת אפשרויות בן/בת זוג (רק לא נשואים וללא הלקוח הנוכחי)
+        async function loadSpouseOptions() {
+            try {
+                const response = await fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=list&limit=1000');
+                const result = await response.json();
+
+                if (result.success && result.data) {
+                    // סינון: רק לא נשואים (maritalStatus != 2) ולא הלקוח הנוכחי
+                    allAvailableSpouses = result.data.filter(c => {
+                        // לא הלקוח הנוכחי
+                        if (customerId && c.unicId === customerId) return false;
+                        // רק לא נשואים (maritalStatus != 2) או שזה בן הזוג הנוכחי
+                        if (c.maritalStatus == 2 && c.unicId !== currentSpouseId) return false;
+                        return true;
+                    });
+
+                    renderSpouseOptions(allAvailableSpouses);
+
+                    // הצגת בן/בת הזוג הנוכחי אם יש
+                    if (currentSpouseId) {
+                        const currentSpouse = result.data.find(c => c.unicId === currentSpouseId);
+                        if (currentSpouse) {
+                            const displayName = `${currentSpouse.firstName || ''} ${currentSpouse.lastName || ''}`.trim();
+                            document.getElementById('spouseDisplayText').textContent = displayName || currentSpouseId;
+                        } else {
+                            document.getElementById('spouseDisplayText').textContent = 'ללא בן/בת זוג';
+                        }
+                    } else {
+                        document.getElementById('spouseDisplayText').textContent = 'ללא בן/בת זוג';
+                    }
+
+                    // החל את כללי מצב המשפחתי
+                    const currentMaritalStatus = document.getElementById('maritalStatus').value;
+                    handleMaritalStatusChange(currentMaritalStatus);
+                }
+            } catch (error) {
+                console.error('Error loading spouse options:', error);
+                document.getElementById('spouseDisplayText').textContent = 'שגיאה בטעינה';
+            }
+        }
+
+        // רינדור אפשרויות בן/בת זוג
+        function renderSpouseOptions(spouses) {
+            const container = document.getElementById('spouseOptions');
+            container.innerHTML = '';
+
+            spouses.forEach(spouse => {
+                const displayName = `${spouse.firstName || ''} ${spouse.lastName || ''}`.trim();
+                const numId = spouse.numId || '';
+
+                const div = document.createElement('div');
+                div.className = 'smart-select-option' + (spouse.unicId === selectedSpouseId ? ' selected' : '');
+                div.dataset.value = spouse.unicId;
+                div.dataset.name = displayName.toLowerCase();
+                div.onclick = () => selectSpouse(spouse.unicId, displayName);
+
+                div.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>${displayName}</span>
+                        <span style="color: #94a3b8; font-size: 12px;">${numId}</span>
+                    </div>
+                `;
+
+                container.appendChild(div);
+            });
+        }
+
+        // פתיחה/סגירה של dropdown
+        function toggleSpouseDropdown() {
+            const dropdown = document.getElementById('spouseDropdown');
+            dropdown.classList.toggle('open');
+
+            if (dropdown.classList.contains('open')) {
+                document.getElementById('spouseSearch').focus();
+            }
+        }
+
+        // סגירת dropdown בלחיצה מחוץ
+        document.addEventListener('click', function(e) {
+            const container = document.getElementById('spouseSelectContainer');
+            if (container && !container.contains(e.target)) {
+                document.getElementById('spouseDropdown').classList.remove('open');
+            }
+        });
+
+        // סינון אפשרויות בחיפוש
+        function filterSpouseOptions() {
+            const searchTerm = document.getElementById('spouseSearch').value.toLowerCase();
+            const filtered = allAvailableSpouses.filter(spouse => {
+                const fullName = `${spouse.firstName || ''} ${spouse.lastName || ''}`.toLowerCase();
+                const numId = (spouse.numId || '').toLowerCase();
+                return fullName.includes(searchTerm) || numId.includes(searchTerm);
+            });
+            renderSpouseOptions(filtered);
+        }
+
+        // בחירת בן/בת זוג
+        function selectSpouse(unicId, displayName) {
+            selectedSpouseId = unicId;
+            document.getElementById('spouseId').value = unicId;
+            document.getElementById('spouseDisplayText').textContent = displayName;
+            document.getElementById('spouseDropdown').classList.remove('open');
+            document.getElementById('spouseSearch').value = '';
+
+            // הערה: מצב משפחתי כעת שולט על בחירת בן/בת הזוג, לא להיפך
+            // לכן אין שינוי אוטומטי של מצב משפחתי כאן
+
+            // סמן את האפשרות הנבחרת
+            document.querySelectorAll('#spouseOptions .smart-select-option, #spouseDropdown > .smart-select-option').forEach(opt => {
+                opt.classList.toggle('selected', opt.dataset.value === unicId);
+            });
+        }
+
         // שליחת הטופס
         document.getElementById('customerForm').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -717,6 +897,22 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
             if (!firstName || !lastName) {
                 showAlert('שם פרטי ושם משפחה הם שדות חובה', 'error');
+                return;
+            }
+
+            // ולידציה של מצב משפחתי ובן/בת זוג
+            const maritalStatus = document.getElementById('maritalStatus').value;
+            const spouseId = document.getElementById('spouseId').value;
+
+            if (maritalStatus === '2' && !spouseId) {
+                // נשוי אבל בלי בן זוג
+                showAlert('כאשר מצב משפחתי הוא "נשוי/אה", יש לבחור בן/בת זוג', 'error');
+                return;
+            }
+
+            if ((maritalStatus === '' || maritalStatus === '1') && spouseId) {
+                // רווק/ריק עם בן זוג - לא אמור לקרות בגלל ה-UI, אבל בדיקה נוספת
+                showAlert('לא ניתן לקשר בן/בת זוג למצב משפחתי ריק או רווק', 'error');
                 return;
             }
 

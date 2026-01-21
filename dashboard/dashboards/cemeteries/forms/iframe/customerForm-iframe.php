@@ -339,6 +339,25 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                                 <?= renderSelect('maritalStatus', $maritalOptions, $customer['maritalStatus'] ?? '') ?>
                             </div>
                             <div class="form-group">
+                                <label>בן/בת זוג</label>
+                                <div class="smart-select-container" id="spouseSelectContainer">
+                                    <input type="hidden" name="spouse" id="spouseId" value="<?= htmlspecialchars($customer['spouse'] ?? '') ?>">
+                                    <div class="smart-select-display" id="spouseDisplay" onclick="toggleSpouseDropdown()">
+                                        <span id="spouseDisplayText">טוען...</span>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </div>
+                                    <div class="smart-select-dropdown" id="spouseDropdown">
+                                        <div class="smart-select-search">
+                                            <input type="text" id="spouseSearch" placeholder="חיפוש לפי שם..." oninput="filterSpouseOptions()">
+                                        </div>
+                                        <div class="smart-select-option" data-value="" onclick="selectSpouse('', 'ללא בן/בת זוג')">
+                                            <span style="color: #94a3b8;">ללא בן/בת זוג</span>
+                                        </div>
+                                        <div id="spouseOptions"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
                                 <label>שם האב</label>
                                 <input type="text" name="nameFather" class="form-control"
                                     value="<?= htmlspecialchars($customer['nameFather'] ?? '') ?>">
@@ -435,25 +454,6 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                             <div class="form-group">
                                 <label>שיוך</label>
                                 <?= renderSelect('association', $associationOptions, $customer['association'] ?? 1) ?>
-                            </div>
-                            <div class="form-group">
-                                <label>בן/בת זוג</label>
-                                <div class="smart-select-container" id="spouseSelectContainer">
-                                    <input type="hidden" name="spouse" id="spouseId" value="<?= htmlspecialchars($customer['spouse'] ?? '') ?>">
-                                    <div class="smart-select-display" id="spouseDisplay" onclick="toggleSpouseDropdown()">
-                                        <span id="spouseDisplayText">טוען...</span>
-                                        <i class="fas fa-chevron-down"></i>
-                                    </div>
-                                    <div class="smart-select-dropdown" id="spouseDropdown">
-                                        <div class="smart-select-search">
-                                            <input type="text" id="spouseSearch" placeholder="חיפוש לפי שם..." oninput="filterSpouseOptions()">
-                                        </div>
-                                        <div class="smart-select-option" data-value="" onclick="selectSpouse('', 'ללא בן/בת זוג')">
-                                            <span style="color: #94a3b8;">ללא בן/בת זוג</span>
-                                        </div>
-                                        <div id="spouseOptions"></div>
-                                    </div>
-                                </div>
                             </div>
                             <div class="form-group span-2">
                                 <label>הערות</label>

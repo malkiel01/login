@@ -415,6 +415,68 @@
                     ]
                 ]);
                 break;
+
+            // חיפוש בני/בנות זוג זמינים - חיפוש בצד השרת
+            case 'search_spouses':
+                $search = $_GET['search'] ?? '';
+                $exclude = $_GET['exclude'] ?? ''; // unicId של הלקוח הנוכחי (לא להציג)
+                $currentSpouse = $_GET['currentSpouse'] ?? ''; // unicId של בן הזוג הנוכחי (תמיד להציג)
+                $limit = isset($_GET['limit']) ? min((int)$_GET['limit'], 100) : 50;
+
+                $sql = "SELECT unicId, firstName, lastName, numId, maritalStatus
+                        FROM customers
+                        WHERE isActive = 1";
+                $params = [];
+
+                // תנאי בסיס: רק רווקים (1) או ללא מצב משפחתי (NULL)
+                // או בן הזוג הנוכחי (תמיד להציג)
+                if ($currentSpouse) {
+                    $sql .= " AND (maritalStatus IS NULL OR maritalStatus = '' OR maritalStatus = '1' OR unicId = :currentSpouse)";
+                    $params['currentSpouse'] = $currentSpouse;
+                } else {
+                    $sql .= " AND (maritalStatus IS NULL OR maritalStatus = '' OR maritalStatus = '1')";
+                }
+
+                // הסר את הלקוח הנוכחי
+                if ($exclude) {
+                    $sql .= " AND unicId != :exclude";
+                    $params['exclude'] = $exclude;
+                }
+
+                // חיפוש לפי טקסט
+                if ($search) {
+                    $sql .= " AND (
+                        firstName LIKE :search1 OR
+                        lastName LIKE :search2 OR
+                        numId LIKE :search3 OR
+                        CONCAT(firstName, ' ', lastName) LIKE :search4 OR
+                        CONCAT(lastName, ' ', firstName) LIKE :search5
+                    )";
+                    $searchTerm = '%' . $search . '%';
+                    $params['search1'] = $searchTerm;
+                    $params['search2'] = $searchTerm;
+                    $params['search3'] = $searchTerm;
+                    $params['search4'] = $searchTerm;
+                    $params['search5'] = $searchTerm;
+                }
+
+                $sql .= " ORDER BY firstName, lastName LIMIT :limit";
+
+                $stmt = $pdo->prepare($sql);
+                foreach ($params as $key => $value) {
+                    $stmt->bindValue(':' . $key, $value);
+                }
+                $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+                $stmt->execute();
+
+                $spouses = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                echo json_encode([
+                    'success' => true,
+                    'data' => $spouses
+                ]);
+                break;
+
             // קבלת לקוח בודד
             case 'get':
                 if (!$id) {

@@ -777,13 +777,15 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             }
         }
 
-        // טעינת אפשרויות בן/בת זוג - דינמית עם פאגינציה
+        // משתנה לניהול timeout של חיפוש (debounce)
+        let spouseSearchTimeout = null;
+
+        // אתחול בחירת בן/בת זוג
         async function loadSpouseOptions() {
             try {
-                // שלב 1: הצגה מיידית של בן הזוג הנוכחי (אם יש)
+                // הצגה מיידית של בן הזוג הנוכחי (אם יש)
                 if (currentSpouseId) {
                     document.getElementById('spouseDisplayText').textContent = 'טוען...';
-                    // טען רק את בן הזוג הנוכחי - מהיר!
                     const spouseResponse = await fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?action=get&id=${currentSpouseId}`);
                     const spouseResult = await spouseResponse.json();
                     if (spouseResult.success && spouseResult.data) {
@@ -800,54 +802,76 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                 const currentMaritalStatus = document.getElementById('maritalStatus').value;
                 handleMaritalStatusChange(currentMaritalStatus);
 
-                // שלב 2: טעינת כל האופציות ברקע
-                let allCustomers = [];
-                let page = 1;
-                const limit = 2000;
-                let hasMore = true;
-
-                while (hasMore) {
-                    const response = await fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?action=list&limit=${limit}&page=${page}`);
-                    const result = await response.json();
-
-                    if (result.success && result.data) {
-                        allCustomers = allCustomers.concat(result.data);
-
-                        // בדוק אם יש עוד עמודים
-                        const total = result.pagination?.total || 0;
-                        const loaded = allCustomers.length;
-                        hasMore = loaded < total;
-                        page++;
-
-                        console.log(`Loaded page ${page - 1}: ${result.data.length} customers (total: ${loaded}/${total})`);
-                    } else {
-                        hasMore = false;
-                    }
-                }
-
-                console.log(`Total customers loaded: ${allCustomers.length}`);
-
-                // סינון: רק רווקים (1) או ללא מצב משפחתי מוגדר (null/empty/undefined)
-                allAvailableSpouses = allCustomers.filter(c => {
-                    // לא הלקוח הנוכחי
-                    if (customerId && c.unicId === customerId) return false;
-                    // אם זה בן הזוג הנוכחי - תמיד הצג
-                    if (c.unicId === currentSpouseId) return true;
-                    // רק רווקים (1) או ללא מצב משפחתי מוגדר (null/empty/undefined/0)
-                    const status = c.maritalStatus;
-                    // !status תופס: null, undefined, '', 0
-                    // status == 1 תופס: 1, '1'
-                    if (!status || status == 1) return true;
-                    return false;
-                });
-
-                console.log(`Available spouses after filter: ${allAvailableSpouses.length}`);
-
-                renderSpouseOptions(allAvailableSpouses);
+                // הצג הודעה ראשונית ב-dropdown
+                document.getElementById('spouseOptions').innerHTML = `
+                    <div style="padding: 15px; text-align: center; color: #64748b;">
+                        הקלד לחיפוש בן/בת זוג...
+                    </div>
+                `;
 
             } catch (error) {
                 console.error('Error loading spouse options:', error);
                 document.getElementById('spouseDisplayText').textContent = 'שגיאה בטעינה';
+            }
+        }
+
+        // חיפוש בני/בנות זוג בצד השרת
+        async function searchSpouses(searchTerm) {
+            const container = document.getElementById('spouseOptions');
+
+            // אם אין טקסט חיפוש - הצג הודעה
+            if (!searchTerm || searchTerm.length < 2) {
+                container.innerHTML = `
+                    <div style="padding: 15px; text-align: center; color: #64748b;">
+                        ${searchTerm.length === 0 ? 'הקלד לחיפוש בן/בת זוג...' : 'הקלד לפחות 2 תווים...'}
+                    </div>
+                `;
+                return;
+            }
+
+            // הצג אנימציית טעינה
+            container.innerHTML = `
+                <div style="padding: 15px; text-align: center; color: #64748b;">
+                    <i class="fas fa-spinner fa-spin"></i> מחפש...
+                </div>
+            `;
+
+            try {
+                const params = new URLSearchParams({
+                    action: 'search_spouses',
+                    search: searchTerm,
+                    exclude: customerId || '',
+                    currentSpouse: currentSpouseId || '',
+                    limit: 50
+                });
+
+                const response = await fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?${params}`);
+                const result = await response.json();
+
+                if (result.success && result.data) {
+                    if (result.data.length === 0) {
+                        container.innerHTML = `
+                            <div style="padding: 15px; text-align: center; color: #64748b;">
+                                לא נמצאו תוצאות
+                            </div>
+                        `;
+                    } else {
+                        renderSpouseOptions(result.data);
+                    }
+                } else {
+                    container.innerHTML = `
+                        <div style="padding: 15px; text-align: center; color: #dc2626;">
+                            שגיאה בחיפוש
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error searching spouses:', error);
+                container.innerHTML = `
+                    <div style="padding: 15px; text-align: center; color: #dc2626;">
+                        שגיאה בחיפוש
+                    </div>
+                `;
             }
         }
 
@@ -895,65 +919,19 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             }
         });
 
-        // חיפוש fuzzy - מאפשר דילוגים על תווים
-        function fuzzyMatch(text, search) {
-            if (!search) return true;
-            if (!text) return false;
-
-            text = text.toLowerCase();
-            search = search.toLowerCase();
-
-            // בדיקה רגילה קודם
-            if (text.includes(search)) return true;
-
-            // fuzzy: כל תו בחיפוש צריך להופיע בטקסט בסדר
-            let textIndex = 0;
-            for (let i = 0; i < search.length; i++) {
-                const char = search[i];
-                // דלג על רווחים בחיפוש
-                if (char === ' ') continue;
-
-                // חפש את התו הבא בטקסט
-                const foundIndex = text.indexOf(char, textIndex);
-                if (foundIndex === -1) return false;
-                textIndex = foundIndex + 1;
-            }
-            return true;
-        }
-
-        // סינון אפשרויות בחיפוש
+        // סינון אפשרויות בחיפוש - עם debounce לחיפוש בצד השרת
         function filterSpouseOptions() {
             const searchTerm = document.getElementById('spouseSearch').value.trim();
 
-            if (!searchTerm) {
-                renderSpouseOptions(allAvailableSpouses);
-                return;
+            // בטל חיפוש קודם אם יש
+            if (spouseSearchTimeout) {
+                clearTimeout(spouseSearchTimeout);
             }
 
-            const filtered = allAvailableSpouses.filter(spouse => {
-                const firstName = spouse.firstName || '';
-                const lastName = spouse.lastName || '';
-                const numId = spouse.numId || '';
-
-                // חיפוש לפי מספר זיהוי
-                if (fuzzyMatch(numId, searchTerm)) return true;
-
-                // חיפוש לפי שם פרטי בלבד
-                if (fuzzyMatch(firstName, searchTerm)) return true;
-
-                // חיפוש לפי שם משפחה בלבד
-                if (fuzzyMatch(lastName, searchTerm)) return true;
-
-                // חיפוש לפי שם פרטי + משפחה
-                if (fuzzyMatch(`${firstName} ${lastName}`, searchTerm)) return true;
-
-                // חיפוש לפי שם משפחה + פרטי
-                if (fuzzyMatch(`${lastName} ${firstName}`, searchTerm)) return true;
-
-                return false;
-            });
-
-            renderSpouseOptions(filtered);
+            // debounce - המתן 300ms לפני חיפוש
+            spouseSearchTimeout = setTimeout(() => {
+                searchSpouses(searchTerm);
+            }, 300);
         }
 
         // בחירת בן/בת זוג

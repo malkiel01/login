@@ -115,7 +115,8 @@ try {
             
             $stmt = $pdo->prepare("
                 SELECT g.*,
-                ag.areaGraveNameHe as area_grave_name
+                ag.areaGraveNameHe as area_grave_name,
+                ag.graveType
                 FROM graves g
                 LEFT JOIN areaGraves ag ON g.areaGraveId = ag.unicId
                 WHERE g.unicId = :id AND g.isActive = 1
@@ -432,7 +433,7 @@ try {
             
             // שליפת פרטי הקבר עם כל ההיררכיה
             $stmt = $pdo->prepare("
-                SELECT 
+                SELECT
                     g.*,
                     agv.areaGraveNameHe,
                     agv.lineNameHe,
@@ -442,9 +443,11 @@ try {
                     agv.cemeteryId,
                     agv.blockId,
                     agv.plotId,
-                    agv.lineId
+                    agv.lineId,
+                    ag.graveType
                 FROM graves g
                 LEFT JOIN areaGraves_view agv ON g.areaGraveId = agv.unicId
+                LEFT JOIN areaGraves ag ON g.areaGraveId = ag.unicId
                 WHERE g.unicId = :id
                 AND g.isActive = 1
             ");

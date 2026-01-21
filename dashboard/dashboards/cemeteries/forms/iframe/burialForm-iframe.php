@@ -743,8 +743,8 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                         console.log('Customer has purchase with grave:', purchase.graveId);
                         // שמור את ה-purchaseId
                         document.getElementById('purchaseId').value = purchase.unicId;
-                        // טען את ההיררכיה של הקבר
-                        await loadGraveHierarchy(purchase.graveId);
+                        // טען את ההיררכיה של הקבר - ללא עדכון לקוח (כי הלקוח כבר נבחר)
+                        await loadGraveHierarchy(purchase.graveId, false);
                     }
                 }
             } catch (error) {
@@ -785,8 +785,9 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
         }
 
         // טעינת היררכיה לפי קבר - ללא סינון (מכיל קבר ספציפי)
-        async function loadGraveHierarchy(graveId) {
-            console.log('loadGraveHierarchy started for:', graveId);
+        // updateCustomer: האם לעדכן את הלקוח מהרכישה (false כשבאים מבחירת לקוח)
+        async function loadGraveHierarchy(graveId, updateCustomer = true) {
+            console.log('loadGraveHierarchy started for:', graveId, 'updateCustomer:', updateCustomer);
             try {
                 // שימוש ב-getDetails כדי לקבל את כל ההיררכיה (cemeteryId, blockId, plotId, lineId)
                 const response = await fetch(`/dashboard/dashboards/cemeteries/api/graves-api.php?action=getDetails&id=${graveId}`);
@@ -799,7 +800,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                     // טעינת ההיררכיה ללא סינון - כי אנחנו יודעים שהקבר קיים
                     if (grave.cemeteryId) {
                         document.getElementById('cemeterySelect').value = grave.cemeteryId;
-                        await loadHierarchyLevel('cemetery', grave.cemeteryId, grave);
+                        await loadHierarchyLevel('cemetery', grave.cemeteryId, grave, updateCustomer);
                     } else {
                         console.error('Grave data missing cemeteryId:', grave);
                     }
@@ -812,7 +813,8 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
         }
 
         // טעינת רמה בהיררכיה ללא סינון (לטעינת קבר ספציפי)
-        async function loadHierarchyLevel(level, parentId, targetGrave) {
+        // updateCustomer: האם לעדכן את הלקוח מהרכישה (false כשבאים מבחירת לקוח)
+        async function loadHierarchyLevel(level, parentId, targetGrave, updateCustomer = true) {
             const configs = {
                 cemetery: {
                     next: 'block',
@@ -886,14 +888,14 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
                         // המשך לרמה הבאה
                         if (config.next !== 'grave') {
-                            await loadHierarchyLevel(config.next, targetValue, targetGrave);
+                            await loadHierarchyLevel(config.next, targetValue, targetGrave, updateCustomer);
                         } else {
                             // הגענו לקבר - בחר אותו ובדוק רכישה
                             nextSelect.value = targetGrave.unicId;
                             console.log('Set graveSelect to:', targetGrave.unicId);
 
                             if (!isEditMode) {
-                                await onGraveSelected(targetGrave.unicId);
+                                await onGraveSelected(targetGrave.unicId, updateCustomer);
                             }
                         }
                     }
@@ -904,10 +906,11 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
         }
 
         // בחירת קבר - בדיקה אם יש רכישה ומילוי אוטומטי של לקוח
-        async function onGraveSelected(graveId) {
+        // updateCustomer: האם לעדכן את הלקוח מהרכישה (true ברירת מחדל, false כשבאים מבחירת לקוח)
+        async function onGraveSelected(graveId, updateCustomer = true) {
             if (!graveId) return;
 
-            console.log('onGraveSelected:', graveId);
+            console.log('onGraveSelected:', graveId, 'updateCustomer:', updateCustomer);
 
             try {
                 // בדוק אם יש רכישה לקבר זה
@@ -923,8 +926,8 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                     document.getElementById('purchaseId').value = purchase.unicId;
                     console.log('Set purchaseId:', purchase.unicId);
 
-                    // טען את הלקוח מהרכישה - תמיד עדכן (לא רק אם ריק)
-                    if (purchase.clientId) {
+                    // טען את הלקוח מהרכישה - רק אם updateCustomer=true
+                    if (updateCustomer && purchase.clientId) {
                         const customerResponse = await fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?action=get&id=${purchase.clientId}`);
                         const customerResult = await customerResponse.json();
 
@@ -940,6 +943,8 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
                             console.log('Auto-filled customer from purchase:', customer.unicId);
                         }
+                    } else if (!updateCustomer) {
+                        console.log('Skipping customer update (came from customer selection)');
                     }
                 } else {
                     // אין רכישה - נקה את השדה

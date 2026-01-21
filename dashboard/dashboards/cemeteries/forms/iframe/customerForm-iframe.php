@@ -82,8 +82,11 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             background: white;
             border-radius: 12px;
             border: 2px solid transparent;
-            overflow: hidden;
+            overflow: visible;
             transition: border-color 0.2s;
+        }
+        .sortable-section .section-content {
+            border-radius: 0 0 10px 10px;
         }
         .sortable-section:hover { border-color: #94a3b8; }
 
@@ -252,10 +255,10 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             background: white;
             border: 1px solid #e2e8f0;
             border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            z-index: 100;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            z-index: 9999;
             display: none;
-            max-height: 250px;
+            max-height: 300px;
             overflow-y: auto;
         }
         .smart-select-dropdown.open { display: block; }

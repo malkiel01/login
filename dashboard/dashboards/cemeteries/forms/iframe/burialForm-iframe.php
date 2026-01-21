@@ -931,7 +931,13 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
             console.log('onGraveSelected:', graveId, 'updateCustomer:', updateCustomer, 'isLoadingHierarchyFromCustomer:', isLoadingHierarchyFromCustomer);
 
-            // לא מנקים את הלקוח מראש - רק מחליפים אותו אם לקבר יש רכישה קיימת
+            // אם ללקוח הנוכחי יש רכישה - אפס אותו (כי הקבר השתנה)
+            const currentPurchaseId = document.getElementById('purchaseId').value;
+            if (currentPurchaseId && updateCustomer) {
+                document.getElementById('clientId').value = '';
+                document.getElementById('customerDisplayText').textContent = '-- בחר נפטר/ת --';
+                console.log('Grave changed - cleared customer (had purchase)');
+            }
 
             try {
                 // בדוק אם יש רכישה לקבר זה
@@ -1022,10 +1028,17 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             document.getElementById('graveSelect').innerHTML = '<option value="">--</option>';
             document.getElementById('graveSelect').disabled = true;
 
-            // כשמשנים את ההיררכיה - הקבר מתאפס, לכן רק הרכישה מתאפסת
-            // הלקוח לא מתאפס - הוא יוחלף רק אם נבחר קבר עם רכישה קיימת
+            // כשמשנים את ההיררכיה - הקבר מתאפס
+            // אם ללקוח הנוכחי יש רכישה - גם הלקוח מתאפס (כי הקבר שלו השתנה)
+            const currentPurchaseId = document.getElementById('purchaseId').value;
+            if (currentPurchaseId) {
+                // ללקוח יש רכישה - אפס גם את הלקוח
+                document.getElementById('clientId').value = '';
+                document.getElementById('customerDisplayText').textContent = '-- בחר נפטר/ת --';
+                console.log('Hierarchy changed - cleared customer (had purchase)');
+            }
             document.getElementById('purchaseId').value = '';
-            console.log('Hierarchy changed - cleared purchase (customer kept)');
+            console.log('Hierarchy changed - cleared purchase');
 
             if (!selectedValue) return;
 

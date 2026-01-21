@@ -780,9 +780,27 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
         // טעינת אפשרויות בן/בת זוג - דינמית עם פאגינציה
         async function loadSpouseOptions() {
             try {
-                document.getElementById('spouseDisplayText').textContent = 'טוען...';
+                // שלב 1: הצגה מיידית של בן הזוג הנוכחי (אם יש)
+                if (currentSpouseId) {
+                    document.getElementById('spouseDisplayText').textContent = 'טוען...';
+                    // טען רק את בן הזוג הנוכחי - מהיר!
+                    const spouseResponse = await fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?action=get&id=${currentSpouseId}`);
+                    const spouseResult = await spouseResponse.json();
+                    if (spouseResult.success && spouseResult.data) {
+                        const displayName = `${spouseResult.data.firstName || ''} ${spouseResult.data.lastName || ''}`.trim();
+                        document.getElementById('spouseDisplayText').textContent = displayName || currentSpouseId;
+                    } else {
+                        document.getElementById('spouseDisplayText').textContent = currentSpouseId;
+                    }
+                } else {
+                    document.getElementById('spouseDisplayText').textContent = 'ללא בן/בת זוג';
+                }
 
-                // טעינת כל הלקוחות בצורה דינמית
+                // החל את כללי מצב המשפחתי מיד
+                const currentMaritalStatus = document.getElementById('maritalStatus').value;
+                handleMaritalStatusChange(currentMaritalStatus);
+
+                // שלב 2: טעינת כל האופציות ברקע
                 let allCustomers = [];
                 let page = 1;
                 const limit = 2000;
@@ -827,22 +845,6 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
 
                 renderSpouseOptions(allAvailableSpouses);
 
-                // הצגת בן/בת הזוג הנוכחי אם יש
-                if (currentSpouseId) {
-                    const currentSpouse = allCustomers.find(c => c.unicId === currentSpouseId);
-                    if (currentSpouse) {
-                        const displayName = `${currentSpouse.firstName || ''} ${currentSpouse.lastName || ''}`.trim();
-                        document.getElementById('spouseDisplayText').textContent = displayName || currentSpouseId;
-                    } else {
-                        document.getElementById('spouseDisplayText').textContent = 'ללא בן/בת זוג';
-                    }
-                } else {
-                    document.getElementById('spouseDisplayText').textContent = 'ללא בן/בת זוג';
-                }
-
-                // החל את כללי מצב המשפחתי
-                const currentMaritalStatus = document.getElementById('maritalStatus').value;
-                handleMaritalStatusChange(currentMaritalStatus);
             } catch (error) {
                 console.error('Error loading spouse options:', error);
                 document.getElementById('spouseDisplayText').textContent = 'שגיאה בטעינה';

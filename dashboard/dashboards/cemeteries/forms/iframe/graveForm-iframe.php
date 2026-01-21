@@ -292,6 +292,26 @@ $graveLocations = [
                 </div>
                 <div class="section-content">
                     <div class="form-grid">
+                        <?php if ($isEdit): ?>
+                        <!-- במצב עריכה - הצג רק את המיקום המלא (כולל אחוזת קבר) -->
+                        <input type="hidden" name="areaGraveId" value="<?= htmlspecialchars($grave['areaGraveId'] ?? $parentId ?? '') ?>">
+                        <div class="form-group span-2">
+                            <label>מיקום נוכחי</label>
+                            <div class="location-display">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <?php
+                                $locationParts = [];
+                                if (!empty($grave['cemeteryNameHe'])) $locationParts[] = $grave['cemeteryNameHe'];
+                                if (!empty($grave['blockNameHe'])) $locationParts[] = 'גוש ' . $grave['blockNameHe'];
+                                if (!empty($grave['plotNameHe'])) $locationParts[] = 'חלקה ' . $grave['plotNameHe'];
+                                if (!empty($grave['lineNameHe'])) $locationParts[] = 'שורה ' . $grave['lineNameHe'];
+                                if (!empty($grave['areaGraveNameHe'])) $locationParts[] = '<strong>אחוזת קבר ' . htmlspecialchars($grave['areaGraveNameHe']) . '</strong>';
+                                echo implode(' ← ', $locationParts);
+                                ?>
+                            </div>
+                        </div>
+                        <?php else: ?>
+                        <!-- במצב הוספה - הצג בחירת אחוזת קבר -->
                         <div class="form-group span-2">
                             <label><span class="required">*</span> אחוזת קבר</label>
                             <select name="areaGraveId" id="areaGraveId" required <?= !empty($parentId) ? 'disabled' : '' ?>>
@@ -299,7 +319,7 @@ $graveLocations = [
                                 <?php foreach ($areaGraves as $id => $data): ?>
                                     <option value="<?= htmlspecialchars($id) ?>"
                                             data-location="<?= htmlspecialchars($data['location']) ?>"
-                                            <?= ($parentId == $id || ($grave['areaGraveId'] ?? '') == $id) ? 'selected' : '' ?>>
+                                            <?= ($parentId == $id) ? 'selected' : '' ?>>
                                         <?= htmlspecialchars($data['name']) ?> - <?= htmlspecialchars($data['location']) ?>
                                     </option>
                                 <?php endforeach; ?>
@@ -307,23 +327,6 @@ $graveLocations = [
                             <?php if (!empty($parentId)): ?>
                                 <input type="hidden" name="areaGraveId" value="<?= htmlspecialchars($parentId) ?>">
                             <?php endif; ?>
-                        </div>
-
-                        <?php if ($isEdit && !empty($grave['cemeteryNameHe'])): ?>
-                        <div class="form-group span-2">
-                            <label>מיקום נוכחי</label>
-                            <div class="location-display">
-                                <i class="fas fa-map-marker-alt"></i>
-                                <?php
-                                $locationParts = [];
-                                if ($grave['cemeteryNameHe']) $locationParts[] = $grave['cemeteryNameHe'];
-                                if ($grave['blockNameHe']) $locationParts[] = 'גוש ' . $grave['blockNameHe'];
-                                if ($grave['plotNameHe']) $locationParts[] = 'חלקה ' . $grave['plotNameHe'];
-                                if ($grave['lineNameHe']) $locationParts[] = 'שורה ' . $grave['lineNameHe'];
-                                if ($grave['areaGraveNameHe']) $locationParts[] = '<strong>אחוזת קבר ' . htmlspecialchars($grave['areaGraveNameHe']) . '</strong>';
-                                echo implode(' ← ', $locationParts);
-                                ?>
-                            </div>
                         </div>
                         <?php endif; ?>
 

@@ -788,18 +788,23 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
         async function loadGraveHierarchy(graveId) {
             console.log('loadGraveHierarchy started for:', graveId);
             try {
-                const response = await fetch(`/dashboard/dashboards/cemeteries/api/graves-api.php?action=get&id=${graveId}`);
+                // שימוש ב-getDetails כדי לקבל את כל ההיררכיה (cemeteryId, blockId, plotId, lineId)
+                const response = await fetch(`/dashboard/dashboards/cemeteries/api/graves-api.php?action=getDetails&id=${graveId}`);
                 const result = await response.json();
 
                 if (result.success && result.data) {
                     const grave = result.data;
-                    console.log('Grave data:', grave);
+                    console.log('Grave data with hierarchy:', grave);
 
                     // טעינת ההיררכיה ללא סינון - כי אנחנו יודעים שהקבר קיים
                     if (grave.cemeteryId) {
                         document.getElementById('cemeterySelect').value = grave.cemeteryId;
                         await loadHierarchyLevel('cemetery', grave.cemeteryId, grave);
+                    } else {
+                        console.error('Grave data missing cemeteryId:', grave);
                     }
+                } else {
+                    console.error('Failed to load grave details:', result);
                 }
             } catch (error) {
                 console.error('Error loading grave hierarchy:', error);

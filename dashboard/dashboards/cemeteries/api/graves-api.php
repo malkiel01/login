@@ -306,12 +306,16 @@ try {
             if ($currentGraveId) {
                 // ✅ במצב עריכה - כלול גם את הקבר הנוכחי
                 $sql = "
-                    SELECT 
+                    SELECT
                         g.*,
                         ag.areaGraveNameHe as area_grave_name,
-                        CASE WHEN g.unicId = :currentGrave THEN 1 ELSE 0 END as is_current
+                        CASE WHEN g.unicId = :currentGrave THEN 1 ELSE 0 END as is_current,
+                        p.unicId as purchaseId,
+                        c.fullNameHe as purchaserName
                     FROM graves g
                     LEFT JOIN areaGraves ag ON g.areaGraveId = ag.unicId
+                    LEFT JOIN purchases p ON g.unicId = p.graveId AND p.isActive = 1
+                    LEFT JOIN customers c ON p.clientId = c.unicId
                     WHERE (g.graveStatus IN $allowedStatuses OR g.unicId = :currentGrave2)
                     AND g.isActive = 1
                 ";
@@ -319,11 +323,15 @@ try {
             } else {
                 // ✅ במצב הוספה - רק קברים מותרים
                 $sql = "
-                    SELECT 
+                    SELECT
                         g.*,
-                        ag.areaGraveNameHe as area_grave_name
+                        ag.areaGraveNameHe as area_grave_name,
+                        p.unicId as purchaseId,
+                        c.fullNameHe as purchaserName
                     FROM graves g
                     LEFT JOIN areaGraves ag ON g.areaGraveId = ag.unicId
+                    LEFT JOIN purchases p ON g.unicId = p.graveId AND p.isActive = 1
+                    LEFT JOIN customers c ON p.clientId = c.unicId
                     WHERE g.graveStatus IN $allowedStatuses
                     AND g.isActive = 1
                 ";

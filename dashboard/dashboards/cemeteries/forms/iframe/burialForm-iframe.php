@@ -846,16 +846,15 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                         fetch(`/dashboard/dashboards/cemeteries/api/plots-api.php?action=list&blockId=${grave.blockId}`).then(r => r.json()),
                         fetch(`/dashboard/dashboards/cemeteries/api/rows-api.php?action=list&plotId=${grave.plotId}`).then(r => r.json()),
                         fetch(`/dashboard/dashboards/cemeteries/api/areaGraves-api.php?action=list&lineId=${grave.lineId}`).then(r => r.json()),
-                        fetch(`/dashboard/dashboards/cemeteries/api/graves-api.php?action=list&areaGraveId=${grave.areaGraveId}`).then(r => r.json())
+                        fetch(`/dashboard/dashboards/cemeteries/api/graves-api.php?action=available&type=burial&areaGraveId=${grave.areaGraveId}&currentGraveId=${grave.unicId}`).then(r => r.json())
                     ]);
 
-                    // מילוי כל הסלקטים
+                    // מילוי כל הסלקטים (חוץ מקברים)
                     const selects = [
                         { el: 'blockSelect', data: blocksRes, nameField: 'blockNameHe', value: grave.blockId },
                         { el: 'plotSelect', data: plotsRes, nameField: 'plotNameHe', value: grave.plotId },
                         { el: 'rowSelect', data: rowsRes, nameField: 'lineNameHe', value: grave.lineId },
-                        { el: 'areaGraveSelect', data: areaGravesRes, nameField: 'areaGraveNameHe', value: grave.areaGraveId },
-                        { el: 'graveSelect', data: gravesRes, nameField: 'graveNameHe', value: grave.unicId }
+                        { el: 'areaGraveSelect', data: areaGravesRes, nameField: 'areaGraveNameHe', value: grave.areaGraveId }
                     ];
 
                     selects.forEach(({ el, data, nameField, value }) => {
@@ -872,6 +871,30 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                             select.disabled = false;
                         }
                     });
+
+                    // מילוי קברים עם אייקון ושם רוכש
+                    const graveSelect = document.getElementById('graveSelect');
+                    if (gravesRes.success && gravesRes.data) {
+                        graveSelect.innerHTML = '<option value="">-- בחר קבר --</option>';
+                        gravesRes.data.forEach(item => {
+                            const option = document.createElement('option');
+                            option.value = item.unicId;
+
+                            // אייקון לפי סטטוס: 1=פנוי, 2=נרכש
+                            const statusIcon = item.graveStatus == 1 ? '🟢' : '🟡';
+                            let graveName = item.graveNameHe || item.name || '-';
+
+                            // הוסף שם רוכש בסוגריים מרובעים אם קיים
+                            if (item.purchaserName) {
+                                graveName += ` [${item.purchaserName}]`;
+                            }
+
+                            option.textContent = `${statusIcon} ${graveName}`;
+                            graveSelect.appendChild(option);
+                        });
+                        graveSelect.value = grave.unicId;
+                        graveSelect.disabled = false;
+                    }
 
                     console.log('All hierarchy loaded in parallel');
 
@@ -1040,12 +1063,24 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                     else if (level === 'row') {
                         await filterAreaGravesWithAvailableGraves(result.data, nextSelect, selectedValue);
                     } else {
-                        // קברים
+                        // קברים - עם אייקון סטטוס ושם הרוכש
                         nextSelect.innerHTML = '<option value="">-- בחר קבר --</option>';
                         result.data.forEach(item => {
                             const option = document.createElement('option');
                             option.value = item.unicId;
-                            option.textContent = item[config.nameField] || item.name || '-';
+
+                            // אייקון לפי סטטוס: 1=פנוי, 2=נרכש
+                            const statusIcon = item.graveStatus == 1 ? '🟢' : '🟡';
+
+                            // שם הקבר
+                            let graveName = item[config.nameField] || item.name || '-';
+
+                            // הוסף שם רוכש בסוגריים מרובעים אם קיים
+                            if (item.purchaserName) {
+                                graveName += ` [${item.purchaserName}]`;
+                            }
+
+                            option.textContent = `${statusIcon} ${graveName}`;
                             nextSelect.appendChild(option);
                         });
                         nextSelect.disabled = false;

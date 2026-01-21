@@ -749,6 +749,21 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                         // טען את ההיררכיה של הקבר - ללא עדכון לקוח (כי הלקוח כבר נבחר)
                         await loadGraveHierarchy(purchase.graveId, false);
                     }
+                } else {
+                    // אין רכישה ללקוח - אפס את כל ההיררכיה
+                    console.log('Customer has no purchase - clearing hierarchy');
+                    document.getElementById('purchaseId').value = '';
+
+                    // אפס את כל שדות ההיררכיה (חוץ מבית עלמין שנשאר עם האופציות)
+                    const hierarchySelects = ['blockSelect', 'plotSelect', 'rowSelect', 'areaGraveSelect', 'graveSelect'];
+                    hierarchySelects.forEach(id => {
+                        const select = document.getElementById(id);
+                        select.innerHTML = '<option value="">-- בחר --</option>';
+                        select.disabled = true;
+                    });
+
+                    // אפס גם את בחירת בית העלמין (אבל השאר את האופציות)
+                    document.getElementById('cemeterySelect').value = '';
                 }
             } catch (error) {
                 console.error('Error checking customer purchase:', error);

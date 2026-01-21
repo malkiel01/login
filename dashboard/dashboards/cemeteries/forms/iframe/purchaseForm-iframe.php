@@ -653,6 +653,9 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                             resident: calculatedResident,
                             name: name
                         };
+
+                        // עדכון אפשרויות סטטוס רוכש לפי בן/בת זוג
+                        await updateBuyerStatusOptions(customer);
                     }
                 } catch (error) {
                     console.error('Error loading current customer:', error);
@@ -661,6 +664,8 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             } else {
                 // במצב הוספה - הצג הודעה לבחירה
                 displayText.textContent = '-- בחר לקוח --';
+                // אפס אפשרויות סטטוס רוכש
+                updateBuyerStatusOptions(null);
             }
 
             // הצג הודעה לחיפוש
@@ -782,6 +787,7 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             }
             if (!customerId) {
                 selectedCustomerData = null;
+                updateBuyerStatusOptions(null); // אפס אפשרויות סטטוס רוכש
                 return;
             }
 
@@ -816,10 +822,64 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
                         resident: calculatedResident,
                         name: `${result.data.firstName} ${result.data.lastName}`
                     };
+
+                    // עדכון אפשרויות סטטוס רוכש לפי בן/בת זוג
+                    await updateBuyerStatusOptions(result.data);
+
                     tryCalculatePayments();
                 }
             } catch (error) {
                 console.error('Error loading customer details:', error);
+            }
+        }
+
+        /**
+         * עדכון אפשרויות סטטוס רוכש
+         * אופציה 3 (בן/בת זוג נפטר) זמינה רק אם:
+         * 1. ללקוח יש בן/בת זוג מקושר
+         * 2. סטטוס בן/בת הזוג = 3 (קבור)
+         */
+        async function updateBuyerStatusOptions(customerData) {
+            const buyerStatusSelect = document.getElementById('buyer_status');
+            if (!buyerStatusSelect) return;
+
+            const option3 = buyerStatusSelect.querySelector('option[value="3"]');
+            if (!option3) return;
+
+            // ברירת מחדל: חסום אופציה 3
+            option3.disabled = true;
+            option3.title = 'זמין רק כשלללקוח יש בן/בת זוג קבור';
+
+            if (!customerData || !customerData.spouse) {
+                // אין לקוח או אין בן זוג מקושר
+                // אם האופציה הנבחרת היא 3, שנה ל-1
+                if (buyerStatusSelect.value === '3') {
+                    buyerStatusSelect.value = '1';
+                }
+                return;
+            }
+
+            // בדוק את סטטוס בן/בת הזוג
+            try {
+                const spouseResponse = await fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?action=get&id=${customerData.spouse}`);
+                const spouseResult = await spouseResponse.json();
+
+                if (spouseResult.success && spouseResult.data) {
+                    const spouseStatus = parseInt(spouseResult.data.statusCustomer) || 1;
+
+                    if (spouseStatus === 3) {
+                        // בן/בת הזוג קבור - אפשר אופציה 3
+                        option3.disabled = false;
+                        option3.title = '';
+                    } else {
+                        // בן/בת הזוג לא קבור
+                        if (buyerStatusSelect.value === '3') {
+                            buyerStatusSelect.value = '1';
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking spouse status:', error);
             }
         }
 

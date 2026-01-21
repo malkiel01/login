@@ -36,6 +36,13 @@
    3. טאבלט קטן (עד 768px)
    ==================================== */
 @media screen and (max-width: 768px) {
+    /* תיקון לתמיכה ב-fixed positioning בתוך iframe */
+    html, body {
+        height: auto;
+        min-height: 100%;
+        overflow-x: hidden;
+    }
+
     /* פריסה - עמודה אחת */
     .form-grid {
         grid-template-columns: 1fr !important;
@@ -47,10 +54,14 @@
         grid-column: span 1 !important;
     }
 
-    /* מיכל הטופס */
+    /* מיכל הטופס - תמיכה גם ב-body ישירות */
+    .form-container,
+    body {
+        padding-bottom: 90px !important; /* מקום לכפתורים קבועים */
+    }
+
     .form-container {
         padding: var(--mobile-padding);
-        padding-bottom: 80px; /* מקום לכפתורים קבועים */
     }
 
     /* סקשנים */
@@ -121,18 +132,21 @@
     /* כפתורי שמירה/ביטול - קבועים בתחתית */
     .form-actions {
         display: flex !important;
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: white;
-        padding: 12px var(--mobile-padding);
-        margin: 0;
-        border-top: 1px solid #e2e8f0;
-        box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
-        z-index: 1000;
-        gap: 8px;
-        border-radius: 0;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        background: white !important;
+        padding: 12px var(--mobile-padding) !important;
+        margin: 0 !important;
+        border-top: 1px solid #e2e8f0 !important;
+        box-shadow: 0 -4px 12px rgba(0,0,0,0.1) !important;
+        z-index: 9999 !important;
+        gap: 8px !important;
+        border-radius: 0 !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        transform: translateZ(0); /* יוצר stacking context חדש */
     }
 
     .form-actions .btn {

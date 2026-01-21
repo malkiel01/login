@@ -342,13 +342,14 @@ try {
             echo json_encode(['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
             break;
         case 'countAvailable':
-            // ספירת קברים פנויים לפי שורה או חלקה
-            $lineId = $_GET['lineId'] ?? null;
+            // ספירת קברים זמינים לפי גוש, חלקה או שורה
+            $blockId = $_GET['blockId'] ?? null;
             $plotId = $_GET['plotId'] ?? null;
+            $lineId = $_GET['lineId'] ?? null;
             $formType = $_GET['type'] ?? 'purchase';
 
-            if (!$lineId && !$plotId) {
-                throw new Exception('חסר מזהה שורה או חלקה');
+            if (!$blockId && !$plotId && !$lineId) {
+                throw new Exception('חסר מזהה גוש, חלקה או שורה');
             }
 
             // קבע את סטטוס הקברים המותרים
@@ -361,8 +362,24 @@ try {
             }
 
             // בנה שאילתה לפי הפרמטר שהתקבל
-            if ($plotId) {
-                // ספור קברים פנויים בחלקה (דרך כל השורות ואחוזות הקבר שלה)
+            if ($blockId) {
+                // ספור קברים זמינים בגוש (דרך כל החלקות, השורות ואחוזות הקבר שלו)
+                $sql = "
+                    SELECT COUNT(*)
+                    FROM graves g
+                    INNER JOIN areaGraves ag ON g.areaGraveId = ag.unicId
+                    INNER JOIN `rows` r ON ag.lineId = r.unicId
+                    INNER JOIN plots p ON r.plotId = p.unicId
+                    WHERE p.blockId = :blockId
+                    AND p.isActive = 1
+                    AND r.isActive = 1
+                    AND ag.isActive = 1
+                    AND g.isActive = 1
+                    AND g.graveStatus IN $allowedStatuses
+                ";
+                $params = ['blockId' => $blockId];
+            } elseif ($plotId) {
+                // ספור קברים זמינים בחלקה (דרך כל השורות ואחוזות הקבר שלה)
                 $sql = "
                     SELECT COUNT(*)
                     FROM graves g
@@ -376,7 +393,7 @@ try {
                 ";
                 $params = ['plotId' => $plotId];
             } else {
-                // ספור קברים פנויים בשורה
+                // ספור קברים זמינים בשורה
                 $sql = "
                     SELECT COUNT(*)
                     FROM graves g

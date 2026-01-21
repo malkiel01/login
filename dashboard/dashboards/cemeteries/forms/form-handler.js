@@ -69,7 +69,7 @@ const FormHandler = {
     openForm: async function(type, parentId = null, itemId = null) {
 
         // 🆕 ניתוב טפסים לשיטה החדשה (iframe popup)
-        const iframeFormTypes = ['customer', 'purchase', 'burial', 'payment', 'residency', 'grave', 'country', 'city'];
+        const iframeFormTypes = ['customer', 'purchase', 'burial', 'payment', 'residency', 'grave', 'country', 'city', 'areaGrave'];
 
         if (iframeFormTypes.includes(type)) {
             if (typeof PopupManager !== 'undefined') {
@@ -129,6 +129,13 @@ const FormHandler = {
                         titleEdit: 'עריכת עיר',
                         width: 600,
                         height: 450
+                    },
+                    areaGrave: {
+                        file: 'areaGraveForm-iframe.php',
+                        titleNew: 'הוספת אחוזת קבר',
+                        titleEdit: 'עריכת אחוזת קבר',
+                        width: 1000,
+                        height: 750
                     }
                 };
 

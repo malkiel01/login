@@ -746,9 +746,23 @@ $gravesJson = json_encode($graves, JSON_UNESCAPED_UNICODE);
         const graveStatuses = <?= json_encode($graveStatuses, JSON_UNESCAPED_UNICODE) ?>;
 
         // ערכים נבחרים מ-PHP (לאתחול בטעינת הדף)
+        const receivedParentId = '<?= addslashes($parentId ?? '') ?>';
         const preSelectedCemeteryId = '<?= addslashes($selectedCemeteryId ?? '') ?>';
         const preSelectedBlockId = '<?= addslashes($selectedBlockId ?? '') ?>';
         const preSelectedPlotId = '<?= addslashes($selectedPlotId ?? '') ?>';
+        const blocksCount = <?= count($blocks) ?>;
+        const plotsCount = <?= count($plots) ?>;
+        const rowsCount = <?= count($rows) ?>;
+
+        console.log('📋 Form loaded with:', {
+            receivedParentId,
+            preSelectedCemeteryId,
+            preSelectedBlockId,
+            preSelectedPlotId,
+            blocksCount,
+            plotsCount,
+            rowsCount
+        });
 
         const MAX_GRAVES = 5;
         const MIN_GRAVES = 1;

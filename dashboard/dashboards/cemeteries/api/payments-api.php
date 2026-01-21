@@ -388,44 +388,28 @@ try {
                 
                 foreach ($allPayments as $payment) {
                     $defId = $payment['priceDefinition'];
-                    
+
                     if (!isset($seenDefinitions[$defId])) {
                         $seenDefinitions[$defId] = true;
-                        
-                        // קבל שם התשלום מטבלת הגדרות אם יש
-                        $definitionName = '';
-                        $mandatory = 0;
-                        
-                        // נסה לקבל הגדרה מטבלה נפרדת אם קיימת
-                        if ($defId) {
-                            try {
-                                $defStmt = $pdo->prepare("SELECT name, mandatory FROM payment_definitions WHERE id = :id");
-                                $defStmt->execute([':id' => $defId]);
-                                $definition = $defStmt->fetch(PDO::FETCH_ASSOC);
-                                if ($definition) {
-                                    $definitionName = $definition['name'];
-                                    $mandatory = $definition['mandatory'] ?? 0;
-                                }
-                            } catch (Exception $e) {
-                                // אם אין טבלת הגדרות, השתמש בשמות ברירת מחדל
-                                $defaultNames = [
-                                    1 => 'עלות קבר',
-                                    2 => 'שירותי לוויה',
-                                    3 => 'שירותי קבורה',
-                                    4 => 'אגרת מצבה',
-                                    5 => 'בדיקת עומק',
-                                    6 => 'פירוק מצבה',
-                                    7 => 'הובלה מנתב״ג',
-                                    8 => 'טהרה',
-                                    9 => 'תכריכים',
-                                    10 => 'החלפת שם'
-                                ];
-                                $definitionName = $defaultNames[$defId] ?? "תשלום מסוג $defId";
-                                // הגדר חובה לתשלומים בסיסיים
-                                $mandatory = in_array($defId, [1, 2, 3]) ? 1 : 0;
-                            }
-                        }
-                        
+
+                        // קבל שם התשלום לפי סוג ההגדרה
+                        $defaultNames = [
+                            1 => 'עלות קבר',
+                            2 => 'שירותי לוויה',
+                            3 => 'שירותי קבורה',
+                            4 => 'אגרת מצבה',
+                            5 => 'בדיקת עומק',
+                            6 => 'פירוק מצבה',
+                            7 => 'הובלה מנתב״ג',
+                            8 => 'טהרה',
+                            9 => 'תכריכים',
+                            10 => 'החלפת שם'
+                        ];
+                        $definitionName = $defaultNames[$defId] ?? "תשלום מסוג $defId";
+
+                        // השתמש בשדה mandatory מהרשומה עצמה!
+                        $mandatory = isset($payment['mandatory']) ? (int)$payment['mandatory'] : 1;
+
                         $uniquePayments[] = [
                             'id' => $payment['id'],
                             'name' => $definitionName,
@@ -433,7 +417,7 @@ try {
                             'priceDefinition' => $defId,
                             'mandatory' => $mandatory
                         ];
-                        
+
                         error_log("Added payment: $definitionName, Price: {$payment['price']}, Mandatory: $mandatory");
                     }
                 }

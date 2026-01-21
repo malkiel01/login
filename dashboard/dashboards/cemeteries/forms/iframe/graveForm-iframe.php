@@ -243,7 +243,7 @@ $graveLocations = [
         .form-actions {
             display: flex;
             gap: 10px;
-            justify-content: flex-start;
+            justify-content: flex-end;
             margin-top: 20px;
             padding-top: 20px;
             border-top: 1px solid #e2e8f0;

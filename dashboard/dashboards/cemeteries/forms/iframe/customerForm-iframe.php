@@ -777,46 +777,72 @@ function renderSelect($name, $options, $value = '', $required = false, $disabled
             }
         }
 
-        // טעינת אפשרויות בן/בת זוג (רק רווקים או ללא מצב משפחתי מוגדר)
+        // טעינת אפשרויות בן/בת זוג - דינמית עם פאגינציה
         async function loadSpouseOptions() {
             try {
-                const response = await fetch('/dashboard/dashboards/cemeteries/api/customers-api.php?action=list&limit=1000');
-                const result = await response.json();
+                document.getElementById('spouseDisplayText').textContent = 'טוען...';
 
-                if (result.success && result.data) {
-                    // סינון: רק רווקים (1) או ללא מצב משפחתי מוגדר (null/empty/undefined)
-                    allAvailableSpouses = result.data.filter(c => {
-                        // לא הלקוח הנוכחי
-                        if (customerId && c.unicId === customerId) return false;
-                        // אם זה בן הזוג הנוכחי - תמיד הצג
-                        if (c.unicId === currentSpouseId) return true;
-                        // רק רווקים (1) או ללא מצב משפחתי מוגדר (null/empty/undefined/0)
-                        const status = c.maritalStatus;
-                        // !status תופס: null, undefined, '', 0
-                        // status == 1 תופס: 1, '1'
-                        if (!status || status == 1) return true;
-                        return false;
-                    });
+                // טעינת כל הלקוחות בצורה דינמית
+                let allCustomers = [];
+                let page = 1;
+                const limit = 1000;
+                let hasMore = true;
 
-                    renderSpouseOptions(allAvailableSpouses);
+                while (hasMore) {
+                    const response = await fetch(`/dashboard/dashboards/cemeteries/api/customers-api.php?action=list&limit=${limit}&page=${page}`);
+                    const result = await response.json();
 
-                    // הצגת בן/בת הזוג הנוכחי אם יש
-                    if (currentSpouseId) {
-                        const currentSpouse = result.data.find(c => c.unicId === currentSpouseId);
-                        if (currentSpouse) {
-                            const displayName = `${currentSpouse.firstName || ''} ${currentSpouse.lastName || ''}`.trim();
-                            document.getElementById('spouseDisplayText').textContent = displayName || currentSpouseId;
-                        } else {
-                            document.getElementById('spouseDisplayText').textContent = 'ללא בן/בת זוג';
-                        }
+                    if (result.success && result.data) {
+                        allCustomers = allCustomers.concat(result.data);
+
+                        // בדוק אם יש עוד עמודים
+                        const total = result.pagination?.total || 0;
+                        const loaded = allCustomers.length;
+                        hasMore = loaded < total;
+                        page++;
+
+                        console.log(`Loaded page ${page - 1}: ${result.data.length} customers (total: ${loaded}/${total})`);
+                    } else {
+                        hasMore = false;
+                    }
+                }
+
+                console.log(`Total customers loaded: ${allCustomers.length}`);
+
+                // סינון: רק רווקים (1) או ללא מצב משפחתי מוגדר (null/empty/undefined)
+                allAvailableSpouses = allCustomers.filter(c => {
+                    // לא הלקוח הנוכחי
+                    if (customerId && c.unicId === customerId) return false;
+                    // אם זה בן הזוג הנוכחי - תמיד הצג
+                    if (c.unicId === currentSpouseId) return true;
+                    // רק רווקים (1) או ללא מצב משפחתי מוגדר (null/empty/undefined/0)
+                    const status = c.maritalStatus;
+                    // !status תופס: null, undefined, '', 0
+                    // status == 1 תופס: 1, '1'
+                    if (!status || status == 1) return true;
+                    return false;
+                });
+
+                console.log(`Available spouses after filter: ${allAvailableSpouses.length}`);
+
+                renderSpouseOptions(allAvailableSpouses);
+
+                // הצגת בן/בת הזוג הנוכחי אם יש
+                if (currentSpouseId) {
+                    const currentSpouse = allCustomers.find(c => c.unicId === currentSpouseId);
+                    if (currentSpouse) {
+                        const displayName = `${currentSpouse.firstName || ''} ${currentSpouse.lastName || ''}`.trim();
+                        document.getElementById('spouseDisplayText').textContent = displayName || currentSpouseId;
                     } else {
                         document.getElementById('spouseDisplayText').textContent = 'ללא בן/בת זוג';
                     }
-
-                    // החל את כללי מצב המשפחתי
-                    const currentMaritalStatus = document.getElementById('maritalStatus').value;
-                    handleMaritalStatusChange(currentMaritalStatus);
+                } else {
+                    document.getElementById('spouseDisplayText').textContent = 'ללא בן/בת זוג';
                 }
+
+                // החל את כללי מצב המשפחתי
+                const currentMaritalStatus = document.getElementById('maritalStatus').value;
+                handleMaritalStatusChange(currentMaritalStatus);
             } catch (error) {
                 console.error('Error loading spouse options:', error);
                 document.getElementById('spouseDisplayText').textContent = 'שגיאה בטעינה';
